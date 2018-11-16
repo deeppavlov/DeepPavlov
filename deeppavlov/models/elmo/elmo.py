@@ -19,8 +19,10 @@ from typing import Optional, List
 import tensorflow as tf
 import numpy as np
 import json
+from overrides import overrides
 
-from deeppavlov.core.models.tf_model import TFModel
+# from deeppavlov.core.models.tf_model import TFModel
+from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.commands.utils import expand_path
@@ -32,9 +34,11 @@ log = get_logger(__name__)
 
 
 @register('elmo_model')
-class ELMo(TFModel):
+class ELMo(NNModel):
     """>>
-    The :class:`~deeppavlov.models.elmo.elmo.ELMo` is for Neural Named Entity Recognition and Slot Filling.
+    The :class:`~deeppavlov.models.elmo.elmo.ELMo` is a deep contextualized word representation that models both
+    complex characteristics of word use (e.g., syntax and semantics), and (2) how these uses vary across linguistic
+    contexts (i.e., to model polysemy)
 
     Parameters:
         options_json_path: Path to the json configure.
@@ -79,33 +83,31 @@ class ELMo(TFModel):
                                      n_negative_samples_batch and all_clip_norm_val
                                      )):
             raise Warning('Use options_json_path or/and direct params to set net architecture.')
-        self._options = self._load_options(options_json_path)
+        self.options = self._load_options(options_json_path)
         self._update_arch_options(char_cnn, bidirectional, unroll_steps, n_tokens_vocab, lstm)
         self._update_other_options(dropout, n_negative_samples_batch, all_clip_norm_val)
 
         # Special options
-        self._options['learning_rate'] = learning_rate
-        self._options['initial_accumulator_value'] = initial_accumulator_value
-        self._options['seed'] = seed
-        self._options['n_gpus'] = n_gpus
-        self._options['batch_size'] = batch_size
+        self.options['learning_rate'] = learning_rate
+        self.options['initial_accumulator_value'] = initial_accumulator_value
+        self.options['seed'] = seed
+        self.options['n_gpus'] = n_gpus
+        self.options['batch_size'] = batch_size
+        self.train_options = {}
+        self.valid_options = {'batch_size': 256, 'unroll_steps': 1}
+        self._options = self.options.copy()
+        self.init_step = 0
         tf.set_random_seed(seed)
         np.random.seed(seed)
 
-        # ==================== Suply vars =====================
+        self._build_graphs()
 
-        self._train_last_loss = np.inf
-        
-        # ================== Building the network ==================
-
-        self.models, self.train_op, _, _, self.train_loss, self.valid_loss = self._build_graph()
-
-        # ================= Initialize the session =================
-        self.init_state_values, self.init_state_tensors, self.final_state_tensors =\
-            self._init_session()
-
+        self._build_model(train = False, rebuild = False, batch_size = 256, unroll_steps = 1, n_gpus = 1)
+        self.sess = tf.Session()
         super().__init__(**kwargs)
-        self.load()
+        # self.load()
+        # print(repr(vars(self)))
+        # input()
 
     def _load_options(self, options_json_path):
         if options_json_path:
@@ -118,75 +120,98 @@ class ELMo(TFModel):
 
     def _update_arch_options(self, char_cnn, bidirectional, unroll_steps, n_tokens_vocab, lstm):
         if char_cnn is not None:
-            self._options['char_cnn'] = char_cnn
+            self.options['char_cnn'] = char_cnn
         if bidirectional is not None:
-            self._options['bidirectional'] = bidirectional
+            self.options['bidirectional'] = bidirectional
         if unroll_steps is not None:
-            self._options['unroll_steps'] = unroll_steps
+            self.options['unroll_steps'] = unroll_steps
         if n_tokens_vocab is not None:
-            self._options['n_tokens_vocab'] = n_tokens_vocab
+            self.options['n_tokens_vocab'] = n_tokens_vocab
         if lstm is not None:
-            self._options['lstm'] = lstm
+            self.options['lstm'] = lstm
 
     def _update_other_options(self, dropout, n_negative_samples_batch, all_clip_norm_val):
         if dropout is not None:
-            self._options['dropout'] = dropout
+            self.options['dropout'] = dropout
         if n_negative_samples_batch is not None:
-            self._options['n_negative_samples_batch'] = n_negative_samples_batch
+            self.options['n_negative_samples_batch'] = n_negative_samples_batch
         if all_clip_norm_val is not None:
-            self._options['all_clip_norm_val'] = all_clip_norm_val
+            self.options['all_clip_norm_val'] = all_clip_norm_val
 
-    def _build_graph(self):
-        init_step = 0  # TODO: Add resolution of init_step
-        with tf.device('/cpu:0'):
-            global_step = tf.get_variable(
-                'global_step', [],
-                initializer=tf.constant_initializer(init_step), trainable=False)
+    def _build_graphs(self):
+        if not hasattr(self, 'train_graph'):
+            self.options = self._options.copy()
+            self.options.update(self.train_options)
+            models, train_op, train_loss, eval_loss, graph =\
+                self._build_graph(tf.Graph())
+            self.train_model_graph = {"models": models,
+                                      "train_op": train_op,
+                                      "train_loss": train_loss,
+                                      "eval_loss": eval_loss,
+                                      "graph": graph
+                                      }
 
-            # set up the optimizer
-            opt = tf.train.AdagradOptimizer(learning_rate=self._options['learning_rate'],
-                                            initial_accumulator_value=1.0)
+        if not hasattr(self, 'valid_graph'):
+            self.options = self._options.copy()
+            self.options.update(self.valid_options)
+            models, train_op, train_loss, eval_loss, graph =\
+                self._build_graph(tf.Graph())
+            self.valid_model_graph = {"models": models,
+                                      "train_op": train_op,
+                                      "train_loss": train_loss,
+                                      "eval_loss": eval_loss,
+                                      "graph": graph
+                                      }
+                                            
+    def _build_graph(self, graph):
+        with graph.as_default():
+            with tf.device('/cpu:0'):
+                global_step = tf.get_variable(
+                    'global_step', [],
+                    initializer=tf.constant_initializer(self.init_step), trainable=False)
 
-            # calculate the gradients on each GPU
-            tower_grads = []
-            models = []
-            train_loss = tf.get_variable(
-                'train_loss', [],
-                initializer=tf.constant_initializer(0.0), trainable=False)
-            valid_loss = tf.get_variable(
-                'valid_loss', [],
-                initializer=tf.constant_initializer(0.0), trainable=False)
-            for k in range(self._options['n_gpus']):
-                with tf.device('/gpu:%d' % k):
-                    with tf.variable_scope('lm', reuse=k > 0):
-                        # calculate the loss for one model replica and get
-                        #   lstm states
-                        model = LanguageModel(self._options, True)
-                        total_train_loss = model.total_train_loss
-                        total_valid_loss = model.total_valid_loss
-                        models.append(model)
-                        # get gradients
-                        grads = opt.compute_gradients(
-                            total_train_loss * self._options['unroll_steps'],
-                            aggregation_method=tf.AggregationMethod.EXPERIMENTAL_TREE,
-                        )
-                        tower_grads.append(grads)
-                        # # keep track of loss across all GPUs
-                        # train_perplexity += total_train_loss
-                        train_loss += total_train_loss
-                        valid_loss += total_valid_loss
-                print_variable_summary()
+                # set up the optimizer
+                opt = tf.train.AdagradOptimizer(learning_rate=self.options['learning_rate'],
+                                                initial_accumulator_value=1.0)
 
-            # calculate the mean of each gradient across all GPUs
-            grads = average_gradients(tower_grads, self._options['batch_size'], self._options)
-            grads, _ = clip_grads(grads, self._options, True, global_step)
-            train_loss = train_loss / self._options['n_gpus']
-            valid_loss = valid_loss / self._options['n_gpus']
-            train_op = opt.apply_gradients(grads, global_step=global_step)
-            hist_summary_op = None
-            summary_op = None
+                # calculate the gradients on each GPU
+                tower_grads = []
+                models = []
+                train_loss = tf.get_variable(
+                    'train_loss', [],
+                    initializer=tf.constant_initializer(0.0), trainable=False)
+                eval_loss = tf.get_variable(
+                    'eval_loss', [],
+                    initializer=tf.constant_initializer(0.0), trainable=False)
+                for k in range(self.options['n_gpus']):
+                    with tf.device('/gpu:%d' % k):
+                        with tf.variable_scope('lm', reuse=k > 0):
+                            # calculate the loss for one model replica and get
+                            #   lstm states
+                            model = LanguageModel(self.options, True)
+                            total_train_loss = model.total_train_loss
+                            total_eval_loss = model.total_eval_loss
+                            models.append(model)
+                            # get gradients
+                            grads = opt.compute_gradients(
+                                total_train_loss * self.options['unroll_steps'],
+                                aggregation_method=tf.AggregationMethod.EXPERIMENTAL_TREE,
+                            )
+                            tower_grads.append(grads)
+                            # # keep track of loss across all GPUs
+                            # train_perplexity += total_train_loss
+                            train_loss += total_train_loss
+                            eval_loss += total_eval_loss
+                    print_variable_summary()
 
-        return models, train_op, summary_op, hist_summary_op, train_loss, valid_loss
+                # calculate the mean of each gradient across all GPUs
+                grads = average_gradients(tower_grads, self.options['batch_size'], self.options)
+                grads, _ = clip_grads(grads, self.options, True, global_step)
+                train_loss = train_loss / self.options['n_gpus']
+                eval_loss = eval_loss / self.options['n_gpus']
+                train_op = opt.apply_gradients(grads, global_step=global_step)
+
+        return models, train_op, train_loss, eval_loss, graph
 
     def _init_session(self):
         restart_ckpt_file = None  # TODO: It is one too
@@ -194,15 +219,15 @@ class ELMo(TFModel):
         sess_config.gpu_options.allow_growth = True
         
         self.sess = tf.Session(config=sess_config)
-        self.sess.run(tf.initialize_all_variables())
+        self.sess.run(tf.global_variables_initializer())
 
         # load the checkpoint data if needed
         if restart_ckpt_file is not None:
             loader = tf.train.Saver()
             loader.restore(self.sess, restart_ckpt_file)
 
-        batch_size = self._options['batch_size']
-        unroll_steps = self._options['unroll_steps']
+        batch_size = self.options['batch_size']
+        unroll_steps = self.options['unroll_steps']
 
         # get the initial lstm states
         init_state_tensors = []
@@ -211,9 +236,9 @@ class ELMo(TFModel):
             init_state_tensors.extend(model.init_lstm_state)
             final_state_tensors.extend(model.final_lstm_state)
 
-        char_inputs = 'char_cnn' in self._options
+        char_inputs = 'char_cnn' in self.options
         if char_inputs:
-            max_chars = self._options['char_cnn']['max_characters_per_token']
+            max_chars = self.options['char_cnn']['max_characters_per_token']
 
         if not char_inputs:
             feed_dict = {
@@ -229,7 +254,7 @@ class ELMo(TFModel):
                 for model in self.models
             }
 
-        if self._options['bidirectional']:
+        if self.options['bidirectional']:
             if not char_inputs:
                 feed_dict.update({
                     model.token_ids_reverse:
@@ -256,21 +281,21 @@ class ELMo(TFModel):
         feed_dict = {t: v for t, v in zip(self.init_state_tensors, self.init_state_values)}
 
         for k, model in enumerate(self.models):
-            start = k * self._options['batch_size']
-            end = (k + 1) * self._options['batch_size']
+            start = k * self.options['batch_size']
+            end = (k + 1) * self.options['batch_size']
 
             # character inputs
             char_ids = char_ids_batches[start:end]  # get char_ids
             
             feed_dict[model.tokens_characters] = char_ids
 
-            if self._options['bidirectional']:
+            if self.options['bidirectional']:
                 feed_dict[model.tokens_characters_reverse] = \
                     reversed_char_ids_batches[start:end]  # get tokens_characters_reverse
                 
             if token_ids_batches is not None:
                 feed_dict[model.next_token_id] = token_ids_batches[start:end]  # get next_token_id
-                if self._options['bidirectional']:
+                if self.options['bidirectional']:
                     feed_dict[model.next_token_id_reverse] = \
                         reversed_token_ids_batches[start:end]  # get next_token_id_reverse
 
@@ -284,12 +309,31 @@ class ELMo(TFModel):
 
         feed_dict = self._fill_feed_dict(char_ids_batches, reversed_char_ids_batches, token_ids_batches, 
                                          reversed_token_ids_batches)
-        # TODO: Do right ppl
-        ret = self.sess.run([self.train_loss] + self.final_state_tensors, feed_dict)
+
+        with self.current_graph.as_default():
+            ret = self.sess.run([self.loss] + self.final_state_tensors, feed_dict)
 
         self.init_state_values = ret[1:]
-        valid_loss = ret[0]
-        return [valid_loss]
+        loss = ret[0]
+        return [loss]
+
+    @overrides
+    def load(self) -> None:
+        pass
+
+    @overrides
+    def save(self) -> None:
+        pass
+    # @overrides
+    # def load(self) -> None:
+    #     """Load model parameters from self.load_path"""
+    #     with self.current_graph.as_default():
+    #         path = str(self.load_path.resolve())
+    #         # Check presence of the model files
+    #         if tf.train.checkpoint_exists(path):
+    #             log.info('[loading model from {}]'.format(path))
+    #             saver = tf.train.Saver()
+    #             saver.restore(self.sess, path)
 
     def train_on_batch(self,
                        x_char_ids: list,
@@ -310,9 +354,46 @@ class ELMo(TFModel):
 
         feed_dict = self._fill_feed_dict(char_ids_batches, reversed_char_ids_batches,
                                          token_ids_batches, reversed_token_ids_batches)
-        ret = self.sess.run([self.train_loss, self.train_op] + self.final_state_tensors, feed_dict)
+        
+        with self.current_graph.as_default():
+            ret = self.sess.run([self.train_loss, self.train_op] + self.final_state_tensors, feed_dict)
 
         self.init_state_values = ret[2:]
         train_loss = ret[0]
 
         return train_loss
+
+    def _build_model(self, train: bool, rebuild: bool, **kwargs):
+
+        if rebuild:
+            self.sess.close()
+        if train:
+            self.options = self._options.copy()
+            self.options.update(self.train_options)
+
+            self.models, self.train_op, self.train_loss, self.loss, self.current_graph =\
+                self.train_model_graph['models'],\
+                self.train_model_graph['train_op'],\
+                self.train_model_graph['train_loss'],\
+                self.train_model_graph['train_loss'],\
+                self.train_model_graph['graph']
+        else:
+            self.options = self._options.copy()
+            self.options.update(self.valid_options)
+
+            self.models, self.train_op, self.train_loss, self.loss, self.current_graph =\
+                self.valid_model_graph['models'],\
+                self.valid_model_graph['train_op'],\
+                self.valid_model_graph['train_loss'],\
+                self.valid_model_graph['eval_loss'],\
+                self.valid_model_graph['graph']
+                
+        with self.current_graph.as_default():
+            self.init_state_values, self.init_state_tensors, self.final_state_tensors =\
+                self._init_session()
+
+    def process_event(self, event_name, data):
+        if event_name == 'after_validation':
+            self._build_model(train = True, rebuild = True, batch_size = 256, unroll_steps = 1)
+        elif event_name == 'after_epoch':
+            self._build_model(train = False, rebuild = True)

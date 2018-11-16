@@ -27,6 +27,7 @@ log = get_logger(__name__)
 @register('elmo_file_paths_iterator')
 class ELMoFilePathsIterator(FilePathsIterator):
     """Dataset iterator for tokenized datasetes like 1 Billion Word Benchmark
+    It gets lists of file paths from the data dictionary and return lines from each file.
 
     Args:
         data: dict with keys ``'train'``, ``'valid'`` and ``'test'`` and values
@@ -137,9 +138,16 @@ class ELMoFilePathsIterator(FilePathsIterator):
         shard_generator = self._shard_generator(tgt_data, shuffle = shuffle, random = self.np_random)
         line_generator = self._line_generator(shard_generator)
 
-        unroll_steps = self.unroll_steps if data_type == 'train' else 20
+        if data_type == 'train':
+            unroll_steps = self.unroll_steps
+            batch_size = batch_size
+            n_gpus = self.n_gpus
+        else:
+            unroll_steps = 1
+            batch_size = 256
+            n_gpus = 1
 
-        batch_generator = self._batch_generator(line_generator, batch_size * self.n_gpus, unroll_steps)
+        batch_generator = self._batch_generator(line_generator, batch_size * n_gpus, unroll_steps)
 
         for char_ids, reversed_char_ids, token_ids, reversed_token_ids in batch_generator:
             batch = [(char_ids, reversed_char_ids), (token_ids, reversed_token_ids)]

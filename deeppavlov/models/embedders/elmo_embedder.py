@@ -292,6 +292,5 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
 
         yield from ['<S>', '</S>', '<UNK>']
 
-
     def destroy(self):
         self.sess.close()

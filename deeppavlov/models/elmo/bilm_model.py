@@ -481,7 +481,7 @@ class LanguageModel(object):
         # now calculate losses
         # loss for each direction of the LSTM
         self.individual_train_losses = []
-        self.individual_valid_losses = []
+        self.individual_eval_losses = []
         self.individual_output_softmaxes = []
 
         if self.bidirectional:
@@ -517,7 +517,7 @@ class LanguageModel(object):
                 )
 
             self.individual_train_losses.append(tf.reduce_mean(sampled_losses))
-            self.individual_valid_losses.append(tf.reduce_mean(losses))
+            self.individual_eval_losses.append(tf.reduce_mean(losses))
             self.individual_output_softmaxes.append(tf.nn.softmax(output_scores))
             
 
@@ -525,8 +525,8 @@ class LanguageModel(object):
         if self.bidirectional:
             self.total_train_loss = 0.5 * (self.individual_train_losses[0]
                                     + self.individual_train_losses[1])
-            self.total_valid_loss = 0.5 * (self.individual_valid_losses[0]
-                                    + self.individual_valid_losses[1])
+            self.total_eval_loss = 0.5 * (self.individual_eval_losses[0]
+                                    + self.individual_eval_losses[1])
         else:
             self.total_train_loss = self.individual_train_losses[0]
-            self.total_valid_loss = self.individual_valid_losses[0]
+            self.total_eval_loss = self.individual_eval_losses[0]
