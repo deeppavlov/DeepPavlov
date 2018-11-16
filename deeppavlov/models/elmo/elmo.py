@@ -75,6 +75,10 @@ class ELMo(NNModel):
                  n_gpus: int = 1,  # TODO: Add cpu supporting
                  seed: int = None,  # Other
                  batch_size: int = 128,  # Data params
+                 load_epoch_num: int = 1,
+                 epoch_save_path: str = 'epochs',
+                 dumps_save_path: str = 'dumps',
+                 tf_hub_save_path: str = 'hubs',
                  **kwargs) -> None:
         
         # ================ Checking input args =================
@@ -93,21 +97,23 @@ class ELMo(NNModel):
         self.options['seed'] = seed
         self.options['n_gpus'] = n_gpus
         self.options['batch_size'] = batch_size
+
+        self.permanent_options = self.options
+
         self.train_options = {}
-        self.valid_options = {'batch_size': 256, 'unroll_steps': 1}
-        self._options = self.options.copy()
+        self.valid_options = {'batch_size': 256, 'unroll_steps': 1, 'n_gpus': 1}
+
+        self.load_epoch_num = load_epoch_num
+        self.epoch_save_path = epoch_save_path
+        self.dumps_save_path = dumps_save_path
+        self.tf_hub_save_path = tf_hub_save_path
         self.init_step = 0
         tf.set_random_seed(seed)
         np.random.seed(seed)
 
-        self._build_graphs()
-
-        self._build_model(train = False, rebuild = False, batch_size = 256, unroll_steps = 1, n_gpus = 1)
-        self.sess = tf.Session()
         super().__init__(**kwargs)
-        # self.load()
-        # print(repr(vars(self)))
-        # input()
+
+        self._build_model(train = False)
 
     def _load_options(self, options_json_path):
         if options_json_path:
@@ -137,31 +143,6 @@ class ELMo(NNModel):
             self.options['n_negative_samples_batch'] = n_negative_samples_batch
         if all_clip_norm_val is not None:
             self.options['all_clip_norm_val'] = all_clip_norm_val
-
-    def _build_graphs(self):
-        if not hasattr(self, 'train_graph'):
-            self.options = self._options.copy()
-            self.options.update(self.train_options)
-            models, train_op, train_loss, eval_loss, graph =\
-                self._build_graph(tf.Graph())
-            self.train_model_graph = {"models": models,
-                                      "train_op": train_op,
-                                      "train_loss": train_loss,
-                                      "eval_loss": eval_loss,
-                                      "graph": graph
-                                      }
-
-        if not hasattr(self, 'valid_graph'):
-            self.options = self._options.copy()
-            self.options.update(self.valid_options)
-            models, train_op, train_loss, eval_loss, graph =\
-                self._build_graph(tf.Graph())
-            self.valid_model_graph = {"models": models,
-                                      "train_op": train_op,
-                                      "train_loss": train_loss,
-                                      "eval_loss": eval_loss,
-                                      "graph": graph
-                                      }
                                             
     def _build_graph(self, graph):
         with graph.as_default():
@@ -202,7 +183,7 @@ class ELMo(NNModel):
                             # train_perplexity += total_train_loss
                             train_loss += total_train_loss
                             eval_loss += total_eval_loss
-                    print_variable_summary()
+                    # print_variable_summary()
 
                 # calculate the mean of each gradient across all GPUs
                 grads = average_gradients(tower_grads, self.options['batch_size'], self.options)
@@ -210,21 +191,14 @@ class ELMo(NNModel):
                 train_loss = train_loss / self.options['n_gpus']
                 eval_loss = eval_loss / self.options['n_gpus']
                 train_op = opt.apply_gradients(grads, global_step=global_step)
-
         return models, train_op, train_loss, eval_loss, graph
 
     def _init_session(self):
-        restart_ckpt_file = None  # TODO: It is one too
         sess_config = tf.ConfigProto(allow_soft_placement=True)
         sess_config.gpu_options.allow_growth = True
         
         self.sess = tf.Session(config=sess_config)
         self.sess.run(tf.global_variables_initializer())
-
-        # load the checkpoint data if needed
-        if restart_ckpt_file is not None:
-            loader = tf.train.Saver()
-            loader.restore(self.sess, restart_ckpt_file)
 
         batch_size = self.options['batch_size']
         unroll_steps = self.options['unroll_steps']
@@ -310,7 +284,7 @@ class ELMo(NNModel):
         feed_dict = self._fill_feed_dict(char_ids_batches, reversed_char_ids_batches, token_ids_batches, 
                                          reversed_token_ids_batches)
 
-        with self.current_graph.as_default():
+        with self.graph.as_default():
             ret = self.sess.run([self.loss] + self.final_state_tensors, feed_dict)
 
         self.init_state_values = ret[1:]
@@ -318,22 +292,24 @@ class ELMo(NNModel):
         return [loss]
 
     @overrides
-    def load(self) -> None:
-        pass
+    def load(self, epoches: Optional[int] = None) -> None:
+        """Load model parameters from self.load_path"""
+        path = str(self.load_path.resolve())
+        # Check presence of the model files
+        if tf.train.checkpoint_exists(path):
+            log.info('[loading model from {}]'.format(path))
+            with self.graph.as_default():
+                saver = tf.train.Saver()
+                saver.restore(self.sess, path)
 
     @overrides
-    def save(self) -> None:
-        pass
-    # @overrides
-    # def load(self) -> None:
-    #     """Load model parameters from self.load_path"""
-    #     with self.current_graph.as_default():
-    #         path = str(self.load_path.resolve())
-    #         # Check presence of the model files
-    #         if tf.train.checkpoint_exists(path):
-    #             log.info('[loading model from {}]'.format(path))
-    #             saver = tf.train.Saver()
-    #             saver.restore(self.sess, path)
+    def save(self, epoches: Optional[int] = None) -> None:
+        """Save model parameters to self.save_path"""
+        path = str(self.save_path.resolve())
+        log.info('[saving model to {}]'.format(path))
+        with self.graph.as_default():
+            saver = tf.train.Saver()
+            saver.save(self.sess, path)
 
     def train_on_batch(self,
                        x_char_ids: list,
@@ -354,8 +330,8 @@ class ELMo(NNModel):
 
         feed_dict = self._fill_feed_dict(char_ids_batches, reversed_char_ids_batches,
                                          token_ids_batches, reversed_token_ids_batches)
-        
-        with self.current_graph.as_default():
+
+        with self.graph.as_default():
             ret = self.sess.run([self.train_loss, self.train_op] + self.final_state_tensors, feed_dict)
 
         self.init_state_values = ret[2:]
@@ -363,37 +339,45 @@ class ELMo(NNModel):
 
         return train_loss
 
-    def _build_model(self, train: bool, rebuild: bool, **kwargs):
+    def _build_model(self, train: bool, **kwargs):
 
-        if rebuild:
+        if hasattr(self, 'sess'):
+            self.save()
             self.sess.close()
+
+        self.options = self.permanent_options.copy()
+
         if train:
-            self.options = self._options.copy()
             self.options.update(self.train_options)
+            self.options.update(kwargs)
 
-            self.models, self.train_op, self.train_loss, self.loss, self.current_graph =\
-                self.train_model_graph['models'],\
-                self.train_model_graph['train_op'],\
-                self.train_model_graph['train_loss'],\
-                self.train_model_graph['train_loss'],\
-                self.train_model_graph['graph']
+            self.models, self.train_op, self.train_loss, _, self.graph = self._build_graph(tf.Graph())
+            self.loss = self.train_loss
         else:
-            self.options = self._options.copy()
             self.options.update(self.valid_options)
+            self.options.update(kwargs)
 
-            self.models, self.train_op, self.train_loss, self.loss, self.current_graph =\
-                self.valid_model_graph['models'],\
-                self.valid_model_graph['train_op'],\
-                self.valid_model_graph['train_loss'],\
-                self.valid_model_graph['eval_loss'],\
-                self.valid_model_graph['graph']
-                
-        with self.current_graph.as_default():
+            self.models, self.train_op, self.train_loss, self.loss, self.graph = self._build_graph(tf.Graph())
+
+        with self.graph.as_default():
             self.init_state_values, self.init_state_tensors, self.final_state_tensors =\
                 self._init_session()
+        self.load()
 
     def process_event(self, event_name, data):
         if event_name == 'after_validation':
-            self._build_model(train = True, rebuild = True, batch_size = 256, unroll_steps = 1)
+            self._build_model(train = True)
         elif event_name == 'after_epoch':
-            self._build_model(train = False, rebuild = True)
+            self._build_model(train = False)
+
+    def destroy(self) -> None:
+        """
+        Delete model from memory
+
+        Returns:
+            None
+        """
+
+        self.sess.close()
+
+        return
