@@ -40,7 +40,7 @@ FOUR_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', 'Dummy text', 'Dummy_t
 
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
-    "ecommerce_bot": {
+    "ecommerce_skill": {
         ("ecommerce_skill/bleu_retrieve.json", "ecommerce_skill_bleu", ALL_MODES): [('Dummy text', '[]', '{}', None)],
         ("ecommerce_skill/tfidf_retrieve.json", "ecommerce_skill_tfidf", ALL_MODES): [('Dummy text', '[]', '{}', None)]
     },
