@@ -13,9 +13,8 @@
 # limitations under the License.
 
 from collections import Counter, defaultdict, Iterable
+from typing import Optional
 from itertools import chain
-from pathlib import Path
-from overrides import overrides
 
 import numpy as np
 
@@ -32,18 +31,16 @@ log = get_logger(__name__)
 class SimpleVocabulary(Estimator):
     """Implements simple vocabulary."""
     def __init__(self,
-                 special_tokens=tuple(),
-                 default_token=None,
-                 max_tokens=2**30,
-                 min_freq=0,
-                 pad_with_zeros=False,
-                 unk_token=None,
-                 freq_drop_load=None,
+                 special_tokens: tuple = tuple(),
+                 max_tokens: int = 2**30,
+                 min_freq: int = 0,
+                 pad_with_zeros: bool = False,
+                 unk_token: Optional[str] = None,
+                 freq_drop_load: Optional[bool] = None,
                  *args,
                  **kwargs):
         super().__init__(**kwargs)
         self.special_tokens = special_tokens
-        self.default_token = default_token
         self._max_tokens = max_tokens
         self._min_freq = min_freq
         self._pad_with_zeros = pad_with_zeros
@@ -149,11 +146,6 @@ class SimpleVocabulary(Estimator):
         return len(self._i2t)
 
     def reset(self):
-        # default index is the position of default_token
-        if self.default_token is not None:
-            default_ind = self.special_tokens.index(self.default_token)
-        else:
-            default_ind = 0
         self.freqs = None
         unk_index = 0
         if self.unk_token in self.special_tokens:
