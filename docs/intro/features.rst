@@ -258,7 +258,7 @@ Based on `Reading Wikipedia to Answer Open-Domain Questions <https://github.com/
 - :doc:`Question Answering component </components/squad>`
 
 Based on `R-NET: Machine Reading Comprehension with Self-matching Networks
-<https://www.microsoft.com/en-us/research/publication/mrc/>`__. The model solves the task of looking for an answer on a
+<https://www.microsoft.com/en-us/research/publication/mcr/>`__. The model solves the task of looking for an answer on a
 question in a given context (`SQuAD <https://rajpurkar.github.io/SQuAD-explorer/>`__ task format).
 
 +---------------+-----------------------------------------------------+----------------+-----------------+
