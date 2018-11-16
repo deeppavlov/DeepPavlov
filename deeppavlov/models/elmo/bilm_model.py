@@ -48,7 +48,7 @@ class LanguageModel(object):
         'projection_dim' is assumed token embedding size and LSTM output size.
         'dim' is the hidden state size.
         Set 'dim' == 'projection_dim' to skip a projection layer.
-    '''
+    """
     def __init__(self, options, is_training):
         self.options = options
         self.is_training = is_training
