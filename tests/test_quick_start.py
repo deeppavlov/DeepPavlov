@@ -15,6 +15,7 @@ import requests
 from urllib.parse import urljoin
 
 import deeppavlov
+from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.download import deep_download
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.core.common.paths import get_settings_path
@@ -89,6 +90,7 @@ PARAMS = {
         ("classifiers/intents_snips_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_snips_bilstm_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_snips_bilstm_cnn.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_proj_layer.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_snips_bilstm_self_add_attention.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_snips_bilstm_self_mult_attention.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_snips_cnn_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -192,29 +194,32 @@ def download_config(conf_file):
         raise RuntimeError('No config file {}'.format(conf_file))
 
     with src_file.open(encoding='utf8') as fin:
-        config = json.load(fin)
+        config: dict = json.load(fin)
 
+    # Download referenced config files
+    config_references = get_all_elems_from_json(parse_config(config), 'config_path')
+    for config_ref in config_references:
+        m_name = config_ref.split('/')[-2]
+        config_ref = '/'.join(config_ref.split('/')[-2:])
+
+        test_configs_path.joinpath(m_name).mkdir(exist_ok=True)
+        if not test_configs_path.joinpath(config_ref).exists():
+            download_config(config_ref)
+
+    # Update config for testing
     if config.get("train"):
         config["train"]["epochs"] = 1
         for pytest_key in [k for k in config["train"] if k.startswith('pytest_')]:
             config["train"][pytest_key[len('pytest_'):]] = config["train"].pop(pytest_key)
 
-    config["deeppavlov_root"] = str(download_path)
+    config_vars = config.setdefault('metadata', {}).setdefault('variables', {})
+    config_vars['ROOT_PATH'] = str(download_path)
+    config_vars['CONFIGS_PATH'] = str(test_configs_path)
 
     conf_file = test_configs_path / conf_file
     conf_file.parent.mkdir(exist_ok=True, parents=True)
     with conf_file.open("w", encoding='utf8') as fout:
         json.dump(config, fout)
-
-    # Download referenced config files
-    config_references = get_all_elems_from_json(config, 'config_path')
-    for config_ref in config_references:
-        m_name = config_ref.split('/')[-2]
-        conf_file = '/'.join(config_ref.split('/')[-2:])
-
-        test_configs_path.joinpath(m_name).mkdir(exist_ok=True)
-        if not test_configs_path.joinpath(conf_file).exists():
-            download_config(conf_file)
 
 
 def install_config(conf_file):

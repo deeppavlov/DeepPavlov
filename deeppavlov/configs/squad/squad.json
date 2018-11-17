@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
-    "name": "squad_dataset_reader",
-    "data_path": "squad/"
+    "class_name": "squad_dataset_reader",
+    "data_path": "{DOWNLOADS_PATH}/squad/"
   },
   "dataset_iterator": {
-    "name": "squad_iterator",
+    "class_name": "squad_iterator",
     "seed": 1337,
     "shuffle": true
   },
@@ -13,7 +13,7 @@
     "in_y": ["ans_raw", "ans_raw_start"],
     "pipe": [
       {
-        "name": "squad_preprocessor",
+        "class_name": "squad_preprocessor",
         "id": "squad_prepr",
         "context_limit": 400,
         "question_limit": 150,
@@ -24,19 +24,19 @@
                 "question_tokens", "question_chars", "spans"]
       },
       {
-        "name": "squad_ans_preprocessor",
+        "class_name": "squad_ans_preprocessor",
         "id": "squad_ans_prepr",
         "in": ["ans_raw", "ans_raw_start", "c_r2p", "spans"],
         "out": ["ans", "ans_start", "ans_end"]
       },
       {
-        "name": "squad_vocab_embedder",
+        "class_name": "squad_vocab_embedder",
         "id": "vocab_embedder",
         "level": "token",
-        "emb_folder": "embeddings/",
+        "emb_folder": "{DOWNLOADS_PATH}/embeddings/",
         "emb_url": "http://files.deeppavlov.ai/embeddings/wiki-news-300d-1M.vec",
-        "save_path": "squad_model/emb/vocab_embedder.pckl",
-        "load_path": "squad_model/emb/vocab_embedder.pckl",
+        "save_path": "{MODELS_PATH}/squad_model/emb/vocab_embedder.pckl",
+        "load_path": "{MODELS_PATH}/squad_model/emb/vocab_embedder.pckl",
         "context_limit": "#squad_prepr.context_limit",
         "question_limit": "#squad_prepr.question_limit",
         "char_limit": "#squad_prepr.char_limit",
@@ -45,13 +45,13 @@
         "out": ["context_tokens_idxs", "question_tokens_idxs"]
       },
       {
-        "name": "squad_vocab_embedder",
+        "class_name": "squad_vocab_embedder",
         "id": "char_vocab_embedder",
         "level": "char",
-        "emb_folder": "embeddings/",
+        "emb_folder": "{DOWNLOADS_PATH}/embeddings/",
         "emb_url": "http://files.deeppavlov.ai/embeddings/wiki-news-300d-1M-char.vec",
-        "save_path": "squad_model/emb/char_vocab_embedder.pckl",
-        "load_path": "squad_model/emb/char_vocab_embedder.pckl",
+        "save_path": "{MODELS_PATH}/squad_model/emb/char_vocab_embedder.pckl",
+        "load_path": "{MODELS_PATH}/squad_model/emb/char_vocab_embedder.pckl",
         "context_limit": "#squad_prepr.context_limit",
         "question_limit": "#squad_prepr.question_limit",
         "char_limit": "#squad_prepr.char_limit",
@@ -60,7 +60,7 @@
         "out": ["context_chars_idxs", "question_chars_idxs"]
       },
       {
-        "name": "squad_model",
+        "class_name": "squad_model",
         "id": "squad",
         "word_emb": "#vocab_embedder.emb_mat",
         "char_emb": "#char_vocab_embedder.emb_mat",
@@ -77,14 +77,14 @@
         "keep_prob": 0.7,
         "grad_clip": 5.0,
         "weight_decay": 1.0,
-        "save_path": "squad_model/model",
-        "load_path": "squad_model/model",
+        "save_path": "{MODELS_PATH}/squad_model/model",
+        "load_path": "{MODELS_PATH}/squad_model/model",
         "in": ["context_tokens_idxs", "context_chars_idxs", "question_tokens_idxs", "question_chars_idxs"],
         "in_y": ["ans_start", "ans_end"],
         "out": ["ans_start_predicted", "ans_end_predicted", "logits"]
       },
       {
-        "name": "squad_ans_postprocessor",
+        "class_name": "squad_ans_postprocessor",
         "id": "squad_ans_postprepr",
         "in": ["ans_start_predicted", "ans_end_predicted", "context_raw", "c_p2r", "spans"],
         "out": ["ans_predicted", "ans_start_predicted", "ans_end_predicted"]
@@ -113,22 +113,30 @@
     ]
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
     "labels": {
       "telegram_utils": "SquadModel",
       "server_utils": "SquadModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/squad_model_1.4_cpu_compatible.tar.gz",
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/squad_model_1.4_cpu_compatible.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
       {
         "url": "http://files.deeppavlov.ai/embeddings/wiki-news-300d-1M.vec",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
       {
         "url": "http://files.deeppavlov.ai/embeddings/wiki-news-300d-1M-char.vec",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
       ]
   }

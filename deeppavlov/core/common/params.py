@@ -15,9 +15,8 @@
 import inspect
 from typing import Dict
 
-from deeppavlov.core.commands.utils import expand_path, get_deeppavlov_root, set_deeppavlov_root
+from deeppavlov.core.commands.utils import expand_path, parse_config
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import get_model, cls_from_str
 from deeppavlov.core.models.component import Component
@@ -48,7 +47,7 @@ def _init_param(param, mode):
     elif isinstance(param, (list, tuple)):
         param = [_init_param(p, mode) for p in param]
     elif isinstance(param, dict):
-        if {'ref', 'name', 'class', 'config_path'}.intersection(param.keys()):
+        if {'ref', 'class_name', 'config_path'}.intersection(param.keys()):
             param = from_params(param, mode=mode)
         else:
             param = {k: _init_param(v, mode) for k, v in param.items()}
@@ -72,25 +71,20 @@ def from_params(params: Dict, mode: str = 'infer', **kwargs) -> Component:
 
     elif 'config_path' in config_params:
         from deeppavlov.core.commands.infer import build_model
-        deeppavlov_root = get_deeppavlov_root()
         refs = _refs.copy()
         _refs.clear()
-        config = read_json(expand_path(config_params['config_path']))
+        config = parse_config(expand_path(config_params['config_path']))
         model = build_model(config)
-        set_deeppavlov_root({'deeppavlov_root': deeppavlov_root})
         _refs.clear()
         _refs.update(refs)
         return model
 
-    elif 'class' in config_params:
-        cls = cls_from_str(config_params.pop('class'))
-    else:
-        cls_name = config_params.pop('name', None)
-        if not cls_name:
-            e = ConfigError('Component config has no `name` nor `ref` or `class` fields')
-            log.exception(e)
-            raise e
-        cls = get_model(cls_name)
+    cls_name = config_params.pop('class_name', None)
+    if not cls_name:
+        e = ConfigError('Component config has no `class_name` nor `ref` fields')
+        log.exception(e)
+        raise e
+    cls = get_model(cls_name)
 
     # find the submodels params recursively
     config_params = {k: _init_param(v, mode) for k, v in config_params.items()}

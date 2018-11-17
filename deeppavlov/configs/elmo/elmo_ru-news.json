@@ -6,17 +6,17 @@
     "pipe": [
       {
         "in": ["sentences"],
-        "name": "lazy_tokenizer",
+        "class_name": "lazy_tokenizer",
         "out": ["tokens"]
       },
       {
-        "name": "elmo",
+        "class_name": "elmo",
         "elmo_output_names": ["lstm_outputs1", "lstm_outputs2", "word_emb"],
         "mini_batch_size": 32,
         "in": [
           "tokens"
         ],
-        "spec": "embeddings/elmo_ru",
+        "spec": "{DOWNLOADS_PATH}/embeddings/elmo_ru",
         "out": [
           "tokens_emb"
         ]
@@ -27,14 +27,19 @@
     ]
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/elmo.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/elmo.txt"
     ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz",
-        "subdir": "embeddings/elmo_ru"
+        "subdir": "{DOWNLOADS_PATH}/embeddings/elmo_ru"
       }
     ]
   }

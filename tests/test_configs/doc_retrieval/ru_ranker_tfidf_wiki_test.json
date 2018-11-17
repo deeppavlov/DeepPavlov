@@ -1,14 +1,14 @@
 {
   "dataset_reader": {
-    "name": "odqa_reader",
-    "data_path": "odqa/ruwiki_test",
-    "save_path": "odqa/ruwiki_test.db",
+    "class_name": "odqa_reader",
+    "data_path": "{DOWNLOADS_PATH}/odqa/ruwiki_test",
+    "save_path": "{DOWNLOADS_PATH}/odqa/ruwiki_test.db",
     "dataset_format": "txt"
   },
   "dataset_iterator": {
-    "name": "sqlite_iterator",
+    "class_name": "sqlite_iterator",
     "shuffle": false,
-    "load_path": "odqa/ruwiki_test.db"
+    "load_path": "{DOWNLOADS_PATH}/odqa/ruwiki_test.db"
   },
   "chainer": {
     "in": [
@@ -19,15 +19,15 @@
     ],
     "pipe": [
       {
-        "name": "hashing_tfidf_vectorizer",
+        "class_name": "hashing_tfidf_vectorizer",
         "id": "vectorizer",
         "fit_on_batch": [
           "x"
         ],
-        "save_path": "odqa/ruwiki_test_tfidf.npz",
-        "load_path": "odqa/ruwiki_test_tfidf.npz",
+        "save_path": "{DOWNLOADS_PATH}/odqa/ruwiki_test_tfidf.npz",
+        "load_path": "{DOWNLOADS_PATH}/odqa/ruwiki_test_tfidf.npz",
         "tokenizer": {
-          "name": "ru_tokenizer",
+          "class_name": "ru_tokenizer",
           "lemmas": true,
           "ngram_range": [
             1,
@@ -36,7 +36,7 @@
         }
       },
       {
-        "name": "tfidf_ranker",
+        "class_name": "tfidf_ranker",
         "top_n": 5,
         "in": [
           "x"
@@ -55,6 +55,11 @@
     "batch_size": 2
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [],
     "labels": {
       "server_utils": "Ranker"
@@ -62,7 +67,7 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/wikipedia/ruwiki_test.tar.gz",
-        "subdir": "odqa"
+        "subdir": "{DOWNLOADS_PATH}/odqa"
       }
     ]
   }

@@ -1,14 +1,14 @@
 {
   "dataset_reader": {
-    "name": "basic_classification_reader",
+    "class_name": "basic_classification_reader",
     "x": "text",
     "y": "label",
-    "data_path": "rusentiment/",
+    "data_path": "{DOWNLOADS_PATH}/rusentiment/",
     "train": "rusentiment_random_posts.csv",
     "test": "rusentiment_test.csv"
   },
   "dataset_iterator": {
-    "name": "basic_classification_iterator",
+    "class_name": "basic_classification_iterator",
     "seed": 42,
     "field_to_split": "train",
     "split_fields": [
@@ -30,12 +30,12 @@
     "pipe": [
       {
         "id": "classes_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "fit_on": [
           "y"
         ],
-        "save_path": "classifiers/rusentiment_v2/classes.dict",
-        "load_path": "classifiers/rusentiment_v2/classes.dict",
+        "save_path": "{MODELS_PATH}/classifiers/rusentiment_v2/classes.dict",
+        "load_path": "{MODELS_PATH}/classifiers/rusentiment_v2/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -46,13 +46,13 @@
         "out": [
           "x_prep"
         ],
-        "name": "dirty_comments_preprocessor"
+        "class_name": "dirty_comments_preprocessor"
       },
       {
         "in": "x_prep",
         "out": "x_tok",
         "id": "my_tokenizer",
-        "name": "nltk_tokenizer",
+        "class_name": "nltk_tokenizer",
         "tokenizer": "wordpunct_tokenize"
       },
       {
@@ -63,7 +63,7 @@
           "x_emb"
         ],
         "id": "my_embedder",
-        "name": "elmo",
+        "class_name": "elmo",
         "elmo_output_names": [
           "elmo"
         ],
@@ -73,7 +73,7 @@
       {
         "in": "y_ids",
         "out": "y_onehot",
-        "name": "one_hotter",
+        "class_name": "one_hotter",
         "depth": "#classes_vocab.len"
       },
       {
@@ -87,9 +87,9 @@
           "y_pred_probas"
         ],
         "main": true,
-        "name": "keras_classification_model",
-        "save_path": "classifiers/rusentiment_v2/model",
-        "load_path": "classifiers/rusentiment_v2/model",
+        "class_name": "keras_classification_model",
+        "save_path": "{MODELS_PATH}/classifiers/rusentiment_v2/model",
+        "load_path": "{MODELS_PATH}/classifiers/rusentiment_v2/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -113,7 +113,7 @@
       {
         "in": "y_pred_probas",
         "out": "y_pred_ids",
-        "name": "proba2labels",
+        "class_name": "proba2labels",
         "max_proba": true
       },
       {
@@ -143,12 +143,17 @@
     "show_examples": false,
     "validate_best": true,
     "test_best": true,
-    "tensorboard_log_dir": "classifiers/rusentiment_v2/"
+    "tensorboard_log_dir": "{MODELS_PATH}/classifiers/rusentiment_v2/"
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/elmo.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/elmo.txt"
     ],
     "labels": {
       "telegram_utils": "IntentModel",
@@ -157,15 +162,15 @@
     "download": [
       {
         "url": "https://github.com/text-machine-lab/rusentiment/raw/master/Dataset/rusentiment_random_posts.csv",
-        "subdir": "rusentiment"
+        "subdir": "{DOWNLOADS_PATH}/rusentiment"
       },
       {
         "url": "https://github.com/text-machine-lab/rusentiment/raw/master/Dataset/rusentiment_test.csv",
-        "subdir": "rusentiment"
+        "subdir": "{DOWNLOADS_PATH}/rusentiment"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/rusentiment_v2.tar.gz",
-        "subdir": "classifiers"
+        "subdir": "{MODELS_PATH}/classifiers"
       }
     ]
   }
