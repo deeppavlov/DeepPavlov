@@ -15,7 +15,7 @@
 import numpy as np
 from copy import deepcopy
 import random
-from typing import List, Generator, Tuple, Any
+from typing import List, Generator, Any, Tuple
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
@@ -31,20 +31,17 @@ class ParamsSearch:
     like finding all changing parameters.
 
     Args:
-        prefix: prefix to determine special keys like `PREFIX_range`, `PREFIX_bool`, `PREFIX_choice`
+        prefix: prefix to determine special keys like "`prefix`_range", "`prefix`_bool", "`prefix`_choice"
         seed: random seed for initialization
         **kwargs: basic config with parameters
 
     Attributes:
-        basic_config: dictionary with initial evolutionary config
-        prefix: prefix to determine special keys like `PREFIX_range`, `PREFIX_bool`, `PREFIX_choice`
+        basic_config: dictionary with initial config with possible values of searched parameters
+        prefix: prefix to determine special keys like "`prefix`_range", "`prefix`_bool", "`prefix`_choice"
         paths_to_params: list of lists of keys and/or integers (for list)
                 with relative paths to searched parameters
         n_params: number of searched parameters
-        eps: EPS value
-        paths_to_fiton_dicts: list of lists of keys and/or integers (for list)
-                with relative paths to dictionaries that can be "fitted on"
-        n_fiton_dicts: number of dictionaries that can be "fitted on"
+        eps: threshold value
     """
 
     def __init__(self,
@@ -67,11 +64,6 @@ class ParamsSearch:
 
         self.eps = 1e-6
 
-        self.paths_to_fiton_dicts = []
-        for path_ in self.find_model_path(self.basic_config, "fit_on"):
-            self.paths_to_fiton_dicts.append(path_)
-        self.n_fiton_dicts = len(self.paths_to_fiton_dicts)
-
         if seed is None:
             pass
         else:
@@ -91,21 +83,21 @@ class ParamsSearch:
             path in config -- list of keys (strings and integers)
         """
         config_pointer = config
-        if type(config_pointer) is dict and key_model in config_pointer.keys():
+        if isinstance(config_pointer, dict) and key_model in config_pointer.keys():
             yield path
         else:
-            if type(config_pointer) is dict:
+            if isinstance(config_pointer, dict):
                 for key in list(config_pointer.keys()):
                     for path_ in self.find_model_path(config_pointer[key], key_model, path + [key]):
                         yield path_
-            elif type(config_pointer) is list:
+            elif isinstance(config_pointer, list):
                 for i in range(len(config_pointer)):
                     for path_ in self.find_model_path(config_pointer[i], key_model, path + [i]):
                         yield path_
 
     @staticmethod
     def insert_value_or_dict_into_config(config: dict, path: list,
-                                         value: [int, float, str, bool, list, dict, np.ndarray]) -> dict:
+                                         value: [int, float, str, bool, list, dict, np.ndarray]) -> None:
         """
         Insert value to dictionary determined by path[:-1] in field with key path[-1]
 
@@ -117,17 +109,15 @@ class ParamsSearch:
         Returns:
             config with inserted value
         """
-        config_copy = deepcopy(config)
-        config_pointer = config_copy
+        config_pointer = config
         for el in path[:-1]:
-            if type(config_pointer) is dict:
+            if isinstance(config_pointer, dict):
                 config_pointer = config_pointer.setdefault(el, {})
-            elif type(config_pointer) is list:
+            elif isinstance(config_pointer, list):
                 config_pointer = config_pointer[el]
             else:
                 pass
         config_pointer[path[-1]] = value
-        return config_copy
 
     @staticmethod
     def get_value_from_config(config: dict, path: list) -> Any:
@@ -144,13 +134,37 @@ class ParamsSearch:
         config_copy = deepcopy(config)
         config_pointer = config_copy
         for el in path[:-1]:
-            if type(config_pointer) is dict:
+            if isinstance(config_pointer, dict):
                 config_pointer = config_pointer.setdefault(el, {})
-            elif type(config_pointer) is list:
+            elif isinstance(config_pointer, list):
                 config_pointer = config_pointer[el]
             else:
                 pass
         return config_pointer[path[-1]]
+
+    @staticmethod
+    def remove_key_from_config(config: dict, path: list) -> Tuple[dict, Any]:
+        """
+        Remove config element determined by path
+
+        Args:
+            config: dictionary
+            path: list of keys and/or integers (for list)
+
+        Returns:
+            dictionary without value from path, value from path
+        """
+        config_copy = deepcopy(config)
+        config_pointer = config_copy
+        for el in path[:-1]:
+            if isinstance(config_pointer, dict):
+                config_pointer = config_pointer.setdefault(el, {})
+            elif isinstance(config_pointer, list):
+                config_pointer = config_pointer[el]
+            else:
+                pass
+        value = config_pointer.pop(path[-1])
+        return config_copy, value
 
     def initialize_params_in_config(self, basic_config: dict, paths: List[list]) -> dict:
         """
@@ -158,7 +172,7 @@ class ParamsSearch:
 
         Args:
             basic_config: config where changable parameters are dictionaries with keys
-                `evolve_range`, `evolve_bool`, `evolve_choice`
+                ``prefix`_range`, ``prefix`_bool`, ``prefix`_choice`
             paths: list of paths to changable parameters
 
         Returns:
@@ -168,11 +182,11 @@ class ParamsSearch:
         for path_ in paths:
             param_name = path_[-1]
             value = self.get_value_from_config(basic_config, path_)
-            if type(value) is dict:
+            if isinstance(value, dict):
                 if (value.get(self.prefix + "_choice") or
                         value.get(self.prefix + "_range") or
                         value.get(self.prefix + "_bool")):
-                    config = self.insert_value_or_dict_into_config(
+                    self.insert_value_or_dict_into_config(
                         config, path_,
                         self.sample_params(**{param_name: deepcopy(value)})[param_name])
 
@@ -183,11 +197,11 @@ class ParamsSearch:
         Sample parameters according to the given possible values
 
         Args:
-            **params: dictionary like {"param_0": {"evolve_range": [0, 10]},
-                                       "param_1": {"evolve_range": [0, 10], "discrete": true},
-                                       "param_2": {"evolve_range": [0, 1], "scale": "log"},
-                                       "param_3": {"evolve_bool": true},
-                                       "param_4": {"evolve_choice": [0, 1, 2, 3]}}
+            **params: dictionary like {"param_0": {"`prefix`_range": [0, 10]},
+                                       "param_1": {"`prefix`_range": [0, 10], "discrete": true},
+                                       "param_2": {"`prefix`_range": [0, 1], "scale": "log"},
+                                       "param_3": {"`prefix`_bool": true},
+                                       "param_4": {"`prefix`_choice": [0, 1, 2, 3]}}
 
         Returns:
             dictionary with randomly sampled parameters
@@ -217,9 +231,9 @@ class ParamsSearch:
         Sample parameters from ranges
 
         Args:
-            opts: dictionary  {"evolve_range": [0, 10]} or \
-                              {"evolve_range": [0, 10], "discrete": true} or \
-                              {"evolve_range": [0, 1], "scale": "log"}
+            opts: dictionary  {"`prefix`_range": [0, 10]} or \
+                              {"`prefix`_range": [0, 10], "discrete": true} or \
+                              {"`prefix`_range": [0, 1], "scale": "log"}
 
         Returns:
             random parameter value from range

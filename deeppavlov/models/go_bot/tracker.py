@@ -82,9 +82,9 @@ class DefaultTracker(Tracker):
     def update_state(self, slots):
         def _filter(slots):
             return filter(lambda s: s[0] in self.slot_names, slots)
-        if type(slots) == list:
+        if isinstance(slots, list):
             self.history.extend(_filter(slots))
-        elif type(slots) == dict:
+        elif isinstance(slots, dict):
             for slot, value in _filter(slots.items()):
                 self.history.append((slot, value))
         self.curr_feats = self._binary_features()
@@ -139,9 +139,9 @@ class FeaturizedTracker(Tracker):
         def _filter(slots):
             return filter(lambda s: s[0] in self.slot_names, slots)
         prev_state = self.get_state()
-        if type(slots) == list:
+        if isinstance(slots, list):
             self.history.extend(_filter(slots))
-        elif type(slots) == dict:
+        elif isinstance(slots, dict):
             for slot, value in _filter(slots.items()):
                 self.history.append((slot, value))
         bin_feats = self._binary_features()

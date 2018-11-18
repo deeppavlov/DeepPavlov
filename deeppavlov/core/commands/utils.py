@@ -11,35 +11,45 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from pathlib import Path
-from typing import Union
+from typing import Union, Dict, TypeVar
 
-from deeppavlov.core.common import paths
+from deeppavlov.core.common.file import read_json, find_config
 
-
-def set_deeppavlov_root(config: dict) -> None:
-    """Make a serialization user dir."""
-    try:
-        deeppavlov_root = Path(config['deeppavlov_root'])
-    except KeyError:
-        deeppavlov_root = Path(__file__, "..", "..", "..", "..", "download").resolve()
-
-    deeppavlov_root.mkdir(exist_ok=True)
-
-    paths.deeppavlov_root = deeppavlov_root
+# noinspection PyShadowingBuiltins
+_T = TypeVar('_T', str, float, bool, list, dict)
 
 
-def get_deeppavlov_root() -> Path:
-    """Return DeepPavlov root directory."""
-    if not paths.deeppavlov_root:
-        set_deeppavlov_root({})
-    return paths.deeppavlov_root
+def _parse_config_property(item: _T, variables: Dict[str, Union[str, Path, float, bool, None]]) -> _T:
+    """Recursively apply config's variables values to its property"""
+    if isinstance(item, str):
+        return item.format(**variables)
+    elif isinstance(item, list):
+        return [_parse_config_property(item, variables) for item in item]
+    elif isinstance(item, dict):
+        return {k: _parse_config_property(v, variables) for k, v in item.items()}
+    else:
+        return item
+
+
+def parse_config(config: Union[str, Path, dict]) -> dict:
+    """Read config's variables and apply their values to all its properties"""
+    if isinstance(config, (str, Path)):
+        find_config(config)
+        config = read_json(config)
+
+    variables = {
+        'DEEPPAVLOV_PATH': Path(__file__).parent.parent.parent
+    }
+    for name, value in config.get('metadata', {}).get('variables', {}).items():
+        variables[name] = value.format(**variables)
+
+    return _parse_config_property(config, variables)
 
 
 def expand_path(path: Union[str, Path]) -> Path:
-    """Treat a relative path as being relative to ``deeppavlov_root``."""
-    return get_deeppavlov_root() / Path(path).expanduser()
+    """Convert relative paths to absolute with resolving user directory."""
+    return Path(path).expanduser().resolve()
 
 
 def import_packages(packages: list) -> None:

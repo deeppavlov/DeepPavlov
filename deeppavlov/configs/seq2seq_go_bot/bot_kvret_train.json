@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
-    "name": "kvret_reader",
-    "data_path": "kvret"
+    "class_name": "kvret_reader",
+    "data_path": "{DOWNLOADS_PATH}/kvret"
   },
   "dataset_iterator": {
-    "name": "kvret_dialog_iterator",
+    "class_name": "kvret_dialog_iterator",
     "shuffle": false
   },
   "chainer": {
@@ -14,7 +14,7 @@
     "pipe": [
       {
         "id": "stream_spacy",
-        "name": "stream_spacy_tokenizer",
+        "class_name": "stream_spacy_tokenizer",
         "lowercase": true,
         "alphas_only": false,
         "in": ["x_text"],
@@ -32,21 +32,21 @@
       },
       {
         "id": "kb",
-        "name": "knowledge_base",
+        "class_name": "knowledge_base",
         "fit_on": ["dialog_id", "kb_columns", "kb_items"],
         "tokenizer": "#stream_spacy",
         "in": ["dialog_id", "kb_columns", "kb_items"],
         "out": ["kb_entries"],
-        "save_path": "seq2seq_go_bot/kvret_kb.json",
-        "load_path": "seq2seq_go_bot/kvret_kb.json"
+        "save_path": "{MODELS_PATH}/seq2seq_go_bot/kvret_kb.json",
+        "load_path": "{MODELS_PATH}/seq2seq_go_bot/kvret_kb.json"
       },
       {
-        "name": "knowledge_base_entity_normalizer",
+        "class_name": "knowledge_base_entity_normalizer",
         "in": ["y_tokens", "kb_entries"],
         "out": ["y_norm_tokens"]
       },
       {
-        "name": "knowledge_base_entity_normalizer",
+        "class_name": "knowledge_base_entity_normalizer",
         "remove": true,
         "in": ["y_tokens", "kb_entries"],
         "out": ["y_without_entities_tokens"]
@@ -54,35 +54,35 @@
       {
         "id": "src_token_vocab",
         "fit_on": ["x_tokens", "y_tokens"],
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "min_freq": 2,
         "default_token": "<UNK>",
         "special_tokens": ["<UNK>", "<SOS>"],
-        "save_path": "vocabs/kvret_src_tokens.dict",
-        "load_path": "vocabs/kvret_src_tokens.dict"
+        "save_path": "{MODELS_PATH}/vocabs/kvret_src_tokens.dict",
+        "load_path": "{MODELS_PATH}/vocabs/kvret_src_tokens.dict"
       },
       {
         "id": "tgt_token_vocab",
         "fit_on": ["y_without_entities_tokens"],
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "default_token": "<UNK>",
         "special_tokens": ["<UNK>", "<SOS>", "<EOS>"],
-        "save_path": "vocabs/kvret_tgt_tokens.dict",
-        "load_path": "vocabs/kvret_tgt_tokens.dict"
+        "save_path": "{MODELS_PATH}/vocabs/kvret_tgt_tokens.dict",
+        "load_path": "{MODELS_PATH}/vocabs/kvret_tgt_tokens.dict"
       },
       {
         "id": "token_embedder",
-        "name": "fasttext",
-        "load_path": "embeddings/wiki.en.bin"
+        "class_name": "fasttext",
+        "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin"
       },
       {
         "in": ["x_tokens", "history_tokens", "kb_entries"],
         "in_y": ["y_norm_tokens"],
         "out": ["prediction_norm_tokens"],
         "main": true,
-        "name": "seq2seq_go_bot",
-        "load_path": "seq2seq_go_bot/model",
-        "save_path": "seq2seq_go_bot/model",
+        "class_name": "seq2seq_go_bot",
+        "load_path": "{MODELS_PATH}/seq2seq_go_bot/model",
+        "save_path": "{MODELS_PATH}/seq2seq_go_bot/model",
         "start_of_sequence_token": "<SOS>",
         "end_of_sequence_token": "<EOS>",
         "embedder": "#token_embedder",
@@ -105,7 +105,7 @@
         "knowledge_base_keys": "#kb.primary_keys"
       },
       {
-        "name": "knowledge_base_entity_normalizer",
+        "class_name": "knowledge_base_entity_normalizer",
         "denormalize": true,
         "in": ["prediction_norm_tokens", "kb_entries"],
         "out": ["prediction_tokens"]
@@ -143,22 +143,33 @@
     "show_examples": false
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/spacy.txt",
-      "../dp_requirements/en_core_web_sm.txt",
-      "../dp_requirements/fasttext.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
     ],
     "labels": {
       "telegram_utils": "Seq2SeqGoalOrientedBot",
       "server_utils": "GoalOrientedBot"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/seq2seq_go_bot_v2.tar.gz",
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/seq2seq_go_bot_v2.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
   }

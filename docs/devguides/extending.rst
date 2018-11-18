@@ -22,8 +22,8 @@ This script imports all the modules in deeppavlov package, builds the registry f
 However, it is possible to use some classes and functions inside configuration files without registering them explicitly.
 There are two options available here:
 
-- instead of ``{"name": "registered_component_name"}`` in config file use key-value pair similar to
-  ``{"class": "my_package.my_module:MyClass"}``
+- instead of ``{"class_name": "registered_component_name"}`` in config file use key-value pair similar to
+  ``{"class_name": "my_package.my_module:MyClass"}``
 
 - if your classes/functions are properly decorated but not included in the registry, use ``"metadata"`` section of
   your config file specifying imports as ``"metadata": {"imports": ["my_local_package.my_module", "global_package.module"]}``;

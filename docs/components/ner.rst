@@ -115,11 +115,11 @@ config part with "conll2003\_reader" should look like:
 ::
 
     "dataset_reader": {
-        "name": "conll2003_reader",
+        "class_name": "conll2003_reader",
         "data_path": "/home/user/Data/conll2003/"
     } 
 
-where "name" refers to the basic ner dataset reader class and data\_path
+where "class_name" refers to the basic ner dataset reader class and data\_path
 is the path to the folder with three files, namely: "train.txt",
 "valid.txt", and "test.txt". Each file should contain data in the format
 presented in *Training data* section. Each line in the file may contain
@@ -132,7 +132,7 @@ Dataset Iterator
 For simple batching and shuffling you can use
 "data\_learning\_iterator". The part of the configuration file for the
 dataset looks like:
-``"dataset_iterator": {     "name": "data_learning_iterator" }``
+``"dataset_iterator": {     "class_name": "data_learning_iterator" }``
 
 There is no additional parameters in this part.
 
@@ -168,28 +168,28 @@ pre-processing:
     "pipe": [
           {
             "in": ["x"],
-            "name": "lazy_tokenizer",
+            "class_name": "lazy_tokenizer",
             "out": ["x"]
           },
           {
             "in": ["x"],
-            "name": "str_lower",
+            "class_name": "str_lower",
             "out": ["x_lower"]
           },
           {
             "in": ["x"],
-            "name": "mask",
+            "class_name": "mask",
             "out": ["mask"]
           },
           {
             "in": ["x_lower"],
-            "name": "sanitizer",
+            "class_name": "sanitizer",
             "nums": true,
             "out": ["x_san"]
           },
           {
             "in": ["x"],
-            "name": "char_splitter",
+            "class_name": "char_splitter",
             "out": ["x_char"]
           },
     ]
@@ -212,7 +212,7 @@ Then vocabularies must be defined:
           {
             "in": ["x_lower"],
             "id": "word_vocab",
-            "name": "simple_vocab",
+            "class_name": "simple_vocab",
             "pad_with_zeros": true,
             "fit_on": ["x_lower"],
             "save_path": "slotfill_dstc2/word.dict",
@@ -222,7 +222,7 @@ Then vocabularies must be defined:
           {
             "in": ["y"],
             "id": "tag_vocab",
-            "name": "simple_vocab",
+            "class_name": "simple_vocab",
             "pad_with_zeros": true,
             "fit_on": ["y"],
             "save_path": "slotfill_dstc2/tag.dict",
@@ -232,7 +232,7 @@ Then vocabularies must be defined:
           {
             "in": ["x_char"],
             "id": "char_vocab",
-            "name": "char_vocab",
+            "class_name": "simple_vocab",
             "pad_with_zeros": true,
             "fit_on": ["x_char"],
             "save_path": "ner_conll2003/char.dict",
@@ -246,8 +246,7 @@ Parameters for vocabulary are:
 
 -  ``id`` - the name of the vocabulary which will be used in other
    models
--  ``name`` - equal to ``"simple_vocab"`` or ``"char_vocab"`` for
-   character level
+-  ``class_name`` - equal to ``"simple_vocab"``
 -  ``fit_on`` - on which data part of the data the vocabulary should
    be fitted (built), possible options are ["x"] or ["y"]
 -  ``save_path`` - path to a new file to save the vocabulary
@@ -276,20 +275,20 @@ Then the embeddings must be initialized along with embedding matrices:
         {
             "in": ["x_san"],
             "id": "glove_emb",
-            "name": "glove",
+            "class_name": "glove",
             "pad_zero": true,
             "load_path": "embeddings/glove.6B.100d.txt",
             "out": ["x_emb"]
         },
         {
             "id": "embeddings",
-            "name": "emb_mat_assembler",
+            "class_name": "emb_mat_assembler",
             "embedder": "#glove_emb",
             "vocab": "#word_vocab"
           },
           {
             "id": "embeddings_char",
-            "name": "emb_mat_assembler",
+            "class_name": "emb_mat_assembler",
             "character_level": true,
             "emb_dim": 32,
             "embedder": "#glove_emb",
@@ -313,7 +312,7 @@ Then the network is defined by the following part of JSON config:
             "in": ["x_emb", "mask", "x_char_ind", "cap"],
             "in_y": ["y_ind"],
             "out": ["y_predicted"],
-            "name": "ner",
+            "class_name": "ner",
             "main": true,
             "token_emb_dim": "#glove_emb.dim",
             "n_hidden_list": [128],
@@ -342,7 +341,7 @@ All network parameters are:
 
 -  ``in`` - inputs to be taken from the shared memory. Treated as x. They are used both during the training and inference.
 -  ``in_y`` - the target or y input to be taken from shared memory. This input is used during the training.
--  ``name`` - the name of the model to be used. In this case we use 'ner' model originally imported from
+-  ``class_name`` - the name of the model to be used. In this case we use 'ner' model originally imported from
    ``deeppavlov.models.ner``. We use only 'ner' name relying on the @registry decorator.
 -  ``main`` - (reserved for future use) a boolean parameter defining whether this is the main model.
 -  ``save_path`` - path to the new file where the model will be saved
@@ -371,7 +370,8 @@ illustrate omidirectionality of the vocabulary. When strings are passed
 to the vocab, it convert them into indices. When the indices are passed
 to the vocab, they are converted to the tag strings.
 
-You can see all parts together in ``deeeppavlov/configs/ner/ner_conll2003.json``.
+You can see all parts together in
+:config:`ner/ner_conll2003.json <ner/ner_conll2003.json>` .
 
 Train and use the model
 -----------------------
@@ -513,6 +513,78 @@ To run Russian NER model use the following code:
     PIPELINE_CONFIG_PATH = configs.ner.ner_rus
     ner_model = build_model(PIPELINE_CONFIG_PATH , download=True)
     ner_model(['Компания « Андэк » , специализирующаяся на решениях для обеспечения безопасности бизнеса , сообщила о том , что Вячеслав Максимов , заместитель генерального директора компании , возглавил направление по оптимизации процессов управления информационной безопасностью '])
+
+
+Few-shot Language-Model based
+-----------------------------
+
+It is possible to get a clod-start baseline from just a few samples of labeled data in a couple of seconds. The solution
+is based on a Language Model trained on open domain corpus. On top of the LM a SVM classification layer is placed. It is
+possible to start from as few as 10 sentences containing entities of interest.
+
+The data for training this model should be collected the following way. Given a collection of `N` sentences without
+markup, sequentially markup sentences until the total number of sentences with entity of interest become equal
+`K`. During the training both sentences with and without markup are used.
+
+
+Mean chunk-wise F1 scores for Russian language on 10 sentences with entities :
+
++---------+-------+
+|PER      | 84.85 |
++---------+-------+
+|LOC      | 68.41 |
++---------+-------+
+|ORG      | 32.63 |
++---------+-------+
+
+(the total number of training sentences is bigger and defined by the distribution of sentences with / without entities).
+
+The model can be trained using CLI:
+
+.. code:: bash
+
+    python -m deeppavlov train ner_few_shot_ru
+
+you have to provide the `train.txt`, `valid.txt`, and `test.txt` files in the format described in the `Training data`_
+section. The files must be in the `ner_few_shot_data` folder as described in the `dataset_reader` part of the config
+:config:`ner/ner_few_shot_ru_train.json <ner/ner_few_shot_ru.json>` .
+
+To train and use the model from python code the following snippet can be used:
+
+.. code:: python
+
+    from deeppavlov import configs, train_model
+
+    ner_model = train_model(configs.ner.ner_few_shot_ru, download=True)
+    ner_model(['Example sentence'])
+
+Warning! This model can take a lot of time and memory if the number of sentences is greater than 1000!
+
+If a lot of data is available the few-shot setting can be simulated with special `dataset_iterator`. For this purpose
+the config
+:config:`ner/ner_few_shot_ru_train.json <ner/ner_few_shot_ru_simulate.json>` . The following code can be used for this
+simulation:
+
+.. code:: python
+
+    from deeppavlov import configs, train_model
+
+    ner_model = train_model(configs.ner.ner_few_shot_ru_simulate, download=True)
+
+In this config the `Collection dataset <http://labinform.ru/pub/named_entities/descr_ne.htm>`__ is used. However, if
+there are files `train.txt`, `valid.txt`, and `test.txt` in the `ner_few_shot_data` folder they will be used instead.
+
+
+To use existing few-shot model use the following python interface can be used:
+
+.. code:: python
+
+    from deeppavlov import configs, build_model
+    ner_model = build_model(configs.ner.ner_few_shot_ru)
+    ner_model([['Example', 'sentence']])
+    ner_model(['Example sentence'])
+
+
 
 Literature
 ----------

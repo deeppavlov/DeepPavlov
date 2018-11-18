@@ -1,31 +1,30 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
+import shutil
 import sys
 from argparse import ArgumentParser, Namespace
 from collections import defaultdict
 from pathlib import Path
 from typing import Union, Optional, Dict, Iterable, Set, Tuple, List
 
-import deeppavlov
-from deeppavlov.core.commands.utils import get_deeppavlov_root, set_deeppavlov_root, expand_path
-from deeppavlov.core.common.file import read_json
-from deeppavlov.core.data.utils import download, download_decompress, get_all_elems_from_json
-from deeppavlov.core.common.log import get_logger
+import requests
 
+import deeppavlov
+from deeppavlov.core.commands.utils import expand_path, parse_config
+from deeppavlov.core.data.utils import download, download_decompress, get_all_elems_from_json, file_md5
+from deeppavlov.core.common.log import get_logger
 
 log = get_logger(__name__)
 
@@ -39,11 +38,7 @@ parser.add_argument('-all', action='store_true',
 
 
 def get_config_downloads(config: Union[str, Path, dict]) -> Set[Tuple[str, Path]]:
-    if isinstance(config, (str, Path)):
-        config = read_json(config)
-
-    dp_root_back = get_deeppavlov_root()
-    set_deeppavlov_root(config)
+    config = parse_config(config)
 
     downloads = set()
     if 'metadata' in config and 'download' in config['metadata']:
@@ -61,8 +56,6 @@ def get_config_downloads(config: Union[str, Path, dict]) -> Set[Tuple[str, Path]
     config_references = [expand_path(config_ref) for config_ref in get_all_elems_from_json(config, 'config_path')]
 
     downloads |= {(url, dest) for config in config_references for url, dest in get_config_downloads(config)}
-
-    set_deeppavlov_root({'deeppavlov_root': dp_root_back})
 
     return downloads
 
@@ -82,10 +75,45 @@ def get_configs_downloads(config: Optional[Union[str, Path, dict]]=None) -> Dict
     return all_downloads
 
 
+def check_md5(url: str, dest_paths: List[Path]) -> bool:
+    r = requests.get(url + '.md5')
+    if r.status_code != 200:
+        return False
+    expected = {}
+    for line in r.text.splitlines():
+        _md5, fname = line.split(' ', maxsplit=1)
+        if fname[0] != '*':
+            if fname[0] == ' ':
+                log.warning(f'Hash generated in text mode for {fname}, comparison could be incorrect')
+            else:
+                log.error(f'Unknown hash content format in {url + ".md5"}')
+                return False
+        expected[fname[1:]] = _md5
+
+    done = None
+    not_done = []
+    for base_path in dest_paths:
+        if all(file_md5(base_path / p) == _md5 for p, _md5 in expected.items()):
+            done = base_path
+        else:
+            not_done.append(base_path)
+
+    if done is None:
+        return False
+
+    for base_path in not_done:
+        log.info(f'Copying data from {done} to {base_path}')
+        for p in expected.keys():
+            shutil.copy(done/p, base_path/p)
+    return True
+
+
 def download_resource(url: str, dest_paths: Iterable[Path]) -> None:
     dest_paths = list(dest_paths)
 
-    if url.endswith(('.tar.gz', '.gz', '.zip')):
+    if check_md5(url, dest_paths):
+        log.info(f'Skipped {url} download because of matching hashes')
+    elif url.endswith(('.tar.gz', '.gz', '.zip')):
         download_path = dest_paths[0].parent
         download_decompress(url, download_path, dest_paths)
     else:

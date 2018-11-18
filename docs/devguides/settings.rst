@@ -20,4 +20,5 @@ Following dialog logging settings are available:
 1. **enabled** (default: ``false``): turns on/off dialog logging for DeepPavlov instance;
 2. **log_path** (default: ``~/.deeppavlov/dialog_logs``): sets directory where dialog logs are stored;
 3. **agent_name** (default: ``dp_agent``): sets subdirectory name for storing dialog logs;
-4. **logfile_max_size_kb** (default: ``10240``): sets logfile maximum size in kilobytes. If exceeded, new log file is created.
+4. **logfile_max_size_kb** (default: ``10240``): sets logfile maximum size in kilobytes. If exceeded, new log file is created;
+5. **ensure_ascii** (default: ``false``): If ``true``, converts all non-ASCII symbols in logged content to Unicode code points.
