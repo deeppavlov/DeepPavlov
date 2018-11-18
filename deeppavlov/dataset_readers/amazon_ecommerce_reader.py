@@ -13,25 +13,33 @@ import re
 from pathlib import Path
 from typing import List, Any, Dict, Iterable, Tuple
 
+from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.data.utils import download_decompress, mark_done, is_done
 
+logger = get_logger(__name__)
+
 @register('amazon_ecommerce_reader')
 class AmazonEcommerceReader(DatasetReader):
     """Class to download and load ecommerce data catalog"""
 
-    def read(self, data_path: str, catalog: str, **kwargs) -> Dict[str, List[Tuple[Any, Any]]]:
+    def read(self, data_path: str, catalog: list, **kwargs) -> Dict[str, List[Tuple[Any, Any]]]:
         """Load data from specific catalog
 
         Parameters:
-            data_path: path where to store the dataset
-            catalog: name of the specific part of the catalog
+            data_path: where the dataset is located
+            catalog: names of the specific subcategories
 
         Returns:
             dataset: loaded dataset
         """
+
+        logger.info(f"Ecommerce loader is loaded with catalog {catalog}")
+
+        if not isinstance(catalog, list):
+            catalog = [catalog]
 
         ec_data_global: List[Any] = []
         data_path = Path(expand_path(data_path))
@@ -41,15 +49,17 @@ class AmazonEcommerceReader(DatasetReader):
 
         if data_path.is_dir():
             for fname in data_path.rglob("*.txt"):
-                if catalog in fname.name:
+                if any(cat in fname.name for cat in catalog):
+                    logger.info(f"File {fname.name} is loaded")
                     ec_data_global += self._load_amazon_ecommerce_file(fname)
 
         dataset = {
-            'train': [((item, {}), ) for item in ec_data_global],
+            'train': [((item['Title'], [], {}), item) for item in ec_data_global],
             'valid': [],
             'test':  []
             }
 
+        logger.info(f"In total {len(ec_data_global)} items are loaded")
         return dataset
 
     def _download_data(self, data_path: str) -> None:
