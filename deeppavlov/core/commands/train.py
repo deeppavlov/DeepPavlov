@@ -443,9 +443,9 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
 
                     if train_config['tensorboard_log_dir'] is not None:
                         for name, score in metrics:
-                            metric_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + name,
+                            metric_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + name,
                                                                             simple_value=score), ])
-                            tb_valid_writer.add_summary(metric_sum, epochs)
+                            tb_valid_writer.add_summary(metric_sum, i)
 
                     m_name, score = metrics[0]
                     if improved(score, best):
