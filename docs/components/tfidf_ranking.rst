@@ -38,15 +38,13 @@ Run the following to fit the ranker on **English** Wikipedia:
 
 .. code:: bash
 
-    cd deeppavlov/
-    python deep.py train configs/doc_retrieval/en_ranker_tfidf_wiki.json
+    python -m deppavlov train en_ranker_tfidf_wiki
 
 Run the following to fit the ranker on **Russian** Wikipedia:
 
 .. code:: bash
 
-    cd deeppavlov/
-    python deep.py train configs/doc_retrieval/ru_ranker_tfidf_wiki.json
+    python -m deeppavlov train ru_ranker_tfidf_wiki
 
 Interacting
 -----------
@@ -58,15 +56,13 @@ Run the following to interact with the **English** ranker:
 
 .. code:: bash
 
-    cd deeppavlov/
-    python deep.py interact configs/doc_retrieval/en_ranker_tfidf_wiki.json -d
+    python -m deeppavlov interact en_ranker_tfidf_wiki.json -d
 
 Run the following to interact with the **Russian** ranker:
 
 .. code:: bash
 
-    cd deeppavlov/
-    python deep.py interact configs/doc_retrieval/ru_ranker_tfidf_wiki.json -d
+    python -m deeppavlov ru_ranker_tfidf_wiki -d
 
 As a result of ranker training, a SQLite database and tf-idf matrix are created.
 

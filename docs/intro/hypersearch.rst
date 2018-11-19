@@ -165,24 +165,22 @@ Example
 
    ::
 
-       cd deeppavlov
-       python deep.py download configs/classifiers/intents_snips.json
+       python -m deeppavlov download intents_snips
 
 -  To evolve the model run the following command providing corresponding
    name of the config file (see above) :config:`intents_dstc2.json <evolution/evolve_intents_snips.json>`:
 
    ::
 
-       cd deeppavlov
-       python evolve.py configs/evolution/evolve_intents_snips.json
+       python -m deeppavlov.evolve evolve_intents_snips
 
--  Folder ``download/evolution/classification/intents_snips`` will be
+-  Folder ``~/.deeppavlov/models/classifiers/intents_snips_evolution/intents_snips`` will be
    created. Each population will be saved in a folder
-   ``download/evolution/classification/intents_snips/population_i`` each
+   ``~/.deeppavlov/models/classifiers/intents_snips_evolution/intents_snips/population_i`` each
    of which contains ``population_size`` folders ``model_i`` consisting
    of saved model files explicitly, saved files of models from pipe that
-   has a key "fit\_on", ``out.txt`` and ``err.txt`` with logs of
-   ``deep.py train`` script from training each model separately, and
+   has a key ``"fit_on"``, ``out.txt`` and ``err.txt`` with logs of
+   ``python -m deeppavlov train`` script from training each model separately, and
    ``config.json`` with config for this individual.
 
 -  Now one can open iPython Notebook file

@@ -53,15 +53,13 @@ Run the following to interact with **English ODQA**:
 
 .. code:: bash
 
-    cd deeppavlov/
-    python deep.py interact deeppavlov/configs/odqa/en_odqa_infer_wiki.json -d
+    python -m deeppavlov interact en_odqa_infer_wiki -d
 
 Run the following to interact with **Russian ODQA**:
 
 .. code:: bash
 
-    cd deeppavlov/
-    python deep.py interact deeppavlov/configs/odqa/ru_odqa_infer_wiki.json -d
+    python -m deeppavlov interact ru_odqa_infer_wiki -d
 
 Configuration
 =============

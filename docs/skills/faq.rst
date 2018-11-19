@@ -88,8 +88,7 @@ To train your own model by running command `train`, for example:
 
 .. code:: bash
 
-    cd deeppavlov/
-    python deep.py train configs/faq/tfidf_autofaq.json
+    python -m deeppavlov train tfidf_autofaq
 
 
 Interacting
@@ -99,8 +98,7 @@ After model has trained, you can use it for inference: model will return answers
 
 .. code:: bash
 
-    cd deeppavlov/
-    python deep.py interact configs/faq/tfidf_autofaq.json -d
+    python -m deeppavlov interact fidf_autofaq -d
 
 
 Inference example:
