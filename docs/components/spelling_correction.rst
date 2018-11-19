@@ -40,7 +40,7 @@ lines to stdout:
 
     from deeppavlov import build_model, configs
 
-    CONFIG_PATH = configs.spelling_correction.rillmoore_kartaslov_ru
+    CONFIG_PATH = configs.spelling_correction.brillmoore_kartaslov_ru
 
     model = build_model(CONFIG_PATH, download=True)
     for line in sys.stdin:
