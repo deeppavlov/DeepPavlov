@@ -87,7 +87,7 @@ class ELMo(NNModel):
                  dumps_save_path: str = 'dumps',
                  tf_hub_save_path: str = 'hubs',
                  **kwargs) -> None:
-        
+
         # ================ Checking input args =================
         if not(options_json_path or (char_cnn and bidirectional and unroll_steps
                                      and n_tokens_vocab and lstm and dropout and
@@ -169,7 +169,7 @@ class ELMo(NNModel):
                           if safely_str2int(i.parts[-1]) is not None)
         epoch_num = max(candidates, default=default)
         return epoch_num
-                           
+
     def _build_graph(self, graph):
         with graph.as_default():
             with tf.device('/cpu:0'):

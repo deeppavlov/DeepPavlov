@@ -242,8 +242,8 @@ def dump_weights(tf_save_dir, outfile, options):
                         # don't dump these
                         continue
                     outname = _get_outname(v.name)
-                    print("Saving variable {0} with name {1}".format(
-                        v.name, outname))
+                    # print("Saving variable {0} with name {1}".format(
+                    #     v.name, outname))
                     shape = v.get_shape().as_list()
                     dset = fout.create_dataset(outname, shape, dtype='float32')
                     values = sess.run([v])[0]

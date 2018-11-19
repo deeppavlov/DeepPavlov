@@ -61,7 +61,8 @@
   },
   "metadata": {
     "requirements": [
-      "../dp_requirements/tf.txt"
+      "../dp_requirements/tf-gpu.txt",
+      "../dp_requirements/tf-hub.txt"
     ],
     "download": [
       "http://files.deeppavlov.ai/deeppavlov_data/elmo-1b-benchmark_test.tar.gz"
