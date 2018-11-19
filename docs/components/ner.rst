@@ -413,15 +413,15 @@ The F1 scores of this model on test part of OntoNotes is presented in table belo
 +================================+====================+
 | DeepPavlov                     | **87.07** ± 0.21   |
 +--------------------------------+--------------------+
-| Strubell at al. (2017) [1]     | 86.84 ± 0.19       |
+| Strubell at al. (2017) [1]_    | 86.84 ± 0.19       |
 +--------------------------------+--------------------+
-| Chiu and Nichols (2016) [2]    | 86.19 ± 0.25       |
+| Chiu and Nichols (2016) [2]_   | 86.19 ± 0.25       |
 +--------------------------------+--------------------+
 | Spacy                          | 85.85              |
 +--------------------------------+--------------------+
-| Durrett and Klein (2014) [3]   | 84.04              |
+| Durrett and Klein (2014) [3]_  | 84.04              |
 +--------------------------------+--------------------+
-| Ratinov and Roth (2009) [4]    | 83.45              |
+| Ratinov and Roth (2009) [4]_   | 83.45              |
 +--------------------------------+--------------------+
 
 Scores by entity type are presented in the table below:
@@ -479,9 +479,9 @@ https://arxiv.org/pdf/1603.01360.pdf.
 
 Bi-LSTM architecture of NER network was tested on three datasets:
 
--  Gareev corpus [5] (obtainable by request to authors)
--  FactRuEval 2016 [6]
--  Persons-1000 [7]
+-  Gareev corpus [5]_ (obtainable by request to authors)
+-  FactRuEval 2016 [6]_
+-  Persons-1000 [7]_
 
 The F1 measure for our model along with the results of other published
 solutions are provided in the table below:
@@ -489,17 +489,17 @@ solutions are provided in the table below:
 +-------------------------------------------------------+--------------------+----------------+-------------------+
 | Models                                                | Gareev’s dataset   | Persons-1000   | FactRuEval 2016   |
 +=======================================================+====================+================+===================+
-| Gareev et al.  [5]   (Linguistic features + CRF)      | 75.05              |                |                   |
+| Gareev et al.  [5]_  (Linguistic features + CRF)      | 75.05              |                |                   |
 +-------------------------------------------------------+--------------------+----------------+-------------------+
-| Malykh et al. [8] (Character level CNN)               | 62.49              |                |                   |
+| Malykh et al. [8]_ (Character level CNN)              | 62.49              |                |                   |
 +-------------------------------------------------------+--------------------+----------------+-------------------+
-| Trofimov [13] (regex and dictionaries)                |                    | 95.57          |                   |
+| Trofimov [12]_ (regex and dictionaries)               |                    | 95.57          |                   |
 +-------------------------------------------------------+--------------------+----------------+-------------------+
-| Sysoev et al. [10] (dictionaries and embeddings + SVM)|                    |                | 74.67             |
+| Sysoev et al. [9]_ (dictionaries and embeddings + SVM)|                    |                | 74.67             |
 +-------------------------------------------------------+--------------------+----------------+-------------------+
-| Ivanitsky et al. [11] (SVM + embeddings)              |                    |                | **87.88**         |
+| Ivanitsky et al. [10]_ (SVM + embeddings)             |                    |                | **87.88**         |
 +-------------------------------------------------------+--------------------+----------------+-------------------+
-| Mozharova et al.  [12] (two stage CRF)                |                    | 97.21          |                   |
+| Mozharova et al.  [11]_ (two stage CRF)               |                    | 97.21          |                   |
 +-------------------------------------------------------+--------------------+----------------+-------------------+
 | Our (Bi-LSTM+CRF)                                     | **87.17**          | **99.26**      | 82.10             |
 +-------------------------------------------------------+--------------------+----------------+-------------------+
@@ -589,53 +589,48 @@ To use existing few-shot model use the following python interface can be used:
 Literature
 ----------
 
-[1] - Strubell at al. (2017) Strubell, Emma, et al. "Fast and accurate
-entity recognition with iterated dilated convolutions." Proceedings of
-the 2017 Conference on Empirical Methods in Natural Language Processing.
-2017.
+.. [1] Strubell at al. (2017) Strubell, Emma, et al. "Fast and accurate
+    entity recognition with iterated dilated convolutions." Proceedings of
+    the 2017 Conference on Empirical Methods in Natural Language Processing.
+    2017.
 
-[2] - Jason PC Chiu and Eric Nichols. 2016. Named entity recognition
-with bidirectional lstm-cnns. Transactions of the Association for
-Computational Linguistics, 4:357–370.
+.. [2] Jason PC Chiu and Eric Nichols. 2016. Named entity recognition
+    with bidirectional lstm-cnns. Transactions of the Association for
+    Computational Linguistics, 4:357–370.
 
-[3] - Greg Durrett and Dan Klein. 2014. A joint model for entity
-analysis: Coreference, typing and linking. Transactions of the
-Association for Computational Linguistics, 2:477–490.
+.. [3] Greg Durrett and Dan Klein. 2014. A joint model for entity
+    analysis: Coreference, typing and linking. Transactions of the
+    Association for Computational Linguistics, 2:477–490.
 
-[4] - Lev Ratinov and Dan Roth. 2009. Design challenges and
-misconceptions in named entity recognition. In Proceedings of the
-Thirteenth Conference on Computational Natural Language Learning, pages
-147–155. Association for Computational Linguistics.
+.. [4] Lev Ratinov and Dan Roth. 2009. Design challenges and
+    misconceptions in named entity recognition. In Proceedings of the
+    Thirteenth Conference on Computational Natural Language Learning, pages
+    147–155. Association for Computational Linguistics.
 
-[5] - Rinat Gareev, Maksim Tkachenko, Valery Solovyev, Andrey
-Simanovsky, Vladimir Ivanov: Introducing Baselines for Russian Named
-Entity Recognition. Computational Linguistics and Intelligent Text
-Processing, 329 -- 342 (2013).
+.. [5] Rinat Gareev, Maksim Tkachenko, Valery Solovyev, Andrey
+    Simanovsky, Vladimir Ivanov: Introducing Baselines for Russian Named
+    Entity Recognition. Computational Linguistics and Intelligent Text
+    Processing, 329 -- 342 (2013).
 
-[6] - https://github.com/dialogue-evaluation/factRuEval-2016
+.. [6] https://github.com/dialogue-evaluation/factRuEval-2016
 
-[7] -
-http://ai-center.botik.ru/Airec/index.php/ru/collections/28-persons-1000
+.. [7] http://ai-center.botik.ru/Airec/index.php/ru/collections/28-persons-1000
 
-[8] - Malykh, Valentin, and Alexey Ozerin. "Reproducing Russian NER
-Baseline Quality without Additional Data." CDUD@ CLA. 2016.
+.. [8] Malykh, Valentin, and Alexey Ozerin. "Reproducing Russian NER
+    Baseline Quality without Additional Data." CDUD@ CLA. 2016.
 
-[9] - Rubaylo A. V., Kosenko M. Y.: Software utilities for natural
-language information retrievial. Almanac of modern science and
-education, Volume 12 (114), 87 – 92.(2016)
+.. [9] Sysoev A. A., Andrianov I. A.: Named Entity Recognition in
+    Russian: the Power of Wiki-Based Approach. dialog-21.ru
 
-[10] - Sysoev A. A., Andrianov I. A.: Named Entity Recognition in
-Russian: the Power of Wiki-Based Approach. dialog-21.ru
+.. [10] Ivanitskiy Roman, Alexander Shipilo, Liubov Kovriguina: Russian
+    Named Entities Recognition and Classification Using Distributed Word and
+    Phrase Representations. In SIMBig, 150 – 156. (2016).
 
-[11] - Ivanitskiy Roman, Alexander Shipilo, Liubov Kovriguina: Russian
-Named Entities Recognition and Classification Using Distributed Word and
-Phrase Representations. In SIMBig, 150 – 156. (2016).
+.. [11] Mozharova V., Loukachevitch N.: Two-stage approach in Russian
+    named entity recognition. In Intelligence, Social Media and Web (ISMW
+    FRUCT), 2016 International FRUCT Conference, 1 – 6 (2016)
 
-[12] - Mozharova V., Loukachevitch N.: Two-stage approach in Russian
-named entity recognition. In Intelligence, Social Media and Web (ISMW
-FRUCT), 2016 International FRUCT Conference, 1 – 6 (2016)
-
-[13] - Trofimov, I.V.: Person name recognition in news articles based on
-the persons- 1000/1111-F collections. In: 16th All-Russian Scientific C
-onference Digital Libraries: Advanced Methods and Technologies, Digital
-Collections, RCDL 2014,pp. 217 – 221 (2014).
+.. [12] Trofimov, I.V.: Person name recognition in news articles based on
+    the persons- 1000/1111-F collections. In: 16th All-Russian Scientific C
+    onference Digital Libraries: Advanced Methods and Technologies, Digital
+    Collections, RCDL 2014,pp. 217 – 221 (2014).
