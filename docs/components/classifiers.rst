@@ -246,7 +246,7 @@ could be changed. Then training can be run in the following way:
 
 ::
 
-    python deep.py train "path_to_config"
+    python deeppavlov/deep.py train "path_to_config"
 
 Train on other datasets
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -283,7 +283,7 @@ Then training process can be run in the same way:
 
 ::
 
-    python deep.py train "path_to_config"
+    python deeppavlov/deep.py train "path_to_config"
 
 The current version of :config:`intents_snips.json <classifiers/intents_snips.json>`` contains parameters for
 intent recognition for SNIPS benchmark dataset [2] that was restored in
