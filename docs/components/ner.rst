@@ -404,7 +404,7 @@ Or from command line:
 
 .. code:: bash
 
-    python -m deeppavlov interact deeppavlov/configs/ner/ner_ontonotes.json [-d]
+    python -m deeppavlov interact ner_ontonotes [-d]
 
 The F1 scores of this model on test part of OntoNotes is presented in table below.
 

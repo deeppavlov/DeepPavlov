@@ -56,7 +56,7 @@ Run the following to interact with the **English** ranker:
 
 .. code:: bash
 
-    python -m deeppavlov interact en_ranker_tfidf_wiki.json -d
+    python -m deeppavlov interact en_ranker_tfidf_wiki -d
 
 Run the following to interact with the **Russian** ranker:
 
