@@ -247,6 +247,13 @@ class EnhancedTFModel(TFModel, Estimator):
                               " and every epoch sumalteniously")
         super().__init__(*args, **kwargs)
 
+        try:
+            self._optimizer = cls_from_str(optimizer)
+        except Exception:
+            self._optimizer = getattr(tf.train, optimizer.split(':')[-1])
+        if not issubclass(self._optimizer, tf.train.Optimizer):
+            raise ConfigError("`optimizer` should be tensorflow.train.Optimizer subclass")
+
         start_val, end_val = learning_rate, None
         if isinstance(learning_rate, (tuple, list)):
             start_val, end_val = learning_rate
@@ -263,6 +270,13 @@ class EnhancedTFModel(TFModel, Estimator):
                                            num_it=num_it, dec_type=dec_type, extra=extra)
         self._lr_ph = tf.placeholder(tf.float32, shape=[], name='learning_rate')
 
+        if (momentum is None) and\
+                self._optimizer not in (tf.train.AdagradDAOptimizer,
+                                        tf.train.AdagradOptimizer,
+                                        tf.train.GradientDescentOptimizer,
+                                        tf.train.ProximalGradientDescentOptimizer,
+                                        tf.train.ProximalAdagradOptimizer):
+            momentum = 0.95
         start_val, end_val = momentum, None
         if isinstance(momentum, (tuple, list)):
             start_val, end_val = momentum
@@ -278,14 +292,8 @@ class EnhancedTFModel(TFModel, Estimator):
         self._mom_schedule = DecayScheduler(start_val=start_val, end_val=end_val,
                                             num_it=num_it, dec_type=dec_type,
                                             extra=extra)
-        self._mom_ph = tf.placeholder(tf.float32, shape=[], name='momentum')
-
-        try:
-            self._optimizer = cls_from_str(optimizer)
-        except Exception:
-            self._optimizer = getattr(tf.train, optimizer.split(':')[-1])
-        if not issubclass(self._optimizer, tf.train.Optimizer):
-            raise ConfigError("`optimizer` should be tensorflow.train.Optimizer subclass")
+        self._mom_ph = tf.placeholder_with_default(0.95, shape=[], name='momentum')
+        # self._mom_ph = tf.placeholder(tf.float32, shape=[], name='momentum')
 
         self._learning_rate_drop_patience = learning_rate_drop_patience
         self._learning_rate_drop_div = learning_rate_drop_div
@@ -304,8 +312,6 @@ class EnhancedTFModel(TFModel, Estimator):
         if self._fit_batch_size is None:
             raise ConfigError("in order to use fit() method"
                               " set `fit_batch_size` parameter")
-        if self._optimizer != tf.train.MomentumOptimizer:
-            log.warning("MomentumOptimizer is suggested to be used during fitting")
         bs, beta = self._fit_batch_size, self._fit_beta
         lr_div, min_batches = self._fit_lr_div, self._fit_min_batches
 
@@ -376,10 +382,17 @@ class EnhancedTFModel(TFModel, Estimator):
                      **kwargs):
         kwargs['learning_rate'] = learning_rate or self.get_learning_rate_ph()
         kwargs['optimizer'] = optimizer or self.get_optimizer()
+
+        momentum_param = 'momentum'
+        if kwargs['optimizer'] == tf.train.AdamOptimizer:
+            momentum_param = 'beta1'
+        elif kwargs['optimizer'] == tf.train.AdadeltaOptimizer:
+            momentum_param = 'rho'
+
         if momentum is not None:
-            kwargs['momentum'] = momentum
+            kwargs[momentum_param] = momentum
         elif self.get_momentum() is not None:
-            kwargs['momentum'] = self.get_momentum_ph()
+            kwargs[momentum_param] = self.get_momentum_ph()
         return super().get_train_op(*args, **kwargs)
 
     def process_event(self, event_name, data):
@@ -396,12 +409,11 @@ class EnhancedTFModel(TFModel, Estimator):
                      self._learning_rate_drop_patience):
                 self._learning_rate_cur_impatience = 0
                 self._learning_rate_cur_div *= self._learning_rate_drop_div
-                log.info(f"New dropping learning rate"
-                         f" {self._learning_rate_cur_div} times")
+                self._lr /= self._learning_rate_drop_div
+                log.info(f"New learning rate dividor = {self._learning_rate_cur_div}")
         if event_name == 'after_batch':
             if self._lr_update_on_batch:
                 self._lr = self._lr_schedule.next_val() / self._learning_rate_cur_div
-                # print(f"new learning rate = {self._lr}")
             if self._mom_update_on_batch and (self.get_momentum() is not None):
                 self._mom = min(1., max(0., self._mom_schedule.next_val()))
         if event_name == 'after_epoch':
