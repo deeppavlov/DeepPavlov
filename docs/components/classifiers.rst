@@ -158,7 +158,7 @@ providing corresponding name of the config file (see above):
 
 ::
 
-    python deep.py download configs/classifiers/intents_dstc2.json
+    python deeppavlov/deep.py download configs/classifiers/intents_dstc2.json
 
 or provide flag ``-d`` for commands like ``interact``, ``interactbot``,
 etc. The flag ``-d`` provides downloading all the required components.
@@ -167,18 +167,26 @@ etc. The flag ``-d`` provides downloading all the required components.
 Infer from pre-trained model
 ----------------------------
 
-To use a pre-trained model for inference one should run the following
-command providing corresponding name of the config file (see above):
+Pre-trained models can be used for inference in the following way:
 
-::
+.. code:: python
 
-    python deep.py interact configs/classifiers/intents_dstc2.json
+    from deeppavlov import build_model, configs
+
+    snips_model = build_model(configs.classifiers.intents_snips , download=True)
+    snips_model(["Hello! What is the weather in Boston tomorrow?"])
+
+or from command line:
+
+.. code:: bash
+
+    python deeppavlov/deep.py interact configs/classifiers/intents_dstc2.json [-d]
 
 or
 
-::
+.. code:: bash
 
-    python deep.py interactbot configs/classifiers/intents_dstc2.json -t <TELEGRAM_TOKEN>
+    python deeppavlov/deep.py interactbot configs/classifiers/intents_dstc2.json -t <TELEGRAM_TOKEN> [-d]
 
 For 'interactbot' mode one should specify a Telegram bot token in ``-t`` parameter or in the ``TELEGRAM_TOKEN``
 environment variable.
