@@ -1,18 +1,18 @@
 {
   "dataset_reader": {
-    "name": "faq_reader",
+    "class_name": "faq_reader",
     "x_col_name": "Question",
     "y_col_name": "Answer",
     "data_url": "http://files.deeppavlov.ai/faq/mipt/faq.csv"
   },
   "dataset_iterator": {
-    "name": "data_learning_iterator"
+    "class_name": "data_learning_iterator"
   },
   "chainer": {
     "in": "q",
     "pipe": [
       {
-        "name": "stream_spacy_tokenizer",
+        "class_name": "stream_spacy_tokenizer",
         "in": "q",
         "id": "my_tokenizer",
         "lemmas": true,
@@ -34,9 +34,9 @@
           "q_lem"
         ],
         "id": "tfidf_vec",
-        "name": "sklearn_component",
-        "save_path": "faq/mipt/en_mipt_faq_v1/tfidf.pkl",
-        "load_path": "faq/mipt/en_mipt_faq_v1/tfidf.pkl",
+        "class_name": "sklearn_component",
+        "save_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v1/tfidf.pkl",
+        "load_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v1/tfidf.pkl",
         "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
         "infer_method": "transform"
       },
@@ -49,10 +49,10 @@
         "out": [
           "answer"
         ],
-        "name": "sklearn_component",
+        "class_name": "sklearn_component",
         "main": true,
-        "save_path": "faq/mipt/en_mipt_faq_v1/logreg.pkl",
-        "load_path": "faq/mipt/en_mipt_faq_v1/logreg.pkl",
+        "save_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v1/logreg.pkl",
+        "load_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v1/logreg.pkl",
         "model_class": "sklearn.linear_model:LogisticRegression",
         "infer_method": "predict",
         "C": 1000,
@@ -68,14 +68,19 @@
     "test_best": false
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/spacy.txt",
-      "../dp_requirements/en_core_web_sm.txt"
+      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
     ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/faq/mipt/en_mipt_faq_v1.tar.gz",
-        "subdir": "faq/mipt"
+        "subdir": "{MODELS_PATH}/faq/mipt"
       }
     ]
   }

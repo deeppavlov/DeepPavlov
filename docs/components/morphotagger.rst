@@ -23,9 +23,9 @@ systems.
 +----------------+--------------+-----------------+------------------+
 | German         | de           | 76.65           | 83.83            |
 +----------------+--------------+-----------------+------------------+
-| Hindi          | ar           | 87.74           | 90.01            |
+| Hindi          | hi           | 87.74           | 90.01            |
 +----------------+--------------+-----------------+------------------+
-| Hungarian      | ar           | 69.52           | 75.34            |
+| Hungarian      | hu           | 69.52           | 75.34            |
 +----------------+--------------+-----------------+------------------+
 | Italian        | it           | 96.33           | 96.47            |
 +----------------+--------------+-----------------+------------------+
@@ -229,12 +229,12 @@ The dataset reader describes the instance of
 ::
 
     "dataset_reader": {
-        "name": "morphotagger_dataset_reader",
+        "class_name": "morphotagger_dataset_reader",
         "data_path": "UD2.0_source",
         "language": "en", "data_types": ["train", "dev", "test"]
       }
 
-``name`` field refers to the class MorphotaggerDatasetReader,
+``class_name`` field refers to the class MorphotaggerDatasetReader,
 ``data_path`` contains the path to data directory, the ``language``
 field is used to derive the name of training and development file.
 Alternatively, you can specify these files separately by full (or absolute) paths
@@ -243,7 +243,7 @@ like
 ::
 
     "dataset_reader": {
-        "name": "morphotagger_dataset_reader",
+        "class_name": "morphotagger_dataset_reader",
         "data_path": ["UD2.0_source/en-ud-train.conllu",
                       "UD2.0_source/en-ud-dev.conllu",
                       "UD2.0_source/en-ud-test.conllu"]
@@ -273,7 +273,7 @@ performs simple batching and shuffling.
 ::
 
     "dataset_iterator": {
-        "name": "morphotagger_dataset"
+        "class_name": "morphotagger_dataset"
     }
 
 By default it has no parameters, but if your training and validation
@@ -283,7 +283,7 @@ are in the same file, you may specify validation split here:
 ::
 
     "dataset_iterator": {
-        "name": "morphotagger_dataset",
+        "class_name": "morphotagger_dataset",
         "validation_split": 0.2
     }
 
@@ -305,7 +305,7 @@ and normalizes it (see :class:`~deeppavlov.models.preprocessors.capitalization.C
     "pipe": [
           {
             "id": "lowercase_preprocessor",
-            "name": "lowercase_preprocessor",
+            "class_name": "lowercase_preprocessor",
             "in": ["x"],
             "out": ["x_processed"]
           },
@@ -317,7 +317,7 @@ model should predict to tag indexes.
 
     {
         "id": "tag_vocab",
-        "name": "default_vocab",
+        "class_name": "default_vocab",
         "fit_on": ["y"],
         "level": "token",
         "special_tokens": ["PAD", "BEGIN", "END"],
@@ -332,7 +332,7 @@ model should predict to tag indexes.
 
      {
         "id": "char_vocab",
-        "name": "default_vocab",
+        "class_name": "default_vocab",
         "min_freq": 3,
         "fit_on": ["x_processed"],
         "special_tokens": ["PAD", "BEGIN", "END"],
@@ -353,7 +353,7 @@ a word and a space-separated list of its possible tags. Tags can be in any possi
 
     {
         "id": "dictionary_vectorizer",
-        "name": "dictionary_vectorizer",
+        "class_name": "dictionary_vectorizer",
         "load_path": PATH_TO_YOUR_DICTIONARY_FILE,
         "save_path": PATH_TO_YOUR_DICTIONARY_FILE,
         "in": ["x"],
@@ -372,7 +372,7 @@ are listed in a separate distributed with the library. This part of the config l
 
       {
         "id": "pymorphy_vectorizer",
-        "name": "pymorphy_vectorizer",
+        "class_name": "pymorphy_vectorizer",
         "save_path": "morpho_tagger/UD2.0/ru_syntagrus/tags_russian.txt",
         "load_path": "morpho_tagger/UD2.0/ru_syntagrus/tags_russian.txt",
         "max_pymorphy_variants": 5,
@@ -389,7 +389,7 @@ the input parameters of :class:`~deeppavlov.models.morpho_tagger.network.Charact
         "in": ["x_processed"],
         "in_y": ["y"],
         "out": ["y_predicted"],
-        "name": "morpho_tagger",
+        "class_name": "morpho_tagger",
         "main": true,
         "save_path": "morpho_tagger/UD2.0/ud_en.hdf5",
         "load_path": "morpho_tagger/UD2.0/ud_en.hdf5",
@@ -430,9 +430,9 @@ in the ``''train''`` subsection of **chainer**. Now it looks like
 ::
 
     "train": {
-    "test\_best": true,
-    "batch\_size": 16,
-    "metrics": ["per\_token\_accuracy"]
+    "test_best": true,
+    "batch_size": 16,
+    "metrics": ["per_token_accuracy"]
     }
 
 
@@ -445,9 +445,9 @@ which transforms the predictions of the tagger to a readable form.
 ::
 
     {
-    "in": ["x", "y\_predicted"],
-    "out": ["y\_prettified"],
-    "name": "tag\_output\_prettifier",
+    "in": ["x", "y_predicted"],
+    "out": ["y_prettified"],
+    "class_name": "tag_output_prettifier",
     "end": "\\n"
     }
 
@@ -457,22 +457,22 @@ and produces the output of the format
 
 ::
 
-    1 Это PRON Animacy=Inan\|Case=Acc\|Gender=Neut\|Number=Sing
+    1 Это PRON Animacy=Inan|Case=Acc|Gender=Neut|Number=Sing
     2 чутко ADV Degree=Pos
     3 фиксируют VERB
-    Aspect=Imp\|Mood=Ind\|Number=Plur\|Person=3\|Tense=Pres\|VerbForm=Fin\|Voice=Act
-    4 энциклопедические ADJ Case=Nom\|Degree=Pos\|Number=Plur
-    5 издания NOUN Animacy=Inan\|Case=Nom\|Gender=Neut\|Number=Plur
-    6 . PUNCT \_
+    Aspect=Imp|Mood=Ind|Number=Plur|Person=3|Tense=Pres|VerbForm=Fin|Voice=Act
+    4 энциклопедические ADJ Case=Nom|Degree=Pos|Number=Plur
+    5 издания NOUN Animacy=Inan|Case=Nom|Gender=Neut|Number=Plur
+    6 . PUNCT _
 
     1 Four NUM NumType=Card
     2 months NOUN Number=Plur
     3 later ADV *
     4 , PUNCT *
-    5 we PRON Case=Nom\|Number=Plur\|Person=1\|PronType=Prs
-    6 were AUX Mood=Ind\|Tense=Past\|VerbForm=Fin
-    7 married VERB Tense=Past\|VerbForm=Part\|Voice=Pass
-    8 . PUNCT \_
+    5 we PRON Case=Nom|Number=Plur|Person=1|PronType=Prs
+    6 were AUX Mood=Ind|Tense=Past|VerbForm=Fin
+    7 married VERB Tense=Past|VerbForm=Part|Voice=Pass
+    8 . PUNCT _
 
 You can also generate output in 10 column CONLL-U format.
 For this purpose add ``format_mode`` = ``ud`` to the **prettifier** section.
@@ -483,6 +483,6 @@ The **train** section of the config is replaced by the **predict** section:
 
     "predict":
     {
-    "batch\_size": 32,
-    "outfile": "results/ud\_ru\_syntagrus\_test.res"
+    "batch_size": 32,
+    "outfile": "results/ud_ru_syntagrus_test.res"
     }

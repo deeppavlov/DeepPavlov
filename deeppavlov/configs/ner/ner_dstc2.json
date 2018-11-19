@@ -1,11 +1,11 @@
 {
   "dataset_reader": {
-    "name": "dstc2_reader",
-    "data_path": "dstc2"
+    "class_name": "dstc2_reader",
+    "data_path": "{DOWNLOADS_PATH}/dstc2"
   },
   "dataset_iterator": {
-    "name": "dstc2_ner_iterator",
-    "dataset_path": "dstc2"
+    "class_name": "dstc2_ner_iterator",
+    "dataset_path": "{DOWNLOADS_PATH}/dstc2"
   },
   "chainer": {
     "in": ["x"],
@@ -13,26 +13,26 @@
     "pipe": [
       {
         "in": ["x"],
-        "name": "lazy_tokenizer",
+        "class_name": "lazy_tokenizer",
         "out": ["x_tokens"]
       },
       {
         "in": ["x_tokens"],
-        "name": "str_lower",
+        "class_name": "str_lower",
         "out": ["x_lower"]
       },
       {
         "in": ["x_lower"],
         "id": "word_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["x_lower"],
-        "save_path": "slotfill_dstc2/word.dict",
-        "load_path": "slotfill_dstc2/word.dict",
+        "save_path": "{MODELS_PATH}/slotfill_dstc2/word.dict",
+        "load_path": "{MODELS_PATH}/slotfill_dstc2/word.dict",
         "out": ["x_tok_ind"]
       },
       {
-        "name": "random_emb_mat",
+        "class_name": "random_emb_mat",
         "id": "embeddings",
         "vocab_len": "#word_vocab.len",
         "emb_dim": 100
@@ -40,30 +40,30 @@
       {
         "in": ["y"],
         "id": "tag_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["y"],
-        "save_path": "slotfill_dstc2/tag.dict",
-        "load_path": "slotfill_dstc2/tag.dict",
+        "save_path": "{MODELS_PATH}/slotfill_dstc2/tag.dict",
+        "load_path": "{MODELS_PATH}/slotfill_dstc2/tag.dict",
         "out": ["y_ind"]
       },
       {
         "in": ["x_tokens"],
-        "name": "mask",
+        "class_name": "mask",
         "out": ["mask"]
       },
       {
         "in": ["x_tok_ind", "mask"],
         "in_y": ["y_ind"],
         "out": ["y_predicted"],
-        "name": "ner",
+        "class_name": "ner",
         "main": true,
         "token_emb_mat": "#embeddings.emb_mat",
         "n_hidden_list": [64, 64],
         "net_type": "cnn",
         "n_tags": "#tag_vocab.len",
-        "save_path": "slotfill_dstc2/model",
-        "load_path": "slotfill_dstc2/model",
+        "save_path": "{MODELS_PATH}/slotfill_dstc2/model",
+        "load_path": "{MODELS_PATH}/slotfill_dstc2/model",
         "embeddings_dropout": true,
         "top_dropout": true,
         "intra_layer_dropout": false,
@@ -100,15 +100,23 @@
     "show_examples": false
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
     "labels": {
       "telegram_utils": "NERModel",
       "server_utils": "NER"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/slotfill_dstc2.tar.gz"
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/slotfill_dstc2.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      }
     ]
   }
 }

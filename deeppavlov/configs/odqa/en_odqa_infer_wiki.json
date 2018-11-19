@@ -8,7 +8,7 @@
     ],
     "pipe": [
       {
-        "config_path": "../deeppavlov/configs/doc_retrieval/en_ranker_tfidf_wiki.json",
+        "config_path": "{CONFIGS_PATH}/doc_retrieval/en_ranker_tfidf_wiki.json",
         "in": [
           "question_raw"
         ],
@@ -17,7 +17,7 @@
         ]
       },
       {
-        "name": "wiki_sqlite_vocab",
+        "class_name": "wiki_sqlite_vocab",
         "in": [
           "doc_ids"
         ],
@@ -26,22 +26,22 @@
         ],
         "join_docs": false,
         "shuffle": false,
-        "load_path": "odqa/enwiki.db"
+        "load_path": "{DOWNLOADS_PATH}/odqa/enwiki.db"
       },
       {
-        "name": "document_chunker",
+        "class_name": "document_chunker",
         "in": ["context_raw"],
         "out": ["chunks"],
         "flatten_result": true
       },
       {
-        "name": "string_multiplier",
+        "class_name": "string_multiplier",
         "in": ["question_raw", "chunks"],
         "out":["questions"]
       },
       {
-        "name": "logit_ranker",
-        "squad_model": {"config_path": "../deeppavlov/configs/squad/squad.json"},
+        "class_name": "logit_ranker",
+        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/squad.json"},
         "in": [
           "chunks",
           "questions"
@@ -53,17 +53,25 @@
     ]
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/spacy.txt",
-      "../dp_requirements/en_core_web_sm.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
     ],
     "labels": {
       "server_utils": "ODQA"
     },
     "download": [
-      "http://files.deeppavlov.ai/datasets/wikipedia/enwiki.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/en_odqa.tar.gz"
+      {
+        "url": "http://files.deeppavlov.ai/datasets/wikipedia/enwiki.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      }
     ]
   }
 }

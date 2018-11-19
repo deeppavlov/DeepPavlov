@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
-    "name": "ubuntu_v2_reader",
-    "data_path": "./ubuntu_v2_data"
+    "class_name": "ubuntu_v2_reader",
+    "data_path": "{DOWNLOADS_PATH}/ubuntu_v2_data"
   },
   "dataset_iterator": {
-    "name": "siamese_iterator",
+    "class_name": "siamese_iterator",
     "num_samples": 1024,
     "seed": 243
   },
@@ -14,7 +14,7 @@
     "pipe": [
       {
         "id": "preproc",
-        "name": "siamese_preprocessor",
+        "class_name": "siamese_preprocessor",
         "use_matrix": true,
         "num_ranking_samples": 2,
         "max_sequence_length": 50,
@@ -24,33 +24,32 @@
         "sent_vocab":
         {
           "id": "siam_sent_vocab",
-          "name":"simple_vocab",
-          "save_path": "ubuntu_v2_vocabs/sent.dict",
-          "load_path": "ubuntu_v2_vocabs/sent.dict"
+          "class_name": "simple_vocab",
+          "save_path": "{MODELS_PATH}/ubuntu_v2_vocabs/sent.dict",
+          "load_path": "{MODELS_PATH}/ubuntu_v2_vocabs/sent.dict"
         },
         "tokenizer":
         {
-          "name": "split_tokenizer"
+          "class_name": "split_tokenizer"
         },
         "vocab":
         {
           "id": "siam_vocab",
-          "name":"simple_vocab",
-          "save_path": "ubuntu_v2_vocabs/tok.dict",
-          "load_path": "ubuntu_v2_vocabs/tok.dict"
+          "class_name": "simple_vocab",
+          "save_path": "{MODELS_PATH}/ubuntu_v2_vocabs/tok.dict",
+          "load_path": "{MODELS_PATH}/ubuntu_v2_vocabs/tok.dict"
         },
         "embedder":
         {
           "id": "siam_embedder",
-          "name": "fasttext",
-          "load_path": "embeddings/ft_dummy_300.bin",
-          "save_path": "embeddings/ft_dummy_300.bin",
+          "class_name": "fasttext",
+          "load_path": "{DOWNLOADS_PATH}/embeddings/ft_dummy_300.bin",
           "dim": 300
         }
       },
       {
         "id": "embeddings",
-        "name": "emb_mat_assembler",
+        "class_name": "emb_mat_assembler",
         "embedder": "#siam_embedder",
         "vocab": "#siam_vocab"
       },
@@ -58,7 +57,7 @@
         "in": ["x_proc"],
         "in_y": ["y"],
         "out": ["y_predicted"],
-        "name": "bilstm_nn",
+        "class_name": "bilstm_nn",
         "len_vocab": "#siam_vocab.len",
         "use_matrix": "#preproc.use_matrix",
         "max_sequence_length": "#preproc.max_sequence_length",
@@ -70,8 +69,8 @@
         "triplet_loss": false,
         "batch_size": 256,
         "interact_pred_num": 3,
-        "save_path": "ubuntu_v2_model/model_weights.h5",
-        "load_path": "ubuntu_v2_model/model_weights.h5"
+        "save_path": "{MODELS_PATH}/ubuntu_v2_model/model_weights.h5",
+        "load_path": "{MODELS_PATH}/ubuntu_v2_model/model_weights.h5"
       }
     ],
     "out": ["y_predicted"]
@@ -87,9 +86,14 @@
     "log_every_n_batches": 1000
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/fasttext.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
     ],
     "labels": {
       "telegram_utils": "SiameseModel",
@@ -98,11 +102,11 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/ubuntu_v2_data.tar.gz",
-        "subdir": "ubuntu_v2_data"
+        "subdir": "{DOWNLOADS_PATH}/ubuntu_v2_data"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/ft_dummy_300.bin",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
   }
