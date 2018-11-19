@@ -29,6 +29,7 @@ from deeppavlov.core.commands.utils import expand_path
 
 from deeppavlov.models.elmo.bilm_model import LanguageModel
 from deeppavlov.models.elmo.train_utils import average_gradients, clip_grads, safely_str2int, dump_weights
+from deeppavlov.models.elmo.elmo2tfhub import export2hub
 
 log = get_logger(__name__)
 
@@ -126,6 +127,8 @@ class ELMo(NNModel):
 
         self.save()
 
+        self.sess.close()
+
     def _load_options(self, options_json_path):
         if options_json_path:
             options_json_path = expand_path(options_json_path)
@@ -215,7 +218,7 @@ class ELMo(NNModel):
     def _init_session(self):
         sess_config = tf.ConfigProto(allow_soft_placement=True)
         sess_config.gpu_options.allow_growth = True
-        
+
         self.sess = tf.Session(config=sess_config)
         self.sess.run(tf.global_variables_initializer())
 
@@ -279,13 +282,13 @@ class ELMo(NNModel):
 
             # character inputs
             char_ids = char_ids_batches[start:end]  # get char_ids
-            
+
             feed_dict[model.tokens_characters] = char_ids
 
             if self.options['bidirectional']:
                 feed_dict[model.tokens_characters_reverse] = \
                     reversed_char_ids_batches[start:end]  # get tokens_characters_reverse
-                
+
             if token_ids_batches is not None:
                 feed_dict[model.next_token_id] = token_ids_batches[start:end]  # get next_token_id
                 if self.options['bidirectional']:
@@ -404,32 +407,41 @@ class ELMo(NNModel):
             epoch = self.save_epoch_num + int(data['epochs_done'])
             self.save(epoch)
             self.save()
-            self.dump_weights(epoch)
+            self.elmo_export(epoch)
 
             self._build_model(train = False)
 
-    def dump_weights(self, epoch: Optional[int] = None) -> None:
+    def elmo_export(self, epoch: Optional[int] = None) -> None:
         """
-        Dump the trained weights from a model to a HDF5 file.
+        Dump the trained weights from a model to a HDF5 file and export a TF-Hub module.
         """
         if hasattr(self, 'sess'):
             self.sess.close()
         path = self.load_path
         if epoch:
             from_path = path.parents[1] / self.epoch_save_path / str(epoch) / path.parts[-1]
-            to_path = path.parents[1] / self.dumps_save_path / f'weights_epoch_n_{epoch}.hdf5'
+            weights_to_path = path.parents[1] / self.dumps_save_path / f'weights_epoch_n_{epoch}.hdf5'
+            tf_hub_to_path = path.parents[1] / self.tf_hub_save_path / f'tf_hub_model_epoch_n_{epoch}'
             from_path.resolve()
-            to_path.resolve()
+            weights_to_path.resolve()
+            tf_hub_to_path.resolve()
             log.info(f'[dumping {epoch} epoch]')
         else:
             from_path = path
-            to_path = path.parents[1] / self.dumps_save_path / 'weights.hdf5'
-        to_path.parents[0].mkdir(parents=True, exist_ok=True)
+            weights_to_path = path.parents[1] / self.dumps_save_path / 'weights.hdf5'
+            tf_hub_to_path = path.parents[1] / self.tf_hub_save_path / 'tf_hub_model'
+
+        weights_to_path.parents[0].mkdir(parents=True, exist_ok=True)
+        tf_hub_to_path.parents[0].mkdir(parents=True, exist_ok=True)
 
         # Check presence of the model files
         if tf.train.checkpoint_exists(str(from_path)):
-            log.info(f'[dumping model from {from_path} to {to_path}]')
-            dump_weights(from_path.parents[0], to_path, self.permanent_options)
+            log.info(f'[dumping model from {from_path} to {weights_to_path}]')
+            dump_weights(from_path.parents[0], weights_to_path, self.permanent_options)
+
+            options = self.permanent_options.copy()
+            options['char_cnn']['n_characters'] = 262
+            export2hub(weights_to_path, tf_hub_to_path, options)
 
     def destroy(self) -> None:
         """
