@@ -326,9 +326,9 @@ class BidirectionalLanguageModelGraph(object):
         char_embed_dim = cnn_options['embedding']['dim']
         n_chars = cnn_options['n_characters']
         if n_chars != 262:
-            raise Exception(
-                "Set n_characters=262 after training."
-            )
+            raise Exception("Set n_characters=262 after training see a \
+                            https://github.com/allenai/bilm-tf/blob/master/README.md")
+
         if cnn_options['activation'] == 'tanh':
             activation = tf.nn.tanh
         elif cnn_options['activation'] == 'relu':

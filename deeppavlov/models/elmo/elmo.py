@@ -20,6 +20,7 @@ import tensorflow as tf
 import numpy as np
 import json
 from overrides import overrides
+import copy
 
 # from deeppavlov.core.models.tf_model import TFModel
 from deeppavlov.core.models.nn_model import NNModel
@@ -126,8 +127,6 @@ class ELMo(NNModel):
         self._build_model(train = False, epoch=load_epoch_num)
 
         self.save()
-
-        self.sess.close()
 
     def _load_options(self, options_json_path):
         if options_json_path:
@@ -381,7 +380,7 @@ class ELMo(NNModel):
         if hasattr(self, 'sess'):
             self.sess.close()
 
-        self.options = self.permanent_options.copy()
+        self.options = copy.deepcopy(self.permanent_options)
 
         if train:
             self.options.update(self.train_options)
@@ -439,7 +438,7 @@ class ELMo(NNModel):
             log.info(f'[dumping model from {from_path} to {weights_to_path}]')
             dump_weights(from_path.parents[0], weights_to_path, self.permanent_options)
 
-            options = self.permanent_options.copy()
+            options = copy.deepcopy(self.permanent_options)
             options['char_cnn']['n_characters'] = 262
             export2hub(weights_to_path, tf_hub_to_path, options)
 

@@ -138,9 +138,8 @@ class LanguageModel(object):
         char_embed_dim = cnn_options['embedding']['dim']
         n_chars = cnn_options['n_characters']
         if n_chars != 261:
-            raise Exception(
-                    "Set n_characters=261 for training see the README.md"
-            )
+            raise Exception("Set n_characters=261 for training see a \
+                            https://github.com/allenai/bilm-tf/blob/master/README.md")
         if cnn_options['activation'] == 'tanh':
             activation = tf.nn.tanh
         elif cnn_options['activation'] == 'relu':
