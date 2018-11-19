@@ -228,22 +228,23 @@ def dump_weights(tf_save_dir, outfile, options):
     ckpt_file = tf.train.latest_checkpoint(tf_save_dir)
 
     config = tf.ConfigProto(allow_soft_placement=True)
-    with tf.Session(config=config) as sess:
-        with tf.variable_scope('lm'):
-            LanguageModel(options, False)  # Create graph
-            # we use the "Saver" class to load the variables
-            loader = tf.train.Saver()
-            loader.restore(sess, ckpt_file)
+    with tf.Graph().as_default():
+        with tf.Session(config=config) as sess:
+            with tf.variable_scope('lm'):
+                LanguageModel(options, False)  # Create graph
+                # we use the "Saver" class to load the variables
+                loader = tf.train.Saver()
+                loader.restore(sess, ckpt_file)
 
-        with h5py.File(outfile, 'w') as fout:
-            for v in tf.trainable_variables():
-                if v.name.find('softmax') >= 0:
-                    # don't dump these
-                    continue
-                outname = _get_outname(v.name)
-                print("Saving variable {0} with name {1}".format(
-                    v.name, outname))
-                shape = v.get_shape().as_list()
-                dset = fout.create_dataset(outname, shape, dtype='float32')
-                values = sess.run([v])[0]
-                dset[...] = values
+            with h5py.File(outfile, 'w') as fout:
+                for v in tf.trainable_variables():
+                    if v.name.find('softmax') >= 0:
+                        # don't dump these
+                        continue
+                    outname = _get_outname(v.name)
+                    print("Saving variable {0} with name {1}".format(
+                        v.name, outname))
+                    shape = v.get_shape().as_list()
+                    dset = fout.create_dataset(outname, shape, dtype='float32')
+                    values = sess.run([v])[0]
+                    dset[...] = values

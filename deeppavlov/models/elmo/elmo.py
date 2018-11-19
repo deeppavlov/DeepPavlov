@@ -15,19 +15,17 @@
 # limitations under the License.
 
 from typing import Optional, List
+import copy
 
 import tensorflow as tf
 import numpy as np
 import json
 from overrides import overrides
-import copy
 
-# from deeppavlov.core.models.tf_model import TFModel
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.commands.utils import expand_path
-
 from deeppavlov.models.elmo.bilm_model import LanguageModel
 from deeppavlov.models.elmo.train_utils import average_gradients, clip_grads, safely_str2int, dump_weights
 from deeppavlov.models.elmo.elmo2tfhub import export2hub
@@ -60,6 +58,12 @@ class ELMo(NNModel):
         n_gpus: Number of gpu to use.
         seed: Random seed.
         batch_size: A size of a train batch.
+        load_epoch_num: An index of loading epoch.
+        epoch_load_path: An epoch loading path relative to save_path.
+        epoch_save_path:  An epoch saving path relative to save_path.
+            If epoch_save_path is None then epoch_save_path = epoch_load_path.
+        dumps_save_path: A dump saving path relative to save_path.
+        tf_hub_save_path: A tf_hub saving path relative to save_path.
     """
 
     def __init__(self,
@@ -165,7 +169,7 @@ class ELMo(NNModel):
                           if safely_str2int(i.parts[-1]) is not None)
         epoch_num = max(candidates, default=default)
         return epoch_num
-                                            
+                           
     def _build_graph(self, graph):
         with graph.as_default():
             with tf.device('/cpu:0'):
@@ -416,7 +420,7 @@ class ELMo(NNModel):
         """
         if hasattr(self, 'sess'):
             self.sess.close()
-        path = self.load_path
+        path = self.save_path
         if epoch:
             from_path = path.parents[1] / self.epoch_save_path / str(epoch) / path.parts[-1]
             weights_to_path = path.parents[1] / self.dumps_save_path / f'weights_epoch_n_{epoch}.hdf5'
@@ -424,7 +428,7 @@ class ELMo(NNModel):
             from_path.resolve()
             weights_to_path.resolve()
             tf_hub_to_path.resolve()
-            log.info(f'[dumping {epoch} epoch]')
+            log.info(f'[exporting {epoch} epoch]')
         else:
             from_path = path
             weights_to_path = path.parents[1] / self.dumps_save_path / 'weights.hdf5'
@@ -435,7 +439,6 @@ class ELMo(NNModel):
 
         # Check presence of the model files
         if tf.train.checkpoint_exists(str(from_path)):
-            log.info(f'[dumping model from {from_path} to {weights_to_path}]')
             dump_weights(from_path.parents[0], weights_to_path, self.permanent_options)
 
             options = copy.deepcopy(self.permanent_options)
