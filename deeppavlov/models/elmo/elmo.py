@@ -79,7 +79,7 @@ class ELMo(NNModel):
                  initial_accumulator_value: float = 1.0,
                  learning_rate: float = 2e-1,  # For AdagradOptimizer
                  n_gpus: int = 1,  # TODO: Add cpu supporting
-                 seed: int = None,  # Other
+                 seed: Optional[int] = None,  # Other
                  batch_size: int = 128,  # Data params
                  load_epoch_num: Optional[int] = None,
                  epoch_load_path: str = 'epochs',
@@ -353,7 +353,7 @@ class ELMo(NNModel):
 
     def train_on_batch(self,
                        x_char_ids: list,
-                       y_token_ids: list):
+                       y_token_ids: list) -> List[float]:
         """
         This method is called by trainer to make one training step on one batch.
 

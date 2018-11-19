@@ -1,12 +1,12 @@
 {
   "dataset_reader": {
-    "name": "file_paths_reader",
-    "data_path": "elmo-1b-benchmark/data/1-billion-word-language-modeling-benchmark-r13output/",
+    "class_name": "file_paths_reader",
+    "data_path": "{DOWNLOADS_PATH}/elmo-1b-benchmark/data/1-billion-word-language-modeling-benchmark-r13output/",
     "train": "training-monolingual.tokenized.shuffled/*",
     "valid": "heldout-monolingual.tokenized.shuffled/*"
   },
   "dataset_iterator": {
-    "name": "elmo_file_paths_iterator",
+    "class_name": "elmo_file_paths_iterator",
     "seed": 31415,
     "unroll_steps": 20,
     "max_word_length": 50,
@@ -14,8 +14,8 @@
     "shuffle": false,
     "bos":"<S>",
     "eos":"</S>",
-    "save_path": "elmo-1b-benchmark/data/vocab-2016-09-10.txt",
-    "load_path":"elmo-1b-benchmark/data/vocab-2016-09-10.txt"
+    "save_path": "{DOWNLOADS_PATH}/elmo-1b-benchmark/data/vocab-2016-09-10.txt",
+    "load_path":"{DOWNLOADS_PATH}/elmo-1b-benchmark/data/vocab-2016-09-10.txt"
   },
   "chainer": {
     "in": [
@@ -26,12 +26,12 @@
     ],
     "pipe": [
       {
-        "name": "elmo_model",
-        "options_json_path": "elmo-1b-benchmark/options.json",
+        "class_name": "elmo_model",
+        "options_json_path": "{DOWNLOADS_PATH}/elmo-1b-benchmark/options.json",
         "unroll_steps": 20,
         "batch_size": 128,
-        "save_path": "elmo-1b-benchmark/ckpts/current_ckpt/model",
-        "load_path": "elmo-1b-benchmark/ckpts/current_ckpt/model",
+        "save_path": "{DOWNLOADS_PATH}/elmo-1b-benchmark/ckpts/current_ckpt/model",
+        "load_path": "{DOWNLOADS_PATH}/elmo-1b-benchmark/ckpts/current_ckpt/model",
         "in": ["x_char_ids", "y_token_ids"],
         "in_y": [],
         "n_gpus": 3,
@@ -56,25 +56,30 @@
         "inputs": ["loss"]
       }
     ],
-    "tensorboard_log_dir": "elmo-1b-benchmark/logs"
+    "tensorboard_log_dir": "{DOWNLOADS_PATH}/elmo-1b-benchmark/logs"
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/tf-gpu.txt",
-      "../dp_requirements/tf-hub.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf-gpu.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
     ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/1-billion-word-language-modeling-benchmark-r13output.tar.gz",
-        "subdir": "elmo-1b-benchmark/data"
+        "subdir": "{DOWNLOADS_PATH}/elmo-1b-benchmark/data"
       },
       {
         "url": "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/vocab-2016-09-10.txt",
-        "subdir": "elmo-1b-benchmark/data"
+        "subdir": "{DOWNLOADS_PATH}/elmo-1b-benchmark/data"
       },
       {
         "url": "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_tf_checkpoint/options.json",
-        "subdir": "elmo-1b-benchmark"
+        "subdir": "{DOWNLOADS_PATH}/elmo-1b-benchmark"
       }
     ]
   }

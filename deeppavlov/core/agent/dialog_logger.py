@@ -51,7 +51,7 @@ class DialogLogger:
             self.agent_name: str = agent_name or self.config['agent_name']
             self.log_max_size: int = self.config['logfile_max_size_kb']
             self.log_file = self._get_log_file()
-            self.log_file.writelines('Agent initiated\n')
+            self.log_file.writelines('"Agent initiated"\n')
 
     @staticmethod
     def _get_timestamp_utc_str() -> str:
@@ -72,7 +72,7 @@ class DialogLogger:
         log_dir: Path = Path(self.config['log_path']).expanduser().resolve() / self.agent_name
         log_dir.mkdir(parents=True, exist_ok=True)
         log_file_path = Path(log_dir, f'{self._get_timestamp_utc_str()}_{self.agent_name}.log')
-        log_file = open(log_file_path, 'a', buffering=1)
+        log_file = open(log_file_path, 'a', buffering=1, encoding='utf8')
         return log_file
 
     def _log(self, utterance: Any, direction: str, dialog_id: Optional[Hashable]=None):
@@ -104,7 +104,7 @@ class DialogLogger:
                 log_msg['dialog_id'] = dialog_id
                 log_msg['direction'] = direction
                 log_msg['message'] = utterance
-                log_str = json.dumps(log_msg)
+                log_str = json.dumps(log_msg, ensure_ascii=self.config['ensure_ascii'])
                 self.log_file.write(f'{log_str}\n')
             except IOError:
                 log.error('Failed to write dialog log.')

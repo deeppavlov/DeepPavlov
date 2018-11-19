@@ -1,12 +1,12 @@
 {
   "dataset_reader": {
-    "name": "conll2003_reader",
-    "data_path": "conll2003/",
+    "class_name": "conll2003_reader",
+    "data_path": "{DOWNLOADS_PATH}/conll2003/",
     "dataset_name": "conll2003",
     "provide_pos": false
   },
   "dataset_iterator": {
-    "name": "data_learning_iterator"
+    "class_name": "data_learning_iterator"
   },
   "chainer": {
     "in": ["x"],
@@ -14,78 +14,78 @@
     "pipe": [
       {
         "in": ["x"],
-        "name": "lazy_tokenizer",
+        "class_name": "lazy_tokenizer",
         "out": ["x_tokens"]
       },
       {
         "in": ["x_tokens"],
-        "name": "str_lower",
+        "class_name": "str_lower",
         "out": ["x_lower"]
       },
       {
         "in": ["x_lower"],
-        "name": "sanitizer",
+        "class_name": "sanitizer",
         "nums": true,
         "out": ["x_san"]
       },
       {
         "in": ["x_san"],
         "id": "word_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "pad_with_zeros": true,
         "special_tokens": ["<UNK>"],
         "fit_on": ["x_san"],
-        "save_path": "ner_conll2003/word.dict",
-        "load_path": "ner_conll2003/word.dict",
+        "save_path": "{MODELS_PATH}/ner_conll2003/word.dict",
+        "load_path": "{MODELS_PATH}/ner_conll2003/word.dict",
         "out": ["x_tok_ind"]
       },
       {
         "in": ["y"],
         "id": "tag_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["y"],
-        "save_path": "ner_conll2003/tag.dict",
-        "load_path": "ner_conll2003/tag.dict",
+        "save_path": "{MODELS_PATH}/ner_conll2003/tag.dict",
+        "load_path": "{MODELS_PATH}/ner_conll2003/tag.dict",
         "out": ["y_ind"]
       },
       {
         "in": ["x_tokens"],
-        "name": "char_splitter",
+        "class_name": "char_splitter",
         "out": ["x_char"]
       },
       {
         "in": ["x_char"],
         "id": "char_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["x_char"],
-        "save_path": "ner_conll2003/char.dict",
-        "load_path": "ner_conll2003/char.dict",
+        "save_path": "{MODELS_PATH}/ner_conll2003/char.dict",
+        "load_path": "{MODELS_PATH}/ner_conll2003/char.dict",
         "out": ["x_char_ind"]
       },
       {
         "in": ["x_tokens"],
-        "name": "mask",
+        "class_name": "mask",
         "out": ["mask"]
       },
       {
         "in": ["x_san"],
         "id": "glove_emb",
-        "name": "glove",
+        "class_name": "glove",
         "pad_zero": true,
-        "load_path": "embeddings/glove.6B.100d.txt",
+        "load_path": "{DOWNLOADS_PATH}/embeddings/glove.6B.100d.txt",
         "out": ["x_emb"]
       },
       {
         "id": "embeddings",
-        "name": "emb_mat_assembler",
+        "class_name": "emb_mat_assembler",
         "embedder": "#glove_emb",
         "vocab": "#word_vocab"
       },
       {
         "id": "embeddings_char",
-        "name": "emb_mat_assembler",
+        "class_name": "emb_mat_assembler",
         "character_level": true,
         "emb_dim": 32,
         "embedder": "#glove_emb",
@@ -93,7 +93,7 @@
       },
       {
         "id": "capitalization",
-        "name": "capitalization_featurizer",
+        "class_name": "capitalization_featurizer",
         "in": ["x_tokens"],
         "out": ["cap"]
       },
@@ -101,7 +101,7 @@
         "in": ["x_emb", "mask", "x_char_ind", "cap"],
         "in_y": ["y_ind"],
         "out": ["y_predicted"],
-        "name": "ner",
+        "class_name": "ner",
         "main": true,
         "token_emb_dim": "#glove_emb.dim",
         "n_hidden_list": [128],
@@ -111,8 +111,8 @@
         "n_tags": "#tag_vocab.len",
         "capitalization_dim": "#capitalization.dim",
         "char_emb_dim": "#embeddings_char.dim",
-        "save_path": "ner_conll2003/model_no_pos",
-        "load_path": "ner_conll2003/model_no_pos",
+        "save_path": "{MODELS_PATH}/ner_conll2003/model_no_pos",
+        "load_path": "{MODELS_PATH}/ner_conll2003/model_no_pos",
         "char_emb_mat": "#embeddings_char.emb_mat",
         "two_dense_on_top": true,
         "use_crf": true,
@@ -149,19 +149,27 @@
     "show_examples": false
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/gensim.txt",
-      "../dp_requirements/tf.txt"
+      "{DEEPPAVLOV_PATH}/requirements/gensim.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
     "labels": {
       "telegram_utils": "NERCoNLL2003Model",
       "server_utils": "NER"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/ner_conll2003_v4_cpu_compatible.tar.gz",
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_conll2003_v4_cpu_compatible.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
       {
         "url": "http://files.deeppavlov.ai/embeddings/glove.6B.100d.txt",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
   }

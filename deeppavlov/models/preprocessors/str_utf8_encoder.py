@@ -29,6 +29,8 @@ from deeppavlov.core.models.estimator import Estimator
 
 log = get_logger(__name__)
 
+StrUTF8EncoderInfo = Union[List[str], List['StrUTF8EncoderInfo']]
+
 
 @register('str_utf8_encoder')
 class StrUTF8Encoder(Estimator):
@@ -45,13 +47,13 @@ class StrUTF8Encoder(Estimator):
         eos: Name of a special token of the end of a sentence.
     """
     def __init__(self, 
-                 max_word_length:int = 50,
-                 pad_special_char_use:bool = False,
-                 word_boundary_special_char_use:bool = False,
-                 sentence_boundary_special_char_use:bool = False,
-                 reversed_sentense_tokens:bool = False,
-                 bos:str = '<S>',
-                 eos:str = '</S>',
+                 max_word_length: int = 50,
+                 pad_special_char_use: bool = False,
+                 word_boundary_special_char_use: bool = False,
+                 sentence_boundary_special_char_use: bool = False,
+                 reversed_sentense_tokens: bool = False,
+                 bos: str = '<S>',
+                 eos: str = '</S>',
                  **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -63,7 +65,6 @@ class StrUTF8Encoder(Estimator):
         self._max_word_length = max_word_length
         self._reverse = reversed_sentense_tokens
 
-
         self._pad_special_char_use = pad_special_char_use
         self._word_boundary_special_char_use = word_boundary_special_char_use
         self._sentence_boundary_special_char_use = sentence_boundary_special_char_use
@@ -74,19 +75,20 @@ class StrUTF8Encoder(Estimator):
         self.eos_char = 257  # <end sentence>
         self.bow_char = 258  # <begin word>
         self.eow_char = 259  # <end word>
-        self.pad_char = 260 # <padding>
+        self.pad_char = 260  # <padding>
 
-        self._len = 261 # an upper bound of all indexes
+        self._len = 261  # an upper bound of all indexes
 
         # the charcter representation of the begin/end of sentence characters
         def _make_bos_eos(indx):
             indx = np.array([indx], dtype=np.int32)
             if self._word_boundary_special_char_use:
-                code = np.pad(indx, (1,1), 'constant', constant_values=(self.bow_char,self.eow_char))
+                code = np.pad(indx, (1, 1), 'constant', constant_values=(self.bow_char, self.eow_char))
             else:
                 code = indx
             if self._pad_special_char_use:
-                code = np.pad(code, (0,self._max_word_length - code.shape[0]), 'constant', constant_values=(self.pad_char))
+                code = np.pad(code, (0, self._max_word_length - code.shape[0]), 'constant', 
+                              constant_values=(self.pad_char))
             else:
                 pass
             return code
@@ -95,11 +97,11 @@ class StrUTF8Encoder(Estimator):
         self.eos_chars = _make_bos_eos(self.eos_char)
 
         if self._sentence_boundary_special_char_use:
-            self._eos_chars =  [self.eos_chars]
-            self._bos_chars =  [self.bos_chars]
+            self._eos_chars = [self.eos_chars]
+            self._bos_chars = [self.bos_chars]
         else:
-            self._eos_chars =  []
-            self._bos_chars =  []
+            self._eos_chars = []
+            self._bos_chars = []
 
         if self.load_path:
             self.load()
@@ -112,7 +114,7 @@ class StrUTF8Encoder(Estimator):
         self._word_char_ids[bos] = self.bos_chars
         self._word_char_ids[eos] = self.eos_chars
 
-    def __call__(self, batch: Union[List[str], Tuple[str]]):
+    def __call__(self, batch: Union[List[str], Tuple[str]]) -> StrUTF8EncoderInfo:
         """Recursively search for strings in a list and utf8 encode
 
         Args:
@@ -127,7 +129,7 @@ class StrUTF8Encoder(Estimator):
             else:
                 return [self(line) for line in batch]
         raise RuntimeError(f'The objects passed to the reverser are not list or tuple of str! '
-                            f' But they are {type(batch)}.')
+                           f' But they are {type(batch)}.')
 
     @overrides
     def load(self):
@@ -166,13 +168,13 @@ class StrUTF8Encoder(Estimator):
         if self._pad_special_char_use:
             code[:] = self.pad_char
         if self._word_boundary_special_char_use:
-            word_encoded = word.encode('utf-8', 'ignore')[:self._max_word_length-2]
+            word_encoded = word.encode('utf-8', 'ignore')[:self._max_word_length - 2]
             code[0] = self.bow_char
 
             for k, chr_id in enumerate(word_encoded, start=1):
                 code[k] = chr_id
 
-            code[len(word_encoded)+1] = self.eow_char
+            code[len(word_encoded) + 1] = self.eow_char
         else:
             word_encoded = word.encode('utf-8', 'ignore')[:self._max_word_length]
 
@@ -181,12 +183,10 @@ class StrUTF8Encoder(Estimator):
 
         if not self._pad_special_char_use:
             if self._word_boundary_special_char_use:
-                code = code[:len(word_encoded)+2]
+                code = code[:len(word_encoded) + 2]
             else:
                 code = code[:len(word_encoded)]
         return code
-
-
 
     def _word_to_char_ids(self, word):
         if word in self._word_char_ids:
@@ -199,9 +199,8 @@ class StrUTF8Encoder(Estimator):
         Encode the sentence as a white space delimited string of tokens.
         '''
         chars_ids = [self._word_to_char_ids(cur_word)
-                    for cur_word in sentence]
+                     for cur_word in sentence]
         return self._wrap_in_s_char(chars_ids)
-
 
     def _wrap_in_s_char(self, chars_ids):
         chars_ids = chars_ids if self._pad_special_char_use else list(chars_ids)
@@ -210,6 +209,7 @@ class StrUTF8Encoder(Estimator):
         else:
             ret = self._bos_chars + chars_ids + self._eos_chars
         return np.vstack(ret) if self._pad_special_char_use else ret
+
     def __len__(self):
         return self._len
 

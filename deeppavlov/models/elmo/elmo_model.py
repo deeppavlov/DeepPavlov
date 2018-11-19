@@ -275,7 +275,7 @@ class BidirectionalLanguageModelGraph(object):
             # get the vocab size
             with h5py.File(embedding_weight_file, 'r') as fin:
                 # +1 for padding
-                self._n_tokens_vocab = fin ['embedding'].shape[0] + 1
+                self._n_tokens_vocab = fin['embedding'].shape[0] + 1
         else:
             self._n_tokens_vocab = None
 
@@ -336,18 +336,16 @@ class BidirectionalLanguageModelGraph(object):
 
         # the character embeddings
         with tf.device("/cpu:0"):
-            self.embedding_weights = tf.get_variable(
-                    "char_embed", [n_chars, char_embed_dim],
-                    dtype=DTYPE,
-                    initializer=tf.random_uniform_initializer(-1.0, 1.0)
-            )
+            self.embedding_weights = tf.get_variable("char_embed", [n_chars, char_embed_dim],
+                                                     dtype=DTYPE,
+                                                     initializer=tf.random_uniform_initializer(-1.0, 1.0))
             # shape (batch_size, unroll_steps, max_chars, embed_dim)
             self.char_embedding = tf.nn.embedding_lookup(self.embedding_weights,
-                                                    self.ids_placeholder)
+                                                         self.ids_placeholder)
 
         # the convolutions
         def make_convolutions(inp):
-            with tf.variable_scope('CNN') as scope:
+            with tf.variable_scope('CNN'):
                 convolutions = []
                 for i, (width, num) in enumerate(filters):
                     if cnn_options['activation'] == 'relu':
@@ -356,7 +354,7 @@ class BidirectionalLanguageModelGraph(object):
                         # w_init = tf.random_normal_initializer(
                         #    mean=0.0,
                         #    stddev=np.sqrt(2.0 / (width * char_embed_dim))
-                        #)
+                        # )
 
                         # Kim et al 2015, +/- 0.05
                         w_init = tf.random_uniform_initializer(
@@ -376,14 +374,12 @@ class BidirectionalLanguageModelGraph(object):
                         "b_cnn_%s" % i, [num], dtype=DTYPE,
                         initializer=tf.constant_initializer(0.0))
 
-                    conv = tf.nn.conv2d(
-                            inp, w,
-                            strides=[1, 1, 1, 1],
-                            padding="VALID") + b
+                    conv = tf.nn.conv2d(inp, w,
+                                        strides=[1, 1, 1, 1],
+                                        padding="VALID") + b
                     # now max pool
-                    conv = tf.nn.max_pool(
-                            conv, [1, 1, max_chars-width+1, 1],
-                            [1, 1, 1, 1], 'VALID')
+                    conv = tf.nn.max_pool(conv, [1, 1, max_chars - width + 1, 1],
+                                          [1, 1, 1, 1], 'VALID')
 
                     # activation
                     conv = activation(conv)
@@ -408,7 +404,7 @@ class BidirectionalLanguageModelGraph(object):
         # set up weights for projection
         if use_proj:
             assert n_filters > projection_dim
-            with tf.variable_scope('CNN_proj') as scope:
+            with tf.variable_scope('CNN_proj'):
                     W_proj_cnn = tf.get_variable(
                         "W_proj", [n_filters, projection_dim],
                         initializer=tf.random_normal_initializer(
@@ -429,7 +425,7 @@ class BidirectionalLanguageModelGraph(object):
             highway_dim = n_filters
 
             for i in range(n_highway):
-                with tf.variable_scope('CNN_high_%s' % i) as scope:
+                with tf.variable_scope('CNN_high_%s' % i):
                     W_carry = tf.get_variable(
                         'W_carry', [highway_dim, highway_dim],
                         # glorit init
@@ -465,7 +461,6 @@ class BidirectionalLanguageModelGraph(object):
         # at last assign attributes for remainder of the model
         self.embedding = embedding
 
-
     def _build_word_embeddings(self):
         projection_dim = self.options['lstm']['projection_dim']
 
@@ -476,8 +471,7 @@ class BidirectionalLanguageModelGraph(object):
                 dtype=DTYPE,
             )
             self.embedding = tf.nn.embedding_lookup(self.embedding_weights,
-                                                self.ids_placeholder)
-
+                                                    self.ids_placeholder)
 
     def _build_lstms(self):
         # now the LSTMs
@@ -529,9 +523,8 @@ class BidirectionalLanguageModelGraph(object):
                         lstm_dim, num_proj=projection_dim,
                         cell_clip=cell_clip, proj_clip=proj_clip)
                 else:
-                    lstm_cell = tf.nn.rnn_cell.LSTMCell(
-                            lstm_dim,
-                            cell_clip=cell_clip, proj_clip=proj_clip)
+                    lstm_cell = tf.nn.rnn_cell.LSTMCell(lstm_dim,
+                                                        cell_clip=cell_clip, proj_clip=proj_clip)
 
                 if use_skip_connections:
                     # ResidualWrapper adds inputs to outputs
@@ -545,7 +538,6 @@ class BidirectionalLanguageModelGraph(object):
 
                 # collect the input state, run the dynamic rnn, collect
                 # the output
-                state_size = lstm_cell.state_size
                 # the LSTMs are stateful.  To support multiple batch sizes,
                 # we'll allocate size for states up to max_batch_size,
                 # then use the first batch_size entries for each batch
@@ -657,8 +649,7 @@ def weight_layers(name, bilm_ops, l2_coef=None,
             x_masked = x * broadcast_mask
             N = tf.reduce_sum(mask_float) * lm_dim
             mean = tf.reduce_sum(x_masked) / N
-            variance = tf.reduce_sum(((x_masked - mean) * broadcast_mask)**2
-                                    ) / N
+            variance = tf.reduce_sum(((x_masked - mean) * broadcast_mask)**2) / N
             return tf.nn.batch_normalization(
                 x, mean, variance, None, None, 1E-12
             )
@@ -696,8 +687,7 @@ def weight_layers(name, bilm_ops, l2_coef=None,
     
             # get the regularizer 
             reg = [
-                r for r in tf.get_collection(
-                                tf.GraphKeys.REGULARIZATION_LOSSES)
+                r for r in tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
                 if r.name.find('{}_ELMo_W/'.format(name)) >= 0
             ]
             if len(reg) != 1:

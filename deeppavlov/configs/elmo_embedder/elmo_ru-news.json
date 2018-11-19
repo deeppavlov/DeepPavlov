@@ -6,17 +6,17 @@
     "pipe": [
       {
         "in": ["sentences"],
-        "name": "lazy_tokenizer",
+        "class_name": "lazy_tokenizer",
         "out": ["tokens"]
       },
       {
-        "name": "elmo_embedder",
+        "class_name": "elmo_embedder",
         "elmo_output_names": ["lstm_outputs1", "lstm_outputs2", "word_emb"],
         "mini_batch_size": 32,
         "in": [
           "tokens"
         ],
-        "spec": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz",
+        "spec": "{DOWNLOADS_PATH}/embeddings/elmo_ru_news",
         "out": [
           "tokens_emb"
         ]
@@ -27,9 +27,20 @@
     ]
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/tf-gpu.txt",
-      "../dp_requirements/tf-hub.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf-gpu.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/embeddings/elmo_ru_news"
+      }
     ]
   }
 }

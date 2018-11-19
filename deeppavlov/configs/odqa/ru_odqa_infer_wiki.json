@@ -8,7 +8,7 @@
     ],
     "pipe": [
       {
-        "config_path": "../deeppavlov/configs/doc_retrieval/ru_ranker_tfidf_wiki.json",
+        "config_path": "{CONFIGS_PATH}/doc_retrieval/ru_ranker_tfidf_wiki.json",
         "in": [
           "question_raw"
         ],
@@ -17,7 +17,7 @@
         ]
       },
       {
-        "name": "wiki_sqlite_vocab",
+        "class_name": "wiki_sqlite_vocab",
         "in": [
           "doc_ids"
         ],
@@ -26,23 +26,23 @@
         ],
         "join_docs": false,
         "shuffle": false,
-        "load_path": "odqa/ruwiki.db"
+        "load_path": "{DOWNLOADS_PATH}/odqa/ruwiki.db"
       },
       {
-        "name": "document_chunker",
+        "class_name": "document_chunker",
         "in": ["context_raw"],
         "out": ["chunks"],
         "flatten_result": true
       },
       {
-        "name": "string_multiplier",
+        "class_name": "string_multiplier",
         "in": ["question_raw", "chunks"],
         "out":["questions"]
       },
       {
-        "name": "logit_ranker",
+        "class_name": "logit_ranker",
         "squad_model": {
-          "config_path": "../deeppavlov/configs/squad/squad_ru.json"
+          "config_path": "{CONFIGS_PATH}/squad/squad_ru.json"
         },
         "in": [
           "chunks",
@@ -55,15 +55,23 @@
     ]
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
     "labels": {
       "server_utils": "ODQA"
     },
     "download": [
-      "http://files.deeppavlov.ai/datasets/wikipedia/ruwiki.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/ru_odqa.tar.gz"
+      {
+        "url": "http://files.deeppavlov.ai/datasets/wikipedia/ruwiki.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      }
     ]
   }
 }

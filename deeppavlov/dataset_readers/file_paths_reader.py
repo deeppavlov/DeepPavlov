@@ -24,6 +24,7 @@ from deeppavlov.core.common.log import get_logger
 
 log = get_logger(__name__)
 
+
 @register('file_paths_reader')
 class FilePathsReader(DatasetReader):
     """Find all file paths by a data path glob"""
