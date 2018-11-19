@@ -59,7 +59,7 @@
           "elmo"
         ],
         "mini_batch_size": 8,
-        "spec": "{DOWNLOADS_PATH}/embeddings/yahooo-sber-questions_epoches_n_9/"
+        "spec": "{DOWNLOADS_PATH}/embeddings/yahooo-sber-questions_epoches_n_15/"
       },
       {
         "in": "y_ids",
@@ -84,14 +84,14 @@
         "load_path": "{MODELS_PATH}/classifiers/convers_vs_info/model_v0/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
-        "units_gru": 256,
+        "units_gru": 512,
         "optimizer": "Adam",
         "lear_rate": 0.001,
         "lear_rate_decay": 0.001,
         "loss": "categorical_crossentropy",
         "text_size": 20,
-        "coef_reg_gru": 1e-5,
-        "coef_reg_den": 1e-5,
+        "coef_reg_gru": 1e-4,
+        "coef_reg_den": 1e-4,
         "dropout_rate": 0.5,
         "rec_dropout_rate": 0.5,
         "dense_size": 100,
@@ -121,7 +121,7 @@
     ]
   },
   "train": {
-    "epochs": 20,
+    "epochs": 100,
     "batch_size": 256,
     "metrics": [
       {
@@ -162,7 +162,7 @@
     },
     "requirements": [
       "../dp_requirements/tf.txt",
-      "../dp_requirements/fasttext.txt"
+      "../dp_requirements/elmo.txt"
     ],
     "labels": {
       "telegram_utils": "IntentModel",
@@ -170,12 +170,16 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/embeddings/yahooo-sber-questions_epoches_n_9.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/embeddings/yahooo-sber-questions_epoches_n_9/"
+        "url": "http://files.deeppavlov.ai/embeddings/yahooo-sber-questions_epoches_n_15.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/embeddings/yahooo-sber-questions_epoches_n_15/"
       },
       {
         "url": "http://files.deeppavlov.ai/datasets/convers_vs_info_data.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/convers_vs_info.tar.gz",
+        "subdir": "{MODELS_PATH}/classifiers/convers_vs_info/"
       }
     ]
   }
