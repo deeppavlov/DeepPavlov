@@ -140,14 +140,14 @@ Evolution process can be described in the following way:
 -  ``{"evolve_choice": [value_0, ..., value_n]}`` -
    values uniformly taking out of the given values.
 
--  The `main` model in the pipe is being evolved.
+-  The ``main`` model in the pipe is being evolved.
    **It is obligatory to use the one and only variable for setting paths for ALL fitted and trained models**
-   from `config["metadata"]["variables"]["MODELS_PATH"]` - this variable should be set to the common folder
+   from ``config["metadata"]["variables"]["MODELS_PATH"]`` - this variable should be set to the common folder
    for current evolutionary process (for example,
-   `config["metadata"]["variables"]["MODELS_PATH"] = "{ROOT_PATH}/snips_evolution"`).
+   ``config["metadata"]["variables"]["MODELS_PATH"] = "{ROOT_PATH}/snips_evolution"``).
    Change ``save_path`` and ``load_path`` of all fitted and trained components of the config
-   to the relative paths using `config["metadata"]["variables"]["MODELS_PATH"]` (for example,
-   `"save_path": "{MODELS_PATH}/classes.dict"`).
+   to the relative paths using ``config["metadata"]["variables"]["MODELS_PATH"]`` (for example,
+   ``"save_path": "{MODELS_PATH}/classes.dict"``).
 
 
 That's all you need to change in the config. Now let's move on to the
