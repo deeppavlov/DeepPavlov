@@ -158,7 +158,7 @@ providing corresponding name of the config file (see above):
 
 ::
 
-    python deeppavlov/deep.py download configs/classifiers/intents_dstc2.json
+    python -m deeppavlov download deeppavlov/configs/classifiers/intents_dstc2.json
 
 or provide flag ``-d`` for commands like ``interact``, ``interactbot``,
 etc. The flag ``-d`` provides downloading all the required components.
@@ -180,13 +180,13 @@ or from command line:
 
 .. code:: bash
 
-    python deeppavlov/deep.py interact configs/classifiers/intents_dstc2.json [-d]
+    python -m deeppavlov interact deeppavlov/configs/classifiers/intents_dstc2.json [-d]
 
 or
 
 .. code:: bash
 
-    python deeppavlov/deep.py interactbot configs/classifiers/intents_dstc2.json -t <TELEGRAM_TOKEN> [-d]
+    python -m deeppavlov interactbot deeppavlov/configs/classifiers/intents_dstc2.json -t <TELEGRAM_TOKEN> [-d]
 
 For 'interactbot' mode one should specify a Telegram bot token in ``-t`` parameter or in the ``TELEGRAM_TOKEN``
 environment variable.
@@ -246,7 +246,7 @@ could be changed. Then training can be run in the following way:
 
 ::
 
-    python deeppavlov/deep.py train "path_to_config"
+    python -m deeppavlov train "path_to_config"
 
 Train on other datasets
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -283,7 +283,7 @@ Then training process can be run in the same way:
 
 ::
 
-    python deeppavlov/deep.py train "path_to_config"
+    python -m deeppavlov train "path_to_config"
 
 The current version of :config:`intents_snips.json <classifiers/intents_snips.json>`` contains parameters for
 intent recognition for SNIPS benchmark dataset [2] that was restored in
