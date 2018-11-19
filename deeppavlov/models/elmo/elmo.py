@@ -28,7 +28,7 @@ from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.commands.utils import expand_path
 
 from deeppavlov.models.elmo.bilm_model import LanguageModel
-from deeppavlov.models.elmo.train_utils import print_variable_summary, average_gradients, clip_grads
+from deeppavlov.models.elmo.train_utils import average_gradients, clip_grads, safely_str2int, dump_weights
 
 log = get_logger(__name__)
 
@@ -75,8 +75,9 @@ class ELMo(NNModel):
                  n_gpus: int = 1,  # TODO: Add cpu supporting
                  seed: int = None,  # Other
                  batch_size: int = 128,  # Data params
-                 load_epoch_num: int = 1,
-                 epoch_save_path: str = 'epochs',
+                 load_epoch_num: Optional[int] = None,
+                 epoch_load_path: str = 'epochs',
+                 epoch_save_path: Optional[str] = None,
                  dumps_save_path: str = 'dumps',
                  tf_hub_save_path: str = 'hubs',
                  **kwargs) -> None:
@@ -103,17 +104,27 @@ class ELMo(NNModel):
         self.train_options = {}
         self.valid_options = {'batch_size': 256, 'unroll_steps': 1, 'n_gpus': 1}
 
-        self.load_epoch_num = load_epoch_num
-        self.epoch_save_path = epoch_save_path
-        self.dumps_save_path = dumps_save_path
-        self.tf_hub_save_path = tf_hub_save_path
-        self.init_step = 0
         tf.set_random_seed(seed)
         np.random.seed(seed)
 
         super().__init__(**kwargs)
 
-        self._build_model(train = False)
+        self.epoch_load_path = epoch_load_path
+
+        if load_epoch_num is None:
+            load_epoch_num = self._get_epoch_from(self.epoch_load_path, None)
+
+        if epoch_save_path is None:
+            self.epoch_save_path = self.epoch_load_path
+
+        self.save_epoch_num = self._get_epoch_from(self.epoch_save_path)
+
+        self.dumps_save_path = dumps_save_path
+        self.tf_hub_save_path = tf_hub_save_path
+
+        self._build_model(train = False, epoch=load_epoch_num)
+
+        self.save()
 
     def _load_options(self, options_json_path):
         if options_json_path:
@@ -143,14 +154,24 @@ class ELMo(NNModel):
             self.options['n_negative_samples_batch'] = n_negative_samples_batch
         if all_clip_norm_val is not None:
             self.options['all_clip_norm_val'] = all_clip_norm_val
+
+    def _get_epoch_from(self, epoch_load_path, default = 0):
+        path = self.load_path
+        path = path.parents[1] / epoch_load_path
+        candidates = path.resolve().glob('[0-9]*')
+        candidates = list(safely_str2int(i.parts[-1]) for i in candidates
+                          if safely_str2int(i.parts[-1]) is not None)
+        epoch_num = max(candidates, default=default)
+        return epoch_num
                                             
     def _build_graph(self, graph):
         with graph.as_default():
             with tf.device('/cpu:0'):
+                init_step = 0
                 global_step = tf.get_variable(
                     'global_step', [],
-                    initializer=tf.constant_initializer(self.init_step), trainable=False)
-
+                    initializer=tf.constant_initializer(init_step), trainable=False)
+                self.global_step = global_step
                 # set up the optimizer
                 opt = tf.train.AdagradOptimizer(learning_rate=self.options['learning_rate'],
                                                 initial_accumulator_value=1.0)
@@ -180,10 +201,8 @@ class ELMo(NNModel):
                             )
                             tower_grads.append(grads)
                             # # keep track of loss across all GPUs
-                            # train_perplexity += total_train_loss
                             train_loss += total_train_loss
                             eval_loss += total_eval_loss
-                    # print_variable_summary()
 
                 # calculate the mean of each gradient across all GPUs
                 grads = average_gradients(tower_grads, self.options['batch_size'], self.options)
@@ -292,21 +311,36 @@ class ELMo(NNModel):
         return [loss]
 
     @overrides
-    def load(self, epoches: Optional[int] = None) -> None:
+    def load(self, epoch: Optional[int] = None) -> None:
         """Load model parameters from self.load_path"""
-        path = str(self.load_path.resolve())
+        path = self.load_path
+        if epoch:
+            path = path.parents[1] / self.epoch_save_path / str(epoch) / path.parts[-1]
+            path.resolve()
+            log.info(f'[loading {epoch} epoch]')
+
+        path = str(path)
+
         # Check presence of the model files
         if tf.train.checkpoint_exists(path):
-            log.info('[loading model from {}]'.format(path))
+            log.info(f'[loading model from {path}]')
             with self.graph.as_default():
                 saver = tf.train.Saver()
                 saver.restore(self.sess, path)
 
     @overrides
-    def save(self, epoches: Optional[int] = None) -> None:
+    def save(self, epoch: Optional[int] = None) -> None:
         """Save model parameters to self.save_path"""
-        path = str(self.save_path.resolve())
-        log.info('[saving model to {}]'.format(path))
+        path = self.save_path
+        if epoch:
+            path = path.parents[1] / self.epoch_save_path / str(epoch) / path.parts[-1]
+            path.resolve()
+            log.info(f'[saving {epoch} epoch]')
+
+        path.parents[0].mkdir(parents=True, exist_ok=True)
+        path = str(path)
+
+        log.info(f'[saving model to {path}]')
         with self.graph.as_default():
             saver = tf.train.Saver()
             saver.save(self.sess, path)
@@ -339,10 +373,9 @@ class ELMo(NNModel):
 
         return train_loss
 
-    def _build_model(self, train: bool, **kwargs):
+    def _build_model(self, train: bool, epoch: Optional[int] = None, **kwargs):
 
         if hasattr(self, 'sess'):
-            self.save()
             self.sess.close()
 
         self.options = self.permanent_options.copy()
@@ -362,13 +395,41 @@ class ELMo(NNModel):
         with self.graph.as_default():
             self.init_state_values, self.init_state_tensors, self.final_state_tensors =\
                 self._init_session()
-        self.load()
+        self.load(epoch)
 
     def process_event(self, event_name, data):
         if event_name == 'after_validation':
             self._build_model(train = True)
         elif event_name == 'after_epoch':
+            epoch = self.save_epoch_num + int(data['epochs_done'])
+            self.save(epoch)
+            self.save()
+            self.dump_weights(epoch)
+
             self._build_model(train = False)
+
+    def dump_weights(self, epoch: Optional[int] = None) -> None:
+        """
+        Dump the trained weights from a model to a HDF5 file.
+        """
+        if hasattr(self, 'sess'):
+            self.sess.close()
+        path = self.load_path
+        if epoch:
+            from_path = path.parents[1] / self.epoch_save_path / str(epoch) / path.parts[-1]
+            to_path = path.parents[1] / self.dumps_save_path / f'weights_epoch_n_{epoch}.hdf5'
+            from_path.resolve()
+            to_path.resolve()
+            log.info(f'[dumping {epoch} epoch]')
+        else:
+            from_path = path
+            to_path = path.parents[1] / self.dumps_save_path / 'weights.hdf5'
+        to_path.parents[0].mkdir(parents=True, exist_ok=True)
+
+        # Check presence of the model files
+        if tf.train.checkpoint_exists(str(from_path)):
+            log.info(f'[dumping model from {from_path} to {to_path}]')
+            dump_weights(from_path.parents[0], to_path, self.permanent_options)
 
     def destroy(self) -> None:
         """
@@ -377,7 +438,5 @@ class ELMo(NNModel):
         Returns:
             None
         """
-
-        self.sess.close()
-
-        return
+        if hasattr(self, 'sess'):
+            self.sess.close()
