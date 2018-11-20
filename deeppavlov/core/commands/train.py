@@ -204,11 +204,7 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
     res = {}
 
     if train_config['validate_best'] or train_config['test_best']:
-        # try:
-        #     model_config['load_path'] = model_config['save_path']
-        # except KeyError:
-        #     log.warning('No "save_path" parameter for the model, so "load_path" will not be renewed')
-        model = build_model(config, load_trained=True)
+        model = build_model(config, load_trained=to_train)
         log.info('Testing the best saved model')
 
         if train_config['validate_best']:
