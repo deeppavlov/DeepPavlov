@@ -69,13 +69,36 @@ def prettify_metrics(metrics: List[Tuple[str, float]], precision: int = 4) -> Or
 
 def _fit(model: Estimator, iterator: DataLearningIterator, train_config) -> Estimator:
     x, y = iterator.get_instances('train')
-    model.fit(x, y)
+    result = model.fit(x, y)
+
+    if result is not None and train_config.get('tensorboard_log_dir') is not None:
+        import tensorflow as tf
+        tb_log_dir = expand_path(train_config['tensorboard_log_dir'])
+        fit_writer = tf.summary.FileWriter(str(tb_log_dir / 'fit_log'))
+
+        for name, scores in result.items():
+            for i, score in enumerate(scores):
+                metric_sum = tf.Summary(value=[tf.Summary.Value(tag='fit/' + name,
+                                                                simple_value=score), ])
+                fit_writer.add_summary(metric_sum, i)
     model.save()
     return model
 
 
-def _fit_batches(model: Estimator, iterator: DataFittingIterator, train_config) -> Estimator:
-    model.fit_batches(iterator, batch_size=train_config['batch_size'])
+def _fit_batches(model: Union[NNModel, Estimator], iterator: Union[DataLearningIterator, DataFittingIterator], train_config) -> Union[NNModel, Estimator]:
+    result = model.fit_batches(iterator, batch_size=train_config['batch_size'])
+
+    if result is not None and train_config.get('tensorboard_log_dir') is not None:
+        import tensorflow as tf
+        tb_log_dir = expand_path(train_config['tensorboard_log_dir'])
+        fit_writer = tf.summary.FileWriter(str(tb_log_dir / 'fit_batches_log'))
+
+        for name, scores in result.items():
+            for i, score in enumerate(scores):
+                metric_sum = tf.Summary(value=[tf.Summary.Value(tag='fit_batches/' + name,
+                                                                simple_value=score), ])
+                fit_writer.add_summary(metric_sum, i)
+
     model.save()
     return model
 
@@ -97,12 +120,34 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
             if len(component_config['fit_on']) == 1:
                 preprocessed = [preprocessed]
 
-            component.fit(*preprocessed)
+            result = component.fit(*preprocessed)
+            if result is not None and config['train'].get('tensorboard_log_dir') is not None:
+                import tensorflow as tf
+                tb_log_dir = expand_path(config['train']['tensorboard_log_dir'])
+                writer = tf.summary.FileWriter(str(tb_log_dir / 'fit_log'))
+
+                for name, scores in result.items():
+                    for i, score in enumerate(scores):
+                        metric_sum = tf.Summary(value=[tf.Summary.Value(tag='fit/' + name,
+                                                                        simple_value=score), ])
+                        writer.add_summary(metric_sum, i)
+
             component.save()
 
         if 'fit_on_batch' in component_config:
             component: Estimator
-            component.fit_batches(iterator, config['train']['batch_size'])
+            result = component.fit_batches(iterator, config['train']['batch_size'])
+            if result is not None and config['train'].get('tensorboard_log_dir') is not None:
+                import tensorflow as tf
+                tb_log_dir = expand_path(config['train']['tensorboard_log_dir'])
+                writer = tf.summary.FileWriter(str(tb_log_dir / 'fit_batches_log'))
+
+                for name, scores in result.items():
+                    for i, score in enumerate(scores):
+                        metric_sum = tf.Summary(value=[tf.Summary.Value(tag='fit_batches/' + name,
+                                                                        simple_value=score), ])
+                        writer.add_summary(metric_sum, i)
+
             component.save()
 
         if 'in' in component_config:
