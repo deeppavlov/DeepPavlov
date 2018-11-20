@@ -487,6 +487,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
 
                     if patience >= train_config['validation_patience'] > 0:
                         log.info('Ran out of patience')
+                        break_flag = True
                         break
 
                 if i >= train_config['max_batches'] > 0:
