@@ -170,6 +170,10 @@ Comparison of deeppavlov pretrained model with others:
 
 Pipelines that use candidates search in a static dictionary and an ARPA language model to correct spelling errors.
 
+.. note::
+
+    About 4.4 GB on disc required for the Russian language model and about 7 GB for the English one.
+
 Comparison on the `test set <http://www.dialog-21.ru/media/3838/test_sample_testset.txt>`__ for the `SpellRuEval
 competition <http://www.dialog-21.ru/en/evaluation/2016/spelling_correction/>`__
 on Automatic Spelling Correction for Russian:

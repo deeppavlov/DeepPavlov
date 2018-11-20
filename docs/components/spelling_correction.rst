@@ -13,7 +13,7 @@ approaches near the end of this readme.
 
 .. note::
 
-    About 4.4 GB on disc required for Russian model and about 7 GB for English one.
+    About 4.4 GB on disc required for the Russian language model and about 7 GB for the English one.
 
 Quick start
 -----------
