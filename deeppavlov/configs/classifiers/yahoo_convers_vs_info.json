@@ -167,7 +167,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/yahoo_convers_vs_info.tar.gz",
-        "subdir": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info/"
+        "subdir": "{MODELS_PATH}/classifiers/"
       }
     ]
   }
