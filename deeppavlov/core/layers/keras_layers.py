@@ -278,35 +278,3 @@ class MaxattentiveMatchingLayer(Layer):
         assert isinstance(input_shape, list)
         shape_a, shape_b = input_shape
         return [(shape_a[0], shape_a[1], self.output_dim), (shape_a[0], shape_a[1], self.output_dim)]
-
-
-def masking_sequences(sequences, seq_lengths):
-    """
-    Function extracts seq_lengths[i] element for each sequences[i].
-    Useful for extracting corresponding hidden state of RNN output.
-
-    Args:
-        sequences: tensor of size (batch_size, timesteps, dim)
-        seq_lengths: tensor of integers of size (batch_size, 2).
-            Each row is a pair (i, length) where length is a number of element of sequences[i] to extract
-
-    Returns:
-        tensor of shape (batch_size, dim)
-    """
-    return Lambda(lambda x: tf.gather_nd(x[0], K.cast(x[1], "int32")))([sequences, seq_lengths])
-
-
-def extracting_part_of_sequences(sequences, seq_lengths):
-    """
-    Function extracts first seq_lengths[i] elements for each sequences[i].
-    Useful for extracting corresponding hidden state of RNN output.
-
-    Args:
-        sequences: tensor of size (batch_size, timesteps, dim)
-        seq_lengths: tensor of integers of size (batch_size, 2).
-            Each row is a pair (i, length) where length is a number of element of sequences[i] to extract
-
-    Returns:
-        tensor of shape (batch_size, dim)
-    """
-    return Lambda(lambda x: tf.gather_nd(x[0], K.cast(x[1], "int32")))([sequences, seq_lengths])
