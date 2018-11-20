@@ -9,9 +9,12 @@ DeepPavlov is an open-source conversational AI library built on [TensorFlow](htt
 ### Warning!
 As of `version 0.1.0` all models, embeddings and other downloaded data for provided configurations are
  by default downloaded to the `.deeppavlov` directory in current user's home directory.
- This can be changed on per-model base by changing
+ This can be changed on per-model base by modifying
  a `ROOT_PATH` [variable](http://docs.deeppavlov.ai/en/latest/intro/config_description.html#variables)
  or related fields one by one in model's configuration file.
+ 
+In configuration files, for all components, dataset readers and iterators `"name"` and `"class"` fields are combined
+into the `"class_name"` field.
 
 # Hello Bot in DeepPavlov
 
