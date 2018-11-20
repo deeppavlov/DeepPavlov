@@ -14,7 +14,6 @@
 
 from collections import defaultdict
 from typing import Iterable, Optional, Any, Union, List, Tuple
-from abc import abstractmethod
 from enum import IntEnum
 import math
 
@@ -24,6 +23,7 @@ from tensorflow.python.ops import variables
 
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.models.estimator import Estimator
+from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import cls_from_str
@@ -219,7 +219,7 @@ class DecayScheduler():
                 return self.start_val * (1 + pct * (self.div - 1))
 
 
-class EnhancedTFModel(TFModel, Estimator):
+class EnhancedTFModel(TFModel):
     """TFModel anhanced with optimizer, learning rate and momentum configuration"""
     def __init__(self,
                  learning_rate: Union[float, Tuple[float, float]],
@@ -233,11 +233,10 @@ class EnhancedTFModel(TFModel, Estimator):
                  momentum_decay_epochs: int = 0,
                  momentum_decay_batches: int = 0,
                  optimizer: str = 'AdamOptimizer',
-                 fit_batch_size: int = None,
                  fit_beta: float = 0.98,
                  fit_learning_rate_div: float = 10.,
                  fit_min_batches: int = 10,
-                 fit_num_batches: int = None,
+                 fit_max_batches: int = None,
                  *args, **kwargs) -> None:
         if learning_rate_decay_epochs and learning_rate_decay_batches:
             raise ConfigError("isn't able to update learning rate every batch"
@@ -300,23 +299,16 @@ class EnhancedTFModel(TFModel, Estimator):
         self._learning_rate_cur_impatience = 0.
         self._learning_rate_last_impatience = 0.
         self._learning_rate_cur_div = 1.
-        self._fit_batch_size = fit_batch_size
         self._fit_beta = fit_beta
         self._fit_lr_div = fit_learning_rate_div
         self._fit_min_batches = fit_min_batches
-        self._fit_num_batches = fit_num_batches
+        self._fit_max_batches = fit_max_batches
 
-    def fit(self, *args):
-        data = list(zip(*args))
+    def fit_batches(self, data_iterator: DataLearningIterator, batch_size: int):
         self.save()
-        if self._fit_batch_size is None:
-            raise ConfigError("in order to use fit() method"
-                              " set `fit_batch_size` parameter")
-        bs, beta = self._fit_batch_size, self._fit_beta
-        lr_div, min_batches = self._fit_lr_div, self._fit_min_batches
+        data_len = len(data_iterator.data['train'])
+        num_batches = self._fit_max_batches or ((data_len - 1) // batch_size + 1)
 
-        data_len = len(data)
-        num_batches = self._fit_num_batches or ((data_len - 1) // bs + 1)
         avg_loss = 0.
         best_loss = 0.
         lrs, losses = [], []
@@ -327,33 +319,42 @@ class EnhancedTFModel(TFModel, Estimator):
                                            num_it=num_batches)
         self._lr = _lr_find_schedule.start_val
         best_lr = _lr_find_schedule.start_val
-        for i in range(num_batches):
-            batch_start = (i * bs) % data_len
-            batch_end = batch_start + bs
-            report = self.train_on_batch(*zip(*data[batch_start: batch_end]))
-            if not isinstance(report, dict):
-                report = {'loss': report}
-            # Calculating smoothed loss
-            avg_loss = beta * avg_loss + (1 - beta) * report['loss']
-            smoothed_loss = avg_loss / (1 - beta**(i + 1))
-            lrs.append(self._lr)
-            losses.append(smoothed_loss)
-            log.info(f"Batch {i + 1}/{num_batches}: smooth_loss = {smoothed_loss}"
-                     f", lr = {self._lr}, best_lr = {best_lr}")
-            if i == 0:
-                best_loss = smoothed_loss
-                best_lr = self._lr
-            else:
-                if math.isnan(smoothed_loss) or (smoothed_loss > 4 * best_loss):
-                    break
-                if (smoothed_loss < best_loss) and (i >= min_batches):
+        break_flag = False
+        i = 0
+        while True:
+            for x, y_true in data_iterator.gen_batches(batch_size):
+                i += 1
+                report = self.train_on_batch(x, y_true)
+                if not isinstance(report, dict):
+                    report = {'loss': report}
+                # Calculating smoothed loss
+                avg_loss = self._fit_beta*avg_loss + (1 - self._fit_beta)*report['loss']
+                smoothed_loss = avg_loss / (1 - self._fit_beta**(i + 1))
+                lrs.append(self._lr)
+                losses.append(smoothed_loss)
+                log.info(f"Batch {i}/{num_batches}: smooth_loss = {smoothed_loss}"
+                         f", lr = {self._lr}, best_lr = {best_lr}")
+                if i == 1:
                     best_loss = smoothed_loss
                     best_lr = self._lr
-            self._lr = _lr_find_schedule.next_val()
+                else:
+                    if math.isnan(smoothed_loss) or (smoothed_loss > 4 * best_loss):
+                        break_flag = True
+                        break
+                    if (smoothed_loss < best_loss) and (i >= self._fit_min_batches):
+                        best_loss = smoothed_loss
+                        best_lr = self._lr
+                self._lr = _lr_find_schedule.next_val()
+
+                if i >= num_batches:
+                    break_flag = True
+                    break
+            if break_flag:
+                break
         # best_lr /= 10
         best_lr = self._get_best(lrs, losses)
 
-        self._lr_schedule = DecayScheduler(start_val=best_lr / lr_div,
+        self._lr_schedule = DecayScheduler(start_val=best_lr / self._fit_lr_div,
                                            end_val=best_lr,
                                            num_it=self._lr_schedule.nb,
                                            dec_type=self._lr_schedule.dec_type,
@@ -363,6 +364,7 @@ class EnhancedTFModel(TFModel, Estimator):
         self._lr = self._lr_schedule.start_val
         self._mom = self._mom_schedule.start_val
         self.load()
+        return {'loss': losses, 'lr': lrs}
 
     @staticmethod
     def _get_best(values, losses, max_loss_div=0.9, min_val_div=10.0):
