@@ -160,8 +160,7 @@ class KerasClassificationModel(KerasModel):
                 self.opt[param] = kwargs.get(param)
         return
 
-    def pad_texts(self, sentences: List[List[np.ndarray]],
-                  return_lengths=False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+    def pad_texts(self, sentences: List[List[np.ndarray]]) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """
         Cut and pad tokenized texts to self.opt["text_size"] tokens
 
@@ -174,9 +173,6 @@ class KerasClassificationModel(KerasModel):
         pad = np.zeros(self.opt['embedding_size'])
         cutted_batch = [sen[:self.opt['text_size']] for sen in sentences]
         cutted_batch = [list(tokens) + [pad] * (self.opt['text_size'] - len(tokens)) for tokens in cutted_batch]
-        if return_lengths:
-            lengths = np.array([min(len(sen), self.opt['text_size']) for sen in sentences], dtype='int')
-            return np.asarray(cutted_batch), lengths
 
         return np.asarray(cutted_batch)
 
@@ -191,13 +187,7 @@ class KerasClassificationModel(KerasModel):
         Returns:
             metrics values on the given batch
         """
-        if "masking" in self.opt["model_name"]:
-            features, lengths = self.pad_texts(texts, return_lengths=True)
-            lengths = np.hstack((np.arange(len(lengths)).reshape(-1, 1),
-                                 lengths.reshape(-1, 1)))
-            features = [features, lengths]
-        else:
-            features = self.pad_texts(texts)
+        features = self.pad_texts(texts)
 
         metrics_values = self.model.train_on_batch(features, np.squeeze(np.array(labels)))
         return metrics_values
@@ -214,13 +204,7 @@ class KerasClassificationModel(KerasModel):
             metrics values on the given batch, if labels are given
             predictions, otherwise
         """
-        if "masking" in self.opt["model_name"]:
-            features, lengths = self.pad_texts(texts, return_lengths=True)
-            lengths = np.hstack((np.arange(len(lengths)).reshape(-1, 1),
-                                 lengths.reshape(-1, 1)))
-            features = [features, lengths]
-        else:
-            features = self.pad_texts(texts)
+        features = self.pad_texts(texts)
 
         if labels:
             metrics_values = self.model.test_on_batch(features, np.squeeze(np.array(labels)))
