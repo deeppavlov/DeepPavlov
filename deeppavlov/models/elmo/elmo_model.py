@@ -599,7 +599,7 @@ class BidirectionalLanguageModelGraph(object):
 
 
 def weight_layers(name, bilm_ops, l2_coef=None,
-                  use_top_only=False, do_layer_norm=False):
+                  use_top_only=False, do_layer_norm=False, reuse = False):
     '''
     Weight the layers of a biLM with trainable scalar weights to
     compute ELMo representations.
@@ -607,7 +607,7 @@ def weight_layers(name, bilm_ops, l2_coef=None,
     For each output layer, this returns two ops.  The first computes
         a layer specific weighted average of the biLM layers, and
         the second the l2 regularizer loss term.
-    The regularization terms are also add to tf.GraphKeys.REGULARIZATION_LOSSES 
+    The regularization terms are also add to tf.GraphKeys.REGULARIZATION_LOSSES
 
     Input:
         name = a string prefix used for the trainable variable names
@@ -619,6 +619,7 @@ def weight_layers(name, bilm_ops, l2_coef=None,
         use_top_only: if True, then only use the top layer.
         do_layer_norm: if True, then apply layer normalization to each biLM
             layer before normalizing
+        reuse: reuse an aggregation variable scope.
 
     Output:
         {
@@ -638,6 +639,7 @@ def weight_layers(name, bilm_ops, l2_coef=None,
 
     n_lm_layers = int(lm_embeddings.get_shape()[1])
     lm_dim = int(lm_embeddings.get_shape()[3])
+    # import pdb; pdb.set_trace()
 
     with tf.control_dependencies([lm_embeddings, mask]):
         # Cast the mask and broadcast for layer use.
@@ -661,13 +663,14 @@ def weight_layers(name, bilm_ops, l2_coef=None,
             # no regularization
             reg = 0.0
         else:
-            W = tf.get_variable(
-                '{}_ELMo_W'.format(name),
-                shape=(n_lm_layers, ),
-                initializer=tf.zeros_initializer,
-                regularizer=_l2_regularizer,
-                trainable=True,
-            )
+            with tf.variable_scope("aggregation", reuse = reuse):
+                W = tf.get_variable(
+                    '{}_ELMo_W'.format(name),
+                    shape=(n_lm_layers, ),
+                    initializer=tf.zeros_initializer,
+                    regularizer=_l2_regularizer,
+                    trainable=True,
+                )
 
             # normalize the weights
             normed_weights = tf.split(
@@ -675,7 +678,7 @@ def weight_layers(name, bilm_ops, l2_coef=None,
             )
             # split LM layers
             layers = tf.split(lm_embeddings, n_lm_layers, axis=1)
-    
+
             # compute the weighted, normalized LM activations
             pieces = []
             for w, t in zip(normed_weights, layers):
@@ -684,8 +687,8 @@ def weight_layers(name, bilm_ops, l2_coef=None,
                 else:
                     pieces.append(w * tf.squeeze(t, squeeze_dims=1))
             sum_pieces = tf.add_n(pieces)
-    
-            # get the regularizer 
+
+            # get the regularizer
             reg = [
                 r for r in tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
                 if r.name.find('{}_ELMo_W/'.format(name)) >= 0
@@ -694,16 +697,36 @@ def weight_layers(name, bilm_ops, l2_coef=None,
                 raise ValueError
 
         # scale the weighted sum by gamma
-        gamma = tf.get_variable(
-            '{}_ELMo_gamma'.format(name),
-            shape=(1, ),
-            initializer=tf.ones_initializer,
-            regularizer=None,
-            trainable=True,
-        )
-        weighted_lm_layers = sum_pieces * gamma
 
-        ret = {'weighted_op': weighted_lm_layers, 'regularization_op': reg}
+        with tf.variable_scope("aggregation", reuse = reuse):
+            gamma = tf.get_variable(
+                '{}_ELMo_gamma'.format(name),
+                shape=(1, ),
+                initializer=tf.ones_initializer,
+                regularizer=None,
+                trainable=True,
+            )
+
+        weighted_lm_layers = sum_pieces * gamma
+        weighted_lm_layers_masked = sum_pieces * broadcast_mask
+
+        weighted_lm_layers_sum = tf.reduce_sum(weighted_lm_layers_masked, 1)
+
+        mask_sum = tf.reduce_sum(mask_float, 1)
+        mask_sum = tf.maximum(mask_sum, [1])
+
+        weighted_lm_layers_mean = weighted_lm_layers_sum / tf.expand_dims(mask_sum, -1)
+
+        word_emb_2n = tf.squeeze(layers[0], [1])
+        word_emb_1n = tf.slice(word_emb_2n, [0, 0, 0], [-1, -1, lm_dim // 2])  # to 512
+        lstm_outputs1 = tf.squeeze(layers[1], [1])
+        lstm_outputs2 = tf.squeeze(layers[2], [1])
+
+        ret = {'weighted_op': weighted_lm_layers,
+               'mean_op': weighted_lm_layers_mean,
+               'regularization_op': reg,
+               'word_emb': word_emb_1n,
+               'lstm_outputs1': lstm_outputs1,
+               'lstm_outputs2': lstm_outputs2, }
 
     return ret
-

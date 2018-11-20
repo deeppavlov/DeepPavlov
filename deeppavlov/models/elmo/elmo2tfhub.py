@@ -16,8 +16,7 @@ import tensorflow as tf
 import tensorflow_hub as hub
 import numpy as np
 
-from deeppavlov.models.elmo.elmo_model import BidirectionalLanguageModel
-from deeppavlov.models.elmo.weight_layers import weight_layers
+from deeppavlov.models.elmo.elmo_model import BidirectionalLanguageModel, weight_layers
 
 
 def make_module_spec(options, weight_file):
