@@ -30,6 +30,7 @@ from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
+from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.download import deep_download
@@ -154,13 +155,19 @@ def get_iterator_from_config(config: dict, data: dict):
     return iterator
 
 
-def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
-                                     to_train=True, to_validate=True, download=False) -> Dict[str, Dict[str, float]]:
+def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None, *,
+                                     to_train=True, to_validate=True, download=False,
+                                     recursive=True) -> Dict[str, Dict[str, float]]:
     """Make training and evaluation of the model described in corresponding configuration file."""
     config = parse_config(config)
 
     if download:
         deep_download(config)
+
+    if to_train and recursive:
+        for subconfig in get_all_elems_from_json(config['chainer'], 'config_path'):
+            log.info(f'Training "{subconfig}"')
+            train_evaluate_model_from_config(subconfig, download=False, recursive=True)
 
     import_packages(config.get('metadata', {}).get('imports', []))
 
