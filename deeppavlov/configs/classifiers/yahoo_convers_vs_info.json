@@ -117,7 +117,7 @@
       }
     ],
     "out": [
-      "y_pred_probas"
+      "y_pred_labels"
     ]
   },
   "train": {
