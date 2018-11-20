@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Tuple, Iterator, Optional
+from typing import Tuple, Iterator, Optional, Union
+from pathlib import Path
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.dataset_iterators.file_paths_iterator import FilePathsIterator
@@ -43,13 +44,13 @@ class ELMoFilePathsIterator(FilePathsIterator):
 
     def __init__(self,
                  data: dict,
-                 save_path: str,
-                 load_path: str,
+                 save_path: Union[str, Path],
+                 load_path: Union[str, Path],
                  seed: Optional[int] = None,
                  shuffle: bool = True,
                  unroll_steps: Optional[int] = None,
                  n_gpus: Optional[int] = None,
-                 max_word_length: int = None,
+                 max_word_length: Optional[int] = None,
                  bos: str = "<S>",
                  eos: str = "</S>",
                  *args, **kwargs) -> None:
@@ -58,23 +59,23 @@ class ELMoFilePathsIterator(FilePathsIterator):
         self.bos = bos
         self.eos = eos
         self.str_utf8_encoder = StrUTF8Encoder(
-            max_word_length = max_word_length,
-            pad_special_char_use = True,
-            word_boundary_special_char_use = True,
-            sentence_boundary_special_char_use = False,
-            reversed_sentense_tokens = False,
-            bos = self.bos,
-            eos = self.eos,
-            save_path = save_path,
-            load_path = load_path,
+            max_word_length=max_word_length,
+            pad_special_char_use=True,
+            word_boundary_special_char_use=True,
+            sentence_boundary_special_char_use=False,
+            reversed_sentense_tokens=False,
+            bos=self.bos,
+            eos=self.eos,
+            save_path=save_path,
+            load_path=load_path,
         )
         self.simple_vocab = SimpleVocabulary(
-            min_freq = 2,
-            special_tokens = [self.eos, self.bos, "<UNK>"],
-            unk_token = "<UNK>",
-            freq_drop_load = True,
-            save_path = save_path,
-            load_path = load_path,
+            min_freq=2,
+            special_tokens=[self.eos, self.bos, "<UNK>"],
+            unk_token="<UNK>",
+            freq_drop_load=True,
+            save_path=save_path,
+            load_path=load_path,
         )
         super().__init__(data, seed, shuffle, *args, **kwargs)
 
@@ -129,7 +130,7 @@ class ELMoFilePathsIterator(FilePathsIterator):
         except StopIteration:
             pass
 
-    def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: bool = None)\
+    def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: Optional[bool] = None)\
             -> Iterator[Tuple[str, str]]:
         if shuffle is None:
             shuffle = self.shuffle

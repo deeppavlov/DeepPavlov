@@ -201,7 +201,7 @@ def make_module_spec(options, weight_file):
     return hub.create_module_spec(module_fn)
 
 
-def export2hub(weight_file, hub_dir, options, ):
+def export2hub(weight_file, hub_dir, options):
     """Exports a TF-Hub module
     """
 

@@ -60,7 +60,7 @@ class FilePathsIterator(DataLearningIterator):
                 self.np_random.shuffle(lines)
             yield lines
 
-    def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: bool = None)\
+    def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: Optional[bool] = None)\
             -> Iterator[Tuple[str, str]]:
         if shuffle is None:
             shuffle = self.shuffle

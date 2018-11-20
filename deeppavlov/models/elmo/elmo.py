@@ -35,9 +35,9 @@ log = get_logger(__name__)
 
 @register('elmo_model')
 class ELMo(NNModel):
-    """>>
+    """
     The :class:`~deeppavlov.models.elmo.elmo.ELMo` is a deep contextualized word representation that models both
-    complex characteristics of word use (e.g., syntax and semantics), and (2) how these uses vary across linguistic
+    complex characteristics of word use (e.g., syntax and semantics), and how these uses vary across linguistic
     contexts (i.e., to model polysemy)
 
     Parameters:

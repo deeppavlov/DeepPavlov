@@ -15,11 +15,11 @@
 # limitations under the License.
 
 from typing import Union, List, Tuple
-
-from pathlib import Path
-import numpy as np
 from itertools import chain
+from pathlib import Path
 from collections import Counter, OrderedDict
+
+import numpy as np
 from overrides import overrides
 
 from deeppavlov.core.common.registry import register
@@ -35,7 +35,6 @@ StrUTF8EncoderInfo = Union[List[str], List['StrUTF8EncoderInfo']]
 @register('str_utf8_encoder')
 class StrUTF8Encoder(Estimator):
     """Component for encoding all strings to utf8 codes
-
 
     Args:
         max_word_length: Max length of words of input and output batches.
@@ -132,7 +131,7 @@ class StrUTF8Encoder(Estimator):
                            f' But they are {type(batch)}.')
 
     @overrides
-    def load(self):
+    def load(self) -> None:
         if self.load_path:
             if self.load_path.is_file():
                 log.info(f"[loading vocabulary from {self.load_path}]")
@@ -147,14 +146,14 @@ class StrUTF8Encoder(Estimator):
             raise ConfigError(f"`load_path` for {self} is not provided!")
 
     @overrides
-    def save(self):
+    def save(self) -> None:
         log.info(f"[saving vocabulary to {self.save_path}]")
         with self.save_path.open('wt', encoding='utf8') as f:
             for token in self._word_char_ids.keys():
                 f.write('{}\n'.format(token))
             
     @overrides
-    def fit(self, *args):
+    def fit(self, *args) -> None:
         words = chain(*args)
         # filter(None, <>) -- to filter empty words
         freqs = Counter(filter(None, chain(*words)))
