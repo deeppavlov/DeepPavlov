@@ -4,7 +4,8 @@ Features
 Components
 ----------
 
-- :doc:`NER component </components/ner>`
+:doc:`NER component </components/ner>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Based on neural Named Entity Recognition network. The NER component reproduces architecture from the paper `Application
 of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition <https://arxiv.org/pdf/1709.09686.pdf>`__
@@ -21,7 +22,8 @@ which is inspired by Bi-LSTM+CRF architecture from https://arxiv.org/pdf/1603.01
 +---------------------------------------------------------------------------------------------------------------------------+------------------+
 
 
-- :doc:`Slot filling components </components/slot_filling>`
+:doc:`Slot filling components </components/slot_filling>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Based on fuzzy Levenshtein search to extract normalized slot values from text. The components either rely on NER results
 or perform needle in haystack search.
@@ -33,7 +35,8 @@ or perform needle in haystack search.
 +---------------------------------------------------------------------------------------------------------------------------+------------------+
 
 
-- :doc:`Classification component </components/classifiers>`
+:doc:`Classification component </components/classifiers>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Component for classification tasks (intents, sentiment, etc) on word-level. Shallow-and-wide CNN, Deep CNN, BiLSTM,
 BiLSTM with self-attention and other models are presented. The model also allows multilabel classification of texts.
@@ -105,7 +108,8 @@ trained on Reddit dataset.
 
 
 
-- :doc:`Goal-oriented bot </skills/go_bot>`
+:doc:`Goal-oriented bot </skills/go_bot>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Based on Hybrid Code Networks (HCNs) architecture from `Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code
 Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017
@@ -137,7 +141,8 @@ Other benchmarks on DSTC2 (can't be directly compared due to dataset :doc:`modif
 +----------------------------------------------------+------------------------------+
 
 
-- :doc:`Seq2seq goal-oriented bot </skills/seq2seq_go_bot>`
+:doc:`Seq2seq goal-oriented bot </skills/seq2seq_go_bot>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Dialogue agent predicts responses in a goal-oriented dialog and is able to handle
 multiple domains (pretrained bot allows calendar scheduling, weather information retrieval,
@@ -160,7 +165,8 @@ Comparison of deeppavlov pretrained model with others:
 | Kvret, Rule-based, Mihail Eric et al. (2017)         | --               | 0.066           |
 +------------------------------------------------------+------------------+-----------------+
 
-- :doc:`Automatic spelling correction component </components/spelling_correction>`
+:doc:`Automatic spelling correction component </components/spelling_correction>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Pipelines that use candidates search in a static dictionary and an ARPA language model to correct spelling errors.
 
@@ -188,7 +194,8 @@ on Automatic Spelling Correction for Russian:
 
 
 
-- :doc:`Ranking component </components/neural_ranking>`
+:doc:`Ranking component </components/neural_ranking>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Based on `LSTM-based deep learning models for non-factoid answer selection <https://arxiv.org/abs/1511.04108>`__. The
 model performs ranking of responses or contexts from some database by their relevance for the given context.
@@ -244,7 +251,8 @@ Comparison with other models on the `InsuranceQA V1 <https://github.com/shuzi/in
 .. _`Architecture II (HLQA(200) CNNQA(4000) 1-MaxPooling Tanh)`: https://arxiv.org/pdf/1508.01585.pdf
 .. _`QA-LSTM basic-model(max pooling)`: https://arxiv.org/pdf/1511.04108.pdf
 
-- :doc:`TF-IDF Ranker component </components/tfidf_ranking>`
+:doc:`TF-IDF Ranker component </components/tfidf_ranking>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Based on `Reading Wikipedia to Answer Open-Domain Questions <https://github.com/facebookresearch/DrQA/>`__. The model solves the task of document retrieval for a given query.
 
@@ -255,7 +263,8 @@ Based on `Reading Wikipedia to Answer Open-Domain Questions <https://github.com/
 +---------------+-------------------------------------------------+-----------------+----------------------+-----------------+-----------+
 
 
-- :doc:`Question Answering component </components/squad>`
+:doc:`Question Answering component </components/squad>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Based on `R-NET: Machine Reading Comprehension with Self-matching Networks
 <https://www.microsoft.com/en-us/research/publication/mcr/>`__. The model solves the task of looking for an answer on a
@@ -273,7 +282,8 @@ In the case when answer is not necessary present in given context we have :confi
 model. This model outputs empty string in case if there is no answer in context.
 
 
-- :doc:`Morphological tagging component </components/morphotagger>`
+:doc:`Morphological tagging component </components/morphotagger>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Based on character-based approach to morphological tagging `Heigold et al., 2017. An extensive empirical evaluation of
 character-based morphological tagging for 14 languages <http://www.aclweb.org/anthology/E17-1048>`__. A state-of-the-art
@@ -313,7 +323,8 @@ contains word and sentence accuracy on UD2.0 datasets. For more scores see :doc:
 .. _`UD2.0`: https://lindat.mff.cuni.cz/repository/xmlui/handle/11234/1-1983
 .. _`UD Pipe 1.2`: http://ufal.mff.cuni.cz/udpipe
 
-- :doc:`Frequently Asked Questions (FAQ) component </skills/faq>`
+:doc:`Frequently Asked Questions (FAQ) component </skills/faq>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Set of pipelines for FAQ task: classifying incoming question into set of known questions and return prepared answer.
 You can build different pipelines based on: tf-idf, weighted fasttext, cosine similarity, logistic regression.
@@ -322,11 +333,13 @@ You can build different pipelines based on: tf-idf, weighted fasttext, cosine si
 Skills
 ------
 
-- :doc:`eCommerce bot </skills/ecommerce>`
+:doc:`eCommerce bot </skills/ecommerce>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The eCommerce bot intends to retrieve product items from catalog in sorted order. In addition, it asks an user to provide additional information to specify the search.
 
-- :doc:`ODQA </skills/odqa>`
+:doc:`ODQA </skills/odqa>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An open domain question answering skill. The skill accepts free-form questions about the world and outputs an answer
 based on its Wikipedia knowledge.
@@ -342,7 +355,8 @@ based on its Wikipedia knowledge.
 AutoML
 --------------------
 
-- :doc:`Hyperparameters optimization </intro/hypersearch>`
+:doc:`Hyperparameters optimization </intro/hypersearch>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Hyperparameters optimization (either by cross-validation or neural evolution) for DeepPavlov models
 that requires only some small changes in a config file.
@@ -351,7 +365,8 @@ that requires only some small changes in a config file.
 Embeddings
 ----------
 
-- :doc:`Pre-trained embeddings for the Russian language </intro/pretrained_vectors>`
+:doc:`Pre-trained embeddings for the Russian language </intro/pretrained_vectors>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Word vectors for the Russian language trained on joint `Russian Wikipedia <https://ru.wikipedia.org/>`__ and `Lenta.ru
 <https://lenta.ru/>`__ corpora.
