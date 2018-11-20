@@ -105,6 +105,7 @@ The dataset includes some additional metadata but for the presented pre-trained 
 Embeddings were obtained from language model (ELMo) fine-tuned on the dataset
 `L6 - Yahoo! Answers Comprehensive Questions and Answers <https://webscope.sandbox.yahoo.com/catalog.php?datatype=l>`__.
 We do not provide datasets, both are available upon request to Yahoo Research.
+Therefore, this model is available only for interaction.
 
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
 | Dataset           | Model                                                                                                        | Task             | Lang | Metric   | Valid  | Test   |
