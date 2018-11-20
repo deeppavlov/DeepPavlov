@@ -304,9 +304,11 @@ class EnhancedTFModel(TFModel):
         self._fit_min_batches = fit_min_batches
         self._fit_max_batches = fit_max_batches
 
-    def fit_batches(self, data_iterator: DataLearningIterator, batch_size: int):
+    def fit_batches(self, *args):
         self.save()
-        data_len = len(data_iterator.data['train'])
+        batches = list(args)
+        data_len, batch_size = len(batches), len(batches[0][0])
+        log.info(f"data_len={data_len}, batch_size={batch_size}")
         num_batches = self._fit_max_batches or ((data_len - 1) // batch_size + 1)
 
         avg_loss = 0.
@@ -322,9 +324,9 @@ class EnhancedTFModel(TFModel):
         break_flag = False
         i = 0
         while True:
-            for x, y_true in data_iterator.gen_batches(batch_size):
+            for batch in batches:
                 i += 1
-                report = self.train_on_batch(x, y_true)
+                report = self.train_on_batch(*batch)
                 if not isinstance(report, dict):
                     report = {'loss': report}
                 # Calculating smoothed loss
@@ -360,7 +362,7 @@ class EnhancedTFModel(TFModel):
         self._lr = self._lr_schedule.start_val
         self._mom = self._mom_schedule.start_val
         self.load()
-        return {'loss': losses, 'learning_rate': lrs}
+        return {'smoothed_loss': losses, 'learning_rate': lrs}
 
     @staticmethod
     def _get_best(values, losses, max_loss_div=0.9, min_val_div=10.0):

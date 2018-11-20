@@ -86,7 +86,8 @@ def _fit(model: Estimator, iterator: DataLearningIterator, train_config) -> Esti
 
 
 def _fit_batches(model: Union[NNModel, Estimator], iterator: Union[DataLearningIterator, DataFittingIterator], train_config) -> Union[NNModel, Estimator]:
-    result = model.fit_batches(iterator, batch_size=train_config['batch_size'])
+
+    result = model.fit_batches(*iterator.gen_batches(train_config['batch_size']))
 
     if result is not None and train_config.get('tensorboard_log_dir') is not None:
         import tensorflow as tf
@@ -134,9 +135,23 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
 
             component.save()
 
-        if 'fit_on_batch' in component_config:
+        if 'fit_on_batches' in component_config:
             component: Estimator
-            result = component.fit_batches(iterator, config['train']['batch_size'])
+
+            targets = component_config['fit_on_batches']
+            if isinstance(targets, str):
+                targets = [targets]
+
+            def iter_data():
+                for data in iterator.gen_batches(config['train']['batch_size'], 'train'):
+                    preprocessed = chainer.compute(*data, targets=targets)
+                    if len(component_config['fit_on_batches']) == 1:
+                        preprocessed = [preprocessed]
+                    yield preprocessed
+
+            result = component.fit_batches(*iter_data())
+
+            #result = component.fit_batches(*iterator.gen_batches(config['train']['batch_size']))
             if result is not None and config['train'].get('tensorboard_log_dir') is not None:
                 import tensorflow as tf
                 tb_log_dir = expand_path(config['train']['tensorboard_log_dir'])
