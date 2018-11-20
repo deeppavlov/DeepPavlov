@@ -1,8 +1,4 @@
 {
-  "dataset_iterator": {
-    "class_name": "basic_classification_iterator",
-    "seed": 42
-  },
   "chainer": {
     "in": [
       "x"
