@@ -73,8 +73,9 @@ def _fit(model: Estimator, iterator: DataLearningIterator, train_config) -> Esti
     return model
 
 
-def _fit_batches(model: Estimator, iterator: DataFittingIterator, train_config) -> Estimator:
-    model.fit_batches(iterator, batch_size=train_config['batch_size'])
+def _partial_fit(model: Estimator, iterator: DataFittingIterator, train_config) -> Estimator:
+    for data in iterator.gen_batches(train_config['batch_size'], 'train'):
+        model.partial_fit(*data)
     model.save()
     return model
 
@@ -99,9 +100,19 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
             component.fit(*preprocessed)
             component.save()
 
-        if 'fit_on_batch' in component_config:
+        if 'fit_on_batches' in component_config:
             component: Estimator
-            component.fit_batches(iterator, config['train']['batch_size'])
+
+            targets = component_config['fit_on']
+            if isinstance(targets, str):
+                targets = [targets]
+
+            for data in iterator.gen_batches(config['train']['batch_size'], 'train'):
+                preprocessed = chainer.compute(*data, targets=targets)
+                if len(component_config['fit_on']) == 1:
+                    preprocessed = [preprocessed]
+                component.partial_fit(*preprocessed)
+
             component.save()
 
         if 'in' in component_config:
@@ -192,8 +203,8 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
 
         if callable(getattr(model, 'train_on_batch', None)):
             _train_batches(model, iterator, train_config, metrics_functions)
-        elif callable(getattr(model, 'fit_batches', None)):
-            _fit_batches(model, iterator, train_config)
+        elif callable(getattr(model, 'partial_fit', None)):
+            _partial_fit(model, iterator, train_config)
         elif callable(getattr(model, 'fit', None)):
             _fit(model, iterator, train_config)
         elif not isinstance(model, Chainer):
