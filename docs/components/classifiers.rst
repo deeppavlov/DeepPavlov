@@ -12,6 +12,33 @@ Available classifiers are:
 
 * **deeppavlov.models.sklearn.SklearnComponent** (registered as ``sklearn_component``) builds most of sklearn classifiers. Chosen model should be passed to ``model_class``, e.g. ``"model_class": "sklearn.neighbors:KNeighborsClassifier"``, as well as ``infer_method`` can be assigned to any sklearn model's prediction methods (e.g. ``predict`` or ``predict_proba``). As for text classification in DeepPavlov we assign list of labels for each sample, it is required to ensure that output of a classifier-``sklearn_component`` is a list of labels for each sample. Therefore, for sklearn component classifier one should set ``ensure_list_output`` to ``true``.
 
+Quick start
+-----------
+
+One can run the following command to try provided pipelines out:
+
+::
+
+    python -m deeppavlov interact <path_to_config> [-d]
+
+where ``<path_to_config>`` is one of the :config:`provided config files <classifiers>`.
+With the optional ``-d`` parameter all the data required to run
+selected pipeline will be downloaded.
+
+One can also use these configs in your python code. To download required data one have to set ``download`` parameter to ``True``.
+
+.. code:: python
+
+    import sys
+
+    from deeppavlov import build_model, configs
+
+    CONFIG_PATH = configs.classifiers.intents_snips
+
+    model = build_model(CONFIG_PATH, download=True)
+    print(model(["What is the weather in Boston today?"]))
+
+
 Pre-trained models
 ------------------
 
