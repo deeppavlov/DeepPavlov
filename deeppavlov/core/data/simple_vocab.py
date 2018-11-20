@@ -104,9 +104,10 @@ class SimpleVocabulary(Estimator):
                     tokens.append(token)
                     counts.append(int(cnt))
                 self._add_tokens_with_freqs(tokens, counts)
-            else:
-                raise ConfigError("Provided `load_path` for {} is not file!".format(
-                    self.__class__.__name__))
+            elif isinstance(self.load_path, Path):
+                if not self.load_path.parent.is_dir():
+                    raise ConfigError("Provided `load_path` for {} doesn't exist!".format(
+                                      self.__class__.__name__))
         else:
             raise ConfigError("`load_path` for {} is not provided!".format(self))
 
