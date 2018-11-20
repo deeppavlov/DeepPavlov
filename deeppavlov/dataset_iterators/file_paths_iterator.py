@@ -51,14 +51,15 @@ class FilePathsIterator(DataLearningIterator):
     def _shard_generator(self, shards, shuffle = False, random = None):
         shards_to_choose = list(shards)
         if shuffle:
-            random.shuffle(shards_to_choose)
+            self.np_random.shuffle(shards_to_choose)
         for shard in shards_to_choose:
             log.info(f'Loaded shard from {shard}')
-            lines = open(shard).readlines()
+            with open(shard, encoding='utf-8') as f:
+                lines = f.readlines()
             if shuffle:
-                random.shuffle(lines)
+                self.np_random.shuffle(lines)
             yield lines
-            
+
     def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: bool = None)\
             -> Iterator[Tuple[str, str]]:
         if shuffle is None:
@@ -72,4 +73,4 @@ class FilePathsIterator(DataLearningIterator):
                 bs = len(shard)
             lines_generator = chunk_generator(shard, bs)
             for lines in lines_generator:
-                yield (lines, [])
+                yield (lines, [None] * len(lines))

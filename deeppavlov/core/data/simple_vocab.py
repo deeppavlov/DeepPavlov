@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from collections import Counter, defaultdict, Iterable
-from typing import Optional
+from typing import Optional, Tuple
 from itertools import chain
 
 import numpy as np
@@ -31,7 +31,7 @@ log = get_logger(__name__)
 class SimpleVocabulary(Estimator):
     """Implements simple vocabulary."""
     def __init__(self,
-                 special_tokens: tuple = tuple(),
+                 special_tokens: Tuple[str, ...] = tuple(),
                  max_tokens: int = 2**30,
                  min_freq: int = 0,
                  pad_with_zeros: bool = False,
