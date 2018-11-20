@@ -109,8 +109,6 @@
     ]
   },
   "train": {
-    "epochs": 100,
-    "batch_size": 256,
     "metrics": [
       {
         "name": "roc_auc",
@@ -134,12 +132,6 @@
         ]
       }
     ],
-    "validation_patience": 5,
-    "val_every_n_epochs": 1,
-    "log_every_n_epochs": 1,
-    "show_examples": false,
-    "validate_best": true,
-    "test_best": false,
     "tensorboard_log_dir": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info/model_v0/"
   },
   "metadata": {
