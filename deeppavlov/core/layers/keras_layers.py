@@ -17,7 +17,6 @@ from keras.engine.topology import Layer
 from keras.layers import Dense, Reshape, Concatenate, Lambda
 from keras.layers.merge import Multiply
 from keras.activations import softmax
-import tensorflow as tf
 
 
 def expand_tile(units, axis):
