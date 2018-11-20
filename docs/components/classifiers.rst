@@ -29,14 +29,15 @@ One can also use these configs in your python code. To download required data on
 
 .. code:: python
 
-    import sys
-
     from deeppavlov import build_model, configs
 
     CONFIG_PATH = configs.classifiers.intents_snips
 
     model = build_model(CONFIG_PATH, download=True)
+
     print(model(["What is the weather in Boston today?"]))
+
+    >>> [['GetWeather']]
 
 
 Pre-trained models
@@ -358,16 +359,12 @@ How to improve the performance
 References
 ----------
 
-.. [1] Kim Y. Convolutional neural networks for sentence classification
-//arXiv preprint arXiv:1408.5882. – 2014.
+.. [1] Kim Y. Convolutional neural networks for sentence classification //arXiv preprint arXiv:1408.5882. – 2014.
 
-.. [2] Ю. В. Рубцова. Построение корпуса текстов для настройки тонового
-классификатора // Программные продукты и системы, 2015, №1(109),
-–С.72-78
+.. [2] Ю. В. Рубцова. Построение корпуса текстов для настройки тонового классификатора // Программные продукты и системы, 2015, №1(109), –С.72-78
 
 .. [3] https://www.slideshare.net/KonstantinSavenkov/nlu-intent-detection-benchmark-by-intento-august-2017
 
-.. [4] P. Bojanowski\ *, E. Grave*, A. Joulin, T. Mikolov, Enriching Word
-Vectors with Subword Information.
+.. [4] P. Bojanowski\ *, E. Grave*, A. Joulin, T. Mikolov, Enriching Word Vectors with Subword Information.
 
 .. [5] Peters, Matthew E., et al. "Deep contextualized word representations." arXiv preprint arXiv:1802.05365 (2018).
