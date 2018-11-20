@@ -70,8 +70,8 @@
         ],
         "main": true,
         "class_name": "keras_classification_model",
-        "save_path": "{DOWNLOADS_PATH}/classifiers/intents_snips_v7/model",
-        "load_path": "{DOWNLOADS_PATH}/classifiers/intents_snips_v7/model",
+        "save_path": "{MODELS_PATH}/classifiers/intents_snips_v7/model",
+        "load_path": "{MODELS_PATH}/classifiers/intents_snips_v7/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
