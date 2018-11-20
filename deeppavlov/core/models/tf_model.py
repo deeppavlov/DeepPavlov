@@ -310,7 +310,7 @@ class EnhancedTFModel(TFModel):
         num_batches = self._fit_max_batches or ((data_len - 1) // batch_size + 1)
 
         avg_loss = 0.
-        best_loss = 0.
+        best_loss = float('inf')
         lrs, losses = [], []
         self._mom = 0. if self._mom is not None else None
         _lr_find_schedule = DecayScheduler(start_val=self._lr_schedule.start_val,
@@ -329,21 +329,17 @@ class EnhancedTFModel(TFModel):
                     report = {'loss': report}
                 # Calculating smoothed loss
                 avg_loss = self._fit_beta*avg_loss + (1 - self._fit_beta)*report['loss']
-                smoothed_loss = avg_loss / (1 - self._fit_beta**(i + 1))
+                smoothed_loss = avg_loss / (1 - self._fit_beta**i)
                 lrs.append(self._lr)
                 losses.append(smoothed_loss)
                 log.info(f"Batch {i}/{num_batches}: smooth_loss = {smoothed_loss}"
                          f", lr = {self._lr}, best_lr = {best_lr}")
-                if i == 1:
+                if math.isnan(smoothed_loss) or (smoothed_loss > 4 * best_loss):
+                    break_flag = True
+                    break
+                if (smoothed_loss < best_loss) and (i >= self._fit_min_batches):
                     best_loss = smoothed_loss
                     best_lr = self._lr
-                else:
-                    if math.isnan(smoothed_loss) or (smoothed_loss > 4 * best_loss):
-                        break_flag = True
-                        break
-                    if (smoothed_loss < best_loss) and (i >= self._fit_min_batches):
-                        best_loss = smoothed_loss
-                        best_lr = self._lr
                 self._lr = _lr_find_schedule.next_val()
 
                 if i >= num_batches:
@@ -364,7 +360,7 @@ class EnhancedTFModel(TFModel):
         self._lr = self._lr_schedule.start_val
         self._mom = self._mom_schedule.start_val
         self.load()
-        return {'loss': losses, 'lr': lrs}
+        return {'loss': losses, 'learning_rate': lrs}
 
     @staticmethod
     def _get_best(values, losses, max_loss_div=0.9, min_val_div=10.0):
