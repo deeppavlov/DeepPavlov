@@ -3,9 +3,9 @@
     "class_name": "basic_classification_reader",
     "x": "Title",
     "y": "Label",
-    "data_path": "{DOWNLOADS_PATH}/convers_vs_info_data/",
-    "train": "train_sber.csv",
-    "valid": "valid_sber.csv"
+    "data_path": "{DOWNLOADS_PATH}/yahoo_convers_vs_info_data/",
+    "train": "train.csv",
+    "valid": "valid.csv"
   },
   "dataset_iterator": {
     "class_name": "basic_classification_iterator",
@@ -25,8 +25,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "{MODELS_PATH}/classifiers/convers_vs_info/model_v0/classes.dict",
-        "load_path": "{MODELS_PATH}/classifiers/convers_vs_info/model_v0/classes.dict",
+        "save_path": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info/model_v0/classes.dict",
+        "load_path": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info/model_v0/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -80,8 +80,8 @@
         ],
         "main": true,
         "class_name": "keras_classification_model",
-        "save_path": "{MODELS_PATH}/classifiers/convers_vs_info/model_v0/model",
-        "load_path": "{MODELS_PATH}/classifiers/convers_vs_info/model_v0/model",
+        "save_path": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info/model_v0/model",
+        "load_path": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info/model_v0/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "units_gru": 512,
@@ -152,7 +152,7 @@
     "show_examples": false,
     "validate_best": true,
     "test_best": false,
-    "tensorboard_log_dir": "{MODELS_PATH}/classifiers/convers_vs_info/model_v0/"
+    "tensorboard_log_dir": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info/model_v0/"
   },
   "metadata": {
     "variables": {
@@ -174,12 +174,8 @@
         "subdir": "{DOWNLOADS_PATH}/embeddings/yahooo-sber-questions_epoches_n_15/"
       },
       {
-        "url": "http://files.deeppavlov.ai/datasets/convers_vs_info_data.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/convers_vs_info.tar.gz",
-        "subdir": "{MODELS_PATH}/classifiers/convers_vs_info/"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/yahoo_convers_vs_info.tar.gz",
+        "subdir": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info/"
       }
     ]
   }

@@ -18,7 +18,7 @@ Pre-trained models
 We also provide with **pre-trained models** for classification on DSTC 2 dataset, SNIPS dataset, "AG News" dataset,
 "Detecting Insults in Social Commentary", Twitter sentiment in Russian dataset.
 
-**DSTC 2 dataset** (http://camdial.org/~mh521/dstc/) does not initially contain information about **intents**,
+`DSTC 2 dataset <http://camdial.org/~mh521/dstc/>`__ does not initially contain information about **intents**,
 therefore, ``Dstc2IntentsDatasetIterator`` (``deeppavlov/dataset_iterators/dstc2_intents_interator.py``) instance
 extracts artificial intents for each user reply using information from acts and slots.
 
@@ -53,8 +53,7 @@ In the original dataset this user reply has characteristics
 This message contains two intents ``(thankyou, bye)``. Train, valid and
 test division is the same as on web-site.
 
-**SNIPS** dataset
-(https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines)
+`SNIPS dataset <https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines>`__
 contains **intent classification** task for 7 intents (approximately 2.4
 samples per intent):
 
@@ -72,20 +71,18 @@ embeddings trained on DSTC-2 dataset that is not the best choice for
 this task. Train set is divided to train and validation sets to
 illustrate ``basic_classification_iterator`` work.
 
-**Detecting Insults in Social Commentary** dataset
-(https://www.kaggle.com/c/detecting-insults-in-social-commentary)
+`Detecting Insults in Social Commentary dataset <https://www.kaggle.com/c/detecting-insults-in-social-commentary>`__
 contains binary classification task for **detecting insults** for
 participants of conversation. Train, valid and test division is the same
 as for the Kaggle challenge.
 
-**AG News** dataset
-(https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html)
+`AG News dataset <https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html>`__
 contains **topic classification** task for 5 classes (range from 0
 to 4 points scale). Test set is initial one from a web-site, valid is a
 Stratified division 1/5 from the train set from web-site with 42 seed,
 and the train set is the rest.
 
-**Twitter mokoron** dataset (http://study.mokoron.com/) contains
+`Twitter mokoron dataset <http://study.mokoron.com/>`__ contains
 **sentiment classification** of Russian tweets for positive and negative
 replies [5]. It was automatically labeled.
 Train, valid and test division is made by hands (Stratified
@@ -98,10 +95,16 @@ it can be considered that model trained on preprocessed data is
 based on semantics while model trained on unprocessed data
 is based on punctuation and syntax.
 
-**RuSentiment** dataset (http://text-machine.cs.uml.edu/projects/rusentiment/) contains
+`RuSentiment dataset <http://text-machine.cs.uml.edu/projects/rusentiment/>`__ contains
 **sentiment classification** of social media posts for Russian language within 5 classes 'positive', 'negative',
 'neutral', 'speech', 'skip'.
 
+`Questions on Yahoo Answers labeled as either informational or conversational dataset <https://webscope.sandbox.yahoo.com/catalog.php?datatype=l>`__
+contains **intent classification** of English questions into two category: informational (`0`) and conversational (`1`) questions.
+The dataset includes some additional metadata but for the presented pre-trained model only `Title` of questions and `Label` were used.
+Embeddings were obtained from language model (ELMo) fine-tuned on the dataset
+`L6 - Yahoo! Answers Comprehensive Questions and Answers <https://webscope.sandbox.yahoo.com/catalog.php?datatype=l>`__.
+We do not provide datasets, both are available upon request to Yahoo Research.
 
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
 | Dataset           | Model                                                                                                        | Task             | Lang | Metric   | Valid  | Test   |
@@ -126,6 +129,8 @@ is based on punctuation and syntax.
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
 |`RuSentiment`_     | :config:`RuSentiment on ELMo <classifiers/rusentiment_elmo.json>`                                            | Sentiment        | Ru   | F1       | 0.7066 | 0.7301 |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+|`Yahoo-L31`_       | :config:`Yahoo-L31 on ELMo <classifiers/yahoo_convers_vs_info.json>` pre-trained on `Yahoo-L6`_              | Intent           | Ru   | ROC-AUC  | 0.9351 |   --   |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
 
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
 .. _`SNIPS-2017`: https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines
@@ -133,7 +138,8 @@ is based on punctuation and syntax.
 .. _`AG News`: https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html
 .. _`Twitter mokoron`: http://study.mokoron.com/
 .. _`RuSentiment`: http://text-machine.cs.uml.edu/projects/rusentiment/
-
+.. _`Yahoo-L31`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
+.. _`Yahoo-L6`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 
 Download pre-trained model
 --------------------------
@@ -142,8 +148,8 @@ DeepPavlov provides the following **pre-trained models**:
 
 -  :config:`intents_dstc2.json <classifiers/intents_dstc2.json>` -- DSTC 2 - intent model for English language with embeddings trained
    via fastText on DSTC 2 (800 Mb).
--  :config:`intents_dstc2_big.json <classifiers/intents_dstc2_big.json>` -- DSTC 2 - intent model for English language with embeddings trained
-   on Wiki (https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md, 8.5 Gb).
+-  :config:`intents_dstc2_big.json <classifiers/intents_dstc2_big.json>` -- DSTC 2 - intent model for English language with `embeddings trained
+   on Wiki <https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md>`__.
    This model achieves higher accuracy than the first one.
 -  :config:`intents_snips.json <classifiers/intents_snips.json>` -- SNIPS - intent model for English language.
 -  :config:`insults_kaggle.json <classifiers/insults_kaggle.json>` -- Insults analysis for English language.
@@ -330,8 +336,7 @@ References
 
 [2] https://github.com/snipsco/nlu-benchmark
 
-[3]
-https://www.slideshare.net/KonstantinSavenkov/nlu-intent-detection-benchmark-by-intento-august-2017
+[3] https://www.slideshare.net/KonstantinSavenkov/nlu-intent-detection-benchmark-by-intento-august-2017
 
 [4] P. Bojanowski\ *, E. Grave*, A. Joulin, T. Mikolov, Enriching Word
 Vectors with Subword Information.
