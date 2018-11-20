@@ -3,7 +3,7 @@ Classification models in DeepPavlov
 
 In this repository one can find code for training and using classification models
 which are implemented as a number of different **neural networks** (for example, shallow-and-wide Convolutional
-Neural Network [1]) or **sklearn models**.
+Neural Network [1]_) or **sklearn models**.
 Models can be used for binary, multi-class or multi-label classification.
 
 Available classifiers are:
@@ -84,7 +84,7 @@ and the train set is the rest.
 
 `Twitter mokoron dataset <http://study.mokoron.com/>`__ contains
 **sentiment classification** of Russian tweets for positive and negative
-replies [5]. It was automatically labeled.
+replies [2]_. It was automatically labeled.
 Train, valid and test division is made by hands (Stratified
 division: 1/5 from all dataset for test set with 42 seed, then 1/5 from
 the rest for validation set with 42 seed). Two provided pre-trained
@@ -129,8 +129,6 @@ Therefore, this model is available only for interaction.
 |`RuSentiment`_     | :config:`RuSentiment on RuWiki+Lenta embeddings <classifiers/rusentiment_cnn.json>`                          | Sentiment        | Ru   | F1       | 0.6393 | 0.6539 |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
 |`RuSentiment`_     | :config:`RuSentiment on ELMo <classifiers/rusentiment_elmo.json>`                                            | Sentiment        | Ru   | F1       | 0.7066 | 0.7301 |
-+-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-|`Yahoo-L31`_       | :config:`Yahoo-L31 on ELMo <classifiers/yahoo_convers_vs_info.json>` pre-trained on `Yahoo-L6`_              | Intent           | Ru   | ROC-AUC  | 0.9351 |   --   |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
 
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
@@ -282,7 +280,7 @@ Then training process can be run in the same way:
     python deep.py train "path_to_config"
 
 The current version of :config:`intents_snips.json <classifiers/intents_snips.json>`` contains parameters for
-intent recognition for SNIPS benchmark dataset [2] that was restored in
+intent recognition for SNIPS benchmark dataset that was restored in
 ``.csv`` format and will be downloaded automatically.
 
 **Important: we do not provide any special embedding binary file for
@@ -295,7 +293,7 @@ Comparison
 
 As no one had published intent recognition for DSTC-2 data, the
 comparison of the presented model is given on **SNIPS** dataset. The
-evaluation of model scores was conducted in the same way as in [3] to
+evaluation of model scores was conducted in the same way as in [3]_ to
 compare with the results from the report of the authors of the dataset.
 The results were achieved with tuning of parameters and embeddings
 trained on Reddit dataset.
@@ -325,23 +323,24 @@ How to improve the performance
 ------------------------------
 
 
--  One can use FastText [4] to train embeddings that are better suited
+-  One can use FastText [4]_ to train embeddings that are better suited
    for considered datasets.
+-  One can use ELMo [5]_ embeddings.
 -  All the parameters should be tuned on the validation set.
 
 References
 ----------
 
-[1] Kim Y. Convolutional neural networks for sentence classification
+.. [1] Kim Y. Convolutional neural networks for sentence classification
 //arXiv preprint arXiv:1408.5882. – 2014.
 
-[2] https://github.com/snipsco/nlu-benchmark
-
-[3] https://www.slideshare.net/KonstantinSavenkov/nlu-intent-detection-benchmark-by-intento-august-2017
-
-[4] P. Bojanowski\ *, E. Grave*, A. Joulin, T. Mikolov, Enriching Word
-Vectors with Subword Information.
-
-[5] Ю. В. Рубцова. Построение корпуса текстов для настройки тонового
+.. [2] Ю. В. Рубцова. Построение корпуса текстов для настройки тонового
 классификатора // Программные продукты и системы, 2015, №1(109),
 –С.72-78
+
+.. [3] https://www.slideshare.net/KonstantinSavenkov/nlu-intent-detection-benchmark-by-intento-august-2017
+
+.. [4] P. Bojanowski\ *, E. Grave*, A. Joulin, T. Mikolov, Enriching Word
+Vectors with Subword Information.
+
+.. [5] Peters, Matthew E., et al. "Deep contextualized word representations." arXiv preprint arXiv:1802.05365 (2018).
