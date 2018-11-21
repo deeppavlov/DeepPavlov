@@ -3,7 +3,7 @@ Classification models in DeepPavlov
 
 In this repository one can find code for training and using classification models
 which are implemented as a number of different **neural networks** (for example, shallow-and-wide Convolutional
-Neural Network [1]) or **sklearn models**.
+Neural Network [1]_) or **sklearn models**.
 Models can be used for binary, multi-class or multi-label classification.
 
 Available classifiers are:
@@ -12,13 +12,41 @@ Available classifiers are:
 
 * **deeppavlov.models.sklearn.SklearnComponent** (registered as ``sklearn_component``) builds most of sklearn classifiers. Chosen model should be passed to ``model_class``, e.g. ``"model_class": "sklearn.neighbors:KNeighborsClassifier"``, as well as ``infer_method`` can be assigned to any sklearn model's prediction methods (e.g. ``predict`` or ``predict_proba``). As for text classification in DeepPavlov we assign list of labels for each sample, it is required to ensure that output of a classifier-``sklearn_component`` is a list of labels for each sample. Therefore, for sklearn component classifier one should set ``ensure_list_output`` to ``true``.
 
+Quick start
+-----------
+
+One can run the following command to try provided pipelines out:
+
+::
+
+    python -m deeppavlov interact <path_to_config> [-d]
+
+where ``<path_to_config>`` is one of the :config:`provided config files <classifiers>`.
+With the optional ``-d`` parameter all the data required to run
+selected pipeline will be downloaded.
+
+One can also use these configs in your python code. To download required data one have to set ``download`` parameter to ``True``.
+
+.. code:: python
+
+    from deeppavlov import build_model, configs
+
+    CONFIG_PATH = configs.classifiers.intents_snips
+
+    model = build_model(CONFIG_PATH, download=True)
+
+    print(model(["What is the weather in Boston today?"]))
+
+    >>> [['GetWeather']]
+
+
 Pre-trained models
 ------------------
 
 We also provide with **pre-trained models** for classification on DSTC 2 dataset, SNIPS dataset, "AG News" dataset,
 "Detecting Insults in Social Commentary", Twitter sentiment in Russian dataset.
 
-**DSTC 2 dataset** (http://camdial.org/~mh521/dstc/) does not initially contain information about **intents**,
+`DSTC 2 dataset <http://camdial.org/~mh521/dstc/>`__ does not initially contain information about **intents**,
 therefore, ``Dstc2IntentsDatasetIterator`` (``deeppavlov/dataset_iterators/dstc2_intents_interator.py``) instance
 extracts artificial intents for each user reply using information from acts and slots.
 
@@ -53,8 +81,7 @@ In the original dataset this user reply has characteristics
 This message contains two intents ``(thankyou, bye)``. Train, valid and
 test division is the same as on web-site.
 
-**SNIPS** dataset
-(https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines)
+`SNIPS dataset <https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines>`__
 contains **intent classification** task for 7 intents (approximately 2.4
 samples per intent):
 
@@ -72,22 +99,20 @@ embeddings trained on DSTC-2 dataset that is not the best choice for
 this task. Train set is divided to train and validation sets to
 illustrate ``basic_classification_iterator`` work.
 
-**Detecting Insults in Social Commentary** dataset
-(https://www.kaggle.com/c/detecting-insults-in-social-commentary)
+`Detecting Insults in Social Commentary dataset <https://www.kaggle.com/c/detecting-insults-in-social-commentary>`__
 contains binary classification task for **detecting insults** for
 participants of conversation. Train, valid and test division is the same
 as for the Kaggle challenge.
 
-**AG News** dataset
-(https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html)
+`AG News dataset <https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html>`__
 contains **topic classification** task for 5 classes (range from 0
 to 4 points scale). Test set is initial one from a web-site, valid is a
 Stratified division 1/5 from the train set from web-site with 42 seed,
 and the train set is the rest.
 
-**Twitter mokoron** dataset (http://study.mokoron.com/) contains
+`Twitter mokoron dataset <http://study.mokoron.com/>`__ contains
 **sentiment classification** of Russian tweets for positive and negative
-replies [5]. It was automatically labeled.
+replies [2]_. It was automatically labeled.
 Train, valid and test division is made by hands (Stratified
 division: 1/5 from all dataset for test set with 42 seed, then 1/5 from
 the rest for validation set with 42 seed). Two provided pre-trained
@@ -98,10 +123,17 @@ it can be considered that model trained on preprocessed data is
 based on semantics while model trained on unprocessed data
 is based on punctuation and syntax.
 
-**RuSentiment** dataset (http://text-machine.cs.uml.edu/projects/rusentiment/) contains
+`RuSentiment dataset <http://text-machine.cs.uml.edu/projects/rusentiment/>`__ contains
 **sentiment classification** of social media posts for Russian language within 5 classes 'positive', 'negative',
 'neutral', 'speech', 'skip'.
 
+`Questions on Yahoo Answers labeled as either informational or conversational dataset <https://webscope.sandbox.yahoo.com/catalog.php?datatype=l>`__
+contains **intent classification** of English questions into two category: informational (`0`) and conversational (`1`) questions.
+The dataset includes some additional metadata but for the presented pre-trained model only `Title` of questions and `Label` were used.
+Embeddings were obtained from language model (ELMo) fine-tuned on the dataset
+`L6 - Yahoo! Answers Comprehensive Questions and Answers <https://webscope.sandbox.yahoo.com/catalog.php?datatype=l>`__.
+We do not provide datasets, both are available upon request to Yahoo Research.
+Therefore, this model is available only for interaction.
 
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
 | Dataset           | Model                                                                                                        | Task             | Lang | Metric   | Valid  | Test   |
@@ -133,7 +165,8 @@ is based on punctuation and syntax.
 .. _`AG News`: https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html
 .. _`Twitter mokoron`: http://study.mokoron.com/
 .. _`RuSentiment`: http://text-machine.cs.uml.edu/projects/rusentiment/
-
+.. _`Yahoo-L31`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
+.. _`Yahoo-L6`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 
 Download pre-trained model
 --------------------------
@@ -142,8 +175,8 @@ DeepPavlov provides the following **pre-trained models**:
 
 -  :config:`intents_dstc2.json <classifiers/intents_dstc2.json>` -- DSTC 2 - intent model for English language with embeddings trained
    via fastText on DSTC 2 (800 Mb).
--  :config:`intents_dstc2_big.json <classifiers/intents_dstc2_big.json>` -- DSTC 2 - intent model for English language with embeddings trained
-   on Wiki (https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md, 8.5 Gb).
+-  :config:`intents_dstc2_big.json <classifiers/intents_dstc2_big.json>` -- DSTC 2 - intent model for English language with `embeddings trained
+   on Wiki <https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md>`__.
    This model achieves higher accuracy than the first one.
 -  :config:`intents_snips.json <classifiers/intents_snips.json>` -- SNIPS - intent model for English language.
 -  :config:`insults_kaggle.json <classifiers/insults_kaggle.json>` -- Insults analysis for English language.
@@ -275,7 +308,7 @@ Then training process can be run in the same way:
     python deep.py train "path_to_config"
 
 The current version of :config:`intents_snips.json <classifiers/intents_snips.json>`` contains parameters for
-intent recognition for SNIPS benchmark dataset [2] that was restored in
+intent recognition for SNIPS benchmark dataset that was restored in
 ``.csv`` format and will be downloaded automatically.
 
 **Important: we do not provide any special embedding binary file for
@@ -288,7 +321,7 @@ Comparison
 
 As no one had published intent recognition for DSTC-2 data, the
 comparison of the presented model is given on **SNIPS** dataset. The
-evaluation of model scores was conducted in the same way as in [3] to
+evaluation of model scores was conducted in the same way as in [3]_ to
 compare with the results from the report of the authors of the dataset.
 The results were achieved with tuning of parameters and embeddings
 trained on Reddit dataset.
@@ -318,24 +351,20 @@ How to improve the performance
 ------------------------------
 
 
--  One can use FastText [4] to train embeddings that are better suited
+-  One can use FastText [4]_ to train embeddings that are better suited
    for considered datasets.
+-  One can use ELMo [5]_ embeddings.
 -  All the parameters should be tuned on the validation set.
 
 References
 ----------
 
-[1] Kim Y. Convolutional neural networks for sentence classification
-//arXiv preprint arXiv:1408.5882. – 2014.
+.. [1] Kim Y. Convolutional neural networks for sentence classification //arXiv preprint arXiv:1408.5882. – 2014.
 
-[2] https://github.com/snipsco/nlu-benchmark
+.. [2] Ю. В. Рубцова. Построение корпуса текстов для настройки тонового классификатора // Программные продукты и системы, 2015, №1(109), –С.72-78
 
-[3]
-https://www.slideshare.net/KonstantinSavenkov/nlu-intent-detection-benchmark-by-intento-august-2017
+.. [3] https://www.slideshare.net/KonstantinSavenkov/nlu-intent-detection-benchmark-by-intento-august-2017
 
-[4] P. Bojanowski\ *, E. Grave*, A. Joulin, T. Mikolov, Enriching Word
-Vectors with Subword Information.
+.. [4] P. Bojanowski\ *, E. Grave*, A. Joulin, T. Mikolov, Enriching Word Vectors with Subword Information.
 
-[5] Ю. В. Рубцова. Построение корпуса текстов для настройки тонового
-классификатора // Программные продукты и системы, 2015, №1(109),
-–С.72-78
+.. [5] Peters, Matthew E., et al. "Deep contextualized word representations." arXiv preprint arXiv:1802.05365 (2018).
