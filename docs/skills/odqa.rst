@@ -7,12 +7,44 @@ Task definition
 
 **Open Domain Question Answering (ODQA)** is a task to find an exact answer
 to any question in **Wikipedia** articles. Thus, given only a question, the system outputs
-the best answer it can find:
+the best answer it can find.
+The default ODQA implementation takes a batch of queries as input and returns 5 answers sorted via their score.
+
+Quick Start
+===========
+
+Training (if you have your own data)
+
+.. code:: python
+
+    from deeppavlov import configs
+    from deeppavlov.core.commands.train import train_evaluate_model_from_config
+
+    train_evaluate_model_from_config(configs.doc_retrieval.en_ranker_tfidf_wiki, download=True)
+    train_evaluate_model_from_config(configs.squad.multi_squad_noans, download=True)
+
+Building
+
+.. code:: python
+
+    from deeppavlov import configs
+    from deeppavlov.core.commands.infer import build_model
+
+    odqa = build_model(configs.odqa.en_odqa_infer_wiki, load_trained=True)
+
+Inference
+
+.. code:: python
+
+    result = odqa(['What is the name of Darth Vader\'s son?'])
+    print(result)
+
+Output:
 
 ::
 
-    :: What is the name of Darth Vader's son?
     >> Luke Skywalker
+
 
 Languages
 =========

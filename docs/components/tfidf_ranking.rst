@@ -4,14 +4,42 @@ TF-IDF Ranker
 
 This is an implementation of a document ranker based on tf-idf vectorization.
 The ranker implementation is based on `DrQA`_ project.
-The default ranker implementation takes a batch of queries as input and returns 5 document ids as output.
+The default ranker implementation takes a batch of queries as input and returns 5 document titles sorted via relevance.
+
+Quick Start
+===========
+
+Training and building (if you have your own data)
+
+.. code:: python
+
+    from deeppavlov import configs, train_model
+    ranker = train_model(configs.doc_retrieval.en_ranker_tfidf_wiki, download=True)
+
+Building (if you don't have your own data)
+
+.. code:: python
+
+    from deeppavlov import configs
+    from deeppavlov.core.commands.infer import build_model
+
+    ranker = build_model(configs.doc_retrieval.en_ranker_tfidf_wiki, load_trained=True)
+
+Inference
+
+.. code:: python
+
+    result = ranker(['Who is Ivan Pavlov?'])
+    print(result)
+
+Output
 
 ::
 
-    :: Who is Ivan Pavlov?
     >> ['Ivan Pavlov (lawyer)', 'Ivan Pavlov', 'Pavlovian session', 'Ivan Pavlov (film)', 'Vladimir Bekhterev']
 
-Text for the output ids can be further extracted with :class:`~deeppavlov.vocabs.wiki_sqlite.WikiSQLiteVocab` class.
+Text for the output titles can be further extracted with :class:`~deeppavlov.vocabs.wiki_sqlite.WikiSQLiteVocab` class.
+
 
 Configuration
 =============
