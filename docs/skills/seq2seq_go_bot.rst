@@ -1,6 +1,24 @@
 Sequence-To-Sequence Dialogue Bot For Goal-Oriented Task
 ========================================================
 
+Quick HowTo
+-------
+
+The pretrained on KVRET dataset (English) model is available. To try run:
+
+.. code:: python
+
+    from deeppavlov import build_model, configs
+
+    bot = build_model(configs.seq2seq_go_bot.bot_kvret, download=True)
+
+    dialog_id = '2b77c100-0fec-426a-a483-04ac03763776'
+    bot(['Hi! Where is the nearest gas station?'], [dialog_id])
+    bot(['Thanks, bye'], [dialog_id])
+
+Intro
+-------
+
 A goal-oriented bot based on a rnn that encodes user utterance and generates 
 response in a sequence-to-sequence manner. For network architecture is similar
 to `[2] <#references>`__.
@@ -152,8 +170,9 @@ To infer from a pretrained model with config path equal to ``<path_to_config>``:
     model = build_model(CONFIG_PATH)
 
     utterance = ""
+    dialog_id = '2b77c100-0fec-426a-a483-04ac03763776' # or any other dialog id from train dataset
     while utterance != 'exit':
-        print(">> " + model([utterance])[0])
+        print(">> " + model([utterance], [dialog_id])[0])
         utterance = input(':: ')
 
 Config parameters:
