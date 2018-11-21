@@ -149,6 +149,7 @@ class KerasClassificationModel(KerasModel):
             "kernel_sizes_cnn",
             "filters_cnn",
             "dense_size",
+            "units_gru",
             "units_lstm",
             "units_lstm_1",
             "units_lstm_2",
