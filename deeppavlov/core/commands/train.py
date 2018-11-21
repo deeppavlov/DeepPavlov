@@ -30,6 +30,7 @@ from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
+from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.download import deep_download
@@ -154,13 +155,19 @@ def get_iterator_from_config(config: dict, data: dict):
     return iterator
 
 
-def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
-                                     to_train=True, to_validate=True, download=False) -> Dict[str, Dict[str, float]]:
+def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None, *,
+                                     to_train=True, to_validate=True, download=False,
+                                     recursive=True) -> Dict[str, Dict[str, float]]:
     """Make training and evaluation of the model described in corresponding configuration file."""
     config = parse_config(config)
 
     if download:
         deep_download(config)
+
+    if to_train and recursive:
+        for subconfig in get_all_elems_from_json(config['chainer'], 'config_path'):
+            log.info(f'Training "{subconfig}"')
+            train_evaluate_model_from_config(subconfig, download=False, recursive=True)
 
     import_packages(config.get('metadata', {}).get('imports', []))
 
@@ -294,6 +301,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
 
         'validation_patience': 5,
         'val_every_n_epochs': 0,
+        'val_every_n_batches': 0,
 
         'log_every_n_batches': 0,
         'log_every_n_epochs': 0,
@@ -341,7 +349,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
         tb_valid_writer = tf.summary.FileWriter(str(tb_log_dir / 'valid_log'))
 
     # validate first (important if model is pre-trained)
-    if train_config['val_every_n_epochs'] > 0 and epochs % train_config['val_every_n_epochs'] == 0:
+    if train_config['val_every_n_epochs'] > 0 or train_config['val_every_n_batches'] > 0:
         report = _test_model(model, metrics_functions, iterator,
                              train_config['batch_size'], 'valid', start_time, train_config['show_examples'])
         report['epochs_done'] = epochs
@@ -430,6 +438,46 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
                     print(json.dumps(report, ensure_ascii=False))
                     for out in outputs.values():
                         out.clear()
+
+                if train_config['val_every_n_batches'] > 0 and i % train_config['val_every_n_batches'] == 0:
+                    report = _test_model(model, metrics_functions, iterator,
+                                         train_config['batch_size'], 'valid', start_time, train_config['show_examples'])
+                    report['epochs_done'] = epochs
+                    report['batches_seen'] = i
+                    report['train_examples_seen'] = examples
+
+                    metrics = list(report['metrics'].items())
+
+                    if train_config['tensorboard_log_dir'] is not None:
+                        for name, score in metrics:
+                            metric_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + name,
+                                                                            simple_value=score), ])
+                            tb_valid_writer.add_summary(metric_sum, i)
+
+                    m_name, score = metrics[0]
+                    if improved(score, best):
+                        patience = 0
+                        log.info('New best {} of {}'.format(m_name, score))
+                        best = score
+                        log.info('Saving model')
+                        model.save()
+                        saved = True
+                    else:
+                        patience += 1
+                        log.info('Did not improve on the {} of {}'.format(m_name, best))
+
+                    report['impatience'] = patience
+                    if train_config['validation_patience'] > 0:
+                        report['patience_limit'] = train_config['validation_patience']
+
+                    model.process_event(event_name='after_validation', data=report)
+                    report = {'valid': report}
+                    print(json.dumps(report, ensure_ascii=False))
+
+                    if patience >= train_config['validation_patience'] > 0:
+                        log.info('Ran out of patience')
+                        break_flag = True
+                        break
 
                 if i >= train_config['max_batches'] > 0:
                     break_flag = True
