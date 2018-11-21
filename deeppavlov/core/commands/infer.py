@@ -11,24 +11,28 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import json
+import sys
+from itertools import islice
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
-from deeppavlov.core.commands.utils import set_deeppavlov_root, import_packages
+from deeppavlov.core.commands.utils import import_packages, parse_config
 from deeppavlov.core.common.chainer import Chainer
-from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.params import from_params
+from deeppavlov.download import deep_download
 
 log = get_logger(__name__)
 
 
-def build_model_from_config(config: [str, Path, dict], mode: str = 'infer', load_trained: bool = False) -> Chainer:
+def build_model(config: Union[str, Path, dict], mode: str= 'infer',
+                load_trained: bool=False, download: bool=False) -> Chainer:
     """Build and return the model described in corresponding configuration file."""
-    if isinstance(config, (str, Path)):
-        config = read_json(config)
-    set_deeppavlov_root(config)
+    config = parse_config(config)
+
+    if download:
+        deep_download(config)
 
     import_packages(config.get('metadata', {}).get('imports', []))
 
@@ -42,7 +46,7 @@ def build_model_from_config(config: [str, Path, dict], mode: str = 'infer', load
                 component_config['load_path'] = component_config['save_path']
             except KeyError:
                 log.warning('No "save_path" parameter for the {} component, so "load_path" will not be renewed'
-                            .format(component_config.get('name', component_config.get('ref', 'UNKNOWN'))))
+                            .format(component_config.get('class_name', component_config.get('ref', 'UNKNOWN'))))
         component = from_params(component_config, mode=mode)
 
         if 'in' in component_config:
@@ -55,10 +59,9 @@ def build_model_from_config(config: [str, Path, dict], mode: str = 'infer', load
     return model
 
 
-def interact_model(config_path: str) -> None:
+def interact_model(config: Union[str, Path, dict]) -> None:
     """Start interaction with the model described in corresponding configuration file."""
-    config = read_json(config_path)
-    model = build_model_from_config(config)
+    model = build_model(config)
 
     while True:
         args = []
@@ -75,12 +78,8 @@ def interact_model(config_path: str) -> None:
         print('>>', *pred)
 
 
-def predict_on_stream(config_path: str, batch_size: int = 1, file_path: Optional[str] = None) -> None:
+def predict_on_stream(config: Union[str, Path, dict], batch_size: int=1, file_path: Optional[str]=None) -> None:
     """Make a prediction with the component described in corresponding configuration file."""
-    import sys
-    import json
-    from itertools import islice
-
     if file_path is None or file_path == '-':
         if sys.stdin.isatty():
             raise RuntimeError('To process data from terminal please use interact mode')
@@ -88,8 +87,7 @@ def predict_on_stream(config_path: str, batch_size: int = 1, file_path: Optional
     else:
         f = open(file_path, encoding='utf8')
 
-    config = read_json(config_path)
-    model: Chainer = build_model_from_config(config)
+    model: Chainer = build_model(config)
 
     args_count = len(model.in_x)
     while True:

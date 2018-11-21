@@ -1,0 +1,7 @@
+{
+  "enabled": false,
+  "agent_name": "dp_agent",
+  "log_path": "~/.deeppavlov/dialog_logs",
+  "logfile_max_size_kb": 10240,
+  "ensure_ascii": false
+}

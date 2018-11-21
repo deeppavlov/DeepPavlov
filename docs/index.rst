@@ -42,7 +42,7 @@ Welcome to DeepPavlov's documentation!
    Pattern Matching <skills/pattern_matching>
    Sequence-To-Sequence Dialogue Bot <skills/seq2seq_go_bot>
    Frequently Asked Questions Answering <skills/faq>
-   eCommerce Bot <skills/ecommerce_bot_skill>
+   eCommerce Bot <skills/ecommerce>
 
 
 .. toctree::

@@ -13,17 +13,17 @@
 # limitations under the License.
 
 import shutil
-from pathlib import Path
 from collections import OrderedDict
+from pathlib import Path
 
 import numpy as np
 from sklearn.model_selection import KFold
 
-from deeppavlov.core.common.file import read_json
+from deeppavlov.core.commands.train import train_evaluate_model_from_config, get_iterator_from_config, \
+    read_data_by_config
+from deeppavlov.core.commands.utils import expand_path, parse_config
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.commands.train import train_evaluate_model_from_config, get_iterator_from_config, read_data_by_config
 from deeppavlov.core.common.params_search import ParamsSearch
-from deeppavlov.core.commands.utils import expand_path
 
 SAVE_PATH_ELEMENT_NAME = 'save_path'
 TEMP_DIR_FOR_CV = 'cv_tmp'
@@ -41,7 +41,7 @@ def change_savepath_for_model(config):
 
         dirs_for_saved_models.add(expand_path(new_save_path.parent))
 
-        config = params_helper.insert_value_or_dict_into_config(config, p, str(new_save_path))
+        params_helper.insert_value_or_dict_into_config(config, p, str(new_save_path))
 
     return config, dirs_for_saved_models
 
@@ -82,26 +82,23 @@ def generate_train_valid(data, n_folds=5, is_loo=False):
             yield data_i
 
 
-def calc_cv_score(config=None, pipeline_config_path=None, data=None, n_folds=5, is_loo=False):
-    if config is None:
-        if pipeline_config_path is not None:
-            config = read_json(pipeline_config_path)
-        else:
-            raise ValueError('Both \"config\" and \"pipeline_config_path\" are None')
+def calc_cv_score(config, data=None, n_folds=5, is_loo=False):
+    config = parse_config(config)
 
     if data is None:
         data = read_data_by_config(config)
 
     config, dirs_for_saved_models = change_savepath_for_model(config)
 
-    target_metrics = config['train']['metrics']
-    cv_score = OrderedDict((k, []) for k in target_metrics)
+    cv_score = OrderedDict()
     for data_i in generate_train_valid(data, n_folds=n_folds, is_loo=is_loo):
         iterator = get_iterator_from_config(config, data_i)
         create_dirs_to_save_models(dirs_for_saved_models)
         score = train_evaluate_model_from_config(config, iterator=iterator)
         delete_dir_for_saved_models(dirs_for_saved_models)
         for key, value in score['valid'].items():
+            if key not in cv_score:
+                cv_score[key] = []
             cv_score[key].append(value)
 
     for key, value in cv_score.items():

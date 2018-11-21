@@ -36,7 +36,7 @@ class KnowledgeBase(Estimator):
     Example:
         .. code:: python
 
-            >>> from models.seq2seq_go_bot.kb import KnowledgeBase
+            >>> from deeppavlov.models.seq2seq_go_bot.kb import KnowledgeBase
             >>> kb = KnowledgeBase(save_path="kb.json", load_path="kb.json")
             >>> kb.fit(['person1'], [['name', 'hair', 'eyes']], [[{'name': 'Sasha', 'hair': 'long   dark', 'eyes': 'light blue '}]])
 
@@ -142,13 +142,13 @@ class KnowledgeBaseEntityNormalizer(Component):
     Example:
         .. code:: python
 
-            >>> from models.seq2seq_go_bot.kb import KnowledgeBase
+            >>> from deeppavlov.models.seq2seq_go_bot.kb import KnowledgeBase
             >>> kb = KnowledgeBase(save_path="kb.json", load_path="kb.json", tokenizer=lambda strings: [s.split() for s in strings])
             >>> kb.fit(['person1'], [['name', 'hair', 'eyes']], [[{'name': 'Sasha', 'hair': 'long   dark', 'eyes': 'light blue '}]])
             >>> kb(['person1'])
             [[('sasha_name', ['Sasha']), ('sasha_hair', ['long', 'dark']), ('sasha_eyes', ['light','blue'])]]
 
-            >>> from models.seq2seq_go_bot.kb import KnowledgeBaseEntityNormalizer
+            >>> from deeppavlov.models.seq2seq_go_bot.kb import KnowledgeBaseEntityNormalizer
             >>> normalizer = KnowledgeBaseEntityNormalizer(denormalize=False, remove=False)
             >>> normalizer([["some", "guy", "with", "long", "dark", "hair", "said", "hi"]], kb(['person1']))
             [['some', 'guy', 'with', 'sasha_hair', 'hair', 'said', 'hi']]

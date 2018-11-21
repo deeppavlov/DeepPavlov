@@ -32,17 +32,13 @@ lines to stdout:
 
 .. code:: python
 
-    import json
     import sys
 
-    from deeppavlov.core.commands.infer import build_model_from_config
+    from deeppavlov import build_model, configs
 
-    CONFIG_PATH = 'deeppavlov/configs/spelling_correction/brillmoore_kartaslov_ru.json'
+    CONFIG_PATH = configs.spelling_correction.rillmoore_kartaslov_ru
 
-    with open(CONFIG_PATH) as config_file:
-        config = json.load(config_file)
-
-    model = build_model_from_config(config)
+    model = build_model(CONFIG_PATH, download=True)
     for line in sys.stdin:
         print(model([line])[0], flush=True)
 
@@ -61,11 +57,7 @@ Component config parameters:
    chainer's shared memory
 -  ``out`` — list with one element: name for this component's output in
    chainer's shared memory
--  ``name`` always equals to ``"spelling_levenshtein"``. Optional if
-   ``class`` attribute is present
--  ``class`` always equals to
-   ``deeppavlov.models.spelling_correction.levenshtein.searcher_component:LevenshteinSearcherComponent``.
-   Optional if ``name`` attribute is present
+-  ``class_name`` always equals to ``"spelling_levenshtein"`` or ``deeppavlov.models.spelling_correction.levenshtein.searcher_component:LevenshteinSearcherComponent``.
 -  ``words`` — list of all correct words (should be a reference)
 -  ``max_distance`` — maximum allowed Damerau-Levenshtein distance
    between source words and candidates
@@ -86,11 +78,7 @@ Component config parameters:
    chainer's shared memory
 -  ``out`` — list with one element: name for this component's output in
    chainer's shared memory
--  ``name`` always equals to ``"spelling_error_model"``. Optional if
-   ``class`` attribute is present
--  ``class`` always equals to
-   ``deeppavlov.models.spelling_correction.brillmoore.error_model:ErrorModel``.
-   Optional if ``name`` attribute is present
+-  ``class_name`` always equals to ``"spelling_error_model"`` or ``deeppavlov.models.spelling_correction.brillmoore.error_model:ErrorModel``.
 -  ``save_path`` — path where the model will be saved at after a
    training session
 -  ``load_path`` — path to the pretrained model
@@ -102,7 +90,7 @@ Component config parameters:
    of (or inherited from)
    ``deeppavlov.vocabs.static_dictionary.StaticDictionary``
 
-   -  ``name`` — ``"static_dictionary"`` for a custom dictionary or one
+   -  ``class_name`` — ``"static_dictionary"`` for a custom dictionary or one
       of two provided:
 
       -  ``"russian_words_vocab"`` to automatically download and use a
@@ -125,15 +113,15 @@ For the training phase config file needs to also include these
 parameters:
 
 -  ``dataset_iterator`` — it should always be set like
-   ``"dataset_iterator": {"name": "typos_iterator"}``
+   ``"dataset_iterator": {"class_name": "typos_iterator"}``
 
-   -  ``name`` always equals to ``typos_iterator``
+   -  ``class_name`` always equals to ``typos_iterator``
    -  ``test_ratio`` — ratio of test data to train, from ``0.`` to
       ``1.``, defaults to ``0.``
 
 -  ``dataset_reader``
 
-   -  ``name`` — ``typos_custom_reader`` for a custom dataset or one of
+   -  ``class_name`` — ``typos_custom_reader`` for a custom dataset or one of
       two provided:
 
       -  ``typos_kartaslov_reader`` to automatically download and

@@ -85,11 +85,11 @@ config part with "ner\_dataset\_reader" should look like:
 ::
 
     "dataset_reader": {
-        "name": "dstc2_datasetreader",
+        "class_name": "dstc2_datasetreader",
         "data_path": "dstc2"
     } 
 
-where ``name`` refers to the basic ner dataset reader class and ``data_path``
+where ``class_name`` refers to the basic ner dataset reader class and ``data_path``
 is the path to the folder with DSTC 2 dataset.
 
 Dataset Iterator
@@ -97,7 +97,7 @@ Dataset Iterator
 
 For simple batching and shuffling you can use "dstc2\_ner\_iterator".
 The part of the configuration file for the dataset iterator looks like:
-``"dataset_iterator": {     "name": "dstc2_ner_iterator" }``
+``"dataset_iterator": {     "class_name": "dstc2_ner_iterator" }``
 
 There are no additional parameters in this part.
 
@@ -135,7 +135,7 @@ existing pipelines:
     "pipe": [
           {
             "in": ["x"],
-            "name": "lazy_tokenizer",
+            "class_name": "lazy_tokenizer",
             "out": ["x"]
           },
           {
@@ -158,7 +158,7 @@ The following component in the pipeline is the ``slotfiller``:
     "pipe": [
         {
             "in": ["x_lower", "tags"],
-            "name": "dstc_slotfilling",
+            "class_name": "dstc_slotfilling",
             "save_path": "slotfill_dstc2/dstc_slot_vals.json",
             "load_path": "slotfill_dstc2/dstc_slot_vals.json",
             "out": ["slots"]
@@ -219,14 +219,10 @@ prediction:
 
 .. code:: python
 
-    from deeppavlov.core.commands.infer import build_model_from_config
-    from deeppavlov.download import deep_download
-    import json
-    PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/slotfill_dstc2.json'
-    with open(PIPELINE_CONFIG_PATH) as f:
-        config = json.load(f)
-    deep_download(['-c', PIPELINE_CONFIG_PATH])
-    slotfill_model = build_model_from_config(config)
+    from deeppavlov import build_model, configs
+
+    PIPELINE_CONFIG_PATH = configs.ner.slotfill_dstc2
+    slotfill_model = build_model(PIPELINE_CONFIG_PATH, download=True)
     slotfill_model(['I would like some chinese food', 'The west part of the city would be nice'])
 
 This example assumes that the working directory is the root of the
@@ -249,12 +245,8 @@ Usage example:
 
 .. code:: python
 
-    from deeppavlov.core.commands.infer import build_model_from_config
-    from deeppavlov.download import deep_download
-    import json
-    PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/slotfill_dstc2_raw.json'
-    with open(PIPELINE_CONFIG_PATH) as f:
-        config = json.load(f)
-    deep_download(['-c', PIPELINE_CONFIG_PATH])
-    slotfill_model = build_model_from_config(config)
+    from deeppavlov import build_model, configs
+
+    PIPELINE_CONFIG_PATH = configs.ner.slotfill_dstc2_raw
+    slotfill_model = build_model(PIPELINE_CONFIG_PATH, download=True)
     slotfill_model(['I would like some chinese food', 'The west part of the city would be nice'])

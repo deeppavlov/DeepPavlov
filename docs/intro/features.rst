@@ -60,6 +60,8 @@ Several pre-trained models are available and presented in Table below.
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
 |`RuSentiment`_     | :config:`RuSentiment on RuWiki+Lenta embeddings <classifiers/rusentiment_cnn.json>`                          | Sentiment        | Ru   | F1       | 0.6393 | 0.6539 |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+|`RuSentiment`_     | :config:`RuSentiment on ELMo <classifiers/rusentiment_elmo.json>`                                            | Sentiment        | Ru   | F1       | 0.7066 | 0.7301 |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
 
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
 .. _`SNIPS-2017`: https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines
@@ -307,7 +309,7 @@ You can build different pipelines based on: tf-idf, weighted fasttext, cosine si
 Skills
 ------
 
-- :doc:`eCommerce bot </skills/ecommerce_bot_skill>`
+- :doc:`eCommerce bot </skills/ecommerce>`
 
 The eCommerce bot intends to retrieve product items from catalog in sorted order. In addition, it asks an user to provide additional information to specify the search.
 

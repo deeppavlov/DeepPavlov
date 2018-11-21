@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
-    "name": "qqp_reader",
-    "data_path": "./qqp_data"
+    "class_name": "qqp_reader",
+    "data_path": "{DOWNLOADS_PATH}/qqp_data"
   },
   "dataset_iterator": {
-    "name": "siamese_iterator",
+    "class_name": "siamese_iterator",
     "len_valid": 20000,
     "len_test": 20000,
     "seed": 243
@@ -15,7 +15,7 @@
     "pipe": [
       {
         "id": "preproc",
-        "name": "siamese_preprocessor",
+        "class_name": "siamese_preprocessor",
         "use_matrix": false,
         "max_sequence_length": 28,
         "fit_on": ["x"],
@@ -24,37 +24,37 @@
         "sent_vocab":
         {
           "id": "siam_sent_vocab",
-          "name":"simple_vocab",
-          "save_path": "qqp_vocabs/sent.dict",
-          "load_path": "qqp_vocabs/sent.dict"
+          "class_name": "simple_vocab",
+          "save_path": "{MODELS_PATH}/qqp_vocabs/sent.dict",
+          "load_path": "{MODELS_PATH}/qqp_vocabs/sent.dict"
         },
         "tokenizer":
         {
-          "name": "nltk_tokenizer"
+          "class_name": "nltk_tokenizer"
         },
         "vocab":
         {
           "id": "siam_vocab",
-          "name":"simple_vocab",
-          "save_path": "qqp_vocabs/tok.dict",
-          "load_path": "qqp_vocabs/tok.dict"
+          "class_name": "simple_vocab",
+          "save_path": "{MODELS_PATH}/qqp_vocabs/tok.dict",
+          "load_path": "{MODELS_PATH}/qqp_vocabs/tok.dict"
         },
         "embedder":
         {
           "id": "siam_embedder",
-          "name": "fasttext",
-          "load_path": "embeddings/wiki.en.bin"
+          "class_name": "fasttext",
+          "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin"
         }
       },
       {
         "id": "embeddings",
-        "name": "emb_mat_assembler",
+        "class_name": "emb_mat_assembler",
         "embedder": "#siam_embedder",
         "vocab": "#siam_vocab"
       },
       {
         "id": "model",
-        "name": "bilstm_nn",
+        "class_name": "bilstm_nn",
         "len_vocab": "#siam_vocab.len",
         "use_matrix": "#preproc.use_matrix",
         "attention": true,
@@ -66,15 +66,15 @@
         "learning_rate": 1e-3,
         "triplet_loss": false,
         "batch_size": 256,
-        "save_path": "qqp_model/model_weights.h5",
-        "load_path": "qqp_model/model_weights.h5",
+        "save_path": "{MODELS_PATH}/qqp_model/model_weights.h5",
+        "load_path": "{MODELS_PATH}/qqp_model/model_weights.h5",
         "preprocess": "#preproc.__call__"
       },
       {
         "in": ["x_proc"],
         "in_y": ["y"],
         "out": ["y_predicted"],
-        "name": "siamese_predictor",
+        "class_name": "siamese_predictor",
         "model": "#model",
         "ranking": false,
         "attention": true,
@@ -95,23 +95,31 @@
     "log_every_n_batches": 525
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/gensim.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
     ],
     "labels": {
       "telegram_utils": "SiameseModel",
       "server_utils": "Ranker"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/paraphrase_ident_qqp_bilstm.tar.gz",
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/paraphrase_ident_qqp_bilstm.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
       {
         "url": "http://files.deeppavlov.ai/datasets/quora_question_pairs.zip",
-        "subdir": "qqp_data"
+        "subdir": "{DOWNLOADS_PATH}/qqp_data"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
   }

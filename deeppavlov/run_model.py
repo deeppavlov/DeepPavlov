@@ -15,7 +15,7 @@ limitations under the License.
 """
 from deeppavlov.core.commands.infer import interact_model
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
-from deeppavlov.deep import find_config
+from deeppavlov.core.common.file import find_config
 
 # PIPELINE_CONFIG_PATH = 'configs/classifiers/intents_dstc2.json'
 # PIPELINE_CONFIG_PATH = 'configs/classifiers/intents_snips.json'
