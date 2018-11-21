@@ -173,7 +173,7 @@ class KerasClassificationModel(KerasModel):
         """
         pad = np.zeros(self.opt['embedding_size'])
         cutted_batch = [sen[:self.opt['text_size']] for sen in sentences]
-        cutted_batch = [list(tokens) + [pad] * (self.opt['text_size'] - len(tokens)) for tokens in cutted_batch]
+        cutted_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + list(tokens) for tokens in cutted_batch]
 
         return np.asarray(cutted_batch)
 
