@@ -27,17 +27,14 @@ log = get_logger(__name__)
 
 @register('file_paths_iterator')
 class FilePathsIterator(DataLearningIterator):
-    """Dataset iterator for datasetes like 1 Billion Word Benchmark.
-    It gets lists of file paths from the data dictionary and return lines from each file.
+    """Dataset iterator for datasets like 1 Billion Word Benchmark.
+    It gets lists of file paths from the data dictionary and returns lines from each file.
 
     Args:
         data: dict with keys ``'train'``, ``'valid'`` and ``'test'`` and values
         seed: random seed for data shuffling
         shuffle: whether to shuffle data during batching
 
-    Attributes:
-        shuffle: whether to shuffle data during batching
-        random: instance of ``Random`` initialized with a seed
     """
 
     def __init__(self,

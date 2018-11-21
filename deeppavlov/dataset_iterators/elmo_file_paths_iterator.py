@@ -28,23 +28,23 @@ log = get_logger(__name__)
 @register('elmo_file_paths_iterator')
 class ELMoFilePathsIterator(FilePathsIterator):
     """Dataset iterator for tokenized datasetes like 1 Billion Word Benchmark
-    It gets lists of file paths from the data dictionary and return lines from each file.
+    It gets lists of file paths from the data dictionary and returns batches of lines from each file.
 
     Args:
         data: dict with keys ``'train'``, ``'valid'`` and ``'test'`` and values
+        load_path: path to the vocabulary to be load from
         seed: random seed for data shuffling
         shuffle: whether to shuffle data during batching
-        unroll_steps: number of unrolling steps.
-        n_gpus: number of gpu to use.
+        unroll_steps: number of unrolling steps
+        n_gpus: number of gpu to use
+        max_word_length: max length of word
+        bos: tag of begin of sentence
+        eos: tag of end of sentence
 
-    Attributes:
-        shuffle: whether to shuffle data during batching
-        random: instance of ``Random`` initialized with a seed
     """
 
     def __init__(self,
                  data: Dict[str, List[Union[str, Path]]],
-                 save_path: Union[str, Path],
                  load_path: Union[str, Path],
                  seed: Optional[int] = None,
                  shuffle: bool = True,
@@ -66,7 +66,7 @@ class ELMoFilePathsIterator(FilePathsIterator):
             reversed_sentense_tokens=False,
             bos=self.bos,
             eos=self.eos,
-            save_path=save_path,
+            save_path=load_path,
             load_path=load_path,
         )
         self.simple_vocab = SimpleVocabulary(
@@ -74,7 +74,7 @@ class ELMoFilePathsIterator(FilePathsIterator):
             special_tokens=[self.eos, self.bos, "<UNK>"],
             unk_token="<UNK>",
             freq_drop_load=True,
-            save_path=save_path,
+            save_path=load_path,
             load_path=load_path,
         )
         super().__init__(data, seed, shuffle, *args, **kwargs)

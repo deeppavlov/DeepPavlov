@@ -43,9 +43,8 @@ class FilePathsReader(DatasetReader):
             test: data path glob relative to data_path
 
         Returns:
-            dictionary with types from data_types.
             A dictionary containing training, validation and test parts of the dataset obtainable via ``train``,
-                ``valid`` and ``test`` keys.
+            ``valid`` and ``test`` keys.
         """
 
         dataset = dict()
