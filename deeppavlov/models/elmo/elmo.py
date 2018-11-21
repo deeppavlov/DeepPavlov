@@ -1,6 +1,6 @@
 # originally based on https://github.com/allenai/bilm-tf/blob/master/bilm/training.py
 
-# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Modifications copyright 2017 Neural Networks and Deep Learning lab, MIPT
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 
 from typing import Optional, List
 import copy
+import json
 
 import tensorflow as tf
 import numpy as np
-import json
 from overrides import overrides
 
 from deeppavlov.core.models.nn_model import NNModel
@@ -343,7 +343,7 @@ class ELMo(NNModel):
             path.resolve()
             log.info(f'[saving {epoch} epoch]')
 
-        path.parents[0].mkdir(parents=True, exist_ok=True)
+        path.parent.mkdir(parents=True, exist_ok=True)
         path = str(path)
 
         log.info(f'[saving model to {path}]')
@@ -434,12 +434,12 @@ class ELMo(NNModel):
             weights_to_path = path.parents[1] / self.dumps_save_path / 'weights.hdf5'
             tf_hub_to_path = path.parents[1] / self.tf_hub_save_path / 'tf_hub_model'
 
-        weights_to_path.parents[0].mkdir(parents=True, exist_ok=True)
-        tf_hub_to_path.parents[0].mkdir(parents=True, exist_ok=True)
+        weights_to_path.parent.mkdir(parents=True, exist_ok=True)
+        tf_hub_to_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Check presence of the model files
         if tf.train.checkpoint_exists(str(from_path)):
-            dump_weights(from_path.parents[0], weights_to_path, self.permanent_options)
+            dump_weights(from_path.parent, weights_to_path, self.permanent_options)
 
             options = copy.deepcopy(self.permanent_options)
             options['char_cnn']['n_characters'] = 262

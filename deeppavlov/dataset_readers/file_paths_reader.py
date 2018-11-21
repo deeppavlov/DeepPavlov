@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 import glob
 
 from overrides import overrides
@@ -30,7 +30,7 @@ class FilePathsReader(DatasetReader):
     """Find all file paths by a data path glob"""
 
     @overrides
-    def read(self, data_path: str, train: Optional[str] = None,
+    def read(self, data_path: Union[str, Path], train: Optional[str] = None,
              valid: Optional[str] = None, test: Optional[str] = None,
              *args, **kwargs) -> Dict:
         """

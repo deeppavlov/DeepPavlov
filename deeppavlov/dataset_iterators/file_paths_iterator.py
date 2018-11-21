@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Tuple, Iterator, Optional
+from typing import Tuple, Iterator, Optional, Dict, List, Union
+from pathlib import Path
 
 import numpy as np
 
@@ -39,8 +40,8 @@ class FilePathsIterator(DataLearningIterator):
         random: instance of ``Random`` initialized with a seed
     """
 
-    def __init__(self, 
-                 data: dict, 
+    def __init__(self,
+                 data: Dict[str, List[Union[str, Path]]],
                  seed: Optional[int] = None, 
                  shuffle: bool = True,
                  *args, **kwargs) -> None:
@@ -48,7 +49,7 @@ class FilePathsIterator(DataLearningIterator):
         self.np_random = np.random.RandomState(seed)
         super().__init__(data, seed, shuffle, *args, **kwargs)
 
-    def _shard_generator(self, shards, shuffle = False, random = None):
+    def _shard_generator(self, shards: List[Union[str, Path]], shuffle: bool = False) -> List[str]:
         shards_to_choose = list(shards)
         if shuffle:
             self.np_random.shuffle(shards_to_choose)
@@ -66,7 +67,7 @@ class FilePathsIterator(DataLearningIterator):
             shuffle = self.shuffle
 
         tgt_data = self.data[data_type]
-        shard_generator = self._shard_generator(tgt_data, shuffle = shuffle, random = self.np_random)
+        shard_generator = self._shard_generator(tgt_data, shuffle=shuffle)
 
         for shard in shard_generator:
             if not (batch_size):

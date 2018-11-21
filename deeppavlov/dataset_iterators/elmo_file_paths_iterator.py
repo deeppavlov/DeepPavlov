@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Tuple, Iterator, Optional, Union
+from typing import Tuple, Iterator, Optional, Dict, List, Union
 from pathlib import Path
 
 from deeppavlov.core.common.registry import register
@@ -43,7 +43,7 @@ class ELMoFilePathsIterator(FilePathsIterator):
     """
 
     def __init__(self,
-                 data: dict,
+                 data: Dict[str, List[Union[str, Path]]],
                  save_path: Union[str, Path],
                  load_path: Union[str, Path],
                  seed: Optional[int] = None,
@@ -136,7 +136,7 @@ class ELMoFilePathsIterator(FilePathsIterator):
             shuffle = self.shuffle
 
         tgt_data = self.data[data_type]
-        shard_generator = self._shard_generator(tgt_data, shuffle = shuffle, random = self.np_random)
+        shard_generator = self._shard_generator(tgt_data, shuffle=shuffle)
         line_generator = self._line_generator(shard_generator)
 
         if data_type == 'train':

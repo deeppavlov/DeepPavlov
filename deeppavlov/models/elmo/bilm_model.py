@@ -1,6 +1,6 @@
 # originally based on https://github.com/allenai/bilm-tf/blob/master/bilm/training.py
 
-# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Modifications copyright 2017 Neural Networks and Deep Learning lab, MIPT
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -343,8 +343,6 @@ class LanguageModel(object):
         proj_clip = self.options['lstm'].get('proj_clip')
 
         use_skip_connections = self.options['lstm'].get('use_skip_connections')
-        if use_skip_connections:
-            print("USING SKIP CONNECTIONS")
 
         lstm_outputs = []
         for lstm_num, lstm_input in enumerate(lstm_inputs):

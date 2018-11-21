@@ -1,6 +1,6 @@
 # originally based on https://github.com/allenai/bilm-tf/blob/master/bilm/training.py
 
-# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Modifications copyright 2017 Neural Networks and Deep Learning lab, MIPT
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,12 +22,6 @@ import h5py
 from deeppavlov.models.elmo.bilm_model import LanguageModel
 
 tf.logging.set_verbosity(tf.logging.INFO)
-
-
-def print_variable_summary():
-    import pprint
-    variables = sorted([[v.name, v.get_shape()] for v in tf.global_variables()])
-    pprint.pprint(variables)
 
 
 def average_gradients(tower_grads, batch_size, options):
