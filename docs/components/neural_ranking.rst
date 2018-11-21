@@ -21,7 +21,7 @@ To train from command line:
 
 ::
 
-    python -m deeppavlov train deeppavlov/configs/ranking/ranking_insurance.json
+    python -m deeppavlov train deeppavlov/configs/ranking/ranking_insurance.json [-d]
 
 As an example of configuration file see
 :config:`ranking_insurance.json <ranking/ranking_insurance.json>`.
@@ -41,9 +41,9 @@ To run the model for inference from command line:
 
 ::
 
-    python -m deeppavlov interact deeppavlov/configs/ranking/ranking_insurance_interact.json
+    python -m deeppavlov interact deeppavlov/configs/ranking/ranking_insurance_interact.json [-d]
 
-Then a user can enter a context and get and responses:
+Then a user can enter a context and get responses:
 
 ::
 
@@ -66,7 +66,7 @@ To train from command line:
 
 ::
 
-    python -m deeppavlov train deeppavlov/configs/ranking/paraphrase_ident_qqp.json
+    python -m deeppavlov train deeppavlov/configs/ranking/paraphrase_ident_qqp.json [-d]
 
 As an example of configuration file see
 :config:`paraphrase_ident_qqp.json <ranking/paraphrase_ident_qqp.json>`.
@@ -86,7 +86,7 @@ To use the model for inference from command line:
 
 ::
 
-    python -m deeppavlov interact deeppavlov/configs/ranking/paraphrase_ident_qqp_interact.json
+    python -m deeppavlov interact deeppavlov/configs/ranking/paraphrase_ident_qqp_interact.json [-d]
 
 Now a user can enter two sentences and the model will make a prediction whether these sentences are paraphrases or not.
 
@@ -94,11 +94,6 @@ Now a user can enter two sentences and the model will make a prediction whether 
 
     :: How can I be a good geologist?&What should I do to be a great geologist?
     >> This is a paraphrase.
-
-References
-----------
-
-.. target-notes::
 
 .. _`InsuranceQA V1`: https://github.com/shuzi/insuranceQA
 .. _`Quora Question Pairs`: https://www.kaggle.com/c/quora-question-pairs/data
