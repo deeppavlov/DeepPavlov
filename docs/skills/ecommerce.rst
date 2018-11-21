@@ -30,6 +30,29 @@ Here is a simple example of interaction:
 		- JBL Charge Portable Indoor/Outdoor Bluetooth Speaker | Black
 
 
+
+
+
+Quick Start
+===========
+
+Building
+
+.. code:: python
+
+    from deeppavlov import configs
+    from deeppavlov.core.commands.infer import build_model
+
+    ecommerce = build_model(configs.ecommerce_skill.tfidf_retrieve, load_trained=True)
+
+
+Inference
+
+.. code:: python
+
+    result = ecommerce(['bluetooth speaker'], [[]], [{}])
+
+
 Usage
 -----
 
@@ -102,9 +125,9 @@ eCommerce bot with BLEU-based ranker
    -  ``state``: dialog state.
 
 
-   .. note::
+.. note::
 
-      About 500 Mb on disc required for eCommerce bot with BLEU-based ranker.
+    About **500 Mb** on disc required for eCommerce bot with BLEU-based ranker.
 
 
 eCommerce bot with TfIdf-based ranker
@@ -137,9 +160,9 @@ eCommerce bot with TfIdf-based ranker
    -  ``state``: dialog state.
 
 
-   .. note::
+.. note::
 
-      About 130 Mb on disc required for eCommerce bot with TfIdf-based ranker
+    About **130 Mb** on disc required for eCommerce bot with TfIdf-based ranker
 
 
 References
