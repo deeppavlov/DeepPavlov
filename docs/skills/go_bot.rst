@@ -1,6 +1,25 @@
 Dialogue Bot for goal-oriented task
 ===================================
 
+There are available two pretrained models for DSTC2 dataset (English). Try them by running:
+
+.. code:: python
+
+    from deeppavlov import build_model, configs
+
+    bot1 = build_model(configs.go_bot.gobot_dstc2, download=True)
+
+    bot1(['hi, i want restaurant in the cheap pricerange'])
+    bot1(['bye'])
+
+    bot2 = build_model(configs.go_bot.gobot_dstc2_best, download=True)
+
+    bot2(['hi, i want chinese restaurant'])
+    bot2(['bye'])
+
+Intro
+-----
+
 The dialogue bot is based on `[1] <#references>`__ which introduces
 Hybrid Code Networks (HCNs) that combine an RNN with domain-specific
 knowledge and system action templates.
