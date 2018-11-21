@@ -108,6 +108,9 @@ Dialog with ``dialog_id="0b144470-faa8-4e71-98c7-a9b645fffab0"`` had entry:
       "event": "tennis activity"
     }
 
+.. note::
+
+   The model uses massive fasttext embeddings and thus requires 10Gb of disk space.
 
 Configs
 -------
