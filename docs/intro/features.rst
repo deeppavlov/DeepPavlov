@@ -342,6 +342,11 @@ Skills
 
 The eCommerce bot intends to retrieve product items from catalog in sorted order. In addition, it asks an user to provide additional information to specify the search.
 
+.. note::
+
+    About **130 Mb** on disc required for eCommerce bot with TfIdf-based ranker and **500 Mb** for BLEU-based ranker.
+
+
 :doc:`ODQA </skills/odqa>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
