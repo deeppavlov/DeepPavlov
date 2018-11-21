@@ -307,9 +307,7 @@ class EnhancedTFModel(TFModel):
     def fit_batches(self, *args):
         self.save()
         batches = list(args)
-        data_len, batch_size = len(batches), len(batches[0][0])
-        log.info(f"data_len={data_len}, batch_size={batch_size}")
-        num_batches = self._fit_max_batches or ((data_len - 1) // batch_size + 1)
+        num_batches = self._fit_max_batches or len(batches)
 
         avg_loss = 0.
         best_loss = float('inf')
