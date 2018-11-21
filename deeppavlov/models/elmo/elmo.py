@@ -38,7 +38,11 @@ class ELMo(NNModel):
     """
     The :class:`~deeppavlov.models.elmo.elmo.ELMo` is a deep contextualized word representation that models both
     complex characteristics of word use (e.g., syntax and semantics), and how these uses vary across linguistic
-    contexts (i.e., to model polysemy)
+    contexts (i.e., to model polysemy).
+    
+    You can use this component for LM training, fine tuning, dumping ELMo to a hdf5 file and wrapping it to
+    the tensorflow hub.
+
 
     Parameters:
         options_json_path: Path to the json configure.
@@ -163,7 +167,7 @@ class ELMo(NNModel):
 
     def _get_epoch_from(self, epoch_load_path, default = 0):
         path = self.load_path
-        path = path.parents[1] / epoch_load_path
+        path = path.parent / epoch_load_path
         candidates = path.resolve().glob('[0-9]*')
         candidates = list(safely_str2int(i.parts[-1]) for i in candidates
                           if safely_str2int(i.parts[-1]) is not None)
@@ -310,10 +314,8 @@ class ELMo(NNModel):
                                          reversed_token_ids_batches)
 
         with self.graph.as_default():
-            ret = self.sess.run([self.loss] + self.final_state_tensors, feed_dict)
-
-        self.init_state_values = ret[1:]
-        loss = ret[0]
+            loss, self.init_state_values = self.sess.run([self.loss, self.final_state_tensors], feed_dict)
+        
         return [loss]
 
     @overrides
@@ -321,7 +323,7 @@ class ELMo(NNModel):
         """Load model parameters from self.load_path"""
         path = self.load_path
         if epoch:
-            path = path.parents[1] / self.epoch_save_path / str(epoch) / path.parts[-1]
+            path = path.parent / self.epoch_save_path / str(epoch) / path.parts[-1]
             path.resolve()
             log.info(f'[loading {epoch} epoch]')
 
@@ -339,7 +341,7 @@ class ELMo(NNModel):
         """Save model parameters to self.save_path"""
         path = self.save_path
         if epoch:
-            path = path.parents[1] / self.epoch_save_path / str(epoch) / path.parts[-1]
+            path = path.parent / self.epoch_save_path / str(epoch) / path.parts[-1]
             path.resolve()
             log.info(f'[saving {epoch} epoch]')
 
@@ -372,10 +374,7 @@ class ELMo(NNModel):
                                          token_ids_batches, reversed_token_ids_batches)
 
         with self.graph.as_default():
-            ret = self.sess.run([self.train_loss, self.train_op] + self.final_state_tensors, feed_dict)
-
-        self.init_state_values = ret[2:]
-        train_loss = ret[0]
+            train_loss, _, self.init_state_values = self.sess.run([self.loss, self.train_op, self.final_state_tensors], feed_dict)
 
         return train_loss
 
@@ -422,17 +421,17 @@ class ELMo(NNModel):
             self.sess.close()
         path = self.save_path
         if epoch:
-            from_path = path.parents[1] / self.epoch_save_path / str(epoch) / path.parts[-1]
-            weights_to_path = path.parents[1] / self.dumps_save_path / f'weights_epoch_n_{epoch}.hdf5'
-            tf_hub_to_path = path.parents[1] / self.tf_hub_save_path / f'tf_hub_model_epoch_n_{epoch}'
+            from_path = path.parent / self.epoch_save_path / str(epoch) / path.parts[-1]
+            weights_to_path = path.parent / self.dumps_save_path / f'weights_epoch_n_{epoch}.hdf5'
+            tf_hub_to_path = path.parent / self.tf_hub_save_path / f'tf_hub_model_epoch_n_{epoch}'
             from_path.resolve()
             weights_to_path.resolve()
             tf_hub_to_path.resolve()
             log.info(f'[exporting {epoch} epoch]')
         else:
             from_path = path
-            weights_to_path = path.parents[1] / self.dumps_save_path / 'weights.hdf5'
-            tf_hub_to_path = path.parents[1] / self.tf_hub_save_path / 'tf_hub_model'
+            weights_to_path = path.parent / self.dumps_save_path / 'weights.hdf5'
+            tf_hub_to_path = path.parent / self.tf_hub_save_path / 'tf_hub_model'
 
         weights_to_path.parent.mkdir(parents=True, exist_ok=True)
         tf_hub_to_path.parent.mkdir(parents=True, exist_ok=True)

@@ -60,8 +60,8 @@ def make_module_spec(options, weight_file):
         bos_ids = _make_bos_eos(_bos_id)
         eos_ids = _make_bos_eos(_eos_id)
 
-        def token_level(token):
-            with tf.name_scope("token_level_preprocessor"):
+        def token2ids(token):
+            with tf.name_scope("token2ids_preprocessor"):
                 char_ids = tf.decode_raw(token, tf.uint8, name='decode_raw2get_char_ids')
                 char_ids = tf.cast(char_ids, tf.int32, name='cast2int_token')
                 char_ids = tf.strided_slice(char_ids, [0], [max_word_length - 2],
@@ -73,22 +73,8 @@ def make_module_spec(options, weight_file):
                                                0, name='concat2bow_token_eow_pads')
                 return bow_token_eow_pads
 
-        def pre_sen_level(sen_dim):
-            sen = sen_dim[0]
-            dim = sen_dim[1]
-            extra_dim = tf.shape(sen)[0] - dim
-            sen = tf.slice(sen, [0], [dim])
-            sen = tf.map_fn(token_level, sen, dtype=tf.int32, back_prop=False,
-                            parallel_iterations=_parallel_iterations)
-
-            bos_sen_eos = tf.concat([[bos_ids], sen, [eos_ids]], 0)
-            bos_sen_eos_plus_one = bos_sen_eos + 1
-            bos_sen_eos_pads = tf.pad(bos_sen_eos_plus_one, [[0, extra_dim], [0, 0]],
-                                      "CONSTANT")
-            return bos_sen_eos_pads
-
-        def pre_sen_level_ids(sen_dim):
-            with tf.name_scope("pre_sen_level_ids_preprocessor"):
+        def sentence_tagging_and_padding(sen_dim):
+            with tf.name_scope("sentence_tagging_and_padding_preprocessor"):
                 sen = sen_dim[0]
                 dim = sen_dim[1]
                 extra_dim = tf.shape(sen)[0] - dim
@@ -105,11 +91,11 @@ def make_module_spec(options, weight_file):
         sequence_len = tf.placeholder(shape=(None, ), dtype=tf.int32, name='ph2sequence_len')
 
         tok_shape = tf.shape(tokens)
-        line_tokens = tf.reshape(tokens, shape=[-1], name='reshape2get_line_tokens')
+        line_tokens = tf.reshape(tokens, shape=[-1], name='reshape2line_tokens')
 
         with tf.device('/cpu:0'):
             tok_ids = tf.map_fn(
-                token_level,
+                token2ids,
                 line_tokens,
                 dtype=tf.int32, back_prop=False, parallel_iterations=_parallel_iterations,
                 name='map_fn2get_tok_ids')
@@ -117,7 +103,7 @@ def make_module_spec(options, weight_file):
         tok_ids = tf.reshape(tok_ids, [tok_shape[0], tok_shape[1], -1], name='reshape2tok_ids')
         with tf.device('/cpu:0'):
             sen_ids = tf.map_fn(
-                pre_sen_level_ids,
+                sentence_tagging_and_padding,
                 (tok_ids, sequence_len),
                 dtype=tf.int32, back_prop=False, parallel_iterations=_parallel_iterations,
                 name='map_fn2get_sen_ids')
@@ -160,11 +146,11 @@ def make_module_spec(options, weight_file):
         def_sequence_len = tf.reduce_sum(def_int_mask, axis=-1)
 
         def_tok_shape = tf.shape(def_tokens_dense)
-        def_line_tokens = tf.reshape(def_tokens_dense, shape=[-1], name='reshape2get_line_tokens')
+        def_line_tokens = tf.reshape(def_tokens_dense, shape=[-1], name='reshape2line_tokens')
 
         with tf.device('/cpu:0'):
             def_tok_ids = tf.map_fn(
-                token_level,
+                token2ids,
                 def_line_tokens,
                 dtype=tf.int32, back_prop=False, parallel_iterations=_parallel_iterations,
                 name='map_fn2get_tok_ids')
@@ -172,7 +158,7 @@ def make_module_spec(options, weight_file):
         def_tok_ids = tf.reshape(def_tok_ids, [def_tok_shape[0], def_tok_shape[1], -1], name='reshape2tok_ids')
         with tf.device('/cpu:0'):
             def_sen_ids = tf.map_fn(
-                pre_sen_level_ids,
+                sentence_tagging_and_padding,
                 (def_tok_ids, def_sequence_len),
                 dtype=tf.int32, back_prop=False, parallel_iterations=_parallel_iterations,
                 name='map_fn2get_sen_ids')
