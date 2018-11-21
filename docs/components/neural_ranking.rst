@@ -34,7 +34,7 @@ inference one can use the following code in python:
 
     from deeppavlov import build_model, configs
 
-    rank_model = train_model(configs.ranking.ranking_insurance, download=True)
+    rank_model = build_model(configs.ranking.ranking_insurance, download=True)
     rank_model(['how much to pay for auto insurance?'])
 
 To run the model for inference from command line:
@@ -79,7 +79,7 @@ inference, one can use the following code in python:
 
     from deeppavlov import build_model, configs
 
-    para_model = train_model(configs.ranking.paraphrase_ident_qqp, download=True)
+    para_model = build_model(configs.ranking.paraphrase_ident_qqp_interact, download=True)
     para_model(['How can I be a good geologist?&What should I do to be a great geologist?'])
 
 To use the model for inference from command line:
