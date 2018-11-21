@@ -1,10 +1,7 @@
 Sequence-To-Sequence Dialogue Bot For Goal-Oriented Task
 ========================================================
 
-Quick HowTo
--------
-
-The pretrained on KVRET dataset (English) model is available. To try run:
+Pretrained on KVRET dataset (English) model is available. Try it by running:
 
 .. code:: python
 
@@ -17,7 +14,7 @@ The pretrained on KVRET dataset (English) model is available. To try run:
     bot(['Thanks, bye'], [dialog_id])
 
 Intro
--------
+-----
 
 A goal-oriented bot based on a rnn that encodes user utterance and generates 
 response in a sequence-to-sequence manner. For network architecture is similar

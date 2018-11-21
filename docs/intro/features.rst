@@ -123,7 +123,7 @@ Available pre-trained models:
 +================================================================================================+=====================+====================+==================+
 | :config:`DSTC2, bot with slot filler & intents <go_bot/gobot_dstc2.json>`                      | 0.5288              | 0.5248             |  8.5 Gb          |
 +------------------------------------------------------------------------------------------------+---------------------+--------------------+------------------+
-| :config:`DSTC2, bot with slot filler & embeddings & attention <go_bot/gobot_dstc2_best.json>`  |  0.5538             | 0.5551             |  8.5Gb           |
+| :config:`DSTC2, bot with slot filler & embeddings & attention <go_bot/gobot_dstc2_best.json>`  |  0.5538             | 0.5551             |  8.5 Gb          |
 +------------------------------------------------------------------------------------------------+---------------------+--------------------+------------------+
 
 Other benchmarks on DSTC2 (can't be directly compared due to dataset :doc:`modifications </skills/go_bot>`):
