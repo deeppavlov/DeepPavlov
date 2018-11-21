@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+import logging
 import logging.config
 import sys
 from pathlib import Path
@@ -21,6 +22,8 @@ LOG_CONFIG_FILENAME = 'log_config.json'
 TRACEBACK_LOGGER_ERRORS = True
 
 root_path = Path(__file__).resolve().parent.parent.parent.parent
+
+logging.getLogger('matplotlib').setLevel(logging.WARNING)
 
 
 def get_settings_path() -> Path:
