@@ -14,7 +14,6 @@
 
 from pathlib import Path
 from typing import Dict, Optional, Union
-import glob
 
 from overrides import overrides
 
@@ -55,9 +54,8 @@ class FilePathsReader(DatasetReader):
 
     def _get_files(self, data_path, tgt):
         if tgt is not None:
-            paths = Path(data_path, tgt).absolute().as_posix()
-            files = glob.glob(paths)
-            files = [file for file in files if Path(file).is_file()]
+            paths = Path(data_path).resolve().glob(tgt)
+            files = [file for file in paths if Path(file).is_file()]
             if not(files):
                 raise Exception(f"Not find files. Data path '{paths}' does not exist or does not hold files!")
             else:
