@@ -129,22 +129,19 @@ def read_data_by_config(config: dict):
         else:
             raise Exception("Unsupported dataset type: {}".format(ds_type))
 
-    data = []
-    reader_config = config.get('dataset_reader', None)
-
-    if reader_config:
+    try:
         reader_config = dict(config['dataset_reader'])
-        reader = get_model(reader_config.pop('class_name'))()
-        data_path = reader_config.pop('data_path', '')
-        if isinstance(data_path, list):
-            data_path = [expand_path(x) for x in data_path]
-        else:
-            data_path = expand_path(data_path)
-        data = reader.read(data_path, **reader_config)
-    else:
-        log.warning("No dataset reader is provided in the JSON config.")
+    except KeyError:
+        raise ConfigError("No dataset reader is provided in the JSON config.")
 
-    return data
+    reader = get_model(reader_config.pop('class_name'))()
+    data_path = reader_config.pop('data_path', '')
+    if isinstance(data_path, list):
+        data_path = [expand_path(x) for x in data_path]
+    else:
+        data_path = expand_path(data_path)
+
+    return reader.read(data_path, **reader_config)
 
 
 def get_iterator_from_config(config: dict, data: dict):
@@ -172,8 +169,13 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None, *
     import_packages(config.get('metadata', {}).get('imports', []))
 
     if iterator is None:
-        data = read_data_by_config(config)
-        iterator = get_iterator_from_config(config, data)
+        try:
+            data = read_data_by_config(config)
+        except ConfigError as e:
+            to_train = False
+            log.warning(f'Skipping training. {e.message}')
+        else:
+            iterator = get_iterator_from_config(config, data)
 
     train_config = {
         'metrics': ['accuracy'],
@@ -210,7 +212,7 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None, *
 
     res = {}
 
-    if train_config['validate_best'] or train_config['test_best']:
+    if iterator is not None and (train_config['validate_best'] or train_config['test_best']):
         model = build_model(config, load_trained=to_train)
         log.info('Testing the best saved model')
 
