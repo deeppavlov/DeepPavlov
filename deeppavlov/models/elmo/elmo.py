@@ -132,7 +132,7 @@ class ELMo(NNModel):
         self.dumps_save_path = dumps_save_path
         self.tf_hub_save_path = tf_hub_save_path
 
-        self._build_model(train = False, epoch=load_epoch_num)
+        self._build_model(train=False, epoch=load_epoch_num)
 
         self.save()
 
@@ -275,10 +275,10 @@ class ELMo(NNModel):
         init_state_values = self.sess.run(init_state_tensors, feed_dict=feed_dict)
         return init_state_values, init_state_tensors, final_state_tensors
 
-    def _fill_feed_dict(self, 
-                        char_ids_batches, 
-                        reversed_char_ids_batches, 
-                        token_ids_batches = None, 
+    def _fill_feed_dict(self,
+                        char_ids_batches,
+                        reversed_char_ids_batches,
+                        token_ids_batches = None,
                         reversed_token_ids_batches = None):
         # init state tensors
         feed_dict = {t: v for t, v in zip(self.init_state_tensors, self.init_state_values)}
@@ -316,7 +316,7 @@ class ELMo(NNModel):
         with self.graph.as_default():
             loss, self.init_state_values = self.sess.run([self.loss, self.final_state_tensors], feed_dict)
         
-        return [loss]
+        return loss
 
     @overrides
     def load(self, epoch: Optional[int] = None) -> None:
@@ -374,7 +374,8 @@ class ELMo(NNModel):
                                          token_ids_batches, reversed_token_ids_batches)
 
         with self.graph.as_default():
-            train_loss, _, self.init_state_values = self.sess.run([self.loss, self.train_op, self.final_state_tensors], feed_dict)
+            train_loss, _, self.init_state_values = self.sess.run([self.loss, self.train_op, self.final_state_tensors],
+                                                                  feed_dict)
 
         return train_loss
 
@@ -404,14 +405,14 @@ class ELMo(NNModel):
 
     def process_event(self, event_name, data):
         if event_name == 'after_validation':
-            self._build_model(train = True)
+            self._build_model(train=True)
         elif event_name == 'after_epoch':
             epoch = self.save_epoch_num + int(data['epochs_done'])
             self.save(epoch)
             self.save()
             self.elmo_export(epoch)
 
-            self._build_model(train = False)
+            self._build_model(train=False)
 
     def elmo_export(self, epoch: Optional[int] = None) -> None:
         """

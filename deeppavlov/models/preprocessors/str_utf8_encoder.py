@@ -194,9 +194,9 @@ class StrUTF8Encoder(Estimator):
             return self._convert_word_to_char_ids(word)
 
     def _encode_chars(self, sentence):
-        '''
+        """
         Encode the sentence as a white space delimited string of tokens.
-        '''
+        """
         chars_ids = [self._word_to_char_ids(cur_word)
                      for cur_word in sentence]
         return self._wrap_in_s_char(chars_ids)
@@ -214,7 +214,7 @@ class StrUTF8Encoder(Estimator):
 
     @property
     def len(self):
-        '''
+        """
         An upper bound of all indexes.
-        '''
+        """
         return len(self)

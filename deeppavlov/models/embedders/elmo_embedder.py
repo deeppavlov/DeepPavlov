@@ -118,8 +118,10 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
 
 
     """
-    def __init__(self, spec: str, elmo_output_names: Optional[List] = None, dim: Optional[int] = None, pad_zero: bool = False,
-                 concat_last_axis: bool = True, max_token: Optional[int] = None, mini_batch_size: int = 32, **kwargs) -> None:
+    def __init__(self, spec: str, elmo_output_names: Optional[List] = None,
+                 dim: Optional[int] = None, pad_zero: bool = False,
+                 concat_last_axis: bool = True, max_token: Optional[int] = None,
+                 mini_batch_size: int = 32, **kwargs) -> None:
 
         self.spec = spec if '://' in spec else str(expand_path(spec))
 
@@ -133,7 +135,7 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
         elmo_output_names_set = set(self.elmo_output_names)
         if elmo_output_names_set - set(self.elmo_output_dims.keys()):
             log.error(f'Incorrect elmo_output_names = {elmo_output_names} . You can use either  ["default"] or some of'\
-                       '["word_emb", "lstm_outputs1", "lstm_outputs2","elmo"]')
+                      '["word_emb", "lstm_outputs1", "lstm_outputs2","elmo"]')
             sys.exit(1)
 
         if elmo_output_names_set - set(['default']) and elmo_output_names_set - set(["word_emb", "lstm_outputs1",
@@ -214,7 +216,7 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
         return batch, tokens_length
 
     def _mini_batch_fit(self, batch: List[List[str]],
-                 *args, **kwargs) -> Union[List[np.ndarray], np.ndarray]:
+                        *args, **kwargs) -> Union[List[np.ndarray], np.ndarray]:
         """
         Embed sentences from a batch.
 

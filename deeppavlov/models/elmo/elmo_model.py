@@ -29,7 +29,7 @@ class BidirectionalLanguageModel(object):
             use_character_inputs=True,
             embedding_weight_file=None,
             max_batch_size=128):
-        '''
+        """
         Creates the language model computational graph and loads weights
 
         Two options for input type:
@@ -47,8 +47,8 @@ class BidirectionalLanguageModel(object):
         weight_file: location of the hdf5 file with LM weights
         use_character_inputs: if True, then use character ids as input,
             otherwise use token ids
-        max_batch_size: the maximum allowable batch size 
-        '''
+        max_batch_size: the maximum allowable batch size
+        """
         if not use_character_inputs:
             if embedding_weight_file is None:
                 raise ValueError(
@@ -66,7 +66,7 @@ class BidirectionalLanguageModel(object):
         self._graphs = {}
 
     def __call__(self, ids_placeholder):
-        '''
+        """
         Given the input character ids (or token ids), returns a dictionary
             with tensorflow ops:
 
@@ -85,7 +85,7 @@ class BidirectionalLanguageModel(object):
                 character ids for a batch
             If use_character_input=False, it is shape (None, None) and
                 holds the input token ids for a batch
-        '''
+        """
         if ids_placeholder in self._ops:
             # have already created ops for this placeholder, just return them
             ret = self._ops[ids_placeholder]
@@ -190,10 +190,10 @@ class BidirectionalLanguageModel(object):
 
 
 def _pretrained_initializer(varname, weight_file, embedding_weight_file=None):
-    '''
+    """
     We'll stub out all the initializers in the pretrained LM with
     a function that loads the weights from the file
-    '''
+    """
     weight_name_map = {}
     for i in range(2):
         for j in range(8):  # if we decide to add more layers
@@ -249,10 +249,10 @@ def _pretrained_initializer(varname, weight_file, embedding_weight_file=None):
 
 
 class BidirectionalLanguageModelGraph(object):
-    '''
+    """
     Creates the computational graph and holds the ops necessary for runnint
     a bidirectional language model
-    '''
+    """
     def __init__(self, options, weight_file, ids_placeholder,
                  use_character_inputs=True, embedding_weight_file=None,
                  max_batch_size=128):
@@ -290,7 +290,7 @@ class BidirectionalLanguageModelGraph(object):
         self._build_lstms()
 
     def _build_word_char_embeddings(self):
-        '''
+        """
         options contains key 'char_cnn': {
 
         'n_characters': 262,
@@ -316,7 +316,7 @@ class BidirectionalLanguageModelGraph(object):
         # if omitted, then no highway layers
         'n_highway': 2,
         }
-        '''
+        """
         projection_dim = self.options['lstm']['projection_dim']
 
         cnn_options = self.options['char_cnn']
@@ -595,8 +595,8 @@ class BidirectionalLanguageModelGraph(object):
 
 
 def weight_layers(name, bilm_ops, l2_coef=None,
-                  use_top_only=False, do_layer_norm=False, reuse = False):
-    '''
+                  use_top_only=False, do_layer_norm=False, reuse=False):
+    """
     Weight the layers of a biLM with trainable scalar weights to
     compute ELMo representations.
 
@@ -622,7 +622,7 @@ def weight_layers(name, bilm_ops, l2_coef=None,
             'weighted_op': op to compute weighted average for output,
             'regularization_op': op to compute regularization term
         }
-    '''
+    """
     def _l2_regularizer(weights):
         if l2_coef is not None:
             return l2_coef * tf.reduce_sum(tf.square(weights))
@@ -659,7 +659,7 @@ def weight_layers(name, bilm_ops, l2_coef=None,
             # no regularization
             reg = 0.0
         else:
-            with tf.variable_scope("aggregation", reuse = reuse):
+            with tf.variable_scope("aggregation", reuse=reuse):
                 W = tf.get_variable(
                     '{}_ELMo_W'.format(name),
                     shape=(n_lm_layers, ),
@@ -694,7 +694,7 @@ def weight_layers(name, bilm_ops, l2_coef=None,
 
         # scale the weighted sum by gamma
 
-        with tf.variable_scope("aggregation", reuse = reuse):
+        with tf.variable_scope("aggregation", reuse=reuse):
             gamma = tf.get_variable(
                 '{}_ELMo_gamma'.format(name),
                 shape=(1, ),
@@ -711,7 +711,7 @@ def weight_layers(name, bilm_ops, l2_coef=None,
         mask_sum = tf.reduce_sum(mask_float, 1)
         mask_sum = tf.maximum(mask_sum, [1])
 
-        weighted_lm_layers_mean = weighted_lm_layers_sum / tf.expand_dims(mask_sum, -1)
+        weighted_lm_layers_mean = weighted_lm_layers_sum / tf.expand_dims(mask_sum, - 1)
 
         word_emb_2n = tf.squeeze(layers[0], [1])
         word_emb_1n = tf.slice(word_emb_2n, [0, 0, 0], [-1, -1, lm_dim // 2])  # to 512

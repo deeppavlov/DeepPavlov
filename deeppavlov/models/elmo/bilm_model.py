@@ -100,7 +100,7 @@ class LanguageModel(object):
                     self.embedding_weights, self.token_ids_reverse)
 
     def _build_word_char_embeddings(self):
-        '''
+        """
         options contains key 'char_cnn': {
 
         'n_characters': 262,
@@ -126,7 +126,7 @@ class LanguageModel(object):
         # if omitted, then no highway layers
         'n_highway': 2,
         }
-        '''
+        """
         batch_size = self.options['batch_size']
         unroll_steps = self.options['unroll_steps']
         projection_dim = self.options['lstm']['projection_dim']
@@ -411,13 +411,13 @@ class LanguageModel(object):
         self._build_loss(lstm_outputs)
 
     def _build_loss(self, lstm_outputs):
-        '''
+        """
         Create:
             self.total_loss: total loss op for training
             self.softmax_W, softmax_b: the softmax variables
             self.next_token_id / _reverse: placeholders for gold input
 
-        '''
+        """
         batch_size = self.options['batch_size']
         unroll_steps = self.options['unroll_steps']
 
@@ -501,7 +501,7 @@ class LanguageModel(object):
             self.individual_train_losses.append(tf.reduce_mean(sampled_losses))
             self.individual_eval_losses.append(tf.reduce_mean(losses))
             self.individual_output_softmaxes.append(tf.nn.softmax(output_scores))
-            
+
         # now make the total loss -- it's the train of the individual losses
         if self.bidirectional:
             self.total_train_loss = 0.5 * (self.individual_train_losses[0] + self.individual_train_losses[1])

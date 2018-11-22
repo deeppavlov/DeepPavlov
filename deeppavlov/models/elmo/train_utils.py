@@ -82,7 +82,7 @@ def average_gradients(tower_grads, batch_size, options):
 
 
 def summary_gradient_updates(grads, opt, lr):
-    '''get summary ops for the magnitude of gradient updates'''
+    """get summary ops for the magnitude of gradient updates"""
 
     # strategy:
     # make a dict of variable name -> [variable, grad, adagrad slot]
@@ -200,9 +200,9 @@ def safely_str2int(in_str: str):
 
 
 def dump_weights(tf_save_dir, outfile, options):
-    '''
+    """
     Dump the trained weights from a model to a HDF5 file.
-    '''
+    """
 
     def _get_outname(tf_name):
         outname = re.sub(':0$', '', tf_name)

@@ -139,7 +139,7 @@ def make_module_spec(options, weight_file):
         def_tokens_dense = tf.sparse_to_dense(sparse_indices=def_tokens_sparse.indices,
                                               output_shape=def_tokens_sparse.dense_shape,
                                               sparse_values=def_tokens_sparse.values,
-                                              default_value= ''
+                                              default_value=''
                                               )
         def_mask = tf.not_equal(def_tokens_dense, '')
         def_int_mask = tf.cast(def_mask, dtype=tf.int32)
@@ -167,7 +167,7 @@ def make_module_spec(options, weight_file):
         def_embeddings_op = bilm(def_sen_ids)
 
         # Get an op to compute ELMo (weighted average of the internal biLM layers)
-        def_elmo_output = weight_layers('elmo_output', def_embeddings_op, l2_coef=0.0, reuse = True)
+        def_elmo_output = weight_layers('elmo_output', def_embeddings_op, l2_coef=0.0, reuse=True)
 
         def_weighted_op = def_elmo_output['weighted_op']
         def_mean_op = def_elmo_output['mean_op']

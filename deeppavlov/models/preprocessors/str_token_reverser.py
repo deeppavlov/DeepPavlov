@@ -30,14 +30,14 @@ class StrTokenReverser(Component):
     """
     def __init__(self, tokenized: bool = False, *args, **kwargs) -> None:
         self.tokenized = tokenized
-    
+
     @staticmethod
     def _reverse_str(raw_string):
         splitted = raw_string.split()
         splitted.reverse()
         string = ' '.join(splitted)
         return string
-    
+
     @staticmethod
     def _reverse_tokens(raw_tokens):
         raw_tokens.reverse()
