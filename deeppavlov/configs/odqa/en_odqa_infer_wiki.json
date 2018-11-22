@@ -41,7 +41,8 @@
       },
       {
         "class_name": "logit_ranker",
-        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/squad.json"},
+        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/multi_squad_noans.json"},
+        "sort_noans": true,
         "in": [
           "chunks",
           "questions"
