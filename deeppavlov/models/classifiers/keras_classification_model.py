@@ -65,6 +65,7 @@ class KerasClassificationModel(KerasModel):
         restore_lr: in case of loading pre-trained model \
                 whether to init learning rate with the final learning rate value from saved opt
         classes: list or generator of considered classes
+        padding: ``pre`` or ``post`` padding to use
 
     Attributes:
         opt: dictionary with all model parameters
@@ -76,6 +77,7 @@ class KerasClassificationModel(KerasModel):
         sess: tf session
         optimizer: keras.optimizers instance
         classes: list of considered classes
+        padding: ``pre`` or ``post`` padding to use
     """
 
     def __init__(self, text_size: int, embedding_size: int, n_classes: int,
