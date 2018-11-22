@@ -277,13 +277,17 @@ Based on `R-NET: Machine Reading Comprehension with Self-matching Networks
 <https://www.microsoft.com/en-us/research/publication/mcr/>`__. The model solves the task of looking for an answer on a
 question in a given context (`SQuAD <https://rajpurkar.github.io/SQuAD-explorer/>`__ task format).
 
-+---------------+-----------------------------------------------------+----------------+-----------------+
-|    Dataset    | Model config                                        |    EM (dev)    |    F-1 (dev)    |
-+===============+=====================================================+================+=================+
-| `SQuAD-v1.1`_ | :config:`squad <squad/squad.json>`                  |     71.49      |     80.34       |
-+---------------+-----------------------------------------------------+----------------+-----------------+
-|  SDSJ Task B  | :config:`squad_ru <squad/squad_ru.json>`            |     60.62      |     80.04       |
-+---------------+-----------------------------------------------------+----------------+-----------------+
+.. note::
+
+    All pre-trained models could be downloaded. Model for English language will download about 2.5 Gb and model for Russian about 5 Gb.
+
++---------------+---------------------------------------------+-------+----------------+-----------------+
+|    Dataset    | Model config                                | lang  |    EM (dev)    |    F-1 (dev)    |
++===============+=============================================+=======+================+=================+
+| `SQuAD-v1.1`_ | :config:`squad <squad/squad.json>`          |  en   |     71.49      |     80.34       |
++---------------+---------------------------------------------+-------+----------------+-----------------+
+|  SDSJ Task B  | :config:`squad_ru <squad/squad_ru.json>`    |  ru   |     60.62      |     80.04       |
++---------------+---------------------------------------------+-------+----------------+-----------------+
 
 In the case when answer is not necessary present in given context we have :config:`squad_noans <squad/multi_squad_noans.json>`
 model. This model outputs empty string in case if there is no answer in context.
