@@ -163,8 +163,8 @@
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger/UD2.0/ar.tar.gz",
-        "subdir": "{MODELS_PATH}/morpho_tagger/UD2.0/ar"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger/UD2.0/en.tar.gz",
+        "subdir": "{MODELS_PATH}/morpho_tagger/UD2.0/en"
       },
       {
         "url": "http://files.deeppavlov.ai/datasets/UD2.0_source/en.tar.gz",
