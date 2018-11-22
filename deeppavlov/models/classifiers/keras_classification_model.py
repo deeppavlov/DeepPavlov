@@ -84,6 +84,7 @@ class KerasClassificationModel(KerasModel):
                  last_layer_activation="sigmoid",
                  restore_lr: bool = False,
                  classes: Optional[Union[list, Generator]] = None,
+                 padding="pre",
                  **kwargs):
         """
         Initialize model using parameters
@@ -103,6 +104,7 @@ class KerasClassificationModel(KerasModel):
                      "last_layer_activation": last_layer_activation,
                      "restore_lr": restore_lr,
                      "classes": classes,
+                     "padding": padding,
                      **kwargs}
         self.opt = deepcopy(given_opt)
         self.model = None
@@ -173,8 +175,12 @@ class KerasClassificationModel(KerasModel):
         """
         pad = np.zeros(self.opt['embedding_size'])
         cutted_batch = [sen[:self.opt['text_size']] for sen in sentences]
-        cutted_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + list(tokens) for tokens in cutted_batch]
-
+        if self.opt["padding"] == "pre":
+            cutted_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + list(tokens) for tokens in cutted_batch]
+        elif self.opt["padding"] == "post":
+            cutted_batch = [list(tokens) + [pad] * (self.opt['text_size'] - len(tokens)) for tokens in cutted_batch]
+        else:
+            raise ConfigError("Padding type {} is not acceptable".format(self.opt['padding']))
         return np.asarray(cutted_batch)
 
     def train_on_batch(self, texts: List[List[np.ndarray]], labels: list) -> [float, List[float]]:
