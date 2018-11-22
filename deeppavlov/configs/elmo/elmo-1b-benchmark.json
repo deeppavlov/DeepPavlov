@@ -2,15 +2,14 @@
   "dataset_reader": {
     "class_name": "file_paths_reader",
     "data_path": "{DOWNLOADS_PATH}/elmo-1b-benchmark/data/1-billion-word-language-modeling-benchmark-r13output/",
-    "train": "training-monolingual.tokenized.shuffled/*",
-    "valid": "heldout-monolingual.tokenized.shuffled/*"
+    "train": "training-monolingual.tokenized.shuffled/*"
   },
   "dataset_iterator": {
     "class_name": "elmo_file_paths_iterator",
     "seed": 31415,
     "unroll_steps": 20,
     "max_word_length": 50,
-    "n_gpus": 3,
+    "n_gpus": 1,
     "shuffle": false,
     "bos":"<S>",
     "eos":"</S>",
@@ -34,7 +33,7 @@
         "load_path": "{MODELS_PATH}/elmo-1b-benchmark/saves/model",
         "in": ["x_char_ids", "y_token_ids"],
         "in_y": [],
-        "n_gpus": 3,
+        "n_gpus": 1,
         "out": ["loss"]
       }
     ],

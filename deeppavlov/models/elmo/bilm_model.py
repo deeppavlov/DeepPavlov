@@ -465,7 +465,6 @@ class LanguageModel(object):
         # loss for each direction of the LSTM
         self.individual_train_losses = []
         self.individual_eval_losses = []
-        self.individual_output_softmaxes = []
 
         if self.bidirectional:
             next_ids = [self.next_token_id, self.next_token_id_reverse]
@@ -497,10 +496,10 @@ class LanguageModel(object):
                     logits=output_scores,
                     labels=tf.squeeze(next_token_id_flat, squeeze_dims=[1])
                 )
-
-            self.individual_train_losses.append(tf.reduce_mean(sampled_losses))
-            self.individual_eval_losses.append(tf.reduce_mean(losses))
-            self.individual_output_softmaxes.append(tf.nn.softmax(output_scores))
+            sampled_losses = tf.reshape(sampled_losses, [self.options['batch_size'], -1])
+            losses = tf.reshape(losses, [self.options['batch_size'], -1])
+            self.individual_train_losses.append(tf.reduce_mean(sampled_losses, axis=1))
+            self.individual_eval_losses.append(tf.reduce_mean(losses, axis=1))
 
         # now make the total loss -- it's the train of the individual losses
         if self.bidirectional:

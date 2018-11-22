@@ -39,7 +39,7 @@ class ELMo(NNModel):
     The :class:`~deeppavlov.models.elmo.elmo.ELMo` is a deep contextualized word representation that models both
     complex characteristics of word use (e.g., syntax and semantics), and how these uses vary across linguistic
     contexts (i.e., to model polysemy).
-    
+
     You can use this component for LM training, fine tuning, dumping ELMo to a hdf5 file and wrapping it to
     the tensorflow hub.
 
@@ -68,6 +68,7 @@ class ELMo(NNModel):
             If epoch_save_path is None then epoch_save_path = epoch_load_path.
         dumps_save_path: A dump saving path relative to save_path.
         tf_hub_save_path: A tf_hub saving path relative to save_path.
+
     """
 
     def __init__(self,
@@ -174,7 +175,7 @@ class ELMo(NNModel):
         epoch_num = max(candidates, default=default)
         return epoch_num
 
-    def _build_graph(self, graph):
+    def _build_graph(self, graph, train = True):
         with graph.as_default():
             with tf.device('/cpu:0'):
                 init_step = 0
@@ -189,11 +190,8 @@ class ELMo(NNModel):
                 # calculate the gradients on each GPU
                 tower_grads = []
                 models = []
-                train_loss = tf.get_variable(
-                    'train_loss', [],
-                    initializer=tf.constant_initializer(0.0), trainable=False)
-                eval_loss = tf.get_variable(
-                    'eval_loss', [],
+                loss = tf.get_variable(
+                    'train_perplexity', [],
                     initializer=tf.constant_initializer(0.0), trainable=False)
                 for k in range(self.options['n_gpus']):
                     with tf.device('/gpu:%d' % k):
@@ -206,21 +204,22 @@ class ELMo(NNModel):
                             models.append(model)
                             # get gradients
                             grads = opt.compute_gradients(
-                                total_train_loss * self.options['unroll_steps'],
+                                tf.reduce_mean(total_train_loss) * self.options['unroll_steps'],
                                 aggregation_method=tf.AggregationMethod.EXPERIMENTAL_TREE,
                             )
                             tower_grads.append(grads)
                             # # keep track of loss across all GPUs
-                            train_loss += total_train_loss
-                            eval_loss += total_eval_loss
+                            if train:
+                                loss += total_train_loss
+                            else:
+                                loss += total_eval_loss
 
                 # calculate the mean of each gradient across all GPUs
                 grads = average_gradients(tower_grads, self.options['batch_size'], self.options)
                 grads, _ = clip_grads(grads, self.options, True, global_step)
-                train_loss = train_loss / self.options['n_gpus']
-                eval_loss = eval_loss / self.options['n_gpus']
+                loss = loss / self.options['n_gpus']
                 train_op = opt.apply_gradients(grads, global_step=global_step)
-        return models, train_op, train_loss, eval_loss, graph
+        return models, train_op, loss, graph
 
     def _init_session(self):
         sess_config = tf.ConfigProto(allow_soft_placement=True)
@@ -304,30 +303,30 @@ class ELMo(NNModel):
 
         return feed_dict
 
-    def __call__(self, *args, **kwargs) -> List[float]:
-        if len(args) != 2:
+    def __call__(self, x, y, *args, **kwargs) -> List[float]:
+        if len(args) != 0:
             return []
-        char_ids_batches, reversed_char_ids_batches = args[0]
-        token_ids_batches, reversed_token_ids_batches = args[1]
+        char_ids_batches, reversed_char_ids_batches = x
+        token_ids_batches, reversed_token_ids_batches = y
 
-        feed_dict = self._fill_feed_dict(char_ids_batches, reversed_char_ids_batches, token_ids_batches, 
+        feed_dict = self._fill_feed_dict(char_ids_batches, reversed_char_ids_batches, token_ids_batches,
                                          reversed_token_ids_batches)
 
         with self.graph.as_default():
             loss, self.init_state_values = self.sess.run([self.loss, self.final_state_tensors], feed_dict)
-        
         return loss
 
     @overrides
     def load(self, epoch: Optional[int] = None) -> None:
         """Load model parameters from self.load_path"""
         path = self.load_path
-        if epoch:
+        if epoch is not None:
             path = path.parent / self.epoch_save_path / str(epoch) / path.parts[-1]
             path.resolve()
             log.info(f'[loading {epoch} epoch]')
 
         path = str(path)
+        print(path)
 
         # Check presence of the model files
         if tf.train.checkpoint_exists(path):
@@ -335,12 +334,14 @@ class ELMo(NNModel):
             with self.graph.as_default():
                 saver = tf.train.Saver()
                 saver.restore(self.sess, path)
+        else:
+            log.info(f'[A checkpoint not found in  {path}]') 
 
     @overrides
     def save(self, epoch: Optional[int] = None) -> None:
         """Save model parameters to self.save_path"""
         path = self.save_path
-        if epoch:
+        if epoch is not None:
             path = path.parent / self.epoch_save_path / str(epoch) / path.parts[-1]
             path.resolve()
             log.info(f'[saving {epoch} epoch]')
@@ -374,10 +375,10 @@ class ELMo(NNModel):
                                          token_ids_batches, reversed_token_ids_batches)
 
         with self.graph.as_default():
-            train_loss, _, self.init_state_values = self.sess.run([self.loss, self.train_op, self.final_state_tensors],
-                                                                  feed_dict)
+            loss, _, self.init_state_values = self.sess.run([self.loss, self.train_op, self.final_state_tensors],
+                                                            feed_dict)
 
-        return train_loss
+        return np.mean(loss)
 
     def _build_model(self, train: bool, epoch: Optional[int] = None, **kwargs):
 
@@ -390,13 +391,13 @@ class ELMo(NNModel):
             self.options.update(self.train_options)
             self.options.update(kwargs)
 
-            self.models, self.train_op, self.train_loss, _, self.graph = self._build_graph(tf.Graph())
-            self.loss = self.train_loss
+            self.models, self.train_op, self.loss, self.graph = self._build_graph(tf.Graph())
         else:
             self.options.update(self.valid_options)
             self.options.update(kwargs)
 
-            self.models, self.train_op, self.train_loss, self.loss, self.graph = self._build_graph(tf.Graph())
+            self.models, self.train_op, self.loss, self.graph = self._build_graph(tf.Graph(),
+                                                                                  train=False)
 
         with self.graph.as_default():
             self.init_state_values, self.init_state_tensors, self.final_state_tensors =\
