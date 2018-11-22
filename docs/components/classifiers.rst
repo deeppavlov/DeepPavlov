@@ -184,6 +184,9 @@ DeepPavlov provides the following **pre-trained models**:
 -  :config:`insults_kaggle.json <classifiers/insults_kaggle.json>` -- Insults analysis for English language.
 -  :config:`topic_ag_news.json <classifiers/topic_ag_news.json>` -- AG News topic analysis for English language.
 -  :config:`sentiment_twitter.json <classifiers/sentiment_twitter.json>` -- Twitter Mokoron sentiment analysis for **Russian** language.
+-  :config:`rusentiment_cnn.json <classifiers/rusentiment_cnn.json>` -- sentiment analysis for **Russian** language on Rusentiment dataset using fastText embeddings.
+-  :config:`rusentiment_elmo.json <classifiers/rusentiment_elmo.json>` -- sentiment analysis for **Russian** language on Rusentiment dataset using ELMo.
+-  :config:`yahoo_convers_vs_info.json <classifiers/yahoo_convers_vs_info.json>` -- intent analysis for **English** language to detect whether the question is conversational or informational.
 
 To download pre-trained models, vocabs, embeddings on the dataset of interest one should run the following command
 providing corresponding name of the config file (see above):
