@@ -326,7 +326,6 @@ class ELMo(NNModel):
             log.info(f'[loading {epoch} epoch]')
 
         path = str(path)
-        print(path)
 
         # Check presence of the model files
         if tf.train.checkpoint_exists(path):
