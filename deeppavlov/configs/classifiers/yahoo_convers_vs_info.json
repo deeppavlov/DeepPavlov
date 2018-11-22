@@ -1,4 +1,14 @@
 {
+  "dataset_reader": {
+    "class_name": "basic_classification_reader",
+    "x": "Title",
+    "y": "Label",
+    "data_path": "{DOWNLOADS_PATH}/yahoo_answers_data/"
+  },
+  "dataset_iterator": {
+    "class_name": "basic_classification_iterator",
+    "seed": 42
+  },
   "chainer": {
     "in": [
       "x"
@@ -109,6 +119,8 @@
     ]
   },
   "train": {
+    "batch_size": 256,
+    "epochs": 100,
     "metrics": [
       {
         "name": "roc_auc",
@@ -132,6 +144,12 @@
         ]
       }
     ],
+    "validation_patience": 10,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
+    "show_examples": true,
+    "validate_best": true,
+    "test_best": false,
     "tensorboard_log_dir": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info/model_v0/"
   },
   "metadata": {
