@@ -119,7 +119,7 @@
     ]
   },
   "train": {
-    "batch_size": 128,
+    "batch_size": 256,
     "epochs": 100,
     "metrics": [
       {
