@@ -27,7 +27,7 @@ log = get_logger(__name__)
 
 @register('elmo_file_paths_iterator')
 class ELMoFilePathsIterator(FilePathsIterator):
-    """Dataset iterator for tokenized datasetes like 1 Billion Word Benchmark
+    """Dataset iterator for tokenized datasets like 1 Billion Word Benchmark
     It gets lists of file paths from the data dictionary and returns batches of lines from each file.
 
     Args:
