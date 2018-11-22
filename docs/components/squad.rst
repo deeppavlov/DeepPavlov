@@ -51,7 +51,7 @@ Configuration
 Default config could be found at ``deeppavlov/configs/squad/squad.json``
 
 Model usage from Python
--------------
+-----------------------
 
 .. code:: python
 
@@ -62,7 +62,7 @@ Model usage from Python
 
 
 Model usage from CLI
--------------
+--------------------
 
 .. _reader_training:
 
