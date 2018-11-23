@@ -86,7 +86,7 @@ class KerasClassificationModel(KerasModel):
                  last_layer_activation="sigmoid",
                  restore_lr: bool = False,
                  classes: Optional[Union[list, Generator]] = None,
-                 padding="pre",
+                 padding: Optional[str] = "pre",
                  **kwargs):
         """
         Initialize model using parameters
