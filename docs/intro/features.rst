@@ -46,9 +46,9 @@ Several pre-trained models are available and presented in Table below.
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
 | `DSTC 2`_         | :config:`DSTC 2 on Wiki embeddings <classifiers/intents_dstc2_big.json>`                                     | 28 intents       | En   | Accuracy | 0.9602 | 0.9593 |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-| `SNIPS-2017`_     | :config:`SNIPS on DSTC 2 embeddings <classifiers/intents_snips.json>`                                        | 7 intents        | En   | F1       | 0.8664 |    --  |
+| `SNIPS-2017`_     | :config:`SNIPS on DSTC 2 embeddings <classifiers/intents_snips.json>`                                        | 7 intents        | En   | F1       | 0.8685 |    --  |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-| `SNIPS-2017`_     | :config:`SNIPS on Wiki embeddings <classifiers/intents_snips_big.json>`                                      | 7 intents        | En   | F1       | 0.9808 |    --  |
+| `SNIPS-2017`_     | :config:`SNIPS on Wiki embeddings <classifiers/intents_snips_big.json>`                                      | 7 intents        | En   | F1       | 0.9811 |    --  |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
 | `Insults`_        | :config:`InsultsKaggle on Reddit embeddings <classifiers/insults_kaggle.json>`                               | Insult detection | En   | ROC-AUC  | 0.9271 | 0.8618 |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
@@ -62,7 +62,7 @@ Several pre-trained models are available and presented in Table below.
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
 |`RuSentiment`_     | :config:`RuSentiment on ELMo <classifiers/rusentiment_elmo.json>`                                            | Sentiment        | Ru   | F1       | 0.7066 | 0.7301 |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-|`Yahoo-L31`_       | :config:`Yahoo-L31 on ELMo <classifiers/yahoo_convers_vs_info.json>` pre-trained on `Yahoo-L6`_              | Intent           | Ru   | ROC-AUC  | 0.9351 |   --   |
+|`Yahoo-L31`_       | :config:`Yahoo-L31 on ELMo <classifiers/yahoo_convers_vs_info.json>` pre-trained on `Yahoo-L6`_              | Intent           | Ru   | ROC-AUC  | 0.9269 |   --   |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
 
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
