@@ -160,7 +160,7 @@ class KerasClassificationModel(KerasModel):
             "self_att_hid",
             "self_att_out"
         ]
-        for param in self.opt.keys():
+        for param in kwargs.keys():
             if param not in fixed_params:
                 self.opt[param] = kwargs.get(param)
         return
