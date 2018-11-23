@@ -36,56 +36,88 @@ systems.
 | Turkish        | tr           | 86.98           | 88.03            |  16.1          |
 +----------------+--------------+-----------------+------------------+----------------+
 
+===========================
+Usage examples.
+===========================
+
+Python:
+---------------------------
+
+.. code:: python
+
+    from deeppavlov import build_model, configs
+    model = build_model(configs.morpho_tagger.UD2_0.morpho_ru_syntagrus_pymorphy, download=True)
+    sentences = ["Я шёл домой по незнакомой улице.", "Девушка пела в церковном хоре о всех уставших в чужом краю."]
+    for parse in model(sentences):
+        print(parse)
+
+If you want to use the obtained tags further in Python, just split the output using tabs and newlines.
+
+You may also pass the tokenized sentences instead of raw ones:
+
+.. code:: python
+
+    sentences = [["Я", "шёл", "домой", "по", "незнакомой", "улице", "."]]
+    for parse in model(sentences):
+        print(parse)
+
+If you want the output in UD format, try setting ``"data_format": ud`` in the ``tag_output_prettifier`` section
+of configuration file you import (``configs/morpho_tagger/UD2_0/morpho_ru_syntagrus_pymorphy.json`` in this case).
+
+Command line:
+----------------
+
 If you want to use our models from scratch, do the following
 (all the examples are for ru\_syntagrus corpus, change the filenames accordingly to invoke models for other languages):
 
 #. Download data
 
-   ::
+    .. code:: bash
 
        python -m deeppavlov download morpho_ru_syntagrus_train
 
    To perform all downloads in runtime you can also run all subsequent
    commands with ``-d`` key,
+
 #. To apply a pre-trained ru\_syntagrus model to ru\_syntagrus test
    data, run
 
-   ::
+    .. code:: bash
 
        python -m deeppavlov.models.morpho_tagger morpho_ru_syntagrus_predict
 
    to use a basic model, or
 
-   ::
+    .. code:: bash
 
        python -m deeppavlov.models.morpho_tagger morpho_ru_syntagrus_predict_pymorphy
 
    to apply a model which additionally utilizes information from
    `Pymorphy2 <http://pymorphy2.readthedocs.io>`__ library.
 
-A subdirectory ``results`` will be created in your current working
-directory
-and predictions will be written to the file
-``ud_ru_syntagrus_test.res`` in it.
+A subdirectory ``results`` will be created in the working directory of ``deeppavlov`` module,
+which is ``~/.deeppavlov`` by default, and predictions will be written to the file ``ud_ru_syntagrus_test.res`` in it.
+You can change the paths in corresponding sections of configuration file.
 
 #. To evaluate ru\_syntagrus model on ru\_syntagrus test subset, run
 
-   ::
+.. code:: bash
 
        python -m deeppavlov evaluate morpho_ru_syntagrus_train
 
 #. To retrain model on ru\_syntagrus dataset, run one of the following
    (the first is for Pymorphy-enriched model)
 
-   ::
+.. code:: bash
 
        python -m deeppavlov train morpho_ru_syntagrus_train_pymorphy
        python -m deeppavlov train morpho_ru_syntagrus_train
 
    Be careful, one epoch takes 8-60 minutes depending on your GPU.
+
 #. To tag Russian sentences from stdin, run
 
-   ::
+.. code:: bash
 
        python -m deeppavlov interact morpho_ru_syntagrus_predict_pymorphy
 
@@ -162,8 +194,13 @@ Test data
 ~~~~~~~~~
 
 When annotating unlabeled text, our model expects the data in
-one-word-per-line format
-with sentences separated by blank line.
+10-column UD format as well. However, it does not pat attention to any column except the first one,
+which should be a number, and the second, which must contain a word.
+You can also pass only the words with exactly one word on each line
+by adding `"from_words": True` to ``dataset_reader`` section.
+Sentences are separated with blank lines.
+
+
 
 Algorithm description
 ---------------------
@@ -230,7 +267,7 @@ The dataset reader describes the instance of
 
     "dataset_reader": {
         "class_name": "morphotagger_dataset_reader",
-        "data_path": "UD2.0_source",
+        "data_path": "{DOWNLOADS_PATH}/UD2.0_source",
         "language": "en", "data_types": ["train", "dev", "test"]
       }
 
@@ -244,9 +281,9 @@ like
 
     "dataset_reader": {
         "class_name": "morphotagger_dataset_reader",
-        "data_path": ["UD2.0_source/en-ud-train.conllu",
-                      "UD2.0_source/en-ud-dev.conllu",
-                      "UD2.0_source/en-ud-test.conllu"]
+        "data_path": ["{DOWNLOADS_PATH}/UD2.0_source/en-ud-train.conllu",
+                      "{DOWNLOADS_PATH}/UD2.0_source/en-ud-dev.conllu",
+                      "{DOWNLOADS_PATH}/UD2.0_source/en-ud-test.conllu"]
         "data_types": ["train", "dev", "test"]
       }
 
@@ -321,8 +358,8 @@ model should predict to tag indexes.
         "fit_on": ["y"],
         "level": "token",
         "special_tokens": ["PAD", "BEGIN", "END"],
-        "save_path": "morpho_tagger/UD2.0/tag_en.dict",
-        "load_path": "morpho_tagger/UD2.0/tag_en.dict"
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/tag_en.dict",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/tag_en.dict"
       },
 
  The third part is the character vocabulary used to represent words as sequences of indexes. Only the
@@ -337,8 +374,8 @@ model should predict to tag indexes.
         "fit_on": ["x_processed"],
         "special_tokens": ["PAD", "BEGIN", "END"],
         "level": "char",
-        "save_path": "morpho_tagger/UD2.0/char_en.dict",
-        "load_path": "morpho_tagger/UD2.0/char_en.dict"
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/char_en.dict",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/char_en.dict"
       },
 
 
@@ -373,8 +410,8 @@ are listed in a separate distributed with the library. This part of the config l
       {
         "id": "pymorphy_vectorizer",
         "class_name": "pymorphy_vectorizer",
-        "save_path": "morpho_tagger/UD2.0/ru_syntagrus/tags_russian.txt",
-        "load_path": "morpho_tagger/UD2.0/ru_syntagrus/tags_russian.txt",
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus/tags_russian.txt",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus/tags_russian.txt",
         "max_pymorphy_variants": 5,
         "in": ["x"],
         "out": ["x_possible_tags"]
@@ -391,8 +428,8 @@ the input parameters of :class:`~deeppavlov.models.morpho_tagger.network.Charact
         "out": ["y_predicted"],
         "class_name": "morpho_tagger",
         "main": true,
-        "save_path": "morpho_tagger/UD2.0/ud_en.hdf5",
-        "load_path": "morpho_tagger/UD2.0/ud_en.hdf5",
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ud_en.hdf5",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ud_en.hdf5",
         "tags": "#tag_vocab",
         "symbols": "#char_vocab",
         "verbose": 1,
@@ -420,26 +457,8 @@ and other specific parameters of the network, available in :class:`~deeppavlov.m
 The `"train"` section of `"chainer"` contains training parameters, such as number of epochs,
 batch_size and logging frequency, see general readme for more details.
 
-Evaluate configuration
-~~~~~~~~~~~~~~~~~~~~~~
-
-Evaluate configuration file is almost the same as the train one, the only difference is
-that **dataset_reader** reads only test part of data. Also there are no logging parameters
-in the ``''train''`` subsection of **chainer**. Now it looks like
-
-::
-
-    "train": {
-    "test_best": true,
-    "batch_size": 16,
-    "metrics": ["per_token_accuracy"]
-    }
-
-
-Predict configuration
-~~~~~~~~~~~~~~~~~~~~~
-
-In prediction configuration **chainer** includes an additional subsection for the prettifier,
+**chainer** also includes the `"prettifier"` subsection, which describes the parameters
+of :class:`~deeppavlov.core.models.morpho_tagger.common.TagOutputPrettifier`
 which transforms the predictions of the tagger to a readable form.
 
 ::
@@ -474,15 +493,4 @@ and produces the output of the format
     7 married VERB Tense=Past|VerbForm=Part|Voice=Pass
     8 . PUNCT _
 
-You can also generate output in 10 column CONLL-U format.
-For this purpose add ``format_mode`` = ``ud`` to the **prettifier** section.
-
-The **train** section of the config is replaced by the **predict** section:
-
-::
-
-    "predict":
-    {
-    "batch_size": 32,
-    "outfile": "results/ud_ru_syntagrus_test.res"
-    }
+To generate output in 10 column CONLL-U format add ``format_mode`` = ``ud`` to the described section.
