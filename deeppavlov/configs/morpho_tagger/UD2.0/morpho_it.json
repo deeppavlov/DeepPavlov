@@ -150,7 +150,7 @@
   },
   "predict": {
     "batch_size": 32,
-    "outfile": "|RESULTS_PATH}/ud_it_test.res"
+    "outfile": "{RESULTS_PATH}/ud_it_test.res"
   },
   "metadata": {
     "variables": {
