@@ -50,7 +50,7 @@ Languages
 =========
 
 There are pretrained **ODQA** models for **English** and **Russian**
-languages in DeepPavlov :doc:`DeepPavlov </index/>`.
+languages in :doc:`DeepPavlov </index/>`.
 
 Models
 ======
@@ -73,7 +73,7 @@ Training
 
 **ODQA ranker** and **ODQA reader** should be trained separately.
 Read about training the **ranker** :ref:`here <ranker_training>`.
-Read about training the **reader** in our separate :doc:`reader tutorial </apiref/models/squad>`.
+Read about training the **reader** in our separate :ref:`reader tutorial <reader_training>`.
 
 Interacting
 -----------
