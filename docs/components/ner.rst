@@ -1,6 +1,59 @@
 Named Entity Recognition (NER)
 ==============================
 
+Train and use the model
+-----------------------
+
+Any pre-trained model can be used for inference from both Command Line Interface (CLI) and Python. Before using the
+mode make sure that all needed packages is installed using the command:
+
+.. code:: bash
+
+    python -m deeppavlov install ner_ontonotes
+
+To use a pre-trained model from CLI use the following command:
+
+.. code:: bash
+
+    python deeppavlov/deep.py interact ner_ontonotes [-d]
+
+where the `ner_ontonotes` is the name of the config and `-d` is an optional download key. The key `-d` is udsed
+to download the pre-trained model along with embeddings and all other files need to run the model. Other possible
+commands are `train`, `evaluate`, and `download`,
+
+
+Here is the list of all available configs:
+
++--------------------------------+--------------------+--------------------+--------------------+--------------------+
+| Model                          | Dataset            | Embeddings Size    | Model Size         | F1 score           |
++================================+====================+====================+====================+====================+
+| ner_ontonotes                  | OnotoNotes         | 331 MB             | 7.8 MB             | 87.07              |
++--------------------------------+--------------------+--------------------+--------------------+--------------------+
+| ner_rus                        | Collection3 [13]_  | 1.0 GB             | 5.6 MB             | 95.25              |
++--------------------------------+--------------------+--------------------+--------------------+--------------------+
+| ner_dstc                       | DSTC2              | ---                | 626 KB             | 97.17              |
++--------------------------------+--------------------+--------------------+--------------------+--------------------+
+| ner_conll2003                  | CoNLL-2003         | 331 MB             | 3.1 MB             | 89.94              |
++--------------------------------+--------------------+--------------------+--------------------+--------------------+
+
+
+Models can be used from Python using the following code:
+
+.. code:: python
+
+    from deeppavlov import configs, build_model
+
+    ner_model = build_model(configs.ner.ner_ontonotes, download=True)
+    ner_model(['Computer Sciences Corp. is close to making final an agreement to buy Cleveland Consulting Associates'])
+
+The model also can be trained from the Python:
+
+.. code:: python
+
+    from deeppavlov import configs, train_model
+    ner_model = train_model(configs.ner.ner_ontonotes)
+
+
 NER task
 --------
 
@@ -117,7 +170,7 @@ config part with "conll2003\_reader" should look like:
     "dataset_reader": {
         "class_name": "conll2003_reader",
         "data_path": "/home/user/Data/conll2003/"
-    } 
+    }
 
 where "class_name" refers to the basic ner dataset reader class and data\_path
 is the path to the folder with three files, namely: "train.txt",
@@ -370,23 +423,7 @@ illustrate omidirectionality of the vocabulary. When strings are passed
 to the vocab, it convert them into indices. When the indices are passed
 to the vocab, they are converted to the tag strings.
 
-You can see all parts together in
-:config:`ner/ner_conll2003.json <ner/ner_conll2003.json>` .
-
-Train and use the model
------------------------
-
-Please see an example of training a NER model and using it for
-prediction:
-
-.. code:: python
-
-    from deeppavlov import configs, train_model
-
-    ner_model = train_model(configs.ner.ner_ontonotes, download=True)
-    ner_model(['Computer Sciences Corp. is close to making final an agreement to buy Cleveland Consulting Associates'])
-
-This example assumes that the working directory is deeppavlov.
+You can see all parts together in ``deeeppavlov/configs/ner/ner_conll2003.json``.
 
 OntoNotes NER
 -------------
@@ -510,8 +547,7 @@ To run Russian NER model use the following code:
 
     from deeppavlov import build_model, configs
 
-    PIPELINE_CONFIG_PATH = configs.ner.ner_rus
-    ner_model = build_model(PIPELINE_CONFIG_PATH , download=True)
+    ner_model = build_model(configs.ner.ner_rus , download=True)
     ner_model(['Компания « Андэк » , специализирующаяся на решениях для обеспечения безопасности бизнеса , сообщила о том , что Вячеслав Максимов , заместитель генерального директора компании , возглавил направление по оптимизации процессов управления информационной безопасностью '])
 
 
@@ -634,3 +670,8 @@ Literature
     the persons- 1000/1111-F collections. In: 16th All-Russian Scientific C
     onference Digital Libraries: Advanced Methods and Technologies, Digital
     Collections, RCDL 2014,pp. 217 – 221 (2014).
+
+.. [13] Mozharova V., Loukachevitch N., Two-stage approach in Russian named
+    entity recognition // International FRUCT Conference on Intelligence,
+    Social Media and Web, ISMW FRUCT 2016. Saint-Petersburg; Russian Federation,
+    DOI 10.1109/FRUCT.2016.7584769

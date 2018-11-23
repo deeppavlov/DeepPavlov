@@ -50,7 +50,7 @@ Languages
 =========
 
 There are pretrained **ODQA** models for **English** and **Russian**
-languages in DeepPavlov :doc:`DeepPavlov </index/>`.
+languages in :doc:`DeepPavlov </index/>`.
 
 Models
 ======
@@ -73,7 +73,7 @@ Training
 
 **ODQA ranker** and **ODQA reader** should be trained separately.
 Read about training the **ranker** :ref:`here <ranker_training>`.
-Read about training the **reader** in our separate :doc:`reader tutorial </apiref/models/squad>`.
+Read about training the **reader** in our separate :ref:`reader tutorial <reader_training>`.
 
 Interacting
 -----------
@@ -109,12 +109,12 @@ Scores for **ODQA** skill:
 |                                                     |                | enwiki (2018-02-11) | enwiki (2016-12-21) |
 |                                                     |                +----------+----------+-----------+---------+
 | Model                                               | Dataset        |  F1      |   EM     |   F1      |   EM    |
-+-----------------------------------------------------+----------------+----------+----------+-----------+---------+
-|:config:`DeepPavlov <odqa/en_odqa_infer_wiki.json>`  | SQuAD (dev)    |  35.89   |  29.21   |  37.83    |  31.26  |
-+-----------------------------------------------------+----------------+----------+----------+-----------+---------+
-|`DrQA`_                                              | SQuAD (dev)    |   \-     |  \-      |   \-      |  27.1   |
-+-----------------------------------------------------+----------------+----------+----------+-----------+---------+
-|`R3`_                                                | SQuAD (dev)    |   \-     |  \-      |   37.5    |  29.1   |
++=====================================================+================+==========+==========+===========+=========+
+|:config:`DeepPavlov <odqa/en_odqa_infer_wiki.json>`  |                |  35.89   |  29.21   |  37.83    |  31.26  |
++-----------------------------------------------------+ SQuAD (dev)    +----------+----------+-----------+---------+
+|`DrQA`_                                              |                |   \-     |  \-      |   \-      |  27.1   |
++-----------------------------------------------------+                +----------+----------+-----------+---------+
+|`R3`_                                                |                |   \-     |  \-      |   37.5    |  29.1   |
 +-----------------------------------------------------+----------------+----------+----------+-----------+---------+
 
 
