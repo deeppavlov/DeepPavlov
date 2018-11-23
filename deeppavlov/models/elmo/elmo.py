@@ -117,25 +117,39 @@ class ELMo(NNModel):
     Examples:
         For a quick start, you can run test training of the test model on small data by this command from bash:
 
-        >>> # python -m deeppavlov train deeppavlov/configs/elmo/elmo-1b-benchmark_test.json -d
+        .. code:: bash
+
+            python -m deeppavlov train deeppavlov/configs/elmo/elmo-1b-benchmark_test.json -d
 
         To download the prepared `1 Billion Word Benchmark dataset <http://www.statmt.org/lm-benchmark/>`__ and
         start a training model use this command from bash:
 
-        >>> # python -m deeppavlov train deeppavlov/configs/elmo/elmo-1b-benchmark.json -d
+        .. note::
+
+            You need to download about **2 GB** also by default about **10 GB** of RAM and **10 GB** of GPU memory
+            required to running the config ``deeppavlov/configs/elmo/elmo-1b-benchmark.json`` on one GPU.
+
+        .. code:: bash
+
+            python -m deeppavlov train deeppavlov/configs/elmo/elmo-1b-benchmark.json -d
 
         To fine-tune ELMo as LM model on `1 Billion Word Benchmark dataset <http://www.statmt.org/lm-benchmark/>`__
         use commands from bash :
 
-        >>> # python -m deeppavlov download deeppavlov/configs/elmo/elmo-1b-benchmark.json
-        >>> # mkdir -p ${MODELS_PATH}/elmo-1b-benchmark/saves/epochs/0
-        >>> # cp my_ckpt.data-00000-of-00001 ${MODELS_PATH}/elmo-1b-benchmark/saves/epochs/0/model.data-00000-of-00001
-        >>> # cp my_ckpt.index ${MODELS_PATH}/elmo-1b-benchmark/saves/epochs/0/model.index
-        >>> # cp my_ckpt.meta ${MODELS_PATH}/elmo-1b-benchmark/saves/epochs/0/model.meta
-        >>> # cp checkpoint ${MODELS_PATH}/elmo-1b-benchmark/saves/epochs/0/checkpoint
-        >>> # cp my_options.json ${MODELS_PATH}/elmo-1b-benchmark/options.json
-        >>> # cp my_vocab {MODELS_PATH}/elmo-1b-benchmark/vocab-2016-09-10.txt
-        >>> # python -m deeppavlov train deeppavlov/configs/elmo/elmo-1b-benchmark.json
+        .. code:: bash
+
+            # download the prepared 1 Billion Word Benchmark dataset
+            python -m deeppavlov download deeppavlov/configs/elmo/elmo-1b-benchmark.json
+            # copy model checkpoint, network configuration, vocabulary of pre-trained LM model
+            mkdir -p ${MODELS_PATH}/elmo-1b-benchmark/saves/epochs/0
+            cp my_ckpt.data-00000-of-00001 ${MODELS_PATH}/elmo-1b-benchmark/saves/epochs/0/model.data-00000-of-00001
+            cp my_ckpt.index ${MODELS_PATH}/elmo-1b-benchmark/saves/epochs/0/model.index
+            cp my_ckpt.meta ${MODELS_PATH}/elmo-1b-benchmark/saves/epochs/0/model.meta
+            cp checkpoint ${MODELS_PATH}/elmo-1b-benchmark/saves/epochs/0/checkpoint
+            cp my_options.json ${MODELS_PATH}/elmo-1b-benchmark/options.json
+            cp my_vocab {MODELS_PATH}/elmo-1b-benchmark/vocab-2016-09-10.txt
+            # start a fine-tuning
+            python -m deeppavlov train deeppavlov/configs/elmo/elmo-1b-benchmark.json
 
         After training you can use the ELMo model from tf_hub wrapper by
         `TensorFlow Hub <https://www.tensorflow.org/hub/overview>`__ or by
@@ -147,8 +161,8 @@ class ELMo(NNModel):
         >>> elmo([['вопрос', 'жизни', 'Вселенной', 'и', 'вообще', 'всего'], ['42']])
         array([[ 0.00719104,  0.08544601, -0.07179783, ...,  0.10879009,
                 -0.18630421, -0.2189409 ],
-               [ 0.16325025, -0.04736076,  0.12354863, ..., -0.1889013 ,
-                 0.04972512,  0.83029324]], dtype=float32)
+            [ 0.16325025, -0.04736076,  0.12354863, ..., -0.1889013 ,
+                0.04972512,  0.83029324]], dtype=float32)
 
     """
 

@@ -63,6 +63,9 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 
 [Morphological tagging](http://docs.deeppavlov.ai/en/latest/components/morphotagger.html) | [Automatic Spelling Correction](http://docs.deeppavlov.ai/en/latest/components/spelling_correction.html)
 
+[ELMo training and fine-tuning](http://docs.deeppavlov.ai/en/latest/apiref/models/elmo.html)
+
+
 **Skills**
 
 [Goal(Task)-oriented Bot](http://docs.deeppavlov.ai/en/latest/skills/go_bot.html) | [Seq2seq Goal-Oriented bot](http://docs.deeppavlov.ai/en/latest/skills/seq2seq_go_bot.html)
@@ -73,7 +76,7 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 
 **Embeddings**
 
-[ELMo embeddings for the Russian language](http://docs.deeppavlov.ai/en/master/apiref/models/embedders.html#deeppavlov.models.embedders.elmo_embedder.ELMoEmbedder)
+[ELMo embeddings for the Russian language](http://docs.deeppavlov.ai/en/latest/apiref/models/embedders.html#deeppavlov.models.embedders.elmo_embedder.ELMoEmbedder)
 
 [FastText embeddings for the Russian language](http://docs.deeppavlov.ai/en/latest/intro/pretrained_vectors.html)
 
