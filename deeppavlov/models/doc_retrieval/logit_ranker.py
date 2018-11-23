@@ -31,6 +31,7 @@ class LogitRanker(Component):
      Args:
         squad_model: a loaded squad model
         batch_size: batch size to use with squad model
+        sort_noans: whether to downgrade noans tokens in the most possible answers
 
      Attributes:
         squad_model: a loaded squad model
@@ -38,9 +39,11 @@ class LogitRanker(Component):
 
     """
 
-    def __init__(self, squad_model: Union[Chainer, Component], batch_size: int = 50, **kwargs):
+    def __init__(self, squad_model: Union[Chainer, Component], batch_size: int = 50,
+                 sort_noans: bool = False, **kwargs):
         self.squad_model = squad_model
         self.batch_size = batch_size
+        self.sort_noans = sort_noans
 
     def __call__(self, contexts_batch: List[List[str]], questions_batch: List[List[str]]) -> List[str]:
         """
@@ -63,6 +66,10 @@ class LogitRanker(Component):
                 q_batch = questions[i: i + self.batch_size]
                 batch_predict = zip(*self.squad_model(c_batch, q_batch))
                 results += batch_predict
-            best_answer = sorted(results, key=itemgetter(2), reverse=True)[0][0]
+            if self.sort_noans:
+                results = sorted(results, key=lambda x: (x[2], x != ''), reverse=True)
+            else:
+                results = sorted(results, key=itemgetter(2), reverse=True)
+            best_answer = results[0][0]
             batch_best_answers.append(best_answer)
         return batch_best_answers
