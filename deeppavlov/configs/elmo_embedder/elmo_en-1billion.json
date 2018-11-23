@@ -10,7 +10,7 @@
         "out": ["tokens"]
       },
       {
-        "class_name": "elmo",
+        "class_name": "elmo_embedder",
         "elmo_output_names": ["lstm_outputs1", "lstm_outputs2", "word_emb"],
         "mini_batch_size": 32,
         "in": [
@@ -34,7 +34,7 @@
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/elmo.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
     ]
   }
 }

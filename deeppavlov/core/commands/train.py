@@ -18,7 +18,7 @@ import json
 import time
 from collections import OrderedDict, namedtuple
 from pathlib import Path
-from typing import List, Tuple, Dict, Union
+from typing import List, Tuple, Dict, Union, Optional
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import expand_path, import_packages, parse_config
@@ -154,7 +154,7 @@ def get_iterator_from_config(config: dict, data: dict):
 
 def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None, *,
                                      to_train=True, to_validate=True, download=False,
-                                     recursive=True) -> Dict[str, Dict[str, float]]:
+                                     start_epoch_num=0, recursive=True) -> Dict[str, Dict[str, float]]:
     """Make training and evaluation of the model described in corresponding configuration file."""
     config = parse_config(config)
 
@@ -200,7 +200,7 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None, *
         model = fit_chainer(config, iterator)
 
         if callable(getattr(model, 'train_on_batch', None)):
-            _train_batches(model, iterator, train_config, metrics_functions)
+            _train_batches(model, iterator, train_config, metrics_functions, start_epoch_num=start_epoch_num)
         elif callable(getattr(model, 'fit_batches', None)):
             _fit_batches(model, iterator, train_config)
         elif callable(getattr(model, 'fit', None)):
@@ -288,10 +288,11 @@ def _test_model(model: Chainer, metrics_functions: List[Metric],
 
 
 def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config: dict,
-                   metrics_functions: List[Metric]) -> NNModel:
+                   metrics_functions: List[Metric], *, start_epoch_num: Optional[int] = None) -> NNModel:
 
     default_train_config = {
         'epochs': 0,
+        'start_epoch_num': 0,
         'max_batches': 0,
         'batch_size': 1,
 
@@ -329,7 +330,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
         raise ConfigError('metric_optimization has to be one of {}'.format(['maximize', 'minimize']))
 
     i = 0
-    epochs = 0
+    epochs = start_epoch_num if start_epoch_num is not None else train_config['start_epoch_num']
     examples = 0
     saved = False
     patience = 0

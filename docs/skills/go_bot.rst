@@ -183,7 +183,7 @@ Your data
 ^^^^^^^^^
 
 Dialogs
-'''''''
+""""""'
 
 If your model uses DSTC2 and relies on ``"dstc2_reader"``
 (:class:`~deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader`),
@@ -239,7 +239,7 @@ achieving that (sorted by increase in the amount of code):
       :config:`configs/go_bot/gobot_dstc2.json <go_bot/gobot_dstc2.json>`.
 
 Templates
-'''''''''
+"""""""""
 
 You should provide a maping from actions to text templates in the format
 
@@ -264,7 +264,7 @@ For example,
 It is recommended to use ``"DefaultTemplate"`` value for ``template_type`` parameter.
 
 Database (optional)
-'''''''''''''''''''
+""""""""""""""""""'
 
 If your dataset doesn't imply any api calls to an external database, just do not set
 ``database`` and ``api_call_action`` parameters and skip the section below.
