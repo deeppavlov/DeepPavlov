@@ -158,7 +158,7 @@ Therefore, this model is available only for interaction.
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
 |`RuSentiment`_     | :config:`RuSentiment on ELMo <classifiers/rusentiment_elmo.json>`                                            | Sentiment        | Ru   | F1       | 0.7066 | 0.7301 |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-|`Yahoo-L31`_       | :config:`Yahoo-L31 on ELMo <classifiers/yahoo_convers_vs_info.json>` pre-trained on `Yahoo-L6`_              | Intent           | Ru   | ROC-AUC  | 0.9351 |   --   |
+|`Yahoo-L31`_       | :config:`Yahoo-L31 on ELMo <classifiers/yahoo_convers_vs_info.json>` pre-trained on `Yahoo-L6`_              | Intent           | Ru   | ROC-AUC  | 0.9269 |   --   |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
 
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
