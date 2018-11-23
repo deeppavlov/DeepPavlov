@@ -23,8 +23,8 @@
         {
           "id": "siam_sent_vocab",
           "class_name": "simple_vocab",
-          "save_path": "{MODELS_PATH}/paraphraser_elmo_vocabs/sent.dict",
-          "load_path": "{MODELS_PATH}/paraphraser_elmo_vocabs/sent.dict"
+          "save_path": "{MODELS_PATH}/paraphraser_elmo_256_vocabs/sent.dict",
+          "load_path": "{MODELS_PATH}/paraphraser_elmo_256_vocabs/sent.dict"
         },
         "tokenizer":
         {
@@ -34,8 +34,8 @@
         {
           "id": "siam_vocab",
           "class_name": "simple_vocab",
-          "save_path": "{MODELS_PATH}/paraphraser_elmo_vocabs/tok.dict",
-          "load_path": "{MODELS_PATH}/paraphraser_elmo_vocabs/tok.dict"
+          "save_path": "{MODELS_PATH}/paraphraser_elmo_256_vocabs/tok.dict",
+          "load_path": "{MODELS_PATH}/paraphraser_elmo_256_vocabs/tok.dict"
         },
         "embedder":
         {
@@ -70,8 +70,8 @@
         "learning_rate": 1e-3,
         "triplet_loss": false,
         "batch_size": 256,
-        "save_path": "{MODELS_PATH}/paraphraser_elmo_model/model_weights.h5",
-        "load_path": "{MODELS_PATH}/paraphraser_elmo_model/model_weights.h5",
+        "save_path": "{MODELS_PATH}/paraphraser_elmo_256_model/model_weights.h5",
+        "load_path": "{MODELS_PATH}/paraphraser_elmo_256_model/model_weights.h5",
         "preprocess": "#preproc.__call__"
       }
     ],
