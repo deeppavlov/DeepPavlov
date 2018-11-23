@@ -66,10 +66,10 @@
         "emb_matrix": "#embeddings.emb_mat",
         "embedding_dim": "#siam_embedder.dim",
         "seed": 243,
-        "hidden_dim": 200,
+        "hidden_dim": 50,
         "learning_rate": 1e-3,
         "triplet_loss": false,
-        "batch_size": 256,
+        "batch_size": 64,
         "save_path": "{MODELS_PATH}/paraphraser_elmo_model/model_weights.h5",
         "load_path": "{MODELS_PATH}/paraphraser_elmo_model/model_weights.h5",
         "preprocess": "#preproc.__call__"
@@ -79,7 +79,7 @@
   },
   "train": {
     "epochs": 200,
-    "batch_size": 256,
+    "batch_size": 64,
     "pytest_max_batches": 2,
     "train_metrics": ["f1", "acc", "log_loss"],
     "metrics": ["f1", "acc", "log_loss"],
