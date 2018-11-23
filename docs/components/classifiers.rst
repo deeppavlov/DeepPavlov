@@ -142,9 +142,9 @@ Therefore, this model is available only for interaction.
 +                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
 |                  |                   |      | :config:`Wiki emb <classifiers/intents_dstc2_big.json>`                                         |          | 0.9602 | 0.9593 |  8.5 Gb   |
 +------------------+-------------------+      +-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
-| 7 intents        | `SNIPS-2017`_     |      | :config:`DSTC 2 emb <classifiers/intents_snips.json>`                                           | F1       | 0.8664 |    --  |  800 Mb   |
+| 7 intents        | `SNIPS-2017`_     |      | :config:`DSTC 2 emb <classifiers/intents_snips.json>`                                           | F1       | 0.8685 |    --  |  800 Mb   |
 +                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
-|                  |                   |      | :config:`Wiki emb <classifiers/intents_snips_big.json>`                                         |          | 0.9808 |    --  |  8.5 Gb   |
+|                  |                   |      | :config:`Wiki emb <classifiers/intents_snips_big.json>`                                         |          | 0.9811 |    --  |  8.5 Gb   |
 +                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
 |                  |                   |      | :config:`Tfidf + SelectKBest + PCA + Wiki emb <classifiers/intents_snips_sklearn.json>`         |          | 0.9673 |    --  |  8.6 Gb   |
 +                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
@@ -162,7 +162,7 @@ Therefore, this model is available only for interaction.
 +                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
 |                  |                   |      | :config:`ELMo <classifiers/rusentiment_elmo.json>`                                              |          | 0.7066 | 0.7301 |  700 Mb   |
 +------------------+-------------------+      +-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
-| Intent           |`Yahoo-L31`_       |      | :config:`Yahoo-L31 on ELMo <classifiers/yahoo_convers_vs_info.json>` pre-trained on `Yahoo-L6`_ | ROC-AUC  | 0.9351 |   --   |  700 Mb   |
+| Intent           |`Yahoo-L31`_       |      | :config:`Yahoo-L31 on ELMo <classifiers/yahoo_convers_vs_info.json>` pre-trained on `Yahoo-L6`_ | ROC-AUC  | 0.9269 |   --   |  700 Mb   |
 +------------------+-------------------+------+-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
 
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
@@ -188,6 +188,9 @@ DeepPavlov provides the following **pre-trained models**:
 -  :config:`insults_kaggle.json <classifiers/insults_kaggle.json>` -- Insults analysis for English language.
 -  :config:`topic_ag_news.json <classifiers/topic_ag_news.json>` -- AG News topic analysis for English language.
 -  :config:`sentiment_twitter.json <classifiers/sentiment_twitter.json>` -- Twitter Mokoron sentiment analysis for **Russian** language.
+-  :config:`rusentiment_cnn.json <classifiers/rusentiment_cnn.json>` -- sentiment analysis for **Russian** language on Rusentiment dataset using fastText embeddings.
+-  :config:`rusentiment_elmo.json <classifiers/rusentiment_elmo.json>` -- sentiment analysis for **Russian** language on Rusentiment dataset using ELMo.
+-  :config:`yahoo_convers_vs_info.json <classifiers/yahoo_convers_vs_info.json>` -- intent analysis for **English** language to detect whether the question is conversational or informational.
 
 To download pre-trained models, vocabs, embeddings on the dataset of interest one should run the following command
 providing corresponding name of the config file (see above):

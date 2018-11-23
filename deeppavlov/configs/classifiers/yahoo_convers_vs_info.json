@@ -74,8 +74,8 @@
         "n_classes": "#classes_vocab.len",
         "units_gru": 512,
         "optimizer": "Adam",
-        "lear_rate": 0.001,
-        "lear_rate_decay": 0.001,
+        "learning_rate": 0.001,
+        "learning_rate_decay": 0.001,
         "loss": "categorical_crossentropy",
         "text_size": 20,
         "coef_reg_gru": 1e-4,
@@ -132,6 +132,12 @@
         ]
       }
     ],
+    "validation_patience": 20,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
+    "show_examples": true,
+    "validate_best": true,
+    "test_best": false,
     "tensorboard_log_dir": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info/model_v0/"
   },
   "metadata": {
