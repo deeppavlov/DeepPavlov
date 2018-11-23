@@ -63,7 +63,7 @@
           "x_emb"
         ],
         "id": "my_embedder",
-        "class_name": "elmo",
+        "class_name": "elmo_embedder",
         "elmo_output_names": [
           "elmo"
         ],
@@ -153,7 +153,7 @@
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/elmo.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
     ],
     "labels": {
       "telegram_utils": "IntentModel",
