@@ -12,7 +12,7 @@ systems.
 
 +----------------+--------------+-----------------+------------------+----------------+
 |    Language    | Code         | UDPipe accuracy | Our top accuracy | Model size (MB)|
-+----------------+--------------+-----------------+------------------+----------------+
++================+==============+=================+==================+================+
 | Arabic         | ar           | 88.31           | 90.85            |  23.7          |
 +----------------+--------------+-----------------+------------------+----------------+
 | Czech          | cs           | 91.86           | 94.35            |  41.8          |
@@ -197,7 +197,7 @@ When annotating unlabeled text, our model expects the data in
 10-column UD format as well. However, it does not pat attention to any column except the first one,
 which should be a number, and the second, which must contain a word.
 You can also pass only the words with exactly one word on each line
-by adding `"from_words": True` to ``dataset_reader`` section.
+by adding ``"from_words": True`` to ``dataset_reader`` section.
 Sentences are separated with blank lines.
 
 
@@ -252,9 +252,9 @@ Training configuration
 
 We distribute pre-trained models for 11 languages trained on Universal Dependencies data.
 Configuration files for reproducible training are also available in
-``deeppavlov/configs/morpho_tagger/UD2.0``, for
+:config:`deeppavlov/configs/morpho_tagger/UD2.0 <morpho_tagger/UD2.0>`, for
 example
-``deeppavlov/configs/morpho_tagger/UD2.0/morpho_en.json``.
+:config:`deeppavlov/configs/morpho_tagger/UD2.0/morpho_en.json <morpho_tagger/UD2.0/morpho_en.json>`.
 The configuration file consists of several parts:
 
 Dataset Reader
@@ -295,9 +295,9 @@ the dev part
 you need to resplit your data as described in `Dataset
 Iterator <#dataset-iterator>`__ section.
 
-Your data should be in CONLL-U format. It refers to `predict` mode also, but in this case only word
+Your data should be in CONLL-U format. It refers to ``predict`` mode also, but in this case only word
 column is taken into account. If your data is in single word per line format and you do not want to
-reformat it, add `"from_words": True` to ``dataset_reader`` section. You can also specify
+reformat it, add ``"from_words": True`` to ``dataset_reader`` section. You can also specify
 which columns contain words, tags and detailed tags, for documentation see
 :func:`Documentation <deeppavlov.dataset_readers.morphotagging_dataset_reader.read_infile>`.
 
@@ -330,7 +330,7 @@ Chainer
 The ``chainer`` part of the configuration file contains the
 specification of the neural network model and supplementary things such as vocabularies.
 Chainer refers to an instance of :class:`~deeppavlov.core.common.chainer.Chainer`, see
-<intro/config_description> for a complete description.
+:doc:`config_description </intro/config_description>` for a complete description.
 
 The major part of ``chainer`` is ``pipe``. The ``pipe`` contains
 vocabularies and the network itself as well
@@ -362,8 +362,8 @@ model should predict to tag indexes.
         "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/tag_en.dict"
       },
 
- The third part is the character vocabulary used to represent words as sequences of indexes. Only the
- symbols which occur at least ``min_freq`` times in the training set are kept.
+The third part is the character vocabulary used to represent words as sequences of indexes. Only the
+symbols which occur at least ``min_freq`` times in the training set are kept.
 
 ::
 
@@ -403,7 +403,7 @@ is `Pymorphy2 <http://pymorphy2.readthedocs.io>`_. In this case the vectorizer l
 for a given word and transforms them to UD2.0 format using
 `russian-tagsets <https://github.com/kmike/russian-tagsets>`_ library. Possible UD2.0 tags
 are listed in a separate distributed with the library. This part of the config look as
-(see :config:`~deeppavlov/configs/morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json`))
+(see :config:`config <morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json>`))
 
 ::
 
@@ -442,22 +442,23 @@ the input parameters of :class:`~deeppavlov.models.morpho_tagger.network.Charact
 
 
 When an additional vectorizer is used, the first line is changed to
-`"in": ["x_processed", "x_possible_tags"]` and an additional parameter
-`"word_vectorizers": [["#pymorphy_vectorizer.dim", 128]]` is appended.
+``"in": ["x_processed", "x_possible_tags"]`` and an additional parameter
+``"word_vectorizers": [["#pymorphy_vectorizer.dim", 128]]`` is appended.
 
 Config includes general parameters of :class:`~deeppavlov.core.models.component.Component` class,
-described in <intro/config_description> and specific `~deeppavlov.models.morpho_tagger.network.CharacterTagger`
+described in the :doc:`config_description </intro/config_description>` and specific
+:class:`~deeppavlov.models.morpho_tagger.network.CharacterTagger`
 parameters. The latter include
 
-- `tags` - tag vocabulary. `#tag_vocab` refers to an already defined model with "id" = "tag_vocab".
-- `symbols` - character vocabulary. `#char_vocab` refers to an already defined model with "id" = "char_vocab".
+- ``tags`` - tag vocabulary. ``#tag_vocab`` refers to an already defined model with ``"id" = "tag_vocab"``.
+- ``symbols`` - character vocabulary. ``#char_vocab`` refers to an already defined model with ``"id" = "char_vocab"``.
 
 and other specific parameters of the network, available in :class:`~deeppavlov.models.morpho_tagger.network.CharacterTagger` documentation.
 
-The `"train"` section of `"chainer"` contains training parameters, such as number of epochs,
+The ``"train"`` section of ``"chainer"`` contains training parameters, such as number of epochs,
 batch_size and logging frequency, see general readme for more details.
 
-**chainer** also includes the `"prettifier"` subsection, which describes the parameters
+**chainer** also includes the ``"prettifier"`` subsection, which describes the parameters
 of :class:`~deeppavlov.core.models.morpho_tagger.common.TagOutputPrettifier`
 which transforms the predictions of the tagger to a readable form.
 
@@ -471,7 +472,7 @@ which transforms the predictions of the tagger to a readable form.
     }
 
 
-It takes two inputs -- source sequence of words and predicted sequence of tags
+It takes two inputs — source sequence of words and predicted sequence of tags
 and produces the output of the format
 
 ::
@@ -493,4 +494,4 @@ and produces the output of the format
     7 married VERB Tense=Past|VerbForm=Part|Voice=Pass
     8 . PUNCT _
 
-To generate output in 10 column CONLL-U format add ``format_mode`` = ``ud`` to the described section.
+To generate output in 10 column CONLL-U format add ``"format_mode": "ud"`` to the described section.
