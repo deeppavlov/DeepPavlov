@@ -82,9 +82,9 @@ class Trie:
         return
 
     def make_cashed(self):
-        '''
+        """
         Включает кэширование запросов к descend
-        '''
+        """
         self._descendance_cash = [dict() for _ in self.graph]
         self.descend = self._descend_cashed
 
@@ -94,9 +94,9 @@ class Trie:
         self.is_numpied = True
 
     def add(self, s):
-        '''
+        """
         Добавление строки s в префиксный бор
-        '''
+        """
         if self.is_terminated:
             raise TypeError("Impossible to add string to fitted trie")
         if s == "":
@@ -161,7 +161,7 @@ class Trie:
 
 
     def is_final(self, index):
-        '''
+        """
         Аргументы
         ---------
         index: int, номер вершины
@@ -169,7 +169,7 @@ class Trie:
         Возвращает
         ----------
         True: если index --- номер финальной вершины
-        '''
+        """
         return self.final[index]
 
     def find_partitions(self, s, max_count=1):
@@ -222,9 +222,9 @@ class Trie:
         return parent
 
     def _add_empty_child(self, parent, code, final=False):
-        '''
+        """
         Добавление ребёнка к вершине parent по символу с кодом code
-        '''
+        """
         self.graph[parent][code] = self.nodes_number
         self.graph.append(self._make_default_node())
         self.data.append(None)
@@ -233,9 +233,9 @@ class Trie:
         return (self.nodes_number - 1)
 
     def _descend_simple(self, curr, s):
-        '''
+        """
         Спуск из вершины curr по строке s
-        '''
+        """
         for a in s:
             curr = self.graph[curr][self.alphabet_codes[a]]
             if curr == Trie.NO_NODE:
@@ -243,9 +243,9 @@ class Trie:
         return curr
 
     def _descend_cashed(self, curr, s):
-        '''
+        """
         Спуск из вершины curr по строке s с кэшированием
-        '''
+        """
         if s == "":
             return curr
         curr_cash = self._descendance_cash[curr]
@@ -263,9 +263,9 @@ class Trie:
         return res
 
     def _set_final(self, curr):
-        '''
+        """
         Делает состояние curr завершающим
-        '''
+        """
         self.final[curr] = True
 
     def _get_letters(self, index, return_indexes=False):
