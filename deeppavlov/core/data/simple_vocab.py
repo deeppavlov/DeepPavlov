@@ -13,8 +13,8 @@
 # limitations under the License.
 
 from collections import Counter, defaultdict, Iterable
+from typing import Optional, Tuple
 from itertools import chain
-from pathlib import Path
 
 import numpy as np
 
@@ -31,21 +31,21 @@ log = get_logger(__name__)
 class SimpleVocabulary(Estimator):
     """Implements simple vocabulary."""
     def __init__(self,
-                 special_tokens=tuple(),
-                 default_token=None,
-                 max_tokens=2**30,
-                 min_freq=0,
-                 pad_with_zeros=False,
-                 unk_token=None,
+                 special_tokens: Tuple[str, ...] = tuple(),
+                 max_tokens: int = 2**30,
+                 min_freq: int = 0,
+                 pad_with_zeros: bool = False,
+                 unk_token: Optional[str] = None,
+                 freq_drop_load: Optional[bool] = None,
                  *args,
                  **kwargs):
         super().__init__(**kwargs)
         self.special_tokens = special_tokens
-        self.default_token = default_token
         self._max_tokens = max_tokens
         self._min_freq = min_freq
         self._pad_with_zeros = pad_with_zeros
         self.unk_token = unk_token
+        self.freq_drop_load = freq_drop_load
         self.reset()
         if self.load_path:
             self.load()
@@ -100,17 +100,24 @@ class SimpleVocabulary(Estimator):
                 log.info("[loading vocabulary from {}]".format(self.load_path))
                 tokens, counts = [], []
                 for ln in self.load_path.open('r', encoding='utf8'):
-                    token, cnt = ln.split('\t', 1)
+                    token, cnt = self.load_line(ln)
                     tokens.append(token)
                     counts.append(int(cnt))
                 self._add_tokens_with_freqs(tokens, counts)
-            elif isinstance(self.load_path, Path):
-                if not self.load_path.parent.is_dir():
-                    raise ConfigError("Provided `load_path` for {} doesn't exist!".format(
-                        self.__class__.__name__))
+            elif not self.load_path.parent.is_dir():
+                raise ConfigError("Provided `load_path` for {} doesn't exist!".format(
+                                  self.__class__.__name__))
         else:
             raise ConfigError("`load_path` for {} is not provided!".format(self))
 
+    def load_line(self, ln):
+        if self.freq_drop_load:
+            token = ln.strip().split()[0]
+            cnt = self._min_freq
+        else:
+            token, cnt = ln.split('\t', 1)
+        return token, cnt
+        
     @property
     def len(self):
         return len(self)
@@ -139,11 +146,6 @@ class SimpleVocabulary(Estimator):
         return len(self._i2t)
 
     def reset(self):
-        # default index is the position of default_token
-        if self.default_token is not None:
-            default_ind = self.special_tokens.index(self.default_token)
-        else:
-            default_ind = 0
         self.freqs = None
         unk_index = 0
         if self.unk_token in self.special_tokens:
