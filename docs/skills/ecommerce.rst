@@ -7,36 +7,37 @@ Here is a simple example of interaction:
 
 .. code:: bash
 
-	>>	Hello, I am a new eCommerce bot. 
-		I will help you to find products that you are looking for. 
-		Please type your query in plain text.
+    >>	Hello, I am a new eCommerce bot.
+        I will help you to find products that you are looking for.
+        Please type your query in plain text.
 
-	x::bluetooth speaker
-	>>	This is what I found for you:
+    x::bluetooth speaker
+    >>	This is what I found for you:
 
-		- Bluetooth Speaker (Black & Red)
-		- Bose SoundLink Bluetooth Speaker III
-		- Bose SoundLink Mini Bluetooth Speaker
-		- Bose SoundLink Mini Bluetooth Speaker
-		- JBL Flip Wireless Bluetooth Speaker (Black)
+        - Bluetooth Speaker (Black & Red)
+        - Bose SoundLink Bluetooth Speaker III
+        - Bose SoundLink Mini Bluetooth Speaker
+        - Bose SoundLink Mini Bluetooth Speaker
+        - JBL Flip Wireless Bluetooth Speaker (Black)
 
-		To specify the search, please choose a Brand: JBL, Soundsworks
-	
-	x::JBL
-	>>	The following items satisfy your request
-		
-		- JBL Flip Wireless Bluetooth Speaker (Black)
-		- JBL Flip Wireless Bluetooth Speaker (Black)
-		- JBL Charge Portable Indoor/Outdoor Bluetooth Speaker | Black
+        To specify the search, please choose a Brand: JBL, Soundsworks
+
+    x::JBL
+    >>	The following items satisfy your request
+
+        - JBL Flip Wireless Bluetooth Speaker (Black)
+        - JBL Flip Wireless Bluetooth Speaker (Black)
+        - JBL Charge Portable Indoor/Outdoor Bluetooth Speaker | Black
 
 
 
 
 
 Quick Start
-===========
+-----------
 
 Building
+^^^^^^^^
 
 .. code:: python
 
@@ -47,6 +48,7 @@ Building
 
 
 Inference
+^^^^^^^^^
 
 .. code:: python
 
@@ -59,7 +61,7 @@ Usage
 Config file
 ^^^^^^^^^^^
 
-BLEU-based `[1] <#references>`__ eCommerce bot 
+BLEU-based [1]_ eCommerce bot
 :config:`ecommerce_skill/bleu_retrieve.json`
 
 TfIdf-based eCommerce bot 
@@ -168,6 +170,6 @@ eCommerce bot with TfIdf-based ranker
 References
 ----------
 
-[1]  Papineni, Kishore, et al. "BLEU: a method for automatic evaluation 
-of machine translation." Proceedings of the 40th annual meeting on association 
-for computational linguistics. Association for Computational Linguistics, 2002.
+.. [1]  Papineni, Kishore, et al. "BLEU: a method for automatic evaluation
+    of machine translation." Proceedings of the 40th annual meeting on association
+    for computational linguistics. Association for Computational Linguistics, 2002.
