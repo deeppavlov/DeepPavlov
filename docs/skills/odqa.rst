@@ -7,18 +7,50 @@ Task definition
 
 **Open Domain Question Answering (ODQA)** is a task to find an exact answer
 to any question in **Wikipedia** articles. Thus, given only a question, the system outputs
-the best answer it can find:
+the best answer it can find.
+The default ODQA implementation takes a batch of queries as input and returns 5 answers sorted via their score.
+
+Quick Start
+===========
+
+Training (if you have your own data)
+
+.. code:: python
+
+    from deeppavlov import configs
+    from deeppavlov.core.commands.train import train_evaluate_model_from_config
+
+    train_evaluate_model_from_config(configs.doc_retrieval.en_ranker_tfidf_wiki, download=True)
+    train_evaluate_model_from_config(configs.squad.multi_squad_noans, download=True)
+
+Building
+
+.. code:: python
+
+    from deeppavlov import configs
+    from deeppavlov.core.commands.infer import build_model
+
+    odqa = build_model(configs.odqa.en_odqa_infer_wiki, load_trained=True)
+
+Inference
+
+.. code:: python
+
+    result = odqa(['What is the name of Darth Vader\'s son?'])
+    print(result)
+
+Output:
 
 ::
 
-    :: What is the name of Darth Vader's son?
     >> Luke Skywalker
+
 
 Languages
 =========
 
 There are pretrained **ODQA** models for **English** and **Russian**
-languages in DeepPavlov :doc:`DeepPavlov </index/>`.
+languages in :doc:`DeepPavlov </index/>`.
 
 Models
 ======
@@ -31,22 +63,17 @@ and its `implementation`_ by Wenxuan Zhou.
 Running ODQA
 ============
 
-**Tensorflow-1.8.0 with GPU support is required** to run this model.
-
-**About 16 GB of RAM required**
-
 .. note::
 
-    TensorFlow 1.8 with GPU support is required to run this skill.
-
-    About 16 GB of RAM required.
+    About **24 GB of RAM** required.
+    It is possible to run on a 16 GB machine, but than swap size should be at least 8 GB.
 
 Training
 --------
 
 **ODQA ranker** and **ODQA reader** should be trained separately.
 Read about training the **ranker** :ref:`here <ranker_training>`.
-Read about training the **reader** in our separate :doc:`reader tutorial </apiref/models/squad>`.
+Read about training the **reader** in our separate :ref:`reader tutorial <reader_training>`.
 
 Interacting
 -----------
@@ -58,15 +85,13 @@ Run the following to interact with **English ODQA**:
 
 .. code:: bash
 
-    cd deeppavlov/
-    python deep.py interact deeppavlov/configs/odqa/en_odqa_infer_wiki.json -d
+    python -m deeppavlov interact en_odqa_infer_wiki -d
 
 Run the following to interact with **Russian ODQA**:
 
 .. code:: bash
 
-    cd deeppavlov/
-    python deep.py interact deeppavlov/configs/odqa/ru_odqa_infer_wiki.json -d
+    python -m deeppavlov interact ru_odqa_infer_wiki -d
 
 Configuration
 =============
@@ -84,12 +109,12 @@ Scores for **ODQA** skill:
 |                                                     |                | enwiki (2018-02-11) | enwiki (2016-12-21) |
 |                                                     |                +----------+----------+-----------+---------+
 | Model                                               | Dataset        |  F1      |   EM     |   F1      |   EM    |
-+-----------------------------------------------------+----------------+----------+----------+-----------+---------+
-|:config:`DeepPavlov <odqa/en_odqa_infer_wiki.json>`  | SQuAD (dev)    |  35.89   |  29.21   |  37.83    |  31.26  |
-+-----------------------------------------------------+----------------+----------+----------+-----------+---------+
-|`DrQA`_                                              | SQuAD (dev)    |   \-     |  \-      |   \-      |  27.1   |
-+-----------------------------------------------------+----------------+----------+----------+-----------+---------+
-|`R3`_                                                | SQuAD (dev)    |   \-     |  \-      |   37.5    |  29.1   |
++=====================================================+================+==========+==========+===========+=========+
+|:config:`DeepPavlov <odqa/en_odqa_infer_wiki.json>`  |                |  35.89   |  29.21   |  37.83    |  31.26  |
++-----------------------------------------------------+ SQuAD (dev)    +----------+----------+-----------+---------+
+|`DrQA`_                                              |                |   \-     |  \-      |   \-      |  27.1   |
++-----------------------------------------------------+                +----------+----------+-----------+---------+
+|`R3`_                                                |                |   \-     |  \-      |   37.5    |  29.1   |
 +-----------------------------------------------------+----------------+----------+----------+-----------+---------+
 
 

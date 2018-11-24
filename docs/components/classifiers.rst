@@ -135,31 +135,35 @@ Embeddings were obtained from language model (ELMo) fine-tuned on the dataset
 We do not provide datasets, both are available upon request to Yahoo Research.
 Therefore, this model is available only for interaction.
 
-+-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-| Dataset           | Model                                                                                                        | Task             | Lang | Metric   | Valid  | Test   |
-+-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-| `DSTC 2`_         | :config:`DSTC 2 on DSTC 2 embeddings <classifiers/intents_dstc2.json>`                                       | 28 intents       | En   | Accuracy | 0.7732 | 0.7868 |
-+-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-| `DSTC 2`_         | :config:`DSTC 2 on Wiki embeddings <classifiers/intents_dstc2_big.json>`                                     | 28 intents       | En   | Accuracy | 0.9602 | 0.9593 |
-+-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-| `SNIPS-2017`_     | :config:`SNIPS on DSTC 2 embeddings <classifiers/intents_snips.json>`                                        | 7 intents        | En   | F1       | 0.8685 |    --  |
-+-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-| `SNIPS-2017`_     | :config:`SNIPS on Wiki embeddings <classifiers/intents_snips_big.json>`                                      | 7 intents        | En   | F1       | 0.9811 |    --  |
-+-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-| `Insults`_        | :config:`InsultsKaggle on Reddit embeddings <classifiers/insults_kaggle.json>`                               | Insult detection | En   | ROC-AUC  | 0.9271 | 0.8618 |
-+-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-| `AG News`_        | :config:`AG News on Wiki embeddings <classifiers/topic_ag_news.json>`                                        | 5 topics         | En   | Accuracy | 0.8876 | 0.9011 |
-+-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-|`Twitter mokoron`_ | :config:`Twitter on RuWiki+Lenta embeddings without any preprocessing <classifiers/sentiment_twitter.json>`  | Sentiment        | Ru   | Accuracy | 0.9972 | 0.9971 |
-+-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-|`Twitter mokoron`_ | :config:`Twitter on RuWiki+Lenta embeddings with preprocessing <classifiers/sentiment_twitter_preproc.json>` | Sentiment        | Ru   | Accuracy | 0.7811 | 0.7749 |
-+-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-|`RuSentiment`_     | :config:`RuSentiment on RuWiki+Lenta embeddings <classifiers/rusentiment_cnn.json>`                          | Sentiment        | Ru   | F1       | 0.6393 | 0.6539 |
-+-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-|`RuSentiment`_     | :config:`RuSentiment on ELMo <classifiers/rusentiment_elmo.json>`                                            | Sentiment        | Ru   | F1       | 0.7066 | 0.7301 |
-+-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-|`Yahoo-L31`_       | :config:`Yahoo-L31 on ELMo <classifiers/yahoo_convers_vs_info.json>` pre-trained on `Yahoo-L6`_              | Intent           | Ru   | ROC-AUC  | 0.9269 |   --   |
-+-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
++------------------+-------------------+------+-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
+| Task             | Dataset           | Lang | Model                                                                                           | Metric   | Valid  | Test   | Downloads |
++==================+===================+======+=================================================================================================+==========+========+========+===========+
+| 28 intents       | `DSTC 2`_         | En   | :config:`DSTC 2 emb <classifiers/intents_dstc2.json>`                                           | Accuracy | 0.7732 | 0.7868 |  800 Mb   |
++                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
+|                  |                   |      | :config:`Wiki emb <classifiers/intents_dstc2_big.json>`                                         |          | 0.9602 | 0.9593 |  8.5 Gb   |
++------------------+-------------------+      +-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
+| 7 intents        | `SNIPS-2017`_     |      | :config:`DSTC 2 emb <classifiers/intents_snips.json>`                                           | F1       | 0.8685 |    --  |  800 Mb   |
++                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
+|                  |                   |      | :config:`Wiki emb <classifiers/intents_snips_big.json>`                                         |          | 0.9811 |    --  |  8.5 Gb   |
++                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
+|                  |                   |      | :config:`Tfidf + SelectKBest + PCA + Wiki emb <classifiers/intents_snips_sklearn.json>`         |          | 0.9673 |    --  |  8.6 Gb   |
++                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
+|                  |                   |      | :config:`Wiki emb weighted by Tfidf <classifiers/intents_snips_tfidf_weighted.json>`            |          | 0.9786 |    --  |  8.5 Gb   |
++------------------+-------------------+      +-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
+| Insult detection | `Insults`_        |      | :config:`Reddit emb <classifiers/insults_kaggle.json>`                                          | ROC-AUC  | 0.9271 | 0.8618 |  6.2 Gb   |
++------------------+-------------------+      +-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
+| 5 topics         | `AG News`_        |      | :config:`Wiki emb <classifiers/topic_ag_news.json>`                                             | Accuracy | 0.8876 | 0.9011 |  8.5 Gb   |
++------------------+-------------------+------+-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
+| Sentiment        |`Twitter mokoron`_ | Ru   | :config:`RuWiki+Lenta emb w/o preprocessing <classifiers/sentiment_twitter.json>`               |          | 0.9972 | 0.9971 |  6.2 Gb   |
++                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
+|                  |                   |      | :config:`RuWiki+Lenta emb with preprocessing <classifiers/sentiment_twitter_preproc.json>`      |          | 0.7811 | 0.7749 |  6.2 Gb   |
++                  +-------------------+      +-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
+|                  |`RuSentiment`_     |      | :config:`RuWiki+Lenta emb <classifiers/rusentiment_cnn.json>`                                   | F1       | 0.6393 | 0.6539 |  6.2 Gb   |
++                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
+|                  |                   |      | :config:`ELMo <classifiers/rusentiment_elmo.json>`                                              |          | 0.7066 | 0.7301 |  700 Mb   |
++------------------+-------------------+      +-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
+| Intent           |`Yahoo-L31`_       |      | :config:`Yahoo-L31 on ELMo <classifiers/yahoo_convers_vs_info.json>` pre-trained on `Yahoo-L6`_ | ROC-AUC  | 0.9269 |   --   |  700 Mb   |
++------------------+-------------------+------+-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
 
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
 .. _`SNIPS-2017`: https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines
@@ -193,7 +197,7 @@ providing corresponding name of the config file (see above):
 
 ::
 
-    python deep.py download configs/classifiers/intents_dstc2.json
+    python -m deeppavlov download deeppavlov/configs/classifiers/intents_dstc2.json
 
 or provide flag ``-d`` for commands like ``interact``, ``interactbot``,
 etc. The flag ``-d`` provides downloading all the required components.
@@ -202,18 +206,26 @@ etc. The flag ``-d`` provides downloading all the required components.
 Infer from pre-trained model
 ----------------------------
 
-To use a pre-trained model for inference one should run the following
-command providing corresponding name of the config file (see above):
+Pre-trained models can be used for inference in the following way:
 
-::
+.. code:: python
 
-    python deep.py interact configs/classifiers/intents_dstc2.json
+    from deeppavlov import build_model, configs
+
+    snips_model = build_model(configs.classifiers.intents_snips , download=True)
+    snips_model(["Hello! What is the weather in Boston tomorrow?"])
+
+or from command line:
+
+.. code:: bash
+
+    python -m deeppavlov interact deeppavlov/configs/classifiers/intents_dstc2.json [-d]
 
 or
 
-::
+.. code:: bash
 
-    python deep.py interactbot configs/classifiers/intents_dstc2.json -t <TELEGRAM_TOKEN>
+    python -m deeppavlov interactbot deeppavlov/configs/classifiers/intents_dstc2.json -t <TELEGRAM_TOKEN> [-d]
 
 For 'interactbot' mode one should specify a Telegram bot token in ``-t`` parameter or in the ``TELEGRAM_TOKEN``
 environment variable.
@@ -273,7 +285,7 @@ could be changed. Then training can be run in the following way:
 
 ::
 
-    python deep.py train "path_to_config"
+    python -m deeppavlov train "path_to_config"
 
 Train on other datasets
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -310,7 +322,7 @@ Then training process can be run in the same way:
 
 ::
 
-    python deep.py train "path_to_config"
+    python -m deeppavlov train "path_to_config"
 
 The current version of :config:`intents_snips.json <classifiers/intents_snips.json>`` contains parameters for
 intent recognition for SNIPS benchmark dataset that was restored in

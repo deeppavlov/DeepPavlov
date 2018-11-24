@@ -11,6 +11,10 @@ with the help of a `kenlm language model <#language-model>`__.
 You can find `the comparison <#comparison>`__ of these and other
 approaches near the end of this readme.
 
+.. note::
+
+    About 4.4 GB on disc required for the Russian language model and about 7 GB for the English one.
+
 Quick start
 -----------
 
@@ -36,7 +40,7 @@ lines to stdout:
 
     from deeppavlov import build_model, configs
 
-    CONFIG_PATH = configs.spelling_correction.rillmoore_kartaslov_ru
+    CONFIG_PATH = configs.spelling_correction.brillmoore_kartaslov_ru
 
     model = build_model(CONFIG_PATH, download=True)
     for line in sys.stdin:
