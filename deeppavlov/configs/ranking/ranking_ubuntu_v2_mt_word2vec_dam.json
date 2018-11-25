@@ -29,7 +29,7 @@
         "id": "word2vec_embedder",
         "name": "glove",
         "dim": 200,
-        "load_path": "ubuntu_v2_mt_word2vec/embeddings_txt/ubuntu_v2_word2vec_embeddings.model"
+        "load_path": "ubuntu_v2_mt_word2vec/embeddings_txt/v2_ubuntu_w2v_vectors.txt"
       },
       {
         "id": "preproc",
