@@ -114,6 +114,20 @@ class ELMo(NNModel):
     More about the ELMo model you can get from `original ELMo implementation
     <https://github.com/allenai/bilm-tf>`__.
 
+
+    If some required packages are missing, install all the requirements by running in command line:
+
+    .. code:: bash
+
+        python -m deeppavlov install <path_to_config>
+
+    where ``<path_to_config>`` is a path to one of the :config:`provided config files <elmo_embedder>`
+    or its name without an extension, for example :
+
+    .. code:: bash
+
+        python -m deeppavlov install elmo-1b-benchmark_test
+        
     Examples:
         For a quick start, you can run test training of the test model on small data by this command from bash:
 
