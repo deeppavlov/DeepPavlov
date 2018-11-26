@@ -48,7 +48,16 @@ Model documentation: :class:`~deeppavlov.models.squad.squad.SquadModel`
 Configuration
 -------------
 
-Default config could be found at ``deeppavlov/configs/squad/squad.json``
+Default config could be found at :config:`deeppavlov/configs/squad/squad.json <squad/squad.json>`
+
+Prerequisites
+-------------
+
+Before using the model make sure that all required packages are installed running the command:
+
+.. code:: bash
+
+    python -m deeppavlov install squad
 
 Model usage from Python
 -----------------------
