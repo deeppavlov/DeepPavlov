@@ -11,10 +11,10 @@ This is implementation of FAQ skillgit which helps to classify incoming question
 
 
 Quick Start
------------
+===========
 
 Building
-^^^^^^^^
+--------
 
 .. code:: python
 
@@ -25,19 +25,21 @@ Building
 
 
 Inference
-^^^^^^^^^
+---------
 
 .. code:: python
 
     result = faq(['What is your open hours?'])
 
 If some required packages are missing, install all the requirements by running in command line:
+
 .. code:: bash
-   python -m deeppavlov install fasttext_avg_autofaq
-   python -m deeppavlov install fasttext_tfidf_autofaq
-   python -m deeppavlov install tfidf_autofaq
-   python -m deeppavlov install tfidf_logreg_autofaq
-   python -m deeppavlov install tfidf_logreg_en_faq
+
+    python -m deeppavlov install fasttext_avg_autofaq
+    python -m deeppavlov install fasttext_tfidf_autofaq
+    python -m deeppavlov install tfidf_autofaq
+    python -m deeppavlov install tfidf_logreg_autofaq
+    python -m deeppavlov install tfidf_logreg_en_faq
 
 Config
 ======
