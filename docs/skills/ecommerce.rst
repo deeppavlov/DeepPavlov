@@ -54,6 +54,13 @@ Inference
 
     result = ecommerce(['bluetooth speaker'], [[]], [{}])
 
+If some required packages are missing, install all the requirements by running in command line:
+
+.. code:: bash
+
+    python -m deeppavlov install tfidf_retrieve
+    python -m deeppavlov install bleu_retrieve
+
 
 Usage
 -----

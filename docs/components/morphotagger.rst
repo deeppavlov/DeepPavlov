@@ -40,6 +40,12 @@ systems.
 Usage examples.
 ===========================
 
+Before using the model make sure that all required packages are installed using the command:
+
+.. code:: bash
+
+    python -m deeppavlov install morpho_ru_syntagrus_pymorphy
+
 Python:
 ---------------------------
 
@@ -101,14 +107,14 @@ You can change the paths in corresponding sections of configuration file.
 
 #. To evaluate ru\_syntagrus model on ru\_syntagrus test subset, run
 
-.. code:: bash
+   .. code:: bash
 
        python -m deeppavlov evaluate morpho_ru_syntagrus_train
 
 #. To retrain model on ru\_syntagrus dataset, run one of the following
    (the first is for Pymorphy-enriched model)
 
-.. code:: bash
+   .. code:: bash
 
        python -m deeppavlov train morpho_ru_syntagrus_train_pymorphy
        python -m deeppavlov train morpho_ru_syntagrus_train
@@ -117,7 +123,7 @@ You can change the paths in corresponding sections of configuration file.
 
 #. To tag Russian sentences from stdin, run
 
-.. code:: bash
+   .. code:: bash
 
        python -m deeppavlov interact morpho_ru_syntagrus_predict_pymorphy
 

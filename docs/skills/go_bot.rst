@@ -17,6 +17,12 @@ There are available two pretrained models for DSTC2 dataset (English). Try them 
     bot2(['hi, i want chinese restaurant'])
     bot2(['bye'])
 
+If some required packages are missing, install all the requirements by running in command line:
+
+.. code:: bash
+
+   python -m deeppavlov install gobot_dstc2
+
 Intro
 -----
 

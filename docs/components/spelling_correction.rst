@@ -18,6 +18,15 @@ approaches near the end of this readme.
 Quick start
 -----------
 
+First you would need to install additional requirements:
+
+::
+
+    python -m deeppavlov install <path_to_config>
+
+where ``<path_to_config>`` is a path to one of the :config:`provided config files <spelling_correction>`
+or its name without an extension, for example :config:`levenshtein_corrector_ru <spelling_correction/levenshtein_corrector_ru.json>`.
+
 You can run the following command to try provided pipelines out:
 
 ::

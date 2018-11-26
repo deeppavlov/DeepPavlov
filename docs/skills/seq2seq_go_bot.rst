@@ -13,6 +13,12 @@ Pretrained on KVRET dataset (English) model is available. Try it by running:
     bot(['Hi! Where is the nearest gas station?'], [dialog_id])
     bot(['Thanks, bye'], [dialog_id])
 
+If you're missing some required packages, install all the requirements by running in command line:
+
+.. code:: bash
+
+   python -m deeppavlov install bot_kvret 
+
 Intro
 -----
 

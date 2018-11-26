@@ -13,6 +13,12 @@ The default ODQA implementation takes a batch of queries as input and returns 5 
 Quick Start
 ===========
 
+Before using the model make sure that all required packages are installed running the command:
+
+.. code:: bash
+
+    python -m deeppavlov install en_odqa_infer_wiki
+
 Training (if you have your own data)
 
 .. code:: python

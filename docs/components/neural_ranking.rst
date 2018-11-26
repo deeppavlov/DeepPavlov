@@ -9,6 +9,12 @@ It is possible to build automatic semantic FAQ systems with such neural architec
 Ranking
 -------
 
+Before using the model make sure that all required packages are installed running the command:
+
+.. code:: bash
+
+    python -m deeppavlov install ranking_insurance
+
 To train the model on the `InsuranceQA V1`_ dataset one can use the following code in python:
 
 .. code:: python
@@ -53,6 +59,12 @@ Then a user can enter a context and get responses:
 
 Paraphrase identification
 -------------------------
+
+Before using the model make sure that all required packages are installed running the command:
+
+.. code:: bash
+
+    python -m deeppavlov install paraphrase_ident_qqp
 
 To train the model on the `Quora Question Pairs`_ dataset one can use the following code in python:
 

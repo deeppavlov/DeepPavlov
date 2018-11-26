@@ -2,13 +2,44 @@
 Frequently Asked Questions (FAQ)
 ================================
 
-This is implementation of FAQ skillgit which helps to classify incoming questions.
+This is implementation of FAQ skill which helps to classify incoming questions.
 
 ::
 
     :: What is your open hours?
     >> 8am - 8pm
 
+
+Quick Start
+===========
+
+Building
+--------
+
+.. code:: python
+
+    from deeppavlov import configs
+    from deeppavlov.core.commands.infer import build_model
+
+    faq = build_model(configs.faq.tfidf_logreg_en_faq, load_trained=True)
+
+
+Inference
+---------
+
+.. code:: python
+
+    result = faq(['What is your open hours?'])
+
+If some required packages are missing, install all the requirements by running in command line:
+
+.. code:: bash
+
+    python -m deeppavlov install fasttext_avg_autofaq
+    python -m deeppavlov install fasttext_tfidf_autofaq
+    python -m deeppavlov install tfidf_autofaq
+    python -m deeppavlov install tfidf_logreg_autofaq
+    python -m deeppavlov install tfidf_logreg_en_faq
 
 Config
 ======

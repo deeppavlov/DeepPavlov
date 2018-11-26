@@ -5,7 +5,7 @@ Train and use the model
 -----------------------
 
 Any pre-trained model can be used for inference from both Command Line Interface (CLI) and Python. Before using the
-mode make sure that all needed packages is installed using the command:
+model make sure that all required packages are installed using the command:
 
 .. code:: bash
 
@@ -17,25 +17,27 @@ To use a pre-trained model from CLI use the following command:
 
     python deeppavlov/deep.py interact ner_ontonotes [-d]
 
-where the `ner_ontonotes` is the name of the config and `-d` is an optional download key. The key `-d` is udsed
-to download the pre-trained model along with embeddings and all other files need to run the model. Other possible
-commands are `train`, `evaluate`, and `download`,
+where ``ner_ontonotes`` is the name of the config and ``-d`` is an optional download key. The key ``-d`` is used
+to download the pre-trained model along with embeddings and all other files needed to run the model. Other possible
+commands are ``train``, ``evaluate``, and ``download``,
 
 
 Here is the list of all available configs:
 
-+--------------------------------+--------------------+--------------------+--------------------+--------------------+
-| Model                          | Dataset            | Embeddings Size    | Model Size         | F1 score           |
-+================================+====================+====================+====================+====================+
-| ner_ontonotes                  | OnotoNotes         | 331 MB             | 7.8 MB             | 87.07              |
-+--------------------------------+--------------------+--------------------+--------------------+--------------------+
-| ner_rus                        | Collection3 [13]_  | 1.0 GB             | 5.6 MB             | 95.25              |
-+--------------------------------+--------------------+--------------------+--------------------+--------------------+
-| ner_dstc                       | DSTC2              | ---                | 626 KB             | 97.17              |
-+--------------------------------+--------------------+--------------------+--------------------+--------------------+
-| ner_conll2003                  | CoNLL-2003         | 331 MB             | 3.1 MB             | 89.94              |
-+--------------------------------+--------------------+--------------------+--------------------+--------------------+
+.. table::
+    :widths: auto
 
+    +--------------------------------------------------+-------------------+-----------------+------------+----------+
+    | Model                                            | Dataset           | Embeddings Size | Model Size | F1 score |
+    +==================================================+===================+=================+============+==========+
+    | :config:`ner_ontonotes <ner/ner_ontonotes.json>` | OnotoNotes        | 331 MB          | 7.8 MB     | 87.07    |
+    +--------------------------------------------------+-------------------+-----------------+------------+----------+
+    | :config:`ner_rus <ner/ner_rus.json>`             | Collection3 [13]_ | 1.0 GB          | 5.6 MB     | 95.25    |
+    +--------------------------------------------------+-------------------+-----------------+------------+----------+
+    | :config:`ner_dstc <ner/ner_dstc.json>`           | DSTC2             | ---             | 626 KB     | 97.17    |
+    +--------------------------------------------------+-------------------+-----------------+------------+----------+
+    | :config:`ner_conll2003 <ner/ner_conll2003.json>` | CoNLL-2003        | 331 MB          | 3.1 MB     | 89.94    |
+    +--------------------------------------------------+-------------------+-----------------+------------+----------+
 
 Models can be used from Python using the following code:
 
