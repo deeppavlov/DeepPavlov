@@ -106,6 +106,7 @@
   "typos_kartaslov_reader": "deeppavlov.dataset_readers.typos_reader:TyposKartaslov",
   "typos_wikipedia_reader": "deeppavlov.dataset_readers.typos_reader:TyposWikipedia",
   "ubuntu_dstc7_mt_reader": "deeppavlov.dataset_readers.ubuntu_dstc7_mt_reader:UbuntuDSTC7MTReader",
+  "ubuntu_v1_mt_reader": "deeppavlov.dataset_readers.ubuntu_v1_mt_reader:UbuntuV1MTReader",
   "ubuntu_v2_mt_reader": "deeppavlov.dataset_readers.ubuntu_v2_mt_reader:UbuntuV2MTReader",
   "ubuntu_v2_preprocessor": "deeppavlov.models.preprocessors.ubuntu_v2_preprocessor:UbuntuV2Preprocessor",
   "ubuntu_v2_reader": "deeppavlov.dataset_readers.ubuntu_v2_reader:UbuntuV2Reader",
