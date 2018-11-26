@@ -3,34 +3,34 @@
     "in": ["x"],
     "pipe": [
       {
-        "name": "str_lower",
+        "class_name": "str_lower",
         "id": "lower",
         "in": ["x"],
         "out": ["x_lower"]
       },
       {
-        "name": "nltk_moses_tokenizer",
+        "class_name": "nltk_moses_tokenizer",
         "id": "tokenizer",
         "in": ["x_lower"],
         "out": ["x_tokens"]
       },
       {
         "id": "vocab",
-        "name": "simple_vocab",
-        "save_path": "vocabs/russian_words_vocab.dict",
-        "load_path": "vocabs/russian_words_vocab.dict"
+        "class_name": "simple_vocab",
+        "save_path": "{DOWNLOADS_PATH}/vocabs/russian_words_vocab.dict",
+        "load_path": "{DOWNLOADS_PATH}/vocabs/russian_words_vocab.dict"
       },
       {
         "in": ["x_tokens"],
         "out": ["tokens_candidates"],
-        "class": "deeppavlov.models.spelling_correction.levenshtein.searcher_component:LevenshteinSearcherComponent",
+        "class_name": "deeppavlov.models.spelling_correction.levenshtein.searcher_component:LevenshteinSearcherComponent",
         "words": "#vocab.keys()"
       },
       {
-        "class": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
+        "class_name": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
         "in": ["tokens_candidates"],
         "out": ["y_predicted_tokens"],
-        "load_path": "language_models/ru_wiyalen_no_punkt.arpa.binary"
+        "load_path": "{DOWNLOADS_PATH}/language_models/ru_wiyalen_no_punkt.arpa.binary"
       },
       {
         "ref": "tokenizer",
@@ -41,8 +41,13 @@
     "out": ["y_predicted"]
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/spelling.txt"
+      "{DEEPPAVLOV_PATH}/requirements/spelling.txt"
     ],
     "labels": {
       "telegram_utils": "ErrorModel",
@@ -51,11 +56,11 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/vocabs/russian_words_vocab.dict.gz",
-        "subdir": "vocabs"
+        "subdir": "{DOWNLOADS_PATH}/vocabs"
       },
       {
         "url": "http://files.deeppavlov.ai/lang_models/ru_wiyalen_no_punkt.arpa.binary.gz",
-        "subdir": "language_models"
+        "subdir": "{DOWNLOADS_PATH}/language_models"
       }
     ]
   }

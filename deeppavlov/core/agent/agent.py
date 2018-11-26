@@ -18,6 +18,7 @@ from collections import defaultdict
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.skill.skill import Skill
+from deeppavlov.core.agent.dialog_logger import DialogLogger
 
 
 class Agent(Component, metaclass=ABCMeta):
@@ -47,6 +48,7 @@ class Agent(Component, metaclass=ABCMeta):
             handles automatic state management for skill. All skills are
             wrapped to SkillsWrapper automatically during agent initialisation.
             We highly recommend to use wrapped skills for skills inference.
+        dialog_logger: DeepPavlov dialog logging facility.
     """
     def __init__(self, skills: List[Skill]) -> None:
         self.skills: List[Skill] = skills
@@ -54,6 +56,7 @@ class Agent(Component, metaclass=ABCMeta):
         self.states: Dict = defaultdict(lambda: [None] * len(self.skills))
         self.wrapped_skills: List[SkillWrapper] = \
             [SkillWrapper(skill, skill_id, self) for skill_id, skill in enumerate(self.skills)]
+        self.dialog_logger: DialogLogger = DialogLogger()
 
     def __call__(self, utterances_batch: list, utterances_ids: Optional[list] = None) -> list:
         """Wraps _call method and updates utterances history.
@@ -73,7 +76,10 @@ class Agent(Component, metaclass=ABCMeta):
 
         for utt_batch_idx, utt_id in enumerate(ids):
             self.history[utt_id].append(utterances_batch[utt_batch_idx])
+            self.dialog_logger.log_in(utterances_batch[utt_batch_idx], utt_id)
+
             self.history[utt_id].append(responses_batch[utt_batch_idx])
+            self.dialog_logger.log_out(responses_batch[utt_batch_idx], utt_id)
 
         return responses_batch
 

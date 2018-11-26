@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple, Optional, Generator, Union
 from pathlib import Path
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Generator, Union
 from copy import deepcopy
 
 import numpy as np
@@ -35,7 +34,6 @@ from overrides import overrides
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import save_json, read_json
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.keras_model import KerasModel
 from deeppavlov.core.common.log import get_logger
@@ -67,6 +65,7 @@ class KerasClassificationModel(KerasModel):
         restore_lr: in case of loading pre-trained model \
                 whether to init learning rate with the final learning rate value from saved opt
         classes: list or generator of considered classes
+        padding: ``pre`` or ``post`` padding to use
 
     Attributes:
         opt: dictionary with all model parameters
@@ -78,6 +77,7 @@ class KerasClassificationModel(KerasModel):
         sess: tf session
         optimizer: keras.optimizers instance
         classes: list of considered classes
+        padding: ``pre`` or ``post`` padding to use
     """
 
     def __init__(self, text_size: int, embedding_size: int, n_classes: int,
@@ -86,6 +86,7 @@ class KerasClassificationModel(KerasModel):
                  last_layer_activation="sigmoid",
                  restore_lr: bool = False,
                  classes: Optional[Union[list, Generator]] = None,
+                 padding: Optional[str] = "pre",
                  **kwargs):
         """
         Initialize model using parameters
@@ -105,6 +106,7 @@ class KerasClassificationModel(KerasModel):
                      "last_layer_activation": last_layer_activation,
                      "restore_lr": restore_lr,
                      "classes": classes,
+                     "padding": padding,
                      **kwargs}
         self.opt = deepcopy(given_opt)
         self.model = None
@@ -151,18 +153,19 @@ class KerasClassificationModel(KerasModel):
             "kernel_sizes_cnn",
             "filters_cnn",
             "dense_size",
+            "units_gru",
             "units_lstm",
             "units_lstm_1",
             "units_lstm_2",
             "self_att_hid",
             "self_att_out"
         ]
-        for param in self.opt.keys():
+        for param in kwargs.keys():
             if param not in fixed_params:
                 self.opt[param] = kwargs.get(param)
         return
 
-    def pad_texts(self, sentences: List[List[np.ndarray]]) -> np.ndarray:
+    def pad_texts(self, sentences: List[List[np.ndarray]]) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """
         Cut and pad tokenized texts to self.opt["text_size"] tokens
 
@@ -174,7 +177,12 @@ class KerasClassificationModel(KerasModel):
         """
         pad = np.zeros(self.opt['embedding_size'])
         cutted_batch = [sen[:self.opt['text_size']] for sen in sentences]
-        cutted_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + list(tokens) for tokens in cutted_batch]
+        if self.opt["padding"] == "pre":
+            cutted_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + list(tokens) for tokens in cutted_batch]
+        elif self.opt["padding"] == "post":
+            cutted_batch = [list(tokens) + [pad] * (self.opt['text_size'] - len(tokens)) for tokens in cutted_batch]
+        else:
+            raise ConfigError("Padding type {} is not acceptable".format(self.opt['padding']))
         return np.asarray(cutted_batch)
 
     def train_on_batch(self, texts: List[List[np.ndarray]], labels: list) -> [float, List[float]]:
@@ -189,6 +197,7 @@ class KerasClassificationModel(KerasModel):
             metrics values on the given batch
         """
         features = self.pad_texts(texts)
+
         metrics_values = self.model.train_on_batch(features, np.squeeze(np.array(labels)))
         return metrics_values
 
@@ -204,12 +213,12 @@ class KerasClassificationModel(KerasModel):
             metrics values on the given batch, if labels are given
             predictions, otherwise
         """
+        features = self.pad_texts(texts)
+
         if labels:
-            features = self.pad_texts(texts)
             metrics_values = self.model.test_on_batch(features, np.squeeze(np.array(labels)))
             return metrics_values
         else:
-            features = self.pad_texts(texts)
             predictions = self.model.predict(features)
             return predictions
 
@@ -863,7 +872,7 @@ class KerasClassificationModel(KerasModel):
         model = Model(inputs=inp, outputs=act_output)
         return model
 
-    def bigru_model(self, units_lstm: int, dense_size: int,
+    def bigru_model(self, units_gru: int, dense_size: int,
                     coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
                     dropout_rate: float = 0., rec_dropout_rate: float = 0.,
                     input_projection_size: Optional[int] = None, **kwargs) -> Model:
@@ -871,7 +880,7 @@ class KerasClassificationModel(KerasModel):
         Method builds uncompiled model BiGRU.
 
         Args:
-            units_lstm: number of units for GRU.
+            units_gru: number of units for GRU.
             dense_size: number of units for dense layer.
             coef_reg_lstm: l2-regularization coefficient for GRU. Default: ``0.0``.
             coef_reg_den: l2-regularization coefficient for dense layers. Default: ``0.0``.
@@ -892,13 +901,60 @@ class KerasClassificationModel(KerasModel):
         if input_projection_size is not None:
             output = Dense(input_projection_size, activation='relu')(output)
 
-        output = Bidirectional(GRU(units_lstm, activation='tanh',
+        output = Bidirectional(GRU(units_gru, activation='tanh',
                                    return_sequences=True,
                                    kernel_regularizer=l2(coef_reg_lstm),
                                    dropout=dropout_rate,
                                    recurrent_dropout=rec_dropout_rate))(output)
 
         output = GlobalMaxPooling1D()(output)
+        output = Dropout(rate=dropout_rate)(output)
+        output = Dense(dense_size, activation=None,
+                       kernel_regularizer=l2(coef_reg_den))(output)
+        output = Activation('relu')(output)
+        output = Dropout(rate=dropout_rate)(output)
+        output = Dense(self.n_classes, activation=None,
+                       kernel_regularizer=l2(coef_reg_den))(output)
+        act_output = Activation(self.opt.get("last_layer_activation", "sigmoid"))(output)
+        model = Model(inputs=inp, outputs=act_output)
+        return model
+
+    def bigru_with_max_aver_pool_model(self, units_gru: int, dense_size: int,
+                                       coef_reg_gru: float = 0., coef_reg_den: float = 0.,
+                                       dropout_rate: float = 0., rec_dropout_rate: float = 0.,
+                                       **kwargs) -> Model:
+        """
+        Method builds uncompiled model Bidirectional GRU with concatenation of max and average pooling after BiGRU.
+
+        Args:
+            units_gru: number of units for GRU.
+            dense_size: number of units for dense layer.
+            coef_reg_gru: l2-regularization coefficient for GRU. Default: ``0.0``.
+            coef_reg_den: l2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate: dropout rate to be used after BiGRU and between dense layers. Default: ``0.0``.
+            rec_dropout_rate: dropout rate for GRU. Default: ``0.0``.
+            kwargs: other non-used parameters
+
+        Returns:
+            keras.models.Model: uncompiled instance of Keras Model
+        """
+
+        inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
+
+        output = Dropout(rate=dropout_rate)(inp)
+
+        output, state1, state2 = Bidirectional(GRU(units_gru, activation='tanh',
+                                                   return_sequences=True,
+                                                   return_state=True,
+                                                   kernel_regularizer=l2(coef_reg_gru),
+                                                   dropout=dropout_rate,
+                                                   recurrent_dropout=rec_dropout_rate))(output)
+
+        output1 = GlobalMaxPooling1D()(output)
+        output2 = GlobalAveragePooling1D()(output)
+
+        output = Concatenate()([output1, output2, state1, state2])
+
         output = Dropout(rate=dropout_rate)(output)
         output = Dense(dense_size, activation=None,
                        kernel_regularizer=l2(coef_reg_den))(output)

@@ -13,15 +13,10 @@
 # limitations under the License.
 
 import sys
+from contextlib import redirect_stdout
 
 
-class RedirectedPrints:
-    def __init__(self, out=sys.stderr):
-        self._out = out
-
-    def __enter__(self):
-        self._original_stdout = sys.stdout
-        sys.stdout = self._out
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        sys.stdout = self._original_stdout
+class RedirectedPrints(redirect_stdout):
+    """Context manager for temporarily redirecting stdout to another stream """
+    def __init__(self, new_target=sys.stderr):
+        super().__init__(new_target=new_target)

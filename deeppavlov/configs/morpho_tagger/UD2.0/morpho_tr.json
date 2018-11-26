@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
-    "name": "morphotagger_dataset_reader",
-    "data_path": "UD2.0_source",
+    "class_name": "morphotagger_dataset_reader",
+    "data_path": "{DOWNLOADS_PATH}/UD2.0_source",
     "language": "tr",
     "data_types": [
       "train",
@@ -10,7 +10,7 @@
     ]
   },
   "dataset_iterator": {
-    "name": "morphotagger_dataset",
+    "class_name": "morphotagger_dataset",
     "min_train_fraction": 0.9
   },
   "chainer": {
@@ -25,14 +25,14 @@
         "in": [
           "x"
         ],
-        "name": "lazy_tokenizer",
+        "class_name": "lazy_tokenizer",
         "out": [
           "x_tokens"
         ]
       },
       {
         "id": "lowercase_preprocessor",
-        "name": "lowercase_preprocessor",
+        "class_name": "lowercase_preprocessor",
         "in": [
           "x_tokens"
         ],
@@ -42,7 +42,7 @@
       },
       {
         "id": "tag_vocab",
-        "name": "default_vocab",
+        "class_name": "default_vocab",
         "fit_on": [
           "y"
         ],
@@ -52,12 +52,12 @@
           "BEGIN",
           "END"
         ],
-        "save_path": "morpho_tagger/UD2.0/tr/tag.dict",
-        "load_path": "morpho_tagger/UD2.0/tr/tag.dict"
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/tr/tag.dict",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/tr/tag.dict"
       },
       {
         "id": "char_vocab",
-        "name": "default_vocab",
+        "class_name": "default_vocab",
         "min_freq": 3,
         "fit_on": [
           "x_processed"
@@ -68,8 +68,8 @@
           "END"
         ],
         "level": "char",
-        "save_path": "morpho_tagger/UD2.0/tr/char.dict",
-        "load_path": "morpho_tagger/UD2.0/tr/char.dict"
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/tr/char.dict",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/tr/char.dict"
       },
       {
         "in": [
@@ -81,10 +81,10 @@
         "out": [
           "y_predicted"
         ],
-        "name": "morpho_tagger",
+        "class_name": "morpho_tagger",
         "main": true,
-        "save_path": "morpho_tagger/UD2.0/tr/model.hdf5",
-        "load_path": "morpho_tagger/UD2.0/tr/model.hdf5",
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/tr/model.hdf5",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/tr/model.hdf5",
         "tags": "#tag_vocab",
         "symbols": "#char_vocab",
         "verbose": 1,
@@ -118,7 +118,7 @@
         "out": [
           "y_prettified"
         ],
-        "name": "tag_output_prettifier",
+        "class_name": "tag_output_prettifier",
         "end": "\n"
       }
     ],
@@ -151,22 +151,30 @@
   },
   "predict": {
     "batch_size": 32,
-    "outfile": "results/ud_tr_test.res"
+    "outfile": "{RESULTS_PATH}/ud_tr_test.res"
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "RESULTS_PATH": "{ROOT_PATH}/results"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger/UD2.0/tr.tar.gz",
-        "subdir": "morpho_tagger/UD2.0/tr"
+        "subdir": "{MODELS_PATH}/morpho_tagger/UD2.0/tr"
       },
       {
         "url": "http://files.deeppavlov.ai/datasets/UD2.0_source/tr.tar.gz",
-        "subdir": "UD2.0_source/tr"
+        "subdir": "{DOWNLOADS_PATH}/UD2.0_source/tr"
       }
     ],
-    "telegram_utils": "MorphoTaggerModel"
+    "labels": {
+      "telegram_utils": "MorphoTaggerModel"
+    }
   }
 }

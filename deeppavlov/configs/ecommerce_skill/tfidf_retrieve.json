@@ -1,0 +1,120 @@
+{
+  "dataset_reader": {
+    "class_name": "amazon_ecommerce_reader",
+    "data_path": "{DOWNLOADS_PATH}/amazon_ecommerce",
+    "catalog": [
+      "Phones",
+      "Home",
+      "Automotive",
+      "Electronics",
+      "Movies",
+      "Books"
+    ]
+  },
+  "dataset_iterator": {
+    "class_name": "data_learning_iterator"
+  },
+  "chainer": {
+    "in": [
+      "query",
+      "history",
+      "state"
+    ],
+    "out": [
+      "response",
+      "confidence",
+      "state"
+    ],
+    "pipe": [
+      {
+        "class_name": "stream_spacy_tokenizer",
+        "in": "query",
+        "id": "my_tokenizer",
+        "lemmas": true,
+        "alphas_only": false,
+        "out": "q_token_lemmas"
+      },
+      {
+        "ref": "my_tokenizer",
+        "in": "q_token_lemmas",
+        "out": "q_lem"
+      },
+      {
+        "in": [
+          "q_lem"
+        ],
+        "out": [
+          "q_vect"
+        ],
+        "fit_on": [
+          "q_lem"
+        ],
+        "id": "tfidf_vec",
+        "class_name": "sklearn_component",
+        "save_path": "{MODELS_PATH}/ecommerce_skill/tfidf_vectorizer_ecommerce.pkl",
+        "load_path": "{MODELS_PATH}/ecommerce_skill/tfidf_vectorizer_ecommerce.pkl",
+        "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
+        "infer_method": "transform",
+        "analyzer": "word",
+        "use_idf": true
+      },
+      {
+        "class_name": "ecommerce_skill_tfidf",
+        "in": [
+          "q_vect",
+          "history",
+          "state"
+        ],
+        "fit_on": [
+          "y",
+          "q_vect"
+        ],
+        "min_similarity": 0.5,
+        "min_entropy": 0.5,
+        "entropy_fields": [
+          "Size",
+          "Brand",
+          "Author",
+          "Color",
+          "Genre"
+        ],
+        "save_path": "{MODELS_PATH}/ecommerce_skill/ecommerce_tfidf_model.pkl",
+        "load_path": "{MODELS_PATH}/ecommerce_skill/ecommerce_tfidf_model.pkl",
+        "out": [
+          "response",
+          "confidence",
+          "state"
+        ]
+      }
+    ]
+  },
+  "train": {
+    "validate_best": false,
+    "test_best": false
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
+    "labels": {
+      "telegram_utils": "EcommerceSkill",
+      "server_utils": "EcommerceSkill"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/ecommerce_skill/ecommerce_tfidf_model.pkl",
+        "subdir": "{MODELS_PATH}/ecommerce_skill"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/ecommerce_skill/tfidf_vectorizer_ecommerce.pkl",
+        "subdir": "{MODELS_PATH}/ecommerce_skill"
+      }
+    ]
+  }
+}

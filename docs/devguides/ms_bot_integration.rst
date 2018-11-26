@@ -88,4 +88,7 @@ in the **Web App Bot connection configuration** section.
 Optional ``-d`` key can be provided for dependencies download
 before service start.
 
-REST service properties (host, port) are provided in ``utils/server_config.json``.
+REST service properties (host, port) are provided in ``utils/settings/server_config.json``. You can also store your
+app id and app secret in appropriate section of ``server_config.json``. Please note, that all command line parameters
+override corresponding config ones.
+
