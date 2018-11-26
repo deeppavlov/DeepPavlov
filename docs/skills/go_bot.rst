@@ -22,7 +22,6 @@ If some required packages are missing, install all the requirements by running i
 .. code:: bash
 
    python -m deeppavlov install gobot_dstc2
-   python -m deeppavlov install gobot_dstc2_best
 
 Intro
 -----
