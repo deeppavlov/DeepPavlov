@@ -15,6 +15,12 @@ Available classifiers are:
 Quick start
 -----------
 
+First you would need to install additional requirements:
+::
+     python -m deeppavlov install <path_to_config>
+ where ``<path_to_config>`` is a path to one of the :config:`provided config files <classifiers>`
+or its name without an extension, for example :config:`intents_snips <classifiers/intents_snips.json>`.
+
 One can run the following command to try provided pipelines out:
 
 ::
