@@ -75,7 +75,6 @@ class UbuntuV1MTReader(DatasetReader):
         contexts = []
         responses = []
         with codecs.open(fname, 'r', 'utf-8') as f:
-            line_num = 1
             responses_buf = []
             for line in f:
                 line = line.replace('_', '')
@@ -85,11 +84,10 @@ class UbuntuV1MTReader(DatasetReader):
                 context = parts[1:-1]
                 responses_buf.append(parts[-1])  # add the next response
 
-                if line_num % 10 == 0:  # add context and 10 response candidates
+                if len(responses_buf) % 10 == 0:  # add context and 10 response candidates
                     contexts.append(self._expand_context(context, padding=self.padding))
                     responses.append(responses_buf)
                     responses_buf = []
-                line_num += 1
 
         data = [el[0] + el[1] for el in zip(contexts, responses)]
         data = [(el, 1) for el in data]  # NOTE: labels are useless here actually...
@@ -113,7 +111,8 @@ class UbuntuV1MTReader(DatasetReader):
                   [''] if len(sent_list) < self.num_turns else sent_list[:self.num_turns]
             return res
         elif padding == "pre":
-            sent_list = context[-(self.num_turns + 1):-1]
+            # context[-self.num_turns:]  because there is no empty strings in `context`
+            sent_list = context[-self.num_turns:]
             if len(sent_list) <= self.num_turns:
                 tmp = sent_list[:]
                 sent_list = [''] * (self.num_turns - len(sent_list))

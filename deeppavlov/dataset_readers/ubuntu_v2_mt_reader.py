@@ -97,6 +97,7 @@ class UbuntuV2MTReader(DatasetReader):
                   [''] if len(sent_list) < self.num_turns else sent_list[:self.num_turns]
             return res
         elif padding == "pre":
+            # context[-(self.num_turns + 1):-1]  because the last item of `context` is always '' (empty string)
             sent_list = context[-(self.num_turns + 1):-1]
             if len(sent_list) <= self.num_turns:
                 tmp = sent_list[:]

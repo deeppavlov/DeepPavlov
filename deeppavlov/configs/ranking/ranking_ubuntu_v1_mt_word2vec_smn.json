@@ -30,7 +30,7 @@
         "id": "word2vec_embedder",
         "name": "glove",
         "dim": 200,
-        "load_path": "ubuntu_v1_mt_word2vec_smn/embeddings_txt/v1_ubuntu_w2v_vectors.txt"
+        "load_path": "ubuntu_v1_mt_word2vec_smn/embeddings_txt/ubuntu_word2vec_200.model.txt"
       },
       {
         "id": "preproc",
@@ -82,6 +82,7 @@
   "train": {
     "epochs": 8,
     "batch_size": 500,
+    "shuffle": true,
     "pytest_max_batches": 2,
     "train_metrics": [],
     "metrics": [
@@ -103,16 +104,6 @@
     "labels": {
       "telegram_utils": "SiameseModel",
       "server_utils": "Ranker"
-    },
-    "download": [
-      {
-        "url": "http://lnsigo.mipt.ru/export/datasets/ubuntu_v2_data_clean.tar.gz",
-        "subdir": "ubuntu_v2_data_clean"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/ubuntu_v2_word2vec_embeddings.model.tar.gz",
-        "subdir": "ubuntu_v2_mt_word2vec/embeddings_txt"
-      }
-    ]
+    }
   }
 }
