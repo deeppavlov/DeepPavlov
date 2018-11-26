@@ -251,7 +251,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
             with tf.variable_scope('similarity'):
                 # sim shape [batch, max_turn_len, max_turn_len, 2*stack_num+1]
                 # divide sqrt(200) to prevent gradient explosion
-                sim = tf.einsum('biks,bjks->bijs', t_a_r, r_a_t) / tf.sqrt(200.0)
+                sim = tf.einsum('biks,bjks->bijs', t_a_r, r_a_t) / tf.sqrt(float(self.word_embedding_size))
 
             sim_turns.append(sim)
 
@@ -270,7 +270,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
             tf.summary.scalar('loss', self.loss)
 
             self.global_step = tf.Variable(0, trainable=False)
-            initial_learning_rate = 0.001
+            initial_learning_rate = self.learning_rate
             self.learning_rate = tf.train.exponential_decay(
                 initial_learning_rate,
                 global_step=self.global_step,
