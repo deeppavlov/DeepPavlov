@@ -9,6 +9,12 @@ The default ranker implementation takes a batch of queries as input and returns 
 Quick Start
 ===========
 
+Before using the model make sure that all required packages are installed running the command:
+
+.. code:: bash
+
+    python -m deeppavlov install en_ranker_tfidf_wiki
+
 Training and building (if you have your own data)
 
 .. code:: python

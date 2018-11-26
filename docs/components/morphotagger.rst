@@ -40,8 +40,7 @@ systems.
 Usage examples.
 ===========================
 
-Before using the
-model make sure that all required packages are installed using the command:
+Before using the model make sure that all required packages are installed using the command:
 
 .. code:: bash
 
