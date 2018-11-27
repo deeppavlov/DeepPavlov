@@ -28,11 +28,11 @@
         "out": ["tag_indices"]
       },
       {
-        "class_name": "elmo",
+        "class_name": "elmo_embedder",
         "elmo_output_names": ["lstm_outputs1", "lstm_outputs2", "word_emb"],
         "mini_batch_size": 32,
         "in": ["x_tokens"],
-        "spec": "{DOWNLOADS_PATH}/embeddings/elmo_ru",
+        "spec": "{DOWNLOADS_PATH}/embeddings/elmo_ru_news",
         "out": ["tokens_emb"]
       },
       {
@@ -90,7 +90,7 @@
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/elmo.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
     ],
     "labels": {
       "telegram_utils": "NERCoNLL2003Model",
@@ -99,7 +99,7 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/embeddings/elmo_ru"
+        "subdir": "{DOWNLOADS_PATH}/embeddings/elmo_ru_news"
       }
     ]
   }

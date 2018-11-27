@@ -38,6 +38,7 @@ parser.add_argument("mode", help="select a mode, train or interact", type=str,
                              'riseapi', 'download', 'install', 'crossval'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 
+parser.add_argument("-e", "--start-epoch-num", dest="start_epoch_num", default=0, help="Start epoch number", type=int)
 parser.add_argument("--recursive", action="store_true", help="Train nested configs")
 
 parser.add_argument("-b", "--batch-size", dest="batch_size", default=1, help="inference batch size", type=int)
@@ -71,10 +72,14 @@ def main():
     multi_instance = args.multi_instance
     stateful = args.stateful
 
+    start_epoch_num = args.start_epoch_num
+
     if args.mode == 'train':
-        train_evaluate_model_from_config(pipeline_config_path, recursive=args.recursive)
+        train_evaluate_model_from_config(pipeline_config_path, recursive=args.recursive, 
+                                         start_epoch_num=start_epoch_num)
     elif args.mode == 'evaluate':
-        train_evaluate_model_from_config(pipeline_config_path, to_train=False, to_validate=False)
+        train_evaluate_model_from_config(pipeline_config_path, to_train=False, to_validate=False,
+                                         start_epoch_num=start_epoch_num)
     elif args.mode == 'interact':
         interact_model(pipeline_config_path)
     elif args.mode == 'interactbot':
