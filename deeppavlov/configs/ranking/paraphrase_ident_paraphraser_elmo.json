@@ -83,7 +83,7 @@
     "pytest_max_batches": 2,
     "train_metrics": ["f1", "acc", "log_loss"],
     "metrics": ["f1", "acc", "log_loss"],
-    "validation_patience": 50,
+    "validation_patience": 20,
     "val_every_n_epochs": 1,
     "log_every_n_batches": 24
   },
