@@ -40,7 +40,7 @@
         "embedder":
         {
           "id": "siam_embedder",
-          "class_name": "elmo",
+          "class_name": "elmo_embedder",
           "elmo_output_names": [
             "elmo"
           ],
