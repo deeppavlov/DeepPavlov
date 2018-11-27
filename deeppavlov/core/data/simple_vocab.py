@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, Iterable
 from itertools import chain
 from pathlib import Path
 
@@ -22,7 +22,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.estimator import Estimator
-from deeppavlov.core.data.utils import zero_pad, zero_pad_char
+from deeppavlov.core.data.utils import zero_pad, is_str_batch, flatten_str_batch
 
 log = get_logger(__name__)
 
@@ -51,10 +51,11 @@ class SimpleVocabulary(Estimator):
             self.load()
 
     def fit(self, *args):
+        # return None
         self.reset()
         tokens = chain(*args)
         # filter(None, <>) -- to filter empty tokens
-        self.freqs = Counter(filter(None, chain(*tokens)))
+        self.freqs = Counter(filter(None, flatten_str_batch(tokens)))
         for special_token in self.special_tokens:
             self._t2i[special_token] = self.count
             self._i2t.append(special_token)
@@ -74,13 +75,15 @@ class SimpleVocabulary(Estimator):
                 self._i2t.append(token)
                 self.count += 1
 
-    def __call__(self, batch, **kwargs):
-        indices_batch = []
-        for sample in batch:
-            indices_batch.append([self[token] for token in sample])
-        if self._pad_with_zeros and self.is_str_batch(batch):
-            indices_batch = zero_pad(indices_batch)
-        return indices_batch
+    def __call__(self, batch, is_top=True, **kwargs):
+        if isinstance(batch, Iterable) and not isinstance(batch, str):
+            looked_up_batch = [self(sample, is_top=False) for sample in batch]
+        else:
+            return self[batch]
+        if is_top and self._pad_with_zeros and not is_str_batch(looked_up_batch):
+            looked_up_batch = zero_pad(looked_up_batch)
+
+        return looked_up_batch
 
     def save(self):
         log.info("[saving vocabulary to {}]".format(self.save_path))
@@ -135,19 +138,6 @@ class SimpleVocabulary(Estimator):
     def __len__(self):
         return len(self._i2t)
 
-    def is_str_batch(self, batch):
-        if not self.is_empty(batch):
-            non_empty = [item for item in batch if len(item) > 0]
-            if isinstance(non_empty[0], str) or isinstance(non_empty[0][0], str):
-                return True
-            elif isinstance(non_empty[0][0], (int, np.integer)):
-                return False
-            else:
-                raise RuntimeError(f'The elements passed to the vocab are not strings '
-                                   f'or integers! But they are {type(element)}')
-        else:
-            return False
-
     def reset(self):
         # default index is the position of default_token
         if self.default_token is not None:
@@ -161,54 +151,3 @@ class SimpleVocabulary(Estimator):
         self._t2i = defaultdict(lambda: unk_index)
         self._i2t = []
         self.count = 0
-
-    @staticmethod
-    def is_empty(batch):
-        non_empty = [item for item in batch if len(item) > 0]
-        self._i2t = []
-        self.count = 0
-
-    @staticmethod
-    def is_empty(batch):
-        non_empty = [item for item in batch if len(item) > 0]
-        return len(non_empty) == 0
-
-
-@register('char_vocab')
-class CharacterVocab(SimpleVocabulary):
-    """Implements character vocabulary."""
-    def fit(self, *args):
-        tokens = chain(*args)
-        chars = chain(*tokens)
-        super().fit(chars)
-
-    def __call__(self, batch, **kwargs):
-        indices_batch = []
-        for sample in batch:
-            tokens = []
-            for token in sample:
-                tokens.append([self[ch] for ch in token])
-            indices_batch.append(tokens)
-        if self._pad_with_zeros:
-            indices_batch = zero_pad_char(indices_batch)
-        return indices_batch
-
-
-@register('dialog_vocab')
-class DialogVocab(SimpleVocabulary):
-    """Implements dialog vocabulary."""
-    def fit(self, *args):
-        utterances = chain(*args)
-        tokens = chain(*utterances)
-        super().fit(tokens)
-
-    def __call__(self, batch, **kwargs):
-        indices_batch = []
-        for dialog in batch:
-            tokens = []
-            for utterance in dialog:
-                tokens.append([self[token] for token in utterance])
-            indices_batch.append(tokens)
-        if self._pad_with_zeros:
-            indices_batch = zero_pad_char(indices_batch)
-        return indices_batch

@@ -1,17 +1,16 @@
 {
   "dataset_reader": {
-    "name": "line_reader",
-    "data_path": "wiki/wikitext_ru/ru.wiki.train.txt"
+    "class_name": "line_reader",
+    "data_path": "{DOWNLOADS_PATH}/wiki/wikitext_ru/ru.wiki.train.txt"
   },
   "dataset_iterator": {
-    "name": "data_learning_iterator"
+    "class_name": "data_learning_iterator"
   },
-
   "chainer": {
     "in": "q",
     "pipe": [
       {
-        "name": "ru_tokenizer",
+        "class_name": "ru_tokenizer",
         "id": "my_tokenizer",
         "in": "q",
         "lemmas": true,
@@ -33,30 +32,30 @@
           "q_lem"
         ],
         "id": "tfidf_vec",
-        "name": "sklearn_component",
-        "save_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
-        "load_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "class_name": "sklearn_component",
+        "save_path": "{MODELS_PATH}/vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "load_path": "{MODELS_PATH}/vectorizer/tfidf_vectorizer_ruwiki.pkl",
         "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
         "infer_method": "transform"
       }
     ],
     "out": "q_vect"
   },
-
   "train": {
     "validate_best": false,
     "test_best": false
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/wikitext_ru.zip",
-        "subdir": "wiki"
+        "subdir": "{DOWNLOADS_PATH}/wiki"
       }
     ]
   }
-
 }
-
-
-

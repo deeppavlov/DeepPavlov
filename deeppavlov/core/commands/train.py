@@ -20,11 +20,10 @@ from collections import OrderedDict, namedtuple
 from pathlib import Path
 from typing import List, Tuple, Dict, Union
 
-from deeppavlov.core.commands.infer import build_model_from_config
-from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root, import_packages
+from deeppavlov.core.commands.infer import build_model
+from deeppavlov.core.commands.utils import expand_path, import_packages, parse_config
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.metrics_registry import get_metric_by_name
 from deeppavlov.core.common.params import from_params
@@ -33,13 +32,14 @@ from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.nn_model import NNModel
+from deeppavlov.download import deep_download
 
 log = get_logger(__name__)
 
 Metric = namedtuple('Metric', ['name', 'fn', 'inputs'])
 
 
-def _parse_metrics(metrics: Union[str, dict], in_y: List[str], out_vars: List[str]) -> List[Metric]:
+def _parse_metrics(metrics: List[Union[str, dict]], in_y: List[str], out_vars: List[str]) -> List[Metric]:
     metrics_functions = []
     for metric in metrics:
         if isinstance(metric, str):
@@ -121,8 +121,8 @@ def read_data_by_config(config: dict):
         config.pop('dataset')
         ds_type = dataset_config['type']
         if ds_type == 'classification':
-            reader = {'name': 'basic_classification_reader'}
-            iterator = {'name': 'basic_classification_iterator'}
+            reader = {'class_name': 'basic_classification_reader'}
+            iterator = {'class_name': 'basic_classification_iterator'}
             config['dataset_reader'] = {**dataset_config, **reader}
             config['dataset_iterator'] = {**dataset_config, **iterator}
         else:
@@ -132,19 +132,8 @@ def read_data_by_config(config: dict):
     reader_config = config.get('dataset_reader', None)
 
     if reader_config:
-        reader_config = config['dataset_reader']
-        if 'class' in reader_config:
-            c = reader_config.pop('class')
-            try:
-                module_name, cls_name = c.split(':')
-                reader = getattr(importlib.import_module(module_name), cls_name)()
-            except ValueError:
-                e = ConfigError('Expected class description in a `module.submodules:ClassName` form, but got `{}`'
-                                .format(c))
-                log.exception(e)
-                raise e
-        else:
-            reader = get_model(reader_config.pop('name'))()
+        reader_config = dict(config['dataset_reader'])
+        reader = get_model(reader_config.pop('class_name'))()
         data_path = reader_config.pop('data_path', '')
         if isinstance(data_path, list):
             data_path = [expand_path(x) for x in data_path]
@@ -166,11 +155,13 @@ def get_iterator_from_config(config: dict, data: dict):
 
 
 def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
-                                     to_train=True, to_validate=True) -> Dict[str, Dict[str, float]]:
+                                     to_train=True, to_validate=True, download=False) -> Dict[str, Dict[str, float]]:
     """Make training and evaluation of the model described in corresponding configuration file."""
-    if isinstance(config, (str, Path)):
-        config = read_json(config)
-    set_deeppavlov_root(config)
+    config = parse_config(config)
+
+    if download:
+        deep_download(config)
+
     import_packages(config.get('metadata', {}).get('imports', []))
 
     if iterator is None:
@@ -217,7 +208,7 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
         #     model_config['load_path'] = model_config['save_path']
         # except KeyError:
         #     log.warning('No "save_path" parameter for the model, so "load_path" will not be renewed')
-        model = build_model_from_config(config, load_trained=True)
+        model = build_model(config, load_trained=True)
         log.info('Testing the best saved model')
 
         if train_config['validate_best']:
@@ -275,11 +266,16 @@ def _test_model(model: Chainer, metrics_functions: List[Metric],
 
     if show_examples:
         try:
+            y_predicted = zip(*[y_predicted_group
+                                for out_name, y_predicted_group in zip(expected_outputs, y_predicted)
+                                if out_name in model.out_params])
+            if len(model.out_params) == 1:
+                y_predicted = [y_predicted_item[0] for y_predicted_item in y_predicted]
             report['examples'] = [{
                 'x': x_item,
                 'y_predicted': y_predicted_item,
                 'y_true': y_true_item
-            } for x_item, y_predicted_item, y_true_item in zip(x, {k: outputs[k] for k in model.out_params}, y_true)]
+            } for x_item, y_predicted_item, y_true_item in zip(x, y_predicted, y_true)]
         except NameError:
             log.warning(f'Could not log examples for {data_type}, assuming it\'s empty')
 
@@ -401,12 +397,17 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
 
                     if train_config['show_examples']:
                         try:
+                            y_predicted = zip(*[y_predicted_group
+                                                for out_name, y_predicted_group in zip(expected_outputs, y_predicted)
+                                                if out_name in model.out_params])
+                            if len(model.out_params) == 1:
+                                y_predicted = [y_predicted_item[0] for y_predicted_item in y_predicted]
                             report['examples'] = [{
                                 'x': x_item,
                                 'y_predicted': y_predicted_item,
                                 'y_true': y_true_item
                             } for x_item, y_predicted_item, y_true_item
-                                in zip(x, {k: outputs[k] for k in model.out_params}, y_true)]
+                                in zip(x, y_predicted, y_true)]
                         except NameError:
                             log.warning('Could not log examples as y_predicted is not defined')
 
@@ -467,12 +468,17 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
 
                 if train_config['show_examples']:
                     try:
+                        y_predicted = zip(*[y_predicted_group
+                                            for out_name, y_predicted_group in zip(expected_outputs, y_predicted)
+                                            if out_name in model.out_params])
+                        if len(model.out_params) == 1:
+                            y_predicted = [y_predicted_item[0] for y_predicted_item in y_predicted]
                         report['examples'] = [{
                             'x': x_item,
                             'y_predicted': y_predicted_item,
                             'y_true': y_true_item
                         } for x_item, y_predicted_item, y_true_item
-                            in zip(x, {k: outputs[k] for k in model.out_params}, y_true)]
+                            in zip(x, y_predicted, y_true)]
                     except NameError:
                         log.warning('Could not log examples')
 

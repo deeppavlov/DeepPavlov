@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
-    "name": "dstc2_reader",
-    "data_path": "dstc2"
+    "class_name": "dstc2_reader",
+    "data_path": "{DOWNLOADS_PATH}/dstc2"
   },
   "dataset_iterator": {
-    "name": "dialog_db_result_iterator"
+    "class_name": "dialog_db_result_iterator"
   },
   "chainer": {
     "in": ["db_result"],
@@ -13,21 +13,26 @@
     "pipe": [
       {
         "id": "restaurant_database",
-        "name": "sqlite_database",
+        "class_name": "sqlite_database",
         "fit_on": ["db_result"],
         "table_name": "mytable",
         "primary_keys": ["name"],
-        "save_path": "dstc2/resto.sqlite"
+        "save_path": "{DOWNLOADS_PATH}/dstc2/resto.sqlite"
       }
     ]
   },
   "train": {
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/dstc2_v2.tar.gz",
-        "subdir": "dstc2"
+        "subdir": "{DOWNLOADS_PATH}/dstc2"
       }
     ]
   }

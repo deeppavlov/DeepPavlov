@@ -1,0 +1,105 @@
+{
+  "dataset_reader": {
+    "class_name": "amazon_ecommerce_reader",
+    "data_path": "{DOWNLOADS_PATH}/amazon_ecommerce",
+    "catalog": "Phones"
+  },
+  "dataset_iterator": {
+    "class_name": "data_learning_iterator"
+  },
+  "chainer": {
+    "in": [
+      "query",
+      "history",
+      "state"
+    ],
+    "out": [
+      "response",
+      "confidence",
+      "state"
+    ],
+    "pipe": [
+      {
+        "class_name": "ecommerce_skill_bleu",
+        "in": [
+          "query",
+          "history",
+          "state"
+        ],
+        "fit_on": [
+          "y"
+        ],
+        "min_similarity": 0.5,
+        "min_entropy": 0.5,
+        "entropy_fields": [
+          "Size",
+          "Brand",
+          "Author",
+          "Color",
+          "Genre"
+        ],
+        "save_path": "{MODELS_PATH}/ecommerce_skill/ecommerce_Phones_model.pkl",
+        "load_path": [
+          "{MODELS_PATH}/ecommerce_skill/ecommerce_Phones_model.pkl"
+        ],
+        "preprocess": {
+          "class_name": "ecommerce_preprocess",
+          "spacy_model": "en_core_web_sm",
+          "disable": [
+            "parser"
+          ]
+        },
+        "out": [
+          "response",
+          "confidence",
+          "state"
+        ]
+      }
+    ]
+  },
+  "train": {
+    "validate_best": false,
+    "test_best": false
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
+    "labels": {
+      "telegram_utils": "EcommerceSkill",
+      "server_utils": "EcommerceSkill"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/ecommerce_skill/ecommerce_Phones_model.pkl",
+        "subdir": "{MODELS_PATH}/ecommerce_skill"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/ecommerce_skill/ecommerce_Books_model.pkl",
+        "subdir": "{MODELS_PATH}/ecommerce_skill"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/ecommerce_skill/ecommerce_Movies_model.pkl",
+        "subdir": "{MODELS_PATH}/ecommerce_skill"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/ecommerce_skill/ecommerce_Electronics_model.pkl",
+        "subdir": "{MODELS_PATH}/ecommerce_skill"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/ecommerce_skill/ecommerce_Home_model.pkl",
+        "subdir": "{MODELS_PATH}/ecommerce_skill"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/ecommerce_skill/ecommerce_Automotive_model.pkl",
+        "subdir": "{MODELS_PATH}/ecommerce_skill"
+      }
+    ]
+  }
+}

@@ -21,8 +21,9 @@ import shutil
 import tarfile
 import zipfile
 from hashlib import md5
+from itertools import chain
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Iterable, Optional
 from urllib.parse import urlparse
 
 import numpy as np
@@ -39,8 +40,11 @@ tqdm.monitor_interval = 0
 
 
 def get_download_token():
-    token_file = Path.home() / '.deeppavlov'
+    token_file = Path.home() / '.deeppavlov' / 'token'
     if not token_file.exists():
+        if token_file.parent.is_file():
+            token_file.parent.unlink()
+        token_file.parent.mkdir(parents=True, exist_ok=True)
         token_file.write_text(secrets.token_urlsafe(32), encoding='utf8')
 
     return token_file.read_text(encoding='utf8').strip()
@@ -138,12 +142,12 @@ def untar(file_path, extract_folder=None):
     tar.close()
 
 
-def ungzip(file_path, extract_path: Path=None):
+def ungzip(file_path, extract_path: Path = None):
     """Simple .gz archive extractor
 
         Args:
             file_path: path to the gzip file to be extracted
-            extract_folder: folder to which the files will be extracted
+            extract_path: path where the file will be extracted
 
         """
     CHUNK = 16 * 1024
@@ -230,6 +234,17 @@ def copytree(src: Path, dest: Path):
             shutil.copy(str(f), str(f_dest))
 
 
+def file_md5(fpath: Union[str, Path], chunk_size: int = 2**16) -> Optional[str]:
+    fpath = Path(fpath)
+    if not fpath.is_file():
+        return None
+    file_hash = md5()
+    with fpath.open('rb') as f:
+        for chunk in iter(lambda: f.read(chunk_size), b""):
+            file_hash.update(chunk)
+    return file_hash.hexdigest()
+
+
 def load_vocab(vocab_path):
     vocab_path = Path(vocab_path)
     with vocab_path.open(encoding='utf8') as f:
@@ -251,22 +266,54 @@ def tokenize_reg(s):
     return re.findall(re.compile(pattern), s)
 
 
-def zero_pad(batch, dtype=np.float32):
-    if len(batch) == 1 and len(batch[0]) == 0:
-        return np.array([], dtype=dtype)
-    batch_size = len(batch)
-    max_len = max(len(utterance) for utterance in batch)
-    if isinstance(batch[0][0], (int, np.int)):
-        padded_batch = np.zeros([batch_size, max_len], dtype=np.int32)
-        for n, utterance in enumerate(batch):
-            padded_batch[n, :len(utterance)] = utterance
+def get_dimensions(batch):
+    """"""
+    if len(batch) > 0 and isinstance(batch[0], Iterable) and not isinstance(batch, str):
+        max_list = [get_dimensions(sample) for sample in batch]
+        max_depth = max(len(m) for m in max_list)
+        max_lens = np.zeros(max_depth, dtype=np.int32)
+        for m in max_list:
+            lm = len(m)
+            max_lens[:lm] = np.maximum(max_lens[:lm], m)
+        return [len(batch)] + list(max_lens)
     else:
-        n_features = len(batch[0][0])
-        padded_batch = np.zeros([batch_size, max_len, n_features], dtype=dtype)
-        for n, utterance in enumerate(batch):
-            for k, token_features in enumerate(utterance):
-                padded_batch[n, k] = token_features
-    return padded_batch
+        return [len(batch)]
+
+
+def zero_pad(batch, zp_batch=None, dtype=np.float32, padding=0):
+    if zp_batch is None:
+        dims = get_dimensions(batch)
+        zp_batch = np.ones(dims, dtype=dtype) * padding
+    if zp_batch.ndim == 1:
+        zp_batch[:len(batch)] = batch
+    else:
+        for b, zp in zip(batch, zp_batch):
+            zero_pad(b, zp)
+    return zp_batch
+
+
+def is_str_batch(batch):
+    while True:
+        if isinstance(batch, Iterable):
+            if isinstance(batch, str):
+                return True
+            elif isinstance(batch, np.ndarray):
+                return batch.dtype.kind == 'U'
+            else:
+                if len(batch) > 0:
+                    batch = batch[0]
+                else:
+                    return True
+        else:
+            return False
+
+
+def flatten_str_batch(batch):
+    if isinstance(batch, str):
+        return [batch]
+    else:
+        return chain(*[flatten_str_batch(sample) for sample in batch])
+
 
 def zero_pad_truncate(batch, max_len, pad='post', trunc='post', dtype=np.float32):
     batch_size = len(batch)
@@ -302,6 +349,7 @@ def zero_pad_truncate(batch, max_len, pad='post', trunc='post', dtype=np.float32
                     for k, token_features in enumerate(utterance):
                         padded_batch[n, k + max_len - len(utterance)] = token_features
     return padded_batch
+
 
 def zero_pad_char(batch, dtype=np.float32):
     if len(batch) == 1 and len(batch[0]) == 0:
@@ -352,20 +400,20 @@ def check_nested_dict_keys(check_dict: dict, keys: list):
         return False
 
 
-def jsonify_data(input):
-    if isinstance(input, (list, tuple)):
-        result = [jsonify_data(item) for item in input]
-    elif isinstance(input, dict):
+def jsonify_data(data):
+    if isinstance(data, (list, tuple)):
+        result = [jsonify_data(item) for item in data]
+    elif isinstance(data, dict):
         result = {}
-        for key in input.keys():
-            result[key] = jsonify_data(input[key])
-    elif isinstance(input, np.ndarray):
-        result = input.tolist()
-    elif isinstance(input, (np.int_, np.intc, np.intp, np.int8, np.int16, np.int32,
-                            np.int64, np.uint8, np.uint16, np.uint32, np.uint64)):
-        result = int(input)
-    elif isinstance(input, (np.float_, np.float16, np.float32, np.float64)):
-        result = float(input)
+        for key in data.keys():
+            result[key] = jsonify_data(data[key])
+    elif isinstance(data, np.ndarray):
+        result = data.tolist()
+    elif isinstance(data, (np.int_, np.intc, np.intp, np.int8, np.int16, np.int32,
+                           np.int64, np.uint8, np.uint16, np.uint32, np.uint64)):
+        result = int(data)
+    elif isinstance(data, (np.float_, np.float16, np.float32, np.float64)):
+        result = float(data)
     else:
-        result = input
+        result = data
     return result

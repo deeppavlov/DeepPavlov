@@ -1,12 +1,12 @@
 {
   "dataset_reader": {
-    "name": "basic_classification_reader",
+    "class_name": "basic_classification_reader",
     "x": "text",
     "y": "intents",
-    "data_path": "snips"
+    "data_path": "{DOWNLOADS_PATH}/snips"
   },
   "dataset_iterator": {
-    "name": "basic_classification_iterator",
+    "class_name": "basic_classification_iterator",
     "seed": {
       "evolve_range": [
         50,
@@ -34,38 +34,38 @@
     "pipe": [
       {
         "id": "classes_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "fit_on": [
           "y"
         ],
-        "save_path": "classifiers/intents_snips_evolution/classes.dict",
-        "load_path": "classifiers/intents_snips_evolution/classes.dict",
+        "save_path": "{MODELS_PATH}/classes.dict",
+        "load_path": "{MODELS_PATH}/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
       {
         "in": "x",
         "out": "x_lower",
-        "name": "str_lower"
+        "class_name": "str_lower"
       },
       {
         "in": "x_lower",
         "out": "x_tok",
         "id": "my_tokenizer",
-        "name": "nltk_tokenizer",
+        "class_name": "nltk_tokenizer",
         "tokenizer": "wordpunct_tokenize"
       },
       {
         "in": "x_tok",
         "out": "x_emb",
         "id": "my_embedder",
-        "name": "fasttext",
-        "load_path": "embeddings/wiki.en.bin"
+        "class_name": "fasttext",
+        "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin"
       },
       {
         "in": "y_ids",
         "out": "y_onehot",
-        "name": "one_hotter",
+        "class_name": "one_hotter",
         "id": "my_one_hotter",
         "depth": "#classes_vocab.len"
       },
@@ -80,9 +80,9 @@
           "y_pred_probas"
         ],
         "main": true,
-        "name": "keras_classification_model",
-        "save_path": "classifiers/intents_snips_evolution/intents_snips",
-        "load_path": "classifiers/intents_snips_evolution/intents_snips",
+        "class_name": "keras_classification_model",
+        "save_path": "{MODELS_PATH}/model",
+        "load_path": "{MODELS_PATH}/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -147,7 +147,7 @@
       {
         "in": "y_pred_probas",
         "out": "y_pred_ids",
-        "name": "proba2labels",
+        "class_name": "proba2labels",
         "max_proba": true
       },
       {
@@ -193,6 +193,11 @@
     "test_best": false
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/intents_snips_evolution"
+    },
     "labels": {
       "telegram_utils": "IntentModel",
       "server_utils": "KerasIntentModel"
@@ -200,11 +205,11 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
-        "subdir": "snips"
+        "subdir": "{DOWNLOADS_PATH}/snips"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
   }

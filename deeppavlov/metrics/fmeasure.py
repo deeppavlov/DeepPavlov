@@ -153,33 +153,27 @@ def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, 
 
             create_chunk_true, pop_out_true = chunk_finder(yt, prev_tag_true, tag)
             if pop_out_true:
-                true_chunk[-1].append(count - 1)
+                true_chunk[-1] = (true_chunk[-1], count - 1)
             if create_chunk_true:
-                true_chunk.append([count])
+                true_chunk.append(count)
 
             create_chunk_pred, pop_out_pred = chunk_finder(yp, prev_tag_pred, tag)
             if pop_out_pred:
-                pred_chunk[-1].append(count - 1)
+                pred_chunk[-1] = (pred_chunk[-1], count - 1)
             if create_chunk_pred:
-                pred_chunk.append([count])
+                pred_chunk.append(count)
             prev_tag_true = yt
             prev_tag_pred = yp
             count += 1
 
-        if len(true_chunk) > 0 and len(true_chunk[-1]) == 1:
-            true_chunk[-1].append(count - 1)
-        if len(pred_chunk) > 0 and len(pred_chunk[-1]) == 1:
-            pred_chunk[-1].append(count - 1)
+        if len(true_chunk) > 0 and not isinstance(true_chunk[-1], tuple):
+            true_chunk[-1] = (true_chunk[-1], count - 1)
+        if len(pred_chunk) > 0 and not isinstance(pred_chunk[-1], tuple):
+            pred_chunk[-1] = (pred_chunk[-1], count - 1)
 
         # Then we find all correctly classified intervals
         # True positive results
-        tp = 0
-        for start, stop in true_chunk:
-            for start_p, stop_p in pred_chunk:
-                if start == start_p and stop == stop_p:
-                    tp += 1
-                if start_p > stop:
-                    break
+        tp = len(set(pred_chunk).intersection(set(true_chunk)))    
         total_correct += tp
         # And then just calculate errors of the first and second kind
         # False negative
