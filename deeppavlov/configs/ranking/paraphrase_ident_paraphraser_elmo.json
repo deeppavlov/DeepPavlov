@@ -45,7 +45,7 @@
             "elmo"
           ],
           "mini_batch_size": 8,
-          "spec": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-twitter_2013-01_2018-04_600k_steps.tar.gz"
+          "spec": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz"
         }
       },
       {
