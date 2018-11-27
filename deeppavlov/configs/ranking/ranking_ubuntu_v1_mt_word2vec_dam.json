@@ -8,7 +8,7 @@
   "dataset_iterator": {
     "name": "siamese_iterator",
     "shuffle": true,
-    "seed": 243
+    "seed": 42
   },
   "chainer": {
     "in": ["x"],
@@ -23,20 +23,20 @@
         "special_tokens": ["<PAD>"],
         "fit_on": ["x"],
         "id": "vocab_1",
-        "save_path": "ubuntu_v2_mt_word2vec_dam/vocabs/int_tok.dict",
-        "load_path": "ubuntu_v2_mt_word2vec_dam/vocabs/int_tok.dict"
+        "save_path": "ubuntu_v1_mt_word2vec_dam/vocabs/int_tok.dict",
+        "load_path": "ubuntu_v1_mt_word2vec_dam/vocabs/int_tok.dict"
       },
       {
         "id": "word2vec_embedder",
         "name": "glove",
         "dim": 200,
-        "load_path": "ubuntu_v2_mt_word2vec_dam/embeddings_txt/v1_ubuntu_w2v_vectors.txt"
+        "load_path": "ubuntu_v1_mt_word2vec_dam/embeddings_txt/v1_ubuntu_word2vec_200_dam_0.779.txt"
       },
       {
         "id": "preproc",
         "name": "ubuntu_v2_preprocessor",
-        "save_path": "ubuntu_v2_mt_word2vec_dam/preproc/tok.dict",
-        "load_path": "ubuntu_v2_mt_word2vec_dam/preproc/tok.dict",
+        "save_path": "ubuntu_v1_mt_word2vec_dam/preproc/tok.dict",
+        "load_path": "ubuntu_v1_mt_word2vec_dam/preproc/tok.dict",
         "num_ranking_samples": 10,
         "num_context_turns": 10,
         "max_sequence_length": 50,
@@ -65,16 +65,17 @@
         "out": ["y_predicted"],
         "name": "dam_nn",
         "stack_num": 5,
+        "is_positional": true,
         "num_context_turns": "#preproc.num_context_turns",
         "max_sequence_length": "#preproc.max_sequence_length",
         "embedding_dim": "#word2vec_embedder.dim",
         "emb_matrix": "#embeddings.emb_mat",
         "learning_rate": 1e-3,
         "batch_size": 100,
-        "seed": 65,
-        "decay_steps": 600,
-        "save_path": "ubuntu_v2_mt_word2vec_dam/model_dam/model",
-        "load_path": "ubuntu_v2_mt_word2vec_dam/model_dam/model"
+        "seed": 42,
+        "decay_steps": 2000,
+        "save_path": "ubuntu_v1_mt_word2vec_dam/model_dam/model",
+        "load_path": "ubuntu_v1_mt_word2vec_dam/model_dam/model"
       }
     ],
     "out": [
@@ -84,6 +85,7 @@
   "train": {
     "epochs": 8,
     "batch_size": 100,
+    "shuffle": true,
     "pytest_max_batches": 2,
     "train_metrics": [],
     "metrics": [
@@ -95,7 +97,7 @@
     "validation_patience": 3,
     "val_every_n_epochs": 1,
     "log_every_n_batches": 100,
-    "tensorboard_log_dir": "ubuntu_v2_mt_word2vec_dam/logs_dam/"
+    "tensorboard_log_dir": "ubuntu_v1_mt_word2vec_dam/logs_dam/"
   },
   "metadata": {
     "requirements": [
