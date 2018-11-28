@@ -103,9 +103,26 @@ class ELMo(NNModel):
     Each token in the vocabulary is cached as the appropriate 50 character id sequence once.
     It is recommended to always include the special <S> and </S> tokens (case sensitive) in the vocabulary file.
 
-
     For fine-tuning of LM on specific data, it is enough to save base model to path
     ``{MODELS_PATH}/elmo_model/saves/epochs/0/`` and start training.
+
+    Also for fine-tuning of LM on specific data, you can use pre-trained model for russian language on different
+    datasets.
+
+
+    LM model pre-trained on `ru-news` dataset ( lines = 63M, tokens = 946M, size = 12GB ), model is available by 
+    ``elmo-lm-ready4fine-tuning-ru-news`` config file.
+
+    LM model pre-trained on `ru-twitter` dataset ( lines = 104M, tokens = 810M, size = 8.5GB ), model is available by 
+    ``elmo-lm-ready4fine-tuning-ru-twitter`` config file.
+
+    LM model pre-trained on `ru-wiki` dataset ( lines = 1M, tokens = 386M, size = 5GB ), model is available by 
+    ``elmo-lm-ready4fine-tuning-ru-wiki`` config file.
+
+    .. note::
+
+        You need to download about **4 GB** also by default about **32 GB** of RAM and **10 GB** of GPU memory
+        required to running the config ``deeppavlov/configs/elmo/elmo-lm-ready4fine-tuning-ru-*.json`` on one GPU.
 
     After training you can use ``{MODELS_PATH}/elmo_model/saves/hubs/tf_hub_model_epoch_n_*/``
     as a ``ModuleSpec`` by using `TensorFlow Hub <https://www.tensorflow.org/hub/overview>`__ or by
