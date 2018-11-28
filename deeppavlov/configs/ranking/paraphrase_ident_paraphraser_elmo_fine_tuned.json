@@ -45,7 +45,7 @@
             "elmo"
           ],
           "mini_batch_size": 8,
-          "spec": "{MODELS_PATH}/elmo-1b-benchmark/saves/hubs/tf_hub_model_epoch_n_2"
+          "spec": "{MODELS_PATH}/elmo-1b-benchmark/saves/hubs/tf_hub_model_epoch_n_1"
         }
       },
       {
