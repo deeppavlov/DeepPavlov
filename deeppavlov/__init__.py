@@ -24,8 +24,8 @@ try:
     from .download import deep_download
 
     # TODO: make better and add typing
-    def train_model(config, download=False):
-        train_evaluate_model_from_config(config, download=download)
+    def train_model(config, download=False, recursive=False):
+        train_evaluate_model_from_config(config, download=download, recursive=recursive)
         return build_model(config, load_trained=True)
 except ImportError:
     'Assuming that requirements are not yet installed'
