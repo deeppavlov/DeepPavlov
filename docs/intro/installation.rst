@@ -7,27 +7,27 @@ Installation
 
 1. Create a virtual environment with ``Python 3.6``:
 
-.. code:: bash
+    .. code:: bash
 
-    virtualenv env
+        virtualenv env
 
 2. Activate the environment:
 
-* Linux
+    * Linux
 
-    .. code:: bash
+        .. code:: bash
 
-        source ./env/bin/activate
+            source ./env/bin/activate
 
-* Windows
+    * Windows
 
-    .. code:: bash
+        .. code:: bash
 
-        .\env\Scripts\activate.bat
+            .\env\Scripts\activate.bat
 
 3. Install the package inside this virtual environment:
 
-.. code:: bash
+    .. code:: bash
 
-    pip install deeppavlov
+        pip install deeppavlov
 
