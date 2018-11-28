@@ -46,6 +46,12 @@ inference one can use the following code in python:
     rank_model = build_model(configs.ranking.ranking_insurance, download=True)
     rank_model(['how much to pay for auto insurance?'])
 
+If the model with multi-turn ``context`` is used
+(such as :class:`~deeppavlov.models.ranking.bilstm_gru_siamese_network.BiLSTMGRUSiameseNetwork`
+with the parameter ``num_context_turns`` set to the value higher than 1 in the configuration JSON file)
+then the ``context`` to evaluate should consist of ``num_context_turns`` strings connected by the ampersand.
+Some of these strings can be empty, e.g. equal to ``''``.
+
 To run the model for inference from command line:
 
 ::
@@ -97,6 +103,8 @@ inference, one can use the following code in python:
     para_model = build_model(configs.ranking.paraphrase_ident_qqp_interact, download=True)
     para_model(['How can I be a good geologist?&What should I do to be a great geologist?'])
 
+Note that two sentences to evaluate are connected by the ampersand.
+
 To use the model for inference from command line:
 
 ::
@@ -130,6 +138,12 @@ and :class:`~deeppavlov.models.ranking.mpm_siamese_network.MPMSiameseNetwork` su
 (the parameter ``triplet_loss`` should be set to ``true`` for the model in the configuration JSON file in this case)
 which can give potentially few percent of performance over the `cross-entropy loss` training.
 
+If the model with multi-turn ``context`` is used
+(such as :class:`~deeppavlov.models.ranking.bilstm_gru_siamese_network.BiLSTMGRUSiameseNetwork`
+with the parameter ``num_context_turns`` set to the value higher than 1 in the configuration JSON file)
+then the ``context`` should be specified with ``num_context_turns`` strings separated by the tab key instead of a single string.
+Some of these strings can be empty, e.g. equal to ``''``.
+
 Classification metrics on the train dataset part (the parameter ``train_metrics`` in the JSON configuration file)
 such as ``f1``, ``acc`` and ``log_loss``  can be calculated only in the ``cross-entropy loss`` training mode.
 Both, `cross-entropy loss` and `triplet loss` training can output loss function value returned by
@@ -145,7 +159,6 @@ Such ranking metrics on the valid and test parts of the dataset (the parameter `
 ``r@1``, ``r@2``, ..., ``r@n`` and ``rank_response`` can be evaluated.
 
 As an example of data usage in the default format, please, see :config:`ranking_default.json <ranking/ranking_default.json>`.
-
 To train the model with this configuration file in python:
 
 .. code:: python
@@ -165,7 +178,12 @@ Paraphrase identification
 
 **train.csv**: the same as for ranking.
 
-**valid.csv**, **test.csv**:
+**valid.csv**, **test.csv**: each line in the file contains ``context``, ``response`` and ``label`` separated by the tab key. ``label`` is
+binary, e.g. 1 or 0 corresponding to the correct or incorrect ``response`` for the given ``context``.
+Instead of ``response`` and ``context`` it can be simply two phrases which are paraphrases or non-paraphrases as indicated by the ``label``.
+
+Classification metrics on the valid and test dataset parts (the parameter ``metrics`` in the JSON configuration file)
+such as ``f1``, ``acc`` and ``log_loss``  can be calculated.
 
 .. _`InsuranceQA V1`: https://github.com/shuzi/insuranceQA
 .. _`Quora Question Pairs`: https://www.kaggle.com/c/quora-question-pairs/data
