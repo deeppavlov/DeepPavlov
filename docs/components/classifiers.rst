@@ -23,6 +23,12 @@ First you would need to install additional requirements:
 where ``<path_to_config>`` is a path to one of the :config:`provided config files <classifiers>`
 or its name without an extension, for example :config:`intents_snips <classifiers/intents_snips.json>`.
 
+For Windows platform one have to set `KERAS_BACKEND` to `tensorflow` (it could be done only once):
+
+::
+
+    set "KERAS_BACKEND=tensorflow"
+
 One can run the following command to try provided pipelines out:
 
 ::
@@ -33,7 +39,17 @@ where ``<path_to_config>`` is one of the :config:`provided config files <classif
 With the optional ``-d`` parameter all the data required to run
 selected pipeline will be downloaded.
 
-One can also use these configs in your python code. To download required data one have to set ``download`` parameter to ``True``.
+One can also use these configs in your python code.
+For Windows platform if one did not set `KERAS_BACKEND` to `tensorflow` from command line it could be done in python code in the following way:
+
+.. code:: python
+
+    import os
+
+    os.environ["KERAS_BACKEND"] = "tensorflow"
+
+And then run the following code in the same python file.
+To download required data one have to set ``download`` parameter to ``True``.
 
 .. code:: python
 
