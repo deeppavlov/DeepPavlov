@@ -11,8 +11,6 @@
   "char_splitter": "deeppavlov.models.preprocessors.char_splitter:CharSplitter",
   "conll2003_reader": "deeppavlov.dataset_readers.conll2003_reader:Conll2003DatasetReader",
   "cos_sim_classifier": "deeppavlov.models.classifiers.cos_sim_classifier:CosineSimilarityClassifier",
-  "data_fitting_iterator": "deeppavlov.core.data.data_fitting_iterator:DataFittingIterator",
-  "data_learning_iterator": "deeppavlov.core.data.data_learning_iterator:DataLearningIterator",
   "default_vocab": "deeppavlov.core.data.vocab:DefaultVocabulary",
   "dialog_db_result_iterator": "deeppavlov.dataset_iterators.dialog_iterator:DialogDBResultDatasetIterator",
   "dialog_iterator": "deeppavlov.dataset_iterators.dialog_iterator:DialogDatasetIterator",
@@ -24,9 +22,9 @@
   "dstc2_ner_iterator": "deeppavlov.dataset_iterators.dstc2_ner_iterator:Dstc2NerDatasetIterator",
   "dstc2_reader": "deeppavlov.dataset_readers.dstc2_reader:DSTC2DatasetReader",
   "dstc_slotfilling": "deeppavlov.models.slotfill.slotfill:DstcSlotFillingNetwork",
+  "ecommerce_preprocess": "deeppavlov.models.preprocessors.ecommerce_preprocess:EcommercePreprocess",
   "ecommerce_skill_bleu": "deeppavlov.skills.ecommerce_skill.bleu_retrieve:EcommerceSkillBleu",
   "ecommerce_skill_tfidf": "deeppavlov.skills.ecommerce_skill.tfidf_retrieve:EcommerceSkillTfidf",
-  "ecommerce_preprocess": "deeppavlov.models.preprocessors.ecommerce_preprocess:EcommercePreprocess",
   "elmo": "deeppavlov.models.embedders.elmo_embedder:ELMoEmbedder",
   "emb_mat_assembler": "deeppavlov.models.preprocessors.assemble_embeddings_matrix:EmbeddingsMatrixAssembler",
   "faq_reader": "deeppavlov.dataset_readers.faq_reader:FaqDatasetReader",
@@ -64,6 +62,7 @@
   "ontonotes_reader": "deeppavlov.dataset_readers.ontonotes_reader:OntonotesReader",
   "params_evolution": "deeppavlov.models.evolution.evolution_param_generator:ParamsEvolution",
   "params_search": "deeppavlov.core.common.params_search:ParamsSearch",
+  "paraphraser_pretrain_reader": "deeppavlov.dataset_readers.paraphrase_pretrain_reader:ParaphraserPretrainReader",
   "paraphraser_reader": "deeppavlov.dataset_readers.paraphraser_reader:ParaphraserReader",
   "proba2labels": "deeppavlov.models.classifiers.proba2labels:Proba2Labels",
   "pymorphy_russian_lemmatizer": "deeppavlov.models.preprocessors.russian_lemmatizer:PymorphyRussianLemmatizer",
@@ -109,6 +108,5 @@
   "ubuntu_v2_mt_reader": "deeppavlov.dataset_readers.ubuntu_v2_mt_reader:UbuntuV2MTReader",
   "ubuntu_v2_reader": "deeppavlov.dataset_readers.ubuntu_v2_reader:UbuntuV2Reader",
   "wiki_sqlite_vocab": "deeppavlov.vocabs.wiki_sqlite:WikiSQLiteVocab",
-  "wikitionary_100K_vocab": "deeppavlov.vocabs.typos:Wiki100KDictionary",
-  "yandex_reader": "deeppavlov.dataset_readers.yandex_reader:YandexReader"
+  "wikitionary_100K_vocab": "deeppavlov.vocabs.typos:Wiki100KDictionary"
 }
