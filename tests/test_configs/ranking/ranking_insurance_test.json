@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
-    "name": "insurance_reader",
-    "data_path": "./insurance_data"
+    "class_name": "insurance_reader",
+    "data_path": "{DOWNLOADS_PATH}/insurance_data"
   },
   "dataset_iterator": {
-    "name": "siamese_iterator",
+    "class_name": "siamese_iterator",
     "random_batches": true,
     "batches_per_epoch": 72,
     "num_samples": 1024,
@@ -16,7 +16,7 @@
     "pipe": [
       {
         "id": "preproc",
-        "name": "siamese_preprocessor",
+        "class_name": "siamese_preprocessor",
         "use_matrix": false,
         "num_ranking_samples": 2,
         "max_sequence_length": 200,
@@ -26,33 +26,32 @@
         "sent_vocab":
         {
           "id": "siam_sent_vocab",
-          "name":"simple_vocab",
-          "save_path": "insurance_vocabs/sent.dict",
-          "load_path": "insurance_vocabs/sent.dict"
+          "class_name": "simple_vocab",
+          "save_path": "{MODELS_PATH}/insurance_vocabs/sent.dict",
+          "load_path": "{MODELS_PATH}/insurance_vocabs/sent.dict"
         },
         "tokenizer":
         {
-          "name": "split_tokenizer"
+          "class_name": "split_tokenizer"
         },
         "vocab":
         {
           "id": "siam_vocab",
-          "name":"simple_vocab",
-          "save_path": "insurance_vocabs/tok.dict",
-          "load_path": "insurance_vocabs/tok.dict"
+          "class_name": "simple_vocab",
+          "save_path": "{MODELS_PATH}/insurance_vocabs/tok.dict",
+          "load_path": "{MODELS_PATH}/insurance_vocabs/tok.dict"
         },
         "embedder":
         {
           "id": "siam_embedder",
-          "name": "fasttext",
-          "load_path": "embeddings/ft_dummy_300.bin",
-          "save_path": "embeddings/ft_dummy_300.bin",
+          "class_name": "fasttext",
+          "load_path": "{DOWNLOADS_PATH}/embeddings/ft_dummy_300.bin",
           "dim": 300
         }
       },
       {
         "id": "embeddings",
-        "name": "emb_mat_assembler",
+        "class_name": "emb_mat_assembler",
         "embedder": "#siam_embedder",
         "vocab": "#siam_vocab"
       },
@@ -60,7 +59,7 @@
         "in": ["x_proc"],
         "in_y": ["y"],
         "out": ["y_predicted"],
-        "name": "bilstm_nn",
+        "class_name": "bilstm_nn",
         "len_vocab": "#siam_vocab.len",
         "use_matrix": "#preproc.use_matrix",
         "max_sequence_length": "#preproc.max_sequence_length",
@@ -76,8 +75,8 @@
         "hard_triplets": false,
         "margin": 0.1,
         "batch_size": 256,
-        "save_path": "insurance_model/model_weights.h5",
-        "load_path": "insurance_model/model_weights.h5",
+        "save_path": "{MODELS_PATH}/insurance_model/model_weights.h5",
+        "load_path": "{MODELS_PATH}/insurance_model/model_weights.h5",
         "preprocess": "#preproc.__call__",
         "interact_pred_num": 3
       }
@@ -95,9 +94,14 @@
     "log_every_n_batches": 24
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/gensim.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
     ],
     "labels": {
       "telegram_utils": "SiameseModel",
@@ -106,11 +110,11 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/insuranceQA-master.zip",
-        "subdir": "insurance_data"
+        "subdir": "{DOWNLOADS_PATH}/insurance_data"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/ft_dummy_300.bin",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
   }

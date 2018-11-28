@@ -1,11 +1,11 @@
 {
   "dataset_reader": {
-    "name": "dstc2_reader",
-    "data_path": "dstc2"
+    "class_name": "dstc2_reader",
+    "data_path": "{DOWNLOADS_PATH}/dstc2"
   },
   "dataset_iterator": {
-    "name": "dstc2_ner_iterator",
-    "dataset_path": "dstc2"
+    "class_name": "dstc2_ner_iterator",
+    "dataset_path": "{DOWNLOADS_PATH}/dstc2"
   },
   "chainer": {
     "in": ["x"],
@@ -13,21 +13,21 @@
     "pipe": [
       {
         "in": ["x"],
-        "name": "lazy_tokenizer",
+        "class_name": "lazy_tokenizer",
         "out": ["x_tokens"]
       },
       {
         "in": ["x_tokens"],
-        "config_path": "../deeppavlov/configs/ner/ner_dstc2.json",
+        "config_path": "{CONFIGS_PATH}/ner/ner_dstc2.json",
         "out": ["x_tokens", "tags"]
       },
 
       {
         "in": ["x_tokens", "tags"],
-        "name": "dstc_slotfilling",
+        "class_name": "dstc_slotfilling",
         "threshold": 0.8,
-        "save_path": "slotfill_dstc2/dstc_slot_vals.json",
-        "load_path": "slotfill_dstc2/dstc_slot_vals.json",
+        "save_path": "{MODELS_PATH}/slotfill_dstc2/dstc_slot_vals.json",
+        "load_path": "{MODELS_PATH}/slotfill_dstc2/dstc_slot_vals.json",
         "out": ["slots"]
       }
     ],
@@ -37,15 +37,24 @@
     "metrics": ["slots_accuracy"]
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
     "labels": {
       "telegram_utils": "NERModel",
       "server_utils": "DstcSlotFillingNetwork"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/slotfill_dstc2.tar.gz"
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/slotfill_dstc2.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      }
     ]
   }
 }

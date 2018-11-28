@@ -1,12 +1,12 @@
 {
   "dataset_reader": {
-    "name": "basic_classification_reader",
+    "class_name": "basic_classification_reader",
     "x": "Twit",
     "y": "Class",
-    "data_path": "sentiment_twitter_data"
+    "data_path": "{DOWNLOADS_PATH}/sentiment_twitter_data"
   },
   "dataset_iterator": {
-    "name": "basic_classification_iterator",
+    "class_name": "basic_classification_iterator",
     "seed": 42
   },
   "chainer": {
@@ -19,12 +19,12 @@
     "pipe": [
       {
         "id": "classes_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "fit_on": [
           "y"
         ],
-        "save_path": "classifiers/sentiment_twitter_v5/classes.dict",
-        "load_path": "classifiers/sentiment_twitter_v5/classes.dict",
+        "save_path": "{MODELS_PATH}/classifiers/sentiment_twitter_v5/classes.dict",
+        "load_path": "{MODELS_PATH}/classifiers/sentiment_twitter_v5/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -32,20 +32,20 @@
         "in": "x",
         "out": "x_tok",
         "id": "my_tokenizer",
-        "name": "nltk_tokenizer",
+        "class_name": "nltk_tokenizer",
         "tokenizer": "wordpunct_tokenize"
       },
       {
         "in": "x_tok",
         "out": "x_emb",
         "id": "my_embedder",
-        "name": "fasttext",
-        "load_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin"
+        "class_name": "fasttext",
+        "load_path": "{DOWNLOADS_PATH}/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin"
       },
       {
         "in": "y_ids",
         "out": "y_onehot",
-        "name": "one_hotter",
+        "class_name": "one_hotter",
         "depth": "#classes_vocab.len"
       },
       {
@@ -59,9 +59,9 @@
           "y_pred_probas"
         ],
         "main": true,
-        "name": "keras_classification_model",
-        "save_path": "classifiers/sentiment_twitter_v5/model",
-        "load_path": "classifiers/sentiment_twitter_v5/model",
+        "class_name": "keras_classification_model",
+        "save_path": "{MODELS_PATH}/classifiers/sentiment_twitter_v5/model",
+        "load_path": "{MODELS_PATH}/classifiers/sentiment_twitter_v5/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -85,7 +85,7 @@
       {
         "in": "y_pred_probas",
         "out": "y_pred_ids",
-        "name": "proba2labels",
+        "class_name": "proba2labels",
         "max_proba": true
       },
       {
@@ -117,23 +117,31 @@
     "test_best": true
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/fasttext.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
     ],
     "labels": {
       "telegram_utils": "IntentModel",
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/datasets/sentiment_twitter_data.tar.gz",
+      {
+        "url": "http://files.deeppavlov.ai/datasets/sentiment_twitter_data.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      },
       {
         "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/sentiment_twitter_v5.tar.gz",
-        "subdir": "classifiers"
+        "subdir": "{MODELS_PATH}/classifiers"
       }
     ]
   }
