@@ -1,22 +1,32 @@
 Installation
 ============
 
-0. Currently we support only `Linux` platform and `Python 3.6` (**Python 3.5 is not supported!**)
+0. Currently we support `Linux` and `Windows` platforms and `Python 3.6`
+    * **`Python 3.5` is not supported!**
+    * **`Windows` platform requires `Visual Studio 2015/2017` with `C++` build tools installed!**
 
 1. Create a virtual environment with `Python 3.6`:
 
-   .. code:: bash
+::
 
-      virtualenv env
+    virtualenv env
 
 2. Activate the environment:
+    * `Linux`
 
-   .. code:: bash
+::
 
-      source ./env/bin/activate
+    source ./env/bin/activate
+
+    * `Windows`
+
+::
+
+    .\env\Scripts\activate.bat
 
 3. Install the package inside this virtual environment:
 
-   .. code:: bash
+::
 
-      pip install deeppavlov
+    pip install deeppavlov
+
