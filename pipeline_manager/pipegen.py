@@ -75,6 +75,10 @@ class PipeGen:
         self.generator = self.pipeline_gen()
 
     def _check_component_name(self) -> None:
+        """
+
+        :return:
+        """
         for i, component in enumerate(self.structure):
             for j, example in enumerate(component):
                 if example is not None:
@@ -84,6 +88,10 @@ class PipeGen:
         return None
 
     def get_len(self):
+        """
+
+        :return:
+        """
         self.enumerator = self.pipeline_enumeration()
         generator = self.pipeline_gen()
         self.length = len(list(generator))
@@ -94,6 +102,10 @@ class PipeGen:
         return self.length
 
     def pipeline_enumeration(self):
+        """
+
+        :return:
+        """
         if isinstance(self.dataset_reader, list):
             drs = []
             for dr in self.dataset_reader:

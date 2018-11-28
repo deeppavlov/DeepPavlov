@@ -25,19 +25,19 @@ components:
 .. code:: python
 
     {
-      "class": "deeppavlov.models.preprocessors.str_lower:StrLower",
+      "class_name": "deeppavlov.models.preprocessors.str_lower:StrLower",
       "in": ["x"],
       "out": ["x_lower"]
     },
     {
-      "name": "nltk_tokenizer",
+      "class_name": "nltk_tokenizer",
       "in": ["x_lower"],
       "out": ["x_tokens"]
     },
 
 Each :class:`~deeppavlov.core.models.component.Component` in the pipeline must implement method :meth:`__call__` and has
-``name`` parameter, which is its registered codename, or ``class`` parameter in the form of
-``module_name:ClassName``. It can also have any other parameters which repeat its :meth:`__init__` method arguments.
+``class_name`` parameter, which is its registered codename, or full name of any python class in the form of
+``"module_name:ClassName"``. It can also have any other parameters which repeat its :meth:`__init__` method arguments.
 Default values of :meth:`__init__` arguments will be overridden with the config values during the initialization of a
 class instance.
 
@@ -47,7 +47,7 @@ parameters:
 .. code:: python
 
     {
-      "name": "nltk_tokenizer",
+      "class_name": "nltk_tokenizer",
       "id": "tokenizer",
       "in": ["x_lower"],
       "out": ["x_tokens"]
@@ -57,6 +57,44 @@ parameters:
       "in": ["y"],
       "out": ["y_tokens"]
     },
+
+
+Variables
+---------
+
+As of *version 0.1.0* every string value in a configuration file is interpreted
+as a `format string <https://docs.python.org/3.6/library/string.html#formatstrings>`__ where fields are evaluated
+from ``metadata.variables`` element:
+
+.. code:: python
+
+    {
+      "chainer": {
+        "in": ["x"],
+        "pipe": [
+          {
+            "class_name": "my_component",
+            "in": ["x"],
+            "out": ["x"],
+            "load_path": "{MY_PATH}/file.obj"
+          },
+          {
+            "in": ["x"],
+            "out": ["y_predicted"],
+            "config_path": "{CONFIGS_PATH}/classifiers/intents_snips.json"
+          }
+        ],
+        "out": ["y_predicted"]
+      },
+      "metadata": {
+        "variables": {
+          "MY_PATH": "/some/path",
+          "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+        }
+      }
+    }
+
+Variable ``DEEPPAVLOV_PATH`` is always preset to be a path to the ``deeppavlov`` python module.
 
 
 Training
@@ -90,7 +128,7 @@ parameter which contains a list of ground truth answer names. For example:
     [
       {
         "id": "classes_vocab",
-        "name": "default_vocab",
+        "class_name": "default_vocab",
         "fit_on": ["y"],
         "level": "token",
         "save_path": "vocabs/classes.dict",
@@ -100,7 +138,7 @@ parameter which contains a list of ground truth answer names. For example:
         "in": ["x"],
         "in_y": ["y"],
         "out": ["y_predicted"],
-        "name": "intent_model",
+        "class_name": "intent_model",
         "save_path": "classifiers/intent_cnn",
         "load_path": "classifiers/intent_cnn",
         "classes_vocab": {
@@ -116,11 +154,11 @@ and ``train``:
 
     {
       "dataset_reader": {
-        "name": ...,
+        "class_name": ...,
         ...
       },
       "dataset_iterator": {
-        "name": ...,
+        "class_name": ...,
         ...
       },
       "chainer": {

@@ -45,7 +45,7 @@ Let's see example for logistic regression model:
 .. code:: python
 
       {
-        "name": "faq_logreg_model",
+        "class_name": "faq_logreg_model",
         "in": "q_vect",
         "fit_on": ["q_vect", "y"],
         "c": {"search_choice": [1, 10, 100, 1000]},
@@ -140,17 +140,15 @@ Evolution process can be described in the following way:
 -  ``{"evolve_choice": [value_0, ..., value_n]}`` -
    values uniformly taking out of the given values.
 
--  Choose the main model in the pipe being evolved. Find or add extra
-   parameter that determines this model (for example, existing
-   ``"main": true``). The dictionary - model containing this parameter
-   as a key will be trained (do not forget to give this parameter's name
-   to ``key_main_model``). Change ``save_path`` and ``load_path`` of
-   this model to any ABSOLUTE paths (VERY IMPORTANT) to folder where
-   population will be saved.
+-  The `main` model in the pipe is being evolved.
+   **It is obligatory to use the one and only variable for setting paths for ALL fitted and trained models**
+   from `config["metadata"]["variables"]["MODELS_PATH"]` - this variable should be set to the common folder
+   for current evolutionary process (for example,
+   `config["metadata"]["variables"]["MODELS_PATH"] = "{ROOT_PATH}/snips_evolution"`).
+   Change ``save_path`` and ``load_path`` of all fitted and trained components of the config
+   to the relative paths using `config["metadata"]["variables"]["MODELS_PATH"]` (for example,
+   `"save_path": "{MODELS_PATH}/classes.dict"`).
 
--  All the models in pipe that contain key ``fit_on`` will be trained
-   every time separately for each model and saved to the same directory
-   with model and called ``fitted_model_{i}``.
 
 That's all you need to change in the config. Now let's move on to the
 example.

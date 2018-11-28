@@ -1,12 +1,12 @@
 {
   "dataset_reader": {
-    "name": "conll2003_reader",
-    "data_path": "total_rus/",
+    "class_name": "conll2003_reader",
+    "data_path": "{DOWNLOADS_PATH}/total_rus/",
     "dataset_name": "collection_rus",
     "provide_pos": false
   },
   "dataset_iterator": {
-    "name": "data_learning_iterator"
+    "class_name": "data_learning_iterator"
   },
   "chainer": {
     "in": ["x"],
@@ -14,84 +14,84 @@
     "pipe": [
       {
         "in": ["x"],
-        "name": "lazy_tokenizer",
+        "class_name": "lazy_tokenizer",
         "out": ["x_tokens"]
       },
       {
         "in": ["x_tokens"],
-        "name": "str_lower",
+        "class_name": "str_lower",
         "out": ["x_lower"]
       },
       {
         "in": ["x_lower"],
-        "name": "sanitizer",
+        "class_name": "sanitizer",
         "nums": true,
         "out": ["x_san"]
       },
       {
         "in": ["x_san"],
         "id": "word_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "pad_with_zeros": true,
         "special_tokens": ["<UNK>"],
         "fit_on": ["x_san"],
-        "save_path": "ner_rus/word.dict",
-        "load_path": "ner_rus/word.dict",
+        "save_path": "{MODELS_PATH}/ner_rus/word.dict",
+        "load_path": "{MODELS_PATH}/ner_rus/word.dict",
         "out": ["x_tok_ind"]
       },
       {
         "in": ["y"],
         "id": "tag_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["y"],
-        "save_path": "ner_rus/tag.dict",
-        "load_path": "ner_rus/tag.dict",
+        "save_path": "{MODELS_PATH}/ner_rus/tag.dict",
+        "load_path": "{MODELS_PATH}/ner_rus/tag.dict",
         "out": ["y_ind"]
       },
       {
         "in": ["x_tokens"],
-        "name": "char_splitter",
+        "class_name": "char_splitter",
         "out": ["x_char"]
       },
       {
         "in": ["x_char"],
         "id": "char_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["x_char"],
-        "save_path": "ner_rus/char.dict",
-        "load_path": "ner_rus/char.dict",
+        "save_path": "{MODELS_PATH}/ner_rus/char.dict",
+        "load_path": "{MODELS_PATH}/ner_rus/char.dict",
         "out": ["x_char_ind"]
       },
       {
         "in": ["x_san"],
         "id": "embedder",
-        "name": "fasttext",
+        "class_name": "fasttext",
         "pad_zero": true,
-        "load_path": "embeddings/lenta_lower_100.bin",
+        "load_path": "{DOWNLOADS_PATH}/embeddings/lenta_lower_100.bin",
         "out": ["x_emb"]
       },
       {
         "in": ["x_tokens"],
-        "name": "mask",
+        "class_name": "mask",
         "out": ["mask"]
       },
       {
-        "name": "random_emb_mat",
+        "class_name": "random_emb_mat",
         "id": "embeddings",
         "vocab_len": "#word_vocab.len",
         "emb_dim": 100
       },
       {
-        "name": "random_emb_mat",
+        "class_name": "random_emb_mat",
         "id": "embeddings_char",
         "vocab_len": "#char_vocab.len",
         "emb_dim": 100
       },
       {
         "id": "capitalization",
-        "name": "capitalization_featurizer",
+        "class_name": "capitalization_featurizer",
         "in": ["x_tokens"],
         "out": ["cap"]
       },
@@ -99,7 +99,7 @@
         "in": ["x_emb", "mask", "x_char_ind", "cap"],
         "in_y": ["y_ind"],
         "out": ["y_predicted"],
-        "name": "ner",
+        "class_name": "ner",
         "main": true,
         "n_hidden_list": [128],
         "net_type": "rnn",
@@ -109,8 +109,8 @@
         "capitalization_dim": "#capitalization.dim",
         "token_emb_dim": "#embedder.dim",
         "char_emb_dim": 100,
-        "save_path": "ner_rus/model",
-        "load_path": "ner_rus/model",
+        "save_path": "{MODELS_PATH}/ner_rus/model",
+        "load_path": "{MODELS_PATH}/ner_rus/model",
         "char_emb_mat": "#embeddings_char.emb_mat",
         "use_crf": true,
         "use_batch_norm": true,
@@ -145,22 +145,30 @@
 
     "log_every_n_epochs": 1,
     "show_examples": false,
-    "tensorboard_log_dir": "ner_rus/logs"
+    "tensorboard_log_dir": "{MODELS_PATH}/ner_rus/logs"
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/fasttext.txt",
-      "../dp_requirements/tf.txt"
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
     "labels": {
       "telegram_utils": "NERCoNLL2003Model",
       "server_utils": "NER"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/ner_rus_v2_cpu_compatible.tar.gz",
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_rus_v2_cpu_compatible.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
       {
         "url": "http://files.deeppavlov.ai/embeddings/lenta_lower_100.bin",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
   }

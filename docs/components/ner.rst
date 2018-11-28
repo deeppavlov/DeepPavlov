@@ -115,11 +115,11 @@ config part with "conll2003\_reader" should look like:
 ::
 
     "dataset_reader": {
-        "name": "conll2003_reader",
+        "class_name": "conll2003_reader",
         "data_path": "/home/user/Data/conll2003/"
     } 
 
-where "name" refers to the basic ner dataset reader class and data\_path
+where "class_name" refers to the basic ner dataset reader class and data\_path
 is the path to the folder with three files, namely: "train.txt",
 "valid.txt", and "test.txt". Each file should contain data in the format
 presented in *Training data* section. Each line in the file may contain
@@ -132,7 +132,7 @@ Dataset Iterator
 For simple batching and shuffling you can use
 "data\_learning\_iterator". The part of the configuration file for the
 dataset looks like:
-``"dataset_iterator": {     "name": "data_learning_iterator" }``
+``"dataset_iterator": {     "class_name": "data_learning_iterator" }``
 
 There is no additional parameters in this part.
 
@@ -168,28 +168,28 @@ pre-processing:
     "pipe": [
           {
             "in": ["x"],
-            "name": "lazy_tokenizer",
+            "class_name": "lazy_tokenizer",
             "out": ["x"]
           },
           {
             "in": ["x"],
-            "name": "str_lower",
+            "class_name": "str_lower",
             "out": ["x_lower"]
           },
           {
             "in": ["x"],
-            "name": "mask",
+            "class_name": "mask",
             "out": ["mask"]
           },
           {
             "in": ["x_lower"],
-            "name": "sanitizer",
+            "class_name": "sanitizer",
             "nums": true,
             "out": ["x_san"]
           },
           {
             "in": ["x"],
-            "name": "char_splitter",
+            "class_name": "char_splitter",
             "out": ["x_char"]
           },
     ]
@@ -212,7 +212,7 @@ Then vocabularies must be defined:
           {
             "in": ["x_lower"],
             "id": "word_vocab",
-            "name": "simple_vocab",
+            "class_name": "simple_vocab",
             "pad_with_zeros": true,
             "fit_on": ["x_lower"],
             "save_path": "slotfill_dstc2/word.dict",
@@ -222,7 +222,7 @@ Then vocabularies must be defined:
           {
             "in": ["y"],
             "id": "tag_vocab",
-            "name": "simple_vocab",
+            "class_name": "simple_vocab",
             "pad_with_zeros": true,
             "fit_on": ["y"],
             "save_path": "slotfill_dstc2/tag.dict",
@@ -232,7 +232,7 @@ Then vocabularies must be defined:
           {
             "in": ["x_char"],
             "id": "char_vocab",
-            "name": "char_vocab",
+            "class_name": "simple_vocab",
             "pad_with_zeros": true,
             "fit_on": ["x_char"],
             "save_path": "ner_conll2003/char.dict",
@@ -246,8 +246,7 @@ Parameters for vocabulary are:
 
 -  ``id`` - the name of the vocabulary which will be used in other
    models
--  ``name`` - equal to ``"simple_vocab"`` or ``"char_vocab"`` for
-   character level
+-  ``class_name`` - equal to ``"simple_vocab"``
 -  ``fit_on`` - on which data part of the data the vocabulary should
    be fitted (built), possible options are ["x"] or ["y"]
 -  ``save_path`` - path to a new file to save the vocabulary
@@ -276,20 +275,20 @@ Then the embeddings must be initialized along with embedding matrices:
         {
             "in": ["x_san"],
             "id": "glove_emb",
-            "name": "glove",
+            "class_name": "glove",
             "pad_zero": true,
             "load_path": "embeddings/glove.6B.100d.txt",
             "out": ["x_emb"]
         },
         {
             "id": "embeddings",
-            "name": "emb_mat_assembler",
+            "class_name": "emb_mat_assembler",
             "embedder": "#glove_emb",
             "vocab": "#word_vocab"
           },
           {
             "id": "embeddings_char",
-            "name": "emb_mat_assembler",
+            "class_name": "emb_mat_assembler",
             "character_level": true,
             "emb_dim": 32,
             "embedder": "#glove_emb",
@@ -313,7 +312,7 @@ Then the network is defined by the following part of JSON config:
             "in": ["x_emb", "mask", "x_char_ind", "cap"],
             "in_y": ["y_ind"],
             "out": ["y_predicted"],
-            "name": "ner",
+            "class_name": "ner",
             "main": true,
             "token_emb_dim": "#glove_emb.dim",
             "n_hidden_list": [128],
@@ -342,7 +341,7 @@ All network parameters are:
 
 -  ``in`` - inputs to be taken from the shared memory. Treated as x. They are used both during the training and inference.
 -  ``in_y`` - the target or y input to be taken from shared memory. This input is used during the training.
--  ``name`` - the name of the model to be used. In this case we use 'ner' model originally imported from
+-  ``class_name`` - the name of the model to be used. In this case we use 'ner' model originally imported from
    ``deeppavlov.models.ner``. We use only 'ner' name relying on the @registry decorator.
 -  ``main`` - (reserved for future use) a boolean parameter defining whether this is the main model.
 -  ``save_path`` - path to the new file where the model will be saved

@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
-    "name": "paraphraser_reader",
-    "data_path": "./paraphraser_data"
+    "class_name": "paraphraser_reader",
+    "data_path": "{DOWNLOADS_PATH}/paraphraser_data"
   },
   "dataset_iterator": {
-    "name": "siamese_iterator",
+    "class_name": "siamese_iterator",
     "seed": 243
   },
   "chainer": {
@@ -13,7 +13,7 @@
     "pipe": [
       {
         "id": "preproc",
-        "name": "siamese_preprocessor",
+        "class_name": "siamese_preprocessor",
         "use_matrix": false,
         "max_sequence_length": 28,
         "fit_on": ["x"],
@@ -22,31 +22,31 @@
         "sent_vocab":
         {
           "id": "siam_sent_vocab",
-          "name":"simple_vocab",
-          "save_path": "paraphraser_vocabs/sent.dict",
-          "load_path": "paraphraser_vocabs/sent.dict"
+          "class_name": "simple_vocab",
+          "save_path": "{MODELS_PATH}/paraphraser_vocabs/sent.dict",
+          "load_path": "{MODELS_PATH}/paraphraser_vocabs/sent.dict"
         },
         "tokenizer":
         {
-          "name": "nltk_tokenizer"
+          "class_name": "nltk_tokenizer"
         },
         "vocab":
         {
           "id": "siam_vocab",
-          "name":"simple_vocab",
-          "save_path": "paraphraser_vocabs/tok.dict",
-          "load_path": "paraphraser_vocabs/tok.dict"
+          "class_name": "simple_vocab",
+          "save_path": "{MODELS_PATH}/paraphraser_vocabs/tok.dict",
+          "load_path": "{MODELS_PATH}/paraphraser_vocabs/tok.dict"
         },
         "embedder":
         {
           "id": "siam_embedder",
-          "name": "fasttext",
-          "load_path": "paraphraser_embeddings/ft_native_300_ru_wiki_lenta_lower_case.bin"
+          "class_name": "fasttext",
+          "load_path": "{DOWNLOADS_PATH}/embeddings/ft_native_300_ru_wiki_lenta_lower_case.bin"
         }
       },
       {
         "id": "embeddings",
-        "name": "emb_mat_assembler",
+        "class_name": "emb_mat_assembler",
         "embedder": "#siam_embedder",
         "vocab": "#siam_vocab"
       },
@@ -54,7 +54,7 @@
         "in": ["x_proc"],
         "in_y": ["y"],
         "out": ["y_predicted"],
-        "name": "mpm_nn",
+        "class_name": "mpm_nn",
         "len_vocab": "#siam_vocab.len",
         "use_matrix": "#preproc.use_matrix",
         "attention": true,
@@ -66,8 +66,8 @@
         "learning_rate": 1e-3,
         "triplet_loss": false,
         "batch_size": 256,
-        "save_path": "paraphraser_model/model_weights.h5",
-        "load_path": "paraphraser_model/model_weights.h5",
+        "save_path": "{MODELS_PATH}/paraphraser_model/model_weights.h5",
+        "load_path": "{MODELS_PATH}/paraphraser_model/model_weights.h5",
         "preprocess": "#preproc.__call__"
       }
     ],
@@ -84,9 +84,14 @@
     "log_every_n_batches": 12
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/fasttext.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
     ],
     "labels": {
       "telegram_utils": "SiameseModel",
@@ -95,15 +100,15 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/paraphraser.zip",
-        "subdir": "paraphraser_data"
+        "subdir": "{DOWNLOADS_PATH}/paraphraser_data"
       },
       {
         "url": "http://files.deeppavlov.ai/datasets/paraphraser_gold.zip",
-        "subdir": "paraphraser_data"
+        "subdir": "{DOWNLOADS_PATH}/paraphraser_data"
       },
       {
         "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_lower_case/ft_native_300_ru_wiki_lenta_lower_case.bin",
-        "subdir": "paraphraser_embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
   }

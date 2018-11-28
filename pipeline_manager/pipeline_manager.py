@@ -20,10 +20,10 @@ from pathlib import Path
 from shutil import rmtree
 from psutil import cpu_count
 from datetime import datetime
+from typing import Union, Dict
 from os.path import join, isdir
 from copy import copy, deepcopy
 from multiprocessing import Pool
-from typing import Union, Dict
 
 from pipeline_manager.pipegen import PipeGen
 from pipeline_manager.observer import Observer
@@ -39,6 +39,9 @@ from deeppavlov.core.commands.train import read_data_by_config, get_iterator_fro
 
 
 def unpack_args(func):
+    """
+    Decorator that unpacks input arguments from tuple or dict.
+    """
     from functools import wraps
 
     @wraps(func)
@@ -52,30 +55,76 @@ def unpack_args(func):
 
 class PipelineManager:
     """
-    The class implements the functions of automatic pipeline search and search for hyperparameters.
+    The class implements the functions of automatic experiment management. The class accepts a config in the input in
+    which the structure of the experiments is described, and additional parameters, which are class attributes.
+    Based on this information, a list of deeppavlov configs is created. Experiments can be run sequentially or in
+    parallel, both on video cards and on the processor. A special class is responsible for describing and logging
+    experiments, their execution time and results. After passing all the experiments based on the logs, a small report
+    is created in the form of a xlsx table, and histogram with metrics info. When you start the experiment, you can
+    also search for optimal hyperparameters, "grid" and "random" search is available.
+
+    Running a large number of experiments, especially with large neural models, may take a large amount of time, so a
+    special test was added to check the correctness of the joints of individual blocks in all pipelines, or another
+    errors. During the test, all pipelines are trained on a small piece of the original dataset, if the test passed
+    without errors, you can not worry about the experiment, and then a normal experiments is automatically started.
+    The test starts automatically, nothing else needs to be done, but it can also be turned off. In this case, the
+    experiment will start immediately. Test supports multiprocessing.
+
+    Also you can save checkpoints for all pipelines, or only the best.
+
+    Write about save best
 
     Args:
-        config_path: path to config file.
+        config_path: path to config file, or config dict.
 
     Attributes:
-        exp_name: name of the experiment.
-        date: date of the experiment.
-        info: some additional information that you want to add to the log, the content of the dictionary
+        exp_name: str, name of the experiment.
+        date: str, date of the experiment.
+        info: dict with some additional information that you want to add to the log, the content of the dictionary
               does not affect the algorithm
         root: root path, the root path where the report will be generated and saved checkpoints
-        sample_num: determines the number of generated pipelines, if hyper_search == random.
+        plot: boolean trigger, which determines whether to draw a graph of results or not
+        save_best: boolean trigger, which determines whether to save all models or only best model
+        do_test: boolean trigger, which determines whether to run an experiment test on a small piece of data,
+                 before running a full-scale experiment
+        search_type: string parameter defining the type of hyperparams search, can be "grid" or "random"
+        sample_num: determines the number of generated pipelines, if parameter search_type == "random"
         target_metric: The metric name on the basis of which the results will be sorted when the report
                        is generated. The default value is None, in this case the target metric is taken the
                        first name from those names that are specified in the config file. If the specified metric
                        is not contained in DeepPavlov will be called error.
+        multiprocessing: boolean trigger, determining the run mode of the experiment.
+        max_num_workers_: upper limit on the number of workers if experiment running in multiprocessing mode
+        use_all_gpus: boolean trigger, if True the pipeline manager automatically considers all available to the user
+                      graphics cards (CUDA_VISIBLE_DEVICES is is taken into account). And selects as available only
+                      those that meet the memory criterion. If the memory of a video card is occupied by more than
+                      "X" percent, then the video card is considered inaccessible, and when the experiment is started,
+                      the models will not start on it. For the value of the parameter "X" is responsible
+                      "memory_fraction" attribute. Parameters "use_all_gpus" and "use_multi_gpus" can not be not
+                      None simultaneously.
+        use_multi_gpus: None or List[ints], list with numbers of video cards available for use. All cards from the list
+                        are checked for availability by memory criterion.If the memory of a video card is occupied by
+                        more than "X" percent, then the video card is considered inaccessible, and when the experiment
+                        is started, the models will not start on it. For the value of the parameter "X" is responsible
+                        "memory_fraction" attribute. If part of the video cards are busy, then only the remaining cards
+                        from the presented list will be used. If all of the presented video cards are busy, an error
+                        message will appear. If "use_multi_gpus" if not None, then "use_all_gpus" must be False.
+        memory_fraction: the parameter determines the criterion of whether the gpu card is free or not.
+                         If memory_fraction == 1.0 only those cards whose memory is completely free will be
+                         considered as available. If memory_fraction == 0.5 cards with no more than half of the memory
+                         will be considered as available.
+        available_gpu: list with numbers of available gpu cards
+        save_path: path to the save folder
         observer: A special class that collects auxiliary statistics and results during training, and stores all
                 the collected data in a separate log.
-        plot: boolean trigger, which determines whether to draw a graph of results or not
         pipeline_generator: A special class that generates configs for training.
+        gen_len: amount of pipelines in experiment
+
     """
     def __init__(self, config_path: Union[str, Dict, Path]):
         """
-        Initialize observer, read input args, builds a directory tree, initialize date.
+        Initialize observer, read input args, builds a directory tree, initialize date, start test of experiment on
+        tiny data.
         """
         if isinstance(config_path, str):
             self.exp_config = read_json(config_path)
@@ -103,6 +152,8 @@ class PipelineManager:
         self.use_all_gpus = self.exp_config['enumerate'].get('use_all_gpus', False)
         self.use_multi_gpus = self.exp_config['enumerate'].get('use_multi_gpus')
         self.memory_fraction = self.exp_config['enumerate'].get('gpu_memory_fraction', 1.0)
+        self.max_num_workers = None
+        self.available_gpu = None
 
         # create the observer
         self.save_path = join(self.root, self.date, self.exp_name, 'checkpoints')
@@ -126,8 +177,6 @@ class PipelineManager:
         if self.use_multi_gpus and self.use_all_gpus:
             raise ValueError("Parameters 'use_all_gpus' and 'use_multi_gpus' can not simultaneously be not None.")
 
-        self.max_num_workers = None
-        self.available_gpu = None
         if self.multiprocessing:
             self.prepare_multiprocess()
 
@@ -138,6 +187,9 @@ class PipelineManager:
             self.test()
 
     def prepare_multiprocess(self):
+        """
+        Calculates the number of workers and the set of available video cards, if gpu is used, based on init attributes.
+        """
         cpu_num = cpu_count()
         gpu_num = get_num_gpu()
 
@@ -222,6 +274,16 @@ class PipelineManager:
     @staticmethod
     @unpack_args
     def train_pipe(pipe, i, observer, gpu_ind=None):
+        """
+        Start learning single pipeline. Observer write all info in log file.
+
+        Args:
+            pipe: config dict of pipeline
+            i:  number of pipeline
+            observer: link to observer object
+            gpu_ind: number of gpu to use (if multiprocessing is True)
+
+        """
         # modify project environment
         if gpu_ind:
             os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_ind)
@@ -256,6 +318,13 @@ class PipelineManager:
         return None
 
     def gpu_gen(self, gpu=False):
+        """
+        Create generator that returning tuple of args fore self.train_pipe method.
+
+        Args:
+            gpu: boolean trigger, determine to use gpu or not
+
+        """
         if gpu:
             for i, pipe_conf in enumerate(self.pipeline_generator()):
                 gpu_ind = i - (i // len(self.available_gpu)) * len(self.available_gpu)
@@ -266,7 +335,7 @@ class PipelineManager:
 
     def _run(self):
         """
-        Initializes the pipeline generator and runs the experiment. Creates a report after the experiments.
+        Run the experiment. Creates a report after the experiments.
         """
         # Start generating pipelines configs
         print('[ Experiment start - {0} pipes, will be run]'.format(self.gen_len))
@@ -291,7 +360,7 @@ class PipelineManager:
                 if self.available_gpu is None:
                     self.train_pipe((pipe, i, self.observer))
                 else:
-                    gpu_ind = i - (i // len(self.available_gpu)) * len(self.available_gpu)
+                    gpu_ind = self.available_gpu[0]
                     self.train_pipe((pipe, i, self.observer, gpu_ind))
 
         # save log
@@ -324,9 +393,8 @@ class PipelineManager:
 
     def _test(self):
         """
-        Initializes the pipeline generator with tiny data and runs the test of experiment.
+        Run a test experiment on a small piece of data. The test supports multiprocessing.
         """
-
         def gpu_gen(pipe_gen, available_gpu, gpu=False):
             if gpu:
                 for j, pipe_conf in enumerate(pipe_gen()):
@@ -388,7 +456,30 @@ class PipelineManager:
     @staticmethod
     @unpack_args
     def test_pipe(ind, pipe_conf, gpu_ind=None):
+        """
+        Start testing single pipeline.
+
+        Args:
+            ind: pipeline number
+            pipe_conf: pipeline config as dict
+            gpu_ind: number of gpu card
+
+        Returns:
+            None
+
+        """
         def test_dataset_reader_and_iterator(config, i):
+            """
+            Creating a test iterator with small peace of train dataset. Config and data validation.
+
+            Args:
+                config: pipeline config as dict
+                i: number of pipeline
+
+            Returns:
+                iterator
+
+            """
             # create and test data generator and data iterator
             dataset_composition_ = dict(train=False, valid=False, test=False)
             data = read_data_by_config(config)

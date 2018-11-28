@@ -23,8 +23,7 @@ from sklearn.model_selection import KFold
 
 from deeppavlov.core.commands.train import train_evaluate_model_from_config, get_iterator_from_config, \
     read_data_by_config
-from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.file import read_json
+from deeppavlov.core.commands.utils import expand_path, parse_config
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.params_search import ParamsSearch
 
@@ -44,7 +43,7 @@ def change_savepath_for_model(config):
 
         dirs_for_saved_models.add(expand_path(new_save_path.parent))
 
-        config = params_helper.insert_value_or_dict_into_config(config, p, str(new_save_path))
+        params_helper.insert_value_or_dict_into_config(config, p, str(new_save_path))
 
     return config, dirs_for_saved_models
 
@@ -85,11 +84,11 @@ def generate_train_valid(data, n_folds=5, is_loo=False):
             yield data_i
 
 
-def calc_cv_score(config=Union[Dict, str], n_folds=5, is_loo=False) -> OrderedDict:
-    if isinstance(config, str):
-        config = read_json(config)
+def calc_cv_score(config, data=None, n_folds=5, is_loo=False):
+    config = parse_config(config)
 
-    data = read_data_by_config(config)
+    if data is None:
+        data = read_data_by_config(config)
 
     config, dirs_for_saved_models = change_savepath_for_model(config)
 

@@ -73,6 +73,10 @@ class Observer(object):
                                experiments=OrderedDict())
 
     def tmp_reset(self):
+        """
+
+        :return:
+        """
         # tmp parameters
         self.pipe_ind = 0
         self.pipe_conf = None
@@ -83,6 +87,10 @@ class Observer(object):
         self.dataset = None
 
     def write(self):
+        """
+
+        :return:
+        """
         if isfile(self.log_file):
             with open(self.log_file, 'r') as old_log:
                 old_log = json.load(old_log)
@@ -95,6 +103,11 @@ class Observer(object):
                 json.dump(self.log, log_file)
 
     def exp_time(self, time):
+        """
+
+        :param time:
+        :return:
+        """
         with open(self.log_file, 'r') as old_log:
             old_log = json.load(old_log)
 
@@ -134,6 +147,10 @@ class Observer(object):
             json.dump(conf, cf)
 
     def save_best_pipe(self):
+        """
+
+        :return:
+        """
         dataset_res = {}
 
         with open(self.log_file, 'r') as log_file:
@@ -180,6 +197,12 @@ class Observer(object):
 
     @staticmethod
     def merge_logs(old_log, new_log):
+        """
+
+        :param old_log:
+        :param new_log:
+        :return:
+        """
         n_old = 0
         for dataset_name in old_log['experiments'].keys():
             n_old += len(old_log['experiments'][dataset_name])
