@@ -1,0 +1,79 @@
+{
+  "dataset_reader": {
+    "class_name": "file_paths_reader",
+    "data_path": "{DOWNLOADS_PATH}/elmo-1b-benchmark_test/data/1-billion-word-language-modeling-benchmark-r13output/",
+    "train": "heldout-monolingual.tokenized.shuffled/news.en.heldout-00001-of-00050",
+    "test": "heldout-monolingual.tokenized.shuffled/news.en.heldout-00002-of-00050",
+    "valid": "heldout-monolingual.tokenized.shuffled/news.en.heldout-00003-of-00050"
+  },
+  "dataset_iterator": {
+    "class_name": "elmo_file_paths_iterator",
+    "seed": 31415,
+    "unroll_steps": 20,
+    "max_word_length": 50,
+    "n_gpus": 1,
+    "shuffle": false,
+    "bos":"<S>",
+    "eos":"</S>",
+    "save_path": "{DOWNLOADS_PATH}/elmo-1b-benchmark_test/data/vocab-2016-09-10.txt",
+    "load_path":"{DOWNLOADS_PATH}/elmo-1b-benchmark_test/data/vocab-2016-09-10.txt"
+  },
+  "chainer": {
+    "in": [
+      "x_char_ids"
+    ],
+    "in_y": [
+      "y_token_ids"
+    ],
+    "pipe": [
+      {
+        "class_name": "elmo_model",
+        "options_json_path": "{DOWNLOADS_PATH}/elmo-1b-benchmark_test/options.json",
+        "unroll_steps": 20,
+        "batch_size": 128,
+        "save_path": "{MODELS_PATH}/elmo-1b-benchmark_test/saves/model",
+        "load_path": "{MODELS_PATH}/elmo-1b-benchmark_test/saves/model",
+        "in": ["x_char_ids", "y_token_ids"],
+        "in_y": [],
+        "n_gpus": 1,
+        "out": ["loss"]
+      }
+    ],
+   "out": [
+    "x_char_ids",
+    "y_token_ids"
+  ]
+  },
+  "train": {
+    "epochs": 2,
+    "batch_size": 128,
+    "log_every_n_batches": 5,
+    "val_every_n_epochs": 1,
+    "validation_patience": 4,
+    "metric_optimization": "minimize",
+    "metrics": [
+      {
+        "name": "elmo_loss2ppl",
+        "inputs": ["loss"]
+      }
+    ],
+    "tensorboard_log_dir": "{MODELS_PATH}/elmo-1b-benchmark_test/logs"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/elmo-1b-benchmark_test.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      }
+    ]
+  }
+}

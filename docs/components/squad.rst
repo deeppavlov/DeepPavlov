@@ -39,7 +39,7 @@ Model
 
 Question Answering Model is based on R-Net, proposed by Microsoft
 Research Asia (`"R-NET: Machine Reading Comprehension with Self-matching
-Networks" <https://www.microsoft.com/en-us/research/publication/mrc/>`__)
+Networks" <https://www.microsoft.com/en-us/research/publication/mcr/>`__)
 and its `implementation <https://github.com/HKUST-KnowComp/R-Net>`__ by
 Wenxuan Zhou.
 
@@ -48,10 +48,30 @@ Model documentation: :class:`~deeppavlov.models.squad.squad.SquadModel`
 Configuration
 -------------
 
-Default config could be found at ``deeppavlov/configs/squad/squad.json``
+Default config could be found at :config:`deeppavlov/configs/squad/squad.json <squad/squad.json>`
 
-Model usage
+Prerequisites
 -------------
+
+Before using the model make sure that all required packages are installed running the command:
+
+.. code:: bash
+
+    python -m deeppavlov install squad
+
+Model usage from Python
+-----------------------
+
+.. code:: python
+
+    from deeppavlov import build_model, configs
+
+    model = build_model(configs.squad.squad, download=True)
+    model(['DeepPavlov is library for NLP and dialog systems.'], ['What is DeepPavlov?'])
+
+
+Model usage from CLI
+--------------------
 
 .. _reader_training:
 
@@ -84,7 +104,7 @@ Pretrained models:
 SQuAD
 ~~~~~
 
-Pretrained model is available and can be downloaded:
+Pretrained model is available and can be downloaded (~2.4Gb):
 
 .. code:: bash
 
@@ -97,7 +117,7 @@ Leadearboad <https://rajpurkar.github.io/SQuAD-explorer/>`__.
 
 +----------------------------------------------+----------------+-----------------+
 | Model (single model)                         |    EM (dev)    |    F-1 (dev)    |
-+----------------------------------------------+----------------+-----------------+
++==============================================+================+=================+
 | :config:`DeepPavlov <squad/squad.json>`      |     71.49      |     80.34       |
 +----------------------------------------------+----------------+-----------------+
 | `BiDAF + Self Attention + ELMo`_             |       --       |     85.6        |
@@ -113,7 +133,7 @@ Leadearboad <https://rajpurkar.github.io/SQuAD-explorer/>`__.
 
 .. _`SQuAD-v1.1`: https://arxiv.org/abs/1606.05250
 .. _`BiDAF`: https://arxiv.org/abs/1611.01603
-.. _`R-Net`: https://www.microsoft.com/en-us/research/publication/mrc/
+.. _`R-Net`: https://www.microsoft.com/en-us/research/publication/mcr/
 .. _`FusionNet`: https://arxiv.org/abs/1711.07341
 .. _`QANet`: https://arxiv.org/abs/1804.09541
 .. _`BiDAF + Self Attention + ELMo`: https://arxiv.org/abs/1802.05365
@@ -134,13 +154,19 @@ We got 57.88 EM and 65.91 F-1 on ground truth Wikipedia article (we used the sam
 
 +---------------+-----------------------------------------------+----------------+-----------------+
 | Model config                                                  |    EM (dev)    |    F-1 (dev)    |
-+---------------------------------------------------------------+----------------+-----------------+
++===============================================================+================+=================+
 | :config:`DeepPavlov <squad/multi_squad_noans.json>`           |     57.88      |     65.91       |
 +---------------------------------------------------------------+----------------+-----------------+
 | `Simple and Effective Multi-Paragraph Reading Comprehension`_ |     59.14      |     67.34       |
 +---------------------------------------------------------------+----------------+-----------------+
 | `DrQA`_                                                       |     49.7       |     --          |
 +---------------------------------------------------------------+----------------+-----------------+
+
+Pretrained model is available and can be downloaded (~2.5Gb):
+
+.. code:: bash
+
+    python -m deeppavlov download deeppavlov/configs/squad/multi_squad_noans.json
 
 
 .. _`DrQA`: https://arxiv.org/abs/1704.00051
@@ -149,7 +175,7 @@ We got 57.88 EM and 65.91 F-1 on ground truth Wikipedia article (we used the sam
 SDSJ Task B
 ~~~~~~~~~~~
 
-Pretrained model is available and can be downloaded:
+Pretrained model is available and can be downloaded (~4.8Gb):
 
 .. code:: bash
 
@@ -157,6 +183,6 @@ Pretrained model is available and can be downloaded:
 
 +---------------+---------------------------------+----------------+-----------------+
 | Model config                                    |    EM (dev)    |    F-1 (dev)    |
-+-------------------------------------------------+----------------+-----------------+
++=================================================+================+=================+
 | :config:`DeepPavlov <squad/squad_ru.json>`      |     60.62      |     80.04       |
 +-------------------------------------------------+----------------+-----------------+

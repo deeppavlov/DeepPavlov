@@ -150,21 +150,22 @@
   },
   "predict": {
     "batch_size": 32,
-    "outfile": "results/ud_en_test.res"
+    "outfile": "{RESULTS_PATH}/ud_en_test.res"
   },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models"
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "RESULTS_PATH": "{ROOT_PATH}/results"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger/UD2.0/ar.tar.gz",
-        "subdir": "{MODELS_PATH}/morpho_tagger/UD2.0/ar"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger/UD2.0/en.tar.gz",
+        "subdir": "{MODELS_PATH}/morpho_tagger/UD2.0/en"
       },
       {
         "url": "http://files.deeppavlov.ai/datasets/UD2.0_source/en.tar.gz",
