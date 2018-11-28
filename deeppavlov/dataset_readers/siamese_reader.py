@@ -21,8 +21,8 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.commands.utils import expand_path
 
 
-@register('siamese_default_reader')
-class SiameseDefaultReader(DatasetReader):
+@register('siamese_reader')
+class SiameseReader(DatasetReader):
     """The class to read dataset for ranking or paraphrase identification with Siamese networks.
 
     Args:

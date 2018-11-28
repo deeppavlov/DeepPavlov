@@ -1,6 +1,6 @@
 {
   "dataset_reader": {
-    "class_name": "siamese_default_reader",
+    "class_name": "siamese_reader",
     "data_path": "{DOWNLOADS_PATH}/default_ranking_data"
   },
   "dataset_iterator": {

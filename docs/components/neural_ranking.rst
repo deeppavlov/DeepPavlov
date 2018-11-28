@@ -144,7 +144,7 @@ Ranking
 ~~~~~~~
 
 To train the model for ranking on your own data you should write your own :class:`~deeppavlov.core.data.dataset_reader.DatasetReader` component
-or you can use default :class:`~deeppavlov.dataset_readers.siamese_default_reader.SiameseDefaultReader`. In the latter case, you should provide
+or you can use default :class:`~deeppavlov.dataset_readers.siamese_reader.SiameseReader`. In the latter case, you should provide
 three separate files in the default data format described below:
 
 **train.csv**: each line in the file contains ``context``, ``response`` and ``label`` separated by the tab key. ``label`` can be
