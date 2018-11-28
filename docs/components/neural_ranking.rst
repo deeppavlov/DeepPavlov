@@ -50,7 +50,7 @@ If the model with multi-turn ``context`` is used
 (such as :class:`~deeppavlov.models.ranking.bilstm_gru_siamese_network.BiLSTMGRUSiameseNetwork`
 with the parameter ``num_context_turns`` set to the value higher than 1 in the configuration JSON file)
 then the ``context`` to evaluate should consist of ``num_context_turns`` strings connected by the ampersand.
-Some of these strings can be empty, e.g. equal to ``''``.
+Some of these strings can be empty, i.e. equal to ``''``.
 
 To run the model for inference from command line:
 
@@ -129,7 +129,7 @@ or you can use default :class:`~deeppavlov.dataset_readers.siamese_default_reade
 three separate files in the default data format described below:
 
 **train.csv**: each line in the file contains ``context``, ``response`` and ``label`` separated by the tab key. ``label`` can be
-binary, e.g. 1 or 0 corresponding to the correct or incorrect ``response`` for the given ``context``, or it can be multi-class label.
+binary, i.e. 1 or 0 corresponding to the correct or incorrect ``response`` for the given ``context``, or it can be multi-class label.
 In the latter case, each unique ``context`` has the unique class ``label`` and the only correct ``response`` is indicated for each ``context``.
 Currently, all ranking and paraphrase identification models support `cross-entropy loss` training with binary labels.
 Some models, such as :class:`~deeppavlov.models.ranking.bilstm_siamese_network.BiLSTMSiameseNetwork`,
@@ -142,7 +142,7 @@ If the model with multi-turn ``context`` is used
 (such as :class:`~deeppavlov.models.ranking.bilstm_gru_siamese_network.BiLSTMGRUSiameseNetwork`
 with the parameter ``num_context_turns`` set to the value higher than 1 in the configuration JSON file)
 then the ``context`` should be specified with ``num_context_turns`` strings separated by the tab key instead of a single string.
-Some of these strings can be empty, e.g. equal to ``''``.
+Some of these strings can be empty, i.e. equal to ``''``.
 
 Classification metrics on the train dataset part (the parameter ``train_metrics`` in the JSON configuration file)
 such as ``f1``, ``acc`` and ``log_loss``  can be calculated only in the ``cross-entropy loss`` training mode.
@@ -179,7 +179,7 @@ Paraphrase identification
 **train.csv**: the same as for ranking.
 
 **valid.csv**, **test.csv**: each line in the file contains ``context``, ``response`` and ``label`` separated by the tab key. ``label`` is
-binary, e.g. 1 or 0 corresponding to the correct or incorrect ``response`` for the given ``context``.
+binary, i.e. 1 or 0 corresponding to the correct or incorrect ``response`` for the given ``context``.
 Instead of ``response`` and ``context`` it can be simply two phrases which are paraphrases or non-paraphrases as indicated by the ``label``.
 
 Classification metrics on the valid and test dataset parts (the parameter ``metrics`` in the JSON configuration file)
