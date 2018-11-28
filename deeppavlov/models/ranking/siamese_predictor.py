@@ -137,6 +137,11 @@ class SiamesePredictor(Component):
             el = self.preproc_func(responses[i*self.batch_size: (i+1)*self.batch_size])
             self.preproc_responses += list(el)
 
+    def rebuild_responses(self, candidates) -> None:
+        self.attention = True
+        self.preproc_responses = list()
+        self.responses = {idx: sentence for idx, sentence in enumerate(candidates)}
+        self._build_preproc_responses()
 
 
 

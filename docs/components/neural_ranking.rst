@@ -43,10 +43,23 @@ inference one can use the following code in python:
 
     from deeppavlov import build_model, configs
 
-    rank_model = build_model(configs.ranking.ranking_insurance, download=True)
+    rank_model = build_model(configs.ranking.ranking_insurance_interact, download=True)
     rank_model(['how much to pay for auto insurance?'])
 
-If the model with multi-turn ``context`` is used
+By default the model returns the ``interact_pred_num`` most relevant responses from all responses the model saw during training time.
+To get predictions on your own list of responses use the following code:
+
+.. code:: python
+
+    from deeppavlov import build_model, configs
+
+    rank_model = build_model(configs.ranking.ranking_insurance_interact, download=True)
+    predictor = rank_model.pipe[-1][-1]
+    predictor.rebuild_responses()
+    rank_model(['how much to pay for auto insurance?'])
+
+
+If the model with multi-turn context is used
 (such as :class:`~deeppavlov.models.ranking.bilstm_gru_siamese_network.BiLSTMGRUSiameseNetwork`
 with the parameter ``num_context_turns`` set to the value higher than 1 in the configuration JSON file)
 then the ``context`` to evaluate should consist of ``num_context_turns`` strings connected by the ampersand.
@@ -138,7 +151,7 @@ and :class:`~deeppavlov.models.ranking.mpm_siamese_network.MPMSiameseNetwork` su
 (the parameter ``triplet_loss`` should be set to ``true`` for the model in the configuration JSON file in this case)
 which can give potentially few percent of performance over the `cross-entropy loss` training.
 
-If the model with multi-turn ``context`` is used
+If the model with multi-turn context is used
 (such as :class:`~deeppavlov.models.ranking.bilstm_gru_siamese_network.BiLSTMGRUSiameseNetwork`
 with the parameter ``num_context_turns`` set to the value higher than 1 in the configuration JSON file)
 then the ``context`` should be specified with ``num_context_turns`` strings separated by the tab key instead of a single string.
