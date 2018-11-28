@@ -33,6 +33,8 @@ Concrete DatasetReader classes.
 
 .. autoclass:: deeppavlov.dataset_readers.quora_question_pairs_reader.QuoraQuestionPairsReader
 
+.. autoclass:: deeppavlov.dataset_readers.siamese_default_reader.SiameseDefaultReader
+
 .. autoclass:: deeppavlov.dataset_readers.squad_dataset_reader.SquadDatasetReader
    :members:
 
