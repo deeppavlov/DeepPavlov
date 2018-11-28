@@ -15,15 +15,15 @@ Installation
 
 * Linux
 
-.. code:: bash
+    .. code:: bash
 
-    source ./env/bin/activate
+        source ./env/bin/activate
 
 * Windows
 
-.. code:: bash
+    .. code:: bash
 
-    .\env\Scripts\activate.bat
+        .\env\Scripts\activate.bat
 
 3. Install the package inside this virtual environment:
 
