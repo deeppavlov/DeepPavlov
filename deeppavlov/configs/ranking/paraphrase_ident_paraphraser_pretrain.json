@@ -24,7 +24,7 @@
           "id": "siam_sent_vocab",
           "class_name": "simple_vocab",
           "save_path": "{MODELS_PATH}/paraphraser_pretrain_vocabs/sent.dict",
-          "load_path": "{MODELS_PATH}/paraphraser_preatrain_vocabs/sent.dict"
+          "load_path": "{MODELS_PATH}/paraphraser_pretrain_vocabs/sent.dict"
         },
         "tokenizer":
         {
@@ -41,7 +41,7 @@
         {
           "id": "siam_embedder",
           "class_name": "fasttext",
-          "load_path": "{DOWNLOADS_PATH}/paraphraser_embeddings/ft_native_300_ru_wiki_lenta_lower_case.bin"
+          "load_path": "{DOWNLOADS_PATH}/embeddings/ft_native_300_ru_wiki_lenta_lower_case.bin"
         }
       },
       {
@@ -86,7 +86,7 @@
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
-      "DOWNLOADS_PATH": "{ROOT_PATH}/download",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models"
     },
     "requirements": [
@@ -107,7 +107,7 @@
         "subdir": "{DOWNLOADS_PATH}/paraphraser_pretrain_data"
       },
       {
-        "url": "http://files.deeppavlov.ai/paraphraser_embeddings/ft_native_300_ru_wiki_lenta_lower_case/ft_native_300_ru_wiki_lenta_lower_case.bin",
+        "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_lower_case/ft_native_300_ru_wiki_lenta_lower_case.bin",
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
