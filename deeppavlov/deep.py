@@ -81,7 +81,7 @@ def main():
     elif args.mode == 'interactmsbot':
         ms_id = args.ms_id
         ms_secret = args.ms_secret
-        run_ms_bf_default_agent(model_config_path=pipeline_config_path,
+        run_ms_bf_default_agent(model_config=pipeline_config_path,
                                 app_id=ms_id,
                                 app_secret=ms_secret,
                                 multi_instance=multi_instance,
@@ -107,7 +107,7 @@ def main():
             log.error('Minimum number of Folds is 2')
         else:
             n_folds = args.folds
-            calc_cv_score(config=pipeline_config_path, n_folds=n_folds, is_loo=False)
+            calc_cv_score(pipeline_config_path, n_folds=n_folds, is_loo=False)
 
 
 if __name__ == "__main__":

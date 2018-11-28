@@ -21,6 +21,7 @@ from flask import Flask, request, jsonify, redirect, Response
 from flask_cors import CORS
 
 from deeppavlov.core.commands.infer import build_model
+from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
@@ -39,15 +40,9 @@ CORS(app)
 dialog_logger = DialogLogger(agent_name='dp_api')
 
 
-def init_model(model_config_path):
-    model_config = read_json(model_config_path)
-    model = build_model(model_config)
-    return model
-
-
-def get_server_params(server_config_path, model_config_path):
+def get_server_params(server_config_path, model_config):
     server_config = read_json(server_config_path)
-    model_config = read_json(model_config_path)
+    model_config = parse_config(model_config)
 
     server_params = server_config['common_defaults']
 
@@ -105,9 +100,9 @@ def interact(model: Chainer, params_names: List[str]) -> Tuple[Response, int]:
     return jsonify(result), 200
 
 
-def start_model_server(model_config_path, https=False, ssl_key=None, ssl_cert=None):
+def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None):
     server_config_path = get_settings_path() / SERVER_CONFIG_FILENAME
-    server_params = get_server_params(server_config_path, model_config_path)
+    server_params = get_server_params(server_config_path, model_config)
 
     host = server_params['host']
     port = server_params['port']
@@ -136,7 +131,7 @@ def start_model_server(model_config_path, https=False, ssl_key=None, ssl_cert=No
     else:
         ssl_context = None
 
-    model = init_model(model_config_path)
+    model = build_model(model_config)
 
     @app.route('/')
     def index():

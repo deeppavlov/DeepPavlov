@@ -62,6 +62,18 @@ class TfidfWeightedEmbedder(Component):
         idf_base_count: minimal idf value (less time occured are not counted)
         log_base: logarithm base for TFIDF-coefficient calculation froom counter vocabulary
         min_idf_weight: minimal idf weight
+
+    Examples:
+        >>> from deeppavlov.models.embedders.tfidf_weighted_embedder import TfidfWeightedEmbedder
+        >>> from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
+        >>> fasttext_embedder = FasttextEmbedder('/data/embeddings/wiki.ru.bin')
+        >>> fastTextTfidf = TfidfWeightedEmbedder(embedder=fasttext_embedder,
+                counter_vocab_path='/data/vocabs/counts_wiki_lenta.txt')
+        >>> fastTextTfidf([['большой', 'и', 'розовый', 'бегемот']])
+        [array([ 1.99135890e-01, -7.14746421e-02,  8.01428872e-02, -5.32840924e-02,
+                 5.05212297e-02,  2.76053832e-01, -2.53270134e-01, -9.34443950e-02,
+                 ...
+                 1.18385439e-02,  1.05643446e-01, -1.21904516e-03,  7.70555378e-02])]
     """
 
     def __init__(self,
@@ -75,18 +87,12 @@ class TfidfWeightedEmbedder(Component):
                  idf_base_count: int = 100,
                  log_base: int = 10,
                  min_idf_weight=0.0, **kwargs) -> None:
-        """
-        Initialize embedder with given parameters.
-        """
         self.embedder = embedder
         self.dim = self.embedder.dim
         self.mean = mean
         self.pad_zero = pad_zero
-
-        if tokenizer is None:
-            self.tokenizer = self.space_detokenizer
-        else:
-            self.tokenizer = tokenizer
+        self.tokenizer = tokenizer or self.space_detokenizer
+        self.vectorizer = vectorizer
 
         if vectorizer and counter_vocab_path:
             raise ConfigError("TfidfWeightedEmbedder got vectorizer and counter_vocab_path simultaneously."
@@ -96,7 +102,7 @@ class TfidfWeightedEmbedder(Component):
             self.vocabulary = np.array(self.vectorizer.model.get_feature_names())
         elif counter_vocab_path:
             self.counter_vocab_path = expand_path(counter_vocab_path)
-            self.counter_vocab, self.min_count = self.load_counter_vocab(self.vocab_path)
+            self.counter_vocab, self.min_count = self.load_counter_vocab(self.counter_vocab_path)
             self.idf_base_count = idf_base_count
             self.log_base = log_base
             self.min_idf_weight = min_idf_weight
@@ -151,9 +157,10 @@ class TfidfWeightedEmbedder(Component):
         min_val = np.inf
         for line in lines:
             key, val = line[:-1].split('\t')
+            val = int(val)
             counter_vocab[key] = val
-            if int(val) < min_val:
-                min_val = int(val)
+            if val < min_val:
+                min_val = val
 
         return counter_vocab, min_val
 
@@ -189,7 +196,7 @@ class TfidfWeightedEmbedder(Component):
 
         if self.tags_vocab:
             if tags_batch is None:
-                raise ConfigError("TfidfWeightedEmbedder got 'tags_vocab_path' but did not get batch woith tags.")
+                raise ConfigError("TfidfWeightedEmbedder got 'tags_vocab_path' but __call__ did not get tags_batch.")
             batch = [self._tags_encode(sample, tags_sample, mean=mean) for sample, tags_sample in zip(batch, tags_batch)]
         else:
             if tags_batch:
@@ -212,10 +219,10 @@ class TfidfWeightedEmbedder(Component):
         Returns:
             list of embedded tokens or array of mean values
         """
-        detokenized_sample = self.tokenizer([tokens])[0]  # str
-        vectorized_sample = self.vectorizer([detokenized_sample])  # (voc_size,)
-
         if self.vectorizer:
+            detokenized_sample = self.tokenizer([tokens])[0]  # str
+            vectorized_sample = self.vectorizer([detokenized_sample])  # (voc_size,)
+
             weights = np.array([vectorized_sample[0, np.where(self.vocabulary == token)[0][0]]
                                 if len(np.where(self.vocabulary == token)[0]) else 0.
                                 for token in tokens])

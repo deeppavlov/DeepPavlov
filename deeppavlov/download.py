@@ -22,8 +22,7 @@ from typing import Union, Optional, Dict, Iterable, Set, Tuple, List
 import requests
 
 import deeppavlov
-from deeppavlov.core.commands.utils import get_deeppavlov_root, set_deeppavlov_root, expand_path
-from deeppavlov.core.common.file import read_json
+from deeppavlov.core.commands.utils import expand_path, parse_config
 from deeppavlov.core.data.utils import download, download_decompress, get_all_elems_from_json, file_md5
 from deeppavlov.core.common.log import get_logger
 
@@ -39,11 +38,7 @@ parser.add_argument('-all', action='store_true',
 
 
 def get_config_downloads(config: Union[str, Path, dict]) -> Set[Tuple[str, Path]]:
-    if isinstance(config, (str, Path)):
-        config = read_json(config)
-
-    dp_root_back = get_deeppavlov_root()
-    set_deeppavlov_root(config)
+    config = parse_config(config)
 
     downloads = set()
     if 'metadata' in config and 'download' in config['metadata']:
@@ -61,8 +56,6 @@ def get_config_downloads(config: Union[str, Path, dict]) -> Set[Tuple[str, Path]
     config_references = [expand_path(config_ref) for config_ref in get_all_elems_from_json(config, 'config_path')]
 
     downloads |= {(url, dest) for config in config_references for url, dest in get_config_downloads(config)}
-
-    set_deeppavlov_root({'deeppavlov_root': dp_root_back})
 
     return downloads
 

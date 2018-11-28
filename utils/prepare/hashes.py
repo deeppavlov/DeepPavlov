@@ -23,7 +23,7 @@ from typing import List, Dict, Union
 from deeppavlov.core.data.utils import file_md5
 
 
-def tar_md5(fpath: Union[str, Path]) -> Dict[str, str]:
+def tar_md5(fpath: Union[str, Path], chunk_size: int = 2**16) -> Dict[str, str]:
     tar = tarfile.open(fpath)
     res = {}
     while True:
@@ -32,7 +32,11 @@ def tar_md5(fpath: Union[str, Path]) -> Dict[str, str]:
             break
         if not item.isfile():
             continue
-        res[item.name] = md5(tar.extractfile(item).read()).hexdigest()
+        file_hash = md5()
+        with tar.extractfile(item) as f:
+            for chunk in iter(lambda: f.read(chunk_size), b""):
+                file_hash.update(chunk)
+        res[item.name] = file_hash.hexdigest()
     return res
 
 

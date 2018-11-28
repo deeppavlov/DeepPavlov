@@ -15,7 +15,6 @@ limitations under the License.
 """
 
 import argparse
-from pathlib import Path
 import sys
 import os
 import json
@@ -27,7 +26,7 @@ from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.models.evolution.evolution_param_generator import ParamsEvolution
 from deeppavlov.core.common.file import read_json, save_json, find_config
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.commands.utils import set_deeppavlov_root, expand_path
+from deeppavlov.core.commands.utils import expand_path, parse_config
 
 log = get_logger(__name__)
 
@@ -107,14 +106,12 @@ def main():
     evolve_metric = considered_metrics[0]
 
     # Create table variable for gathering results
-    set_deeppavlov_root(evolution.basic_config)
+    abs_path_to_main_models = expand_path(str(evolution.models_path).format(
+        **evolution.basic_config['metadata']['variables']))
+    abs_path_to_main_models.mkdir(parents=True, exist_ok=True)
 
-    expand_path(Path(evolution.get_value_from_config(
-        evolution.basic_config, evolution.main_model_path + ["save_path"]))).mkdir(parents=True, exist_ok=True)
-
-    result_file = expand_path(Path(evolution.get_value_from_config(evolution.basic_config,
-                                                                   evolution.main_model_path + ["save_path"])
-                                   ).joinpath("result_table.csv"))
+    result_file = abs_path_to_main_models / "result_table.tsv"
+    print(result_file)
 
     result_table_columns = []
     result_table_dict = {}
@@ -143,35 +140,13 @@ def main():
 
         population = []
         for i in range(population_size):
-            population.append(read_json(expand_path(Path(path_to_population).joinpath(
-                "model_" + str(i)).joinpath("config.json"))))
-            population[i] = evolution.insert_value_or_dict_into_config(
-                population[i], evolution.main_model_path + ["save_path"],
-                str(Path(
-                    evolution.get_value_from_config(evolution.basic_config, evolution.main_model_path + ["save_path"])
-                    ).joinpath(
-                    "population_" + str(start_from_population)).joinpath(
-                    "model_" + str(i)).joinpath(
-                    "model")))
+            config = read_json(expand_path(path_to_population) / f"model_{i}" / "config.json")
 
-            population[i] = evolution.insert_value_or_dict_into_config(
-                population[i], evolution.main_model_path + ["load_path"],
-                str(Path(
-                    evolution.get_value_from_config(population[i], evolution.main_model_path + ["load_path"]))))
+            evolution.insert_value_or_dict_into_config(
+                config, evolution.path_to_models_save_path,
+                str(evolution.main_model_path / f"population_{start_from_population}" / f"model_{i}"))
 
-            for path_id, path_ in enumerate(evolution.paths_to_fiton_dicts):
-                population[i] = evolution.insert_value_or_dict_into_config(
-                    population[i], path_ + ["save_path"],
-                    str(Path(evolution.get_value_from_config(evolution.basic_config,
-                                                             evolution.main_model_path + ["save_path"])
-                             ).joinpath("population_" + str(iters)).joinpath("model_" + str(i)).joinpath(
-                        "fitted_model_" + str(path_id))))
-
-            for path_id, path_ in enumerate(evolution.paths_to_fiton_dicts):
-                population[i] = evolution.insert_value_or_dict_into_config(
-                    population[i], path_ + ["load_path"],
-                    str(Path(evolution.get_value_from_config(
-                        population[i], path_ + ["load_path"]))))
+            population.append(config)
 
     run_population(population, evolution, gpus)
     population_scores = results_to_table(population, evolution, considered_metrics,
@@ -213,11 +188,12 @@ def run_population(population, evolution, gpus):
         for j in range(len(gpus)):
             i = k * len(gpus) + j
             if i < population_size:
-                save_path = expand_path(Path(evolution.get_value_from_config(
-                    population[i], evolution.main_model_path + ["save_path"])).parent)
+                save_path = expand_path(
+                    evolution.get_value_from_config(parse_config(population[i]),
+                                                    evolution.path_to_models_save_path))
 
                 save_path.mkdir(parents=True, exist_ok=True)
-                f_name = save_path.joinpath("config.json")
+                f_name = save_path / "config.json"
                 save_json(population[i], f_name)
 
                 with save_path.joinpath('out.txt').open('w', encoding='utf8') as outlog,\
@@ -232,9 +208,9 @@ def run_population(population, evolution, gpus):
             i = k * len(gpus) + j
             log.info(f'Waiting on {i}th proc')
             if proc.wait() != 0:
-                save_path = expand_path(Path(evolution.get_value_from_config(
-                    population[i], evolution.main_model_path + ["save_path"])).parent)
-
+                save_path = expand_path(
+                    evolution.get_value_from_config(parse_config(population[i]),
+                                                    evolution.path_to_models_save_path))
                 with save_path.joinpath('err.txt').open(encoding='utf8') as errlog:
                     log.warning(f'Population {i} returned an error code {proc.returncode} and an error log:\n' +
                                 errlog.read())
@@ -260,10 +236,10 @@ def results_to_table(population, evolution, considered_metrics, result_file, res
     for m in considered_metrics:
         population_metrics[m] = []
     for i in range(population_size):
-        with open(str(expand_path(Path(evolution.get_value_from_config(
-                population[i],
-                evolution.main_model_path + ["save_path"])).parent.joinpath("out.txt"))), "r", encoding='utf8') as fout:
-            reports_data = fout.read().splitlines()[-2:]
+        logpath = expand_path(evolution.get_value_from_config(parse_config(population[i]),
+                                                              evolution.path_to_models_save_path)
+                              ) / "out.txt"
+        reports_data = logpath.read_text(encoding='utf8').splitlines()[-2:]
         reports = []
         for j in range(2):
             try:
@@ -308,7 +284,7 @@ def results_to_table(population, evolution, considered_metrics, result_file, res
             elif test_best:
                 population_metrics[m].append(test_results[m])
 
-        result_table_dict[result_table_columns[-1]] = [population[i]]
+        result_table_dict[result_table_columns[-1]] = [json.dumps(population[i])]
         result_table = pd.DataFrame(result_table_dict)
         result_table.loc[:, result_table_columns].to_csv(result_file, index=False, sep='\t', mode='a', header=None)
 

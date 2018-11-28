@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
-    "name": "dstc2_reader",
-    "data_path": "dstc2"
+    "class_name": "dstc2_reader",
+    "data_path": "{DOWNLOADS_PATH}/dstc2"
   },
   "dataset_iterator": {
-    "name": "dialog_iterator"
+    "class_name": "dialog_iterator"
   },
   "chainer": {
     "in": ["x"],
@@ -12,36 +12,36 @@
     "out": ["y_predicted"],
     "pipe": [
       {
-        "class": "deeppavlov.models.go_bot.wrapper:DialogComponentWrapper",
-        "component": { "name": "split_tokenizer" },
+        "class_name": "deeppavlov.models.go_bot.wrapper:DialogComponentWrapper",
+        "component": { "class_name": "split_tokenizer" },
         "in": ["x"],
         "out": ["x_tokens"]
       },
       {
         "id": "token_vocab",
         "fit_on": ["x_tokens"],
-        "name": "simple_vocab",
-        "save_path": "vocabs/token.dict",
-        "load_path": "vocabs/token.dict"
+        "class_name": "simple_vocab",
+        "save_path": "{MODELS_PATH}/vocabs/token.dict",
+        "load_path": "{MODELS_PATH}/vocabs/token.dict"
       },
       {
         "id": "restaurant_database",
-        "name": "sqlite_database",
+        "class_name": "sqlite_database",
         "table_name": "mytable",
         "primary_keys": ["name"],
-        "save_path": "dstc2/resto.sqlite"
+        "save_path": "{DOWNLOADS_PATH}/dstc2/resto.sqlite"
       },
       {
         "in": ["x"],
         "in_y": ["y"],
         "out": ["y_predicted"],
         "main": true,
-        "name": "go_bot",
-        "load_path": "gobot_dstc2_best/model",
-        "save_path": "gobot_dstc2_best/model",
+        "class_name": "go_bot",
+        "load_path": "{MODELS_PATH}/gobot_dstc2_best/model",
+        "save_path": "{MODELS_PATH}/gobot_dstc2_best/model",
         "debug": false,
         "word_vocab": "#token_vocab",
-        "template_path": "dstc2/dstc2-templates.txt",
+        "template_path": "{DOWNLOADS_PATH}/dstc2/dstc2-templates.txt",
         "template_type": "DualTemplate",
         "database": "#restaurant_database",
         "api_call_action": "api_call",
@@ -65,20 +65,20 @@
           }
         },
         "slot_filler": {
-          "config_path": "../deeppavlov/configs/ner/slotfill_dstc2.json"
+          "config_path": "{CONFIGS_PATH}/ner/slotfill_dstc2.json"
         },
         "intent_classifier": null,
         "embedder": {
-          "name": "fasttext",
-          "load_path": "embeddings/wiki.en.bin"
+          "class_name": "fasttext",
+          "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin"
         },
         "bow_embedder": null,
         "tokenizer": {
-          "name": "stream_spacy_tokenizer",
+          "class_name": "stream_spacy_tokenizer",
           "lowercase": false
         },
         "tracker": {
-          "name": "featurized_tracker",
+          "class_name": "featurized_tracker",
           "slot_names": ["pricerange", "this", "area", "food", "name"]
         }
       }
@@ -101,26 +101,38 @@
     "test_best": true
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/fasttext.txt",
-      "../dp_requirements/spacy.txt",
-      "../dp_requirements/en_core_web_sm.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
+      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
     ],
     "labels": {
       "telegram_utils": "GoalOrientedBot",
       "server_utils": "GoalOrientedBot"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_best_v2.tar.gz",
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_best_v2.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
       {
         "url": "http://files.deeppavlov.ai/datasets/dstc2_v2.tar.gz",
-        "subdir": "dstc2"
+        "subdir": "{DOWNLOADS_PATH}/dstc2"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
   }

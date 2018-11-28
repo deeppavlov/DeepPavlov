@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import List, Dict, Union, Optional
 
 from deeppavlov.core.commands.infer import build_model
-from deeppavlov.core.commands.utils import set_deeppavlov_root, expand_path
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import get_model
@@ -24,12 +24,11 @@ def predict_with_model(config_path: [Path, str]) -> List[Optional[List[str]]]:
 
     """
     config = read_json(config_path)
-    set_deeppavlov_root(config)
 
     reader_config = config['dataset_reader']
-    reader = get_model(reader_config['name'])()
+    reader = get_model(reader_config['class_name'])()
     data_path = expand_path(reader_config.get('data_path', ''))
-    read_params = {k: v for k, v in reader_config.items() if k not in ['name', 'data_path']}
+    read_params = {k: v for k, v in reader_config.items() if k not in ['class_name', 'data_path']}
     data: Dict = reader.read(data_path, **read_params)
 
     iterator_config = config['dataset_iterator']
