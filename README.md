@@ -88,7 +88,7 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 
 0. Currently we support `Linux` and `Windows` platforms and `Python 3.6` 
     * **`Python 3.5` is not supported!**
-    * **`Windows` platform requires `Visual Studio 2015/2017` with `C++` build tools installed!**
+    * **`Windows` platform requires `Git` for Windows (for example, [git](https://git-scm.com/download/win)),  `Visual Studio 2015/2017` with `C++` build tools installed!**
 
 1. Create a virtual environment with `Python 3.6`:
     ```
