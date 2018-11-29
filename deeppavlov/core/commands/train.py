@@ -154,7 +154,7 @@ def get_iterator_from_config(config: dict, data: dict):
 
 def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None, *,
                                      to_train=True, to_validate=True, download=False,
-                                     start_epoch_num=0, recursive=True) -> Dict[str, Dict[str, float]]:
+                                     start_epoch_num=0, recursive=False) -> Dict[str, Dict[str, float]]:
     """Make training and evaluation of the model described in corresponding configuration file."""
     config = parse_config(config)
 
