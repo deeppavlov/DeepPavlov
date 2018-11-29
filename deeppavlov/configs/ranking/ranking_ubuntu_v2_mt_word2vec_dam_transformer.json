@@ -1,5 +1,5 @@
 {
-  "info": "The config is for evaluating of SMN on Ubuntu Dialogue Corpus v2 using prepared Word2vec embeddings",
+  "info": "The config is for training of DAM_USE-T on Ubuntu Dialogue Corpus v2 using prepared Word2vec embeddings",
   "dataset_reader": {
     "class_name": "ubuntu_v2_mt_reader",
     "data_path": "{DOWNLOADS_PATH}/ubuntu_v2_data_clean",
@@ -23,8 +23,8 @@
         "special_tokens": ["<PAD>"],
         "fit_on": ["x"],
         "id": "vocab_1",
-        "save_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_smn/vocabs/int_tok.dict",
-        "load_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_smn/vocabs/int_tok.dict"
+        "save_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam_transformer/vocabs/int_tok.dict",
+        "load_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam_transformer/vocabs/int_tok.dict"
       },
       {
         "id": "word2vec_embedder",
@@ -35,12 +35,13 @@
       {
         "id": "preproc",
         "class_name": "ubuntu_v2_preprocessor",
-        "save_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_smn/preproc/tok.dict",
-        "load_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_smn/preproc/tok.dict",
+        "save_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam_transformer/preproc/tok.dict",
+        "load_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam_transformer/preproc/tok.dict",
         "num_ranking_samples": 10,
         "num_context_turns": 10,
         "max_sequence_length": 50,
         "embedding_dim": 200,
+        "add_raw_text": true,
         "fit_on": ["x"],
         "in": ["x"],
         "out": ["x_proc"],
@@ -60,26 +61,21 @@
         "vocab": "#vocab_1"
       },
       {
-        "id": "model",
-        "class_name": "smn_nn",
+        "in": ["x_proc"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "class_name": "dam_nn_use_transformer",
         "stack_num": 5,
         "num_context_turns": "#preproc.num_context_turns",
         "max_sequence_length": "#preproc.max_sequence_length",
         "embedding_dim": "#word2vec_embedder.dim",
         "emb_matrix": "#embeddings.emb_mat",
         "learning_rate": 1e-3,
-        "batch_size": 500,
-        "save_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_smn/model_dam/model",
-        "load_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_smn/model_dam/model"
-      },
-      {
-        "in": ["x_proc"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
-        "class_name": "matching_predictor",
-        "model": "#model",
-        "num_context_turns": "#model.num_context_turns",
-        "max_sequence_length": 50
+        "batch_size": 100,
+        "seed": 65,
+        "decay_steps": 600,
+        "save_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam_transformer/model_dam/model",
+        "load_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam_transformer/model_dam/model"
       }
     ],
     "out": [
@@ -88,7 +84,7 @@
   },
   "train": {
     "epochs": 8,
-    "batch_size": 500,
+    "batch_size": 100,
     "pytest_max_batches": 2,
     "train_metrics": [],
     "metrics": [
@@ -100,7 +96,7 @@
     "validation_patience": 3,
     "val_every_n_epochs": 1,
     "log_every_n_batches": 100,
-    "tensorboard_log_dir": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_smn/logs_dam/"
+    "tensorboard_log_dir": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam_transformer/logs_dam/"
   },
   "metadata": {
     "variables": {
@@ -117,14 +113,13 @@
       "server_utils": "Ranker"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v2_mt_ranking_smn.tar.gz",
       {
         "url": "http://lnsigo.mipt.ru/export/datasets/ubuntu_v2_data_clean.tar.gz",
         "subdir": "ubuntu_v2_data_clean"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/ubuntu_v2_word2vec_embeddings.model.tar.gz",
-        "subdir": "ubuntu_v2_mt_word2vec_smn/embeddings_txt"
+        "subdir": "ubuntu_v2_mt_word2vec_dam/embeddings_txt"
       }
     ]
   }

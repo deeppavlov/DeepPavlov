@@ -31,7 +31,6 @@ class UbuntuV1MTReader(DatasetReader):
         num_context_turns: A maximum number of dialogue ``context`` turns.
         padding: "post" or "pre" context sentences padding
     """
-    
     def read(self, data_path: str,
              num_context_turns: int = 1,
              padding: str = "post",
@@ -50,7 +49,7 @@ class UbuntuV1MTReader(DatasetReader):
         dataset["valid"] = self.preprocess_data_validation(valid_fname)
         dataset["test"] = self.preprocess_data_validation(test_fname)
         return dataset
-    
+
     def preprocess_data_train(self, train_fname: Union[Path, str]) -> List[Tuple[List[str], int]]:
         contexts = []
         responses = []
@@ -75,7 +74,6 @@ class UbuntuV1MTReader(DatasetReader):
         contexts = []
         responses = []
         with codecs.open(fname, 'r', 'utf-8') as f:
-            line_num = 1
             responses_buf = []
             for line in f:
                 line = line.replace('_', '')
@@ -83,16 +81,15 @@ class UbuntuV1MTReader(DatasetReader):
 
                 label = int(parts[0])  # labels are not used
                 context = parts[1:-1]
-                responses_buf.append(parts[-1])   # add the next response
+                responses_buf.append(parts[-1])  # add the next response
 
-                if line_num % 10 == 0:   # add context and 10 response candidates
+                if len(responses_buf) % 10 == 0:  # add context and 10 response candidates
                     contexts.append(self._expand_context(context, padding=self.padding))
                     responses.append(responses_buf)
                     responses_buf = []
-                line_num += 1
 
         data = [el[0] + el[1] for el in zip(contexts, responses)]
-        data = [(el, 1) for el in data]   # NOTE: labels are useless here actually...
+        data = [(el, 1) for el in data]  # NOTE: labels are useless here actually...
         return data
 
     def _expand_context(self, context: List[str], padding: str) -> List[str]:
@@ -113,7 +110,8 @@ class UbuntuV1MTReader(DatasetReader):
                   [''] if len(sent_list) < self.num_turns else sent_list[:self.num_turns]
             return res
         elif padding == "pre":
-            sent_list = context[-(self.num_turns + 1):-1]
+            # context[-self.num_turns:]  because there is no empty strings in `context`
+            sent_list = context[-self.num_turns:]
             if len(sent_list) <= self.num_turns:
                 tmp = sent_list[:]
                 sent_list = [''] * (self.num_turns - len(sent_list))

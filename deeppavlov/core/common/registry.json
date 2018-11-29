@@ -12,6 +12,7 @@
   "conll2003_reader": "deeppavlov.dataset_readers.conll2003_reader:Conll2003DatasetReader",
   "cos_sim_classifier": "deeppavlov.models.classifiers.cos_sim_classifier:CosineSimilarityClassifier",
   "dam_nn": "deeppavlov.models.ranking.matching_models.deep_attention_matching_network:DAMNetwork",
+  "dam_nn_use_transformer": "deeppavlov.models.ranking.matching_models.deep_attention_matching_network_use_transformer:DAMNetworkUSETransformer",
   "data_fitting_iterator": "deeppavlov.core.data.data_fitting_iterator:DataFittingIterator",
   "data_learning_iterator": "deeppavlov.core.data.data_learning_iterator:DataLearningIterator",
   "default_vocab": "deeppavlov.core.data.vocab:DefaultVocabulary",

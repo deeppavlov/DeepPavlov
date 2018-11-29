@@ -143,7 +143,7 @@ class SMNNetwork(TensorflowBaseMatchingModel):
                                  name='final_v')
         self.y_pred = tf.nn.softmax(logits)
         self.loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=self.y_true, logits=logits))
-        optimizer = tf.train.AdamOptimizer(learning_rate=0.001)
+        optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
         self.train_op = optimizer.minimize(self.loss)
 
         # Debug

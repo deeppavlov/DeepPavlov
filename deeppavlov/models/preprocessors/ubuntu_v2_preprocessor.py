@@ -50,6 +50,8 @@ class UbuntuV2Preprocessor(Estimator):
             If set to ``post`` it will truncated at the end.
         num_context_turns: A number of ``context`` turns in data samples.
         num_ranking_samples: A number of condidates for ranking including positive one.
+        add_raw_text: whether add raw text sentences to output data list or not.
+            Use with conjunction of models using sentence encoders
         tokenizer: An instance of one of the :class:`deeppavlov.models.tokenizers`.
         vocab: An instance of :class:`deeppavlov.core.data.simple_vocab.SimpleVocabulary`.
     """
@@ -63,6 +65,7 @@ class UbuntuV2Preprocessor(Estimator):
                  truncating: str = 'post',
                  num_context_turns: int = 1,
                  num_ranking_samples: int = 1,
+                 add_raw_text: bool = False,
                  tokenizer: Component = None,
                  vocab: Estimator = "simple_vocab",
                  **kwargs):
@@ -73,6 +76,7 @@ class UbuntuV2Preprocessor(Estimator):
         self.dynamic_batch = dynamic_batch
         self.num_ranking_samples = num_ranking_samples
         self.num_context_turns = num_context_turns
+        self.add_raw_text = add_raw_text
         self.tokenizer = tokenizer
         self.vocab = vocab
         self.save_path = expand_path(save_path).resolve()
@@ -107,7 +111,8 @@ class UbuntuV2Preprocessor(Estimator):
                 msl = self.max_sequence_length
             x_proc = zero_pad_truncate(x_proc, msl, pad=self.padding, trunc=self.truncating)
             x_proc = list(x_proc)
-            x_proc += el   # add (self.num_context_turns+self.num_ranking_samples) raw sentences
+            if self.add_raw_text:
+                x_proc += el   # add (self.num_context_turns+self.num_ranking_samples) raw sentences
             yield x_proc
 
     def load(self) -> None:

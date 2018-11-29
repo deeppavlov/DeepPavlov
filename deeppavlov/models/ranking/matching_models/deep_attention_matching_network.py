@@ -14,7 +14,6 @@
 
 import numpy as np
 import tensorflow as tf
-import tensorflow_hub as hub
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
@@ -55,6 +54,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
         is_positional (bool): Adds a bunch of sinusoids of different frequencies to an embeddings.
         stack_num (int): Number of stack layers, default is 5.
         seed (int): Random seed.
+        decay_steps (int): Number of steps after which is to decay the learning rate.
     """
 
     def __init__(self,
@@ -72,6 +72,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
                  **kwargs):
 
         self.seed = seed
+
         np.random.seed(self.seed)
         tf.set_random_seed(self.seed)
 
@@ -81,44 +82,16 @@ class DAMNetwork(TensorflowBaseMatchingModel):
         self.trainable = trainable_embeddings
         self.is_positional = is_positional
         self.stack_num = stack_num
+
         self.learning_rate = learning_rate
         self.emb_matrix = emb_matrix
         self.decay_steps = decay_steps
 
-        ##############################################################################
-        self.g_use = tf.Graph()
-        with self.g_use.as_default():
-            # sentence encoder
-            self.embed = hub.Module("https://tfhub.dev/google/universal-sentence-encoder-large/3", trainable=False)
-
-            # Raw sentences for context and response
-            self.context_sent_ph = tf.placeholder(tf.string, shape=(None, self.num_context_turns),
-                                                  name="context_sentences")
-            self.response_sent_ph = tf.placeholder(tf.string, shape=(None,), name="response_sentences")
-            # embed sentences of context
-            with tf.variable_scope('sentence_embeddings'):
-                x = []
-                for i in range(self.num_context_turns):
-                    x.append(self.embed(tf.squeeze(self.context_sent_ph[:, i])))
-                embed_context_turns = tf.stack(x, axis=1)
-                embed_response = self.embed(self.response_sent_ph)
-
-                self.sent_embedder_context = tf.expand_dims(embed_context_turns, axis=2)
-                self.sent_embedder_response = tf.expand_dims(embed_response, axis=1)
-
-        self.cpu_sess = tf.Session(config=tf.ConfigProto(), graph=self.g_use)
-        with self.g_use.as_default():
-            self.cpu_sess.run([tf.global_variables_initializer(), tf.tables_initializer()])
-        ##############################################################################
-
-        ##############################################################################
-        self._init_graph()
-
         self.sess_config = tf.ConfigProto(allow_soft_placement=True)
         self.sess_config.gpu_options.allow_growth = True
         self.sess = tf.Session(config=self.sess_config)
+        self._init_graph()
         self.sess.run(tf.global_variables_initializer())
-        ##############################################################################
 
         super(DAMNetwork, self).__init__(*args, **kwargs)
 
@@ -138,25 +111,8 @@ class DAMNetwork(TensorflowBaseMatchingModel):
             # Labels
             self.y_true = tf.placeholder(tf.int32, shape=(None,))
 
-            # Raw sentences for context and response
-            self.context_sent_emb_ph = tf.placeholder(tf.float32, shape=(None, self.num_context_turns, 1, 512))
-            self.response_sent_emb_ph = tf.placeholder(tf.float32, shape=(None, 1, 512))
-
     def _init_graph(self):
         self._init_placeholders()
-
-        with tf.variable_scope('sentence_emb_dim_reduction'):
-            dense_emb = tf.layers.Dense(200,
-                                        kernel_initializer=tf.keras.initializers.glorot_uniform(seed=42),
-                                        kernel_regularizer=tf.keras.regularizers.l2(),
-                                        bias_regularizer=tf.keras.regularizers.l2(),
-                                        trainable=True)
-
-            a = []
-            for i in range(self.num_context_turns):
-                a.append(dense_emb(self.context_sent_emb_ph[:, i]))
-            sent_embedder_context = tf.stack(a, axis=1)
-            sent_embedder_response = dense_emb(self.response_sent_emb_ph)
 
         with tf.variable_scope('embedding_matrix_init'):
             word_embeddings = tf.get_variable("word_embeddings_v",
@@ -170,9 +126,6 @@ class DAMNetwork(TensorflowBaseMatchingModel):
             with tf.variable_scope('positional'):
                 Hr = op.positional_encoding_vector(Hr, max_timescale=10)
 
-        with tf.variable_scope('expand_resp_embeddings'):
-            Hr = tf.concat([sent_embedder_response, Hr], axis=1)
-
         Hr_stack = [Hr]
 
         for index in range(self.stack_num):
@@ -184,22 +137,17 @@ class DAMNetwork(TensorflowBaseMatchingModel):
 
         # context part
         # a list of length max_turn_num, every element is a tensor with shape [batch, max_turn_len]
-        list_turn_t      = tf.unstack(self.utterance_ph, axis=1)
+        list_turn_t = tf.unstack(self.utterance_ph, axis=1)
         list_turn_length = tf.unstack(self.all_utterance_len_ph, axis=1)
-        list_turn_t_sent = tf.unstack(sent_embedder_context, axis=1)
 
         sim_turns = []
         # for every turn_t calculate matching vector
-        for turn_t, t_turn_length, turn_t_sent in zip(list_turn_t, list_turn_length, list_turn_t_sent):
+        for turn_t, t_turn_length in zip(list_turn_t, list_turn_length):
             Hu = tf.nn.embedding_lookup(word_embeddings, turn_t)  # [batch, max_turn_len, emb_size]
 
             if self.is_positional and self.stack_num > 0:
                 with tf.variable_scope('positional', reuse=True):
                     Hu = op.positional_encoding_vector(Hu, max_timescale=10)
-
-            with tf.variable_scope('expand_cont_embeddings'):
-                Hu = tf.concat([turn_t_sent, Hu], axis=1)
-
             Hu_stack = [Hu]
 
             for index in range(self.stack_num):
@@ -259,7 +207,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
         sim = tf.stack(sim_turns, axis=1)
         log.info('sim shape: %s' % sim.shape)
         with tf.variable_scope('cnn_aggregation'):
-            final_info = layers.CNN_3d(sim, 32, 32)
+            final_info = layers.CNN_3d(sim, 32, 16)
             # for douban
             # final_info = layers.CNN_3d(sim, 16, 16)
 

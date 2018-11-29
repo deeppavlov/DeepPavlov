@@ -16,8 +16,6 @@ limitations under the License.
 
 import numpy as np
 from typing import List, Iterable, Union
-import tensorflow as tf
-import tensorflow_hub as hub
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.tf_model import TFModel
@@ -51,77 +49,41 @@ class TensorflowBaseMatchingModel(TFModel):
         batch_buffer_context_len = []   # [batch_size, 10]
         batch_buffer_response = []      # [batch_size, 50]
         batch_buffer_response_len = []  # [batch_size]
-
-        raw_batch_buffer_context = []  # [batch_size, 10]
-        raw_batch_buffer_response = []  # [batch_size]
         j = 0
         while True:
             try:
                 sample = next(samples_generator)
-                sample_len = len(sample)
                 j += 1
                 context_sentences = sample[:self.num_context_turns]
-                response_sentences = sample[self.num_context_turns:sample_len//2]
-
-                raw_context_sentences = sample[sample_len//2:sample_len//2 + self.num_context_turns]
-                raw_response_sentences = sample[sample_len//2 + self.num_context_turns:]
+                response_sentences = sample[self.num_context_turns:]
 
                 # format model inputs
                 # word indices
                 batch_buffer_context += [context_sentences for sent in response_sentences]
                 batch_buffer_response += [response_sentence for response_sentence in response_sentences]
-
-                raw_batch_buffer_context += [raw_context_sentences for sent in raw_response_sentences]
-                raw_batch_buffer_response += [raw_sent for raw_sent in raw_response_sentences]
-
                 # lens of sentences
                 lens = []
                 for context in [context_sentences for sent in response_sentences]:
                     context_sentences_lens = []
                     for sent in context:
-                        sent_len = len(sent[sent != 0])
-                        sent_len = sent_len + 1 if sent_len > 0 else 0
-                        context_sentences_lens.append(sent_len)
+                        context_sentences_lens.append(len(sent[sent != 0]))
                     lens.append(context_sentences_lens)
                 batch_buffer_context_len += lens
 
                 lens = []
                 for context in [response_sentence for response_sentence in response_sentences]:
-                    sent_len = len(context[context != 0])
-                    sent_len = sent_len + 1 if sent_len > 0 else 0
-                    lens.append(sent_len)
+                    lens.append(len(context[context != 0]))
                 batch_buffer_response_len += lens
 
                 if len(batch_buffer_context) >= self.batch_size:
                     for i in range(len(batch_buffer_context) // self.batch_size):
-
-                        # CPU Graph
-                        with self.g_use.as_default():
-                            sent_feed_dict = {
-                                self.context_sent_ph: np.array(
-                                    raw_batch_buffer_context[i * self.batch_size: (i + 1) * self.batch_size]),
-                                self.response_sent_ph: np.array(
-                                    raw_batch_buffer_response[i * self.batch_size: (i + 1) * self.batch_size])
-                            }
-                            c, r = self.cpu_sess.run([self.sent_embedder_context, self.sent_embedder_response],
-                                                     feed_dict=sent_feed_dict)
-
-                        # GPU Graph
-                        with self.graph.as_default():
-                            feed_dict = {
-                                self.utterance_ph: np.array(
-                                    batch_buffer_context[i * self.batch_size:(i + 1) * self.batch_size]),
-                                self.all_utterance_len_ph: np.array(
-                                    batch_buffer_context_len[i * self.batch_size:(i + 1) * self.batch_size]),
-                                self.response_ph: np.array(
-                                    batch_buffer_response[i * self.batch_size:(i + 1) * self.batch_size]),
-                                self.response_len_ph: np.array(
-                                    batch_buffer_response_len[i * self.batch_size:(i + 1) * self.batch_size]),
-
-                                self.context_sent_emb_ph: c,
-                                self.response_sent_emb_ph: r
-                            }
-                            yp = self.sess.run(self.y_pred, feed_dict=feed_dict)
+                        feed_dict = {
+                            self.utterance_ph: np.array(batch_buffer_context[i*self.batch_size:(i+1)*self.batch_size]),
+                            self.all_utterance_len_ph: np.array(batch_buffer_context_len[i*self.batch_size:(i+1)*self.batch_size]),
+                            self.response_ph: np.array(batch_buffer_response[i*self.batch_size:(i+1)*self.batch_size]),
+                            self.response_len_ph: np.array(batch_buffer_response_len[i*self.batch_size:(i+1)*self.batch_size])
+                        }
+                        yp = self.sess.run(self.y_pred, feed_dict=feed_dict)
                         y_pred += list(yp[:, 1])
                     lenb = len(batch_buffer_context) % self.batch_size
                     if lenb != 0:
@@ -129,42 +91,22 @@ class TensorflowBaseMatchingModel(TFModel):
                         batch_buffer_context_len = batch_buffer_context_len[-lenb:]
                         batch_buffer_response = batch_buffer_response[-lenb:]
                         batch_buffer_response_len = batch_buffer_response_len[-lenb:]
-
-                        raw_batch_buffer_context = raw_batch_buffer_context[-lenb:]
-                        raw_batch_buffer_response = raw_batch_buffer_response[-lenb:]
                     else:
                         batch_buffer_context = []
                         batch_buffer_context_len = []
                         batch_buffer_response = []
                         batch_buffer_response_len = []
-
-                        raw_batch_buffer_context = []
-                        raw_batch_buffer_response = []
             except StopIteration:
                 if j == 1:
                     return ["Error! It is not intended to use the model in the interact mode."]
                 if len(batch_buffer_context) != 0:
-                    # CPU Graph
-                    with self.g_use.as_default():
-                        sent_feed_dict = {
-                            self.context_sent_ph: np.array(raw_batch_buffer_context),
-                            self.response_sent_ph: np.array(raw_batch_buffer_response)
-                        }
-                        c, r = self.cpu_sess.run([self.sent_embedder_context, self.sent_embedder_response],
-                                                 feed_dict=sent_feed_dict)
-
-                    # GPU Graph
-                    with self.graph.as_default():
-                        feed_dict = {
-                            self.utterance_ph: np.array(batch_buffer_context),
-                            self.all_utterance_len_ph: np.array(batch_buffer_context_len),
-                            self.response_ph: np.array(batch_buffer_response),
-                            self.response_len_ph: np.array(batch_buffer_response_len),
-
-                            self.context_sent_emb_ph: c,
-                            self.response_sent_emb_ph: r
-                        }
-                        yp = self.gpu_sess.run(self.y_pred, feed_dict=feed_dict)
+                    feed_dict = {
+                        self.utterance_ph: np.array(batch_buffer_context),
+                        self.all_utterance_len_ph: np.array(batch_buffer_context_len),
+                        self.response_ph: np.array(batch_buffer_response),
+                        self.response_len_ph: np.array(batch_buffer_response_len)
+                    }
+                    yp = self.sess.run(self.y_pred, feed_dict=feed_dict)
                     y_pred += list(yp[:, 1])
                 break
         y_pred = np.asarray(y_pred)
@@ -188,118 +130,68 @@ class TensorflowBaseMatchingModel(TFModel):
         batch_buffer_context_len = []   # [batch_size, 10]
         batch_buffer_response = []      # [batch_size, 50]
         batch_buffer_response_len = []  # [batch_size]
-
-        raw_batch_buffer_context = []  # [batch_size, 10]
-        raw_batch_buffer_response = []  # [batch_size]
         j = 0
         while True:
             try:
                 sample = next(x)
-                sample_len = len(sample)
                 j += 1
                 context_sentences = sample[:self.num_context_turns]
-                response_sentences = sample[self.num_context_turns:sample_len//2]
-
-                raw_context_sentences = sample[sample_len//2:sample_len//2 + self.num_context_turns]
-                raw_response_sentences = sample[sample_len//2 + self.num_context_turns:]
+                response_sentences = sample[self.num_context_turns:]
 
                 # format model inputs
                 # word indices
                 batch_buffer_context += [context_sentences for sent in response_sentences]
                 batch_buffer_response += [response_sentence for response_sentence in response_sentences]
-
-                raw_batch_buffer_context += [raw_context_sentences for sent in raw_response_sentences]
-                raw_batch_buffer_response += [raw_sent for raw_sent in raw_response_sentences]
-
                 # lens of sentences
                 lens = []
                 for context in [context_sentences for sent in response_sentences]:
                     context_sentences_lens = []
                     for sent in context:
-                        sent_len = len(sent[sent != 0])
-                        sent_len = sent_len + 1 if sent_len > 0 else 0
-                        context_sentences_lens.append(sent_len)
+                        context_sentences_lens.append(len(sent[sent != 0]))
                     lens.append(context_sentences_lens)
                 batch_buffer_context_len += lens
 
                 lens = []
                 for context in [response_sentence for response_sentence in response_sentences]:
-                    sent_len = len(context[context != 0])
-                    sent_len = sent_len + 1 if sent_len > 0 else 0
-                    lens.append(sent_len)
+                    lens.append(len(context[context != 0]))
                 batch_buffer_response_len += lens
 
                 if len(batch_buffer_context) >= self.batch_size:
                     for i in range(len(batch_buffer_context) // self.batch_size):
-                        # CPU Graph
-                        with self.g_use.as_default():
-                            sent_feed_dict = {
-                                self.context_sent_ph: np.array(
-                                    raw_batch_buffer_context[i * self.batch_size: (i + 1) * self.batch_size]),
-                                self.response_sent_ph: np.array(
-                                    raw_batch_buffer_response[i * self.batch_size: (i + 1) * self.batch_size])
-                            }
-                            c, r = self.cpu_sess.run([self.sent_embedder_context, self.sent_embedder_response],
-                                                     feed_dict=sent_feed_dict)
-
-                        # GPU Graph
-                        with self.graph.as_default():
-                            feed_dict = {
-                                self.utterance_ph: np.array(
-                                    batch_buffer_context[i * self.batch_size:(i + 1) * self.batch_size]),
-                                self.all_utterance_len_ph: np.array(
-                                    batch_buffer_context_len[i * self.batch_size:(i + 1) * self.batch_size]),
-                                self.response_ph: np.array(
-                                    batch_buffer_response[i * self.batch_size:(i + 1) * self.batch_size]),
-                                self.response_len_ph: np.array(
-                                    batch_buffer_response_len[i * self.batch_size:(i + 1) * self.batch_size]),
-                                self.y_true: np.array(y),
-
-                                self.context_sent_emb_ph: c,
-                                self.response_sent_emb_ph: r
-                            }
-                            loss, _ = self.sess.run([self.loss, self.train_op], feed_dict=feed_dict)
+                        feed_dict = {
+                            self.utterance_ph: np.array(
+                                batch_buffer_context[i * self.batch_size:(i + 1) * self.batch_size]),
+                            self.all_utterance_len_ph: np.array(
+                                batch_buffer_context_len[i * self.batch_size:(i + 1) * self.batch_size]),
+                            self.response_ph: np.array(
+                                batch_buffer_response[i * self.batch_size:(i + 1) * self.batch_size]),
+                            self.response_len_ph: np.array(
+                                batch_buffer_response_len[i * self.batch_size:(i + 1) * self.batch_size]),
+                            self.y_true: np.array(y)
+                        }
+                        loss, _ = self.sess.run([self.loss, self.train_op], feed_dict=feed_dict)
                     lenb = len(batch_buffer_context) % self.batch_size
                     if lenb != 0:
                         batch_buffer_context = batch_buffer_context[-lenb:]
                         batch_buffer_context_len = batch_buffer_context_len[-lenb:]
                         batch_buffer_response = batch_buffer_response[-lenb:]
                         batch_buffer_response_len = batch_buffer_response_len[-lenb:]
-
-                        raw_batch_buffer_context = raw_batch_buffer_context[-lenb:]
-                        raw_batch_buffer_response = raw_batch_buffer_response[-lenb:]
                     else:
                         batch_buffer_context = []
                         batch_buffer_context_len = []
                         batch_buffer_response = []
                         batch_buffer_response_len = []
-
-                        raw_batch_buffer_context = []
-                        raw_batch_buffer_response = []
             except StopIteration:
                 if j == 1:
                     return ["Error! It is not intended to use the model in the interact mode."]
                 if len(batch_buffer_context) != 0:
-                    # CPU Graph
-                    with self.g_use.as_default():
-                        sent_feed_dict = {
-                            self.context_sent_ph: np.array(raw_batch_buffer_context),
-                            self.response_sent_ph: np.array(raw_batch_buffer_response)
-                        }
-                        c, r = self.cpu_sess.run([self.sent_embedder_context, self.sent_embedder_response],
-                                                 feed_dict=sent_feed_dict)
-                    # GPU Graph
-                    with self.graph.as_default():
-                        feed_dict = {
-                            self.utterance_ph: np.array(batch_buffer_context),
-                            self.all_utterance_len_ph: np.array(batch_buffer_context_len),
-                            self.response_ph: np.array(batch_buffer_response),
-                            self.response_len_ph: np.array(batch_buffer_response_len),
-                            self.y_true: np.array(y),
-
-                            self.context_sent_emb_ph: c,
-                            self.response_sent_emb_ph: r
-                        }
-                        loss, _ = self.sess.run([self.loss, self.train_op], feed_dict=feed_dict)
+                    feed_dict = {
+                        self.utterance_ph: np.array(batch_buffer_context),
+                        self.all_utterance_len_ph: np.array(batch_buffer_context_len),
+                        self.response_ph: np.array(batch_buffer_response),
+                        self.response_len_ph: np.array(batch_buffer_response_len),
+                        self.y_true: np.array(y)
+                    }
+                    loss, _ = self.sess.run([self.loss, self.train_op], feed_dict=feed_dict)
                 break
         return loss

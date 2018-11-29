@@ -1,12 +1,13 @@
 {
+  "info": "The config is for training of DAM on Ubuntu Dialogue Corpus v2 using prepared Word2vec embeddings",
   "dataset_reader": {
-    "name": "ubuntu_v2_mt_reader",
-    "data_path": "./ubuntu_v2_data_clean",
+    "class_name": "ubuntu_v2_mt_reader",
+    "data_path": "{DOWNLOADS_PATH}/ubuntu_v2_data_clean",
     "num_context_turns": 10,
     "padding": "pre"
   },
   "dataset_iterator": {
-    "name": "siamese_iterator",
+    "class_name": "siamese_iterator",
     "seed": 243
   },
   "chainer": {
@@ -14,28 +15,28 @@
     "in_y": ["y"],
     "pipe": [
       {
-        "name": "split_tokenizer",
+        "class_name": "split_tokenizer",
         "id": "tok_1"
       },
       {
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "special_tokens": ["<PAD>"],
         "fit_on": ["x"],
         "id": "vocab_1",
-        "save_path": "ubuntu_v2_mt_word2vec/vocabs/int_tok.dict",
-        "load_path": "ubuntu_v2_mt_word2vec/vocabs/int_tok.dict"
+        "save_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam/vocabs/int_tok.dict",
+        "load_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam/vocabs/int_tok.dict"
       },
       {
         "id": "word2vec_embedder",
-        "name": "glove",
+        "class_name": "glove",
         "dim": 200,
-        "load_path": "ubuntu_v2_mt_word2vec/embeddings_txt/v2_ubuntu_w2v_vectors.txt"
+        "load_path": "{DOWNLOADS_PATH}/embeddings/v2_ubuntu_w2v_vectors.txt"
       },
       {
         "id": "preproc",
-        "name": "ubuntu_v2_preprocessor",
-        "save_path": "ubuntu_v2_mt_word2vec/preproc/tok.dict",
-        "load_path": "ubuntu_v2_mt_word2vec/preproc/tok.dict",
+        "class_name": "ubuntu_v2_preprocessor",
+        "save_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam/preproc/tok.dict",
+        "load_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam/preproc/tok.dict",
         "num_ranking_samples": 10,
         "num_context_turns": 10,
         "max_sequence_length": 50,
@@ -54,7 +55,7 @@
       },
       {
         "id": "embeddings",
-        "name": "emb_mat_assembler",
+        "class_name": "emb_mat_assembler",
         "embedder": "#word2vec_embedder",
         "vocab": "#vocab_1"
       },
@@ -62,7 +63,7 @@
         "in": ["x_proc"],
         "in_y": ["y"],
         "out": ["y_predicted"],
-        "name": "dam_nn",
+        "class_name": "dam_nn",
         "stack_num": 5,
         "num_context_turns": "#preproc.num_context_turns",
         "max_sequence_length": "#preproc.max_sequence_length",
@@ -70,10 +71,10 @@
         "emb_matrix": "#embeddings.emb_mat",
         "learning_rate": 1e-3,
         "batch_size": 100,
-        "decay_steps": 600,
         "seed": 65,
-        "save_path": "ubuntu_v2_mt_word2vec/model_dam/model",
-        "load_path": "ubuntu_v2_mt_word2vec/model_dam/model"
+        "decay_steps": 600,
+        "save_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam/model_dam/model",
+        "load_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam/model_dam/model"
       }
     ],
     "out": [
@@ -94,12 +95,17 @@
     "validation_patience": 3,
     "val_every_n_epochs": 1,
     "log_every_n_batches": 100,
-    "tensorboard_log_dir": "ubuntu_v2_mt_word2vec/logs_dam/"
+    "tensorboard_log_dir": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam/logs_dam/"
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/gensim.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
     ],
     "labels": {
       "telegram_utils": "SiameseModel",
@@ -112,7 +118,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/ubuntu_v2_word2vec_embeddings.model.tar.gz",
-        "subdir": "ubuntu_v2_mt_word2vec/embeddings_txt"
+        "subdir": "ubuntu_v2_mt_word2vec_dam/embeddings_txt"
       }
     ]
   }
