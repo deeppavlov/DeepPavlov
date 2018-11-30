@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
     "class_name": "file_paths_reader",
-    "data_path": "{DOWNLOADS_PATH}/paraphraser_train_texts/",
-    "train": "paraphraser_train_texts_train.txt",
-    "valid": "paraphraser_train_texts_valid.txt",
-    "test": "paraphraser_train_texts_test.txt"
+    "data_path": "{DOWNLOADS_PATH}/paraphraser_train_and_pretrain_texts/",
+    "train": "paraphraser_train_and_pretrain_texts_train.txt",
+    "valid": "paraphraser_train_and_pretrain_texts_valid.txt",
+    "test": "paraphraser_train_and_pretrain_texts_test.txt"
   },
   "dataset_iterator": {
     "class_name": "elmo_file_paths_iterator",
@@ -45,11 +45,11 @@
   ]
   },
   "train": {
-    "epochs": 20,
+    "epochs": 2,
     "batch_size": 128,
     "log_every_n_batches": 24,
     "val_every_n_epochs": 1,
-    "validation_patience": 5,
+    "validation_patience": 1,
     "metric_optimization": "minimize",
     "metrics": [
       {
