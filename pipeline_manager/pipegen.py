@@ -28,10 +28,18 @@ log = get_logger(__name__)
 
 class PipeGen:
     """
-    The class implements the generator of standard DeepPavlov configs.
+    The class implements the function of generator of standard DeepPavlov configs. Based on the input config, the
+    generator creates a set of pipelines, as well as variants of the same pipeline with a different set of
+    hyperparameters using the "random" or "grid" search. Also in all generated configs the save and load paths change
+    to intermediate ones.
     """
 
-    def __init__(self, config: Union[Dict, str], save_path: str, mode: str='random', sample_num=10, test_mode=False):
+    def __init__(self,
+                 config: Union[Dict, str],
+                 save_path: str,
+                 mode: str='random',
+                 sample_num=10,
+                 test_mode=False) -> None:
         """
         Initialize generator with input params.
 
@@ -40,6 +48,9 @@ class PipeGen:
             save_path: str; path to folder with pipelines checkpoints.
             sample_num: int; determines the number of generated pipelines, if hyper_search == random.
             test_mode: bool; trigger that determine logic of changing save and loads paths in config.
+
+        Return:
+            None
         """
         if isinstance(config, dict):
             self.main_config = deepcopy(config)
@@ -76,8 +87,10 @@ class PipeGen:
 
     def _check_component_name(self) -> None:
         """
+        Checks incoming config for the presence of a "component_name" key in the component description dict.
 
-        :return:
+        Returns:
+            None
         """
         for i, component in enumerate(self.structure):
             for j, example in enumerate(component):
@@ -89,8 +102,10 @@ class PipeGen:
 
     def get_len(self):
         """
+        Calculate the length of generator.
 
-        :return:
+        Returns:
+            None
         """
         self.enumerator = self.pipeline_enumeration()
         generator = self.pipeline_gen()
@@ -103,8 +118,10 @@ class PipeGen:
 
     def pipeline_enumeration(self):
         """
+        Creates a primary set of pipelines using a self.main_config attribute.
 
-        :return:
+        Returns:
+            iterator of primary set of pipelines
         """
         if isinstance(self.dataset_reader, list):
             drs = []
@@ -135,9 +152,10 @@ class PipeGen:
 
     def pipeline_gen(self):
         """
-        Generate DeepPavlov standard configs (dicts).
+        Creates a configs with a different set of hyperparameters based on the primary set of pipelines.
+
         Returns:
-            python generator
+            iterator of final sets of configs (dicts)
         """
         p = 0
         for i, variant in enumerate(self.enumerator):
@@ -180,9 +198,13 @@ class PipeGen:
     # random generation
     def random_conf_gen(self, pipe_components: list) -> Generator:
         """
-        Creates generator that return all possible pipelines.
+        Creates a set of configs with a different set of hyperparameters using "random search".
+
+        Args:
+            pipe_components: list of dicts; config if components
+
         Returns:
-            python generator
+            random search iterator
         """
         sample_gen = ParamsSearch(prefix="random")
         new_pipes = []
@@ -214,12 +236,13 @@ class PipeGen:
     @staticmethod
     def grid_conf_gen(pipe_components: list) -> Generator:
         """
-        Compute cartesian product of config parameters.
+        Creates a set of configs with a different set of hyperparameters using "grid search".
+
         Args:
             pipe_components: list of dicts; config if components
 
         Returns:
-            list
+            grid search iterator
         """
         list_of_variants = []
         # find in config keys for grid search
@@ -249,7 +272,8 @@ class PipeGen:
     @staticmethod
     def change_load_path(config, n, save_path, dataset_name, test_mode=False):
         """
-        Change save_path and load_path attributes in standard config.
+        Change save_path and load_path attributes in standard DeepPavlov config.
+
         Args:
             config: dict; the chainer content.
             n: int; pipeline number
