@@ -1,9 +1,30 @@
 Sequence-To-Sequence Dialogue Bot For Goal-Oriented Task
 ========================================================
 
+Pretrained on KVRET dataset (English) model is available. Try it by running:
+
+.. code:: python
+
+    from deeppavlov import build_model, configs
+
+    bot = build_model(configs.seq2seq_go_bot.bot_kvret, download=True)
+
+    dialog_id = '2b77c100-0fec-426a-a483-04ac03763776'
+    bot(['Hi! Where is the nearest gas station?'], [dialog_id])
+    bot(['Thanks, bye'], [dialog_id])
+
+If you're missing some required packages, install all the requirements by running in command line:
+
+.. code:: bash
+
+   python -m deeppavlov install bot_kvret 
+
+Intro
+-----
+
 A goal-oriented bot based on a rnn that encodes user utterance and generates 
 response in a sequence-to-sequence manner. For network architecture is similar
-to `[2] <#references>`__.
+to [1]_.
 
 |alt text| **Diagram 1.**  Key-value retrieval network.
 For each time-step of decoding, the cell state is used to compute
@@ -20,7 +41,7 @@ end-to-end differentiable and does not need to explicitly model dialogue
 state or belief trackers.
 
 We also used a new Stanford NLP Group released dataset of 3,031 dialogues
-`[1] <#references>`__ that are grounded through underlying knowledge bases
+[2]_ that are grounded through underlying knowledge bases
 and span three distinct tasks in the in-car personal assistant space:
 
     - calendar scheduling,
@@ -108,6 +129,9 @@ Dialog with ``dialog_id="0b144470-faa8-4e71-98c7-a9b645fffab0"`` had entry:
       "event": "tennis activity"
     }
 
+.. note::
+
+   The model uses massive fasttext embeddings and thus requires 10Gb of disk space.
 
 Configs
 -------
@@ -149,8 +173,9 @@ To infer from a pretrained model with config path equal to ``<path_to_config>``:
     model = build_model(CONFIG_PATH)
 
     utterance = ""
+    dialog_id = '2b77c100-0fec-426a-a483-04ac03763776' # or any other dialog id from train dataset
     while utterance != 'exit':
-        print(">> " + model([utterance])[0])
+        print(">> " + model([utterance], [dialog_id])[0])
         utterance = input(':: ')
 
 Config parameters:
@@ -163,25 +188,25 @@ Comparison
 
 Comparison of BLEU scores on test set of Kvret dataset:
 
-+------------------------------------------------------+------------------+
-|                    Model                             |  Test BLEU       |
-+======================================================+==================+
-| DeepPavlov implementation of KV Retrieval Net        |   **0.132**      |
-+------------------------------------------------------+------------------+
-| KV Retrieven Net from `[2] <#references>`__          |   **0.132**      |
-+------------------------------------------------------+------------------+
-| Copy Net from `[2] <#references>`__                  |   0.110          |
-+------------------------------------------------------+------------------+
-| Attn. Seq2Seq from `[2] <#references>`__             |   0.102          |
-+------------------------------------------------------+------------------+
-| Rule-Based from `[2] <#references>`__                |   0.660          |
-+------------------------------------------------------+------------------+
++------------------------------------------------+------------------+
+|                    Model                       |  Test BLEU       |
++================================================+==================+
+| DeepPavlov implementation of KV Retrieval Net  |   **0.132**      |
++------------------------------------------------+------------------+
+| KV Retrieven Net from  [1]_                    |   **0.132**      |
++------------------------------------------------+------------------+
+| Copy Net from  [1]_                            |   0.110          |
++------------------------------------------------+------------------+
+| Attn. Seq2Seq from  [1]_                       |   0.102          |
++------------------------------------------------+------------------+
+| Rule-Based from  [1]_                          |   0.660          |
++------------------------------------------------+------------------+
 
 References
 ----------
 
-[1] `A New Multi-Turn, Multi-Domain, Task-Oriented Dialogue Dataset - 2017 <https://nlp.stanford.edu/blog/a-new-multi-turn-multi-domain-task-oriented-dialogue-dataset/>`_
+.. [1] `Mihail Eric, Lakshmi Krishnan, Francois Charette, and Christopher D. Manning, "Key-Value Retrieval Networks for Task-Oriented Dialogue – 2017 <https://arxiv.org/abs/1705.05414>`_
 
-[2] `Mihail Eric, Lakshmi Krishnan, Francois Charette, and Christopher D. Manning, "Key-Value Retrieval Networks for Task-Oriented Dialogue – 2017 <https://arxiv.org/abs/1705.05414>`_
+.. [2] `A New Multi-Turn, Multi-Domain, Task-Oriented Dialogue Dataset - 2017 <https://nlp.stanford.edu/blog/a-new-multi-turn-multi-domain-task-oriented-dialogue-dataset/>`_
 
 .. |alt text| image:: ../_static/kvret_diagram.png

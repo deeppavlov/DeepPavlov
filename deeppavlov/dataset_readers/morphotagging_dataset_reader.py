@@ -159,5 +159,7 @@ class MorphotaggerDatasetReader(DatasetReader):
         for mode, filepath in zip(data_types, data_path):
             if mode == "dev":
                 mode = "valid"
+#             if mode == "test":
+#                 kwargs["read_only_words"] = True
             data[mode] = read_infile(filepath, **kwargs)
         return data

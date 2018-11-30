@@ -13,6 +13,10 @@ Concrete DatasetIterator classes.
 
 .. autoclass:: deeppavlov.dataset_iterators.dstc2_ner_iterator.Dstc2NerDatasetIterator
 
+.. autoclass:: deeppavlov.dataset_iterators.elmo_file_paths_iterator.ELMoFilePathsIterator
+
+.. autoclass:: deeppavlov.dataset_iterators.file_paths_iterator.FilePathsIterator
+
 .. autoclass:: deeppavlov.dataset_iterators.kvret_dialog_iterator.KvretDialogDatasetIterator
 
 .. autofunction:: deeppavlov.dataset_iterators.morphotagger_iterator.preprocess_data

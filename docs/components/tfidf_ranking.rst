@@ -4,14 +4,48 @@ TF-IDF Ranker
 
 This is an implementation of a document ranker based on tf-idf vectorization.
 The ranker implementation is based on `DrQA`_ project.
-The default ranker implementation takes a batch of queries as input and returns 5 document ids as output.
+The default ranker implementation takes a batch of queries as input and returns 5 document titles sorted via relevance.
+
+Quick Start
+===========
+
+Before using the model make sure that all required packages are installed running the command:
+
+.. code:: bash
+
+    python -m deeppavlov install en_ranker_tfidf_wiki
+
+Training and building (if you have your own data)
+
+.. code:: python
+
+    from deeppavlov import configs, train_model
+    ranker = train_model(configs.doc_retrieval.en_ranker_tfidf_wiki, download=True)
+
+Building (if you don't have your own data)
+
+.. code:: python
+
+    from deeppavlov import configs
+    from deeppavlov.core.commands.infer import build_model
+
+    ranker = build_model(configs.doc_retrieval.en_ranker_tfidf_wiki, load_trained=True)
+
+Inference
+
+.. code:: python
+
+    result = ranker(['Who is Ivan Pavlov?'])
+    print(result)
+
+Output
 
 ::
 
-    :: Who is Ivan Pavlov?
     >> ['Ivan Pavlov (lawyer)', 'Ivan Pavlov', 'Pavlovian session', 'Ivan Pavlov (film)', 'Vladimir Bekhterev']
 
-Text for the output ids can be further extracted with :class:`~deeppavlov.vocabs.wiki_sqlite.WikiSQLiteVocab` class.
+Text for the output titles can be further extracted with :class:`~deeppavlov.vocabs.wiki_sqlite.WikiSQLiteVocab` class.
+
 
 Configuration
 =============
@@ -27,7 +61,7 @@ Running the Ranker
 
 .. note::
 
-    Training and inferring the ranker requires ~16 GB RAM.
+    About **16 GB of RAM** required.
 
 .. _ranker_training:
 
@@ -38,15 +72,13 @@ Run the following to fit the ranker on **English** Wikipedia:
 
 .. code:: bash
 
-    cd deeppavlov/
-    python deep.py train configs/doc_retrieval/en_ranker_tfidf_wiki.json
+    python -m deppavlov train en_ranker_tfidf_wiki
 
 Run the following to fit the ranker on **Russian** Wikipedia:
 
 .. code:: bash
 
-    cd deeppavlov/
-    python deep.py train configs/doc_retrieval/ru_ranker_tfidf_wiki.json
+    python -m deeppavlov train ru_ranker_tfidf_wiki
 
 Interacting
 -----------
@@ -58,15 +90,13 @@ Run the following to interact with the **English** ranker:
 
 .. code:: bash
 
-    cd deeppavlov/
-    python deep.py interact configs/doc_retrieval/en_ranker_tfidf_wiki.json -d
+    python -m deeppavlov interact en_ranker_tfidf_wiki -d
 
 Run the following to interact with the **Russian** ranker:
 
 .. code:: bash
 
-    cd deeppavlov/
-    python deep.py interact configs/doc_retrieval/ru_ranker_tfidf_wiki.json -d
+    python -m deeppavlov ru_ranker_tfidf_wiki -d
 
 As a result of ranker training, a SQLite database and tf-idf matrix are created.
 
@@ -79,7 +109,7 @@ Wikipedia DB and pretrained tfidf matrices are downloaded in
 enwiki.db
 ---------
 
-**enwiki.db** SQLite database consists of **5159530** Wikipedia articles
+**enwiki.db** SQLite database consists of **5180368** Wikipedia articles
 and is built by the following steps:
 
 #. Download a Wikipedia dump file. We took the latest
@@ -131,10 +161,10 @@ Scores for **TF-IDF Ranker** model:
 
 +-----------------------------------------------------------------+----------------+----------------------+-----------------+
 | Model                                                           | Dataset        |  Wiki dump           |  Recall (top 5) |
-+-----------------------------------------------------------------+----------------+----------------------+-----------------+
++=================================================================+================+======================+=================+
 | :config:`DeepPavlov <doc_retrieval/en_ranker_tfidf_wiki.json>`  | SQuAD (dev)    |  enwiki (2018-02-11) |       75.6      |
-+-----------------------------------------------------------------+----------------+----------------------+-----------------+
-| `DrQA`_                                                         | SQuAD (dev)    |  enwiki (2016-12-21) |       77.8      |
++-----------------------------------------------------------------+                +----------------------+-----------------+
+| `DrQA`_                                                         |                |  enwiki (2016-12-21) |       77.8      |
 +-----------------------------------------------------------------+----------------+----------------------+-----------------+
 
 
