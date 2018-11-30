@@ -23,20 +23,21 @@ from os.path import join, isdir, isfile
 
 class Observer(object):
     """
-    The class implements data collection on how the experiment is going. Pipeline configuration information,
-    pipeline results, and time information is collected.
+    The class implements the functions of observing the course of experiments, collecting results, time and other useful
+    information, logging and storing it.
     """
     def __init__(self, name, root, info, date, plot):
         """
-        Init log, and creates folders for logs, report and checkpoints.
+        Initializes the log, creates a folders tree and files necessary for the observer to work.
 
         Args:
             name: str; name of the experiments.
             root: str; path to root folder.
-            info: dict; ome additional information that you want to add to the log, the content of the dictionary
+            info: dict; additional information that you want to add to the log, the content of the dictionary
              does not affect the algorithm
             date: str; date of the experiment.
         """
+
         self.exp_name = name
         self.exp_inf = info
         self.root = root
@@ -74,8 +75,7 @@ class Observer(object):
 
     def tmp_reset(self):
         """
-
-        :return:
+        Reinitialize temporary attributes.
         """
         # tmp parameters
         self.pipe_ind = 0
@@ -88,8 +88,7 @@ class Observer(object):
 
     def write(self):
         """
-
-        :return:
+        Write log in log_file.
         """
         if isfile(self.log_file):
             with open(self.log_file, 'r') as old_log:
@@ -104,9 +103,13 @@ class Observer(object):
 
     def exp_time(self, time):
         """
+        Adding the time duration of the experiment in log file.
 
-        :param time:
-        :return:
+        Args:
+            time: the time duration of the experiment
+
+        Returns:
+            None
         """
         with open(self.log_file, 'r') as old_log:
             old_log = json.load(old_log)
@@ -116,7 +119,7 @@ class Observer(object):
             json.dump(old_log, log_file)
 
     def update_log(self):
-        """ Updates the log with information about the new pipeline """
+        """ Updates a log with new pipeline information. """
 
         if (self.model is None) and (self.pipe_conf is not None):
             for component in self.pipe_conf:
@@ -140,17 +143,12 @@ class Observer(object):
         return self
 
     def save_config(self, conf, dataset_name, ind) -> None:
-        """
-        Save train config in checkpoint folder.
-        """
+        """ Save train config in checkpoint folder. """
         with open(join(self.save_path, dataset_name, "pipe_{}".format(ind), 'config.json'), 'w') as cf:
             json.dump(conf, cf)
 
     def save_best_pipe(self):
-        """
-
-        :return:
-        """
+        """ Calculate the best pipeline and delete others pipelines checkpoints. """
         dataset_res = {}
 
         with open(self.log_file, 'r') as log_file:
@@ -198,10 +196,14 @@ class Observer(object):
     @staticmethod
     def merge_logs(old_log, new_log):
         """
+        Merge a logs of two experiments.
 
-        :param old_log:
-        :param new_log:
-        :return:
+        Args:
+            old_log: config dict
+            new_log: config dict
+
+        Returns:
+            dict: new config
         """
         n_old = 0
         for dataset_name in old_log['experiments'].keys():
