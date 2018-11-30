@@ -73,8 +73,6 @@ class PipelineManager:
 
     Also you can save checkpoints for all pipelines, or only the best.
 
-    Write about save best
-
     Args:
         config_path: path to config file, or config dict.
 
