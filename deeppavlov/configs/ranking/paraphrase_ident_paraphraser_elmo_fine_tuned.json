@@ -45,7 +45,7 @@
             "elmo"
           ],
           "mini_batch_size": 8,
-          "spec": "{MODELS_PATH}/elmo-1b-benchmark/saves/hubs/tf_hub_model_epoch_n_1"
+          "spec": "{DOWNLOADS_PATH}/embeddings/elmo_para_fine_tuned"
         }
       },
       {
@@ -109,6 +109,10 @@
       {
         "url": "http://files.deeppavlov.ai/datasets/paraphraser_gold.zip",
         "subdir": "{DOWNLOADS_PATH}/paraphraser_data"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/elmo_news_wmt11-16-simple_reduce_para_fine_tuned.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/embeddings/elmo_para_fine_tuned"
       }
     ]
   }
