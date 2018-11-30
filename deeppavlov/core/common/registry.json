@@ -68,7 +68,7 @@
   "ontonotes_reader": "deeppavlov.dataset_readers.ontonotes_reader:OntonotesReader",
   "params_evolution": "deeppavlov.models.evolution.evolution_param_generator:ParamsEvolution",
   "params_search": "deeppavlov.core.common.params_search:ParamsSearch",
-  "paraphraser_pretrain_reader": "deeppavlov.dataset_readers.paraphrase_pretrain_reader:ParaphraserPretrainReader",
+  "paraphraser_pretrain_reader": "deeppavlov.dataset_readers.paraphraser_pretrain_reader:ParaphraserPretrainReader",
   "paraphraser_reader": "deeppavlov.dataset_readers.paraphraser_reader:ParaphraserReader",
   "proba2labels": "deeppavlov.models.classifiers.proba2labels:Proba2Labels",
   "pymorphy_russian_lemmatizer": "deeppavlov.models.preprocessors.russian_lemmatizer:PymorphyRussianLemmatizer",
