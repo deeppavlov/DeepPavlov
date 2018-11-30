@@ -45,7 +45,7 @@
             "elmo"
           ],
           "mini_batch_size": 8,
-          "spec": "https://tfhub.dev/google/elmo/2"
+          "spec": "{DOWNLOADS_PATH}/embeddings/elmo_ru_news"
         }
       },
       {
@@ -78,7 +78,7 @@
     "out": ["y_predicted"]
   },
   "train": {
-    "epochs": 200,
+    "epochs": 1,
     "batch_size": 256,
     "pytest_max_batches": 2,
     "train_metrics": ["f1", "acc", "log_loss"],
@@ -109,6 +109,10 @@
       {
         "url": "http://files.deeppavlov.ai/datasets/paraphraser_gold.zip",
         "subdir": "{DOWNLOADS_PATH}/paraphraser_data"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/embeddings/elmo_ru_news"
       }
     ]
   }
