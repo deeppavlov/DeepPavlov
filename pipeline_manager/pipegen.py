@@ -28,10 +28,10 @@ log = get_logger(__name__)
 
 class PipeGen:
     """
-    The class implements the function of generator of standard DeepPavlov configs. Based on the input config, the
-    generator creates a set of pipelines, as well as variants of the same pipeline with a different set of
-    hyperparameters using the "random" or "grid" search. Also in all generated configs the save and load paths change
-    to intermediate ones.
+    The :class:`~pipeline_manager.pipegen.PipeGen` implements the function of generator of standard DeepPavlov configs.
+    Based on the input config, the generator creates a set of pipelines, as well as variants of the same pipeline
+    with a different set of hyperparameters using the "random" or "grid" search. Also in all generated configs the save
+    and load paths change to intermediate ones.
     """
 
     def __init__(self,

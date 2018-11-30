@@ -23,8 +23,8 @@ from os.path import join, isdir, isfile
 
 class Observer(object):
     """
-    The class implements the functions of observing the course of experiments, collecting results, time and other useful
-    information, logging and storing it.
+    The :class:`~pipeline_manager.observer.Observer` implements the functions of observing the course of experiments,
+    collecting results, time and other useful information, logging and storing it.
     """
     def __init__(self, name, root, info, date, plot):
         """
