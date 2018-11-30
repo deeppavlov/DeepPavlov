@@ -45,7 +45,7 @@
             "elmo"
           ],
           "mini_batch_size": 8,
-          "spec": "{DOWNLOADS_PATH}/embeddings/elmo_ru_news"
+          "spec": "{DOWNLOADS_PATH}/embeddings/elmo_ru_wiki"
         }
       },
       {
@@ -111,8 +111,8 @@
         "subdir": "{DOWNLOADS_PATH}/paraphraser_data"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/embeddings/elmo_ru_news"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-wiki_600k_steps.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/embeddings/elmo_ru_wiki"
       }
     ]
   }
