@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 
 from os import mkdir
 from copy import copy
-from typing import Dict, List, Union, Iterable
+from typing import Dict, List, Tuple, Union, Iterable
 from os.path import join, isdir
 
 from py3nvml import py3nvml
@@ -37,7 +37,7 @@ GOLD_METRICS = {'Accuracy': ["classification_accuracy", "simple_accuracy"],
                 'F1 weighted': ["classification_f1_weighted", "simple_f1_weighted"]}
 
 
-def merge_logs(old_log, new_log):
+def merge_logs(old_log: dict, new_log: dict) -> dict:
     """
     Merge a logs of two experiments.
 
@@ -79,7 +79,7 @@ def merge_logs(old_log, new_log):
     return old_log
 
 
-def rename_met(log, gold_metrics=None):
+def rename_met(log: dict, gold_metrics: Union[str, Dict[str, List[str]]] = None) -> dict:
     """
     Renames metrics in the log to default values.
 
@@ -206,7 +206,7 @@ def get_available_gpus(num_gpus: Union[int, None] = None,
     return available_gpu
 
 
-def check_gpu_available(number: int, gpu_fraction=1.0):
+def check_gpu_available(number: int, gpu_fraction: float = 1.0) -> bool:
     """
     Checks if the graphics card is free.
 
@@ -238,7 +238,7 @@ def check_gpu_available(number: int, gpu_fraction=1.0):
         return False
 
 
-def get_num_gpu():
+def get_num_gpu() -> int:
     """
     Checks the number of discrete (nvidia) graphics cards on your computer.
 
@@ -258,7 +258,7 @@ def get_num_gpu():
 # _______________________________________________Generate new table____________________________________________________
 
 
-def get_data(log: dict):
+def get_data(log: dict) -> Tuple[int, Dict[str, List]]:
     """
     Retrieves the necessary information from the log to build a table with sorted results.
 
@@ -304,7 +304,7 @@ def get_data(log: dict):
     return max_com, dataset_names
 
 
-def write_info(sheet, num, target_metric, cell_format, full_time):
+def write_info(sheet: xlsxwriter, num: int, target_metric: str, cell_format: Dict, full_time: str) -> Tuple[int, int]:
     """ Write abstract info about experiment in table """
     # Start from the first cell. Rows and columns are zero indexed.
     # write info
@@ -318,7 +318,8 @@ def write_info(sheet, num, target_metric, cell_format, full_time):
     return 2, 0
 
 
-def write_legend(sheet, row, col, data_tipe, metric_names, max_com, cell_format):
+def write_legend(sheet: xlsxwriter, row: int, col: int, data_tipe: List[str], metric_names: Union[Dict, List[str]],
+                 max_com: int, cell_format: Dict) -> Tuple[int, int]:
     """ Write legend if the table """
     # write legend
     sheet.write(row, col, "Pipeline", cell_format)
@@ -334,8 +335,9 @@ def write_legend(sheet, row, col, data_tipe, metric_names, max_com, cell_format)
     return row + 1, col
 
 
-def write_dataset_name(sheet, sheet_2, row_1, row_2, col, name, dataset_list, format_, max_l, target_metric,
-                       metric_names):
+def write_dataset_name(sheet: xlsxwriter, sheet_2: xlsxwriter, row_1: int, row_2: int, col: int, name: str,
+                       dataset_list: List[Dict], format_: Dict, max_l: int, target_metric: str,
+                       metric_names: List[str]) -> Tuple[int, int]:
     """ Writes to the table the name of the dataset for which the table will be built """
     # write dataset name
     sheet.write(row_1, col, "Dataset name", format_)
@@ -359,7 +361,8 @@ def write_dataset_name(sheet, sheet_2, row_1, row_2, col, name, dataset_list, fo
     return row_1, row_2
 
 
-def write_exp(row1, row2, col, model_list, sheet, sheet_2, _format, max_l, target_metric, metric_names):
+def write_exp(row1: int, row2: int, col: int, model_list: List[Dict], sheet: xlsxwriter, sheet_2: xlsxwriter,
+              _format: Dict, max_l: int, target_metric: str, metric_names: List[str]) -> Tuple[int, int]:
     """ Writes legends to the table """
     row_1 = row1
     row_2 = row2
@@ -383,7 +386,7 @@ def write_exp(row1, row2, col, model_list, sheet, sheet_2, _format, max_l, targe
     return row_1, row_2
 
 
-def write_metrics(sheet, comp_dict, start_x, start_y, cell_format):
+def write_metrics(sheet: xlsxwriter, comp_dict: Dict, start_x: int, start_y: int, cell_format: Dict) -> None:
     """ Write metric to the table """
     data_names = list(comp_dict['res'].keys())
     metric_names = list(comp_dict['res'][data_names[-1]].keys())
@@ -395,7 +398,7 @@ def write_metrics(sheet, comp_dict, start_x, start_y, cell_format):
     return None
 
 
-def write_config(sheet, comp_dict, x, y, cell_format):
+def write_config(sheet: xlsxwriter, comp_dict: Dict, x: int, y: int, cell_format: Dict) -> None:
     """ Write config of pipeline in last cell in row"""
     z = {}
     for i, comp in enumerate(comp_dict['components']):
@@ -405,7 +408,8 @@ def write_config(sheet, comp_dict, x, y, cell_format):
     return None
 
 
-def write_pipe(sheet, pipe_dict, start_x, start_y, cell_format, max_, write_conf):
+def write_pipe(sheet: xlsxwriter, pipe_dict: Dict, start_x: int, start_y: int, cell_format: Dict, max_: int,
+               write_conf: bool) -> None:
     """ Add pipeline to the table """
     data_names = list(pipe_dict['res'].keys())
     metric_names = list(pipe_dict['res'][data_names[-1]].keys())
@@ -431,7 +435,8 @@ def write_pipe(sheet, pipe_dict, start_x, start_y, cell_format, max_, write_conf
     return None
 
 
-def write_table(worksheet, pipelines, row, col, cell_format, max_l, write_conf=True):
+def write_table(worksheet: xlsxwriter, pipelines: Union[Dict, List[dict]], row: int, col: int, cell_format: Dict,
+                max_l: int, write_conf: bool = True) -> int:
     """
     Writes a table to xlsx file.
 
@@ -454,7 +459,7 @@ def write_table(worksheet, pipelines, row, col, cell_format, max_l, write_conf=T
     return row
 
 
-def get_best(data: List[dict], target: str):
+def get_best(data: dict, target: str) -> List[Dict]:
     """
     Calculate the best pipeline.
 
@@ -465,7 +470,7 @@ def get_best(data: List[dict], target: str):
     Returns:
         best_pipes: list; List of pipelines
     """
-    def get_name(pipeline):
+    def get_name(pipeline: Dict) -> str:
         """
         Creates a short description of the pipeline as a string.
 
@@ -506,7 +511,7 @@ def get_best(data: List[dict], target: str):
     return best_pipes
 
 
-def sort_pipes(pipes: List[dict], target_metric: str):
+def sort_pipes(pipes: List[dict], target_metric: str) -> List[dict]:
     """ Sorts pipelines by target metric """
     ind_val = []
     sort_pipes_ = []
@@ -533,7 +538,7 @@ def sort_pipes(pipes: List[dict], target_metric: str):
     return sort_pipes_
 
 
-def build_pipeline_table(log_data: dict, save_path: str = './'):
+def build_pipeline_table(log_data: dict, save_path: str = './') -> None:
     """
     Creates a report table containing a brief description of all the pipelines and their results, as well as selected
     by the target metric.
@@ -581,7 +586,7 @@ def build_pipeline_table(log_data: dict, save_path: str = './'):
 # ___________________________________________________Generate plots___________________________________________________
 
 
-def get_met_info(log_: dict):
+def get_met_info(log_: Dict) -> Dict:
     """
     Retrieves the necessary information from the log to build a histogram of results.
 
@@ -641,7 +646,7 @@ def plot_res(info: dict,
              width: float = 0.2,
              fheight: int = 8,
              fwidth: int = 12,
-             ext: str = 'png'):
+             ext: str = 'png') -> None:
     """
     Creates a histogram with the results of various models based on the experiment log.
 

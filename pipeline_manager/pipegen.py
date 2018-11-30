@@ -13,9 +13,10 @@
 # limitations under the License.
 
 from os.path import join
+from pathlib import Path
 from copy import deepcopy
 from itertools import product
-from typing import Union, Dict, Generator
+from typing import Union, Dict, List, Generator, Iterator
 
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
@@ -35,10 +36,10 @@ class PipeGen:
     """
 
     def __init__(self,
-                 config: Union[Dict, str],
+                 config: Union[str, Dict, Path],
                  save_path: str,
                  mode: str='random',
-                 sample_num=10,
+                 sample_num: int = 10,
                  test_mode=False) -> None:
         """
         Initialize generator with input params.
@@ -100,7 +101,7 @@ class PipeGen:
                                           "don't contain the 'component_name' key.".format(i + 1, j + 1))
         return None
 
-    def get_len(self):
+    def get_len(self) -> None:
         """
         Calculate the length of generator.
 
@@ -116,7 +117,7 @@ class PipeGen:
     def __len__(self):
         return self.length
 
-    def pipeline_enumeration(self):
+    def pipeline_enumeration(self) -> Iterator:
         """
         Creates a primary set of pipelines using a self.main_config attribute.
 
@@ -150,7 +151,7 @@ class PipeGen:
 
         return product(*self.pipes)
 
-    def pipeline_gen(self):
+    def pipeline_gen(self) -> Iterator:
         """
         Creates a configs with a different set of hyperparameters based on the primary set of pipelines.
 
@@ -196,7 +197,7 @@ class PipeGen:
                     yield new_config
 
     # random generation
-    def random_conf_gen(self, pipe_components: list) -> Generator:
+    def random_conf_gen(self, pipe_components: List[dict]) -> Generator:
         """
         Creates a set of configs with a different set of hyperparameters using "random search".
 
@@ -234,7 +235,7 @@ class PipeGen:
 
     # grid generation
     @staticmethod
-    def grid_conf_gen(pipe_components: list) -> Generator:
+    def grid_conf_gen(pipe_components: List[dict]) -> Generator:
         """
         Creates a set of configs with a different set of hyperparameters using "grid search".
 
@@ -270,7 +271,11 @@ class PipeGen:
             yield search_conf
 
     @staticmethod
-    def change_load_path(config, n, save_path, dataset_name, test_mode=False):
+    def change_load_path(config: List[dict],
+                         n: int,
+                         save_path: str,
+                         dataset_name: str,
+                         test_mode: bool = False) -> List[dict]:
         """
         Change save_path and load_path attributes in standard DeepPavlov config.
 
@@ -307,5 +312,5 @@ class PipeGen:
                         component['save_path'] = join('..', save_path, "tmp", dataset_name, sp)
         return config
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs) -> Iterator:
         return self.generator

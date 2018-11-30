@@ -26,7 +26,7 @@ class Observer(object):
     The :class:`~pipeline_manager.observer.Observer` implements the functions of observing the course of experiments,
     collecting results, time and other useful information, logging and storing it.
     """
-    def __init__(self, name, root, info, date, plot):
+    def __init__(self, name: str, root: str, info: dict, date: str, plot: bool) -> None:
         """
         Initializes the log, creates a folders tree and files necessary for the observer to work.
 
@@ -73,7 +73,7 @@ class Observer(object):
                                                            target_metric=None),
                                experiments=OrderedDict())
 
-    def tmp_reset(self):
+    def tmp_reset(self) -> None:
         """
         Reinitialize temporary attributes.
         """
@@ -86,7 +86,7 @@ class Observer(object):
         self.batch_size = None
         self.dataset = None
 
-    def write(self):
+    def write(self) -> None:
         """
         Write log in log_file.
         """
@@ -101,7 +101,7 @@ class Observer(object):
             with open(self.log_file, 'w') as log_file:
                 json.dump(self.log, log_file)
 
-    def exp_time(self, time):
+    def exp_time(self, time: str) -> None:
         """
         Adding the time duration of the experiment in log file.
 
@@ -142,12 +142,12 @@ class Observer(object):
         self.write()
         return self
 
-    def save_config(self, conf, dataset_name, ind) -> None:
+    def save_config(self, conf: dict, dataset_name: str, ind: int) -> None:
         """ Save train config in checkpoint folder. """
         with open(join(self.save_path, dataset_name, "pipe_{}".format(ind), 'config.json'), 'w') as cf:
             json.dump(conf, cf)
 
-    def save_best_pipe(self):
+    def save_best_pipe(self) -> None:
         """ Calculate the best pipeline and delete others pipelines checkpoints. """
         dataset_res = {}
 
@@ -194,7 +194,7 @@ class Observer(object):
             rmtree(join(self.save_path, name))
 
     @staticmethod
-    def merge_logs(old_log, new_log):
+    def merge_logs(old_log: dict, new_log: dict) -> dict:
         """
         Merge a logs of two experiments.
 

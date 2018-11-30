@@ -20,7 +20,7 @@ from pathlib import Path
 from shutil import rmtree
 from psutil import cpu_count
 from datetime import datetime
-from typing import Union, Dict
+from typing import Union, Dict, Iterator
 from os.path import join, isdir
 from copy import copy, deepcopy
 from multiprocessing import Pool
@@ -120,7 +120,7 @@ class PipelineManager:
         gen_len: amount of pipelines in experiment
 
     """
-    def __init__(self, config_path: Union[str, Dict, Path]):
+    def __init__(self, config_path: Union[str, Dict, Path]) -> None:
         """
         Initialize observer, read input args, builds a directory tree, initialize date, start test of experiment on
         tiny data.
@@ -185,7 +185,7 @@ class PipelineManager:
         if self.do_test:
             self.test()
 
-    def prepare_multiprocess(self):
+    def prepare_multiprocess(self) -> None:
         """
         Calculates the number of workers and the set of available video cards, if gpu is used, based on init attributes.
         """
@@ -272,7 +272,7 @@ class PipelineManager:
 
     @staticmethod
     @unpack_args
-    def train_pipe(pipe, i, observer, gpu_ind=None):
+    def train_pipe(pipe: Dict, i: int, observer: Observer, gpu_ind: Union[int, None] = None) -> None:
         """
         Start learning single pipeline. Observer write all info in log file.
 
@@ -316,7 +316,7 @@ class PipelineManager:
         observer.save_config(pipe, dataset_name, i + 1)
         return None
 
-    def gpu_gen(self, gpu=False):
+    def gpu_gen(self, gpu: bool = False) -> Iterator:
         """
         Create generator that returning tuple of args fore self.train_pipe method.
 
@@ -332,7 +332,7 @@ class PipelineManager:
             for i, pipe_conf in enumerate(self.pipeline_generator()):
                 yield (deepcopy(pipe_conf), i, self.observer)
 
-    def _run(self):
+    def _run(self) -> None:
         """
         Run the experiment. Creates a report after the experiments.
         """
@@ -375,7 +375,7 @@ class PipelineManager:
         print("[ Report created ]")
         return None
 
-    def run(self):
+    def run(self) -> None:
         try:
             self._run()
         except KeyboardInterrupt:
@@ -390,7 +390,7 @@ class PipelineManager:
 
         return None
 
-    def _test(self):
+    def _test(self) -> None:
         """
         Run a test experiment on a small piece of data. The test supports multiprocessing.
         """
@@ -443,7 +443,7 @@ class PipelineManager:
         print('[ The test was successful ]')
         return None
 
-    def test(self):
+    def test(self) -> None:
         try:
             self._test()
         except KeyboardInterrupt:
@@ -454,7 +454,7 @@ class PipelineManager:
 
     @staticmethod
     @unpack_args
-    def test_pipe(ind, pipe_conf, gpu_ind=None):
+    def test_pipe(ind: int, pipe_conf: Dict, gpu_ind: Union[int, None] = None) -> None:
         """
         Start testing single pipeline.
 
@@ -467,7 +467,7 @@ class PipelineManager:
             None
 
         """
-        def test_dataset_reader_and_iterator(config, i):
+        def test_dataset_reader_and_iterator(config: Dict, i: int):
             """
             Creating a test iterator with small peace of train dataset. Config and data validation.
 
