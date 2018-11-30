@@ -78,12 +78,12 @@
     "out": ["y_predicted"]
   },
   "train": {
-    "epochs": 200,
+    "epochs": 1,
     "batch_size": 256,
     "pytest_max_batches": 2,
     "train_metrics": ["f1", "acc", "log_loss"],
     "metrics": ["f1", "acc", "log_loss"],
-    "validation_patience": 20,
+    "validation_patience": 1,
     "val_every_n_epochs": 1,
     "log_every_n_batches": 24
   },
