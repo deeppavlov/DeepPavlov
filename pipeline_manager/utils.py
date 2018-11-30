@@ -353,14 +353,14 @@ def write_dataset_name(sheet, sheet_2, row_1, row_2, col, name, dataset_list, fo
         sheet_2.merge_range(row_2, max_l + p + 1, row_2, max_l + p + len(metric_names), type_d, format_)
     row_2 += 1
 
-    row_1, row_2 = write_batch_size(row_1, row_2, col, dataset_list, sheet, sheet_2, format_, max_l, target_metric,
+    row_1, row_2 = write_exp(row_1, row_2, col, dataset_list, sheet, sheet_2, format_, max_l, target_metric,
                                     metric_names)
 
     return row_1, row_2
 
 
-def write_batch_size(row1, row2, col, model_list, sheet, sheet_2, _format, max_l, target_metric, metric_names):
-    """ Writes to the table the batch size """
+def write_exp(row1, row2, col, model_list, sheet, sheet_2, _format, max_l, target_metric, metric_names):
+    """ Writes legends to the table """
     row_1 = row1
     row_2 = row2
 
