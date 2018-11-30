@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 
 from os import mkdir
 from copy import copy
-from typing import Dict
+from typing import Dict, List, Union, Iterable
 from os.path import join, isdir
 
 from py3nvml import py3nvml
@@ -38,7 +38,16 @@ GOLD_METRICS = {'Accuracy': ["classification_accuracy", "simple_accuracy"],
 
 
 def merge_logs(old_log, new_log):
-    """ Merge two logs """
+    """
+    Merge a logs of two experiments.
+
+    Args:
+        old_log: config dict
+        new_log: config dict
+
+    Returns:
+        new config dict
+    """
     # update time
     t_old = old_log['experiment_info']['full_time'].split(':')
     t_new = new_log['experiment_info']['full_time'].split(':')
@@ -71,6 +80,16 @@ def merge_logs(old_log, new_log):
 
 
 def rename_met(log, gold_metrics=None):
+    """
+    Renames metrics in the log to default values.
+
+    Args:
+        log: config dict
+        gold_metrics: dict with map {'Default Metric Name': [list of metrics names whose need to be replaced on key]}
+
+    Returns:
+        new log (dict)
+    """
     if gold_metrics is None:
         gold_metrics = {'Accuracy': ["classification_accuracy", "simple_accuracy"],
                         'F1': ["simple_f1_macro", "classification_f1"],
@@ -99,9 +118,13 @@ def rename_met(log, gold_metrics=None):
 
 
 # -------------------------------------------------Work with gpus------------------------------------------------------
-def get_available_gpus(num_gpus=None, gpu_select=None, gpu_fraction=1.0):
+def get_available_gpus(num_gpus: Union[int, None] = None,
+                       gpu_select: Union[int, Iterable[int], None] = None,
+                       gpu_fraction: float = 1.0) -> List[int]:
     """
-    Checks for idle gpu.
+    Considers all available to the user graphics cards. And selects as available only those that meet the memory
+    criterion. If the memory of a video card is occupied by more than "X" percent, then the video card is considered
+    inaccessible. For the value of the parameter "X" is responsible "gpu_fraction" argument.
 
     Args:
         num_gpus : int; How many gpus you need (optional)
@@ -184,6 +207,19 @@ def get_available_gpus(num_gpus=None, gpu_select=None, gpu_fraction=1.0):
 
 
 def check_gpu_available(number: int, gpu_fraction=1.0):
+    """
+    Checks if the graphics card is free.
+
+    Args:
+        number: (int) number of graphics card
+        gpu_fraction: the parameter determines the criterion of whether the gpu card is free or not.
+                      If gpu_fraction == 1.0 only those cards whose memory is completely free will be
+                      considered as available. If gpu_fraction == 0.5 cards with no more than half of the memory
+                      will be considered as available.
+
+    Returns:
+        True of False
+    """
     # Try connect with NVIDIA drivers
     try:
         py3nvml.nvmlInit()
@@ -203,6 +239,12 @@ def check_gpu_available(number: int, gpu_fraction=1.0):
 
 
 def get_num_gpu():
+    """
+    Checks the number of discrete (nvidia) graphics cards on your computer.
+
+    Returns:
+        numdevices: (int) amount of discrete graphics cards (nvidia) on your computer
+    """
     # Try connect with NVIDIA drivers
     try:
         py3nvml.nvmlInit()
@@ -216,7 +258,17 @@ def get_num_gpu():
 # _______________________________________________Generate new table____________________________________________________
 
 
-def get_data(log):
+def get_data(log: dict):
+    """
+    Retrieves the necessary information from the log to build a table with sorted results.
+
+    Args:
+        log: dict; log of the experiment
+
+    Returns:
+        max_com: int; maximum pipeline length (in components)
+        dataset_names: dict; dictionary with the necessary information to build a table
+    """
     dataset_names = {}
     max_com = 0
 
@@ -253,6 +305,7 @@ def get_data(log):
 
 
 def write_info(sheet, num, target_metric, cell_format, full_time):
+    """ Write abstract info about experiment in table """
     # Start from the first cell. Rows and columns are zero indexed.
     # write info
     sheet.write(0, 0, "Number of pipelines:", cell_format)
@@ -266,6 +319,7 @@ def write_info(sheet, num, target_metric, cell_format, full_time):
 
 
 def write_legend(sheet, row, col, data_tipe, metric_names, max_com, cell_format):
+    """ Write legend if the table """
     # write legend
     sheet.write(row, col, "Pipeline", cell_format)
     sheet.merge_range(row, col + 1, row, max_com - 1, "Preprocessing", cell_format)
@@ -282,6 +336,7 @@ def write_legend(sheet, row, col, data_tipe, metric_names, max_com, cell_format)
 
 def write_dataset_name(sheet, sheet_2, row_1, row_2, col, name, dataset_list, format_, max_l, target_metric,
                        metric_names):
+    """ Writes to the table the name of the dataset for which the table will be built """
     # write dataset name
     sheet.write(row_1, col, "Dataset name", format_)
     sheet.write(row_1, col + 1, name, format_)
@@ -305,6 +360,7 @@ def write_dataset_name(sheet, sheet_2, row_1, row_2, col, name, dataset_list, fo
 
 
 def write_batch_size(row1, row2, col, model_list, sheet, sheet_2, _format, max_l, target_metric, metric_names):
+    """ Writes to the table the batch size """
     row_1 = row1
     row_2 = row2
 
@@ -328,6 +384,7 @@ def write_batch_size(row1, row2, col, model_list, sheet, sheet_2, _format, max_l
 
 
 def write_metrics(sheet, comp_dict, start_x, start_y, cell_format):
+    """ Write metric to the table """
     data_names = list(comp_dict['res'].keys())
     metric_names = list(comp_dict['res'][data_names[-1]].keys())
 
@@ -339,6 +396,7 @@ def write_metrics(sheet, comp_dict, start_x, start_y, cell_format):
 
 
 def write_config(sheet, comp_dict, x, y, cell_format):
+    """ Write config of pipeline in last cell in row"""
     z = {}
     for i, comp in enumerate(comp_dict['components']):
         z[str(i)] = comp['conf']
@@ -374,6 +432,21 @@ def write_pipe(sheet, pipe_dict, start_x, start_y, cell_format, max_, write_conf
 
 
 def write_table(worksheet, pipelines, row, col, cell_format, max_l, write_conf=True):
+    """
+    Writes a table to xlsx file.
+
+    Args:
+        worksheet: object of xlsxwriter
+        pipelines: list of dicts;
+        row: int; number of row
+        col: int; number of column
+        cell_format: dict; described format of table cell
+        max_l: int; maximum len of table in cells
+        write_conf: bool; determine writing config string in last cell or not
+
+    Returns:
+        row: int; number of row in table
+    """
     # Write pipelines table
     for pipe in pipelines:
         write_pipe(worksheet, pipe, row, col, cell_format, max_l, write_conf)
@@ -381,8 +454,27 @@ def write_table(worksheet, pipelines, row, col, cell_format, max_l, write_conf=T
     return row
 
 
-def get_best(data, target):
+def get_best(data: List[dict], target: str):
+    """
+    Calculate the best pipeline.
+
+    Args:
+        data:  list of dict containing information about pipelines
+        target: str; name of target metric
+
+    Returns:
+        best_pipes: list; List of pipelines
+    """
     def get_name(pipeline):
+        """
+        Creates a short description of the pipeline as a string.
+
+        Args:
+            pipeline: dict; pipeline config
+
+        Returns:
+            string with tiny name of pipeline
+        """
         z = []
         for com in pipeline['components']:
             z.append(com['name'])
@@ -414,7 +506,8 @@ def get_best(data, target):
     return best_pipes
 
 
-def sort_pipes(pipes, target_metric):
+def sort_pipes(pipes: List[dict], target_metric: str):
+    """ Sorts pipelines by target metric """
     ind_val = []
     sort_pipes_ = []
     dtype = [('value', 'float'), ('index', 'int')]
@@ -440,7 +533,18 @@ def sort_pipes(pipes, target_metric):
     return sort_pipes_
 
 
-def build_pipeline_table(log_data, save_path='./'):
+def build_pipeline_table(log_data: dict, save_path: str = './'):
+    """
+    Creates a report table containing a brief description of all the pipelines and their results, as well as selected
+    by the target metric.
+
+    Args:
+        log_data: dict; log of the experiment
+        save_path: str; path to the folder where table will be saved
+
+    Returns:
+        None
+    """
     exp_name = log_data['experiment_info']['exp_name']
     date = log_data['experiment_info']['date']
     metrics = log_data['experiment_info']['metrics']
@@ -477,7 +581,16 @@ def build_pipeline_table(log_data, save_path='./'):
 # ___________________________________________________Generate plots___________________________________________________
 
 
-def get_met_info(log_):
+def get_met_info(log_: dict):
+    """
+    Retrieves the necessary information from the log to build a histogram of results.
+
+    Args:
+        log_: dict; experiment log
+
+    Returns:
+        data: dict;
+    """
 
     def analize(log: Dict):
         main = dict()
@@ -521,7 +634,30 @@ def get_met_info(log_):
     return data
 
 
-def plot_res(info, name, savepath='./', save=True, width=0.2, fheight=8, fwidth=12, ext='png'):
+def plot_res(info: dict,
+             name: str,
+             savepath: str = './',
+             save: bool = True,
+             width: float = 0.2,
+             fheight: int = 8,
+             fwidth: int = 12,
+             ext: str = 'png'):
+    """
+    Creates a histogram with the results of various models based on the experiment log.
+
+    Args:
+        info: dict; data for the plot
+        name: str; name of the plot
+        savepath: str; path to the folder where plot will be saved
+        save: bool; determine save plot or show it without saving
+        width: float; width between columns of histogram
+        fheight: int; height of the plot
+        fwidth: int; width of the plot
+        ext: str; extension of the plot file
+
+    Returns:
+        None
+    """
     # prepeare data
 
     bar_list = []
@@ -596,6 +732,17 @@ def plot_res(info, name, savepath='./', save=True, width=0.2, fheight=8, fwidth=
 
 
 def results_visualization(root: str, plot: bool, merge: bool = False) -> None:
+    """
+    It builds a reporting table and a histogram of results for different models, based on data from the experiment log.
+
+    Args:
+        root: str; path to the folder where report will be created
+        plot: bool; determine build plots or not
+        merge: bool; determine merge logs and reports from different experiments or not
+
+    Returns:
+        None
+    """
 
     if not merge:
         with open(join(root, root.split('/')[-1] + '.json'), 'r') as log_file:
@@ -610,6 +757,7 @@ def results_visualization(root: str, plot: bool, merge: bool = False) -> None:
             # plot histograms
             for dataset_name, dataset_val in info.items():
                 plot_res(dataset_val, dataset_name, join(root, 'images'))
+    # TODO del this code block if it not needed anymore
     else:
         logs_names = os.listdir(root)
         logs = []
