@@ -23,8 +23,8 @@
         {
           "id": "siam_sent_vocab",
           "class_name": "simple_vocab",
-          "save_path": "{MODELS_PATH}/paraphraser_elmo_ft_vocabs/sent.dict",
-          "load_path": "{MODELS_PATH}/paraphraser_elmo_ft_vocabs/sent.dict"
+          "save_path": "{MODELS_PATH}/paraphraser_elmo_ft_pre_1_vocabs/sent.dict",
+          "load_path": "{MODELS_PATH}/paraphraser_elmo_ft_pre_1_vocabs/sent.dict"
         },
         "tokenizer":
         {
@@ -34,8 +34,8 @@
         {
           "id": "siam_vocab",
           "class_name": "simple_vocab",
-          "save_path": "{MODELS_PATH}/paraphraser_elmo_ft_vocabs/tok.dict",
-          "load_path": "{MODELS_PATH}/paraphraser_elmo_ft_vocabs/tok.dict"
+          "save_path": "{MODELS_PATH}/paraphraser_elmo_ft_pre_1_vocabs/tok.dict",
+          "load_path": "{MODELS_PATH}/paraphraser_elmo_ft_pre_1_vocabs/tok.dict"
         },
         "embedder":
         {
@@ -45,7 +45,7 @@
             "elmo"
           ],
           "mini_batch_size": 8,
-          "spec": "{DOWNLOADS_PATH}/embeddings/elmo_para_fine_tuned"
+          "spec": "{DOWNLOADS_PATH}/embeddings/elmo_para_pre_1_fine_tuned"
         }
       },
       {
@@ -70,8 +70,8 @@
         "learning_rate": 1e-3,
         "triplet_loss": false,
         "batch_size": 256,
-        "save_path": "{MODELS_PATH}/paraphraser_elmo_ft_model/model_weights.h5",
-        "load_path": "{MODELS_PATH}/paraphraser_elmo_ft_model/model_weights.h5",
+        "save_path": "{MODELS_PATH}/paraphraser_elmo_ft_pre_1_model/model_weights.h5",
+        "load_path": "{MODELS_PATH}/paraphraser_elmo_ft_pre_1_model/model_weights.h5",
         "preprocess": "#preproc.__call__"
       }
     ],
@@ -111,8 +111,8 @@
         "subdir": "{DOWNLOADS_PATH}/paraphraser_data"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/elmo_news_wmt11-16-simple_reduce_para_fine_tuned.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/embeddings/elmo_para_fine_tuned"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/elmo_news_wmt11-16-simple_reduce_para_pretrain_fine_tuned_ep1.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/embeddings/elmo_para_pre_1_fine_tuned"
       }
     ]
   }
