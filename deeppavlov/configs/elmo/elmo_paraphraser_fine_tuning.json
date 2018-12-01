@@ -69,6 +69,11 @@
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
       "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
     ],
-    "download": []
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/paraphraser_train_and_pretrain_texts.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/paraphraser_train_and_pretrain_texts"
+      }
+    ]
   }
 }
