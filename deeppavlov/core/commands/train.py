@@ -251,6 +251,10 @@ def _test_model(model: Chainer, metrics_functions: List[Metric],
 
     expected_outputs = list(set().union(model.out_params, *[m.inputs for m in metrics_functions]))
 
+    if not iterator.data[data_type]:
+        log.warning(f'Could not log examples for {data_type}, assuming it\'s empty')
+        return {'metrics': None}
+
     outputs = {out: [] for out in expected_outputs}
     examples = 0
     for x, y_true in iterator.gen_batches(batch_size, data_type, shuffle=False):
