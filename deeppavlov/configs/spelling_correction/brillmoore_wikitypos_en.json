@@ -1,9 +1,10 @@
 {
   "dataset_reader": {
-    "class": "deeppavlov.dataset_readers.typos_reader:TyposWikipedia"
+    "class_name": "deeppavlov.dataset_readers.typos_reader:TyposWikipedia",
+    "data_path": "{DOWNLOADS_PATH}"
   },
   "dataset_iterator": {
-    "class": "deeppavlov.dataset_iterators.typos_iterator:TyposDatasetIterator",
+    "class_name": "deeppavlov.dataset_iterators.typos_iterator:TyposDatasetIterator",
     "test_ratio": 0.05
   },
   "chainer":{
@@ -11,13 +12,13 @@
     "in_y": ["y"],
     "pipe": [
       {
-        "name": "str_lower",
+        "class_name": "str_lower",
         "id": "lower",
         "in": ["x"],
         "out": ["x_lower"]
       },
       {
-        "name": "nltk_moses_tokenizer",
+        "class_name": "nltk_moses_tokenizer",
         "id": "tokenizer",
         "in": ["x_lower"],
         "out": ["x_tokens"]
@@ -31,19 +32,20 @@
         "fit_on": ["x_tokens", "y_tokens"],
         "in": ["x_tokens"],
         "out": ["tokens_candidates"],
-        "name": "spelling_error_model",
+        "class_name": "spelling_error_model",
         "window": 1,
         "candidates_count": 4,
         "dictionary": {
-          "class": "deeppavlov.vocabs.typos:Wiki100KDictionary"
+          "class_name": "deeppavlov.vocabs.typos:Wiki100KDictionary",
+          "data_dir": "{DOWNLOADS_PATH}/vocabs"
         },
-        "save_path": "error_model/error_model.tsv"
+        "save_path": "{MODELS_PATH}/error_model/error_model.tsv"
       },
       {
-        "class": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
+        "class_name": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
         "in": ["tokens_candidates"],
         "out": ["y_predicted_tokens"],
-        "load_path": "language_models/en_wiki_no_punkt.arpa.binary"
+        "load_path": "{DOWNLOADS_PATH}/language_models/en_wiki_no_punkt.arpa.binary"
       },
       {
         "ref": "tokenizer",
@@ -58,18 +60,26 @@
     "test_best": true
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/spelling.txt"
+      "{DEEPPAVLOV_PATH}/requirements/spelling.txt"
     ],
     "labels": {
       "telegram_utils": "ErrorModel",
       "server_utils": "ErrorModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/error_model.tar.gz",
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/error_model.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
       {
         "url": "http://files.deeppavlov.ai/lang_models/en_wiki_no_punkt.arpa.binary.gz",
-        "subdir": "language_models"
+        "subdir": "{DOWNLOADS_PATH}/language_models"
       }
     ]
   }

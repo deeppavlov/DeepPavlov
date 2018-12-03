@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import List, Dict, Union, Optional
 
 from deeppavlov.core.commands.infer import build_model
-from deeppavlov.core.commands.utils import set_deeppavlov_root, expand_path
+from deeppavlov.core.commands.utils import expand_path, parse_config
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import get_model
@@ -23,13 +23,12 @@ def predict_with_model(config_path: [Path, str]) -> List[Optional[List[str]]]:
         or a list of full CONLL-U descriptions.
 
     """
-    config = read_json(config_path)
-    set_deeppavlov_root(config)
+    config = parse_config(config_path)
 
     reader_config = config['dataset_reader']
-    reader = get_model(reader_config['name'])()
+    reader = get_model(reader_config['class_name'])()
     data_path = expand_path(reader_config.get('data_path', ''))
-    read_params = {k: v for k, v in reader_config.items() if k not in ['name', 'data_path']}
+    read_params = {k: v for k, v in reader_config.items() if k not in ['class_name', 'data_path']}
     data: Dict = reader.read(data_path, **read_params)
 
     iterator_config = config['dataset_iterator']
@@ -75,12 +74,28 @@ class TagOutputPrettifier(Component):
 
     def __init__(self, format_mode: str = "basic", return_string: bool = True,
                  begin: str = "", end: str = "", sep: str = "\n", **kwargs) -> None:
-        self.format_mode = format_mode
+        self.set_format_mode(format_mode)
         self.return_string = return_string
-        self._make_format_string()
         self.begin = begin
         self.end = end
         self.sep = sep
+
+    def set_format_mode(self, format_mode: str = "basic") -> None:
+        """A function that sets format for output and recalculates `self.format_string`.
+
+        Args:
+            format_mode: output format,
+                in `basic` mode output data contains 4 columns (id, word, pos, features),
+                in `conllu` or `ud` mode it contains 10 columns:
+                id, word, lemma, pos, xpos, feats, head, deprel, deps, misc
+                (see http://universaldependencies.org/format.html for details)
+                Only id, word, tag and pos values are present in current version,
+                other columns are filled by `_` value.
+
+        Returns:
+        """
+        self.format_mode = format_mode
+        self._make_format_string()
 
     def _make_format_string(self) -> None:
         if self.format_mode == "basic":

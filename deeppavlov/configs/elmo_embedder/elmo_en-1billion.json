@@ -6,17 +6,17 @@
     "pipe": [
       {
         "in": ["sentences"],
-        "name": "lazy_tokenizer",
+        "class_name": "lazy_tokenizer",
         "out": ["tokens"]
       },
       {
-        "name": "elmo",
+        "class_name": "elmo_embedder",
         "elmo_output_names": ["lstm_outputs1", "lstm_outputs2", "word_emb"],
         "mini_batch_size": 32,
         "in": [
           "tokens"
         ],
-        "spec": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-twitter_2013-01_2018-04_600k_steps.tar.gz",
+        "spec": "https://tfhub.dev/google/elmo/2",
         "out": [
           "tokens_emb"
         ]
@@ -27,9 +27,14 @@
     ]
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/elmo.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
     ]
   }
 }

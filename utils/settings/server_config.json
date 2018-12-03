@@ -26,10 +26,10 @@
       "model_endpoint": "/slot-fill",
       "model_args_names": ""
     },
-    "EcommerceBot": {
+    "EcommerceSkill": {
       "host": "",
       "port": "",
-      "model_endpoint": "/ecommerce_bot",
+      "model_endpoint": "/ecommerce_skill",
       "model_args_names": ["query", "history", "state"]
     },
     "ErrorModel": {

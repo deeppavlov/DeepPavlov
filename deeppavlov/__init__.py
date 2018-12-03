@@ -24,13 +24,13 @@ try:
     from .download import deep_download
 
     # TODO: make better and add typing
-    def train_model(config, download=False):
-        train_evaluate_model_from_config(config, download=download)
+    def train_model(config, download=False, recursive=False):
+        train_evaluate_model_from_config(config, download=download, recursive=recursive)
         return build_model(config, load_trained=True)
 except ImportError:
     'Assuming that requirements are not yet installed'
 
-__version__ = '0.0.9'
+__version__ = '0.1.0'
 __author__ = 'Neural Networks and Deep Learning lab, MIPT'
 __description__ = 'An open source library for building end-to-end dialog systems and training chatbots.'
 __keywords__ = ['NLP', 'NER', 'SQUAD', 'Intents', 'Chatbot']

@@ -219,7 +219,7 @@ class GoalOrientedBotNetwork(EnhancedTFModel):
 
         self.sess.run(tf.global_variables_initializer())
 
-        if tf.train.checkpoint_exists(str(self.save_path.resolve())):
+        if tf.train.checkpoint_exists(str(self.load_path.resolve())):
             log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
             self.load()
         else:

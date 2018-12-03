@@ -10,82 +10,135 @@ Dependencies corpora <www.universaldependencies.org>`__.
 Our model achieves the state-of-the-art performance among open source
 systems.
 
-+----------------+--------------+-----------------+------------------+
-|    Language    | Code         | UDPipe accuracy | Our top accuracy |
-+----------------+--------------+-----------------+------------------+
-| Arabic         | ar           | 88.31           | 90.85            |
-+----------------+--------------+-----------------+------------------+
-| Czech          | cs           | 91.86           | 94.35            |
-+----------------+--------------+-----------------+------------------+
-| English        | en           | 92.53           | 93.00            |
-+----------------+--------------+-----------------+------------------+
-| French         | fr           | 95.25           | 95.45            |
-+----------------+--------------+-----------------+------------------+
-| German         | de           | 76.65           | 83.83            |
-+----------------+--------------+-----------------+------------------+
-| Hindi          | ar           | 87.74           | 90.01            |
-+----------------+--------------+-----------------+------------------+
-| Hungarian      | ar           | 69.52           | 75.34            |
-+----------------+--------------+-----------------+------------------+
-| Italian        | it           | 96.33           | 96.47            |
-+----------------+--------------+-----------------+------------------+
-| Russian        | ru_syntagrus | 93.57           | 96.23            |
-+----------------+--------------+-----------------+------------------+
-| Spanish        | es_ancora    | 96.88           | 97.00            |
-+----------------+--------------+-----------------+------------------+
-| Turkish        | tr           | 86.98           | 88.03            |
-+----------------+--------------+-----------------+------------------+
++----------------+--------------+-----------------+------------------+----------------+
+|    Language    | Code         | UDPipe accuracy | Our top accuracy | Model size (MB)|
++================+==============+=================+==================+================+
+| Arabic         | ar           | 88.31           | 90.85            |  23.7          |
++----------------+--------------+-----------------+------------------+----------------+
+| Czech          | cs           | 91.86           | 94.35            |  41.8          |
++----------------+--------------+-----------------+------------------+----------------+
+| English        | en           | 92.53           | 93.00            |  16.9          |
++----------------+--------------+-----------------+------------------+----------------+
+| French         | fr           | 95.25           | 95.45            |  19.0          |
++----------------+--------------+-----------------+------------------+----------------+
+| German         | de           | 76.65           | 83.83            |  18.6          |
++----------------+--------------+-----------------+------------------+----------------+
+| Hindi          | hi           | 87.74           | 90.01            |  21.9          |
++----------------+--------------+-----------------+------------------+----------------+
+| Hungarian      | hu           | 69.52           | 75.34            |  15.4          |
++----------------+--------------+-----------------+------------------+----------------+
+| Italian        | it           | 96.33           | 96.47            |  32.0          |
++----------------+--------------+-----------------+------------------+----------------+
+| Russian        | ru_syntagrus | 93.57           | 96.23            |  48.7          |
++----------------+--------------+-----------------+------------------+----------------+
+| Spanish        | es_ancora    | 96.88           | 97.00            |  20.8          |
++----------------+--------------+-----------------+------------------+----------------+
+| Turkish        | tr           | 86.98           | 88.03            |  16.1          |
++----------------+--------------+-----------------+------------------+----------------+
+
+===========================
+Usage examples.
+===========================
+
+Before using the model make sure that all required packages are installed using the command:
+
+.. code:: bash
+
+    python -m deeppavlov install morpho_ru_syntagrus_pymorphy
+
+For Windows platform one have to set `KERAS_BACKEND` to `tensorflow` (it could be done only once):
+
+.. code:: bash
+
+    set "KERAS_BACKEND=tensorflow"
+
+Python:
+---------------------------
+
+For Windows platform if one did not set `KERAS_BACKEND` to `tensorflow` from command line it could be done in python code in the following way:
+
+.. code:: python
+
+    import os
+
+    os.environ["KERAS_BACKEND"] = "tensorflow"
+
+
+.. code:: python
+
+    from deeppavlov import build_model, configs
+    model = build_model(configs.morpho_tagger.UD2_0.morpho_ru_syntagrus_pymorphy, download=True)
+    sentences = ["Я шёл домой по незнакомой улице.", "Девушка пела в церковном хоре о всех уставших в чужом краю."]
+    for parse in model(sentences):
+        print(parse)
+
+If you want to use the obtained tags further in Python, just split the output using tabs and newlines.
+
+You may also pass the tokenized sentences instead of raw ones:
+
+.. code:: python
+
+    sentences = [["Я", "шёл", "домой", "по", "незнакомой", "улице", "."]]
+    for parse in model(sentences):
+        print(parse)
+
+If you want the output in UD format, try setting ``"data_format": ud`` in the ``tag_output_prettifier`` section
+of configuration file you import (``configs/morpho_tagger/UD2_0/morpho_ru_syntagrus_pymorphy.json`` in this case).
+
+Command line:
+----------------
 
 If you want to use our models from scratch, do the following
 (all the examples are for ru\_syntagrus corpus, change the filenames accordingly to invoke models for other languages):
 
 #. Download data
 
-   ::
+    .. code:: bash
 
        python -m deeppavlov download morpho_ru_syntagrus_train
 
    To perform all downloads in runtime you can also run all subsequent
    commands with ``-d`` key,
+
 #. To apply a pre-trained ru\_syntagrus model to ru\_syntagrus test
    data, run
 
-   ::
+    .. code:: bash
 
        python -m deeppavlov.models.morpho_tagger morpho_ru_syntagrus_predict
 
    to use a basic model, or
 
-   ::
+    .. code:: bash
 
        python -m deeppavlov.models.morpho_tagger morpho_ru_syntagrus_predict_pymorphy
 
    to apply a model which additionally utilizes information from
    `Pymorphy2 <http://pymorphy2.readthedocs.io>`__ library.
 
-A subdirectory ``results`` will be created in your current working
-directory
-and predictions will be written to the file
-``ud_ru_syntagrus_test.res`` in it.
+A subdirectory ``results`` will be created in the working directory of ``deeppavlov`` module,
+which is ``~/.deeppavlov`` by default, and predictions will be written to the file ``ud_ru_syntagrus_test.res`` in it.
+You can change the paths in corresponding sections of configuration file.
 
 #. To evaluate ru\_syntagrus model on ru\_syntagrus test subset, run
 
-   ::
+   .. code:: bash
 
        python -m deeppavlov evaluate morpho_ru_syntagrus_train
 
 #. To retrain model on ru\_syntagrus dataset, run one of the following
    (the first is for Pymorphy-enriched model)
 
-   ::
+   .. code:: bash
 
        python -m deeppavlov train morpho_ru_syntagrus_train_pymorphy
        python -m deeppavlov train morpho_ru_syntagrus_train
 
    Be careful, one epoch takes 8-60 minutes depending on your GPU.
+
 #. To tag Russian sentences from stdin, run
 
-   ::
+   .. code:: bash
 
        python -m deeppavlov interact morpho_ru_syntagrus_predict_pymorphy
 
@@ -162,8 +215,13 @@ Test data
 ~~~~~~~~~
 
 When annotating unlabeled text, our model expects the data in
-one-word-per-line format
-with sentences separated by blank line.
+10-column UD format as well. However, it does not pat attention to any column except the first one,
+which should be a number, and the second, which must contain a word.
+You can also pass only the words with exactly one word on each line
+by adding ``"from_words": True`` to ``dataset_reader`` section.
+Sentences are separated with blank lines.
+
+
 
 Algorithm description
 ---------------------
@@ -215,9 +273,9 @@ Training configuration
 
 We distribute pre-trained models for 11 languages trained on Universal Dependencies data.
 Configuration files for reproducible training are also available in
-``deeppavlov/configs/morpho_tagger/UD2.0``, for
+:config:`deeppavlov/configs/morpho_tagger/UD2.0 <morpho_tagger/UD2.0>`, for
 example
-``deeppavlov/configs/morpho_tagger/UD2.0/morpho_en.json``.
+:config:`deeppavlov/configs/morpho_tagger/UD2.0/morpho_en.json <morpho_tagger/UD2.0/morpho_en.json>`.
 The configuration file consists of several parts:
 
 Dataset Reader
@@ -229,12 +287,12 @@ The dataset reader describes the instance of
 ::
 
     "dataset_reader": {
-        "name": "morphotagger_dataset_reader",
-        "data_path": "UD2.0_source",
+        "class_name": "morphotagger_dataset_reader",
+        "data_path": "{DOWNLOADS_PATH}/UD2.0_source",
         "language": "en", "data_types": ["train", "dev", "test"]
       }
 
-``name`` field refers to the class MorphotaggerDatasetReader,
+``class_name`` field refers to the class MorphotaggerDatasetReader,
 ``data_path`` contains the path to data directory, the ``language``
 field is used to derive the name of training and development file.
 Alternatively, you can specify these files separately by full (or absolute) paths
@@ -243,10 +301,10 @@ like
 ::
 
     "dataset_reader": {
-        "name": "morphotagger_dataset_reader",
-        "data_path": ["UD2.0_source/en-ud-train.conllu",
-                      "UD2.0_source/en-ud-dev.conllu",
-                      "UD2.0_source/en-ud-test.conllu"]
+        "class_name": "morphotagger_dataset_reader",
+        "data_path": ["{DOWNLOADS_PATH}/UD2.0_source/en-ud-train.conllu",
+                      "{DOWNLOADS_PATH}/UD2.0_source/en-ud-dev.conllu",
+                      "{DOWNLOADS_PATH}/UD2.0_source/en-ud-test.conllu"]
         "data_types": ["train", "dev", "test"]
       }
 
@@ -258,9 +316,9 @@ the dev part
 you need to resplit your data as described in `Dataset
 Iterator <#dataset-iterator>`__ section.
 
-Your data should be in CONLL-U format. It refers to `predict` mode also, but in this case only word
+Your data should be in CONLL-U format. It refers to ``predict`` mode also, but in this case only word
 column is taken into account. If your data is in single word per line format and you do not want to
-reformat it, add `"from_words": True` to ``dataset_reader`` section. You can also specify
+reformat it, add ``"from_words": True`` to ``dataset_reader`` section. You can also specify
 which columns contain words, tags and detailed tags, for documentation see
 :func:`Documentation <deeppavlov.dataset_readers.morphotagging_dataset_reader.read_infile>`.
 
@@ -273,7 +331,7 @@ performs simple batching and shuffling.
 ::
 
     "dataset_iterator": {
-        "name": "morphotagger_dataset"
+        "class_name": "morphotagger_dataset"
     }
 
 By default it has no parameters, but if your training and validation
@@ -283,7 +341,7 @@ are in the same file, you may specify validation split here:
 ::
 
     "dataset_iterator": {
-        "name": "morphotagger_dataset",
+        "class_name": "morphotagger_dataset",
         "validation_split": 0.2
     }
 
@@ -293,7 +351,7 @@ Chainer
 The ``chainer`` part of the configuration file contains the
 specification of the neural network model and supplementary things such as vocabularies.
 Chainer refers to an instance of :class:`~deeppavlov.core.common.chainer.Chainer`, see
-<intro/config_description> for a complete description.
+:doc:`config_description </intro/config_description>` for a complete description.
 
 The major part of ``chainer`` is ``pipe``. The ``pipe`` contains
 vocabularies and the network itself as well
@@ -305,7 +363,7 @@ and normalizes it (see :class:`~deeppavlov.models.preprocessors.capitalization.C
     "pipe": [
           {
             "id": "lowercase_preprocessor",
-            "name": "lowercase_preprocessor",
+            "class_name": "lowercase_preprocessor",
             "in": ["x"],
             "out": ["x_processed"]
           },
@@ -317,28 +375,28 @@ model should predict to tag indexes.
 
     {
         "id": "tag_vocab",
-        "name": "default_vocab",
+        "class_name": "default_vocab",
         "fit_on": ["y"],
         "level": "token",
         "special_tokens": ["PAD", "BEGIN", "END"],
-        "save_path": "morpho_tagger/UD2.0/tag_en.dict",
-        "load_path": "morpho_tagger/UD2.0/tag_en.dict"
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/tag_en.dict",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/tag_en.dict"
       },
 
- The third part is the character vocabulary used to represent words as sequences of indexes. Only the
- symbols which occur at least ``min_freq`` times in the training set are kept.
+The third part is the character vocabulary used to represent words as sequences of indexes. Only the
+symbols which occur at least ``min_freq`` times in the training set are kept.
 
 ::
 
      {
         "id": "char_vocab",
-        "name": "default_vocab",
+        "class_name": "default_vocab",
         "min_freq": 3,
         "fit_on": ["x_processed"],
         "special_tokens": ["PAD", "BEGIN", "END"],
         "level": "char",
-        "save_path": "morpho_tagger/UD2.0/char_en.dict",
-        "load_path": "morpho_tagger/UD2.0/char_en.dict"
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/char_en.dict",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/char_en.dict"
       },
 
 
@@ -353,7 +411,7 @@ a word and a space-separated list of its possible tags. Tags can be in any possi
 
     {
         "id": "dictionary_vectorizer",
-        "name": "dictionary_vectorizer",
+        "class_name": "dictionary_vectorizer",
         "load_path": PATH_TO_YOUR_DICTIONARY_FILE,
         "save_path": PATH_TO_YOUR_DICTIONARY_FILE,
         "in": ["x"],
@@ -366,15 +424,15 @@ is `Pymorphy2 <http://pymorphy2.readthedocs.io>`_. In this case the vectorizer l
 for a given word and transforms them to UD2.0 format using
 `russian-tagsets <https://github.com/kmike/russian-tagsets>`_ library. Possible UD2.0 tags
 are listed in a separate distributed with the library. This part of the config look as
-(see :config:`~deeppavlov/configs/morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json`))
+(see :config:`config <morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json>`))
 
 ::
 
       {
         "id": "pymorphy_vectorizer",
-        "name": "pymorphy_vectorizer",
-        "save_path": "morpho_tagger/UD2.0/ru_syntagrus/tags_russian.txt",
-        "load_path": "morpho_tagger/UD2.0/ru_syntagrus/tags_russian.txt",
+        "class_name": "pymorphy_vectorizer",
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus/tags_russian.txt",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus/tags_russian.txt",
         "max_pymorphy_variants": 5,
         "in": ["x"],
         "out": ["x_possible_tags"]
@@ -389,10 +447,10 @@ the input parameters of :class:`~deeppavlov.models.morpho_tagger.network.Charact
         "in": ["x_processed"],
         "in_y": ["y"],
         "out": ["y_predicted"],
-        "name": "morpho_tagger",
+        "class_name": "morpho_tagger",
         "main": true,
-        "save_path": "morpho_tagger/UD2.0/ud_en.hdf5",
-        "load_path": "morpho_tagger/UD2.0/ud_en.hdf5",
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ud_en.hdf5",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ud_en.hdf5",
         "tags": "#tag_vocab",
         "symbols": "#char_vocab",
         "verbose": 1,
@@ -405,84 +463,56 @@ the input parameters of :class:`~deeppavlov.models.morpho_tagger.network.Charact
 
 
 When an additional vectorizer is used, the first line is changed to
-`"in": ["x_processed", "x_possible_tags"]` and an additional parameter
-`"word_vectorizers": [["#pymorphy_vectorizer.dim", 128]]` is appended.
+``"in": ["x_processed", "x_possible_tags"]`` and an additional parameter
+``"word_vectorizers": [["#pymorphy_vectorizer.dim", 128]]`` is appended.
 
 Config includes general parameters of :class:`~deeppavlov.core.models.component.Component` class,
-described in <intro/config_description> and specific `~deeppavlov.models.morpho_tagger.network.CharacterTagger`
+described in the :doc:`config_description </intro/config_description>` and specific
+:class:`~deeppavlov.models.morpho_tagger.network.CharacterTagger`
 parameters. The latter include
 
-- `tags` - tag vocabulary. `#tag_vocab` refers to an already defined model with "id" = "tag_vocab".
-- `symbols` - character vocabulary. `#char_vocab` refers to an already defined model with "id" = "char_vocab".
+- ``tags`` - tag vocabulary. ``#tag_vocab`` refers to an already defined model with ``"id" = "tag_vocab"``.
+- ``symbols`` - character vocabulary. ``#char_vocab`` refers to an already defined model with ``"id" = "char_vocab"``.
 
 and other specific parameters of the network, available in :class:`~deeppavlov.models.morpho_tagger.network.CharacterTagger` documentation.
 
-The `"train"` section of `"chainer"` contains training parameters, such as number of epochs,
+The ``"train"`` section of ``"chainer"`` contains training parameters, such as number of epochs,
 batch_size and logging frequency, see general readme for more details.
 
-Evaluate configuration
-~~~~~~~~~~~~~~~~~~~~~~
-
-Evaluate configuration file is almost the same as the train one, the only difference is
-that **dataset_reader** reads only test part of data. Also there are no logging parameters
-in the ``''train''`` subsection of **chainer**. Now it looks like
-
-::
-
-    "train": {
-    "test\_best": true,
-    "batch\_size": 16,
-    "metrics": ["per\_token\_accuracy"]
-    }
-
-
-Predict configuration
-~~~~~~~~~~~~~~~~~~~~~
-
-In prediction configuration **chainer** includes an additional subsection for the prettifier,
+**chainer** also includes the ``"prettifier"`` subsection, which describes the parameters
+of :class:`~deeppavlov.core.models.morpho_tagger.common.TagOutputPrettifier`
 which transforms the predictions of the tagger to a readable form.
 
 ::
 
     {
-    "in": ["x", "y\_predicted"],
-    "out": ["y\_prettified"],
-    "name": "tag\_output\_prettifier",
+    "in": ["x", "y_predicted"],
+    "out": ["y_prettified"],
+    "class_name": "tag_output_prettifier",
     "end": "\\n"
     }
 
 
-It takes two inputs -- source sequence of words and predicted sequence of tags
+It takes two inputs — source sequence of words and predicted sequence of tags
 and produces the output of the format
 
 ::
 
-    1 Это PRON Animacy=Inan\|Case=Acc\|Gender=Neut\|Number=Sing
+    1 Это PRON Animacy=Inan|Case=Acc|Gender=Neut|Number=Sing
     2 чутко ADV Degree=Pos
     3 фиксируют VERB
-    Aspect=Imp\|Mood=Ind\|Number=Plur\|Person=3\|Tense=Pres\|VerbForm=Fin\|Voice=Act
-    4 энциклопедические ADJ Case=Nom\|Degree=Pos\|Number=Plur
-    5 издания NOUN Animacy=Inan\|Case=Nom\|Gender=Neut\|Number=Plur
-    6 . PUNCT \_
+    Aspect=Imp|Mood=Ind|Number=Plur|Person=3|Tense=Pres|VerbForm=Fin|Voice=Act
+    4 энциклопедические ADJ Case=Nom|Degree=Pos|Number=Plur
+    5 издания NOUN Animacy=Inan|Case=Nom|Gender=Neut|Number=Plur
+    6 . PUNCT _
 
     1 Four NUM NumType=Card
     2 months NOUN Number=Plur
     3 later ADV *
     4 , PUNCT *
-    5 we PRON Case=Nom\|Number=Plur\|Person=1\|PronType=Prs
-    6 were AUX Mood=Ind\|Tense=Past\|VerbForm=Fin
-    7 married VERB Tense=Past\|VerbForm=Part\|Voice=Pass
-    8 . PUNCT \_
+    5 we PRON Case=Nom|Number=Plur|Person=1|PronType=Prs
+    6 were AUX Mood=Ind|Tense=Past|VerbForm=Fin
+    7 married VERB Tense=Past|VerbForm=Part|Voice=Pass
+    8 . PUNCT _
 
-You can also generate output in 10 column CONLL-U format.
-For this purpose add ``format_mode`` = ``ud`` to the **prettifier** section.
-
-The **train** section of the config is replaced by the **predict** section:
-
-::
-
-    "predict":
-    {
-    "batch\_size": 32,
-    "outfile": "results/ud\_ru\_syntagrus\_test.res"
-    }
+To generate output in 10 column CONLL-U format add ``"format_mode": "ud"`` to the described section.

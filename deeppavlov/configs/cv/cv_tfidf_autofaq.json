@@ -1,19 +1,19 @@
 {
   "dataset_reader": {
-    "name": "faq_reader",
+    "class_name": "faq_reader",
     "x_col_name": "Question",
     "y_col_name": "Answer",
     "data_url": "http://files.deeppavlov.ai/faq/school/faq_school.csv"
   },
   "dataset_iterator": {
-    "name": "data_learning_iterator"
+    "class_name": "data_learning_iterator"
   },
   "chainer": {
     "in": "q",
     "in_y": "y",
     "pipe": [
       {
-        "name": "ru_tokenizer",
+        "class_name": "ru_tokenizer",
         "id": "my_tokenizer",
         "in": "q",
         "lemmas": true,
@@ -35,14 +35,14 @@
           "q_lem"
         ],
         "id": "tfidf_vec",
-        "name": "sklearn_component",
-        "save_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
-        "load_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "class_name": "sklearn_component",
+        "save_path": "{MODELS_PATH}/vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "load_path": "{MODELS_PATH}/vectorizer/tfidf_vectorizer_ruwiki.pkl",
         "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
         "infer_method": "transform"
       },
       {
-        "name": "cos_sim_classifier",
+        "class_name": "cos_sim_classifier",
         "in": [
           "q_vect"
         ],
@@ -51,8 +51,8 @@
           "y"
         ],
         "top_n": 1,
-        "save_path": "faq/tfidf_cos_sim_classifier.pkl",
-        "load_path": "faq/tfidf_cos_sim_classifier.pkl",
+        "save_path": "{MODELS_PATH}/faq/tfidf_cos_sim_classifier.pkl",
+        "load_path": "{MODELS_PATH}/faq/tfidf_cos_sim_classifier.pkl",
         "out": [
           "answer",
           "score"
@@ -69,14 +69,19 @@
     "test_best": false
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/faq/school/tfidf_cos_sim_classifier.pkl",
-        "subdir": "faq"
+        "subdir": "{MODELS_PATH}/faq"
       },
       {
         "url": "http://files.deeppavlov.ai/vectorizer/tfidf_vectorizer_ruwiki.pkl",
-        "subdir": "vectorizer"
+        "subdir": "{MODELS_PATH}/vectorizer"
       }
     ]
   }

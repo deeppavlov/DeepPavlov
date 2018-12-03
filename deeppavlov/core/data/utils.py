@@ -23,7 +23,7 @@ import zipfile
 from hashlib import md5
 from itertools import chain
 from pathlib import Path
-from typing import List, Union, Iterable
+from typing import List, Union, Iterable, Optional
 from urllib.parse import urlparse
 
 import numpy as np
@@ -142,12 +142,12 @@ def untar(file_path, extract_folder=None):
     tar.close()
 
 
-def ungzip(file_path, extract_path: Path=None):
+def ungzip(file_path, extract_path: Path = None):
     """Simple .gz archive extractor
 
         Args:
             file_path: path to the gzip file to be extracted
-            extract_folder: folder to which the files will be extracted
+            extract_path: path where the file will be extracted
 
         """
     CHUNK = 16 * 1024
@@ -234,6 +234,17 @@ def copytree(src: Path, dest: Path):
             shutil.copy(str(f), str(f_dest))
 
 
+def file_md5(fpath: Union[str, Path], chunk_size: int = 2**16) -> Optional[str]:
+    fpath = Path(fpath)
+    if not fpath.is_file():
+        return None
+    file_hash = md5()
+    with fpath.open('rb') as f:
+        for chunk in iter(lambda: f.read(chunk_size), b""):
+            file_hash.update(chunk)
+    return file_hash.hexdigest()
+
+
 def load_vocab(vocab_path):
     vocab_path = Path(vocab_path)
     with vocab_path.open(encoding='utf8') as f:
@@ -263,7 +274,7 @@ def get_dimensions(batch):
         max_lens = np.zeros(max_depth, dtype=np.int32)
         for m in max_list:
             lm = len(m)
-            max_lens[:lm]= np.maximum(max_lens[:lm], m)
+            max_lens[:lm] = np.maximum(max_lens[:lm], m)
         return [len(batch)] + list(max_lens)
     else:
         return [len(batch)]
@@ -339,6 +350,7 @@ def zero_pad_truncate(batch, max_len, pad='post', trunc='post', dtype=np.float32
                         padded_batch[n, k + max_len - len(utterance)] = token_features
     return padded_batch
 
+
 def zero_pad_char(batch, dtype=np.float32):
     if len(batch) == 1 and len(batch[0]) == 0:
         return np.array([], dtype=dtype)
@@ -388,20 +400,25 @@ def check_nested_dict_keys(check_dict: dict, keys: list):
         return False
 
 
-def jsonify_data(input):
-    if isinstance(input, (list, tuple)):
-        result = [jsonify_data(item) for item in input]
-    elif isinstance(input, dict):
+def jsonify_data(data):
+    if isinstance(data, (list, tuple)):
+        result = [jsonify_data(item) for item in data]
+    elif isinstance(data, dict):
         result = {}
-        for key in input.keys():
-            result[key] = jsonify_data(input[key])
-    elif isinstance(input, np.ndarray):
-        result = input.tolist()
-    elif isinstance(input, (np.int_, np.intc, np.intp, np.int8, np.int16, np.int32,
-                            np.int64, np.uint8, np.uint16, np.uint32, np.uint64)):
-        result = int(input)
-    elif isinstance(input, (np.float_, np.float16, np.float32, np.float64)):
-        result = float(input)
+        for key in data.keys():
+            result[key] = jsonify_data(data[key])
+    elif isinstance(data, np.ndarray):
+        result = data.tolist()
+    elif isinstance(data, (np.int_, np.intc, np.intp, np.int8, np.int16, np.int32,
+                           np.int64, np.uint8, np.uint16, np.uint32, np.uint64)):
+        result = int(data)
+    elif isinstance(data, (np.float_, np.float16, np.float32, np.float64)):
+        result = float(data)
     else:
-        result = input
+        result = data
     return result
+
+
+def chunk_generator(items_list, chunk_size):
+    for i in range(0, len(items_list), chunk_size):
+        yield items_list[i:i + chunk_size]

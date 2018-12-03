@@ -1,0 +1,168 @@
+{
+  "chainer": {
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
+    "pipe": [
+      {
+        "id": "classes_vocab",
+        "class_name": "simple_vocab",
+        "fit_on": [
+          "y"
+        ],
+        "save_path": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info/model_v0/classes.dict",
+        "load_path": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info/model_v0/classes.dict",
+        "in": "y",
+        "out": "y_ids"
+      },
+      {
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_prep"
+        ],
+        "class_name": "dirty_comments_preprocessor",
+        "remove_punctuation": false
+      },
+      {
+        "in": "x_prep",
+        "out": "x_tok",
+        "id": "my_tokenizer",
+        "class_name": "nltk_moses_tokenizer"
+      },
+      {
+        "in": [
+          "x_tok"
+        ],
+        "out": [
+          "x_emb"
+        ],
+        "id": "my_embedder",
+        "class_name": "elmo_embedder",
+        "elmo_output_names": [
+          "elmo"
+        ],
+        "mini_batch_size": 8,
+        "spec": "{DOWNLOADS_PATH}/embeddings/yahooo-sber-questions_epoches_n_15/"
+      },
+      {
+        "in": "y_ids",
+        "out": "y_onehot",
+        "class_name": "one_hotter",
+        "id": "my_one_hotter",
+        "depth": "#classes_vocab.len"
+      },
+      {
+        "in": [
+          "x_emb"
+        ],
+        "in_y": [
+          "y_onehot"
+        ],
+        "out": [
+          "y_pred_probas"
+        ],
+        "main": true,
+        "class_name": "keras_classification_model",
+        "save_path": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info/model_v0/model",
+        "load_path": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info/model_v0/model",
+        "embedding_size": "#my_embedder.dim",
+        "n_classes": "#classes_vocab.len",
+        "units_gru": 512,
+        "optimizer": "Adam",
+        "learning_rate": 0.001,
+        "learning_rate_decay": 0.001,
+        "loss": "categorical_crossentropy",
+        "text_size": 20,
+        "coef_reg_gru": 1e-4,
+        "coef_reg_den": 1e-4,
+        "dropout_rate": 0.5,
+        "rec_dropout_rate": 0.5,
+        "dense_size": 100,
+        "model_name": "bigru_with_max_aver_pool_model",
+        "last_layer_activation": "softmax",
+        "restore_lr": false
+      },
+      {
+        "in": "y_pred_probas",
+        "out": "y_pred_ids",
+        "class_name": "proba2labels",
+        "max_proba": true
+      },
+      {
+        "in": "y_pred_ids",
+        "out": "y_pred_labels",
+        "ref": "classes_vocab"
+      },
+      {
+        "ref": "my_one_hotter",
+        "in": "y_pred_ids",
+        "out": "y_pred_onehot"
+      }
+    ],
+    "out": [
+      "y_pred_labels"
+    ]
+  },
+  "train": {
+    "metrics": [
+      {
+        "name": "roc_auc",
+        "inputs": [
+          "y_onehot",
+          "y_pred_probas"
+        ]
+      },
+      {
+        "name": "sets_accuracy",
+        "inputs": [
+          "y",
+          "y_pred_labels"
+        ]
+      },
+      {
+        "name": "f1_macro",
+        "inputs": [
+          "y",
+          "y_pred_labels"
+        ]
+      }
+    ],
+    "validation_patience": 20,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
+    "show_examples": true,
+    "validate_best": true,
+    "test_best": false,
+    "tensorboard_log_dir": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info/model_v0/"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
+    ],
+    "labels": {
+      "telegram_utils": "IntentModel",
+      "server_utils": "KerasIntentModel"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/yahooo-sber-questions_epoches_n_15.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/embeddings/yahooo-sber-questions_epoches_n_15/"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/yahoo_convers_vs_info.tar.gz",
+        "subdir": "{MODELS_PATH}/classifiers/"
+      }
+    ]
+  }
+}

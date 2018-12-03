@@ -1,5 +1,6 @@
 import io
 import json
+import logging
 import os
 import signal
 from pathlib import Path
@@ -14,10 +15,10 @@ import requests
 from urllib.parse import urljoin
 
 import deeppavlov
+from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.download import deep_download
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.core.common.paths import get_settings_path
-import utils
 from utils.server_utils.server import get_server_params, SERVER_CONFIG_FILENAME
 
 
@@ -40,8 +41,9 @@ FOUR_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', 'Dummy text', 'Dummy_t
 
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
-    "ecommerce_bot": {
-        ("ecommerce_bot/ecommerce_bot.json", "ecommerce_bot", ALL_MODES): [('Dummy text', '{}', '{}', None)]
+    "ecommerce_skill": {
+        ("ecommerce_skill/bleu_retrieve.json", "ecommerce_skill_bleu", ALL_MODES): [('Dummy text', '[]', '{}', None)],
+        ("ecommerce_skill/tfidf_retrieve.json", "ecommerce_skill_tfidf", ALL_MODES): [('Dummy text', '[]', '{}', None)]
     },
     "faq": {
         ("faq/tfidf_logreg_en_faq.json", "faq_tfidf_logreg_en", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
@@ -79,7 +81,9 @@ PARAMS = {
         ("classifiers/sentiment_twitter.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_twitter_preproc.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/topic_ag_news.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/rusentiment_cnn.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+        ("classifiers/rusentiment_cnn.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/rusentiment_elmo.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/yahoo_convers_vs_info.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "snips": {
         ("classifiers/intents_snips.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -88,6 +92,7 @@ PARAMS = {
         ("classifiers/intents_snips_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_snips_bilstm_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_snips_bilstm_cnn.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_proj_layer.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_snips_bilstm_self_add_attention.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_snips_bilstm_self_mult_attention.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_snips_cnn_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -102,6 +107,7 @@ PARAMS = {
         ("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_ontonotes.json", "ner_ontonotes", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_few_shot_ru_simulate.json", "ner_fs", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_rus.json", "ner_rus", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/slotfill_dstc2.json", "slotfill_dstc2", ('IP',)):
             [
@@ -110,8 +116,11 @@ PARAMS = {
                 ("moderate price range", "{'pricerange': 'moderate'}")
             ]
     },
-    "elmo": {
-        ("elmo/elmo_ru-news.json", "elmo_ru-news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+    "elmo_embedder": {
+        ("elmo_embedder/elmo_ru-news.json", "elmo_embedder_ru-news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+    },
+    "elmo_model": {
+        ("elmo/elmo-1b-benchmark_test.json", "elmo-1b-benchmark_test", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
     },
 
     "ranking": {("ranking/ranking_insurance_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -190,29 +199,32 @@ def download_config(conf_file):
         raise RuntimeError('No config file {}'.format(conf_file))
 
     with src_file.open(encoding='utf8') as fin:
-        config = json.load(fin)
+        config: dict = json.load(fin)
 
+    # Download referenced config files
+    config_references = get_all_elems_from_json(parse_config(config), 'config_path')
+    for config_ref in config_references:
+        m_name = config_ref.split('/')[-2]
+        config_ref = '/'.join(config_ref.split('/')[-2:])
+
+        test_configs_path.joinpath(m_name).mkdir(exist_ok=True)
+        if not test_configs_path.joinpath(config_ref).exists():
+            download_config(config_ref)
+
+    # Update config for testing
     if config.get("train"):
         config["train"]["epochs"] = 1
         for pytest_key in [k for k in config["train"] if k.startswith('pytest_')]:
             config["train"][pytest_key[len('pytest_'):]] = config["train"].pop(pytest_key)
 
-    config["deeppavlov_root"] = str(download_path)
+    config_vars = config.setdefault('metadata', {}).setdefault('variables', {})
+    config_vars['ROOT_PATH'] = str(download_path)
+    config_vars['CONFIGS_PATH'] = str(test_configs_path)
 
     conf_file = test_configs_path / conf_file
     conf_file.parent.mkdir(exist_ok=True, parents=True)
     with conf_file.open("w", encoding='utf8') as fout:
         json.dump(config, fout)
-
-    # Download referenced config files
-    config_references = get_all_elems_from_json(config, 'config_path')
-    for config_ref in config_references:
-        m_name = config_ref.split('/')[-2]
-        conf_file = '/'.join(config_ref.split('/')[-2:])
-
-        test_configs_path.joinpath(m_name).mkdir(exist_ok=True)
-        if not test_configs_path.joinpath(conf_file).exists():
-            download_config(conf_file)
 
 
 def install_config(conf_file):
@@ -426,3 +438,24 @@ def test_evolving():
                            .format(model_dir, logfile.getvalue().decode()))
 
     shutil.rmtree(str(download_path), ignore_errors=True)
+
+
+def test_hashes_existence():
+    all_configs = list(src_dir.glob('**/*.json')) + list(test_src_dir.glob('**/*.json'))
+    url_root = 'http://files.deeppavlov.ai/'
+    downloads_urls = set()
+    for config in all_configs:
+        config = json.loads(config.read_text(encoding='utf-8'))
+        downloads_urls |= {d if isinstance(d, str) else d['url'] for d in
+                           config.get('metadata', {}).get('download', [])}
+    downloads_urls = [url + '.md5' for url in downloads_urls if url.startswith(url_root)]
+    messages = []
+
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+
+    for url in downloads_urls:
+        status = requests.get(url).status_code
+        if status != 200:
+            messages.append(f'got status_code {status} for {url}')
+    if messages:
+        raise RuntimeError('\n'.join(messages))

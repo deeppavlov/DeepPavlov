@@ -45,7 +45,7 @@ Let's see example for logistic regression model:
 .. code:: python
 
       {
-        "name": "faq_logreg_model",
+        "class_name": "faq_logreg_model",
         "in": "q_vect",
         "fit_on": ["q_vect", "y"],
         "c": {"search_choice": [1, 10, 100, 1000]},
@@ -140,17 +140,15 @@ Evolution process can be described in the following way:
 -  ``{"evolve_choice": [value_0, ..., value_n]}`` -
    values uniformly taking out of the given values.
 
--  Choose the main model in the pipe being evolved. Find or add extra
-   parameter that determines this model (for example, existing
-   ``"main": true``). The dictionary - model containing this parameter
-   as a key will be trained (do not forget to give this parameter's name
-   to ``key_main_model``). Change ``save_path`` and ``load_path`` of
-   this model to any ABSOLUTE paths (VERY IMPORTANT) to folder where
-   population will be saved.
+-  The ``main`` model in the pipe is being evolved.
+   **It is obligatory to use the one and only variable for setting paths for ALL fitted and trained models**
+   from ``config["metadata"]["variables"]["MODELS_PATH"]`` - this variable should be set to the common folder
+   for current evolutionary process (for example,
+   ``config["metadata"]["variables"]["MODELS_PATH"] = "{ROOT_PATH}/snips_evolution"``).
+   Change ``save_path`` and ``load_path`` of all fitted and trained components of the config
+   to the relative paths using ``config["metadata"]["variables"]["MODELS_PATH"]`` (for example,
+   ``"save_path": "{MODELS_PATH}/classes.dict"``).
 
--  All the models in pipe that contain key ``fit_on`` will be trained
-   every time separately for each model and saved to the same directory
-   with model and called ``fitted_model_{i}``.
 
 That's all you need to change in the config. Now let's move on to the
 example.
@@ -167,24 +165,22 @@ Example
 
    ::
 
-       cd deeppavlov
-       python deep.py download configs/classifiers/intents_snips.json
+       python -m deeppavlov download intents_snips
 
 -  To evolve the model run the following command providing corresponding
    name of the config file (see above) :config:`intents_dstc2.json <evolution/evolve_intents_snips.json>`:
 
    ::
 
-       cd deeppavlov
-       python evolve.py configs/evolution/evolve_intents_snips.json
+       python -m deeppavlov.evolve evolve_intents_snips
 
--  Folder ``download/evolution/classification/intents_snips`` will be
+-  Folder ``~/.deeppavlov/models/classifiers/intents_snips_evolution/intents_snips`` will be
    created. Each population will be saved in a folder
-   ``download/evolution/classification/intents_snips/population_i`` each
+   ``~/.deeppavlov/models/classifiers/intents_snips_evolution/intents_snips/population_i`` each
    of which contains ``population_size`` folders ``model_i`` consisting
    of saved model files explicitly, saved files of models from pipe that
-   has a key "fit\_on", ``out.txt`` and ``err.txt`` with logs of
-   ``deep.py train`` script from training each model separately, and
+   has a key ``"fit_on"``, ``out.txt`` and ``err.txt`` with logs of
+   ``python -m deeppavlov train`` script from training each model separately, and
    ``config.json`` with config for this individual.
 
 -  Now one can open iPython Notebook file

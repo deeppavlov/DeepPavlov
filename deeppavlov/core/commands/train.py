@@ -18,19 +18,19 @@ import json
 import time
 from collections import OrderedDict, namedtuple
 from pathlib import Path
-from typing import List, Tuple, Dict, Union
+from typing import List, Tuple, Dict, Union, Optional
 
 from deeppavlov.core.commands.infer import build_model
-from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root, import_packages
+from deeppavlov.core.commands.utils import expand_path, import_packages, parse_config
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.metrics_registry import get_metric_by_name
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
+from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.download import deep_download
@@ -182,40 +182,26 @@ def read_data_by_config(config: dict):
         config.pop('dataset')
         ds_type = dataset_config['type']
         if ds_type == 'classification':
-            reader = {'name': 'basic_classification_reader'}
-            iterator = {'name': 'basic_classification_iterator'}
+            reader = {'class_name': 'basic_classification_reader'}
+            iterator = {'class_name': 'basic_classification_iterator'}
             config['dataset_reader'] = {**dataset_config, **reader}
             config['dataset_iterator'] = {**dataset_config, **iterator}
         else:
             raise Exception("Unsupported dataset type: {}".format(ds_type))
 
-    data = []
-    reader_config = config.get('dataset_reader', None)
-
-    if reader_config:
+    try:
         reader_config = dict(config['dataset_reader'])
-        if 'class' in reader_config:
-            c = reader_config.pop('class')
-            try:
-                module_name, cls_name = c.split(':')
-                reader = getattr(importlib.import_module(module_name), cls_name)()
-            except ValueError:
-                e = ConfigError('Expected class description in a `module.submodules:ClassName` form, but got `{}`'
-                                .format(c))
-                log.exception(e)
-                raise e
-        else:
-            reader = get_model(reader_config.pop('name'))()
-        data_path = reader_config.pop('data_path', '')
-        if isinstance(data_path, list):
-            data_path = [expand_path(x) for x in data_path]
-        else:
-            data_path = expand_path(data_path)
-        data = reader.read(data_path, **reader_config)
-    else:
-        log.warning("No dataset reader is provided in the JSON config.")
+    except KeyError:
+        raise ConfigError("No dataset reader is provided in the JSON config.")
 
-    return data
+    reader = get_model(reader_config.pop('class_name'))()
+    data_path = reader_config.pop('data_path', '')
+    if isinstance(data_path, list):
+        data_path = [expand_path(x) for x in data_path]
+    else:
+        data_path = expand_path(data_path)
+
+    return reader.read(data_path, **reader_config)
 
 
 def get_iterator_from_config(config: dict, data: dict):
@@ -226,21 +212,30 @@ def get_iterator_from_config(config: dict, data: dict):
     return iterator
 
 
-def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
-                                     to_train=True, to_validate=True, download=False) -> Dict[str, Dict[str, float]]:
+def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None, *,
+                                     to_train=True, to_validate=True, download=False,
+                                     start_epoch_num=0, recursive=False) -> Dict[str, Dict[str, float]]:
     """Make training and evaluation of the model described in corresponding configuration file."""
-    if isinstance(config, (str, Path)):
-        config = read_json(config)
-    set_deeppavlov_root(config)
+    config = parse_config(config)
 
     if download:
         deep_download(config)
 
+    if to_train and recursive:
+        for subconfig in get_all_elems_from_json(config['chainer'], 'config_path'):
+            log.info(f'Training "{subconfig}"')
+            train_evaluate_model_from_config(subconfig, download=False, recursive=True)
+
     import_packages(config.get('metadata', {}).get('imports', []))
 
     if iterator is None:
-        data = read_data_by_config(config)
-        iterator = get_iterator_from_config(config, data)
+        try:
+            data = read_data_by_config(config)
+        except ConfigError as e:
+            to_train = False
+            log.warning(f'Skipping training. {e.message}')
+        else:
+            iterator = get_iterator_from_config(config, data)
 
     train_config = {
         'metrics': ['accuracy'],
@@ -266,9 +261,9 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
 
         if callable(getattr(model, 'fit', None)):
             _fit(model, iterator, train_config)
-        if callable(getattr(model, 'train_on_batch', None)):
-            _train_batches(model, iterator, train_config, metrics_functions)
-        if callable(getattr(model, 'fit_batches', None)):
+        elif callable(getattr(model, 'train_on_batch', None)):
+            _train_batches(model, iterator, train_config, metrics_functions, start_epoch_num=start_epoch_num)
+        elif callable(getattr(model, 'fit_batches', None)):
             _fit_batches(model, iterator, train_config)
         if not any(getattr(model, m, None) for m in ('fit', 'train_on_batch', 'fit_batches'))\
                 and not isinstance(model, Chainer):
@@ -278,12 +273,8 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
 
     res = {}
 
-    if train_config['validate_best'] or train_config['test_best']:
-        # try:
-        #     model_config['load_path'] = model_config['save_path']
-        # except KeyError:
-        #     log.warning('No "save_path" parameter for the model, so "load_path" will not be renewed')
-        model = build_model(config, load_trained=True)
+    if iterator is not None and (train_config['validate_best'] or train_config['test_best']):
+        model = build_model(config, load_trained=to_train)
         log.info('Testing the best saved model')
 
         if train_config['validate_best']:
@@ -358,10 +349,11 @@ def _test_model(model: Chainer, metrics_functions: List[Metric],
 
 
 def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config: dict,
-                   metrics_functions: List[Metric]) -> NNModel:
+                   metrics_functions: List[Metric], *, start_epoch_num: Optional[int] = None) -> NNModel:
 
     default_train_config = {
         'epochs': 0,
+        'start_epoch_num': 0,
         'max_batches': 0,
         'batch_size': 1,
 
@@ -399,7 +391,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
         raise ConfigError('metric_optimization has to be one of {}'.format(['maximize', 'minimize']))
 
     i = 0
-    epochs = 0
+    epochs = start_epoch_num if start_epoch_num is not None else train_config['start_epoch_num']
     examples = 0
     saved = False
     patience = 0
@@ -417,7 +409,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
         tb_valid_writer = tf.summary.FileWriter(str(tb_log_dir / 'valid_log'))
 
     # validate first (important if model is pre-trained)
-    if train_config['val_every_n_epochs'] > 0 and epochs % train_config['val_every_n_epochs'] == 0:
+    if train_config['val_every_n_epochs'] > 0 or train_config['val_every_n_batches'] > 0:
         report = _test_model(model, metrics_functions, iterator,
                              train_config['batch_size'], 'valid', start_time, train_config['show_examples'])
         report['epochs_done'] = epochs
