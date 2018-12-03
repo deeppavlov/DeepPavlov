@@ -253,7 +253,7 @@ def _test_model(model: Chainer, metrics_functions: List[Metric],
 
     if not iterator.data[data_type]:
         log.warning(f'Could not log examples for {data_type}, assuming it\'s empty')
-        return {'metrics': None}
+        return {'eval_examples_count': 0, 'metrics': None, 'time_spent': str(datetime.timedelta(seconds=0))}
 
     outputs = {out: [] for out in expected_outputs}
     examples = 0
