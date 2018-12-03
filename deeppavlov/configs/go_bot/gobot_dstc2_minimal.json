@@ -32,23 +32,20 @@
         "save_path": "dstc2/resto.sqlite"
       },
       {
-        "main": true,
-        "id": "go_bot_network",
         "name": "go_bot_rnn",
         "load_path": "gobot_dstc2_minimal/model",
         "save_path": "gobot_dstc2_minimal/model",
+        "in": ["x"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "main": true,
         "debug": false,
-        "fit_batch_size": 8,
-        "fit_valid_rate": 0.2,
-        "fit_learning_rate_div": 10.0,
-        "fit_min_batches": 15,
-        "learning_rate": [0.001, 1],
-        "learning_rate_decay": ["1cycle", 0.5],
+        "learning_rate": [2e-3, 2e-3],
+        "learning_rate_decay": "1cycle",
         "learning_rate_decay_epochs": 20,
-        "momentum": [0.95, 0.85],
-        "momentum_decay": "1cycle",
-        "momentum_decay_epochs": 10,
-        "optimizer": "tensorflow.train:MomentumOptimizer",
+        "momentum": 0.95,
+        "optimizer": "tensorflow.train:AdamOptimizer",
+        "clip_norm": 2.0,
         "dropout_rate": 0.3,
         "l2_reg_coef": 1e-4,
         "hidden_size": 128,
@@ -75,16 +72,6 @@
           "name": "featurized_tracker",
           "slot_names": ["pricerange", "this", "area", "food", "name"]
         }
-      },
-      {
-        "ref": "go_bot_network",
-        "fit_on": ["x", "y"]
-      },
-      {
-        "ref": "go_bot_network",
-        "in": ["x"],
-        "in_y": ["y"],
-        "out": ["y_predicted"]
       }
     ]
   },

@@ -594,7 +594,7 @@ class GoalOrientedBotNetwork(EnhancedTFModel):
         # _loss_tensor = tf.multiply(_loss_tensor, self._utterance_mask)
         self._loss = tf.reduce_mean(_loss_tensor, name='loss')
         self._loss += self.l2_reg * tf.losses.get_regularization_loss()
-        self._train_op = self.get_train_op(self._loss, clip_norm=2.)
+        self._train_op = self.get_train_op(self._loss)
 
     def _add_placeholders(self):
         self._dropout_keep_prob = tf.placeholder_with_default(1.0,

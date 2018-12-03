@@ -32,23 +32,23 @@
         "save_path": "dstc2/resto.sqlite"
       },
       {
-        "id": "go_bot_network",
         "name": "go_bot_rnn",
-        "main": true,
         "load_path": "gobot_dstc2_best/model",
         "save_path": "gobot_dstc2_best/model",
+        "in": ["x"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "main": true,
         "debug": false,
-        "fit_batch_size": 16,
-        "fit_valid_rate": 0.2,
-        "fit_learning_rate_div": 10.0,
-        "fit_linear": false,
-        "fit_min_batches": 15,
-        "fit_num_batches": 256,
-        "learning_rate": [0.00185, 0.0185],
-        "learning_rate_decay": ["1cycle", 0.8],
-        "learning_rate_decay_epochs": 18,
+        "learning_rate": [2e-3, 2e-2],
+        "learning_rate_decay": "1cycle",
+        "learning_rate_decay_batches": 150,
+        "learning_rate_drop_patience": 5,
+        "learning_rate_drop_div": 10.0,
+        "momentum": 0.95,
         "optimizer": "tensorflow.train:AdamOptimizer",
-        "dropout_rate": 0.55,
+        "clip_norm": 2.0,
+        "dropout_rate": 0.45,
         "l2_reg_coef": 2e-3,
         "hidden_size": 128,
         "dense_size": 128,
@@ -83,34 +83,23 @@
           "name": "featurized_tracker",
           "slot_names": ["pricerange", "this", "area", "food", "name"]
         }
-      },
-      {
-        "ref": "go_bot_network"
-      },
-      {
-        "ref": "go_bot_network",
-        "in": ["x"],
-        "in_y": ["y"],
-        "out": ["y_predicted"]
       }
     ]
   },
   "train": {
     "epochs": 200,
-    "batch_size": 4,
+    "batch_size": 8,
 
     "pytest_max_batches": 2,
 
     "metrics": ["per_item_dialog_accuracy"],
     "validation_patience": 30,
-    "val_every_n_epochs": 1,
+    "val_every_n_batches": 15,
 
-    "log_every_n_batches": -1,
-    "log_every_n_epochs": 1,
+    "log_every_n_batches": 15,
     "show_examples": false,
     "validate_best": true,
-    "test_best": true,
-    "tensorboard_log_dir": "dp_logs_gobot_best"
+    "test_best": true
   },
   "metadata": {
     "requirements": [
