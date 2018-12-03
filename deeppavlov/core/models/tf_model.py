@@ -276,7 +276,7 @@ class EnhancedTFModel(TFModel):
                                         tf.train.GradientDescentOptimizer,
                                         tf.train.ProximalGradientDescentOptimizer,
                                         tf.train.ProximalAdagradOptimizer):
-            momentum = 0.95
+            momentum = 0.9
         start_val, end_val = momentum, None
         if isinstance(momentum, (tuple, list)):
             start_val, end_val = momentum

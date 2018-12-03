@@ -55,11 +55,8 @@ class NerNetwork(EnhancedTFModel):
         top_dropout: Whether to use dropout on output units of the network or not.
         intra_layer_dropout: Whether to use dropout between layers or not.
         l2_reg: L2 norm regularization for all kernels.
-        clip_grad_norm: Clip the gradients by norm.
         gpu: Number of gpu to use.
         seed: Random seed.
-        lr_drop_patience: How many epochs to wait until drop the learning rate.
-        lr_drop_value: Amount of learning rate drop.
     """
     GRAPH_PARAMS = ["n_tags",  # TODO: add check
                     "char_emb_dim",
@@ -94,18 +91,19 @@ class NerNetwork(EnhancedTFModel):
                  top_dropout: bool = False,
                  intra_layer_dropout: bool = False,
                  l2_reg: float = 0.0,
-                 clip_grad_norm: float = 5.0,
                  gpu: int = None,
                  seed: int = None,
-                 lr_drop_patience: int = 5,
-                 lr_drop_value: float = 0.1,
                  **kwargs) -> None:
         tf.set_random_seed(seed)
         np.random.seed(seed)
 
+        if 'learning_rate_drop_div' not in kwargs:
+            kwargs['learning_rate_drop_div'] = 10.0
+        if 'learning_rate_drop_patience' not in kwargs:
+            kwargs['learning_rate_drop_patience'] = 5.0
+        if 'clip_norm' not in kwargs:
+            kwargs['clip_norm'] = 5.0
         super().__init__(**kwargs)
-        self._lr_drop_patience = lr_drop_patience
-        self._lr_drop_value = lr_drop_value
         self._add_training_placeholders(dropout_keep_prob)
         self._xs_ph_list = []
         self._y_ph = tf.placeholder(tf.int32, [None, None], name='y_ph')
@@ -153,7 +151,7 @@ class NerNetwork(EnhancedTFModel):
         self._logits = self._build_top(units, n_tags, n_hidden_list[-1], top_dropout, two_dense_on_top)
 
         self.train_op, self.loss = self._build_train_predict(self._logits, self.mask_ph, n_tags,
-                                                             use_crf, clip_grad_norm, l2_reg)
+                                                             use_crf, l2_reg)
         self.predict = self.predict_crf if use_crf else self.predict_no_crf
 
         # ================= Initialize the session =================
@@ -248,7 +246,7 @@ class NerNetwork(EnhancedTFModel):
                                  kernel_regularizer=tf.nn.l2_loss)
         return logits
 
-    def _build_train_predict(self, logits, mask, n_tags, use_crf, clip_grad_norm, l2_reg):
+    def _build_train_predict(self, logits, mask, n_tags, use_crf, l2_reg):
         if use_crf:
             sequence_lengths = tf.reduce_sum(mask, axis=1)
             log_likelihood, transition_params = tf.contrib.crf.crf_log_likelihood(logits, self._y_ph, sequence_lengths)
@@ -266,7 +264,7 @@ class NerNetwork(EnhancedTFModel):
         if l2_reg > 0:
             loss += l2_reg * tf.reduce_sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
 
-        train_op = self.get_train_op(loss, clip_norm=clip_grad_norm)
+        train_op = self.get_train_op(loss)
         return train_op, loss
 
     def predict_no_crf(self, xs):
@@ -331,14 +329,4 @@ class NerNetwork(EnhancedTFModel):
 
     def process_event(self, event_name, data):
         super().process_event(event_name, data)
-        if event_name == 'after_validation':
-            if not hasattr(self, '_best_f1'):
-                self._best_f1 = 0
-            if not hasattr(self, '_impatience'):
-                self._impatience = 0
-            if data['metrics']['ner_f1'] > self._best_f1:
-                self._best_f1 = data['metrics']['ner_f1']
-                self._impatience = 0
-            else:
-                self._impatience += 1
 
