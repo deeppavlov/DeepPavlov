@@ -233,6 +233,7 @@ class EnhancedTFModel(TFModel):
                  momentum_decay_epochs: int = 0,
                  momentum_decay_batches: int = 0,
                  optimizer: str = 'AdamOptimizer',
+                 clip_norm: float = None,
                  fit_beta: float = 0.98,
                  fit_learning_rate_div: float = 10.,
                  fit_min_batches: int = 10,
@@ -291,7 +292,7 @@ class EnhancedTFModel(TFModel):
         self._mom_schedule = DecayScheduler(start_val=start_val, end_val=end_val,
                                             num_it=num_it, dec_type=dec_type,
                                             extra=extra)
-        self._mom_ph = tf.placeholder_with_default(0.95, shape=[], name='momentum')
+        self._mom_ph = tf.placeholder_with_default(0.9, shape=[], name='momentum')
         # self._mom_ph = tf.placeholder(tf.float32, shape=[], name='momentum')
 
         self._learning_rate_drop_patience = learning_rate_drop_patience
@@ -299,6 +300,7 @@ class EnhancedTFModel(TFModel):
         self._learning_rate_cur_impatience = 0.
         self._learning_rate_last_impatience = 0.
         self._learning_rate_cur_div = 1.
+        self._clip_norm = clip_norm
         self._fit_beta = fit_beta
         self._fit_lr_div = fit_learning_rate_div
         self._fit_min_batches = fit_min_batches
@@ -377,9 +379,11 @@ class EnhancedTFModel(TFModel):
                      learning_rate: Union[float, tf.placeholder] = None,
                      optimizer: tf.train.Optimizer = None,
                      momentum: Union[float, tf.placeholder] = None,
+                     clip_norm: float = None,
                      **kwargs):
         kwargs['learning_rate'] = learning_rate or self.get_learning_rate_ph()
         kwargs['optimizer'] = optimizer or self.get_optimizer()
+        kwargs['clip_norm'] = clip_norm or self._clip_norm
 
         momentum_param = 'momentum'
         if kwargs['optimizer'] == tf.train.AdamOptimizer:
