@@ -287,20 +287,18 @@ class HashingTfIdfVectorizer(Estimator, Serializable):
                          loader['indptr']), shape=loader['shape'])
         return matrix, loader['opts'].item(0)
 
-    def fit_batches(self, iterator: DataFittingIterator, batch_size: int) -> None:
-        """Generate a batch to be fit to a vectorizer.
+    def partial_fit(self, batch: List) -> None:
+        """Fit on one batch.
 
         Args:
-            iterator: an instance of an iterator class
-            batch_size: a size of a generated batch
+            batch: a tuple with list of input documents and list of document ids
 
         Returns:
             None
 
         """
-        self.doc_index = iterator.doc2index
-        for x, y in iterator.gen_batches(batch_size):
-            self.fit_batch(x, y)
+        # TODO: self.doc_index =
+        self.fit_batch(*batch)
 
     def fit(self):
         pass
