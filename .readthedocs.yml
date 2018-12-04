@@ -3,7 +3,8 @@
 build:
   image: latest
 
-formats: []
+formats:
+  - pdf
 
 python:
   pip_install: true

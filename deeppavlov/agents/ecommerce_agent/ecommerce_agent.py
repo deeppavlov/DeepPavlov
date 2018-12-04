@@ -180,7 +180,7 @@ def make_agent() -> EcommerceAgent:
         agent: created Ecommerce agent
     """
 
-    config_path = find_config('bleu_retrieve')
+    config_path = find_config('tfidf_retrieve')
     skill = build_model(config_path)
     agent = EcommerceAgent(skills=[skill])
     return agent
