@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
-    "name": "basic_classification_reader",
-    "data_path": "rb_0927",
+    "class_name": "basic_classification_reader",
+    "data_path": "{DOWNLOADS_PATH}/rb_0927",
     "x": "Text",
     "y": "theme",
     "train": "train_final.csv",
@@ -9,7 +9,7 @@
     "test": "test_final.csv"
   },
   "dataset_iterator": {
-    "name": "basic_classification_iterator"
+    "class_name": "basic_classification_iterator"
   },
   "chainer": {
     "in": ["x"],
@@ -20,7 +20,7 @@
           "in": ["y"],
           "out": ["y_ids"],
           "fit_on": ["y"],
-          "name": "simple_vocab",
+          "class_name": "simple_vocab",
           "component_name": "Vocab of classes",
           "id": "classes_vocab",
           "level": "token",
@@ -33,7 +33,7 @@
           "in": ["x"],
           "out": ["x_vec"],
           "fit_on": ["x"],
-          "name": "sklearn_component",
+          "class_name": "sklearn_component",
           "component_name": "tf-idf",
           "id": "tfidf_vec",
           "save_path": "vocabs/tfidf_sber.pkl",
@@ -50,7 +50,7 @@
           "in": ["x"],
           "out": ["x_vec"],
           "fit_on": ["x"],
-          "name": "sklearn_component",
+          "class_name": "sklearn_component",
           "component_name": "count",
           "id": "count",
           "save_path": "vocabs/count.pkl",
@@ -69,7 +69,7 @@
           "in": ["x_vec"],
           "out": ["y_pred_probas"],
           "fit_on": ["x_vec", "y_ids"],
-          "name": "sklearn_component",
+          "class_name": "sklearn_component",
           "component_name": "Log Reg",
           "main": true,
           "save_path": "linm/checkpoints/logreg.pkl",
@@ -88,7 +88,7 @@
           "in": ["x_vec"],
           "out": ["y_pred_probas"],
           "fit_on": ["x_vec", "y_ids"],
-          "name": "sklearn_component",
+          "class_name": "sklearn_component",
           "component_name": "Log Reg",
           "main": true,
           "save_path": "linm/checkpoints/logreg.pkl",
@@ -108,7 +108,7 @@
         {
           "in": ["y_pred_probas"],
           "out": ["y_pred_ids"],
-          "name": "proba2labels",
+          "class_name": "proba2labels",
           "component_name": "prob2ind",
           "max_proba": true
         }
@@ -142,6 +142,12 @@
     "show_examples": false,
     "validate_best": true,
     "test_best": true
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "../download"
+    }
   },
   "enumerate": {
     "exp_name": "lin_clf",

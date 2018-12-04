@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import json
 import time
 
 from tqdm import tqdm
@@ -20,10 +21,10 @@ from pathlib import Path
 from shutil import rmtree
 from psutil import cpu_count
 from datetime import datetime
-from typing import Union, Dict, Iterator
-from os.path import join, isdir
 from copy import copy, deepcopy
 from multiprocessing import Pool
+from os.path import join, isdir, isfile
+from typing import Union, Dict, Iterator
 
 from pipeline_manager.pipegen import PipeGen
 from pipeline_manager.observer import Observer
@@ -161,7 +162,7 @@ class PipelineManager:
         self.pipeline_generator = PipeGen(self.exp_config, self.save_path, self.search_type, self.sample_num, False)
         self.gen_len = self.pipeline_generator.length
         # write train data in observer
-        self.observer.log['experiment_info']['number_of_pipes'] = self.gen_len
+        self.observer.log['experiment_info']['number_of_pipes'] = copy(self.gen_len)
         if self.target_metric:
             self.observer.log['experiment_info']['target_metric'] = self.target_metric
         else:
@@ -171,6 +172,33 @@ class PipelineManager:
                     copy(self.exp_config['train']['metrics'][0]['name'])
             else:
                 self.observer.log['experiment_info']['target_metric'] = copy(self.exp_config['train']['metrics'][0])
+
+        # check experiment checkpoint
+        self.exp_checkpoint = join(self.save_path, self.exp_name + '.json')
+        if not isfile(self.exp_checkpoint):
+            exp_dict = {}
+            for i in range(copy(self.gen_len)):
+                exp_dict[f'pipe_{i + 1}'] = False
+
+            with open(self.exp_checkpoint, 'w') as exp_check:
+                json.dump(exp_dict, exp_check)
+
+            self.start_exp_from_checkpoint = False
+            self.exp_structure = deepcopy(exp_dict)
+        else:
+            with open(self.exp_checkpoint, 'r') as exp_check:
+                exp_dict = json.load(exp_check)
+
+            self.exp_structure = deepcopy(exp_dict)
+
+            values = []
+            for key, value in exp_dict.items():
+                values.append(value)
+
+            if True in values:
+                self.start_exp_from_checkpoint = True
+            else:
+                self.start_exp_from_checkpoint = False
 
         # multiprocessing
         if self.use_multi_gpus and self.use_all_gpus:
@@ -272,7 +300,7 @@ class PipelineManager:
 
     @staticmethod
     @unpack_args
-    def train_pipe(pipe: Dict, i: int, observer: Observer, gpu_ind: Union[int, None] = None) -> None:
+    def train_pipe(pipe: Dict, i: int, observer: Observer, gpu_ind: Union[int, None] = None) -> int:
         """
         Start learning single pipeline. Observer write all info in log file.
 
@@ -314,7 +342,7 @@ class PipelineManager:
 
         # save config in checkpoint folder
         observer.save_config(pipe, dataset_name, i + 1)
-        return None
+        return i + 1
 
     def gpu_gen(self, gpu: bool = False) -> Iterator:
         """
@@ -332,10 +360,7 @@ class PipelineManager:
             for i, pipe_conf in enumerate(self.pipeline_generator()):
                 yield (deepcopy(pipe_conf), i, self.observer)
 
-    def _run(self) -> None:
-        """
-        Run the experiment. Creates a report after the experiments.
-        """
+    def run_exp_from_scratch(self) -> None:
         # Start generating pipelines configs
         print('[ Experiment start - {0} pipes, will be run]'.format(self.gen_len))
 
@@ -353,20 +378,86 @@ class PipelineManager:
                               total=self.gen_len))
                 workers.close()
                 workers.join()
-            del x
+
+            for ind in x:
+                self.exp_structure[f'pipe_{ind}'] = True
         else:
             for i, pipe in enumerate(tqdm(self.pipeline_generator(), total=self.gen_len)):
                 if self.available_gpu is None:
-                    self.train_pipe((pipe, i, self.observer))
+                    x = self.train_pipe((pipe, i, self.observer))
                 else:
                     gpu_ind = self.available_gpu[0]
-                    self.train_pipe((pipe, i, self.observer, gpu_ind))
+                    x = self.train_pipe((pipe, i, self.observer, gpu_ind))
+                self.exp_structure[f'pipe_{x}'] = True
+
+    def run_exp_from_checkpoint(self) -> None:
+        if self.multiprocessing:
+            # start multiprocessing
+            workers = Pool(self.max_num_workers)
+
+            if self.available_gpu is None:
+
+                pipes_items = [x for x in self.gpu_gen(gpu=False)]
+
+                for i, (key, item) in enumerate(self.exp_structure.items()):
+                    if item:
+                        pipes_items.remove(pipes_items[i])
+
+                print('[ Experiment start from checkpoint - {0} pipes, will be run]'.format(len(pipes_items)))
+
+                x = list(tqdm(workers.imap_unordered(self.train_pipe, pipes_items), total=self.gen_len))
+                workers.close()
+                workers.join()
+            else:
+                pipes_items = [x for x in self.gpu_gen(gpu=True)]
+
+                for i, (key, item) in enumerate(self.exp_structure.items()):
+                    if item:
+                        pipes_items.remove(pipes_items[i])
+
+                print('[ Experiment start from checkpoint - {0} pipes, will be run]'.format(len(pipes_items)))
+
+                x = list(tqdm(workers.imap_unordered(self.train_pipe, pipes_items), total=self.gen_len))
+                workers.close()
+                workers.join()
+
+            for ind in x:
+                self.exp_structure[f'pipe_{ind}'] = True
+        else:
+            gpu_ind = self.available_gpu[0]
+            pipes_items = list(self.pipeline_generator())
+
+            for i, (key, item) in enumerate(self.exp_structure.items()):
+                if item:
+                    pipes_items.remove(pipes_items[i])
+
+            print('[ Experiment start from checkpoint - {0} pipes, will be run]'.format(len(pipes_items)))
+
+            for i, pipe in enumerate(tqdm(pipes_items)):
+                if self.available_gpu is None:
+                    x = self.train_pipe((pipe, i, self.observer))
+                else:
+                    x = self.train_pipe((pipe, i, self.observer, gpu_ind))
+                self.exp_structure[f'pipe_{x}'] = True
+
+    def _run(self) -> None:
+        """
+        Run the experiment. Creates a report after the experiments.
+        """
+        if self.start_exp_from_checkpoint:
+            self.run_exp_from_checkpoint()
+        else:
+            self.run_exp_from_scratch()
 
         # save log
         self.observer.exp_time(time.strftime('%H:%M:%S', time.gmtime(time.time() - self.start_exp)))
         # delete all checkpoints and save only best pipe
         if self.save_best:
             self.observer.save_best_pipe()
+
+        # save experiment checkpoint
+        with open(self.exp_checkpoint, 'w') as f:
+            json.dump(self.exp_structure, f)
 
         print("[ End of experiment ]")
         # visualization of results
@@ -381,6 +472,10 @@ class PipelineManager:
         except KeyboardInterrupt:
             # save log
             self.observer.exp_time(time.strftime('%H:%M:%S', time.gmtime(time.time() - self.start_exp)))
+
+            # save experiment checkpoint
+            with open(self.exp_checkpoint, 'w') as f:
+                json.dump(self.exp_structure, f)
 
             print("[ The experiment was interrupt]")
             # visualization of results
