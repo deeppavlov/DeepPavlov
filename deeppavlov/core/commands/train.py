@@ -67,43 +67,6 @@ def prettify_metrics(metrics: List[Tuple[str, float]], precision: int = 4) -> Or
     return prettified_metrics
 
 
-def _fit(model: Estimator, iterator: DataLearningIterator, train_config) -> Estimator:
-    x, y = iterator.get_instances('train')
-    result = model.fit(x, y)
-
-    if result is not None and train_config.get('tensorboard_log_dir') is not None:
-        import tensorflow as tf
-        tb_log_dir = expand_path(train_config['tensorboard_log_dir'])
-        fit_writer = tf.summary.FileWriter(str(tb_log_dir / 'fit_log'))
-
-        for name, scores in result.items():
-            for i, score in enumerate(scores):
-                metric_sum = tf.Summary(value=[tf.Summary.Value(tag='fit/' + name,
-                                                                simple_value=score), ])
-                fit_writer.add_summary(metric_sum, i)
-    model.save()
-    return model
-
-
-def _fit_batches(model: Union[NNModel, Estimator], iterator: Union[DataLearningIterator, DataFittingIterator], train_config) -> Union[NNModel, Estimator]:
-
-    result = model.fit_batches(*iterator.gen_batches(train_config['batch_size']))
-
-    if result is not None and train_config.get('tensorboard_log_dir') is not None:
-        import tensorflow as tf
-        tb_log_dir = expand_path(train_config['tensorboard_log_dir'])
-        fit_writer = tf.summary.FileWriter(str(tb_log_dir / 'fit_batches_log'))
-
-        for name, scores in result.items():
-            for i, score in enumerate(scores):
-                metric_sum = tf.Summary(value=[tf.Summary.Value(tag='fit_batches/' + name,
-                                                                simple_value=score), ])
-                fit_writer.add_summary(metric_sum, i)
-
-    model.save()
-    return model
-
-
 def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingIterator]) -> Chainer:
     """Fit and return the chainer described in corresponding configuration dictionary."""
     chainer_config: dict = config['chainer']
@@ -149,7 +112,7 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
                         preprocessed = [preprocessed]
                     yield preprocessed
 
-            result = component.fit_batches(*iter_data())
+            result = component.fit_batches(iter_data())
 
             #result = component.fit_batches(*iterator.gen_batches(config['train']['batch_size']))
             if result is not None and config['train'].get('tensorboard_log_dir') is not None:
@@ -259,14 +222,9 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None, *
     if to_train:
         model = fit_chainer(config, iterator)
 
-        if callable(getattr(model, 'fit', None)):
-            _fit(model, iterator, train_config)
-        elif callable(getattr(model, 'train_on_batch', None)):
+        if callable(getattr(model, 'train_on_batch', None)):
             _train_batches(model, iterator, train_config, metrics_functions, start_epoch_num=start_epoch_num)
-        elif callable(getattr(model, 'fit_batches', None)):
-            _fit_batches(model, iterator, train_config)
-        if not any(getattr(model, m, None) for m in ('fit', 'train_on_batch', 'fit_batches'))\
-                and not isinstance(model, Chainer):
+        else:
             log.warning('Nothing to train')
 
         model.destroy()

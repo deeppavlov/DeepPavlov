@@ -306,7 +306,7 @@ class EnhancedTFModel(TFModel):
         self._fit_min_batches = fit_min_batches
         self._fit_max_batches = fit_max_batches
 
-    def fit_batches(self, *args):
+    def fit_batches(self, args):
         self.save()
         batches = list(args)
         num_batches = self._fit_max_batches or len(batches)
