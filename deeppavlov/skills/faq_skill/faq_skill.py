@@ -39,7 +39,7 @@ class FAQSkill(Skill):
 
 		if data_path is None and data_url is None:
 			raise ValueError("You haven't specified neither 'data_path' nor 'data_url'")
-		if data_path != None and data_url != None:
+		if data_path is not None and data_url is not None:
 			raise ValueError("You can't specify both 'data_path' and 'data_url'")
 
 		if data_path != None:				
