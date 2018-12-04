@@ -94,7 +94,7 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
             component.fit(*preprocessed)
             component.save()
 
-        if 'fit_on_batches' in component_config:
+        if 'fit_on_batch' in component_config:
             component: Estimator
 
             targets = component_config['fit_on']
