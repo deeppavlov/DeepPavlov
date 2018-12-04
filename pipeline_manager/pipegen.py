@@ -207,7 +207,7 @@ class PipeGen:
         Returns:
             random search iterator
         """
-        sample_gen = ParamsSearch(prefix="random")
+        sample_gen = ParamsSearch(prefix="random", seed=42)
         new_pipes = []
         for component in pipe_components:
             new_components = []
