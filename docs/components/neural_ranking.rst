@@ -32,21 +32,23 @@ To train from command line:
 As an example of configuration file see
 :config:`ranking_insurance.json <ranking/ranking_insurance.json>`.
 
-To use ether Sequential Matching Network (SMN) or Deep Attention Matching Network (DAM)
+To use Sequential Matching Network (SMN) or Deep Attention Matching Network (DAM) or
+Deep Attention Matching Network with Universal Sentence Encoder (DAM-USE-T)
 on the `Ubuntu Dialogue Corpus v2`_ for inference, please run one of the following commands:
 
 ::
 
     python -m deeppavlov interact deeppavlov/configs/ranking/ranking_ubuntu_v2_mt_word2vec_smn_interact.json -d
     python -m deeppavlov interact deeppavlov/configs/ranking/ranking_ubuntu_v2_mt_word2vec_dam_interact.json -d
+    python -m deeppavlov interact deeppavlov/configs/ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer_interact.json -d
 
-Now a user can enter a dialog consists of several context sentences and candidate response sentence separated by '&'
+Now a user can enter a dialog consists of 10 context sentences and several (>=1) candidate response sentences separated by '&'
 and then get the probability that the response is proper continuation of the dialog:
 
 ::
 
-    :: bonhoeffer  whar drives do you want to mount what &  i have an ext3 usb drive  & look with fdisk -l
-    >> The probability that the response is proper continuation of the dialog is 0.933
+    :: & & & & & & & & bonhoeffer  whar drives do you want to mount what &  i have an ext3 usb drive  & look with fdisk -l
+    >> 0.933
 
 To train the models on the `Ubuntu Dialogue Corpus v2`_ dataset please run one of the following commands:
 
@@ -54,6 +56,7 @@ To train the models on the `Ubuntu Dialogue Corpus v2`_ dataset please run one o
 
     python -m deeppavlov train deeppavlov/configs/ranking/ranking_ubuntu_v2_mt_word2vec_smn.json -d
     python -m deeppavlov train deeppavlov/configs/ranking/ranking_ubuntu_v2_mt_word2vec_dam.json -d
+    python -m deeppavlov train deeppavlov/configs/ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json -d
 
 As an example of configuration file see
 :config:`ranking_ubuntu_v2_mt_word2vec_smn.json <ranking/ranking_ubuntu_v2_mt_word2vec_smn.json>`.
