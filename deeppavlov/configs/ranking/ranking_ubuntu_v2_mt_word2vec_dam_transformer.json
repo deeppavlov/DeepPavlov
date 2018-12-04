@@ -117,7 +117,7 @@
     },
     "download": [
       {
-        "url": "http://lnsigo.mipt.ru/datasets/ubuntu_v2_data_clean.tar.gz",
+        "url": "http://files.deeppavlov.ai/datasets/ubuntu_v2_data_clean.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/ubuntu_v2_data_clean"
       },
       {

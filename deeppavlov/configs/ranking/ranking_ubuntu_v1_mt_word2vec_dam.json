@@ -116,7 +116,7 @@
     },
     "download": [
       {
-        "url": "http://lnsigo.mipt.ru/datasets/ubuntu_v1_data.tar.gz",
+        "url": "http://files.deeppavlov.ai/datasets/ubuntu_v1_data.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/ubuntu_v1_data"
       },
       {
