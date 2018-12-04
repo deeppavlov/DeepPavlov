@@ -112,12 +112,12 @@
     },
     "download": [
       {
-        "url": "http://lnsigo.mipt.ru/export/datasets/ubuntu_v2_data_clean.tar.gz",
-        "subdir": "ubuntu_v2_data_clean"
+        "url": "http://lnsigo.mipt.ru/datasets/ubuntu_v2_data_clean.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/ubuntu_v2_data_clean"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/ubuntu_v2_word2vec_embeddings.model.tar.gz",
-        "subdir": "ubuntu_v2_mt_word2vec_smn/embeddings_txt"
+        "url": "http://files.deeppavlov.ai/embeddings/v2_ubuntu_w2v_vectors.txt.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
   }

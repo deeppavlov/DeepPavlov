@@ -64,6 +64,7 @@
         "id": "model",
         "class_name": "dam_nn_use_transformer",
         "stack_num": 5,
+        "is_positional": true,
         "num_context_turns": "#preproc.num_context_turns",
         "max_sequence_length": "#preproc.max_sequence_length",
         "embedding_dim": "#word2vec_embedder.dim",
@@ -71,7 +72,7 @@
         "learning_rate": 1e-3,
         "batch_size": 100,
         "seed": 65,
-        "decay_steps": 600,
+        "decay_steps": 2000,
         "save_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam_transformer/model_dam/model",
         "load_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam_transformer/model_dam/model"
       },
@@ -92,6 +93,7 @@
   "train": {
     "epochs": 8,
     "batch_size": 100,
+    "shuffle": true,
     "pytest_max_batches": 2,
     "train_metrics": [],
     "metrics": [
@@ -100,7 +102,7 @@
       "r@5",
       "rank_response"
     ],
-    "validation_patience": 3,
+    "validation_patience": 1,
     "val_every_n_epochs": 1,
     "log_every_n_batches": 100,
     "tensorboard_log_dir": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam_transformer/logs_dam/"
@@ -120,14 +122,17 @@
       "server_utils": "Ranker"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v2_mt_ranking_dam.tar.gz",
       {
-        "url": "http://lnsigo.mipt.ru/export/datasets/ubuntu_v2_data_clean.tar.gz",
-        "subdir": "ubuntu_v2_data_clean"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v2_mt_word2vec_dam_transformer.tar.gz",
+        "subdir": "{MODELS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/ubuntu_v2_word2vec_embeddings.model.tar.gz",
-        "subdir": "ubuntu_v2_mt_word2vec_dam/embeddings_txt"
+        "url": "http://lnsigo.mipt.ru/datasets/ubuntu_v2_data_clean.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/ubuntu_v2_data_clean"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/v2_ubuntu_w2v_vectors.txt.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
   }
