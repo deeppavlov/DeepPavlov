@@ -18,11 +18,11 @@
         "out": ["x_tokens"]
       },
       {
-        "id": "token_vocab",
+        "id": "word_vocab",
         "class_name": "simple_vocab",
         "fit_on": ["x_tokens"],
-        "save_path": "{MODELS_PATH}/vocabs/token.dict",
-        "load_path": "{MODELS_PATH}/vocabs/token.dict"
+        "save_path": "{MODELS_PATH}/gobot_dstc2_minimal/word.dict",
+        "load_path": "{MODELS_PATH}/gobot_dstc2_minimal/word.dict"
       },
       {
         "id": "restaurant_database",
@@ -40,7 +40,7 @@
         "out": ["y_predicted"],
         "main": true,
         "debug": false,
-        "learning_rate": [2e-3, 2e-3],
+        "learning_rate": [2e-3, 2e-2],
         "learning_rate_decay": "1cycle",
         "learning_rate_decay_epochs": 20,
         "momentum": 0.95,
@@ -50,7 +50,7 @@
         "l2_reg_coef": 1e-4,
         "hidden_size": 128,
         "dense_size": 64,
-        "word_vocab": "#token_vocab",
+        "word_vocab": "#word_vocab",
         "template_path": "{DOWNLOADS_PATH}/dstc2/dstc2-templates.txt",
         "template_type": "DualTemplate",
         "database": "#restaurant_database",
@@ -61,7 +61,7 @@
         "embedder": null,
         "bow_embedder": {
           "class_name": "bow",
-          "depth": "#token_vocab.__len__()",
+          "depth": "#word_vocab.__len__()",
           "with_counts": true
         },
         "tokenizer": {
@@ -80,7 +80,7 @@
 	"batch_size": 4,
 
 	"metrics": ["per_item_dialog_accuracy"],
-	"validation_patience": 20,
+	"validation_patience": 10,
 	"val_every_n_epochs": 1,
 
 	"log_every_n_batches": -1,
