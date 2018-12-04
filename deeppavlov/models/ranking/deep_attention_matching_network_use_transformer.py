@@ -15,11 +15,11 @@
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
-from typing import List, Iterable, Union
+from typing import List, Iterable, Dict, Tuple
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.ranking.matching_models.tf_base_matching_model import TensorflowBaseMatchingModel
+from deeppavlov.models.ranking.tf_base_matching_model import TensorflowBaseMatchingModel
 from deeppavlov.models.ranking.matching_models.dam_utils import layers
 from deeppavlov.models.ranking.matching_models.dam_utils import operations as op
 
@@ -29,8 +29,17 @@ log = get_logger(__name__)
 @register('dam_nn_use_transformer')
 class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
     """
-    Tensorflow implementation of Deep Attention Matching Network (DAM)
+    Tensorflow implementation of Deep Attention Matching Network (DAM) [1] improved with USE [2]
+    ```
+    http://aclweb.org/anthology/P18-1103
 
+    Based on Tensorflow code: https://github.com/baidu/Dialogue/tree/master/DAM
+    We added USE-T [2] as a sentence encoder to the model to achieve state-of-the-art performance on the datasets:
+    * Ubuntu Dialogue Corpus v1 (R@1: 0.739, R@2: 0.867, R@5: 0.972)
+    * Ubuntu Dialogue Corpus v2 (R@1: ?, R@2: ?, R@5: ?)
+
+    References:
+    [1]
     ```
     @inproceedings{ ,
       title={Multi-Turn Response Selection for Chatbots with Deep Attention Matching Network},
@@ -41,9 +50,8 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
       year={2018}
     }
     ```
-    http://aclweb.org/anthology/P18-1103
-
-    Based on authors' Tensorflow code: https://github.com/baidu/Dialogue/tree/master/DAM
+    [2] Cer D, Yang Y, Kong S-y, Hua N, Limtiaco N, John RS, et al. 2018. Universal sentence encoder.
+    arXiv preprint arXiv:1803.11175 2018.
 
     Args:
         num_context_turns (int): A number of ``context`` turns in data samples.
@@ -59,9 +67,8 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
         decay_steps (int): Number of steps after which is to decay the learning rate.
     """
 
-
-
     def __init__(self,
+                 batch_size: int,
                  embedding_dim: int = 200,
                  num_context_turns: int = 10,
                  max_sequence_length: int = 50,
@@ -79,6 +86,7 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
         np.random.seed(self.seed)
         tf.set_random_seed(self.seed)
 
+        self.batch_size = batch_size
         self.num_context_turns = num_context_turns
         self.max_sentence_len = max_sequence_length
         self.word_embedding_size = embedding_dim
@@ -125,7 +133,8 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
         self.sess.run(tf.global_variables_initializer())
         ##############################################################################
 
-        super(DAMNetworkUSETransformer, self).__init__(*args, **kwargs)
+        super(DAMNetworkUSETransformer, self).__init__(
+            batch_size=batch_size, num_context_turns=num_context_turns, *args, **kwargs)
 
         if self.load_path is not None:
             self.load()
@@ -298,260 +307,255 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
         # Debug
         self.print_number_of_parameters()
 
+    def _append_sample_to_batch_buffer(self, sample: List[np.ndarray], buf: List[Tuple]):
+        """
+        The function for adding samples to the batch buffer
 
-    def __call__(self, samples_generator: Iterable[List[np.ndarray]]) -> Union[np.ndarray, List[str]]:
-        y_pred = []
+        Args:
+            sample (List[nd.array]): samples generator
+            buf (List[Tuple[np.ndarray]]) : List of samples with model inputs each:
+                [( context, context_len, response, response_len ), ( ... ), ... ].
+
+        Returns:
+             None
+        """
+        sample_len = len(sample)
+
         batch_buffer_context = []       # [batch_size, 10, 50]
         batch_buffer_context_len = []   # [batch_size, 10]
         batch_buffer_response = []      # [batch_size, 50]
         batch_buffer_response_len = []  # [batch_size]
 
-        raw_batch_buffer_context = []  # [batch_size, 10]
+        raw_batch_buffer_context = []   # [batch_size, 10]
         raw_batch_buffer_response = []  # [batch_size]
+
+        context_sentences = sample[:self.num_context_turns]
+        response_sentences = sample[self.num_context_turns:sample_len // 2]
+
+        raw_context_sentences = sample[sample_len // 2:sample_len // 2 + self.num_context_turns]
+        raw_response_sentences = sample[sample_len // 2 + self.num_context_turns:]
+
+        # Format model inputs:
+        # 4 model inputs
+
+        # 1. Token indices for context
+        batch_buffer_context += [context_sentences for sent in response_sentences]
+        # 2. Token indices for response
+        batch_buffer_response += [response_sentence for response_sentence in response_sentences]
+        # 3. Lens of context sentences
+        lens = []
+        for context in [context_sentences for sent in response_sentences]:
+            context_sentences_lens = []
+            for sent in context:
+                context_sentences_lens.append(len(sent[sent != 0]))
+            lens.append(context_sentences_lens)
+        batch_buffer_context_len += lens
+        # 4. Lens of context sentences
+        lens = []
+        for context in [response_sentence for response_sentence in response_sentences]:
+            lens.append(len(context[context != 0]))
+        batch_buffer_response_len += lens
+        # 5. Raw context sentences
+        raw_batch_buffer_context += [raw_context_sentences for sent in raw_response_sentences]
+        # 6. Raw response sentences
+        raw_batch_buffer_response += [raw_sent for raw_sent in raw_response_sentences]
+
+        for i in range(len(batch_buffer_context)):
+            buf.append(tuple((
+                batch_buffer_context[i],
+                batch_buffer_context_len[i],
+                batch_buffer_response[i],
+                batch_buffer_response_len[i],
+                raw_batch_buffer_context[i],
+                raw_batch_buffer_response[i]
+            )))
+
+    def _make_batch(self, batch: List[Tuple[np.ndarray]], graph: str = "main") -> Dict:
+        """
+        The function for formatting model inputs
+
+        Args:
+            batch (List[List[np.ndarray]]): List of samples with model inputs each:
+                [( context, context_len, response, response_len ), ( ... ), ... ].
+            graph (str): which graph the inputs is preparing for
+
+        Returns:
+            Dict: feed_dict to feed a model
+        """
+        if graph == "use":
+            input_raw_context = []
+            input_raw_response = []
+
+            # format model inputs for USE graph as numpy arrays
+            for sample in batch:
+                input_raw_context.append(sample[4])   # raw context is the 4th element of each Tuple in the batch
+                input_raw_response.append(sample[5])  # raw response is the 5th element of each Tuple in the batch
+
+            return {
+                self.context_sent_ph: np.array(input_raw_context),
+                self.response_sent_ph: np.array(input_raw_response)
+            }
+        elif graph == "main":
+            input_context = []
+            input_context_len = []
+            input_response = []
+            input_response_len = []
+
+            # format model inputs for MAIN graph as numpy arrays
+            for sample in batch:
+                input_context.append(sample[0])
+                input_context_len.append(sample[1])
+                input_response.append(sample[2])
+                input_response_len.append(sample[3])
+
+            return {
+                self.utterance_ph: np.array(input_context),
+                self.all_utterance_len_ph: np.array(input_context_len),
+                self.response_ph: np.array(input_response),
+                self.response_len_ph: np.array(input_response_len)
+            }
+
+    def _predict_on_batch(self, batch: Dict, graph: str = "main") -> np.ndarray:
+        """
+        Run a model with the batch of inputs.
+        The function returns a list of predictions for the batch in numpy format
+
+        Args:
+            batch (Dict): feed_dict that contains a batch with inputs for a model
+            graph (str): which graph the inputs is preparing for
+
+        Returns:
+            nd.array: predictions for the batch
+        """
+        if graph == "use":
+            return self.cpu_sess.run([self.sent_embedder_context, self.sent_embedder_response],
+                                     feed_dict=batch)
+        elif graph == "main":
+            return self.sess.run(self.y_pred, feed_dict=batch)[:, 1]
+
+    def _train_on_batch(self, batch: Dict, y: List[int]) -> float:
+        """
+        The function is for formatting of feed_dict used as an input for a model
+        Args:
+            batch (Dict): feed_dict that contains a batch with inputs for a model (except ground truth labels)
+            y (List(int)): list of ground truth labels
+
+        Returns:
+            float: value of mean loss on the batch
+        """
+
+        batch.update({self.y_true: np.array(y)})
+        return self.sess.run([self.loss, self.train_op], feed_dict=batch)[0]  # return the first item aka loss
+
+    def __call__(self, samples_generator: Iterable[List[np.ndarray]]) -> np.ndarray:
+        """
+        This method is called by trainer to make one evaluation step on one batch.
+
+        Args:
+            samples_generator (Iterable[List[np.ndarray]]):  generator that returns list of numpy arrays
+            of words of all sentences represented as integers.
+            Has shape: (number_of_context_turns + 1, max_number_of_words_in_a_sentence)
+
+        Returns:
+            np.ndarray: predictions for the batch of samples
+        """
+
+        y_pred = []
+        buf = []
+        for j, sample in enumerate(samples_generator, start=1):
+            n_responses = len(sample[self.num_context_turns:len(sample) // 2])
+            self._append_sample_to_batch_buffer(sample, buf)
+            if len(buf) >= self.batch_size:
+                for i in range(len(buf) // self.batch_size):
+                    # 1. USE Graph
+                    fd = self._make_batch(buf[i * self.batch_size:(i + 1) * self.batch_size], graph="use")
+                    context_emb, response_emb = self._predict_on_batch(fd, graph="use")
+
+                    # 2. MAIN Graph
+                    fd = self._make_batch(buf[i * self.batch_size:(i + 1) * self.batch_size], graph="main")
+                    fd.update({
+                        self.context_sent_emb_ph: context_emb,
+                        self.response_sent_emb_ph: response_emb
+                    })
+                    yp = self._predict_on_batch(fd, graph="main")
+                    y_pred += list(yp)
+                lenb = len(buf) % self.batch_size
+                if lenb != 0:
+                    buf = buf[-lenb:]
+                else:
+                    buf = []
+        if len(buf) != 0:
+            # 1. USE Graph
+            fd = self._make_batch(buf, graph="use")
+            context_emb, response_emb = self._predict_on_batch(fd, graph="use")
+
+            # 2. MAIN Graph
+            fd = self._make_batch(buf, graph="main")
+            fd.update({
+                self.context_sent_emb_ph: context_emb,
+                self.response_sent_emb_ph: response_emb
+            })
+            yp = self._predict_on_batch(fd, graph="main")
+            y_pred += list(yp)
+        y_pred = np.asarray(y_pred)
+        # reshape to [batch_size, n_responses] if needed (n_responses > 1)
+        y_pred = np.reshape(y_pred, (j, n_responses)) if n_responses > 1 else y_pred
+        return y_pred
+
+    def train_on_batch(self, samples_generator: Iterable[List[np.ndarray]], y: List[int]) -> float:
+        """
+        This method is called by trainer to make one training step on one batch.
+
+        Args:
+            samples_generator (Iterable[List[np.ndarray]]): generator that returns list of numpy arrays
+            of words of all sentences represented as integers.
+            Has shape: (number_of_context_turns + 1, max_number_of_words_in_a_sentence)
+            y (List[int]): tuple of labels, with shape: (batch_size, )
+
+        Returns:
+            float: value of mean loss on the batch
+        """
+        loss = 0
+        buf = []
         j = 0
         while True:
             try:
                 sample = next(samples_generator)
-                sample_len = len(sample)
                 j += 1
-                context_sentences = sample[:self.num_context_turns]
-                response_sentences = sample[self.num_context_turns:sample_len//2]
+                self._append_sample_to_batch_buffer(sample=sample, buf=buf)
+                if len(buf) >= self.batch_size:
+                    for i in range(len(buf) // self.batch_size):
+                        # 1. USE Graph
+                        fd = self._make_batch(buf[i * self.batch_size:(i + 1) * self.batch_size], graph="use")
+                        context_emb, response_emb = self._predict_on_batch(fd, graph="use")
 
-                raw_context_sentences = sample[sample_len//2:sample_len//2 + self.num_context_turns]
-                raw_response_sentences = sample[sample_len//2 + self.num_context_turns:]
-
-                # format model inputs
-                # word indices
-                batch_buffer_context += [context_sentences for sent in response_sentences]
-                batch_buffer_response += [response_sentence for response_sentence in response_sentences]
-
-                raw_batch_buffer_context += [raw_context_sentences for sent in raw_response_sentences]
-                raw_batch_buffer_response += [raw_sent for raw_sent in raw_response_sentences]
-
-                # lens of sentences
-                lens = []
-                for context in [context_sentences for sent in response_sentences]:
-                    context_sentences_lens = []
-                    for sent in context:
-                        sent_len = len(sent[sent != 0])
-                        sent_len = sent_len + 1 if sent_len > 0 else 0
-                        context_sentences_lens.append(sent_len)
-                    lens.append(context_sentences_lens)
-                batch_buffer_context_len += lens
-
-                lens = []
-                for context in [response_sentence for response_sentence in response_sentences]:
-                    sent_len = len(context[context != 0])
-                    sent_len = sent_len + 1 if sent_len > 0 else 0
-                    lens.append(sent_len)
-                batch_buffer_response_len += lens
-
-                if len(batch_buffer_context) >= self.batch_size:
-                    for i in range(len(batch_buffer_context) // self.batch_size):
-
-                        # CPU Graph
-                        with self.g_use.as_default():
-                            sent_feed_dict = {
-                                self.context_sent_ph: np.array(
-                                    raw_batch_buffer_context[i * self.batch_size: (i + 1) * self.batch_size]),
-                                self.response_sent_ph: np.array(
-                                    raw_batch_buffer_response[i * self.batch_size: (i + 1) * self.batch_size])
-                            }
-                            c, r = self.cpu_sess.run([self.sent_embedder_context, self.sent_embedder_response],
-                                                     feed_dict=sent_feed_dict)
-
-                        # GPU Graph
-                        with self.graph.as_default():
-                            feed_dict = {
-                                self.utterance_ph: np.array(
-                                    batch_buffer_context[i * self.batch_size:(i + 1) * self.batch_size]),
-                                self.all_utterance_len_ph: np.array(
-                                    batch_buffer_context_len[i * self.batch_size:(i + 1) * self.batch_size]),
-                                self.response_ph: np.array(
-                                    batch_buffer_response[i * self.batch_size:(i + 1) * self.batch_size]),
-                                self.response_len_ph: np.array(
-                                    batch_buffer_response_len[i * self.batch_size:(i + 1) * self.batch_size]),
-
-                                self.context_sent_emb_ph: c,
-                                self.response_sent_emb_ph: r
-                            }
-                            yp = self.sess.run(self.y_pred, feed_dict=feed_dict)
-                        y_pred += list(yp[:, 1])
-                    lenb = len(batch_buffer_context) % self.batch_size
+                        # 2. MAIN Graph
+                        fd = self._make_batch(buf[i * self.batch_size:(i + 1) * self.batch_size], graph="main")
+                        fd.update({
+                            self.context_sent_emb_ph: context_emb,
+                            self.response_sent_emb_ph: response_emb
+                        })
+                        loss = self._train_on_batch(fd, y)
+                    lenb = len(buf) % self.batch_size
                     if lenb != 0:
-                        batch_buffer_context = batch_buffer_context[-lenb:]
-                        batch_buffer_context_len = batch_buffer_context_len[-lenb:]
-                        batch_buffer_response = batch_buffer_response[-lenb:]
-                        batch_buffer_response_len = batch_buffer_response_len[-lenb:]
-
-                        raw_batch_buffer_context = raw_batch_buffer_context[-lenb:]
-                        raw_batch_buffer_response = raw_batch_buffer_response[-lenb:]
+                        buf = buf[-lenb:]
                     else:
-                        batch_buffer_context = []
-                        batch_buffer_context_len = []
-                        batch_buffer_response = []
-                        batch_buffer_response_len = []
-
-                        raw_batch_buffer_context = []
-                        raw_batch_buffer_response = []
+                        buf = []
             except StopIteration:
                 if j == 1:
                     return ["Error! It is not intended to use the model in the interact mode."]
-                if len(batch_buffer_context) != 0:
-                    # CPU Graph
-                    with self.g_use.as_default():
-                        sent_feed_dict = {
-                            self.context_sent_ph: np.array(raw_batch_buffer_context),
-                            self.response_sent_ph: np.array(raw_batch_buffer_response)
-                        }
-                        c, r = self.cpu_sess.run([self.sent_embedder_context, self.sent_embedder_response],
-                                                 feed_dict=sent_feed_dict)
+                if len(buf) != 0:
+                    # feed the rest items
+                    # 1. USE Graph
+                    fd = self._make_batch(buf, graph="use")
+                    context_emb, response_emb = self._predict_on_batch(fd, graph="use")
 
-                    # GPU Graph
-                    with self.graph.as_default():
-                        feed_dict = {
-                            self.utterance_ph: np.array(batch_buffer_context),
-                            self.all_utterance_len_ph: np.array(batch_buffer_context_len),
-                            self.response_ph: np.array(batch_buffer_response),
-                            self.response_len_ph: np.array(batch_buffer_response_len),
-
-                            self.context_sent_emb_ph: c,
-                            self.response_sent_emb_ph: r
-                        }
-                        yp = self.gpu_sess.run(self.y_pred, feed_dict=feed_dict)
-                    y_pred += list(yp[:, 1])
-                break
-        y_pred = np.asarray(y_pred)
-        if len(response_sentences) > 1:
-            y_pred = np.reshape(y_pred, (j, len(response_sentences)))  # reshape to [batch_size, 10]
-        return y_pred
-
-    def train_on_batch(self, x: List[np.ndarray], y: List[int]) -> float:
-        """
-        This method is called by trainer to make one training step on one batch.
-
-        :param x: generator that returns
-                  list of ndarray - words of all sentences represented as integers,
-                  with shape: (number_of_context_turns + 1, max_number_of_words_in_a_sentence)
-        :param y: tuple of labels, with shape: (batch_size, )
-        :return: value of loss function on batch
-        """
-        batch_buffer_context = []       # [batch_size, 10, 50]
-        batch_buffer_context_len = []   # [batch_size, 10]
-        batch_buffer_response = []      # [batch_size, 50]
-        batch_buffer_response_len = []  # [batch_size]
-
-        raw_batch_buffer_context = []  # [batch_size, 10]
-        raw_batch_buffer_response = []  # [batch_size]
-        j = 0
-        while True:
-            try:
-                sample = next(x)
-                sample_len = len(sample)
-                j += 1
-                context_sentences = sample[:self.num_context_turns]
-                response_sentences = sample[self.num_context_turns:sample_len//2]
-
-                raw_context_sentences = sample[sample_len//2:sample_len//2 + self.num_context_turns]
-                raw_response_sentences = sample[sample_len//2 + self.num_context_turns:]
-
-                # format model inputs
-                # word indices
-                batch_buffer_context += [context_sentences for sent in response_sentences]
-                batch_buffer_response += [response_sentence for response_sentence in response_sentences]
-
-                raw_batch_buffer_context += [raw_context_sentences for sent in raw_response_sentences]
-                raw_batch_buffer_response += [raw_sent for raw_sent in raw_response_sentences]
-
-                # lens of sentences
-                lens = []
-                for context in [context_sentences for sent in response_sentences]:
-                    context_sentences_lens = []
-                    for sent in context:
-                        sent_len = len(sent[sent != 0])
-                        sent_len = sent_len + 1 if sent_len > 0 else 0
-                        context_sentences_lens.append(sent_len)
-                    lens.append(context_sentences_lens)
-                batch_buffer_context_len += lens
-
-                lens = []
-                for context in [response_sentence for response_sentence in response_sentences]:
-                    sent_len = len(context[context != 0])
-                    sent_len = sent_len + 1 if sent_len > 0 else 0
-                    lens.append(sent_len)
-                batch_buffer_response_len += lens
-
-                if len(batch_buffer_context) >= self.batch_size:
-                    for i in range(len(batch_buffer_context) // self.batch_size):
-                        # CPU Graph
-                        with self.g_use.as_default():
-                            sent_feed_dict = {
-                                self.context_sent_ph: np.array(
-                                    raw_batch_buffer_context[i * self.batch_size: (i + 1) * self.batch_size]),
-                                self.response_sent_ph: np.array(
-                                    raw_batch_buffer_response[i * self.batch_size: (i + 1) * self.batch_size])
-                            }
-                            c, r = self.cpu_sess.run([self.sent_embedder_context, self.sent_embedder_response],
-                                                     feed_dict=sent_feed_dict)
-
-                        # GPU Graph
-                        with self.graph.as_default():
-                            feed_dict = {
-                                self.utterance_ph: np.array(
-                                    batch_buffer_context[i * self.batch_size:(i + 1) * self.batch_size]),
-                                self.all_utterance_len_ph: np.array(
-                                    batch_buffer_context_len[i * self.batch_size:(i + 1) * self.batch_size]),
-                                self.response_ph: np.array(
-                                    batch_buffer_response[i * self.batch_size:(i + 1) * self.batch_size]),
-                                self.response_len_ph: np.array(
-                                    batch_buffer_response_len[i * self.batch_size:(i + 1) * self.batch_size]),
-                                self.y_true: np.array(y),
-
-                                self.context_sent_emb_ph: c,
-                                self.response_sent_emb_ph: r
-                            }
-                            loss, _ = self.sess.run([self.loss, self.train_op], feed_dict=feed_dict)
-                    lenb = len(batch_buffer_context) % self.batch_size
-                    if lenb != 0:
-                        batch_buffer_context = batch_buffer_context[-lenb:]
-                        batch_buffer_context_len = batch_buffer_context_len[-lenb:]
-                        batch_buffer_response = batch_buffer_response[-lenb:]
-                        batch_buffer_response_len = batch_buffer_response_len[-lenb:]
-
-                        raw_batch_buffer_context = raw_batch_buffer_context[-lenb:]
-                        raw_batch_buffer_response = raw_batch_buffer_response[-lenb:]
-                    else:
-                        batch_buffer_context = []
-                        batch_buffer_context_len = []
-                        batch_buffer_response = []
-                        batch_buffer_response_len = []
-
-                        raw_batch_buffer_context = []
-                        raw_batch_buffer_response = []
-            except StopIteration:
-                if j == 1:
-                    return ["Error! It is not intended to use the model in the interact mode."]
-                if len(batch_buffer_context) != 0:
-                    # CPU Graph
-                    with self.g_use.as_default():
-                        sent_feed_dict = {
-                            self.context_sent_ph: np.array(raw_batch_buffer_context),
-                            self.response_sent_ph: np.array(raw_batch_buffer_response)
-                        }
-                        c, r = self.cpu_sess.run([self.sent_embedder_context, self.sent_embedder_response],
-                                                 feed_dict=sent_feed_dict)
-                    # GPU Graph
-                    with self.graph.as_default():
-                        feed_dict = {
-                            self.utterance_ph: np.array(batch_buffer_context),
-                            self.all_utterance_len_ph: np.array(batch_buffer_context_len),
-                            self.response_ph: np.array(batch_buffer_response),
-                            self.response_len_ph: np.array(batch_buffer_response_len),
-                            self.y_true: np.array(y),
-
-                            self.context_sent_emb_ph: c,
-                            self.response_sent_emb_ph: r
-                        }
-                        loss, _ = self.sess.run([self.loss, self.train_op], feed_dict=feed_dict)
+                    # 2. MAIN Graph
+                    fd = self._make_batch(buf, graph="main")
+                    fd.update({
+                        self.context_sent_emb_ph: context_emb,
+                        self.response_sent_emb_ph: response_emb
+                    })
+                    loss += self._train_on_batch(fd, y)
                 break
         return loss

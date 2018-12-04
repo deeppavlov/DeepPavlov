@@ -17,7 +17,7 @@ import tensorflow as tf
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.ranking.matching_models.tf_base_matching_model import TensorflowBaseMatchingModel
+from deeppavlov.models.ranking.tf_base_matching_model import TensorflowBaseMatchingModel
 from deeppavlov.models.ranking.matching_models.dam_utils import layers
 from deeppavlov.models.ranking.matching_models.dam_utils import operations as op
 
@@ -52,6 +52,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
         trainable_embeddings (bool): Whether train embeddings matrix or not.
         embedding_dim (int): Dimensionality of token (word) embeddings.
         is_positional (bool): Adds a bunch of sinusoids of different frequencies to an embeddings.
+        filters2_conv3d (int): number of filters in the second conv3d layer (cnn aggregation). Default: 16.
         stack_num (int): Number of stack layers, default is 5.
         seed (int): Random seed.
         decay_steps (int): Number of steps after which is to decay the learning rate.
@@ -65,6 +66,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
                  emb_matrix: np.ndarray = None,
                  trainable_embeddings: bool = False,
                  is_positional: bool = True,
+                 filters2_conv3d: int = 16,
                  stack_num: int = 5,
                  seed: int = 65,
                  decay_steps: int = 600,
@@ -82,6 +84,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
         self.trainable = trainable_embeddings
         self.is_positional = is_positional
         self.stack_num = stack_num
+        self.filters2_conv3d = filters2_conv3d
 
         self.learning_rate = learning_rate
         self.emb_matrix = emb_matrix
@@ -207,7 +210,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
         sim = tf.stack(sim_turns, axis=1)
         log.info('sim shape: %s' % sim.shape)
         with tf.variable_scope('cnn_aggregation'):
-            final_info = layers.CNN_3d(sim, 32, 16)
+            final_info = layers.CNN_3d(sim, 32, self.filters2_conv3d)
             # for douban
             # final_info = layers.CNN_3d(sim, 16, 16)
 

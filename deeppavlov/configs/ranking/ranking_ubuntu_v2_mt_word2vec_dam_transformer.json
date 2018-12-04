@@ -8,6 +8,7 @@
   },
   "dataset_iterator": {
     "class_name": "siamese_iterator",
+    "shuffle": true,
     "seed": 243
   },
   "chainer": {
@@ -73,7 +74,7 @@
         "learning_rate": 1e-3,
         "batch_size": 100,
         "seed": 65,
-        "decay_steps": 600,
+        "decay_steps": 2000,
         "save_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam_transformer/model_dam/model",
         "load_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam_transformer/model_dam/model"
       }
@@ -85,6 +86,7 @@
   "train": {
     "epochs": 8,
     "batch_size": 100,
+    "shuffle": true,
     "pytest_max_batches": 2,
     "train_metrics": [],
     "metrics": [
@@ -93,7 +95,7 @@
       "r@5",
       "rank_response"
     ],
-    "validation_patience": 3,
+    "validation_patience": 1,
     "val_every_n_epochs": 1,
     "log_every_n_batches": 100,
     "tensorboard_log_dir": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam_transformer/logs_dam/"

@@ -96,7 +96,9 @@
       "r@5",
       "rank_response"
     ],
-    "validation_patience": 3,
+    "validate_best": true,
+    "test_best": true,
+    "validation_patience": 1,
     "val_every_n_epochs": 1,
     "log_every_n_batches": 100,
     "tensorboard_log_dir": "{MODELS_PATH}/ubuntu_v1_mt_word2vec_dam_transformer/logs_dam/"
