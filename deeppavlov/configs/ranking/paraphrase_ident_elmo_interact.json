@@ -45,7 +45,7 @@
             "elmo"
           ],
           "mini_batch_size": 8,
-          "spec": "{DOWNLOADS_PATH}/embeddings/elmo_para_pre_1_fine_tuned"
+          "spec": "{DOWNLOADS_PATH}/embeddings/elmo_news_wmt11-16-simple_reduce_para_pre_fine_tuned_ep1"
         }
       },
       {
@@ -124,7 +124,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/elmo_news_wmt11-16-simple_reduce_para_pretrain_fine_tuned_ep1.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/embeddings/elmo_para_pre_1_fine_tuned"
+        "subdir": "{DOWNLOADS_PATH}/embeddings/elmo_news_wmt11-16-simple_reduce_para_pre_fine_tuned_ep1"
       }
     ]
   }
