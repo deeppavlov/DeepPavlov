@@ -97,13 +97,13 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
         if 'fit_on_batch' in component_config:
             component: Estimator
 
-            targets = component_config['fit_on']
+            targets = component_config['fit_on_batch']
             if isinstance(targets, str):
                 targets = [targets]
 
             for data in iterator.gen_batches(config['train']['batch_size'], 'train'):
                 preprocessed = chainer.compute(*data, targets=targets)
-                if len(component_config['fit_on']) == 1:
+                if len(component_config['fit_on_batch']) == 1:
                     preprocessed = [preprocessed]
                 component.partial_fit(preprocessed)
 
