@@ -6,7 +6,7 @@ from deeppavlov.core.common.file import find_config
 from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
 
 from typing import Tuple, Optional, Union
-import json;
+import json
 
 class FAQSkill(Skill):
 	"""Skill, matches utterances to questions, returns predefined answers.
