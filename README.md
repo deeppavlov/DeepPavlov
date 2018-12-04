@@ -5,6 +5,23 @@ DeepPavlov is an open-source conversational AI library built on [TensorFlow](htt
  * development of production ready chat-bots and complex conversational systems,
  * NLP and dialog systems research.
 
+
+### Breaking changes in version 0.1.0!
+- As of `version 0.1.0` all models, embeddings and other downloaded data for provided configurations are
+ by default downloaded to the `.deeppavlov` directory in current user's home directory.
+ This can be changed on per-model basis by modifying
+ a `ROOT_PATH` [variable](http://docs.deeppavlov.ai/en/latest/intro/config_description.html#variables)
+ or related fields one by one in model's configuration file.
+ 
+- In configuration files, for all components, dataset readers and iterators `"name"` and `"class"` fields are combined
+into the `"class_name"` field.
+
+- `deeppavlov.core.commands.infer.build_model_from_config()` was renamed to `build_model` and can be imported from the
+ `deeppavlov` module directly.
+
+- The way arguments are passed to metrics functions during training and evaluation was changed and
+ [documented](http://docs.deeppavlov.ai/en/latest/intro/config_description.html#metrics).
+
 # Hello Bot in DeepPavlov
 
 Import key components to build HelloBot. 
@@ -46,6 +63,9 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 
 [Morphological tagging](http://docs.deeppavlov.ai/en/latest/components/morphotagger.html) | [Automatic Spelling Correction](http://docs.deeppavlov.ai/en/latest/components/spelling_correction.html)
 
+[ELMo training and fine-tuning](http://docs.deeppavlov.ai/en/latest/apiref/models/elmo.html)
+
+
 **Skills**
 
 [Goal(Task)-oriented Bot](http://docs.deeppavlov.ai/en/latest/skills/go_bot.html) | [Seq2seq Goal-Oriented bot](http://docs.deeppavlov.ai/en/latest/skills/seq2seq_go_bot.html)
@@ -56,7 +76,7 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 
 **Embeddings**
 
-[ELMo embeddings for the Russian language](http://docs.deeppavlov.ai/en/master/apiref/models/embedders.html#deeppavlov.models.embedders.elmo_embedder.ELMoEmbedder)
+[ELMo embeddings for the Russian language](http://docs.deeppavlov.ai/en/latest/apiref/models/embedders.html#deeppavlov.models.embedders.elmo_embedder.ELMoEmbedder)
 
 [FastText embeddings for the Russian language](http://docs.deeppavlov.ai/en/latest/intro/pretrained_vectors.html)
 
@@ -68,7 +88,7 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 
 0. Currently we support `Linux` and `Windows` platforms and `Python 3.6` 
     * **`Python 3.5` is not supported!**
-    * **`Windows` platform requires `Visual Studio 2015/2017` with `C++` build tools installed!**
+    * **`Windows` platform requires `Git` for Windows (for example, [git](https://git-scm.com/download/win)),  `Visual Studio 2015/2017` with `C++` build tools installed!**
 
 1. Create a virtual environment with `Python 3.6`:
     ```
@@ -116,8 +136,8 @@ python -m deeppavlov <mode> <path_to_config> [-d]
 or a name without the `.json` extension of one of the config files [provided](deeppavlov/configs) in this repository (e.g. `slotfill_dstc2`)
 
 For the `interactbot` mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` environment variable. Also if you want to get custom `/start` and `/help` Telegram messages for the running model you should:
-* Add section to [*utils/settings/model_info.json*](utils/settings/model_info.json) with your custom Telegram messages
-* In model config file specify `metadata.labels.telegram_utils` parameter with name which refers to the added section of [*utils/settings/model_info.json*](utils/settings/model_info.json)
+* Add section to [*utils/settings/models_info.json*](utils/settings/models_info.json) with your custom Telegram messages
+* In model config file specify `metadata.labels.telegram_utils` parameter with name which refers to the added section of [*utils/settings/models_info.json*](utils/settings/models_info.json)
 
 For the `interactmsbot` mode you should specify **Microsoft app id** in `-i` and **Microsoft app secret** in `-s`. Also before launch you should specify api deployment settings (host, port) in [*utils/settings/server_config.json*](utils/settings/server_config.json) configuration file. Note, that Microsoft Bot Framework requires `https` endpoint with valid certificate from CA.
 Here is [detailed info on the Microsoft Bot Framework integration](http://docs.deeppavlov.ai/en/latest/devguides/ms_bot_integration.html)
@@ -149,7 +169,7 @@ Here is our [DockerHub repository](https://hub.docker.com/u/deeppavlov/) with im
 
 # Tutorials
 
-Jupyter notebooks and videos explaining how to use DeepPalov for different tasks can be found in [/examples/tutorials/](examples/tutorials/)
+Jupyter notebooks and videos explaining how to use DeepPalov for different tasks can be found in [/examples/tutorials/](examples/tutorials)
 
 # License
 

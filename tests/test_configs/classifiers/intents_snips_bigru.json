@@ -74,7 +74,7 @@
         "load_path": "{MODELS_PATH}/classifiers/intent_cnn_snips_bigru",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
-        "units_lstm": 64,
+        "units_gru": 64,
         "optimizer": "Adam",
         "learning_rate": 0.01,
         "learning_rate_decay": 0.1,

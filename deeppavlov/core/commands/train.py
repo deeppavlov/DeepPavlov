@@ -18,7 +18,7 @@ import json
 import time
 from collections import OrderedDict, namedtuple
 from pathlib import Path
-from typing import List, Tuple, Dict, Union
+from typing import List, Tuple, Dict, Union, Optional
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import expand_path, import_packages, parse_config
@@ -30,6 +30,7 @@ from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
+from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.download import deep_download
@@ -73,13 +74,6 @@ def _fit(model: Estimator, iterator: DataLearningIterator, train_config) -> Esti
     return model
 
 
-def _partial_fit(model: Estimator, iterator: DataFittingIterator, train_config) -> Estimator:
-    for data in iterator.gen_batches(train_config['batch_size'], 'train'):
-        model.partial_fit(*data)
-    model.save()
-    return model
-
-
 def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingIterator]) -> Chainer:
     """Fit and return the chainer described in corresponding configuration dictionary."""
     chainer_config: dict = config['chainer']
@@ -111,7 +105,7 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
                 preprocessed = chainer.compute(*data, targets=targets)
                 if len(component_config['fit_on']) == 1:
                     preprocessed = [preprocessed]
-                component.partial_fit(*preprocessed)
+                component.partial_fit(preprocessed)
 
             component.save()
 
@@ -139,22 +133,19 @@ def read_data_by_config(config: dict):
         else:
             raise Exception("Unsupported dataset type: {}".format(ds_type))
 
-    data = []
-    reader_config = config.get('dataset_reader', None)
-
-    if reader_config:
+    try:
         reader_config = dict(config['dataset_reader'])
-        reader = get_model(reader_config.pop('class_name'))()
-        data_path = reader_config.pop('data_path', '')
-        if isinstance(data_path, list):
-            data_path = [expand_path(x) for x in data_path]
-        else:
-            data_path = expand_path(data_path)
-        data = reader.read(data_path, **reader_config)
-    else:
-        log.warning("No dataset reader is provided in the JSON config.")
+    except KeyError:
+        raise ConfigError("No dataset reader is provided in the JSON config.")
 
-    return data
+    reader = get_model(reader_config.pop('class_name'))()
+    data_path = reader_config.pop('data_path', '')
+    if isinstance(data_path, list):
+        data_path = [expand_path(x) for x in data_path]
+    else:
+        data_path = expand_path(data_path)
+
+    return reader.read(data_path, **reader_config)
 
 
 def get_iterator_from_config(config: dict, data: dict):
@@ -165,19 +156,30 @@ def get_iterator_from_config(config: dict, data: dict):
     return iterator
 
 
-def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
-                                     to_train=True, to_validate=True, download=False) -> Dict[str, Dict[str, float]]:
+def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None, *,
+                                     to_train=True, to_validate=True, download=False,
+                                     start_epoch_num=0, recursive=False) -> Dict[str, Dict[str, float]]:
     """Make training and evaluation of the model described in corresponding configuration file."""
     config = parse_config(config)
 
     if download:
         deep_download(config)
 
+    if to_train and recursive:
+        for subconfig in get_all_elems_from_json(config['chainer'], 'config_path'):
+            log.info(f'Training "{subconfig}"')
+            train_evaluate_model_from_config(subconfig, download=False, recursive=True)
+
     import_packages(config.get('metadata', {}).get('imports', []))
 
     if iterator is None:
-        data = read_data_by_config(config)
-        iterator = get_iterator_from_config(config, data)
+        try:
+            data = read_data_by_config(config)
+        except ConfigError as e:
+            to_train = False
+            log.warning(f'Skipping training. {e.message}')
+        else:
+            iterator = get_iterator_from_config(config, data)
 
     train_config = {
         'metrics': ['accuracy'],
@@ -202,9 +204,9 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
         model = fit_chainer(config, iterator)
 
         if callable(getattr(model, 'train_on_batch', None)):
-            _train_batches(model, iterator, train_config, metrics_functions)
-        elif callable(getattr(model, 'partial_fit', None)):
-            _partial_fit(model, iterator, train_config)
+            _train_batches(model, iterator, train_config, metrics_functions, start_epoch_num=start_epoch_num)
+        elif callable(getattr(model, 'fit_batches', None)):
+            _fit_batches(model, iterator, train_config)
         elif callable(getattr(model, 'fit', None)):
             _fit(model, iterator, train_config)
         elif not isinstance(model, Chainer):
@@ -214,12 +216,8 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
 
     res = {}
 
-    if train_config['validate_best'] or train_config['test_best']:
-        # try:
-        #     model_config['load_path'] = model_config['save_path']
-        # except KeyError:
-        #     log.warning('No "save_path" parameter for the model, so "load_path" will not be renewed')
-        model = build_model(config, load_trained=True)
+    if iterator is not None and (train_config['validate_best'] or train_config['test_best']):
+        model = build_model(config, load_trained=to_train)
         log.info('Testing the best saved model')
 
         if train_config['validate_best']:
@@ -294,10 +292,11 @@ def _test_model(model: Chainer, metrics_functions: List[Metric],
 
 
 def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config: dict,
-                   metrics_functions: List[Metric]) -> NNModel:
+                   metrics_functions: List[Metric], *, start_epoch_num: Optional[int] = None) -> NNModel:
 
     default_train_config = {
         'epochs': 0,
+        'start_epoch_num': 0,
         'max_batches': 0,
         'batch_size': 1,
 
@@ -335,7 +334,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
         raise ConfigError('metric_optimization has to be one of {}'.format(['maximize', 'minimize']))
 
     i = 0
-    epochs = 0
+    epochs = start_epoch_num if start_epoch_num is not None else train_config['start_epoch_num']
     examples = 0
     saved = False
     patience = 0

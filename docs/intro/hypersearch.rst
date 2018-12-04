@@ -140,14 +140,14 @@ Evolution process can be described in the following way:
 -  ``{"evolve_choice": [value_0, ..., value_n]}`` -
    values uniformly taking out of the given values.
 
--  The `main` model in the pipe is being evolved.
+-  The ``main`` model in the pipe is being evolved.
    **It is obligatory to use the one and only variable for setting paths for ALL fitted and trained models**
-   from `config["metadata"]["variables"]["MODELS_PATH"]` - this variable should be set to the common folder
+   from ``config["metadata"]["variables"]["MODELS_PATH"]`` - this variable should be set to the common folder
    for current evolutionary process (for example,
-   `config["metadata"]["variables"]["MODELS_PATH"] = "{ROOT_PATH}/snips_evolution"`).
+   ``config["metadata"]["variables"]["MODELS_PATH"] = "{ROOT_PATH}/snips_evolution"``).
    Change ``save_path`` and ``load_path`` of all fitted and trained components of the config
-   to the relative paths using `config["metadata"]["variables"]["MODELS_PATH"]` (for example,
-   `"save_path": "{MODELS_PATH}/classes.dict"`).
+   to the relative paths using ``config["metadata"]["variables"]["MODELS_PATH"]`` (for example,
+   ``"save_path": "{MODELS_PATH}/classes.dict"``).
 
 
 That's all you need to change in the config. Now let's move on to the
@@ -165,24 +165,22 @@ Example
 
    ::
 
-       cd deeppavlov
-       python deep.py download configs/classifiers/intents_snips.json
+       python -m deeppavlov download intents_snips
 
 -  To evolve the model run the following command providing corresponding
    name of the config file (see above) :config:`intents_dstc2.json <evolution/evolve_intents_snips.json>`:
 
    ::
 
-       cd deeppavlov
-       python evolve.py configs/evolution/evolve_intents_snips.json
+       python -m deeppavlov.evolve evolve_intents_snips
 
--  Folder ``download/evolution/classification/intents_snips`` will be
+-  Folder ``~/.deeppavlov/models/classifiers/intents_snips_evolution/intents_snips`` will be
    created. Each population will be saved in a folder
-   ``download/evolution/classification/intents_snips/population_i`` each
+   ``~/.deeppavlov/models/classifiers/intents_snips_evolution/intents_snips/population_i`` each
    of which contains ``population_size`` folders ``model_i`` consisting
    of saved model files explicitly, saved files of models from pipe that
-   has a key "fit\_on", ``out.txt`` and ``err.txt`` with logs of
-   ``deep.py train`` script from training each model separately, and
+   has a key ``"fit_on"``, ``out.txt`` and ``err.txt`` with logs of
+   ``python -m deeppavlov train`` script from training each model separately, and
    ``config.json`` with config for this individual.
 
 -  Now one can open iPython Notebook file
