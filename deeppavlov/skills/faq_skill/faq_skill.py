@@ -37,7 +37,7 @@ class FAQSkill(Skill):
 	def __init__(self, data_path=None, data_url=None, x_col_name='Question', y_col_name='Answer'):
 		model_config = read_json(find_config('tfidf_autofaq'))
 
-		if data_path == None and data_url == None:
+		if data_path is None and data_url is None:
 			raise ValueError("You haven't specified neither 'data_path' nor 'data_url'")
 		if data_path != None and data_url != None:
 			raise ValueError("You can't specify both 'data_path' and 'data_url'")
