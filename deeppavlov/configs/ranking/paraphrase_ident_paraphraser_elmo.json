@@ -45,7 +45,7 @@
             "elmo"
           ],
           "mini_batch_size": 8,
-          "spec": "{DOWNLOADS_PATH}/embeddings/elmo_news_wmt11-16-simple_reduce_para_pre_fine_tuned_ep1"
+          "spec": "{MODELS_PATH}/elmo_news_wmt11-16-simple_reduce_vocab/saves/hubs/tf_hub_model_epoch_n_1"
         }
       },
       {

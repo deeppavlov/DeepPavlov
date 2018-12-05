@@ -36,7 +36,7 @@ As an example of configuration file see
 :config:`ranking_insurance.json <ranking/ranking_insurance.json>`.
 
 
-To use the model pre-trained on the `InsuranceQA V1`_ dataset for
+To use the model trained on the `InsuranceQA V1`_ dataset for
 inference one can use the following code in python:
 
 .. code:: python
@@ -87,6 +87,81 @@ Then a user can enter a context and get responses:
 Paraphrase identification
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Paraphraser.ru dataset
+~~~~~~~~~~~~~~~~~~~~~~
+
+Before using the model make sure that all required packages are installed running the command:
+
+.. code:: bash
+
+    python -m deeppavlov install paraphrase_ident_paraphraser
+    python -m deeppavlov install elmo_paraphraser_fine_tuning
+    python -m deeppavlov install paraphrase_ident_paraphraser_elmo
+    python -m deeppavlov install paraphrase_ident_paraphraser_pretrain
+    python -m deeppavlov install paraphrase_ident_paraphraser_tune
+
+To train the model on the `paraphraser.ru`_ dataset with fasttext embeddings one can use the following code in python:
+
+.. code:: python
+
+    from deeppavlov import configs, train_model
+
+    para_model = train_model(configs.ranking.paraphrase_ident_paraphraser, download=True)
+
+
+To train the model on the `paraphraser.ru`_ dataset with fine-tuned ELMO embeddings one should first fine-tune ELMO embeddings:
+
+.. code:: python
+
+    from deeppavlov import configs, train_model
+
+    para_model = train_model(configs.elmo.elmo_paraphraser_fine_tuning, download=True)
+
+To train the model itself with fine-tuned embeddings:
+
+.. code:: python
+
+    from deeppavlov import configs, train_model
+
+    para_model = train_model(configs.elmo.paraphrase_ident_paraphraser_elmo, download=True)
+
+Note that the fine-tuned ELMO embeddings obtained at the previous step can be downloaded directly
+from the :config:`paraphrase_ident_qqp.json <ranking/paraphrase_ident_paraphraser_elmo.json>`.
+
+To train the model on the `paraphraser.ru`_ dataset with pre-training one should first train the model
+on the additionally collected dataset:
+
+.. code:: python
+
+    from deeppavlov import configs, train_model
+
+    para_model = train_model(configs.elmo.paraphrase_ident_paraphraser_pretrain, download=True)
+
+To fine-tune the model on the target dataset:
+
+.. code:: python
+
+    from deeppavlov import configs, train_model
+
+    para_model = train_model(configs.elmo.paraphrase_ident_paraphraser_tune , download=True)
+
+Note that the pre-trained model can obtained at the previous step can be downloaded directly
+from the :config:`paraphrase_ident_qqp.json <ranking/paraphrase_ident_paraphraser_tune.json>`.
+
+To use the model trained on the `paraphraser.ru`_ dataset for
+inference, one can use the following code in python:
+
+.. code:: python
+
+    from deeppavlov import build_model, configs
+
+    para_model = build_model(configs.ranking.deeppavlov/configs/ranking/paraphrase_ident_tune_interact, download=True)
+    para_model(['How can I be a good geologist?&What should I do to be a great geologist?'])
+    >>> 'This is a paraphrase.'
+
+Quora question pairs dataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Before using the model make sure that all required packages are installed running the command:
 
 .. code:: bash
@@ -100,7 +175,6 @@ To train the model on the `Quora Question Pairs`_ dataset one can use the follow
     from deeppavlov import configs, train_model
 
     para_model = train_model(configs.ranking.paraphrase_ident_qqp, download=True)
-    >>> 'This is a paraphrase.'
 
 To train from command line:
 
@@ -112,7 +186,7 @@ As an example of configuration file see
 :config:`paraphrase_ident_qqp.json <ranking/paraphrase_ident_qqp.json>`.
 
 
-To use the model pre-trained on the `Quora Question Pairs`_ dataset for
+To use the model trained on the `Quora Question Pairs`_ dataset for
 inference, one can use the following code in python:
 
 .. code:: python
@@ -121,6 +195,7 @@ inference, one can use the following code in python:
 
     para_model = build_model(configs.ranking.paraphrase_ident_qqp_interact, download=True)
     para_model(['How can I be a good geologist?&What should I do to be a great geologist?'])
+    >>> 'This is a paraphrase.'
 
 Note that two sentences to evaluate are connected by the ampersand.
 
@@ -205,4 +280,5 @@ Classification metrics on the valid and test dataset parts (the parameter ``metr
 such as ``f1``, ``acc`` and ``log_loss``  can be calculated.
 
 .. _`InsuranceQA V1`: https://github.com/shuzi/insuranceQA
+.. _`paraphraser.ru`: https://paraphraser.ru
 .. _`Quora Question Pairs`: https://www.kaggle.com/c/quora-question-pairs/data
