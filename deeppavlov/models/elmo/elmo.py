@@ -110,19 +110,26 @@ class ELMo(NNModel):
     datasets.
 
 
-    LM model pre-trained on `ru-news` dataset ( lines = 63M, tokens = 946M, size = 12GB ), model is available by 
-    ``elmo-lm-ready4fine-tuning-ru-news`` config file or ``elmo-lm-ready4fine-tuning-ru-news-simple`` config file.
+    LM model pre-trained on `ru-news` dataset ( lines = 63M, tokens = 946M, size = 12GB ), model is available by
+    ``elmo-lm-ready4fine-tuning-ru-news`` configuration file or ``elmo-lm-ready4fine-tuning-ru-news-simple``
+    configuration file.
 
-    LM model pre-trained on `ru-twitter` dataset ( lines = 104M, tokens = 810M, size = 8.5GB ), model is available by 
-    ``elmo-lm-ready4fine-tuning-ru-twitter`` config file or ``elmo-lm-ready4fine-tuning-ru-twitter-simple`` config file.
+    LM model pre-trained on `ru-twitter` dataset ( lines = 104M, tokens = 810M, size = 8.5GB ), model is available by
+    ``elmo-lm-ready4fine-tuning-ru-twitter`` configuration file or ``elmo-lm-ready4fine-tuning-ru-twitter-simple``
+    configuration file.
 
-    LM model pre-trained on `ru-wiki` dataset ( lines = 1M, tokens = 386M, size = 5GB ), model is available by 
-    ``elmo-lm-ready4fine-tuning-ru-wiki`` config file or ``elmo-lm-ready4fine-tuning-ru-wiki-simple`` config file.
+    LM model pre-trained on `ru-wiki` dataset ( lines = 1M, tokens = 386M, size = 5GB ), model is available by
+    ``elmo-lm-ready4fine-tuning-ru-wiki`` configuration file or ``elmo-lm-ready4fine-tuning-ru-wiki-simple``
+    configuration file.
+
+    `simple` configuration file is a configuration of a model without special tags of output
+    vocab used for first training.
 
     .. note::
 
         You need to download about **4 GB** also by default about **32 GB** of RAM and **10 GB** of GPU memory
-        required to running the config ``deeppavlov/configs/elmo/elmo-lm-ready4fine-tuning-ru-*.json`` on one GPU.
+        required to running the configuration ``deeppavlov/configs/elmo/elmo-lm-ready4fine-tuning-ru-*.json``
+        on one GPU.
 
     After training you can use ``{MODELS_PATH}/elmo_model/saves/hubs/tf_hub_model_epoch_n_*/``
     as a ``ModuleSpec`` by using `TensorFlow Hub <https://www.tensorflow.org/hub/overview>`__ or by
@@ -144,7 +151,7 @@ class ELMo(NNModel):
         .. note::
 
             You need to download about **2 GB** also by default about **10 GB** of RAM and **10 GB** of GPU memory
-            required to running the config ``deeppavlov/configs/elmo/elmo-1b-benchmark.json`` on one GPU.
+            required to running the configuration ``deeppavlov/configs/elmo/elmo-1b-benchmark.json`` on one GPU.
 
         .. code:: bash
 
