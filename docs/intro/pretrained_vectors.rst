@@ -5,11 +5,21 @@ ELMo
 ----
 
 | We are publishing :class:`Russian language ELMo embeddings model <deeppavlov.models.embedders.elmo_embedder.ELMoEmbedder>` for tensorflow-hub.
+| We are publishing :class:`LM model <deeppavlov.models.elmo.elmo.ELMo>` for training and fine-tuning ELMo as LM model.
 | ELMo (Embeddings from Language Models) representations are pre-trained contextual representations from
   large-scale bidirectional language models. See a paper `Deep contextualized word representations
   <https://arxiv.org/abs/1802.05365>`__ for more information about the algorithm and a detailed analysis.
-| These vectors where trained on `Russian Wikipedia <https://ru.wikipedia.org/>`__.
 
+Downloads
+~~~~~~~~~
+
+The models can be downloaded and run by configuration file or tensorflow hub module from:
+
++--------------------------------------------------------------------+---------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Description                                                        | Dataset parameters                                      | Configuration file and tensorflow hub module                                                                                                                                                                                           |
++====================================================================+=========================================================+========================================================================================================================================================================================================================================+
+| ELMo on  `Russian Wikipedia <https://ru.wikipedia.org/>`__         | lines = 1M, tokens = 386M, size = 5GB                   | `config_file <https://github.com/deepmipt/DeepPavlov/blob/master/deeppavlov/configs/elmo_embedder/elmo_ru-wiki.json>`__, `module_spec <http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-wiki_600k_steps.tar.gz>`__                   |
++--------------------------------------------------------------------+---------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 fastText
 --------

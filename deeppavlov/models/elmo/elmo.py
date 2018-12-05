@@ -111,13 +111,13 @@ class ELMo(NNModel):
 
 
     LM model pre-trained on `ru-news` dataset ( lines = 63M, tokens = 946M, size = 12GB ), model is available by 
-    ``elmo-lm-ready4fine-tuning-ru-news`` config file.
+    ``elmo-lm-ready4fine-tuning-ru-news`` config file or ``elmo-lm-ready4fine-tuning-ru-news-simple`` config file.
 
     LM model pre-trained on `ru-twitter` dataset ( lines = 104M, tokens = 810M, size = 8.5GB ), model is available by 
-    ``elmo-lm-ready4fine-tuning-ru-twitter`` config file.
+    ``elmo-lm-ready4fine-tuning-ru-twitter`` config file or ``elmo-lm-ready4fine-tuning-ru-twitter-simple`` config file.
 
     LM model pre-trained on `ru-wiki` dataset ( lines = 1M, tokens = 386M, size = 5GB ), model is available by 
-    ``elmo-lm-ready4fine-tuning-ru-wiki`` config file.
+    ``elmo-lm-ready4fine-tuning-ru-wiki`` config file or ``elmo-lm-ready4fine-tuning-ru-wiki-simple`` config file.
 
     .. note::
 
