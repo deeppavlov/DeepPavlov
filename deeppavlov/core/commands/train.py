@@ -93,7 +93,7 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
             if isinstance(targets, str):
                 targets = [targets]
 
-            for data in iterator.gen_batches(config['train']['batch_size'], 'train', shuffle=False):
+            for data in iterator.gen_batches(config['train']['batch_size'], shuffle=False):
                 preprocessed = chainer.compute(*data, targets=targets)
                 if len(component_config['fit_on_batch']) == 1:
                     preprocessed = [preprocessed]
