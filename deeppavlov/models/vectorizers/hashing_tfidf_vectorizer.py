@@ -22,10 +22,8 @@ from sklearn.utils import murmurhash3_32
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.estimator import Estimator
-from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 
 logger = get_logger(__name__)
 
@@ -270,19 +268,19 @@ class HashingTfIdfVectorizer(Estimator):
                          loader['indptr']), shape=loader['shape'])
         return matrix, loader['opts'].item(0)
 
-    def partial_fit(self, docs: List[str], doc_ids: List[Any]) -> None:
+    def partial_fit(self, docs: List[str], doc_ids: List[Any], doc_nums: List[int]) -> None:
         """Partially fit on one batch.
 
         Args:
             docs: a list of input documents
             doc_ids: a list of document ids corresponding to input documents
+            doc_nums: a list of document integer ids as they appear in a database
 
         Returns:
             None
 
         """
-        next_id = 0 if not self.doc_index else (max(self.doc_index.values()) + 1)
-        for i, doc_id in enumerate(doc_ids, next_id):
+        for doc_id, i in zip(doc_ids, doc_nums):
             self.doc_index[doc_id] = i
 
         for batch_rows, batch_data, batch_cols in self.get_counts(docs, doc_ids):
@@ -290,12 +288,13 @@ class HashingTfIdfVectorizer(Estimator):
             self.cols.extend(batch_cols)
             self.data.extend(batch_data)
 
-    def fit(self, docs: List[str], doc_ids: List[Any]) -> None:
+    def fit(self, docs: List[str], doc_ids: List[Any], doc_nums: List[int]) -> None:
         """Fit the vectorizer.
 
         Args:
             docs: a list of input documents
             doc_ids: a list of document ids corresponding to input documents
+            doc_nums: a list of document integer ids as they appear in a database
 
         Returns:
             None
@@ -305,4 +304,4 @@ class HashingTfIdfVectorizer(Estimator):
         self.rows = []
         self.cols = []
         self.data = []
-        return self.partial_fit(docs, doc_ids)
+        return self.partial_fit(docs, doc_ids, doc_nums)
