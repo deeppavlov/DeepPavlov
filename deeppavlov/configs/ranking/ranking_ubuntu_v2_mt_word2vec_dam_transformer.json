@@ -75,7 +75,7 @@
         "learning_rate": 1e-3,
         "batch_size": 100,
         "seed": 65,
-        "decay_steps": 2000,
+        "decay_steps": 1000,
         "save_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam_transformer/model_dam/model",
         "load_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam_transformer/model_dam/model"
       }
@@ -90,6 +90,8 @@
     "shuffle": true,
     "pytest_max_batches": 2,
     "train_metrics": [],
+    "validate_best": true,
+    "test_best": true,
     "metrics": [
       "r@1",
       "r@2",
