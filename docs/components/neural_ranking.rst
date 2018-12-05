@@ -126,7 +126,7 @@ To train the model itself with fine-tuned embeddings:
     para_model = train_model(configs.elmo.paraphrase_ident_paraphraser_elmo, download=True)
 
 Note that the fine-tuned ELMO embeddings obtained at the previous step can be downloaded directly
-from the :config:`paraphrase_ident_qqp.json <ranking/paraphrase_ident_paraphraser_elmo.json>`.
+from the :config:`paraphrase_ident_paraphraser_elmo.json <ranking/paraphrase_ident_paraphraser_elmo.json>`.
 
 To train the model on the `paraphraser.ru`_ dataset with pre-training one should first train the model
 on the additionally collected dataset:
@@ -146,7 +146,7 @@ To fine-tune the model on the target dataset:
     para_model = train_model(configs.elmo.paraphrase_ident_paraphraser_tune , download=True)
 
 Note that the pre-trained model can obtained at the previous step can be downloaded directly
-from the :config:`paraphrase_ident_qqp.json <ranking/paraphrase_ident_paraphraser_tune.json>`.
+from the :config:`paraphrase_ident_paraphraser_tune.json <ranking/paraphrase_ident_paraphraser_tune.json>`.
 
 To use the model trained on the `paraphraser.ru`_ dataset for
 inference, one can use the following code in python:
@@ -156,7 +156,7 @@ inference, one can use the following code in python:
     from deeppavlov import build_model, configs
 
     para_model = build_model(configs.ranking.deeppavlov/configs/ranking/paraphrase_ident_tune_interact, download=True)
-    para_model(['How can I be a good geologist?&What should I do to be a great geologist?'])
+    para_model(['9 мая метрополитен Петербурга будет работать круглосуточно&Петербургское метро в ночь на 10 мая будет работать круглосуточно'])
     >>> 'This is a paraphrase.'
 
 Quora question pairs dataset
