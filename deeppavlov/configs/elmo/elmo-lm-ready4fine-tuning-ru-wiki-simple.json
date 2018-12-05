@@ -2,7 +2,8 @@
   "dataset_reader": {
     "class_name": "file_paths_reader",
     "data_path": "{DOWNLOADS_PATH}/elmo-lm-ready4fine-example-data/data/",
-    "train": "train/*"
+    "train": "train/*",
+    "valid": "heldout/*"
   },
   "dataset_iterator": {
     "class_name": "elmo_file_paths_iterator",
