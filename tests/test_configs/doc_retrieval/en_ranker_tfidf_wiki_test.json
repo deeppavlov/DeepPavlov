@@ -12,7 +12,11 @@
   },
   "chainer": {
     "in": [
-      "x"
+      "docs"
+    ],
+    "in_y": [
+      "doc_ids",
+      "doc_nums"
     ],
     "out": [
       "y"
