@@ -46,7 +46,7 @@ def hash_(token: str, hash_size: int) -> int:
 
 
 @register('hashing_tfidf_vectorizer')
-class HashingTfIdfVectorizer(Estimator, Serializable):
+class HashingTfIdfVectorizer(Estimator):
     """Create a tfidf matrix from collection of documents of size [n_documents X n_features(hash_size)].
 
     Args:
@@ -87,7 +87,7 @@ class HashingTfIdfVectorizer(Estimator, Serializable):
             self.index2doc = self.get_index2doc()
         else:
             self.term_freqs = None
-            self.doc_index = doc_index
+            self.doc_index = doc_index or {}
 
     def __call__(self, questions: List[str]) -> Sparse:
         """Transform input list of documents to tfidf vectors.
@@ -207,23 +207,6 @@ class HashingTfIdfVectorizer(Estimator, Serializable):
         tfidfs = idfs.dot(tfs)
         return tfidfs, term_freqs
 
-    def fit_batch(self, docs: List[str], doc_ids: List[Any]) -> None:
-        """Fit batch of documents.
-
-        Args:
-            docs: a list of input documents
-            doc_ids: a list of document ids corresponding to input documents
-
-        Returns:
-            None
-
-        """
-
-        for batch_rows, batch_data, batch_cols in self.get_counts(docs, doc_ids):
-            self.rows.extend(batch_rows)
-            self.cols.extend(batch_cols)
-            self.data.extend(batch_data)
-
     def save(self) -> None:
         """Save tfidf matrix into **.npz** format.
 
@@ -287,18 +270,39 @@ class HashingTfIdfVectorizer(Estimator, Serializable):
                          loader['indptr']), shape=loader['shape'])
         return matrix, loader['opts'].item(0)
 
-    def partial_fit(self, batch: List) -> None:
-        """Fit on one batch.
+    def partial_fit(self, docs: List[str], doc_ids: List[Any]) -> None:
+        """Partially fit on one batch.
 
         Args:
-            batch: a tuple with list of input documents and list of document ids
+            docs: a list of input documents
+            doc_ids: a list of document ids corresponding to input documents
 
         Returns:
             None
 
         """
-        # TODO: self.doc_index =
-        self.fit_batch(*batch)
+        next_id = 0 if not self.doc_index else (max(self.doc_index.values()) + 1)
+        for i, doc_id in enumerate(doc_ids, next_id):
+            self.doc_index[doc_id] = i
 
-    def fit(self):
-        pass
+        for batch_rows, batch_data, batch_cols in self.get_counts(docs, doc_ids):
+            self.rows.extend(batch_rows)
+            self.cols.extend(batch_cols)
+            self.data.extend(batch_data)
+
+    def fit(self, docs: List[str], doc_ids: List[Any]) -> None:
+        """Fit the vectorizer.
+
+        Args:
+            docs: a list of input documents
+            doc_ids: a list of document ids corresponding to input documents
+
+        Returns:
+            None
+
+        """
+        self.doc_index = {}
+        self.rows = []
+        self.cols = []
+        self.data = []
+        return self.partial_fit(docs, doc_ids)
