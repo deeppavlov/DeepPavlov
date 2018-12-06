@@ -374,7 +374,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
     try:
         while True:
             for x, y_true in iterator.gen_batches(train_config['batch_size']):
-                if log_on:
+                if log_on and len(train_metrics_functions) > 0:
                     y_predicted = list(model.compute(list(x), list(y_true), targets=expected_outputs))
                     if len(expected_outputs) == 1:
                         y_predicted = [y_predicted]
