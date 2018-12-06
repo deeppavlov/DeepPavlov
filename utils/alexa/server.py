@@ -1,3 +1,4 @@
+import re
 from urllib.parse import urlsplit
 
 import requests
@@ -5,10 +6,12 @@ from OpenSSL import crypto
 from flask import Flask, request, jsonify, redirect, Response
 # from ask_sdk
 
-app = Flask(__name__)
+
 HOST = '0.0.0.0'
 PORT = '7050'
+TRUSTED_CERTS_PATH = '/etc/ssl/certs/ca-certificates.crt'
 
+app = Flask(__name__)
 
 def verify_sc_url(url: str) -> bool:
     parsed = urlsplit(url)
@@ -30,18 +33,30 @@ def verify_sc_url(url: str) -> bool:
     return result
 
 
-def verify_signature(signature_chain_url: str, request_body: bytes) -> bool:
-    result = True
+def extract_certs(certs_txt: str) -> list:
+    pattern = r'-----BEGIN CERTIFICATE-----.+?-----END CERTIFICATE-----'
+    certs_txt = re.findall(pattern, certs_txt, flags=re.DOTALL)
+    certs = [crypto.load_certificate(crypto.FILETYPE_PEM, cert_txt) for cert_txt in certs_txt]
+    return certs
 
+
+def verify_signature(signature_chain_url: str, request_body: bytes) -> bool:
     cert_chain_get = requests.get(signature_chain_url)
     cert_chain_txt = cert_chain_get.text
-    cert_chain = crypto.load_certificate(crypto.FILETYPE_PEM, cert_chain_txt)
+    cert_chain = extract_certs(cert_chain_txt)
+
+    for cert in cert_chain:
+        print('')
+        print(cert.get_subject().__str__())
+        print(cert.get_issuer().__str__())
+
+    amazon_cert = cert_chain.pop(0)
 
     # verify not expired
-    verify_expired = cert_chain.has_expired()
+    verify_expired = not amazon_cert.has_expired()
 
     # get subject alternative names
-    cert_extentions = [cert_chain.get_extension(i) for i in range(cert_chain.get_extension_count())]
+    cert_extentions = [amazon_cert.get_extension(i) for i in range(amazon_cert.get_extension_count())]
     subject_alt_names = ''
 
     for extention in cert_extentions:
@@ -51,7 +66,30 @@ def verify_signature(signature_chain_url: str, request_body: bytes) -> bool:
 
     verify_sans = 'echo-api.amazon.com' in subject_alt_names
 
-    return False
+    # verify certs chain
+    store = crypto.X509Store()
+
+    for cert in cert_chain:
+        store.add_cert(cert)
+
+    with open(TRUSTED_CERTS_PATH, 'r') as crt_f:
+        trusted_certs_txt = crt_f.read()
+        trusted_certs = extract_certs(trusted_certs_txt)
+        for cert in trusted_certs:
+            store.add_cert(cert)
+
+    store_context = crypto.X509StoreContext(store, amazon_cert)
+
+    try:
+        store_context.verify_certificate()
+        verify_chain = True
+    except crypto.X509StoreContextError as e:
+        print(e)
+        verify_chain = False
+
+    result = verify_expired and verify_sans and verify_chain
+
+    return result
 
 
 @app.route('/', methods=['POST'])
