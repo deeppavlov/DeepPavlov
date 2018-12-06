@@ -25,9 +25,10 @@ from deeppavlov.core.data.utils import zero_pad_truncate
 log = get_logger(__name__)
 
 
-@register('ubuntu_v2_preprocessor')
-class UbuntuV2Preprocessor(Estimator):
-    """ Preprocessing of data samples containing few text strings to feed them in SMN or DAM ranking neural models.
+@register('ubuntu_preprocessor')
+class UbuntuPreprocessor(Estimator):
+    """ Preprocessing of data samples from Ubuntu Dialogue Corpus v1/v2 dataset
+     to feed them in SMN or DAM ranking neural models.
 
     First ``num_context_turns`` strings in each data sample corresponds to the dialogue ``context``
     and the rest string(s) in the sample is (are) ``response(s)``.

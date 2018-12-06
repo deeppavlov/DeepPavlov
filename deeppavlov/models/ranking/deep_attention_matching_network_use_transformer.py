@@ -29,14 +29,14 @@ log = get_logger(__name__)
 @register('dam_nn_use_transformer')
 class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
     """
-    Tensorflow implementation of Deep Attention Matching Network (DAM) [1] improved with USE [2]
+    Tensorflow implementation of Deep Attention Matching Network (DAM) [1] improved with USE [2]. We called it DAM-USE-T
     ```
     http://aclweb.org/anthology/P18-1103
 
     Based on Tensorflow code: https://github.com/baidu/Dialogue/tree/master/DAM
-    We added USE-T [2] as a sentence encoder to the model to achieve state-of-the-art performance on the datasets:
-    * Ubuntu Dialogue Corpus v1 (R@1: 0.739, R@2: 0.867, R@5: 0.972)
-    * Ubuntu Dialogue Corpus v2 (R@1: ?, R@2: ?, R@5: ?)
+    We added USE-T [2] as a sentence encoder to the DAM network to achieve state-of-the-art performance on the datasets:
+    * Ubuntu Dialogue Corpus v1 (R@1: 0.7929, R@2: 0.8912, R@5: 0.9742)
+    * Ubuntu Dialogue Corpus v2 (R@1: 0.7414, R@2: 0.8656, R@5: 0.9731)
 
     References:
     [1]
