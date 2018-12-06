@@ -1,4 +1,6 @@
 import re
+import base64
+import hashlib
 from urllib.parse import urlsplit
 
 import requests
@@ -40,7 +42,8 @@ def extract_certs(certs_txt: str) -> list:
     return certs
 
 
-def verify_signature(signature_chain_url: str, request_body: bytes) -> bool:
+# TODO: think of decomposition
+def verify_signature(signature_chain_url: str, request_body: bytes, signature: str) -> bool:
     cert_chain_get = requests.get(signature_chain_url)
     cert_chain_txt = cert_chain_get.text
     cert_chain = extract_certs(cert_chain_txt)
@@ -50,7 +53,7 @@ def verify_signature(signature_chain_url: str, request_body: bytes) -> bool:
         print(cert.get_subject().__str__())
         print(cert.get_issuer().__str__())
 
-    amazon_cert = cert_chain.pop(0)
+    amazon_cert: crypto.X509 = cert_chain.pop(0)
 
     # verify not expired
     verify_expired = not amazon_cert.has_expired()
@@ -87,6 +90,18 @@ def verify_signature(signature_chain_url: str, request_body: bytes) -> bool:
         print(e)
         verify_chain = False
 
+    # validate signature
+    pub_key = amazon_cert.get_pubkey()
+
+    hashed_https_body = hashlib.sha1()
+    hashed_https_body.update(request_body)
+    print('request')
+    print(request_body)
+    print(hashed_https_body)
+
+    print('signature')
+    print()
+
     result = verify_expired and verify_sans and verify_chain
 
     return result
@@ -96,12 +111,13 @@ def verify_signature(signature_chain_url: str, request_body: bytes) -> bool:
 def skill():
     request_body: bytes = request.get_data()
     sc_url = request.headers.get('Signaturecertchainurl')
+    signature = base64.b64decode(request.headers.get('Signature'))
     input = request.get_json()
 
     if not verify_sc_url(sc_url):
         return jsonify({'error': 'failed signature certificate URL check'}), 400
 
-    if not verify_signature(sc_url, request_body):
+    if not verify_signature(sc_url, request_body, signature):
         return jsonify({'error': 'failed signature certificate URL check'}), 400
 
     return jsonify({'error': 'error'}), 400
