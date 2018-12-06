@@ -11,7 +11,6 @@ PORT = '7050'
 
 
 def verify_sc_url(url: str) -> bool:
-    result = True
     parsed = urlsplit(url)
 
     scheme: str = parsed.scheme
@@ -23,10 +22,10 @@ def verify_sc_url(url: str) -> bool:
     except ValueError:
         port = None
 
-    result = result and scheme.lower() == 'https'
-    result = result and netloc.lower().split(':')[0] == 's3.amazonaws.com'
-    result = result and path[:10] == '/echo.api/'
-    result = result and (port == 443 or port is None)
+    result = (scheme.lower() == 'https' and
+              netloc.lower().split(':')[0] == 's3.amazonaws.com' and
+              path[:10] == '/echo.api/' and
+              (port == 443 or port is None))
 
     return result
 
@@ -44,14 +43,13 @@ def verify_signature(signature_chain_url: str, request_body: bytes) -> bool:
     # get subject alternative names
     cert_extentions = [cert_chain.get_extension(i) for i in range(cert_chain.get_extension_count())]
     subject_alt_names = ''
+
     for extention in cert_extentions:
         if 'subjectAltName' in str(extention.get_short_name()):
             subject_alt_names = extention.__str__()
             break
 
-    print(subject_alt_names)
-
-
+    verify_sans = 'echo-api.amazon.com' in subject_alt_names
 
     return False
 
