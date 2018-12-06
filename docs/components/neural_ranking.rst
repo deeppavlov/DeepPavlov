@@ -145,7 +145,7 @@ To fine-tune the model on the target dataset:
 
     para_model = train_model(configs.elmo.paraphrase_ident_paraphraser_tune , download=True)
 
-Note that the pre-trained model can obtained at the previous step can be downloaded directly
+Note that the pre-trained model obtained at the previous step can be downloaded directly
 from the :config:`paraphrase_ident_paraphraser_tune.json <ranking/paraphrase_ident_paraphraser_tune.json>`.
 
 To use the model trained on the `paraphraser.ru`_ dataset for
