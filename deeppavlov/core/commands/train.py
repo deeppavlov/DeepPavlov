@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import datetime
-import importlib
 import json
 import time
 from collections import OrderedDict, namedtuple
@@ -67,19 +66,6 @@ def prettify_metrics(metrics: List[Tuple[str, float]], precision: int = 4) -> Or
     return prettified_metrics
 
 
-def _fit(model: Estimator, iterator: DataLearningIterator, train_config) -> Estimator:
-    x, y = iterator.get_instances('train')
-    model.fit(x, y)
-    model.save()
-    return model
-
-
-def _fit_batches(model: Estimator, iterator: DataFittingIterator, train_config) -> Estimator:
-    model.fit_batches(iterator, batch_size=train_config['batch_size'])
-    model.save()
-    return model
-
-
 def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingIterator]) -> Chainer:
     """Fit and return the chainer described in corresponding configuration dictionary."""
     chainer_config: dict = config['chainer']
@@ -102,7 +88,17 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
 
         if 'fit_on_batch' in component_config:
             component: Estimator
-            component.fit_batches(iterator, config['train']['batch_size'])
+
+            targets = component_config['fit_on_batch']
+            if isinstance(targets, str):
+                targets = [targets]
+
+            for data in iterator.gen_batches(config['train']['batch_size'], shuffle=False):
+                preprocessed = chainer.compute(*data, targets=targets)
+                if len(component_config['fit_on_batch']) == 1:
+                    preprocessed = [preprocessed]
+                component.partial_fit(*preprocessed)
+
             component.save()
 
         if 'in' in component_config:
@@ -201,12 +197,6 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None, *
 
         if callable(getattr(model, 'train_on_batch', None)):
             _train_batches(model, iterator, train_config, metrics_functions, start_epoch_num=start_epoch_num)
-        elif callable(getattr(model, 'fit_batches', None)):
-            _fit_batches(model, iterator, train_config)
-        elif callable(getattr(model, 'fit', None)):
-            _fit(model, iterator, train_config)
-        elif not isinstance(model, Chainer):
-            log.warning('Nothing to train')
 
         model.destroy()
 

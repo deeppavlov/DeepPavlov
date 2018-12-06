@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import sqlite3
-from typing import List, Any, Dict, Optional, Union
+from typing import List, Any, Dict, Optional, Union, Generator, Tuple
 from random import Random
 from pathlib import Path
 
@@ -131,3 +131,38 @@ class SQLiteDataIterator(DataFittingIterator):
         result = cursor.fetchone()
         cursor.close()
         return result if result is None else result[0]
+
+    @overrides
+    def gen_batches(self, batch_size: int, shuffle: bool = None) \
+            -> Generator[Tuple[List[str], List[int]], Any, None]:
+        """Gen batches of documents.
+
+        Args:
+            batch_size: a number of samples in a single batch
+            shuffle: whether to shuffle data during batching
+
+        Yields:
+            generated tuple of documents and their ids
+
+        """
+        if shuffle is None:
+            shuffle = self.shuffle
+
+        if shuffle:
+            _doc_ids = self.random.sample(self.doc_ids, len(self.doc_ids))
+        else:
+            _doc_ids = self.doc_ids
+
+        batches = [_doc_ids[i:i + batch_size] for i in
+                   range(0, len(_doc_ids), batch_size)]
+
+        # DEBUG
+        # len_batches = len(batches)
+
+        for i, doc_ids in enumerate(batches):
+            # DEBUG
+            # logger.info(
+            #     "Processing batch # {} of {} ({} documents)".format(i, len_batches, len(doc_index)))
+            docs = [self.get_doc_content(doc_id) for doc_id in doc_ids]
+            doc_nums = [self.doc2index[doc_id] for doc_id in doc_ids]
+            yield docs, zip(doc_ids, doc_nums)
