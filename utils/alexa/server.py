@@ -1,6 +1,6 @@
 import re
 import base64
-import json
+from datetime import datetime
 from urllib.parse import urlsplit
 
 import requests
@@ -108,10 +108,18 @@ def skill():
     payload = request.get_json()
 
     if not verify_sc_url(sc_url):
-        return jsonify({'error': 'failed signature certificate URL check'}), 400
+        return jsonify({'error': 'failed signature chain URL check'}), 400
 
     if not verify_signature(sc_url, request_body, signature):
-        return jsonify({'error': 'failed signature certificate URL check'}), 400
+        return jsonify({'error': 'failed signature certificate check'}), 400
+
+    timestamp_str = payload['request']['timestamp']
+    timestamp_datetime = datetime.strptime(timestamp_str, '%Y-%m-%dT%H:%M:%SZ')
+    now = datetime.utcnow()
+    delta = now - timestamp_datetime
+
+    if abs(delta.seconds) > 150:
+        return jsonify({'error': 'failed request timestamp check'}), 400
 
     return jsonify({'error': 'error'}), 400
 
