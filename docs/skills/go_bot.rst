@@ -1,7 +1,32 @@
 Dialogue Bot for goal-oriented task
 ===================================
 
-The dialogue bot is based on `[1] <#references>`__ which introduces
+There are available two pretrained models for DSTC2 dataset (English). Try them by running:
+
+.. code:: python
+
+    from deeppavlov import build_model, configs
+
+    bot1 = build_model(configs.go_bot.gobot_dstc2, download=True)
+
+    bot1(['hi, i want restaurant in the cheap pricerange'])
+    bot1(['bye'])
+
+    bot2 = build_model(configs.go_bot.gobot_dstc2_best, download=True)
+
+    bot2(['hi, i want chinese restaurant'])
+    bot2(['bye'])
+
+If some required packages are missing, install all the requirements by running in command line:
+
+.. code:: bash
+
+   python -m deeppavlov install gobot_dstc2
+
+Intro
+-----
+
+The dialogue bot is based on [1]_ which introduces
 Hybrid Code Networks (HCNs) that combine an RNN with domain-specific
 knowledge and system action templates.
 
@@ -12,6 +37,10 @@ developer.
 
 Here is a simple example of interaction with a trained dialogue bot
 (available for download):
+
+.. note::
+
+    Models that rely on fasttext word embeddings will require 8.5 GB of disk space, those that use only one-hot encoding of words will require less than 300Mb of disk space.
 
 .. code:: bash
 
@@ -148,7 +177,7 @@ DSTC2
 ^^^^^
 
 The Hybrid Code Network model was trained and evaluated on a modification of a dataset from Dialogue State Tracking
-Challenge 2 `[2] <#references>`__. The modifications were as follows:
+Challenge 2 [2]_. The modifications were as follows:
 
 -  **new turns with api calls**
 
@@ -183,7 +212,7 @@ Your data
 ^^^^^^^^^
 
 Dialogs
-""""""'
+"""""""
 
 If your model uses DSTC2 and relies on ``"dstc2_reader"``
 (:class:`~deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader`),
@@ -264,7 +293,7 @@ For example,
 It is recommended to use ``"DefaultTemplate"`` value for ``template_type`` parameter.
 
 Database (optional)
-""""""""""""""""""'
+"""""""""""""""""""
 
 If your dataset doesn't imply any api calls to an external database, just do not set
 ``database`` and ``api_call_action`` parameters and skip the section below.
@@ -276,13 +305,13 @@ Otherwise, you should
    This can be done with the following script:
 
 
-    .. code:: bash
+   .. code:: bash
 
-        python -m deeppavlov train configs/go_bot/database_<your_dataset>.json
+       python -m deeppavlov train configs/go_bot/database_<your_dataset>.json
 
-    where ``configs/go_bot/database_<your_dataset>.json`` is a copy
-    of ``configs/go_bot/database_dstc2.json`` with configured
-    ``save_path``, ``primary_keys`` and ``unknown_value``.
+   where ``configs/go_bot/database_<your_dataset>.json`` is a copy
+   of ``configs/go_bot/database_dstc2.json`` with configured
+   ``save_path``, ``primary_keys`` and ``unknown_value``.
 
 Comparison
 ----------
@@ -304,48 +333,48 @@ Scores for different modifications of our bot model:
 +-----------------------------------------------+----------------------------------------------------------------------+----------------------------+
 
 There is another modification of DSTC2 dataset called dialog babi Task6
-`[3] <#references>`__. It differs from ours in train/valid/test split and
+[3]_. It differs from ours in train/valid/test split and
 intent/action labeling.
 
-These are the test scores provided by Williams et al. (2017) `[1] <#references>`__
+These are the test scores provided by Williams et al. (2017) [1]_
 (can't be directly compared with above):
 
-+----------------------------------------------------+------------------------------+
-|                   Model                            | Test turn textual accuracy   |
-+====================================================+==============================+
-| Bordes and Weston (2016) `[4] <#references>`__     |   0.411                      |
-+----------------------------------------------------+------------------------------+
-| Perez and Liu (2016) `[5] <#references>`__         |   0.487                      |
-+----------------------------------------------------+------------------------------+
-| Eric and Manning (2017) `[6] <#references>`__      |   0.480                      |
-+----------------------------------------------------+------------------------------+
-| Williams et al. (2017) `[1] <#references>`__       |   0.556                      |
-+----------------------------------------------------+------------------------------+
++-----------------------------------+------------------------------+
+|         Model                     | Test turn textual accuracy   |
++===================================+==============================+
+| Bordes and Weston (2016) [4]_     |   0.411                      |
++-----------------------------------+------------------------------+
+| Perez and Liu (2016) [5]_         |   0.487                      |
++-----------------------------------+------------------------------+
+| Eric and Manning (2017) [6]_      |   0.480                      |
++-----------------------------------+------------------------------+
+| Williams et al. (2017) [1]_       |   0.556                      |
++-----------------------------------+------------------------------+
 
 TODO: add dialog accuracies
 
 References
 ----------
 
-[1] `Jason D. Williams, Kavosh Asadi, Geoffrey Zweig "Hybrid Code
-Networks: practical and efficient end-to-end dialog control with
-supervised and reinforcement learning" –
-2017 <https://arxiv.org/abs/1702.03274>`_
+.. [1] `Jason D. Williams, Kavosh Asadi, Geoffrey Zweig "Hybrid Code
+    Networks: practical and efficient end-to-end dialog control with
+    supervised and reinforcement learning" –
+    2017 <https://arxiv.org/abs/1702.03274>`_
 
-[2] `Dialog State Tracking Challenge 2
-dataset <http://camdial.org/~mh521/dstc/>`_
+.. [2] `Dialog State Tracking Challenge 2
+    dataset <http://camdial.org/~mh521/dstc/>`_
 
-[3] `The bAbI project <https://research.fb.com/downloads/babi/>`_
+.. [3] `The bAbI project <https://research.fb.com/downloads/babi/>`_
 
-[4] `Antoine Bordes, Y-Lan Boureau & Jason Weston "Learning end-to-end
-goal-oriented dialog" - 2017 <https://arxiv.org/abs/1605.07683>`_
+.. [4] `Antoine Bordes, Y-Lan Boureau & Jason Weston "Learning end-to-end
+    goal-oriented dialog" - 2017 <https://arxiv.org/abs/1605.07683>`_
 
-[5] `Fei Liu, Julien Perez "Gated End-to-end Memory Networks" -
-2016 <https://arxiv.org/abs/1610.04211>`_
+.. [5] `Fei Liu, Julien Perez "Gated End-to-end Memory Networks" -
+    2016 <https://arxiv.org/abs/1610.04211>`_
 
-[6] `Mihail Eric, Christopher D. Manning "A Copy-Augmented
-Sequence-to-Sequence Architecture Gives Good Performance on
-Task-Oriented Dialogue" - 2017 <https://arxiv.org/abs/1701.04024>`_
+.. [6] `Mihail Eric, Christopher D. Manning "A Copy-Augmented
+    Sequence-to-Sequence Architecture Gives Good Performance on
+    Task-Oriented Dialogue" - 2017 <https://arxiv.org/abs/1701.04024>`_
 
 
 .. |alt text| image:: ../_static/gobot_diagram.png

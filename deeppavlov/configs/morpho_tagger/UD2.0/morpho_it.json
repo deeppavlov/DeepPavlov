@@ -150,13 +150,14 @@
   },
   "predict": {
     "batch_size": 32,
-    "outfile": "results/ud_it_test.res"
+    "outfile": "{RESULTS_PATH}/ud_it_test.res"
   },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models"
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "RESULTS_PATH": "{ROOT_PATH}/results"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt"

@@ -59,6 +59,20 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
         max_token: The number limitation of words per a batch line.
         mini_batch_size: It is used to reduce the memory requirements of the device.
 
+
+    If some required packages are missing, install all the requirements by running in command line:
+
+    .. code:: bash
+
+        python -m deeppavlov install <path_to_config>
+
+    where ``<path_to_config>`` is a path to one of the :config:`provided config files <elmo_embedder>`
+    or its name without an extension, for example :
+
+    .. code:: bash
+
+        python -m deeppavlov install elmo_ru-news
+        
     Examples:
         >>> from deeppavlov.models.embedders.elmo_embedder import ELMoEmbedder
         >>> elmo = ELMoEmbedder("http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz")

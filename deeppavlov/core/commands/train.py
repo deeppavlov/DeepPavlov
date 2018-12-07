@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import datetime
-import importlib
 import json
 import time
 from collections import OrderedDict, namedtuple
@@ -67,19 +66,6 @@ def prettify_metrics(metrics: List[Tuple[str, float]], precision: int = 4) -> Or
     return prettified_metrics
 
 
-def _fit(model: Estimator, iterator: DataLearningIterator, train_config) -> Estimator:
-    x, y = iterator.get_instances('train')
-    model.fit(x, y)
-    model.save()
-    return model
-
-
-def _fit_batches(model: Estimator, iterator: DataFittingIterator, train_config) -> Estimator:
-    model.fit_batches(iterator, batch_size=train_config['batch_size'])
-    model.save()
-    return model
-
-
 def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingIterator]) -> Chainer:
     """Fit and return the chainer described in corresponding configuration dictionary."""
     chainer_config: dict = config['chainer']
@@ -102,7 +88,17 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
 
         if 'fit_on_batch' in component_config:
             component: Estimator
-            component.fit_batches(iterator, config['train']['batch_size'])
+
+            targets = component_config['fit_on_batch']
+            if isinstance(targets, str):
+                targets = [targets]
+
+            for data in iterator.gen_batches(config['train']['batch_size'], shuffle=False):
+                preprocessed = chainer.compute(*data, targets=targets)
+                if len(component_config['fit_on_batch']) == 1:
+                    preprocessed = [preprocessed]
+                component.partial_fit(*preprocessed)
+
             component.save()
 
         if 'in' in component_config:
@@ -154,7 +150,7 @@ def get_iterator_from_config(config: dict, data: dict):
 
 def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None, *,
                                      to_train=True, to_validate=True, download=False,
-                                     start_epoch_num=0, recursive=True) -> Dict[str, Dict[str, float]]:
+                                     start_epoch_num=0, recursive=False) -> Dict[str, Dict[str, float]]:
     """Make training and evaluation of the model described in corresponding configuration file."""
     config = parse_config(config)
 
@@ -201,12 +197,6 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None, *
 
         if callable(getattr(model, 'train_on_batch', None)):
             _train_batches(model, iterator, train_config, metrics_functions, start_epoch_num=start_epoch_num)
-        elif callable(getattr(model, 'fit_batches', None)):
-            _fit_batches(model, iterator, train_config)
-        elif callable(getattr(model, 'fit', None)):
-            _fit(model, iterator, train_config)
-        elif not isinstance(model, Chainer):
-            log.warning('Nothing to train')
 
         model.destroy()
 
@@ -250,6 +240,10 @@ def _test_model(model: Chainer, metrics_functions: List[Metric],
         start_time = time.time()
 
     expected_outputs = list(set().union(model.out_params, *[m.inputs for m in metrics_functions]))
+
+    if not iterator.data[data_type]:
+        log.warning(f'Could not log examples for {data_type}, assuming it\'s empty')
+        return {'eval_examples_count': 0, 'metrics': None, 'time_spent': str(datetime.timedelta(seconds=0))}
 
     outputs = {out: [] for out in expected_outputs}
     examples = 0
@@ -380,7 +374,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
     try:
         while True:
             for x, y_true in iterator.gen_batches(train_config['batch_size']):
-                if log_on:
+                if log_on and len(train_metrics_functions) > 0:
                     y_predicted = list(model.compute(list(x), list(y_true), targets=expected_outputs))
                     if len(expected_outputs) == 1:
                         y_predicted = [y_predicted]

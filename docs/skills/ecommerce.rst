@@ -7,27 +7,59 @@ Here is a simple example of interaction:
 
 .. code:: bash
 
-	>>	Hello, I am a new eCommerce bot. 
-		I will help you to find products that you are looking for. 
-		Please type your query in plain text.
+    >>	Hello, I am a new eCommerce bot.
+        I will help you to find products that you are looking for.
+        Please type your query in plain text.
 
-	x::bluetooth speaker
-	>>	This is what I found for you:
+    x::bluetooth speaker
+    >>	This is what I found for you:
 
-		- Bluetooth Speaker (Black & Red)
-		- Bose SoundLink Bluetooth Speaker III
-		- Bose SoundLink Mini Bluetooth Speaker
-		- Bose SoundLink Mini Bluetooth Speaker
-		- JBL Flip Wireless Bluetooth Speaker (Black)
+        - Bluetooth Speaker (Black & Red)
+        - Bose SoundLink Bluetooth Speaker III
+        - Bose SoundLink Mini Bluetooth Speaker
+        - Bose SoundLink Mini Bluetooth Speaker
+        - JBL Flip Wireless Bluetooth Speaker (Black)
 
-		To specify the search, please choose a Brand: JBL, Soundsworks
-	
-	x::JBL
-	>>	The following items satisfy your request
-		
-		- JBL Flip Wireless Bluetooth Speaker (Black)
-		- JBL Flip Wireless Bluetooth Speaker (Black)
-		- JBL Charge Portable Indoor/Outdoor Bluetooth Speaker | Black
+        To specify the search, please choose a Brand: JBL, Soundsworks
+
+    x::JBL
+    >>	The following items satisfy your request
+
+        - JBL Flip Wireless Bluetooth Speaker (Black)
+        - JBL Flip Wireless Bluetooth Speaker (Black)
+        - JBL Charge Portable Indoor/Outdoor Bluetooth Speaker | Black
+
+
+
+
+
+Quick Start
+-----------
+
+Building
+^^^^^^^^
+
+.. code:: python
+
+    from deeppavlov import configs
+    from deeppavlov.core.commands.infer import build_model
+
+    ecommerce = build_model(configs.ecommerce_skill.tfidf_retrieve, load_trained=True)
+
+
+Inference
+^^^^^^^^^
+
+.. code:: python
+
+    result = ecommerce(['bluetooth speaker'], [[]], [{}])
+
+If some required packages are missing, install all the requirements by running in command line:
+
+.. code:: bash
+
+    python -m deeppavlov install tfidf_retrieve
+    python -m deeppavlov install bleu_retrieve
 
 
 Usage
@@ -36,7 +68,7 @@ Usage
 Config file
 ^^^^^^^^^^^
 
-BLEU-based `[1] <#references>`__ eCommerce bot 
+BLEU-based [1]_ eCommerce bot
 :config:`ecommerce_skill/bleu_retrieve.json`
 
 TfIdf-based eCommerce bot 
@@ -102,9 +134,9 @@ eCommerce bot with BLEU-based ranker
    -  ``state``: dialog state.
 
 
-   .. note::
+.. note::
 
-      About 500 Mb on disc required for eCommerce bot with BLEU-based ranker.
+    About **500 Mb** on disc required for eCommerce bot with BLEU-based ranker.
 
 
 eCommerce bot with TfIdf-based ranker
@@ -137,14 +169,14 @@ eCommerce bot with TfIdf-based ranker
    -  ``state``: dialog state.
 
 
-   .. note::
+.. note::
 
-      About 130 Mb on disc required for eCommerce bot with TfIdf-based ranker
+    About **130 Mb** on disc required for eCommerce bot with TfIdf-based ranker
 
 
 References
 ----------
 
-[1]  Papineni, Kishore, et al. "BLEU: a method for automatic evaluation 
-of machine translation." Proceedings of the 40th annual meeting on association 
-for computational linguistics. Association for Computational Linguistics, 2002.
+.. [1]  Papineni, Kishore, et al. "BLEU: a method for automatic evaluation
+    of machine translation." Proceedings of the 40th annual meeting on association
+    for computational linguistics. Association for Computational Linguistics, 2002.
