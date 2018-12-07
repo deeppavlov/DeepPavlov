@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import numpy as np
-from typing import List, Union, Iterable
+from typing import List, Union, Iterable, Optional
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.log import get_logger
@@ -73,9 +73,9 @@ class SiamesePreprocessor(Estimator):
                  num_ranking_samples: int = 1,
                  add_raw_text: bool = False,
                  tokenizer: Component = None,
-                 vocab: Estimator = "simple_vocab",
-                 embedder: Component = "fasttext",
-                 sent_vocab: Estimator = "simple_vocab",
+                 vocab: Estimator = None,
+                 embedder: Optional[Component] = None,
+                 sent_vocab: Optional[Estimator] = None,
                  **kwargs):
 
         self.max_sequence_length = max_sequence_length
@@ -100,7 +100,7 @@ class SiamesePreprocessor(Estimator):
             self.embedder.destroy()
 
     def fit(self, x: List[List[str]]) -> None:
-        if type(self.sent_vocab) != str:
+        if self.sent_vocab is not None:
             self.sent_vocab.fit([el[self.num_context_turns:] for el in x])
         x_tok = [self.tokenizer(el) for el in x]
         self.vocab.fit([el for x in x_tok for el in x])
@@ -136,6 +136,6 @@ class SiamesePreprocessor(Estimator):
         pass
 
     def save(self) -> None:
-        if type(self.sent_vocab) != str:
+        if self.sent_vocab is not None:
             self.sent_vocab.save()
         self.vocab.save()
