@@ -120,7 +120,6 @@
   "ubuntu_dstc7_mt_reader": "deeppavlov.dataset_readers.ubuntu_dstc7_mt_reader:UbuntuDSTC7MTReader",
   "ubuntu_v1_mt_reader": "deeppavlov.dataset_readers.ubuntu_v1_mt_reader:UbuntuV1MTReader",
   "ubuntu_v2_mt_reader": "deeppavlov.dataset_readers.ubuntu_v2_mt_reader:UbuntuV2MTReader",
-  "ubuntu_preprocessor": "deeppavlov.models.preprocessors.ubuntu_preprocessor:UbuntuPreprocessor",
   "ubuntu_v2_reader": "deeppavlov.dataset_readers.ubuntu_v2_reader:UbuntuV2Reader",
   "wiki_sqlite_vocab": "deeppavlov.vocabs.wiki_sqlite:WikiSQLiteVocab",
   "wikitionary_100K_vocab": "deeppavlov.vocabs.typos:Wiki100KDictionary"

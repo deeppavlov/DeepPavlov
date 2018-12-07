@@ -38,25 +38,25 @@ on the `Ubuntu Dialogue Corpus v2`_ for inference, please run one of the followi
 
 ::
 
-    python -m deeppavlov interact deeppavlov/configs/ranking/ranking_ubuntu_v2_mt_word2vec_smn_interact.json -d
-    python -m deeppavlov interact deeppavlov/configs/ranking/ranking_ubuntu_v2_mt_word2vec_dam_interact.json -d
-    python -m deeppavlov interact deeppavlov/configs/ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer_interact.json -d
+    python -m deeppavlov interact -d ranking_ubuntu_v2_mt_word2vec_smn
+    python -m deeppavlov interact -d ranking_ubuntu_v2_mt_word2vec_dam
+    python -m deeppavlov interact -d ranking_ubuntu_v2_mt_word2vec_dam_transformer
 
 Now a user can enter a dialog consists of 10 context sentences and several (>=1) candidate response sentences separated by '&'
 and then get the probability that the response is proper continuation of the dialog:
 
 ::
 
-    :: & & & & & & & & bonhoeffer  whar drives do you want to mount what &  i have an ext3 usb drive  & look with fdisk -l
-    >> 0.933
+    :: & & & & & & & & bonhoeffer  whar drives do you want to mount what &  i have an ext3 usb drive  & look with fdisk -l & hello there & fdisk is all you need
+    >> [0.9728276 0.1618539 0.9873016]
 
 To train the models on the `Ubuntu Dialogue Corpus v2`_ dataset please run one of the following commands:
 
 ::
 
-    python -m deeppavlov train deeppavlov/configs/ranking/ranking_ubuntu_v2_mt_word2vec_smn.json -d
-    python -m deeppavlov train deeppavlov/configs/ranking/ranking_ubuntu_v2_mt_word2vec_dam.json -d
-    python -m deeppavlov train deeppavlov/configs/ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json -d
+    python -m deeppavlov train -d ranking_ubuntu_v2_mt_word2vec_smn
+    python -m deeppavlov train -d ranking_ubuntu_v2_mt_word2vec_dam
+    python -m deeppavlov train -d ranking_ubuntu_v2_mt_word2vec_dam_transformer
 
 As an example of configuration file see
 :config:`ranking_ubuntu_v2_mt_word2vec_smn.json <ranking/ranking_ubuntu_v2_mt_word2vec_smn.json>`.

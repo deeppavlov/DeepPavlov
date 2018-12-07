@@ -83,7 +83,7 @@
     "metrics": ["r@1", "rank_response"],
     "validation_patience": 10,
     "val_every_n_epochs": 1,
-    "log_every_n_batches": 1000
+    "log_every_n_batches": 100
   },
   "metadata": {
     "variables": {

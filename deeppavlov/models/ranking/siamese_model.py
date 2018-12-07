@@ -31,7 +31,7 @@ class SiameseModel(NNModel):
 
     def __init__(self,
                  batch_size: int,
-                 num_context_turns: int,
+                 num_context_turns: int = 1,
                  *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
@@ -44,12 +44,43 @@ class SiameseModel(NNModel):
     def save(self, *args, **kwargs) -> None:
         pass
 
-    def train_on_batch(self, batch: List[List[np.ndarray]], y: List[int]) -> float:
-        b = self._make_batch(list(batch))
+    def train_on_batch(self, samples_generator: Iterable[List[np.ndarray]], y: List[int]) -> float:
+        """
+        This method is called by trainer to make one training step on one batch.
+        The number of samples returned by `samples_generator` is always equal to `batch_size`, so we need to:
+            1) accumulate data for all of the inputs of the model;
+            2) format inputs of a model in a proper way using `self._make_batch` function;
+            3) run a model with provided inputs and ground truth labels (`y`) using `self._train_on_batch` function;
+            4) return mean loss value on the batch
+
+        Args:
+            samples_generator (Iterable[List[np.ndarray]]): generator that returns list of numpy arrays
+                of words of all sentences represented as integers.
+                Its shape: (number_of_context_turns + 1, max_number_of_words_in_a_sentence)
+            y (List[int]): tuple of labels, with shape: (batch_size, )
+
+        Returns:
+            float: value of mean loss on the batch
+        """
+        buf = []
+        for sample in samples_generator:
+            self._append_sample_to_batch_buffer(sample, buf)
+        b = self._make_batch(buf)
         loss = self._train_on_batch(b, y)
         return loss
 
     def __call__(self, samples_generator: Iterable[List[np.ndarray]]) -> Union[np.ndarray, List[str]]:
+        """
+        This method is called by trainer to make one evaluation step on one batch.
+
+        Args:
+            samples_generator (Iterable[List[np.ndarray]]):  generator that returns list of numpy arrays
+            of words of all sentences represented as integers.
+            Has shape: (number_of_context_turns + 1, max_number_of_words_in_a_sentence)
+
+        Returns:
+            np.ndarray: predictions for the batch of samples
+        """
         y_pred = []
         buf = []
         for j, sample in enumerate(samples_generator, start=1):

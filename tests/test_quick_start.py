@@ -137,19 +137,13 @@ PARAMS = {
                  ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
                 ("ranking/paraphrase_ident_qqp_bilstm_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
                 ("ranking/paraphrase_ident_qqp_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/ranking_ubuntu_v2_mt_word2vec_dam.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_interact.json", "ranking", ('IP',)):
-                    [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer_interact.json", "ranking", ('IP',)):
-                    [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/ranking_ubuntu_v2_mt_word2vec_smn.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/ranking_ubuntu_v2_mt_word2vec_smn_interact.json", "ranking", ('IP',)):
-                    [ONE_ARGUMENT_INFER_CHECK],
                 ("ranking/ranking_ubuntu_v1_mt_word2vec_smn.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
                 ("ranking/ranking_ubuntu_v1_mt_word2vec_dam.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
                 ("ranking/ranking_ubuntu_v1_mt_word2vec_dam_transformer.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/ranking_ubuntu_v1_mt_word2vec_dam_transformer_interact.json", "ranking", ('IP',)):
+                ("ranking/ranking_ubuntu_v2_mt_word2vec_smn.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/ranking_ubuntu_v2_mt_word2vec_dam.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json", "ranking", ('IP',)):
                     [ONE_ARGUMENT_INFER_CHECK]
     },
     "doc_retrieval": {

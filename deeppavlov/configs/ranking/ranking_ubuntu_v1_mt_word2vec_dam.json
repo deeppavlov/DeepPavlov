@@ -35,7 +35,7 @@
       },
       {
         "id": "preproc",
-        "class_name": "ubuntu_preprocessor",
+        "class_name": "siamese_preprocessor",
         "save_path": "{MODELS_PATH}/ubuntu_v1_mt_word2vec_dam/preproc/tok.dict",
         "load_path": "{MODELS_PATH}/ubuntu_v1_mt_word2vec_dam/preproc/tok.dict",
         "num_ranking_samples": 10,

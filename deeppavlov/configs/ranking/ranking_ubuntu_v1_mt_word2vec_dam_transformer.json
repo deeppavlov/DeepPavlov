@@ -1,5 +1,5 @@
 {
-  "info": "The config is for training of DAM_USE-T on Ubuntu Dialogue Corpus v1 using prepared Word2vec embeddings",
+  "info": "The config is for training or evaluation of DAM_USE-T on Ubuntu Dialogue Corpus v1 using prepared Word2vec embeddings",
   "dataset_reader": {
     "class_name": "ubuntu_v1_mt_reader",
     "data_path": "{DOWNLOADS_PATH}/ubuntu_v1_data",
@@ -35,7 +35,7 @@
       },
       {
         "id": "preproc",
-        "class_name": "ubuntu_preprocessor",
+        "class_name": "siamese_preprocessor",
         "save_path": "{MODELS_PATH}/ubuntu_v1_mt_word2vec_dam_transformer/preproc/tok.dict",
         "load_path": "{MODELS_PATH}/ubuntu_v1_mt_word2vec_dam_transformer/preproc/tok.dict",
         "num_ranking_samples": 10,
@@ -90,6 +90,8 @@
     "shuffle": true,
     "pytest_max_batches": 2,
     "train_metrics": [],
+    "validate_best": true,
+    "test_best": true,
     "metrics": [
       "r@1",
       "r@2",
@@ -118,6 +120,10 @@
       "server_utils": "Ranker"
     },
     "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v1_mt_word2vec_dam_transformer.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
       {
         "url": "http://files.deeppavlov.ai/datasets/ubuntu_v1_data.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/ubuntu_v1_data"

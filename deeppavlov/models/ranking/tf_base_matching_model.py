@@ -99,7 +99,7 @@ class TensorflowBaseMatchingModel(TFModel, SiameseModel):
         The function for formatting model inputs
 
         Args:
-            batch (List[List[np.ndarray]]): List of samples with model inputs each:
+            batch (List[Tuple[np.ndarray]]): List of samples with model inputs each:
                 [( context, context_len, response, response_len ), ( ... ), ... ].
         Returns:
             Dict: feed_dict to feed a model
@@ -148,45 +148,3 @@ class TensorflowBaseMatchingModel(TFModel, SiameseModel):
         """
         batch.update({self.y_true: np.array(y)})
         return self.sess.run([self.loss, self.train_op], feed_dict=batch)[0]  # return the first item aka loss
-
-    # load() and save() are inherited from TFModel
-
-    def train_on_batch(self, samples_generator: Iterable[List[np.ndarray]], y: List[int]) -> float:
-        """
-        This method is called by trainer to make one training step on one batch.
-
-        Args:
-            samples_generator (Iterable[List[np.ndarray]]): generator that returns list of numpy arrays
-            of words of all sentences represented as integers.
-            Has shape: (number_of_context_turns + 1, max_number_of_words_in_a_sentence)
-            y (List[int]): tuple of labels, with shape: (batch_size, )
-
-        Returns:
-            float: value of mean loss on the batch
-        """
-        loss = 0
-        buf = []
-        j = 0
-        while True:
-            try:
-                sample = next(samples_generator)
-                j += 1
-                self._append_sample_to_batch_buffer(sample=sample, buf=buf)
-                if len(buf) >= self.batch_size:
-                    for i in range(len(buf) // self.batch_size):
-                        fd = self._make_batch(buf[i * self.batch_size:(i + 1) * self.batch_size])
-                        loss = self._train_on_batch(fd, y)
-                    lenb = len(buf) % self.batch_size
-                    if lenb != 0:
-                        buf = buf[-lenb:]
-                    else:
-                        buf = []
-            except StopIteration:
-                if j == 1:
-                    return ["Error! It is not intended to use the model in the interact mode."]
-                if len(buf) != 0:
-                    # feed the rest items
-                    fd = self._make_batch(buf)
-                    loss = self._train_on_batch(batch=fd, y=y)
-                break
-        return loss

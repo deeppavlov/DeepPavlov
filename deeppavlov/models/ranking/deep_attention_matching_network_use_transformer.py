@@ -112,7 +112,7 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
             with tf.variable_scope('sentence_embeddings'):
                 x = []
                 for i in range(self.num_context_turns):
-                    x.append(self.embed(tf.squeeze(self.context_sent_ph[:, i])))
+                    x.append(self.embed(tf.reshape(self.context_sent_ph[:, i], shape=(tf.shape(self.context_sent_ph)[0], ))))
                 embed_context_turns = tf.stack(x, axis=1)
                 embed_response = self.embed(self.response_sent_ph)
 
@@ -375,7 +375,7 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
         The function for formatting model inputs
 
         Args:
-            batch (List[List[np.ndarray]]): List of samples with model inputs each:
+            batch (List[Tuple[np.ndarray]]): List of samples with model inputs each:
                 [( context, context_len, response, response_len ), ( ... ), ... ].
             graph (str): which graph the inputs is preparing for
 
@@ -515,47 +515,18 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
         Returns:
             float: value of mean loss on the batch
         """
-        loss = 0
         buf = []
-        j = 0
-        while True:
-            try:
-                sample = next(samples_generator)
-                j += 1
-                self._append_sample_to_batch_buffer(sample=sample, buf=buf)
-                if len(buf) >= self.batch_size:
-                    for i in range(len(buf) // self.batch_size):
-                        # 1. USE Graph
-                        fd = self._make_batch(buf[i * self.batch_size:(i + 1) * self.batch_size], graph="use")
-                        context_emb, response_emb = self._predict_on_batch(fd, graph="use")
+        for sample in samples_generator:
+            self._append_sample_to_batch_buffer(sample, buf)
 
-                        # 2. MAIN Graph
-                        fd = self._make_batch(buf[i * self.batch_size:(i + 1) * self.batch_size], graph="main")
-                        fd.update({
-                            self.context_sent_emb_ph: context_emb,
-                            self.response_sent_emb_ph: response_emb
-                        })
-                        loss = self._train_on_batch(fd, y)
-                    lenb = len(buf) % self.batch_size
-                    if lenb != 0:
-                        buf = buf[-lenb:]
-                    else:
-                        buf = []
-            except StopIteration:
-                if j == 1:
-                    return ["Error! It is not intended to use the model in the interact mode."]
-                if len(buf) != 0:
-                    # feed the rest items
-                    # 1. USE Graph
-                    fd = self._make_batch(buf, graph="use")
-                    context_emb, response_emb = self._predict_on_batch(fd, graph="use")
+        fd = self._make_batch(buf, graph="use")
+        context_emb, response_emb = self._predict_on_batch(fd, graph="use")   # We do not update USE weights
 
-                    # 2. MAIN Graph
-                    fd = self._make_batch(buf, graph="main")
-                    fd.update({
-                        self.context_sent_emb_ph: context_emb,
-                        self.response_sent_emb_ph: response_emb
-                    })
-                    loss += self._train_on_batch(fd, y)
-                break
+        # 2. MAIN Graph
+        fd = self._make_batch(buf, graph="main")
+        fd.update({
+            self.context_sent_emb_ph: context_emb,
+            self.response_sent_emb_ph: response_emb
+        })
+        loss = self._train_on_batch(fd, y)                                    # We do update MAIN model weights
         return loss
