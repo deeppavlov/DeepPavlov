@@ -67,7 +67,7 @@ class LogitRanker(Component):
                 batch_predict = zip(*self.squad_model(c_batch, q_batch))
                 results += batch_predict
             if self.sort_noans:
-                results = sorted(results, key=lambda x: (x[2], x != ''), reverse=True)
+                results = sorted(results, key=lambda x: (x[0] != '', x[2]), reverse=True)
             else:
                 results = sorted(results, key=itemgetter(2), reverse=True)
             best_answer = results[0][0]

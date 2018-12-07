@@ -22,3 +22,8 @@ Following dialog logging settings are available:
 3. **agent_name** (default: ``dp_agent``): sets subdirectory name for storing dialog logs;
 4. **logfile_max_size_kb** (default: ``10240``): sets logfile maximum size in kilobytes. If exceeded, new log file is created;
 5. **ensure_ascii** (default: ``false``): If ``true``, converts all non-ASCII symbols in logged content to Unicode code points.
+
+3. Environment variables
+------------------------
+
+- **DP_SKIP_NLTK_DOWNLOAD** set to ``TRUE`` to prevent automatic downloading of **nltk** packages (``punkt``, ``stopwords``, ``perluniprops``, ``nonbreaking_prefixes``)

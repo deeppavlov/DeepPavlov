@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import nltk
 
 from deeppavlov.core.common.prints import RedirectedPrints
 
-
-with RedirectedPrints():
-    nltk.download('punkt')
-    nltk.download('stopwords')
-    nltk.download('perluniprops')
-    nltk.download('nonbreaking_prefixes')
+if not os.environ.get('DP_SKIP_NLTK_DOWNLOAD'):
+    with RedirectedPrints():
+        nltk.download('punkt')
+        nltk.download('stopwords')
+        nltk.download('perluniprops')
+        nltk.download('nonbreaking_prefixes')
