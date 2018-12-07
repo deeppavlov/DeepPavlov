@@ -1,12 +1,12 @@
 import re
 import base64
-import hashlib
+import json
 from urllib.parse import urlsplit
 
 import requests
 from OpenSSL import crypto
 from flask import Flask, request, jsonify, redirect, Response
-# from ask_sdk
+#from ask_sdk import standard
 
 
 HOST = '0.0.0.0'
@@ -14,6 +14,7 @@ PORT = '7050'
 TRUSTED_CERTS_PATH = '/etc/ssl/certs/ca-certificates.crt'
 
 app = Flask(__name__)
+
 
 def verify_sc_url(url: str) -> bool:
     parsed = urlsplit(url)
@@ -47,11 +48,6 @@ def verify_signature(signature_chain_url: str, request_body: bytes, signature: s
     cert_chain_get = requests.get(signature_chain_url)
     cert_chain_txt = cert_chain_get.text
     cert_chain = extract_certs(cert_chain_txt)
-
-    for cert in cert_chain:
-        print('')
-        print(cert.get_subject().__str__())
-        print(cert.get_issuer().__str__())
 
     amazon_cert: crypto.X509 = cert_chain.pop(0)
 
@@ -87,22 +83,19 @@ def verify_signature(signature_chain_url: str, request_body: bytes, signature: s
         store_context.verify_certificate()
         verify_chain = True
     except crypto.X509StoreContextError as e:
-        print(e)
         verify_chain = False
+        print(e)
 
-    # validate signature
-    pub_key = amazon_cert.get_pubkey()
 
-    hashed_https_body = hashlib.sha1()
-    hashed_https_body.update(request_body)
-    print('request')
-    print(request_body)
-    print(hashed_https_body)
+    # verify signature
+    try:
+        crypto.verify(amazon_cert, signature, request_body, 'sha1')
+        verify_signature = True
+    except crypto.Error as e:
+        verify_signature = False
+        print(e)
 
-    print('signature')
-    print()
-
-    result = verify_expired and verify_sans and verify_chain
+    result = verify_expired and verify_sans and verify_chain and verify_signature
 
     return result
 
@@ -112,7 +105,7 @@ def skill():
     request_body: bytes = request.get_data()
     sc_url = request.headers.get('Signaturecertchainurl')
     signature = base64.b64decode(request.headers.get('Signature'))
-    input = request.get_json()
+    payload = request.get_json()
 
     if not verify_sc_url(sc_url):
         return jsonify({'error': 'failed signature certificate URL check'}), 400
@@ -129,4 +122,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    #print(verify_sc_url('https://s3.amazonaws.com:443/echo.api/echo-api-cert-6-ats.pem'))
