@@ -16,7 +16,7 @@ import argparse
 import os
 from pathlib import Path
 
-from deeppavlov.core.common.paths import get_settings_path, set_settings_path, set_settings_default
+from deeppavlov.core.common.paths import get_settings_path
 
 
 parser = argparse.ArgumentParser()
