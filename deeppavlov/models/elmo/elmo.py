@@ -111,15 +111,18 @@ class ELMo(NNModel):
 
 
     LM model pre-trained on `ru-news` dataset ( lines = 63M, tokens = 946M, size = 12GB ), model is available by
-    ``elmo-lm-ready4fine-tuning-ru-news`` configuration file or ``elmo-lm-ready4fine-tuning-ru-news-simple``
+    :config:`elmo-lm-ready4fine-tuning-ru-news </elmo/elmo-lm-ready4fine-tuning-ru-news.json>` configuration file
+    or :config:`elmo-lm-ready4fine-tuning-ru-news-simple </elmo/elmo-lm-ready4fine-tuning-ru-news-simple.json>`
     configuration file.
 
     LM model pre-trained on `ru-twitter` dataset ( lines = 104M, tokens = 810M, size = 8.5GB ), model is available by
-    ``elmo-lm-ready4fine-tuning-ru-twitter`` configuration file or ``elmo-lm-ready4fine-tuning-ru-twitter-simple``
+    :config:`elmo-lm-ready4fine-tuning-ru-twitter </elmo/elmo-lm-ready4fine-tuning-ru-twitter.json>` configuration file 
+    or :config:`elmo-lm-ready4fine-tuning-ru-twitter-simple </elmo/elmo-lm-ready4fine-tuning-ru-twitter-simple.json>`
     configuration file.
 
     LM model pre-trained on `ru-wiki` dataset ( lines = 1M, tokens = 386M, size = 5GB ), model is available by
-    ``elmo-lm-ready4fine-tuning-ru-wiki`` configuration file or ``elmo-lm-ready4fine-tuning-ru-wiki-simple``
+    :config:`elmo-lm-ready4fine-tuning-ru-wiki </elmo/elmo-lm-ready4fine-tuning-ru-wiki.json>` configuration file 
+    or :config:`elmo-lm-ready4fine-tuning-ru-wiki-simple </elmo/elmo-lm-ready4fine-tuning-ru-wiki-simple.json>`
     configuration file.
 
     `simple` configuration file is a configuration of a model without special tags of output
@@ -128,7 +131,7 @@ class ELMo(NNModel):
     .. note::
 
         You need to download about **4 GB** also by default about **32 GB** of RAM and **10 GB** of GPU memory
-        required to running the configuration ``deeppavlov/configs/elmo/elmo-lm-ready4fine-tuning-ru-*.json``
+        required to running the :config:`elmo-lm-ready4fine-tuning-ru-* </elmo/>`
         on one GPU.
 
     After training you can use ``{MODELS_PATH}/elmo_model/saves/hubs/tf_hub_model_epoch_n_*/``
@@ -151,7 +154,7 @@ class ELMo(NNModel):
         .. note::
 
             You need to download about **2 GB** also by default about **10 GB** of RAM and **10 GB** of GPU memory
-            required to running the configuration ``deeppavlov/configs/elmo/elmo-1b-benchmark.json`` on one GPU.
+            required to running :config:`elmo-1b-benchmark <elmo/elmo-1b-benchmark.json>` on one GPU.
 
         .. code:: bash
 

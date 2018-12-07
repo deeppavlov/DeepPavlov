@@ -4,8 +4,7 @@ Pre-trained embeddings
 ELMo
 ----
 
-| We are publishing :class:`Russian language ELMo embeddings model <deeppavlov.models.embedders.elmo_embedder.ELMoEmbedder>` for tensorflow-hub.
-| We are publishing :class:`LM model <deeppavlov.models.elmo.elmo.ELMo>` for training and fine-tuning ELMo as LM model.
+| We are publishing :class:`Russian language ELMo embeddings model <deeppavlov.models.embedders.elmo_embedder.ELMoEmbedder>` for tensorflow-hub and :class:`LM model <deeppavlov.models.elmo.elmo.ELMo>` for training and fine-tuning ELMo as LM model.
 | ELMo (Embeddings from Language Models) representations are pre-trained contextual representations from
   large-scale bidirectional language models. See a paper `Deep contextualized word representations
   <https://arxiv.org/abs/1802.05365>`__ for more information about the algorithm and a detailed analysis.
