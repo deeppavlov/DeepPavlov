@@ -68,10 +68,6 @@
       "server_utils": "ODQA"
     },
     "download": [
-      {
-        "url": "http://files.deeppavlov.ai/datasets/wikipedia/ruwiki.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}"
-      }
     ]
   }
 }
