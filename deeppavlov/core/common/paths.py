@@ -24,6 +24,7 @@ if _settings_path.is_file():
 
 
 def get_settings_path() -> Path:
+    """Return an absolute path to the DeepPavlov settings directory"""
     populate_settings_dir()
     return _settings_path
 
