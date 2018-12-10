@@ -58,7 +58,7 @@ parser.add_argument("--https", action="store_true", help="run model in https mod
 parser.add_argument("--key", default=None, help="ssl key", type=str)
 parser.add_argument("--cert", default=None, help="ssl certificate", type=str)
 
-parser.add_argument("-p", "--cert", default=None, help="api port", type=str)
+parser.add_argument("-p", "--port", default=None, help="api port", type=str)
 
 parser.add_argument("--api-mode", help="rest api mode: 'basic' with batches or 'alice' for  Yandex.Dialogs format",
                     type=str, default='basic', choices={'basic', 'alice'})
