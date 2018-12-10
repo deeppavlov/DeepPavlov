@@ -81,7 +81,7 @@ with valid certificate from CA.
 Each DeepPavlov skill/component can be made available for MS Bot Framework
 as a REST service by:
 
-``python -m deeppavlov interactmsbot -i <microsoft_app_id> -s <microsoft_app_secret> <config_path> [-d] [-p <port_number>``
+``python -m deeppavlov interactmsbot -i <microsoft_app_id> -s <microsoft_app_secret> <config_path> [-d] [-p <port_number>]``
 
 Use *Microsoft App ID* and *Microsoft App Secret* obtained
 in the **Web App Bot connection configuration** section.
