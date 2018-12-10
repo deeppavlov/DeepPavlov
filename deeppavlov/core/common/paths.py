@@ -22,6 +22,10 @@ _settings_path = Path(os.getenv('DP_SETTINGS_PATH', _default_settings_path)).exp
 if _settings_path.is_file():
     raise FileExistsError(f'DP_SETTINGS_PATH={_settings_path} is a file and not a directory')
 
+if _default_settings_path in _settings_path.parents:
+    raise RecursionError(f'DP_SETTINGS_PATH={_settings_path} is relative'
+                         f' to the default settings path {_default_settings_path}')
+
 
 def get_settings_path() -> Path:
     """Return an absolute path to the DeepPavlov settings directory"""
@@ -43,7 +47,7 @@ def populate_settings_dir(force: bool = False) -> bool:
     if _default_settings_path == _settings_path:
         return res
 
-    for src in _default_settings_path.glob('**/*.json'):
+    for src in list(_default_settings_path.glob('**/*.json')):
         dest = _settings_path / src.relative_to(_default_settings_path)
         if not force and dest.exists():
             continue
