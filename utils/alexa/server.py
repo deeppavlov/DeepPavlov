@@ -6,8 +6,6 @@ from urllib.parse import urlsplit
 import requests
 from OpenSSL import crypto
 from flask import Flask, request, jsonify, redirect, Response
-#from ask_sdk import standard
-
 
 HOST = '0.0.0.0'
 PORT = '7050'
@@ -86,7 +84,6 @@ def verify_signature(signature_chain_url: str, request_body: bytes, signature: s
         verify_chain = False
         print(e)
 
-
     # verify signature
     try:
         crypto.verify(amazon_cert, signature, request_body, 'sha1')
@@ -121,7 +118,39 @@ def skill():
     if abs(delta.seconds) > 150:
         return jsonify({'error': 'failed request timestamp check'}), 400
 
-    return jsonify({'error': 'error'}), 400
+    user_id = payload['session']['user']['userId']
+    req_type = payload['request']['type']
+    session_id = payload['session']['sessionId']
+
+    response_template = {
+        'version': '1.0',
+        'sessionAttributes': {
+            'new': False,
+            'sessionId': session_id
+        },
+        'response': {
+            'shouldEndSession': False,
+            'outputSpeech': {
+                'type': 'PlainText',
+                'text': 'Dummy'},
+            'card': {
+                'type': 'Simple',
+                'content': 'Dummy'
+            }
+        }
+    }
+
+    req_type_response_map = {
+        'LaunchRequest': 'Welcome to DeepPavlov Alexa wrapper!',
+        'IntentRequest': 'Here is my answer!',
+        'SessionEndedRequest': 'See ya!'
+    }
+
+    response = response_template
+    response['response']['outputSpeech']['text'] = req_type_response_map[req_type]
+    response['response']['card']['content'] = req_type_response_map[req_type]
+
+    return jsonify(response), 200
 
 
 def main():
