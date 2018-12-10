@@ -98,8 +98,6 @@
       "r@5",
       "rank_response"
     ],
-    "validate_best": true,
-    "test_best": true,
     "validation_patience": 1,
     "val_every_n_epochs": 1,
     "log_every_n_batches": 100,
@@ -113,6 +111,7 @@
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt",
       "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
     ],
     "labels": {

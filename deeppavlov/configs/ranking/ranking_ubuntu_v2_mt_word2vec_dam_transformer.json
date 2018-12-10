@@ -111,6 +111,7 @@
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt",
       "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
     ],
     "labels": {

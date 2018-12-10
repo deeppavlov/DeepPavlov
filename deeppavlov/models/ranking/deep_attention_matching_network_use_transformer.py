@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List, Iterable, Dict, Tuple
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
-from typing import List, Iterable, Dict, Tuple
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
