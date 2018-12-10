@@ -1,22 +1,18 @@
 {
   "dataset_reader": {
     "class_name": "odqa_reader",
-    "data_path": "{DOWNLOADS_PATH}/odqa/enwiki",
-    "save_path": "{DOWNLOADS_PATH}/odqa/enwiki.db",
+    "data_path": "{DOWNLOADS_PATH}/odqa/enwiki20161221",
+    "save_path": "{DOWNLOADS_PATH}/odqa/enwiki20161221.db",
     "dataset_format": "wiki"
   },
   "dataset_iterator": {
     "class_name": "sqlite_iterator",
     "shuffle": false,
-    "load_path": "{DOWNLOADS_PATH}/odqa/enwiki.db"
+    "load_path": "{DOWNLOADS_PATH}/odqa/enwiki20161221.db"
   },
   "chainer": {
     "in": [
-      "docs"
-    ],
-    "in_y": [
-      "doc_ids",
-      "doc_nums"
+      "x"
     ],
     "out": [
       "y"
@@ -26,12 +22,10 @@
         "class_name": "hashing_tfidf_vectorizer",
         "id": "vectorizer",
         "fit_on_batch": [
-          "docs",
-          "doc_ids",
-          "doc_nums"
+          "x"
         ],
-        "save_path": "{MODELS_PATH}/odqa/enwiki_tfidf_matrix.npz",
-        "load_path": "{MODELS_PATH}/odqa/enwiki_tfidf_matrix.npz",
+        "save_path": "{MODELS_PATH}/odqa/enwiki20161221_tfidf_matrix.npz",
+        "load_path": "{MODELS_PATH}/odqa/enwiki20161221_tfidf_matrix.npz",
         "tokenizer": {
           "class_name": "stream_spacy_tokenizer",
           "lemmas": true,
@@ -45,7 +39,7 @@
         "class_name": "tfidf_ranker",
         "top_n": 25,
         "in": [
-          "docs"
+          "x"
         ],
         "out": [
           "y",
@@ -75,11 +69,11 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/datasets/wikipedia/enwiki.tar.gz",
+        "url": "http://files.deeppavlov.ai/datasets/wikipedia/enwiki20161221.tar.gz",
         "subdir": "{DOWNLOADS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/en_odqa.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/en_odqa_enwiki20161221.tar.gz",
         "subdir": "{MODELS_PATH}"
       }
     ]
