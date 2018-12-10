@@ -22,16 +22,29 @@ _settings_path = Path(os.getenv('DP_SETTINGS_PATH', _default_settings_path)).exp
 
 
 def get_settings_path() -> Path:
-    _populate_settings_dir()
+    populate_settings_dir()
     return _settings_path
 
 
-def _populate_settings_dir() -> None:
+def populate_settings_dir(force: bool = False) -> bool:
+    """
+    Populate settings directory with default settings files
+
+    Args:
+        force: if ``True``, replace existing settings files with default ones
+
+    Returns:
+        ``True`` if any files were copied and ``False`` otherwise
+    """
+    res = False
     if _default_settings_path == _settings_path:
-        return
+        return res
+
     for src in _default_settings_path.glob('**/*.json'):
         dest = _settings_path / src.relative_to(_default_settings_path)
-        if dest.exists():
+        if not force and dest.exists():
             continue
+        res = True
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(src, dest)
+    return res
