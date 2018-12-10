@@ -4,7 +4,7 @@ REST API
 Each library component or skill can be easily made available for
 inference as a REST web service. The general method is:
 
-``python -m deeppavlov riseapi <config_path> [-d] [-p <port-number>]``
+``python -m deeppavlov riseapi <config_path> [-d] [-p <port_number>]``
 
 (optional ``-d`` key is for dependencies download before service start)
 

@@ -20,7 +20,7 @@ Then run
 
 ::
 
-    python -m deeppavlov riseapi --api-mode alice --https --key my.key --cert my.crt  <config_path> [-d] [-p <port-number>]
+    python -m deeppavlov riseapi --api-mode alice --https --key my.key --cert my.crt  <config_path> [-d] [-p <port_number>]
 
 
 Optional ``-d`` key is for dependencies download before service start.
