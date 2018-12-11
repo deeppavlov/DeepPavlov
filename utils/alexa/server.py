@@ -1,161 +1,87 @@
-import re
-import base64
-from datetime import datetime
-from urllib.parse import urlsplit
+from datetime import timedelta
+from pathlib import Path
+from queue import Queue
+from typing import Union, Optional
 
-import requests
-from OpenSSL import crypto
-from flask import Flask, request, jsonify, redirect, Response
+from flask import Flask, request, jsonify, redirect
+from flasgger import Swagger
+from flask_cors import CORS
 
-HOST = '0.0.0.0'
-PORT = '7050'
-TRUSTED_CERTS_PATH = '/etc/ssl/certs/ca-certificates.crt'
+from utils.alexa.bot import Bot
+from deeppavlov.core.commands.infer import build_model
+from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.common.file import read_json
+from deeppavlov.core.common.paths import get_settings_path
+from deeppavlov.agents.default_agent.default_agent import DefaultAgent
+from deeppavlov.agents.processors.default_rich_content_processor import DefaultRichContentWrapper
+from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
+
+SERVER_CONFIG_FILENAME = 'server_config.json'
+
+AMAZON_CERTIFICATE_LIFETIME = timedelta(hours=1)
+
+log = get_logger(__name__)
 
 app = Flask(__name__)
+Swagger(app)
+CORS(app)
 
 
-def verify_sc_url(url: str) -> bool:
-    parsed = urlsplit(url)
+def run_alexa_default_agent(model_config: Union[str, Path, dict], multi_instance: bool = False,
+                            stateful: bool = False, port: Optional[int] = None) -> None:
 
-    scheme: str = parsed.scheme
-    netloc: str = parsed.netloc
-    path: str = parsed.path
+    def get_default_agent() -> DefaultAgent:
+        model = build_model(model_config)
+        skill = DefaultStatelessSkill(model)
+        agent = DefaultAgent([skill], skills_processor=DefaultRichContentWrapper())
+        return agent
 
-    try:
-        port = parsed.port
-    except ValueError:
-        port = None
-
-    result = (scheme.lower() == 'https' and
-              netloc.lower().split(':')[0] == 's3.amazonaws.com' and
-              path[:10] == '/echo.api/' and
-              (port == 443 or port is None))
-
-    return result
+    run_alexa_server(get_default_agent, multi_instance, stateful, port=port)
 
 
-def extract_certs(certs_txt: str) -> list:
-    pattern = r'-----BEGIN CERTIFICATE-----.+?-----END CERTIFICATE-----'
-    certs_txt = re.findall(pattern, certs_txt, flags=re.DOTALL)
-    certs = [crypto.load_certificate(crypto.FILETYPE_PEM, cert_txt) for cert_txt in certs_txt]
-    return certs
+def run_alexa_server(agent_generator: callable, multi_instance: bool = False,
+                     stateful: bool = False, port: Optional[int] = None) -> None:
 
+    server_config_path = Path(get_settings_path(), SERVER_CONFIG_FILENAME).resolve()
+    server_params = read_json(server_config_path)
 
-# TODO: think of decomposition
-def verify_signature(signature_chain_url: str, request_body: bytes, signature: str) -> bool:
-    cert_chain_get = requests.get(signature_chain_url)
-    cert_chain_txt = cert_chain_get.text
-    cert_chain = extract_certs(cert_chain_txt)
+    host = server_params['common_defaults']['host']
+    port = port or server_params['common_defaults']['port']
 
-    amazon_cert: crypto.X509 = cert_chain.pop(0)
+    alexa_server_params = server_params['alexa_defaults']
 
-    # verify not expired
-    verify_expired = not amazon_cert.has_expired()
+    alexa_server_params['multi_instance'] = multi_instance or server_params['common_defaults']['multi_instance']
+    alexa_server_params['stateful'] = stateful or server_params['common_defaults']['stateful']
+    alexa_server_params['amazon_cert_lifetime'] = AMAZON_CERTIFICATE_LIFETIME
 
-    # get subject alternative names
-    cert_extentions = [amazon_cert.get_extension(i) for i in range(amazon_cert.get_extension_count())]
-    subject_alt_names = ''
+    input_q = Queue()
+    output_q = Queue()
 
-    for extention in cert_extentions:
-        if 'subjectAltName' in str(extention.get_short_name()):
-            subject_alt_names = extention.__str__()
-            break
+    bot = Bot(agent_generator, alexa_server_params, input_q, output_q)
+    bot.start()
 
-    verify_sans = 'echo-api.amazon.com' in subject_alt_names
+    @app.route('/')
+    def index():
+        return redirect('/apidocs/')
 
-    # verify certs chain
-    store = crypto.X509Store()
+    @app.route('/interact', methods=['POST'])
+    def handle_request():
+        request_body: bytes = request.get_data()
+        signature_chain_url: str = request.headers.get('Signaturecertchainurl')
+        signature: str = request.headers.get('Signature')
+        alexa_request: dict = request.get_json()
 
-    for cert in cert_chain:
-        store.add_cert(cert)
-
-    with open(TRUSTED_CERTS_PATH, 'r') as crt_f:
-        trusted_certs_txt = crt_f.read()
-        trusted_certs = extract_certs(trusted_certs_txt)
-        for cert in trusted_certs:
-            store.add_cert(cert)
-
-    store_context = crypto.X509StoreContext(store, amazon_cert)
-
-    try:
-        store_context.verify_certificate()
-        verify_chain = True
-    except crypto.X509StoreContextError as e:
-        verify_chain = False
-        print(e)
-
-    # verify signature
-    try:
-        crypto.verify(amazon_cert, signature, request_body, 'sha1')
-        verify_signature = True
-    except crypto.Error as e:
-        verify_signature = False
-        print(e)
-
-    result = verify_expired and verify_sans and verify_chain and verify_signature
-
-    return result
-
-
-@app.route('/', methods=['POST'])
-def skill():
-    request_body: bytes = request.get_data()
-    sc_url = request.headers.get('Signaturecertchainurl')
-    signature = base64.b64decode(request.headers.get('Signature'))
-    payload = request.get_json()
-
-    if not verify_sc_url(sc_url):
-        return jsonify({'error': 'failed signature chain URL check'}), 400
-
-    if not verify_signature(sc_url, request_body, signature):
-        return jsonify({'error': 'failed signature certificate check'}), 400
-
-    timestamp_str = payload['request']['timestamp']
-    timestamp_datetime = datetime.strptime(timestamp_str, '%Y-%m-%dT%H:%M:%SZ')
-    now = datetime.utcnow()
-    delta = now - timestamp_datetime
-
-    if abs(delta.seconds) > 150:
-        return jsonify({'error': 'failed request timestamp check'}), 400
-
-    user_id = payload['session']['user']['userId']
-    req_type = payload['request']['type']
-    session_id = payload['session']['sessionId']
-
-    response_template = {
-        'version': '1.0',
-        'sessionAttributes': {
-            'new': False,
-            'sessionId': session_id
-        },
-        'response': {
-            'shouldEndSession': False,
-            'outputSpeech': {
-                'type': 'PlainText',
-                'text': 'Dummy'},
-            'card': {
-                'type': 'Simple',
-                'content': 'Dummy'
-            }
+        request_dict = {
+            'request_body': request_body,
+            'signature_chain_url': signature_chain_url,
+            'signature': signature,
+            'alexa_request': alexa_request
         }
-    }
 
-    req_type_response_map = {
-        'LaunchRequest': 'Welcome to DeepPavlov Alexa wrapper!',
-        'IntentRequest': 'Here is my answer!',
-        'SessionEndedRequest': 'See ya!'
-    }
+        bot.input_queue.put(request_dict)
+        response: dict = bot.output_queue.get()
+        response_code = 400 if 'error' in response.keys() else 200
 
-    response = response_template
-    response['response']['outputSpeech']['text'] = req_type_response_map[req_type]
-    response['response']['card']['content'] = req_type_response_map[req_type]
+        return jsonify(response), response_code
 
-    return jsonify(response), 200
-
-
-def main():
-    app.run(host=HOST, port=PORT)
-
-
-if __name__ == '__main__':
-    main()
+    app.run(host=host, port=port, threaded=True)

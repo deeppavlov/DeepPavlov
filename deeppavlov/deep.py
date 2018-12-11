@@ -26,6 +26,7 @@ from utils.alice import start_alice_server
 from utils.telegram_utils.telegram_ui import interact_model_by_telegram
 from utils.server_utils.server import start_model_server
 from utils.ms_bot_framework_utils.server import run_ms_bf_default_agent
+from utils.alexa.server import run_alexa_default_agent
 from utils.pip_wrapper import install_from_config
 
 
@@ -35,7 +36,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
                     choices={'train', 'evaluate', 'interact', 'predict', 'interactbot', 'interactmsbot',
-                             'riseapi', 'download', 'install', 'crossval'})
+                             'alexa', 'riseapi', 'download', 'install', 'crossval'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 
 parser.add_argument("-e", "--start-epoch-num", dest="start_epoch_num", default=0, help="Start epoch number", type=int)
@@ -91,6 +92,10 @@ def main():
         run_ms_bf_default_agent(model_config=pipeline_config_path,
                                 app_id=ms_id,
                                 app_secret=ms_secret,
+                                multi_instance=multi_instance,
+                                stateful=stateful)
+    elif args.mode == 'alexa':
+        run_alexa_default_agent(model_config=pipeline_config_path,
                                 multi_instance=multi_instance,
                                 stateful=stateful)
     elif args.mode == 'riseapi':

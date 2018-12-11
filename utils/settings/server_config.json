@@ -1,7 +1,7 @@
 {
   "common_defaults": {
     "host": "0.0.0.0",
-    "port": 5000,
+    "port": 7050,
     "model_endpoint": "/model",
     "model_args_names": ["context"],
     "https": false,
@@ -18,6 +18,13 @@
     "conversation_lifetime": 3600,
     "auth_app_id": "",
     "auth_app_secret": ""
+  },
+  "alexa_defaults": {
+    "intent_name": "AskDeepPavlov",
+    "slot_name": "raw_input",
+    "start_message": "Welcome to DeepPavlov Alexa wrapper!",
+    "unsupported_message": "Sorry, DeepPavlov can't understand it.",
+    "conversation_lifetime": 3600
   },
   "model_defaults": {
     "DstcSlotFillingNetwork": {
