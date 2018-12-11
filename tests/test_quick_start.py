@@ -144,7 +144,9 @@ PARAMS = {
                 ("ranking/ranking_ubuntu_v2_mt_word2vec_dam.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
                 ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
                 ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json", "ranking", ('IP',)):
-                    [ONE_ARGUMENT_INFER_CHECK]
+                    [(' & & & & & & & & bonhoeffer  whar drives do you want to mount what &  i have an ext3 usb drive  '
+                      '& look with fdisk -l & hello there & fdisk is all you need',
+                      '[0.9728276 0.1618539 0.9873016]')]
     },
     "doc_retrieval": {
         ("doc_retrieval/en_ranker_tfidf_wiki_test.json", "doc_retrieval", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
