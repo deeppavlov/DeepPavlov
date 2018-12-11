@@ -16,11 +16,12 @@ class Bot(Thread):
     def __init__(self, agent_generator: callable, config: dict, input_queue: Queue, output_queue: Queue):
         super(Bot, self).__init__()
         self.config = config
-
         self.conversations = {}
-        self.valid_certificates = {}
         self.input_queue = input_queue
         self.output_queue = output_queue
+
+        # key - signature chain url, value - UTC timestamp of signature chain url certificate validation
+        self.valid_certificates = {}
 
         self.agent = None
         self.agent_generator = agent_generator
@@ -64,13 +65,24 @@ class Bot(Thread):
                 del self.valid_certificates[valid_cert_url]
                 log.info(f'Validation period of {valid_cert_url} certificate expired')
 
+    def _verify_cert(self, signature_chain_url: str, signature: str, request_body: bytes) -> bool:
+        if signature_chain_url not in self.valid_certificates.keys():
+            if verify_cert(signature_chain_url, signature, request_body):
+                self.valid_certificates[signature_chain_url] = datetime.utcnow()
+                log.info(f'Certificate {signature_chain_url} validated')
+                return True
+            else:
+                return False
+        else:
+            return True
+
     def _handle_request(self, request: dict) -> dict:
         request_body: bytes = request['request_body']
         signature_chain_url: str = request['signature_chain_url']
         signature: str = request['signature']
         alexa_request: dict = request['alexa_request']
 
-        if not verify_cert(signature_chain_url, signature, request_body):
+        if not self._verify_cert(signature_chain_url, signature, request_body):
             return {'error': 'failed certificate/signature check'}
 
         timestamp_str = alexa_request['request']['timestamp']
@@ -81,7 +93,6 @@ class Bot(Thread):
         if abs(delta.seconds) > REQUEST_TIMESTAMP_TOLERANCE_SECS:
             return {'error': 'failed request timestamp check'}
 
-        # request_type = alexa_request['request']['type']
         conversation_key = alexa_request['session']['user']['userId']
 
         if conversation_key not in self.conversations.keys():
