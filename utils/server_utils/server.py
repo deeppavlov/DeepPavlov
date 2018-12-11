@@ -100,12 +100,12 @@ def interact(model: Chainer, params_names: List[str]) -> Tuple[Response, int]:
     return jsonify(result), 200
 
 
-def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None):
+def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, port=None):
     server_config_path = get_settings_path() / SERVER_CONFIG_FILENAME
     server_params = get_server_params(server_config_path, model_config)
 
     host = server_params['host']
-    port = server_params['port']
+    port = port or server_params['port']
     model_endpoint = server_params['model_endpoint']
     model_args_names = server_params['model_args_names']
 

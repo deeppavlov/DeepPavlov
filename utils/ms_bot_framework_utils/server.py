@@ -1,6 +1,6 @@
 from pathlib import Path
 from queue import Queue
-from typing import Union
+from typing import Union, Optional
 
 from flask import Flask, request, jsonify, redirect
 from flasgger import Swagger
@@ -31,24 +31,24 @@ CORS(app)
 
 
 def run_ms_bf_default_agent(model_config: Union[str, Path, dict], app_id: str, app_secret: str,
-                            multi_instance: bool = False, stateful: bool = False):
+                            multi_instance: bool = False, stateful: bool = False, port: Optional[int] = None):
     def get_default_agent():
         model = build_model(model_config)
         skill = DefaultStatelessSkill(model)
         agent = DefaultAgent([skill], skills_processor=DefaultRichContentWrapper())
         return agent
 
-    run_ms_bot_framework_server(get_default_agent, app_id, app_secret, multi_instance, stateful)
+    run_ms_bot_framework_server(get_default_agent, app_id, app_secret, multi_instance, stateful, port=port)
 
 
 def run_ms_bot_framework_server(agent_generator: callable, app_id: str, app_secret: str,
-                                multi_instance: bool = False, stateful: bool = False):
+                                multi_instance: bool = False, stateful: bool = False, port: Optional[int] = None):
 
     server_config_path = Path(get_settings_path(), SERVER_CONFIG_FILENAME).resolve()
     server_params = read_json(server_config_path)
 
     host = server_params['common_defaults']['host']
-    port = server_params['common_defaults']['port']
+    port = port or server_params['common_defaults']['port']
 
     ms_bf_server_params = server_params['ms_bot_framework_defaults']
 

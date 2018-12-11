@@ -58,6 +58,8 @@ parser.add_argument("--https", action="store_true", help="run model in https mod
 parser.add_argument("--key", default=None, help="ssl key", type=str)
 parser.add_argument("--cert", default=None, help="ssl certificate", type=str)
 
+parser.add_argument("-p", "--port", default=None, help="api port", type=str)
+
 parser.add_argument("--api-mode", help="rest api mode: 'basic' with batches or 'alice' for  Yandex.Dialogs format",
                     type=str, default='basic', choices={'basic', 'alice'})
 
@@ -92,16 +94,17 @@ def main():
                                 app_id=ms_id,
                                 app_secret=ms_secret,
                                 multi_instance=multi_instance,
-                                stateful=stateful)
+                                stateful=stateful,
+                                port=args.port)
     elif args.mode == 'riseapi':
         alice = args.api_mode == 'alice'
         https = args.https
         ssl_key = args.key
         ssl_cert = args.cert
         if alice:
-            start_alice_server(pipeline_config_path, https, ssl_key, ssl_cert)
+            start_alice_server(pipeline_config_path, https, ssl_key, ssl_cert, port=args.port)
         else:
-            start_model_server(pipeline_config_path, https, ssl_key, ssl_cert)
+            start_model_server(pipeline_config_path, https, ssl_key, ssl_cert, port=args.port)
     elif args.mode == 'predict':
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
     elif args.mode == 'install':
