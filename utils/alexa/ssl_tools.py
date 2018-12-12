@@ -15,8 +15,7 @@ log = get_logger(__name__)
 
 
 def verify_sc_url(url: str) -> bool:
-    """
-    Verify signature certificate URL against Amazon Alexa requirements.
+    """Verify signature certificate URL against Amazon Alexa requirements.
 
     Each call of Agent passes incoming utterances batch through skills filter,
     agent skills, skills processor. Batch of dialog IDs can be provided, in
@@ -48,8 +47,7 @@ def verify_sc_url(url: str) -> bool:
 
 
 def extract_certs(certs_txt: str) -> List[crypto.X509]:
-    """
-    Extracts pycrypto X509 objects from SSL certificates chain string.
+    """Extracts pycrypto X509 objects from SSL certificates chain string.
 
     Args:
         certs_txt: SSL certificates chain string.
@@ -64,8 +62,7 @@ def extract_certs(certs_txt: str) -> List[crypto.X509]:
 
 
 def verify_sans(amazon_cert: crypto.X509) -> bool:
-    """
-    Verifies Subject Alternative Names (SANs) for Amazon certificate.
+    """Verifies Subject Alternative Names (SANs) for Amazon certificate.
 
     Args:
         amazon_cert: Pycrypto X509 Amazon certificate.
@@ -87,8 +84,7 @@ def verify_sans(amazon_cert: crypto.X509) -> bool:
 
 
 def verify_certs_chain(certs_chain: List[crypto.X509], amazon_cert: crypto.X509) -> bool:
-    """
-    Verifies if Amazon and additional certificates creates chain of trust to a root CA.
+    """Verifies if Amazon and additional certificates creates chain of trust to a root CA.
 
     Args:
         certs_chain: List of pycrypto X509 intermediate certificates from signature chain URL.
@@ -121,8 +117,7 @@ def verify_certs_chain(certs_chain: List[crypto.X509], amazon_cert: crypto.X509)
 
 
 def verify_signature(amazon_cert: crypto.X509, signature: str, request_body: bytes) -> bool:
-    """
-    Verifies Alexa request signature.
+    """Verifies Alexa request signature.
 
     Args:
         amazon_cert: Pycrypto X509 Amazon certificate.
@@ -143,8 +138,7 @@ def verify_signature(amazon_cert: crypto.X509, signature: str, request_body: byt
 
 
 def verify_cert(signature_chain_url: str, signature: str, request_body: bytes) -> bool:
-    """
-    Conducts series of Alexa request verifications against Amazon Alexa requirements.
+    """Conducts series of Alexa request verifications against Amazon Alexa requirements.
 
     Args:
         signature_chain_url: Signature certificate URL from SignatureCertChainUrl HTTP header.
