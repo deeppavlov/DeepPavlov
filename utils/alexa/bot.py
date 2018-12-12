@@ -2,87 +2,150 @@ import threading
 from datetime import timedelta, datetime
 from queue import Queue
 from threading import Thread
+from typing import Optional, Dict
+from collections import namedtuple
+
+from OpenSSL.crypto import X509
 
 from utils.alexa.conversation import Conversation
+from utils.alexa.ssl_tools import verify_cert, verify_signature
 from deeppavlov.core.common.log import get_logger
-from utils.alexa.ssl_tools import verify_cert
+from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 
 REQUEST_TIMESTAMP_TOLERANCE_SECS = 150
+REFRESH_VALID_CERTS_PERIOD_SECS = 120
 
 log = get_logger(__name__)
 
+ValidatedCert = namedtuple('ValidatedCert', ['cert', 'expiration_timestamp'])
+
 
 class Bot(Thread):
+    """Contains agent(s), conversations, validates Alexa requests and routes them to conversations.
+
+    Args:
+        agent_generator: Callback which generates DefaultAgent instance with alexa skill.
+        config: Alexa skill configuration settings.
+        input_queue: Queue for incoming requests from Alexa.
+        output_queue: Queue for outcoming responses to Alexa.
+
+    Attributes:
+        config: Alexa skill configuration settings.
+        conversations: Dict with current conversations, key - Alexa user ID, value - Conversation object.
+        input_queue: Queue for incoming requests from Alexa.
+        output_queue: Queue for outcoming responses to Alexa.
+        valid_certificates: Dict where key - signature chain url, value - ValidatedCert instance.
+        agent: Alexa skill agent if not multi-instance mode.
+        agent_generator: Callback which generates DefaultAgent instance with alexa skill.
+        timer: Timer which triggers periodical certificates with expired validation cleanup.
+    """
     def __init__(self, agent_generator: callable, config: dict, input_queue: Queue, output_queue: Queue):
         super(Bot, self).__init__()
         self.config = config
-        self.conversations = {}
+        self.conversations: Dict[str, Conversation] = {}
         self.input_queue = input_queue
         self.output_queue = output_queue
 
-        # key - signature chain url, value - UTC timestamp of signature chain url certificate validation
-        self.valid_certificates = {}
+        self.valid_certificates: Dict[str, ValidatedCert] = {}
 
-        self.agent = None
+        self.agent: Optional[DefaultAgent] = None
         self.agent_generator = agent_generator
 
         if not self.config['multi_instance']:
             self.agent = self._init_agent()
             log.info('New bot instance level agent initiated')
 
-        amazon_cert_lifetime: timedelta = self.config['amazon_cert_lifetime']
-        amazon_cert_lifetime: int = int(amazon_cert_lifetime.total_seconds())
-
-        self.timer = threading.Timer(amazon_cert_lifetime, self._refresh_valid_certs)
+        self.timer = threading.Timer(REFRESH_VALID_CERTS_PERIOD_SECS, self._refresh_valid_certs)
         self.timer.start()
 
-    def run(self):
+    def run(self) -> None:
+        """Thread run method implementation."""
         while True:
             request = self.input_queue.get()
             response = self._handle_request(request)
             self.output_queue.put(response)
 
-    def del_conversation(self, conversation_key: str):
-        del self.conversations[conversation_key]
-        log.info(f'Deleted conversation, key: {conversation_key}')
+    def del_conversation(self, conversation_key: str) -> None:
+        """Deletes Conversation instance.
+
+        Args:
+            conversation_key: Conversation key.
+        """
+        if conversation_key in self.conversations.keys():
+            del self.conversations[conversation_key]
+            log.info(f'Deleted conversation, key: {conversation_key}')
 
     def _init_agent(self):
+        """Initiates Alexa skill agent from agent generator"""
         # TODO: Decide about multi-instance mode necessity.
         # If model multi-instancing is still necessary - refactor and remove
         agent = self.agent_generator()
         return agent
 
     def _refresh_valid_certs(self):
-        amazon_cert_lifetime: timedelta = self.config['amazon_cert_lifetime']
-        amazon_cert_lifetime: int = int(amazon_cert_lifetime.total_seconds())
-
-        self.timer = threading.Timer(amazon_cert_lifetime, self._refresh_valid_certs)
+        """Conducts cleanup of periodical certificates with expired validation."""
+        self.timer = threading.Timer(REFRESH_VALID_CERTS_PERIOD_SECS, self._refresh_valid_certs)
         self.timer.start()
 
-        for valid_cert_url, cert_expiration_time in self.valid_certificates.items():
-            cert_expiration_time: datetime = cert_expiration_time
-            if datetime.utcnow() > cert_expiration_time:
-                del self.valid_certificates[valid_cert_url]
-                log.info(f'Validation period of {valid_cert_url} certificate expired')
+        expired_certificates = []
 
-    def _verify_cert(self, signature_chain_url: str, signature: str, request_body: bytes) -> bool:
+        for valid_cert_url, valid_cert in self.valid_certificates.items():
+            valid_cert: ValidatedCert = valid_cert
+            cert_expiration_time: datetime = valid_cert.expiration_timestamp
+            if datetime.utcnow() > cert_expiration_time:
+                expired_certificates.append(valid_cert_url)
+
+        for expired_cert_url in expired_certificates:
+            del self.valid_certificates[expired_cert_url]
+            log.info(f'Validation period of {expired_cert_url} certificate expired')
+
+    def _verify_request(self, signature_chain_url: str, signature: str, request_body: bytes) -> bool:
+        """Conducts series of Alexa request verifications against Amazon Alexa requirements.
+
+        Args:
+            signature_chain_url: Signature certificate URL from SignatureCertChainUrl HTTP header.
+            signature: Base64 decoded Alexa request signature from Signature HTTP header.
+            request_body: full HTTPS request body
+        Returns:
+            result: True if verification was successful, False if not.
+        """
         if signature_chain_url not in self.valid_certificates.keys():
-            if verify_cert(signature_chain_url, signature, request_body):
-                self.valid_certificates[signature_chain_url] = datetime.utcnow()
+            amazon_cert: X509 = verify_cert(signature_chain_url)
+            if amazon_cert:
+                amazon_cert_lifetime: timedelta = self.config['amazon_cert_lifetime']
+                expiration_timestamp = datetime.utcnow() + amazon_cert_lifetime
+                validated_cert = ValidatedCert(cert=amazon_cert, expiration_timestamp=expiration_timestamp)
+                self.valid_certificates[signature_chain_url] = validated_cert
                 log.info(f'Certificate {signature_chain_url} validated')
-                return True
             else:
+                log.error(f'Certificate {signature_chain_url} validation failed')
                 return False
         else:
-            return True
+            validated_cert: ValidatedCert = self.valid_certificates[signature_chain_url]
+            amazon_cert: X509 = validated_cert.cert
+
+        if verify_signature(amazon_cert, signature, request_body):
+            result = True
+        else:
+            log.error(f'Failed signature verification for request: {str(request_body)}')
+            result = False
+
+        return result
 
     def _handle_request(self, request: dict) -> dict:
+        """Processes Alexa requests from skill server and returns responses to Alexa.
+
+        Args:
+            request: Dict with Alexa request payload and metadata.
+        Returns:
+            result: Alexa formatted or error response.
+        """
         request_body: bytes = request['request_body']
         signature_chain_url: str = request['signature_chain_url']
         signature: str = request['signature']
         alexa_request: dict = request['alexa_request']
 
-        if not self._verify_cert(signature_chain_url, signature, request_body):
+        if not self._verify_request(signature_chain_url, signature, request_body):
             return {'error': 'failed certificate/signature check'}
 
         timestamp_str = alexa_request['request']['timestamp']

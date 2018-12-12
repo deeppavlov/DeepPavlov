@@ -1,7 +1,7 @@
 import re
 import base64
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 from urllib.parse import urlsplit
 
 import requests
@@ -137,15 +137,13 @@ def verify_signature(amazon_cert: crypto.X509, signature: str, request_body: byt
     return result
 
 
-def verify_cert(signature_chain_url: str, signature: str, request_body: bytes) -> bool:
-    """Conducts series of Alexa request verifications against Amazon Alexa requirements.
+def verify_cert(signature_chain_url: str) -> Optional[crypto.X509]:
+    """Conducts series of Alexa SSL certificate verifications against Amazon Alexa requirements.
 
     Args:
         signature_chain_url: Signature certificate URL from SignatureCertChainUrl HTTP header.
-        signature: Base64 decoded Alexa request signature from Signature HTTP header.
-        request_body: full HTTPS request body
     Returns:
-        result: True if verification was successful, False if not.
+        result: Amazon certificate if verification was successful, None if not.
     """
     certs_chain_get = requests.get(signature_chain_url)
     certs_chain_txt = certs_chain_get.text
@@ -173,12 +171,6 @@ def verify_cert(signature_chain_url: str, signature: str, request_body: bytes) -
     if not chain_verification:
         log.error(f'Certificates chain verification for ({signature_chain_url}) certificate failed')
 
-    # verify signature
-    signature_verification = verify_signature(amazon_cert, signature, request_body)
-    if not signature_verification:
-        log.error(f'Signature verification for ({signature_chain_url}) certificate failed')
+    result = (sc_url_verification and expired_verification and sans_verification and chain_verification)
 
-    result = (sc_url_verification and expired_verification and sans_verification
-              and chain_verification and signature_verification)
-
-    return result
+    return amazon_cert if result else None
