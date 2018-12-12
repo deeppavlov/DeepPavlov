@@ -6,14 +6,17 @@ DeepPavlov provides some tools to facilitate its usage (e.g. dialog logging, set
 1. Settings files access and management
 ---------------------------------------
 
-Most of DeepPavlov settings are located in settings files, which in turn are located in settings folder. Default settings folder location is ``utils/settings`` .
+Most of DeepPavlov settings are located in settings files, which in turn are located in a settings folder. Default settings folder location is ``utils/settings`` .
 
-You can get full path to settings folder with ``python -m deeppavlov.settings settings``. Also you can move it with with ``python -m deeppavlov.settings settings -p <new/configs/dir/path>`` (all your configuration settings will be preserved) or move it to default location (``utils/settings``) with ``python -m deeppavlov.settings settings -d`` (all your configuration settings will be RESET to default ones).
+You can override a settings directory path by setting the ``DP_SETTINGS_PATH`` environment variable. Missing files will be added automatically when running any deeppavlov script.
+
+You can get current full path to settings directory with ``python -m deeppavlov.settings``.
+To reset settings in the current settings directory one can use ``python -m deeppavlov.settings -d``.
 
 2. Dialog logging
 -----------------
 
-DeepPavlov supports logging of dialogs carried by Agent or ``riseapi`` instances. You can manage dialog logging by editing ``dialog_logger_config.json`` settings file in settings directory
+DeepPavlov supports logging of dialogs carried by Agent or ``riseapi`` instances. You can manage dialog logging by editing ``dialog_logger_config.json`` settings file in a settings directory.
 
 Following dialog logging settings are available:
 
@@ -22,3 +25,9 @@ Following dialog logging settings are available:
 3. **agent_name** (default: ``dp_agent``): sets subdirectory name for storing dialog logs;
 4. **logfile_max_size_kb** (default: ``10240``): sets logfile maximum size in kilobytes. If exceeded, new log file is created;
 5. **ensure_ascii** (default: ``false``): If ``true``, converts all non-ASCII symbols in logged content to Unicode code points.
+
+3. Environment variables
+------------------------
+
+- **DP_SETTINGS_PATH** — custom path to a directory that contains settings files. It's automatically populated with missing files when running any deeppavlov scripts.
+- **DP_SKIP_NLTK_DOWNLOAD** set to ``TRUE`` to prevent automatic downloading of **nltk** packages (``punkt``, ``stopwords``, ``perluniprops``, ``nonbreaking_prefixes``)
