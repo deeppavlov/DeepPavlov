@@ -112,7 +112,6 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
 
 def read_data_by_config(config: dict):
     """Read data by dataset_reader from specified config."""
-    set_deeppavlov_root(config)
     dataset_config = config.get('dataset', None)
 
     if dataset_config:

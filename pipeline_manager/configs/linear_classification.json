@@ -1,15 +1,22 @@
 {
   "dataset_reader": {
-    "name": "basic_classification_reader",
-    "data_path": "rb_0927",
-    "x": "Text",
-    "y": "theme",
-    "train": "train_final.csv",
-    "valid": "valid_final.csv",
-    "test": "test_final.csv"
+    "class_name": "basic_classification_reader",
+    "x": "text",
+    "y": "intents",
+    "data_path": "{DOWNLOADS_PATH}/snips"
   },
   "dataset_iterator": {
-    "name": "basic_classification_iterator"
+    "class_name": "basic_classification_iterator",
+    "seed": 42,
+    "field_to_split": "train",
+    "split_fields": [
+      "train",
+      "valid"
+    ],
+    "split_proportions": [
+      0.9,
+      0.1
+    ]
   },
   "chainer": {
     "in": ["x"],
@@ -20,12 +27,11 @@
           "in": ["y"],
           "out": ["y_ids"],
           "fit_on": ["y"],
-          "name": "simple_vocab",
+          "class_name": "simple_vocab",
           "component_name": "Vocab of classes",
           "id": "classes_vocab",
           "level": "token",
-          "save_path": "vocabs/sber_classes.dict",
-          "load_path": "vocabs/sber_classes.dict"
+          "save_path": "{DOWNLOADS_PATH}/vocabs/sber_classes.dict"
         }
       ],
       [
@@ -33,11 +39,11 @@
           "in": ["x"],
           "out": ["x_vec"],
           "fit_on": ["x"],
-          "name": "sklearn_component",
+          "class_name": "sklearn_component",
           "component_name": "tf-idf",
           "id": "tfidf_vec",
-          "save_path": "vocabs/tfidf_sber.pkl",
-          "load_path": "vocabs/tfidf_sber.pkl",
+          "save_path": "{DOWNLOADS_PATH}/vocabs/tfidf_sber.pkl",
+          "load_path": "{DOWNLOADS_PATH}/vocabs/tfidf_sber.pkl",
           "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
           "infer_method": "transform",
           "lowercase": true,
@@ -50,11 +56,11 @@
           "in": ["x"],
           "out": ["x_vec"],
           "fit_on": ["x"],
-          "name": "sklearn_component",
+          "class_name": "sklearn_component",
           "component_name": "count",
           "id": "count",
-          "save_path": "vocabs/count.pkl",
-          "load_path": "vocabs/count.pkl",
+          "save_path": "{DOWNLOADS_PATH}/vocabs/count.pkl",
+          "load_path": "{DOWNLOADS_PATH}/vocabs/count.pkl",
           "model_class": "sklearn.feature_extraction.text:CountVectorizer",
           "infer_method": "transform",
           "lowercase": true,
@@ -69,11 +75,11 @@
           "in": ["x_vec"],
           "out": ["y_pred_probas"],
           "fit_on": ["x_vec", "y_ids"],
-          "name": "sklearn_component",
+          "class_name": "sklearn_component",
           "component_name": "Log Reg",
           "main": true,
-          "save_path": "linm/checkpoints/logreg.pkl",
-          "load_path": "linm/checkpoints/logreg.pkl",
+          "save_path": "{DOWNLOADS_PATH}/linm/checkpoints/logreg.pkl",
+          "load_path": "{DOWNLOADS_PATH}/linm/checkpoints/logreg.pkl",
           "model_class": "sklearn.linear_model:LogisticRegression",
           "infer_method": "predict_proba",
           "warm_start": false,
@@ -88,11 +94,11 @@
           "in": ["x_vec"],
           "out": ["y_pred_probas"],
           "fit_on": ["x_vec", "y_ids"],
-          "name": "sklearn_component",
+          "class_name": "sklearn_component",
           "component_name": "Log Reg",
           "main": true,
-          "save_path": "linm/checkpoints/logreg.pkl",
-          "load_path": "linm/checkpoints/logreg.pkl",
+          "save_path": "{DOWNLOADS_PATH}/linm/checkpoints/logreg.pkl",
+          "load_path": "{DOWNLOADS_PATH}/linm/checkpoints/logreg.pkl",
           "model_class": "sklearn.linear_model:LogisticRegression",
           "infer_method": "predict_proba",
           "warm_start": false,
@@ -108,7 +114,7 @@
         {
           "in": ["y_pred_probas"],
           "out": ["y_pred_ids"],
-          "name": "proba2labels",
+          "class_name": "proba2labels",
           "component_name": "prob2ind",
           "max_proba": true
         }
@@ -141,11 +147,11 @@
     ],
     "show_examples": false,
     "validate_best": true,
-    "test_best": true
+    "test_best": false
   },
   "enumerate": {
     "exp_name": "lin_clf",
-    "root": "./download/experiments/",
+    "root": "{DOWNLOADS_PATH}/experiments/",
     "do_test": false,
     "search_type": "random",
     "sample_num": 1,
@@ -156,5 +162,18 @@
     "use_all_gpus": false,
     "use_multi_gpus": null,
     "gpu_memory_fraction": 1.0
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
+        "subdir": "{DOWNLOADS_PATH}/snips"
+      }
+    ]
   }
 }
