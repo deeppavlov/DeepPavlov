@@ -15,6 +15,19 @@ log = get_logger(__name__)
 
 
 def verify_sc_url(url: str) -> bool:
+    """
+    Verify signature certificate URL against Amazon Alexa requirements.
+
+    Each call of Agent passes incoming utterances batch through skills filter,
+    agent skills, skills processor. Batch of dialog IDs can be provided, in
+    other case utterances indexes in incoming batch are used as dialog IDs.
+
+    Args:
+        url: Signature certificate URL from SignatureCertChainUrl HTTP header.
+
+    Returns:
+        result: True if verification was successful, False if not.
+    """
     parsed = urlsplit(url)
 
     scheme: str = parsed.scheme
@@ -34,7 +47,16 @@ def verify_sc_url(url: str) -> bool:
     return result
 
 
-def extract_certs(certs_txt: str) -> list:
+def extract_certs(certs_txt: str) -> List[crypto.X509]:
+    """
+    Extracts pycrypto X509 objects from SSL certificates chain string.
+
+    Args:
+        certs_txt: SSL certificates chain string.
+
+    Returns:
+        result: List of pycrypto X509 objects.
+    """
     pattern = r'-----BEGIN CERTIFICATE-----.+?-----END CERTIFICATE-----'
     certs_txt = re.findall(pattern, certs_txt, flags=re.DOTALL)
     certs = [crypto.load_certificate(crypto.FILETYPE_PEM, cert_txt) for cert_txt in certs_txt]
@@ -42,6 +64,15 @@ def extract_certs(certs_txt: str) -> list:
 
 
 def verify_sans(amazon_cert: crypto.X509) -> bool:
+    """
+    Verifies Subject Alternative Names (SANs) for Amazon certificate.
+
+    Args:
+        amazon_cert: Pycrypto X509 Amazon certificate.
+
+    Returns:
+        result: True if verification was successful, False if not.
+    """
     cert_extentions = [amazon_cert.get_extension(i) for i in range(amazon_cert.get_extension_count())]
     subject_alt_names = ''
 
@@ -56,6 +87,16 @@ def verify_sans(amazon_cert: crypto.X509) -> bool:
 
 
 def verify_certs_chain(certs_chain: List[crypto.X509], amazon_cert: crypto.X509) -> bool:
+    """
+    Verifies if Amazon and additional certificates creates chain of trust to a root CA.
+
+    Args:
+        certs_chain: List of pycrypto X509 intermediate certificates from signature chain URL.
+        amazon_cert: Pycrypto X509 Amazon certificate.
+
+    Returns:
+        result: True if verification was successful, False if not.
+    """
     store = crypto.X509Store()
 
     for cert in certs_chain:
@@ -79,7 +120,17 @@ def verify_certs_chain(certs_chain: List[crypto.X509], amazon_cert: crypto.X509)
     return result
 
 
-def verify_signature(amazon_cert: crypto.X509, signature: str, request_body: bytes):
+def verify_signature(amazon_cert: crypto.X509, signature: str, request_body: bytes) -> bool:
+    """
+    Verifies Alexa request signature.
+
+    Args:
+        amazon_cert: Pycrypto X509 Amazon certificate.
+        signature: Base64 decoded Alexa request signature from Signature HTTP header.
+        request_body: full HTTPS request body
+    Returns:
+        result: True if verification was successful, False if not.
+    """
     signature = base64.b64decode(signature)
 
     try:
@@ -92,6 +143,16 @@ def verify_signature(amazon_cert: crypto.X509, signature: str, request_body: byt
 
 
 def verify_cert(signature_chain_url: str, signature: str, request_body: bytes) -> bool:
+    """
+    Conducts series of Alexa request verifications against Amazon Alexa requirements.
+
+    Args:
+        signature_chain_url: Signature certificate URL from SignatureCertChainUrl HTTP header.
+        signature: Base64 decoded Alexa request signature from Signature HTTP header.
+        request_body: full HTTPS request body
+    Returns:
+        result: True if verification was successful, False if not.
+    """
     certs_chain_get = requests.get(signature_chain_url)
     certs_chain_txt = certs_chain_get.text
     certs_chain = extract_certs(certs_chain_txt)
