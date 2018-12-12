@@ -1,22 +1,327 @@
 Pipeline Manager
 ================
 
+Introduction:
+-------------
+When conducting research, a situation may arise in which a series of experiments that are similar to each other are
+required. For example, you solve the problem of classifying intents, you have the opportunity to use a number of
+different embeddingings. Suppose some were trained on more data, while others were trained on data that belongs to the
+same domain as your dataset. You can not say exactly which embeddings will give a better score. As a result, you want
+to try to train the model with all embeddings, and then compare the results. Or you have a set of different neural
+architectures that solve the same problem, you want to know the quality of work of all models, and then compare with
+each other. Or maybe both. The :class:`~pipeline_manager.pipeline_manager.PipelineManager` is designed to automate
+experiments of this kind.
+
+|alt text| **Diagram 1.**
+
+The structure of the experiment and its parameters, for example, to save checkpoints for all experiments or only for
+the best, is described as a special json config, and is given to the :class:`~pipeline_manager.pipeline_manager.PipelineManager`
+class as an argument when it is initialized. Based on these data, and using the DeepPavlov library's functionality,
+the class automatically runs all the experiments described in the config, saves their description and results, and
+finally builds a table with xlsx resolution, in which the experiments are sorted in descending order by the target
+metric, and a plot with a histogram of results.
+
+|alt text2| **Plot 1.** Example of histogram with results.
+
+Experiments can be run both sequentially and in parallel. Including on video cards, in the event that you have several.
+Also, the :class:`~pipeline_manager.pipeline_manager.PipelineManager` class functionality allows for the selection of
+hyperparameters for individual models. “Random search” and “grid search” are available.
+
+Running a large number of experiments, especially with large neural models, may take a large amount of time.
+It would be very unpleasant if you lose a few hours (or even more) due to some kind of error somewhere in the middle
+of the process. To avoid this a special test was added to check the correctness of the joints of individual blocks in
+all pipelines, or another errors. During the test, all pipelines are trained on a small piece of the original dataset,
+if the test passed without errors, you can not worry about the experiment. A normal experiments is automatically
+started after test. The test starts, nothing else needs to be done, but it can also be turned off. In this case,
+the experiment will start immediately. Test supports multiprocessing.
+
+Usage
+-----
+First you would need to install additional requirements:
+
+.. code:: bash
+
+    python -m deeppavlov install <path_to_config>
+
+After you wrote your config file, you can run your experiment by running in terminal command:
+
+.. code:: bash
+
+    python -m deeppavlov enumerate <path_to_config> [-d]
+
+The ``-d`` parameter downloads
+
+   - data required to train your model (embeddings, etc.);
+   - a pretrained model if available (provided not for all configs).
+
+Or run :class:`~pipeline_manager.pipeline_manager.PipelineManager` in code:
+
+.. code:: python
+
+    from pipeline_manager.pipeline_manager import PipelineManager
+
+    pipeman = PipelineManager("path to your config file or config dict")
+    pipeman.run()
+
+Config description for Pipeline Manager:
+----------------------------------------
+Description of the structure of the experiments and the logic of the work of the
+:class:`~pipeline_manager.pipeline_manager.PipelineManager` class, is also described by the config file. Its main
+difference from the :doc:`default config <intro/config_description>` is that each element of the chainer can now be a list:
+
+|alt text3| **Diagram 2.** Conceptual example of :class:`~pipeline_manager.pipeline_manager.PipelineManager` config.
+
+Thus, in place of a component, there can now be a list of components for enumeration. And during the work of the
+:class:`~pipeline_manager.pipeline_manager.PipelineManager`, it will launch a full-fledged experiment with each of
+them separately.
+
+.. note::
+
+    **WARNING!:** All components listed in one list must accept the same data type and format as input and output it.
+    In other words, all components within the list should be compatible with their closest neighbors. Otherwise, an
+    error will occur.
+
+Parameters of the :class:`~pipeline_manager.pipeline_manager.PipelineManager` class  are defined in the config file
+under the key “enumerate”. Here is simplify example:
+
+.. code:: python
+
+    {
+        "dataset_reader": {...},
+        "dataset_iterator": {...},
+        "chainer": {
+            "in": ["x"],
+            "in_y": ["y"],
+            "pipe": [ ... ],
+            "out": ["pred_labels"]
+            },
+        "train": {...},
+        "metadata": {...},
+        "enumerate": {
+            "exp_name": "lin_clf",
+            "root": "./download/experiments/",
+            "do_test": false,
+            "search_type": "random",
+            "sample_num": 10,
+            "plot": false,
+            "save_best": true,
+            "multiprocessing": true,
+            "max_num_workers": 4,
+            "use_all_gpus": True,
+            "use_multi_gpus": null,
+            "gpu_memory_fraction": 1.0
+            }
+    }
+
+You can look at the full config file for Pipeline Manager here :config:`pipeline_manager/configs/neural_classification.json <neural_classification.json>`.
+
+With their help, the operating modes of the :class:`~pipeline_manager.pipeline_manager.PipelineManager`
+and other characteristics are adjusted. Consider them in the form of several groups united in meaning.
+
+The first group of parameters is, by and large, auxiliary and does not really affect the conduct of experiments:
+
+ - **target_metric:** str, The metric name on the basis of which the results will be sorted when the report is
+   generated. The parameter was added as when evaluating the quality of models in DeepPavlov several metrics can be
+   applied simultaneously.  The default value is None, in this case the target metric is taken the first name from
+   those names that are specified in the config file. If the specified metric is not contained in DeepPavlov will be
+   called error.
+
+ - **info:** dict with some additional information that you want to add to the log, the content of the dictionary
+   does not affect the algorithm and therefore can be arbitrary. The default value is None.
+
+Directories structure
+---------------------
+The second group of parameters defines the appearance of the folders tree:
+
+ - **root:** str, the root path where the report will be generated and saved checkpoints
+
+ - **date:** str, date of the experiment.
+
+ - **exp_name:** str, name of the experiment.
+
+ - **save_best:** boolean trigger, which determines whether to save all models or only best model
+
+ - **plot:** boolean trigger, which determines whether to draw a graph of results or not
+
+When you start the work of the :class:`~pipeline_manager.pipeline_manager.PipelineManager` in the path specified
+through the parameter **root**, the following structure is created:
+
+- {**root**}/
+    - **date**/
+        - **exp_name**/
+            - checkpoints/
+                if **save_best** is False:
+                    - "dataset_name"/
+                        - pipe_1/
+                            - config.json
+                            - out.txt
+                            - [others checkpoints files]
+                        - pipe_2/
+
+                        - ...
+
+                        - [common files to all pipelines (for example vocabs or tf-idf)]
+
+                Else:
+                    - "dataset_name"_best_pipe/
+                        - pipe_n/
+                            - config.json
+                            - out.txt
+                            - [others checkpoints files]
+                            - [common files to all pipelines (for example vocabs or tf-idf)]
 
 
-The :class:`~pipeline_manager.pipeline_manager.PipelineManager` implements the functions of automatic experiment
-management. The class accepts a config in the input in which the structure of the experiments is described, and
-additional parameters, which are class attributes. Based on this information, a list of deeppavlov configs is
-created. Experiments can be run sequentially or in parallel, both on video cards and on the processor.
-A special class is responsible for describing and logging experiments, their execution time and results.
-After passing all the experiments based on the logs, a small report is created in the form of a xlsx table,
-and histogram with metrics info. When you start the experiment, you can also search for optimal hyperparameters,
-"grid" and "random" search is available.
+            - images/  # creating if **plot** is True, in the end of algorithm
+                - "dataset_name".png
+            - **exp_name**.json
+            - Report_exp_name_date.xlsx  # creating in the end of algorithm
 
-Running a large number of experiments, especially with large neural models, may take a large amount of time, so a
-special test was added to check the correctness of the joints of individual blocks in all pipelines, or another
-errors. During the test, all pipelines are trained on a small piece of the original dataset, if the test passed
-without errors, you can not worry about the experiment, and then a normal experiments is automatically started.
-The test starts automatically, nothing else needs to be done, but it can also be turned off. In this case, the
-experiment will start immediately. Test supports multiprocessing.
+**Explanations:**
+ - The file “Report_exp_name_date.xlsx” is a summary table and is created only at the end of the algorithm, after the
+   completion of all experiments.
+ - The file **exp_name**.json is the log of the whole experiment, it contains a description of all the running
+   experiments, their results, the time of the experiment, etc. It is created at the start of the algorithm, and is
+   updated throughout the entire algorithm.
+ - “dataset_name” is the name of the folder in which the dataset is located, automatically parsed from the
+   dataset_reader parameters in the experiment config.
+ - The “checkpoints/” folder is created when the algorithm is launched, and is updated throughout its operation.
+ - The file “checkpoints/dataset_name/pipe_{x}/config.json” is the default DP configuration for the pipeline
+   “pipe_{x}” with all the necessary dependencies. So if you want to run the model trained in “pipe_{x}” to be
+   validated or inferenced, you do not need to write the config again, it will be enough to refer to this file.
+ - The file “checkpoints/dataset_name/pipe_{x}/out.txt” contains the contents of the std.err and std.out
+   streams received from the training “pipe_{x}”.
+ - At the moment, if the **save_best** parameter is True, then during the operation of the algorithm, the checkpoints
+   of all pipelines are saved in the “checkpoints/dataset_name/" folder, and only after all the pipelines are
+   completed, the best ones are calculated and all the others are deleted. In the near future it will be fixed.
 
-Also you can save checkpoints for all pipelines, or only the best.
+Test of experiments
+-------------------
+The following parameter should be considered separately:
+ - do_test: boolean trigger, which determines whether to run an experiment test on a small piece of data,  before
+   running a full-scale experiment.
+
+As mentioned earlier, this test runs all experiments on a very small piece of the original dataset, and performs
+everything except the construction of the final report. Including building a folder tree, as well as saving
+intermediate checkpoints, in the folder “~/checkpoints/tmp/”, after successfully passing the test, the folder is
+automatically deleted. If the test is not successful, the “~/checkpoints/tmp/” folder with all its contents
+remains for debugging. When you run the test again, all content from the past test will be deleted.
+
+Parallel mode
+--------------
+As mentioned earlier, the work of the :class:`~pipeline_manager.pipeline_manager.PipelineManager` supports
+multithreading, in the sense that the work of several pipelines can be run simultaneously on several video cards or
+processors. Therefore, we proceed to the group of parameters defining the multithreading format:
+
+ - **multiprocessing:** boolean trigger, determining the run mode of the experiment. The multiprocessing parameter is
+   naturally decisive, and if it is False, the values of the other parameters do not have the value anymore, all
+   pipelines will be executed sequentially.
+ - **max_num_workers_:** upper limit on the number of workers if experiment running in multiprocessing mode.
+ - **use_all_gpus:** boolean trigger, if True the :class:`~pipeline_manager.pipeline_manager.PipelineManager`
+   automatically considers all available to the user graphics cards (CUDA_VISIBLE_DEVICES is is taken into account).
+   And selects as available only those that meet the memory criterion. If the memory of a video card is occupied by
+   more than "X" percent, then the video card is considered inaccessible, and when the experiment is started, the
+   models will not start on it. For the value of the parameter "X" is responsible "memory_fraction" attribute.
+   Parameters "use_all_gpus" and "use_multi_gpus" can not be not None simultaneously.
+ - **use_multi_gpus:** None or List[ints], list with numbers of video cards available for use. All cards from the
+   list are checked for availability by memory criterion.If the memory of a video card is occupied by more than "X"
+   percent, then the video card is considered inaccessible, and when the experiment is started, the models will not
+   start on it. For the value of the parameter "X" is responsible "memory_fraction" attribute. If part of the video
+   cards are busy, then only the remaining cards from the presented list will be used. If all of the presented video
+   cards are busy, an error message will appear. If "use_multi_gpus" if not None, then "use_all_gpus" must be False.
+ - **memory_fraction:** the parameter determines the criterion of whether the gpu card is free or not.
+   If memory_fraction == 1.0 only those cards whose memory is completely free will be considered as available.
+   If memory_fraction == 0.5 cards with no more than half of the memory will be considered as available.
+
+As can be seen from the description of the **use_all_gpus** parameter, the
+:class:`~pipeline_manager.pipeline_manager.PipelineManager` class can automatically
+determine which nvidia video cards you have on your machine, determine which of the **memory_fraction** parameter
+which ones are free, and then scatter the pipelines on the free cards. It is important to understand that if you
+define the global variable CUDA_VISIBLE_DEVICES before starting the :class:`~pipeline_manager.pipeline_manager.PipelineManager`,
+then when determining free video cards it will only consider those cards that are defined in the variable, if it is not
+defined or is equal to an empty line, then the analysis will consider all video cards on the car. When you start
+training on a video card in sequential mode, all the pipeline will run on the first card from the list of available ones.
+
+.. note::
+
+    **WARNING!:** Remember that when learning neural networks on the CPU, by default tensorflow parallelizes tensor
+    calculations, so if you run several pipelines with neural networks training on the CPU in parallel mode, you will get
+    an error. Use video cards. Learning pipelines in parallel mode on the CPU is better suited for training estimators from
+    scikit-learn. In our library there is such an opportunity.
+
+Hyperparameter search
+---------------------
+We can say that when you run an experiment with :class:`~pipeline_manager.pipeline_manager.PipelineManager`, we perform
+greed search on the components entered into the config. However, in addition to this, :class:`~pipeline_manager.pipeline_manager.PipelineManager`
+also allows hyperparameter search. The last group of parameters relates to its regulation:
+
+ - **search_type:** str, parameter defining the type of hyperparams search, can be "grid" or "random".
+ - **sample_num:** int, determines the number of generated pipelines, applies only if parameter search_type is
+   "random", default value is 10.
+
+In order to specify how and which components have which parameters to iterate, it is required in the config when
+describing the class parameters of a component, instead of an attribute value, specify a dictionary describing the
+type of search, for example:
+
+.. code:: python
+
+    {
+        "chainer": {
+            "in": ["x"],
+            "in_y": ["y"],
+            "pipe": [
+                [...],
+                ... ,
+                [
+                    {
+                     "in": ["x_vec"],
+                     "out": ["y_pred_probas"],
+                     "fit_on": ["x_vec", "y_ids"],
+                     "class_name": "sklearn_component",
+                     "C": {"random_range": [0.01, 2.0]},
+                     "fit_intercept": {"random_bool": true},
+                     "class_weight": {"random_choice": [null, "balanced"]},
+                     "solver": {"random_choice": ["lbfgs", "newton-cg"]}
+                    }
+                ]
+            ],
+            "out": ["y_pred_labels"]
+        }
+    }
+
+As you can see from the example, in the dictionaries with the description of the search, there are different keys
+[**random_bool**, **random_choice**, **random_range**], and as you may have guessed, they determine the effect of
+sampling.
+
+In the case of **random_bool**, the attribute value is randomly taken as True or False (and no matter what the value
+of this key is). In the case of **random_choice**, one of the elements of the presented list is randomly selected.
+And with **random_range** a number from the specified range is sampled randomly.
+
+For the latter case, additional parameters **discrete**, **scale** are provided. The first one takes boolean values,
+if it is True, then only integers will be sampled from the specified range, the default value is False. The second
+one takes values from [None, “log”], if the parameter is “log”, then sampling will take place on a logarithmic scale,
+the default value is None. Thus, a dictionary can be defined:
+
+.. code:: python
+
+    ...
+    "C": {"random_range": [1, 1000], "discrete": true, "scale": "log"},
+    ...
+
+And then whole numbers will be sampled from the range [1, 1000] on a logarithmic scale.
+
+In the case of greed_search, only the **grid_search** key is provided with no additional parameters.
+
+To understand how different sets of hyperparameters are sampled against the background of component lookup, consider
+the case from the introduction (shown in the picture), we want to try two models and three different embeds,
+resulting in six different pipelines. If in one of these pipelines a component is encountered with the search of
+parameters, then hyperparameter search will start. If we add a parameter enumeration to the description of one of the
+models and use random_search using the default value of **sample_num**, we will end up with 33 pipelines, not 6.
+
+There are two sheets in the summary table for this case of these, a sorted table with all pipelines and their results,
+in this case 33, and another sorted table with only 6 pipelines, where the best values ​​were taken as pipelines for
+which parameters were selected.
+
+
+.. |alt text| image:: ../_static/pipeline_manager/PM_basic.png
+.. |alt text2| image:: ../_static/pipeline_manager/metrics_plot.png
+.. |alt text3| image:: ../_static/pipeline_manager/pm_config.png

@@ -1,26 +1,30 @@
 Configuration files
 ===================
+A skill that is part of a dialog agent is an NLP pipeline, the task of which is to perform a certain function.
+For example, NER or Intent Classification, etc. Within the DeepPavlov library, the structure of the NLP pipelines is
+described as a dictionary in json format, and is saved as a config file.
 
-An NLP pipeline config is a JSON file that contains one required element ``chainer``:
+The configs includes a description of working with dataset, pipeline preprocessing, description of the model,
+training parameters and metrics. Using these configs, the library's functionality can teach a skill, run it in infer
+mode, or raise it as service using restapi functional.
 
-.. code:: python
+Consider the structure of the config on the intents classification task. We have a dataset, model and we want to train it.
 
-    {
-      "chainer": {
-        "in": ["x"],
-        "in_y": ["y"],
-        "pipe": [
-          ...
-        ],
-        "out": ["y_predicted"]
-      }
-    }
+Simplified it can be represented as:
+
+|alt text| **Diagram 1.**
+
+In the figure you can see that the configuration can be divided into several parts. The first part is the description
+of working with data, namely the description of which classes should be used for dataset_reader and dataset_iterator.
+The description of the chainer, train parameters, and metadata.
 
 :class:`~deeppavlov.core.common.chainer.Chainer` is a core concept of DeepPavlov library: chainer builds a pipeline from
-heterogeneous components (Rule-Based/ML/DL) and allows to train or infer from pipeline as a whole. Each component in the
-pipeline specifies its inputs and outputs as arrays of names, for example: ``"in": ["tokens", "features"]`` and
-``"out": ["token_embeddings", "features_embeddings"]`` and you can chain outputs of one components with inputs of other
-components:
+heterogeneous components (Rule-Based/ML/DL) and allows to train or infer from pipeline as a whole.
+And ``Chainer`` is the only required element that must contain a config. For example, if you want to interact with an
+already trained pipeline, rather than train it. Then you no longer need the “dataset_reader”, “dataset_iterator” and
+“train” keys in config. Each component in the pipeline specifies its inputs and outputs as arrays of names, for example:
+"in": ["tokens", "features"] and"out": ["token_embeddings", "features_embeddings"] and you can chain outputs of one
+components with inputs of other components:
 
 .. code:: python
 
@@ -34,6 +38,14 @@ components:
       "in": ["x_lower"],
       "out": ["x_tokens"]
     },
+
+Block with key “train” describing learning parameters, in which such parameters as the number of epochs, the size of the
+batch, etc.
+
+And the “metadata” block describing the additional parameters that do not affect the work of the experiment are
+specified. In the last block, for example, the necessary dependencies that need to be installed before starting the
+experiment, links to download data, description of internal variables, etc. can be described.
+
 
 Each :class:`~deeppavlov.core.models.component.Component` in the pipeline must implement method :meth:`__call__` and has
 ``class_name`` parameter, which is its registered codename, or full name of any python class in the form of
@@ -263,3 +275,6 @@ A particular format of returned data should be defined in :meth:`__call__`.
 
 Inference is triggered by :func:`~deeppavlov.core.commands.infer.interact_model` function. There is no need in a
 separate JSON for inference.
+
+
+.. |alt text| image:: ../_static/base_config.png

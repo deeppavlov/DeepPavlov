@@ -80,7 +80,7 @@ class PipelineManager:
         exp_name: str, name of the experiment.
         date: str, date of the experiment.
         info: dict with some additional information that you want to add to the log, the content of the dictionary
-              does not affect the algorithm
+              does not affect the algorithm and therefore can be arbitrary. The default value is None.
         root: root path, the root path where the report will be generated and saved checkpoints
         plot: boolean trigger, which determines whether to draw a graph of results or not
         save_best: boolean trigger, which determines whether to save all models or only best model
@@ -89,9 +89,10 @@ class PipelineManager:
         search_type: string parameter defining the type of hyperparams search, can be "grid" or "random"
         sample_num: determines the number of generated pipelines, if parameter search_type == "random"
         target_metric: The metric name on the basis of which the results will be sorted when the report
-                       is generated. The default value is None, in this case the target metric is taken the
-                       first name from those names that are specified in the config file. If the specified metric
-                       is not contained in DeepPavlov will be called error.
+                       is generated. The parameter was added as when evaluating the quality of models in DeepPavlov
+                       several metrics can be applied simultaneously. The default value is None, in this case the target
+                       metric is taken the first name from those names that are specified in the config file.
+                       If the specified metric is not contained in DeepPavlov will be called error.
         multiprocessing: boolean trigger, determining the run mode of the experiment.
         max_num_workers_: upper limit on the number of workers if experiment running in multiprocessing mode
         use_all_gpus: boolean trigger, if True the pipeline manager automatically considers all available to the user
@@ -176,8 +177,7 @@ class PipelineManager:
         if self.use_multi_gpus and self.use_all_gpus:
             raise ValueError("Parameters 'use_all_gpus' and 'use_multi_gpus' can not simultaneously be not None.")
 
-        if self.multiprocessing:
-            self.prepare_multiprocess()
+        self.prepare_multiprocess()
 
         # write time of experiment start
         self.start_exp = time.time()
