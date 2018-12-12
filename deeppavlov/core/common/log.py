@@ -18,29 +18,21 @@ import logging.config
 import sys
 from pathlib import Path
 
+from .paths import get_settings_path
+
 LOG_CONFIG_FILENAME = 'log_config.json'
 TRACEBACK_LOGGER_ERRORS = True
 
-root_path = Path(__file__).resolve().parent.parent.parent.parent
+root_path = Path(__file__).resolve().parents[3]
 
 logging.getLogger('matplotlib').setLevel(logging.WARNING)
 
 
-def get_settings_path() -> Path:
-    with open(root_path / 'deeppavlov/paths.json', encoding='utf8') as fin:
-        paths = json.load(fin)
-
-    settings_path = Path(paths['settings_path']).resolve() if paths['settings_path'][0] == '/' \
-        else root_path / paths['settings_path']
-
-    return settings_path
-
-
 def get_logger(logger_name):
     try:
-        log_config_path = Path(get_settings_path(), LOG_CONFIG_FILENAME).resolve()
+        log_config_path = get_settings_path() / LOG_CONFIG_FILENAME
 
-        with open(log_config_path, encoding='utf8') as log_config_json:
+        with log_config_path.open(encoding='utf8') as log_config_json:
             log_config = json.load(log_config_json)
 
         configured_loggers = [log_config.get('root', {})] + log_config.get('loggers', [])

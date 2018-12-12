@@ -125,12 +125,16 @@ html_context = {
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
+
 htmlhelp_basename = f'{project}-Docs'
 
 
 # -- Options for LaTeX output ------------------------------------------------
 
+latex_engine = 'xelatex'
+
 latex_elements = {
+
     # The paper size ('letterpaper' or 'a4paper').
     #
     # 'papersize': 'letterpaper',
@@ -146,6 +150,11 @@ latex_elements = {
     # Latex figure (float) alignment
     #
     # 'figure_align': 'htbp',
+
+    'extraclassoptions': 'openany,oneside',
+
+    'fncychap': r'\usepackage[Sonny]{fncychap}'
+
 }
 
 # Grouping the document tree into LaTeX files. List of tuples

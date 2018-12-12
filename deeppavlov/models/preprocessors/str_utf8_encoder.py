@@ -139,9 +139,8 @@ class StrUTF8Encoder(Estimator):
                 for ln in self.load_path.open('r', encoding='utf8'):
                     token = ln.strip().split()[0]
                     self.tokens.append(token)
-            elif isinstance(self.load_path, Path):
-                if not self.load_path.parent.is_dir():
-                    raise ConfigError(f"Provided `load_path` for {self.__class__.__name__} doesn't exist!")
+            else:
+                raise ConfigError(f"Provided `load_path` for {self.__class__.__name__} doesn't exist!")
         else:
             raise ConfigError(f"`load_path` for {self} is not provided!")
 
