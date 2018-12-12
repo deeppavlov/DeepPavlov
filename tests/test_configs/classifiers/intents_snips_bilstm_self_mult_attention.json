@@ -56,7 +56,8 @@
         "in": "y_ids",
         "out": "y_onehot",
         "class_name": "one_hotter",
-        "depth": "#classes_vocab.len"
+        "depth": "#classes_vocab.len",
+        "single_vector": true
       },
       {
         "in": [
