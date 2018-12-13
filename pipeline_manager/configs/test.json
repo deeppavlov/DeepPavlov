@@ -124,11 +124,11 @@
     "test_best": true
   },
   "enumerate": {
-    "exp_name": "test_of_gen",
+    "exp_name": "test_of_key_interrupt",
     "root": "./download/experiments/",
     "search_type": "random",
     "do_test": true,
-    "sample_num": 1,
+    "sample_num": 3,
     "plot": true,
     "save_best": true,
     "multiprocessing": true,
