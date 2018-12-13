@@ -291,7 +291,7 @@ class PipelineManager:
 
         observer.pipe_ind = i + 1
         observer.pipe_conf = copy(pipe['chainer']['pipe'])
-        dataset_name = copy(pipe['dataset_reader']['data_path'])
+        dataset_name = copy(pipe['dataset_reader']['data_path'].split("/")[-1])
         observer.dataset = copy(pipe['dataset_reader']['data_path'])
         observer.batch_size = copy(pipe['train'].get('batch_size', "None"))
 
