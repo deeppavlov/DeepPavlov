@@ -25,12 +25,15 @@ class InsuranceReader(DatasetReader):
     """The class to read the InsuranceQA V1 dataset from files.
 
     Please, see https://github.com/shuzi/insuranceQA.
-
-    Args:
-        data_path: A path to a folder with dataset files.
     """
 
     def read(self, data_path: str, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
+        """Read the InsuranceQA V1 dataset from files.
+
+        Args:
+            data_path: A path to a folder with dataset files.
+        """
+
         data_path = expand_path(data_path)
         dataset = {'train': None, 'valid': None, 'test': None}
         train_fname = data_path / 'insuranceQA-master/V1/question.train.token_idx.label'
