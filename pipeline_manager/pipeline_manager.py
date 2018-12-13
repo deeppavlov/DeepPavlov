@@ -392,7 +392,7 @@ class PipelineManager:
             print("[ The experiment was interrupt]")
             # visualization of results
             print("[ Create an intermediate report ... ]")
-            results_visualization(join(self.root, self.date, self.exp_name), False)
+            results_visualization(str(self.observer.log_path), self.plot)
             print("[ The intermediate report was created ]")
 
         return None
