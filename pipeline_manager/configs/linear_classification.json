@@ -78,8 +78,8 @@
           "class_name": "sklearn_component",
           "component_name": "Log Reg",
           "main": true,
-          "save_path": "{DOWNLOADS_PATH}/linm/checkpoints/logreg.pkl",
-          "load_path": "{DOWNLOADS_PATH}/linm/checkpoints/logreg.pkl",
+          "save_path": "{DOWNLOADS_PATH}/linm/logreg.pkl",
+          "load_path": "{DOWNLOADS_PATH}/linm/logreg.pkl",
           "model_class": "sklearn.linear_model:LogisticRegression",
           "infer_method": "predict_proba",
           "warm_start": false,
@@ -97,8 +97,8 @@
           "class_name": "sklearn_component",
           "component_name": "Log Reg",
           "main": true,
-          "save_path": "{DOWNLOADS_PATH}/linm/checkpoints/logreg.pkl",
-          "load_path": "{DOWNLOADS_PATH}/linm/checkpoints/logreg.pkl",
+          "save_path": "{DOWNLOADS_PATH}/linm/logreg.pkl",
+          "load_path": "{DOWNLOADS_PATH}/linm/logreg.pkl",
           "model_class": "sklearn.linear_model:LogisticRegression",
           "infer_method": "predict_proba",
           "warm_start": false,
@@ -151,7 +151,7 @@
   },
   "enumerate": {
     "exp_name": "lin_clf",
-    "root": "{DOWNLOADS_PATH}/experiments/",
+    "root": "{EXP_PATH}",
     "do_test": false,
     "search_type": "random",
     "sample_num": 1,
@@ -167,7 +167,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models"
+      "EXP_PATH": "{ROOT_PATH}/experiments"
     },
     "download": [
       {

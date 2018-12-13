@@ -33,6 +33,7 @@ from pipeline_manager.utils import results_visualization, get_available_gpus
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.prints import RedirectedPrints
+from deeppavlov.core.commands.utils import expand_path, parse_config
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.commands.train import read_data_by_config, get_iterator_from_config
@@ -133,10 +134,12 @@ class PipelineManager:
         else:
             self.exp_config = config_path
 
+        self.exp_config = parse_config(self.exp_config)
+
         self.exp_name = self.exp_config['enumerate'].get('exp_name', 'experiment')
         self.date = self.exp_config['enumerate'].get('date', datetime.now().strftime('%Y-%m-%d'))
         self.info = self.exp_config['enumerate'].get('info')
-        self.root = self.exp_config['enumerate'].get('root', 'download/experiments/')
+        self.root = self.exp_config['enumerate'].get('root', '~/.deeppavlov/experiments')
         self.plot = self.exp_config['enumerate'].get('plot', False)
         self.save_best = self.exp_config['enumerate'].get('save_best', False)
         self.do_test = self.exp_config['enumerate'].get('do_test', False)
@@ -156,7 +159,7 @@ class PipelineManager:
         self.available_gpu = None
 
         # create the observer
-        self.save_path = join(self.root, self.date, self.exp_name, 'checkpoints')
+        self.save_path = expand_path(join(self.root, self.date, self.exp_name, 'checkpoints'))
         self.observer = Observer(self.exp_name, self.root, self.info, self.date, self.plot)
         # create the pipeline generator
         self.pipeline_generator = PipeGen(self.exp_config, self.save_path, self.search_type, self.sample_num, False)
@@ -292,7 +295,7 @@ class PipelineManager:
         observer.pipe_ind = i + 1
         observer.pipe_conf = copy(pipe['chainer']['pipe'])
         dataset_name = copy(pipe['dataset_reader']['data_path'].split("/")[-1])
-        observer.dataset = copy(pipe['dataset_reader']['data_path'])
+        observer.dataset = copy(pipe['dataset_reader']['data_path'].split("/")[-1])
         observer.batch_size = copy(pipe['train'].get('batch_size', "None"))
 
         # start pipeline time
@@ -371,7 +374,7 @@ class PipelineManager:
         print("[ End of experiment ]")
         # visualization of results
         print("[ Create an experiment report ... ]")
-        results_visualization(join(self.root, self.date, self.exp_name), self.plot)
+        results_visualization(str(self.observer.log_path), self.plot)
         print("[ Report created ]")
         return None
 
@@ -424,7 +427,7 @@ class PipelineManager:
                     self.test_pipe((i, pipe))
 
         # del all tmp files in save path
-        rmtree(join(self.save_path, "tmp"))
+        rmtree(join(str(self.save_path), "tmp"))
         print('[ The test was successful ]')
         return None
 

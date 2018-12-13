@@ -19,6 +19,7 @@ import shutil
 from shutil import rmtree
 from collections import OrderedDict
 from os.path import join, isdir, isfile
+from deeppavlov.core.commands.utils import expand_path
 
 
 class Observer(object):
@@ -54,15 +55,15 @@ class Observer(object):
         self.dataset = None
 
         # build folder dependencies
-        self.save_path = join(self.root, self.date, self.exp_name, 'checkpoints')
-        self.log_path = join(self.root, date, self.exp_name)
-        self.log_file = join(self.log_path, self.exp_name + '.json')
+        self.save_path = expand_path(join(self.root, self.date, self.exp_name, 'checkpoints'))
+        self.log_path = expand_path(join(self.root, date, self.exp_name))
+        self.log_file = expand_path(self.log_path / (self.exp_name + '.json'))
 
         if not isdir(self.save_path):
-            os.makedirs(self.save_path)
+            os.makedirs(str(self.save_path))
         if self.plot:
-            if not isdir(join(self.log_path, 'images')):
-                os.makedirs(join(self.log_path, 'images'))
+            if not isdir(str(self.log_path / 'images')):
+                os.makedirs(str(self.log_path / 'images'))
 
         self.log = OrderedDict(experiment_info=OrderedDict(date=date,
                                                            exp_name=self.exp_name,
@@ -91,14 +92,14 @@ class Observer(object):
         Write log in log_file.
         """
         if isfile(self.log_file):
-            with open(self.log_file, 'r') as old_log:
+            with open(str(self.log_file), 'r') as old_log:
                 old_log = json.load(old_log)
 
             new_log = self.merge_logs(old_log, self.log)
-            with open(self.log_file, 'w') as log_file:
+            with open(str(self.log_file), 'w') as log_file:
                 json.dump(new_log, log_file)
         else:
-            with open(self.log_file, 'w') as log_file:
+            with open(str(self.log_file), 'w') as log_file:
                 json.dump(self.log, log_file)
 
     def exp_time(self, time):
@@ -111,11 +112,11 @@ class Observer(object):
         Returns:
             None
         """
-        with open(self.log_file, 'r') as old_log:
+        with open(str(self.log_file), 'r') as old_log:
             old_log = json.load(old_log)
 
         old_log['experiment_info']['full_time'] = time
-        with open(self.log_file, 'w') as log_file:
+        with open(str(self.log_file), 'w') as log_file:
             json.dump(old_log, log_file)
 
     def update_log(self):
@@ -144,14 +145,14 @@ class Observer(object):
 
     def save_config(self, conf, dataset_name, ind) -> None:
         """ Save train config in checkpoint folder. """
-        with open(join(self.save_path, dataset_name, "pipe_{}".format(ind), 'config.json'), 'w') as cf:
+        with open(str(self.save_path / dataset_name / "pipe_{}".format(ind) / 'config.json'), 'w') as cf:
             json.dump(conf, cf)
 
     def save_best_pipe(self):
         """ Calculate the best pipeline and delete others pipelines checkpoints. """
         dataset_res = {}
 
-        with open(self.log_file, 'r') as log_file:
+        with open(str(self.log_file), 'r') as log_file:
             log = json.load(log_file)
 
         target_metric = log['experiment_info']['target_metric']
@@ -174,8 +175,8 @@ class Observer(object):
                         dataset_res[dataset_name]["best_ind"] = key
 
         for name in dataset_res.keys():
-            source = join(self.save_path, name)
-            dest1 = join(self.save_path, name + '_best_pipe')
+            source = self.save_path / name
+            dest1 = self.save_path / (name + '_best_pipe')
             if not os.path.isdir(dest1):
                 os.makedirs(dest1)
 
@@ -191,7 +192,7 @@ class Observer(object):
                         shutil.move(join(source, f), dest1)
 
             # del all tmp files in save path
-            rmtree(join(self.save_path, name))
+            rmtree(str(self.save_path / name))
 
     @staticmethod
     def merge_logs(old_log, new_log):

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from os.path import join
+from pathlib import Path
 from copy import deepcopy
 from itertools import product
 from typing import Union, Dict, Generator
@@ -20,6 +21,7 @@ from typing import Union, Dict, Generator
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.params_search import ParamsSearch
 
 
@@ -36,8 +38,8 @@ class PipeGen:
 
     def __init__(self,
                  config: Union[Dict, str],
-                 save_path: str,
-                 mode: str='random',
+                 save_path: Union[str, Path],
+                 mode: str = 'random',
                  sample_num=10,
                  test_mode=False) -> None:
         """
@@ -173,7 +175,7 @@ class PipeGen:
                         new_config['metadata'] = self.main_config['metadata']
 
                     chainer_components = list(random_pipe)
-                    dataset_name = dr_config['data_path']
+                    dataset_name = dr_config['data_path'].split('/')[-1]
                     chainer_components = self.change_load_path(chainer_components, p, self.save_path, dataset_name,
                                                                self.test_mode)
                     new_config['chainer']['pipe'] = chainer_components
@@ -188,7 +190,7 @@ class PipeGen:
                         new_config['metadata'] = self.main_config['metadata']
 
                     chainer_components = list(grid_pipe)
-                    dataset_name = dr_config['data_path']
+                    dataset_name = dr_config['data_path'].split('/')[-1]
                     chainer_components = self.change_load_path(chainer_components, p, self.save_path, dataset_name,
                                                                self.test_mode)
                     new_config['chainer']['pipe'] = chainer_components
@@ -289,22 +291,31 @@ class PipeGen:
                 if component.get('save_path', None) is not None:
                     sp = component['save_path'].split('/')[-1]
                     if not test_mode:
-                        component['save_path'] = join('..', save_path, dataset_name, 'pipe_{}'.format(n + 1), sp)
+                        new_save_path = join(str(expand_path(save_path)), dataset_name, 'pipe_{}'.format(n + 1), sp)
+                        component['save_path'] = new_save_path
                     else:
-                        component['save_path'] = join('..', save_path, "tmp", dataset_name, 'pipe_{}'.format(n + 1), sp)
+                        new_save_path = join(str(expand_path(save_path)), "tmp", dataset_name,
+                                             'pipe_{}'.format(n + 1), sp)
+                        component['save_path'] = new_save_path
                 if component.get('load_path', None) is not None:
                     lp = component['load_path'].split('/')[-1]
                     if not test_mode:
-                        component['load_path'] = join('..', save_path, dataset_name, 'pipe_{}'.format(n + 1), lp)
+                        new_load_path = join(str(expand_path(save_path)), dataset_name, 'pipe_{}'.format(n + 1), lp)
+                        component['load_path'] = new_load_path
                     else:
-                        component['load_path'] = join('..', save_path, "tmp", dataset_name, 'pipe_{}'.format(n + 1), lp)
+                        new_load_path = join(str(expand_path(save_path)), "tmp", dataset_name,
+                                             'pipe_{}'.format(n + 1), lp)
+                        component['load_path'] = new_load_path
             else:
                 if component.get('save_path', None) is not None:
                     sp = component['save_path'].split('/')[-1]
                     if not test_mode:
-                        component['save_path'] = join('..', save_path, dataset_name, sp)
+                        new_save_path = join(str(expand_path(save_path)), dataset_name, sp)
+                        component['save_path'] = new_save_path
                     else:
-                        component['save_path'] = join('..', save_path, "tmp", dataset_name, sp)
+                        new_save_path = join(str(expand_path(save_path)), "tmp", dataset_name, sp)
+                        component['save_path'] = new_save_path
+
         return config
 
     def __call__(self, *args, **kwargs):
