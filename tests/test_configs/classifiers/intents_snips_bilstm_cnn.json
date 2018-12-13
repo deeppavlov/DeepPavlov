@@ -50,7 +50,8 @@
         "id": "my_embedder",
         "class_name": "fasttext",
         "load_path": "{DOWNLOADS_PATH}/embeddings/dstc2_fastText_model.bin",
-        "dim": 100
+        "dim": 100,
+        "pad_zero": true
       },
       {
         "in": "y_ids",
@@ -86,7 +87,6 @@
         "learning_rate": 0.01,
         "learning_rate_decay": 0.1,
         "loss": "binary_crossentropy",
-        "text_size": 15,
         "coef_reg_cnn": 1e-4,
         "coef_reg_lstm": 1e-4,
         "coef_reg_den": 1e-4,
