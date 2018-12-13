@@ -3,9 +3,9 @@ import json
 import logging
 import os
 import signal
-from pathlib import Path
 import shutil
 import sys
+from pathlib import Path
 
 import pytest
 import pexpect
@@ -28,7 +28,8 @@ test_src_dir = tests_dir / "test_configs"
 download_path = tests_dir / "download"
 
 cache_dir: Path = None
-cache_dir = tests_dir / 'cache'
+if not os.getenv('DP_PYTEST_NO_CACHE'):
+    cache_dir = tests_dir / 'download_cache'
 
 api_port = os.getenv('DP_PYTEST_API_PORT')
 
