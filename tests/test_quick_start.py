@@ -29,6 +29,8 @@ src_dir = Path(deeppavlov.__path__[0]) / "configs"
 test_src_dir = tests_dir / "test_configs"
 download_path = tests_dir / "download"
 
+api_port = os.getenv('DP_PYTEST_API_PORT')
+
 TEST_MODES = ['IP',  # test_interacting_pretrained_model
               'TI',  # test_consecutive_training_and_interacting
               ]
@@ -295,7 +297,7 @@ class TestQuickStart(object):
         server_params = get_server_params(server_conf_file, conf_file)
         model_args_names = server_params['model_args_names']
 
-        url_base = 'http://{}:{}/'.format(server_params['host'], server_params['port'])
+        url_base = 'http://{}:{}/'.format(server_params['host'], api_port or server_params['port'])
         url = urljoin(url_base.replace('http://0.0.0.0:', 'http://127.0.0.1:'), server_params['model_endpoint'])
 
         post_headers = {'Accept': 'application/json'}
@@ -306,7 +308,10 @@ class TestQuickStart(object):
             post_payload[arg_name] = [arg_value]
 
         logfile = io.BytesIO(b'')
-        p = pexpect.popen_spawn.PopenSpawn(' '.join([sys.executable, "-m", "deeppavlov", "riseapi", str(conf_file)]),
+        args = [sys.executable, "-m", "deeppavlov", "riseapi", str(conf_file)]
+        if api_port:
+            args += ['-p', str(api_port)]
+        p = pexpect.popen_spawn.PopenSpawn(' '.join(args),
                                            timeout=None, logfile=logfile)
         try:
             p.expect(url_base)
