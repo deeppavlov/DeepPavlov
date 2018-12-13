@@ -22,16 +22,18 @@ from deeppavlov.core.commands.utils import expand_path
 
 @register("paraphraser_pretrain_reader")
 class ParaphraserPretrainReader(DatasetReader):
-    """The class to read the pretraining dataset for the paraphrase identification task from files.
-
-    Args:
-        data_path: A path to a folder with dataset files.
-        seed: Random seed.
-    """
+    """The class to read the pretraining dataset for the paraphrase identification task from files."""
 
     def read(self,
              data_path: str,
              seed: int = None, *args, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
+        """Read the pretraining dataset for the paraphrase identification task from files.
+
+        Args:
+            data_path: A path to a folder with dataset files.
+            seed: Random seed.
+        """
+
         data_path = expand_path(data_path)
         train_fname = data_path / 'paraphraser_pretrain_train.json'
         test_fname = data_path / 'paraphraser_pretrain_val.json'
