@@ -125,7 +125,7 @@ To train the model itself with fine-tuned embeddings:
 
     para_model = train_model(configs.elmo.paraphrase_ident_paraphraser_elmo, download=True)
 
-Note that the fine-tuned ELMO embeddings obtained at the previous step can be downloaded directly
+The fine-tuned ELMO embeddings obtained at the previous step can be downloaded directly
 from the :config:`paraphrase_ident_paraphraser_elmo.json <ranking/paraphrase_ident_paraphraser_elmo.json>`.
 
 To train the model on the `paraphraser.ru`_ dataset with pre-training one should first train the model
@@ -145,7 +145,7 @@ To fine-tune the model on the target dataset:
 
     para_model = train_model(configs.elmo.paraphrase_ident_paraphraser_tune , download=True)
 
-Note that the pre-trained model obtained at the previous step can be downloaded directly
+The pre-trained model obtained at the previous step can be downloaded directly
 from the :config:`paraphrase_ident_paraphraser_tune.json <ranking/paraphrase_ident_paraphraser_tune.json>`.
 
 To use the model trained on the `paraphraser.ru`_ dataset for
