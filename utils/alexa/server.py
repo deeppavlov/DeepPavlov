@@ -29,7 +29,17 @@ CORS(app)
 
 def run_alexa_default_agent(model_config: Union[str, Path, dict], multi_instance: bool = False,
                             stateful: bool = False, port: Optional[int] = None) -> None:
+    """Creates Alexa agents factory and initiates Alexa web service.
 
+    Wrapper around run_alexa_server. Allows raise Alexa web service with
+    DeepPavlov config in backend.
+
+    Args:
+        model_config: DeepPavlov config path.
+        multi_instance: Multi instance mode flag.
+        stateful: Stateful mode flag.
+        port: Flask web service port.
+    """
     def get_default_agent() -> DefaultAgent:
         model = build_model(model_config)
         skill = DefaultStatelessSkill(model)
@@ -41,7 +51,14 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict], multi_instance
 
 def run_alexa_server(agent_generator: callable, multi_instance: bool = False,
                      stateful: bool = False, port: Optional[int] = None) -> None:
+    """Initiates Flask web service with Alexa skill.
 
+    Args:
+        agent_generator: Callback Alexa agents factory.
+        multi_instance: Multi instance mode flag.
+        stateful: Stateful mode flag.
+        port: Flask web service port.
+    """
     server_config_path = Path(get_settings_path(), SERVER_CONFIG_FILENAME).resolve()
     server_params = read_json(server_config_path)
 
