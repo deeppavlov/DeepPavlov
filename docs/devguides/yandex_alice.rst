@@ -20,10 +20,12 @@ Then run
 
 ::
 
-    python -m deeppavlov riseapi --api-mode alice --https --key my.key --cert my.crt  <config_path> [-d]
+    python -m deeppavlov riseapi --api-mode alice --https --key my.key --cert my.crt  <config_path> [-d] [-p <port_number>]
 
 
 Optional ``-d`` key is for dependencies download before service start.
+
+Optional ``-p`` key is used to override the port number.
 
 Now set up and test your dialog (https://dialogs.yandex.ru/developer/). Detailed documentation of the platform could be
 found on https://tech.yandex.ru/dialogs/alice/doc/about-docpage/, while other library options described in

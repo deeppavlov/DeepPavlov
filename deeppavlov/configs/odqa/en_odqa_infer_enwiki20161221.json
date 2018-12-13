@@ -8,7 +8,7 @@
     ],
     "pipe": [
       {
-        "config_path": "{CONFIGS_PATH}/doc_retrieval/ru_ranker_tfidf_wiki.json",
+        "config_path": "{CONFIGS_PATH}/doc_retrieval/en_ranker_tfidf_enwiki20161221.json",
         "in": [
           "question_raw"
         ],
@@ -26,7 +26,7 @@
         ],
         "join_docs": false,
         "shuffle": false,
-        "load_path": "{DOWNLOADS_PATH}/odqa/ruwiki.db"
+        "load_path": "{DOWNLOADS_PATH}/odqa/enwiki20161221.db"
       },
       {
         "class_name": "document_chunker",
@@ -41,9 +41,8 @@
       },
       {
         "class_name": "logit_ranker",
-        "squad_model": {
-          "config_path": "{CONFIGS_PATH}/squad/squad_ru.json"
-        },
+        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/multi_squad_noans_infer.json"},
+        "sort_noans": true,
         "in": [
           "chunks",
           "questions"
@@ -62,7 +61,9 @@
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
     "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
     ],
     "labels": {
       "server_utils": "ODQA"

@@ -4,12 +4,13 @@ REST API
 Each library component or skill can be easily made available for
 inference as a REST web service. The general method is:
 
-``python -m deeppavlov riseapi <config_path> [-d]``
+``python -m deeppavlov riseapi <config_path> [-d] [-p <port_number>]``
 
 (optional ``-d`` key is for dependencies download before service start)
 
 Web service properties (host, port, model endpoint, GET request
-arguments) are provided in ``utils/settings/server_config.json``.
+arguments) are provided in ``utils/settings/server_config.json``,
+but port can be overridden with the ``-p`` key in command line.
 Properties from ``common_defaults`` section are used by default unless
 they are overridden by component-specific properties, provided in
 ``model_defaults`` section of the ``server_config.json``.
