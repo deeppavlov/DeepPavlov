@@ -410,6 +410,10 @@ class PipelineManager:
                 for j, pipe_conf in enumerate(pipe_gen()):
                     yield (j, deepcopy(pipe_conf))
 
+        # del all tmp files in save path from past test
+        if isdir(join(str(self.save_path), "tmp")):
+            rmtree(join(str(self.save_path), "tmp"))
+
         # create the pipeline generator
         pipeline_generator = PipeGen(self.exp_config, self.save_path, self.search_type, self.sample_num, True)
         len_gen = pipeline_generator.length
