@@ -23,13 +23,15 @@ from deeppavlov.core.commands.utils import expand_path
 
 @register('siamese_reader')
 class SiameseReader(DatasetReader):
-    """The class to read dataset for ranking or paraphrase identification with Siamese networks.
-
-    Args:
-        data_path: A path to a folder with dataset files.
-    """
+    """The class to read dataset for ranking or paraphrase identification with Siamese networks."""
 
     def read(self, data_path: str, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
+        """Read the dataset for ranking or paraphrase identification with Siamese networks.
+
+        Args:
+            data_path: A path to a folder with dataset files.
+        """
+
         dataset = {'train': None, 'valid': None, 'test': None}
         data_path = expand_path(data_path)
         train_fname = data_path / 'train.csv'

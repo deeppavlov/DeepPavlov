@@ -22,11 +22,16 @@ try:
     # noinspection PyUnresolvedReferences
     from .core.commands.train import train_evaluate_model_from_config
     from .download import deep_download
+    from .core.common.chainer import Chainer
 
-    # TODO: make better and add typing
-    def train_model(config, download=False, recursive=False):
+    # TODO: make better
+    def train_model(config: [str, Path, dict], download: bool = False, recursive: bool = False) -> Chainer:
         train_evaluate_model_from_config(config, download=download, recursive=recursive)
         return build_model(config, load_trained=True)
+
+    def evaluate_model(config: [str, Path, dict], download: bool = False, recursive: bool = False) -> dict:
+        return train_evaluate_model_from_config(config, to_train=False, download=download, recursive=recursive)
+
 except ImportError:
     'Assuming that requirements are not yet installed'
 
