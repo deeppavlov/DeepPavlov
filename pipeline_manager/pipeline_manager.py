@@ -21,9 +21,9 @@ from shutil import rmtree
 from psutil import cpu_count
 from datetime import datetime
 from typing import Union, Dict
-from os.path import join, isdir
 from copy import copy, deepcopy
 from multiprocessing import Pool
+from os.path import join, isdir, isfile
 
 from pipeline_manager.pipegen import PipeGen
 from pipeline_manager.observer import Observer
@@ -305,8 +305,13 @@ class PipelineManager:
             os.makedirs(save_path)
 
         # run pipeline train with redirected output flow
-        with RedirectedPrints(new_target=open(join(save_path, "out.txt"), "w")):
-            results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
+        process_out_path = join(save_path, f"out_{i + 1}.txt")
+        if isfile(process_out_path):
+            with RedirectedPrints(new_target=open(process_out_path, "r+")):
+                results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
+        else:
+            with RedirectedPrints(new_target=open(process_out_path, "w")):
+                results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
 
         # add results and pipe time to log
         observer.pipe_time = time.strftime('%H:%M:%S', time.gmtime(time.time() - pipe_start))

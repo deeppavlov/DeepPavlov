@@ -1,13 +1,22 @@
 {
   "dataset_reader": {
-    "name": "basic_classification_reader",
+    "class_name": "basic_classification_reader",
     "x": "text",
-    "y": "target",
-    "data_path": "sber_faq"
+    "y": "intents",
+    "data_path": "{DOWNLOADS_PATH}/snips"
   },
   "dataset_iterator": {
-    "name": "basic_classification_iterator",
-    "seed": 42
+    "class_name": "basic_classification_iterator",
+    "seed": 42,
+    "field_to_split": "train",
+    "split_fields": [
+      "train",
+      "valid"
+    ],
+    "split_proportions": [
+      0.9,
+      0.1
+    ]
   },
   "chainer": {
     "in": ["x"],
@@ -15,101 +24,155 @@
     "pipe": [
       [
         {
-          "id": "classes_vocab",
-          "name": "default_vocab",
+          "in": ["y"],
+          "out": ["y_ids"],
           "fit_on": ["y"],
+          "class_name": "simple_vocab",
+          "component_name": "Vocab of classes",
+          "id": "classes_vocab",
           "level": "token",
-          "save_path": "vocabs/sber_classes.dict",
-          "load_path": "vocabs/sber_classes.dict",
-          "component_name": "Vocab of classes"
+          "save_path": "{DOWNLOADS_PATH}/vocabs/sber_classes.dict"
         }
       ],
       [
         {
           "in": ["x"],
-          "name": "ru_tokenizer",
-          "id": "ru_tok",
-          "out": ["x_tok"],
-          "component_name": "Ru tokenizer"
-        }
-      ],
-      [
-        {
-          "in": "x_tok",
-          "out": "vec",
-          "fit_on": ["x_tok"],
-          "name": "tfidf_vectorizer",
-          "id": "tf-idf",
-          "save_path": "vocabs/tf-idf.pkl",
-          "load_path": "vocabs/tf-idf.pkl",
-          "component_name": "Sklearn tf-idf vectorizer"
-        }
-      ],
-      [
-        {
-          "in": ["vec"],
-          "fit_on": ["vec", "y"],
-          "out": ["y_labels"],
-          "name": "support_vector_classifier",
-          "main": true,
-          "save_path": "new_sber/checkpoints/svm.pkl",
-          "load_path": "new_sber/checkpoints/svm.pkl",
-          "component_name": "SVC",
-          "penalty": "l2",
-          "loss": "squared_hinge",
-          "dual": {"search_grid": [false,true]},
-          "tol": {"search_range": [0.00001, 0.005]},
-          "C": {"search_range": [0.5, 2.0]},
-          "fit_intercept": {"search_bool": true},
-          "class_weight": {"search_choice": [null, "balanced"]}
+          "out": ["x_vec"],
+          "fit_on": ["x"],
+          "class_name": "sklearn_component",
+          "component_name": "tf-idf",
+          "id": "tfidf_vec",
+          "save_path": "{DOWNLOADS_PATH}/vocabs/tfidf_sber.pkl",
+          "load_path": "{DOWNLOADS_PATH}/vocabs/tfidf_sber.pkl",
+          "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
+          "infer_method": "transform",
+          "lowercase": true,
+          "analyzer": "char",
+          "ngram_range": [1, 5],
+          "max_features": 10000,
+          "norm": null
         },
         {
-          "in": ["avr_x"],
-          "fit_on": ["avr_x", "y"],
-          "out": ["y_labels"],
-          "name": "logistic_regression",
-          "main": true,
-          "save_path": "new_sber/checkpoints/logreg.pkl",
-          "load_path": "new_sber/checkpoints/logreg.pkl",
+          "in": ["x"],
+          "out": ["x_vec"],
+          "fit_on": ["x"],
+          "class_name": "sklearn_component",
+          "component_name": "count",
+          "id": "count",
+          "save_path": "{DOWNLOADS_PATH}/vocabs/count.pkl",
+          "load_path": "{DOWNLOADS_PATH}/vocabs/count.pkl",
+          "model_class": "sklearn.feature_extraction.text:CountVectorizer",
+          "infer_method": "transform",
+          "lowercase": true,
+          "analyzer": "char",
+          "ngram_range": [1, 5],
+          "max_features": 10000,
+          "norm": null
+        }
+      ],
+      [
+        {
+          "in": ["x_vec"],
+          "out": ["y_pred_probas"],
+          "fit_on": ["x_vec", "y_ids"],
+          "class_name": "sklearn_component",
           "component_name": "Log Reg",
+          "main": true,
+          "save_path": "{DOWNLOADS_PATH}/linm/logreg.pkl",
+          "load_path": "{DOWNLOADS_PATH}/linm/logreg.pkl",
+          "model_class": "sklearn.linear_model:LogisticRegression",
+          "infer_method": "predict_proba",
+          "warm_start": false,
           "penalty": "l1",
           "dual": false,
-          "tol": {"search_range": [0.00001, 0.005]},
-          "C": {"search_range": [0.5, 2.0]},
-          "fit_intercept": {"search_bool": true},
-          "class_weight": {"search_choice": [null, "balanced"]},
-          "solver": {"search_choice": ["liblinear", "saga"]}
+          "C": {"random_range": [0.01, 2.0]},
+          "fit_intercept": {"random_bool": true},
+          "class_weight": {"random_choice": [null, "balanced"]},
+          "solver": {"random_choice": ["liblinear", "saga"]}
+        },
+        {
+          "in": ["x_vec"],
+          "out": ["y_pred_probas"],
+          "fit_on": ["x_vec", "y_ids"],
+          "class_name": "sklearn_component",
+          "component_name": "Log Reg",
+          "main": true,
+          "save_path": "{DOWNLOADS_PATH}/linm/logreg.pkl",
+          "load_path": "{DOWNLOADS_PATH}/linm/logreg.pkl",
+          "model_class": "sklearn.linear_model:LogisticRegression",
+          "infer_method": "predict_proba",
+          "warm_start": false,
+          "penalty": "l2",
+          "dual": false,
+          "C": {"random_range": [0.01, 2.0]},
+          "fit_intercept": {"random_bool": true},
+          "class_weight": {"random_choice": [null, "balanced"]},
+          "solver": {"random_choice": ["lbfgs", "newton-cg"]}
+        }
+      ],
+      [
+        {
+          "in": ["y_pred_probas"],
+          "out": ["y_pred_ids"],
+          "class_name": "proba2labels",
+          "component_name": "prob2ind",
+          "max_proba": true
+        }
+      ],
+      [
+        {
+          "in": ["y_pred_ids"],
+          "out": ["y_pred_labels"],
+          "component_name": "vocab",
+          "ref": "classes_vocab"
         }
       ]
     ],
-    "out": ["y_labels"]
+    "out": ["y_pred_labels"]
   },
   "train": {
     "metrics": [
-      "simple_accuracy",
-      "simple_f1_macro",
-      "simple_f1_weighted"
-    ],
-    "validation_patience": 5,
-    "val_every_n_epochs": 5,
-    "log_every_n_epochs": 1,
-    "show_examples": false,
-    "validate_best": true,
-    "test_best": true
-  },
-  "metadata": {
-    "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/gensim.txt"
-    ],
-    "download": [
       {
-        "url": "http://files.deeppavlov.ai/datasets/sber_faq.zip",
-        "subdir": "sber_faq"
+        "name": "f1_macro",
+        "inputs": ["y", "y_pred_labels"]
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/sber_faq.txt",
-        "subdir": "embeddings"
+        "name": "sets_accuracy",
+        "inputs": ["y", "y_pred_labels"]
+      },
+      {
+        "name": "f1_weighted",
+        "inputs": ["y", "y_pred_labels"]
+      }
+    ],
+    "show_examples": false,
+    "validate_best": true,
+    "test_best": false
+  },
+  "enumerate": {
+    "exp_name": "lin_clf",
+    "root": "{EXP_PATH}",
+    "do_test": true,
+    "search_type": "random",
+    "sample_num": 1,
+    "plot": true,
+    "save_best": true,
+    "multiprocessing": true,
+    "max_num_workers": 4,
+    "use_all_gpus": false,
+    "use_multi_gpus": null,
+    "gpu_memory_fraction": 1.0
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "EXP_PATH": "{ROOT_PATH}/experiments"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
+        "subdir": "{DOWNLOADS_PATH}/snips"
       }
     ]
   }

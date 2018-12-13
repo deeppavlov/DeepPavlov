@@ -731,64 +731,28 @@ def plot_res(info: dict,
 # _________________________________________________Build report_______________________________________________________
 
 
-def results_visualization(root: str, plot: bool, merge: bool = False) -> None:
+def results_visualization(root: str, plot: bool) -> None:
     """
     It builds a reporting table and a histogram of results for different models, based on data from the experiment log.
 
     Args:
         root: str; path to the folder where report will be created
         plot: bool; determine build plots or not
-        merge: bool; determine merge logs and reports from different experiments or not
 
     Returns:
         None
     """
+    with open(join(root, root.split('/')[-1] + '.json'), 'r') as log_file:
+        log = json.load(log_file)
+        log_file.close()
+    # create the xlsx file with results of experiments
+    build_pipeline_table(log, save_path=root)
 
-    if not merge:
-        with open(join(root, root.split('/')[-1] + '.json'), 'r') as log_file:
-            log = json.load(log_file)
-            log_file.close()
-        # create the xlsx file with results of experiments
-        build_pipeline_table(log, save_path=root)
-
-        if plot:
-            # scrub data from log for image creating
-            info = get_met_info(log)
-            # plot histograms
-            for dataset_name, dataset_val in info.items():
-                plot_res(dataset_val, dataset_name, join(root, 'images'))
-    # TODO del this code block if it not needed anymore
-    else:
-        logs_names = os.listdir(root)
-        logs = []
-        # read logs
-        for name in logs_names:
-            with open(join(root, name), 'r') as f:
-                log = json.load(f)
-                f.close()
-            logs.append(log)
-        # rename metrics
-        for i, log in enumerate(logs):
-            logs[i] = rename_met(log, GOLD_METRICS)
-        # merge logs
-        old_log = logs[0]
-        for log in logs:
-            old_log = merge_logs(old_log, log)
-
-        # chose new metric
-        target_metric = old_log['experiment_info']['target_metric']
-        for key, metrics in GOLD_METRICS.items():
-            if target_metric in metrics:
-                target_metric = key
-
-        build_pipeline_table(old_log, save_path=root)
-        if plot:
-            if not isdir(join(root, 'images')):
-                os.makedirs(join(root, 'images'))
-            # scrub data from log for image creating
-            info = get_met_info(old_log)
-            # plot histograms
-            for dataset_name, dataset_val in info.items():
-                plot_res(dataset_val, dataset_name, join(root, 'images'))
+    if plot:
+        # scrub data from log for image creating
+        info = get_met_info(log)
+        # plot histograms
+        for dataset_name, dataset_val in info.items():
+            plot_res(dataset_val, dataset_name, join(root, 'images'))
 
     return None
