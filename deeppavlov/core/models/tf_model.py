@@ -352,7 +352,10 @@ class EnhancedTFModel(TFModel):
         # best_lr /= 10
         best_lr = self._get_best(lrs, losses)
 
-        self._lr_schedule = DecayScheduler(start_val=best_lr / self._fit_lr_div,
+        start_val = best_lr
+        if self._lr_schedule.dec_type == DecayType.ONECYCLE:
+            start_val = best_lr / self._fit_lr_div
+        self._lr_schedule = DecayScheduler(start_val=start_val,
                                            end_val=best_lr,
                                            num_it=self._lr_schedule.nb,
                                            dec_type=self._lr_schedule.dec_type,
