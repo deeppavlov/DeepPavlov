@@ -23,7 +23,8 @@ try:
     from .core.commands.train import train_evaluate_model_from_config
     from .download import deep_download
     from .core.common.chainer import Chainer
-    
+
+    # TODO: make better
     def train_model(config: [str, Path, dict], download: bool = False, recursive: bool = False) -> Chainer:
         train_evaluate_model_from_config(config, download=download, recursive=recursive)
         return build_model(config, load_trained=True)
