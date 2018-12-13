@@ -1,4 +1,4 @@
-import threading
+from threading import Timer
 from datetime import timedelta, datetime
 from queue import Queue
 from threading import Thread
@@ -21,7 +21,7 @@ ValidatedCert = namedtuple('ValidatedCert', ['cert', 'expiration_timestamp'])
 
 
 class Bot(Thread):
-    """Contains agent(s), conversations, validates Alexa requests and routes them to conversations.
+    """Contains agent (if not multi-instanced), conversations, validates Alexa requests and routes them to conversations.
 
     Args:
         agent_generator: Callback which generates DefaultAgent instance with alexa skill.
@@ -55,7 +55,7 @@ class Bot(Thread):
             self.agent = self._init_agent()
             log.info('New bot instance level agent initiated')
 
-        self.timer = threading.Timer(REFRESH_VALID_CERTS_PERIOD_SECS, self._refresh_valid_certs)
+        self.timer = Timer(REFRESH_VALID_CERTS_PERIOD_SECS, self._refresh_valid_certs)
         self.timer.start()
 
     def run(self) -> None:
@@ -65,7 +65,7 @@ class Bot(Thread):
             response = self._handle_request(request)
             self.output_queue.put(response)
 
-    def del_conversation(self, conversation_key: str) -> None:
+    def _del_conversation(self, conversation_key: str) -> None:
         """Deletes Conversation instance.
 
         Args:
@@ -84,7 +84,7 @@ class Bot(Thread):
 
     def _refresh_valid_certs(self):
         """Conducts cleanup of periodical certificates with expired validation."""
-        self.timer = threading.Timer(REFRESH_VALID_CERTS_PERIOD_SECS, self._refresh_valid_certs)
+        self.timer = Timer(REFRESH_VALID_CERTS_PERIOD_SECS, self._refresh_valid_certs)
         self.timer.start()
 
         expired_certificates = []
@@ -165,9 +165,11 @@ class Bot(Thread):
             else:
                 conv_agent = self.agent
 
-            self.conversations[conversation_key] = Conversation(bot=self,
-                                                                agent=conv_agent,
-                                                                conversation_key=conversation_key)
+            self.conversations[conversation_key] = \
+                Conversation(config=self.config,
+                             agent=conv_agent,
+                             conversation_key=conversation_key,
+                             self_destruct_callback=lambda: self._del_conversation(conversation_key))
 
             log.info(f'Created new conversation, key: {conversation_key}')
 

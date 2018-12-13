@@ -1,6 +1,8 @@
-import threading
+from threading import Timer
 from copy import deepcopy
+from typing import Optional
 
+from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.core.agent.rich_content import RichMessage
 from deeppavlov.core.common.log import get_logger
 
@@ -8,16 +10,30 @@ log = get_logger(__name__)
 
 
 class Conversation:
-    def __init__(self, bot, agent, conversation_key: str):
-        self.bot = bot
+    """Contains agent (if multi-instanced), receives requests, generates responses.
+
+    Args:
+        config: Alexa skill configuration settings.
+        agent: DeepPavlov Agent instance.
+        conversation_key: Alexa conversation ID.
+        self_destruct_callback: Conversation instance deletion callback function.
+
+    Attributes:
+        config: Alexa skill configuration settings.
+        agent: Alexa skill agent.
+        key: Alexa conversation ID.
+        stateful: Stateful mode flag.
+        timer: Conversation self-destruct timer.
+        handled_requests: Mapping of Alexa requests types to requests handlers.
+        response_template: Alexa response template.
+        """
+    def __init__(self, config: dict, agent: DefaultAgent, conversation_key: str, self_destruct_callback: callable):
+        self.config = config
         self.agent = agent
         self.key = conversation_key
-
-        self.stateful = self.bot.config['stateful']
-
-        self.conversation_lifetime = self.bot.config['conversation_lifetime']
-        self.timer = None
-        self._start_timer()
+        self.self_destruct_callback = self_destruct_callback
+        self.stateful: bool = self.config['stateful']
+        self.timer: Optional[Timer] = None
 
         self.handled_requests = {
             'LaunchRequest': self._handle_launch,
@@ -33,18 +49,26 @@ class Conversation:
             }
         }
 
+        self._start_timer()
+
     def _start_timer(self) -> None:
-        self.timer = threading.Timer(self.conversation_lifetime, self._self_destruct)
+        """Initiates self-destruct timer."""
+        self.timer = Timer(self.config['conversation_lifetime'], self.self_destruct_callback)
         self.timer.start()
 
     def _rearm_self_destruct(self) -> None:
+        """Rearms self-destruct timer."""
         self.timer.cancel()
         self._start_timer()
 
-    def _self_destruct(self) -> None:
-        self.bot.del_conversation(self.key)
-
     def handle_request(self, request: dict) -> dict:
+        """Routes Alexa requests to appropriate handlers.
+
+        Args:
+            request: Alexa request.
+        Returns:
+            response: Response conforming Alexa response specification.
+        """
         request_type = request['request']['type']
         request_id = request['request']['requestId']
         log.debug(f'Received request. Type: {request_type}, id: {request_id}')
@@ -60,6 +84,13 @@ class Conversation:
         return response
 
     def _act(self, utterance: str) -> list:
+        """Infers DeepPavlov agent with raw user input extracted from Alexa request.
+
+        Args:
+            utterance: Raw user input extracted from Alexa request.
+        Returns:
+            response: DeepPavlov agent response.
+        """
         if self.stateful:
             utterance = [[utterance], [self.key]]
         else:
@@ -70,6 +101,14 @@ class Conversation:
         return agent_response
 
     def _generate_response(self, response: dict, request: dict) -> dict:
+        """Populates generated response with additional data conforming Alexa response specification.
+
+        Args:
+            response: Raw user input extracted from Alexa request.
+            request: Alexa request.
+        Returns:
+            response: Response conforming Alexa response specification.
+        """
         response_template = deepcopy(self.response_template)
         response_template['sessionAttributes']['sessionId'] = request['session']['sessionId']
 
@@ -80,8 +119,15 @@ class Conversation:
         return response
 
     def _handle_intent(self, request: dict) -> dict:
-        intent_name = self.bot.config['intent_name']
-        slot_name = self.bot.config['slot_name']
+        """Handles IntentRequest Alexa request.
+
+        Args:
+            request: Alexa request.
+        Returns:
+            response: "response" part of response dict conforming Alexa specification.
+        """
+        intent_name = self.config['intent_name']
+        slot_name = self.config['slot_name']
 
         request_id = request['request']['requestId']
         request_intent: dict = request['request']['intent']
@@ -113,16 +159,23 @@ class Conversation:
         return response
 
     def _handle_launch(self, request: dict) -> dict:
+        """Handles LaunchRequest Alexa request.
+
+        Args:
+            request: Alexa request.
+        Returns:
+            response: "response" part of response dict conforming Alexa specification.
+        """
         response = {
             'response': {
                 'shouldEndSession': False,
                 'outputSpeech': {
                     'type': 'PlainText',
-                    'text': self.bot.config['start_message']
+                    'text': self.config['start_message']
                 },
                 'card': {
                     'type': 'Simple',
-                    'content': self.bot.config['start_message']
+                    'content': self.config['start_message']
                 }
             }
         }
@@ -132,21 +185,35 @@ class Conversation:
         return response
 
     def _handle_end(self, request: dict) -> dict:
+        """Handles SessionEndedRequest Alexa request and deletes Conversation instance.
+
+        Args:
+            request: Alexa request.
+        Returns:
+            response: Dummy empty response dict.
+        """
         response = {}
-        self._self_destruct()
+        self.self_destruct_callback()
         return response
 
     def _handle_unsupported(self, request: dict) -> dict:
+        """Handles all unsupported types of Alexa requests. Returns standard message.
+
+        Args:
+            request: Alexa request.
+        Returns:
+            response: "response" part of response dict conforming Alexa specification.
+        """
         response = {
             'response': {
                 'shouldEndSession': False,
                 'outputSpeech': {
                     'type': 'PlainText',
-                    'text': self.bot.config['unsupported_message']
+                    'text': self.config['unsupported_message']
                 },
                 'card': {
                     'type': 'Simple',
-                    'content': self.bot.config['unsupported_message']
+                    'content': self.config['unsupported_message']
                 }
             }
         }
