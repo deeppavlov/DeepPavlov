@@ -6,7 +6,6 @@ import signal
 from pathlib import Path
 import shutil
 import sys
-from tempfile import TemporaryDirectory
 
 import pytest
 import pexpect
@@ -22,12 +21,14 @@ from deeppavlov.core.common.paths import get_settings_path
 from utils.server_utils.server import get_server_params, SERVER_CONFIG_FILENAME
 
 
-cache_dir = None
 tests_dir = Path(__file__).parent
 test_configs_path = tests_dir / "deeppavlov" / "configs"
 src_dir = Path(deeppavlov.__path__[0]) / "configs"
 test_src_dir = tests_dir / "test_configs"
 download_path = tests_dir / "download"
+
+cache_dir: Path = None
+cache_dir = tests_dir / 'cache'
 
 api_port = os.getenv('DP_PYTEST_API_PORT')
 
@@ -249,17 +250,17 @@ def setup_module():
         for (conf_file, _, _), _ in conf_dict.items():
             download_config(conf_file)
 
-    global cache_dir
-    cache_dir = TemporaryDirectory()
-    os.environ['DP_CACHE_DIR'] = cache_dir.name
+    if cache_dir:
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        os.environ['DP_CACHE_DIR'] = str(cache_dir.resolve())
 
 
 def teardown_module():
     shutil.rmtree(str(test_configs_path.parent), ignore_errors=True)
     shutil.rmtree(str(download_path), ignore_errors=True)
 
-    global cache_dir
-    cache_dir.cleanup()
+    if cache_dir:
+        shutil.rmtree(str(cache_dir), ignore_errors=True)
 
 
 @pytest.mark.parametrize("model,conf_file,model_dir,mode", TEST_GRID, scope='class')
