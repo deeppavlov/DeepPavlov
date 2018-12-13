@@ -51,7 +51,7 @@
       {
         "class_name": "logit_ranker",
         "squad_model": {
-          "config_path": "{CONFIGS_PATH}/squad/multi_squad_noans.json"
+          "config_path": "{CONFIGS_PATH}/squad/multi_squad_noans_infer.json"
         },
         "sort_noans": true,
         "in": [

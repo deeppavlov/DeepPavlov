@@ -1,6 +1,6 @@
 deeppavlov.models.elmo
 ======================
 
-.. automodule:: deeppavlov.models.go_bot
+.. automodule:: deeppavlov.models.elmo
 
 .. autoclass:: deeppavlov.models.elmo.elmo.ELMo

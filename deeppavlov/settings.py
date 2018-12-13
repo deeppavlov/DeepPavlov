@@ -13,34 +13,27 @@
 # limitations under the License.
 
 import argparse
-import os
-from pathlib import Path
 
-from deeppavlov.core.common.paths import get_settings_path, set_settings_path, set_settings_default
+from deeppavlov.core.common.paths import get_settings_path, populate_settings_dir
 
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("mode", help="select DeepPavlov configuration option", type=str, choices={'settings'})
-
-parser.add_argument("-p", "--path", default=None, help="set path", type=str)
 parser.add_argument("-d", "--default", action="store_true", help="return to defaults")
 
 
 def main():
     """DeepPavlov console configuration utility."""
     args = parser.parse_args()
-    path = args.path
+    path = get_settings_path()
 
-    if args.mode == 'settings':
-        if args.default:
-            set_settings_default()
+    if args.default:
+        if populate_settings_dir(force=True):
+            print(f'Populated {path} with default settings files')
         else:
-            if not path:
-                print(f'Current DeepPavlov settings path: {get_settings_path()}')
-            else:
-                path = Path(os.getcwd(), path).resolve()
-                set_settings_path(path)
+            print(f'{path} is already a default settings directory')
+    else:
+        print(f'Current DeepPavlov settings path: {path}')
 
 
 if __name__ == "__main__":

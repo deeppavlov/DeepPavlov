@@ -39,7 +39,6 @@ app = Flask(__name__)
 Swagger(app)
 CORS(app)
 
-
 DialogID = namedtuple('DialogID', ['user_id', 'session_id'])
 
 
@@ -82,7 +81,7 @@ def interact_alice(agent: Agent):
     return jsonify(response), 200
 
 
-def start_alice_server(model_config, https=False, ssl_key=None, ssl_cert=None):
+def start_alice_server(model_config, https=False, ssl_key=None, ssl_cert=None, port=None):
     server_config_path = get_settings_path() / SERVER_CONFIG_FILENAME
     server_params = get_server_params(server_config_path, model_config)
 
@@ -106,7 +105,7 @@ def start_alice_server(model_config, https=False, ssl_key=None, ssl_cert=None):
             raise e
 
     host = server_params['host']
-    port = server_params['port']
+    port = port or server_params['port']
     model_endpoint = server_params['model_endpoint']
 
     model = build_model(model_config)
@@ -117,8 +116,8 @@ def start_alice_server(model_config, https=False, ssl_key=None, ssl_cert=None):
 
 
 def start_agent_server(agent: Agent, host: str, port: int, endpoint: str,
-                       ssl_key: Optional[Path]=None,
-                       ssl_cert: Optional[Path]=None):
+                       ssl_key: Optional[Path] = None,
+                       ssl_cert: Optional[Path] = None):
     if ssl_key and ssl_cert:
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
         ssh_key_path = Path(ssl_key).resolve()

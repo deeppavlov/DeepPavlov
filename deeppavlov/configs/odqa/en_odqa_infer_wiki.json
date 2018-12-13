@@ -41,7 +41,7 @@
       },
       {
         "class_name": "logit_ranker",
-        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/multi_squad_noans.json"},
+        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/multi_squad_noans_infer.json"},
         "sort_noans": true,
         "in": [
           "chunks",
@@ -69,10 +69,6 @@
       "server_utils": "ODQA"
     },
     "download": [
-      {
-        "url": "http://files.deeppavlov.ai/datasets/wikipedia/enwiki.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}"
-      }
     ]
   }
 }

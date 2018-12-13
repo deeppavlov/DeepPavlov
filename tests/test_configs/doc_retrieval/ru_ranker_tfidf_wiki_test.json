@@ -12,7 +12,11 @@
   },
   "chainer": {
     "in": [
-      "x"
+      "docs"
+    ],
+    "in_y": [
+      "doc_ids",
+      "doc_nums"
     ],
     "out": [
       "y"
@@ -22,7 +26,9 @@
         "class_name": "hashing_tfidf_vectorizer",
         "id": "vectorizer",
         "fit_on_batch": [
-          "x"
+          "docs",
+          "doc_ids",
+          "doc_nums"
         ],
         "save_path": "{DOWNLOADS_PATH}/odqa/ruwiki_test_tfidf.npz",
         "load_path": "{DOWNLOADS_PATH}/odqa/ruwiki_test_tfidf.npz",
@@ -39,7 +45,7 @@
         "class_name": "tfidf_ranker",
         "top_n": 5,
         "in": [
-          "x"
+          "docs"
         ],
         "out": [
           "y",
