@@ -29,7 +29,7 @@ class UbuntuV2Reader(DatasetReader):
 
     def read(self, data_path: str,
              *args, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
-        """Reads the Ubuntu V2 dataset from csv files.
+        """Read the Ubuntu V2 dataset from csv files.
 
         Args:
             data_path: A path to a folder with dataset csv files.
