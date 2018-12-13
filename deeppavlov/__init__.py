@@ -24,9 +24,13 @@ try:
     from .download import deep_download
 
     # TODO: make better and add typing
-    def train_model(config, download=False, recursive=False):
+    def train_model(config: [str, Path, dict], download: bool = False, recursive: bool = False):
         train_evaluate_model_from_config(config, download=download, recursive=recursive)
         return build_model(config, load_trained=True)
+
+    def evaluate_model(config: [str, Path, dict], download: bool = False, recursive: bool = False):
+        return train_evaluate_model_from_config(config, to_train=False, download=download, recursive=recursive)
+
 except ImportError:
     'Assuming that requirements are not yet installed'
 
