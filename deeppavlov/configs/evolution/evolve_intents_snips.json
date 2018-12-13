@@ -60,7 +60,8 @@
         "out": "x_emb",
         "id": "my_embedder",
         "class_name": "fasttext",
-        "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin"
+        "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin",
+        "pad_zero": true
       },
       {
         "in": "y_ids",
@@ -114,7 +115,6 @@
           "scale": "log"
         },
         "loss": "categorical_crossentropy",
-        "text_size": 15,
         "coef_reg_cnn": {
           "evolve_range": [
             1e-6,
