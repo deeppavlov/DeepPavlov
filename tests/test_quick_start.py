@@ -6,6 +6,7 @@ import signal
 import shutil
 import sys
 from pathlib import Path
+from typing import Union
 
 import pytest
 import pexpect
@@ -194,6 +195,18 @@ for model in PARAMS.keys():
         TEST_GRID.append(grid_unit)
 
 
+def _override_with_test_values(item: Union[dict, list]) -> None:
+    if isinstance(item, dict):
+        keys = [k for k in item.keys() if k.startswith('pytest_')]
+        for k in keys:
+            item[k[len('pytest_'):]] = item.pop(k)
+        item = item.values()
+
+    for child in item:
+        if isinstance(child, (dict, list)):
+            _override_with_test_values(child)
+
+
 def download_config(conf_file):
     src_file = src_dir / conf_file
     if not src_file.is_file():
@@ -216,10 +229,8 @@ def download_config(conf_file):
             download_config(config_ref)
 
     # Update config for testing
-    if config.get("train"):
-        config["train"]["epochs"] = 1
-        for pytest_key in [k for k in config["train"] if k.startswith('pytest_')]:
-            config["train"][pytest_key[len('pytest_'):]] = config["train"].pop(pytest_key)
+    config.setdefault('train', {}).setdefault('pytest_epochs', 1)
+    _override_with_test_values(config)
 
     config_vars = config.setdefault('metadata', {}).setdefault('variables', {})
     config_vars['ROOT_PATH'] = str(download_path)
