@@ -81,6 +81,10 @@ them separately.
     In other words, all components within the list should be compatible with their closest neighbors. Otherwise, an
     error will occur.
 
+It is also recommended to add the key "component_name" (with the name of the component that will be displayed in the
+summary table) in the description of the parameters of all components of the ``Chainer``. If this key is not in the
+description of the component, then the ConfigError will appear.
+
 Parameters of the :class:`~pipeline_manager.pipeline_manager.PipelineManager` class  are defined in the config file
 under the key “enumerate”. Here is simplify example:
 
