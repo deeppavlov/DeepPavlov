@@ -25,13 +25,16 @@ class UbuntuV2Reader(DatasetReader):
     """The class to read the Ubuntu V2 dataset from csv files.
 
     Please, see https://github.com/rkadlec/ubuntu-ranking-dataset-creator.
-
-    Args:
-        data_path: A path to a folder with dataset csv files.
     """
 
     def read(self, data_path: str,
              *args, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
+        """Read the Ubuntu V2 dataset from csv files.
+
+        Args:
+            data_path: A path to a folder with dataset csv files.
+        """
+
         data_path = expand_path(data_path)
         dataset = {'train': None, 'valid': None, 'test': None}
         train_fname = Path(data_path) / 'train.csv'

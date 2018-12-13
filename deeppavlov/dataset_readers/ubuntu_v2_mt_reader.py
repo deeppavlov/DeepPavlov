@@ -25,15 +25,18 @@ class UbuntuV2MTReader(DatasetReader):
     """The class to read the Ubuntu V2 dataset from csv files taking into account multi-turn dialogue ``context``.
 
     Please, see https://github.com/rkadlec/ubuntu-ranking-dataset-creator.
-
-    Args:
-        data_path: A path to a folder with dataset csv files.
-        num_context_turns: A maximum number of dialogue ``context`` turns.
     """
     
     def read(self, data_path: str,
              num_context_turns: int = 1,
              *args, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
+        """Read the Ubuntu V2 dataset from csv files taking into account multi-turn dialogue ``context``.
+
+        Args:
+            data_path: A path to a folder with dataset csv files.
+            num_context_turns: A maximum number of dialogue ``context`` turns.
+        """
+
         self.num_turns = num_context_turns
         dataset = {'train': None, 'valid': None, 'test': None}
         train_fname = Path(data_path) / 'train.csv'

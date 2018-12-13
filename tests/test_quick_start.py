@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import signal
+from pathlib import Path
 import shutil
 import sys
 from pathlib import Path
@@ -139,6 +140,13 @@ PARAMS = {
         ("ranking/ranking_ubuntu_v2_mt_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/paraphrase_ident_paraphraser_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/paraphrase_ident_paraphraser_interact_test.json", "ranking",
+         ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_paraphraser_pretrain.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_paraphraser_tune.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_tune_interact.json", "ranking",
+         ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_paraphraser_elmo.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_elmo_interact.json", "ranking",
          ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/paraphrase_ident_qqp_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/paraphrase_ident_qqp_bilstm_interact_test.json", "ranking",
