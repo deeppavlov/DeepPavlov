@@ -49,9 +49,6 @@ class KerasClassificationModel(KerasModel):
     Class implements Keras model for classification task for multi-class multi-labeled data.
 
     Args:
-        text_size: maximal length of text in tokens (words),
-                longer texts are cutted,
-                shorter ones are padded by zeros (pre-padding)
         embedding_size: embedding_size from embedder in pipeline
         n_classes: number of considered classes
         model_name: particular method of this class to initialize model configuration
@@ -65,6 +62,9 @@ class KerasClassificationModel(KerasModel):
         restore_lr: in case of loading pre-trained model \
                 whether to init learning rate with the final learning rate value from saved opt
         classes: list or generator of considered classes
+        text_size: maximal length of text in tokens (words),
+                longer texts are cutted,
+                shorter ones are padded by zeros (pre-padding)
         padding: ``pre`` or ``post`` padding to use
 
     Attributes:
@@ -80,12 +80,13 @@ class KerasClassificationModel(KerasModel):
         padding: ``pre`` or ``post`` padding to use
     """
 
-    def __init__(self, text_size: int, embedding_size: int, n_classes: int,
+    def __init__(self, embedding_size: int, n_classes: int,
                  model_name: str, optimizer: str = "Adam", loss: str = "binary_crossentropy",
                  learning_rate: float = 0.01, learning_rate_decay: float = 0.,
                  last_layer_activation="sigmoid",
                  restore_lr: bool = False,
                  classes: Optional[Union[list, Generator]] = None,
+                 text_size: int = None,
                  padding: Optional[str] = "pre",
                  **kwargs):
         """
@@ -95,8 +96,7 @@ class KerasClassificationModel(KerasModel):
         if classes is not None:
             classes = list(classes)
 
-        given_opt = {"text_size": text_size,
-                     "embedding_size": embedding_size,
+        given_opt = {"embedding_size": embedding_size,
                      "n_classes": n_classes,
                      "model_name": model_name,
                      "optimizer": optimizer,
@@ -106,6 +106,7 @@ class KerasClassificationModel(KerasModel):
                      "last_layer_activation": last_layer_activation,
                      "restore_lr": restore_lr,
                      "classes": classes,
+                     "text_size": text_size,
                      "padding": padding,
                      **kwargs}
         self.opt = deepcopy(given_opt)
@@ -196,8 +197,10 @@ class KerasClassificationModel(KerasModel):
         Returns:
             metrics values on the given batch
         """
-        features = self.pad_texts(texts)
-
+        if self.opt["text_size"]:
+            features = self.pad_texts(texts)
+        else:
+            features = np.array(texts)
         metrics_values = self.model.train_on_batch(features, np.squeeze(np.array(labels)))
         return metrics_values
 
@@ -213,7 +216,10 @@ class KerasClassificationModel(KerasModel):
             metrics values on the given batch, if labels are given
             predictions, otherwise
         """
-        features = self.pad_texts(texts)
+        if self.opt["text_size"]:
+            features = self.pad_texts(texts)
+        else:
+            features = np.array(texts)
 
         if labels:
             metrics_values = self.model.test_on_batch(features, np.squeeze(np.array(labels)))
