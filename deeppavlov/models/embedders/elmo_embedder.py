@@ -264,8 +264,6 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
             elmo_output_values = [elmo_output_values_line[:length_line]
                                   for length_line, elmo_output_values_line in zip(tokens_length, elmo_output_values)]
 
-            if self.pad_zero:
-                elmo_output_values = zero_pad(elmo_output_values)
 
             if not self.concat_last_axis:
                 slice_indexes = np.cumsum(self.dim).tolist()[:-1]
@@ -294,6 +292,9 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
                 elmo_output_values.extend(mini_batch_out)
         else:
             elmo_output_values = self._mini_batch_fit(batch, *args, **kwargs)
+
+        if self.pad_zero:
+            elmo_output_values = zero_pad(elmo_output_values)
 
         return elmo_output_values
 
