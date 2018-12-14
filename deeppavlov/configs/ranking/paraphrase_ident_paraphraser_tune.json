@@ -67,21 +67,21 @@
         "triplet_loss": false,
         "batch_size": 256,
         "save_path": "{MODELS_PATH}/paraphraser_model/model_weights.h5",
-        "load_path": "{MODELS_PATH}/paraphraser_model/model_weights.h5",
+        "load_path": "{MODELS_PATH}/pretrained_model/pretrained_weights.h5",
         "preprocess": "#preproc.__call__"
       }
     ],
     "out": ["y_predicted"]
   },
   "train": {
-    "epochs": 200,
+    "epochs": 1,
     "batch_size": 256,
     "pytest_max_batches": 2,
     "train_metrics": ["f1", "acc", "log_loss"],
     "metrics": ["f1", "acc", "log_loss"],
-    "validation_patience": 10,
+    "validation_patience": 1,
     "val_every_n_epochs": 1,
-    "log_every_n_batches": 24
+    "log_every_n_batches": 12
   },
   "metadata": {
     "variables": {
@@ -109,6 +109,10 @@
       {
         "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_lower_case/ft_native_300_ru_wiki_lenta_lower_case.bin",
         "subdir": "{DOWNLOADS_PATH}/embeddings"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/paraphrase_ident_paraphraser_pretrained.tar.gz",
+        "subdir": "{MODELS_PATH}/pretrained_model"
       }
     ]
   }

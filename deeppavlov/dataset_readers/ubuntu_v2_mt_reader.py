@@ -36,6 +36,17 @@ class UbuntuV2MTReader(DatasetReader):
              num_context_turns: int = 1,
              padding: str = "post",
              *args, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
+        """Read the Ubuntu V2 dataset from csv files taking into account multi-turn dialogue ``context``.
+
+        Args:
+            data_path: A path to a folder with dataset csv files.
+            num_context_turns: A maximum number of dialogue ``context`` turns.
+            padding: "post" or "pre" context sentences padding
+
+        Returns:
+            Dictionary with keys "train", "valid", "test" and parts of the dataset as their values
+        """
+
         self.num_turns = num_context_turns
         self.padding = padding
         dataset = {'train': None, 'valid': None, 'test': None}
