@@ -17,7 +17,7 @@ limitations under the License.
 import argparse
 
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
-from pipeline_manager.pipeline_manager import PipelineManager
+from deeppavlov.pipeline_manager import PipelineManager
 from deeppavlov.core.commands.infer import interact_model, predict_on_stream
 from deeppavlov.core.common.file import find_config
 from deeppavlov.core.common.log import get_logger
@@ -36,7 +36,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
                     choices={'train', 'evaluate', 'interact', 'predict', 'interactbot', 'riseapi', 'download',
-                             'install', 'interactmsbot', 'enumerate', 'crossval'})
+                             'install', 'interactmsbot', 'pipeline_search', 'crossval'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 
 parser.add_argument("-e", "--start-epoch-num", dest="start_epoch_num", default=0, help="Start epoch number", type=int)
@@ -108,7 +108,7 @@ def main():
             start_model_server(pipeline_config_path, https, ssl_key, ssl_cert, port=args.port)
     elif args.mode == 'predict':
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
-    elif args.mode == 'enumerate':
+    elif args.mode == 'pipeline_search':
         manager = PipelineManager(config_path=pipeline_config_path)
         manager.run()
     elif args.mode == 'install':

@@ -9,13 +9,13 @@ different embeddingings. Suppose some were trained on more data, while others we
 same domain as your dataset. You can not say exactly which embeddings will give a better score. As a result, you want
 to try to train the model with all embeddings, and then compare the results. Or you have a set of different neural
 architectures that solve the same problem, you want to know the quality of work of all models, and then compare with
-each other. Or maybe both. The :class:`~pipeline_manager.pipeline_manager.PipelineManager` is designed to automate
+each other. Or maybe both. The :class:`~deeppavlov.pipeline_manager.PipelineManager` is designed to automate
 experiments of this kind.
 
 |alt text| **Diagram 1.**
 
 The structure of the experiment and its parameters, for example, to save checkpoints for all experiments or only for
-the best, is described as a special json config, and is given to the :class:`~pipeline_manager.pipeline_manager.PipelineManager`
+the best, is described as a special json config, and is given to the :class:`~deeppavlov.pipeline_manager.PipelineManager`
 class as an argument when it is initialized. Based on these data, and using the DeepPavlov library's functionality,
 the class automatically runs all the experiments described in the config, saves their description and results, and
 finally builds a table with xlsx resolution, in which the experiments are sorted in descending order by the target
@@ -24,7 +24,7 @@ metric, and a plot with a histogram of results.
 |alt text2| **Plot 1.** Example of histogram with results.
 
 Experiments can be run both sequentially and in parallel. Including on video cards, in the event that you have several.
-Also, the :class:`~pipeline_manager.pipeline_manager.PipelineManager` class functionality allows for the selection of
+Also, the :class:`~deeppavlov.pipeline_manager.PipelineManager` class functionality allows for the selection of
 hyperparameters for individual models. “Random search” and “grid search” are available.
 
 Running a large number of experiments, especially with large neural models, may take a large amount of time.
@@ -47,18 +47,18 @@ After you wrote your config file, you can run your experiment by running in term
 
 .. code:: bash
 
-    python -m deeppavlov enumerate <path_to_config> [-d]
+    python -m deeppavlov pipeline_search <path_to_config> [-d]
 
 The ``-d`` parameter downloads
 
    - data required to train your model (embeddings, etc.);
    - a pretrained model if available (provided not for all configs).
 
-Or run :class:`~pipeline_manager.pipeline_manager.PipelineManager` in code:
+Or run :class:`~deeppavlov.pipeline_manager.PipelineManager` in code:
 
 .. code:: python
 
-    from pipeline_manager.pipeline_manager import PipelineManager
+    from deeppavlov.pipeline_manager import PipelineManager
 
     pipeman = PipelineManager("path to your config file or config dict")
     pipeman.run()
@@ -66,13 +66,13 @@ Or run :class:`~pipeline_manager.pipeline_manager.PipelineManager` in code:
 Config description for Pipeline Manager:
 ----------------------------------------
 Description of the structure of the experiments and the logic of the work of the
-:class:`~pipeline_manager.pipeline_manager.PipelineManager` class, is also described by the config file. Its main
-difference from the :doc:`default config <intro/config_description>` is that each element of the chainer can now be a list:
+:class:`~deeppavlov.pipeline_manager.PipelineManager` class, is also described by the config file. Its main
+difference from the :doc:`config_description </intro/config_description>` is that each element of the chainer can now be a list:
 
-|alt text3| **Diagram 2.** Conceptual example of :class:`~pipeline_manager.pipeline_manager.PipelineManager` config.
+|alt text3| **Diagram 2.** Conceptual example of :class:`~deeppavlov.pipeline_manager.PipelineManager` config.
 
 Thus, in place of a component, there can now be a list of components for enumeration. And during the work of the
-:class:`~pipeline_manager.pipeline_manager.PipelineManager`, it will launch a full-fledged experiment with each of
+:class:`~deeppavlov.pipeline_manager.PipelineManager`, it will launch a full-fledged experiment with each of
 them separately.
 
 .. note::
@@ -85,8 +85,21 @@ It is also recommended to add the key "component_name" (with the name of the com
 summary table) in the description of the parameters of all components of the ``Chainer``. If this key is not in the
 description of the component, then the ConfigError will appear.
 
-Parameters of the :class:`~pipeline_manager.pipeline_manager.PipelineManager` class  are defined in the config file
-under the key “enumerate”. Here is simplify example:
+The :class:`~deeppavlov.pipeline_manager.PipelineManager` operation mode is defined by the parameters:
+ - **exp_name**
+ - **root**
+ - **do_test**
+ - **search_type**
+ - **sample_num**
+ - **plot**
+ - **save_best**
+ - **multiprocessing**
+ - **max_num_workers**
+ - **use_all_gpus**
+ - **use_multi_gpus**
+ - **gpu_memory_fraction**
+
+This parameters are defined in the config file under the key “enumerate”. Here is simplify example:
 
 .. code:: python
 
@@ -117,9 +130,9 @@ under the key “enumerate”. Here is simplify example:
             }
     }
 
-You can look at the full config file for Pipeline Manager here :config:`pipeline_manager/configs/neural_classification.json <neural_classification.json>`.
+You can look at the full config file for Pipeline Manager here :config:`deeppavlov/configs/pipeline_manager/linear_classification.json <linear_classification.json>`.
 
-With their help, the operating modes of the :class:`~pipeline_manager.pipeline_manager.PipelineManager`
+With their help, the operating modes of the :class:`~deeppavlov.pipeline_manager.PipelineManager`
 and other characteristics are adjusted. Consider them in the form of several groups united in meaning.
 
 The first group of parameters is, by and large, auxiliary and does not really affect the conduct of experiments:
@@ -147,7 +160,7 @@ The second group of parameters defines the appearance of the folders tree:
 
  - **plot:** boolean trigger, which determines whether to draw a graph of results or not
 
-When you start the work of the :class:`~pipeline_manager.pipeline_manager.PipelineManager` in the path specified
+When you start the work of the :class:`~deeppavlov.pipeline_manager.PipelineManager` in the path specified
 through the parameter **root**, the following structure is created:
 
 - {**root**}/
@@ -212,7 +225,7 @@ remains for debugging. When you run the test again, all content from the past te
 
 Parallel mode
 --------------
-As mentioned earlier, the work of the :class:`~pipeline_manager.pipeline_manager.PipelineManager` supports
+As mentioned earlier, the work of the :class:`~deeppavlov.pipeline_manager.PipelineManager` supports
 multithreading, in the sense that the work of several pipelines can be run simultaneously on several video cards or
 processors. Therefore, we proceed to the group of parameters defining the multithreading format:
 
@@ -220,7 +233,7 @@ processors. Therefore, we proceed to the group of parameters defining the multit
    naturally decisive, and if it is False, the values of the other parameters do not have the value anymore, all
    pipelines will be executed sequentially.
  - **max_num_workers_:** upper limit on the number of workers if experiment running in multiprocessing mode.
- - **use_all_gpus:** boolean trigger, if True the :class:`~pipeline_manager.pipeline_manager.PipelineManager`
+ - **use_all_gpus:** boolean trigger, if True the :class:`~deeppavlov.pipeline_manager.PipelineManager`
    automatically considers all available to the user graphics cards (CUDA_VISIBLE_DEVICES is is taken into account).
    And selects as available only those that meet the memory criterion. If the memory of a video card is occupied by
    more than "X" percent, then the video card is considered inaccessible, and when the experiment is started, the
@@ -237,10 +250,10 @@ processors. Therefore, we proceed to the group of parameters defining the multit
    If memory_fraction == 0.5 cards with no more than half of the memory will be considered as available.
 
 As can be seen from the description of the **use_all_gpus** parameter, the
-:class:`~pipeline_manager.pipeline_manager.PipelineManager` class can automatically
+:class:`~deeppavlov.pipeline_manager.PipelineManager` class can automatically
 determine which nvidia video cards you have on your machine, determine which of the **memory_fraction** parameter
 which ones are free, and then scatter the pipelines on the free cards. It is important to understand that if you
-define the global variable CUDA_VISIBLE_DEVICES before starting the :class:`~pipeline_manager.pipeline_manager.PipelineManager`,
+define the global variable CUDA_VISIBLE_DEVICES before starting the :class:`~deeppavlov.pipeline_manager.PipelineManager`,
 then when determining free video cards it will only consider those cards that are defined in the variable, if it is not
 defined or is equal to an empty line, then the analysis will consider all video cards on the car. When you start
 training on a video card in sequential mode, all the pipeline will run on the first card from the list of available ones.
@@ -254,8 +267,8 @@ training on a video card in sequential mode, all the pipeline will run on the fi
 
 Hyperparameter search
 ---------------------
-We can say that when you run an experiment with :class:`~pipeline_manager.pipeline_manager.PipelineManager`, we perform
-greed search on the components entered into the config. However, in addition to this, :class:`~pipeline_manager.pipeline_manager.PipelineManager`
+We can say that when you run an experiment with :class:`~deeppavlov.pipeline_manager.PipelineManager`, we perform
+greed search on the components entered into the config. However, in addition to this, :class:`~deeppavlov.pipeline_manager.PipelineManager`
 also allows hyperparameter search. The last group of parameters relates to its regulation:
 
  - **search_type:** str, parameter defining the type of hyperparams search, can be "grid" or "random".

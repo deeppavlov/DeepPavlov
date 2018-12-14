@@ -12,6 +12,7 @@ Welcome to DeepPavlov's documentation!
    Configuration files <intro/config_description>
    Pre-trained embeddings <intro/pretrained_vectors>
    AutoML <intro/hypersearch>
+   Pipeline manager <intro/pipeline_manager>
    Tutorials <intro/tutorials>
 
 

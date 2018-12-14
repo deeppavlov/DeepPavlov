@@ -17,7 +17,6 @@ flask==1.0.2
 flasgger==0.9.1
 flask_cors==3.0.6
 rusenttokenize==0.0.4
-sortedcontainers==2.0.2
 matplotlib
 xlsxwriter
 psutil

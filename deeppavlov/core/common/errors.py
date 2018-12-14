@@ -28,7 +28,7 @@ class ConfigError(Exception):
 
 
 class GpuError(Exception):
-    """Any configuration error."""
+    """Error accessing the video card."""
     def __init__(self, message):
         super(GpuError, self).__init__()
         self.message = message

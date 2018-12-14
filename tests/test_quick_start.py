@@ -380,7 +380,7 @@ def test_pipeline_manager():
     shutil.rmtree(str(model_path),  ignore_errors=True)
 
     logfile = io.BytesIO(b'')
-    p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov enumerate {c}",
+    p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov pipeline_search {c}",
                                        timeout=None, logfile=logfile)
     if p.wait() != 0:
         logfile.seek(0)

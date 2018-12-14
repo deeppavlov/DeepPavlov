@@ -25,10 +25,10 @@ from multiprocessing import Pool
 from os.path import join, isdir, isfile
 from typing import Union, Dict, Iterator
 
-from pipeline_manager.pipegen import PipeGen
-from pipeline_manager.observer import Observer
-from pipeline_manager.utils import get_num_gpu
-from pipeline_manager.utils import results_visualization, get_available_gpus
+from deeppavlov.pipeline_manager.pipegen import PipeGen
+from deeppavlov.pipeline_manager.observer import Observer
+from deeppavlov.pipeline_manager.utils import get_num_gpu
+from deeppavlov.pipeline_manager.utils import results_visualization, get_available_gpus
 
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.errors import ConfigError
@@ -56,7 +56,7 @@ def unpack_args(func):
 
 class PipelineManager:
     """
-    The :class:`~pipeline_manager.pipeline_manager.PipelineManager` implements the functions of automatic experiment
+    The :class:`~deeppavlov.pipeline_manager.PipelineManager` implements the functions of automatic experiment
     management. The class accepts a config in the input in which the structure of the experiments is described, and
     additional parameters, which are class attributes. Based on this information, a list of deeppavlov configs is
     created. Experiments can be run sequentially or in parallel, both on video cards and on the processor.
@@ -275,14 +275,14 @@ class PipelineManager:
 
     @staticmethod
     @unpack_args
-    def train_pipe(pipe: Dict, i: int, observer: Observer, gpu_ind: Union[int, None] = None) -> None:
+    def train_pipe(pipe: Dict, i: int, observer_: Observer, gpu_ind: Union[int, None] = None) -> None:
         """
         Start learning single pipeline. Observer write all info in log file.
 
         Args:
             pipe: config dict of pipeline
             i:  number of pipeline
-            observer: link to observer object
+            observer_: link to observer object
             gpu_ind: number of gpu to use (if multiprocessing is True)
 
         """
@@ -292,15 +292,15 @@ class PipelineManager:
         else:
             os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
-        observer.pipe_ind = i + 1
-        observer.pipe_conf = copy(pipe['chainer']['pipe'])
+        observer_.pipe_ind = i + 1
+        observer_.pipe_conf = copy(pipe['chainer']['pipe'])
         dataset_name = copy(pipe['dataset_reader']['data_path'].split("/")[-1])
-        observer.dataset = copy(pipe['dataset_reader']['data_path'].split("/")[-1])
-        observer.batch_size = copy(pipe['train'].get('batch_size', "None"))
+        observer_.dataset = copy(pipe['dataset_reader']['data_path'].split("/")[-1])
+        observer_.batch_size = copy(pipe['train'].get('batch_size', "None"))
 
         # start pipeline time
         pipe_start = time.time()
-        save_path = join(observer.save_path, dataset_name, "pipe_{}".format(i + 1))
+        save_path = join(observer_.save_path, dataset_name, "pipe_{}".format(i + 1))
         if not isdir(save_path):
             os.makedirs(save_path)
 
@@ -314,14 +314,14 @@ class PipelineManager:
                 results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
 
         # add results and pipe time to log
-        observer.pipe_time = time.strftime('%H:%M:%S', time.gmtime(time.time() - pipe_start))
-        observer.pipe_res = results
+        observer_.pipe_time = time.strftime('%H:%M:%S', time.gmtime(time.time() - pipe_start))
+        observer_.pipe_res = results
 
         # update logger
-        observer.update_log()
+        observer_.update_log()
 
         # save config in checkpoint folder
-        observer.save_config(pipe, dataset_name, i + 1)
+        observer_.save_config(pipe, dataset_name, i + 1)
         return None
 
     def gpu_gen(self, gpu: bool = False) -> Iterator:
