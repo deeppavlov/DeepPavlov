@@ -222,7 +222,7 @@ class DecayScheduler():
 class EnhancedTFModel(TFModel):
     """TFModel anhanced with optimizer, learning rate and momentum configuration"""
     def __init__(self,
-                 learning_rate: Union[float, Tuple[float, float]],
+                 learning_rate: Union[float, Tuple[float, float]] = None,
                  learning_rate_decay: Union[str, DecayType, List[Any]] = DecayType.NO,
                  learning_rate_decay_epochs: int = 0,
                  learning_rate_decay_batches: int = 0,
@@ -235,6 +235,7 @@ class EnhancedTFModel(TFModel):
                  optimizer: str = 'AdamOptimizer',
                  clip_norm: float = None,
                  fit_beta: float = 0.98,
+                 fit_learning_rate: Tuple[float, float] = [1e-7, 10],
                  fit_learning_rate_div: float = 10.,
                  fit_min_batches: int = 10,
                  fit_max_batches: int = None,
@@ -302,7 +303,8 @@ class EnhancedTFModel(TFModel):
         self._learning_rate_cur_div = 1.
         self._clip_norm = clip_norm
         self._fit_beta = fit_beta
-        self._fit_lr_div = fit_learning_rate_div
+        self._fit_learning_rate = fit_learning_rate
+        self._fit_learning_rate_div = fit_learning_rate_div
         self._fit_min_batches = fit_min_batches
         self._fit_max_batches = fit_max_batches
 
@@ -315,8 +317,8 @@ class EnhancedTFModel(TFModel):
         best_loss = float('inf')
         lrs, losses = [], []
         self._mom = 0. if self._mom is not None else None
-        _lr_find_schedule = DecayScheduler(start_val=self._lr_schedule.start_val,
-                                           end_val=self._lr_schedule.end_val,
+        _lr_find_schedule = DecayScheduler(start_val=self._fit_learning_rate[0],
+                                           end_val=self._fit_learning_rate[1],
                                            dec_type="exponential",
                                            num_it=num_batches)
         self._lr = _lr_find_schedule.start_val
@@ -354,7 +356,7 @@ class EnhancedTFModel(TFModel):
 
         start_val = best_lr
         if self._lr_schedule.dec_type == DecayType.ONECYCLE:
-            start_val = best_lr / self._fit_lr_div
+            start_val = best_lr / self._fit_learning_rate_div
         self._lr_schedule = DecayScheduler(start_val=start_val,
                                            end_val=best_lr,
                                            num_it=self._lr_schedule.nb,
@@ -428,6 +430,9 @@ class EnhancedTFModel(TFModel):
                 self._mom = min(1., max(0., self._mom_schedule.next_val()))
 
     def get_learning_rate(self):
+        if self._lr is None:
+            raise ConfigError("Please specify `learning_rate` parameter"
+                              " before training")
         return self._lr
 
     def get_learning_rate_ph(self):
