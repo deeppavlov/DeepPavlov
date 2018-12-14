@@ -195,3 +195,4 @@ class Chainer(Component):
         for in_params, out_params, component in self.pipe:
             if inspect.ismethod(getattr(component, 'destroy', None)):
                 component.destroy()
+            del component
