@@ -12,18 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os.path import join
-from pathlib import Path
 from copy import deepcopy
 from itertools import product
+from os.path import join
+from pathlib import Path
 from typing import Union, Dict, List, Generator, Iterator
 
+from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.params_search import ParamsSearch
-
 
 log = get_logger(__name__)
 

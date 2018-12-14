@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import json
+import os
 import shutil
-
-from shutil import rmtree
 from collections import OrderedDict
 from os.path import join, isdir, isfile
+from shutil import rmtree
+
 from deeppavlov.core.commands.utils import expand_path
 
 
@@ -27,6 +27,7 @@ class Observer(object):
     The :class:`~pipeline_manager.observer.Observer` implements the functions of observing the course of experiments,
     collecting results, time and other useful information, logging and storing it.
     """
+
     def __init__(self, name: str, root: str, info: dict, date: str, plot: bool) -> None:
         """
         Initializes the log, creates a folders tree and files necessary for the observer to work.

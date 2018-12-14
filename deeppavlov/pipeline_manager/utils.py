@@ -14,18 +14,18 @@
 
 import json
 import time
-import xlsxwriter
-import numpy as np
-import matplotlib.pyplot as plt
-
-from os import mkdir
 from copy import copy
-from typing import Dict, List, Tuple, Union, Iterable
+from os import mkdir
 from os.path import join, isdir
+from typing import Dict, List, Tuple, Union, Iterable
 
+import matplotlib.pyplot as plt
+import numpy as np
+import xlsxwriter
 from py3nvml import py3nvml
-from deeppavlov.core.common.log import get_logger
+
 from deeppavlov.core.common.errors import GpuError
+from deeppavlov.core.common.log import get_logger
 
 logger = get_logger(__name__)
 
@@ -253,6 +253,8 @@ def get_num_gpu() -> int:
     numdevices = py3nvml.nvmlDeviceGetCount()
     py3nvml.nvmlShutdown()
     return numdevices
+
+
 # ------------------------------------------------Generate reports-----------------------------------------------------
 # _______________________________________________Generate new table____________________________________________________
 
@@ -325,11 +327,11 @@ def write_legend(sheet: xlsxwriter, row: int, col: int, data_tipe: List[str], me
     sheet.merge_range(row, col + 1, row, max_com - 1, "Preprocessing", cell_format)
     sheet.write(row, max_com, "Model", cell_format)
     for j in range(len(data_tipe)):
-        p = j*len(metric_names)
+        p = j * len(metric_names)
         for k, met in enumerate(metric_names):
             sheet.write(row, max_com + p + k + 1, met['name'], cell_format)
     # write pipeline run time
-    sheet.write(row, max_com + len(metric_names)*len(data_tipe) + 1, "Time", cell_format)
+    sheet.write(row, max_com + len(metric_names) * len(data_tipe) + 1, "Time", cell_format)
 
     return row + 1, col
 
@@ -342,7 +344,7 @@ def write_dataset_name(sheet: xlsxwriter, sheet_2: xlsxwriter, row_1: int, row_2
     sheet.write(row_1, col, "Dataset name", format_)
     sheet.write(row_1, col + 1, name, format_)
     for l, type_d in enumerate(dataset_list[0][0]['res'].keys()):
-        p = l*len(metric_names)
+        p = l * len(metric_names)
         sheet.merge_range(row_1, max_l + p + 1, row_1, max_l + p + len(metric_names), type_d, format_)
     row_1 += 1
 
@@ -391,7 +393,7 @@ def write_metrics(sheet: xlsxwriter, comp_dict: Dict, start_x: int, start_y: int
     metric_names = list(comp_dict['res'][data_names[-1]].keys())
 
     for j, tp in enumerate(data_names):
-        p = j*len(comp_dict['res'][tp])
+        p = j * len(comp_dict['res'][tp])
         for k, met in enumerate(metric_names):
             sheet.write(start_x, start_y + p + k + 1, comp_dict['res'][tp][met], cell_format)
     return None
@@ -430,7 +432,7 @@ def write_pipe(sheet: xlsxwriter, pipe_dict: Dict, start_x: int, start_y: int, c
     sheet.write(x, max_ + len(data_names) * len(metric_names) + 1, pipe_dict['time'], cell_format)
     # write config in second table
     if write_conf:
-        write_config(sheet, pipe_dict, x, max_ + len(data_names)*len(metric_names) + 2, cell_format)
+        write_config(sheet, pipe_dict, x, max_ + len(data_names) * len(metric_names) + 2, cell_format)
     return None
 
 
@@ -469,6 +471,7 @@ def get_best(data: dict, target: str) -> List[Dict]:
     Returns:
         best_pipes: list; List of pipelines
     """
+
     def get_name(pipeline: Dict) -> str:
         """
         Creates a short description of the pipeline as a string.
@@ -693,7 +696,7 @@ def plot_res(info: dict,
         if i == 0:
             bars.append(ax.bar(x, y, width, color=colors[i]))
         else:
-            bars.append(ax.bar(x + i*width, y, width, color=colors[i]))
+            bars.append(ax.bar(x + i * width, y, width, color=colors[i]))
 
     # plot x sticks and labels
     ax.set_xticks(x - width / 2 + n * width / 2)

@@ -14,29 +14,28 @@
 
 import os
 import time
-
-from tqdm import tqdm
-from pathlib import Path
-from shutil import rmtree
-from psutil import cpu_count
-from datetime import datetime
 from copy import copy, deepcopy
+from datetime import datetime
 from multiprocessing import Pool
 from os.path import join, isdir, isfile
+from pathlib import Path
+from shutil import rmtree
 from typing import Union, Dict, Iterator
 
-from deeppavlov.pipeline_manager.pipegen import PipeGen
+from psutil import cpu_count
+from tqdm import tqdm
+
+from deeppavlov.core.commands.train import read_data_by_config, get_iterator_from_config
+from deeppavlov.core.commands.train import train_evaluate_model_from_config
+from deeppavlov.core.commands.utils import expand_path, parse_config
+from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.file import read_json
+from deeppavlov.core.common.prints import RedirectedPrints
+from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.pipeline_manager.observer import Observer
+from deeppavlov.pipeline_manager.pipegen import PipeGen
 from deeppavlov.pipeline_manager.utils import get_num_gpu
 from deeppavlov.pipeline_manager.utils import results_visualization, get_available_gpus
-
-from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.prints import RedirectedPrints
-from deeppavlov.core.commands.utils import expand_path, parse_config
-from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
-from deeppavlov.core.commands.train import train_evaluate_model_from_config
-from deeppavlov.core.commands.train import read_data_by_config, get_iterator_from_config
 
 
 def unpack_args(func):
@@ -51,6 +50,7 @@ def unpack_args(func):
             return func(**args)
         else:
             return func(*args)
+
     return wrapper
 
 
@@ -122,6 +122,7 @@ class PipelineManager:
         gen_len: amount of pipelines in experiment
 
     """
+
     def __init__(self, config_path: Union[str, Dict, Path]) -> None:
         """
         Initialize observer, read input args, builds a directory tree, initialize date, start test of experiment on
@@ -401,6 +402,7 @@ class PipelineManager:
         """
         Run a test experiment on a small piece of data. The test supports multiprocessing.
         """
+
         def gpu_gen(pipe_gen, available_gpu, gpu=False):
             if gpu:
                 for j, pipe_conf in enumerate(pipe_gen()):
@@ -478,6 +480,7 @@ class PipelineManager:
             None
 
         """
+
         def test_dataset_reader_and_iterator(config: Dict, i: int):
             """
             Creating a test iterator with small peace of train dataset. Config and data validation.
