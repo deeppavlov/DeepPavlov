@@ -15,8 +15,7 @@
 import json
 import time
 from copy import copy
-from os import mkdir
-from os.path import join, isdir
+from pathlib import Path
 from typing import Dict, List, Tuple, Union, Iterable
 
 import matplotlib.pyplot as plt
@@ -540,7 +539,7 @@ def sort_pipes(pipes: List[dict], target_metric: str) -> List[dict]:
     return sort_pipes_
 
 
-def build_pipeline_table(log_data: dict, save_path: str = './') -> None:
+def build_pipeline_table(log_data: dict, save_path: Union[str, Path]) -> None:
     """
     Creates a report table containing a brief description of all the pipelines and their results, as well as selected
     by the target metric.
@@ -562,7 +561,7 @@ def build_pipeline_table(log_data: dict, save_path: str = './') -> None:
     # read data from log
     max_l, pipe_data = get_data(log_data)
     # create xlsx table form
-    workbook = xlsxwriter.Workbook(join(save_path, 'Report_{0}_{1}.xlsx'.format(exp_name, date)))
+    workbook = xlsxwriter.Workbook(str(save_path / 'Report_{0}_{1}.xlsx'.format(exp_name, date)))
     worksheet_1 = workbook.add_worksheet("Pipelines_sort")
     worksheet_2 = workbook.add_worksheet("Pipelines_table")
     # Create a cell format
@@ -643,7 +642,7 @@ def get_met_info(log_: Dict) -> Dict:
 
 def plot_res(info: dict,
              name: str,
-             savepath: str = './',
+             savepath: Union[str, Path],
              save: bool = True,
              width: float = 0.2,
              fheight: int = 8,
@@ -726,10 +725,10 @@ def plot_res(info: dict,
     if not save:
         plt.show()
     else:
-        if not isdir(savepath):
-            mkdir(savepath)
-        adr = join(savepath, '{0}.{1}'.format(name, ext))
-        fig.savefig(adr, dpi=100)
+        if not savepath.is_dir():
+            savepath.mkdir()
+        adr = savepath / '{0}.{1}'.format(name, ext)
+        fig.savefig(str(adr), dpi=100)
         plt.close(fig)
 
     return None
@@ -738,7 +737,7 @@ def plot_res(info: dict,
 # _________________________________________________Build report_______________________________________________________
 
 
-def results_visualization(root: str, plot: bool) -> None:
+def results_visualization(root: Union[str, Path], plot: bool) -> None:
     """
     It builds a reporting table and a histogram of results for different models, based on data from the experiment log.
 
@@ -749,7 +748,7 @@ def results_visualization(root: str, plot: bool) -> None:
     Returns:
         None
     """
-    with open(join(root, root.split('/')[-1] + '.json'), 'r') as log_file:
+    with open(str(root / (root.name + '.json')), 'r') as log_file:
         log = json.load(log_file)
         log_file.close()
     # create the xlsx file with results of experiments
@@ -760,6 +759,6 @@ def results_visualization(root: str, plot: bool) -> None:
         info = get_met_info(log)
         # plot histograms
         for dataset_name, dataset_val in info.items():
-            plot_res(dataset_val, dataset_name, join(root, 'images'))
+            plot_res(dataset_val, dataset_name, str(root / 'images'))
 
     return None

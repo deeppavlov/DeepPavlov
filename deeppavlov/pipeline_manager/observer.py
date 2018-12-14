@@ -13,13 +13,11 @@
 # limitations under the License.
 
 import json
-import os
 import shutil
 from collections import OrderedDict
-from os.path import join, isdir, isfile
+from pathlib import Path
 from shutil import rmtree
-
-from deeppavlov.core.commands.utils import expand_path
+from typing import Union
 
 
 class Observer(object):
@@ -28,7 +26,7 @@ class Observer(object):
     collecting results, time and other useful information, logging and storing it.
     """
 
-    def __init__(self, name: str, root: str, info: dict, date: str, plot: bool) -> None:
+    def __init__(self, name: str, root: Union[str, Path], info: dict, date: str, plot: bool) -> None:
         """
         Initializes the log, creates a folders tree and files necessary for the observer to work.
 
@@ -56,19 +54,19 @@ class Observer(object):
         self.dataset = None
 
         # build folder dependencies
-        self.save_path = expand_path(join(self.root, self.date, self.exp_name, 'checkpoints'))
-        self.log_path = expand_path(join(self.root, date, self.exp_name))
-        self.log_file = expand_path(self.log_path / (self.exp_name + '.json'))
+        self.save_path = self.root / self.date / self.exp_name / 'checkpoints'
+        self.log_path = self.root / date / self.exp_name
+        self.log_file = self.log_path / (self.exp_name + '.json')
 
-        if not isdir(self.save_path):
-            os.makedirs(str(self.save_path))
+        if not self.save_path.is_dir():
+            self.save_path.mkdir(parents=True)
         if self.plot:
-            if not isdir(str(self.log_path / 'images')):
-                os.makedirs(str(self.log_path / 'images'))
+            if not (self.log_path / 'images').is_dir():
+                (self.log_path / 'images').mkdir()
 
         self.log = OrderedDict(experiment_info=OrderedDict(date=date,
                                                            exp_name=self.exp_name,
-                                                           root=self.root,
+                                                           root=str(self.root),
                                                            info=self.exp_inf,
                                                            number_of_pipes=None,
                                                            metrics=None,
@@ -92,7 +90,7 @@ class Observer(object):
         """
         Write log in log_file.
         """
-        if isfile(self.log_file):
+        if self.log_file.is_file():
             with open(str(self.log_file), 'r') as old_log:
                 old_log = json.load(old_log)
 
@@ -178,19 +176,19 @@ class Observer(object):
         for name in dataset_res.keys():
             source = self.save_path / name
             dest1 = self.save_path / (name + '_best_pipe')
-            if not os.path.isdir(dest1):
-                os.makedirs(dest1)
+            if not dest1.is_dir():
+                dest1.mkdir()
 
-            files = os.listdir(source)
+            files = sorted(source.glob("*"))
             for f in files:
-                if not f.startswith('pipe') and not os.path.isfile(join(dest1, f)):
-                    shutil.move(join(source, f), dest1)
-                elif f == 'pipe_{}'.format(dataset_res[name]["best_ind"]):
-                    if os.path.isdir(join(dest1, f)):
-                        rmtree(join(dest1, f))
-                        shutil.move(join(source, f), dest1)
+                if not f.name.startswith('pipe') and not (dest1 / f.name).is_file():
+                    shutil.move((source / f.name), dest1)
+                elif f.name == 'pipe_{}'.format(dataset_res[name]["best_ind"]):
+                    if (dest1 / f.name).is_dir():
+                        rmtree((dest1 / f.name))
+                        shutil.move((source / f.name), dest1)
                     else:
-                        shutil.move(join(source, f), dest1)
+                        shutil.move((source / f.name), dest1)
 
             # del all tmp files in save path
             rmtree(str(self.save_path / name))

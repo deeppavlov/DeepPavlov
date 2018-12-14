@@ -17,7 +17,6 @@ import time
 from copy import copy, deepcopy
 from datetime import datetime
 from multiprocessing import Pool
-from os.path import join, isdir, isfile
 from pathlib import Path
 from shutil import rmtree
 from typing import Union, Dict, Iterator
@@ -140,7 +139,8 @@ class PipelineManager:
         self.exp_name = self.exp_config['enumerate'].get('exp_name', 'experiment')
         self.date = self.exp_config['enumerate'].get('date', datetime.now().strftime('%Y-%m-%d'))
         self.info = self.exp_config['enumerate'].get('info')
-        self.root = self.exp_config['enumerate'].get('root', '~/.deeppavlov/experiments')
+        self.root = expand_path(Path(self.exp_config['enumerate'].get('root',
+                                                                      Path('~/.deeppavlov/experiments').resolve())))
         self.plot = self.exp_config['enumerate'].get('plot', False)
         self.save_best = self.exp_config['enumerate'].get('save_best', False)
         self.do_test = self.exp_config['enumerate'].get('do_test', False)
@@ -160,7 +160,7 @@ class PipelineManager:
         self.available_gpu = None
 
         # create the observer
-        self.save_path = expand_path(join(self.root, self.date, self.exp_name, 'checkpoints'))
+        self.save_path = self.root / self.date / self.exp_name / 'checkpoints'
         self.observer = Observer(self.exp_name, self.root, self.info, self.date, self.plot)
         # create the pipeline generator
         self.pipeline_generator = PipeGen(self.exp_config, self.save_path, self.search_type, self.sample_num, False)
@@ -301,17 +301,18 @@ class PipelineManager:
 
         # start pipeline time
         pipe_start = time.time()
-        save_path = join(observer_.save_path, dataset_name, "pipe_{}".format(i + 1))
-        if not isdir(save_path):
-            os.makedirs(save_path)
+
+        save_path = observer_.save_path / dataset_name / "pipe_{}".format(i + 1)
+        if not save_path.exists():
+            save_path.mkdir(parents=True)
 
         # run pipeline train with redirected output flow
-        process_out_path = join(save_path, f"out_{i + 1}.txt")
-        if isfile(process_out_path):
-            with RedirectedPrints(new_target=open(process_out_path, "r+")):
+        process_out_path = save_path / f"out_{i + 1}.txt"
+        if process_out_path.is_file():
+            with RedirectedPrints(new_target=open(str(process_out_path), "r+")):
                 results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
         else:
-            with RedirectedPrints(new_target=open(process_out_path, "w")):
+            with RedirectedPrints(new_target=open(str(process_out_path), "w")):
                 results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
 
         # add results and pipe time to log
@@ -413,8 +414,9 @@ class PipelineManager:
                     yield (j, deepcopy(pipe_conf))
 
         # del all tmp files in save path from past test
-        if isdir(join(str(self.save_path), "tmp")):
-            rmtree(join(str(self.save_path), "tmp"))
+        tmp_save_path = self.save_path / "tmp"
+        if tmp_save_path.is_dir():
+            rmtree(str(tmp_save_path))
 
         # create the pipeline generator
         pipeline_generator = PipeGen(self.exp_config, self.save_path, self.search_type, self.sample_num, True)
@@ -452,7 +454,7 @@ class PipelineManager:
                     self.test_pipe((i, pipe))
 
         # del all tmp files in save path
-        rmtree(join(str(self.save_path), "tmp"))
+        rmtree(str(tmp_save_path))
         print('[ The test was successful ]')
         return None
 
@@ -461,7 +463,7 @@ class PipelineManager:
             self._test()
         except KeyboardInterrupt:
             # del all tmp files in save path
-            rmtree(join(str(self.save_path), "tmp"))
+            rmtree(str(self.save_path / "tmp"))
             print('[ The test was interrupt ]')
             return None
 

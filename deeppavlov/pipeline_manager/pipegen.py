@@ -14,11 +14,9 @@
 
 from copy import deepcopy
 from itertools import product
-from os.path import join
 from pathlib import Path
 from typing import Union, Dict, List, Generator, Iterator
 
-from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
@@ -273,7 +271,7 @@ class PipeGen:
     @staticmethod
     def change_load_path(config: List[dict],
                          n: int,
-                         save_path: str,
+                         save_path: Union[str, Path],
                          dataset_name: str,
                          test_mode: bool = False) -> List[dict]:
         """
@@ -292,31 +290,31 @@ class PipeGen:
         for component in config:
             if component.get('main') is True:
                 if component.get('save_path', None) is not None:
-                    sp = component['save_path'].split('/')[-1]
+                    sp = Path(component['save_path']).name
                     if not test_mode:
-                        new_save_path = join(str(expand_path(save_path)), dataset_name, 'pipe_{}'.format(n + 1), sp)
+                        new_save_path = str(save_path / dataset_name / 'pipe_{}'.format(n + 1) / sp)
                         component['save_path'] = new_save_path
                     else:
-                        new_save_path = join(str(expand_path(save_path)), "tmp", dataset_name,
-                                             'pipe_{}'.format(n + 1), sp)
+                        new_save_path = str(save_path / "tmp" / dataset_name /
+                                            'pipe_{}'.format(n + 1) / sp)
                         component['save_path'] = new_save_path
                 if component.get('load_path', None) is not None:
-                    lp = component['load_path'].split('/')[-1]
+                    lp = Path(component['load_path']).name
                     if not test_mode:
-                        new_load_path = join(str(expand_path(save_path)), dataset_name, 'pipe_{}'.format(n + 1), lp)
+                        new_load_path = str(save_path / dataset_name / 'pipe_{}'.format(n + 1) / lp)
                         component['load_path'] = new_load_path
                     else:
-                        new_load_path = join(str(expand_path(save_path)), "tmp", dataset_name,
-                                             'pipe_{}'.format(n + 1), lp)
+                        new_load_path = str(save_path / "tmp" / dataset_name /
+                                            'pipe_{}'.format(n + 1) / lp)
                         component['load_path'] = new_load_path
             else:
                 if component.get('save_path', None) is not None:
-                    sp = component['save_path'].split('/')[-1]
+                    sp = Path(component['save_path']).name
                     if not test_mode:
-                        new_save_path = join(str(expand_path(save_path)), dataset_name, sp)
+                        new_save_path = str(save_path / dataset_name / sp)
                         component['save_path'] = new_save_path
                     else:
-                        new_save_path = join(str(expand_path(save_path)), "tmp", dataset_name, sp)
+                        new_save_path = str(save_path / "tmp" / dataset_name / sp)
                         component['save_path'] = new_save_path
 
         return config
