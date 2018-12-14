@@ -4,7 +4,6 @@ Welcome to DeepPavlov's documentation!
 .. toctree::
    :glob:
    :maxdepth: 1
-   :caption: Intro
 
    Hello bot! <intro/hello_bot>
    Installation <intro/installation>

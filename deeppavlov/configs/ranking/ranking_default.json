@@ -1,11 +1,10 @@
 {
   "dataset_reader": {
-    "class_name": "paraphraser_reader",
-    "data_path": "{DOWNLOADS_PATH}/paraphraser_data"
+    "class_name": "siamese_reader",
+    "data_path": "{DOWNLOADS_PATH}/default_ranking_data"
   },
   "dataset_iterator": {
-    "class_name": "siamese_iterator",
-    "seed": 243
+    "class_name": "siamese_iterator"
   },
   "chainer": {
     "in": ["x"],
@@ -15,7 +14,8 @@
         "id": "preproc",
         "class_name": "siamese_preprocessor",
         "use_matrix": false,
-        "max_sequence_length": 28,
+        "num_ranking_samples": 10,
+        "max_sequence_length": 50,
         "fit_on": ["x"],
         "in": ["x"],
         "out": ["x_proc"],
@@ -23,25 +23,25 @@
         {
           "id": "siam_sent_vocab",
           "class_name": "simple_vocab",
-          "save_path": "{MODELS_PATH}/paraphraser_vocabs/sent.dict",
-          "load_path": "{MODELS_PATH}/paraphraser_vocabs/sent.dict"
+          "save_path": "{MODELS_PATH}/default_ranking_vocabs/sent.dict",
+          "load_path": "{MODELS_PATH}/default_ranking_vocabs/sent.dict"
         },
         "tokenizer":
         {
-          "class_name": "nltk_tokenizer"
+          "class_name": "split_tokenizer"
         },
         "vocab":
         {
           "id": "siam_vocab",
           "class_name": "simple_vocab",
-          "save_path": "{MODELS_PATH}/paraphraser_vocabs/tok.dict",
-          "load_path": "{MODELS_PATH}/paraphraser_vocabs/tok.dict"
+          "save_path": "{MODELS_PATH}/default_ranking_vocabs/tok.dict",
+          "load_path": "{MODELS_PATH}/default_ranking_vocabs/tok.dict"
         },
         "embedder":
         {
           "id": "siam_embedder",
           "class_name": "fasttext",
-          "load_path": "{DOWNLOADS_PATH}/embeddings/ft_native_300_ru_wiki_lenta_lower_case.bin"
+          "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.ru.bin"
         }
       },
       {
@@ -54,34 +54,36 @@
         "in": ["x_proc"],
         "in_y": ["y"],
         "out": ["y_predicted"],
-        "class_name": "mpm_nn",
+        "class_name": "bilstm_nn",
         "len_vocab": "#siam_vocab.len",
         "use_matrix": "#preproc.use_matrix",
-        "attention": true,
         "max_sequence_length": "#preproc.max_sequence_length",
         "emb_matrix": "#embeddings.emb_mat",
         "embedding_dim": "#siam_embedder.dim",
         "seed": 243,
-        "hidden_dim": 200,
+        "reccurent": "bilstm",
+        "max_pooling": true,
+        "shared_weights": true,
+        "hidden_dim": 100,
         "learning_rate": 1e-3,
-        "triplet_loss": false,
         "batch_size": 256,
-        "save_path": "{MODELS_PATH}/paraphraser_model/model_weights.h5",
-        "load_path": "{MODELS_PATH}/paraphraser_model/model_weights.h5",
-        "preprocess": "#preproc.__call__"
+        "save_path": "{MODELS_PATH}/default_ranking_model/model_weights.h5",
+        "load_path": "{MODELS_PATH}/default_ranking_model/model_weights.h5",
+        "preprocess": "#preproc.__call__",
+        "interact_pred_num": 3
       }
     ],
     "out": ["y_predicted"]
   },
   "train": {
-    "epochs": 200,
+    "epochs": 10,
     "batch_size": 256,
     "pytest_max_batches": 2,
-    "train_metrics": ["f1", "acc", "log_loss"],
-    "metrics": ["f1", "acc", "log_loss"],
-    "validation_patience": 10,
+    "train_metrics": ["f1", "acc"],
+    "metrics": ["r@1", "r@2", "r@5", "rank_response"],
+    "validation_patience": 3,
     "val_every_n_epochs": 1,
-    "log_every_n_batches": 24
+    "log_every_n_batches": 1
   },
   "metadata": {
     "variables": {
@@ -99,15 +101,11 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/datasets/paraphraser.zip",
-        "subdir": "{DOWNLOADS_PATH}/paraphraser_data"
+        "url": "http://files.deeppavlov.ai/datasets/default_ranking_data.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/default_ranking_data"
       },
       {
-        "url": "http://files.deeppavlov.ai/datasets/paraphraser_gold.zip",
-        "subdir": "{DOWNLOADS_PATH}/paraphraser_data"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_lower_case/ft_native_300_ru_wiki_lenta_lower_case.bin",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.ru.bin",
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import datetime
-import importlib
 import json
 import time
 from collections import OrderedDict, namedtuple
@@ -100,31 +99,27 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
 
         if 'fit_on_batches' in component_config:
             component: Estimator
-
-            targets = component_config['fit_on_batches']
+            targets = component_config['fit_on_batch']
             if isinstance(targets, str):
                 targets = [targets]
 
-            def iter_data():
-                for data in iterator.gen_batches(config['train']['batch_size'], 'train'):
-                    preprocessed = chainer.compute(*data, targets=targets)
-                    if len(component_config['fit_on_batches']) == 1:
-                        preprocessed = [preprocessed]
-                    yield preprocessed
+            for i, data in enumerate(iterator.gen_batches(config['train']['batch_size'], shuffle=False)):
+                preprocessed = chainer.compute(*data, targets=targets)
+                if len(component_config['fit_on_batch']) == 1:
+                    preprocessed = [preprocessed]
+                result = component.partial_fit(*preprocessed)
 
-            result = component.fit_batches(iter_data())
+                if result is not None and config['train'].get('tensorboard_log_dir') is not None:
+                    if i == 0:
+                        import tensorflow as tf
+                        tb_log_dir = expand_path(config['train']['tensorboard_log_dir'])
+                        writer = tf.summary.FileWriter(str(tb_log_dir / 'fit_batches_log'))
 
-            #result = component.fit_batches(*iterator.gen_batches(config['train']['batch_size']))
-            if result is not None and config['train'].get('tensorboard_log_dir') is not None:
-                import tensorflow as tf
-                tb_log_dir = expand_path(config['train']['tensorboard_log_dir'])
-                writer = tf.summary.FileWriter(str(tb_log_dir / 'fit_batches_log'))
-
-                for name, scores in result.items():
-                    for i, score in enumerate(scores):
+                    for name, score in result.items():
                         metric_sum = tf.Summary(value=[tf.Summary.Value(tag='fit_batches/' + name,
                                                                         simple_value=score), ])
                         writer.add_summary(metric_sum, i)
+
 
             component.save()
 
@@ -224,8 +219,6 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None, *
 
         if callable(getattr(model, 'train_on_batch', None)):
             _train_batches(model, iterator, train_config, metrics_functions, start_epoch_num=start_epoch_num)
-        else:
-            log.warning('Nothing to train')
 
         model.destroy()
 
@@ -269,6 +262,10 @@ def _test_model(model: Chainer, metrics_functions: List[Metric],
         start_time = time.time()
 
     expected_outputs = list(set().union(model.out_params, *[m.inputs for m in metrics_functions]))
+
+    if not iterator.data[data_type]:
+        log.warning(f'Could not log examples for {data_type}, assuming it\'s empty')
+        return {'eval_examples_count': 0, 'metrics': None, 'time_spent': str(datetime.timedelta(seconds=0))}
 
     outputs = {out: [] for out in expected_outputs}
     examples = 0
@@ -399,7 +396,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
     try:
         while True:
             for x, y_true in iterator.gen_batches(train_config['batch_size']):
-                if log_on:
+                if log_on and len(train_metrics_functions) > 0:
                     y_predicted = list(model.compute(list(x), list(y_true), targets=expected_outputs))
                     if len(expected_outputs) == 1:
                         y_predicted = [y_predicted]
