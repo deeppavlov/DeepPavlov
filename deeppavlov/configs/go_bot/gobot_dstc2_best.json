@@ -21,8 +21,8 @@
         "id": "token_vocab",
         "fit_on": ["x_tokens"],
         "class_name": "simple_vocab",
-        "save_path": "{MODELS_PATH}/vocabs/token.dict",
-        "load_path": "{MODELS_PATH}/vocabs/token.dict"
+        "save_path": "{MODELS_PATH}/gobot_dstc2_best/word.dict",
+        "load_path": "{MODELS_PATH}/gobot_dstc2_best/word.dict"
       },
       {
         "id": "restaurant_database",
@@ -40,16 +40,15 @@
         "out": ["y_predicted"],
         "main": true,
         "debug": false,
-        "learning_rate": [2e-3, 2e-2],
-        "learning_rate_decay": "1cycle",
-        "learning_rate_decay_batches": 150,
-        "learning_rate_drop_patience": 5,
-        "learning_rate_drop_div": 10.0,
+        "learning_rate": [1e-5, 10],
+        "learning_rate": 0.003,
+        "learning_rate_drop_patience": 10,
+        "learning_rate_drop_div": 4.0,
         "momentum": 0.95,
         "optimizer": "tensorflow.train:AdamOptimizer",
         "clip_norm": 2.0,
-        "dropout_rate": 0.45,
-        "l2_reg_coef": 2e-3,
+        "dropout_rate": 0.8,
+        "l2_reg_coef": 1e-3,
         "hidden_size": 128,
         "dense_size": 128,
         "attention_mechanism": {
@@ -69,7 +68,9 @@
         "slot_filler": {
           "config_path": "{CONFIGS_PATH}/ner/slotfill_dstc2.json"
         },
-        "intent_classifier": null,
+        "intent_classifier": {
+          "config_path": "{CONFIGS_PATH}/classifiers/intents_dstc2.json"
+        },
         "embedder": {
           "class_name": "fasttext",
           "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin"
@@ -87,13 +88,13 @@
     ]
   },
   "train": {
-    "epochs": 200,
+    "epochs": 100,
     "batch_size": 8,
 
     "pytest_max_batches": 2,
 
     "metrics": ["per_item_dialog_accuracy"],
-    "validation_patience": 30,
+    "validation_patience": 10,
     "val_every_n_batches": 15,
 
     "log_every_n_batches": 15,
@@ -120,11 +121,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
-        "subdir": "{MODELS_PATH}"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_best_v2.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_best_v3.tar.gz",
         "subdir": "{MODELS_PATH}"
       },
       {
