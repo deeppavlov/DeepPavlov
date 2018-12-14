@@ -759,6 +759,6 @@ def results_visualization(root: Union[str, Path], plot: bool) -> None:
         info = get_met_info(log)
         # plot histograms
         for dataset_name, dataset_val in info.items():
-            plot_res(dataset_val, dataset_name, str(root / 'images'))
+            plot_res(dataset_val, dataset_name, (root / 'images'))
 
     return None

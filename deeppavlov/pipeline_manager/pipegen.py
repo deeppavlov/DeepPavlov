@@ -316,6 +316,14 @@ class PipeGen:
                     else:
                         new_save_path = str(save_path / "tmp" / dataset_name / sp)
                         component['save_path'] = new_save_path
+                if component.get('load_path', None) is not None:
+                    lp = Path(component['load_path']).name
+                    if not test_mode:
+                        new_load_path = str(save_path / dataset_name / lp)
+                        component['load_path'] = new_load_path
+                    else:
+                        new_load_path = str(save_path / "tmp" / dataset_name / lp)
+                        component['load_path'] = new_load_path
 
         return config
 

@@ -182,13 +182,13 @@ class Observer(object):
             files = sorted(source.glob("*"))
             for f in files:
                 if not f.name.startswith('pipe') and not (dest1 / f.name).is_file():
-                    shutil.move((source / f.name), dest1)
+                    shutil.move(str((source / f.name)), str(dest1))
                 elif f.name == 'pipe_{}'.format(dataset_res[name]["best_ind"]):
                     if (dest1 / f.name).is_dir():
                         rmtree((dest1 / f.name))
-                        shutil.move((source / f.name), dest1)
+                        shutil.move(str(source / f.name), str(dest1))
                     else:
-                        shutil.move((source / f.name), dest1)
+                        shutil.move(str(source / f.name), str(dest1))
 
             # del all tmp files in save path
             rmtree(str(self.save_path / name))
