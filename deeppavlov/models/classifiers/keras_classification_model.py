@@ -200,7 +200,10 @@ class KerasClassificationModel(KerasModel):
         if self.opt["text_size"]:
             features = self.pad_texts(texts)
         else:
-            features = np.array(texts)
+            if len(texts[0]):
+                features = np.array(texts)
+            else:
+                features = np.zeros((1, 1, self.opt["embedding_size"]))
         metrics_values = self.model.train_on_batch(features, np.squeeze(np.array(labels)))
         return metrics_values
 
@@ -219,7 +222,10 @@ class KerasClassificationModel(KerasModel):
         if self.opt["text_size"]:
             features = self.pad_texts(texts)
         else:
-            features = np.array(texts)
+            if len(texts[0]):
+                features = np.array(texts)
+            else:
+                features = np.zeros((1, 1, self.opt["embedding_size"]))
 
         if labels:
             metrics_values = self.model.test_on_batch(features, np.squeeze(np.array(labels)))
