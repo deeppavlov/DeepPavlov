@@ -40,7 +40,6 @@
         "out": ["y_predicted"],
         "main": true,
         "debug": false,
-        "learning_rate": [1e-5, 10],
         "learning_rate": 0.003,
         "learning_rate_drop_patience": 10,
         "learning_rate_drop_div": 4.0,

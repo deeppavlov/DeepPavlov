@@ -690,7 +690,8 @@ class GoalOrientedBotNetwork(EnhancedTFModel):
                                             _units,
                                             initial_state=self._initial_state,
                                             sequence_length=_utter_lengths)
-
+        _output = tf_layers.variational_dropout(_output,
+                                                keep_prob=self._dropout_keep_prob)
         # output projection
         _logits = tf.layers.dense(_output, self.action_size,
                                   kernel_regularizer=tf.nn.l2_loss,
