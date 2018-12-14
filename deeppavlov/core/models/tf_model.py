@@ -185,7 +185,7 @@ class DecayScheduler():
             self.end_val = 0
         if self.dec_type == DecayType.ONECYCLE:
             self.cycle_nb = math.ceil(self.nb / 2)
-            self.div = self.end_val / self.start_val
+            self.div = 1.0 if not self.start_val else self.end_val / self.start_val
 
     def __str__(self):
         return f"DecayScheduler(start_val={self.start_val}, end_val={self.end_val}"\
@@ -234,9 +234,10 @@ class EnhancedTFModel(TFModel):
                  momentum_decay_batches: int = 0,
                  optimizer: str = 'AdamOptimizer',
                  clip_norm: float = None,
-                 fit_beta: float = 0.98,
+                 fit_batch_size: Union[int, str] = None,
                  fit_learning_rate: Tuple[float, float] = [1e-7, 10],
                  fit_learning_rate_div: float = 10.,
+                 fit_beta: float = 0.98,
                  fit_min_batches: int = 10,
                  fit_max_batches: int = None,
                  *args, **kwargs) -> None:
@@ -302,16 +303,22 @@ class EnhancedTFModel(TFModel):
         self._learning_rate_last_impatience = 0.
         self._learning_rate_cur_div = 1.
         self._clip_norm = clip_norm
-        self._fit_beta = fit_beta
+        self._fit_batch_size = fit_batch_size
         self._fit_learning_rate = fit_learning_rate
         self._fit_learning_rate_div = fit_learning_rate_div
+        self._fit_beta = fit_beta
         self._fit_min_batches = fit_min_batches
         self._fit_max_batches = fit_max_batches
 
-    def fit_batches(self, args):
+    def fit(self, *args):
+        data = list(zip(*args))
         self.save()
-        batches = list(args)
-        num_batches = self._fit_max_batches or len(batches)
+        if self._fit_batch_size is None:
+            raise ConfigError("in order to use fit() method"
+                              " set `fit_batch_size` parameter")
+        bs = int(self._fit_batch_size)
+        data_len = len(data)
+        num_batches = self._fit_max_batches or ((data_len - 1) // bs + 1)
 
         avg_loss = 0.
         best_loss = float('inf')
@@ -323,33 +330,27 @@ class EnhancedTFModel(TFModel):
                                            num_it=num_batches)
         self._lr = _lr_find_schedule.start_val
         best_lr = _lr_find_schedule.start_val
-        break_flag = False
-        i = 0
-        while True:
-            for batch in batches:
-                i += 1
-                report = self.train_on_batch(*batch)
-                if not isinstance(report, dict):
-                    report = {'loss': report}
-                # Calculating smoothed loss
-                avg_loss = self._fit_beta*avg_loss + (1 - self._fit_beta)*report['loss']
-                smoothed_loss = avg_loss / (1 - self._fit_beta**i)
-                lrs.append(self._lr)
-                losses.append(smoothed_loss)
-                log.info(f"Batch {i}/{num_batches}: smooth_loss = {smoothed_loss}"
-                         f", lr = {self._lr}, best_lr = {best_lr}")
-                if math.isnan(smoothed_loss) or (smoothed_loss > 4 * best_loss):
-                    break_flag = True
-                    break
-                if (smoothed_loss < best_loss) and (i >= self._fit_min_batches):
-                    best_loss = smoothed_loss
-                    best_lr = self._lr
-                self._lr = _lr_find_schedule.next_val()
+        for i in range(num_batches):
+            batch_start = (i * bs) % data_len
+            batch_end = batch_start + bs
+            report = self.train_on_batch(*zip(*data[batch_start:batch_end]))
+            if not isinstance(report, dict):
+                report = {'loss': report}
+            # Calculating smoothed loss
+            avg_loss = self._fit_beta*avg_loss + (1 - self._fit_beta)*report['loss']
+            smoothed_loss = avg_loss / (1 - self._fit_beta**i)
+            lrs.append(self._lr)
+            losses.append(smoothed_loss)
+            log.info(f"Batch {i}/{num_batches}: smooth_loss = {smoothed_loss}"
+                     f", lr = {self._lr}, best_lr = {best_lr}")
+            if math.isnan(smoothed_loss) or (smoothed_loss > 4 * best_loss):
+                break
+            if (smoothed_loss < best_loss) and (i >= self._fit_min_batches):
+                best_loss = smoothed_loss
+                best_lr = self._lr
+            self._lr = _lr_find_schedule.next_val()
 
-                if i >= num_batches:
-                    break_flag = True
-                    break
-            if break_flag:
+            if i >= num_batches:
                 break
         # best_lr /= 10
         best_lr = self._get_best(lrs, losses)
