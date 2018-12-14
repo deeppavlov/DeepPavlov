@@ -26,9 +26,40 @@ def repeat_(x, k):
     return kb.tile(x[:, None, :], tile_factor)
 
 
-def make_pos_and_tag(tag):
-    if "," in tag:
-        pos, tag = tag.split(",", maxsplit=1)
+def make_pos_and_tag(tag, sep=" ", return_mode=None):
+    if tag.endswith(" _"):
+        tag = tag[:-2]
+    if sep in tag:
+        pos, tag = tag.split(sep, maxsplit=1)
     else:
-        pos, tag = tag, "_"
+        pos, tag = tag, ("_" if return_mode is None else "")
+    if return_mode in ["dict", "list", "sorted_dict"]:
+        tag = tag.split("|") if tag != "" else []
+        if "dict" in return_mode:
+            tag = dict(elem.split("=") for elem in tag)
+            if return_mode == "sorted_dict":
+                tag = sorted(tag.items())
     return pos, tag
+
+
+def _are_equal_pos(first, second):
+    NOUNS, VERBS, CONJ = ["NOUN", "PROPN"], ["AUX", "VERB"], ["CCONJ", "SCONJ"]
+    return (first == second or any((first in parts) and (second in parts)
+                                   for parts in [NOUNS, VERBS, CONJ]))
+
+
+IDLE_FEATURES = ["Voice", "Animacy", "Degree", "Mood", "VerbForm"]
+
+def get_tag_distance(first, second, first_sep=",", second_sep=" "):
+    first_pos, first_feats = make_pos_and_tag(first, sep=first_sep, return_mode="dict")
+    second_pos, second_feats = make_pos_and_tag(second, sep=second_sep, return_mode="dict")
+    dist = int(not _are_equal_pos(first_pos, second_pos))
+    for key, value in first_feats.items():
+        other = second_feats.get(key)
+        if other is None:
+            dist += int(key not in IDLE_FEATURES)
+        else:
+            dist += int(value != other)
+    for key in second_feats:
+        dist += int(key not in first_feats and key not in IDLE_FEATURES)
+    return dist

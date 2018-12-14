@@ -24,6 +24,7 @@ from russian_tagsets import converters
 
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.registry import register
+from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag
 
 
 class WordIndexVectorizer(Serializable):
@@ -192,11 +193,12 @@ class PymorphyVectorizer(WordIndexVectorizer):
         self._start_nodes_for_pos = dict()
         self._data = [None]
         for tag, code in self._t2i.items():
-            if "," in tag:
-                pos, tag = tag.split(",", maxsplit=1)
-                tag = sorted([tuple(elem.split("=")) for elem in tag.split("|")])
-            else:
-                pos, tag = tag, []
+            # if "," in tag:
+            #     pos, tag = tag.split(",", maxsplit=1)
+            #     tag = sorted([tuple(elem.split("=")) for elem in tag.split("|")])
+            # else:
+            #     pos, tag = tag, []
+            pos, tag = make_pos_and_tag(tag, sep=",", return_mode="sorted_dict")
             start = self._start_nodes_for_pos.get(pos)
             if start is None:
                 start = self._start_nodes_for_pos[pos] = len(self._nodes)

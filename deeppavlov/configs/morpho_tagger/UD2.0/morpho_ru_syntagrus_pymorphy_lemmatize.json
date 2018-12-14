@@ -1,0 +1,212 @@
+{
+  "dataset_reader": {
+    "class_name": "morphotagger_dataset_reader",
+    "data_path": "{DOWNLOADS_PATH}/UD2.0_source",
+    "language": "ru_syntagrus",
+    "data_types": [
+      "train",
+      "dev",
+      "test"
+    ]
+  },
+  "dataset_iterator": {
+    "class_name": "morphotagger_dataset"
+  },
+  "chainer": {
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
+    "pipe": [
+      {
+        "in": [
+          "x"
+        ],
+        "class_name": "lazy_tokenizer",
+        "out": [
+          "x_tokens"
+        ]
+      },
+      {
+        "id": "lowercase_preprocessor",
+        "class_name": "lowercase_preprocessor",
+        "in": [
+          "x_tokens"
+        ],
+        "out": [
+          "x_processed"
+        ]
+      },
+      {
+        "id": "tag_vocab",
+        "class_name": "default_vocab",
+        "fit_on": [
+          "y"
+        ],
+        "level": "token",
+        "special_tokens": [
+          "PAD",
+          "BEGIN",
+          "END"
+        ],
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus/tag.dict",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus/tag.dict"
+      },
+      {
+        "id": "char_vocab",
+        "class_name": "default_vocab",
+        "min_freq": 3,
+        "fit_on": [
+          "x_processed"
+        ],
+        "special_tokens": [
+          "PAD",
+          "BEGIN",
+          "END"
+        ],
+        "level": "char",
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus/char.dict",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus/char.dict"
+      },
+      {
+        "id": "pymorphy_vectorizer",
+        "class_name": "pymorphy_vectorizer",
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus/tags_russian.txt",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus/tags_russian.txt",
+        "max_pymorphy_variants": 5,
+        "in": [
+          "x_tokens"
+        ],
+        "out": [
+          "x_possible_tags"
+        ]
+      },
+      {
+        "in": [
+          "x_processed",
+          "x_possible_tags"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "y_predicted"
+        ],
+        "class_name": "morpho_tagger",
+        "main": true,
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus/model_pymorphy.hdf5",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus/model_pymorphy.hdf5",
+        "tags": "#tag_vocab",
+        "symbols": "#char_vocab",
+        "verbose": 1,
+        "char_embeddings_size": 32,
+        "char_window_size": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "word_lstm_units": 128,
+        "conv_dropout": 0.0,
+        "char_conv_layers": 1,
+        "char_highway_layers": 1,
+        "highway_dropout": 0.0,
+        "word_lstm_layers": 1,
+        "char_filter_multiple": 50,
+        "intermediate_dropout": 0.0,
+        "word_dropout": 0.2,
+        "lstm_dropout": 0.2,
+        "regularizer": 0.01,
+        "word_vectorizers": [
+          [
+            "#pymorphy_vectorizer.dim",
+            128
+          ]
+        ]
+      },
+      {
+        "in": [
+          "x_tokens",
+          "y_predicted"
+        ],
+        "out": [
+          "y_lemmas"
+        ],
+        "class_name": "UD_pymorphy_lemmatizer",
+        "end": "\n"
+      },
+      {
+        "in": [
+          "x_tokens",
+          "y_predicted",
+          "y_lemmas"
+        ],
+        "out": [
+          "y_prettified"
+        ],
+        "class_name": "lemmatized_output_prettifier",
+        "end": "\n"
+      }
+    ],
+    "out": [
+      "y_prettified"
+    ]
+  },
+  "train": {
+    "epochs": 50,
+    "batch_size": 32,
+    "metrics": [
+      {
+        "name": "per_token_accuracy",
+        "inputs": [
+          "y",
+          "y_predicted"
+        ]
+      },
+      {
+        "name": "accuracy",
+        "inputs": [
+          "y",
+          "y_predicted"
+        ]
+      }
+    ],
+    "validation_patience": 10,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1
+  },
+  "predict": {
+    "batch_size": 32,
+    "outfile": "{RESULTS_PATH}/ud_ru_syntagrus_test.res"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "RESULTS_PATH": "{ROOT_PATH}/results"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger/UD2.0/ru_syntagrus.tar.gz",
+        "subdir": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/datasets/UD2.0_source/ru_syntagrus.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/UD2.0_source/ru_syntagrus"
+      }
+    ],
+    "labels": {
+      "telegram_utils": "MorphoTaggerPymorphyLemmatizedModel"
+    }
+  }
+}
