@@ -1,15 +1,28 @@
 from pathlib import Path
-from typing import List, Dict, Union, Optional, Tuple
+from typing import List, Dict, Union, Optional
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import expand_path, parse_config
-from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
+from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.dataset_iterators.morphotagger_iterator import MorphoTaggerDatasetIterator
 from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag
+
+
+def call_model(model: Chainer, data: List, batch_size: int = 16) -> List[Optional[List[str]]]:
+    data_for_iterator = [(sent, None) for sent in data]
+    iterator: MorphoTaggerDatasetIterator = MorphoTaggerDatasetIterator({"test": data_for_iterator})
+    answer = [None] * len(data)
+
+    for indexes, (x, _) in iterator.gen_batches(
+            batch_size=batch_size, data_type="test", shuffle=False, return_indexes=True):
+        y = model(x)
+        for i, elem in zip(indexes, y):
+            answer[i] = elem
+    return answer
 
 
 def predict_with_model(config_path: [Path, str]) -> List[Optional[List[str]]]:
@@ -51,19 +64,6 @@ def predict_with_model(config_path: [Path, str]) -> List[Optional[List[str]]]:
             for elem in answers:
                 fout.write(elem + "\n")
     return answers
-
-
-@register('sent_label_splitter')
-class SentLabelSplitter(Component):
-
-    def __init__(self, **kwargs):
-        pass
-
-    def __call__(self, X: List[Tuple]) -> Tuple[List[Union[List[str], str]], List[int]]:
-        answer = [elem[0] for elem in X], [elem[1] for elem in X]
-        return answer
-
-
 
 
 @register('tag_output_prettifier')

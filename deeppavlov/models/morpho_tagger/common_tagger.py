@@ -36,10 +36,22 @@ def make_pos_and_tag(tag, sep=" ", return_mode=None):
     if return_mode in ["dict", "list", "sorted_dict"]:
         tag = tag.split("|") if tag != "" else []
         if "dict" in return_mode:
-            tag = dict(elem.split("=") for elem in tag)
+            tag = dict(tuple(elem.split("=")) for elem in tag)
             if return_mode == "sorted_dict":
-                tag = sorted(tag.items())
+                tag = tuple(sorted(tag.items()))
     return pos, tag
+
+
+def make_full_UD_tag(pos, tag, mode=None):
+    if tag == "_" or len(tag) == 0:
+        return pos
+    if mode == "dict":
+        tag, mode = sorted(tag.items()), "sorted_dict"
+    if mode == "sorted_dict":
+        tag, mode = ["{}={}".format(*elem) for elem in tag], "list"
+    if mode == "list":
+        tag = "|".join(tag)
+    return "{},{}".format(pos, tag)
 
 
 def _are_equal_pos(first, second):
