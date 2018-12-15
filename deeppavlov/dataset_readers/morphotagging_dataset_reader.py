@@ -162,4 +162,99 @@ class MorphotaggerDatasetReader(DatasetReader):
 #             if mode == "test":
 #                 kwargs["read_only_words"] = True
             data[mode] = read_infile(filepath, **kwargs)
+            # data[mode] = [((sent, 0), tags) for sent, tags in curr_data]
+        return data
+
+
+@register('morphotagger_multidataset_reader')
+class MorphotaggerMultiDatasetReader(DatasetReader):
+    """Class to read training datasets in UD format"""
+
+    URL = 'http://files.deeppavlov.ai/datasets/UD2.0_source/'
+
+    def read(self, data_path: Union[List, str],
+             additional_data_path: Optional[List] = None,
+             language: Optional[None] = None,
+             data_types: Optional[List[str]] = None,
+             **kwargs) -> Dict[str, List]:
+        """Reads UD dataset from data_path.
+
+        Args:
+            data_path: contists of two parts
+                The first can be either
+                1. a directory containing files. The file for data_type 'mode'
+                is then data_path / {language}-ud-{mode}.conllu
+                2. a list of files, containing the same number of items as data_types
+                The second contains a list of additional train files.
+            language: a language to detect filename when it is not given
+            data_types: which dataset parts among 'train', 'dev', 'test' are returned
+
+        Returns:
+            a dictionary containing dataset fragments (see ``read_infile``) for given data types
+        """
+        if data_types is None:
+            data_types = ["train", "dev"]
+        elif isinstance(data_types, str):
+            data_types = list(data_types)
+        for data_type in data_types:
+            if data_type not in ["train", "dev", "test"]:
+                raise ValueError("Unknown data_type: {}, only train, dev and test "
+                                 "datatypes are allowed".format(data_type))
+        if additional_data_path is None:
+            additional_data_path = []
+        if isinstance(data_path, str):
+            data_path = Path(data_path)
+        if isinstance(data_path, Path):
+            if data_path.exists():
+                is_file = data_path.is_file()
+            else:
+                is_file = (len(data_types) == 1)
+            if is_file:
+                # path to a single file
+                data_path, reserve_data_path = [data_path], None
+            else:
+                # path to data directory
+                if language is None:
+                    raise ValueError("You must implicitly provide language "
+                                     "when providing data directory as source")
+                reserve_data_path = data_path
+                data_path = [data_path / "{}-ud-{}.conllu".format(language, mode)
+                             for mode in data_types]
+                reserve_data_path = [
+                    reserve_data_path / language / "{}-ud-{}.conllu".format(language, mode)
+                    for mode in data_types]
+        else:
+            data_path = [Path(data_path) for data_path in data_path]
+            reserve_data_path = None
+        if len(data_path) != len(data_types):
+            raise ValueError("The number of input files in data_path and data types "
+                             "in data_types must be equal")
+        has_missing_files = any(not filepath.exists() for filepath in data_path)
+        if has_missing_files and reserve_data_path is not None:
+            has_missing_files = any(not filepath.exists() for filepath in reserve_data_path)
+            if not has_missing_files:
+                data_path = reserve_data_path
+        if has_missing_files:
+            # Files are downloaded from the Web repository
+            dir_path = data_path[0].parent
+            language = language or get_language(data_path[0].parts[-1])
+            url = self.URL + "{}.tar.gz".format(language)
+            log.info('[downloading data from {} to {}]'.format(url, dir_path))
+            dir_path.mkdir(exist_ok=True, parents=True)
+            download_decompress(url, dir_path)
+            mark_done(dir_path)
+        data = {}
+        for mode, filepath in zip(data_types, data_path):
+            if mode == "dev":
+                mode = "valid"
+#             if mode == "test":
+#                 kwargs["read_only_words"] = True
+            curr_data = read_infile(filepath, **kwargs)
+            data[mode] = [((sent, 0), tags) for sent, tags in curr_data]
+        for i, filepath in enumerate(additional_data_path, 1):
+            if isinstance(filepath, str):
+                filepath = Path(filepath)
+            curr_data = read_infile(filepath, **kwargs)
+            curr_data = [((sent, i), tags) for sent, tags in curr_data]
+            data["train"].extend(curr_data)
         return data

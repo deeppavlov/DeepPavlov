@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Dict, Union, Optional
+from typing import List, Dict, Union, Optional, Tuple
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import expand_path, parse_config
@@ -51,6 +51,19 @@ def predict_with_model(config_path: [Path, str]) -> List[Optional[List[str]]]:
             for elem in answers:
                 fout.write(elem + "\n")
     return answers
+
+
+@register('sent_label_splitter')
+class SentLabelSplitter(Component):
+
+    def __init__(self, **kwargs):
+        pass
+
+    def __call__(self, X: List[Tuple]) -> Tuple[List[Union[List[str], str]], List[int]]:
+        answer = [elem[0] for elem in X], [elem[1] for elem in X]
+        return answer
+
+
 
 
 @register('tag_output_prettifier')

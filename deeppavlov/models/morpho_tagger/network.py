@@ -84,6 +84,8 @@ class CharacterTagger:
                  word_lstm_units: Union[int, List[int]] = 128,
                  word_dropout: float = 0.0,
                  regularizer: float = None,
+                 additional_inputs_number: int = 0,
+                 additional_inputs_weight: float = 0.0,
                  verbose: int = 1):
         self.symbols = symbols
         self.tags = tags
@@ -103,6 +105,8 @@ class CharacterTagger:
         self.word_lstm_layers = word_lstm_layers
         self.word_lstm_units = word_lstm_units
         self.regularizer = regularizer
+        self.additional_inputs_number = additional_inputs_number
+        self.additional_inputs_weight = additional_inputs_weight
         self.verbose = verbose
         self._initialize()
         self.build()
@@ -126,10 +130,17 @@ class CharacterTagger:
             log.info("{} symbols, {} tags in CharacterTagger".format(self.symbols_number_, self.tags_number_))
 
     @property
+    def has_additional_inputs(self) -> bool:
+        return (self.additional_inputs_number > 0)
+
+    def _get_additional_symbol_index(self, i) -> int:
+        return len(self.symbols) + i
+
+    @property
     def symbols_number_(self) -> int:
         """Character vocabulary size
         """
-        return len(self.symbols)
+        return len(self.symbols) + self.additional_inputs_number
 
     @property
     def tags_number_(self) -> int:
@@ -219,15 +230,22 @@ class CharacterTagger:
         return pre_outputs, lstm_outputs
 
     def _transform_batch(self, data, labels=None, transform_to_one_hot=True):
+        if self.has_additional_inputs:
+            data, groups = data[:-1], data[-1]
+            weights = np.array([1 if x == 0 else self.additional_inputs_weight for x in groups])
+        else:
+            groups = [0] * len(data[0])
+            weights = np.ones(shape=(len(data[0],)))
         data, additional_data = data[0], data[1:]
         L = max(len(x) for x in data)
-        X = np.array([self._make_sent_vector(x, L) for x in data])
+        X = np.array([self._make_sent_vector(x, L, group=group)
+                      for x, group in zip(data, groups)])
         X = [X] + [np.array(x) for x in additional_data]
         if labels is not None:
             Y = np.array([self._make_tags_vector(y, L) for y in labels])
             if transform_to_one_hot:
                 Y = to_one_hot(Y, len(self.tags))
-            return X, Y
+            return X, Y, weights
         else:
             return X
 
@@ -240,8 +258,8 @@ class CharacterTagger:
         Returns:
             the trained model
         """
-        X, Y = self._transform_batch(data, labels)
-        self.model_.train_on_batch(X, Y)
+        X, Y, weights = self._transform_batch(data, labels)
+        self.model_.train_on_batch(X, Y, sample_weight=weights)
 
     def predict_on_batch(self, data: Union[list, tuple],
                          return_indexes: bool = False) -> List[List[str]]:
@@ -265,7 +283,7 @@ class CharacterTagger:
             answer[i] = elem if return_indexes else self.tags.idxs2toks(elem)
         return answer
 
-    def _make_sent_vector(self, sent: List, bucket_length: int =None) -> np.ndarray:
+    def _make_sent_vector(self, sent: List, bucket_length: int = None, group: int = 0) -> np.ndarray:
         """Transforms a sentence to Numpy array, which will be the network input.
 
         Args:
@@ -280,11 +298,13 @@ class CharacterTagger:
         answer = np.zeros(shape=(bucket_length, MAX_WORD_LENGTH+2), dtype=np.int32)
         for i, word in enumerate(sent):
             answer[i, 0] = self.tags.tok2idx("BEGIN")
-            m = min(len(word), MAX_WORD_LENGTH)
-            for j, x in enumerate(word[-m:]):
+            m = min(len(word), MAX_WORD_LENGTH - int(self.has_additional_inputs))
+            if self.has_additional_inputs:
+                answer[i, 1] = self._get_additional_symbol_index(group)
+            for j, x in enumerate(word[-m:], int(self.has_additional_inputs)):
                 answer[i, j+1] = self.symbols.tok2idx(x)
-            answer[i, m+1] = self.tags.tok2idx("END")
-            answer[i, m+2:] = self.tags.tok2idx("PAD")
+            answer[i, m+1+int(self.has_additional_inputs)] = self.tags.tok2idx("END")
+            answer[i, m+2+int(self.has_additional_inputs):] = self.tags.tok2idx("PAD")
         return answer
 
     def _make_tags_vector(self, tags, bucket_length=None) -> np.ndarray:

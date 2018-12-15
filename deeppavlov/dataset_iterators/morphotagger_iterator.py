@@ -89,13 +89,11 @@ class MorphoTaggerDatasetIterator(DataLearningIterator):
     def gen_batches(self, batch_size: int, data_type: str = 'train',
                     shuffle: bool = None, return_indexes: bool = False) -> Iterator[tuple]:
         """Generate batches of inputs and expected output to train neural networks
-
         Args:
             batch_size: number of samples in batch
             data_type: can be either 'train', 'test', or 'valid'
             shuffle: whether to shuffle dataset before batching
             return_indexes: whether to return indexes of batch elements in initial dataset
-
         Yields:
             a tuple of a batch of inputs and a batch of expected outputs.
             If `return_indexes` is True, also yields indexes of batch elements.
@@ -111,8 +109,88 @@ class MorphoTaggerDatasetIterator(DataLearningIterator):
         if batch_size < 0:
             batch_size = L
         for start in range(0, L, batch_size):
-            indexes_to_yield = indexes[start:start+batch_size]
+            indexes_to_yield = indexes[start:start + batch_size]
             data_to_yield = tuple(list(x) for x in zip(*([data[i] for i in indexes_to_yield])))
+            if return_indexes:
+                yield indexes_to_yield, data_to_yield
+            else:
+                yield data_to_yield
+
+
+@register('morphotagger_multidataset')
+class MorphoTaggerMultiDatasetIterator(DataLearningIterator):
+    """
+    Iterates over data for Morphological Tagging.
+    A subclass of :class:`~deeppavlov.core.data.data_learning_iterator.DataLearningIterator`.
+
+    Args:
+        seed: random seed for data shuffling
+        shuffle: whether to shuffle data during batching
+        validation_split: the fraction of validation data
+            (is used only if there is no `valid` subset in `data`)
+        min_train_fraction: minimal fraction of train data in train+dev dataset,
+                For fair comparison with UD Pipe it is set to 0.9 for UD experiments.
+                It is actually used only for Turkish data.
+    """
+    def __init__(self, data: Dict[str, List[Tuple[Any, Any]]], seed: int = None,
+                 shuffle: bool = True,  min_train_fraction: float = 0.0,
+                 validation_split: float = 0.2) -> None:
+        self.validation_split = validation_split
+        self.min_train_fraction = min_train_fraction
+        super().__init__(data, seed, shuffle)
+
+    def split(self) -> None:
+        """
+        Splits the `train` part to `train` and `valid`, if no `valid` part is specified.
+        Moves deficient data from `valid` to `train` if both parts are given,
+        but `train` subset is too small.
+        """
+        if len(self.valid) == 0:
+            if self.shuffle:
+                random.shuffle(self.train)
+            L = int(len(self.train) * (1.0 - self.validation_split))
+            self.train, self.valid = self.train[:L], self.valid[L:]
+        elif self.min_train_fraction > 0.0:
+            train_length = len(self.train)
+            valid_length = len(self.valid)
+            gap = int(self.min_train_fraction * (train_length + valid_length)) - train_length
+            if gap > 0:
+                self.train.extend(self.valid[:gap])
+                self.valid = self.valid[gap:]
+        return
+
+    def gen_batches(self, batch_size: int, data_type: str = 'train',
+                    shuffle: bool = None, return_indexes: bool = False) -> Iterator[tuple]:
+        """Generate batches of inputs and expected output to train neural networks
+        Args:
+            batch_size: number of samples in batch
+            data_type: can be either 'train', 'test', or 'valid'
+            shuffle: whether to shuffle dataset before batching
+            return_indexes: whether to return indexes of batch elements in initial dataset
+        Yields:
+            a tuple of a batch of inputs and a batch of expected outputs.
+            If `return_indexes` is True, also yields indexes of batch elements.
+        """
+        if shuffle is None:
+            shuffle = self.shuffle
+        data = self.data[data_type]
+        max_index = max(elem[0][1] for elem in data) + 1
+        groups = [[] for _ in range(max_index)]
+        for (elem, i), tags in data:
+            groups[i].append(((elem, i), tags))
+        lengths = [[len(x[0]) for x in elem] for elem in groups]
+        indexes = [np.argsort(elem) for elem in lengths]
+
+        L = len(data[0])
+        if batch_size < 0:
+            batch_size = L
+        starts = [(i, start) for i, elem in enumerate(groups)
+                  for start in range(0, len(elem), batch_size)]
+        if shuffle:
+            random.shuffle(starts)
+        for i, start in starts:
+            indexes_to_yield = indexes[i][start:start + batch_size]
+            data_to_yield = tuple(list(x) for x in zip(*([groups[i][index] for index in indexes_to_yield])))
             if return_indexes:
                 yield indexes_to_yield, data_to_yield
             else:
