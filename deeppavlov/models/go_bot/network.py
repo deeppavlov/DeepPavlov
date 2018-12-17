@@ -579,19 +579,14 @@ class GoalOrientedBotNetwork(EnhancedTFModel):
         # loss, train and predict operations
         self._prediction = tf.argmax(self._probs, axis=-1, name='prediction')
 
-        _weights = tf.expand_dims(self._utterance_mask, -1)
+        # _weights = tf.expand_dims(self._utterance_mask, -1)
         # TODO: try multiplying logits to action_mask
-        # onehots = tf.one_hot(self._action, self.action_size)
-        # _loss_tensor = \
-        # tf.losses.softmax_cross_entropy(logits=_logits, onehot_labels=onehots,
-        #                                weights=_weights,
-        #                                reduction=tf.losses.Reduction.NONE)
-        _loss_tensor = tf.losses.sparse_softmax_cross_entropy(
-            logits=_logits, labels=self._action, weights=_weights,
-            reduction=tf.losses.Reduction.NONE
+        onehots = tf.one_hot(self._action, self.action_size)
+        _loss_tensor = tf.nn.softmax_cross_entropy_with_logits_v2(
+            logits=_logits, labels=onehots
         )
         # multiply with batch utterance mask
-        # _loss_tensor = tf.multiply(_loss_tensor, self._utterance_mask)
+        _loss_tensor = tf.multiply(_loss_tensor, self._utterance_mask)
         self._loss = tf.reduce_mean(_loss_tensor, name='loss')
         self._loss += self.l2_reg * tf.losses.get_regularization_loss()
         self._train_op = self.get_train_op(self._loss)
@@ -612,8 +607,8 @@ class GoalOrientedBotNetwork(EnhancedTFModel):
         self._utterance_mask = tf.placeholder(tf.float32,
                                               shape=[None, None],
                                               name='utterance_mask')
-        _batch_size = tf.shape(self._features)[0]
-        zero_state = tf.zeros([_batch_size, self.hidden_size], dtype=tf.float32)
+        self._batch_size = tf.shape(self._features)[0]
+        zero_state = tf.zeros([self._batch_size, self.hidden_size], dtype=tf.float32)
         _initial_state_c = \
             tf.placeholder_with_default(zero_state, shape=[None, self.hidden_size])
         _initial_state_h = \
@@ -688,8 +683,10 @@ class GoalOrientedBotNetwork(EnhancedTFModel):
         _utter_lengths = tf.to_int32(tf.reduce_sum(self._utterance_mask, axis=-1))
         _output, _state = tf.nn.dynamic_rnn(_lstm_cell,
                                             _units,
+                                            time_major=False,
                                             initial_state=self._initial_state,
                                             sequence_length=_utter_lengths)
+        _output = tf.reshape(_output, (self._batch_size, -1, self.hidden_size))
         _output = tf_layers.variational_dropout(_output,
                                                 keep_prob=self._dropout_keep_prob)
         # output projection
