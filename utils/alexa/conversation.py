@@ -27,7 +27,8 @@ class Conversation:
         handled_requests: Mapping of Alexa requests types to requests handlers.
         response_template: Alexa response template.
         """
-    def __init__(self, config: dict, agent: DefaultAgent, conversation_key: str, self_destruct_callback: callable):
+    def __init__(self, config: dict, agent: DefaultAgent, conversation_key: str,
+                 self_destruct_callback: callable) -> None:
         self.config = config
         self.agent = agent
         self.key = conversation_key
