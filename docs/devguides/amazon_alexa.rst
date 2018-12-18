@@ -27,7 +27,7 @@ possible user inputs with list of predefined intents and slots. There are to way
 **1. AMAZON.SearchQuery slot type**
 
 This hack uses AMAZON.SearchQuery slot type which grabs raw text (speech) user input. Bad news that sample utterance
-can not consist only of AMAZON.SearchQuery slot and requires some carrier phrase (one word carrier phrase will work.
+can not consist only of AMAZON.SearchQuery slot and requires some carrier phrase (one word carrier phrase will work).
 So you should define this phrase and restrict your user to use it before or after you query.
 
 Here is JSON config example for Skill Developer console with *"tell"* carrier phrase:
@@ -173,7 +173,7 @@ Please note, that in both cases you should have only one intent with only one sl
 Alexa sends request to the https endpoint which was set in the **Endpoint** section of Alexa Development Console.
 
 You should deploy DeepPavlov skill/component REST service on this
-endpoint or terminate it to your REST service. Full REST endpoint URL
+endpoint or redirect it to your REST service. Full REST endpoint URL
 can be obtained by the swagger ``apidocs/`` endpoint. We remind you that Alexa requires https endpoint
 with valid certificate from CA.
 
