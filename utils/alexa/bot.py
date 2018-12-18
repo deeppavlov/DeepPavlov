@@ -126,7 +126,7 @@ class Bot(Thread):
         if verify_signature(amazon_cert, signature, request_body):
             result = True
         else:
-            log.error(f'Failed signature verification for request: {str(request_body)}')
+            log.error(f'Failed signature verification for request: {request_body.decode("utf-8", "replace")}')
             result = False
 
         return result
