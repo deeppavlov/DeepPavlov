@@ -1,7 +1,6 @@
-from threading import Timer
+from threading import Timer, Thread
 from datetime import timedelta, datetime
 from queue import Queue
-from threading import Thread
 from typing import Optional, Dict
 from collections import namedtuple
 
