@@ -150,7 +150,8 @@ class Bot(Thread):
         timestamp_str = alexa_request['request']['timestamp']
         timestamp_datetime = datetime.strptime(timestamp_str, '%Y-%m-%dT%H:%M:%SZ')
         now = datetime.utcnow()
-        delta = now - timestamp_datetime
+
+        delta = now - timestamp_datetime if now >= timestamp_datetime else timestamp_datetime - now
 
         if abs(delta.seconds) > REQUEST_TIMESTAMP_TOLERANCE_SECS:
             return {'error': 'failed request timestamp check'}
