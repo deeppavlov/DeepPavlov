@@ -51,9 +51,7 @@
         "vocab": "#siam_vocab"
       },
       {
-        "in": ["x_proc"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
+        "id": "model",
         "class_name": "mpm_nn",
         "len_vocab": "#siam_vocab.len",
         "use_matrix": "#preproc.use_matrix",
@@ -69,19 +67,30 @@
         "save_path": "{MODELS_PATH}/paraphraser_model/model_weights.h5",
         "load_path": "{MODELS_PATH}/paraphraser_model/model_weights.h5",
         "preprocess": "#preproc.__call__"
+      },
+      {
+        "in": ["x_proc"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "class_name": "siamese_predictor",
+        "model": "#model",
+        "ranking": false,
+        "attention": true,
+        "batch_size": "#model.batch_size",
+        "preproc_func": "#preproc.__call__"
       }
     ],
     "out": ["y_predicted"]
   },
   "train": {
-    "epochs": 200,
+    "epochs": 20,
     "batch_size": 256,
     "pytest_max_batches": 2,
     "train_metrics": ["f1", "acc", "log_loss"],
     "metrics": ["f1", "acc", "log_loss"],
     "validation_patience": 10,
     "val_every_n_epochs": 1,
-    "log_every_n_batches": 24
+    "log_every_n_batches": 12
   },
   "metadata": {
     "variables": {
@@ -98,6 +107,10 @@
       "server_utils": "Ranker"
     },
     "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/paraphrase_ident_paraphraser_tuned.tar.gz",
+        "subdir": "{MODELS_PATH}/paraphraser_model"
+      },
       {
         "url": "http://files.deeppavlov.ai/datasets/paraphraser.zip",
         "subdir": "{DOWNLOADS_PATH}/paraphraser_data"

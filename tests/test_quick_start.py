@@ -3,10 +3,10 @@ import json
 import logging
 import os
 import signal
-from pathlib import Path
 import shutil
 import sys
-from tempfile import TemporaryDirectory
+from pathlib import Path
+from typing import Union
 
 import pytest
 import pexpect
@@ -22,12 +22,17 @@ from deeppavlov.core.common.paths import get_settings_path
 from utils.server_utils.server import get_server_params, SERVER_CONFIG_FILENAME
 
 
-cache_dir = None
 tests_dir = Path(__file__).parent
 test_configs_path = tests_dir / "deeppavlov" / "configs"
 src_dir = Path(deeppavlov.__path__[0]) / "configs"
 test_src_dir = tests_dir / "test_configs"
 download_path = tests_dir / "download"
+
+cache_dir: Path = None
+if not os.getenv('DP_PYTEST_NO_CACHE'):
+    cache_dir = tests_dir / 'download_cache'
+
+api_port = os.getenv('DP_PYTEST_API_PORT')
 
 TEST_MODES = ['IP',  # test_interacting_pretrained_model
               'TI',  # test_consecutive_training_and_interacting
@@ -93,8 +98,10 @@ PARAMS = {
         ("classifiers/intents_snips_bilstm_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_snips_bilstm_cnn.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_snips_bilstm_proj_layer.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/intents_snips_bilstm_self_add_attention.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/intents_snips_bilstm_self_mult_attention.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_self_add_attention.json", "classifiers", ('TI',)):
+            [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_self_mult_attention.json", "classifiers", ('TI',)):
+            [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_snips_cnn_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_snips_sklearn.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_snips_tfidf_weighted.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
@@ -108,7 +115,7 @@ PARAMS = {
         ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_ontonotes.json", "ner_ontonotes", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_few_shot_ru_simulate.json", "ner_fs", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_rus.json", "ner_rus", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_rus.json", "ner_rus", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/slotfill_dstc2.json", "slotfill_dstc2", ('IP',)):
             [
                 ("chinese food", "{'food': 'chinese'}"),
@@ -123,20 +130,28 @@ PARAMS = {
         ("elmo/elmo-1b-benchmark_test.json", "elmo-1b-benchmark_test", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
     },
 
-    "ranking": {("ranking/ranking_insurance_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/ranking_insurance_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/ranking_ubuntu_v2_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/ranking_ubuntu_v2_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/ranking_ubuntu_v2_mt_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/ranking_ubuntu_v2_mt_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/paraphrase_ident_paraphraser_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/paraphrase_ident_paraphraser_interact_test.json", "ranking",
-                 ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/paraphrase_ident_qqp_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/paraphrase_ident_qqp_bilstm_interact_test.json", "ranking",
-                 ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/paraphrase_ident_qqp_bilstm_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/paraphrase_ident_qqp_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+    "ranking": {
+        ("ranking/ranking_insurance_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_insurance_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_mt_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_mt_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_paraphraser_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_paraphraser_interact_test.json", "ranking",
+         ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_paraphraser_pretrain.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_paraphraser_tune.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_tune_interact.json", "ranking",
+         ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_paraphraser_elmo.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_elmo_interact.json", "ranking",
+         ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_qqp_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_qqp_bilstm_interact_test.json", "ranking",
+         ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_qqp_bilstm_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_qqp_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "doc_retrieval": {
         ("doc_retrieval/en_ranker_tfidf_wiki_test.json", "doc_retrieval", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -168,7 +183,7 @@ PARAMS = {
         ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("odqa/ru_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
-    "morpho_tagger":{
+    "morpho_tagger": {
         ("morpho_tagger/UD2.0/morpho_en.json", "morpho_tagger_en", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json", "morpho_tagger_pymorphy", ALL_MODES):
             [ONE_ARGUMENT_INFER_CHECK],
@@ -190,13 +205,25 @@ for model in PARAMS.keys():
         TEST_GRID.append(grid_unit)
 
 
-def download_config(conf_file):
-    src_file = src_dir / conf_file
+def _override_with_test_values(item: Union[dict, list]) -> None:
+    if isinstance(item, dict):
+        keys = [k for k in item.keys() if k.startswith('pytest_')]
+        for k in keys:
+            item[k[len('pytest_'):]] = item.pop(k)
+        item = item.values()
+
+    for child in item:
+        if isinstance(child, (dict, list)):
+            _override_with_test_values(child)
+
+
+def download_config(config_path):
+    src_file = src_dir / config_path
     if not src_file.is_file():
-        src_file = test_src_dir / conf_file
+        src_file = test_src_dir / config_path
 
     if not src_file.is_file():
-        raise RuntimeError('No config file {}'.format(conf_file))
+        raise RuntimeError('No config file {}'.format(config_path))
 
     with src_file.open(encoding='utf8') as fin:
         config: dict = json.load(fin)
@@ -212,29 +239,27 @@ def download_config(conf_file):
             download_config(config_ref)
 
     # Update config for testing
-    if config.get("train"):
-        config["train"]["epochs"] = 1
-        for pytest_key in [k for k in config["train"] if k.startswith('pytest_')]:
-            config["train"][pytest_key[len('pytest_'):]] = config["train"].pop(pytest_key)
+    config.setdefault('train', {}).setdefault('pytest_epochs', 1)
+    _override_with_test_values(config)
 
     config_vars = config.setdefault('metadata', {}).setdefault('variables', {})
     config_vars['ROOT_PATH'] = str(download_path)
     config_vars['CONFIGS_PATH'] = str(test_configs_path)
 
-    conf_file = test_configs_path / conf_file
-    conf_file.parent.mkdir(exist_ok=True, parents=True)
-    with conf_file.open("w", encoding='utf8') as fout:
+    config_path = test_configs_path / config_path
+    config_path.parent.mkdir(exist_ok=True, parents=True)
+    with config_path.open("w", encoding='utf8') as fout:
         json.dump(config, fout)
 
 
-def install_config(conf_file):
+def install_config(config_path):
     logfile = io.BytesIO(b'')
-    p = pexpect.popen_spawn.PopenSpawn(sys.executable + " -m deeppavlov install " + str(conf_file), timeout=None,
+    p = pexpect.popen_spawn.PopenSpawn(sys.executable + " -m deeppavlov install " + str(config_path), timeout=None,
                                        logfile=logfile)
     p.readlines()
     if p.wait() != 0:
         raise RuntimeError('Installing process of {} returned non-zero exit code: \n{}'
-                           .format(conf_file, logfile.getvalue().decode()))
+                           .format(config_path, logfile.getvalue().decode()))
 
 
 def setup_module():
@@ -244,29 +269,29 @@ def setup_module():
 
     for m_name, conf_dict in PARAMS.items():
         test_configs_path.joinpath(m_name).mkdir(exist_ok=True, parents=True)
-        for (conf_file, _, _), _ in conf_dict.items():
-            download_config(conf_file)
+        for (config_path, _, _), _ in conf_dict.items():
+            download_config(config_path)
 
-    global cache_dir
-    cache_dir = TemporaryDirectory()
-    os.environ['DP_CACHE_DIR'] = cache_dir.name
+    if cache_dir:
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        os.environ['DP_CACHE_DIR'] = str(cache_dir.resolve())
 
 
 def teardown_module():
     shutil.rmtree(str(test_configs_path.parent), ignore_errors=True)
     shutil.rmtree(str(download_path), ignore_errors=True)
 
-    global cache_dir
-    cache_dir.cleanup()
+    if cache_dir:
+        shutil.rmtree(str(cache_dir), ignore_errors=True)
 
 
 @pytest.mark.parametrize("model,conf_file,model_dir,mode", TEST_GRID, scope='class')
 class TestQuickStart(object):
     @staticmethod
-    def interact(conf_file, model_dir, qr_list=None):
+    def interact(config_path, model_directory, qr_list=None):
         qr_list = qr_list or []
         logfile = io.BytesIO(b'')
-        p = pexpect.popen_spawn.PopenSpawn(' '.join([sys.executable, "-m", "deeppavlov", "interact", str(conf_file)]),
+        p = pexpect.popen_spawn.PopenSpawn(' '.join([sys.executable, "-m", "deeppavlov", "interact", str(config_path)]),
                                            timeout=None, logfile=logfile)
         try:
             for *query, expected_response in qr_list:  # works until the first failed query
@@ -278,7 +303,7 @@ class TestQuickStart(object):
                 if expected_response is not None:
                     actual_response = p.readline().decode().strip()
                     assert expected_response == actual_response,\
-                        f"Error in interacting with {model_dir} ({conf_file}): {query}"
+                        f"Error in interacting with {model_directory} ({config_path}): {query}"
 
             p.expect("::")
             p.sendline("quit")
@@ -289,13 +314,13 @@ class TestQuickStart(object):
             raise RuntimeError('Got unexpected EOF: \n{}'.format(logfile.getvalue().decode()))
 
     @staticmethod
-    def interact_api(conf_file):
+    def interact_api(config_path):
         server_conf_file = get_settings_path() / SERVER_CONFIG_FILENAME
 
-        server_params = get_server_params(server_conf_file, conf_file)
+        server_params = get_server_params(server_conf_file, config_path)
         model_args_names = server_params['model_args_names']
 
-        url_base = 'http://{}:{}/'.format(server_params['host'], server_params['port'])
+        url_base = 'http://{}:{}/'.format(server_params['host'], api_port or server_params['port'])
         url = urljoin(url_base.replace('http://0.0.0.0:', 'http://127.0.0.1:'), server_params['model_endpoint'])
 
         post_headers = {'Accept': 'application/json'}
@@ -306,13 +331,16 @@ class TestQuickStart(object):
             post_payload[arg_name] = [arg_value]
 
         logfile = io.BytesIO(b'')
-        p = pexpect.popen_spawn.PopenSpawn(' '.join([sys.executable, "-m", "deeppavlov", "riseapi", str(conf_file)]),
+        args = [sys.executable, "-m", "deeppavlov", "riseapi", str(config_path)]
+        if api_port:
+            args += ['-p', str(api_port)]
+        p = pexpect.popen_spawn.PopenSpawn(' '.join(args),
                                            timeout=None, logfile=logfile)
         try:
             p.expect(url_base)
             post_response = requests.post(url, json=post_payload, headers=post_headers)
             response_code = post_response.status_code
-            assert response_code == 200, f"POST request returned error code {response_code} with {conf_file}"
+            assert response_code == 200, f"POST request returned error code {response_code} with {config_path}"
 
         except pexpect.exceptions.EOF:
             raise RuntimeError('Got unexpected EOF: \n{}'.format(logfile.getvalue().decode()))

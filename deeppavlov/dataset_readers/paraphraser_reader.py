@@ -25,15 +25,18 @@ class ParaphraserReader(DatasetReader):
     """The class to read the paraphraser.ru dataset from files.
 
     Please, see https://paraphraser.ru.
-
-    Args:
-        data_path: A path to a folder with dataset files.
-        seed: Random seed.
     """
 
     def read(self,
              data_path: str,
              seed: int = None, *args, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
+        """Read the paraphraser.ru dataset from files.
+
+        Args:
+            data_path: A path to a folder with dataset files.
+            seed: Random seed.
+        """
+
         data_path = expand_path(data_path)
         train_fname = data_path / 'paraphrases.xml'
         test_fname =  data_path / 'paraphrases_gold.xml'
