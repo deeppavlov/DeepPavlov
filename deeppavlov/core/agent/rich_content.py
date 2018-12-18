@@ -57,7 +57,7 @@ class RichItem(metaclass=ABCMeta):
         including its nested controls.
 
         Returns:
-            control: Telegram representation of control state.
+            control: Amazon Alexa representation of control state.
         """
         return None
 
