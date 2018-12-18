@@ -77,7 +77,7 @@ Here is JSON config example for Skill Developer console with *"tell"* carrier ph
 
 This is kind of "black market hack" but it gives the exact result we want. The idea is to use
 `custom slot types <https://developer.amazon.com/docs/custom-skills/create-and-edit-custom-slot-types.html>`__.
-In our case we will need only one slot type. We will rely on the fact, that, according the docs values outside the
+In our case, we will need only one slot type. We will rely on the fact, that, according the docs values outside the
 predefined custom slot values list are still returned if recognized by the spoken language understanding system.
 Although input to a custom slot type is weighted towards the values in the list, it is not constrained to just the
 items on the list.
