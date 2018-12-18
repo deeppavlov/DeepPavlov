@@ -1,5 +1,6 @@
 import re
 import base64
+import ssl
 from pathlib import Path
 from typing import List, Optional
 from urllib.parse import urlsplit
@@ -9,7 +10,6 @@ from OpenSSL import crypto
 
 from deeppavlov.core.common.log import get_logger
 
-ROOT_CERTS_PATH = '/etc/ssl/certs/ca-certificates.crt'
 
 log = get_logger(__name__)
 
@@ -95,15 +95,40 @@ def verify_certs_chain(certs_chain: List[crypto.X509], amazon_cert: crypto.X509)
     """
     store = crypto.X509Store()
 
+    # add certificates from Amazon provided certs chain
     for cert in certs_chain:
         store.add_cert(cert)
 
-    root_certs_path = Path(ROOT_CERTS_PATH).resolve()
-    with open(root_certs_path, 'r') as crt_f:
-        root_certs_txt = crt_f.read()
-        root_certs = extract_certs(root_certs_txt)
-        for cert in root_certs:
-            store.add_cert(cert)
+    # add CA certificates
+    default_verify_paths = ssl.get_default_verify_paths()
+
+    default_verify_file = default_verify_paths.cafile
+    default_verify_file = Path(default_verify_file).resolve() if default_verify_file else None
+
+    default_verify_path = default_verify_paths.capath
+    default_verify_path = Path(default_verify_path).resolve() if default_verify_path else None
+
+    ca_files = [ca_file for ca_file in default_verify_path.iterdir()] if default_verify_path else []
+    if default_verify_file:
+        ca_files.append(default_verify_file)
+
+    if ca_files:
+        for ca_file in ca_files:
+            ca_file: Path = ca_file
+            if ca_file.is_file():
+                with ca_file.open('r') as crt_f:
+                    ca_certs_txt = crt_f.read()
+                    ca_certs = extract_certs(ca_certs_txt)
+                    for cert in ca_certs:
+                        store.add_cert(cert)
+
+    # add CA certificates (Windows)
+    ssl_context = ssl.create_default_context()
+    der_certs = ssl_context.get_ca_certs(binary_form=True)
+    pem_certs = '\n'.join([ssl.DER_cert_to_PEM_cert(der_cert) for der_cert in der_certs])
+    ca_certs = extract_certs(pem_certs)
+    for ca_cert in ca_certs:
+        store.add_cert(ca_cert)
 
     store_context = crypto.X509StoreContext(store, amazon_cert)
 
