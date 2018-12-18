@@ -1,10 +1,11 @@
+import ssl
 from datetime import timedelta
 from pathlib import Path
 from queue import Queue
 from typing import Union, Optional
 
 from flask import Flask, request, jsonify, redirect
-from flasgger import Swagger
+from flasgger import Swagger, swag_from
 from flask_cors import CORS
 
 from utils.alexa.bot import Bot
@@ -28,7 +29,8 @@ CORS(app)
 
 
 def run_alexa_default_agent(model_config: Union[str, Path, dict], multi_instance: bool = False,
-                            stateful: bool = False, port: Optional[int] = None) -> None:
+                            stateful: bool = False, port: Optional[int] = None, https: bool = False,
+                            ssl_key: str = None, ssl_cert: str = None) -> None:
     """Creates Alexa agents factory and initiates Alexa web service.
 
     Wrapper around run_alexa_server. Allows raise Alexa web service with
@@ -39,6 +41,9 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict], multi_instance
         multi_instance: Multi instance mode flag.
         stateful: Stateful mode flag.
         port: Flask web service port.
+        https: Flag for running Alexa skill service in https mode.
+        ssl_key: SSL key file path.
+        ssl_cert: SSL certificate file path.
     """
     def get_default_agent() -> DefaultAgent:
         model = build_model(model_config)
@@ -46,11 +51,18 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict], multi_instance
         agent = DefaultAgent([skill], skills_processor=DefaultRichContentWrapper())
         return agent
 
-    run_alexa_server(get_default_agent, multi_instance, stateful, port=port)
+    run_alexa_server(agent_generator=get_default_agent,
+                     multi_instance=multi_instance,
+                     stateful=stateful,
+                     port=port,
+                     https=https,
+                     ssl_key=ssl_key,
+                     ssl_cert=ssl_cert)
 
 
 def run_alexa_server(agent_generator: callable, multi_instance: bool = False,
-                     stateful: bool = False, port: Optional[int] = None) -> None:
+                     stateful: bool = False, port: Optional[int] = None, https: bool = False,
+                     ssl_key: str = None, ssl_cert: str = None) -> None:
     """Initiates Flask web service with Alexa skill.
 
     Args:
@@ -58,6 +70,9 @@ def run_alexa_server(agent_generator: callable, multi_instance: bool = False,
         multi_instance: Multi instance mode flag.
         stateful: Stateful mode flag.
         port: Flask web service port.
+        https: Flag for running Alexa skill service in https mode.
+        ssl_key: SSL key file path.
+        ssl_cert: SSL certificate file path.
     """
     server_config_path = Path(get_settings_path(), SERVER_CONFIG_FILENAME).resolve()
     server_params = read_json(server_config_path)
@@ -71,17 +86,54 @@ def run_alexa_server(agent_generator: callable, multi_instance: bool = False,
     alexa_server_params['stateful'] = stateful or server_params['common_defaults']['stateful']
     alexa_server_params['amazon_cert_lifetime'] = AMAZON_CERTIFICATE_LIFETIME
 
+    if https:
+        ssh_key_path = Path(ssl_key or server_params['https_key_path']).resolve()
+        if not ssh_key_path.is_file():
+            e = FileNotFoundError('Ssh key file not found: please provide correct path in --key param or '
+                                  'https_key_path param in server configuration file')
+            log.error(e)
+            raise e
+
+        ssh_cert_path = Path(ssl_cert or server_params['https_cert_path']).resolve()
+        if not ssh_cert_path.is_file():
+            e = FileNotFoundError('Ssh certificate file not found: please provide correct path in --cert param or '
+                                  'https_cert_path param in server configuration file')
+            log.error(e)
+            raise e
+
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+        ssl_context.load_cert_chain(ssh_cert_path, ssh_key_path)
+    else:
+        ssl_context = None
+
     input_q = Queue()
     output_q = Queue()
 
     bot = Bot(agent_generator, alexa_server_params, input_q, output_q)
     bot.start()
 
+    endpoint_description = {
+        'description': 'Amazon Alexa custom service endpoint',
+        'parameters': [
+            {
+                'name': 'data',
+                'in': 'body',
+                'required': 'true'
+            }
+        ],
+        'responses': {
+            "200": {
+                "description": "A model response"
+            }
+        }
+    }
+
     @app.route('/')
     def index():
         return redirect('/apidocs/')
 
     @app.route('/interact', methods=['POST'])
+    @swag_from(endpoint_description)
     def handle_request():
         request_body: bytes = request.get_data()
         signature_chain_url: str = request.headers.get('Signaturecertchainurl')
@@ -101,4 +153,4 @@ def run_alexa_server(agent_generator: callable, multi_instance: bool = False,
 
         return jsonify(response), response_code
 
-    app.run(host=host, port=port, threaded=True)
+    app.run(host=host, port=port, threaded=True, ssl_context=ssl_context)

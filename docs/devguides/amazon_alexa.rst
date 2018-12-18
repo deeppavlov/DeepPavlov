@@ -175,7 +175,8 @@ Alexa sends request to the https endpoint which was set in the **Endpoint** sect
 You should deploy DeepPavlov skill/component REST service on this
 endpoint or redirect it to your REST service. Full REST endpoint URL
 can be obtained by the swagger ``apidocs/`` endpoint. We remind you that Alexa requires https endpoint
-with valid certificate from CA.
+with valid certificate from CA. `Here is the guide <https://developer.amazon.com/docs/custom-skills/configure-web-service-self-signed-certificate.html>`__
+for running custom skill service with self-signed certificates in test mode.
 
 Your intent and slot names defined in Alexa Development Console should be the same with values defined in
 DeepPavlov settings file ``utils/settings/server_config.json``. JSON examples from this guide use default values from
@@ -183,10 +184,15 @@ the settings file.
 
 DeepPavlov skill/component can be made available for Amazon Alexa as a REST service by:
 
-``python -m deeppavlov alexa <config_path> [-d]``
+.. code:: bash
+
+    python -m deeppavlov alexa <config_path> -p <port> --https --key <SSL key file path> --cert <SSL certificate file path> [-d]
+
+If you redirect requests to your skills service from some https endpoint, you may want to run it in http mode by
+omitting ``https``, ``key``, ``cert`` keys.
 
 Optional ``-d`` key can be provided for dependencies download
 before service start.
 
-REST service properties (host, port) are provided in ``utils/settings/server_config.json``. Please note,
+REST service properties (host, port, https options) are provided in ``utils/settings/server_config.json``. Please note,
 that all command line parameters override corresponding config ones.

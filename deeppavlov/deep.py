@@ -67,7 +67,11 @@ parser.add_argument("--api-mode", help="rest api mode: 'basic' with batches or '
 
 def main():
     args = parser.parse_args()
+
     pipeline_config_path = find_config(args.config_path)
+    https = args.https
+    ssl_key = args.key
+    ssl_cert = args.cert
 
     if args.download or args.mode == 'download':
         deep_download(pipeline_config_path)
@@ -100,12 +104,13 @@ def main():
     elif args.mode == 'alexa':
         run_alexa_default_agent(model_config=pipeline_config_path,
                                 multi_instance=multi_instance,
-                                stateful=stateful)
+                                stateful=stateful,
+                                port=args.port,
+                                https=https,
+                                ssl_key=ssl_key,
+                                ssl_cert=ssl_cert)
     elif args.mode == 'riseapi':
         alice = args.api_mode == 'alice'
-        https = args.https
-        ssl_key = args.key
-        ssl_cert = args.cert
         if alice:
             start_alice_server(pipeline_config_path, https, ssl_key, ssl_cert, port=args.port)
         else:
