@@ -39,7 +39,7 @@ class Bot(Thread):
         agent_generator: Callback which generates DefaultAgent instance with alexa skill.
         timer: Timer which triggers periodical certificates with expired validation cleanup.
     """
-    def __init__(self, agent_generator: callable, config: dict, input_queue: Queue, output_queue: Queue):
+    def __init__(self, agent_generator: callable, config: dict, input_queue: Queue, output_queue: Queue) -> None:
         super(Bot, self).__init__()
         self.config = config
         self.conversations: Dict[str, Conversation] = {}
@@ -75,14 +75,14 @@ class Bot(Thread):
             del self.conversations[conversation_key]
             log.info(f'Deleted conversation, key: {conversation_key}')
 
-    def _init_agent(self):
+    def _init_agent(self) -> DefaultAgent:
         """Initiates Alexa skill agent from agent generator"""
         # TODO: Decide about multi-instance mode necessity.
         # If model multi-instancing is still necessary - refactor and remove
         agent = self.agent_generator()
         return agent
 
-    def _refresh_valid_certs(self):
+    def _refresh_valid_certs(self) -> None:
         """Conducts cleanup of periodical certificates with expired validation."""
         self.timer = Timer(REFRESH_VALID_CERTS_PERIOD_SECS, self._refresh_valid_certs)
         self.timer.start()
