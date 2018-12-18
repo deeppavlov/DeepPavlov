@@ -40,14 +40,14 @@
         "out": ["y_predicted"],
         "main": true,
         "debug": false,
-        "learning_rate": 0.003,
+        "learning_rate": 0.005,
         "learning_rate_drop_patience": 10,
         "learning_rate_drop_div": 4.0,
         "momentum": 0.95,
         "optimizer": "tensorflow.train:AdamOptimizer",
-        "clip_norm": 2.0,
+        "clip_norm": 1.0,
         "dropout_rate": 0.8,
-        "l2_reg_coef": 1e-3,
+        "l2_reg_coef": 9e-4,
         "hidden_size": 128,
         "dense_size": 128,
         "attention_mechanism": {
@@ -93,7 +93,7 @@
     "pytest_max_batches": 2,
 
     "metrics": ["per_item_dialog_accuracy"],
-    "validation_patience": 10,
+    "validation_patience": 15,
     "val_every_n_batches": 15,
 
     "log_every_n_batches": 15,
