@@ -26,3 +26,9 @@ class Component(metaclass=ABCMeta):
 
     def destroy(self):
         pass
+
+    def serialize(self):
+        return None
+
+    def deserialize(self, data):
+        pass

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import json
+import pickle
 import sys
 from itertools import islice
 from pathlib import Path
@@ -26,10 +27,14 @@ from deeppavlov.download import deep_download
 log = get_logger(__name__)
 
 
-def build_model(config: Union[str, Path, dict], mode: str= 'infer',
-                load_trained: bool=False, download: bool=False) -> Chainer:
+def build_model(config: Union[str, Path, dict], mode: str = 'infer',
+                load_trained: bool = False, download: bool = False,
+                serialized: Optional[bytes] = None) -> Chainer:
     """Build and return the model described in corresponding configuration file."""
     config = parse_config(config)
+
+    if serialized:
+        serialized: list = pickle.loads(serialized)
 
     if download:
         deep_download(config)
@@ -50,6 +55,7 @@ def build_model(config: Union[str, Path, dict], mode: str= 'infer',
         component = from_params(component_config, mode=mode)
 
         if 'in' in component_config:
+            component.deserialize(serialized.pop(0))
             c_in = component_config['in']
             c_out = component_config['out']
             in_y = component_config.get('in_y', None)
@@ -78,7 +84,7 @@ def interact_model(config: Union[str, Path, dict]) -> None:
         print('>>', *pred)
 
 
-def predict_on_stream(config: Union[str, Path, dict], batch_size: int=1, file_path: Optional[str]=None) -> None:
+def predict_on_stream(config: Union[str, Path, dict], batch_size: int = 1, file_path: Optional[str] = None) -> None:
     """Make a prediction with the component described in corresponding configuration file."""
     if file_path is None or file_path == '-':
         if sys.stdin.isatty():
@@ -91,7 +97,7 @@ def predict_on_stream(config: Union[str, Path, dict], batch_size: int=1, file_pa
 
     args_count = len(model.in_x)
     while True:
-        batch = list((l.strip() for l in islice(f, batch_size*args_count)))
+        batch = list((l.strip() for l in islice(f, batch_size * args_count)))
 
         if not batch:
             break

@@ -13,11 +13,13 @@
 # limitations under the License.
 
 import inspect
+import pickle
 from typing import Union, Tuple, List
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
+from deeppavlov.core.models.serializable import Serializable
 
 
 class Chainer(Component):
@@ -172,23 +174,34 @@ class Chainer(Component):
             res = res[0]
         return res
 
-    def get_main_component(self):
+    def get_main_component(self) -> Serializable:
         return self.main or self.pipe[-1][-1]
 
-    def save(self):
+    def save(self) -> None:
         self.get_main_component().save()
 
-    def load(self):
+    def load(self) -> None:
         for in_params, out_params, component in self.pipe:
             if inspect.ismethod(getattr(component, 'load', None)):
                 component.load()
 
-    def reset(self):
+    def reset(self) -> None:
         for in_params, out_params, component in self.pipe:
             if inspect.ismethod(getattr(component, 'reset', None)):
                 component.reset()
 
-    def destroy(self):
+    def destroy(self) -> None:
         for in_params, out_params, component in self.pipe:
             if inspect.ismethod(getattr(component, 'destroy', None)):
                 component.destroy()
+
+    def serialize(self) -> bytes:
+        data = []
+        for in_params, out_params, component in self.pipe:
+            data.append(component.serialize())
+        return pickle.dumps(data)
+
+    def deserialize(self, data: bytes) -> None:
+        data = pickle.loads(data)
+        for in_params, out_params, component in self.pipe:
+            component.deserialize(data)
