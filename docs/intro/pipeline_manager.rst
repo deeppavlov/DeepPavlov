@@ -71,10 +71,9 @@ Also you can run :class:`~deeppavlov.pipeline_manager.PipelineManager` in code:
     pipeman.run()
 
 **Examples:**
-
 For a quick start, you can run test experiment on Snips dataset by this command from bash:
 
-.. code::
+.. code:: bash
 
     python -m deeppavlov pipeline_search deeppavlov/configs/pipeline_manager/linear_classification.json. -d
 
