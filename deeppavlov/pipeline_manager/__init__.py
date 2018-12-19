@@ -324,7 +324,6 @@ class PipelineManager:
 
         # save config in checkpoint folder
         observer_.save_config(pipe, dataset_name, i + 1)
-        return None
 
     def gpu_gen(self, gpu: bool = False) -> Iterator:
         """
