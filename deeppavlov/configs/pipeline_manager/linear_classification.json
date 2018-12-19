@@ -159,8 +159,7 @@
     "save_best": true,
     "multiprocessing": true,
     "max_num_workers": 4,
-    "use_all_gpus": false,
-    "use_multi_gpus": null,
+    "use_gpu": false,
     "gpu_memory_fraction": 1.0
   },
   "metadata": {

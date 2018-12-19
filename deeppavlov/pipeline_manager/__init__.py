@@ -19,7 +19,7 @@ from datetime import datetime
 from multiprocessing import Pool
 from pathlib import Path
 from shutil import rmtree
-from typing import Union, Dict, Generator, Optional
+from typing import Union, Dict, Generator, Optional, List
 
 from psutil import cpu_count
 from tqdm import tqdm
@@ -94,21 +94,21 @@ class PipelineManager:
                        metric is taken the first name from those names that are specified in the config file.
                        If the specified metric is not contained in DeepPavlov will be called error.
         multiprocessing: boolean trigger, determining the run mode of the experiment.
-        max_num_workers_: upper limit on the number of workers if experiment running in multiprocessing mode
-        use_all_gpus: boolean trigger, if True the pipeline manager automatically considers all available to the user
-                      GPU (CUDA_VISIBLE_DEVICES is is taken into account). And selects as available only
-                      those that meet the memory criterion. If the memory of a GPU is occupied by more than
-                      "X" percent, then the GPU is considered inaccessible, and when the experiment is started,
-                      the models will not start on it. For the value of the parameter "X" is responsible
-                      "memory_fraction" attribute. Parameters "use_all_gpus" and "use_multi_gpus" can not be not
-                      None simultaneously.
-        use_multi_gpus: None or List[ints], list with numbers of GPU available for use. All cards from the list
-                        are checked for availability by memory criterion.If the memory of a GPU is occupied by
-                        more than "X" percent, then the GPU is considered inaccessible, and when the experiment
-                        is started, the models will not start on it. For the value of the parameter "X" is responsible
-                        "memory_fraction" attribute. If part of the GPU are busy, then only the remaining cards
-                        from the presented list will be used. If all of the presented GPU are busy, an error
-                        message will appear. If "use_multi_gpus" if not None, then "use_all_gpus" must be False.
+        max_num_workers: upper limit on the number of workers if experiment running in multiprocessing mode
+        use_gpu: may take values ["all", int, List[int], False];
+                 If the parameter takes the value "all" (str) the pipeline manager automatically considers
+                 all available to the user GPU (CUDA_VISIBLE_DEVICES is is taken into account). And selects as available
+                 only those that meet the memory criterion. If the memory of a GPU is occupied by more than
+                 "X" percent, then the GPU is considered inaccessible, and when the experiment is started,
+                 the models will not start on it. For the value of the parameter "X" is responsible
+                 "memory_fraction" attribute.
+
+                 If the parameter takes the value int or List[ints] (list with numbers of GPU available for use).
+                 All cards from the list are checked for availability by memory criterion. If part of the GPU are busy,
+                 then only the remaining cards from the presented list will be used. If all of the presented GPU are
+                 busy, an error message will appear.
+
+                 If the parameter takes the value False GPU will not be used during training.
         memory_fraction: the parameter determines the criterion of whether the gpu card is free or not.
                          If memory_fraction == 1.0 only those cards whose memory is completely free will be
                          considered as available. If memory_fraction == 0.5 cards with no more than half of the memory
@@ -147,9 +147,17 @@ class PipelineManager:
         self.sample_num = self.exp_config['enumerate'].get('sample_num', 10)
         self.target_metric = self.exp_config['enumerate'].get('target_metric')
         self.multiprocessing = self.exp_config['enumerate'].get('multiprocessing', True)
-        self.max_num_workers_ = self.exp_config['enumerate'].get('max_num_workers')
-        self.use_all_gpus = self.exp_config['enumerate'].get('use_all_gpus', False)
-        self.use_multi_gpus = self.exp_config['enumerate'].get('use_multi_gpus')
+        self.max_num_workers = self.exp_config['enumerate'].get('max_num_workers')
+        cpu_num = cpu_count()
+        if self.max_num_workers:
+            if self.max_num_workers > cpu_num:
+                raise ConfigError("Parameter 'max_num_workers'={0}, "
+                                  "but amounts of cpu is {1}.".format(self.max_num_workers, cpu_num))
+            elif self.max_num_workers < 1:
+                raise ConfigError("The number of workers must be at least equal to one. "
+                                  "Please check 'max_num_workers' parameter in config.")
+
+        self.use_gpu = self.exp_config['enumerate'].get('use_all_gpus', False)
         self.memory_fraction = self.exp_config['enumerate'].get('gpu_memory_fraction', 1.0)
         self.max_num_workers = None
         self.available_gpu = None
@@ -172,10 +180,6 @@ class PipelineManager:
             else:
                 self.observer.log['experiment_info']['target_metric'] = copy(self.exp_config['train']['metrics'][0])
 
-        # multiprocessing
-        if self.use_multi_gpus and self.use_all_gpus:
-            raise ValueError("Parameters 'use_all_gpus' and 'use_multi_gpus' can not simultaneously be not None.")
-
         self.prepare_multiprocess()
 
         # write time of experiment start
@@ -188,86 +192,32 @@ class PipelineManager:
         """
         Calculates the number of workers and the set of available video cards, if gpu is used, based on init attributes.
         """
-        cpu_num = cpu_count()
-        gpu_num = get_num_gpu()
-
         try:
             visible_gpu = [int(q) for q in os.environ['CUDA_VISIBLE_DEVICES'].split(',')]
             os.environ['CUDA_VISIBLE_DEVICES'] = ""
         except KeyError:
-            visible_gpu = []
+            visible_gpu = None
 
-        if self.max_num_workers_ is not None and self.max_num_workers_ < 1:
-            raise ConfigError("The number of workers must be at least equal to one. "
-                              "Please check 'max_num_workers' parameter in config.")
+        if self.use_gpu:
+            if isinstance(self.use_gpu, (List[int], int)):
+                if visible_gpu:
+                    self.use_gpu = list(set(self.use_gpu) & set(visible_gpu))
 
-        if self.use_all_gpus:
-            if self.max_num_workers_ is None:
-                self.available_gpu = get_available_gpus(gpu_fraction=self.memory_fraction)
-                if len(visible_gpu) != 0:
-                    self.available_gpu = list(set(self.available_gpu) & set(visible_gpu))
+                if len(self.use_gpu) == 0:
+                    raise ValueError("GPU numbers in 'use_multi_gpus' and 'CUDA_VISIBLE_DEVICES' "
+                                     "has not intersections".format(set(visible_gpu)))
 
-                if len(self.available_gpu) == 0:
-                    raise ValueError("GPU with numbers: ({}) are busy.".format(set(visible_gpu)))
-                elif len(self.available_gpu) < len(visible_gpu):
-                    print("PipelineManagerWarning: 'CUDA_VISIBLE_DEVICES' = ({0}), "
-                          "but only {1} are available.".format(visible_gpu, self.available_gpu))
-
-                if int(cpu_num * 0.7) > len(self.available_gpu):
-                    self.max_num_workers = len(self.available_gpu)
-                else:
-                    self.max_num_workers = int(cpu_num * 0.7)
-            else:
-                if self.max_num_workers_ > gpu_num:
-                    self.max_num_workers = gpu_num
-                    self.available_gpu = get_available_gpus(gpu_fraction=self.memory_fraction)
-                    if len(visible_gpu) != 0:
-                        self.available_gpu = list(set(self.available_gpu) & set(visible_gpu))
-
-                    if len(self.available_gpu) == 0:
-                        raise ValueError("GPU with numbers: ({}) are busy.".format(set(visible_gpu)))
-                else:
-                    self.available_gpu = get_available_gpus(num_gpus=self.max_num_workers_,
-                                                            gpu_fraction=self.memory_fraction)
-                    if len(visible_gpu) != 0:
-                        self.available_gpu = list(set(self.available_gpu) & set(visible_gpu))
-
-                    if len(self.available_gpu) == 0:
-                        raise ValueError("GPU with numbers: ({}) are busy.".format(set(visible_gpu)))
-
-                    self.max_num_workers = len(self.available_gpu)
-
-        elif self.use_multi_gpus:
-            if len(visible_gpu) != 0:
-                self.use_multi_gpus = list(set(self.use_multi_gpus) & set(visible_gpu))
-
-            if len(self.use_multi_gpus) == 0:
-                raise ValueError("GPU numbers in 'use_multi_gpus' and 'CUDA_VISIBLE_DEVICES' "
-                                 "has not intersections".format(set(visible_gpu)))
-
-            self.available_gpu = get_available_gpus(gpu_select=self.use_multi_gpus, gpu_fraction=self.memory_fraction)
+                self.available_gpu = get_available_gpus(gpu_select=self.use_gpu, gpu_fraction=self.memory_fraction)
+            elif self.use_gpu == "all":
+                self.available_gpu = get_available_gpus(gpu_select=visible_gpu, gpu_fraction=self.memory_fraction)
 
             if len(self.available_gpu) == 0:
-                raise ValueError("All GPU from 'use_multi_gpus' are busy. "
-                                 "GPU numbers ({});".format(self.use_multi_gpus))
+                raise ValueError("All selected GPU with numbers: ({}), are busy.".format(set(self.use_gpu)))
+            elif len(self.available_gpu) < len(self.use_gpu):
+                print("PipelineManagerWarning: 'CUDA_VISIBLE_DEVICES' = ({0}), "
+                      "but only {1} are available.".format(self.use_gpu, self.available_gpu))
 
-            if not self.max_num_workers_:
-                self.max_num_workers = len(self.available_gpu)
-            else:
-                if self.max_num_workers_ > len(self.available_gpu):
-                    self.max_num_workers = len(self.available_gpu)
-                else:
-                    self.max_num_workers = self.max_num_workers_
-                    self.available_gpu = self.available_gpu[0:self.max_num_workers_]
-
-        else:
-            if self.max_num_workers_ is not None and self.max_num_workers_ > cpu_num:
-                print("PipelineManagerWarning: parameter 'max_num_workers'={0}, "
-                      "but amounts of cpu is {1}. The {1} will be assigned to 'max_num_workers' "
-                      "as default.".format(self.max_num_workers_, cpu_num))
-                self.max_num_workers_ = cpu_num
-
-            self.max_num_workers = self.max_num_workers_
+            self.max_num_workers = len(self.available_gpu)
 
     @staticmethod
     @unpack_args
