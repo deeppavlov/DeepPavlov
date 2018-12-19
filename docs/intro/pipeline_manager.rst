@@ -268,7 +268,7 @@ training on a video card in sequential mode, all the pipeline will run on the fi
 Hyperparameter search
 ---------------------
 We can say that when you run an experiment with :class:`~deeppavlov.pipeline_manager.PipelineManager`, we perform
-greed search on the components entered into the config. However, in addition to this, :class:`~deeppavlov.pipeline_manager.PipelineManager`
+grid search on the components entered into the config. However, in addition to this, :class:`~deeppavlov.pipeline_manager.PipelineManager`
 also allows hyperparameter search. The last group of parameters relates to its regulation:
 
  - **search_type:** str, parameter defining the type of hyperparams search, can be "grid" or "random".
