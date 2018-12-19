@@ -98,39 +98,11 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
         self.decay_steps = decay_steps
 
         ##############################################################################
-        self.g_use = tf.Graph()
-        with self.g_use.as_default():
-            # sentence encoder
-            self.embed = hub.Module("https://tfhub.dev/google/universal-sentence-encoder-large/3", trainable=False)
-
-            # Raw sentences for context and response
-            self.context_sent_ph = tf.placeholder(tf.string,
-                                                  shape=(None, self.num_context_turns),
-                                                  name="context_sentences")
-            self.response_sent_ph = tf.placeholder(tf.string, shape=(None,), name="response_sentences")
-            # embed sentences of context
-            with tf.variable_scope('sentence_embeddings'):
-                x = []
-                for i in range(self.num_context_turns):
-                    x.append(self.embed(tf.reshape(self.context_sent_ph[:, i], shape=(tf.shape(self.context_sent_ph)[0], ))))
-                embed_context_turns = tf.stack(x, axis=1)
-                embed_response = self.embed(self.response_sent_ph)
-
-                self.sent_embedder_context = tf.expand_dims(embed_context_turns, axis=2)
-                self.sent_embedder_response = tf.expand_dims(embed_response, axis=1)
-
-        self.cpu_sess = tf.Session(config=tf.ConfigProto(), graph=self.g_use)
-        with self.g_use.as_default():
-            self.cpu_sess.run([tf.global_variables_initializer(), tf.tables_initializer()])
-        ##############################################################################
-
-        ##############################################################################
         self._init_graph()
-
         self.sess_config = tf.ConfigProto(allow_soft_placement=True)
         self.sess_config.gpu_options.allow_growth = True
         self.sess = tf.Session(config=self.sess_config)
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run([tf.global_variables_initializer(), tf.tables_initializer()])
         ##############################################################################
 
         super(DAMNetworkUSETransformer, self).__init__(
@@ -140,6 +112,7 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
             self.load()
 
     def _init_placeholders(self):
+        """ Init model placeholders """
         with tf.variable_scope('inputs'):
             # Utterances and their lengths
             self.utterance_ph = tf.placeholder(tf.int32, shape=(None, self.num_context_turns, self.max_sentence_len))
@@ -153,11 +126,34 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
             self.y_true = tf.placeholder(tf.int32, shape=(None,))
 
             # Raw sentences for context and response
-            self.context_sent_emb_ph = tf.placeholder(tf.float32, shape=(None, self.num_context_turns, 1, 512))
-            self.response_sent_emb_ph = tf.placeholder(tf.float32, shape=(None, 1, 512))
+            self.context_sent_ph = tf.placeholder(tf.string,
+                                                  shape=(None, self.num_context_turns),
+                                                  name="context_sentences")
+            self.response_sent_ph = tf.placeholder(tf.string, shape=(None,), name="response_sentences")
+
+    def _init_sentence_encoder(self):
+        """ Init sentence encoder, for example USE-T """
+        # sentence encoder
+        self.embed = hub.Module("https://tfhub.dev/google/universal-sentence-encoder-large/3",
+                                trainable=False)
+
+        # embed sentences of context
+        with tf.variable_scope('sentence_embeddings'):
+            x = []
+            for i in range(self.num_context_turns):
+                x.append(self.embed(tf.reshape(self.context_sent_ph[:, i], shape=(tf.shape(self.context_sent_ph)[0],))))
+            embed_context_turns = tf.stack(x, axis=1)
+            embed_response = self.embed(self.response_sent_ph)
+
+            # for context sentences: shape=(None, self.num_context_turns, 1, 512)
+            self.sent_embedder_context = tf.expand_dims(embed_context_turns, axis=2)
+            # for resp sentences: shape=(None, 1, 512)
+            self.sent_embedder_response = tf.expand_dims(embed_response, axis=1)
+
 
     def _init_graph(self):
         self._init_placeholders()
+        self._init_sentence_encoder()
 
         with tf.variable_scope('sentence_emb_dim_reduction'):
             dense_emb = tf.layers.Dense(200,
@@ -168,9 +164,9 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
 
             a = []
             for i in range(self.num_context_turns):
-                a.append(dense_emb(self.context_sent_emb_ph[:, i]))
+                a.append(dense_emb(self.sent_embedder_context[:, i]))
             sent_embedder_context = tf.stack(a, axis=1)
-            sent_embedder_response = dense_emb(self.response_sent_emb_ph)
+            sent_embedder_response = dense_emb(self.sent_embedder_response)
 
         with tf.variable_scope('embedding_matrix_init'):
             word_embeddings = tf.get_variable("word_embeddings_v",
@@ -342,18 +338,24 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
         batch_buffer_context += [context_sentences for sent in response_sentences]
         # 2. Token indices for response
         batch_buffer_response += [response_sentence for response_sentence in response_sentences]
-        # 3. Lens of context sentences
+        # 3. Lengths of all context sentences
         lens = []
         for context in [context_sentences for sent in response_sentences]:
             context_sentences_lens = []
             for sent in context:
-                context_sentences_lens.append(len(sent[sent != 0]))
+                sent_len = len(sent[sent != 0])
+                if sent_len != 0:
+                    sent_len += 1  # 1 additional token is the USE token
+                context_sentences_lens.append(sent_len)
             lens.append(context_sentences_lens)
         batch_buffer_context_len += lens
-        # 4. Lens of context sentences
+        # 4. Length of response
         lens = []
-        for context in [response_sentence for response_sentence in response_sentences]:
-            lens.append(len(context[context != 0]))
+        for response in [response_sentence for response_sentence in response_sentences]:
+            sent_len = len(response[response != 0])
+            if sent_len != 0:
+                sent_len += 1  # 1 additional token is the USE token
+            lens.append(sent_len)
         batch_buffer_response_len += lens
         # 5. Raw context sentences
         raw_batch_buffer_context += [raw_context_sentences for sent in raw_response_sentences]
@@ -370,7 +372,7 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
                 raw_batch_buffer_response[i]
             )))
 
-    def _make_batch(self, batch: List[Tuple[np.ndarray]], graph: str = "main") -> Dict:
+    def _make_batch(self, batch: List[Tuple[np.ndarray]]) -> Dict:
         """
         The function for formatting model inputs
 
@@ -382,151 +384,27 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
         Returns:
             Dict: feed_dict to feed a model
         """
-        if graph == "use":
-            input_raw_context = []
-            input_raw_response = []
+        input_context = []
+        input_context_len = []
+        input_response = []
+        input_response_len = []
+        input_raw_context = []
+        input_raw_response = []
 
-            # format model inputs for USE graph as numpy arrays
-            for sample in batch:
-                input_raw_context.append(sample[4])   # raw context is the 4th element of each Tuple in the batch
-                input_raw_response.append(sample[5])  # raw response is the 5th element of each Tuple in the batch
+        # format model inputs for MAIN graph as numpy arrays
+        for sample in batch:
+            input_context.append(sample[0])
+            input_context_len.append(sample[1])
+            input_response.append(sample[2])
+            input_response_len.append(sample[3])
+            input_raw_context.append(sample[4])  # raw context is the 4th element of each Tuple in the batch
+            input_raw_response.append(sample[5])  # raw response is the 5th element of each Tuple in the batch
 
-            return {
-                self.context_sent_ph: np.array(input_raw_context),
-                self.response_sent_ph: np.array(input_raw_response)
-            }
-        elif graph == "main":
-            input_context = []
-            input_context_len = []
-            input_response = []
-            input_response_len = []
-
-            # format model inputs for MAIN graph as numpy arrays
-            for sample in batch:
-                input_context.append(sample[0])
-                input_context_len.append(sample[1])
-                input_response.append(sample[2])
-                input_response_len.append(sample[3])
-
-            return {
-                self.utterance_ph: np.array(input_context),
-                self.all_utterance_len_ph: np.array(input_context_len),
-                self.response_ph: np.array(input_response),
-                self.response_len_ph: np.array(input_response_len)
-            }
-
-    def _predict_on_batch(self, batch: Dict, graph: str = "main") -> np.ndarray:
-        """
-        Run a model with the batch of inputs.
-        The function returns a list of predictions for the batch in numpy format
-
-        Args:
-            batch (Dict): feed_dict that contains a batch with inputs for a model
-            graph (str): which graph the inputs is preparing for
-
-        Returns:
-            nd.array: predictions for the batch
-        """
-        if graph == "use":
-            return self.cpu_sess.run([self.sent_embedder_context, self.sent_embedder_response],
-                                     feed_dict=batch)
-        elif graph == "main":
-            return self.sess.run(self.y_pred, feed_dict=batch)[:, 1]
-
-    def _train_on_batch(self, batch: Dict, y: List[int]) -> float:
-        """
-        The function is for formatting of feed_dict used as an input for a model
-        Args:
-            batch (Dict): feed_dict that contains a batch with inputs for a model (except ground truth labels)
-            y (List(int)): list of ground truth labels
-
-        Returns:
-            float: value of mean loss on the batch
-        """
-
-        batch.update({self.y_true: np.array(y)})
-        return self.sess.run([self.loss, self.train_op], feed_dict=batch)[0]  # return the first item aka loss
-
-    def __call__(self, samples_generator: Iterable[List[np.ndarray]]) -> np.ndarray:
-        """
-        This method is called by trainer to make one evaluation step on one batch.
-
-        Args:
-            samples_generator (Iterable[List[np.ndarray]]):  generator that returns list of numpy arrays
-            of words of all sentences represented as integers.
-            Has shape: (number_of_context_turns + 1, max_number_of_words_in_a_sentence)
-
-        Returns:
-            np.ndarray: predictions for the batch of samples
-        """
-
-        y_pred = []
-        buf = []
-        for j, sample in enumerate(samples_generator, start=1):
-            n_responses = len(sample[self.num_context_turns:len(sample) // 2])
-            self._append_sample_to_batch_buffer(sample, buf)
-            if len(buf) >= self.batch_size:
-                for i in range(len(buf) // self.batch_size):
-                    # 1. USE Graph
-                    fd = self._make_batch(buf[i * self.batch_size:(i + 1) * self.batch_size], graph="use")
-                    context_emb, response_emb = self._predict_on_batch(fd, graph="use")
-
-                    # 2. MAIN Graph
-                    fd = self._make_batch(buf[i * self.batch_size:(i + 1) * self.batch_size], graph="main")
-                    fd.update({
-                        self.context_sent_emb_ph: context_emb,
-                        self.response_sent_emb_ph: response_emb
-                    })
-                    yp = self._predict_on_batch(fd, graph="main")
-                    y_pred += list(yp)
-                lenb = len(buf) % self.batch_size
-                if lenb != 0:
-                    buf = buf[-lenb:]
-                else:
-                    buf = []
-        if len(buf) != 0:
-            # 1. USE Graph
-            fd = self._make_batch(buf, graph="use")
-            context_emb, response_emb = self._predict_on_batch(fd, graph="use")
-
-            # 2. MAIN Graph
-            fd = self._make_batch(buf, graph="main")
-            fd.update({
-                self.context_sent_emb_ph: context_emb,
-                self.response_sent_emb_ph: response_emb
-            })
-            yp = self._predict_on_batch(fd, graph="main")
-            y_pred += list(yp)
-        y_pred = np.asarray(y_pred)
-        # reshape to [batch_size, n_responses] if needed (n_responses > 1)
-        y_pred = np.reshape(y_pred, (j, n_responses)) if n_responses > 1 else y_pred
-        return y_pred
-
-    def train_on_batch(self, samples_generator: Iterable[List[np.ndarray]], y: List[int]) -> float:
-        """
-        This method is called by trainer to make one training step on one batch.
-
-        Args:
-            samples_generator (Iterable[List[np.ndarray]]): generator that returns list of numpy arrays
-            of words of all sentences represented as integers.
-            Has shape: (number_of_context_turns + 1, max_number_of_words_in_a_sentence)
-            y (List[int]): tuple of labels, with shape: (batch_size, )
-
-        Returns:
-            float: value of mean loss on the batch
-        """
-        buf = []
-        for sample in samples_generator:
-            self._append_sample_to_batch_buffer(sample, buf)
-
-        fd = self._make_batch(buf, graph="use")
-        context_emb, response_emb = self._predict_on_batch(fd, graph="use")   # We do not update USE weights
-
-        # 2. MAIN Graph
-        fd = self._make_batch(buf, graph="main")
-        fd.update({
-            self.context_sent_emb_ph: context_emb,
-            self.response_sent_emb_ph: response_emb
-        })
-        loss = self._train_on_batch(fd, y)                                    # We do update MAIN model weights
-        return loss
+        return {
+            self.utterance_ph: np.array(input_context),
+            self.all_utterance_len_ph: np.array(input_context_len),
+            self.response_ph: np.array(input_response),
+            self.response_len_ph: np.array(input_response_len),
+            self.context_sent_ph: np.array(input_raw_context),
+            self.response_sent_ph: np.array(input_raw_response)
+        }
