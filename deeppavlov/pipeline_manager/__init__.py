@@ -96,7 +96,7 @@ class PipelineManager:
         multiprocessing: boolean trigger, determining the run mode of the experiment.
         max_num_workers_: upper limit on the number of workers if experiment running in multiprocessing mode
         use_all_gpus: boolean trigger, if True the pipeline manager automatically considers all available to the user
-                      graphics cards (CUDA_VISIBLE_DEVICES is is taken into account). And selects as available only
+                      graphics cards (CUDA_VISIBLE_DEVICES is taken into account). And selects as available only
                       those that meet the memory criterion. If the memory of a video card is occupied by more than
                       "X" percent, then the video card is considered inaccessible, and when the experiment is started,
                       the models will not start on it. For the value of the parameter "X" is responsible
