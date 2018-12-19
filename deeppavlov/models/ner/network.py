@@ -310,11 +310,6 @@ class NerNetwork(EnhancedTFModel):
             return []
         return self.predict(args)
 
-    def calc_loss(self, *args):
-        *xs, y = args
-        feed_dict = self._fill_feed_dict(xs, y)
-        return {'loss': self.sess.run(self.loss, feed_dict)}
-
     def train_on_batch(self, *args):
         *xs, y = args
         feed_dict = self._fill_feed_dict(xs, y, train=True)

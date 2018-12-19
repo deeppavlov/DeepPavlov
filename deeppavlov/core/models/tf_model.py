@@ -157,6 +157,7 @@ class DecayType(IntEnum):
     EXPONENTIAL = 4
     POLYNOMIAL = 5
     ONECYCLE = 6
+    TRAPEZOID = 7
 
     @classmethod
     def from_str(cls, label: str):
@@ -186,6 +187,8 @@ class DecayScheduler():
             self.end_val = 0
         if self.dec_type == DecayType.ONECYCLE:
             self.cycle_nb = math.ceil(self.nb / 2)
+            self.div = 1.0 if not self.start_val else self.end_val / self.start_val
+        if self.dec_type == DecayType.TRAPEZOID:
             self.div = 1.0 if not self.start_val else self.end_val / self.start_val
 
     def __str__(self):
@@ -217,6 +220,18 @@ class DecayScheduler():
             else:
                 # raising from start_val to end_val for cycle_nb steps
                 pct = self.iters / self.cycle_nb
+                return self.start_val * (1 + pct * (self.div - 1))
+        elif self.dec_type == DecayType.TRAPEZOID:
+            if self.iters > 0.6 * self.nb:
+                # decaying from end_val to start_val for 4/10 * nb steps
+                pct = 2.5 * (self.nb - self.iters) / self.nb
+                return self.start_val * (1 + pct * (self.div - 1))
+            elif self.iters > 0.1 * self.nb:
+                # constant end_val
+                return self.end_val
+            else:
+                # raising from start_val to end_val for 1/10 * nb steps
+                pct = 10.0 * self.iters / self.nb
                 return self.start_val * (1 + pct * (self.div - 1))
 
 
@@ -364,7 +379,9 @@ class EnhancedTFModel(TFModel):
         best_lr = self._get_best(lrs, losses)
 
         start_val = best_lr
-        if self._lr_schedule.dec_type == DecayType.ONECYCLE:
+        if self._lr_schedule.dec_type in (DecayType.ONECYCLE, DecayType.TRAPEZOID):
+            start_val = best_lr / self._fit_learning_rate_div
+        if self._lr_schedule.dec_type == DecayType.TRAPEZOID:
             start_val = best_lr / self._fit_learning_rate_div
         self._lr_schedule = DecayScheduler(start_val=start_val,
                                            end_val=best_lr,
@@ -432,19 +449,24 @@ class EnhancedTFModel(TFModel):
                 self.sess.run(tf.assign(self._lr_var, self._lr))
                 log.info(f"New learning rate dividor = {self._learning_rate_cur_div}")
         if event_name == 'after_batch':
-            if self._lr_update_on_batch:
-                self._lr = self._lr_schedule.next_val() / self._learning_rate_cur_div
-                self.sess.run(tf.assign(self._lr_var, self._lr))
-            if self._mom_update_on_batch and (self.get_momentum() is not None):
-                self._mom = min(1., max(0., self._mom_schedule.next_val()))
-                self.sess.run(tf.assign(self._mom_var, self._mom))
+            if (self._lr is not None) and self._lr_update_on_batch:
+                    self._lr = self._lr_schedule.next_val() / self._learning_rate_cur_div
+                    self.sess.run(tf.assign(self._lr_var, self._lr))
+            if (self._mom is not None) and self._mom_update_on_batch:
+                    self._mom = min(1., max(0., self._mom_schedule.next_val()))
+                    self.sess.run(tf.assign(self._mom_var, self._mom))
         if event_name == 'after_epoch':
-            if not self._lr_update_on_batch:
-                self._lr = self._lr_schedule.next_val() / self._learning_rate_cur_div
-                self.sess.run(tf.assign(self._lr_var, self._lr))
-            if not self._mom_update_on_batch and (self.get_momentum() is not None):
-                self._mom = min(1., max(0., self._mom_schedule.next_val()))
-                self.sess.run(tf.assign(self._mom_var, self._mom))
+            if (self._lr is not None) and not self._lr_update_on_batch:
+                    self._lr = self._lr_schedule.next_val() / self._learning_rate_cur_div
+                    self.sess.run(tf.assign(self._lr_var, self._lr))
+            if (self._mom is not None) and not self._mom_update_on_batch:
+                    self._mom = min(1., max(0., self._mom_schedule.next_val()))
+                    self.sess.run(tf.assign(self._mom_var, self._mom))
+        if event_name == 'after_train_log':
+            if self._lr is not None:
+                data['learning_rate'] = self._lr
+            if self._mom is not None:
+                data['momentum'] = self._mom
 
     def get_learning_rate(self):
         if self._lr is None:

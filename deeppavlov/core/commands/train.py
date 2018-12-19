@@ -452,6 +452,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
                                                                          simple_value=score), ])
                             tb_train_writer.add_summary(res_sum, i)
 
+                    model.process_event(event_name='after_train_log', data=report)
                     report = {'train': report}
                     print(json.dumps(report, ensure_ascii=False))
                     for out in outputs.values():

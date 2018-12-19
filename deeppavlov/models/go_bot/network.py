@@ -438,7 +438,7 @@ class GoalOrientedBotNetwork(EnhancedTFModel):
                 self.prev_action *= 0.
                 self.prev_action[action_id] = 1.
 
-            res.append(self._infer(context['text'], context.get('db_result')))
+            res.append(self._infer(context['text'], db_result=context.get('db_result')))
         return res
 
     def make_api_call(self, slots):
