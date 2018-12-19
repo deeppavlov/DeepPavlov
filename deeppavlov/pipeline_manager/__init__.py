@@ -462,7 +462,6 @@ class PipelineManager:
             # del all tmp files in save path
             rmtree(str(self.save_path / "tmp"))
             print('[ The test was interrupt ]')
-            return None
 
     @staticmethod
     @unpack_args
