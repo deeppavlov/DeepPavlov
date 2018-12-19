@@ -54,7 +54,7 @@ def verify_sc_url(url: str) -> bool:
 
     result = (scheme.lower() == 'https' and
               netloc.lower().split(':')[0] == 's3.amazonaws.com' and
-              path[:10] == '/echo.api/' and
+              path.startswith('/echo.api/') and
               (port == 443 or port is None))
 
     return result
@@ -126,15 +126,14 @@ def verify_certs_chain(certs_chain: List[crypto.X509], amazon_cert: crypto.X509)
     if default_verify_file:
         ca_files.append(default_verify_file)
 
-    if ca_files:
-        for ca_file in ca_files:
-            ca_file: Path = ca_file
-            if ca_file.is_file():
-                with ca_file.open('r') as crt_f:
-                    ca_certs_txt = crt_f.read()
-                    ca_certs = extract_certs(ca_certs_txt)
-                    for cert in ca_certs:
-                        store.add_cert(cert)
+    for ca_file in ca_files:
+        ca_file: Path = ca_file
+        if ca_file.is_file():
+            with ca_file.open('r') as crt_f:
+                ca_certs_txt = crt_f.read()
+                ca_certs = extract_certs(ca_certs_txt)
+                for cert in ca_certs:
+                    store.add_cert(cert)
 
     # add CA certificates (Windows)
     ssl_context = ssl.create_default_context()
