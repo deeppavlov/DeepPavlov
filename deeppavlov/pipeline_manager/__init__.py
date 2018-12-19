@@ -382,7 +382,6 @@ class PipelineManager:
         print("[ Create an experiment report ... ]")
         results_visualization(self.observer.log_path, self.plot)
         print("[ Report created ]")
-        return None
 
     def run(self) -> None:
         try:
