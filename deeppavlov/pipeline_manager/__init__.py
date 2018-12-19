@@ -19,7 +19,7 @@ from datetime import datetime
 from multiprocessing import Pool
 from pathlib import Path
 from shutil import rmtree
-from typing import Union, Dict, Iterator
+from typing import Union, Dict, Generator, Optional
 
 from psutil import cpu_count
 from tqdm import tqdm
@@ -58,7 +58,7 @@ class PipelineManager:
     The :class:`~deeppavlov.pipeline_manager.PipelineManager` implements the functions of automatic experiment
     management. The class accepts a config in the input in which the structure of the experiments is described, and
     additional parameters, which are class attributes. Based on this information, a list of deeppavlov configs is
-    created. Experiments can be run sequentially or in parallel, both on video cards and on the processor.
+    created. Experiments can be run sequentially or in parallel, both on GPU and on the CPU.
     A special class is responsible for describing and logging experiments, their execution time and results.
     After passing all the experiments based on the logs, a small report is created in the form of a xlsx table,
     and histogram with metrics info. When you start the experiment, you can also search for optimal hyperparameters,
@@ -96,24 +96,24 @@ class PipelineManager:
         multiprocessing: boolean trigger, determining the run mode of the experiment.
         max_num_workers_: upper limit on the number of workers if experiment running in multiprocessing mode
         use_all_gpus: boolean trigger, if True the pipeline manager automatically considers all available to the user
-                      graphics cards (CUDA_VISIBLE_DEVICES is is taken into account). And selects as available only
-                      those that meet the memory criterion. If the memory of a video card is occupied by more than
-                      "X" percent, then the video card is considered inaccessible, and when the experiment is started,
+                      GPU (CUDA_VISIBLE_DEVICES is is taken into account). And selects as available only
+                      those that meet the memory criterion. If the memory of a GPU is occupied by more than
+                      "X" percent, then the GPU is considered inaccessible, and when the experiment is started,
                       the models will not start on it. For the value of the parameter "X" is responsible
                       "memory_fraction" attribute. Parameters "use_all_gpus" and "use_multi_gpus" can not be not
                       None simultaneously.
-        use_multi_gpus: None or List[ints], list with numbers of video cards available for use. All cards from the list
-                        are checked for availability by memory criterion.If the memory of a video card is occupied by
-                        more than "X" percent, then the video card is considered inaccessible, and when the experiment
+        use_multi_gpus: None or List[ints], list with numbers of GPU available for use. All cards from the list
+                        are checked for availability by memory criterion.If the memory of a GPU is occupied by
+                        more than "X" percent, then the GPU is considered inaccessible, and when the experiment
                         is started, the models will not start on it. For the value of the parameter "X" is responsible
-                        "memory_fraction" attribute. If part of the video cards are busy, then only the remaining cards
-                        from the presented list will be used. If all of the presented video cards are busy, an error
+                        "memory_fraction" attribute. If part of the GPU are busy, then only the remaining cards
+                        from the presented list will be used. If all of the presented GPU are busy, an error
                         message will appear. If "use_multi_gpus" if not None, then "use_all_gpus" must be False.
         memory_fraction: the parameter determines the criterion of whether the gpu card is free or not.
                          If memory_fraction == 1.0 only those cards whose memory is completely free will be
                          considered as available. If memory_fraction == 0.5 cards with no more than half of the memory
                          will be considered as available.
-        available_gpu: list with numbers of available gpu cards
+        available_gpu: list with numbers of available gpu
         save_path: path to the save folder
         observer: A special class that collects auxiliary statistics and results during training, and stores all
                 the collected data in a separate log.
@@ -127,9 +127,7 @@ class PipelineManager:
         Initialize observer, read input args, builds a directory tree, initialize date, start test of experiment on
         tiny data.
         """
-        if isinstance(config_path, str):
-            self.exp_config = read_json(config_path)
-        elif isinstance(config_path, Path):
+        if isinstance(config_path, (str, Path)):
             self.exp_config = read_json(config_path)
         else:
             self.exp_config = config_path
@@ -144,9 +142,6 @@ class PipelineManager:
         self.plot = self.exp_config['enumerate'].get('plot', False)
         self.save_best = self.exp_config['enumerate'].get('save_best', False)
         self.do_test = self.exp_config['enumerate'].get('do_test', False)
-
-        # self.cross_validation = self.exp_config['enumerate'].get('cross_val', False)
-        # self.k_fold = self.exp_config['enumerate'].get('k_fold', 5)
 
         self.search_type = self.exp_config['enumerate'].get('search_type', 'random')
         self.sample_num = self.exp_config['enumerate'].get('sample_num', 10)
@@ -276,7 +271,7 @@ class PipelineManager:
 
     @staticmethod
     @unpack_args
-    def train_pipe(pipe: Dict, i: int, observer_: Observer, gpu_ind: Union[int, None] = None) -> None:
+    def train_pipe(pipe: Dict, i: int, observer_: Observer, gpu_ind: Optional[int] = None) -> None:
         """
         Start learning single pipeline. Observer write all info in log file.
 
@@ -324,9 +319,8 @@ class PipelineManager:
 
         # save config in checkpoint folder
         observer_.save_config(pipe, dataset_name, i + 1)
-        return None
 
-    def gpu_gen(self, gpu: bool = False) -> Iterator:
+    def gpu_gen(self, gpu: bool = False) -> Generator:
         """
         Create generator that returning tuple of args fore self.train_pipe method.
 
@@ -383,7 +377,6 @@ class PipelineManager:
         print("[ Create an experiment report ... ]")
         results_visualization(self.observer.log_path, self.plot)
         print("[ Report created ]")
-        return None
 
     def run(self) -> None:
         try:
@@ -396,8 +389,6 @@ class PipelineManager:
             print("[ Create an intermediate report ... ]")
             results_visualization(self.observer.log_path, self.plot)
             print("[ The intermediate report was created ]")
-
-        return None
 
     def _test(self) -> None:
         """
@@ -456,7 +447,6 @@ class PipelineManager:
         # del all tmp files in save path
         rmtree(str(tmp_save_path))
         print('[ The test was successful ]')
-        return None
 
     def test(self) -> None:
         try:
@@ -465,11 +455,10 @@ class PipelineManager:
             # del all tmp files in save path
             rmtree(str(self.save_path / "tmp"))
             print('[ The test was interrupt ]')
-            return None
 
     @staticmethod
     @unpack_args
-    def test_pipe(ind: int, pipe_conf: Dict, gpu_ind: Union[int, None] = None) -> None:
+    def test_pipe(ind: int, pipe_conf: Dict, gpu_ind: Optional[int] = None) -> None:
         """
         Start testing single pipeline.
 
@@ -570,4 +559,3 @@ class PipelineManager:
                                                    to_train=True,
                                                    to_validate=False)
         del results
-        return None

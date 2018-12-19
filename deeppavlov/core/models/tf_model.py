@@ -12,25 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-import tensorflow as tf
-
 from collections import defaultdict
 from typing import Iterable, Optional
-from copy import copy
 
+import numpy as np
+import tensorflow as tf
 from tensorflow.python.ops import variables
 
-from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.models.nn_model import NNModel
 from .tf_backend import TfModelMeta
-
 
 log = get_logger(__name__)
 
 
 class TFModel(NNModel, metaclass=TfModelMeta):
     """Parent class for all components using TensorFlow."""
+
     def __init__(self, *args, **kwargs) -> None:
         if not hasattr(self, 'sess'):
             raise RuntimeError('Your TensorFlow model {} must'

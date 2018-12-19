@@ -17,7 +17,7 @@ flask==1.0.2
 flasgger==0.9.1
 flask_cors==3.0.6
 rusenttokenize==0.0.4
-matplotlib
-xlsxwriter
-psutil
-py3nvml
+matplotlib==2.2.3
+xlsxwriter==1.0.7
+psutil==5.4.7
+py3nvml==0.2.0
