@@ -112,6 +112,7 @@ class Chainer(Component):
         if self.forward_map.issuperset(in_x):
             self.pipe.append(((x_keys, in_x), out_params, component))
             self.forward_map = self.forward_map.union(out_params)
+
         if self.train_map.issuperset(in_x):
             self.train_pipe.append(((x_keys, in_x), out_params, component))
             self.train_map = self.train_map.union(out_params)
@@ -181,27 +182,27 @@ class Chainer(Component):
         self.get_main_component().save()
 
     def load(self) -> None:
-        for in_params, out_params, component in self.pipe:
+        for in_params, out_params, component in self.train_pipe:
             if inspect.ismethod(getattr(component, 'load', None)):
                 component.load()
 
     def reset(self) -> None:
-        for in_params, out_params, component in self.pipe:
+        for in_params, out_params, component in self.train_pipe:
             if inspect.ismethod(getattr(component, 'reset', None)):
                 component.reset()
 
     def destroy(self) -> None:
-        for in_params, out_params, component in self.pipe:
+        for in_params, out_params, component in self.train_pipe:
             if inspect.ismethod(getattr(component, 'destroy', None)):
                 component.destroy()
 
     def serialize(self) -> bytes:
         data = []
-        for in_params, out_params, component in self.pipe:
+        for in_params, out_params, component in self.train_pipe:
             data.append(component.serialize())
         return pickle.dumps(data)
 
     def deserialize(self, data: bytes) -> None:
         data = pickle.loads(data)
-        for in_params, out_params, component in self.pipe:
+        for in_params, out_params, component in self.train_pipe:
             component.deserialize(data)

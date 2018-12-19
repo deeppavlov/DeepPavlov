@@ -52,10 +52,15 @@ def build_model(config: Union[str, Path, dict], mode: str = 'infer',
             except KeyError:
                 log.warning('No "save_path" parameter for the {} component, so "load_path" will not be renewed'
                             .format(component_config.get('class_name', component_config.get('ref', 'UNKNOWN'))))
-        component = from_params(component_config, mode=mode)
+
+        if serialized and 'in' in component_config:
+            component_serialized = serialized.pop(0)
+        else:
+            component_serialized = None
+
+        component = from_params(component_config, mode=mode, serialized=component_serialized)
 
         if 'in' in component_config:
-            component.deserialize(serialized.pop(0))
             c_in = component_config['in']
             c_out = component_config['out']
             in_y = component_config.get('in_y', None)
