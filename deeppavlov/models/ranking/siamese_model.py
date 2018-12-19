@@ -84,8 +84,7 @@ class SiameseModel(NNModel):
         y_pred = []
         buf = []
         for j, sample in enumerate(samples_generator, start=1):
-            n_responses = len(sample[self.num_context_turns:])
-            self._append_sample_to_batch_buffer(sample, buf)
+            n_responses = self._append_sample_to_batch_buffer(sample, buf)
             if len(buf) >= self.batch_size:
                 for i in range(len(buf) // self.batch_size):
                     b = self._make_batch(buf[i*self.batch_size:(i+1)*self.batch_size])
@@ -108,10 +107,13 @@ class SiameseModel(NNModel):
     def reset(self) -> None:
         pass
 
-    def _append_sample_to_batch_buffer(self, sample: List, buf: Union[List[List[np.ndarray]], List[Tuple[np.ndarray]]]):
+    def _append_sample_to_batch_buffer(self, sample: List,
+                                       buf: Union[List[List[np.ndarray]], List[Tuple[np.ndarray]]]) -> int:
         context = sample[:self.num_context_turns]
         responses = sample[self.num_context_turns:]
         buf += [context + [el] for el in responses]
+
+        return len(responses)
 
     def _train_on_batch(self, batch: Union[List[np.ndarray], Dict], y: List[int]) -> float:
         pass

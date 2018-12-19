@@ -335,17 +335,16 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
         # 4 model inputs
 
         # 1. Token indices for context
-        batch_buffer_context += [context_sentences for sent in response_sentences]
+        batch_buffer_context += [context_sentences for sent in response_sentences]    # replicate context N times
         # 2. Token indices for response
         batch_buffer_response += [response_sentence for response_sentence in response_sentences]
         # 3. Lengths of all context sentences
         lens = []
-        for context in [context_sentences for sent in response_sentences]:
+        for context in [context_sentences for sent in response_sentences]:    # replicate context N times
             context_sentences_lens = []
             for sent in context:
                 sent_len = len(sent[sent != 0])
-                if sent_len != 0:
-                    sent_len += 1  # 1 additional token is the USE token
+                sent_len = sent_len + 1 if sent_len > 0 else 0  # 1 additional token is the USE token
                 context_sentences_lens.append(sent_len)
             lens.append(context_sentences_lens)
         batch_buffer_context_len += lens
@@ -353,8 +352,7 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
         lens = []
         for response in [response_sentence for response_sentence in response_sentences]:
             sent_len = len(response[response != 0])
-            if sent_len != 0:
-                sent_len += 1  # 1 additional token is the USE token
+            sent_len = sent_len + 1 if sent_len > 0 else 0  # 1 additional token is the USE token
             lens.append(sent_len)
         batch_buffer_response_len += lens
         # 5. Raw context sentences
@@ -371,6 +369,7 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
                 raw_batch_buffer_context[i],
                 raw_batch_buffer_response[i]
             )))
+        return len(response_sentences)
 
     def _make_batch(self, batch: List[Tuple[np.ndarray]]) -> Dict:
         """
@@ -397,7 +396,7 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
             input_context_len.append(sample[1])
             input_response.append(sample[2])
             input_response_len.append(sample[3])
-            input_raw_context.append(sample[4])  # raw context is the 4th element of each Tuple in the batch
+            input_raw_context.append(sample[4])   # raw context is the 4th element of each Tuple in the batch
             input_raw_response.append(sample[5])  # raw response is the 5th element of each Tuple in the batch
 
         return {

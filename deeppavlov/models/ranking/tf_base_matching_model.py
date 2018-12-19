@@ -44,8 +44,9 @@ class TensorflowBaseMatchingModel(TFModel, SiameseModel):
                  **kwargs):
         super(TensorflowBaseMatchingModel, self).__init__(batch_size=batch_size, num_context_turns=num_context_turns,
                                                           *args, **kwargs)
+        self.emb_matrix[1] = np.mean(self.emb_matrix[2:], axis=0)  # set mean embedding for OOV token at the 2nd index
 
-    def _append_sample_to_batch_buffer(self, sample: List[np.ndarray], buf: List[Tuple]):
+    def _append_sample_to_batch_buffer(self, sample: List[np.ndarray], buf: List[Tuple]) -> int:
         """
 
         Args:
@@ -53,7 +54,7 @@ class TensorflowBaseMatchingModel(TFModel, SiameseModel):
             buf (List[Tuple]) : List of samples with model inputs each:
                 [( context, context_len, response, response_len ), ( ... ), ... ].
         Returns:
-             None
+             a number of candidate responses
         """
         #
         batch_buffer_context = []       # [batch_size, 10, 50]
@@ -93,6 +94,7 @@ class TensorflowBaseMatchingModel(TFModel, SiameseModel):
                 batch_buffer_response_len[i]
             )))
 
+        return len(response_sentences)
 
     def _make_batch(self, batch: List[Tuple[List[np.ndarray], List, np.ndarray, int]]) -> Dict:
         """

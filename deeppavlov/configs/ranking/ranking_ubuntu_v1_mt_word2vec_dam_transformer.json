@@ -21,7 +21,8 @@
       },
       {
         "class_name": "simple_vocab",
-        "special_tokens": ["<PAD>"],
+        "special_tokens": ["", "<UNK>"],
+        "unk_token": "<UNK>",
         "fit_on": ["x"],
         "id": "vocab_1",
         "save_path": "{MODELS_PATH}/ubuntu_v1_mt_word2vec_dam_transformer/vocabs/int_tok.dict",
