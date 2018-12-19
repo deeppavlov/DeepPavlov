@@ -19,7 +19,7 @@ from datetime import datetime
 from multiprocessing import Pool
 from pathlib import Path
 from shutil import rmtree
-from typing import Union, Dict, Iterator
+from typing import Union, Dict, Iterator, Optional
 
 from psutil import cpu_count
 from tqdm import tqdm
