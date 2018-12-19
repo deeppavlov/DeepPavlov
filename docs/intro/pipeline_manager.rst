@@ -326,7 +326,7 @@ the default value is None. Thus, a dictionary can be defined:
 
 And then whole numbers will be sampled from the range [1, 1000] on a logarithmic scale.
 
-In the case of greed_search, only the **grid_search** key is provided with no additional parameters.
+In the case of grid_search, only the **grid_search** key is provided with no additional parameters.
 
 To understand how different sets of hyperparameters are sampled against the background of component lookup, consider
 the case from the introduction (shown in the picture), we want to try two models and three different embeds,
