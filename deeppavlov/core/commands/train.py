@@ -419,6 +419,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
                         'metrics': prettify_metrics(metrics),
                         'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                     }
+                    default_report_keys = list(report.keys())
                     report.update(result)
 
                     if train_config['show_examples']:
@@ -441,18 +442,20 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
                         report['loss'] = sum(losses)/len(losses)
                         losses = []
 
+                    model.process_event(event_name='after_train_log', data=report)
+
                     if train_config['tensorboard_log_dir'] is not None:
                         for name, score in metrics:
                             metric_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + name,
                                                                             simple_value=score), ])
                             tb_train_writer.add_summary(metric_sum, i)
 
-                        for name, score in result.items():
-                            res_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + name,
-                                                                         simple_value=score), ])
-                            tb_train_writer.add_summary(res_sum, i)
+                        for name, score in report.items():
+                            if name not in default_report_keys:
+                                res_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + name,
+                                                                             simple_value=score), ])
+                                tb_train_writer.add_summary(res_sum, i)
 
-                    model.process_event(event_name='after_train_log', data=report)
                     report = {'train': report}
                     print(json.dumps(report, ensure_ascii=False))
                     for out in outputs.values():
@@ -532,6 +535,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
                     'metrics': prettify_metrics(metrics),
                     'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                 }
+                default_report_keys = list(report.keys())
                 report.update(result)
 
                 if train_config['show_examples']:
@@ -554,18 +558,20 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
                     report['loss'] = sum(losses)/len(losses)
                     losses = []
 
+                model.process_event(event_name='after_train_log', data=report)
+
                 if train_config['tensorboard_log_dir'] is not None:
                     for name, score in metrics:
                         metric_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + name,
                                                                         simple_value=score), ])
                         tb_train_writer.add_summary(metric_sum, epochs)
 
-                    for name, score in result.items():
-                        res_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + name,
-                                                                     simple_value=score), ])
-                        tb_train_writer.add_summary(res_sum, epochs)
+                    for name, score in report.items():
+                        if name not in default_report_keys:
+                            res_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + name,
+                                                                         simple_value=score), ])
+                            tb_train_writer.add_summary(res_sum, epochs)
 
-                model.process_event(event_name='after_train_log', data=report)
                 report = {'train': report}
                 print(json.dumps(report, ensure_ascii=False))
                 for out in outputs.values():
