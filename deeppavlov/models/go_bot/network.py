@@ -481,7 +481,7 @@ class GoalOrientedBotNetwork(EnhancedTFModel):
         if self.debug:
             log.debug("Bot reset.")
 
-    def shutdown(self):
+    def destroy(self):
         self.sess.close()
         self.slot_filler.shutdown()
 
@@ -510,8 +510,6 @@ class GoalOrientedBotNetwork(EnhancedTFModel):
                                action_mask, action):
         feed_dict = {
             self._dropout_keep_prob: 1.,
-            self.get_learning_rate_ph(): self.get_learning_rate(),
-            self.get_momentum_ph(): self.get_momentum(),
             self._utterance_mask: utter_mask,
             self._features: features,
             self._action: action,
@@ -524,26 +522,6 @@ class GoalOrientedBotNetwork(EnhancedTFModel):
         _, loss_value, prediction = \
             self.sess.run([self._train_op, self._loss, self._prediction],
                           feed_dict=feed_dict)
-        report = {'loss': loss_value, 'learning_rate': self.get_learning_rate()}
-        if self.get_momentum() is not None:
-            report['momentum'] = self.get_momentum()
-        return report
-
-    def calc_loss(self, x, y):
-        features, emb_context, key, utter_mask, action_mask, action = \
-            self.prepare_data(x, y)
-        feed_dict = {
-            self._dropout_keep_prob: 1.,
-            self._utterance_mask: utter_mask,
-            self._features: features,
-            self._action: action,
-            self._action_mask: action_mask
-        }
-        if self.attn:
-            feed_dict[self._emb_context] = emb_context
-            feed_dict[self._key] = key
-
-        loss_value = self.sess.run(self._loss, feed_dict=feed_dict)
         return {'loss': loss_value}
 
     def _init_network_params(self):

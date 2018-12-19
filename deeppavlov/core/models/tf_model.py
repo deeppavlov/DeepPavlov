@@ -22,8 +22,6 @@ import tensorflow as tf
 from tensorflow.python.ops import variables
 
 from deeppavlov.core.models.nn_model import NNModel
-from deeppavlov.core.models.estimator import Estimator
-from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import cls_from_str
@@ -62,6 +60,9 @@ class TFModel(NNModel, metaclass=TfModelMeta):
         var_list = self._get_saveable_variables(exclude_scopes)
         saver = tf.train.Saver(var_list)
         saver.save(self.sess, path)
+
+    def destroy(self):
+        self.sess.close()
 
     @staticmethod
     def _get_saveable_variables(exclude_scopes=tuple()):
@@ -270,7 +271,8 @@ class EnhancedTFModel(TFModel):
 
         self._lr_schedule = DecayScheduler(start_val=start_val, end_val=end_val,
                                            num_it=num_it, dec_type=dec_type, extra=extra)
-        self._lr_ph = tf.placeholder(tf.float32, shape=[], name='learning_rate')
+        #self._lr_var = tf.placeholder(tf.float32, shape=[], name='learning_rate')
+        self._lr_var = tf.Variable(self._lr, dtype=tf.float32, name='learning_rate')
 
         if (momentum is None) and\
                 self._optimizer not in (tf.train.AdagradDAOptimizer,
@@ -294,8 +296,9 @@ class EnhancedTFModel(TFModel):
         self._mom_schedule = DecayScheduler(start_val=start_val, end_val=end_val,
                                             num_it=num_it, dec_type=dec_type,
                                             extra=extra)
-        self._mom_ph = tf.placeholder_with_default(0.9, shape=[], name='momentum')
-        # self._mom_ph = tf.placeholder(tf.float32, shape=[], name='momentum')
+        # self._mom_var = tf.placeholder_with_default(0.9, shape=[], name='momentum')
+        # self._mom_var = tf.placeholder(tf.float32, shape=[], name='momentum')
+        self._mom_var = tf.Variable(self._mom, dtype=tf.float32, name='momentum')
 
         self._learning_rate_drop_patience = learning_rate_drop_patience
         self._learning_rate_drop_div = learning_rate_drop_div
@@ -309,6 +312,11 @@ class EnhancedTFModel(TFModel):
         self._fit_beta = fit_beta
         self._fit_min_batches = fit_min_batches
         self._fit_max_batches = fit_max_batches
+
+    def load(self, exclude_scopes: Optional[Iterable] = ('Optimizer',
+                                                         'learning_rate',
+                                                         'momentum')):
+        return super().load(exclude_scopes=exclude_scopes)
 
     def fit(self, *args):
         data = list(zip(*args))
@@ -387,7 +395,10 @@ class EnhancedTFModel(TFModel):
                      momentum: Union[float, tf.placeholder] = None,
                      clip_norm: float = None,
                      **kwargs):
-        kwargs['learning_rate'] = learning_rate or self.get_learning_rate_ph()
+        if learning_rate is not None:
+            kwargs['learning_rate'] = learning_rate
+        else:
+            kwargs['learning_rate'] = self.get_learning_rate_var()
         kwargs['optimizer'] = optimizer or self.get_optimizer()
         kwargs['clip_norm'] = clip_norm or self._clip_norm
 
@@ -400,7 +411,7 @@ class EnhancedTFModel(TFModel):
         if momentum is not None:
             kwargs[momentum_param] = momentum
         elif self.get_momentum() is not None:
-            kwargs[momentum_param] = self.get_momentum_ph()
+            kwargs[momentum_param] = self.get_momentum_var()
         return super().get_train_op(*args, **kwargs)
 
     def process_event(self, event_name, data):
@@ -418,17 +429,22 @@ class EnhancedTFModel(TFModel):
                 self._learning_rate_cur_impatience = 0
                 self._learning_rate_cur_div *= self._learning_rate_drop_div
                 self._lr /= self._learning_rate_drop_div
+                self.sess.run(tf.assign(self._lr_var, self._lr))
                 log.info(f"New learning rate dividor = {self._learning_rate_cur_div}")
         if event_name == 'after_batch':
             if self._lr_update_on_batch:
                 self._lr = self._lr_schedule.next_val() / self._learning_rate_cur_div
+                self.sess.run(tf.assign(self._lr_var, self._lr))
             if self._mom_update_on_batch and (self.get_momentum() is not None):
                 self._mom = min(1., max(0., self._mom_schedule.next_val()))
+                self.sess.run(tf.assign(self._mom_var, self._mom))
         if event_name == 'after_epoch':
             if not self._lr_update_on_batch:
                 self._lr = self._lr_schedule.next_val() / self._learning_rate_cur_div
+                self.sess.run(tf.assign(self._lr_var, self._lr))
             if not self._mom_update_on_batch and (self.get_momentum() is not None):
                 self._mom = min(1., max(0., self._mom_schedule.next_val()))
+                self.sess.run(tf.assign(self._mom_var, self._mom))
 
     def get_learning_rate(self):
         if self._lr is None:
@@ -436,14 +452,14 @@ class EnhancedTFModel(TFModel):
                               " before training")
         return self._lr
 
-    def get_learning_rate_ph(self):
-        return self._lr_ph
+    def get_learning_rate_var(self):
+        return self._lr_var
 
     def get_momentum(self):
         return self._mom
 
-    def get_momentum_ph(self):
-        return self._mom_ph
+    def get_momentum_var(self):
+        return self._mom_var
 
     def get_optimizer(self):
         return self._optimizer

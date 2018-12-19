@@ -300,9 +300,6 @@ class NerNetwork(EnhancedTFModel):
         feed_dict = {ph: x for ph, x in zip(self._xs_ph_list, xs)}
         if y is not None:
             feed_dict[self._y_ph] = y
-        if train:
-            feed_dict[self.get_learning_rate_ph()] = self.get_learning_rate()
-            feed_dict[self.get_momentum_ph()] = self.get_momentum()
         feed_dict[self.training_ph] = train
         if not train:
             feed_dict[self._dropout_ph] = 1.0
@@ -322,11 +319,7 @@ class NerNetwork(EnhancedTFModel):
         *xs, y = args
         feed_dict = self._fill_feed_dict(xs, y, train=True)
         _, loss_value = self.sess.run([self.train_op, self.loss], feed_dict)
-        report = {'loss': loss_value, 'learning_rate': self.get_learning_rate()}
-        if self.get_momentum():
-            report['momentum'] = self.get_momentum()
-        return report
+        return {'loss': loss_value}
 
     def process_event(self, event_name, data):
         super().process_event(event_name, data)
-

@@ -220,6 +220,7 @@ class SquadModel(EnhancedTFModel):
         self.y1_ph = tf.placeholder(shape=(None, ), dtype=tf.int32, name='y1_ph')
         self.y2_ph = tf.placeholder(shape=(None, ), dtype=tf.int32, name='y2_ph')
 
+        self.lear_rate_ph = tf.placeholder_with_default(0.0, shape=[], name='learning_rate')
         self.keep_prob_ph = tf.placeholder_with_default(1.0, shape=[], name='keep_prob_ph')
         self.is_train_ph = tf.placeholder_with_default(False, shape=[], name='is_train_ph')
 
@@ -227,7 +228,7 @@ class SquadModel(EnhancedTFModel):
         with tf.variable_scope('Optimizer'):
             self.global_step = tf.get_variable('global_step', shape=[], dtype=tf.int32,
                                                initializer=tf.constant_initializer(0), trainable=False)
-            self.train_op = self.get_train_op(self.loss)
+            self.train_op = self.get_train_op(self.loss, learning_rate=self.lear_rate_ph)
 
     def _build_feed_dict(self, c_tokens, c_chars, q_tokens, q_chars, y1=None, y2=None):
         feed_dict = {
@@ -240,8 +241,7 @@ class SquadModel(EnhancedTFModel):
             feed_dict.update({
                 self.y1_ph: y1,
                 self.y2_ph: y2,
-                self.get_learning_rate_ph(): max(self.get_learning_rate(), self.min_learning_rate),
-                self.get_momentum_ph(): self.get_momentum(),
+                self.lear_rate_ph: max(self.get_learning_rate(), self.min_learning_rate),
                 self.keep_prob_ph: self.keep_prob,
                 self.is_train_ph: True,
             })
@@ -274,10 +274,9 @@ class SquadModel(EnhancedTFModel):
             y2s = (y2s + 1) * noans_mask
 
         feed_dict = self._build_feed_dict(c_tokens, c_chars, q_tokens, q_chars, y1s, y2s)
-        loss, _ = self.sess.run([self.loss, self.train_op], feed_dict=feed_dict)
-        report = {'loss': loss, 'learning_rate': self.get_learning_rate()}
-        if self.get_momentum() is not None:
-            report['momentum'] = self.get_momentum()
+        loss, _, lear_rate = self.sess.run([self.loss, self.train_op, self.lear_rate_ph],
+                                           feed_dict=feed_dict)
+        report = {'loss': loss, 'learning_rate': lear_rate}
         return report
 
     def __call__(self, c_tokens: np.ndarray, c_chars: np.ndarray, q_tokens: np.ndarray, q_chars: np.ndarray,
