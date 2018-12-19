@@ -395,7 +395,6 @@ class PipelineManager:
             results_visualization(self.observer.log_path, self.plot)
             print("[ The intermediate report was created ]")
 
-        return None
 
     def _test(self) -> None:
         """
