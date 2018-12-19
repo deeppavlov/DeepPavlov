@@ -20,7 +20,7 @@ The description of the chainer, train parameters, and metadata.
 
 :class:`~deeppavlov.core.common.chainer.Chainer` is a core concept of DeepPavlov library: chainer builds a pipeline from
 heterogeneous components (Rule-Based/ML/DL) and allows to train or infer from pipeline as a whole.
-And ``Chainer`` is the only required element that must contain a config. For example, if you want to interact with an
+And ``Chainer`` is the only element that every config must contain. For example, if you want to interact with an
 already trained pipeline, rather than train it. Then you no longer need the “dataset_reader”, “dataset_iterator” and
 “train” keys in config. Each component in the pipeline specifies its inputs and outputs as arrays of names, for example:
 "in": ["tokens", "features"] and "out": ["token_embeddings", "features_embeddings"] and you can chain outputs of one
