@@ -168,6 +168,7 @@ class Bot(Thread):
         delta = now - timestamp_datetime if now >= timestamp_datetime else timestamp_datetime - now
 
         if abs(delta.seconds) > REQUEST_TIMESTAMP_TOLERANCE_SECS:
+            log.error(f'Failed timestamp check for request: {request_body.decode("utf-8", "replace")}')
             return {'error': 'failed request timestamp check'}
 
         conversation_key = alexa_request['session']['user']['userId']
