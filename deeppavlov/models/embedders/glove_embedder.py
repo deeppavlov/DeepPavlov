@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import pickle
 
 from overrides import overrides
 from typing import Iterator
@@ -50,6 +51,9 @@ class GloVeEmbedder(Embedder):
         Load dict of embeddings from given file
         """
         log.info(f"[loading GloVe embeddings from `{self.load_path}`]")
+        if not self.load_path.exists():
+            log.warning(f'{self.load_path} does not exist, cannot load embeddings from it!')
+            return
         self.model = KeyedVectors.load_word2vec_format(str(self.load_path))
         self.dim = self.model.vector_size
 
@@ -62,3 +66,10 @@ class GloVeEmbedder(Embedder):
             iterator
         """
         yield from self.model.vocab
+
+    def serialize(self):
+        return pickle.dumps(self.model)
+
+    def deserialize(self, data):
+        self.model = pickle.loads(data)
+        self.dim = self.model.vector_size

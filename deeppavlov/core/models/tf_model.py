@@ -27,6 +27,8 @@ log = get_logger(__name__)
 
 
 class TFModel(NNModel, metaclass=TfModelMeta):
+    sess: tf.Session
+
     """Parent class for all components using TensorFlow."""
     def __init__(self, *args, **kwargs) -> None:
         if not hasattr(self, 'sess'):
@@ -66,11 +68,7 @@ class TFModel(NNModel, metaclass=TfModelMeta):
         saver.save(self.sess, path)
 
     def serialize(self):
-        # tf_vars = self._get_saveable_variables(exclude_scopes)
-        # tf_vars = [v._variables if isinstance(v, CudnnOpaqueParamsSaveable) else v for v in tf_vars
-        #            if not isinstance(v, CudnnOpaqueParamsSaveable)  # TODO: remove this line
-        #            ]
-        tf_vars = tf.trainable_variables()
+        tf_vars = tf.global_variables()
         values = self.sess.run(tf_vars)
         return tuple(zip([var.name for var in tf_vars], values))
 
