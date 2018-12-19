@@ -114,6 +114,14 @@ class PipelineManager:
                          considered as available. If memory_fraction == 0.5 cards with no more than half of the memory
                          will be considered as available.
         available_gpu: list with numbers of available gpu
+
+        .. note::
+
+            **WARNING!:** Remember that when learning neural networks on the CPU, by default tensorflow parallelizes
+            tensor calculations, so if you run several pipelines with neural networks training on the CPU in parallel
+            mode, you will get an error. Use video cards. Learning pipelines in parallel mode on the CPU is better
+            suited for training estimators from scikit-learn. In our library there is such an opportunity.
+
         save_path: path to the save folder
         observer: A special class that collects auxiliary statistics and results during training, and stores all
                 the collected data in a separate log.
