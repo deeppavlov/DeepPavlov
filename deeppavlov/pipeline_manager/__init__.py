@@ -83,7 +83,7 @@ class PipelineManager:
               does not affect the algorithm and therefore can be arbitrary. The default value is None.
         root: root path, the root path where the report will be generated and saved checkpoints
         plot: boolean trigger, which determines whether to draw a graph of results or not
-        save_best: boolean trigger, which determines whether to save all models or only best model
+        save_best: boolean trigger, which determines whether to save all models or only the best model
         do_test: boolean trigger, which determines whether to run an experiment test on a small piece of data,
                  before running a full-scale experiment
         search_type: string parameter defining the type of hyperparams search, can be "grid" or "random"
