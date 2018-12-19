@@ -183,7 +183,12 @@ def verify_cert(signature_chain_url: str) -> Optional[crypto.X509]:
     Returns:
         result: Amazon certificate if verification was successful, None if not.
     """
-    certs_chain_get = requests.get(signature_chain_url)
+    try:
+        certs_chain_get = requests.get(signature_chain_url)
+    except requests.exceptions.ConnectionError as e:
+        log.error(f'Amazon signature chain get error: {e}')
+        return None
+
     certs_chain_txt = certs_chain_get.text
     certs_chain = extract_certs(certs_chain_txt)
 
