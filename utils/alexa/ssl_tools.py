@@ -127,9 +127,9 @@ def verify_certs_chain(certs_chain: List[crypto.X509], amazon_cert: crypto.X509)
         ca_files.append(default_verify_file)
 
     for ca_file in ca_files:
-        ca_file: Path = ca_file
+        ca_file: Path
         if ca_file.is_file():
-            with ca_file.open('r') as crt_f:
+            with ca_file.open('r', encoding='ascii') as crt_f:
                 ca_certs_txt = crt_f.read()
                 ca_certs = extract_certs(ca_certs_txt)
                 for cert in ca_certs:
