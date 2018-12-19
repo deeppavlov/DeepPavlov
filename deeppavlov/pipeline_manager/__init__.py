@@ -276,7 +276,7 @@ class PipelineManager:
 
     @staticmethod
     @unpack_args
-    def train_pipe(pipe: Dict, i: int, observer_: Observer, gpu_ind: Union[int, None] = None) -> None:
+    def train_pipe(pipe: Dict, i: int, observer_: Observer, gpu_ind: Optional[int] = None) -> None:
         """
         Start learning single pipeline. Observer write all info in log file.
 
