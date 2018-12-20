@@ -206,7 +206,7 @@ class KerasClassificationModel(KerasModel):
 
         return features
 
-    def train_on_batch(self, texts: List[List[np.ndarray]], labels: list) -> [float, List[float]]:
+    def train_on_batch(self, texts: List[List[np.ndarray]], labels: list) -> Union[float, List[float]]:
         """
         Train the model on the given batch
 
@@ -222,7 +222,8 @@ class KerasClassificationModel(KerasModel):
         metrics_values = self.model.train_on_batch(features, np.squeeze(np.array(labels)))
         return metrics_values
 
-    def infer_on_batch(self, texts: List[List[np.ndarray]], labels: list = None) -> [float, List[float], np.ndarray]:
+    def infer_on_batch(self, texts: List[List[np.ndarray]], labels: list = None) -> \
+            Union[float, List[float], np.ndarray]:
         """
         Infer the model on the given batch
 
