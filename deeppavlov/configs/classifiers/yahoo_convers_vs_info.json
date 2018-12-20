@@ -13,8 +13,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info/model_v0/classes.dict",
-        "load_path": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info/model_v0/classes.dict",
+        "save_path": "{MODELS_PATH}/classes.dict",
+        "load_path": "{MODELS_PATH}/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -46,15 +46,17 @@
         "elmo_output_names": [
           "elmo"
         ],
-        "mini_batch_size": 8,
-        "spec": "{DOWNLOADS_PATH}/embeddings/yahooo-sber-questions_epoches_n_15/"
+        "mini_batch_size": 32,
+        "spec": "{DOWNLOADS_PATH}/embeddings/yahooo-sber-questions_epoches_n_15/",
+        "pad_zero": true
       },
       {
         "in": "y_ids",
         "out": "y_onehot",
         "class_name": "one_hotter",
         "id": "my_one_hotter",
-        "depth": "#classes_vocab.len"
+        "depth": "#classes_vocab.len",
+        "single_vector": true
       },
       {
         "in": [
@@ -68,8 +70,8 @@
         ],
         "main": true,
         "class_name": "keras_classification_model",
-        "save_path": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info/model_v0/model",
-        "load_path": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info/model_v0/model",
+        "save_path": "{MODELS_PATH}/model",
+        "load_path": "{MODELS_PATH}/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "units_gru": 512,
@@ -77,7 +79,6 @@
         "learning_rate": 0.001,
         "learning_rate_decay": 0.001,
         "loss": "categorical_crossentropy",
-        "text_size": 20,
         "coef_reg_gru": 1e-4,
         "coef_reg_den": 1e-4,
         "dropout_rate": 0.5,
@@ -109,6 +110,8 @@
     ]
   },
   "train": {
+    "epochs": 100,
+    "batch_size": 32,
     "metrics": [
       {
         "name": "roc_auc",
@@ -138,13 +141,13 @@
     "show_examples": true,
     "validate_best": true,
     "test_best": false,
-    "tensorboard_log_dir": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info/model_v0/"
+    "tensorboard_log_dir": "{MODELS_PATH}/"
   },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models"
+      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/yahoo_convers_vs_info_v2"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -160,8 +163,8 @@
         "subdir": "{DOWNLOADS_PATH}/embeddings/yahooo-sber-questions_epoches_n_15/"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/yahoo_convers_vs_info.tar.gz",
-        "subdir": "{MODELS_PATH}/classifiers/"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/yahoo_convers_vs_info_v2.tar.gz",
+        "subdir": "{ROOT_PATH}/models/classifiers/"
       }
     ]
   }
