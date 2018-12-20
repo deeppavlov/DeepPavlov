@@ -18,7 +18,7 @@ from typing import Dict
 from deeppavlov.core.commands.utils import expand_path, parse_config
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.common.registry import get_model, cls_from_str
+from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.models.component import Component
 
 log = get_logger(__name__)
@@ -69,10 +69,6 @@ def from_params(params: Dict, mode: str = 'infer', **kwargs) -> Component:
             log.exception(e)
             raise e
 
-    if config_params.get('cache', False) and config_params.get('component_name') in _refs:
-        log.info(f"loading cached {config_params['component_name']}")
-        return _refs[config_params['component_name']]
-
     elif 'config_path' in config_params:
         from deeppavlov.core.commands.infer import build_model
         refs = _refs.copy()
@@ -95,14 +91,11 @@ def from_params(params: Dict, mode: str = 'infer', **kwargs) -> Component:
 
     try:
         spec = inspect.getfullargspec(cls)
-        if 'mode' in spec.args+spec.kwonlyargs or spec.varkw is not None:
+        if 'mode' in spec.args + spec.kwonlyargs or spec.varkw is not None:
             kwargs['mode'] = mode
 
         component = cls(**dict(config_params, **kwargs))
-        try:
-            _refs[config_params['component_name']] = component
-        except KeyError:
-            pass
+
         try:
             _refs[config_params['id']] = component
         except KeyError:

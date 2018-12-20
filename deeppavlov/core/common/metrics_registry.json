@@ -24,9 +24,6 @@
   "rank_response": "deeppavlov.models.ranking.metrics:rank_response",
   "roc_auc": "deeppavlov.metrics.roc_auc_score:roc_auc_score",
   "sets_accuracy": "deeppavlov.metrics.accuracy:sets_accuracy",
-  "simple_accuracy": "deeppavlov.metrics.fmeasure_classification:simple_acc",
-  "simple_f1_macro": "deeppavlov.metrics.fmeasure_classification:simple_f1_macro",
-  "simple_f1_weighted": "deeppavlov.metrics.fmeasure_classification:simple_f1_wighted",
   "slots_accuracy": "deeppavlov.metrics.accuracy:slots_accuracy",
   "squad_f1": "deeppavlov.metrics.squad_metrics:squad_f1"
 }

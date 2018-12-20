@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import json
-import time
 from copy import copy
 from pathlib import Path
 from typing import Dict, List, Tuple, Union, Iterable, Optional
@@ -35,49 +34,7 @@ GOLD_METRICS = {'Accuracy': ["classification_accuracy", "simple_accuracy"],
                 'F1 weighted': ["classification_f1_weighted", "simple_f1_weighted"]}
 
 
-def merge_logs(old_log: dict, new_log: dict) -> dict:
-    """
-    Merge a logs of two experiments.
-
-    Args:
-        old_log: config dict
-        new_log: config dict
-
-    Returns:
-        new config dict
-    """
-    # update time
-    t_old = old_log['experiment_info']['full_time'].split(':')
-    t_new = new_log['experiment_info']['full_time'].split(':')
-    sec = int(t_old[2]) + int(t_new[2]) + (int(t_old[1]) + int(t_new[1])) * 60 + (
-            int(t_old[0]) + int(t_new[0])) * 3600
-    old_log['experiment_info']['full_time'] = time.strftime('%H:%M:%S', time.gmtime(sec))
-    # update num of pipes
-    n_old = int(old_log['experiment_info']['number_of_pipes'])
-    n_new = int(new_log['experiment_info']['number_of_pipes'])
-    old_log['experiment_info']['number_of_pipes'] = n_old + n_new
-
-    for dataset_name, dataset_val in new_log['experiments'].items():
-        if dataset_name not in old_log['experiments'].keys():
-            old_log['experiments'][dataset_name] = dataset_val
-        else:
-            for ind, item in new_log['experiments'][dataset_name].items():
-                if ind not in old_log['experiments'][dataset_name].keys():
-                    old_log['experiments'][dataset_name][ind] = item
-                else:
-                    for nkey, nval in item.items():
-                        match = False
-                        for okey, oval in old_log['experiments'][dataset_name][ind].items():
-                            if nval['config'] == oval['config']:
-                                match = True
-                        if not match:
-                            n_old += 1
-                            old_log['experiments'][dataset_name][str(n_old)] = nval
-
-    return old_log
-
-
-def rename_met(log: dict, gold_metrics: Union[str, Dict[str, List[str]]] = None) -> dict:
+def rename_met(log: dict, gold_metrics: Union[str, Dict[str, List[str]], None] = None) -> dict:
     """
     Renames metrics in the log to default values.
 
@@ -204,56 +161,6 @@ def get_available_gpus(num_gpus: Optional[int] = None,
     return available_gpu
 
 
-def check_gpu_available(number: int, gpu_fraction: float = 1.0) -> bool:
-    """
-    Checks if the graphics card is free.
-
-    Args:
-        number: (int) number of graphics card
-        gpu_fraction: the parameter determines the criterion of whether the gpu card is free or not.
-                      If gpu_fraction == 1.0 only those cards whose memory is completely free will be
-                      considered as available. If gpu_fraction == 0.5 cards with no more than half of the memory
-                      will be considered as available.
-
-    Returns:
-        True of False
-    """
-    # Try connect with NVIDIA drivers
-    try:
-        py3nvml.nvmlInit()
-    except Exception:
-        raise GpuError("Couldn't connect to nvml drivers. Check they are installed correctly.")
-
-    handle = py3nvml.nvmlDeviceGetHandleByIndex(number)
-    info = py3nvml.nvmlDeviceGetMemoryInfo(handle)
-
-    # Sometimes GPU has a few MB used when it is actually free
-    if (info.free + 10) / info.total >= gpu_fraction:
-        py3nvml.nvmlShutdown()
-        return True
-    else:
-        py3nvml.nvmlShutdown()
-        return False
-
-
-def get_num_gpu() -> int:
-    """
-    Checks the number of discrete (nvidia) graphics cards on your computer.
-
-    Returns:
-        numdevices: (int) amount of discrete graphics cards (nvidia) on your computer
-    """
-    # Try connect with NVIDIA drivers
-    try:
-        py3nvml.nvmlInit()
-    except Exception:
-        raise GpuError("Couldn't connect to nvml drivers. Check they are installed correctly.")
-
-    numdevices = py3nvml.nvmlDeviceGetCount()
-    py3nvml.nvmlShutdown()
-    return numdevices
-
-
 # ------------------------------------------------Generate reports-----------------------------------------------------
 # _______________________________________________Generate new table____________________________________________________
 
@@ -361,12 +268,9 @@ def write_dataset_name(sheet: xlsxwriter, sheet_2: xlsxwriter, row_1: int, row_2
     return row_1, row_2
 
 
-def write_exp(row1: int, row2: int, col: int, model_list: List[Dict], sheet: xlsxwriter, sheet_2: xlsxwriter,
+def write_exp(row_1: int, row_2: int, col: int, model_list: List[Dict], sheet: xlsxwriter, sheet_2: xlsxwriter,
               _format: Dict, max_l: int, target_metric: str, metric_names: List[str]) -> Tuple[int, int]:
     """ Writes legends to the table """
-    row_1 = row1
-    row_2 = row2
-
     for val_ in model_list:
         row_1, col = write_legend(sheet, row_1, col, list(val_[0]['res'].keys()), metric_names, max_l, _format)
         row_2, col = write_legend(sheet_2, row_2, col, list(val_[0]['res'].keys()), metric_names, max_l, _format)
@@ -725,6 +629,8 @@ def plot_res(info: dict,
         adr = savepath / '{0}.{1}'.format(name, ext)
         fig.savefig(str(adr), dpi=100)
         plt.close(fig)
+
+
 # _________________________________________________Build report_______________________________________________________
 
 

@@ -20,23 +20,21 @@ from shutil import rmtree
 from typing import Union
 
 
-class Observer(object):
+class Observer:
     """
     The :class:`~pipeline_manager.observer.Observer` implements the functions of observing the course of experiments,
     collecting results, time and other useful information, logging and storing it.
+
+    Args:
+            name: name of the experiments.
+            root: path to root folder.
+            info: additional information that you want to add to the log, the content of the dictionary
+             does not affect the algorithm
+            date: date of the experiment.
     """
 
     def __init__(self, name: str, root: Union[str, Path], info: dict, date: str, plot: bool) -> None:
-        """
-        Initializes the log, creates a folders tree and files necessary for the observer to work.
-
-        Args:
-            name: str; name of the experiments.
-            root: str; path to root folder.
-            info: dict; additional information that you want to add to the log, the content of the dictionary
-             does not affect the algorithm
-            date: str; date of the experiment.
-        """
+        """ Initializes the log, creates a folders tree and files necessary for the observer to work. """
 
         self.exp_name = name
         self.exp_inf = info
@@ -74,9 +72,7 @@ class Observer(object):
                                experiments=OrderedDict())
 
     def tmp_reset(self) -> None:
-        """
-        Reinitialize temporary attributes.
-        """
+        """ Reinitialize temporary attributes. """
         # tmp parameters
         self.pipe_ind = 0
         self.pipe_conf = None
@@ -87,9 +83,7 @@ class Observer(object):
         self.dataset = None
 
     def write(self) -> None:
-        """
-        Write log in log_file.
-        """
+        """ Write log in log_file. """
         if self.log_file.is_file():
             with open(str(self.log_file), 'r') as old_log:
                 old_log = json.load(old_log)

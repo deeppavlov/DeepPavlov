@@ -31,6 +31,12 @@ class PipeGen:
     Based on the input config, the generator creates a set of pipelines, as well as variants of the same pipeline
     with a different set of hyperparameters using the "random" or "grid" search. Also in all generated configs the save
     and load paths change to intermediate ones.
+
+    Args:
+            config: str or dict; path to config file with search pattern, or dict with it config.
+            save_path: str; path to folder with pipelines checkpoints.
+            sample_num: int; determines the number of generated pipelines, if hyper_search == random.
+            test_mode: bool; trigger that determine logic of changing save and loads paths in config.
     """
 
     def __init__(self,
@@ -39,26 +45,11 @@ class PipeGen:
                  mode: str = 'random',
                  sample_num: int = 10,
                  test_mode: bool = False) -> None:
-        """
-        Initialize generator with input params.
-
-        Args:
-            config: str or dict; path to config file with search pattern, or dict with it config.
-            save_path: str; path to folder with pipelines checkpoints.
-            sample_num: int; determines the number of generated pipelines, if hyper_search == random.
-            test_mode: bool; trigger that determine logic of changing save and loads paths in config.
-
-        Return:
-            None
-        """
+        """ Initialize generator with input params. """
         if isinstance(config, dict):
             self.main_config = deepcopy(config)
         else:
             self.main_config = deepcopy(read_json(config))
-
-        if 'chainer' not in self.main_config:
-            raise ConfigError("Main config file not contain 'chainer' component."
-                              "Structure search can not be started without this component.")
 
         self.dataset_reader = self.main_config.pop("dataset_reader")
         if not isinstance(self.main_config["dataset_iterator"], dict):
@@ -85,12 +76,7 @@ class PipeGen:
         self.generator = self.pipeline_gen()
 
     def _check_component_name(self) -> None:
-        """
-        Checks incoming config for the presence of a "component_name" key in the component description dict.
-
-        Returns:
-            None
-        """
+        """ Checks incoming config for the presence of a "component_name" key in the component description dict. """
         for i, component in enumerate(self.structure):
             for j, example in enumerate(component):
                 if example is not None:
@@ -99,12 +85,7 @@ class PipeGen:
                                           "don't contain the 'component_name' key.".format(i + 1, j + 1))
 
     def get_len(self) -> None:
-        """
-        Calculate the length of generator.
-
-        Returns:
-            None
-        """
+        """ Calculate the length of generator. """
         self.enumerator = self.pipeline_enumeration()
         generator = self.pipeline_gen()
         self.length = len(list(generator))

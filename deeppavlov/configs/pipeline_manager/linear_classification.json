@@ -149,7 +149,7 @@
     "validate_best": true,
     "test_best": false
   },
-  "enumerate": {
+  "pipeline_search": {
     "exp_name": "lin_clf",
     "root": "{EXP_PATH}",
     "do_test": true,
