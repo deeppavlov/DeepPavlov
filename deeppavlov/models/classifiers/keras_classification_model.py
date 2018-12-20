@@ -63,7 +63,7 @@ class KerasClassificationModel(KerasModel):
                 whether to init learning rate with the final learning rate value from saved opt
         classes: list or generator of considered classes
         text_size: maximal length of text in tokens (words),
-                longer texts are cutted,
+                longer texts are cut,
                 shorter ones are padded by zeros (pre-padding)
         padding: ``pre`` or ``post`` padding to use
 
