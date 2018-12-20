@@ -186,16 +186,15 @@ class KerasClassificationModel(KerasModel):
             raise ConfigError("Padding type {} is not acceptable".format(self.opt['padding']))
         return np.asarray(cutted_batch)
 
-    def train_on_batch(self, texts: List[List[np.ndarray]], labels: list) -> [float, List[float]]:
+    def check_input(self, texts: List[List[np.ndarray]]):
         """
-        Train the model on the given batch
+        Check and convert input to array of tokenized embedded samples
 
         Args:
-            texts: list of tokenized text samples
-            labels: list of labels
+            texts: list of tokenized embedded text samples
 
         Returns:
-            metrics values on the given batch
+            array of tokenized embedded texts samples that are cut and padded
         """
         if self.opt["text_size"] is not None:
             features = self.pad_texts(texts)
@@ -204,6 +203,22 @@ class KerasClassificationModel(KerasModel):
                 features = np.array(texts)
             else:
                 features = np.zeros((1, 1, self.opt["embedding_size"]))
+
+        return features
+
+    def train_on_batch(self, texts: List[List[np.ndarray]], labels: list) -> [float, List[float]]:
+        """
+        Train the model on the given batch
+
+        Args:
+            texts: list of tokenized embedded text samples
+            labels: list of labels
+
+        Returns:
+            metrics values on the given batch
+        """
+        features = self.check_input(texts)
+
         metrics_values = self.model.train_on_batch(features, np.squeeze(np.array(labels)))
         return metrics_values
 
@@ -212,20 +227,14 @@ class KerasClassificationModel(KerasModel):
         Infer the model on the given batch
 
         Args:
-            texts: list of tokenized text samples
+            texts: list of tokenized embedded text samples
             labels: list of labels
 
         Returns:
             metrics values on the given batch, if labels are given
             predictions, otherwise
         """
-        if self.opt["text_size"]:
-            features = self.pad_texts(texts)
-        else:
-            if len(texts[0]):
-                features = np.array(texts)
-            else:
-                features = np.zeros((1, 1, self.opt["embedding_size"]))
+        features = self.check_input(texts)
 
         if labels:
             metrics_values = self.model.test_on_batch(features, np.squeeze(np.array(labels)))
