@@ -97,7 +97,6 @@ class PipeGen:
                     if "component_name" not in example.keys():
                         raise ConfigError("The pipeline element in config file, on position {0} and with number {1}"
                                           "don't contain the 'component_name' key.".format(i + 1, j + 1))
-        return None
 
     def get_len(self) -> None:
         """
@@ -149,7 +148,7 @@ class PipeGen:
 
         return product(*self.pipes)
 
-    def pipeline_gen(self) -> Iterator:
+    def pipeline_gen(self) -> Generator:
         """
         Creates a configs with a different set of hyperparameters based on the primary set of pipelines.
 
@@ -327,5 +326,5 @@ class PipeGen:
 
         return config
 
-    def __call__(self, *args, **kwargs) -> Iterator:
+    def __call__(self, *args, **kwargs) -> Generator:
         return self.generator

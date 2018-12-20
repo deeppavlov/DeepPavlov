@@ -16,7 +16,7 @@ import json
 import time
 from copy import copy
 from pathlib import Path
-from typing import Dict, List, Tuple, Union, Iterable
+from typing import Dict, List, Tuple, Union, Iterable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -116,7 +116,7 @@ def rename_met(log: dict, gold_metrics: Union[str, Dict[str, List[str]]] = None)
 
 
 # -------------------------------------------------Work with gpus------------------------------------------------------
-def get_available_gpus(num_gpus: Union[int, None] = None,
+def get_available_gpus(num_gpus: Optional[int] = None,
                        gpu_select: Union[int, Iterable[int], None] = None,
                        gpu_fraction: float = 1.0) -> List[int]:
     """
@@ -395,7 +395,6 @@ def write_metrics(sheet: xlsxwriter, comp_dict: Dict, start_x: int, start_y: int
         p = j * len(comp_dict['res'][tp])
         for k, met in enumerate(metric_names):
             sheet.write(start_x, start_y + p + k + 1, comp_dict['res'][tp][met], cell_format)
-    return None
 
 
 def write_config(sheet: xlsxwriter, comp_dict: Dict, x: int, y: int, cell_format: Dict) -> None:
@@ -405,7 +404,6 @@ def write_config(sheet: xlsxwriter, comp_dict: Dict, x: int, y: int, cell_format
         z[str(i)] = comp['conf']
     s = json.dumps(z)
     sheet.write(x, y, s, cell_format)
-    return None
 
 
 def write_pipe(sheet: xlsxwriter, pipe_dict: Dict, start_x: int, start_y: int, cell_format: Dict, max_: int,
@@ -432,7 +430,6 @@ def write_pipe(sheet: xlsxwriter, pipe_dict: Dict, start_x: int, start_y: int, c
     # write config in second table
     if write_conf:
         write_config(sheet, pipe_dict, x, max_ + len(data_names) * len(metric_names) + 2, cell_format)
-    return None
 
 
 def write_table(worksheet: xlsxwriter, pipelines: Union[Dict, List[dict]], row: int, col: int, cell_format: Dict,
@@ -581,7 +578,6 @@ def build_pipeline_table(log_data: dict, save_path: Union[str, Path]) -> None:
                                         cell_format, max_l, target_metric, metrics)
 
     workbook.close()
-    return None
 
 
 # ___________________________________________________Generate plots___________________________________________________
@@ -665,7 +661,6 @@ def plot_res(info: dict,
         None
     """
     # prepeare data
-
     bar_list = []
     models = list(info.keys())
     metrics = list(info[models[0]].keys())
@@ -730,10 +725,6 @@ def plot_res(info: dict,
         adr = savepath / '{0}.{1}'.format(name, ext)
         fig.savefig(str(adr), dpi=100)
         plt.close(fig)
-
-    return None
-
-
 # _________________________________________________Build report_______________________________________________________
 
 
@@ -760,5 +751,3 @@ def results_visualization(root: Union[str, Path], plot: bool) -> None:
         # plot histograms
         for dataset_name, dataset_val in info.items():
             plot_res(dataset_val, dataset_name, (root / 'images'))
-
-    return None
