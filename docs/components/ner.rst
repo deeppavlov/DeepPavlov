@@ -46,7 +46,9 @@ Models can be used from Python using the following code:
     from deeppavlov import configs, build_model
 
     ner_model = build_model(configs.ner.ner_ontonotes, download=True)
-    ner_model(['Computer Sciences Corp. is close to making final an agreement to buy Cleveland Consulting Associates'])
+    ner_model(['Bob Ross lived in Florida'])
+    >>> [[['Bob', 'Ross', 'lived', 'in', 'Florida']], [['B-PERSON', 'I-PERSON', 'O', 'O', 'B-GPE']]]
+
 
 The model also can be trained from the Python:
 
