@@ -197,7 +197,7 @@ class KerasClassificationModel(KerasModel):
         Returns:
             metrics values on the given batch
         """
-        if self.opt["text_size"]:
+        if self.opt["text_size"] is not None:
             features = self.pad_texts(texts)
         else:
             if len(texts[0]):
