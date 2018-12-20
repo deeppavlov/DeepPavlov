@@ -186,7 +186,7 @@ class KerasClassificationModel(KerasModel):
             raise ConfigError("Padding type {} is not acceptable".format(self.opt['padding']))
         return np.asarray(cutted_batch)
 
-    def check_input(self, texts: List[List[np.ndarray]]):
+    def check_input(self, texts: List[List[np.ndarray]]) -> np.ndarray:
         """
         Check and convert input to array of tokenized embedded samples
 
