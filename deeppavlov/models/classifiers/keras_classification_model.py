@@ -64,7 +64,7 @@ class KerasClassificationModel(KerasModel):
         classes: list or generator of considered classes
         text_size: maximal length of text in tokens (words),
                 longer texts are cut,
-                shorter ones are padded by zeros (pre-padding)
+                shorter ones are padded with zeros (pre-padding)
         padding: ``pre`` or ``post`` padding to use
 
     Attributes:
