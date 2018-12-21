@@ -15,6 +15,7 @@ import requests
 from urllib.parse import urljoin
 
 import deeppavlov
+from deeppavlov import build_model
 from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.download import deep_download
 from deeppavlov.core.data.utils import get_all_elems_from_json
@@ -393,6 +394,20 @@ class TestQuickStart(object):
             shutil.rmtree(str(download_path), ignore_errors=True)
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
+
+    def test_serialization(self, model, conf_file, model_dir, mode):
+        config_file_path = str(test_configs_path.joinpath(conf_file))
+        chainer = build_model(config_file_path)
+        raw_bytes = chainer.serialize()
+        if raw_bytes is not None:
+            chainer = build_model(config_file_path, serialized=raw_bytes)
+            for *query, expected_response in PARAMS[model][(conf_file, model_dir, mode)]:
+                actual_response = chainer(*query)
+                if expected_response is not None:
+                    assert expected_response == actual_response, \
+                        f"Error in interacting with {model_dir} ({conf_file}): {query}"
+        else:
+            pytest.skip("Serialization not supported: {}".format(conf_file))
 
 
 def test_crossvalidation():
