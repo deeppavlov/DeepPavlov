@@ -33,8 +33,8 @@
           "y"
         ],
         "level": "token",
-        "save_path": "{MODELS_PATH}/classifiers/intents_snips_v7/classes.dict",
-        "load_path": "{MODELS_PATH}/classifiers/intents_snips_v7/classes.dict",
+        "save_path": "{MODELS_PATH}/classes.dict",
+        "load_path": "{MODELS_PATH}/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -50,13 +50,15 @@
         "out": "x_emb",
         "id": "my_embedder",
         "class_name": "fasttext",
-        "load_path": "{DOWNLOADS_PATH}/embeddings/dstc2_fastText_model.bin"
+        "load_path": "{DOWNLOADS_PATH}/embeddings/dstc2_fastText_model.bin",
+        "pad_zero": true
       },
       {
         "in": "y_ids",
         "out": "y_onehot",
         "class_name": "one_hotter",
-        "depth": "#classes_vocab.len"
+        "depth": "#classes_vocab.len",
+        "single_vector": true
       },
       {
         "in": [
@@ -70,8 +72,8 @@
         ],
         "main": true,
         "class_name": "keras_classification_model",
-        "save_path": "{MODELS_PATH}/classifiers/intents_snips_v7/model",
-        "load_path": "{MODELS_PATH}/classifiers/intents_snips_v7/model",
+        "save_path": "{MODELS_PATH}/model",
+        "load_path": "{MODELS_PATH}/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -84,7 +86,6 @@
         "learning_rate": 0.01,
         "learning_rate_decay": 0.1,
         "loss": "binary_crossentropy",
-        "text_size": 15,
         "coef_reg_cnn": 1e-4,
         "coef_reg_den": 1e-4,
         "dropout_rate": 0.5,
@@ -121,7 +122,7 @@
     "validation_patience": 5,
     "val_every_n_epochs": 5,
     "log_every_n_epochs": 5,
-    "show_examples": true,
+    "show_examples": false,
     "validate_best": true,
     "test_best": false
   },
@@ -129,7 +130,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models"
+      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/intents_snips_v9"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -149,8 +150,8 @@
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/intents_snips_v7.tar.gz",
-        "subdir": "{MODELS_PATH}/classifiers"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/intents_snips_v9.tar.gz",
+        "subdir": "{ROOT_PATH}/models/classifiers"
       }
     ]
   }

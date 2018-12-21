@@ -113,7 +113,7 @@
         "subdir": "{MODELS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_v6.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_v8.tar.gz",
         "subdir": "{MODELS_PATH}"
       },
       {

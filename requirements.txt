@@ -21,3 +21,4 @@ matplotlib==2.2.3
 xlsxwriter==1.0.7
 psutil==5.4.7
 py3nvml==0.2.0
+pyopenssl==18.0.0
