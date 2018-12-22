@@ -400,7 +400,7 @@ class TestQuickStart(object):
         config_file_path = str(test_configs_path.joinpath(conf_file))
         install_config(config_file_path)
         deep_download(config_file_path)
-        chainer = build_model(config_file_path)
+        chainer = build_model(config_file_path, download=True)
         raw_bytes = chainer.serialize()
         if raw_bytes is not None:
             chainer = build_model(config_file_path, serialized=raw_bytes)
@@ -408,6 +408,8 @@ class TestQuickStart(object):
                 query = [[q] for q in query]
                 actual_response = chainer(*query)
                 if expected_response is not None:
+                    if actual_response is not None and len(actual_response) > 0:
+                        actual_response = actual_response[0]
                     assert expected_response == actual_response, \
                         f"Error in interacting with {model_dir} ({conf_file}): {query}"
         else:
