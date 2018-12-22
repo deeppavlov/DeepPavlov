@@ -405,6 +405,7 @@ class TestQuickStart(object):
         if raw_bytes is not None:
             chainer = build_model(config_file_path, serialized=raw_bytes)
             for *query, expected_response in PARAMS[model][(conf_file, model_dir, mode)]:
+                query = [[q] for q in query]
                 actual_response = chainer(*query)
                 if expected_response is not None:
                     assert expected_response == actual_response, \
