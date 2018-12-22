@@ -396,7 +396,10 @@ class TestQuickStart(object):
             pytest.skip("Unsupported mode: {}".format(mode))
 
     def test_serialization(self, model, conf_file, model_dir, mode):
+        download_config(conf_file)
         config_file_path = str(test_configs_path.joinpath(conf_file))
+        install_config(config_file_path)
+        deep_download(config_file_path)
         chainer = build_model(config_file_path)
         raw_bytes = chainer.serialize()
         if raw_bytes is not None:
