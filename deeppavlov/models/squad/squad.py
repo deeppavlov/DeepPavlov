@@ -18,7 +18,7 @@ import tensorflow as tf
 import numpy as np
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.tf_model import EnhancedTFModel
+from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
 from deeppavlov.models.squad.utils import dot_attention, simple_attention, PtrNet, CudnnGRU, CudnnCompatibleGRU
 from deeppavlov.core.common.check_gpu import GPU_AVAILABLE
 from deeppavlov.core.layers.tf_layers import cudnn_bi_gru, variational_dropout
@@ -28,7 +28,7 @@ logger = get_logger(__name__)
 
 
 @register('squad_model')
-class SquadModel(EnhancedTFModel):
+class SquadModel(LRScheduledTFModel):
     """
     SquadModel predicts answer start and end position in given context by given question.
 

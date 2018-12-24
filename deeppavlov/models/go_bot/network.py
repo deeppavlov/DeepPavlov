@@ -24,7 +24,7 @@ from deeppavlov.core.layers import tf_layers
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.tf_model import EnhancedTFModel
+from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.models.go_bot.tracker import Tracker
@@ -35,7 +35,7 @@ log = get_logger(__name__)
 
 
 @register("go_bot_rnn")
-class GoalOrientedBotNetwork(EnhancedTFModel):
+class GoalOrientedBotNetwork(LRScheduledTFModel):
     """
     The dialogue bot is based on  https://arxiv.org/abs/1702.03274, which introduces
     Hybrid Code Networks that combine an RNN with domain-specific knowledge

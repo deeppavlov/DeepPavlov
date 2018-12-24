@@ -19,7 +19,7 @@ from functools import partial
 
 from deeppavlov.core.layers.tf_layers import embedding_layer, character_embedding_network, variational_dropout
 from deeppavlov.core.layers.tf_layers import cudnn_bi_lstm, cudnn_bi_gru, bi_rnn, stacked_cnn, INITIALIZER
-from deeppavlov.core.models.tf_model import EnhancedTFModel
+from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 
@@ -28,7 +28,7 @@ log = get_logger(__name__)
 
 
 @register('ner')
-class NerNetwork(EnhancedTFModel):
+class NerNetwork(LRScheduledTFModel):
     """
     The :class:`~deeppavlov.models.ner.network.NerNetwork` is for Neural Named Entity Recognition and Slot Filling.
 
