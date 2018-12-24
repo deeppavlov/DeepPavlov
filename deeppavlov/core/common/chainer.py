@@ -94,17 +94,14 @@ class Chainer(Component):
                     t_in_x = dict(zip(t_in_x_keys, t_in_x))
                 preprocessor.append(t_component, t_in_x, t_out)
 
-            def train_on_batch(*args, learning_rate=None, **kwargs):
+            def train_on_batch(*args, **kwargs):
                 preprocessed = preprocessor.compute(*args, **kwargs)
                 if len(in_x+in_y) == 1:
                     preprocessed = [preprocessed]
                 if keys:
-                    kwargs = dict(zip(keys, preprocessed))
+                    return component.train_on_batch(**dict(zip(keys, preprocessed)))
                 else:
-                    args = preprocessed
-                if learning_rate is not None:
-                    kwargs['learning_rate'] = learning_rate
-                return component.train_on_batch(*args, **kwargs)
+                    return component.train_on_batch(*preprocessed)
 
             self.train_on_batch = train_on_batch
             self.process_event = component.process_event
