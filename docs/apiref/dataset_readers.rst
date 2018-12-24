@@ -27,8 +27,6 @@ Concrete DatasetReader classes.
 .. automodule:: deeppavlov.dataset_readers.morphotagging_dataset_reader
    :members:
 
-.. autoclass:: deeppavlov.dataset_readers.ontonotes_reader.OntonotesReader
-
 .. autoclass:: deeppavlov.dataset_readers.paraphraser_reader.ParaphraserReader
 
 .. autoclass:: deeppavlov.dataset_readers.paraphraser_pretrain_reader.ParaphraserPretrainReader
