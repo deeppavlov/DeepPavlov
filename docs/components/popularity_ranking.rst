@@ -2,7 +2,7 @@
 Popularity Ranker
 =================
 
-Popularity Ranker re-ranks results obtained via :doc:`my document <../tfidf_ranking>` using information about
+Popularity Ranker re-ranks results obtained via :doc:`TF-IDF Ranker <tfidf_ranking>` using information about
 the number of article views. The number of Wikipedia articles views is an open piece of information which can be
 obtained via `Wikimedia REST API <https://wikimedia.org/api/rest_v1/>`_.
 We assigned a mean number of views for the period since 2017/11/05 to 2018/11/05 to each article in our

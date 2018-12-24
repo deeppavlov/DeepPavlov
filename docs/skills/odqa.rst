@@ -121,20 +121,20 @@ There are several ODQA configs available:
 +----------------------------------------------------------------------------------------+-------------------------------------------------+
 |:config:`en_odqa_infer_wiki <odqa/en_odqa_infer_wiki.json>`                             | Basic config for **English** language. Consists |
 |                                                                                        | of TF-IDF ranker and reader. Searches for an    |
-|                                                                                        | answer in `enwiki20180211` Wikipedia dump.      |
+|                                                                                        | answer in ``enwiki20180211`` Wikipedia dump.    |
 +----------------------------------------------------------------------------------------+-------------------------------------------------+
 |:config:`en_odqa_infer_enwiki20161221 <odqa/en_odqa_infer_enwiki20161221.json>`         | Basic config for **English** language. Consists |
 |                                                                                        | of TF-IDF ranker and reader. Searches for an    |
-|                                                                                        | answer in `enwiki20161221` Wikipedia dump.      |
+|                                                                                        | answer in ``enwiki20161221`` Wikipedia dump.    |
 +----------------------------------------------------------------------------------------+-------------------------------------------------+
 |:config:`ru_odqa_infer_wiki <odqa/ru_odqa_infer_wiki.json>`                             | Basic config for **Russian** language. Consists |
 |                                                                                        | of TF-IDF ranker and reader. Searches for an    |
-|                                                                                        | answer in `ruwiki20180401` Wikipedia dump.      |
+|                                                                                        | answer in ``ruwiki20180401`` Wikipedia dump.    |
 +----------------------------------------------------------------------------------------+-------------------------------------------------+
 |:config:`en_odqa_pop_infer_enwiki20180211 <odqa/en_odqa_pop_infer_enwiki20180211.json>` | Extended config for **English** language.       |
 |                                                                                        | Consists of TF-IDF Ranker, Popularity Ranker    |
 |                                                                                        | and reader. Searches for an answer in           |
-|                                                                                        | `enwiki20180211` Wikipedia dump.                |
+|                                                                                        | ``enwiki20180211`` Wikipedia dump.              |
 +----------------------------------------------------------------------------------------+-------------------------------------------------+
 
 Comparison

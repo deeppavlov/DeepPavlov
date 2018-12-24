@@ -29,10 +29,9 @@ class PopRanker(Component):
     """Rank documents according their tfidf scores and popularities. It is not a standalone ranker, it should be used
     for re-ranking the results of TF-IDF Ranker.
     Based on a Logistic Regression trained on 3 features:
-         - tfidf score of the article
-         - popularity of the article obtained via Wikimedia REST API as a mean number of views for the period
-           since 2017/11/05 to 2018/11/05
-         - multiplication of the two features above
+    * tfidf score of the article
+    * popularity of the article obtained via Wikimedia REST API as a mean number of views for the period since 2017/11/05 to 2018/11/05
+    * multiplication of the two features above
 
     Args:
         pop_dict_path: a path to json file with article title to article popularity map
