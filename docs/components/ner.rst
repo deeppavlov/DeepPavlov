@@ -46,7 +46,8 @@ Models can be used from Python using the following code:
     from deeppavlov import configs, build_model
 
     ner_model = build_model(configs.ner.ner_ontonotes, download=True)
-    ner_model(['Computer Sciences Corp. is close to making final an agreement to buy Cleveland Consulting Associates'])
+    ner_model(['Bob Ross lived in Florida'])
+    >>> [[['Bob', 'Ross', 'lived', 'in', 'Florida']], [['B-PERSON', 'I-PERSON', 'O', 'O', 'B-GPE']]]
 
 The model also can be trained from the Python:
 
@@ -54,6 +55,17 @@ The model also can be trained from the Python:
 
     from deeppavlov import configs, train_model
     ner_model = train_model(configs.ner.ner_ontonotes)
+
+The data for training should be placed in the folder provided in the config:
+
+.. code:: python
+
+    from deeppavlov.core.commands.utils import parse_config
+    config_dict = parse_config(configs.ner.ner_ontonotes)
+    print(config_dict['dataset_reader']['data_path'])
+    >>> '~/.deeppavlov/downloads/ontonotes_ner_data'
+
+There must be three txt files: train.txt, valid.txt, and test.txt.
 
 
 NER task
