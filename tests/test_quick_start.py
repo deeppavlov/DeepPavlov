@@ -2,6 +2,7 @@ import io
 import json
 import logging
 import os
+import pickle
 import signal
 import shutil
 import sys
@@ -397,12 +398,16 @@ class TestQuickStart(object):
 
     def test_serialization(self, model, conf_file, model_dir, mode):
         download_config(conf_file)
-        config_file_path = str(test_configs_path.joinpath(conf_file))
+        config_file_path = test_configs_path / conf_file
         install_config(config_file_path)
-        deep_download(config_file_path)
         chainer = build_model(config_file_path, download=True)
         raw_bytes = chainer.serialize()
-        if raw_bytes is not None:
+        chainer.destroy()
+
+        serialized: list = pickle.loads(raw_bytes)
+        if any(serialized):
+            serialized.clear()
+
             chainer = build_model(config_file_path, serialized=raw_bytes)
             for *query, expected_response in PARAMS[model][(conf_file, model_dir, mode)]:
                 query = [[q] for q in query]
@@ -410,7 +415,7 @@ class TestQuickStart(object):
                 if expected_response is not None:
                     if actual_response is not None and len(actual_response) > 0:
                         actual_response = actual_response[0]
-                    assert expected_response == actual_response, \
+                    assert expected_response == str(actual_response), \
                         f"Error in interacting with {model_dir} ({conf_file}): {query}"
         else:
             pytest.skip("Serialization not supported: {}".format(conf_file))
