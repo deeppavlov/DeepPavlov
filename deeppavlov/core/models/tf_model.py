@@ -287,7 +287,7 @@ class EnhancedTFModel(TFModel):
         self._lr_schedule = DecayScheduler(start_val=start_val, end_val=end_val,
                                            num_it=num_it, dec_type=dec_type, extra=extra)
         #self._lr_var = tf.placeholder(tf.float32, shape=[], name='learning_rate')
-        self._lr_var = tf.Variable(self._lr, dtype=tf.float32, name='learning_rate')
+        self._lr_var = tf.Variable(self._lr or 0., dtype=tf.float32, name='learning_rate')
 
         if (momentum is None) and\
                 self._optimizer not in (tf.train.AdagradDAOptimizer,
