@@ -122,7 +122,8 @@
         "id": "onehotter",
         "depth": "#classes_vocab.len",
         "in": "y_ids",
-        "out": "y_onehot"
+        "out": "y_onehot",
+        "single_vector": true
       },
       {
         "in": [
