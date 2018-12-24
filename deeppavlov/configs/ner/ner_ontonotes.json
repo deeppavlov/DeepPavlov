@@ -128,12 +128,10 @@
       }
     ],
     "validation_patience": 7,
-    "val_every_n_batches": 100,
+    "val_every_n_epochs": 1,
 
-    "log_every_n_batches": 100,
-    "show_examples": false,
-
-    "tensorboard_log_dir": "dp_logs_ner_ontonotes"
+    "log_every_n_batches": -1,
+    "show_examples": false
   },
   "metadata": {
     "variables": {

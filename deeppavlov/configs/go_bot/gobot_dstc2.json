@@ -40,9 +40,7 @@
         "out": ["y_predicted"],
         "main": true,
         "debug": false,
-        "learning_rate": [5e-4, 5e-3],
-        "learning_rate_decay": "1cycle",
-        "learning_rate_decay_batches": 200,
+        "learning_rate": 0.003,
         "learning_rate_drop_patience": 5,
         "learning_rate_drop_div": 10.0,
         "momentum": 0.95,
@@ -104,7 +102,7 @@
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
+      "{DEEPPAVLOV_PATH}/requirements/gensim.txt",
       "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
       "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
     ],
