@@ -73,6 +73,8 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
     for component_config in chainer_config['pipe']:
         component = from_params(component_config, mode='train')
         if 'fit_on' in component_config:
+            if hasattr(component, 'partial_fit'):
+                break
             component: Estimator
 
             targets = component_config['fit_on']
@@ -98,15 +100,19 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
 
             component.save()
 
-        if 'fit_on_batches' in component_config:
+        if 'fit_on_batch' in component_config:
+            log.warning('`fit_on_batch` is deprecated and will be removed in future versions.'
+                        ' Please use `fit_on` instead.')
+        if ('fit_on_batch' in component_config) or\
+                (('fit_on' in component_config) and hasattr(component, 'partial_fit')):
             component: Estimator
-            targets = component_config['fit_on_batch']
+            targets = component_config.get('fit_on', component_config['fit_on_batch'])
             if isinstance(targets, str):
                 targets = [targets]
 
             for i, data in enumerate(iterator.gen_batches(config['train']['batch_size'], shuffle=False)):
                 preprocessed = chainer.compute(*data, targets=targets)
-                if len(component_config['fit_on_batch']) == 1:
+                if len(targets) == 1:
                     preprocessed = [preprocessed]
                 result = component.partial_fit(*preprocessed)
 
