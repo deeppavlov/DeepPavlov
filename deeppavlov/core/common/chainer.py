@@ -189,7 +189,8 @@ class Chainer(Component):
                 component.reset()
 
     def destroy(self):
-        for in_params, out_params, component in self.pipe:
+        for in_params, out_params, component in self.train_pipe:
             if inspect.ismethod(getattr(component, 'destroy', None)):
                 component.destroy()
-            del component
+        self.pipe.clear()
+        self.train_pipe.clear()
