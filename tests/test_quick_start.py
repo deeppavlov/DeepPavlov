@@ -155,7 +155,9 @@ PARAMS = {
     },
     "doc_retrieval": {
         ("doc_retrieval/en_ranker_tfidf_wiki_test.json", "doc_retrieval", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("doc_retrieval/ru_ranker_tfidf_wiki_test.json", "doc_retrieval", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("doc_retrieval/ru_ranker_tfidf_wiki_test.json", "doc_retrieval", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("doc_retrieval/en_ranker_pop_wiki_test.json", "doc_retrieval", ('TI',)): [
+            ONE_ARGUMENT_INFER_CHECK]
     },
     "squad": {
         ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
@@ -181,7 +183,8 @@ PARAMS = {
     },
     "odqa": {
         ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("odqa/ru_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("odqa/ru_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("odqa/en_odqa_pop_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "morpho_tagger": {
         ("morpho_tagger/UD2.0/morpho_en.json", "morpho_tagger_en", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
