@@ -229,9 +229,6 @@ class SquadVocabEmbedder(Estimator):
 
         self.emb_folder.mkdir(parents=True, exist_ok=True)
 
-        # if not (self.emb_folder / self.emb_file_name).exists():
-        #     download(self.emb_folder / self.emb_file_name, self.emb_url)
-
         self.emb_dim = self.emb_mat = self.token2idx_dict = None
 
         if self.load_path.exists():
@@ -310,23 +307,23 @@ class SquadVocabEmbedder(Estimator):
                             for token, idx in self.token2idx_dict.items()}
             self.emb_mat = np.array([idx2emb_dict[idx] for idx in range(len(idx2emb_dict))])
 
-    def load(self, *args, **kwargs):
+    def load(self) -> None:
         logger.info('SquadVocabEmbedder: loading saved {}s vocab from {}'.format(self.level, self.load_path))
         with self.load_path.open('rb') as f:
             self.emb_dim, self.emb_mat, self.token2idx_dict = pickle.load(f)
         self.loaded = True
 
-    def deserialize(self, data):
+    def deserialize(self, data: bytes) -> None:
         self.emb_dim, self.emb_mat, self.token2idx_dict = pickle.loads(data)
         self.loaded = True
 
-    def save(self, *args, **kwargs):
+    def save(self) -> None:
         logger.info('SquadVocabEmbedder: saving {}s vocab to {}'.format(self.level, self.save_path))
         self.save_path.parent.mkdir(parents=True, exist_ok=True)
         with self.save_path.open('wb') as f:
             pickle.dump((self.emb_dim, self.emb_mat, self.token2idx_dict), f)
 
-    def serialize(self):
+    def serialize(self) -> bytes:
         return pickle.dumps((self.emb_dim, self.emb_mat, self.token2idx_dict))
 
     def _get_idx(self, el: str) -> int:
