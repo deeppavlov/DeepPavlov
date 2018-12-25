@@ -66,9 +66,9 @@ class GloVeEmbedder(Embedder):
         """
         yield from self.model.vocab
 
-    def serialize(self):
+    def serialize(self) -> bytes:
         return pickle.dumps(self.model)
 
-    def deserialize(self, data):
+    def deserialize(self, data: bytes) -> None:
         self.model = pickle.loads(data)
         self.dim = self.model.vector_size
