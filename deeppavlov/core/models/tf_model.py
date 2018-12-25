@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from collections import defaultdict
+from typing import Tuple, Iterable
 
 import numpy as np
 import tensorflow as tf
@@ -48,7 +49,7 @@ class TFModel(NNModel, metaclass=TfModelMeta):
             saver = tf.train.Saver(var_list)
             saver.restore(self.sess, path)
 
-    def deserialize(self, weights):
+    def deserialize(self, weights: Iterable[Tuple[str, np.ndarray]]) -> None:
         assign_ops = []
         feed_dict = {}
         for var_name, value in weights:
@@ -68,7 +69,7 @@ class TFModel(NNModel, metaclass=TfModelMeta):
         saver = tf.train.Saver(var_list)
         saver.save(self.sess, path)
 
-    def serialize(self):
+    def serialize(self) -> Tuple[Tuple[str, np.ndarray], ...]:
         tf_vars = tf.global_variables()
         values = self.sess.run(tf_vars)
         return tuple(zip([var.name for var in tf_vars], values))
