@@ -115,8 +115,9 @@ class SimpleVocabulary(Estimator):
 
     def deserialize(self, data: List[Tuple[str, int]]) -> None:
         self.reset()
-        tokens, counts = zip(*data)
-        self._add_tokens_with_freqs(tokens, counts)
+        if data:
+            tokens, counts = zip(*data)
+            self._add_tokens_with_freqs(tokens, counts)
 
     def load_line(self, ln):
         if self.freq_drop_load:
