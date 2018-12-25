@@ -15,6 +15,7 @@
 from typing import List, Any
 from operator import itemgetter
 
+import numpy as np
 from sklearn.externals import joblib
 
 from deeppavlov.core.common.log import get_logger
@@ -42,6 +43,7 @@ class PopRanker(Component):
 
     Attributes:
         pop_dict: a map of article titles to their popularity
+        mean_pop: mean popularity of all popularities in :attr:`pop_dict`, use it when popularity is not found
         clf: a loaded logistic regression classifier
         top_n: a number of doc ids to return
         active: whether to return a number specified by :attr:`top_n` or all ids
@@ -52,6 +54,7 @@ class PopRanker(Component):
         pop_dict_path = expand_path(pop_dict_path)
         logger.info(f"Reading popularity dictionary from {pop_dict_path}")
         self.pop_dict = read_json(pop_dict_path)
+        self.mean_pop = np.mean(list(self.pop_dict.values()))
         load_path = expand_path(load_path)
         logger.info(f"Loading popularity ranker from {load_path}")
         self.clf = joblib.load(load_path)
@@ -75,7 +78,7 @@ class PopRanker(Component):
         for instance_ids, instance_scores in zip(input_doc_ids, input_doc_scores):
             instance_probas = []
             for idx, score in zip(instance_ids, instance_scores):
-                pop = self.pop_dict[idx]
+                pop = self.pop_dict.get(idx, self.mean_pop)
                 features = [score, pop, score * pop]
                 prob = self.clf.predict_proba([features])
                 instance_probas.append(prob[0][1])
