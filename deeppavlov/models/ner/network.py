@@ -97,6 +97,9 @@ class NerNetwork(LRScheduledTFModel):
         tf.set_random_seed(seed)
         np.random.seed(seed)
 
+        assert n_tags != 0, 'Number of classes equal 0! It seems that vocabularies is not loaded.' \
+                            ' Check that all vocabulary files are downloaded!'
+
         if 'learning_rate_drop_div' not in kwargs:
             kwargs['learning_rate_drop_div'] = 10.0
         if 'learning_rate_drop_patience' not in kwargs:
