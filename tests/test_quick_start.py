@@ -372,30 +372,6 @@ class TestQuickStart(object):
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
 
-    def test_consecutive_training_and_interacting(self, model, conf_file, model_dir, mode):
-        if 'TI' in mode:
-            c = test_configs_path / conf_file
-            model_path = download_path / model_dir
-
-            if 'IP' not in mode:
-                config_path = str(test_configs_path.joinpath(conf_file))
-                install_config(config_path)
-                deep_download(config_path)
-            shutil.rmtree(str(model_path),  ignore_errors=True)
-
-            logfile = io.BytesIO(b'')
-            p = pexpect.popen_spawn.PopenSpawn(sys.executable + " -m deeppavlov train " + str(c), timeout=None,
-                                               logfile=logfile)
-            p.readlines()
-            if p.wait() != 0:
-                raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
-                                   .format(model_dir, logfile.getvalue().decode()))
-            self.interact(c, model_dir)
-
-            shutil.rmtree(str(download_path), ignore_errors=True)
-        else:
-            pytest.skip("Unsupported mode: {}".format(mode))
-
     def test_serialization(self, model, conf_file, model_dir, mode):
         if 'IP' not in mode:
             return pytest.skip("Unsupported mode: {}".format(mode))
@@ -422,6 +398,30 @@ class TestQuickStart(object):
                         f"Error in interacting with {model_dir} ({conf_file}): {query}"
         else:
             pytest.skip("Serialization not supported: {}".format(conf_file))
+
+    def test_consecutive_training_and_interacting(self, model, conf_file, model_dir, mode):
+        if 'TI' in mode:
+            c = test_configs_path / conf_file
+            model_path = download_path / model_dir
+
+            if 'IP' not in mode:
+                config_path = str(test_configs_path.joinpath(conf_file))
+                install_config(config_path)
+                deep_download(config_path)
+            shutil.rmtree(str(model_path),  ignore_errors=True)
+
+            logfile = io.BytesIO(b'')
+            p = pexpect.popen_spawn.PopenSpawn(sys.executable + " -m deeppavlov train " + str(c), timeout=None,
+                                               logfile=logfile)
+            p.readlines()
+            if p.wait() != 0:
+                raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
+                                   .format(model_dir, logfile.getvalue().decode()))
+            self.interact(c, model_dir)
+
+            shutil.rmtree(str(download_path), ignore_errors=True)
+        else:
+            pytest.skip("Unsupported mode: {}".format(mode))
 
 
 def test_crossvalidation():
