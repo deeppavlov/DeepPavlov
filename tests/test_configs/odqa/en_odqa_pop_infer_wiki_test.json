@@ -36,6 +36,7 @@
         "out": [
           "chunks"
         ],
+        "tokens_limit": 4000,
         "flatten_result": true
       },
       {
