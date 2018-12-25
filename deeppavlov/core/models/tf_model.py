@@ -27,9 +27,10 @@ log = get_logger(__name__)
 
 
 class TFModel(NNModel, metaclass=TfModelMeta):
+    """Parent class for all components using TensorFlow."""
+
     sess: tf.Session
 
-    """Parent class for all components using TensorFlow."""
     def __init__(self, *args, **kwargs) -> None:
         if not hasattr(self, 'sess'):
             raise RuntimeError('Your TensorFlow model {} must'
