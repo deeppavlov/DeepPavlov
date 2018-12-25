@@ -276,7 +276,7 @@ class SquadModel(LRScheduledTFModel):
         feed_dict = self._build_feed_dict(c_tokens, c_chars, q_tokens, q_chars, y1s, y2s)
         loss, _, lear_rate = self.sess.run([self.loss, self.train_op, self.lear_rate_ph],
                                            feed_dict=feed_dict)
-        report = {'loss': loss, 'learning_rate': lear_rate}
+        report = {'loss': loss, 'learning_rate': float(lear_rate)}
         return report
 
     def __call__(self, c_tokens: np.ndarray, c_chars: np.ndarray, q_tokens: np.ndarray, q_chars: np.ndarray,

@@ -133,7 +133,7 @@ class LRScheduledTFModel(TFModel):
                  optimizer: str = 'AdamOptimizer',
                  clip_norm: float = None,
                  fit_batch_size: Union[int, str] = None,
-                 fit_learning_rate: Tuple[float, float] = [1e-7, 10],
+                 fit_learning_rate: Tuple[float, float] = [1e-7, 100],
                  fit_learning_rate_div: float = 10.,
                  fit_beta: float = 0.98,
                  fit_min_batches: int = 10,
@@ -195,7 +195,7 @@ class LRScheduledTFModel(TFModel):
                                             extra=extra)
         # self._mom_var = tf.placeholder_with_default(0.9, shape=[], name='momentum')
         # self._mom_var = tf.placeholder(tf.float32, shape=[], name='momentum')
-        self._mom_var = tf.Variable(self._mom, dtype=tf.float32, name='momentum')
+        self._mom_var = tf.Variable(self._mom or 0., dtype=tf.float32, name='momentum')
 
         self._learning_rate_drop_patience = learning_rate_drop_patience
         self._learning_rate_drop_div = learning_rate_drop_div
@@ -209,6 +209,8 @@ class LRScheduledTFModel(TFModel):
         self._fit_beta = fit_beta
         self._fit_min_batches = fit_min_batches
         self._fit_max_batches = fit_max_batches
+        self._external_lr = False
+        self._external_mom = False
 
     def load(self, exclude_scopes: Optional[Iterable] = ('Optimizer',
                                                          'learning_rate',
@@ -228,12 +230,13 @@ class LRScheduledTFModel(TFModel):
         avg_loss = 0.
         best_loss = float('inf')
         lrs, losses = [], []
-        self._mom = 0. if self._mom is not None else None
         _lr_find_schedule = DecayScheduler(start_val=self._fit_learning_rate[0],
                                            end_val=self._fit_learning_rate[1],
                                            dec_type="exponential",
                                            num_it=num_batches)
         self._lr = _lr_find_schedule.start_val
+        self._mom = 0.
+        self._update_tf_variables(learning_rate=self._lr, momentum=self._mom)
         best_lr = _lr_find_schedule.start_val
         for i in range(num_batches):
             batch_start = (i * bs) % data_len
@@ -254,27 +257,32 @@ class LRScheduledTFModel(TFModel):
                 best_loss = smoothed_loss
                 best_lr = self._lr
             self._lr = _lr_find_schedule.next_val()
+            self._update_tf_variables(learning_rate=self._lr)
 
             if i >= num_batches:
                 break
         # best_lr /= 10
-        best_lr = self._get_best(lrs, losses)
+        end_val = self._get_best(lrs, losses)
 
-        start_val = best_lr
+        start_val = end_val
         if self._lr_schedule.dec_type in (DecayType.ONECYCLE, DecayType.TRAPEZOID):
-            start_val = best_lr / self._fit_learning_rate_div
-        if self._lr_schedule.dec_type == DecayType.TRAPEZOID:
-            start_val = best_lr / self._fit_learning_rate_div
+            start_val = end_val / self._fit_learning_rate_div
+        elif self._lr_schedule.dec_type in (DecayType.POLYNOMIAL, DecayType.EXPONENTIAL,
+                                            DecayType.LINEAR):
+            start_val = end_val
+            end_val = end_val / self._fit_learning_rate_div
         self._lr_schedule = DecayScheduler(start_val=start_val,
-                                           end_val=best_lr,
+                                           end_val=end_val,
                                            num_it=self._lr_schedule.nb,
                                            dec_type=self._lr_schedule.dec_type,
                                            extra=self._lr_schedule.extra)
         log.info(f"Found best learning rate value = {best_lr}"
                  f", setting new learning rate schedule with {self._lr_schedule}.")
+
+        self.load()
         self._lr = self._lr_schedule.start_val
         self._mom = self._mom_schedule.start_val
-        self.load()
+        self._update_tf_variables(learning_rate=self._lr, momentum=self._mom)
         return {'smoothed_loss': losses, 'learning_rate': lrs}
 
     @staticmethod
@@ -295,6 +303,7 @@ class LRScheduledTFModel(TFModel):
                      clip_norm: float = None,
                      **kwargs):
         if learning_rate is not None:
+            self._external_lr = True
             kwargs['learning_rate'] = learning_rate
         else:
             kwargs['learning_rate'] = self.get_learning_rate_var()
@@ -308,10 +317,19 @@ class LRScheduledTFModel(TFModel):
             momentum_param = 'rho'
 
         if momentum is not None:
+            self._external_mom = True
             kwargs[momentum_param] = momentum
         elif self.get_momentum() is not None:
             kwargs[momentum_param] = self.get_momentum_var()
         return super().get_train_op(*args, **kwargs)
+
+    def _update_tf_variables(self, learning_rate=None, momentum=None):
+        if learning_rate is not None:
+            self.sess.run(tf.assign(self._lr_var, learning_rate))
+            #log.info(f"Learning rate = {learning_rate}")
+        if momentum is not None:
+            self.sess.run(tf.assign(self._mom_var, momentum))
+            #log.info(f"Momentum      = {momentum}")
 
     def process_event(self, event_name, data):
         if event_name == "after_validation":
@@ -328,26 +346,26 @@ class LRScheduledTFModel(TFModel):
                 self._learning_rate_cur_impatience = 0
                 self._learning_rate_cur_div *= self._learning_rate_drop_div
                 self._lr /= self._learning_rate_drop_div
-                self.sess.run(tf.assign(self._lr_var, self._lr))
+                self._update_tf_variables(learning_rate=self._lr)
                 log.info(f"New learning rate dividor = {self._learning_rate_cur_div}")
         if event_name == 'after_batch':
-            if (self._lr is not None) and self._lr_update_on_batch:
-                    self._lr = self._lr_schedule.next_val() / self._learning_rate_cur_div
-                    self.sess.run(tf.assign(self._lr_var, self._lr))
-            if (self._mom is not None) and self._mom_update_on_batch:
-                    self._mom = min(1., max(0., self._mom_schedule.next_val()))
-                    self.sess.run(tf.assign(self._mom_var, self._mom))
-        if event_name == 'after_epoch':
             if (self._lr is not None) and not self._lr_update_on_batch:
-                    self._lr = self._lr_schedule.next_val() / self._learning_rate_cur_div
-                    self.sess.run(tf.assign(self._lr_var, self._lr))
+                self._lr = self._lr_schedule.next_val() / self._learning_rate_cur_div
+                self._update_tf_variables(learning_rate=self._lr)
             if (self._mom is not None) and not self._mom_update_on_batch:
-                    self._mom = min(1., max(0., self._mom_schedule.next_val()))
-                    self.sess.run(tf.assign(self._mom_var, self._mom))
+                self._mom = min(1., max(0., self._mom_schedule.next_val()))
+                self._update_tf_variables(momentum=self._mom)
+        if event_name == 'after_epoch':
+            if (self._lr is not None) and self._lr_update_on_batch:
+                self._lr = self._lr_schedule.next_val() / self._learning_rate_cur_div
+                self._update_tf_variables(learning_rate=self._lr)
+            if (self._mom is not None) and self._mom_update_on_batch:
+                self._mom = min(1., max(0., self._mom_schedule.next_val()))
+                self._update_tf_variables(momentum=self._mom)
         if event_name == 'after_train_log':
-            if self._lr is not None:
+            if (self._lr is not None) and not self._external_lr:
                 data['learning_rate'] = self._lr
-            if self._mom is not None:
+            if (self._mom is not None) and not self._external_mom:
                 data['momentum'] = self._mom
 
     def get_learning_rate(self):
