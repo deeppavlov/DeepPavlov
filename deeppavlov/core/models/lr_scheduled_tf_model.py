@@ -349,17 +349,17 @@ class LRScheduledTFModel(TFModel):
                 self._update_tf_variables(learning_rate=self._lr)
                 log.info(f"New learning rate dividor = {self._learning_rate_cur_div}")
         if event_name == 'after_batch':
-            if (self._lr is not None) and not self._lr_update_on_batch:
-                self._lr = self._lr_schedule.next_val() / self._learning_rate_cur_div
-                self._update_tf_variables(learning_rate=self._lr)
-            if (self._mom is not None) and not self._mom_update_on_batch:
-                self._mom = min(1., max(0., self._mom_schedule.next_val()))
-                self._update_tf_variables(momentum=self._mom)
-        if event_name == 'after_epoch':
             if (self._lr is not None) and self._lr_update_on_batch:
                 self._lr = self._lr_schedule.next_val() / self._learning_rate_cur_div
                 self._update_tf_variables(learning_rate=self._lr)
             if (self._mom is not None) and self._mom_update_on_batch:
+                self._mom = min(1., max(0., self._mom_schedule.next_val()))
+                self._update_tf_variables(momentum=self._mom)
+        if event_name == 'after_epoch':
+            if (self._lr is not None) and not self._lr_update_on_batch:
+                self._lr = self._lr_schedule.next_val() / self._learning_rate_cur_div
+                self._update_tf_variables(learning_rate=self._lr)
+            if (self._mom is not None) and not self._mom_update_on_batch:
                 self._mom = min(1., max(0., self._mom_schedule.next_val()))
                 self._update_tf_variables(momentum=self._mom)
         if event_name == 'after_train_log':
