@@ -397,6 +397,9 @@ class TestQuickStart(object):
             pytest.skip("Unsupported mode: {}".format(mode))
 
     def test_serialization(self, model, conf_file, model_dir, mode):
+        if 'IP' not in mode:
+            return pytest.skip("Unsupported mode: {}".format(mode))
+
         download_config(conf_file)
         config_file_path = test_configs_path / conf_file
         install_config(config_file_path)
