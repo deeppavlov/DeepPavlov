@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from collections import defaultdict
-from typing import Iterable, Optional
+from typing import Tuple, Iterable
 
 import numpy as np
 import tensorflow as tf
@@ -29,13 +29,16 @@ log = get_logger(__name__)
 
 class TFModel(NNModel, metaclass=TfModelMeta):
     """Parent class for all components using TensorFlow."""
+
+    sess: tf.Session
+
     def __init__(self, *args, **kwargs) -> None:
         if not hasattr(self, 'sess'):
             raise RuntimeError('Your TensorFlow model {} must'
                                ' have sess attribute!'.format(self.__class__.__name__))
         super().__init__(*args, **kwargs)
 
-    def load(self, exclude_scopes: Optional[Iterable] = ('Optimizer',)) -> None:
+    def load(self, exclude_scopes: tuple = ('Optimizer',)) -> None:
         """Load model parameters from self.load_path"""
         path = str(self.load_path.resolve())
         # Check presence of the model files
@@ -46,7 +49,19 @@ class TFModel(NNModel, metaclass=TfModelMeta):
             saver = tf.train.Saver(var_list)
             saver.restore(self.sess, path)
 
-    def save(self, exclude_scopes: Optional[Iterable] = ('Optimizer',)) -> None:
+    def deserialize(self, weights: Iterable[Tuple[str, np.ndarray]]) -> None:
+        assign_ops = []
+        feed_dict = {}
+        for var_name, value in weights:
+            var = self.sess.graph.get_tensor_by_name(var_name)
+            value = np.asarray(value)
+            assign_placeholder = tf.placeholder(var.dtype, shape=value.shape)
+            assign_op = tf.assign(var, assign_placeholder)
+            assign_ops.append(assign_op)
+            feed_dict[assign_placeholder] = value
+        self.sess.run(assign_ops, feed_dict=feed_dict)
+
+    def save(self, exclude_scopes: tuple = ('Optimizer',)) -> None:
         """Save model parameters to self.save_path"""
         path = str(self.save_path.resolve())
         log.info('[saving model to {}]'.format(path))
@@ -54,8 +69,14 @@ class TFModel(NNModel, metaclass=TfModelMeta):
         saver = tf.train.Saver(var_list)
         saver.save(self.sess, path)
 
+    def serialize(self) -> Tuple[Tuple[str, np.ndarray], ...]:
+        tf_vars = tf.global_variables()
+        values = self.sess.run(tf_vars)
+        return tuple(zip([var.name for var in tf_vars], values))
+
     @staticmethod
     def _get_saveable_variables(exclude_scopes=tuple()):
+        # noinspection PyProtectedMember
         all_vars = variables._all_saveable_objects()
         vars_to_train = [var for var in all_vars if all(sc not in var.name for sc in exclude_scopes)]
         return vars_to_train
