@@ -1,7 +1,7 @@
 {
   "chainer": {
     "in": [
-      "docs"
+      "question_raw"
     ],
     "out": [
       "best_answer"
@@ -10,7 +10,7 @@
       {
         "config_path": "{CONFIGS_PATH}/doc_retrieval/en_ranker_pop_enwiki20180211.json",
         "in": [
-          "docs"
+          "question_raw"
         ],
         "out": [
           "pop_doc_ids"
@@ -24,9 +24,8 @@
         "out": [
           "pop_doc_text"
         ],
-        "data_dir": "odqa",
-        "shuffle": false,
         "join_docs": false,
+        "shuffle": false,
         "load_path": "{DOWNLOADS_PATH}/odqa/enwiki.db"
       },
       {
@@ -39,7 +38,7 @@
       {
         "class_name": "string_multiplier",
         "in": [
-          "docs",
+          "question_raw",
           "chunks"
         ],
         "out": [
