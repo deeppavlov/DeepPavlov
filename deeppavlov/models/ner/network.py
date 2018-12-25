@@ -104,6 +104,10 @@ class NerNetwork(TFModel):
                  **kwargs) -> None:
         tf.set_random_seed(seed)
         np.random.seed(seed)
+
+        assert n_tags != 0, 'Number of classes equal 0! It seems that vocabularies is not loaded.' \
+                            ' Check that all vocabulary files are downloaded!'
+
         self._learning_rate = learning_rate
         self._lr_drop_patience = lr_drop_patience
         self._lr_drop_value = lr_drop_value
