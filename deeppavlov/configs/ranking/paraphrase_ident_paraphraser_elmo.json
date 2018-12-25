@@ -5,6 +5,7 @@
   },
   "dataset_iterator": {
     "class_name": "siamese_iterator",
+    "pytest_num_samples": 384,
     "seed": 243
   },
   "chainer": {
