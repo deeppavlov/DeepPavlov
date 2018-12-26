@@ -1,14 +1,14 @@
 {
   "dataset_reader": {
     "class_name": "odqa_reader",
-    "data_path": "{DOWNLOADS_PATH}/odqa/enwiki20161221",
-    "save_path": "{DOWNLOADS_PATH}/odqa/enwiki20161221.db",
-    "dataset_format": "wiki"
+    "data_path": "{DOWNLOADS_PATH}/odqa/enwiki_test",
+    "save_path": "{DOWNLOADS_PATH}/odqa/enwiki_test.db",
+    "dataset_format": "txt"
   },
   "dataset_iterator": {
     "class_name": "sqlite_iterator",
     "shuffle": false,
-    "load_path": "{DOWNLOADS_PATH}/odqa/enwiki20161221.db"
+    "load_path": "{DOWNLOADS_PATH}/odqa/enwiki_test.db"
   },
   "chainer": {
     "in": [
@@ -19,7 +19,7 @@
       "doc_nums"
     ],
     "out": [
-      "tfidf_doc_ids"
+      "pop_doc_ids"
     ],
     "pipe": [
       {
@@ -30,8 +30,8 @@
           "doc_ids",
           "doc_nums"
         ],
-        "save_path": "{MODELS_PATH}/odqa/enwiki20161221_tfidf_matrix.npz",
-        "load_path": "{MODELS_PATH}/odqa/enwiki20161221_tfidf_matrix.npz",
+        "save_path": "{DOWNLOADS_PATH}/odqa/enwiki_test_tfidf.npz",
+        "load_path": "{DOWNLOADS_PATH}/odqa/enwiki_test_tfidf.npz",
         "tokenizer": {
           "class_name": "stream_spacy_tokenizer",
           "lemmas": true,
@@ -43,7 +43,7 @@
       },
       {
         "class_name": "tfidf_ranker",
-        "top_n": 25,
+        "top_n": 20,
         "in": [
           "docs"
         ],
@@ -52,6 +52,20 @@
           "tfidf_doc_scores"
         ],
         "vectorizer": "#vectorizer"
+      },
+      {
+        "class_name": "pop_ranker",
+        "pop_dict_path": "{DOWNLOADS_PATH}/odqa/enwiki20180211_popularities.json",
+        "load_path": "{MODELS_PATH}/odqa/logreg_3features.joblib",
+        "top_n": 10,
+        "in": [
+          "tfidf_doc_ids",
+          "tfidf_doc_scores"
+        ],
+        "out": [
+          "pop_doc_ids",
+          "pop_doc_scores"
+        ]
       }
     ]
   },
@@ -75,11 +89,15 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/datasets/wikipedia/enwiki20161221.tar.gz",
+        "url": "http://files.deeppavlov.ai/datasets/wikipedia/enwiki_test.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/odqa"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/datasets/wikipedia/enwiki20180211_popularities.tar.gz",
         "subdir": "{DOWNLOADS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/en_odqa_enwiki20161221.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/pop_ranker.tar.gz",
         "subdir": "{MODELS_PATH}"
       }
     ]

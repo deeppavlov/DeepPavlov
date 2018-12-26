@@ -8,32 +8,32 @@
     ],
     "pipe": [
       {
-        "config_path": "{CONFIGS_PATH}/doc_retrieval/en_ranker_tfidf_wiki_test.json",
+        "config_path": "{CONFIGS_PATH}/doc_retrieval/en_ranker_pop_enwiki20180211.json",
         "in": [
           "question_raw"
         ],
         "out": [
-          "tfidf_doc_ids"
+          "pop_doc_ids"
         ]
       },
       {
         "class_name": "wiki_sqlite_vocab",
         "in": [
-          "tfidf_doc_ids"
+          "pop_doc_ids"
         ],
         "out": [
-          "tfidf_doc_text"
+          "pop_doc_text"
         ],
         "join_docs": false,
         "shuffle": false,
-        "load_path": "{DOWNLOADS_PATH}/odqa/enwiki_test.db"
+        "load_path": "{DOWNLOADS_PATH}/odqa/enwiki.db"
       },
       {
         "class_name": "document_chunker",
-        "in": ["tfidf_doc_text"],
+        "in": ["pop_doc_text"],
         "out": ["chunks"],
-        "flatten_result": true,
-        "paragraphs": true
+        "tokens_limit": 4000,
+        "flatten_result": true
       },
       {
         "class_name": "string_multiplier",
@@ -48,7 +48,9 @@
       {
         "class_name": "logit_ranker",
         "batch_size": 10,
-        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/multi_squad_noans_infer.json"},
+        "squad_model": {
+          "config_path": "{CONFIGS_PATH}/squad/multi_squad_noans_infer.json"
+        },
         "sort_noans": true,
         "in": [
           "chunks",
@@ -60,6 +62,11 @@
       }
     ]
   },
+  "train": {
+    "validate_best": false,
+    "test_best": false,
+    "batch_size": 10000
+  },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
@@ -67,7 +74,7 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
-    "requirements": [
+  "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
       "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
       "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
@@ -76,10 +83,6 @@
       "server_utils": "ODQA"
     },
     "download": [
-      {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/odqa_test.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}"
-      }
     ]
   }
 }
