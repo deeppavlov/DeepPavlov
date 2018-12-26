@@ -124,7 +124,7 @@ class LRScheduledTFModel(TFModel):
     """
     def __init__(self,
                  learning_rate: Union[float, Tuple[float, float]] = None,
-                 learning_rate_decay: Union[DType, List[DType, Any]] = DecayType.NO,
+                 learning_rate_decay: Union[DType, Tuple[DType, Any]] = DecayType.NO,
                  learning_rate_decay_epochs: int = 0,
                  learning_rate_decay_batches: int = 0,
                  learning_rate_drop_div: float = 2.0,
