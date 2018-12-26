@@ -2,6 +2,7 @@ import io
 import json
 import logging
 import os
+import pickle
 import signal
 import shutil
 import sys
@@ -15,6 +16,7 @@ import requests
 from urllib.parse import urljoin
 
 import deeppavlov
+from deeppavlov import build_model
 from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.download import deep_download
 from deeppavlov.core.data.utils import get_all_elems_from_json
@@ -369,6 +371,33 @@ class TestQuickStart(object):
                 shutil.rmtree(str(download_path), ignore_errors=True)
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
+
+    def test_serialization(self, model, conf_file, model_dir, mode):
+        if 'IP' not in mode:
+            return pytest.skip("Unsupported mode: {}".format(mode))
+
+        download_config(conf_file)
+        config_file_path = test_configs_path / conf_file
+        install_config(config_file_path)
+        chainer = build_model(config_file_path, download=True)
+        raw_bytes = chainer.serialize()
+        chainer.destroy()
+
+        serialized: list = pickle.loads(raw_bytes)
+        if any(serialized):
+            serialized.clear()
+
+            chainer = build_model(config_file_path, serialized=raw_bytes)
+            for *query, expected_response in PARAMS[model][(conf_file, model_dir, mode)]:
+                query = [[q] for q in query]
+                actual_response = chainer(*query)
+                if expected_response is not None:
+                    if actual_response is not None and len(actual_response) > 0:
+                        actual_response = actual_response[0]
+                    assert expected_response == str(actual_response), \
+                        f"Error in interacting with {model_dir} ({conf_file}): {query}"
+        else:
+            pytest.skip("Serialization not supported: {}".format(conf_file))
 
     def test_consecutive_training_and_interacting(self, model, conf_file, model_dir, mode):
         if 'TI' in mode:
