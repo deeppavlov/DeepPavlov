@@ -411,13 +411,6 @@ class KerasClassificationModel(LRScheduledKerasModel):
         if self.opt.get("load_path") and self.opt.get("save_path"):
             if self.opt.get("save_path") != self.opt.get("load_path"):
                 self.opt["load_path"] = str(self.opt["save_path"])
-        with open('tmp.json', 'wt') as outputfile:
-            import json
-            for k, v in self.opt.items():
-                try:
-                    json.dump(v, outputfile)
-                except (TypeError, OverflowError):
-                    log.info(f"Failure for `{k}`")
         save_json(self.opt, opt_path)
 
     def cnn_model(self, kernel_sizes_cnn: List[int], filters_cnn: int, dense_size: int,
