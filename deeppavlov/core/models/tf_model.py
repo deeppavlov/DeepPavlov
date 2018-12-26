@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from collections import defaultdict
-from typing import Tuple, Iterable
+from typing import Iterable, Tuple
 
 import numpy as np
 import tensorflow as tf
@@ -21,6 +21,7 @@ from tensorflow.python.ops import variables
 
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.log import get_logger
+
 from .tf_backend import TfModelMeta
 
 
@@ -33,13 +34,13 @@ class TFModel(NNModel, metaclass=TfModelMeta):
     sess: tf.Session
 
     def __init__(self, *args, **kwargs) -> None:
-        if not hasattr(self, 'sess'):
-            raise RuntimeError('Your TensorFlow model {} must'
-                               ' have sess attribute!'.format(self.__class__.__name__))
         super().__init__(*args, **kwargs)
 
     def load(self, exclude_scopes: tuple = ('Optimizer',)) -> None:
         """Load model parameters from self.load_path"""
+        if not hasattr(self, 'sess'):
+            raise RuntimeError('Your TensorFlow model {} must'
+                               ' have sess attribute!'.format(self.__class__.__name__))
         path = str(self.load_path.resolve())
         # Check presence of the model files
         if tf.train.checkpoint_exists(path):
@@ -63,11 +64,17 @@ class TFModel(NNModel, metaclass=TfModelMeta):
 
     def save(self, exclude_scopes: tuple = ('Optimizer',)) -> None:
         """Save model parameters to self.save_path"""
+        if not hasattr(self, 'sess'):
+            raise RuntimeError('Your TensorFlow model {} must'
+                               ' have sess attribute!'.format(self.__class__.__name__))
         path = str(self.save_path.resolve())
         log.info('[saving model to {}]'.format(path))
         var_list = self._get_saveable_variables(exclude_scopes)
         saver = tf.train.Saver(var_list)
         saver.save(self.sess, path)
+
+    def destroy(self):
+        self.sess.close()
 
     def serialize(self) -> Tuple[Tuple[str, np.ndarray], ...]:
         tf_vars = tf.global_variables()
@@ -93,15 +100,19 @@ class TFModel(NNModel, metaclass=TfModelMeta):
                      optimizer=None,
                      clip_norm=None,
                      learnable_scopes=None,
-                     optimizer_scope_name=None):
-        """ Get train operation for given loss
+                     optimizer_scope_name=None,
+                     **kwargs):
+        """
+        Get train operation for given loss
 
         Args:
             loss: loss, tf tensor or scalar
-            learning_rate: scalar or placeholder
-            clip_norm: clip gradients norm by clip_norm
-            learnable_scopes: which scopes are trainable (None for all)
-            optimizer: instance of tf.train.Optimizer, default Adam
+            learning_rate: scalar or placeholder.
+            clip_norm: clip gradients norm by clip_norm.
+            learnable_scopes: which scopes are trainable (None for all).
+            optimizer: instance of tf.train.Optimizer, default Adam.
+            **kwargs: parameters passed to tf.train.Optimizer object
+               (scalars or placeholders).
 
         Returns:
             train_op
@@ -119,7 +130,7 @@ class TFModel(NNModel, metaclass=TfModelMeta):
                     variables_to_train.extend(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope_name))
 
             if optimizer is None:
-                optimizer = tf.train.AdamOptimizer(learning_rate)
+                optimizer = tf.train.AdamOptimizer(learning_rate, **kwargs)
 
             # For batch norm it is necessary to update running averages
             extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
@@ -129,7 +140,7 @@ class TFModel(NNModel, metaclass=TfModelMeta):
                     if grad is not None:
                         return tf.clip_by_norm(grad, clip_norm)
 
-                opt = optimizer(learning_rate)
+                opt = optimizer(learning_rate, **kwargs)
                 grads_and_vars = opt.compute_gradients(loss, var_list=variables_to_train)
                 if clip_norm is not None:
                     grads_and_vars = [(clip_if_not_none(grad), var)

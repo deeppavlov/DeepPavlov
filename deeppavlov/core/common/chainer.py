@@ -191,10 +191,12 @@ class Chainer(Component):
             if inspect.ismethod(getattr(component, 'reset', None)):
                 component.reset()
 
-    def destroy(self) -> None:
+    def destroy(self):
         for in_params, out_params, component in self.train_pipe:
             if inspect.ismethod(getattr(component, 'destroy', None)):
                 component.destroy()
+        self.pipe.clear()
+        self.train_pipe.clear()
 
     def serialize(self) -> bytes:
         data = []
