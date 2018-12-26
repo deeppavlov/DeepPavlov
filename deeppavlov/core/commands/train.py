@@ -579,7 +579,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
                         if name not in default_report_keys:
                             summ.value.add(tag='every_n_epochs/' + name, simple_value=score)
 
-                    tb_train_writer.add_summary(summ, i)
+                    tb_train_writer.add_summary(summ, epochs)
                     tb_train_writer.flush()
 
                 report = {'train': report}
