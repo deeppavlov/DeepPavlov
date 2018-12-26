@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from collections import defaultdict
-from typing import Iterable, Tuple
+from typing import Iterable, Tuple, Optional, Union
+from overrides import overrides
 
 import numpy as np
 import tensorflow as tf
@@ -21,7 +22,9 @@ from tensorflow.python.ops import variables
 
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.log import get_logger
-
+from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.registry import cls_from_str
+from .lr_scheduled_model import LRScheduledModel, DecayScheduler
 from .tf_backend import TfModelMeta
 
 
@@ -165,3 +168,101 @@ class TFModel(NNModel, metaclass=TfModelMeta):
             log.info("{} - {}.".format(block_name, cnt))
         total_num_parameters = np.sum(list(blocks.values()))
         log.info('Total number of parameters equal {}'.format(total_num_parameters))
+
+
+class LRScheduledTFModel(LRScheduledModel, TFModel):
+    """
+    TFModel enhanced with optimizer, learning rate and momentum
+    management and search.
+    """
+    def __init__(self,
+                 optimizer: str = 'AdamOptimizer',
+                 clip_norm: float = None,
+                 **kwargs) -> None:
+        try:
+            self._optimizer = cls_from_str(optimizer)
+        except Exception:
+            self._optimizer = getattr(tf.train, optimizer.split(':')[-1])
+        if not issubclass(self._optimizer, tf.train.Optimizer):
+            raise ConfigError("`optimizer` should be tensorflow.train.Optimizer subclass")
+
+        super().__init__(**kwargs)
+
+        self._clip_norm = clip_norm
+        self._external_lr = False
+        self._external_mom = False
+
+    def get_optimizer(self):
+        return self._optimizer
+
+    @overrides
+    def _init_learning_rate_variable(self):
+        # return tf.placeholder(tf.float32, shape=[], name='learning_rate')
+        return tf.Variable(self._lr or 0., dtype=tf.float32, name='learning_rate')
+
+    @overrides
+    def _init_momentum_variable(self):
+        # return tf.placeholder_with_default(0.9, shape=[], name='momentum')
+        # return tf.placeholder(tf.float32, shape=[], name='momentum')
+
+        if (self._mom is None) and\
+                self._optimizer not in (tf.train.AdagradDAOptimizer,
+                                        tf.train.AdagradOptimizer,
+                                        tf.train.GradientDescentOptimizer,
+                                        tf.train.ProximalGradientDescentOptimizer,
+                                        tf.train.ProximalAdagradOptimizer):
+            self._mom = 0.9
+            self._mom_schedule = DecayScheduler(start_val=self._mom, dec_type="no")
+
+        return tf.Variable(self._mom or 0., dtype=tf.float32, name='momentum')
+
+    @overrides
+    def _update_graph_variables(self, learning_rate=None, momentum=None):
+        if learning_rate is not None:
+            self.sess.run(tf.assign(self._lr_var, learning_rate))
+            # log.info(f"Learning rate = {learning_rate}")
+        if momentum is not None:
+            self.sess.run(tf.assign(self._mom_var, momentum))
+            # log.info(f"Momentum      = {momentum}")
+
+    def load(self, exclude_scopes: Optional[Iterable] = ('Optimizer',
+                                                         'learning_rate',
+                                                         'momentum')):
+        return super().load(exclude_scopes=exclude_scopes)
+
+    def get_train_op(self,
+                     *args,
+                     learning_rate: Union[float, tf.placeholder] = None,
+                     optimizer: tf.train.Optimizer = None,
+                     momentum: Union[float, tf.placeholder] = None,
+                     clip_norm: float = None,
+                     **kwargs):
+        if learning_rate is not None:
+            self._external_lr = True
+            kwargs['learning_rate'] = learning_rate
+        else:
+            kwargs['learning_rate'] = self.get_learning_rate_variable()
+        kwargs['optimizer'] = optimizer or self.get_optimizer()
+        kwargs['clip_norm'] = clip_norm or self._clip_norm
+
+        momentum_param = 'momentum'
+        if kwargs['optimizer'] == tf.train.AdamOptimizer:
+            momentum_param = 'beta1'
+        elif kwargs['optimizer'] == tf.train.AdadeltaOptimizer:
+            momentum_param = 'rho'
+
+        if momentum is not None:
+            self._external_mom = True
+            kwargs[momentum_param] = momentum
+        elif self.get_momentum() is not None:
+            kwargs[momentum_param] = self.get_momentum_variable()
+        return super().get_train_op(*args, **kwargs)
+
+    def process_event(self, event_name, data):
+        if event_name == 'after_train_log':
+            if (self._lr is not None) and not self._external_lr:
+                data['learning_rate'] = self._lr
+            if (self._mom is not None) and not self._external_mom:
+                data['momentum'] = self._mom
+        else:
+            super().process_event(event_name, data)
