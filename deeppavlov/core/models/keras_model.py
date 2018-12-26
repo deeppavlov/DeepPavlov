@@ -16,6 +16,7 @@ import inspect
 from abc import abstractmethod
 from copy import deepcopy
 from typing import Optional, List, Union
+from overrides import overrides
 
 import numpy as np
 import tensorflow as tf
@@ -24,6 +25,7 @@ from keras import backend as K
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.tf_backend import TfModelMeta
+from .lr_scheduled_model import LRScheduledModel
 
 
 log = get_logger(__name__)
@@ -172,3 +174,56 @@ class KerasWrapper(KerasModel):
         with self.graph.as_default():
             K.set_session(self.sess)
             return self._net.predict_on_batch(x_batch, **kwargs)
+
+
+class LRScheduledKerasModel(LRScheduledModel, KerasModel):
+    """
+    KerasModel enhanced with optimizer, learning rate and momentum
+    management and search.
+    """
+
+    @abstractmethod
+    def get_optimizer(self):
+        """Return instance of keras optimizer"""
+        pass
+
+    @overrides
+    def _init_learning_rate_variable(self):
+        return None
+
+    @overrides
+    def _init_momentum_variable(self):
+        return None
+
+    @overrides
+    def get_learning_rate_variable(self):
+        return self.get_optimizer().lr
+
+    @overrides
+    def get_momentum_variable(self):
+        optimizer = self.get_optimizer()
+        if hasattr(optimizer, 'rho'):
+            return optimizer.rho
+        elif hasattr(optimizer, 'beta_1'):
+            return optimizer.beta_1
+        return None
+
+    @overrides
+    def _update_graph_variables(self, learning_rate=None, momentum=None):
+        if learning_rate is not None:
+            K.set_value(self.get_learning_rate_variable(), learning_rate)
+            # log.info(f"Learning rate = {learning_rate}")
+        if momentum is not None:
+            K.set_value(self.get_momentum_variable(), momentum)
+            # log.info(f"Momentum      = {momentum}")
+
+    def process_event(self, event_name, data):
+        if event_name == 'after_train_log':
+            if (self.get_learning_rate_variable() is not None) and ('learning_rate' not in data):
+                data['learning_rate'] = float(K.get_value(self.get_learning_rate_variable()))
+                # data['learning_rate'] = self._lr
+            if (self.get_momentum_variable() is not None) and ('momentum' not in data):
+                data['momentum'] = float(K.get_value(self.get_momentum_variable()))
+                # data['momentum'] = self._mom
+        else:
+            super().process_event(event_name, data)
