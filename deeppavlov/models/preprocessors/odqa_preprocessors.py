@@ -26,7 +26,7 @@ logger = get_logger(__name__)
 
 @register('document_chunker')
 class DocumentChunker(Component):
-    """ Make chunks from a document or a list of documents. Don't tear up sentences if needed.
+    """Make chunks from a document or a list of documents. Don't tear up sentences if needed.
 
     Args:
         sentencize_fn: a function for sentence segmentation
@@ -45,7 +45,7 @@ class DocumentChunker(Component):
 
     def __init__(self, sentencize_fn: Callable = sent_tokenize, keep_sentences: bool = True,
                  tokens_limit: int = 400, flatten_result: bool = False,
-                 paragraphs: bool = False, *args, **kwargs):
+                 paragraphs: bool = False, *args, **kwargs) -> None:
         self._sentencize_fn = sentencize_fn
         self.keep_sentences = keep_sentences
         self.tokens_limit = tokens_limit
@@ -54,7 +54,7 @@ class DocumentChunker(Component):
 
     def __call__(self, batch_docs: List[Union[str, List[str]]]) -> List[
         Union[List[str], List[List[str]]]]:
-        """ Make chunks from a batch of documents. There can be several documents in each batch.
+        """Make chunks from a batch of documents. There can be several documents in each batch.
         Args:
             batch_docs: a batch of documents / a batch of lists of documents
         Returns:
@@ -129,6 +129,6 @@ class StringMultiplier(Component):
         """
         res = []
         for s, r in zip(batch_s, ref):
-            res.append([s]*len(r))
+            res.append([s] * len(r))
 
         return res

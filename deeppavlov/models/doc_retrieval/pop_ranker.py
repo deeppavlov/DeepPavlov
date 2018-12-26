@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Any
+from typing import List, Any, Tuple
 from operator import itemgetter
 
 import numpy as np
@@ -27,8 +27,8 @@ logger = get_logger(__name__)
 
 
 class PopRanker(Component):
-    """Rank documents according their tfidf scores and popularities. It is not a standalone ranker, it should be used
-    for re-ranking the results of TF-IDF Ranker.
+    """Rank documents according to their tfidf scores and popularities. It is not a standalone ranker,
+     it should be used for re-ranking the results of TF-IDF Ranker.
     Based on a Logistic Regression trained on 3 features:
     * tfidf score of the article
     * popularity of the article obtained via Wikimedia REST API as a mean number of views for the period since 2017/11/05 to 2018/11/05
@@ -50,7 +50,8 @@ class PopRanker(Component):
 
     """
 
-    def __init__(self, pop_dict_path: str, load_path: str, top_n: int = 3, active: bool = True, **kwargs):
+    def __init__(self, pop_dict_path: str, load_path: str, top_n: int = 3, active: bool = True,
+                 **kwargs) -> None:
         pop_dict_path = expand_path(pop_dict_path)
         logger.info(f"Reading popularity dictionary from {pop_dict_path}")
         self.pop_dict = read_json(pop_dict_path)
@@ -61,7 +62,8 @@ class PopRanker(Component):
         self.top_n = top_n
         self.active = active
 
-    def __call__(self, input_doc_ids: List[List[Any]], input_doc_scores: List[List[float]]):
+    def __call__(self, input_doc_ids: List[List[Any]], input_doc_scores: List[List[float]]) -> \
+    Tuple[List[List], List[List]]:
         """Get tfidf scores and tfidf ids, re-rank them by applying logistic regression classifier,
         output pop ranker ids and pop ranker scores.
 

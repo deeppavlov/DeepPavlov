@@ -103,8 +103,8 @@ Run the following to interact with the **Russian** ranker:
 Available Data and Pretrained Models
 ====================================
 
-Wikipedia DB is downloaded to ``deeppavlov/downloads/odqa`` folder and pre-trained tfidf matrices are downloaded
-to ``deeppavlov/models/odqa`` folder by default.
+Wikipedia DB is downloaded to ``~/.deeppavlov/downloads/odqa`` and pre-trained tfidf matrices are downloaded
+to ``~/.deeppavlov/models/odqa`` folder by default.
 
 enwiki.db
 ---------

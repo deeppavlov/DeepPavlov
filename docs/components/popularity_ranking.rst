@@ -79,8 +79,8 @@ Run the following to interact with the ranker:
 Available Data and Pretrained Models
 ====================================
 
-Available information about Wikipedia articles popularity is downloaded to ``deeppavlov/downloads/odqa/popularities.json``
-and pre-trained logistic regression classifier is downloaded to ``deeppavlov/models/odqa/logreg_3features.joblib`` by default.
+Available information about Wikipedia articles popularity is downloaded to ``~/.deeppavlov/downloads/odqa/popularities.json``
+and pre-trained logistic regression classifier is downloaded to ``~/.deeppavlov/models/odqa/logreg_3features.joblib`` by default.
 
 
 References
