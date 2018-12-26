@@ -114,6 +114,9 @@ class DecayScheduler():
                 return self.start_val * (1 + pct * (self.div - 1))
 
 
+DType = Union[str, DecayType]
+
+
 class LRScheduledTFModel(TFModel):
     """
     TFModel enhanced with optimizer, learning rate and momentum
@@ -121,13 +124,13 @@ class LRScheduledTFModel(TFModel):
     """
     def __init__(self,
                  learning_rate: Union[float, Tuple[float, float]] = None,
-                 learning_rate_decay: Union[str, DecayType, List[Any]] = DecayType.NO,
+                 learning_rate_decay: Union[DType, List[DType, Any]] = DecayType.NO,
                  learning_rate_decay_epochs: int = 0,
                  learning_rate_decay_batches: int = 0,
                  learning_rate_drop_div: float = 2.0,
                  learning_rate_drop_patience: int = None,
                  momentum: Union[float, Tuple[float, float]] = None,
-                 momentum_decay: Union[str, DecayType, List[Any]] = DecayType.NO,
+                 momentum_decay: Union[DType, Tuple[DType, Any]] = DecayType.NO,
                  momentum_decay_epochs: int = 0,
                  momentum_decay_batches: int = 0,
                  optimizer: str = 'AdamOptimizer',
@@ -246,7 +249,7 @@ class LRScheduledTFModel(TFModel):
                 report = {'loss': report}
             # Calculating smoothed loss
             avg_loss = self._fit_beta*avg_loss + (1 - self._fit_beta)*report['loss']
-            smoothed_loss = avg_loss / (1 - self._fit_beta**i)
+            smoothed_loss = avg_loss / (1 - self._fit_beta**(i + 1))
             lrs.append(self._lr)
             losses.append(smoothed_loss)
             log.info(f"Batch {i}/{num_batches}: smooth_loss = {smoothed_loss}"
