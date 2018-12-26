@@ -52,8 +52,8 @@ class DocumentChunker(Component):
         self.flatten_result = flatten_result
         self.paragraphs = paragraphs
 
-    def __call__(self, batch_docs: List[Union[str, List[str]]]) -> List[
-        Union[List[str], List[List[str]]]]:
+    def __call__(self, batch_docs: List[Union[str, List[str]]]) -> \
+            List[Union[List[str], List[List[str]]]]:
         """Make chunks from a batch of documents. There can be several documents in each batch.
         Args:
             batch_docs: a batch of documents / a batch of lists of documents
