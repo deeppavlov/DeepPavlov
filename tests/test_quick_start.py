@@ -396,6 +396,7 @@ class TestQuickStart(object):
                         actual_response = actual_response[0]
                     assert expected_response == str(actual_response), \
                         f"Error in interacting with {model_dir} ({conf_file}): {query}"
+            chainer.destroy()
         else:
             pytest.skip("Serialization not supported: {}".format(conf_file))
 

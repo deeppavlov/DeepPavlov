@@ -73,9 +73,6 @@ class TFModel(NNModel, metaclass=TfModelMeta):
         saver = tf.train.Saver(var_list)
         saver.save(self.sess, path)
 
-    def destroy(self):
-        self.sess.close()
-
     def serialize(self) -> Tuple[Tuple[str, np.ndarray], ...]:
         tf_vars = tf.global_variables()
         values = self.sess.run(tf_vars)
@@ -165,3 +162,7 @@ class TFModel(NNModel, metaclass=TfModelMeta):
             log.info("{} - {}.".format(block_name, cnt))
         total_num_parameters = np.sum(list(blocks.values()))
         log.info('Total number of parameters equal {}'.format(total_num_parameters))
+
+    def destroy(self):
+        for k in list(self.sess.graph.get_all_collection_keys()):
+            self.sess.graph.clear_collection(k)
