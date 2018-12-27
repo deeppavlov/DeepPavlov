@@ -17,7 +17,6 @@ import json
 import time
 from collections import OrderedDict, namedtuple
 from pathlib import Path
-import inspect
 from typing import List, Tuple, Dict, Union, Optional
 
 from deeppavlov.core.commands.infer import build_model
@@ -74,7 +73,7 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
     for component_config in chainer_config['pipe']:
         component = from_params(component_config, mode='train')
         if ('fit_on' in component_config) and \
-                (not inspect.ismethod(getattr(component, 'partial_fit', None))):
+                (not callable(getattr(component, 'partial_fit', None))):
             component: Estimator
 
             targets = component_config['fit_on']
@@ -103,9 +102,9 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
         if 'fit_on_batch' in component_config:
             log.warning('`fit_on_batch` is deprecated and will be removed in future versions.'
                         ' Please use `fit_on` instead.')
-        if ('fit_on_batch' in component_config) or\
-                (('fit_on' in component_config) and\
-                 inspect.ismethod(getattr(component, 'partial_fit', None))):
+        if ('fit_on_batch' in component_config) or \
+                (('fit_on' in component_config) and
+                 callable(getattr(component, 'partial_fit', None))):
             component: Estimator
             targets = component_config.get('fit_on', component_config['fit_on_batch'])
             if isinstance(targets, str):

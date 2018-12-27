@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import inspect
 import pickle
 from typing import Union, Tuple, List
 
@@ -183,17 +182,17 @@ class Chainer(Component):
 
     def load(self) -> None:
         for in_params, out_params, component in self.train_pipe:
-            if inspect.ismethod(getattr(component, 'load', None)):
+            if callable(getattr(component, 'load', None)):
                 component.load()
 
     def reset(self) -> None:
         for in_params, out_params, component in self.train_pipe:
-            if inspect.ismethod(getattr(component, 'reset', None)):
+            if callable(getattr(component, 'reset', None)):
                 component.reset()
 
     def destroy(self):
         for in_params, out_params, component in self.train_pipe:
-            if inspect.ismethod(getattr(component, 'destroy', None)):
+            if callable(getattr(component, 'destroy', None)):
                 component.destroy()
         self.pipe.clear()
         self.train_pipe.clear()
