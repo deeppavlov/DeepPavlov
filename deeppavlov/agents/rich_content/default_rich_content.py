@@ -45,12 +45,36 @@ class PlainText(RichControl):
         Creating MS Bot Framework activity blank with "text" field populated.
 
         Returns:
-            control_json: MS Bot Framework representation of PlainText state.
+            out_activity: MS Bot Framework representation of PlainText state.
         """
         out_activity = {}
         out_activity['type'] = 'message'
         out_activity['text'] = self.content
         return out_activity
+
+    def alexa(self) -> dict:
+        """Returns Amazon Alexa compatible state of the PlainText instance.
+
+        Creating Amazon Alexa response blank with populated "outputSpeech" and
+        "card sections.
+
+        Returns:
+            response: Amazon Alexa representation of PlainText state.
+        """
+        response = {
+            'response': {
+                'shouldEndSession': False,
+                'outputSpeech': {
+                    'type': 'PlainText',
+                    'text': self.content},
+                'card': {
+                    'type': 'Simple',
+                    'content': self.content
+                }
+            }
+        }
+
+        return response
 
 
 class Button(RichControl):

@@ -19,7 +19,7 @@
       "doc_nums"
     ],
     "out": [
-      "y"
+      "tfidf_doc_ids"
     ],
     "pipe": [
       {
@@ -48,8 +48,8 @@
           "docs"
         ],
         "out": [
-          "y",
-          "score"
+          "tfidf_doc_ids",
+          "tfidf_doc_scores"
         ],
         "vectorizer": "#vectorizer"
       }

@@ -173,6 +173,8 @@ To configure your own pipelines that contain a ``"go_bot"`` component, refer to 
 Datasets
 --------
 
+.. _dstc2_dataset:
+
 DSTC2
 ^^^^^
 
@@ -316,42 +318,31 @@ Otherwise, you should
 Comparison
 ----------
 
-Scores for different modifications of our bot model:
+Scores for different modifications of our bot model and comparison with existing benchmarks:
 
-+-----------------------------------------------+----------------------------------------------------------------------+----------------------------+
-| Model                                         | Config                                                               | Test turn textual accuracy |
-+===============================================+======================================================================+============================+
-| basic bot                                     | :config:`gobot_dstc2_minimal.json <go_bot/gobot_dstc2_minimal.json>` | 0.3809                     |
-+-----------------------------------------------+----------------------------------------------------------------------+----------------------------+
-| bot with slot filler & fasttext embeddings    |                                                                      | 0.5317                     |
-+-----------------------------------------------+----------------------------------------------------------------------+----------------------------+
-| bot with slot filler & intents                | :config:`gobot_dstc2.json <go_bot/gobot_dstc2.json>`                 | 0.5248                     |
-+-----------------------------------------------+----------------------------------------------------------------------+----------------------------+
-| bot with slot filler & intents & embeddings   |                                                                      | 0.5145                     |
-+-----------------------------------------------+----------------------------------------------------------------------+----------------------------+
-| bot with slot filler & embeddings & attention | :config:`gobot_dstc2_best.json <go_bot/gobot_dstc2_best.json>`       | **0.5551**                 |
-+-----------------------------------------------+----------------------------------------------------------------------+----------------------------+
++----------------+------+-------------------------------------------+----------------------------------------------------------------------+---------------+-----------+---------------+
+| Dataset        | Lang | Model                                     | Config                                                               | Metric        | Test      | Downloads     |
++================+======+===========================================+======================================================================+===============+===========+===============+
+| `DSTC 2`_ [*]_ | En   | basic bot                                 | :config:`gobot_dstc2_minimal.json <go_bot/gobot_dstc2_minimal.json>` | Turn Accuracy | 0.380     | 10 Mb         |
++                +      +-------------------------------------------+----------------------------------------------------------------------+               +-----------+---------------+
+|                |      | bot with slot filler                      | :config:`gobot_dstc2.json <go_bot/gobot_dstc2.json>`                 |               | 0.529     | 400 Mb        |
++                +      +-------------------------------------------+----------------------------------------------------------------------+               +-----------+---------------+
+|                |      | bot with slot filler & intents            |                                                                      |               | 0.531     | --            |
++                +      +-------------------------------------------+----------------------------------------------------------------------+               +-----------+---------------+
+|                |      | bot with slot filler, intents & attention | :config:`gobot_dstc2_best.json <go_bot/gobot_dstc2_best.json>`       |               | **0.561** | 8.5 Gb        |
++----------------+      +-------------------------------------------+----------------------------------------------------------------------+               +-----------+---------------+
+| `DSTC 2`_      |      | Bordes and Weston (2016) [3]_             | --                                                                   |               | 0.411     | --            |
++                +      +-------------------------------------------+----------------------------------------------------------------------+               +-----------+---------------+
+|                |      | Eric and Manning (2017) [4]_              | --                                                                   |               | 0.480     | --            |
++                +      +-------------------------------------------+----------------------------------------------------------------------+               +-----------+---------------+
+|                |      | Perez and Liu (2016) [5]_                 | --                                                                   |               | 0.487     | --            |
++                +      +-------------------------------------------+----------------------------------------------------------------------+               +-----------+---------------+
+|                |      | Williams et al. (2017) [1]_               | --                                                                   |               | **0.556** | --            |
++----------------+------+-------------------------------------------+----------------------------------------------------------------------+---------------+-----------+---------------+
 
-There is another modification of DSTC2 dataset called dialog babi Task6
-[3]_. It differs from ours in train/valid/test split and
-intent/action labeling.
+.. _`DSTC 2`: http://camdial.org/~mh521/dstc/
 
-These are the test scores provided by Williams et al. (2017) [1]_
-(can't be directly compared with above):
-
-+-----------------------------------+------------------------------+
-|         Model                     | Test turn textual accuracy   |
-+===================================+==============================+
-| Bordes and Weston (2016) [4]_     |   0.411                      |
-+-----------------------------------+------------------------------+
-| Perez and Liu (2016) [5]_         |   0.487                      |
-+-----------------------------------+------------------------------+
-| Eric and Manning (2017) [6]_      |   0.480                      |
-+-----------------------------------+------------------------------+
-| Williams et al. (2017) [1]_       |   0.556                      |
-+-----------------------------------+------------------------------+
-
-TODO: add dialog accuracies
+.. [*] There were a few :ref:`modifications <dstc2_dataset>` to the original dataset. It differs from ours in train/valid/test split and intent/action labeling.
 
 References
 ----------
@@ -364,17 +355,15 @@ References
 .. [2] `Dialog State Tracking Challenge 2
     dataset <http://camdial.org/~mh521/dstc/>`_
 
-.. [3] `The bAbI project <https://research.fb.com/downloads/babi/>`_
-
-.. [4] `Antoine Bordes, Y-Lan Boureau & Jason Weston "Learning end-to-end
+.. [3] `Antoine Bordes, Y-Lan Boureau & Jason Weston "Learning end-to-end
     goal-oriented dialog" - 2017 <https://arxiv.org/abs/1605.07683>`_
+
+.. [4] `Mihail Eric, Christopher D. Manning "A Copy-Augmented
+    Sequence-to-Sequence Architecture Gives Good Performance on
+    Task-Oriented Dialogue" - 2017 <https://arxiv.org/abs/1701.04024>`_
 
 .. [5] `Fei Liu, Julien Perez "Gated End-to-end Memory Networks" -
     2016 <https://arxiv.org/abs/1610.04211>`_
-
-.. [6] `Mihail Eric, Christopher D. Manning "A Copy-Augmented
-    Sequence-to-Sequence Architecture Gives Good Performance on
-    Task-Oriented Dialogue" - 2017 <https://arxiv.org/abs/1701.04024>`_
 
 
 .. |alt text| image:: ../_static/gobot_diagram.png

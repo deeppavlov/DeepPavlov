@@ -27,11 +27,13 @@ Concrete DatasetReader classes.
 .. automodule:: deeppavlov.dataset_readers.morphotagging_dataset_reader
    :members:
 
-.. autoclass:: deeppavlov.dataset_readers.ontonotes_reader.OntonotesReader
-
 .. autoclass:: deeppavlov.dataset_readers.paraphraser_reader.ParaphraserReader
 
+.. autoclass:: deeppavlov.dataset_readers.paraphraser_pretrain_reader.ParaphraserPretrainReader
+
 .. autoclass:: deeppavlov.dataset_readers.quora_question_pairs_reader.QuoraQuestionPairsReader
+
+.. autoclass:: deeppavlov.dataset_readers.siamese_reader.SiameseReader
 
 .. autoclass:: deeppavlov.dataset_readers.squad_dataset_reader.SquadDatasetReader
    :members:

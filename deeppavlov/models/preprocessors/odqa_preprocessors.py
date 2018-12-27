@@ -26,37 +26,39 @@ logger = get_logger(__name__)
 
 @register('document_chunker')
 class DocumentChunker(Component):
-    """ Make chunks from a document or a list of documents. Don't tear up sentences if needed.
+    """Make chunks from a document or a list of documents. Don't tear up sentences if needed.
 
     Args:
         sentencize_fn: a function for sentence segmentation
         keep_sentences: whether to tear up sentences between chunks or not
         tokens_limit: a number of tokens in a single chunk (usually this number corresponds to the squad model limit)
         flatten_result: whether to flatten the resulting list of lists of chunks
+        paragraphs: whether to split document by paragrahs; if set to True, tokens_limit is ignored
 
     Attributes:
         keep_sentences: whether to tear up sentences between chunks or not
         tokens_limit: a number of tokens in a single chunk
         flatten_result: whether to flatten the resulting list of lists of chunks
+        paragraphs: whether to split document by paragrahs; if set to True, tokens_limit is ignored
 
     """
 
     def __init__(self, sentencize_fn: Callable = sent_tokenize, keep_sentences: bool = True,
-                 tokens_limit: int = 400, flatten_result: bool = False, *args, **kwargs):
+                 tokens_limit: int = 400, flatten_result: bool = False,
+                 paragraphs: bool = False, *args, **kwargs) -> None:
         self._sentencize_fn = sentencize_fn
         self.keep_sentences = keep_sentences
         self.tokens_limit = tokens_limit
         self.flatten_result = flatten_result
+        self.paragraphs = paragraphs
 
-    def __call__(self, batch_docs: List[Union[str, List[str]]]) -> List[Union[List[str], List[List[str]]]]:
-        """ Make chunks from a batch of documents. There can be several documents in each batch.
-
+    def __call__(self, batch_docs: List[Union[str, List[str]]]) -> \
+            List[Union[List[str], List[List[str]]]]:
+        """Make chunks from a batch of documents. There can be several documents in each batch.
         Args:
             batch_docs: a batch of documents / a batch of lists of documents
-
         Returns:
             chunks of docs, flattened or not
-
         """
 
         result = []
@@ -66,27 +68,33 @@ class DocumentChunker(Component):
             if isinstance(docs, str):
                 docs = [docs]
             for doc in docs:
-                doc_chunks = []
-                if self.keep_sentences:
-                    sentences = sent_tokenize(doc)
-                    n_tokens = 0
-                    keep = []
-                    for s in sentences:
-                        n_tokens += len(s.split())
-                        if n_tokens > self.tokens_limit:
-                            if keep:
-                                doc_chunks.append(' '.join(keep))
-                                n_tokens = 0
-                                keep.clear()
-                        keep.append(s)
-                    if keep:
-                        doc_chunks.append(' '.join(keep))
-                    batch_chunks.append(doc_chunks)
+                if self.paragraphs:
+                    split_doc = doc.split('\n\n')
+                    split_doc = [sd.strip() for sd in split_doc]
+                    split_doc = list(filter(lambda x: len(x) > 40, split_doc))
+                    batch_chunks.append(split_doc)
                 else:
-                    split_doc = doc.split()
-                    doc_chunks = [split_doc[i:i + self.tokens_limit] for i in
-                                  range(0, len(split_doc), self.tokens_limit)]
-                    batch_chunks.append(doc_chunks)
+                    doc_chunks = []
+                    if self.keep_sentences:
+                        sentences = sent_tokenize(doc)
+                        n_tokens = 0
+                        keep = []
+                        for s in sentences:
+                            n_tokens += len(s.split())
+                            if n_tokens > self.tokens_limit:
+                                if keep:
+                                    doc_chunks.append(' '.join(keep))
+                                    n_tokens = 0
+                                    keep.clear()
+                            keep.append(s)
+                        if keep:
+                            doc_chunks.append(' '.join(keep))
+                        batch_chunks.append(doc_chunks)
+                    else:
+                        split_doc = doc.split()
+                        doc_chunks = [split_doc[i:i + self.tokens_limit] for i in
+                                      range(0, len(split_doc), self.tokens_limit)]
+                        batch_chunks.append(doc_chunks)
             result.append(batch_chunks)
 
         if self.flatten_result:
@@ -121,6 +129,6 @@ class StringMultiplier(Component):
         """
         res = []
         for s, r in zip(batch_s, ref):
-            res.append([s]*len(r))
+            res.append([s] * len(r))
 
         return res

@@ -13,9 +13,10 @@
 # limitations under the License.
 
 from itertools import chain
-from typing import List, Generator, Any, Optional, Union, Tuple
+from typing import List, Generator, Any, Optional, Union, Tuple, Iterable
 
 import spacy
+import spacy.language
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
@@ -23,6 +24,20 @@ from deeppavlov.models.tokenizers.utils import detokenize, ngramize
 from deeppavlov.core.common.log import get_logger
 
 logger = get_logger(__name__)
+
+
+def _try_load_spacy_model(model_name: str, disable: Iterable[str] = ()):
+    disable = set(disable)
+    try:
+        model = spacy.load(model_name, disable=disable)
+    except OSError as e:
+        try:
+            model = __import__(model_name).load(disable=disable)
+            if not isinstance(model, spacy.language.Language):
+                raise RuntimeError(f'{model_name} is not a spacy model module')
+        except Exception:
+            raise e
+    return model
 
 
 @register('stream_spacy_tokenizer')
@@ -64,7 +79,7 @@ class StreamSpacyTokenizer(Component):
 
     """
 
-    def __init__(self, disable: Optional[List[str]] = None, stopwords: Optional[List[str]] = None,
+    def __init__(self, disable: Optional[Iterable[str]] = None, stopwords: Optional[List[str]] = None,
                  batch_size: Optional[int] = None, ngram_range: Optional[List[int]] = None,
                  lemmas: bool = False, n_threads: Optional[int] = None,
                  lowercase: Optional[bool] = None, alphas_only: Optional[bool] = None,
@@ -75,7 +90,7 @@ class StreamSpacyTokenizer(Component):
         if ngram_range is None:
             ngram_range = [1, 1]
         self.stopwords = stopwords or []
-        self.model = spacy.load(spacy_model, disable=disable)
+        self.model = _try_load_spacy_model(spacy_model, disable=disable)
         self.model.add_pipe(self.model.create_pipe('sentencizer'))
         self.tokenizer = self.model.Defaults.create_tokenizer(self.model)
         self.batch_size = batch_size

@@ -45,31 +45,31 @@ Several pre-trained models are available and presented in Table below.
 +------------------+-------------------+------+-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
 | Task             | Dataset           | Lang | Model                                                                                           | Metric   | Valid  | Test   | Downloads |
 +==================+===================+======+=================================================================================================+==========+========+========+===========+
-| 28 intents       | `DSTC 2`_         | En   | :config:`DSTC 2 emb <classifiers/intents_dstc2.json>`                                           | Accuracy | 0.7732 | 0.7868 |  800 Mb   |
+| 28 intents       | `DSTC 2`_         | En   | :config:`DSTC 2 emb <classifiers/intents_dstc2.json>`                                           | Accuracy | 0.7613 | 0.7733 |  800 Mb   |
 +                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
-|                  |                   |      | :config:`Wiki emb <classifiers/intents_dstc2_big.json>`                                         |          | 0.9602 | 0.9593 |  8.5 Gb   |
+|                  |                   |      | :config:`Wiki emb <classifiers/intents_dstc2_big.json>`                                         |          | 0.9629 | 0.9617 |  8.5 Gb   |
 +------------------+-------------------+      +-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
-| 7 intents        | `SNIPS-2017`_     |      | :config:`DSTC 2 emb <classifiers/intents_snips.json>`                                           | F1       | 0.8685 |    --  |  800 Mb   |
+| 7 intents        | `SNIPS-2017`_     |      | :config:`DSTC 2 emb <classifiers/intents_snips.json>`                                           | F1       | 0.8591 |    --  |  800 Mb   |
 +                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
-|                  |                   |      | :config:`Wiki emb <classifiers/intents_snips_big.json>`                                         |          | 0.9811 |    --  |  8.5 Gb   |
+|                  |                   |      | :config:`Wiki emb <classifiers/intents_snips_big.json>`                                         |          | 0.9820 |    --  |  8.5 Gb   |
 +                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
 |                  |                   |      | :config:`Tfidf + SelectKBest + PCA + Wiki emb <classifiers/intents_snips_sklearn.json>`         |          | 0.9673 |    --  |  8.6 Gb   |
 +                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
 |                  |                   |      | :config:`Wiki emb weighted by Tfidf <classifiers/intents_snips_tfidf_weighted.json>`            |          | 0.9786 |    --  |  8.5 Gb   |
 +------------------+-------------------+      +-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
-| Insult detection | `Insults`_        |      | :config:`Reddit emb <classifiers/insults_kaggle.json>`                                          | ROC-AUC  | 0.9271 | 0.8618 |  6.2 Gb   |
+| Insult detection | `Insults`_        |      | :config:`Reddit emb <classifiers/insults_kaggle.json>`                                          | ROC-AUC  | 0.9263 | 0.8556 |  6.2 Gb   |
 +------------------+-------------------+      +-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
-| 5 topics         | `AG News`_        |      | :config:`Wiki emb <classifiers/topic_ag_news.json>`                                             | Accuracy | 0.8876 | 0.9011 |  8.5 Gb   |
+| 5 topics         | `AG News`_        |      | :config:`Wiki emb <classifiers/topic_ag_news.json>`                                             | Accuracy | 0.8922 | 0.9059 |  8.5 Gb   |
 +------------------+-------------------+------+-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
-| Sentiment        |`Twitter mokoron`_ | Ru   | :config:`RuWiki+Lenta emb w/o preprocessing <classifiers/sentiment_twitter.json>`               |          | 0.9972 | 0.9971 |  6.2 Gb   |
+| Sentiment        |`Twitter mokoron`_ | Ru   | :config:`RuWiki+Lenta emb w/o preprocessing <classifiers/sentiment_twitter.json>`               |          | 0.9965 | 0.9961 |  6.2 Gb   |
 +                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
-|                  |                   |      | :config:`RuWiki+Lenta emb with preprocessing <classifiers/sentiment_twitter_preproc.json>`      |          | 0.7811 | 0.7749 |  6.2 Gb   |
+|                  |                   |      | :config:`RuWiki+Lenta emb with preprocessing <classifiers/sentiment_twitter_preproc.json>`      |          | 0.7823 | 0.7759 |  6.2 Gb   |
 +                  +-------------------+      +-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
-|                  |`RuSentiment`_     |      | :config:`RuWiki+Lenta emb <classifiers/rusentiment_cnn.json>`                                   | F1       | 0.6393 | 0.6539 |  6.2 Gb   |
+|                  |`RuSentiment`_     |      | :config:`RuWiki+Lenta emb <classifiers/rusentiment_cnn.json>`                                   | F1       | 0.6258 | 0.6472 |  6.2 Gb   |
 +                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
-|                  |                   |      | :config:`ELMo <classifiers/rusentiment_elmo.json>`                                              |          | 0.7066 | 0.7301 |  700 Mb   |
+|                  |                   |      | :config:`ELMo <classifiers/rusentiment_elmo.json>`                                              |          | 0.7074 | 0.7288 |  700 Mb   |
 +------------------+-------------------+      +-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
-| Intent           |`Yahoo-L31`_       |      | :config:`Yahoo-L31 on ELMo <classifiers/yahoo_convers_vs_info.json>` pre-trained on `Yahoo-L6`_ | ROC-AUC  | 0.9269 |   --   |  700 Mb   |
+| Intent           |`Yahoo-L31`_       |      | :config:`Yahoo-L31 on ELMo <classifiers/yahoo_convers_vs_info.json>` pre-trained on `Yahoo-L6`_ | ROC-AUC  | 0.9412 |   --   |  700 Mb   |
 +------------------+-------------------+------+-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
 
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
@@ -114,34 +114,33 @@ trained on Reddit dataset.
 :doc:`Goal-oriented bot </skills/go_bot>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Based on Hybrid Code Networks (HCNs) architecture from `Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code
-Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017
-<https://arxiv.org/abs/1702.03274>`__. It allows to predict responses in goal-oriented dialog. The model is
+Based on Hybrid Code Networks (HCNs) architecture from `Jason D. Williams, Kavosh Asadi, 
+Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control 
+with supervised and reinforcement learning – 2017 <https://arxiv.org/abs/1702.03274>`__.
+It allows to predict responses in a goal-oriented dialog. The model is
 customizable: embeddings, slot filler and intent classifier can be switched on and off on demand.
 
-Available pre-trained models:
+Available pre-trained models and their comparison with existing benchmarks:
 
-+------------------------------------------------------------------------------------------------+---------------------+--------------------+------------------+
-| Dataset & Model                                                                                | Valid turn accuracy | Test turn accuracy | Downloads        |
-+================================================================================================+=====================+====================+==================+
-| :config:`DSTC2, bot with slot filler & intents <go_bot/gobot_dstc2.json>`                      | 0.5288              | 0.5248             |  8.5 Gb          |
-+------------------------------------------------------------------------------------------------+---------------------+--------------------+------------------+
-| :config:`DSTC2, bot with slot filler & embeddings & attention <go_bot/gobot_dstc2_best.json>`  |  0.5538             | 0.5551             |  8.5 Gb          |
-+------------------------------------------------------------------------------------------------+---------------------+--------------------+------------------+
++----------------+------+-------------------------------------------------------------------------------------+---------------+---------+------------+------------------+
+| Dataset        | Lang | Model                                                                               | Metric        | Valid   | Test       | Downloads        |
++================+======+=====================================================================================+===============+=========+============+==================+
+| `DSTC 2`_ [*]_ | En   | :config:`bot with slot filler <go_bot/gobot_dstc2.json>`                            | Turn Accuracy | 0.521   | 0.529      | 400 Mb           |
++                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
+|                |      | :config:`bot with slot filler & intents & attention <go_bot/gobot_dstc2_best.json>` |               | 0.555   | **0.561**  | 8.5 Gb           |
++----------------+      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
+| `DSTC 2`_      |      | Bordes and Weston (2016)                                                            |               | --      | 0.411      | --               |
++                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
+|                |      | Eric and Manning (2017)                                                             |               | --      | 0.480      | --               |
++                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
+|                |      | Perez and Liu (2016)                                                                |               | --      | 0.487      | --               |
++                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
+|                |      | Williams et al. (2017)                                                              |               | --      | **0.556**  | --               |
++----------------+------+-------------------------------------------------------------------------------------+---------------+---------+------------+------------------+
 
-Other benchmarks on DSTC2 (can't be directly compared due to dataset :doc:`modifications </skills/go_bot>`):
+.. _`DSTC 2`: http://camdial.org/~mh521/dstc/
 
-+----------------------------------------------------+------------------------------+
-|             Dataset & Model                        | Test turn accuracy           |
-+====================================================+==============================+
-| DSTC2, Bordes and Weston (2016)                    |   0.411                      |
-+----------------------------------------------------+------------------------------+
-| DSTC2, Perez and Liu (2016)                        |   0.487                      |
-+----------------------------------------------------+------------------------------+
-| DSTC2, Eric and Manning (2017)                     |   0.480                      |
-+----------------------------------------------------+------------------------------+
-| DSTC2, Williams et al. (2017)                      |   0.556                      |
-+----------------------------------------------------+------------------------------+
+.. [*] There were a few :ref:`modifications <dstc2_dataset>` to the original dataset. 
 
 
 :doc:`Seq2seq goal-oriented bot </skills/seq2seq_go_bot>`
@@ -154,19 +153,21 @@ does not need to explicitly model dialogue state or belief trackers.
 
 Comparison of deeppavlov pretrained model with others:
 
-+------------------------------------------------------+------------------+-----------------+-----------+
-| Dataset & Model                                      | Valid BLEU       | Test BLEU       | Downloads |
-+======================================================+==================+=================+===========+
-| :config:`Kvret, KvretNet  <go_bot/gobot_dstc2.json>` | 0.1319           | **0.1328**      |  10 Gb    |
-+------------------------------------------------------+------------------+-----------------+-----------+
-| Kvret, KvretNet, Mihail Eric et al. (2017)           | --               | **0.132**       |    --     +
-+------------------------------------------------------+------------------+-----------------+-----------+
-| Kvret, CopyNet, Mihail Eric et al. (2017)            | --               | 0.110           | --        +
-+------------------------------------------------------+------------------+-----------------+-----------+
-| Kvret, Attn Seq2Seq, Mihail Eric et al. (2017)       | --               | 0.102           | --        +
-+------------------------------------------------------+------------------+-----------------+-----------+
-| Kvret, Rule-based, Mihail Eric et al. (2017)         | --               | 0.066           | --        +
-+------------------------------------------------------+------------------+-----------------+-----------+
++-------------------+------+----------------------------------------------------+------------------+-----------------+-----------+
+| Dataset           | Lang | Model                                              | Valid BLEU       | Test BLEU       | Downloads |
++===================+======+====================================================+==================+=================+===========+
+| `Stanford Kvret`_ | En   | :config:`KvretNet <seq2seq_go_bot/bot_kvret.json>` | 0.131            | **0.132**       |  10 Gb    |
++                   +      +----------------------------------------------------+------------------+-----------------+-----------+
+|                   |      | KvretNet, Mihail Eric et al. (2017)                | --               | **0.132**       |    --     +
++                   +      +----------------------------------------------------+------------------+-----------------+-----------+
+|                   |      | CopyNet, Mihail Eric et al. (2017)                 | --               | 0.110           | --        +
++                   +      +----------------------------------------------------+------------------+-----------------+-----------+
+|                   |      | Attn Seq2Seq, Mihail Eric et al. (2017)            | --               | 0.102           | --        +
++                   +      +----------------------------------------------------+------------------+-----------------+-----------+
+|                   |      | Rule-based, Mihail Eric et al. (2017)              | --               | 0.066           | --        +
++-------------------+------+----------------------------------------------------+------------------+-----------------+-----------+
+
+.. _`Stanford Kvret`: https://nlp.stanford.edu/blog/a-new-multi-turn-multi-domain-task-oriented-dialogue-dataset/
 
 :doc:`Automatic spelling correction component </components/spelling_correction>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -234,6 +235,10 @@ Available pre-trained models for paraphrase identification:
    |    Dataset             |Model config                                                                                 | Val (accuracy)| Test (accuracy)| Val (F1)| Test (F1)| Val (log_loss)| Test (log_loss)|Downloads |
    +========================+=============================================================================================+===============+================+=========+==========+===============+================+==========+
    |`paraphraser.ru`_       |:config:`paraphrase_ident_paraphraser <ranking/paraphrase_ident_paraphraser_interact.json>`  |   83.8        |   75.4         |   87.9  |  80.9    |   0.468       |   0.616        |5938M     |
+   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+----------+
+   |`paraphraser.ru`_       |:config:`paraphrase_ident_paraphraser <ranking/paraphrase_ident_elmo_interact.json>`         |   82.7        |   76.0         |   87.3  |  81.4    |   0.391       |   0.510        |5938M     |
+   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+----------+
+   |`paraphraser.ru`_       |:config:`paraphrase_ident_paraphraser_tune <ranking/paraphrase_ident_tune_interact.json>`    |   82.9        |   76.7         |   87.3  |  82.0    |   0.392       |   0.479        |5938M     |
    +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+----------+
    |`Quora Question Pairs`_ |:config:`paraphrase_ident_qqp <ranking/paraphrase_ident_qqp_bilstm_interact.json>`           |   87.1        |   87.0         |   83.0  |  82.6    |   0.300       |   0.305        |8134M     |
    +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+----------+
