@@ -185,8 +185,7 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
 
         sess_config = tf.ConfigProto()
         sess_config.gpu_options.allow_growth = True
-        with tf.Graph().as_default():
-            sess = tf.Session(config=sess_config)
+        sess = tf.Session(config=sess_config)
 
         tokens_ph = tf.placeholder(shape=(None, None), dtype=tf.string, name='tokens')
         tokens_length_ph = tf.placeholder(shape=(None,), dtype=tf.int32, name='tokens_length')
