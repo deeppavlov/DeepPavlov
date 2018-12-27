@@ -48,10 +48,10 @@ class SiameseModel(NNModel):
         """
         This method is called by trainer to make one training step on one batch.
         The number of samples returned by `samples_generator` is always equal to `batch_size`, so we need to:
-            1) accumulate data for all of the inputs of the model;
-            2) format inputs of a model in a proper way using `self._make_batch` function;
-            3) run a model with provided inputs and ground truth labels (`y`) using `self._train_on_batch` function;
-            4) return mean loss value on the batch
+        1) accumulate data for all of the inputs of the model;
+        2) format inputs of a model in a proper way using `self._make_batch` function;
+        3) run a model with provided inputs and ground truth labels (`y`) using `self._train_on_batch` function;
+        4) return mean loss value on the batch
 
         Args:
             samples_generator (Iterable[List[np.ndarray]]): generator that returns list of numpy arrays

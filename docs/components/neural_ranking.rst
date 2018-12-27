@@ -51,7 +51,7 @@ and then get the probability that the response is proper continuation of the dia
 ::
 
     :: & & & & & & & & bonhoeffer  whar drives do you want to mount what &  i have an ext3 usb drive  & look with fdisk -l & hello there & fdisk is all you need
-    >> [0.9728276 0.1618539 0.9873016]
+    >> [0.9776373  0.05753616 0.9642599 ]
 
 To train the models on the `Ubuntu Dialogue Corpus v2`_ dataset please run one of the following commands:
 
