@@ -32,7 +32,7 @@
         "id": "word2vec_embedder",
         "class_name": "glove",
         "dim": 200,
-        "load_path": "{DOWNLOADS_PATH}/embeddings/v1_ubuntu_word2vec_200_smn.txt"
+        "load_path": "{DOWNLOADS_PATH}/embeddings/v1_ubuntu_word2vec_200_dam_0.779.txt"
       },
       {
         "id": "preproc",
