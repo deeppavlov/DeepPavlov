@@ -20,7 +20,7 @@ class FAQSkill(Skill):
 		y_col_name: Name of the column in '.csv' file, that represents Answer column.
 
 	Attributes:
-		model: Сlassifies user's questions
+		model: Classifies user's questions
 	"""
 	def __init__(self, data_path: str = None, x_col_name: str = 'Question', y_col_name: str = 'Answer') -> None:
 		model_config = read_json(find_config('tfidf_autofaq'))
