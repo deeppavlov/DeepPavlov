@@ -52,6 +52,15 @@ class RichItem(metaclass=ABCMeta):
         """
         return None
 
+    def alexa(self):
+        """Returns Amazon Alexa compatible state of the control instance
+        including its nested controls.
+
+        Returns:
+            control: Amazon Alexa representation of control state.
+        """
+        return None
+
 
 class RichControl(RichItem, metaclass=ABCMeta):
     """Base class for rich controls.
@@ -128,3 +137,14 @@ class RichMessage(RichItem):
         """
         telegram_controls = [control.telegram() for control in self.controls]
         return telegram_controls
+
+    def alexa(self) -> list:
+        """Returns list of Amazon Alexa compatible states of the RichMessage
+        instance nested controls.
+
+        Returns:
+            alexa_controls: Amazon Alexa representation of RichMessage instance nested
+                controls.
+        """
+        alexa_controls = [control.alexa() for control in self.controls]
+        return alexa_controls

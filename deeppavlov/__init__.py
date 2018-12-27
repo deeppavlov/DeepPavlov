@@ -35,7 +35,7 @@ try:
 except ImportError:
     'Assuming that requirements are not yet installed'
 
-__version__ = '0.1.1'
+__version__ = '0.1.5'
 __author__ = 'Neural Networks and Deep Learning lab, MIPT'
 __description__ = 'An open source library for building end-to-end dialog systems and training chatbots.'
 __keywords__ = ['NLP', 'NER', 'SQUAD', 'Intents', 'Chatbot']

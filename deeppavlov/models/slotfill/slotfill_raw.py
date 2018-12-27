@@ -74,9 +74,15 @@ class SlotFillingComponent(Component, Serializable):
         with open(self.load_path, encoding='utf8') as f:
             self._slot_vals = json.load(f)
 
+    def deserialize(self, data):
+        self._slot_vals = json.loads(data)
+
     def save(self):
         with open(self.save_path, 'w', encoding='utf8') as f:
             json.dump(self._slot_vals, f)
+
+    def serialize(self):
+        return json.dumps(self._slot_vals)
 
     def _fuzzy_finder(self, slot_dict, tokens):
         global input_entity

@@ -5,6 +5,7 @@
   },
   "dataset_iterator": {
     "class_name": "siamese_iterator",
+    "pytest_num_samples": 384,
     "seed": 243
   },
   "chainer": {
@@ -79,7 +80,7 @@
   },
   "train": {
     "epochs": 1,
-    "batch_size": 256,
+    "batch_size": 192,
     "pytest_max_batches": 2,
     "train_metrics": ["f1", "acc", "log_loss"],
     "metrics": ["f1", "acc", "log_loss"],

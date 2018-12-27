@@ -70,7 +70,13 @@ class SVMTagger(Estimator):
         with self.save_path.open('wb') as f:
             pickle.dump(self.classifier, f)
 
+    def serialize(self):
+        return pickle.dumps(self.classifier)
+
     def load(self) -> None:
         if self.load_path.exists():
             with self.load_path.open('rb') as f:
                 self.classifier = pickle.load(f)
+
+    def deserialize(self, data):
+        self.classifier = pickle.loads(data)

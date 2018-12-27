@@ -61,13 +61,15 @@
         "id": "my_embedder",
         "class_name": "fasttext",
         "load_path": "{DOWNLOADS_PATH}/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
-        "dim": 300
+        "dim": 300,
+        "pad_zero": true
       },
       {
         "in": "y_ids",
         "out": "y_onehot",
         "class_name": "one_hotter",
-        "depth": "#classes_vocab.len"
+        "depth": "#classes_vocab.len",
+        "single_vector": true
       },
       {
         "in": [
@@ -111,7 +113,6 @@
           ]
         },
         "loss": "categorical_crossentropy",
-        "text_size": 100,
         "last_layer_activation": "softmax",
         "coef_reg_cnn": {
           "evolve_range": [

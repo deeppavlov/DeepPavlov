@@ -16,13 +16,14 @@ from typing import List, Any, Optional, Union
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.models.component import Component
 from deeppavlov.dataset_iterators.sqlite_iterator import SQLiteDataIterator
 
 logger = get_logger(__name__)
 
 
 @register('wiki_sqlite_vocab')
-class WikiSQLiteVocab(SQLiteDataIterator):
+class WikiSQLiteVocab(SQLiteDataIterator, Component):
     """Get content from SQLite database by document ids.
 
     Args:
@@ -35,8 +36,8 @@ class WikiSQLiteVocab(SQLiteDataIterator):
 
     """
 
-    def __init__(self, load_path: str, join_docs: bool=True, shuffle: bool=False, **kwargs) -> None:
-        super().__init__(load_path=load_path, shuffle=shuffle)
+    def __init__(self, load_path: str, join_docs: bool = True, shuffle: bool = False, **kwargs) -> None:
+        SQLiteDataIterator.__init__(self, load_path=load_path, shuffle=shuffle)
         self.join_docs = join_docs
 
     def __call__(self, doc_ids: Optional[List[List[Any]]] = None, *args, **kwargs) -> List[Union[str, List[str]]]:
