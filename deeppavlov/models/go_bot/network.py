@@ -482,8 +482,11 @@ class GoalOrientedBotNetwork(LRScheduledTFModel):
             log.debug("Bot reset.")
 
     def destroy(self):
-        self.sess.close()
-        self.slot_filler.shutdown()
+        try:
+            self.slot_filler.destroy()
+        except AttributeError:
+            pass
+        super().destroy()
 
     def network_call(self, features, emb_context, key, action_mask, prob=False):
         feed_dict = {
