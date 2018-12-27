@@ -148,13 +148,13 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
         self.elmo_output_names = elmo_output_names
         elmo_output_names_set = set(self.elmo_output_names)
         if elmo_output_names_set - set(self.elmo_output_dims.keys()):
-            log.error(f'Incorrect elmo_output_names = {elmo_output_names} . You can use either  ["default"] or some of'\
+            log.error(f'Incorrect elmo_output_names = {elmo_output_names} . You can use either  ["default"] or some of'
                       '["word_emb", "lstm_outputs1", "lstm_outputs2","elmo"]')
             sys.exit(1)
 
-        if elmo_output_names_set - set(['default']) and elmo_output_names_set - set(["word_emb", "lstm_outputs1",
-                                                                                     "lstm_outputs2", "elmo"]):
-            log.error('Incompatible conditions: you can use either  ["default"] or list of '\
+        if elmo_output_names_set - {'default'} and elmo_output_names_set - {"word_emb", "lstm_outputs1",
+                                                                            "lstm_outputs2", "elmo"}:
+            log.error('Incompatible conditions: you can use either  ["default"] or list of '
                       '["word_emb", "lstm_outputs1", "lstm_outputs2","elmo"] ')
             sys.exit(1)
 
@@ -229,8 +229,7 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
 
         return batch, tokens_length
 
-    def _mini_batch_fit(self, batch: List[List[str]],
-                        *args, **kwargs) -> Union[List[np.ndarray], np.ndarray]:
+    def _mini_batch_fit(self, batch: List[List[str]], *args, **kwargs) -> Union[List[np.ndarray], np.ndarray]:
         """
         Embed sentences from a batch.
 
@@ -263,7 +262,6 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
 
             elmo_output_values = [elmo_output_values_line[:length_line]
                                   for length_line, elmo_output_values_line in zip(tokens_length, elmo_output_values)]
-
 
             if not self.concat_last_axis:
                 slice_indexes = np.cumsum(self.dim).tolist()[:-1]
