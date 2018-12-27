@@ -185,7 +185,8 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
 
         sess_config = tf.ConfigProto()
         sess_config.gpu_options.allow_growth = True
-        sess = tf.Session(config=sess_config)
+        with tf.Graph().as_default():
+            sess = tf.Session(config=sess_config)
 
         tokens_ph = tf.placeholder(shape=(None, None), dtype=tf.string, name='tokens')
         tokens_length_ph = tf.placeholder(shape=(None,), dtype=tf.int32, name='tokens_length')
@@ -308,4 +309,5 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
         yield from ['<S>', '</S>', '<UNK>']
 
     def destroy(self):
-        self.sess.close()
+        for k in list(self.sess.graph.get_all_collection_keys()):
+            self.sess.graph.clear_collection(k)
