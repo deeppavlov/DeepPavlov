@@ -6,8 +6,9 @@ from deeppavlov.core.skill.skill import Skill
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.file import find_config
 
+
 class FAQSkill(Skill):
-	"""Skill, matches utterances to questions, returns predefined answers.
+    """Skill, matches utterances to questions, returns predefined answers.
 
 	Allows to create skills that give answers on frequently asked questions.
 	Skill returns response and confidence.
@@ -22,28 +23,31 @@ class FAQSkill(Skill):
 	Attributes:
 		model: Classifies user's questions
 	"""
-	def __init__(self, data_path: str = None, x_col_name: str = 'Question', y_col_name: str = 'Answer') -> None:
-		model_config = read_json(find_config('tfidf_autofaq'))
 
-		if data_path is not None:
-			if 'data_url' in model_config['dataset_reader']:
-				del model_config['dataset_reader']['data_url']
-			model_config['dataset_reader']['data_path'] = data_path
+    def __init__(self, data_path: str = None, x_col_name: str = 'Question', y_col_name: str = 'Answer') -> None:
+        model_config = read_json(find_config('tfidf_autofaq'))
 
-		model_config['dataset_reader']['x_col_name'] = x_col_name
-		model_config['dataset_reader']['y_col_name'] = y_col_name
+        if data_path is not None:
+            if 'data_url' in model_config['dataset_reader']:
+                del model_config['dataset_reader']['data_url']
+            model_config['dataset_reader']['data_path'] = data_path
 
-		for i in range(len(model_config['chainer']['pipe'])):
-			if 'save_path' in model_config['chainer']['pipe'][i]:
-				model_config['chainer']['pipe'][i]['save_path'] = './' + model_config['chainer']['pipe'][i]['class_name'] + '.pkl'
-			if 'load_path' in model_config['chainer']['pipe'][i]:
-				model_config['chainer']['pipe'][i]['load_path']  = './' + model_config['chainer']['pipe'][i]['class_name'] + '.pkl'
+        model_config['dataset_reader']['x_col_name'] = x_col_name
+        model_config['dataset_reader']['y_col_name'] = y_col_name
 
-		self.model = train_model(model_config)		
+        for i in range(len(model_config['chainer']['pipe'])):
+            if 'save_path' in model_config['chainer']['pipe'][i]:
+                model_config['chainer']['pipe'][i]['save_path'] = './' + model_config['chainer']['pipe'][i][
+                    'class_name'] + '.pkl'
+            if 'load_path' in model_config['chainer']['pipe'][i]:
+                model_config['chainer']['pipe'][i]['load_path'] = './' + model_config['chainer']['pipe'][i][
+                    'class_name'] + '.pkl'
 
-	def __call__(self, utterances_batch: list, history_batch: list,
-		states_batch: Optional[list] = None) -> Tuple[list, list]:
-		"""Returns skill inference result.
+        self.model = train_model(model_config)
+
+    def __call__(self, utterances_batch: list, history_batch: list,
+                 states_batch: Optional[list] = None) -> Tuple[list, list]:
+        """Returns skill inference result.
 
 		Returns batches of skill inference results and estimated confidence levels
 
@@ -58,4 +62,4 @@ class FAQSkill(Skill):
 			confidence: A batch of float typed confidence levels for each of
 				skill inference result.
 		"""
-		return self.model(utterances_batch)
+        return self.model(utterances_batch)
