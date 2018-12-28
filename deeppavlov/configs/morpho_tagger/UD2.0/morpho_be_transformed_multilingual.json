@@ -2,8 +2,8 @@
   "dataset_reader": {
     "class_name": "morphotagger_multidataset_reader",
     "data_path": "{DOWNLOADS_PATH}/UD2.3_source/UD_Belarusian-HSE",
-    "additional_data_path": ["{DOWNLOADS_PATH}/downloads/UD2.3_source/UD_Russian-SynTagRus/ru_syntagrus-ud-train.conllu",
-                             "{DOWNLOADS_PATH}/downloads/UD2.3_source/UD_Ukrainian-IU/uk_iu-ud-train.conllu"],
+    "additional_data_path": ["{DOWNLOADS_PATH}/UD2.3_source/UD_Russian-SynTagRus/ru_syntagrus-ud-train.conllu",
+                             "{DOWNLOADS_PATH}/UD2.3_source/UD_Ukrainian-IU/uk_iu-ud-train.conllu"],
     "language": "be_hse",
     "data_types": [
       "train",
