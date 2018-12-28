@@ -19,6 +19,7 @@ import tarfile
 from hashlib import md5
 from pathlib import Path
 from typing import List, Dict, Union
+from zipfile import ZipFile
 
 from deeppavlov.core.data.utils import file_md5
 
@@ -48,6 +49,20 @@ def gzip_md5(fpath: Union[str, Path], chunk_size: int = 2**16) -> str:
     return file_hash.hexdigest()
 
 
+def zip_md5(fpath: Union[str, Path], chunk_size: int = 2**16) -> Dict[str, str]:
+    res = {}
+    with ZipFile(fpath) as zip_f:
+        for item in zip_f.infolist():
+            if item.is_dir():
+                continue
+            file_hash = md5()
+            with zip_f.open(item) as f:
+                for chunk in iter(lambda: f.read(chunk_size), b""):
+                    file_hash.update(chunk)
+            res[item.filename] = file_hash.hexdigest()
+    return res
+
+
 def compute_hashes(fpath: Union[str, Path]) -> Dict[str, str]:
     p = Path(fpath).expanduser()
     if not p.is_file():
@@ -57,6 +72,8 @@ def compute_hashes(fpath: Union[str, Path]) -> Dict[str, str]:
         hashes = tar_md5(p)
     elif p.suffix.lower() == '.gz':
         hashes = {p.with_suffix('').name: gzip_md5(p)}
+    elif p.suffix.lower() == '.zip':
+        hashes = zip_md5(p)
     else:
         hashes = {p.name: file_md5(p)}
     return hashes

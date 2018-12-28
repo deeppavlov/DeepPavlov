@@ -12,17 +12,23 @@
   },
   "chainer": {
     "in": [
-      "x"
+      "docs"
+    ],
+    "in_y": [
+      "doc_ids",
+      "doc_nums"
     ],
     "out": [
-      "y"
+      "tfidf_doc_ids"
     ],
     "pipe": [
       {
         "class_name": "hashing_tfidf_vectorizer",
         "id": "vectorizer",
         "fit_on_batch": [
-          "x"
+          "docs",
+          "doc_ids",
+          "doc_nums"
         ],
         "save_path": "{MODELS_PATH}/odqa/ruwiki_tfidf_matrix.npz",
         "load_path": "{MODELS_PATH}/odqa/ruwiki_tfidf_matrix.npz",
@@ -37,13 +43,13 @@
       },
       {
         "class_name": "tfidf_ranker",
-        "top_n": 5,
+        "top_n": 25,
         "in": [
-          "x"
+          "docs"
         ],
         "out": [
-          "y",
-          "score"
+          "tfidf_doc_ids",
+          "tfidf_doc_scores"
         ],
         "vectorizer": "#vectorizer"
       }

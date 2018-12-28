@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import datetime
-import importlib
 import json
 import time
 from collections import OrderedDict, namedtuple
@@ -67,26 +66,14 @@ def prettify_metrics(metrics: List[Tuple[str, float]], precision: int = 4) -> Or
     return prettified_metrics
 
 
-def _fit(model: Estimator, iterator: DataLearningIterator, train_config) -> Estimator:
-    x, y = iterator.get_instances('train')
-    model.fit(x, y)
-    model.save()
-    return model
-
-
-def _fit_batches(model: Estimator, iterator: DataFittingIterator, train_config) -> Estimator:
-    model.fit_batches(iterator, batch_size=train_config['batch_size'])
-    model.save()
-    return model
-
-
 def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingIterator]) -> Chainer:
     """Fit and return the chainer described in corresponding configuration dictionary."""
     chainer_config: dict = config['chainer']
     chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
     for component_config in chainer_config['pipe']:
         component = from_params(component_config, mode='train')
-        if 'fit_on' in component_config:
+        if ('fit_on' in component_config) and \
+                (not callable(getattr(component, 'partial_fit', None))):
             component: Estimator
 
             targets = component_config['fit_on']
@@ -97,12 +84,50 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
             if len(component_config['fit_on']) == 1:
                 preprocessed = [preprocessed]
 
-            component.fit(*preprocessed)
+            result = component.fit(*preprocessed)
+            if result is not None and config['train'].get('tensorboard_log_dir') is not None:
+                import tensorflow as tf
+                tb_log_dir = expand_path(config['train']['tensorboard_log_dir'])
+                writer = tf.summary.FileWriter(str(tb_log_dir / 'fit_log'))
+
+                for name, scores in result.items():
+                    for i, score in enumerate(scores):
+                        summ = tf.Summary()
+                        summ.value.add(tag='fit/' + name, simple_value=score)
+                        writer.add_summary(summ, i)
+                writer.flush()
+
             component.save()
 
         if 'fit_on_batch' in component_config:
+            log.warning('`fit_on_batch` is deprecated and will be removed in future versions.'
+                        ' Please use `fit_on` instead.')
+        if ('fit_on_batch' in component_config) or \
+                (('fit_on' in component_config) and
+                 callable(getattr(component, 'partial_fit', None))):
             component: Estimator
-            component.fit_batches(iterator, config['train']['batch_size'])
+            targets = component_config.get('fit_on', component_config['fit_on_batch'])
+            if isinstance(targets, str):
+                targets = [targets]
+
+            for i, data in enumerate(iterator.gen_batches(config['train']['batch_size'], shuffle=False)):
+                preprocessed = chainer.compute(*data, targets=targets)
+                if len(targets) == 1:
+                    preprocessed = [preprocessed]
+                result = component.partial_fit(*preprocessed)
+
+                if result is not None and config['train'].get('tensorboard_log_dir') is not None:
+                    if i == 0:
+                        import tensorflow as tf
+                        tb_log_dir = expand_path(config['train']['tensorboard_log_dir'])
+                        writer = tf.summary.FileWriter(str(tb_log_dir / 'fit_batches_log'))
+
+                    for name, score in result.items():
+                        summ = tf.Summary()
+                        summ.value.add(tag='fit_batches/' + name, simple_value=score)
+                        writer.add_summary(summ, i)
+                    writer.flush()
+
             component.save()
 
         if 'in' in component_config:
@@ -201,12 +226,6 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None, *
 
         if callable(getattr(model, 'train_on_batch', None)):
             _train_batches(model, iterator, train_config, metrics_functions, start_epoch_num=start_epoch_num)
-        elif callable(getattr(model, 'fit_batches', None)):
-            _fit_batches(model, iterator, train_config)
-        elif callable(getattr(model, 'fit', None)):
-            _fit(model, iterator, train_config)
-        elif not isinstance(model, Chainer):
-            log.warning('Nothing to train')
 
         model.destroy()
 
@@ -237,7 +256,7 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None, *
             res['test'] = report['test']['metrics']
 
             print(json.dumps(report, ensure_ascii=False))
-        
+
         model.destroy()
 
     return res
@@ -250,6 +269,10 @@ def _test_model(model: Chainer, metrics_functions: List[Metric],
         start_time = time.time()
 
     expected_outputs = list(set().union(model.out_params, *[m.inputs for m in metrics_functions]))
+
+    if not iterator.data[data_type]:
+        log.warning(f'Could not log examples for {data_type}, assuming it\'s empty')
+        return {'eval_examples_count': 0, 'metrics': None, 'time_spent': str(datetime.timedelta(seconds=0))}
 
     outputs = {out: [] for out in expected_outputs}
     examples = 0
@@ -380,15 +403,17 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
     try:
         while True:
             for x, y_true in iterator.gen_batches(train_config['batch_size']):
-                if log_on:
+                if log_on and len(train_metrics_functions) > 0:
                     y_predicted = list(model.compute(list(x), list(y_true), targets=expected_outputs))
                     if len(expected_outputs) == 1:
                         y_predicted = [y_predicted]
                     for out, val in zip(outputs.values(), y_predicted):
                         out += list(val)
-                loss = model.train_on_batch(x, y_true)
-                if loss is not None:
-                    losses.append(loss)
+                result = model.train_on_batch(x, y_true)
+                if not isinstance(result, dict):
+                    result = {'loss': result} if result is not None else {}
+                if 'loss' in result:
+                    losses.append(result['loss'])
                 i += 1
                 examples += len(x)
 
@@ -401,6 +426,8 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
                         'metrics': prettify_metrics(metrics),
                         'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                     }
+                    default_report_keys = list(report.keys())
+                    report.update(result)
 
                     if train_config['show_examples']:
                         try:
@@ -422,16 +449,19 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
                         report['loss'] = sum(losses)/len(losses)
                         losses = []
 
-                    if train_config['tensorboard_log_dir'] is not None:
-                        for name, score in metrics:
-                            metric_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + name,
-                                                                            simple_value=score), ])
-                            tb_train_writer.add_summary(metric_sum, i)
+                    model.process_event(event_name='after_train_log', data=report)
 
-                        if 'loss' in report:
-                            loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + 'loss',
-                                                                          simple_value=report['loss']), ])
-                            tb_train_writer.add_summary(loss_sum, i)
+                    if train_config['tensorboard_log_dir'] is not None:
+                        summ = tf.Summary()
+
+                        for name, score in metrics:
+                            summ.value.add(tag='every_n_batches/' + name, simple_value=score)
+                        for name, score in report.items():
+                            if name not in default_report_keys:
+                                summ.value.add(tag='every_n_batches/' + name, simple_value=score)
+
+                        tb_train_writer.add_summary(summ, i)
+                        tb_train_writer.flush()
 
                     report = {'train': report}
                     print(json.dumps(report, ensure_ascii=False))
@@ -448,10 +478,12 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
                     metrics = list(report['metrics'].items())
 
                     if train_config['tensorboard_log_dir'] is not None:
+                        summ = tf.Summary()
                         for name, score in metrics:
-                            metric_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + name,
-                                                                            simple_value=score), ])
-                            tb_valid_writer.add_summary(metric_sum, i)
+                            summ.value.add(tag='every_n_batches/' + name, simple_value=score)
+                        tb_valid_writer.add_summary(summ, i)
+                        tb_valid_writer.flush()
+
 
                     m_name, score = metrics[0]
                     if improved(score, best):
@@ -512,6 +544,8 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
                     'metrics': prettify_metrics(metrics),
                     'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                 }
+                default_report_keys = list(report.keys())
+                report.update(result)
 
                 if train_config['show_examples']:
                     try:
@@ -533,18 +567,20 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
                     report['loss'] = sum(losses)/len(losses)
                     losses = []
 
-                if train_config['tensorboard_log_dir'] is not None:
-                    for name, score in metrics:
-                        metric_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + name,
-                                                                        simple_value=score), ])
-                        tb_train_writer.add_summary(metric_sum, epochs)
-
-                    if 'loss' in report:
-                        loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + 'loss',
-                                                                      simple_value=report['loss']), ])
-                        tb_train_writer.add_summary(loss_sum, epochs)
-
                 model.process_event(event_name='after_train_log', data=report)
+
+                if train_config['tensorboard_log_dir'] is not None:
+                    summ = tf.Summary()
+
+                    for name, score in metrics:
+                        summ.value.add(tag='every_n_epochs/' + name, simple_value=score)
+                    for name, score in report.items():
+                        if name not in default_report_keys:
+                            summ.value.add(tag='every_n_epochs/' + name, simple_value=score)
+
+                    tb_train_writer.add_summary(summ, epochs)
+                    tb_train_writer.flush()
+
                 report = {'train': report}
                 print(json.dumps(report, ensure_ascii=False))
                 for out in outputs.values():
@@ -560,10 +596,11 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
                 metrics = list(report['metrics'].items())
 
                 if train_config['tensorboard_log_dir'] is not None:
+                    summ = tf.Summary()
                     for name, score in metrics:
-                        metric_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + name,
-                                                                        simple_value=score), ])
-                        tb_valid_writer.add_summary(metric_sum, epochs)
+                        summ.value.add(tag='every_n_epochs/' + name, simple_value=score)
+                    tb_valid_writer.add_summary(summ, epochs)
+                    tb_valid_writer.flush()
 
                 m_name, score = metrics[0]
                 if improved(score, best):

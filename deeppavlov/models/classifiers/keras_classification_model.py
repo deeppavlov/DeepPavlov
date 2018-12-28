@@ -49,9 +49,6 @@ class KerasClassificationModel(KerasModel):
     Class implements Keras model for classification task for multi-class multi-labeled data.
 
     Args:
-        text_size: maximal length of text in tokens (words),
-                longer texts are cutted,
-                shorter ones are padded by zeros (pre-padding)
         embedding_size: embedding_size from embedder in pipeline
         n_classes: number of considered classes
         model_name: particular method of this class to initialize model configuration
@@ -65,6 +62,9 @@ class KerasClassificationModel(KerasModel):
         restore_lr: in case of loading pre-trained model \
                 whether to init learning rate with the final learning rate value from saved opt
         classes: list or generator of considered classes
+        text_size: maximal length of text in tokens (words),
+                longer texts are cut,
+                shorter ones are padded with zeros (pre-padding)
         padding: ``pre`` or ``post`` padding to use
 
     Attributes:
@@ -80,12 +80,13 @@ class KerasClassificationModel(KerasModel):
         padding: ``pre`` or ``post`` padding to use
     """
 
-    def __init__(self, text_size: int, embedding_size: int, n_classes: int,
+    def __init__(self, embedding_size: int, n_classes: int,
                  model_name: str, optimizer: str = "Adam", loss: str = "binary_crossentropy",
                  learning_rate: float = 0.01, learning_rate_decay: float = 0.,
                  last_layer_activation="sigmoid",
                  restore_lr: bool = False,
                  classes: Optional[Union[list, Generator]] = None,
+                 text_size: Optional[int] = None,
                  padding: Optional[str] = "pre",
                  **kwargs):
         """
@@ -95,8 +96,7 @@ class KerasClassificationModel(KerasModel):
         if classes is not None:
             classes = list(classes)
 
-        given_opt = {"text_size": text_size,
-                     "embedding_size": embedding_size,
+        given_opt = {"embedding_size": embedding_size,
                      "n_classes": n_classes,
                      "model_name": model_name,
                      "optimizer": optimizer,
@@ -106,6 +106,7 @@ class KerasClassificationModel(KerasModel):
                      "last_layer_activation": last_layer_activation,
                      "restore_lr": restore_lr,
                      "classes": classes,
+                     "text_size": text_size,
                      "padding": padding,
                      **kwargs}
         self.opt = deepcopy(given_opt)
@@ -185,35 +186,56 @@ class KerasClassificationModel(KerasModel):
             raise ConfigError("Padding type {} is not acceptable".format(self.opt['padding']))
         return np.asarray(cutted_batch)
 
-    def train_on_batch(self, texts: List[List[np.ndarray]], labels: list) -> [float, List[float]]:
+    def check_input(self, texts: List[List[np.ndarray]]) -> np.ndarray:
+        """
+        Check and convert input to array of tokenized embedded samples
+
+        Args:
+            texts: list of tokenized embedded text samples
+
+        Returns:
+            array of tokenized embedded texts samples that are cut and padded
+        """
+        if self.opt["text_size"] is not None:
+            features = self.pad_texts(texts)
+        else:
+            if len(texts[0]):
+                features = np.array(texts)
+            else:
+                features = np.zeros((1, 1, self.opt["embedding_size"]))
+
+        return features
+
+    def train_on_batch(self, texts: List[List[np.ndarray]], labels: list) -> Union[float, List[float]]:
         """
         Train the model on the given batch
 
         Args:
-            texts: list of tokenized text samples
+            texts: list of tokenized embedded text samples
             labels: list of labels
 
         Returns:
             metrics values on the given batch
         """
-        features = self.pad_texts(texts)
+        features = self.check_input(texts)
 
         metrics_values = self.model.train_on_batch(features, np.squeeze(np.array(labels)))
         return metrics_values
 
-    def infer_on_batch(self, texts: List[List[np.ndarray]], labels: list = None) -> [float, List[float], np.ndarray]:
+    def infer_on_batch(self, texts: List[List[np.ndarray]], labels: list = None) -> \
+            Union[float, List[float], np.ndarray]:
         """
         Infer the model on the given batch
 
         Args:
-            texts: list of tokenized text samples
+            texts: list of tokenized embedded text samples
             labels: list of labels
 
         Returns:
             metrics values on the given batch, if labels are given
             predictions, otherwise
         """
-        features = self.pad_texts(texts)
+        features = self.check_input(texts)
 
         if labels:
             metrics_values = self.model.test_on_batch(features, np.squeeze(np.array(labels)))

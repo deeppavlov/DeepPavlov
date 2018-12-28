@@ -13,16 +13,16 @@
           "question_raw"
         ],
         "out": [
-          "doc_ids"
+          "tfidf_doc_ids"
         ]
       },
       {
         "class_name": "wiki_sqlite_vocab",
         "in": [
-          "doc_ids"
+          "tfidf_doc_ids"
         ],
         "out": [
-          "context_raw"
+          "tfidf_doc_text"
         ],
         "join_docs": false,
         "shuffle": false,
@@ -30,9 +30,10 @@
       },
       {
         "class_name": "document_chunker",
-        "in": ["context_raw"],
+        "in": ["tfidf_doc_text"],
         "out": ["chunks"],
-        "flatten_result": true
+        "flatten_result": true,
+        "paragraphs": true
       },
       {
         "class_name": "string_multiplier",
@@ -41,9 +42,9 @@
       },
       {
         "class_name": "logit_ranker",
-        "squad_model": {
-          "config_path": "{CONFIGS_PATH}/squad/squad_ru.json"
-        },
+        "batch_size": 10,
+        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/multi_squad_noans_infer.json"},
+        "sort_noans": true,
         "in": [
           "chunks",
           "questions"
@@ -68,10 +69,6 @@
       "server_utils": "ODQA"
     },
     "download": [
-      {
-        "url": "http://files.deeppavlov.ai/datasets/wikipedia/ruwiki.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}"
-      }
     ]
   }
 }
