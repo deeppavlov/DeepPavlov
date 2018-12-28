@@ -98,7 +98,7 @@ of :config:`configuration file <morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy
 you import.
 
 Exclusively for Russian language you can obtain lemmatized UD output by using
-:config:`augmented version <morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy_lemmatize.json>`
+:morpho_config:`augmented version <morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy_lemmatize.json>`
 of Pymorphy model (the link is not active yet).
 
 .. code:: python
