@@ -1,5 +1,6 @@
 from typing import Tuple, Optional
 import json
+import os
 
 from deeppavlov import train_model
 from deeppavlov import build_model
@@ -46,15 +47,19 @@ class FAQSkill(Skill):
 
             if x_col_name is not None:
                 model_config['dataset_reader']['x_col_name'] = x_col_name
-            if y_col_name is None:
+            if y_col_name is not None:
                 model_config['dataset_reader']['y_col_name'] = y_col_name
 
             if save_path is None:
                 save_path = './tfidf_autofaq.json'
-            elif save_path.split('.')[-1] is not 'json':
+            elif save_path.split('.')[-1] != 'json':
                 save_path = save_path + '/tfidf_autofaq.json'
 
-            with open(save_path, 'w') as config_file:
+            dir_path = '/'.join(save_path.split('/')[:-1])
+            if not os.path.exists(dir_path):
+                os.mkdir(dir_path)
+
+            with open(save_path, 'w+') as config_file:
                 json.dump(model_config, config_file)
 
             self.model = train_model(model_config)
