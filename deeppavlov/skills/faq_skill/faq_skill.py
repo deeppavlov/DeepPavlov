@@ -58,7 +58,7 @@ class FAQSkill(Skill):
                 json.dump(model_config, config_file)
 
             self.model = train_model(model_config)
-            print('Your config is saved at: ' + save_path)
+            print('Your config was saved at: \'' + save_path + '\'')
         else:
             model_config = read_json(load_path)
             self.model = build_model(model_config)
