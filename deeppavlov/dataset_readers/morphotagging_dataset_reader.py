@@ -17,6 +17,7 @@ from typing import Dict, List, Union, Tuple, Optional
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import download_decompress, mark_done
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.data.dataset_reader import DatasetReader
 
@@ -262,6 +263,7 @@ class MorphotaggerMultiDatasetReader(DatasetReader):
         for i, filepath in enumerate(additional_data_path, 1):
             if isinstance(filepath, str):
                 filepath = Path(filepath)
+            filepath = expand_path(filepath)
             curr_data = read_infile(filepath, **additional_read_params[i-1])
             curr_data = [((sent, i), tags) for sent, tags in curr_data]
             data["train"].extend(curr_data)
