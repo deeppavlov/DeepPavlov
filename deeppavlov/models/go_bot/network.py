@@ -137,7 +137,7 @@ class GoalOrientedBot(LRScheduledTFModel):
                  debug: bool = False,
                  **kwargs):
         if any(p in network_parameters for p in self.DEPRECATED):
-            raise ConfigError(f"parameters {self.DEPRECATED} are deprecated,"
+            log.warning(f"parameters {self.DEPRECATED} are deprecated,"
                               " for learning rate schedule documentation see"
                               " deeppavlov.core.models.lr_scheduled_tf_model"
                               " or read gitub tutorial on super convergence.")
