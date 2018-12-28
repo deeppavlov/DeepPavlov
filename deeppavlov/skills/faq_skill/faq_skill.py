@@ -38,13 +38,6 @@ class FAQSkill(Skill):
         if load_path is None:
             model_config = read_json(find_config('tfidf_autofaq'))
 
-            model_config['metadata']['variables']['ROOT_PATH'] = './'
-
-            if data_path is not None:
-                if 'data_url' in model_config['dataset_reader']:
-                    del model_config['dataset_reader']['data_url']
-                model_config['dataset_reader']['data_path'] = data_path
-
             if x_col_name is not None:
                 model_config['dataset_reader']['x_col_name'] = x_col_name
             if y_col_name is not None:
@@ -55,9 +48,16 @@ class FAQSkill(Skill):
             elif save_path.split('.')[-1] != 'json':
                 save_path = save_path + '/tfidf_autofaq.json'
 
-            dir_path = '/'.join(save_path.split('/')[:-1])
+            dir_path = os.getcwd() + '/' + '/'.join(save_path.split('/')[:-1])
             if not os.path.exists(dir_path):
                 os.mkdir(dir_path)
+
+            model_config['metadata']['variables']['ROOT_PATH'] = dir_path
+
+            if data_path is not None:
+                if 'data_url' in model_config['dataset_reader']:
+                    del model_config['dataset_reader']['data_url']
+                model_config['dataset_reader']['data_path'] = os.getcwd() + '/' + data_path
 
             with open(save_path, 'w+') as config_file:
                 json.dump(model_config, config_file)
