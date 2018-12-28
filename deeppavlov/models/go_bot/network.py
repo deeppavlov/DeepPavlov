@@ -17,6 +17,7 @@ import collections
 import json
 import numpy as np
 import tensorflow as tf
+from typing import Dict,Any
 from tensorflow.contrib.layers import xavier_initializer as xav
 
 from deeppavlov.core.layers import tf_attention_mechanisms as am
@@ -113,13 +114,11 @@ class GoalOrientedBotNetwork(LRScheduledTFModel):
                  tracker: Tracker,
                  template_path: str,
                  save_path: str,
-                 hidden_size: int,
+                 network_parameters: Dict[str, Any],
                  obs_size: int = None,
                  action_size: int = None,
                  dropout_rate: float = 0.,
                  l2_reg_coef: float = 0.,
-                 dense_size: int = None,
-                 attention_mechanism: dict = None,
                  load_path: str = None,
                  template_type: str = "DefaultTemplate",
                  word_vocab: Component = None,
@@ -159,6 +158,11 @@ class GoalOrientedBotNetwork(LRScheduledTFModel):
         self.intents = []
         if callable(self.intent_classifier):
             self.intents = self.intent_classifier.get_main_component().classes
+
+        dense_size = network_parameters['dense_size']
+        hidden_size = network_parameters['hidden_size']
+        learning_rate = network_parameters['learning_rate']
+        attention_mechanism = network_parameters['attention_mechanism']
 
         self._init_network(hidden_size=hidden_size,
                            action_size=action_size,
