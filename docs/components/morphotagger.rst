@@ -94,7 +94,7 @@ separate you list of sentences into small batches.
         print(parse)
 
 If you want the output in UD format, try setting ``"data_format": ud`` in the ``tag_output_prettifier`` section
-of :config:`configuration file <morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json>`
+of :morpho_config:`configuration file <morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json>`
 you import.
 
 Exclusively for Russian language you can obtain lemmatized UD output by using
@@ -302,7 +302,8 @@ Training configuration
 
 We distribute pre-trained models for 11 languages trained on Universal Dependencies data.
 Configuration files for reproducible training are also available in
-:config:`deeppavlov/configs/morpho_tagger/UD2.0 <morpho_tagger/UD2.0>`, for
+:config:`deeppavlov/configs/morpho_tagger/UD2.0 <morpho_tagger/UD2.0>` and
+:morpho_config:`deeppavlov/configs/morpho_tagger/UD2.3 <morpho_tagger/UD2.3>`, for
 example
 :config:`deeppavlov/configs/morpho_tagger/UD2.0/morpho_en.json <morpho_tagger/UD2.0/morpho_en.json>`.
 The configuration file consists of several parts:
