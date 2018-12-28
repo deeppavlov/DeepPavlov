@@ -163,7 +163,23 @@
       "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
     "download": [
-    ],
+      {
+        "url": "http://files.deeppavlov.ai/datasets/UD2.3_source/UD_Belarusian-HSE.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/UD2.3_source/UD_Belarusian-HSE"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/datasets/UD2.3_source/UD_Russian-SynTagRus.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/UD2.3_source/UD_Russian-SynTagRus"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/datasets/UD2.3_source/UD_Ukrainian-IU.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/UD2.3_source/UD_Ukrainian-IU"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger/UD2.3/be.tar.gz",
+        "subdir": "{MODELS_PATH}/morpho_tagger/UD2.3/be"
+      }
+      ],
     "labels": {
       "telegram_utils": "MorphoTaggerModel"
     }
