@@ -1,15 +1,16 @@
 {
   "dataset_reader": {
     "class_name": "morphotagger_multidataset_reader",
-    "data_path": "/home/alexeysorokin/data/Data/UD2.3/UD_Belarusian-HSE",
-    "additional_data_path": ["/home/alexeysorokin/data/Data/UD2.3/UD_Russian-SynTagRus/ru_syntagrus-ud-train.conllu"],
+    "data_path": "{DOWNLOADS_PATH}/UD2.3_source/UD_Belarusian-HSE",
+    "additional_data_path": ["{DOWNLOADS_PATH}/downloads/UD2.3_source/UD_Russian-SynTagRus/ru_syntagrus-ud-train.conllu",
+                             "{DOWNLOADS_PATH}/downloads/UD2.3_source/UD_Ukrainian-IU/uk_iu-ud-train.conllu"],
     "language": "be_hse",
     "data_types": [
       "train",
       "dev",
       "test"
     ],
-    "max_sents": 1000
+    "additional_read_params": {"max_sents": 1000}
   },
   "dataset_iterator": {
     "class_name": "morphotagger_multidataset"
@@ -36,8 +37,8 @@
           "y"
         ],
         "class_name": "multilingual_tag_normalizer",
-        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/be/tag_transformer_multi.out",
-        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/be/tag_transformer_multi.out",
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.3/be/tag_transformer_multi.out",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.3/be/tag_transformer_multi.out",
         "fit_on": [
           "y", "groups"
         ],
@@ -76,8 +77,8 @@
           "BEGIN",
           "END"
         ],
-        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/be/tag_multi_t.dict",
-        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/be/tag_multi_t.dict"
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.3/be/tag_multi_t.dict",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.3/be/tag_multi_t.dict"
       },
       {
         "id": "char_vocab",
@@ -92,8 +93,8 @@
           "END"
         ],
         "level": "char",
-        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/be/char_multi_t.dict",
-        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/be/char_multi_t.dict"
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.3/be/char_multi_t.dict",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.3/be/char_multi_t.dict"
       },
       {
         "in": [
@@ -107,8 +108,8 @@
         ],
         "class_name": "morpho_tagger",
         "main": true,
-        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/be/model_multi_t.hdf5",
-        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/be/model_multi_t.hdf5",
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.3/be/model_multi_t.hdf5",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.3/be/model_multi_t.hdf5",
         "tags": "#tag_vocab",
         "symbols": "#char_vocab",
         "verbose": 1,
@@ -134,7 +135,7 @@
         "lstm_dropout": 0.2,
         "regularizer": 0.01,
         "additional_inputs_number": 2,
-        "additional_inputs_weight": 0.1
+        "additional_inputs_weight": 1.0
       },
       {
         "in": [

@@ -176,6 +176,7 @@ class MorphotaggerMultiDatasetReader(DatasetReader):
              additional_data_path: Optional[List] = None,
              language: Optional[None] = None,
              data_types: Optional[List[str]] = None,
+             additional_read_params: Optional[Union[List,dict]] = None,
              **kwargs) -> Dict[str, List]:
         """Reads UD dataset from data_path.
 
@@ -251,10 +252,17 @@ class MorphotaggerMultiDatasetReader(DatasetReader):
 #                 kwargs["read_only_words"] = True
             curr_data = read_infile(filepath, **kwargs)
             data[mode] = [((sent, 0), tags) for sent, tags in curr_data]
+        if len(additional_data_path) > 0:
+            if additional_read_params is None:
+                additional_read_params = dict()
+            if isinstance(additional_read_params, dict):
+                additional_read_params = [additional_read_params] * len(additional_data_path)
+            if len(additional_read_params) != len(additional_data_path):
+                raise ValueError("Additional_read_params should have the same length as additional_data_path")
         for i, filepath in enumerate(additional_data_path, 1):
             if isinstance(filepath, str):
                 filepath = Path(filepath)
-            curr_data = read_infile(filepath, **kwargs)
+            curr_data = read_infile(filepath, **additional_read_params[i-1])
             curr_data = [((sent, i), tags) for sent, tags in curr_data]
             data["train"].extend(curr_data)
         return data

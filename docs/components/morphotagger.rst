@@ -99,7 +99,7 @@ you import.
 
 Exclusively for Russian language you can obtain lemmatized UD output by using
 :morpho_config:`augmented version <morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy_lemmatize.json>`
-of Pymorphy model (the link is not active yet).
+of Pymorphy model.
 
 .. code:: python
 
@@ -108,6 +108,11 @@ of Pymorphy model (the link is not active yet).
     sentences = ["Я шёл домой по незнакомой улице.", "Девушка пела в церковном хоре о всех уставших в чужом краю."]
     for parse in model(sentences):
         print(parse)
+
+Since our model is character-based, we are able to train on several languages simultaneously, as provided in
+:morpho_config:`multilingual configuration file <morpho_tagger/UD2.3/morpho_be_transformed_multilingual.json>`.
+The detailed description of modifications in the configuration file is provided in
+`Multilingual dataset <#multilingual-dataset>`__ section.
 
 Command line:
 ----------------
@@ -540,3 +545,28 @@ and produces the output of the format
     8 . PUNCT _
 
 To generate output in 10 column CONLL-U format add ``"format_mode": "ud"`` to the described section.
+
+Multilingual dataset
+^^^^^^^^^^^^^^^^^^^^
+
+The ``dataset_reader`` section of the configuration file now looks like
+
+::
+
+    {
+        "class_name": "morphotagger_multidataset_reader",
+        "data_path": "{DOWNLOADS_PATH}/UD2.3_source/UD_Belarusian-HSE",
+        "additional_data_path": ["{DOWNLOADS_PATH}/downloads/UD2.3_source/UD_Russian-SynTagRus/ru_syntagrus-ud-train.conllu",
+                                 "{DOWNLOADS_PATH}/downloads/UD2.3_source/UD_Ukrainian-IU/uk_iu-ud-train.conllu"],
+        "language": "be_hse",
+        "data_types": [
+          "train",
+          "dev",
+          "test"
+        ],
+        "additional_read_params": {"max_sents": 1000}
+    }
+
+It tells that we provide additional data files in related (Russian and Ukrainian) languages.
+We read only 1000 sentences from auxiliary datasets in order to restrict their influence. For other modifications
+see the :morpho_config:`example configuration file <morpho_tagger/UD2.3/morpho_be_transformed_multilingual.json>`
