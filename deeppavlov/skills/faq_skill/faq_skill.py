@@ -19,14 +19,15 @@ class FAQSkill(Skill):
             from matching row from Answers column.
         x_col_name: Name of the column in '.csv' file, that represents Question column.
         y_col_name: Name of the column in '.csv' file, that represents Answer column.
-        save_path: path, where config file and models will be saved
-        load_path: path, where config file and models will be loaded from
+        save_path: Path, where config file and models will be saved
+        load_path: Path, where config file and models will be loaded from
+        edit_dict: Dictionary of fixes in config
 
     Attributes:
         model: Classifies user's questions
     """
 
-    def __init__(self, data_path: str = None, x_col_name: str = None, y_col_name: str = None,
+    def __init__(self, data_path: str = None, x_col_name: str = None, y_col_name: str = None, edit_dict: dict = None,
                  save_path: str = None, load_path: str = None) -> None:
         if load_path is not None and \
                 (save_path is not None or data_path is not None or x_col_name is not None or y_col_name is not None):
@@ -49,9 +50,12 @@ class FAQSkill(Skill):
                     del model_config['dataset_reader']['data_url']
                 model_config['dataset_reader']['data_path'] = data_path
 
+            # Need to change to recursive dict update
+            model_config.update(edit_dict)
             self.model = train_model(model_config)
             print('Your model was saved at: \'' + save_path + '\'')
         else:
+            model_config.update(edit_dict)
             model_config['metadata']['variables']['ROOT_PATH'] = load_path
             self.model = build_model(model_config)
 
