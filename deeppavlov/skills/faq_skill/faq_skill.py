@@ -1,6 +1,4 @@
 from typing import Tuple, Optional
-import json
-import os
 
 from deeppavlov import train_model
 from deeppavlov import build_model
@@ -49,7 +47,7 @@ class FAQSkill(Skill):
             if data_path is not None:
                 if 'data_url' in model_config['dataset_reader']:
                     del model_config['dataset_reader']['data_url']
-                model_config['dataset_reader']['data_path'] = os.getcwd() + '/' + data_path
+                model_config['dataset_reader']['data_path'] = data_path
 
             self.model = train_model(model_config)
             print('Your model was saved at: \'' + save_path + '\'')
