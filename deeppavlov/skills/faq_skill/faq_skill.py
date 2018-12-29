@@ -35,37 +35,26 @@ class FAQSkill(Skill):
             raise ValueError("If you specify 'load_path', you can't specify anything else, "
                              "because it leads to ambiguity")
 
+        model_config = read_json(find_config('tfidf_autofaq'))
         if load_path is None:
-            model_config = read_json(find_config('tfidf_autofaq'))
-
             if x_col_name is not None:
                 model_config['dataset_reader']['x_col_name'] = x_col_name
             if y_col_name is not None:
                 model_config['dataset_reader']['y_col_name'] = y_col_name
 
             if save_path is None:
-                save_path = './tfidf_autofaq.json'
-            elif save_path.split('.')[-1] != 'json':
-                save_path = save_path + '/tfidf_autofaq.json'
-
-            dir_path = os.getcwd() + '/' + '/'.join(save_path.split('/')[:-1])
-            if not os.path.exists(dir_path):
-                os.mkdir(dir_path)
-
-            model_config['metadata']['variables']['ROOT_PATH'] = dir_path
+                save_path = './faq'
+            model_config['metadata']['variables']['ROOT_PATH'] = save_path
 
             if data_path is not None:
                 if 'data_url' in model_config['dataset_reader']:
                     del model_config['dataset_reader']['data_url']
                 model_config['dataset_reader']['data_path'] = os.getcwd() + '/' + data_path
 
-            with open(save_path, 'w+') as config_file:
-                json.dump(model_config, config_file)
-
             self.model = train_model(model_config)
-            print('Your config was saved at: \'' + save_path + '\'')
+            print('Your model was saved at: \'' + save_path + '\'')
         else:
-            model_config = read_json(load_path)
+            model_config['metadata']['variables']['ROOT_PATH'] = load_path
             self.model = build_model(model_config)
 
     def __call__(self, utterances_batch: list, history_batch: list,
