@@ -14,6 +14,7 @@
 
 import re
 import collections
+from typing import Dict, Any
 import json
 import numpy as np
 import tensorflow as tf
@@ -34,8 +35,8 @@ import deeppavlov.models.go_bot.templates as templ
 log = get_logger(__name__)
 
 
-@register("go_bot_rnn")
-class GoalOrientedBotNetwork(LRScheduledTFModel):
+@register("go_bot")
+class GoalOrientedBot(LRScheduledTFModel):
     """
     The dialogue bot is based on  https://arxiv.org/abs/1702.03274, which introduces
     Hybrid Code Networks that combine an RNN with domain-specific knowledge
@@ -47,7 +48,7 @@ class GoalOrientedBotNetwork(LRScheduledTFModel):
 
     An LSTM with a dense layer for input features and a dense layer for it's output.
     Softmax is used as an output activation function.
-        
+
     Todo:
         add docstring for trackers.
 
@@ -76,6 +77,7 @@ class GoalOrientedBotNetwork(LRScheduledTFModel):
               to attention.
             * **intent_as_key** – use utterance intents as attention key or not.
             * **projected_align** – whether to use output projection.
+        network_parameters: dictionary with network parameters (for compatibility with release 0.1.1, deprecated in the future)
 
         template_path: file with mapping between actions and text templates
             for response generation.
@@ -107,19 +109,21 @@ class GoalOrientedBotNetwork(LRScheduledTFModel):
 
     GRAPH_PARAMS = ["hidden_size", "action_size", "dense_size", "obs_size",
                     "attention_mechanism"]
+    DEPRECATED = ["end_learning_rate", "decay_steps", "decay_power"]
 
     def __init__(self,
                  tokenizer: Component,
                  tracker: Tracker,
                  template_path: str,
                  save_path: str,
-                 hidden_size: int,
+                 hidden_size: int = 128,
                  obs_size: int = None,
                  action_size: int = None,
                  dropout_rate: float = 0.,
                  l2_reg_coef: float = 0.,
                  dense_size: int = None,
                  attention_mechanism: dict = None,
+                 network_parameters: Dict[str, Any] = {},
                  load_path: str = None,
                  template_type: str = "DefaultTemplate",
                  word_vocab: Component = None,
@@ -132,6 +136,13 @@ class GoalOrientedBotNetwork(LRScheduledTFModel):
                  use_action_mask: bool = False,
                  debug: bool = False,
                  **kwargs):
+        if any(p in network_parameters for p in self.DEPRECATED):
+            log.warning(f"parameters {self.DEPRECATED} are deprecated,"
+                              " for learning rate schedule documentation see"
+                              " deeppavlov.core.models.lr_scheduled_tf_model"
+                              " or read gitub tutorial on super convergence.")
+        if 'learning_rate' in network_parameters:
+            kwargs['learning_rate'] = network_parameters.pop('learning_rate')
         super().__init__(load_path=load_path, save_path=save_path, **kwargs)
 
         self.tokenizer = tokenizer
@@ -160,13 +171,19 @@ class GoalOrientedBotNetwork(LRScheduledTFModel):
         if callable(self.intent_classifier):
             self.intents = self.intent_classifier.get_main_component().classes
 
-        self._init_network(hidden_size=hidden_size,
-                           action_size=action_size,
-                           obs_size=obs_size,
-                           dropout_rate=dropout_rate,
-                           l2_reg_coef=l2_reg_coef,
-                           dense_size=dense_size,
-                           attn=attention_mechanism)
+        new_network_parameters = {
+            'hidden_size': hidden_size,
+            'action_size': action_size,
+            'obs_size': obs_size,
+            'dropout_rate': dropout_rate,
+            'l2_reg_coef': l2_reg_coef,
+            'dense_size': dense_size,
+            'attn': attention_mechanism
+        }
+        if 'attention_mechanism' in network_parameters:
+            network_parameters['attn'] = network_parameters.pop('attention_mechanism')
+        new_network_parameters.update(network_parameters)
+        self._init_network(**new_network_parameters)
 
         self.reset()
 

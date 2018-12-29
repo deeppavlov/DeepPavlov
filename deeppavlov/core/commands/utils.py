@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 from pathlib import Path
 from typing import Union, Dict, TypeVar
 
@@ -38,9 +39,12 @@ def parse_config(config: Union[str, Path, dict]) -> dict:
         config = read_json(find_config(config))
 
     variables = {
-        'DEEPPAVLOV_PATH': Path(__file__).parent.parent.parent
+        'DEEPPAVLOV_PATH': os.getenv(f'DP_DEEPPAVLOV_PATH', Path(__file__).parent.parent.parent)
     }
     for name, value in config.get('metadata', {}).get('variables', {}).items():
+        env_name = f'DP_{name}'
+        if env_name in os.environ:
+            value = os.getenv(env_name)
         variables[name] = value.format(**variables)
 
     return _parse_config_property(config, variables)
