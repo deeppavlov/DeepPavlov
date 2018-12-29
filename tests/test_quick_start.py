@@ -247,10 +247,6 @@ def download_config(config_path):
     config.setdefault('train', {}).setdefault('pytest_epochs', 1)
     _override_with_test_values(config)
 
-    config_vars = config.setdefault('metadata', {}).setdefault('variables', {})
-    config_vars['ROOT_PATH'] = str(download_path)
-    config_vars['CONFIGS_PATH'] = str(test_configs_path)
-
     config_path = test_configs_path / config_path
     config_path.parent.mkdir(exist_ok=True, parents=True)
     with config_path.open("w", encoding='utf8') as fout:
@@ -276,6 +272,9 @@ def setup_module():
         test_configs_path.joinpath(m_name).mkdir(exist_ok=True, parents=True)
         for (config_path, _, _), _ in conf_dict.items():
             download_config(config_path)
+
+    os.environ['DP_ROOT_PATH'] = str(download_path)
+    os.environ['DP_CONFIGS_PATH'] = str(test_configs_path)
 
     if cache_dir:
         cache_dir.mkdir(parents=True, exist_ok=True)
