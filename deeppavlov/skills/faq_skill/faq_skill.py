@@ -51,11 +51,13 @@ class FAQSkill(Skill):
                 model_config['dataset_reader']['data_path'] = data_path
 
             # Need to change to recursive dict update
-            model_config.update(edit_dict)
+            if edit_dict is not None:
+                model_config.update(edit_dict)
             self.model = train_model(model_config)
             print('Your model was saved at: \'' + save_path + '\'')
         else:
-            model_config.update(edit_dict)
+            if edit_dict is not None:
+                model_config.update(edit_dict)
             model_config['metadata']['variables']['ROOT_PATH'] = load_path
             self.model = build_model(model_config)
 
