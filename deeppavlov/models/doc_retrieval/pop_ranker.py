@@ -19,6 +19,7 @@ import numpy as np
 from sklearn.externals import joblib
 
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Component
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.file import read_json
@@ -26,6 +27,7 @@ from deeppavlov.core.common.file import read_json
 logger = get_logger(__name__)
 
 
+@register('pop_ranker')
 class PopRanker(Component):
     """Rank documents according to their tfidf scores and popularities. It is not a standalone ranker,
     it should be used for re-ranking the results of TF-IDF Ranker.
