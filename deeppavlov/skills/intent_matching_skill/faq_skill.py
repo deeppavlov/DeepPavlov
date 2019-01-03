@@ -8,17 +8,17 @@ from deeppavlov.core.common.file import find_config
 from deeppavlov.core.data.utils import update_dict_recursive
 
 
-class FAQSkill(Skill):
-    """Skill, matches utterances to questions, returns predefined answers.
+class IntentMatchingSkill(Skill):
+    """Skill, matches utterances to intents, returns predefined answers.
 
-    Allows to create skills that give answers on frequently asked questions.
+    Allows to create skills that give answers to corresponding intents
     Skill returns response and confidence.
 
     Args:
-        data_path: URL or local path to '.csv' file that contains two columns with Questions and Answers.
-            User's utterance will be compared with Questions column and respond will be selected
+        data_path: URL or local path to '.csv' file that contains two columns with Intents and Answers.
+            User's utterance will be compared with Intents column and respond will be selected
             from matching row from Answers column.
-        x_col_name: Name of the column in '.csv' file, that represents Question column.
+        x_col_name: Name of the column in '.csv' file, that represents Intents column.
         y_col_name: Name of the column in '.csv' file, that represents Answer column.
         save_path: Path, where config file and models will be saved
         load_path: Path, where config file and models will be loaded from
