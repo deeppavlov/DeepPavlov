@@ -39,7 +39,7 @@
   "file_paths_iterator": "deeppavlov.dataset_iterators.file_paths_iterator:FilePathsIterator",
   "file_paths_reader": "deeppavlov.dataset_readers.file_paths_reader:FilePathsReader",
   "glove": "deeppavlov.models.embedders.glove_embedder:GloVeEmbedder",
-  "go_bot_rnn": "deeppavlov.models.go_bot.network:GoalOrientedBotNetwork",
+  "go_bot": "deeppavlov.models.go_bot.network:GoalOrientedBot",
   "hashing_tfidf_vectorizer": "deeppavlov.models.vectorizers.hashing_tfidf_vectorizer:HashingTfIdfVectorizer",
   "insurance_reader": "deeppavlov.dataset_readers.insurance_reader:InsuranceReader",
   "kenlm_elector": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",

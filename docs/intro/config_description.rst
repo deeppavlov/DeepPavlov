@@ -96,6 +96,10 @@ from ``metadata.variables`` element:
 
 Variable ``DEEPPAVLOV_PATH`` is always preset to be a path to the ``deeppavlov`` python module.
 
+One can override configuration variables using environment variables with prefix ``DP_``. So environment variable
+``DP_VARIABLE_NAME`` will override ``VARIABLE_NAME`` inside a configuration file.
+
+For example, adding ``DP_ROOT_PATH=/my_path/to/large_hard_drive`` will make most configs use this path for downloading and reading  embeddings/models/datasets.
 
 Training
 --------

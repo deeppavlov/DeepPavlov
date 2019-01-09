@@ -32,7 +32,7 @@
         "save_path": "{DOWNLOADS_PATH}/dstc2/resto.sqlite"
       },
       {
-        "class_name": "go_bot_rnn",
+        "class_name": "go_bot",
         "load_path": "{MODELS_PATH}/gobot_dstc2_best/model",
         "save_path": "{MODELS_PATH}/gobot_dstc2_best/model",
         "in": ["x"],
