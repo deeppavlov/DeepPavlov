@@ -14,6 +14,7 @@
 
 from typing import List, Union, Tuple
 from operator import itemgetter
+import warnings
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
@@ -58,6 +59,10 @@ class LogitRanker(Component):
             a batch of best answers and their scores
 
         """
+        # TODO output result for top_n
+        warnings.warn(f'{self.__class__.__name__}.__call__() API will be changed in the future release.'
+                      ' Instead of returning Tuple(List[str], List[float] will return'
+                      ' Tuple(List[List[str]], List[List[float]]).', FutureWarning)
 
         batch_best_answers = []
         batch_best_answers_scores = []
