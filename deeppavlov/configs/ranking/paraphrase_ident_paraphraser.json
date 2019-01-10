@@ -80,8 +80,8 @@
     "train_metrics": ["f1", "acc", "log_loss"],
     "metrics": ["f1", "acc", "log_loss"],
     "validation_patience": 10,
-    "val_every_n_epochs": 5,
-    "log_every_n_batches": 12
+    "val_every_n_epochs": 1,
+    "log_every_n_batches": 24
   },
   "metadata": {
     "variables": {

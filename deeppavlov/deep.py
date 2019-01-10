@@ -26,6 +26,7 @@ from utils.alice import start_alice_server
 from utils.telegram_utils.telegram_ui import interact_model_by_telegram
 from utils.server_utils.server import start_model_server
 from utils.ms_bot_framework_utils.server import run_ms_bf_default_agent
+from utils.alexa.server import run_alexa_default_agent
 from utils.pip_wrapper import install_from_config
 
 
@@ -35,7 +36,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
                     choices={'train', 'evaluate', 'interact', 'predict', 'interactbot', 'interactmsbot',
-                             'riseapi', 'download', 'install', 'crossval'})
+                             'alexa', 'riseapi', 'download', 'install', 'crossval'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 
 parser.add_argument("-e", "--start-epoch-num", dest="start_epoch_num", default=0, help="Start epoch number", type=int)
@@ -58,13 +59,19 @@ parser.add_argument("--https", action="store_true", help="run model in https mod
 parser.add_argument("--key", default=None, help="ssl key", type=str)
 parser.add_argument("--cert", default=None, help="ssl certificate", type=str)
 
+parser.add_argument("-p", "--port", default=None, help="api port", type=str)
+
 parser.add_argument("--api-mode", help="rest api mode: 'basic' with batches or 'alice' for  Yandex.Dialogs format",
                     type=str, default='basic', choices={'basic', 'alice'})
 
 
 def main():
     args = parser.parse_args()
+
     pipeline_config_path = find_config(args.config_path)
+    https = args.https
+    ssl_key = args.key
+    ssl_cert = args.cert
 
     if args.download or args.mode == 'download':
         deep_download(pipeline_config_path)
@@ -92,16 +99,22 @@ def main():
                                 app_id=ms_id,
                                 app_secret=ms_secret,
                                 multi_instance=multi_instance,
-                                stateful=stateful)
+                                stateful=stateful,
+                                port=args.port)
+    elif args.mode == 'alexa':
+        run_alexa_default_agent(model_config=pipeline_config_path,
+                                multi_instance=multi_instance,
+                                stateful=stateful,
+                                port=args.port,
+                                https=https,
+                                ssl_key=ssl_key,
+                                ssl_cert=ssl_cert)
     elif args.mode == 'riseapi':
         alice = args.api_mode == 'alice'
-        https = args.https
-        ssl_key = args.key
-        ssl_cert = args.cert
         if alice:
-            start_alice_server(pipeline_config_path, https, ssl_key, ssl_cert)
+            start_alice_server(pipeline_config_path, https, ssl_key, ssl_cert, port=args.port)
         else:
-            start_model_server(pipeline_config_path, https, ssl_key, ssl_cert)
+            start_model_server(pipeline_config_path, https, ssl_key, ssl_cert, port=args.port)
     elif args.mode == 'predict':
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
     elif args.mode == 'install':

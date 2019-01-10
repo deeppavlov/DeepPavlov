@@ -4,7 +4,7 @@ TF-IDF Ranker
 
 This is an implementation of a document ranker based on tf-idf vectorization.
 The ranker implementation is based on `DrQA`_ project.
-The default ranker implementation takes a batch of queries as input and returns 5 document titles sorted via relevance.
+The default ranker implementation takes a batch of queries as input and returns 25 document titles sorted via relevance.
 
 Quick Start
 ===========
@@ -36,7 +36,7 @@ Inference
 .. code:: python
 
     result = ranker(['Who is Ivan Pavlov?'])
-    print(result)
+    print(result[:5])
 
 Output
 
@@ -80,6 +80,8 @@ Run the following to fit the ranker on **Russian** Wikipedia:
 
     python -m deeppavlov train ru_ranker_tfidf_wiki
 
+As a result of ranker training, a SQLite database and tf-idf matrix are created.
+
 Interacting
 -----------
 
@@ -98,13 +100,11 @@ Run the following to interact with the **Russian** ranker:
 
     python -m deeppavlov ru_ranker_tfidf_wiki -d
 
-As a result of ranker training, a SQLite database and tf-idf matrix are created.
-
 Available Data and Pretrained Models
 ====================================
 
-Wikipedia DB and pretrained tfidf matrices are downloaded in
-``deeppavlov/download/odqa`` folder by default.
+Wikipedia DB is downloaded to ``~/.deeppavlov/downloads/odqa`` and pre-trained tfidf matrices are downloaded
+to ``~/.deeppavlov/models/odqa`` folder by default.
 
 enwiki.db
 ---------
@@ -158,14 +158,15 @@ Comparison
 
 Scores for **TF-IDF Ranker** model:
 
-
-+-----------------------------------------------------------------+----------------+----------------------+-----------------+
-| Model                                                           | Dataset        |  Wiki dump           |  Recall (top 5) |
-+=================================================================+================+======================+=================+
-| :config:`DeepPavlov <doc_retrieval/en_ranker_tfidf_wiki.json>`  | SQuAD (dev)    |  enwiki (2018-02-11) |       75.6      |
-+-----------------------------------------------------------------+                +----------------------+-----------------+
-| `DrQA`_                                                         |                |  enwiki (2016-12-21) |       77.8      |
-+-----------------------------------------------------------------+----------------+----------------------+-----------------+
++------------------------------------------------------------------------------+----------------+-----------------+
+| Model                                                                        | Dataset        |   Recall@5      |
++------------------------------------------------------------------------------+----------------+-----------------+
+| :config:`enwiki20180211 <doc_retrieval/en_ranker_tfidf_wiki.json>`           |                |       75.6      |
++------------------------------------------------------------------------------+                +-----------------+
+| :config:`enwiki20161221 <doc_retrieval/en_ranker_tfidf_enwiki20161221.json>` |  SQuAD (dev)   |       76.2      |
++------------------------------------------------------------------------------+                +-----------------+
+| `DrQA`_ enwiki20161221                                                       |                |       77.8      |
++------------------------------------------------------------------------------+----------------+-----------------+
 
 
 References

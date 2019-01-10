@@ -8,10 +8,14 @@ Task definition
 **Open Domain Question Answering (ODQA)** is a task to find an exact answer
 to any question in **Wikipedia** articles. Thus, given only a question, the system outputs
 the best answer it can find.
-The default ODQA implementation takes a batch of queries as input and returns 5 answers sorted via their score.
+The default ODQA implementation takes a batch of queries as input and returns the best answer.
 
 Quick Start
 ===========
+
+The example below is given for basic ODQA config :config:`en_odqa_infer_wiki <odqa/en_odqa_infer_wiki.json>`.
+Check what :ref:`other ODQA configs <odqa_configuration>` are available and simply replace `en_odqa_infer_wiki`
+with the config name of your preference.
 
 Before using the model make sure that all required packages are installed running the command:
 
@@ -102,29 +106,57 @@ Run the following to interact with **Russian ODQA**:
 Configuration
 =============
 
+.. _odqa_configuration:
+
 The **ODQA** configs suit only model inferring purposes. For training purposes use
 the :ref:`ranker configs <ranker_training>` and the :ref:`reader configs <reader_training>`
 accordingly.
+
+There are several ODQA configs available:
+
++----------------------------------------------------------------------------------------+-------------------------------------------------+
+|                                                                                        |                                                 |
+|                                                                                        |                                                 |
+| Config                                                                                 | Description                                     |
++----------------------------------------------------------------------------------------+-------------------------------------------------+
+|:config:`en_odqa_infer_wiki <odqa/en_odqa_infer_wiki.json>`                             | Basic config for **English** language. Consists |
+|                                                                                        | of TF-IDF ranker and reader. Searches for an    |
+|                                                                                        | answer in ``enwiki20180211`` Wikipedia dump.    |
++----------------------------------------------------------------------------------------+-------------------------------------------------+
+|:config:`en_odqa_infer_enwiki20161221 <odqa/en_odqa_infer_enwiki20161221.json>`         | Basic config for **English** language. Consists |
+|                                                                                        | of TF-IDF ranker and reader. Searches for an    |
+|                                                                                        | answer in ``enwiki20161221`` Wikipedia dump.    |
++----------------------------------------------------------------------------------------+-------------------------------------------------+
+|:config:`ru_odqa_infer_wiki <odqa/ru_odqa_infer_wiki.json>`                             | Basic config for **Russian** language. Consists |
+|                                                                                        | of TF-IDF ranker and reader. Searches for an    |
+|                                                                                        | answer in ``ruwiki20180401`` Wikipedia dump.    |
++----------------------------------------------------------------------------------------+-------------------------------------------------+
+|:config:`en_odqa_pop_infer_enwiki20180211 <odqa/en_odqa_pop_infer_enwiki20180211.json>` | Extended config for **English** language.       |
+|                                                                                        | Consists of TF-IDF Ranker, Popularity Ranker    |
+|                                                                                        | and reader. Searches for an answer in           |
+|                                                                                        | ``enwiki20180211`` Wikipedia dump.              |
++----------------------------------------------------------------------------------------+-------------------------------------------------+
 
 Comparison
 ==========
 
 Scores for **ODQA** skill:
 
-+-----------------------------------------------------+----------------+---------------------+---------------------+
-|                                                     |                | enwiki (2018-02-11) | enwiki (2016-12-21) |
-|                                                     |                +----------+----------+-----------+---------+
-| Model                                               | Dataset        |  F1      |   EM     |   F1      |   EM    |
-+=====================================================+================+==========+==========+===========+=========+
-|:config:`DeepPavlov <odqa/en_odqa_infer_wiki.json>`  |                |  35.89   |  29.21   |  37.83    |  31.26  |
-+-----------------------------------------------------+ SQuAD (dev)    +----------+----------+-----------+---------+
-|`DrQA`_                                              |                |   \-     |  \-      |   \-      |  27.1   |
-+-----------------------------------------------------+                +----------+----------+-----------+---------+
-|`R3`_                                                |                |   \-     |  \-      |   37.5    |  29.1   |
-+-----------------------------------------------------+----------------+----------+----------+-----------+---------+
++------------------------------------------------------------------+----------------+---------------------+---------------------+
+|                                                                  |                |   Ranker@5          |   Ranker@25         |
+|                                                                  |                +----------+----------+-----------+---------+
+| Model                                                            | Dataset        |  F1      |   EM     |   F1      |   EM    |
++------------------------------------------------------------------+----------------+----------+----------+-----------+---------+
+|:config:`enwiki20180211 <odqa/en_odqa_infer_wiki.json>`           |                |  35.89   |  29.21   |  39.96    |  32.64  |
++------------------------------------------------------------------+                +----------+----------+-----------+---------+
+|:config:`enwiki20161221 <odqa/en_odqa_infer_enwiki20161221.json>` |   SQuAD (dev)  |  37.83   |  31.26   |  41.86    |  34.73  |
++------------------------------------------------------------------+                +----------+----------+-----------+---------+
+|`DrQA`_ enwiki20161221                                            |                |   \-     |  27.1    |   \-      |   \-    |
++------------------------------------------------------------------+                +----------+----------+-----------+---------+
+|`R3`_   enwiki20161221                                            |                |  37.5    |  29.1    |   \-      |         |
++------------------------------------------------------------------+----------------+----------+----------+-----------+---------+
 
-
-EM stands for "exact-match accuracy". Metrics are counted for top 5 documents returned by retrieval module.
+EM stands for "exact-match accuracy". Metrics are counted for top 5 and top 25 documents returned by retrieval module.
 
 References
 ==========
