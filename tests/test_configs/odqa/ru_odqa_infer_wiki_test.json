@@ -51,6 +51,7 @@
       },
       {
         "class_name": "logit_ranker",
+        "top_n": 1,
         "squad_model": {
           "config_path": "{CONFIGS_PATH}/squad/squad_ru.json"
         },

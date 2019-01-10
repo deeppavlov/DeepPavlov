@@ -4,7 +4,8 @@
       "question_raw"
     ],
     "out": [
-      "best_answer"
+      "best_answer",
+      "best_answer_score"
     ],
     "pipe": [
       {
@@ -43,6 +44,7 @@
       {
         "class_name": "logit_ranker",
         "batch_size": 10,
+        "top_n": 1,
         "squad_model": {"config_path": "{CONFIGS_PATH}/squad/multi_squad_noans_infer.json"},
         "sort_noans": true,
         "in": [

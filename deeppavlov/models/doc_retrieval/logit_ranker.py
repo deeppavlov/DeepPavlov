@@ -40,10 +40,11 @@ class LogitRanker(Component):
     """
 
     def __init__(self, squad_model: Union[Chainer, Component], batch_size: int = 50,
-                 sort_noans: bool = False, **kwargs):
+                 top_n: int = 3, sort_noans: bool = False, **kwargs):
         self.squad_model = squad_model
         self.batch_size = batch_size
         self.sort_noans = sort_noans
+        self.top_n = top_n
 
     def __call__(self, contexts_batch: List[List[str]], questions_batch: List[List[str]]) -> \
             Tuple[List[str], List[float]]:
@@ -72,6 +73,7 @@ class LogitRanker(Component):
                 results = sorted(results, key=lambda x: (x[0] != '', x[2]), reverse=True)
             else:
                 results = sorted(results, key=itemgetter(2), reverse=True)
-            batch_best_answers.append(results[0][0])
-            batch_best_answers_scores.append(results[0][2])
+            results = results[:self.top_n]
+            batch_best_answers += map(itemgetter(0), results)
+            batch_best_answers_scores += map(itemgetter(2), results)
         return batch_best_answers, batch_best_answers_scores
