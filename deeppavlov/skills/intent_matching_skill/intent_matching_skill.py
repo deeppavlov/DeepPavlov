@@ -1,4 +1,4 @@
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 
 from deeppavlov import train_model
 from deeppavlov import build_model
@@ -28,8 +28,9 @@ class IntentMatchingSkill(Skill):
         model: Classifies user's questions
     """
 
-    def __init__(self, data_path: str = None, x_col_name: str = None, y_col_name: str = None, edit_dict: dict = None,
-                 save_path: str = None, load_path: str = None) -> None:
+    def __init__(self,
+                 data_path: Optional[str] = None, x_col_name: Optional[str] = None, y_col_name: Optional[str] = None,
+                 edit_dict: Optional[dict] = None, save_path: Optional[str] = None, load_path: Optional[str] = None):
         if load_path is not None and \
                 (save_path is not None or data_path is not None or x_col_name is not None or y_col_name is not None):
             raise ValueError("If you specify 'load_path', you can't specify anything else, "
@@ -61,8 +62,8 @@ class IntentMatchingSkill(Skill):
             model_config['metadata']['variables']['ROOT_PATH'] = load_path
             self.model = build_model(model_config)
 
-    def __call__(self, utterances_batch: list, history_batch: list,
-                 states_batch: Optional[list] = None) -> Tuple[list, list]:
+    def __call__(self, utterances_batch: List[str], history_batch: List[List[str]],
+                 states_batch: Optional[list] = None) -> Tuple[List[str], List[float]]:
         """Returns skill inference result.
 
         Returns batches of skill inference results and estimated confidence levels
