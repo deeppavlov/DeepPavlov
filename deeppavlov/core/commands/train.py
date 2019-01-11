@@ -17,7 +17,7 @@ import json
 import time
 from collections import OrderedDict, namedtuple
 from pathlib import Path
-from typing import List, Tuple, Dict, Union, Optional
+from typing import List, Tuple, Dict, Union, Optional, Iterable
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import expand_path, import_packages, parse_config
@@ -39,7 +39,7 @@ log = get_logger(__name__)
 Metric = namedtuple('Metric', ['name', 'fn', 'inputs'])
 
 
-def _parse_metrics(metrics: List[Union[str, dict]], in_y: List[str], out_vars: List[str]) -> List[Metric]:
+def _parse_metrics(metrics: Iterable[Union[str, dict]], in_y: List[str], out_vars: List[str]) -> List[Metric]:
     metrics_functions = []
     for metric in metrics:
         if isinstance(metric, str):
@@ -64,6 +64,133 @@ def prettify_metrics(metrics: List[Tuple[str, float]], precision: int = 4) -> Or
         value = round(value, precision)
         prettified_metrics[key] = value
     return prettified_metrics
+
+
+class FitTrainer:
+    def __init__(self, chainer_config: dict, *, batch_size: int = -1,
+                 metrics: Iterable[Union[str, dict]] = ('accuracy',),
+                 evaluation_targets: Iterable[str] = ('valid', 'test'),
+                 show_examples: bool = False,
+                 tensorboard_log_dir: Optional[Union[str, Path]] = None) -> None:
+        self.chainer_config = chainer_config
+        self.chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
+        self.batch_size = batch_size
+        self.metrics = _parse_metrics(metrics, self.chainer.in_y, self.chainer.out_params)
+        self.evaluation_targets = tuple(evaluation_targets)
+        self.show_examples = show_examples
+
+        self.tensorboard_log_dir: Optional[Path] = tensorboard_log_dir
+        if tensorboard_log_dir is not None:
+            self.tensorboard_log_dir = expand_path(tensorboard_log_dir)
+            # noinspection PyPackageRequirements
+            import tensorflow
+            self._tf = tensorflow
+
+        self._built = False
+
+    def fit_chainer(self, iterator: Union[DataFittingIterator, DataLearningIterator]):
+        if self._built:
+            raise RuntimeError('Cannot fit already built chainer')
+        for component_index, component_config in enumerate(self.chainer_config['pipe'], 1):
+            component = from_params(component_config, mode='train')
+            if 'fit_on' in component_config:
+                component: Estimator
+
+                targets = component_config['fit_on']
+                if isinstance(targets, str):
+                    targets = [targets]
+
+                if self.batch_size > 0 and callable(getattr(component, 'partial_fit', None)):
+                    writer = None
+
+                    for i, (x, y) in enumerate(iterator.gen_batches(self.batch_size, shuffle=False)):
+                        preprocessed = self.chainer.compute(x, y, targets=targets)
+                        # noinspection PyUnresolvedReferences
+                        result = component.partial_fit(*preprocessed)
+
+                        if result is not None and self.tensorboard_log_dir is not None:
+                            if writer is None:
+                                writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir /
+                                                                         f'partial_fit_{component_index}_log'))
+                            for name, score in result.items():
+                                summary = self._tf.Summary()
+                                summary.value.add(tag='partial_fit/' + name, simple_value=score)
+                                writer.add_summary(summary, i)
+                            writer.flush()
+                else:
+                    preprocessed = self.chainer.compute(*iterator.get_instances(), targets=targets)
+                    if len(targets) == 1:
+                        preprocessed = [preprocessed]
+                    result: Optional[Dict[str, Iterable[float]]] = component.fit(*preprocessed)
+
+                    if result is not None and self.tensorboard_log_dir is not None:
+                        writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir /
+                                                                 f'fit_log_{component_index}'))
+                        for name, scores in result.items():
+                            for i, score in enumerate(scores):
+                                summary = self._tf.Summary()
+                                summary.value.add(tag='fit/' + name, simple_value=score)
+                                writer.add_summary(summary, i)
+                        writer.flush()
+
+                component.save()
+
+            if 'in' in component_config:
+                c_in = component_config['in']
+                c_out = component_config['out']
+                in_y = component_config.get('in_y', None)
+                main = component_config.get('main', False)
+                self.chainer.append(component, c_in, c_out, in_y, main)
+        self._built = True
+
+    def train(self, iterator: Union[DataFittingIterator, DataLearningIterator]) -> None:
+        self.fit_chainer(iterator)
+
+    def test_model(self, iterator: DataLearningIterator, data_type: str = 'train') -> dict:
+        pass
+
+    def evaluate(self, iterator: DataLearningIterator, data_types: Optional[Iterable[str]] = None):
+        if data_types is None:
+            data_types = self.evaluation_targets
+
+        for data_type in data_types:
+            report = self.test_model(iterator, data_type)
+
+
+class NNTrainer(FitTrainer):
+    def __init__(self, chainer_config: dict, *, batch_size: int = 1,
+                 epochs: int = -1,
+                 start_epoch_num: int = 0,
+                 max_batches: int = -1,
+                 metrics: Iterable[Union[str, dict]] = ('accuracy',),
+                 train_metrics: Optional[Iterable[Union[str, dict]]] = None,
+                 metric_optimization: str = 'maximize',
+                 evaluation_targets: Iterable[str] = ('valid', 'test'),
+                 show_examples: bool = False,
+                 tensorboard_log_dir: Optional[Union[str, Path]] = None) -> None:
+        super().__init__(chainer_config, batch_size=batch_size, metrics=metrics, evaluation_targets=evaluation_targets,
+                         show_examples=show_examples, tensorboard_log_dir=tensorboard_log_dir)
+
+        if train_metrics is None:
+            self.train_metrics = self.metrics
+        else:
+            self.train_metrics = _parse_metrics(train_metrics, self.chainer.in_y, self.chainer.out_params)
+
+        self.metric_optimization = metric_optimization
+
+        self.max_epochs = epochs,
+        self.epoch = start_epoch_num
+        self.max_batches = max_batches
+        self.train_batches_seen = 0
+
+        default_train_config = {
+            'validation_patience': 5,
+            'val_every_n_epochs': 0,
+            'val_every_n_batches': 0,
+
+            'log_every_n_batches': 0,
+            'log_every_n_epochs': 0,
+        }
 
 
 def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingIterator]) -> Chainer:
@@ -98,10 +225,6 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
                 writer.flush()
 
             component.save()
-
-        if 'fit_on_batch' in component_config:
-            log.warning('`fit_on_batch` is deprecated and will be removed in future versions.'
-                        ' Please use `fit_on` instead.')
         if ('fit_on_batch' in component_config) or \
                 (('fit_on' in component_config) and
                  callable(getattr(component, 'partial_fit', None))):
