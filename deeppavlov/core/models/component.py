@@ -14,6 +14,11 @@
 
 from abc import ABCMeta, abstractmethod
 
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
+
 
 class Component(metaclass=ABCMeta):
     """Abstract class for all callables that could be used in Chainer's pipe."""
@@ -25,4 +30,18 @@ class Component(metaclass=ABCMeta):
         pass
 
     def destroy(self):
+        pass
+
+    def serialize(self):
+        from deeppavlov.core.models.serializable import Serializable
+        if isinstance(self, Serializable):
+            log.warning(f'Method for {self.__class__.__name__} serialization is not implemented!'
+                        f' Will not be able to load without using load_path')
+        return None
+
+    def deserialize(self, data):
+        from deeppavlov.core.models.serializable import Serializable
+        if isinstance(self, Serializable):
+            log.warning(f'Method for {self.__class__.__name__} deserialization is not implemented!'
+                        f' Please, use traditional load_path for this component')
         pass

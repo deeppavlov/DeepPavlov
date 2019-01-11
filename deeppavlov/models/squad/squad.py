@@ -18,9 +18,9 @@ import tensorflow as tf
 import numpy as np
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.tf_model import TFModel
+from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
 from deeppavlov.models.squad.utils import dot_attention, simple_attention, PtrNet, CudnnGRU, CudnnCompatibleGRU
-from deeppavlov.core.common.check_gpu import GPU_AVAILABLE
+from deeppavlov.core.common.check_gpu import check_gpu_existence
 from deeppavlov.core.layers.tf_layers import cudnn_bi_gru, variational_dropout
 from deeppavlov.core.common.log import get_logger
 
@@ -28,7 +28,7 @@ logger = get_logger(__name__)
 
 
 @register('squad_model')
-class SquadModel(TFModel):
+class SquadModel(LRScheduledTFModel):
     """
     SquadModel predicts answer start and end position in given context by given question.
 
@@ -48,17 +48,14 @@ class SquadModel(TFModel):
         encoder_hidden_size: hidden size of encoder RNN
         attention_hidden_size: size of projection layer in attention
         keep_prob: dropout keep probability
-        learning_rate: initial learning rate
-        min_learning_rate: min learning rate, is used in learning rate decay
-        learning_rate_patience: number of epochs without score improvements to decay learning rate
-        grad_clip: gradient clipping value
+        min_learning_rate: minimal learning rate, is used in learning rate decay
         noans_token: boolean, flags whether to use special no_ans token to make model able not to answer on question
     """
     def __init__(self, word_emb: np.ndarray, char_emb: np.ndarray, context_limit: int = 450, question_limit: int = 150,
                  char_limit: int = 16, train_char_emb: bool = True, char_hidden_size: int = 100,
                  encoder_hidden_size: int = 75, attention_hidden_size: int = 75, keep_prob: float = 0.7,
-                 learning_rate: float = 0.5, min_learning_rate: float = 0.001, learning_rate_patience: int = 1,
-                 grad_clip: float = 5.0, noans_token: bool = False, **kwargs) -> None:
+                 min_learning_rate: float = 0.001, noans_token: bool = False, **kwargs) -> None:
+        super().__init__(**kwargs)
 
         self.init_word_emb = word_emb
         self.init_char_emb = char_emb
@@ -70,10 +67,7 @@ class SquadModel(TFModel):
         self.hidden_size = encoder_hidden_size
         self.attention_hidden_size = attention_hidden_size
         self.keep_prob = keep_prob
-        self.learning_rate = learning_rate
         self.min_learning_rate = min_learning_rate
-        self.learning_rate_patience = learning_rate_patience
-        self.grad_clip = grad_clip
         self.noans_token = noans_token
 
         self.word_emb_dim = self.init_word_emb.shape[1]
@@ -82,7 +76,7 @@ class SquadModel(TFModel):
         self.last_impatience = 0
         self.lr_impatience = 0
 
-        if GPU_AVAILABLE:
+        if check_gpu_existence():
             self.GRU = CudnnGRU
         else:
             self.GRU = CudnnCompatibleGRU
@@ -97,7 +91,6 @@ class SquadModel(TFModel):
 
         self.sess.run(tf.global_variables_initializer())
 
-        super().__init__(**kwargs)
         # Try to load the model (if there are some model files the model will be loaded from them)
         if self.load_path is not None:
             self.load()
@@ -227,7 +220,7 @@ class SquadModel(TFModel):
         self.y1_ph = tf.placeholder(shape=(None, ), dtype=tf.int32, name='y1_ph')
         self.y2_ph = tf.placeholder(shape=(None, ), dtype=tf.int32, name='y2_ph')
 
-        self.lr_ph = tf.placeholder(dtype=tf.float32, shape=[], name='lr_ph')
+        self.lear_rate_ph = tf.placeholder_with_default(0.0, shape=[], name='learning_rate')
         self.keep_prob_ph = tf.placeholder_with_default(1.0, shape=[], name='keep_prob_ph')
         self.is_train_ph = tf.placeholder_with_default(False, shape=[], name='is_train_ph')
 
@@ -235,11 +228,7 @@ class SquadModel(TFModel):
         with tf.variable_scope('Optimizer'):
             self.global_step = tf.get_variable('global_step', shape=[], dtype=tf.int32,
                                                initializer=tf.constant_initializer(0), trainable=False)
-            self.opt = tf.train.AdadeltaOptimizer(learning_rate=self.lr_ph, epsilon=1e-6)
-            grads = self.opt.compute_gradients(self.loss)
-            gradients, variables = zip(*grads)
-            capped_grads = [tf.clip_by_norm(g, self.grad_clip) for g in gradients]
-            self.train_op = self.opt.apply_gradients(zip(capped_grads, variables), global_step=self.global_step)
+            self.train_op = self.get_train_op(self.loss, learning_rate=self.lear_rate_ph)
 
     def _build_feed_dict(self, c_tokens, c_chars, q_tokens, q_chars, y1=None, y2=None):
         feed_dict = {
@@ -252,7 +241,7 @@ class SquadModel(TFModel):
             feed_dict.update({
                 self.y1_ph: y1,
                 self.y2_ph: y2,
-                self.lr_ph: self.learning_rate,
+                self.lear_rate_ph: max(self.get_learning_rate(), self.min_learning_rate),
                 self.keep_prob_ph: self.keep_prob,
                 self.is_train_ph: True,
             })
@@ -285,8 +274,10 @@ class SquadModel(TFModel):
             y2s = (y2s + 1) * noans_mask
 
         feed_dict = self._build_feed_dict(c_tokens, c_chars, q_tokens, q_chars, y1s, y2s)
-        loss, _ = self.sess.run([self.loss, self.train_op], feed_dict=feed_dict)
-        return loss
+        loss, _, lear_rate = self.sess.run([self.loss, self.train_op, self.lear_rate_ph],
+                                           feed_dict=feed_dict)
+        report = {'loss': loss, 'learning_rate': float(lear_rate)}
+        return report
 
     def __call__(self, c_tokens: np.ndarray, c_chars: np.ndarray, q_tokens: np.ndarray, q_chars: np.ndarray,
                  *args, **kwargs) -> Tuple[np.ndarray, np.ndarray, List[float]]:
@@ -331,16 +322,4 @@ class SquadModel(TFModel):
             event_name: event_name sent by trainer
             data: number of examples, epochs, metrics sent by trainer
         """
-        if event_name == "after_validation":
-            if data['impatience'] > self.last_impatience:
-                self.lr_impatience += 1
-            else:
-                self.lr_impatience = 0
-
-            self.last_impatience = data['impatience']
-
-            if self.lr_impatience >= self.learning_rate_patience:
-                self.lr_impatience = 0
-                self.learning_rate = max(self.learning_rate / 2, self.min_learning_rate)
-                logger.info('SQuAD model: learning_rate changed to {}'.format(self.learning_rate))
-            logger.info('SQuAD model: lr_impatience: {}, learning_rate: {}'.format(self.lr_impatience, self.learning_rate))
+        super().process_event(event_name, data)

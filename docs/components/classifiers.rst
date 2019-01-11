@@ -163,31 +163,31 @@ Therefore, this model is available only for interaction.
 +------------------+-------------------+------+-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
 | Task             | Dataset           | Lang | Model                                                                                           | Metric   | Valid  | Test   | Downloads |
 +==================+===================+======+=================================================================================================+==========+========+========+===========+
-| 28 intents       | `DSTC 2`_         | En   | :config:`DSTC 2 emb <classifiers/intents_dstc2.json>`                                           | Accuracy | 0.7732 | 0.7868 |  800 Mb   |
+| 28 intents       | `DSTC 2`_         | En   | :config:`DSTC 2 emb <classifiers/intents_dstc2.json>`                                           | Accuracy | 0.7613 | 0.7733 |  800 Mb   |
 +                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
-|                  |                   |      | :config:`Wiki emb <classifiers/intents_dstc2_big.json>`                                         |          | 0.9602 | 0.9593 |  8.5 Gb   |
+|                  |                   |      | :config:`Wiki emb <classifiers/intents_dstc2_big.json>`                                         |          | 0.9629 | 0.9617 |  8.5 Gb   |
 +------------------+-------------------+      +-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
-| 7 intents        | `SNIPS-2017`_     |      | :config:`DSTC 2 emb <classifiers/intents_snips.json>`                                           | F1       | 0.8685 |    --  |  800 Mb   |
+| 7 intents        | `SNIPS-2017`_     |      | :config:`DSTC 2 emb <classifiers/intents_snips.json>`                                           | F1       | 0.8591 |    --  |  800 Mb   |
 +                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
-|                  |                   |      | :config:`Wiki emb <classifiers/intents_snips_big.json>`                                         |          | 0.9811 |    --  |  8.5 Gb   |
+|                  |                   |      | :config:`Wiki emb <classifiers/intents_snips_big.json>`                                         |          | 0.9820 |    --  |  8.5 Gb   |
 +                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
 |                  |                   |      | :config:`Tfidf + SelectKBest + PCA + Wiki emb <classifiers/intents_snips_sklearn.json>`         |          | 0.9673 |    --  |  8.6 Gb   |
 +                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
 |                  |                   |      | :config:`Wiki emb weighted by Tfidf <classifiers/intents_snips_tfidf_weighted.json>`            |          | 0.9786 |    --  |  8.5 Gb   |
 +------------------+-------------------+      +-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
-| Insult detection | `Insults`_        |      | :config:`Reddit emb <classifiers/insults_kaggle.json>`                                          | ROC-AUC  | 0.9271 | 0.8618 |  6.2 Gb   |
+| Insult detection | `Insults`_        |      | :config:`Reddit emb <classifiers/insults_kaggle.json>`                                          | ROC-AUC  | 0.9263 | 0.8556 |  6.2 Gb   |
 +------------------+-------------------+      +-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
-| 5 topics         | `AG News`_        |      | :config:`Wiki emb <classifiers/topic_ag_news.json>`                                             | Accuracy | 0.8876 | 0.9011 |  8.5 Gb   |
+| 5 topics         | `AG News`_        |      | :config:`Wiki emb <classifiers/topic_ag_news.json>`                                             | Accuracy | 0.8922 | 0.9059 |  8.5 Gb   |
 +------------------+-------------------+------+-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
-| Sentiment        |`Twitter mokoron`_ | Ru   | :config:`RuWiki+Lenta emb w/o preprocessing <classifiers/sentiment_twitter.json>`               |          | 0.9972 | 0.9971 |  6.2 Gb   |
+| Sentiment        |`Twitter mokoron`_ | Ru   | :config:`RuWiki+Lenta emb w/o preprocessing <classifiers/sentiment_twitter.json>`               |          | 0.9965 | 0.9961 |  6.2 Gb   |
 +                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
-|                  |                   |      | :config:`RuWiki+Lenta emb with preprocessing <classifiers/sentiment_twitter_preproc.json>`      |          | 0.7811 | 0.7749 |  6.2 Gb   |
+|                  |                   |      | :config:`RuWiki+Lenta emb with preprocessing <classifiers/sentiment_twitter_preproc.json>`      |          | 0.7823 | 0.7759 |  6.2 Gb   |
 +                  +-------------------+      +-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
-|                  |`RuSentiment`_     |      | :config:`RuWiki+Lenta emb <classifiers/rusentiment_cnn.json>`                                   | F1       | 0.6393 | 0.6539 |  6.2 Gb   |
+|                  |`RuSentiment`_     |      | :config:`RuWiki+Lenta emb <classifiers/rusentiment_cnn.json>`                                   | F1       | 0.6258 | 0.6472 |  6.2 Gb   |
 +                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
-|                  |                   |      | :config:`ELMo <classifiers/rusentiment_elmo.json>`                                              |          | 0.7066 | 0.7301 |  700 Mb   |
+|                  |                   |      | :config:`ELMo <classifiers/rusentiment_elmo.json>`                                              |          | 0.7074 | 0.7288 |  700 Mb   |
 +------------------+-------------------+      +-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
-| Intent           |`Yahoo-L31`_       |      | :config:`Yahoo-L31 on ELMo <classifiers/yahoo_convers_vs_info.json>` pre-trained on `Yahoo-L6`_ | ROC-AUC  | 0.9269 |   --   |  700 Mb   |
+| Intent           |`Yahoo-L31`_       |      | :config:`Yahoo-L31 on ELMo <classifiers/yahoo_convers_vs_info.json>` pre-trained on `Yahoo-L6`_ | ROC-AUC  | 0.9412 |   --   |  700 Mb   |
 +------------------+-------------------+------+-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
 
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/

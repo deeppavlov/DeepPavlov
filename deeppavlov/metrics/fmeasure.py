@@ -31,7 +31,7 @@ def ner_f1(y_true, y_predicted):
     y_predicted = list(chain(*y_predicted))
     results = precision_recall_f1(y_true,
                                   y_predicted,
-                                  print_results=False)
+                                  print_results=True)
     f1 = results['__total__']['f1']
     return f1
 

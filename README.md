@@ -1,8 +1,6 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/deepmipt/DeepPavlov/blob/master/LICENSE)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 [![Downloads](https://pepy.tech/badge/deeppavlov)](https://pepy.tech/project/deeppavlov)
-[![Downloads](https://pepy.tech/badge/deeppavlov/month)](https://pepy.tech/project/deeppavlov)
-[![Downloads](https://pepy.tech/badge/deeppavlov/week)](https://pepy.tech/project/deeppavlov)
 
 DeepPavlov is an open-source conversational AI library built on [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). It is designed for
  * development of production ready chat-bots and complex conversational systems,
@@ -184,8 +182,12 @@ If you have any questions, bug reports or feature requests, please feel free to 
 
 # The Team
 
+<p align="center">
+<img src="docs/_static/ipavlov_logo.png" width="20%" height="20%"/>
+</p>
+
 DeepPavlov is built and maintained by [Neural Networks and Deep Learning Lab](https://mipt.ru/english/research/labs/neural-networks-and-deep-learning-lab) at [MIPT](https://mipt.ru/english/) within [iPavlov](http://ipavlov.ai/) project (part of [National Technology Initiative](https://asi.ru/eng/nti/)) and in partnership with [Sberbank](http://www.sberbank.com/).
 
 <p align="center">
-<img src="https://ipavlov.ai/img/ipavlov_footer.png" width="50%" height="50%"/>
+<img src="docs/_static/ipavlov_footer.png" width="50%" height="50%"/>
 </p>

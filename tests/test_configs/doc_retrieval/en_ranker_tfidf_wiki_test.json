@@ -19,7 +19,7 @@
       "doc_nums"
     ],
     "out": [
-      "y"
+      "tfidf_doc_ids"
     ],
     "pipe": [
       {
@@ -43,13 +43,13 @@
       },
       {
         "class_name": "tfidf_ranker",
-        "top_n": 5,
+        "top_n": 20,
         "in": [
           "docs"
         ],
         "out": [
-          "y",
-          "score"
+          "tfidf_doc_ids",
+          "tfidf_doc_scores"
         ],
         "vectorizer": "#vectorizer"
       }

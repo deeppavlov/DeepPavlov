@@ -21,8 +21,8 @@
         "id": "token_vocab",
         "fit_on": ["x_tokens"],
         "class_name": "simple_vocab",
-        "save_path": "{MODELS_PATH}/vocabs/token.dict",
-        "load_path": "{MODELS_PATH}/vocabs/token.dict"
+        "save_path": "{MODELS_PATH}/gobot_dstc2_best/word.dict",
+        "load_path": "{MODELS_PATH}/gobot_dstc2_best/word.dict"
       },
       {
         "id": "restaurant_database",
@@ -32,42 +32,45 @@
         "save_path": "{DOWNLOADS_PATH}/dstc2/resto.sqlite"
       },
       {
+        "class_name": "go_bot",
+        "load_path": "{MODELS_PATH}/gobot_dstc2_best/model",
+        "save_path": "{MODELS_PATH}/gobot_dstc2_best/model",
         "in": ["x"],
         "in_y": ["y"],
         "out": ["y_predicted"],
         "main": true,
-        "class_name": "go_bot",
-        "load_path": "{MODELS_PATH}/gobot_dstc2_best/model",
-        "save_path": "{MODELS_PATH}/gobot_dstc2_best/model",
         "debug": false,
+        "learning_rate": 3e-4,
+        "learning_rate_drop_patience": 10,
+        "learning_rate_drop_div": 4.0,
+        "momentum": 0.95,
+        "optimizer": "tensorflow.train:AdamOptimizer",
+        "clip_norm": 2.0,
+        "dropout_rate": 0.75,
+        "l2_reg_coef": 9e-4,
+        "hidden_size": 128,
+        "dense_size": 128,
+        "attention_mechanism": {
+          "type": "cs_bahdanau",
+          "hidden_size": 32,
+          "depth": 3,
+          "action_as_key": true,
+          "intent_as_key": true,
+          "max_num_tokens": 100,
+          "projected_align": false
+        },
         "word_vocab": "#token_vocab",
         "template_path": "{DOWNLOADS_PATH}/dstc2/dstc2-templates.txt",
         "template_type": "DualTemplate",
         "database": "#restaurant_database",
         "api_call_action": "api_call",
         "use_action_mask": false,
-        "network_parameters": {
-          "learning_rate": 0.002,
-          "end_learning_rate": 0.00002,
-          "decay_steps": 10,
-          "decay_power": 0.5,
-          "dropout_rate": 0.45,
-          "l2_reg_coef": 2e-3,
-          "hidden_size": 128,
-          "dense_size": 64,
-          "attention_mechanism": {
-            "type": "cs_bahdanau",
-            "hidden_size": 32,
-            "depth": 3,
-            "action_as_key": true,
-            "max_num_tokens": 100,
-            "projected_align": false
-          }
-        },
         "slot_filler": {
           "config_path": "{CONFIGS_PATH}/ner/slotfill_dstc2.json"
         },
-        "intent_classifier": null,
+        "intent_classifier": {
+          "config_path": "{CONFIGS_PATH}/classifiers/intents_dstc2.json"
+        },
         "embedder": {
           "class_name": "fasttext",
           "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin"
@@ -85,17 +88,16 @@
     ]
   },
   "train": {
-    "epochs": 200,
-    "batch_size": 4,
+    "epochs": 100,
+    "batch_size": 8,
 
     "pytest_max_batches": 2,
 
     "metrics": ["per_item_dialog_accuracy"],
-    "validation_patience": 30,
-    "val_every_n_epochs": 1,
+    "validation_patience": 15,
+    "val_every_n_batches": 15,
 
-    "log_every_n_batches": -1,
-    "log_every_n_epochs": 1,
+    "log_every_n_batches": 15,
     "show_examples": false,
     "validate_best": true,
     "test_best": true
@@ -119,11 +121,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
-        "subdir": "{MODELS_PATH}"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_best_v2.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_best_v3.tar.gz",
         "subdir": "{MODELS_PATH}"
       },
       {

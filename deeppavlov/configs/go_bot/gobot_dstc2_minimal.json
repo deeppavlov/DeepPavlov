@@ -18,11 +18,11 @@
         "out": ["x_tokens"]
       },
       {
-        "id": "token_vocab",
+        "id": "word_vocab",
         "class_name": "simple_vocab",
         "fit_on": ["x_tokens"],
-        "save_path": "{MODELS_PATH}/vocabs/token.dict",
-        "load_path": "{MODELS_PATH}/vocabs/token.dict"
+        "save_path": "{MODELS_PATH}/gobot_dstc2_minimal/word.dict",
+        "load_path": "{MODELS_PATH}/gobot_dstc2_minimal/word.dict"
       },
       {
         "id": "restaurant_database",
@@ -32,33 +32,36 @@
         "save_path": "{DOWNLOADS_PATH}/dstc2/resto.sqlite"
       },
       {
+        "class_name": "go_bot",
+        "load_path": "{MODELS_PATH}/gobot_dstc2_minimal/model",
+        "save_path": "{MODELS_PATH}/gobot_dstc2_minimal/model",
         "in": ["x"],
         "in_y": ["y"],
         "out": ["y_predicted"],
         "main": true,
-        "class_name": "go_bot",
-        "load_path": "{MODELS_PATH}/gobot_dstc2_minimal/model",
-        "save_path": "{MODELS_PATH}/gobot_dstc2_minimal/model",
         "debug": false,
-        "word_vocab": "#token_vocab",
+        "learning_rate": [2e-3, 2e-2],
+        "learning_rate_decay": "1cycle",
+        "learning_rate_decay_epochs": 20,
+        "momentum": 0.95,
+        "optimizer": "tensorflow.train:AdamOptimizer",
+        "clip_norm": 2.0,
+        "dropout_rate": 0.3,
+        "l2_reg_coef": 1e-4,
+        "hidden_size": 128,
+        "dense_size": 64,
+        "word_vocab": "#word_vocab",
         "template_path": "{DOWNLOADS_PATH}/dstc2/dstc2-templates.txt",
         "template_type": "DualTemplate",
         "database": "#restaurant_database",
         "api_call_action": "api_call",
         "use_action_mask": false,
-        "network_parameters": {
-          "learning_rate": 0.005,
-          "dropout_rate": 0.1,
-          "l2_reg_coef": 1e-4,
-          "hidden_size": 128,
-          "dense_size": 64
-        },
         "slot_filler": null,
         "intent_classifier": null,
         "embedder": null,
         "bow_embedder": {
           "class_name": "bow",
-          "depth": "#token_vocab.__len__()",
+          "depth": "#word_vocab.__len__()",
           "with_counts": true
         },
         "tokenizer": {
@@ -77,7 +80,7 @@
 	"batch_size": 4,
 
 	"metrics": ["per_item_dialog_accuracy"],
-	"validation_patience": 20,
+	"validation_patience": 10,
 	"val_every_n_epochs": 1,
 
 	"log_every_n_batches": -1,
