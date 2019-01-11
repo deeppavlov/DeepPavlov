@@ -1,1 +1,1 @@
-from .faq_skill import *
+from .intent_matching_skill import *
