@@ -102,3 +102,9 @@ class DataFittingIterator:
             #     "Processing batch # {} of {} ({} documents)".format(i, len_batches, len(doc_index)))
             docs = [self.get_doc_content(doc_id) for doc_id in doc_ids]
             yield docs, doc_ids
+
+    def get_instances(self):
+        """Get all data"""
+        doc_ids = list(self.doc_ids)
+        docs = [self.get_doc_content(doc_id) for doc_id in doc_ids]
+        return docs, doc_ids

@@ -160,9 +160,13 @@ class SQLiteDataIterator(DataFittingIterator):
         # len_batches = len(batches)
 
         for i, doc_ids in enumerate(batches):
-            # DEBUG
-            # logger.info(
-            #     "Processing batch # {} of {} ({} documents)".format(i, len_batches, len(doc_index)))
             docs = [self.get_doc_content(doc_id) for doc_id in doc_ids]
             doc_nums = [self.doc2index[doc_id] for doc_id in doc_ids]
             yield docs, zip(doc_ids, doc_nums)
+
+    def get_instances(self):
+        """Get all data"""
+        doc_ids = list(self.doc_ids)
+        docs = [self.get_doc_content(doc_id) for doc_id in doc_ids]
+        doc_nums = [self.doc2index[doc_id] for doc_id in doc_ids]
+        return docs, zip(doc_ids, doc_nums)
