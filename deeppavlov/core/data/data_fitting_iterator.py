@@ -90,8 +90,11 @@ class DataFittingIterator:
         else:
             _doc_ids = self.doc_ids
 
-        batches = [_doc_ids[i:i + batch_size] for i in
-                   range(0, len(_doc_ids), batch_size)]
+        if batch_size > 0:
+            batches = [_doc_ids[i:i + batch_size] for i in
+                       range(0, len(_doc_ids), batch_size)]
+        else:
+            batches = [_doc_ids]
 
         # DEBUG
         # len_batches = len(batches)

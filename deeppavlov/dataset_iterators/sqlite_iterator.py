@@ -153,11 +153,11 @@ class SQLiteDataIterator(DataFittingIterator):
         else:
             _doc_ids = self.doc_ids
 
-        batches = [_doc_ids[i:i + batch_size] for i in
-                   range(0, len(_doc_ids), batch_size)]
-
-        # DEBUG
-        # len_batches = len(batches)
+        if batch_size > 0:
+            batches = [_doc_ids[i:i + batch_size] for i in
+                       range(0, len(_doc_ids), batch_size)]
+        else:
+            batches = [_doc_ids]
 
         for i, doc_ids in enumerate(batches):
             docs = [self.get_doc_content(doc_id) for doc_id in doc_ids]
