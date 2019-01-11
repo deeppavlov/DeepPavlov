@@ -1,44 +1,53 @@
-from nltk.corpus import wordnet as wn
-from nltk import pos_tag
-import pattern.en as en
-from pattern.en import ADJECTIVE, NOUN, VERB, ADVERB
 from itertools import repeat
-import nltk
-
 from typing import List, Tuple
 from collections import defaultdict
+import pattern.en as en
+from pattern.en import ADJECTIVE, NOUN, VERB, ADVERB
+import nltk
+from nltk.corpus import wordnet as wn
+from nltk import pos_tag
 
 class EnSynWordnet:
-    """Finding synonyms for each token in given list, for english language
+    """
+    It finds synonyms for each token in given list, for english language
+    - 'None' token doesn't processing
+    - it finds synonyms only for noun, adjective, verb, adverb
+    - it finds synonyms exclude source token
+    - for adjective, adjective satellite is included also in list of synonyms
+    - all output synonyms are inflected to the source token form
+    - all output words are in lowercase
+    - errors in inflection are possible(pattern.en)
 
     Args:
-        classical_pluralize: whether to use classical pluralize method in pattern.en.pluralize
+        classical_pluralize: boolean, flags whether to use classical pluralize option in method pattern.en.pluralize
     Attributes:
-        classical_pluralize: whether to use classical pluralize method in pattern.en.pluralize
+        classical_pluralize: whether to use classical pluralize option in method pattern.en.pluralize
         wn_tag_to_pattern:   vocabulary between pos_tags in wordnet and pos_tags in pattern
     """
+
+    def _download(self):
+        """download all neccesary data"""
+        nltk.download('wordnet')
 
     def __init__(self, classical_pluralize: bool=True):
         self.classical_pluralize = classical_pluralize
         self.wn_tag_to_pattern = {wn.VERB: VERB, wn.NOUN: NOUN, wn.ADJ: ADJECTIVE, wn.ADV: ADVERB}
-
-    def _download_data(self):
-        """download all neccesary data"""
-        nltk.download('wordnet')
+        self._download()
 
     def _find_synonyms(self, token_morph: Tuple[dict, str]):
+        #if not noun
         if token_morph:
-            synonyms = set()
-            if token_morph[0]['pos'] == wn.ADJ: # take all Adjective satellites
-                for synset in wn.synsets(token_morph[1], pos='s'):
+            #if token pos in [noun, adj, adv, verb]
+            if token_morph[0]:
+                synonyms = set()
+                wn_synsets = wn.synsets(token_morph[1], pos=token_morph[0]['pos'])
+                #for adjective, it finds Adjective satellites, that connected with this adjective
+                if token_morph[0]['pos'] == wn.ADJ:
+                    wn_synsets = wn_synsets.extend(wn.synsets(token_morph[1], pos='s'))
+                for synset in wn_synsets:
                     for synset_lemma in synset.lemmas():
-                        if synset_lemma.name() != token_morph[1]:#take all lemmas that not equal to source token
+                        if synset_lemma.name() != token_morph[1]:
                             synonyms.update([synset_lemma.name()])
-            if token_morph[0]['pos']:# if there are synset for this pos_tag
-                for synset in wn.synsets(token_morph[1], pos=token_morph[0]['pos']):
-                        for synset_lemma in synset.lemmas():
-                            if synset_lemma.name() != token_morph[1]:
-                                synonyms.update([synset_lemma.name()])
             return list(synonyms)
 
     def _lemmatize(self, token: str, pos_tag: Tuple[str, str]) -> List[str]:
@@ -46,22 +55,24 @@ class EnSynWordnet:
             init_form = defaultdict(bool)
             lemma = token
             if pos_tag[1].startswith('N'):
-                init_form.update({'pos': wn.NOUN, 'plur': pos_tag[1].endswith('S')})
                 lemma = en.inflect.singularize(token)
+                init_form.update({'pos': wn.NOUN, 'plur': pos_tag[1].endswith('S')})
+
             elif pos_tag[1].startswith('V'):
-                init_form.update({'pos': wn.VERB,\
-                                    'tense': en.tenses(token)[0]})
                 lemma = en.lemma(token)
+                init_form.update({'pos': wn.VERB, 'tense': en.tenses(token)[0]})
+
             elif pos_tag[1].startswith('J'):
-                init_form.update({'pos': wn.ADJ, 'comp': pos_tag[1].endswith('R'), 'supr': pos_tag[1].endswith('S'),\
-                                    'plur': en.inflect.pluralize(token, pos=ADJECTIVE, classical=self.classical_pluralize) == token})
+                is_plur = en.inflect.pluralize(token, pos=ADJECTIVE, classical=self.classical_pluralize) == token
+                init_form.update({'pos': wn.ADJ, 'comp': pos_tag[1].endswith('R'), 'supr': pos_tag[1].endswith('S'), 'plur': is_plur})
+
             elif pos_tag[1].startswith('R'):
-                init_form.update({'pos': wn.ADV, 'comp': pos_tag[1].endswith('R'),\
-                                    'supr': pos_tag[1].endswith('S')})
-                
+                init_form.update({'pos': wn.ADV, 'comp': pos_tag[1].endswith('R'), 'supr': pos_tag[1].endswith('S')})
+
             return init_form, lemma
     
     def _inflect_to_init_form(self, token, init_form):
+        #it inflect only the first word in phrases
         token = token.split('_')
         if init_form['plur']:
             token[0] = en.inflect.pluralize(token[0], pos=self.wn_tag_to_pattern[init_form['pos']], classical=self.classical_pluralize)
@@ -69,11 +80,13 @@ class EnSynWordnet:
             token[0] = en.conjugate(token[0], init_form['tense'])
         if init_form['comp']:
             token[0] = en.inflect.comparative(token[0])
-            if len(token[0].split()) == 2:# if added 'more' or 'most' then need delete it
+            # if added 'more' or 'most' then need delete it
+            if len(token[0].split()) == 2:
                 token[0] = token[0].split()[1]
         if init_form['supr']:
             token[0] = en.inflect.superlative(token[0])
-            if len(token[0].split()) == 2:# if added 'more' or 'most' then need delete it
+            # if added 'more' or 'most' then need delete it
+            if len(token[0].split()) == 2:
                 token[0] = token[0].split()[1]
         return " ".join(token)
         
@@ -82,13 +95,21 @@ class EnSynWordnet:
             synset = set(map(self._inflect_to_init_form, synonyms_for_one_token, repeat(token_morph[0], len(synonyms_for_one_token))))
             return list(synset)
 
-    def get_synset(self, prep_tokens: List[str], source_pos_tag: List[str]=None) -> List[List[str]]:
-        """Generating list of synonyms for each token in prep_tokens, that isn't equal to None
-            Args:
-                prep_tokens: preprocessed source tokens, where all tokens that do not need to search for synonyms are replaced by None
-                source_pos_tag: pos tags for source sentence, in nltk.pos_tag format
-            Return:
-                List of list of synonyms without source token, for tokens for which no synonyms were found, return None
+    def get_synset(self, prep_tokens: List[str], source_pos_tag: List[str]) -> List[List[str]]:
+        """
+        Generating list of synonyms for each token in prep_tokens, that isn't equal to None
+        - 'None' token doesn't processing
+        - it finds synonyms only for noun, adjective, verb, adverb
+        - it finds synonyms exclude source token
+        - for adjective, adjective satellite is included also in list of synonyms
+        - all output synonyms are inflected to the source token form
+        - all output words are in lowercase
+        - errors in inflection are possible(pattern.en)
+        Args:
+            prep_tokens: preprocessed source tokens, where all tokens that do not need to search for synonyms are replaced by None
+            source_pos_tag: pos tags for source sentence, in nltk.pos_tag format
+        Return:
+            List of list of synonyms without source token, for tokens for which no synonyms were found, return None
         """
         tokens_morph = list(map(self._lemmatize, prep_tokens, source_pos_tag))
         #find synonyms excluding the source word
