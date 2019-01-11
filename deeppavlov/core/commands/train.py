@@ -276,8 +276,7 @@ def _test_model(model: Chainer, metrics_functions: List[Metric],
 
     outputs = {out: [] for out in expected_outputs}
     examples = 0
-    for elem in iterator.gen_batches(batch_size, data_type, shuffle=False):
-        x, y_true = elem
+    for x, y_true in iterator.gen_batches(batch_size, data_type, shuffle=False):
         examples += len(x)
         y_predicted = list(model.compute(list(x), list(y_true), targets=expected_outputs))
         if len(expected_outputs) == 1:
