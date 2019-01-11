@@ -438,8 +438,7 @@ def update_dict_recursive(editable_dict: dict, editing_dict: dict) -> dict:
     """
     for k, v in editing_dict.items():
         if isinstance(v, collections.Mapping):
-            editable_dict[k] = update_dict_recursive(editable_dict.get(k, {}), v)
+            update_dict_recursive(editable_dict.get(k, {}), v)
         else:
             editable_dict[k] = v
-    return editable_dict
 

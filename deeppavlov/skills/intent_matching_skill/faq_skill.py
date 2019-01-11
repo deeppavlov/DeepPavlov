@@ -51,14 +51,13 @@ class IntentMatchingSkill(Skill):
                     del model_config['dataset_reader']['data_url']
                 model_config['dataset_reader']['data_path'] = data_path
 
-            # Need to change to recursive dict update
             if edit_dict is not None:
-                model_config = update_dict_recursive(model_config, edit_dict)
+                update_dict_recursive(model_config, edit_dict)
             self.model = train_model(model_config)
             print('Your model was saved at: \'' + save_path + '\'')
         else:
             if edit_dict is not None:
-                model_config = update_dict_recursive(model_config, edit_dict)
+                update_dict_recursive(model_config, edit_dict)
             model_config['metadata']['variables']['ROOT_PATH'] = load_path
             self.model = build_model(model_config)
 
