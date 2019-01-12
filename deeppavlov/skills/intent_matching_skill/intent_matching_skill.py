@@ -21,45 +21,39 @@ class IntentMatchingSkill(Skill):
         x_col_name: Name of the column in '.csv' file, that represents Intents column.
         y_col_name: Name of the column in '.csv' file, that represents Answer column.
         edit_dict: Dictionary of edits in config
-        save_path: Path, where models will be saved
-        load_path: Path, where models will be loaded from
+        save_load_path: Path, where model will be saved or loaded from
+        train: Should model be trained or not
 
     Attributes:
         model: Classifies user's questions
     """
 
-    def __init__(self,
-                 data_path: Optional[str] = None, x_col_name: Optional[str] = None, y_col_name: Optional[str] = None,
-                 edit_dict: Optional[dict] = None, save_path: Optional[str] = None, load_path: Optional[str] = None):
-        if load_path is not None and \
-                (save_path is not None or data_path is not None or x_col_name is not None or y_col_name is not None):
-            raise ValueError("If you specify 'load_path', you can't specify anything else, "
-                             "because it leads to ambiguity")
+    def __init__(self, data_path: Optional[str] = None,
+                 x_col_name: Optional[str] = None, y_col_name: Optional[str] = None,
+                 edit_dict: Optional[dict] = None, save_load_path: Optional[str] = None, train: bool = True):
 
         model_config = read_json(find_config('tfidf_autofaq'))
-        if load_path is None:
-            if x_col_name is not None:
-                model_config['dataset_reader']['x_col_name'] = x_col_name
-            if y_col_name is not None:
-                model_config['dataset_reader']['y_col_name'] = y_col_name
+        if x_col_name is not None:
+            model_config['dataset_reader']['x_col_name'] = x_col_name
+        if y_col_name is not None:
+            model_config['dataset_reader']['y_col_name'] = y_col_name
 
-            if save_path is None:
-                save_path = './faq'
-            model_config['metadata']['variables']['ROOT_PATH'] = save_path
+        if save_load_path is None:
+            save_load_path = './faq'
+        model_config['metadata']['variables']['ROOT_PATH'] = save_load_path
 
-            if data_path is not None:
-                if 'data_url' in model_config['dataset_reader']:
-                    del model_config['dataset_reader']['data_url']
-                model_config['dataset_reader']['data_path'] = data_path
+        if data_path is not None:
+            if 'data_url' in model_config['dataset_reader']:
+                del model_config['dataset_reader']['data_url']
+            model_config['dataset_reader']['data_path'] = data_path
 
-            if edit_dict is not None:
-                update_dict_recursive(model_config, edit_dict)
+        if edit_dict is not None:
+            update_dict_recursive(model_config, edit_dict)
+
+        if train:
             self.model = train_model(model_config)
-            print('Your model was saved at: \'' + save_path + '\'')
+            print('Your model was saved at: \'' + save_load_path + '\'')
         else:
-            if edit_dict is not None:
-                update_dict_recursive(model_config, edit_dict)
-            model_config['metadata']['variables']['ROOT_PATH'] = load_path
             self.model = build_model(model_config)
 
     def __call__(self, utterances_batch: List[str], history_batch: List[List[str]],
