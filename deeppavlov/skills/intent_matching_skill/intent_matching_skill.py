@@ -63,7 +63,7 @@ class IntentMatchingSkill(Skill):
                  states_batch: Optional[list] = None) -> Tuple[List[str], List[float]]:
         """Returns skill inference result.
 
-        Returns batches of skill inference results and estimated confidence levels
+        Returns batches of skill inference results and estimated confidence
 
         Args:
             utterances_batch: A batch of utterances of any type.
