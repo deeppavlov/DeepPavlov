@@ -2,10 +2,13 @@ from typing import Tuple, Optional, List
 
 from deeppavlov import train_model
 from deeppavlov import build_model
+from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.skill.skill import Skill
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.file import find_config
 from deeppavlov.core.data.utils import update_dict_recursive
+
+log = get_logger(__name__)
 
 
 class IntentMatchingSkill(Skill):
@@ -52,7 +55,7 @@ class IntentMatchingSkill(Skill):
 
         if train:
             self.model = train_model(model_config)
-            print('Your model was saved at: \'' + save_load_path + '\'')
+            log.info('Your model was saved at: \'' + save_load_path + '\'')
         else:
             self.model = build_model(model_config)
 
