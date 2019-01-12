@@ -28,7 +28,7 @@ class IntentMatchingSkill(Skill):
         train: Should model be trained or not
 
     Attributes:
-        model: Classifies user's questions
+        model: Classifies user's intent
     """
 
     def __init__(self, data_path: Optional[str] = None,
