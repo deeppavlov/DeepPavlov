@@ -84,5 +84,50 @@ Deployment process consists of two main stages:
 2. DeepPavlov PDQA deployment
 -----------------------------
 
+1.  Login to your AWS EC2 instance.
 
+2.  For now DeepPavlov requires Python 3.6 to run. Below are instructions for DeepPavlov ODQA
+    deployment under Ubuntu 18.04 (which has pre-installed Python 3.6) and virtualenv.
 
+3.  Install pip3:
+
+    ``sudo apt update``
+
+    ``sudo apt install python3-pip``
+
+4.  Install virtualenv:
+
+    ``sudo pip3 install virtualenv``
+
+5.  Create and activate Python 3.6 virtual enviroment:
+
+    ``virtualenv env -p python3.6``
+
+    ``source env/bin/activate``
+
+6.  Install DeepPavlov:
+
+    ``pip install deeppavlov``
+
+7.  Install ODQA dependencies:
+
+    ``python -m deeppavlov install en_odqa_pop_infer_enwiki20180211``
+
+8.  Download ODQA components (it will take quite a time):
+
+    ``python -m deeppavlov download en_odqa_pop_infer_enwiki20180211``
+
+9.  Run ODQA REST API service, where <port> is port you defined in TCP
+    inbound rules for your AWS instance:
+
+    ``python -m deeppavlov riseapi en_odqa_pop_infer_enwiki20180211 -p <port>``
+
+3. Accessing your ODQA API
+--------------------------
+
+1.  Get your AWS instance public DNS from the instance dashboard.
+
+2.  Get full info about your ODQA API from its Flasgger by navigating to
+    following URL in your browser:
+
+    ``http://<your_aws_instance_public_dns>:<your_odqa_service_port>``
