@@ -1,7 +1,7 @@
-AWS DeepPavlov ODQA deployment manual
-=====================================
+Amazon AWS deployment
+=====================
 
-Here is a manual for deployment DeepPavlov ODQA in Amazon Web Services using EC2 virtual machine.
+Here is a manual for deployment DeepPavlov (with ODQA as example) in Amazon Web Services using EC2 virtual machine.
 
 Deployment process consists of two main stages:
 
