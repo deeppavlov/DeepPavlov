@@ -81,7 +81,7 @@ Deployment process consists of two main stages:
     .. image:: ../_static/aws_ec2/09_02_connection_info.png
        :width: 800
 
-2. DeepPavlov PDQA deployment
+2. DeepPavlov ODQA deployment
 -----------------------------
 
 1.  Login to your AWS EC2 instance.
