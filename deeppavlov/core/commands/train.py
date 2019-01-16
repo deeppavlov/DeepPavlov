@@ -106,7 +106,10 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
                 (('fit_on' in component_config) and
                  callable(getattr(component, 'partial_fit', None))):
             component: Estimator
-            targets = component_config.get('fit_on', component_config['fit_on_batch'])
+            try:
+                targets = component_config['fit_on']
+            except KeyError:
+                targets = component_config['fit_on_batch']
             if isinstance(targets, str):
                 targets = [targets]
 
