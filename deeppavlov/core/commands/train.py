@@ -146,11 +146,58 @@ class FitTrainer:
     def train(self, iterator: Union[DataFittingIterator, DataLearningIterator]) -> None:
         self.fit_chainer(iterator)
 
-    def test_model(self, iterator: DataLearningIterator, data_type: str = 'train') -> dict:
-        # todo: implement
-        pass
+    def test(self, iterator: DataLearningIterator, data_type: str = 'train', start_time: Optional[float] = None,
+             batch_size: Optional[int] = None, show_examples: Optional[bool] = None) -> dict:
+        if not iterator.data[data_type]:
+            log.warning(f'Could not log examples for {data_type}, assuming it\'s empty')
+            return {'eval_examples_count': 0, 'metrics': None, 'time_spent': str(datetime.timedelta(seconds=0))}
 
-    def evaluate(self, iterator: DataLearningIterator, data_types: Optional[Iterable[str]] = None):
+        if start_time is None:
+            start_time = time.time()
+        if batch_size is None:
+            batch_size = self.batch_size
+        if show_examples is None:
+            show_examples = self.show_examples
+
+        expected_outputs = list(set().union(self.chainer.out_params, *[m.inputs for m in self.metrics]))
+
+        outputs = {out: [] for out in expected_outputs}
+        examples = 0
+        for x, y_true in iterator.gen_batches(batch_size=batch_size, data_type=data_type, shuffle=False):
+            examples += len(x)
+            y_predicted = list(self.chainer.compute(list(x), list(y_true), targets=expected_outputs))
+            if len(expected_outputs) == 1:
+                y_predicted = [y_predicted]
+            for out, val in zip(outputs.values(), y_predicted):
+                out += list(val)
+
+        metrics = [(m.name, m.fn(*[outputs[i] for i in m.inputs])) for m in self.metrics]
+
+        report = {
+            'eval_examples_count': examples,
+            'metrics': prettify_metrics(metrics),
+            'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
+        }
+
+        if show_examples:
+            try:
+                y_predicted = zip(*[y_predicted_group
+                                    for out_name, y_predicted_group in zip(expected_outputs, y_predicted)
+                                    if out_name in self.chainer.out_params])
+                if len(self.chainer.out_params) == 1:
+                    y_predicted = [y_predicted_item[0] for y_predicted_item in y_predicted]
+                report['examples'] = [{
+                    'x': x_item,
+                    'y_predicted': y_predicted_item,
+                    'y_true': y_true_item
+                } for x_item, y_predicted_item, y_true_item in zip(x, y_predicted, y_true)]
+            except NameError:
+                log.warning(f'Could not log examples for {data_type}, assuming it\'s empty')
+
+        return report
+
+    def evaluate(self, iterator: DataLearningIterator, data_types: Optional[Iterable[str]] = None,
+                 print_reports: bool = True):
         if data_types is None:
             data_types = self.evaluation_targets
 
@@ -158,8 +205,9 @@ class FitTrainer:
 
         for data_type in data_types:
             report = self.test_model(iterator, data_type)
-            print(json.dumps({data_type: report}, ensure_ascii=False))
             res[data_type] = report
+            if print_reports:
+                print(json.dumps({data_type: report}, ensure_ascii=False))
 
         return res
 
@@ -321,54 +369,6 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None, *
         model.destroy()
 
     return res
-
-
-def _test_model(model: Chainer, metrics_functions: List[Metric],
-                iterator: DataLearningIterator, batch_size=-1, data_type='valid',
-                start_time: float=None, show_examples=False) -> Dict[str, Union[int, OrderedDict, str]]:
-    if start_time is None:
-        start_time = time.time()
-
-    expected_outputs = list(set().union(model.out_params, *[m.inputs for m in metrics_functions]))
-
-    if not iterator.data[data_type]:
-        log.warning(f'Could not log examples for {data_type}, assuming it\'s empty')
-        return {'eval_examples_count': 0, 'metrics': None, 'time_spent': str(datetime.timedelta(seconds=0))}
-
-    outputs = {out: [] for out in expected_outputs}
-    examples = 0
-    for x, y_true in iterator.gen_batches(batch_size, data_type, shuffle=False):
-        examples += len(x)
-        y_predicted = list(model.compute(list(x), list(y_true), targets=expected_outputs))
-        if len(expected_outputs) == 1:
-            y_predicted = [y_predicted]
-        for out, val in zip(outputs.values(), y_predicted):
-            out += list(val)
-
-    metrics = [(m.name, m.fn(*[outputs[i] for i in m.inputs])) for m in metrics_functions]
-
-    report = {
-        'eval_examples_count': examples,
-        'metrics': prettify_metrics(metrics),
-        'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
-    }
-
-    if show_examples:
-        try:
-            y_predicted = zip(*[y_predicted_group
-                                for out_name, y_predicted_group in zip(expected_outputs, y_predicted)
-                                if out_name in model.out_params])
-            if len(model.out_params) == 1:
-                y_predicted = [y_predicted_item[0] for y_predicted_item in y_predicted]
-            report['examples'] = [{
-                'x': x_item,
-                'y_predicted': y_predicted_item,
-                'y_true': y_true_item
-            } for x_item, y_predicted_item, y_true_item in zip(x, y_predicted, y_true)]
-        except NameError:
-            log.warning(f'Could not log examples for {data_type}, assuming it\'s empty')
-
-    return report
 
 
 def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config: dict,
