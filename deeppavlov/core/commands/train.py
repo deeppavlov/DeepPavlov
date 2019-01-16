@@ -147,14 +147,21 @@ class FitTrainer:
         self.fit_chainer(iterator)
 
     def test_model(self, iterator: DataLearningIterator, data_type: str = 'train') -> dict:
+        # todo: implement
         pass
 
     def evaluate(self, iterator: DataLearningIterator, data_types: Optional[Iterable[str]] = None):
         if data_types is None:
             data_types = self.evaluation_targets
 
+        res = {}
+
         for data_type in data_types:
             report = self.test_model(iterator, data_type)
+            print(json.dumps({data_type: report}, ensure_ascii=False))
+            res[data_type] = report
+
+        return res
 
 
 class NNTrainer(FitTrainer):
@@ -191,78 +198,6 @@ class NNTrainer(FitTrainer):
             'log_every_n_batches': 0,
             'log_every_n_epochs': 0,
         }
-
-
-def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingIterator]) -> Chainer:
-    """Fit and return the chainer described in corresponding configuration dictionary."""
-    chainer_config: dict = config['chainer']
-    chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
-    for component_config in chainer_config['pipe']:
-        component = from_params(component_config, mode='train')
-        if ('fit_on' in component_config) and \
-                (not callable(getattr(component, 'partial_fit', None))):
-            component: Estimator
-
-            targets = component_config['fit_on']
-            if isinstance(targets, str):
-                targets = [targets]
-
-            preprocessed = chainer.compute(*iterator.get_instances('train'), targets=targets)
-            if len(component_config['fit_on']) == 1:
-                preprocessed = [preprocessed]
-
-            result = component.fit(*preprocessed)
-            if result is not None and config['train'].get('tensorboard_log_dir') is not None:
-                import tensorflow as tf
-                tb_log_dir = expand_path(config['train']['tensorboard_log_dir'])
-                writer = tf.summary.FileWriter(str(tb_log_dir / 'fit_log'))
-
-                for name, scores in result.items():
-                    for i, score in enumerate(scores):
-                        summ = tf.Summary()
-                        summ.value.add(tag='fit/' + name, simple_value=score)
-                        writer.add_summary(summ, i)
-                writer.flush()
-
-            component.save()
-        if ('fit_on_batch' in component_config) or \
-                (('fit_on' in component_config) and
-                 callable(getattr(component, 'partial_fit', None))):
-            component: Estimator
-            try:
-                targets = component_config['fit_on']
-            except KeyError:
-                targets = component_config['fit_on_batch']
-            if isinstance(targets, str):
-                targets = [targets]
-
-            for i, data in enumerate(iterator.gen_batches(config['train']['batch_size'], shuffle=False)):
-                preprocessed = chainer.compute(*data, targets=targets)
-                if len(targets) == 1:
-                    preprocessed = [preprocessed]
-                result = component.partial_fit(*preprocessed)
-
-                if result is not None and config['train'].get('tensorboard_log_dir') is not None:
-                    if i == 0:
-                        import tensorflow as tf
-                        tb_log_dir = expand_path(config['train']['tensorboard_log_dir'])
-                        writer = tf.summary.FileWriter(str(tb_log_dir / 'fit_batches_log'))
-
-                    for name, score in result.items():
-                        summ = tf.Summary()
-                        summ.value.add(tag='fit_batches/' + name, simple_value=score)
-                        writer.add_summary(summ, i)
-                    writer.flush()
-
-            component.save()
-
-        if 'in' in component_config:
-            c_in = component_config['in']
-            c_out = component_config['out']
-            in_y = component_config.get('in_y', None)
-            main = component_config.get('main', False)
-            chainer.append(component, c_in, c_out, in_y, main)
-    return chainer
 
 
 def read_data_by_config(config: dict):
