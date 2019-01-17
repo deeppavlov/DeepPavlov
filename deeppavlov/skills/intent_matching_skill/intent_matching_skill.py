@@ -1,11 +1,12 @@
 from typing import Tuple, Optional, List
+import os
 
 from deeppavlov import train_model
 from deeppavlov import build_model
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.skill.skill import Skill
 from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.file import find_config
+from deeppavlov.configs import configs
 from deeppavlov.core.data.utils import update_dict_recursive
 
 log = get_logger(__name__)
@@ -35,7 +36,7 @@ class IntentMatchingSkill(Skill):
                  x_col_name: Optional[str] = None, y_col_name: Optional[str] = None,
                  edit_dict: Optional[dict] = None, save_load_path: Optional[str] = None, train: bool = True):
 
-        model_config = read_json(find_config('tfidf_autofaq'))
+        model_config = read_json(configs.faq.tfidf_autofaq)
         if x_col_name is not None:
             model_config['dataset_reader']['x_col_name'] = x_col_name
         if y_col_name is not None:
@@ -46,9 +47,14 @@ class IntentMatchingSkill(Skill):
         model_config['metadata']['variables']['ROOT_PATH'] = save_load_path
 
         if data_path is not None:
-            if 'data_url' in model_config['dataset_reader']:
-                del model_config['dataset_reader']['data_url']
-            model_config['dataset_reader']['data_path'] = data_path
+            if os.path.exists(data_path):
+                if 'data_url' in model_config['dataset_reader']:
+                    del model_config['dataset_reader']['data_url']
+                model_config['dataset_reader']['data_path'] = data_path
+            else:
+                if 'data_path' in model_config['dataset_reader']:
+                    del model_config['dataset_reader']['data_path']
+                model_config['dataset_reader']['data_url'] = data_path
 
         if edit_dict is not None:
             update_dict_recursive(model_config, edit_dict)
