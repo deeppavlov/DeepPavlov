@@ -20,7 +20,7 @@ import numpy as np
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
 from deeppavlov.models.squad.utils import dot_attention, simple_attention, PtrNet, CudnnGRU, CudnnCompatibleGRU
-from deeppavlov.core.common.check_gpu import GPU_AVAILABLE
+from deeppavlov.core.common.check_gpu import check_gpu_existence
 from deeppavlov.core.layers.tf_layers import cudnn_bi_gru, variational_dropout
 from deeppavlov.core.common.log import get_logger
 
@@ -76,7 +76,7 @@ class SquadModel(LRScheduledTFModel):
         self.last_impatience = 0
         self.lr_impatience = 0
 
-        if GPU_AVAILABLE:
+        if check_gpu_existence():
             self.GRU = CudnnGRU
         else:
             self.GRU = CudnnCompatibleGRU
