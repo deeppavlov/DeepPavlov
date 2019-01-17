@@ -23,7 +23,7 @@ class IntentMatchingSkill(Skill):
             from matching row from Answers column.
         x_col_name: Name of the column in '.csv' file, that represents Intents column.
         y_col_name: Name of the column in '.csv' file, that represents Answer column.
-        edit_dict: Dictionary of edits in config
+        edit_dict: Dictionary of edits in config (has higher prior, than previous arguments)
         save_load_path: Path, where model will be saved or loaded from
         train: Should model be trained or not
 
