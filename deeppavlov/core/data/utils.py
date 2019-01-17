@@ -433,6 +433,8 @@ def update_dict_recursive(editable_dict: dict, editing_dict: dict) -> None:
     Args:
         editable_dict: dictionary, that will be edited
         editing_dict: dictionary, that contains edits
+    Returns:
+        None
     """
     for k, v in editing_dict.items():
         if isinstance(v, collections.Mapping):
