@@ -81,10 +81,17 @@ class FitTrainer:
 
         self.tensorboard_log_dir: Optional[Path] = tensorboard_log_dir
         if tensorboard_log_dir is not None:
-            self.tensorboard_log_dir = expand_path(tensorboard_log_dir)
-            # noinspection PyPackageRequirements
-            import tensorflow
-            self._tf = tensorflow
+            try:
+                # noinspection PyPackageRequirements
+                # noinspection PyUnresolvedReferences
+                import tensorflow
+            except ImportError:
+                log.warning('Tensorflow could not be imported, so tensorboard log directory'
+                            f'`{self.tensorboard_log_dir}` will be ignored')
+                self.tensorboard_log_dir = None
+            else:
+                self.tensorboard_log_dir = expand_path(tensorboard_log_dir)
+                self._tf = tensorflow
 
         self._built = False
         self._saved = False
@@ -249,7 +256,7 @@ class NNTrainer(FitTrainer):
                  tensorboard_log_dir: Optional[Union[str, Path]] = None,
                  validate_first: bool = True,
                  validation_patience: int = 5, val_every_n_epochs: int = -1, val_every_n_batches: int = -1,
-                 log_every_n_batches: int = -1, log_every_n_epochs: int = -1, log_on_k_batches: int = 1) -> None:
+                 log_every_n_batches: int = -1, log_every_n_epochs: int = -1, log_on_k_batches: int = 0) -> None:
         super().__init__(chainer_config, batch_size=batch_size, metrics=metrics, evaluation_targets=evaluation_targets,
                          show_examples=show_examples, tensorboard_log_dir=tensorboard_log_dir)
         if train_metrics is None:
@@ -259,11 +266,11 @@ class NNTrainer(FitTrainer):
 
         metric_optimization = metric_optimization.strip().lower()
         if metric_optimization == 'maximize':
-            self.improved = lambda score, best: score > best
             self.best = float('-inf')
+            self.improved = lambda score: score > self.best
         elif metric_optimization == 'minimize':
-            self.improved = lambda score, best: score < best
             self.best = float('inf')
+            self.improved = lambda score, best: score < self.best
         else:
             raise ConfigError('metric_optimization has to be one of {}'.format(['maximize', 'minimize']))
 
@@ -283,6 +290,10 @@ class NNTrainer(FitTrainer):
         self.examples = 0
         self.patience = 0
         self.start_time = None
+
+        if self.tensorboard_log_dir is not None:
+            self.tb_train_writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir / 'train_log'))
+            self.tb_valid_writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir / 'valid_log'))
 
     def train_on_batches(self, iterator: DataLearningIterator):
         self.start_time = time.time()
