@@ -43,7 +43,7 @@ class IntentMatchingSkill(Skill):
             model_config['dataset_reader']['y_col_name'] = y_col_name
 
         if save_load_path is None:
-            save_load_path = './faq'
+            save_load_path = './intent_matching'
         model_config['metadata']['variables']['ROOT_PATH'] = save_load_path
 
         if data_path is not None:
