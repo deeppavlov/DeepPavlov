@@ -425,7 +425,7 @@ def chunk_generator(items_list, chunk_size):
         yield items_list[i:i + chunk_size]
 
 
-def update_dict_recursive(editable_dict: dict, editing_dict: dict) -> dict:
+def update_dict_recursive(editable_dict: dict, editing_dict: dict) -> None:
     """Updates dict recursively
 
     You need to use this function to update dictionary if depth of editing_dict is more then 1
@@ -433,8 +433,6 @@ def update_dict_recursive(editable_dict: dict, editing_dict: dict) -> dict:
     Args:
         editable_dict: dictionary, that will be edited
         editing_dict: dictionary, that contains edits
-    Returns:
-        Edited dictionary
     """
     for k, v in editing_dict.items():
         if isinstance(v, collections.Mapping):
