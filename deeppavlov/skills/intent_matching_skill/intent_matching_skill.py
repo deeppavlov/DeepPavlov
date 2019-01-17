@@ -63,7 +63,7 @@ class IntentMatchingSkill(Skill):
                  states_batch: Optional[list] = None) -> Tuple[List[str], List[float]]:
         """Returns skill inference result.
 
-        Returns batches of skill inference results and estimated confidence
+        Returns batches of skill inference results and estimated confidences
 
         Args:
             utterances_batch: A batch of utterances of any type.
@@ -72,8 +72,6 @@ class IntentMatchingSkill(Skill):
                 each utterance.
 
         Returns:
-            response: A batch of arbitrary typed skill inference results.
-            confidence: A batch of float typed confidence levels for each of
-                skill inference result.
+            Batches of skill inference results and estimated confidences
         """
         return self.model(utterances_batch)
