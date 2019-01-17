@@ -73,9 +73,9 @@ class FitTrainer:
                  show_examples: bool = False,
                  tensorboard_log_dir: Optional[Union[str, Path]] = None) -> None:
         self.chainer_config = chainer_config
-        self.chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
+        self._chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
         self.batch_size = batch_size
-        self.metrics = _parse_metrics(metrics, self.chainer.in_y, self.chainer.out_params)
+        self.metrics = _parse_metrics(metrics, self._chainer.in_y, self._chainer.out_params)
         self.evaluation_targets = tuple(evaluation_targets)
         self.show_examples = show_examples
 
@@ -87,6 +87,8 @@ class FitTrainer:
             self._tf = tensorflow
 
         self._built = False
+        self._saved = False
+        self._loaded = False
 
     def fit_chainer(self, iterator: Union[DataFittingIterator, DataLearningIterator]):
         if self._built:
@@ -104,7 +106,7 @@ class FitTrainer:
                     writer = None
 
                     for i, (x, y) in enumerate(iterator.gen_batches(self.batch_size, shuffle=False)):
-                        preprocessed = self.chainer.compute(x, y, targets=targets)
+                        preprocessed = self._chainer.compute(x, y, targets=targets)
                         # noinspection PyUnresolvedReferences
                         result = component.partial_fit(*preprocessed)
 
@@ -118,7 +120,7 @@ class FitTrainer:
                                 writer.add_summary(summary, i)
                             writer.flush()
                 else:
-                    preprocessed = self.chainer.compute(*iterator.get_instances(), targets=targets)
+                    preprocessed = self._chainer.compute(*iterator.get_instances(), targets=targets)
                     if len(targets) == 1:
                         preprocessed = [preprocessed]
                     result: Optional[Dict[str, Iterable[float]]] = component.fit(*preprocessed)
@@ -140,13 +142,34 @@ class FitTrainer:
                 c_out = component_config['out']
                 in_y = component_config.get('in_y', None)
                 main = component_config.get('main', False)
-                self.chainer.append(component, c_in, c_out, in_y, main)
+                self._chainer.append(component, c_in, c_out, in_y, main)
         self._built = True
+
+    def _load(self):
+        if not self._saved:
+            raise RuntimeError('Chainer was not saved and cannot be loaded')
+
+        if not self._loaded:
+            self._chainer.destroy()
+            self._chainer = build_model({'chainer': self.chainer_config}, load_trained=True)
+            self._loaded = True
+
+    def get_chainer(self):
+        self._load()
+        return self._chainer
+
+    def save(self):
+        if self._loaded:
+            raise RuntimeError('Cannot save already finalized chainer')
+
+        self._chainer.save()
+        self._saved = True
 
     def train(self, iterator: Union[DataFittingIterator, DataLearningIterator]) -> None:
         self.fit_chainer(iterator)
+        self.save()
 
-    def test(self, iterator: DataLearningIterator, data_type: str = 'train', start_time: Optional[float] = None,
+    def test(self, iterator: DataLearningIterator, data_type: str = 'train', *, start_time: Optional[float] = None,
              batch_size: Optional[int] = None, show_examples: Optional[bool] = None) -> dict:
         if not iterator.data[data_type]:
             log.warning(f'Could not log examples for {data_type}, assuming it\'s empty')
@@ -159,13 +182,13 @@ class FitTrainer:
         if show_examples is None:
             show_examples = self.show_examples
 
-        expected_outputs = list(set().union(self.chainer.out_params, *[m.inputs for m in self.metrics]))
+        expected_outputs = list(set().union(self._chainer.out_params, *[m.inputs for m in self.metrics]))
 
         outputs = {out: [] for out in expected_outputs}
         examples = 0
         for x, y_true in iterator.gen_batches(batch_size=batch_size, data_type=data_type, shuffle=False):
             examples += len(x)
-            y_predicted = list(self.chainer.compute(list(x), list(y_true), targets=expected_outputs))
+            y_predicted = list(self._chainer.compute(list(x), list(y_true), targets=expected_outputs))
             if len(expected_outputs) == 1:
                 y_predicted = [y_predicted]
             for out, val in zip(outputs.values(), y_predicted):
@@ -183,8 +206,8 @@ class FitTrainer:
             try:
                 y_predicted = zip(*[y_predicted_group
                                     for out_name, y_predicted_group in zip(expected_outputs, y_predicted)
-                                    if out_name in self.chainer.out_params])
-                if len(self.chainer.out_params) == 1:
+                                    if out_name in self._chainer.out_params])
+                if len(self._chainer.out_params) == 1:
                     y_predicted = [y_predicted_item[0] for y_predicted_item in y_predicted]
                 report['examples'] = [{
                     'x': x_item,
@@ -196,15 +219,16 @@ class FitTrainer:
 
         return report
 
-    def evaluate(self, iterator: DataLearningIterator, data_types: Optional[Iterable[str]] = None,
-                 print_reports: bool = True):
+    def evaluate(self, iterator: DataLearningIterator, data_types: Optional[Iterable[str]] = None, *,
+                 print_reports: bool = True) -> Dict[str, dict]:
+        self._load()
         if data_types is None:
             data_types = self.evaluation_targets
 
         res = {}
 
         for data_type in data_types:
-            report = self.test_model(iterator, data_type)
+            report = self.test(iterator, data_type)
             res[data_type] = report
             if print_reports:
                 print(json.dumps({data_type: report}, ensure_ascii=False))
@@ -222,30 +246,52 @@ class NNTrainer(FitTrainer):
                  metric_optimization: str = 'maximize',
                  evaluation_targets: Iterable[str] = ('valid', 'test'),
                  show_examples: bool = False,
-                 tensorboard_log_dir: Optional[Union[str, Path]] = None) -> None:
+                 tensorboard_log_dir: Optional[Union[str, Path]] = None,
+                 validate_first: bool = True,
+                 validation_patience: int = 5, val_every_n_epochs: int = -1, val_every_n_batches: int = -1,
+                 log_every_n_batches: int = -1, log_every_n_epochs: int = -1, log_on_k_batches: int = 1) -> None:
         super().__init__(chainer_config, batch_size=batch_size, metrics=metrics, evaluation_targets=evaluation_targets,
                          show_examples=show_examples, tensorboard_log_dir=tensorboard_log_dir)
-
         if train_metrics is None:
             self.train_metrics = self.metrics
         else:
-            self.train_metrics = _parse_metrics(train_metrics, self.chainer.in_y, self.chainer.out_params)
+            self.train_metrics = _parse_metrics(train_metrics, self._chainer.in_y, self._chainer.out_params)
 
-        self.metric_optimization = metric_optimization
+        metric_optimization = metric_optimization.strip().lower()
+        if metric_optimization == 'maximize':
+            self.improved = lambda score, best: score > best
+            self.best = float('-inf')
+        elif metric_optimization == 'minimize':
+            self.improved = lambda score, best: score < best
+            self.best = float('inf')
+        else:
+            raise ConfigError('metric_optimization has to be one of {}'.format(['maximize', 'minimize']))
+
+        self.validate_first = validate_first
+        self.validation_patience = validation_patience
+        self.val_every_n_epochs = val_every_n_epochs
+        self.val_every_n_batches = val_every_n_batches
+        self.log_every_n_epochs = log_every_n_epochs
+        self.log_every_n_batches = log_every_n_batches
+        self.log_on_k_batches = log_on_k_batches
 
         self.max_epochs = epochs,
         self.epoch = start_epoch_num
         self.max_batches = max_batches
+
         self.train_batches_seen = 0
+        self.examples = 0
+        self.patience = 0
+        self.start_time = None
 
-        default_train_config = {
-            'validation_patience': 5,
-            'val_every_n_epochs': 0,
-            'val_every_n_batches': 0,
+    def train_on_batches(self, iterator: DataLearningIterator):
+        self.start_time = time.time()
+        # todo: make this work somehow
 
-            'log_every_n_batches': 0,
-            'log_every_n_epochs': 0,
-        }
+    def train(self, iterator: DataLearningIterator):
+        self.fit_chainer(iterator)
+        self.train_on_batches(iterator)
+        self.save()
 
 
 def read_data_by_config(config: dict):
