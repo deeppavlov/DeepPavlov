@@ -60,10 +60,10 @@ class IntentMatchingSkill(Skill):
             update_dict_recursive(model_config, edit_dict)
 
         if train:
-            self.model = train_model(model_config)
+            self.model = train_model(model_config, download=True)
             log.info('Your model was saved at: \'' + save_load_path + '\'')
         else:
-            self.model = build_model(model_config)
+            self.model = build_model(model_config, download=True)
 
     def __call__(self, utterances_batch: List[str], history_batch: List[List[str]],
                  states_batch: Optional[list] = None) -> Tuple[List[str], List[float]]:
