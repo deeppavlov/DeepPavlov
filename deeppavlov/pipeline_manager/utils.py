@@ -17,13 +17,16 @@ from copy import copy
 from pathlib import Path
 from typing import Dict, List, Tuple, Union, Iterable, Optional
 
-import matplotlib.pyplot as plt
+import matplotlib
+
 import numpy as np
 import xlsxwriter
 from py3nvml import py3nvml
 
 from deeppavlov.core.common.errors import GpuError
 from deeppavlov.core.common.log import get_logger
+
+matplotlib.use('agg', warn=False, force=True)
 
 logger = get_logger(__name__)
 
@@ -564,6 +567,8 @@ def plot_res(info: dict,
     Returns:
         None
     """
+    from matplotlib import pyplot as plt
+
     # prepeare data
     bar_list = []
     models = list(info.keys())
