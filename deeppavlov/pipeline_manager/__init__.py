@@ -15,4 +15,3 @@
 from .pipeline_manager import PipelineManager
 from .observer import Observer
 from .pipegen import PipeGen
-from .utils import *
