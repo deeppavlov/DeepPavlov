@@ -269,7 +269,7 @@ class NNTrainer(FitTrainer):
             self.improved = lambda score: score > self.best
         elif metric_optimization == 'minimize':
             self.best = float('inf')
-            self.improved = lambda score, best: score < self.best
+            self.improved = lambda score: score < self.best
         else:
             raise ConfigError('metric_optimization has to be one of {}'.format(['maximize', 'minimize']))
 
@@ -281,22 +281,86 @@ class NNTrainer(FitTrainer):
         self.log_every_n_batches = log_every_n_batches
         self.log_on_k_batches = log_on_k_batches
 
-        self.max_epochs = epochs,
+        self.max_epochs = epochs
         self.epoch = start_epoch_num
         self.max_batches = max_batches
 
         self.train_batches_seen = 0
         self.examples = 0
         self.patience = 0
+        self.losses = []
         self.start_time = None
 
         if self.tensorboard_log_dir is not None:
             self.tb_train_writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir / 'train_log'))
             self.tb_valid_writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir / 'valid_log'))
 
+    def _validate(self, iterator: DataLearningIterator,
+                  tensorboard_tag: Optional[str] = None, tensorboard_index: Optional[int] = None):
+        report = self.test(iterator.gen_batches(self.batch_size, data_type='valid', shuffle=False),
+                           start_time=self.start_time)
+
+        report['epochs_done'] = self.epoch
+        report['batches_seen'] = self.train_batches_seen
+        report['train_examples_seen'] = self.examples
+
+        metrics = list(report['metrics'].items())
+
+        if tensorboard_tag is not None and self.tensorboard_log_dir is not None:
+            summary = self._tf.Summary()
+            for name, score in metrics:
+                summary.value.add(tag=f'{tensorboard_tag}/{name}', simple_value=score)
+            if tensorboard_index is None:
+                tensorboard_index = self.train_batches_seen
+            self.tb_valid_writer.add_summary(summary, tensorboard_index)
+            self.tb_valid_writer.flush()
+
+        m_name, score = metrics[0]
+        if self.improved(score):
+            self.patience = 0
+            log.info('New best {} of {}'.format(m_name, score))
+            self.best = score
+            log.info('Saving model')
+            self._chainer.save()
+            self.saved = True
+        else:
+            self.patience += 1
+            log.info('Did not improve on the {} of {}'.format(m_name, self.best))
+
+        report['impatience'] = self.patience
+        if self.validation_patience > 0:
+            report['patience_limit'] = self.validation_patience
+
+        self._chainer.process_event(event_name='after_validation', data=report)
+        report = {'valid': report}
+        print(json.dumps(report, ensure_ascii=False))
+
     def train_on_batches(self, iterator: DataLearningIterator):
         self.start_time = time.time()
-        # todo: make this work somehow
+        if self.validate_first:
+            self._validate(iterator)
+
+        while True:
+            for x, y_true in iterator.gen_batches(self.batch_size, data_type='train'):
+                result = self._chainer.train_on_batch(x, y_true)
+                if not isinstance(result, dict):
+                    result = {'loss': result} if result is not None else {}
+                if 'loss' in result:
+                    self.losses.append(result['loss'])
+
+                self.train_batches_seen += 1
+                self.examples += len(x)
+                if self.val_every_n_batches > 0 and self.train_batches_seen % self.val_every_n_batches == 0:
+                    self._validate(iterator,
+                                   tensorboard_tag='every_n_batches', tensorboard_index=self.train_batches_seen)
+
+            self.epoch += 1
+
+            if self.val_every_n_epochs > 0 and self.epoch % self.val_every_n_epochs == 0:
+                self._validate(iterator, tensorboard_tag='every_n_epochs', tensorboard_index=self.epoch)
+
+            if 0 < self.max_epochs <= self.epoch:
+                break
 
     def train(self, iterator: DataLearningIterator):
         self.fit_chainer(iterator)
