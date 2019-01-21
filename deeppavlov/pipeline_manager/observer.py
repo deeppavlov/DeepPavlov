@@ -49,12 +49,12 @@ class Observer:
         self.pipe_res = None
         self.pipe_time = None
         self.batch_size = None
-        self.dataset = None
 
         # build folder dependencies
         self.save_path = self.root / self.date / self.exp_name / 'checkpoints'
         self.log_path = self.root / date / self.exp_name
-        self.log_file = self.log_path / (self.exp_name + '.json')
+        self.exp_file = self.log_path / (self.exp_name + '.json')
+        self.log_file = self.log_path / 'logs.jsonl'
 
         if not self.save_path.is_dir():
             self.save_path.mkdir(parents=True)
@@ -62,38 +62,20 @@ class Observer:
             if not (self.log_path / 'images').is_dir():
                 (self.log_path / 'images').mkdir()
 
-        self.log = OrderedDict(experiment_info=OrderedDict(date=date,
-                                                           exp_name=self.exp_name,
-                                                           root=str(self.root),
-                                                           info=self.exp_inf,
-                                                           number_of_pipes=None,
-                                                           metrics=None,
-                                                           target_metric=None),
-                               experiments=OrderedDict())
+        self.exp_info = OrderedDict(date=date,
+                                    exp_name=self.exp_name,
+                                    root=str(self.root),
+                                    info=self.exp_inf,
+                                    number_of_pipes=None,
+                                    metrics=None,
+                                    target_metric=None,
+                                    dataset_name=None)
+        self.log = None
 
-    def tmp_reset(self) -> None:
-        """ Reinitialize temporary attributes. """
-        # tmp parameters
-        self.pipe_ind = 0
-        self.pipe_conf = None
-        self.model = None
-        self.pipe_res = None
-        self.pipe_time = None
-        self.batch_size = None
-        self.dataset = None
-
-    def write(self) -> None:
-        """ Write log in log_file. """
-        if self.log_file.is_file():
-            with open(str(self.log_file), 'r') as old_log:
-                old_log = json.load(old_log)
-
-            new_log = self.merge_logs(old_log, self.log)
-            with open(str(self.log_file), 'w') as log_file:
-                json.dump(new_log, log_file)
-        else:
-            with open(str(self.log_file), 'w') as log_file:
-                json.dump(self.log, log_file)
+    def save_exp_info(self):
+        """ Write exp_info in json file. """
+        with open(str(self.exp_file), 'w') as exp_file:
+            json.dump(self.exp_info, exp_file)
 
     def exp_time(self, time: str) -> None:
         """
@@ -105,12 +87,34 @@ class Observer:
         Returns:
             None
         """
-        with open(str(self.log_file), 'r') as old_log:
+        with open(str(self.exp_file), 'r') as old_log:
             old_log = json.load(old_log)
 
-        old_log['experiment_info']['full_time'] = time
-        with open(str(self.log_file), 'w') as log_file:
+        old_log['full_time'] = time
+        with open(str(self.exp_file), 'w') as log_file:
             json.dump(old_log, log_file)
+
+    def tmp_reset(self) -> None:
+        """ Reinitialize temporary attributes. """
+        # tmp parameters
+        self.pipe_ind = 0
+        self.pipe_conf = None
+        self.model = None
+        self.pipe_res = None
+        self.pipe_time = None
+        self.batch_size = None
+        self.log = None
+
+    def write(self) -> None:
+        """ Write pipeline logs in jsonl file. """
+        if self.log_file.is_file():
+            with open(str(self.log_file), 'a') as logs:
+                logs.write(json.dumps(self.log))
+                logs.write('\n')
+        else:
+            with open(str(self.log_file), 'w') as logs:
+                logs.write(json.dumps(self.log))
+                logs.write('\n')
 
     def update_log(self):
         """ Updates a log with new pipeline information. """
@@ -122,18 +126,16 @@ class Observer:
 
         pipe_name = '-->'.join([x['component_name'] for x in self.pipe_conf])
 
-        if self.dataset not in self.log['experiments'].keys():
-            self.log['experiments'][self.dataset] = OrderedDict()
+        self.log = {'pipe_index': self.pipe_ind,
+                    'model': self.model,
+                    'config': self.pipe_conf,
+                    'light_config': pipe_name,
+                    'time': self.pipe_time,
+                    'batch_size': self.batch_size,
+                    'results': self.pipe_res}
 
-        self.log['experiments'][self.dataset][self.pipe_ind] = {'model': self.model,
-                                                                'config': self.pipe_conf,
-                                                                'light_config': pipe_name,
-                                                                'time': self.pipe_time,
-                                                                'batch_size': self.batch_size,
-                                                                'results': self.pipe_res}
-
-        self.tmp_reset()
         self.write()
+        self.tmp_reset()
         return self
 
     def save_config(self, conf: dict, dataset_name: str, ind: int) -> None:
@@ -143,81 +145,37 @@ class Observer:
 
     def save_best_pipe(self) -> None:
         """ Calculate the best pipeline and delete others pipelines checkpoints. """
-        dataset_res = {}
-
+        logs = []
         with open(str(self.log_file), 'r') as log_file:
-            log = json.load(log_file)
+            for line in log_file.readlines():
+                logs.append(json.loads(line))
 
-        target_metric = log['experiment_info']['target_metric']
+        with open(self.exp_file, 'r') as info:
+            exp_info = json.load(info)
 
-        for dataset_name in log['experiments'].keys():
-            for key, item in log['experiments'][dataset_name].items():
-                results = item['results']
+        target_metric = exp_info['target_metric']
+        dataset_name = exp_info['dataset_name']
 
-                if dataset_name not in dataset_res.keys():
-                    dataset_res[dataset_name] = dict(best_score=-1, best_ind=None)
+        if 'test' in logs[0]['results'].keys():
+            sort_logs = sorted(logs, key=lambda x: x['results']['test'][target_metric], reverse=True)
+        else:
+            sort_logs = sorted(logs, key=lambda x: x['results']['valid'][target_metric], reverse=True)
 
-                if 'test' in results.keys():
-                    if results['test'][target_metric] > dataset_res[dataset_name]["best_score"]:
-                        dataset_res[dataset_name]["best_score"] = results['test'][target_metric]
-                        dataset_res[dataset_name]["best_ind"] = key
+        source = self.save_path / dataset_name
+        dest1 = self.save_path / (dataset_name + '_best_pipe')
+        if not dest1.is_dir():
+            dest1.mkdir()
 
+        files = sorted(source.glob("*"))
+        for f in files:
+            if not f.name.startswith('pipe') and not (dest1 / f.name).is_file():
+                shutil.move(str((source / f.name)), str(dest1))
+            elif f.name == 'pipe_{}'.format(sort_logs[0]['pipe_index']):
+                if (dest1 / f.name).is_dir():
+                    rmtree((dest1 / f.name))
+                    shutil.move(str(source / f.name), str(dest1))
                 else:
-                    if results['valid'][target_metric] > dataset_res[dataset_name]["best_score"]:
-                        dataset_res[dataset_name]["best_score"] = results['valid'][target_metric]
-                        dataset_res[dataset_name]["best_ind"] = key
+                    shutil.move(str(source / f.name), str(dest1))
 
-        for name in dataset_res.keys():
-            source = self.save_path / name
-            dest1 = self.save_path / (name + '_best_pipe')
-            if not dest1.is_dir():
-                dest1.mkdir()
-
-            files = sorted(source.glob("*"))
-            for f in files:
-                if not f.name.startswith('pipe') and not (dest1 / f.name).is_file():
-                    shutil.move(str((source / f.name)), str(dest1))
-                elif f.name == 'pipe_{}'.format(dataset_res[name]["best_ind"]):
-                    if (dest1 / f.name).is_dir():
-                        rmtree((dest1 / f.name))
-                        shutil.move(str(source / f.name), str(dest1))
-                    else:
-                        shutil.move(str(source / f.name), str(dest1))
-
-            # del all tmp files in save path
-            rmtree(str(self.save_path / name))
-
-    @staticmethod
-    def merge_logs(old_log: dict, new_log: dict) -> dict:
-        """
-        Merge a logs of two experiments.
-
-        Args:
-            old_log: config dict
-            new_log: config dict
-
-        Returns:
-            dict: new config
-        """
-        n_old = 0
-        for dataset_name in old_log['experiments'].keys():
-            n_old += len(old_log['experiments'][dataset_name])
-
-        for dataset_name, dataset_val in new_log['experiments'].items():
-            if dataset_name not in old_log['experiments'].keys():
-                old_log['experiments'][dataset_name] = dataset_val
-            else:
-                for ind, item in new_log['experiments'][dataset_name].items():
-                    if ind not in old_log['experiments'][dataset_name].keys():
-                        old_log['experiments'][dataset_name][ind] = item
-                    else:
-                        for nkey, nval in item.items():
-                            match = False
-                            for okey, oval in old_log['experiments'][dataset_name][ind].items():
-                                if nval['config'] == oval['config']:
-                                    match = True
-                            if not match:
-                                n_old += 1
-                                old_log['experiments'][dataset_name][str(n_old)] = nval
-
-        return old_log
+        # del all tmp files in save path
+        rmtree(str(self.save_path / dataset_name))

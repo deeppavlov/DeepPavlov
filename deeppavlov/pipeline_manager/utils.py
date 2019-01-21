@@ -53,11 +53,11 @@ def rename_met(log: dict, gold_metrics: Union[str, Dict[str, List[str]], None] =
                         'F1': ["simple_f1_macro", "classification_f1"],
                         'F1 weighted': ["classification_f1_weighted", "simple_f1_weighted"]}
     # rename exp info
-    log['experiment_info']['metrics'] = list(gold_metrics.keys())
+    log['metrics'] = list(gold_metrics.keys())
     # rename target metric
     for gold_name, gold_val in gold_metrics.items():
-        if log['experiment_info']['target_metric'] in gold_val:
-            log['experiment_info']['target_metric'] = gold_name
+        if log['target_metric'] in gold_val:
+            log['target_metric'] = gold_name
     # rename metrics in pipe logs
     for dataset_name, dataset_val in log['experiments'].items():
         for model_name, model_val in dataset_val.items():
@@ -168,50 +168,44 @@ def get_available_gpus(num_gpus: Optional[int] = None,
 # _______________________________________________Generate new table____________________________________________________
 
 
-def get_data(log: dict) -> Tuple[int, Dict[str, List]]:
+def get_data(logs: list) -> Tuple[int, List]:
     """
     Retrieves the necessary information from the log to build a table with sorted results.
 
     Args:
-        log: dict; log of the experiment
+        logs: dict; log of the experiment
 
     Returns:
         max_com: int; maximum pipeline length (in components)
         dataset_names: dict; dictionary with the necessary information to build a table
     """
-    dataset_names = {}
-    max_com = 0
-
     stop_words = ['save_path', 'load_path', 'scratch_init', 'name', 'id', 'in', 'in_y', 'out', 'fit_on']
+    max_com = 0
+    pipelines = []
+    for val in logs:
+        pipe = dict(index=int(val['pipe_index']), components=[], res={}, time=val['time'])
+        # max amount of components
+        if max_com < len(val['config']):
+            max_com = len(val['config'])
 
-    for dataset_name, dataset_val in log['experiments'].items():
-        dataset_names[dataset_name] = []
-        pipelines = []
-        for ind, conf in dataset_val.items():
-            pipe = dict(index=int(ind), components=[], res={}, time=conf['time'])
-            # max amount of components
-            if max_com < len(conf['config']):
-                max_com = len(conf['config'])
+        for component in val['config']:
+            for key in copy(list(component.keys())):
+                if key in stop_words:
+                    del component[key]  # dell = component.pop(key)
 
-            for component in conf['config']:
-                for key in copy(list(component.keys())):
-                    if key in stop_words:
-                        del component[key]  # dell = component.pop(key)
+            comp_data = dict()
+            comp_data['name'] = component.pop('component_name')
+            comp_data['conf'] = component
+            pipe['components'].append(comp_data)
 
-                comp_data = dict()
-                comp_data['name'] = component.pop('component_name')
-                comp_data['conf'] = component
-                pipe['components'].append(comp_data)
+            if 'main' in component.keys():
+                break
 
-                if 'main' in component.keys():
-                    break
+        for name, val_ in val['results'].items():
+            pipe['res'][name] = val_
+        pipelines.append(pipe)
 
-            for name, val_ in conf['results'].items():
-                pipe['res'][name] = val_
-            pipelines.append(pipe)
-        dataset_names[dataset_name].append(pipelines)
-
-    return max_com, dataset_names
+    return max_com, pipelines
 
 
 def write_info(sheet: xlsxwriter, num: int, target_metric: str, cell_format: Dict, full_time: str) -> Tuple[int, int]:
@@ -247,12 +241,12 @@ def write_legend(sheet: xlsxwriter, row: int, col: int, data_tipe: List[str], me
 
 def write_dataset_name(sheet: xlsxwriter, sheet_2: xlsxwriter, row_1: int, row_2: int, col: int, name: str,
                        dataset_list: List[Dict], format_: Dict, max_l: int, target_metric: str,
-                       metric_names: List[str]) -> Tuple[int, int]:
+                       metric_names: List[str]) -> None:
     """ Writes to the table the name of the dataset for which the table will be built """
     # write dataset name
     sheet.write(row_1, col, "Dataset name", format_)
     sheet.write(row_1, col + 1, name, format_)
-    for l, type_d in enumerate(dataset_list[0][0]['res'].keys()):
+    for l, type_d in enumerate(dataset_list[0]['res'].keys()):
         p = l * len(metric_names)
         sheet.merge_range(row_1, max_l + p + 1, row_1, max_l + p + len(metric_names), type_d, format_)
     row_1 += 1
@@ -260,7 +254,7 @@ def write_dataset_name(sheet: xlsxwriter, sheet_2: xlsxwriter, row_1: int, row_2
     # write dataset name
     sheet_2.write(row_2, col, "Dataset name", format_)
     sheet_2.write(row_2, col + 1, name, format_)
-    for l, type_d in enumerate(dataset_list[0][0]['res'].keys()):
+    for l, type_d in enumerate(dataset_list[0]['res'].keys()):
         p = l * len(metric_names)
         sheet_2.merge_range(row_2, max_l + p + 1, row_2, max_l + p + len(metric_names), type_d, format_)
     row_2 += 1
@@ -268,27 +262,29 @@ def write_dataset_name(sheet: xlsxwriter, sheet_2: xlsxwriter, row_1: int, row_2
     row_1, row_2 = write_exp(row_1, row_2, col, dataset_list, sheet, sheet_2, format_, max_l, target_metric,
                              metric_names)
 
-    return row_1, row_2
+    return None  # row_1, row_2
 
 
 def write_exp(row_1: int, row_2: int, col: int, model_list: List[Dict], sheet: xlsxwriter, sheet_2: xlsxwriter,
               _format: Dict, max_l: int, target_metric: str, metric_names: List[str]) -> Tuple[int, int]:
     """ Writes legends to the table """
-    for val_ in model_list:
-        row_1, col = write_legend(sheet, row_1, col, list(val_[0]['res'].keys()), metric_names, max_l, _format)
-        row_2, col = write_legend(sheet_2, row_2, col, list(val_[0]['res'].keys()), metric_names, max_l, _format)
 
-        # Write pipelines table
-        row_1 = write_table(sheet, val_, row_1, col, _format, max_l)
-        # Get the best pipelines
-        best_pipelines = get_best(val_, target_metric)
-        # Sorting pipelines
-        best_pipelines = sort_pipes(best_pipelines, target_metric)
-        # Write sort pipelines table
-        row_2 = write_table(sheet_2, best_pipelines, row_2, col, _format, max_l, write_conf=False)
+    row_1, col = write_legend(sheet, row_1, col, list(model_list[0]['res'].keys()), metric_names, max_l, _format)
+    row_2, col = write_legend(sheet_2, row_2, col, list(model_list[0]['res'].keys()), metric_names, max_l, _format)
 
-        row_1 += 2
-        row_2 += 2
+    # Write pipelines table
+    sorted_model_list = sort_pipes(model_list, target_metric)
+
+    row_1 = write_table(sheet, sorted_model_list, row_1, col, _format, max_l)
+    # Get the best pipelines
+    best_pipelines = get_best(model_list, target_metric)
+    # Sorting pipelines
+    best_pipelines = sort_pipes(best_pipelines, target_metric)
+    # Write sort pipelines table
+    row_2 = write_table(sheet_2, best_pipelines, row_2, col, _format, max_l, write_conf=False)
+
+    row_1 += 2
+    row_2 += 2
 
     return row_1, row_2
 
@@ -363,16 +359,16 @@ def write_table(worksheet: xlsxwriter, pipelines: Union[Dict, List[dict]], row: 
     return row
 
 
-def get_best(data: dict, target: str) -> List[Dict]:
+def get_best(data: List[Dict], target: str) -> List[Dict]:
     """
     Calculate the best pipeline.
 
     Args:
-        data:  list of dict containing information about pipelines
-        target: str; name of target metric
+        data: list of dict containing information about pipelines
+        target: name of target metric
 
     Returns:
-        best_pipes: list; List of pipelines
+        best_pipes: List of pipelines
     """
 
     def get_name(pipeline: Dict) -> str:
@@ -380,7 +376,7 @@ def get_best(data: dict, target: str) -> List[Dict]:
         Creates a short description of the pipeline as a string.
 
         Args:
-            pipeline: dict; pipeline config
+            pipeline: pipeline config
 
         Returns:
             string with tiny name of pipeline
@@ -443,24 +439,26 @@ def sort_pipes(pipes: List[dict], target_metric: str) -> List[dict]:
     return sort_pipes_
 
 
-def build_pipeline_table(log_data: dict, save_path: Union[str, Path]) -> None:
+def build_pipeline_table(exp_data: dict, log_data: list, save_path: Union[str, Path]) -> None:
     """
     Creates a report table containing a brief description of all the pipelines and their results, as well as selected
     by the target metric.
 
     Args:
-        log_data: dict; log of the experiment
-        save_path: str; path to the folder where table will be saved
+        exp_data: experiments info
+        log_data: pipelines logs
+        save_path: path to the folder where table will be saved
 
     Returns:
         None
     """
-    exp_name = log_data['experiment_info']['exp_name']
-    date = log_data['experiment_info']['date']
-    metrics = log_data['experiment_info']['metrics']
-    num_p = log_data['experiment_info']['number_of_pipes']
-    target_metric = log_data['experiment_info']['target_metric']
-    exp_time = log_data['experiment_info']['full_time']
+    exp_name = exp_data['exp_name']
+    date = exp_data['date']
+    metrics = exp_data['metrics']
+    num_p = exp_data['number_of_pipes']
+    target_metric = exp_data['target_metric']
+    exp_time = exp_data['full_time']
+    dataset_name = exp_data['dataset_name']
 
     # read data from log
     max_l, pipe_data = get_data(log_data)
@@ -480,67 +478,57 @@ def build_pipeline_table(log_data: dict, save_path: Union[str, Path]) -> None:
     row1 = row
     row2 = row
 
-    for dataset_name, dataset_dict in pipe_data.items():
-        row1, row2 = write_dataset_name(worksheet_2, worksheet_1, row1, row2, col, dataset_name, dataset_dict,
-                                        cell_format, max_l, target_metric, metrics)
-
+    write_dataset_name(worksheet_2, worksheet_1, row1, row2, col, dataset_name, pipe_data, cell_format, max_l,
+                       target_metric, metrics)
     workbook.close()
 
 
 # ___________________________________________________Generate plots___________________________________________________
 
 
-def get_met_info(log_: Dict) -> Dict:
+def get_met_info(logs_: List[Dict]) -> Dict:
     """
     Retrieves the necessary information from the log to build a histogram of results.
 
     Args:
-        log_: dict; experiment log
+        logs_: experiment logs
 
     Returns:
-        data: dict;
+        data: experiments logs grouped by model name
     """
+    main = dict()
 
-    def analize(log: Dict):
-        main = dict()
+    if logs_[0]['results'].get('test'):
+        metrics_ = list(logs_[0]['results']['test'].keys())
+    else:
+        metrics_ = list(logs_[0]['results']['valid'].keys())
 
-        log_keys = list(log.keys())
-        if log[log_keys[0]]['results'].get('test'):
-            metrics_ = list(log[log_keys[0]]['results']['test'].keys())
+    group_data = dict()
+    for val in logs_:
+        if val['model'] not in group_data:
+            group_data[val['model']] = dict()
+            group_data[val['model']][val['pipe_index']] = val
         else:
-            metrics_ = list(log[log_keys[0]]['results']['valid'].keys())
+            group_data[val['model']][val['pipe_index']] = val
 
-        group_data = dict()
-        for ind, val in log.items():
-            if val['model'] not in group_data:
-                group_data[val['model']] = dict()
-                group_data[val['model']][ind] = val
-            else:
-                group_data[val['model']][ind] = val
-
-        for name in group_data.keys():
-            main[name] = dict()
-            for met in metrics_:
-                met_max = -1
-                for key, val in group_data[name].items():
-                    if val['results'].get('test') is not None:
-                        if val['results']['test'][met] > met_max:
-                            met_max = val['results']['test'][met]
+    for name in group_data.keys():
+        main[name] = dict()
+        for met in metrics_:
+            met_max = -1
+            for key, val in group_data[name].items():
+                if val['results'].get('test') is not None:
+                    if val['results']['test'][met] > met_max:
+                        met_max = val['results']['test'][met]
+                else:
+                    if val['results'].get('valid'):
+                        if val['results']['valid'][met] > met_max:
+                            met_max = val['results']['valid'][met]
                     else:
-                        if val['results'].get('valid'):
-                            if val['results']['valid'][met] > met_max:
-                                met_max = val['results']['valid'][met]
-                        else:
-                            raise ValueError("Pipe with number {0} not contain 'test' or 'valid' keys in results, "
-                                             "and it will not participate in comparing the results to display "
-                                             "the final plot.".format(key))
-                main[name][met] = met_max
-        return main
-
-    data = {}
-    for dataset_name, log_val in log_['experiments'].items():
-        data[dataset_name] = analize(log_val)
-    return data
+                        raise ValueError("Pipe with number {0} not contain 'test' or 'valid' keys in results, "
+                                         "and it will not participate in comparing the results to display "
+                                         "the final plot.".format(key))
+            main[name][met] = met_max
+    return main
 
 
 def plot_res(info: dict,
@@ -555,14 +543,14 @@ def plot_res(info: dict,
     Creates a histogram with the results of various models based on the experiment log.
 
     Args:
-        info: dict; data for the plot
-        name: str; name of the plot
-        savepath: str; path to the folder where plot will be saved
-        save: bool; determine save plot or show it without saving
-        width: float; width between columns of histogram
-        fheight: int; height of the plot
-        fwidth: int; width of the plot
-        ext: str; extension of the plot file
+        info: data for the plot
+        name: name of the plot
+        savepath: path to the folder where plot will be saved
+        save: determine save plot or show it without saving
+        width: width between columns of histogram
+        fheight: height of the plot
+        fwidth: width of the plot
+        ext: extension of the plot file
 
     Returns:
         None
@@ -639,7 +627,7 @@ def plot_res(info: dict,
 # _________________________________________________Build report_______________________________________________________
 
 
-def results_visualization(root: Union[str, Path], plot: bool) -> None:
+def results_visualization(root: Union[str, Path], logs_file: Union[str, Path], plot: bool) -> None:
     """
     It builds a reporting table and a histogram of results for different models, based on data from the experiment log.
 
@@ -650,15 +638,20 @@ def results_visualization(root: Union[str, Path], plot: bool) -> None:
     Returns:
         None
     """
+    logs = []
     with open(str(root / (root.name + '.json')), 'r') as log_file:
-        log = json.load(log_file)
+        exp_info = json.load(log_file)
         log_file.close()
+
+    with open(logs_file, 'r') as log_file:
+        for line in log_file.readlines():
+            logs.append(json.loads(line))
+
     # create the xlsx file with results of experiments
-    build_pipeline_table(log, save_path=root)
+    build_pipeline_table(exp_info, logs, save_path=root)
 
     if plot:
         # scrub data from log for image creating
-        info = get_met_info(log)
+        info = get_met_info(logs)
         # plot histograms
-        for dataset_name, dataset_val in info.items():
-            plot_res(dataset_val, dataset_name, (root / 'images'))
+        plot_res(info, exp_info['dataset_name'], (root / 'images'))

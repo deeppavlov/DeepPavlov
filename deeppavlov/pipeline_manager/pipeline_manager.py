@@ -175,16 +175,18 @@ class PipelineManager:
         self.pipeline_generator = PipeGen(self.exp_config, self.save_path, self.search_type, self.sample_num, False)
         self.gen_len = self.pipeline_generator.length
         # write train data in observer
-        self.observer.log['experiment_info']['number_of_pipes'] = copy(self.gen_len)
+        self.observer.exp_info['number_of_pipes'] = copy(self.gen_len)
+        self.observer.exp_info['dataset_name'] = copy(self.exp_config['dataset_reader']['data_path'].split("/")[-1])
         if self.target_metric:
-            self.observer.log['experiment_info']['target_metric'] = self.target_metric
+            self.observer.exp_info['target_metric'] = self.target_metric
         else:
-            self.observer.log['experiment_info']['metrics'] = copy(self.exp_config['train']['metrics'])
+            self.observer.exp_info['metrics'] = copy(self.exp_config['train']['metrics'])
             if isinstance(self.exp_config['train']['metrics'][0], dict):
-                self.observer.log['experiment_info']['target_metric'] = \
+                self.observer.exp_info['target_metric'] = \
                     copy(self.exp_config['train']['metrics'][0]['name'])
             else:
-                self.observer.log['experiment_info']['target_metric'] = copy(self.exp_config['train']['metrics'][0])
+                self.observer.exp_info['target_metric'] = copy(self.exp_config['train']['metrics'][0])
+        self.observer.save_exp_info()
 
         self.prepare_multiprocess()
 
@@ -244,10 +246,10 @@ class PipelineManager:
         else:
             os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
+        dataset_name = copy(pipe['dataset_reader']['data_path'].split("/")[-1])
+
         observer_.pipe_ind = i + 1
         observer_.pipe_conf = copy(pipe['chainer']['pipe'])
-        dataset_name = copy(pipe['dataset_reader']['data_path'].split("/")[-1])
-        observer_.dataset = copy(pipe['dataset_reader']['data_path'].split("/")[-1])
         observer_.batch_size = copy(pipe['train'].get('batch_size', "None"))
 
         # start pipeline time
@@ -260,7 +262,7 @@ class PipelineManager:
         # run pipeline train with redirected output flow
         process_out_path = save_path / f"out_{i + 1}.txt"
         if process_out_path.is_file():
-            with RedirectedPrints(new_target=open(str(process_out_path), "r+")):
+            with RedirectedPrints(new_target=open(str(process_out_path), "a")):
                 results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
         else:
             with RedirectedPrints(new_target=open(str(process_out_path), "w")):
@@ -331,7 +333,7 @@ class PipelineManager:
         print("[ End of experiment ]")
         # visualization of results
         print("[ Create an experiment report ... ]")
-        results_visualization(self.observer.log_path, self.plot)
+        results_visualization(self.observer.log_path, self.observer.log_file, self.plot)
         print("[ Report created ]")
 
     def run(self) -> None:
@@ -343,7 +345,7 @@ class PipelineManager:
             print("[ The experiment was interrupt]")
             # visualization of results
             print("[ Create an intermediate report ... ]")
-            results_visualization(self.observer.log_path, self.plot)
+            results_visualization(self.observer.log_path, self.observer.log_file, self.plot)
             print("[ The intermediate report was created ]")
 
     def _test(self) -> None:
