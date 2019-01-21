@@ -17,7 +17,7 @@ import json
 import time
 from collections import OrderedDict, namedtuple
 from pathlib import Path
-from typing import List, Tuple, Dict, Union, Optional, Iterable
+from typing import List, Tuple, Dict, Union, Optional, Iterable, Any, Collection
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import expand_path, import_packages, parse_config
@@ -176,24 +176,22 @@ class FitTrainer:
         self.fit_chainer(iterator)
         self.save()
 
-    def test(self, iterator: DataLearningIterator, data_type: str = 'train', *, start_time: Optional[float] = None,
-             batch_size: Optional[int] = None, show_examples: Optional[bool] = None) -> dict:
-        if not iterator.data[data_type]:
-            log.warning(f'Could not log examples for {data_type}, assuming it\'s empty')
-            return {'eval_examples_count': 0, 'metrics': None, 'time_spent': str(datetime.timedelta(seconds=0))}
+    def test(self, data: Iterable[Tuple[Collection[Any], Collection[Any]]],
+             metrics: Optional[Collection[Metric]] = None, *,
+             start_time: Optional[float] = None, show_examples: Optional[bool] = None) -> dict:
 
         if start_time is None:
             start_time = time.time()
-        if batch_size is None:
-            batch_size = self.batch_size
         if show_examples is None:
             show_examples = self.show_examples
+        if metrics is None:
+            metrics = self.metrics
 
-        expected_outputs = list(set().union(self._chainer.out_params, *[m.inputs for m in self.metrics]))
+        expected_outputs = list(set().union(self._chainer.out_params, *[m.inputs for m in metrics]))
 
         outputs = {out: [] for out in expected_outputs}
         examples = 0
-        for x, y_true in iterator.gen_batches(batch_size=batch_size, data_type=data_type, shuffle=False):
+        for x, y_true in data:
             examples += len(x)
             y_predicted = list(self._chainer.compute(list(x), list(y_true), targets=expected_outputs))
             if len(expected_outputs) == 1:
@@ -201,28 +199,28 @@ class FitTrainer:
             for out, val in zip(outputs.values(), y_predicted):
                 out += list(val)
 
-        metrics = [(m.name, m.fn(*[outputs[i] for i in m.inputs])) for m in self.metrics]
+        if examples == 0:
+            return {'eval_examples_count': 0, 'metrics': None, 'time_spent': str(datetime.timedelta(seconds=0))}
+
+        metrics_values = [(m.name, m.fn(*[outputs[i] for i in m.inputs])) for m in metrics]
 
         report = {
             'eval_examples_count': examples,
-            'metrics': prettify_metrics(metrics),
+            'metrics': prettify_metrics(metrics_values),
             'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
         }
 
         if show_examples:
-            try:
-                y_predicted = zip(*[y_predicted_group
-                                    for out_name, y_predicted_group in zip(expected_outputs, y_predicted)
-                                    if out_name in self._chainer.out_params])
-                if len(self._chainer.out_params) == 1:
-                    y_predicted = [y_predicted_item[0] for y_predicted_item in y_predicted]
-                report['examples'] = [{
-                    'x': x_item,
-                    'y_predicted': y_predicted_item,
-                    'y_true': y_true_item
-                } for x_item, y_predicted_item, y_true_item in zip(x, y_predicted, y_true)]
-            except NameError:
-                log.warning(f'Could not log examples for {data_type}, assuming it\'s empty')
+            y_predicted = zip(*[y_predicted_group
+                                for out_name, y_predicted_group in zip(expected_outputs, y_predicted)
+                                if out_name in self._chainer.out_params])
+            if len(self._chainer.out_params) == 1:
+                y_predicted = [y_predicted_item[0] for y_predicted_item in y_predicted]
+            report['examples'] = [{
+                'x': x_item,
+                'y_predicted': y_predicted_item,
+                'y_true': y_true_item
+            } for x_item, y_predicted_item, y_true_item in zip(x, y_predicted, y_true)]
 
         return report
 
@@ -235,7 +233,8 @@ class FitTrainer:
         res = {}
 
         for data_type in data_types:
-            report = self.test(iterator, data_type)
+            data_gen = iterator.gen_batches(self.batch_size, data_type=data_type, shuffle=False)
+            report = self.test(data_gen)
             res[data_type] = report
             if print_reports:
                 print(json.dumps({data_type: report}, ensure_ascii=False))
