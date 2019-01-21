@@ -12,7 +12,7 @@ from deeppavlov.core.data.utils import update_dict_recursive
 log = get_logger(__name__)
 
 
-class IntentMatchingSkill(Skill):
+class SimilarityMatchingSkill(Skill):
     """Skill, matches utterances to intents, returns predefined answers.
 
     Allows to create skills that give answers to corresponding intents
@@ -60,10 +60,10 @@ class IntentMatchingSkill(Skill):
             update_dict_recursive(model_config, edit_dict)
 
         if train:
-            self.model = train_model(model_config, download=True)
+            self.model = train_model(model_config)
             log.info('Your model was saved at: \'' + save_load_path + '\'')
         else:
-            self.model = build_model(model_config, download=True)
+            self.model = build_model(model_config)
 
     def __call__(self, utterances_batch: List[str], history_batch: List[List[str]],
                  states_batch: Optional[list] = None) -> Tuple[List[str], List[float]]:
