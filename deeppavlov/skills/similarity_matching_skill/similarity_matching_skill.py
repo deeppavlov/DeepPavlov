@@ -24,9 +24,9 @@ class SimilarityMatchingSkill(Skill):
             from matching row from Responses column.
         x_col_name: Name of the column in '.csv' file, that represents Utterances column.
         y_col_name: Name of the column in '.csv' file, that represents Responses column.
-        edit_dict: Dictionary of edits in config (has higher prior, than previous arguments)
-        save_load_path: Path, where model will be saved or loaded from
-        train: Should model be trained or not
+        save_load_path: Path, where model will be saved or loaded from.
+        edit_dict: Dictionary of edits in config (has higher prior, than previous arguments).
+        train: Should model be trained or not.
 
     Attributes:
         model: Classifies user's utterance
@@ -34,7 +34,7 @@ class SimilarityMatchingSkill(Skill):
 
     def __init__(self, data_path: Optional[str] = None,
                  x_col_name: Optional[str] = None, y_col_name: Optional[str] = None,
-                 edit_dict: Optional[dict] = None, save_load_path: Optional[str] = None, train: bool = True):
+                 save_load_path: Optional[str] = None, edit_dict: Optional[dict] = None, train: bool = True):
 
         model_config = read_json(configs.faq.tfidf_autofaq)
         if x_col_name is not None:
