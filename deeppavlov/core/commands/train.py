@@ -341,6 +341,7 @@ class NNTrainer(FitTrainer):
             self._validate(iterator)
 
         while True:
+            impatient = False
             for x, y_true in iterator.gen_batches(self.batch_size, data_type='train'):
                 result = self._chainer.train_on_batch(x, y_true)
                 if not isinstance(result, dict):
@@ -354,12 +355,28 @@ class NNTrainer(FitTrainer):
                     self._validate(iterator,
                                    tensorboard_tag='every_n_batches', tensorboard_index=self.train_batches_seen)
 
+                if 0 < self.max_batches <= self.train_batches_seen:
+                    impatient = True
+                    break
+
+                if 0 < self.validation_patience <= self.patience:
+                    log.info('Ran out of patience')
+                    impatient = True
+                    break
+
+            if impatient:
+                break
+
             self.epoch += 1
 
             if self.val_every_n_epochs > 0 and self.epoch % self.val_every_n_epochs == 0:
                 self._validate(iterator, tensorboard_tag='every_n_epochs', tensorboard_index=self.epoch)
 
             if 0 < self.max_epochs <= self.epoch:
+                break
+
+            if 0 < self.validation_patience <= self.patience:
+                log.info('Ran out of patience')
                 break
 
     def train(self, iterator: DataLearningIterator):
