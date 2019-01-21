@@ -13,23 +13,23 @@ log = get_logger(__name__)
 
 
 class SimilarityMatchingSkill(Skill):
-    """Skill, matches utterances to intents, returns predefined answers.
+    """Skill, matches utterances to predefined phrases, returns corresponding response.
 
-    Allows to create skills that give answers to corresponding intents
+    Allows to create skills that gives response to corresponding user's utterance
     Skill returns response and confidence.
 
     Args:
-        data_path: URL or local path to '.csv' file that contains two columns with Intents and Answers.
-            User's utterance will be compared with Intents column and respond will be selected
-            from matching row from Answers column.
-        x_col_name: Name of the column in '.csv' file, that represents Intents column.
-        y_col_name: Name of the column in '.csv' file, that represents Answer column.
+        data_path: URL or local path to '.csv' file that contains two columns with Utterances and Responses.
+            User's utterance will be compared with Utterances column and response will be selected
+            from matching row from Responses column.
+        x_col_name: Name of the column in '.csv' file, that represents Utterances column.
+        y_col_name: Name of the column in '.csv' file, that represents Responses column.
         edit_dict: Dictionary of edits in config (has higher prior, than previous arguments)
         save_load_path: Path, where model will be saved or loaded from
         train: Should model be trained or not
 
     Attributes:
-        model: Classifies user's intent
+        model: Classifies user's utterance
     """
 
     def __init__(self, data_path: Optional[str] = None,
