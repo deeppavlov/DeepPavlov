@@ -1,1 +1,1 @@
-from .similarity_matching_skill import *
+from .similarity_matching_skill import SimilarityMatchingSkill
