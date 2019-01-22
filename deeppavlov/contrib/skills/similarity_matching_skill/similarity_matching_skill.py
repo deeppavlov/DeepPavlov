@@ -3,6 +3,7 @@ import os
 
 from deeppavlov import train_model
 from deeppavlov import build_model
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.skill.skill import Skill
 from deeppavlov.core.common.file import read_json
@@ -43,11 +44,11 @@ class SimilarityMatchingSkill(Skill):
             model_config['dataset_reader']['y_col_name'] = y_col_name
 
         if save_load_path is None:
-            save_load_path = './intent_matching'
+            save_load_path = './similarity_matching'
         model_config['metadata']['variables']['ROOT_PATH'] = save_load_path
 
         if data_path is not None:
-            if os.path.exists(data_path):
+            if expand_path(data_path).exists():
                 if 'data_url' in model_config['dataset_reader']:
                     del model_config['dataset_reader']['data_url']
                 model_config['dataset_reader']['data_path'] = data_path
@@ -72,7 +73,7 @@ class SimilarityMatchingSkill(Skill):
         Returns batches of skill inference results and estimated confidences
 
         Args:
-            utterances_batch: A batch of utterances of any type.
+            utterances_batch: A batch of utterances.
             history_batch: A batch of list typed histories for each utterance.
             states_batch: Optional. A batch of arbitrary typed states for
                 each utterance.
