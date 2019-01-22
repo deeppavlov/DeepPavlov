@@ -1,5 +1,4 @@
 from typing import Tuple, Optional, List
-import os
 
 from deeppavlov import train_model
 from deeppavlov import build_model
