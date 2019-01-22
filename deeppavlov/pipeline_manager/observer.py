@@ -19,6 +19,8 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Union
 
+from deeppavlov.pipeline_manager.utils import sort_pipes
+
 
 class Observer:
     """
@@ -156,10 +158,7 @@ class Observer:
         target_metric = exp_info['target_metric']
         dataset_name = exp_info['dataset_name']
 
-        if 'test' in logs[0]['results'].keys():
-            sort_logs = sorted(logs, key=lambda x: x['results']['test'][target_metric], reverse=True)
-        else:
-            sort_logs = sorted(logs, key=lambda x: x['results']['valid'][target_metric], reverse=True)
+        sort_logs = sort_pipes(logs, target_metric)
 
         source = self.save_path / dataset_name
         dest1 = self.save_path / (dataset_name + '_best_pipe')

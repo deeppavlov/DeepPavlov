@@ -183,7 +183,7 @@ def get_data(logs: list) -> Tuple[int, List]:
     max_com = 0
     pipelines = []
     for val in logs:
-        pipe = dict(index=int(val['pipe_index']), components=[], res={}, time=val['time'])
+        pipe = dict(index=int(val['pipe_index']), components=[], results={}, time=val['time'])
         # max amount of components
         if max_com < len(val['config']):
             max_com = len(val['config'])
@@ -202,7 +202,7 @@ def get_data(logs: list) -> Tuple[int, List]:
                 break
 
         for name, val_ in val['results'].items():
-            pipe['res'][name] = val_
+            pipe['results'][name] = val_
         pipelines.append(pipe)
 
     return max_com, pipelines
@@ -246,7 +246,7 @@ def write_dataset_name(sheet: xlsxwriter, sheet_2: xlsxwriter, row_1: int, row_2
     # write dataset name
     sheet.write(row_1, col, "Dataset name", format_)
     sheet.write(row_1, col + 1, name, format_)
-    for l, type_d in enumerate(dataset_list[0]['res'].keys()):
+    for l, type_d in enumerate(dataset_list[0]['results'].keys()):
         p = l * len(metric_names)
         sheet.merge_range(row_1, max_l + p + 1, row_1, max_l + p + len(metric_names), type_d, format_)
     row_1 += 1
@@ -254,7 +254,7 @@ def write_dataset_name(sheet: xlsxwriter, sheet_2: xlsxwriter, row_1: int, row_2
     # write dataset name
     sheet_2.write(row_2, col, "Dataset name", format_)
     sheet_2.write(row_2, col + 1, name, format_)
-    for l, type_d in enumerate(dataset_list[0]['res'].keys()):
+    for l, type_d in enumerate(dataset_list[0]['results'].keys()):
         p = l * len(metric_names)
         sheet_2.merge_range(row_2, max_l + p + 1, row_2, max_l + p + len(metric_names), type_d, format_)
     row_2 += 1
@@ -269,8 +269,8 @@ def write_exp(row_1: int, row_2: int, col: int, model_list: List[Dict], sheet: x
               _format: Dict, max_l: int, target_metric: str, metric_names: List[str]) -> Tuple[int, int]:
     """ Writes legends to the table """
 
-    row_1, col = write_legend(sheet, row_1, col, list(model_list[0]['res'].keys()), metric_names, max_l, _format)
-    row_2, col = write_legend(sheet_2, row_2, col, list(model_list[0]['res'].keys()), metric_names, max_l, _format)
+    row_1, col = write_legend(sheet, row_1, col, list(model_list[0]['results'].keys()), metric_names, max_l, _format)
+    row_2, col = write_legend(sheet_2, row_2, col, list(model_list[0]['results'].keys()), metric_names, max_l, _format)
 
     # Write pipelines table
     sorted_model_list = sort_pipes(model_list, target_metric)
@@ -291,13 +291,13 @@ def write_exp(row_1: int, row_2: int, col: int, model_list: List[Dict], sheet: x
 
 def write_metrics(sheet: xlsxwriter, comp_dict: Dict, start_x: int, start_y: int, cell_format: Dict) -> None:
     """ Write metric to the table """
-    data_names = list(comp_dict['res'].keys())
-    metric_names = list(comp_dict['res'][data_names[-1]].keys())
+    data_names = list(comp_dict['results'].keys())
+    metric_names = list(comp_dict['results'][data_names[-1]].keys())
 
     for j, tp in enumerate(data_names):
-        p = j * len(comp_dict['res'][tp])
+        p = j * len(comp_dict['results'][tp])
         for k, met in enumerate(metric_names):
-            sheet.write(start_x, start_y + p + k + 1, comp_dict['res'][tp][met], cell_format)
+            sheet.write(start_x, start_y + p + k + 1, comp_dict['results'][tp][met], cell_format)
 
 
 def write_config(sheet: xlsxwriter, comp_dict: Dict, x: int, y: int, cell_format: Dict) -> None:
@@ -312,8 +312,8 @@ def write_config(sheet: xlsxwriter, comp_dict: Dict, x: int, y: int, cell_format
 def write_pipe(sheet: xlsxwriter, pipe_dict: Dict, start_x: int, start_y: int, cell_format: Dict, max_: int,
                write_conf: bool) -> None:
     """ Add pipeline to the table """
-    data_names = list(pipe_dict['res'].keys())
-    metric_names = list(pipe_dict['res'][data_names[-1]].keys())
+    data_names = list(pipe_dict['results'].keys())
+    metric_names = list(pipe_dict['results'][data_names[-1]].keys())
 
     sheet.write(start_x, start_y, pipe_dict['index'], cell_format)
     x = start_x
@@ -392,12 +392,12 @@ def get_best(data: List[Dict], target: str) -> List[Dict]:
     for pipe in data:
         pipe_name = get_name(pipe)
         if pipe_name not in buf.keys():
-            tp = list(pipe['res'].keys())[-1]
-            buf[pipe_name] = {'ind': pipe['index'], 'target': pipe['res'][tp][target]}
+            tp = list(pipe['results'].keys())[-1]
+            buf[pipe_name] = {'ind': pipe['index'], 'target': pipe['results'][tp][target]}
         else:
-            tp = list(pipe['res'].keys())[-1]
-            if buf[pipe_name]['target'] <= pipe['res'][tp][target]:
-                buf[pipe_name]['target'] = pipe['res'][tp][target]
+            tp = list(pipe['results'].keys())[-1]
+            if buf[pipe_name]['target'] <= pipe['results'][tp][target]:
+                buf[pipe_name]['target'] = pipe['results'][tp][target]
                 buf[pipe_name]['ind'] = pipe['index']
 
     for key, val in buf.items():
@@ -412,31 +412,15 @@ def get_best(data: List[Dict], target: str) -> List[Dict]:
     return best_pipes
 
 
-def sort_pipes(pipes: List[dict], target_metric: str) -> List[dict]:
+def sort_pipes(pipes: List[dict], target_metric: str, name: str = 'results') -> List[dict]:
     """ Sorts pipelines by target metric """
-    ind_val = []
-    sort_pipes_ = []
-    dtype = [('value', 'float'), ('index', 'int')]
-    for pipe in pipes:
-        if 'test' not in pipe['res'].keys():
-            name = list(pipe['res'].keys())[0]
-        else:
-            name = 'test'
-        rm = pipe['res'][name]
-        ind_val.append((rm[target_metric], pipe['index']))
 
-    ind_val = np.sort(np.array(ind_val, dtype=dtype), order='value')
-    for com in ind_val:
-        ind = com[1]
-        for pipe in pipes:
-            if pipe['index'] == ind:
-                sort_pipes_.append(pipe)
+    if 'test' in pipes[0][name].keys():
+        sorted_logs = sorted(pipes, key=lambda x: x[name]['test'][target_metric], reverse=True)
+    else:
+        sorted_logs = sorted(pipes, key=lambda x: x[name]['valid'][target_metric], reverse=True)
 
-    del pipes, ind_val
-
-    sort_pipes_.reverse()
-
-    return sort_pipes_
+    return sorted_logs
 
 
 def build_pipeline_table(exp_data: dict, log_data: list, save_path: Union[str, Path]) -> None:
