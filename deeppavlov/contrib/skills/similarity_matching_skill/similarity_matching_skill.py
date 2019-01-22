@@ -35,7 +35,8 @@ class SimilarityMatchingSkill(Skill):
 
     def __init__(self, data_path: Optional[str] = None,
                  x_col_name: Optional[str] = None, y_col_name: Optional[str] = None,
-                 save_load_path: Optional[str] = None, edit_dict: Optional[dict] = None, train: bool = True):
+                 save_load_path: Optional[str] = './similarity_matching',
+                 edit_dict: Optional[dict] = None, train: bool = True):
 
         model_config = read_json(configs.faq.tfidf_autofaq)
         if x_col_name is not None:
@@ -43,8 +44,6 @@ class SimilarityMatchingSkill(Skill):
         if y_col_name is not None:
             model_config['dataset_reader']['y_col_name'] = y_col_name
 
-        if save_load_path is None:
-            save_load_path = './similarity_matching'
         model_config['metadata']['variables']['ROOT_PATH'] = save_load_path
 
         if data_path is not None:
