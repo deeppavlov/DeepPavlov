@@ -14,20 +14,20 @@ log = get_logger(__name__)
 
 
 class SimilarityMatchingSkill(Skill):
-    """Skill, matches utterances to predefined phrases, returns corresponding response.
+    """Skill, matches utterances to phrases, returns predefined answers.
 
-    Allows to create skills that gives response to corresponding user's utterance
+    Allows to create skills based on a .csv table that give a response to corresponding user's utterance
     Skill returns response and confidence.
 
     Args:
         data_path: URL or local path to '.csv' file that contains two columns with Utterances and Responses.
             User's utterance will be compared with Utterances column and response will be selected
-            from matching row from Responses column.
-        x_col_name: Name of the column in '.csv' file, that represents Utterances column.
-        y_col_name: Name of the column in '.csv' file, that represents Responses column.
-        save_load_path: Path, where model will be saved or loaded from. Chooses './similarity_matching' by default.
+            from matching row from Responses column. 'http://files.deeppavlov.ai/faq/school/faq_school.csv' by default.
+        x_col_name: Name of the column in '.csv' file, that represents Utterances column. 'Question' by default.
+        y_col_name: Name of the column in '.csv' file, that represents Responses column. 'Answer' by default.
+        save_load_path: Path, where model will be saved or loaded from. './similarity_matching' by default.
         edit_dict: Dictionary of edits in config (has higher prior, than previous arguments).
-        train: Should model be trained or not.
+        train: Should model be trained or not. True by default
 
     Attributes:
         model: Classifies user's utterance
