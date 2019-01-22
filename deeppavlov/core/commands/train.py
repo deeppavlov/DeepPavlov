@@ -434,7 +434,9 @@ class NNTrainer(FitTrainer):
                 log.info('Stopped training')
         else:
             log.warn(f'Using {self.__class__.__name__} for a pipeline without batched training')
-        self.save()
+
+        if not self._saved:
+            self.save()
 
 
 def read_data_by_config(config: dict):
