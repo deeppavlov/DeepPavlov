@@ -545,4 +545,6 @@ def train_evaluate_model_from_config(config: Union[str, Path, dict],
         res = trainer.evaluate(iterator, evaluation_targets, print_reports=True)
         trainer.get_chainer().destroy()
 
+    res = {k: v['metrics'] for k, v in res.items()}
+
     return res
