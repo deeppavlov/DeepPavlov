@@ -428,7 +428,10 @@ class NNTrainer(FitTrainer):
     def train(self, iterator: DataLearningIterator):
         self.fit_chainer(iterator)
         if callable(getattr(self._chainer, 'train_on_batch')):
-            self.train_on_batches(iterator)
+            try:
+                self.train_on_batches(iterator)
+            except KeyboardInterrupt:
+                log.info('Stopped training')
         else:
             log.warn(f'Using {self.__class__.__name__} for a pipeline without batched training')
         self.save()
