@@ -25,7 +25,7 @@ class SimilarityMatchingSkill(Skill):
             from matching row from Responses column.
         x_col_name: Name of the column in '.csv' file, that represents Utterances column.
         y_col_name: Name of the column in '.csv' file, that represents Responses column.
-        save_load_path: Path, where model will be saved or loaded from.
+        save_load_path: Path, where model will be saved or loaded from. Chooses './similarity_matching' by default.
         edit_dict: Dictionary of edits in config (has higher prior, than previous arguments).
         train: Should model be trained or not.
 
