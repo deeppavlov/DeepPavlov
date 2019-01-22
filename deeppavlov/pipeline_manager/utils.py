@@ -232,7 +232,7 @@ def write_legend(sheet: xlsxwriter, row: int, col: int, data_tipe: List[str], me
     for j in range(len(data_tipe)):
         p = j * len(metric_names)
         for k, met in enumerate(metric_names):
-            sheet.write(row, max_com + p + k + 1, met['name'], cell_format)
+            sheet.write(row, max_com + p + k + 1, met, cell_format)
     # write pipeline run time
     sheet.write(row, max_com + len(metric_names) * len(data_tipe) + 1, "Time", cell_format)
 

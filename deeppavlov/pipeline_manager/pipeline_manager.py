@@ -177,15 +177,19 @@ class PipelineManager:
         # write train data in observer
         self.observer.exp_info['number_of_pipes'] = copy(self.gen_len)
         self.observer.exp_info['dataset_name'] = copy(self.exp_config['dataset_reader']['data_path'].split("/")[-1])
+
+        self.observer.exp_info['metrics'] = []
+        for met in copy(self.exp_config['train']['metrics']):
+            if isinstance(met, dict):
+                self.observer.exp_info['metrics'].append(met['name'])
+            else:
+                self.observer.exp_info['metrics'].append(met)
+
         if self.target_metric:
             self.observer.exp_info['target_metric'] = self.target_metric
         else:
-            self.observer.exp_info['metrics'] = copy(self.exp_config['train']['metrics'])
-            if isinstance(self.exp_config['train']['metrics'][0], dict):
-                self.observer.exp_info['target_metric'] = \
-                    copy(self.exp_config['train']['metrics'][0]['name'])
-            else:
-                self.observer.exp_info['target_metric'] = copy(self.exp_config['train']['metrics'][0])
+            self.observer.exp_info['target_metric'] = self.observer.exp_info['metrics'][0]
+
         self.observer.save_exp_info()
 
         self.prepare_multiprocess()
