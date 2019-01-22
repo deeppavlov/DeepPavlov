@@ -427,7 +427,7 @@ class NNTrainer(FitTrainer):
 
     def train(self, iterator: DataLearningIterator):
         self.fit_chainer(iterator)
-        if callable(getattr(self._chainer, 'train_on_batch')):
+        if callable(getattr(self._chainer, 'train_on_batch', None)):
             try:
                 self.train_on_batches(iterator)
             except KeyboardInterrupt:
