@@ -32,7 +32,6 @@ from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.core.models.estimator import Estimator
-from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.download import deep_download
 
 log = get_logger(__name__)
@@ -72,7 +71,10 @@ class FitTrainer:
                  metrics: Iterable[Union[str, dict]] = ('accuracy',),
                  evaluation_targets: Iterable[str] = ('valid', 'test'),
                  show_examples: bool = False,
-                 tensorboard_log_dir: Optional[Union[str, Path]] = None) -> None:
+                 tensorboard_log_dir: Optional[Union[str, Path]] = None,
+                 **kwargs) -> None:
+        if kwargs:
+            log.info(f'{self.__class__.__name__} got additional init parameters {list(kwargs)} that will be ignored:')
         self.chainer_config = chainer_config
         self._chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
         self.batch_size = batch_size
@@ -98,7 +100,7 @@ class FitTrainer:
         self._saved = False
         self._loaded = False
 
-    def fit_chainer(self, iterator: Union[DataFittingIterator, DataLearningIterator]):
+    def fit_chainer(self, iterator: Union[DataFittingIterator, DataLearningIterator]) -> None:
         if self._built:
             raise RuntimeError('Cannot fit already built chainer')
         for component_index, component_config in enumerate(self.chainer_config['pipe'], 1):
@@ -153,20 +155,17 @@ class FitTrainer:
                 self._chainer.append(component, c_in, c_out, in_y, main)
         self._built = True
 
-    def _load(self):
-        if not self._saved:
-            raise RuntimeError('Chainer was not saved and cannot be loaded')
-
+    def _load(self) -> None:
         if not self._loaded:
             self._chainer.destroy()
-            self._chainer = build_model({'chainer': self.chainer_config}, load_trained=True)
+            self._chainer = build_model({'chainer': self.chainer_config}, load_trained=self._saved)
             self._loaded = True
 
-    def get_chainer(self):
+    def get_chainer(self) -> Chainer:
         self._load()
         return self._chainer
 
-    def save(self):
+    def save(self) -> None:
         if self._loaded:
             raise RuntimeError('Cannot save already finalized chainer')
 
@@ -256,9 +255,10 @@ class NNTrainer(FitTrainer):
                  tensorboard_log_dir: Optional[Union[str, Path]] = None,
                  validate_first: bool = True,
                  validation_patience: int = 5, val_every_n_epochs: int = -1, val_every_n_batches: int = -1,
-                 log_every_n_batches: int = -1, log_every_n_epochs: int = -1, log_on_k_batches: int = 0) -> None:
+                 log_every_n_batches: int = -1, log_every_n_epochs: int = -1, log_on_k_batches: int = 0,
+                 **kwargs) -> None:
         super().__init__(chainer_config, batch_size=batch_size, metrics=metrics, evaluation_targets=evaluation_targets,
-                         show_examples=show_examples, tensorboard_log_dir=tensorboard_log_dir)
+                         show_examples=show_examples, tensorboard_log_dir=tensorboard_log_dir, **kwargs)
         if train_metrics is None:
             self.train_metrics = self.metrics
         else:
@@ -323,8 +323,7 @@ class NNTrainer(FitTrainer):
             log.info('New best {} of {}'.format(m_name, score))
             self.best = score
             log.info('Saving model')
-            self._chainer.save()
-            self.saved = True
+            self.save()
         else:
             self.patience += 1
             log.info('Did not improve on the {} of {}'.format(m_name, self.best))
@@ -347,6 +346,12 @@ class NNTrainer(FitTrainer):
             data = islice(iterator.gen_batches(self.batch_size, data_type='train', shuffle=True),
                           self.log_on_k_batches)
             report = self.test(data, self.train_metrics, start_time=self.start_time)
+
+        report.update({
+            'epochs_done': self.epoch,
+            'batches_seen': self.train_batches_seen,
+            'train_examples_seen': self.examples
+        })
 
         metrics: List[Tuple[str, float]] = list(report.get('metrics', {}).items()) + list(self.last_result.items())
 
@@ -422,7 +427,10 @@ class NNTrainer(FitTrainer):
 
     def train(self, iterator: DataLearningIterator):
         self.fit_chainer(iterator)
-        self.train_on_batches(iterator)
+        if callable(getattr(self._chainer, 'train_on_batch')):
+            self.train_on_batches(iterator)
+        else:
+            log.warn(f'Using {self.__class__.__name__} for a pipeline without batched training')
         self.save()
 
 
@@ -464,9 +472,14 @@ def get_iterator_from_config(config: dict, data: dict):
     return iterator
 
 
-def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None, *,
-                                     to_train=True, to_validate=True, download=False,
-                                     start_epoch_num=0, recursive=False) -> Dict[str, Dict[str, float]]:
+def train_evaluate_model_from_config(config: Union[str, Path, dict],
+                                     iterator: Union[DataLearningIterator, DataFittingIterator] = None, *,
+                                     to_train: bool = True,
+                                     evaluation_targets: Optional[Iterable[str]] = None,
+                                     to_validate: Optional[bool] = None,
+                                     download: bool = False,
+                                     start_epoch_num: Optional[int] = None,
+                                     recursive: bool = False) -> Dict[str, Dict[str, float]]:
     """Make training and evaluation of the model described in corresponding configuration file."""
     config = parse_config(config)
 
@@ -489,388 +502,42 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None, *
         else:
             iterator = get_iterator_from_config(config, data)
 
-    train_config = {
-        'metrics': ['accuracy'],
-        'validate_best': to_validate,
-        'test_best': True,
-        'show_examples': False
-    }
-
-    try:
-        train_config.update(config['train'])
-    except KeyError:
+    if 'train' not in config:
         log.warning('Train config is missing. Populating with default values')
+    train_config = config.get('train')
 
-    in_y = config['chainer'].get('in_y', ['y'])
-    if isinstance(in_y, str):
-        in_y = [in_y]
-    if isinstance(config['chainer']['out'], str):
-        config['chainer']['out'] = [config['chainer']['out']]
-    metrics_functions = _parse_metrics(train_config['metrics'], in_y, config['chainer']['out'])
+    if start_epoch_num is not None:
+        train_config['start_epoch_num'] = start_epoch_num
+
+    if 'evaluation_targets' not in train_config and ('validate_best' in train_config
+                                                     or 'test_best' in train_config):
+        log.warning('"validate_best" and "test_best" parameters are deprecated.'
+                    ' Please, use "evaluation_targets" list instead')
+
+        train_config['evaluation_targets'] = []
+        if train_config.pop('validate_best', True):
+            train_config['evaluation_targets'].append('valid')
+        if train_config.pop('test_best', True):
+            train_config['evaluation_targets'].append('test')
+
+    trainer = NNTrainer(config['chainer'], **train_config)
 
     if to_train:
-        model = fit_chainer(config, iterator)
-
-        if callable(getattr(model, 'train_on_batch', None)):
-            _train_batches(model, iterator, train_config, metrics_functions, start_epoch_num=start_epoch_num)
-
-        model.destroy()
+        trainer.train(iterator)
 
     res = {}
 
-    if iterator is not None and (train_config['validate_best'] or train_config['test_best']):
-        model = build_model(config, load_trained=to_train)
-        log.info('Testing the best saved model')
+    if iterator is not None:
+        if to_validate is not None:
+            if evaluation_targets is None:
+                log.warning('"to_validate" parameter is deprecated and will be removed in future versions.'
+                            ' Please, use "evaluation_targets" list instead')
+                evaluation_targets = ['test']
+            else:
+                log.warn('Both "evaluation_targets" and "to_validate" parameters are specified.'
+                         ' "to_validate" is deprecated and will be ignored')
 
-        if train_config['validate_best']:
-            report = {
-                'valid': _test_model(model, metrics_functions, iterator,
-                                     train_config.get('batch_size', -1), 'valid',
-                                     show_examples=train_config['show_examples'])
-            }
-
-            res['valid'] = report['valid']['metrics']
-
-            print(json.dumps(report, ensure_ascii=False))
-
-        if train_config['test_best']:
-            report = {
-                'test': _test_model(model, metrics_functions, iterator,
-                                    train_config.get('batch_size', -1), 'test',
-                                    show_examples=train_config['show_examples'])
-            }
-
-            res['test'] = report['test']['metrics']
-
-            print(json.dumps(report, ensure_ascii=False))
-
-        model.destroy()
+        res = trainer.evaluate(iterator, evaluation_targets, print_reports=True)
+        trainer.get_chainer().destroy()
 
     return res
-
-
-def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config: dict,
-                   metrics_functions: List[Metric], *, start_epoch_num: Optional[int] = None) -> NNModel:
-
-    default_train_config = {
-        'epochs': 0,
-        'start_epoch_num': 0,
-        'max_batches': 0,
-        'batch_size': 1,
-
-        'metric_optimization': 'maximize',
-
-        'validation_patience': 5,
-        'val_every_n_epochs': 0,
-        'val_every_n_batches': 0,
-
-        'log_every_n_batches': 0,
-        'log_every_n_epochs': 0,
-
-        'validate_best': True,
-        'test_best': True,
-        'tensorboard_log_dir': None,
-    }
-
-    train_config = dict(default_train_config, **train_config)
-
-    if 'train_metrics' in train_config:
-        train_metrics_functions = _parse_metrics(train_config['train_metrics'], model.in_y, model.out_params)
-    else:
-        train_metrics_functions = metrics_functions
-    expected_outputs = list(set().union(model.out_params, *[m.inputs for m in train_metrics_functions]))
-
-    if train_config['metric_optimization'] == 'maximize':
-        def improved(score, best):
-            return score > best
-        best = float('-inf')
-    elif train_config['metric_optimization'] == 'minimize':
-        def improved(score, best):
-            return score < best
-        best = float('inf')
-    else:
-        raise ConfigError('metric_optimization has to be one of {}'.format(['maximize', 'minimize']))
-
-    i = 0
-    epochs = start_epoch_num if start_epoch_num is not None else train_config['start_epoch_num']
-    examples = 0
-    saved = False
-    patience = 0
-    log_on = train_config['log_every_n_batches'] > 0 or train_config['log_every_n_epochs'] > 0
-    outputs = {key: [] for key in expected_outputs}
-    losses = []
-    start_time = time.time()
-    break_flag = False
-
-    if train_config['tensorboard_log_dir'] is not None:
-        import tensorflow as tf
-        tb_log_dir = expand_path(train_config['tensorboard_log_dir'])
-
-        tb_train_writer = tf.summary.FileWriter(str(tb_log_dir / 'train_log'))
-        tb_valid_writer = tf.summary.FileWriter(str(tb_log_dir / 'valid_log'))
-
-    # validate first (important if model is pre-trained)
-    if train_config['val_every_n_epochs'] > 0 or train_config['val_every_n_batches'] > 0:
-        report = _test_model(model, metrics_functions, iterator,
-                             train_config['batch_size'], 'valid', start_time, train_config['show_examples'])
-        report['epochs_done'] = epochs
-        report['batches_seen'] = i
-        report['train_examples_seen'] = examples
-
-        metrics = list(report['metrics'].items())
-
-        m_name, score = metrics[0]
-        if improved(score, best):
-            patience = 0
-            log.info('New best {} of {}'.format(m_name, score))
-            best = score
-            log.info('Saving model')
-            model.save()
-            saved = True
-        else:
-            patience += 1
-            log.info('Did not improve on the {} of {}'.format(m_name, best))
-
-        report['impatience'] = patience
-        if train_config['validation_patience'] > 0:
-            report['patience_limit'] = train_config['validation_patience']
-
-        model.process_event(event_name='after_validation', data=report)
-        report = {'valid': report}
-        print(json.dumps(report, ensure_ascii=False))
-
-    try:
-        while True:
-            for x, y_true in iterator.gen_batches(train_config['batch_size']):
-                if log_on and len(train_metrics_functions) > 0:
-                    y_predicted = list(model.compute(list(x), list(y_true), targets=expected_outputs))
-                    if len(expected_outputs) == 1:
-                        y_predicted = [y_predicted]
-                    for out, val in zip(outputs.values(), y_predicted):
-                        out += list(val)
-                result = model.train_on_batch(x, y_true)
-                if not isinstance(result, dict):
-                    result = {'loss': result} if result is not None else {}
-                if 'loss' in result:
-                    losses.append(result['loss'])
-                i += 1
-                examples += len(x)
-
-                if train_config['log_every_n_batches'] > 0 and i % train_config['log_every_n_batches'] == 0:
-                    metrics = [(m.name, m.fn(*[outputs[i] for i in m.inputs])) for m in train_metrics_functions]
-                    report = {
-                        'epochs_done': epochs,
-                        'batches_seen': i,
-                        'examples_seen': examples,
-                        'metrics': prettify_metrics(metrics),
-                        'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
-                    }
-                    default_report_keys = list(report.keys())
-                    report.update(result)
-
-                    if train_config['show_examples']:
-                        try:
-                            y_predicted = zip(*[y_predicted_group
-                                                for out_name, y_predicted_group in zip(expected_outputs, y_predicted)
-                                                if out_name in model.out_params])
-                            if len(model.out_params) == 1:
-                                y_predicted = [y_predicted_item[0] for y_predicted_item in y_predicted]
-                            report['examples'] = [{
-                                'x': x_item,
-                                'y_predicted': y_predicted_item,
-                                'y_true': y_true_item
-                            } for x_item, y_predicted_item, y_true_item
-                                in zip(x, y_predicted, y_true)]
-                        except NameError:
-                            log.warning('Could not log examples as y_predicted is not defined')
-
-                    if losses:
-                        report['loss'] = sum(losses)/len(losses)
-                        losses = []
-
-                    model.process_event(event_name='after_train_log', data=report)
-
-                    if train_config['tensorboard_log_dir'] is not None:
-                        summ = tf.Summary()
-
-                        for name, score in metrics:
-                            summ.value.add(tag='every_n_batches/' + name, simple_value=score)
-                        for name, score in report.items():
-                            if name not in default_report_keys:
-                                summ.value.add(tag='every_n_batches/' + name, simple_value=score)
-
-                        tb_train_writer.add_summary(summ, i)
-                        tb_train_writer.flush()
-
-                    report = {'train': report}
-                    print(json.dumps(report, ensure_ascii=False))
-                    for out in outputs.values():
-                        out.clear()
-
-                if train_config['val_every_n_batches'] > 0 and i % train_config['val_every_n_batches'] == 0:
-                    report = _test_model(model, metrics_functions, iterator,
-                                         train_config['batch_size'], 'valid', start_time, train_config['show_examples'])
-                    report['epochs_done'] = epochs
-                    report['batches_seen'] = i
-                    report['train_examples_seen'] = examples
-
-                    metrics = list(report['metrics'].items())
-
-                    if train_config['tensorboard_log_dir'] is not None:
-                        summ = tf.Summary()
-                        for name, score in metrics:
-                            summ.value.add(tag='every_n_batches/' + name, simple_value=score)
-                        tb_valid_writer.add_summary(summ, i)
-                        tb_valid_writer.flush()
-
-                    m_name, score = metrics[0]
-                    if improved(score, best):
-                        patience = 0
-                        log.info('New best {} of {}'.format(m_name, score))
-                        best = score
-                        log.info('Saving model')
-                        model.save()
-                        saved = True
-                    else:
-                        patience += 1
-                        log.info('Did not improve on the {} of {}'.format(m_name, best))
-
-                    report['impatience'] = patience
-                    if train_config['validation_patience'] > 0:
-                        report['patience_limit'] = train_config['validation_patience']
-
-                    model.process_event(event_name='after_validation', data=report)
-                    report = {'valid': report}
-                    print(json.dumps(report, ensure_ascii=False))
-
-                    if patience >= train_config['validation_patience'] > 0:
-                        log.info('Ran out of patience')
-                        break_flag = True
-                        break
-
-                if i >= train_config['max_batches'] > 0:
-                    break_flag = True
-                    break
-
-                report = {
-                    'epochs_done': epochs,
-                    'batches_seen': i,
-                    'train_examples_seen': examples,
-                    'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
-                }
-                model.process_event(event_name='after_batch', data=report)
-            if break_flag:
-                break
-
-            epochs += 1
-
-            report = {
-                'epochs_done': epochs,
-                'batches_seen': i,
-                'train_examples_seen': examples,
-                'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
-            }
-            model.process_event(event_name='after_epoch', data=report)
-
-            if train_config['log_every_n_epochs'] > 0 and epochs % train_config['log_every_n_epochs'] == 0\
-                    and outputs:
-                metrics = [(m.name, m.fn(*[outputs[i] for i in m.inputs])) for m in train_metrics_functions]
-                report = {
-                    'epochs_done': epochs,
-                    'batches_seen': i,
-                    'train_examples_seen': examples,
-                    'metrics': prettify_metrics(metrics),
-                    'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
-                }
-                default_report_keys = list(report.keys())
-                report.update(result)
-
-                if train_config['show_examples']:
-                    try:
-                        y_predicted = zip(*[y_predicted_group
-                                            for out_name, y_predicted_group in zip(expected_outputs, y_predicted)
-                                            if out_name in model.out_params])
-                        if len(model.out_params) == 1:
-                            y_predicted = [y_predicted_item[0] for y_predicted_item in y_predicted]
-                        report['examples'] = [{
-                            'x': x_item,
-                            'y_predicted': y_predicted_item,
-                            'y_true': y_true_item
-                        } for x_item, y_predicted_item, y_true_item
-                            in zip(x, y_predicted, y_true)]
-                    except NameError:
-                        log.warning('Could not log examples')
-
-                if losses:
-                    report['loss'] = sum(losses)/len(losses)
-                    losses = []
-
-                model.process_event(event_name='after_train_log', data=report)
-
-                if train_config['tensorboard_log_dir'] is not None:
-                    summ = tf.Summary()
-
-                    for name, score in metrics:
-                        summ.value.add(tag='every_n_epochs/' + name, simple_value=score)
-                    for name, score in report.items():
-                        if name not in default_report_keys:
-                            summ.value.add(tag='every_n_epochs/' + name, simple_value=score)
-
-                    tb_train_writer.add_summary(summ, epochs)
-                    tb_train_writer.flush()
-
-                report = {'train': report}
-                print(json.dumps(report, ensure_ascii=False))
-                for out in outputs.values():
-                    out.clear()
-
-            if train_config['val_every_n_epochs'] > 0 and epochs % train_config['val_every_n_epochs'] == 0:
-                report = _test_model(model, metrics_functions, iterator,
-                                     train_config['batch_size'], 'valid', start_time, train_config['show_examples'])
-                report['epochs_done'] = epochs
-                report['batches_seen'] = i
-                report['train_examples_seen'] = examples
-
-                metrics = list(report['metrics'].items())
-
-                if train_config['tensorboard_log_dir'] is not None:
-                    summ = tf.Summary()
-                    for name, score in metrics:
-                        summ.value.add(tag='every_n_epochs/' + name, simple_value=score)
-                    tb_valid_writer.add_summary(summ, epochs)
-                    tb_valid_writer.flush()
-
-                m_name, score = metrics[0]
-                if improved(score, best):
-                    patience = 0
-                    log.info('New best {} of {}'.format(m_name, score))
-                    best = score
-                    log.info('Saving model')
-                    model.save()
-                    saved = True
-                else:
-                    patience += 1
-                    log.info('Did not improve on the {} of {}'.format(m_name, best))
-
-                report['impatience'] = patience
-                if train_config['validation_patience'] > 0:
-                    report['patience_limit'] = train_config['validation_patience']
-
-                model.process_event(event_name='after_validation', data=report)
-                report = {'valid': report}
-                print(json.dumps(report, ensure_ascii=False))
-
-                if patience >= train_config['validation_patience'] > 0:
-                    log.info('Ran out of patience')
-                    break
-
-            if epochs >= train_config['epochs'] > 0:
-                break
-    except KeyboardInterrupt:
-        log.info('Stopped training')
-
-    if not saved:
-        log.info('Saving model')
-        model.save()
-
-    return model
