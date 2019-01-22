@@ -16,6 +16,7 @@ import datetime
 import json
 import time
 from collections import OrderedDict, namedtuple
+from itertools import islice
 from pathlib import Path
 from typing import List, Tuple, Dict, Union, Optional, Iterable, Any, Collection
 
@@ -279,7 +280,7 @@ class NNTrainer(FitTrainer):
         self.val_every_n_batches = val_every_n_batches
         self.log_every_n_epochs = log_every_n_epochs
         self.log_every_n_batches = log_every_n_batches
-        self.log_on_k_batches = log_on_k_batches
+        self.log_on_k_batches = log_on_k_batches if log_on_k_batches >= 0 else None
 
         self.max_epochs = epochs
         self.epoch = start_epoch_num
@@ -288,6 +289,7 @@ class NNTrainer(FitTrainer):
         self.train_batches_seen = 0
         self.examples = 0
         self.patience = 0
+        self.last_result = {}
         self.losses = []
         self.start_time = None
 
@@ -335,6 +337,36 @@ class NNTrainer(FitTrainer):
         report = {'valid': report}
         print(json.dumps(report, ensure_ascii=False))
 
+    def _log(self, iterator: DataLearningIterator,
+             tensorboard_tag: Optional[str] = None, tensorboard_index: Optional[int] = None):
+        if self.log_on_k_batches == 0:
+            report = {
+                'time_spent': str(datetime.timedelta(seconds=round(time.time() - self.start_time + 0.5)))
+            }
+        else:
+            data = islice(iterator.gen_batches(self.batch_size, data_type='train', shuffle=True),
+                          self.log_on_k_batches)
+            report = self.test(data, self.train_metrics, start_time=self.start_time)
+
+        metrics: List[Tuple[str, float]] = list(report.get('metrics', {}).items()) + list(self.last_result.items())
+
+        report.update(self.last_result)
+        if self.losses:
+            report['loss'] = sum(self.losses)/len(self.losses)
+            self.losses.clear()
+            metrics.append(('loss', report['loss']))
+
+        if metrics and self.tensorboard_log_dir is not None:
+            summary = self._tf.Summary()
+
+            for name, score in metrics:
+                summary.value.add(tag=f'{tensorboard_tag}/{name}', simple_value=score)
+            self.tb_train_writer.add_summary(summary, tensorboard_index)
+            self.tb_train_writer.flush()
+
+        report = {'train': report}
+        print(json.dumps(report, ensure_ascii=False))
+
     def train_on_batches(self, iterator: DataLearningIterator):
         self.start_time = time.time()
         if self.validate_first:
@@ -343,14 +375,20 @@ class NNTrainer(FitTrainer):
         while True:
             impatient = False
             for x, y_true in iterator.gen_batches(self.batch_size, data_type='train'):
-                result = self._chainer.train_on_batch(x, y_true)
-                if not isinstance(result, dict):
-                    result = {'loss': result} if result is not None else {}
-                if 'loss' in result:
-                    self.losses.append(result['loss'])
+                self.last_result = self._chainer.train_on_batch(x, y_true)
+                if self.last_result is None:
+                    self.last_result = {}
+                elif not isinstance(self.last_result, dict):
+                    self.last_result = {'loss': self.last_result}
+                if 'loss' in self.last_result:
+                    self.losses.append(self.last_result.pop('loss'))
 
                 self.train_batches_seen += 1
                 self.examples += len(x)
+
+                if self.log_every_n_batches > 0 and self.train_batches_seen % self.log_every_n_batches == 0:
+                    self._log(iterator, tensorboard_tag='every_n_batches', tensorboard_index=self.train_batches_seen)
+
                 if self.val_every_n_batches > 0 and self.train_batches_seen % self.val_every_n_batches == 0:
                     self._validate(iterator,
                                    tensorboard_tag='every_n_batches', tensorboard_index=self.train_batches_seen)
@@ -368,6 +406,9 @@ class NNTrainer(FitTrainer):
                 break
 
             self.epoch += 1
+
+            if self.log_every_n_epochs > 0 and self.epoch % self.log_every_n_epochs == 0:
+                self._log(iterator, tensorboard_tag='every_n_epochs', tensorboard_index=self.epoch)
 
             if self.val_every_n_epochs > 0 and self.epoch % self.val_every_n_epochs == 0:
                 self._validate(iterator, tensorboard_tag='every_n_epochs', tensorboard_index=self.epoch)
@@ -681,7 +722,6 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
                             summ.value.add(tag='every_n_batches/' + name, simple_value=score)
                         tb_valid_writer.add_summary(summ, i)
                         tb_valid_writer.flush()
-
 
                     m_name, score = metrics[0]
                     if improved(score, best):
