@@ -1,0 +1,91 @@
+{
+  "chainer": {
+    "in": [
+      "question_raw"
+    ],
+    "out": [
+      "best_answer"
+    ],
+    "pipe": [
+      {
+        "config_path": "{CONFIGS_PATH}/doc_retrieval/en_ranker_pop_wiki_test.json",
+        "in": [
+          "question_raw"
+        ],
+        "out": [
+          "doc_ids"
+        ]
+      },
+      {
+        "class_name": "wiki_sqlite_vocab",
+        "in": [
+          "doc_ids"
+        ],
+        "out": [
+          "context_raw"
+        ],
+        "join_docs": false,
+        "shuffle": false,
+        "load_path": "{DOWNLOADS_PATH}/odqa/enwiki_test.db"
+      },
+      {
+        "class_name": "document_chunker",
+        "in": [
+          "context_raw"
+        ],
+        "out": [
+          "chunks"
+        ],
+        "tokens_limit": 4000,
+        "flatten_result": true
+      },
+      {
+        "class_name": "string_multiplier",
+        "in": [
+          "question_raw",
+          "chunks"
+        ],
+        "out": [
+          "questions"
+        ]
+      },
+      {
+        "class_name": "logit_ranker",
+        "squad_model": {
+          "config_path": "{CONFIGS_PATH}/squad/multi_squad_noans_infer.json"
+        },
+        "sort_noans": true,
+        "in": [
+          "chunks",
+          "questions"
+        ],
+        "out": [
+          "best_answer",
+          "best_answer_score"
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
+    ],
+    "labels": {
+      "server_utils": "ODQA"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/odqa_test.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      }
+    ]
+  }
+}

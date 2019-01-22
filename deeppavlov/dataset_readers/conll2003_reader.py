@@ -9,21 +9,24 @@ from deeppavlov.core.common.registry import register
 class Conll2003DatasetReader(DatasetReader):
     """Class to read training datasets in CoNLL-2003 format"""
 
-    def read(self, dir_path: str, dataset_name=None, provide_pos=False):
+    def read(self, data_path: str, dataset_name=None, provide_pos=False):
         self.provide_pos = provide_pos
-        dir_path = Path(dir_path)
-        files = list(dir_path.glob('*.txt'))
+        data_path = Path(data_path)
+        files = list(data_path.glob('*.txt'))
         if 'train.txt' not in {file_path.name for file_path in files}:
             if dataset_name == 'conll2003':
                 url = 'http://files.deeppavlov.ai/deeppavlov_data/conll2003_v2.tar.gz'
             elif dataset_name == 'collection_rus':
                 url = 'http://files.deeppavlov.ai/deeppavlov_data/collection5.tar.gz'
+            elif dataset_name == 'ontonotes':
+                url = 'http://files.deeppavlov.ai/deeppavlov_data/ontonotes_ner.tar.gz'
             else:
-                raise RuntimeError('train.txt not found in "{}"'.format(dir_path))
-            dir_path.mkdir(exist_ok=True, parents=True)
-            download_decompress(url, dir_path)
-            files = list(dir_path.glob('*.txt'))
+                raise RuntimeError('train.txt not found in "{}"'.format(data_path))
+            data_path.mkdir(exist_ok=True, parents=True)
+            download_decompress(url, data_path)
+            files = list(data_path.glob('*.txt'))
         dataset = {}
+
         for file_name in files:
             name = file_name.with_suffix('').name
             dataset[name] = self.parse_ner_file(file_name)

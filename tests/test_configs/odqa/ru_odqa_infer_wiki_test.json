@@ -36,7 +36,8 @@
         "out": [
           "chunks"
         ],
-        "flatten_result": true
+        "flatten_result": true,
+        "paragraphs": true
       },
       {
         "class_name": "string_multiplier",
@@ -58,7 +59,8 @@
           "questions"
         ],
         "out": [
-          "best_answer"
+          "best_answer",
+          "best_answer_score"
         ]
       }
     ]

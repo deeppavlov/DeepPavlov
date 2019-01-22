@@ -17,6 +17,7 @@ from spacy.matcher import Matcher
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
+from deeppavlov.models.tokenizers.spacy_tokenizer import _try_load_spacy_model
 
 
 @register('ecommerce_preprocess')
@@ -28,11 +29,11 @@ class EcommercePreprocess(Component):
         disable: SpaCy pipeline to disable
     """
 
-    def __init__(self, spacy_model: str = 'en_core_web_sm', disable: Optional[List[str]] = None, **kwargs):
+    def __init__(self, spacy_model: str = 'en_core_web_sm', disable: Optional[Iterable[str]] = None, **kwargs):
         if disable is None:
             disable = ['parser', 'ner']
 
-        self.model = spacy.load(spacy_model, disable=disable)
+        self.model = _try_load_spacy_model(spacy_model, disable=disable)
 
         below = lambda text: bool(re.compile(r'below|cheap').match(text))
         BELOW = self.model.vocab.add_flag(below)
@@ -43,12 +44,12 @@ class EcommercePreprocess(Component):
         self.matcher = Matcher(self.model.vocab)
 
         self.matcher.add('below', None, [{BELOW: True}, {'LOWER': 'than', 'OP': '?'},
-                        {'LOWER': 'from', 'OP': '?'}, {'ORTH': '$', 'OP': '?'},
-                        {'ENT_TYPE': 'MONEY', 'LIKE_NUM': True}])
+                                         {'LOWER': 'from', 'OP': '?'}, {'ORTH': '$', 'OP': '?'},
+                                         {'ENT_TYPE': 'MONEY', 'LIKE_NUM': True}])
 
         self.matcher.add('above', None, [{ABOVE: True}, {'LOWER': 'than', 'OP': '?'},
-                        {'LOWER': 'from', 'OP': '?'}, {'ORTH': '$', 'OP': '?'},
-                        {'ENT_TYPE': 'MONEY', 'LIKE_NUM': True}])
+                                         {'LOWER': 'from', 'OP': '?'}, {'ORTH': '$', 'OP': '?'},
+                                         {'ENT_TYPE': 'MONEY', 'LIKE_NUM': True}])
 
     def __call__(self, **kwargs):
         pass
@@ -78,12 +79,12 @@ class EcommercePreprocess(Component):
 
             num_token = [token for token in span if token.like_num == True]
             if (string_id == 'below' and negated == False) or (string_id == 'above' and negated == True):
-                money_range = (0, float(num_token[0].text))                
+                money_range = (0, float(num_token[0].text))
 
             if (string_id == 'above' and negated == False) or (string_id == 'below' and negated == True):
-                money_range = (float(num_token[0].text), float(math.inf))                
+                money_range = (float(num_token[0].text), float(math.inf))
 
-            del doc_no_money[start:end+1]
+            del doc_no_money[start:end + 1]
         return doc_no_money, money_range
 
     def analyze(self, text: str) -> Iterable:
@@ -121,7 +122,7 @@ class EcommercePreprocess(Component):
     def parse_input(self, inp: str) -> Dict[Any, Any]:
         """Convert space-delimited string into dialog state"""
         state: List = []
-        for i in range(len(inp.split())//2, 0, -1):
+        for i in range(len(inp.split()) // 2, 0, -1):
             state.append([inp.split(None, 1)[0], inp.split(None, 1)[1].split()[0]])
 
             if i > 1:

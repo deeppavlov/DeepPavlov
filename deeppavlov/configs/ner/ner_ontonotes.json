@@ -1,7 +1,8 @@
 {
   "dataset_reader": {
-    "class_name": "ontonotes_reader",
-    "data_path": "{DOWNLOADS_PATH}/ontonotes_senna"
+    "class_name": "conll2003_reader",
+    "data_path": "{DOWNLOADS_PATH}/ontonotes",
+    "dataset_name": "ontonotes"
   },
   "dataset_iterator": {
     "class_name": "data_learning_iterator",
@@ -105,6 +106,7 @@
         "intra_layer_dropout": false,
         "l2_reg": 0,
         "learning_rate": 3e-3,
+        "learning_rate_drop_patience": 3,
         "dropout_keep_prob": 0.7
       },
       {
@@ -129,7 +131,7 @@
     "validation_patience": 7,
     "val_every_n_epochs": 1,
 
-    "log_every_n_epochs": -1,
+    "log_every_n_batches": -1,
     "show_examples": false
   },
   "metadata": {

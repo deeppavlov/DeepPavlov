@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import inspect
+import pickle
 from typing import Union, Tuple, List
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
+from deeppavlov.core.models.serializable import Serializable
 
 
 class Chainer(Component):
@@ -110,6 +111,7 @@ class Chainer(Component):
         if self.forward_map.issuperset(in_x):
             self.pipe.append(((x_keys, in_x), out_params, component))
             self.forward_map = self.forward_map.union(out_params)
+
         if self.train_map.issuperset(in_x):
             self.train_pipe.append(((x_keys, in_x), out_params, component))
             self.train_map = self.train_map.union(out_params)
@@ -172,23 +174,36 @@ class Chainer(Component):
             res = res[0]
         return res
 
-    def get_main_component(self):
+    def get_main_component(self) -> Serializable:
         return self.main or self.pipe[-1][-1]
 
-    def save(self):
+    def save(self) -> None:
         self.get_main_component().save()
 
-    def load(self):
-        for in_params, out_params, component in self.pipe:
-            if inspect.ismethod(getattr(component, 'load', None)):
+    def load(self) -> None:
+        for in_params, out_params, component in self.train_pipe:
+            if callable(getattr(component, 'load', None)):
                 component.load()
 
-    def reset(self):
-        for in_params, out_params, component in self.pipe:
-            if inspect.ismethod(getattr(component, 'reset', None)):
+    def reset(self) -> None:
+        for in_params, out_params, component in self.train_pipe:
+            if callable(getattr(component, 'reset', None)):
                 component.reset()
 
     def destroy(self):
-        for in_params, out_params, component in self.pipe:
-            if inspect.ismethod(getattr(component, 'destroy', None)):
+        for in_params, out_params, component in self.train_pipe:
+            if callable(getattr(component, 'destroy', None)):
                 component.destroy()
+        self.pipe.clear()
+        self.train_pipe.clear()
+
+    def serialize(self) -> bytes:
+        data = []
+        for in_params, out_params, component in self.train_pipe:
+            data.append(component.serialize())
+        return pickle.dumps(data)
+
+    def deserialize(self, data: bytes) -> None:
+        data = pickle.loads(data)
+        for in_params, out_params, component in self.train_pipe:
+            component.deserialize(data)
