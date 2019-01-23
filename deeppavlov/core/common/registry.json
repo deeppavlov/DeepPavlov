@@ -1,5 +1,6 @@
 {
   "amazon_ecommerce_reader": "deeppavlov.dataset_readers.amazon_ecommerce_reader:AmazonEcommerceReader",
+  "answer_generation": "deeppavlov.models.simple_qa.answer_generation:AnswerGeneration",
   "api_requester": "deeppavlov.models.api_requester.api_requester:ApiRequester",
   "api_router": "deeppavlov.models.api_requester.api_router:ApiRouter",
   "basic_classification_iterator": "deeppavlov.dataset_iterators.basic_classification_iterator:BasicClassificationDatasetIterator",
@@ -31,6 +32,7 @@
   "elmo_file_paths_iterator": "deeppavlov.dataset_iterators.elmo_file_paths_iterator:ELMoFilePathsIterator",
   "elmo_model": "deeppavlov.models.elmo.elmo:ELMo",
   "emb_mat_assembler": "deeppavlov.models.preprocessors.assemble_embeddings_matrix:EmbeddingsMatrixAssembler",
+  "entity_linking": "deeppavlov.models.simple_qa.entity_linking:EntityLinking",
   "faq_reader": "deeppavlov.dataset_readers.faq_reader:FaqDatasetReader",
   "fasttext": "deeppavlov.models.embedders.fasttext_embedder:FasttextEmbedder",
   "featurized_tracker": "deeppavlov.models.go_bot.tracker:FeaturizedTracker",
@@ -51,6 +53,7 @@
   "logit_ranker": "deeppavlov.models.doc_retrieval.logit_ranker:LogitRanker",
   "lowercase_preprocessor": "deeppavlov.models.preprocessors.capitalization:LowercasePreprocessor",
   "mask": "deeppavlov.models.preprocessors.mask:Mask",
+  "max_n": "deeppavlov.models.simple_qa.max_n:Max_n",
   "morpho_tagger": "deeppavlov.models.morpho_tagger.network:MorphoTagger",
   "morphotagger_dataset": "deeppavlov.dataset_iterators.morphotagger_iterator:MorphoTaggerDatasetIterator",
   "morphotagger_dataset_reader": "deeppavlov.dataset_readers.morphotagging_dataset_reader:MorphotaggerDatasetReader",

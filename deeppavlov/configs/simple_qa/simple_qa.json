@@ -18,7 +18,6 @@
       {
         "in": "x",
         "out": "x_tok",
-        "id": "my_tokenizer",
         "class_name": "nltk_tokenizer",
         "tokenizer": "wordpunct_tokenize"
       },
