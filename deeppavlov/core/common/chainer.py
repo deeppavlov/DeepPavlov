@@ -178,7 +178,9 @@ class Chainer(Component):
         return self.main or self.pipe[-1][-1]
 
     def save(self) -> None:
-        self.get_main_component().save()
+        main_component = self.get_main_component()
+        if isinstance(main_component, Serializable):
+            main_component.save()
 
     def load(self) -> None:
         for in_params, out_params, component in self.train_pipe:
