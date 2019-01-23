@@ -162,16 +162,9 @@ class FitTrainer:
         self._load()
         return self._chainer
 
-    def save(self) -> None:
-        if self._loaded:
-            raise RuntimeError('Cannot save already finalized chainer')
-
-        self._chainer.save()
-        self._saved = True
-
     def train(self, iterator: Union[DataFittingIterator, DataLearningIterator]) -> None:
         self.fit_chainer(iterator)
-        self.save()
+        self._saved = True
 
     def test(self, data: Iterable[Tuple[Collection[Any], Collection[Any]]],
              metrics: Optional[Collection[Metric]] = None, *,
@@ -293,6 +286,13 @@ class NNTrainer(FitTrainer):
         if self.tensorboard_log_dir is not None:
             self.tb_train_writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir / 'train_log'))
             self.tb_valid_writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir / 'valid_log'))
+
+    def save(self) -> None:
+        if self._loaded:
+            raise RuntimeError('Cannot save already finalized chainer')
+
+        self._chainer.save()
+        self._saved = True
 
     def _validate(self, iterator: DataLearningIterator,
                   tensorboard_tag: Optional[str] = None, tensorboard_index: Optional[int] = None):
