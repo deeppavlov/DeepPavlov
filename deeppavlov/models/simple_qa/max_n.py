@@ -4,9 +4,6 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
 
-import os
-import pickle
-
 
 @register('max_n')
 class Max_n(Component):
