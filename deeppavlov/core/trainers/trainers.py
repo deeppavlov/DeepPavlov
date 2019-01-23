@@ -69,6 +69,7 @@ class FitTrainer:
                  evaluation_targets: Iterable[str] = ('valid', 'test'),
                  show_examples: bool = False,
                  tensorboard_log_dir: Optional[Union[str, Path]] = None,
+                 max_test_batches: int = -1,
                  **kwargs) -> None:
         if kwargs:
             log.info(f'{self.__class__.__name__} got additional init parameters {list(kwargs)} that will be ignored:')
@@ -78,6 +79,8 @@ class FitTrainer:
         self.metrics = _parse_metrics(metrics, self._chainer.in_y, self._chainer.out_params)
         self.evaluation_targets = tuple(evaluation_targets)
         self.show_examples = show_examples
+
+        self.max_test_batches = None if max_test_batches < 0 else max_test_batches
 
         self.tensorboard_log_dir: Optional[Path] = tensorboard_log_dir
         if tensorboard_log_dir is not None:
@@ -181,6 +184,9 @@ class FitTrainer:
 
         outputs = {out: [] for out in expected_outputs}
         examples = 0
+
+        data = islice(data, self.max_test_batches)
+
         for x, y_true in data:
             examples += len(x)
             y_predicted = list(self._chainer.compute(list(x), list(y_true), targets=expected_outputs))
@@ -243,12 +249,14 @@ class NNTrainer(FitTrainer):
                  evaluation_targets: Iterable[str] = ('valid', 'test'),
                  show_examples: bool = False,
                  tensorboard_log_dir: Optional[Union[str, Path]] = None,
+                 max_test_batches: int = -1,
                  validate_first: bool = True,
                  validation_patience: int = 5, val_every_n_epochs: int = -1, val_every_n_batches: int = -1,
                  log_every_n_batches: int = -1, log_every_n_epochs: int = -1, log_on_k_batches: int = 0,
                  **kwargs) -> None:
         super().__init__(chainer_config, batch_size=batch_size, metrics=metrics, evaluation_targets=evaluation_targets,
-                         show_examples=show_examples, tensorboard_log_dir=tensorboard_log_dir, **kwargs)
+                         show_examples=show_examples, tensorboard_log_dir=tensorboard_log_dir,
+                         max_test_batches=max_test_batches, **kwargs)
         if train_metrics is None:
             self.train_metrics = self.metrics
         else:
