@@ -58,8 +58,7 @@ class Observer:
         self.exp_file = self.log_path / (self.exp_name + '.json')
         self.log_file = self.log_path / 'logs.jsonl'
 
-        if not self.save_path.is_dir():
-            self.save_path.mkdir(parents=True)
+        self.save_path.mkdir(parents=True, exist_ok=True)
         if self.plot:
             if not (self.log_path / 'images').is_dir():
                 (self.log_path / 'images').mkdir()
@@ -134,7 +133,7 @@ class Observer:
 
     def save_config(self, conf: dict, dataset_name: str, ind: int) -> None:
         """ Save train config in checkpoint folder. """
-        with open(str(self.save_path / dataset_name / "pipe_{}".format(ind) / 'config.json'), 'w') as cf:
+        with self.save_path.joinpath(dataset_name, f'pipe_{ind}', 'config.json').open('w', encoding='utf8') as cf:
             json.dump(conf, cf)
 
     def save_best_pipe(self) -> None:
