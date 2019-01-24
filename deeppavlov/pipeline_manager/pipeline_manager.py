@@ -20,6 +20,7 @@ from multiprocessing import Pool
 from pathlib import Path
 from shutil import rmtree
 from typing import Union, Dict, Generator, Optional, List
+from contextlib import redirect_stderr, redirect_stdout
 
 from psutil import cpu_count
 from tqdm import tqdm
@@ -29,7 +30,6 @@ from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.commands.utils import expand_path, parse_config
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.prints import RedirectedPrints
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.pipeline_manager.observer import ExperimentObserver
 from deeppavlov.pipeline_manager.pipegen import PipeGen
@@ -265,8 +265,10 @@ class PipelineManager:
 
         # run pipeline train with redirected output flow
         process_out_path = save_path / f"out_{i + 1}.txt"
-        with RedirectedPrints(new_target=open(str(process_out_path), "a")):
-            results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
+        process_err_path = save_path / f"err_{i + 1}.txt"
+        with redirect_stdout(open(str(process_out_path), "a")):
+            with redirect_stderr(open(str(process_err_path), "a")):
+                results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
 
         # add results and pipe time to log
         observer_.pipe_time = time.strftime('%H:%M:%S', time.gmtime(time.time() - pipe_start))
