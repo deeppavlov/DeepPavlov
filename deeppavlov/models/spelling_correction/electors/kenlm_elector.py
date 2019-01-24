@@ -33,25 +33,31 @@ class KenlmElector(Component):
     Args:
          load_path: path to the kenlm model file
          beam_size: beam size for highest probability search
+         top_k: How much it returns examples with highest product of base and language model probabilities
 
     Attributes:
         lm: kenlm object
         beam_size: beam size for highest probability search
+        top_k: How much it returns examples with highest product of base and language model probabilities
     """
-    def __init__(self, load_path: Path, beam_size: int=4, *args, **kwargs):
+    def __init__(self, load_path: Path, beam_size: int=4, top_k: int=2, *args, **kwargs):
         self.lm = kenlm.Model(str(expand_path(load_path)))
         self.beam_size = beam_size
+        self.top_k = top_k
 
     def __call__(self, batch: List[List[List[Tuple[float, str]]]]) -> List[List[str]]:
-        """Choose the best candidate for every token
+        """It chooses top_k candidates for every token
 
         Args:
             batch: batch of probabilities and string values of candidates for every token in a sentence
 
         Returns:
-            batch of corrected tokenized sentences
+            batch of corrected tokenized sentences, candidates for one sentences follow each other
         """
-        return [self._infer_instance(candidates) for candidates in batch]
+        res = []
+        for candidates in batch:
+            res.extend(self._infer_instance(candidates))
+        return res
 
     def _infer_instance(self, candidates: List[List[Tuple[float, str]]]):
         candidates = candidates + [[(0, '</s>')]]
@@ -72,5 +78,5 @@ class KenlmElector(Component):
                     new_beam.append((beam_score + score + c_score, state, beam_words + cs))
             new_beam.sort(reverse=True)
             beam = new_beam[:self.beam_size]
-        score, state, words = beam[0]
-        return words[:-1]
+        return [words[:-1] for _, _, words in beam[:self.top_k]]
+
