@@ -4,7 +4,7 @@ Pipeline Manager
 .. autoclass:: deeppavlov.pipeline_manager.PipelineManager
     :members:
 
-.. autoclass:: deeppavlov.pipeline_manager.observer.Observer
+.. autoclass:: deeppavlov.pipeline_manager.observer.ExperimentObserver
     :members:
 
 .. autoclass:: deeppavlov.pipeline_manager.pipegen.PipeGen

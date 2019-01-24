@@ -21,7 +21,6 @@ import numpy as np
 matplotlib.use('agg', warn=False, force=True)
 
 
-# ___________________________________________________Generate plots___________________________________________________
 def get_met_info(logs_: List[Dict]) -> Dict:
     """
     Retrieves the necessary information from the log to build a histogram of results.

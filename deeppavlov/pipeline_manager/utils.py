@@ -12,25 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-from pathlib import Path
 from typing import List, Union, Iterable, Optional
-
-import matplotlib
 
 from py3nvml import py3nvml
 
 from deeppavlov.core.common.errors import GpuError
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.pipeline_manager.table_gen import build_pipeline_table
-from deeppavlov.pipeline_manager.plot_gen import plot_res, get_met_info
-
-matplotlib.use('agg', warn=False, force=True)
 
 logger = get_logger(__name__)
 
 
-# -------------------------------------------------Work with gpus------------------------------------------------------
 def get_available_gpus(num_gpus: Optional[int] = None,
                        gpu_select: Union[int, Iterable[int], None] = None,
                        gpu_fraction: float = 1.0) -> List[int]:
@@ -117,35 +108,3 @@ def get_available_gpus(num_gpus: Optional[int] = None,
         available_gpu = available_gpu[0:num_gpus]
 
     return available_gpu
-
-
-# ------------------------------------------------Generate reports-----------------------------------------------------
-def results_visualization(root: Union[str, Path], logs_file: Union[str, Path], plot: bool) -> None:
-    """
-    It builds a reporting table and a histogram of results for different models, based on data from the experiment log.
-
-    Args:
-        root: str; path to the folder where report will be created
-        logs_file: path to the experiments log
-        plot: bool; determine build plots or not
-
-    Returns:
-        None
-    """
-    logs = []
-    with open(str(root / (root.name + '.json')), 'r') as log_file:
-        exp_info = json.load(log_file)
-        log_file.close()
-
-    with open(logs_file, 'r') as log_file:
-        for line in log_file.readlines():
-            logs.append(json.loads(line))
-
-    # create the xlsx file with results of experiments
-    build_pipeline_table(exp_info, logs, save_path=root)
-
-    if plot:
-        # scrub data from log for image creating
-        info = get_met_info(logs)
-        # plot histograms
-        plot_res(info, exp_info['dataset_name'], (root / 'images'))

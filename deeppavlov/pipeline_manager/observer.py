@@ -20,9 +20,11 @@ from shutil import rmtree
 from typing import Union
 
 from deeppavlov.pipeline_manager.table_gen import sort_pipes
+from deeppavlov.pipeline_manager.table_gen import build_pipeline_table
+from deeppavlov.pipeline_manager.plot_gen import plot_res, get_met_info
 
 
-class Observer:
+class ExperimentObserver:
     """
     The :class:`~pipeline_manager.observer.Observer` implements the functions of observing the course of experiments,
     collecting results, time and other useful information, logging and storing it.
@@ -169,3 +171,28 @@ class Observer:
 
         # del all tmp files in save path
         rmtree(str(self.save_path / dataset_name))
+
+    def build_report(self) -> None:
+        """
+        It builds a reporting table and a histogram of results for different models,
+        based on data from the experiment log.
+
+        Returns:
+            None
+        """
+        logs = []
+        with self.log_path.joinpath(self.log_path.name + '.json').open('r', encoding='utf8') as exp_log:
+            exp_info = json.load(exp_log)
+
+        with open(self.log_file, 'r') as log_file:
+            for line in log_file.readlines():
+                logs.append(json.loads(line))
+
+        # create the xlsx file with results of experiments
+        build_pipeline_table(exp_info, logs, save_path=self.log_path)
+
+        if self.plot:
+            # scrub data from log for image creating
+            info = get_met_info(logs)
+            # plot histograms
+            plot_res(info, exp_info['dataset_name'], self.log_path.joinpath('images'))

@@ -20,7 +20,6 @@ from typing import Dict, List, Tuple, Union
 import xlsxwriter
 
 
-# _______________________________________________Generate table____________________________________________________
 def get_data(logs: list) -> Tuple[int, List]:
     """
     Retrieves the necessary information from the log to build a table with sorted results.
@@ -112,14 +111,11 @@ def write_dataset_name(sheet: xlsxwriter, sheet_2: xlsxwriter, row_1: int, row_2
         sheet_2.merge_range(row_2, max_l + p + 1, row_2, max_l + p + len(metric_names), type_d, format_)
     row_2 += 1
 
-    row_1, row_2 = write_exp(row_1, row_2, col, dataset_list, sheet, sheet_2, format_, max_l, target_metric,
-                             metric_names)
-
-    return None
+    write_exp(row_1, row_2, col, dataset_list, sheet, sheet_2, format_, max_l, target_metric, metric_names)
 
 
 def write_exp(row_1: int, row_2: int, col: int, model_list: List[Dict], sheet: xlsxwriter, sheet_2: xlsxwriter,
-              _format: Dict, max_l: int, target_metric: str, metric_names: List[str]) -> Tuple[int, int]:
+              _format: Dict, max_l: int, target_metric: str, metric_names: List[str]) -> None:
     """ Writes legends to the table """
 
     row_1, col = write_legend(sheet, row_1, col, list(model_list[0]['results'].keys()), metric_names, max_l, _format)
@@ -128,18 +124,13 @@ def write_exp(row_1: int, row_2: int, col: int, model_list: List[Dict], sheet: x
     # Write pipelines table
     sorted_model_list = sort_pipes(model_list, target_metric)
 
-    row_1 = write_table(sheet, sorted_model_list, row_1, col, _format, max_l)
+    write_table(sheet, sorted_model_list, row_1, col, _format, max_l)
     # Get the best pipelines
     best_pipelines = get_best(model_list, target_metric)
     # Sorting pipelines
     best_pipelines = sort_pipes(best_pipelines, target_metric)
     # Write sort pipelines table
-    row_2 = write_table(sheet_2, best_pipelines, row_2, col, _format, max_l, write_conf=False)
-
-    row_1 += 2
-    row_2 += 2
-
-    return row_1, row_2
+    write_table(sheet_2, best_pipelines, row_2, col, _format, max_l, write_conf=False)
 
 
 def write_metrics(sheet: xlsxwriter, comp_dict: Dict, start_x: int, start_y: int, cell_format: Dict) -> None:
@@ -189,7 +180,7 @@ def write_pipe(sheet: xlsxwriter, pipe_dict: Dict, start_x: int, start_y: int, c
 
 
 def write_table(worksheet: xlsxwriter, pipelines: Union[Dict, List[dict]], row: int, col: int, cell_format: Dict,
-                max_l: int, write_conf: bool = True) -> int:
+                max_l: int, write_conf: bool = True) -> None:
     """
     Writes a table to xlsx file.
 
@@ -209,7 +200,6 @@ def write_table(worksheet: xlsxwriter, pipelines: Union[Dict, List[dict]], row: 
     for pipe in pipelines:
         write_pipe(worksheet, pipe, row, col, cell_format, max_l, write_conf)
         row += 1
-    return row
 
 
 def get_best(data: List[Dict], target: str) -> List[Dict]:

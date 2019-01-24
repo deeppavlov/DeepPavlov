@@ -31,9 +31,9 @@ from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.prints import RedirectedPrints
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
-from deeppavlov.pipeline_manager.observer import Observer
+from deeppavlov.pipeline_manager.observer import ExperimentObserver
 from deeppavlov.pipeline_manager.pipegen import PipeGen
-from deeppavlov.pipeline_manager.utils import results_visualization, get_available_gpus
+from deeppavlov.pipeline_manager.utils import get_available_gpus
 
 
 def unpack_args(func):
@@ -114,8 +114,8 @@ class PipelineManager:
                          will be considered as available.
         available_gpu: list with numbers of available gpu
         save_path: path to the save folder
-        observer: A special class that collects auxiliary statistics and results during training, and stores all
-                the collected data in a separate log.
+        observer: A special class that collects auxiliary statistics and results during training, and stores
+                all the collected data in a separate log.
         pipeline_generator: A special class that generates configs for training.
         gen_len: amount of pipelines in experiment
 
@@ -130,8 +130,8 @@ class PipelineManager:
 
     def __init__(self, config_path: Union[str, Dict, Path]) -> None:
         """
-        Initialize observer, read input args, builds a directory tree, initialize date, start test of experiment on
-        tiny data.
+        Initialize observer, read input args, builds a directory tree, initialize date, start test of
+        experiment on tiny data.
         """
         if isinstance(config_path, (str, Path)):
             self.exp_config = read_json(config_path)
@@ -170,7 +170,7 @@ class PipelineManager:
 
         # create the observer
         self.save_path = self.root / self.date / self.exp_name / 'checkpoints'
-        self.observer = Observer(self.exp_name, self.root, self.info, self.date, self.plot)
+        self.observer = ExperimentObserver(self.exp_name, self.root, self.info, self.date, self.plot)
         # create the pipeline generator
         self.pipeline_generator = PipeGen(self.exp_config, self.save_path, self.search_type, self.sample_num, False)
         self.gen_len = self.pipeline_generator.length
@@ -233,7 +233,7 @@ class PipelineManager:
 
     @staticmethod
     @unpack_args
-    def train_pipe(pipe: Dict, i: int, observer_: Observer, gpu_ind: Optional[int] = None) -> None:
+    def train_pipe(pipe: Dict, i: int, observer_: ExperimentObserver, gpu_ind: Optional[int] = None) -> None:
         """
         Start learning single pipeline. Observer write all info in log file.
 
@@ -265,12 +265,8 @@ class PipelineManager:
 
         # run pipeline train with redirected output flow
         process_out_path = save_path / f"out_{i + 1}.txt"
-        if process_out_path.is_file():
-            with RedirectedPrints(new_target=open(str(process_out_path), "a")):
-                results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
-        else:
-            with RedirectedPrints(new_target=open(str(process_out_path), "w")):
-                results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
+        with RedirectedPrints(new_target=open(str(process_out_path), "a")):
+            results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
 
         # add results and pipe time to log
         observer_.pipe_time = time.strftime('%H:%M:%S', time.gmtime(time.time() - pipe_start))
@@ -337,7 +333,7 @@ class PipelineManager:
         print("[ End of experiment ]")
         # visualization of results
         print("[ Create an experiment report ... ]")
-        results_visualization(self.observer.log_path, self.observer.log_file, self.plot)
+        self.observer.build_report()
         print("[ Report created ]")
 
     def run(self) -> None:
@@ -349,7 +345,7 @@ class PipelineManager:
             print("[ The experiment was interrupt]")
             # visualization of results
             print("[ Create an intermediate report ... ]")
-            results_visualization(self.observer.log_path, self.observer.log_file, self.plot)
+            self.observer.build_report()
             print("[ The intermediate report was created ]")
 
     def _test(self) -> None:

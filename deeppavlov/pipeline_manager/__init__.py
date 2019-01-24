@@ -13,5 +13,5 @@
 # limitations under the License.
 
 from .pipeline_manager import PipelineManager
-from .observer import Observer
+from .observer import ExperimentObserver
 from .pipegen import PipeGen
