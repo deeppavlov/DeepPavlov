@@ -114,11 +114,9 @@ class Observer:
 
     def update_log(self):
         """ Updates a log with new pipeline information. """
-
-        if (self.model is None) and (self.pipe_conf is not None):
-            for component in self.pipe_conf:
-                if component.get('main') is True:
-                    self.model = component['component_name']
+        for component in self.pipe_conf:
+            if component.get('main') is True:
+                self.model = component['component_name']
 
         pipe_name = '-->'.join([x['component_name'] for x in self.pipe_conf])
 
