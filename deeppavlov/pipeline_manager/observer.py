@@ -26,7 +26,7 @@ from deeppavlov.pipeline_manager.plot_gen import plot_res, get_met_info
 
 class ExperimentObserver:
     """
-    The :class:`~pipeline_manager.observer.Observer` implements the functions of observing the course of experiments,
+    Implements the functions of observing the course of experiments,
     collecting results, time and other useful information, logging and storing it.
 
     Args:
