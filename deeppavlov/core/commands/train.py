@@ -115,7 +115,8 @@ def train_evaluate_model_from_config(config: Union[str, Path, dict],
         if train_config.pop('test_best', True):
             train_config['evaluation_targets'].append('test')
 
-    trainer = NNTrainer(config['chainer'], **train_config)
+    trainer_class = get_model(train_config.pop('class_name', 'nn_trainer'))
+    trainer = trainer_class(config['chainer'], **train_config)
 
     if to_train:
         trainer.train(iterator)

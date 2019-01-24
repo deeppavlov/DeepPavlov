@@ -27,6 +27,7 @@ from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.metrics_registry import get_metric_by_name
 from deeppavlov.core.common.params import from_params
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.models.estimator import Estimator
@@ -63,6 +64,7 @@ def prettify_metrics(metrics: List[Tuple[str, float]], precision: int = 4) -> Or
     return prettified_metrics
 
 
+@register('fit_trainer')
 class FitTrainer:
     def __init__(self, chainer_config: dict, *, batch_size: int = -1,
                  metrics: Iterable[Union[str, dict]] = ('accuracy',),
@@ -238,6 +240,7 @@ class FitTrainer:
         return res
 
 
+@register('nn_trainer')
 class NNTrainer(FitTrainer):
     def __init__(self, chainer_config: dict, *, batch_size: int = 1,
                  epochs: int = -1,
