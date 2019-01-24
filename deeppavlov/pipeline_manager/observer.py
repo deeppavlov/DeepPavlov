@@ -109,14 +109,8 @@ class Observer:
 
     def write(self) -> None:
         """ Write pipeline logs in jsonl file. """
-        if self.log_file.is_file():
-            with open(str(self.log_file), 'a') as logs:
-                logs.write(json.dumps(self.log))
-                logs.write('\n')
-        else:
-            with open(str(self.log_file), 'w') as logs:
-                logs.write(json.dumps(self.log))
-                logs.write('\n')
+        with self.log_file.open('a', encoding='utf8') as f:
+            print(json.dumps(self.log), file=f)
 
     def update_log(self):
         """ Updates a log with new pipeline information. """
