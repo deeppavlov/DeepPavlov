@@ -142,7 +142,7 @@ class Observer:
 
     def save_config(self, conf: dict, dataset_name: str, ind: int) -> None:
         """ Save train config in checkpoint folder. """
-        with open(str(self.save_path / dataset_name / "pipe_{}".format(ind) / 'config.json'), 'w') as cf:
+        with self.save_path.joinpath(dataset_name, f'pipe_{ind}', 'config.json').open('w', encoding='utf8') as cf:
             json.dump(conf, cf)
 
     def save_best_pipe(self) -> None:
