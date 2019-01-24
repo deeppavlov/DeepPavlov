@@ -19,7 +19,7 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Union
 
-from deeppavlov.pipeline_manager.utils import sort_pipes
+from deeppavlov.pipeline_manager.table_gen import sort_pipes
 
 
 class Observer:
