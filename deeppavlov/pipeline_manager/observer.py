@@ -62,8 +62,7 @@ class ExperimentObserver:
 
         self.save_path.mkdir(parents=True, exist_ok=True)
         if self.plot:
-            if not (self.log_path / 'images').is_dir():
-                (self.log_path / 'images').mkdir()
+            self.log_path.joinpath('images').mkdir(exist_ok=True)
 
         self.exp_info = OrderedDict(date=date,
                                     exp_name=self.exp_name,
@@ -75,12 +74,7 @@ class ExperimentObserver:
                                     dataset_name=None)
         self.log = None
 
-    def save_exp_info(self):
-        """ Write exp_info in json file. """
-        with open(str(self.exp_file), 'w') as exp_file:
-            json.dump(self.exp_info, exp_file)
-
-    def exp_time(self, time: str) -> None:
+    def save_exp_info(self, time: str) -> None:
         """
         Adding the time duration of the experiment in log file.
 
@@ -90,12 +84,9 @@ class ExperimentObserver:
         Returns:
             None
         """
-        with open(str(self.exp_file), 'r') as old_log:
-            old_log = json.load(old_log)
-
-        old_log['full_time'] = time
-        with open(str(self.exp_file), 'w') as log_file:
-            json.dump(old_log, log_file)
+        self.exp_info['full_time'] = time
+        with self.exp_file.open('w', encoding='utf8') as exp_file:
+            json.dump(self.exp_info, exp_file)
 
     def tmp_reset(self) -> None:
         """ Reinitialize temporary attributes. """
@@ -140,25 +131,24 @@ class ExperimentObserver:
 
     def save_best_pipe(self) -> None:
         """ Calculate the best pipeline and delete others pipelines checkpoints. """
-        logs = []
-        with open(str(self.log_file), 'r') as log_file:
-            for line in log_file.readlines():
-                logs.append(json.loads(line))
-
-        with open(self.exp_file, 'r') as info:
+        with self.exp_file.open('r', encoding='utf8') as info:
             exp_info = json.load(info)
 
         target_metric = exp_info['target_metric']
         dataset_name = exp_info['dataset_name']
 
-        sort_logs = sort_pipes(logs, target_metric)
+        logs = []
+        with self.log_file.open('r', encoding='utf8') as log_file:
+            for line in log_file.readlines():
+                logs.append(json.loads(line))
+            sort_logs = sort_pipes(logs, target_metric)
 
         source = self.save_path / dataset_name
         dest1 = self.save_path / (dataset_name + '_best_pipe')
         if not dest1.is_dir():
             dest1.mkdir()
 
-        files = sorted(source.glob("*"))
+        files = source.iterdir()  # sorted(source.glob("*"))
         for f in files:
             if not f.name.startswith('pipe') and not (dest1 / f.name).is_file():
                 shutil.move(str((source / f.name)), str(dest1))
@@ -184,7 +174,7 @@ class ExperimentObserver:
         with self.log_path.joinpath(self.log_path.name + '.json').open('r', encoding='utf8') as exp_log:
             exp_info = json.load(exp_log)
 
-        with open(self.log_file, 'r') as log_file:
+        with self.log_file.open('r', encoding='utf8') as log_file:
             for line in log_file.readlines():
                 logs.append(json.loads(line))
 

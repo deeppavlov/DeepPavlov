@@ -190,8 +190,6 @@ class PipelineManager:
         else:
             self.observer.exp_info['target_metric'] = self.observer.exp_info['metrics'][0]
 
-        self.observer.save_exp_info()
-
         self.prepare_multiprocess()
 
         # write time of experiment start
@@ -264,10 +262,10 @@ class PipelineManager:
             save_path.mkdir(parents=True)
 
         # run pipeline train with redirected output flow
-        process_out_path = save_path / f"out_{i + 1}.txt"
-        process_err_path = save_path / f"err_{i + 1}.txt"
-        with redirect_stdout(open(str(process_out_path), "a")):
-            with redirect_stderr(open(str(process_err_path), "a")):
+        proc_out_path = save_path / f"out_{i + 1}.txt"
+        proc_err_path = save_path / f"err_{i + 1}.txt"
+        with proc_out_path.open("a", encoding='utf8') as out_file, proc_err_path.open("a", encoding='utf8') as err_file:
+            with redirect_stderr(err_file), redirect_stdout(out_file):
                 results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
 
         # add results and pipe time to log
@@ -327,7 +325,7 @@ class PipelineManager:
                     self.train_pipe((pipe, i, self.observer, gpu_ind))
 
         # save log
-        self.observer.exp_time(time.strftime('%H:%M:%S', time.gmtime(time.time() - self.start_exp)))
+        self.observer.save_exp_info(time.strftime('%H:%M:%S', time.gmtime(time.time() - self.start_exp)))
         # delete all checkpoints and save only best pipe
         if self.save_best:
             self.observer.save_best_pipe()
@@ -343,7 +341,7 @@ class PipelineManager:
             self._run()
         except KeyboardInterrupt:
             # save log
-            self.observer.exp_time(time.strftime('%H:%M:%S', time.gmtime(time.time() - self.start_exp)))
+            self.observer.save_exp_info(time.strftime('%H:%M:%S', time.gmtime(time.time() - self.start_exp)))
             print("[ The experiment was interrupt]")
             # visualization of results
             print("[ Create an intermediate report ... ]")
