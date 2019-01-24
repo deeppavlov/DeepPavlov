@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Union
+from typing import List, Union, Tuple
 from operator import itemgetter
+import warnings
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
@@ -45,7 +46,8 @@ class LogitRanker(Component):
         self.batch_size = batch_size
         self.sort_noans = sort_noans
 
-    def __call__(self, contexts_batch: List[List[str]], questions_batch: List[List[str]]) -> List[str]:
+    def __call__(self, contexts_batch: List[List[str]], questions_batch: List[List[str]]) -> \
+            Tuple[List[str], List[float]]:
         """
         Sort obtained results from squad reader by logits and get the answer with a maximum logit.
 
@@ -54,11 +56,16 @@ class LogitRanker(Component):
             questions_batch: a batch of questions which should be treated as a single batch in the outer JSON config
 
         Returns:
-            a batch of best answers
+            a batch of best answers and their scores
 
         """
+        # TODO output result for top_n
+        warnings.warn(f'{self.__class__.__name__}.__call__() API will be changed in the future release.'
+                      ' Instead of returning Tuple(List[str], List[float] will return'
+                      ' Tuple(List[List[str]], List[List[float]]).', FutureWarning)
 
         batch_best_answers = []
+        batch_best_answers_scores = []
         for contexts, questions in zip(contexts_batch, questions_batch):
             results = []
             for i in range(0, len(contexts), self.batch_size):
@@ -70,6 +77,6 @@ class LogitRanker(Component):
                 results = sorted(results, key=lambda x: (x[0] != '', x[2]), reverse=True)
             else:
                 results = sorted(results, key=itemgetter(2), reverse=True)
-            best_answer = results[0][0]
-            batch_best_answers.append(best_answer)
-        return batch_best_answers
+            batch_best_answers.append(results[0][0])
+            batch_best_answers_scores.append(results[0][2])
+        return batch_best_answers, batch_best_answers_scores
