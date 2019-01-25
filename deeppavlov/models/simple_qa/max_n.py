@@ -13,8 +13,8 @@ import pickle
 @register('max_n')
 class Max_n(Component):
     
-    def __init__(self, filename, *args, **kwargs):
-        fl = open(filename, 'r')
+    def __init__(self, load_path, *args, **kwargs):
+        fl = open(load_path, 'r')
         lines = fl.readlines()
         self.classes = [line.split('\t')[0] for line in lines]
         
