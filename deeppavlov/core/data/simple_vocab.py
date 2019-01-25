@@ -124,7 +124,7 @@ class SimpleVocabulary(Estimator):
             token = ln.strip().split()[0]
             cnt = self._min_freq
         else:
-            token, cnt = ln.split('\t', 1)
+            token, cnt = ln.rsplit('\t', 1)
         return token, cnt
         
     @property

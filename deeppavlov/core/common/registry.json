@@ -85,6 +85,7 @@
   "seq2seq_go_bot_nn": "deeppavlov.models.seq2seq_go_bot.network:Seq2SeqGoalOrientedBotNetwork",
   "siamese_iterator": "deeppavlov.dataset_iterators.siamese_iterator:SiameseIterator",
   "siamese_predictor": "deeppavlov.models.ranking.siamese_predictor:SiamesePredictor",
+  "siamese_predictor_v2": "deeppavlov.models.ranking.siamese_predictor_v2:SiamesePredictor_v2",
   "siamese_preprocessor": "deeppavlov.models.preprocessors.siamese_preprocessor:SiamesePreprocessor",
   "siamese_reader": "deeppavlov.dataset_readers.siamese_reader:SiameseReader",
   "simple_vocab": "deeppavlov.core.data.simple_vocab:SimpleVocabulary",

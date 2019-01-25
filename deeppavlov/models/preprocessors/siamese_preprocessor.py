@@ -108,6 +108,8 @@ class SiamesePreprocessor(Estimator):
     def __call__(self, x: Union[List[List[str]], List[str]]) -> Iterable[List[List[np.ndarray]]]:
         if len(x) == 0 or isinstance(x[0], str):
             if len(x) == 1:
+                x[0] = x[0].replace('&', '')
+                x[0] = "&&&&&&&&&" + x[0]
                 x_preproc = [[sent.strip() for sent in x[0].split('&')]]  # List[str] -> List[List[str]]
             elif len(x) == 0:
                 x_preproc = [['']]

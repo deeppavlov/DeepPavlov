@@ -1,0 +1,134 @@
+{
+  "info": "interact with siamese_network v1 (input: context, output: 1 most relevant response)",
+  "dataset_reader": {
+    "note": "not used during infer",
+    "class_name": "ubuntu_v2_mt_reader",
+    "data_path": "{DOWNLOADS_PATH}/some_path",
+    "num_context_turns": 10,
+    "padding": "pre"
+  },
+  "dataset_iterator": {
+    "class_name": "siamese_iterator",
+    "shuffle": true,
+    "seed": 243
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "id": "preproc",
+        "class_name": "siamese_preprocessor",
+        "use_matrix": true,
+        "num_ranking_samples": 10,
+        "num_context_turns": 10,
+        "max_sequence_length": 50,
+        "fit_on": ["x"],
+        "in": ["x"],
+        "out": ["x_proc"],
+        "sent_vocab":
+        {
+          "id": "siam_sent_vocab",
+          "class_name":"simple_vocab",
+          "save_path": "{MODELS_PATH}/chitchat_siamese_1/vocabs/sent.dict",
+          "load_path": "{MODELS_PATH}/chitchat_siamese_1/vocabs/sent.dict"
+        },
+        "tokenizer":
+        {
+          "class_name": "ru_tokenizer"
+        },
+        "vocab":
+        {
+          "id": "siam_vocab",
+          "class_name":"simple_vocab",
+          "save_path": "{MODELS_PATH}/chitchat_siamese_1/vocabs/tok.dict",
+          "load_path": "{MODELS_PATH}/chitchat_siamese_1/vocabs/tok.dict"
+        },
+        "embedder":
+        {
+          "id": "siam_embedder",
+          "class_name": "fasttext",
+          "load_path": "{DOWNLOADS_PATH}/embeddings/ft_native_300_ru_wiki_lenta_lower_case.bin",
+          "dim": 300
+        }
+      },
+      {
+        "id": "embeddings",
+        "class_name": "emb_mat_assembler",
+        "embedder": "#siam_embedder",
+        "vocab": "#siam_vocab"
+      },
+      {
+        "id": "model",
+        "class_name": "bilstm_gru_nn",
+        "len_vocab": "#siam_vocab.len",
+        "use_matrix": "#preproc.use_matrix",
+        "num_context_turns": "#preproc.num_context_turns",
+        "max_sequence_length": "#preproc.max_sequence_length",
+        "emb_matrix": "#embeddings.emb_mat",
+        "embedding_dim": "#siam_embedder.dim",
+        "seed": 243,
+        "reccurent": "bilstm",
+        "max_pooling": true,
+        "shared_weights": true,
+        "hidden_dim": 300,
+        "learning_rate": 1e-3,
+        "triplet_loss": false,
+        "attention": false,
+        "batch_size": 64,
+        "save_path": "{MODELS_PATH}/chitchat_siamese_1/model/model_weights.h5",
+        "load_path": "{MODELS_PATH}/chitchat_siamese_1/model/model_weights.h5"
+      },
+      {
+        "in": ["x_proc"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "class_name": "siamese_predictor_v2",
+        "attention": false,
+        "model": "#model",
+        "num_context_turns": "#model.num_context_turns",
+        "max_sequence_length": "#model.max_sequence_length",
+        "batch_size": "#model.batch_size",
+        "responses_filename": "{MODELS_PATH}/chitchat_siamese_1/model/test_responses_200K.pickle",
+        "preproc_func": "#preproc.__call__",
+        "interact_pred_num": 1
+      }
+    ],
+    "out": ["y_predicted"]
+  },
+  "train": {
+    "epochs": 50,
+    "batch_size": 64,
+    "pytest_max_batches": 2,
+    "train_metrics": ["f1", "acc", "log_loss"],
+    "metrics": ["r@1", "r@2", "r@5", "rank_response"],
+    "validation_patience": 1,
+    "val_every_n_epochs": 1,
+    "log_every_n_batches": 100
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
+    "requirements": [
+      "../dp_requirements/tf.txt",
+      "../dp_requirements/gensim.txt"
+    ],
+    "labels": {
+      "telegram_utils": "SiameseModel",
+      "server_utils": "Ranker"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/dev/chitchat_siamese_1.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_lower_case/ft_native_300_ru_wiki_lenta_lower_case.bin",
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
+      }
+    ]
+  }
+}
