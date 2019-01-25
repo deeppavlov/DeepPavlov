@@ -113,7 +113,7 @@
       "MODELS_PATH": "{ROOT_PATH}/models"
     },
     "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf-gpu.txt",
       "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
     ],
     "labels": {
