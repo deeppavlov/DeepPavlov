@@ -40,11 +40,16 @@ class FitTrainer:
 
     Args:
         chainer_config: ``"chainer"`` block of a configuration file
-        batch_size: batch_size to use for partial fitting (if available) and evaluation
-        metrics: list of registered metrics names with optional lists of their inputs
-        evaluation_targets: data types on which to evaluate trained pipeline
+        batch_size: batch_size to use for partial fitting (if available) and evaluation,
+            the whole dataset is used if ``batch_size`` is negative or zero (default is ``-1``)
+        metrics: list of registered metrics names with optional lists of their inputs (default is ``('accuracy',)``)
+        evaluation_targets: data types on which to evaluate trained pipeline (default is ``('valid', 'test')``)
         show_examples: a flag used to print inputs, expected outputs and predicted outputs for the last batch
-            in evaluation logs
+            in evaluation logs (default is ``False``)
+        tensorboard_log_dir: path to a directory where tensorboard logs can be stored, ignored if None
+            (default is ``None``)
+        max_test_batches: todo
+        **kwargs: todo
 
     Attributes:
 
