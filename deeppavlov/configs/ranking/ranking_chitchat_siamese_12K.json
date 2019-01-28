@@ -23,6 +23,7 @@
         "num_ranking_samples": 10,
         "num_context_turns": 10,
         "max_sequence_length": 50,
+        "last_turn_only": true,
         "fit_on": ["x"],
         "in": ["x"],
         "out": ["x_proc"],
