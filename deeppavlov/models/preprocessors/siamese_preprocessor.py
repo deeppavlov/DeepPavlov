@@ -113,7 +113,7 @@ class SiamesePreprocessor(Estimator):
         if len(x) == 0 or isinstance(x[0], str):
             if len(x) == 1:
                 # interact mode: len(batch) == 1
-                x_ = copy(x)
+                x_ = list(x)
                 if self.last_turn_only:              # TODO: remove
                     # this is for using last utterance only
                     x_[0] = x_[0].replace('&', '')

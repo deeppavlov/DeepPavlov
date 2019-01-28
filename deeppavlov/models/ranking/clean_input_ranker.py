@@ -29,5 +29,5 @@ class CleanInput(Component):
         pass
 
     def __call__(self, context):
-        context_ = copy(context)
+        context_ = list(context)
         return context_[0].replace('&', '')
