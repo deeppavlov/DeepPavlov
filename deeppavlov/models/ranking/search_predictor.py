@@ -37,9 +37,5 @@ class SearchPredictor(Component):
 
 
     def __call__(self, responses, preds):
-        # print(preds)
         sorted_ids = np.flip(np.argsort(preds[0]), -1)
-        # print(sorted_ids)
-        # print(responses)
-        # print(preds[0][sorted_ids[0]])
         return [responses[0][sorted_ids[0]]]

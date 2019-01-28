@@ -13,14 +13,13 @@
 # limitations under the License.
 
 import pickle
-from typing import List, Union
-from operator import itemgetter
+
+from copy import copy
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.estimator import Component
-from deeppavlov.core.common.chainer import Chainer
 
 logger = get_logger(__name__)
 
@@ -41,11 +40,12 @@ class SearchIndex(Component):
 
 
         # TODO: remove: now we use only 1 last replica
-        context[0] = context[0].replace('&', '')
-        context[0] = "&&&&&&&&&" + context[0]
+        context_ = copy(context)
+        context_[0] = context_[0].replace('&', '')
+        context_[0] = "&&&&&&&&&" + context_[0]
 
         # concat context and response candidates
-        smn_resp_inputs = context[0]
+        smn_resp_inputs = context_[0]
         for r in candidates:
             smn_resp_inputs += " & " + r.replace('&', '')
 

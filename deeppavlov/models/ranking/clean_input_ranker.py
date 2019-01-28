@@ -12,15 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pickle
-from typing import List, Union
-from operator import itemgetter
+from copy import copy
 
-from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.estimator import Component
-from deeppavlov.core.common.chainer import Chainer
 
 logger = get_logger(__name__)
 
@@ -33,4 +29,5 @@ class CleanInput(Component):
         pass
 
     def __call__(self, context):
-        return context[0].replace('&', '')
+        context_ = copy(context)
+        return context_[0].replace('&', '')

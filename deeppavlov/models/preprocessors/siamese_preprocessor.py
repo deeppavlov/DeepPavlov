@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from copy import copy
 import numpy as np
 from typing import List, Union, Iterable, Optional
 
@@ -111,10 +112,13 @@ class SiamesePreprocessor(Estimator):
     def __call__(self, x: Union[List[List[str]], List[str]]) -> Iterable[List[List[np.ndarray]]]:
         if len(x) == 0 or isinstance(x[0], str):
             if len(x) == 1:
-                if self.last_turn_only:
-                    x[0] = x[0].replace('&', '')
-                    x[0] = "&&&&&&&&&" + x[0]
-                x_preproc = [[sent.strip() for sent in x[0].split('&')]]  # List[str] -> List[List[str]]
+                # interact mode: len(batch) == 1
+                x_ = copy(x)
+                if self.last_turn_only:              # TODO: remove
+                    # this is for using last utterance only
+                    x_[0] = x_[0].replace('&', '')
+                    x_[0] = "&&&&&&&&&" + x_[0]
+                x_preproc = [[sent.strip() for sent in x_[0].split('&')]]  # List[str] -> List[List[str]]
             elif len(x) == 0:
                 x_preproc = [['']]
             else:
