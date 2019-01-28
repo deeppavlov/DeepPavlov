@@ -76,7 +76,7 @@
         "learning_rate": 1e-3,
         "triplet_loss": false,
         "attention": false,
-        "batch_size": 64,
+        "batch_size": 1024,
         "save_path": "{MODELS_PATH}/chitchat_siamese_1/model/model_weights.h5",
         "load_path": "{MODELS_PATH}/chitchat_siamese_1/model/model_weights.h5"
       },
@@ -99,7 +99,7 @@
   },
   "train": {
     "epochs": 50,
-    "batch_size": 64,
+    "batch_size": 1024,
     "pytest_max_batches": 2,
     "train_metrics": ["f1", "acc", "log_loss"],
     "metrics": ["r@1", "r@2", "r@5", "rank_response"],

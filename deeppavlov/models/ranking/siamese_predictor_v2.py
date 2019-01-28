@@ -86,8 +86,7 @@ class SiamesePredictor_v2(Component):
                     context_emb = np.squeeze(context_emb, axis=0)
                     scores = context_emb @ self.response_embeddings.T
                 ids = np.flip(np.argsort(scores), -1)
-                # return [[self.responses[el] for el in ids[:self.interact_pred_num]]]
-                return self.responses[ids[:1]]
+                return [[self.responses[el] for el in ids[:self.interact_pred_num]]][0]
             else:
                 return ["Please, provide contexts separated by '&' in the number equal to that used while training."]
 
