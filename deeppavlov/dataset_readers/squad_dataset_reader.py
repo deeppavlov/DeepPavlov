@@ -95,27 +95,33 @@ class MultiSquadDatasetReader(DatasetReader):
     Downloads dataset files and prepares train/valid split.
 
     MultiSQuADRetr:
-    SQuAD dataset with additional contexts retrieved by tfidf document ranker from full Wikipedia.
+    Multiparagraph SQuAD dataset with additional contexts retrieved by tfidf document ranker from full En Wikipedia.
+
+    MultiSQuADRuRetr:
+    Multiparagraph SberSQuAD dataset with additional contexts retrieved by tfidf document ranker from  Ru Wikipedia.
 
     """
 
     url_multi_squad_retr = 'http://files.deeppavlov.ai/datasets/multi_squad_retr_enwiki20161221.tar.gz'
+    url_multi_squad_ru_retr = 'http://files.deeppavlov.ai/datasets/multi_squad_ru_retr.tar.gz'
 
-    def read(self, dir_path: str, dataset: str = 'SQuAD', *args, **kwargs) -> Dict[str, Dict[str, Any]]:
+    def read(self, dir_path: str, dataset: str = 'MultiSQuADRetr', *args, **kwargs) -> Dict[str, Dict[str, Any]]:
         """
 
         Args:
             dir_path: path to save data
-            dataset: dataset name: ``'MultiSQuADRetr'``
+            dataset: dataset name: ``'MultiSQuADRetr'``, ``'MultiSQuADRuRetr'``
 
         Returns:
             dataset split on train/valid
 
         Raises:
-            RuntimeError: if `dataset` is not one of these: TODO.
+            RuntimeError: if `dataset` is not one of these: ``'MultiSQuADRetr'``, ``'MultiSQuADRuRetr'``.
         """
         if dataset == 'MultiSQuADRetr':
             self.url = self.url_multi_squad_retr
+        if dataset == 'MultiSQuADRuRetr':
+            self.url = self.url_multi_squad_ru_retr
         else:
             raise RuntimeError('Dataset {} is unknown'.format(dataset))
 
