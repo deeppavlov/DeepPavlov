@@ -129,6 +129,8 @@ def train_evaluate_model_from_config(config: Union[str, Path, dict],
                 log.warning('"to_validate" parameter is deprecated and will be removed in future versions.'
                             ' Please, use "evaluation_targets" list instead')
                 evaluation_targets = ['test']
+                if to_validate:
+                    evaluation_targets.append('valid')
             else:
                 log.warn('Both "evaluation_targets" and "to_validate" parameters are specified.'
                          ' "to_validate" is deprecated and will be ignored')
