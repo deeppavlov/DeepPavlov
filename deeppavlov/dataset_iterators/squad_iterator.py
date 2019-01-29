@@ -232,7 +232,7 @@ class MultiSquadRetrIterator(DataLearningIterator):
                     if with_answer_rate is None:
                         with_answer_rate = 1.0 if noans_clen == 0 else ans_clen / (ans_clen + noans_clen)
 
-                    if random.rand() < with_answer_rate:
+                    if random.rand() < with_answer_rate or noans_clen == 0:
                         # select random context with answer
                         context = random.choice(ans_contexts)
                     else:

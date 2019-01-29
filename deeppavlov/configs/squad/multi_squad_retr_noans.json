@@ -8,7 +8,7 @@
     "class_name": "multi_squad_retr_iterator",
     "seed": 1337,
     "shuffle": false,
-    "with_answer_rate": null
+    "with_answer_rate": 0.333
   },
   "chainer": {
     "in": ["context_raw", "question_raw"],
@@ -133,7 +133,7 @@
         "inputs": ["ans_raw", "ans_predicted"]
       }
     ],
-    "tensorboard_log_dir": "{MODELS_PATH}/multi_squad_model_noans/logs"
+    "tensorboard_log_dir": "{MODELS_PATH}/multi_squad_retr_model_noans/logs"
   },
   "metadata": {
     "variables": {
