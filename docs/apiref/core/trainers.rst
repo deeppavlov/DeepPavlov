@@ -7,5 +7,4 @@ Trainer classes.
 
 .. autoclass:: deeppavlov.core.trainers.NNTrainer
    :members:
-   :show-inheritance:
    :inherited-members:

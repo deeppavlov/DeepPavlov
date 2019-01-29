@@ -31,6 +31,46 @@ log = get_logger(__name__)
 
 @register('nn_trainer')
 class NNTrainer(FitTrainer):
+    """
+    | Bases :class:`~deeppavlov.core.trainers.FitTrainer`
+    | Trainer class for training and evaluating pipelines containing
+      :class:`Estimators <deeppavlov.core.models.estimator.Estimator>`
+      and an :class:`~deeppavlov.core.models.nn_model.NNModel`
+
+    Args:
+        chainer_config: ``"chainer"`` block of a configuration file
+        batch_size: batch_size to use for partial fitting (if available) and evaluation,
+            the whole dataset is used if ``batch_size`` is negative or zero (default is ``1``)
+        epochs: maximum epochs number to train the pipeline, ignored if negative or zero (default is ``-1``)
+        start_epoch_num: starting epoch number for reports (default is ``0``)
+        max_batches: maximum batches number to train the pipeline, ignored if negative or zero (default is ``-1``)
+        metrics: iterable of registered metrics names with optional lists of their inputs from chainer config,
+            the first metric is used for early stopping (default is ``('accuracy',)``)
+        train_metrics: metrics calculated for train logs (if omitted, ``metrics`` argument is used)
+        metric_optimization: one of ``'maximize'`` or ``'minimize'`` — strategy for metric optimization used in early
+            stopping (default is ``'maximize'``)
+        evaluation_targets: data types on which to evaluate trained pipeline (default is ``('valid', 'test')``)
+        show_examples: a flag used to print inputs, expected outputs and predicted outputs for the last batch
+            in evaluation logs (default is ``False``)
+        tensorboard_log_dir: path to a directory where tensorboard logs can be stored, ignored if None
+            (default is ``None``)
+        validate_first: flag used to calculate metrics on the ``'valid'`` data type before starting training
+            (default is ``True``)
+        validation_patience: how many times in a row the validation metric has to not improve for early stopping,
+            ignored if negative or zero (default is ``5``)
+        val_every_n_epochs: how often (in epochs) to validate the pipeline, ignored if negative or zero
+            (default is ``-1``)
+        val_every_n_batches: how often (in batches) to validate the pipeline, ignored if negative or zero
+            (default is ``-1``)
+        log_every_n_epochs: how often (in epochs) to calculate metrics on train data, ignored if negative or zero
+            (default is ``-1``)
+        log_every_n_batches: how often (in batches) to calculate metrics on train data, ignored if negative or zero
+            (default is ``-1``)
+        log_on_k_batches: count of random train batches to calculate metrics in log (default is ``1``)
+        max_test_batches: maximum batches count for pipeline testing and evaluation, overrides ``log_on_k_batches``,
+            ignored if negative (default is ``-1``)
+        **kwargs: additional parameters whose names will be logged but otherwise ignored
+    """
     def __init__(self, chainer_config: dict, *, batch_size: int = 1,
                  epochs: int = -1,
                  start_epoch_num: int = 0,
@@ -44,7 +84,7 @@ class NNTrainer(FitTrainer):
                  max_test_batches: int = -1,
                  validate_first: bool = True,
                  validation_patience: int = 5, val_every_n_epochs: int = -1, val_every_n_batches: int = -1,
-                 log_every_n_batches: int = -1, log_every_n_epochs: int = -1, log_on_k_batches: int = 0,
+                 log_every_n_batches: int = -1, log_every_n_epochs: int = -1, log_on_k_batches: int = 1,
                  **kwargs) -> None:
         super().__init__(chainer_config, batch_size=batch_size, metrics=metrics, evaluation_targets=evaluation_targets,
                          show_examples=show_examples, tensorboard_log_dir=tensorboard_log_dir,
@@ -95,7 +135,7 @@ class NNTrainer(FitTrainer):
         self._saved = True
 
     def _validate(self, iterator: DataLearningIterator,
-                  tensorboard_tag: Optional[str] = None, tensorboard_index: Optional[int] = None):
+                  tensorboard_tag: Optional[str] = None, tensorboard_index: Optional[int] = None) -> None:
         report = self.test(iterator.gen_batches(self.batch_size, data_type='valid', shuffle=False),
                            start_time=self.start_time)
 
@@ -134,7 +174,7 @@ class NNTrainer(FitTrainer):
         print(json.dumps(report, ensure_ascii=False))
 
     def _log(self, iterator: DataLearningIterator,
-             tensorboard_tag: Optional[str] = None, tensorboard_index: Optional[int] = None):
+             tensorboard_tag: Optional[str] = None, tensorboard_index: Optional[int] = None) -> None:
         if self.log_on_k_batches == 0:
             report = {
                 'time_spent': str(datetime.timedelta(seconds=round(time.time() - self.start_time + 0.5)))
@@ -169,7 +209,8 @@ class NNTrainer(FitTrainer):
         report = {'train': report}
         print(json.dumps(report, ensure_ascii=False))
 
-    def train_on_batches(self, iterator: DataLearningIterator):
+    def train_on_batches(self, iterator: DataLearningIterator) -> None:
+        """Train pipeline on batches using provided data iterator and initialization parameters"""
         self.start_time = time.time()
         if self.validate_first:
             self._validate(iterator)
@@ -222,7 +263,8 @@ class NNTrainer(FitTrainer):
                 log.info('Ran out of patience')
                 break
 
-    def train(self, iterator: DataLearningIterator):
+    def train(self, iterator: DataLearningIterator) -> None:
+        """Call :meth:`~fit_chainer` and then :meth:`~train_on_batches` with provided data iterator as an argument"""
         self.fit_chainer(iterator)
         if callable(getattr(self._chainer, 'train_on_batch', None)):
             try:

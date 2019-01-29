@@ -49,7 +49,7 @@ class FitTrainer:
             in evaluation logs (default is ``False``)
         tensorboard_log_dir: path to a directory where tensorboard logs can be stored, ignored if None
             (default is ``None``)
-        max_test_batches: maximum batches count for pipeline testing and evaluation ignored if negative
+        max_test_batches: maximum batches count for pipeline testing and evaluation, ignored if negative
             (default is ``-1``)
         **kwargs: additional parameters whose names will be logged but otherwise ignored
     """
@@ -160,7 +160,7 @@ class FitTrainer:
         return self._chainer
 
     def train(self, iterator: Union[DataFittingIterator, DataLearningIterator]) -> None:
-        """Call :meth:`~fit_chainer` with provided data iterator as an argument."""
+        """Call :meth:`~fit_chainer` with provided data iterator as an argument"""
         self.fit_chainer(iterator)
         self._saved = True
 
