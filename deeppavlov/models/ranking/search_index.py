@@ -40,7 +40,7 @@ class SearchIndex(Component):
 
 
         # TODO: remove: now we use only 1 last replica
-        context_ = copy(context)
+        context_ = list(context)
         context_[0] = context_[0].replace('&', '')
         context_[0] = "&&&&&&&&&" + context_[0]
 
