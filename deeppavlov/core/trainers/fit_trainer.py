@@ -42,18 +42,16 @@ class FitTrainer:
         chainer_config: ``"chainer"`` block of a configuration file
         batch_size: batch_size to use for partial fitting (if available) and evaluation,
             the whole dataset is used if ``batch_size`` is negative or zero (default is ``-1``)
-        metrics: list of registered metrics names with optional lists of their inputs (default is ``('accuracy',)``)
+        metrics: iterable of registered metrics names with optional lists of their inputs from chainer config
+            (default is ``('accuracy',)``)
         evaluation_targets: data types on which to evaluate trained pipeline (default is ``('valid', 'test')``)
         show_examples: a flag used to print inputs, expected outputs and predicted outputs for the last batch
             in evaluation logs (default is ``False``)
         tensorboard_log_dir: path to a directory where tensorboard logs can be stored, ignored if None
             (default is ``None``)
-        max_test_batches: todo
-        **kwargs: todo
-
-    Attributes:
-
-
+        max_test_batches: maximum batches count for pipeline testing and evaluation ignored if negative
+            (default is ``-1``)
+        **kwargs: additional parameters whose names will be logged but otherwise ignored
     """
     def __init__(self, chainer_config: dict, *, batch_size: int = -1,
                  metrics: Iterable[Union[str, dict]] = ('accuracy',),
@@ -92,6 +90,10 @@ class FitTrainer:
         self._loaded = False
 
     def fit_chainer(self, iterator: Union[DataFittingIterator, DataLearningIterator]) -> None:
+        """
+        Build the pipeline :class:`~deeppavlov.core.common.chainer.Chainer` and successively fit
+        :class:`Estimator <deeppavlov.core.models.estimator.Estimator>` components using a provided data iterator
+        """
         if self._built:
             raise RuntimeError('Cannot fit already built chainer')
         for component_index, component_config in enumerate(self.chainer_config['pipe'], 1):
@@ -153,16 +155,34 @@ class FitTrainer:
             self._loaded = True
 
     def get_chainer(self) -> Chainer:
+        """Return a :class:`~deeppavlov.core.common.chainer.Chainer` built from ``self.chainer_config`` for inference"""
         self._load()
         return self._chainer
 
     def train(self, iterator: Union[DataFittingIterator, DataLearningIterator]) -> None:
+        """Call :meth:`~fit_chainer` with provided data iterator as an argument."""
         self.fit_chainer(iterator)
         self._saved = True
 
     def test(self, data: Iterable[Tuple[Collection[Any], Collection[Any]]],
              metrics: Optional[Collection[Metric]] = None, *,
              start_time: Optional[float] = None, show_examples: Optional[bool] = None) -> dict:
+        """
+        Calculate metrics and return reports on provided data for currently stored
+        :class:`~deeppavlov.core.common.chainer.Chainer`
+
+        Args:
+            data: iterable of batches of inputs and expected outputs
+            metrics: collection of metrics namedtuples containing names for report, metric functions
+                and their inputs names (if omitted, ``self.metrics`` is used)
+            start_time: start time for test report
+            show_examples: a flag used to return inputs, expected outputs and predicted outputs for the last batch
+                in a result report (if omitted, ``self.show_examples`` is used)
+
+        Returns:
+            a report dict containing calculated metrics, spent time value, examples count in tested data
+            and maybe examples
+        """
 
         if start_time is None:
             start_time = time.time()
@@ -211,15 +231,26 @@ class FitTrainer:
 
         return report
 
-    def evaluate(self, iterator: DataLearningIterator, data_types: Optional[Iterable[str]] = None, *,
+    def evaluate(self, iterator: DataLearningIterator, evaluation_targets: Optional[Iterable[str]] = None, *,
                  print_reports: bool = True) -> Dict[str, dict]:
+        """
+        Run :meth:`test` on multiple data types using provided data iterator
+        
+        Args:
+            iterator: :class:`~deeppavlov.core.data.data_learning_iterator.DataLearningIterator` used for evaluation
+            evaluation_targets: iterable of data types to evaluate on
+            print_reports: a flag used to print evaluation reports as json lines
+
+        Returns:
+            a dictionary with data types as keys and evaluation reports as values
+        """
         self._load()
-        if data_types is None:
-            data_types = self.evaluation_targets
+        if evaluation_targets is None:
+            evaluation_targets = self.evaluation_targets
 
         res = {}
 
-        for data_type in data_types:
+        for data_type in evaluation_targets:
             data_gen = iterator.gen_batches(self.batch_size, data_type=data_type, shuffle=False)
             report = self.test(data_gen)
             res[data_type] = report

@@ -23,7 +23,6 @@ from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.data.utils import get_all_elems_from_json
-from deeppavlov.core.trainers.nn_trainer import NNTrainer
 from deeppavlov.download import deep_download
 
 log = get_logger(__name__)
