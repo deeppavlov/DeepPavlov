@@ -49,7 +49,7 @@ Give the floor to the HelloBot!
 print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 ```
 
-[Jupyther notebook with HelloBot example.](https://colab.research.google.com/github/deepmipt/DeepPavlov/blob/master/docs/intro/hello_bot.ipynb)
+[Jupyter notebook with HelloBot example.](https://colab.research.google.com/github/deepmipt/DeepPavlov/blob/master/docs/intro/hello_bot.ipynb)
 
 
 # Features

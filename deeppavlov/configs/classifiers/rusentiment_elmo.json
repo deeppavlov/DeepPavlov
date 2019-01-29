@@ -162,14 +162,6 @@
     },
     "download": [
       {
-        "url": "https://github.com/text-machine-lab/rusentiment/raw/master/Dataset/rusentiment_random_posts.csv",
-        "subdir": "{DOWNLOADS_PATH}/rusentiment"
-      },
-      {
-        "url": "https://github.com/text-machine-lab/rusentiment/raw/master/Dataset/rusentiment_test.csv",
-        "subdir": "{DOWNLOADS_PATH}/rusentiment"
-      },
-      {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/rusentiment_v4.tar.gz",
         "subdir": "{ROOT_PATH}/models/classifiers"
       }
