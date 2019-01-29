@@ -77,7 +77,7 @@ def interact_model(config: Union[str, Path, dict]) -> None:
     while True:
         args = []
         for in_x in model.in_x:
-            args.append([input('{}::'.format(in_x))])
+            args.append((input('{}::'.format(in_x)),))
             # check for exit command
             if args[-1][0] in {'exit', 'stop', 'quit', 'q'}:
                 return
