@@ -152,6 +152,11 @@ is based on punctuation and syntax.
 **sentiment classification** of social media posts for Russian language within 5 classes 'positive', 'negative',
 'neutral', 'speech', 'skip'.
 
+`SentiRuEval dataset <http://www.dialog-21.ru/evaluation/2016/sentiment/>`__ contains
+**sentiment classification** of reviews for Russian language within 4 classes 'positive', 'negative',
+'neutral', 'both'. Datasets on four different themes 'Banks', 'Telecom', 'Restaurants', 'Cars' are
+combined to one big dataset.
+
 `Questions on Yahoo Answers labeled as either informational or conversational dataset <https://webscope.sandbox.yahoo.com/catalog.php?datatype=l>`__
 contains **intent classification** of English questions into two category: informational (`0`) and conversational (`1`) questions.
 The dataset includes some additional metadata but for the presented pre-trained model only `Title` of questions and `Label` were used.
@@ -186,6 +191,8 @@ Therefore, this model is available only for interaction.
 |                  |`RuSentiment`_     |      | :config:`RuWiki+Lenta emb <classifiers/rusentiment_cnn.json>`                                   | F1       | 0.6258 | 0.6472 |  6.2 Gb   |
 +                  +                   +      +-------------------------------------------------------------------------------------------------+          +--------+--------+-----------+
 |                  |                   |      | :config:`ELMo <classifiers/rusentiment_elmo.json>`                                              |          | 0.7074 | 0.7288 |  700 Mb   |
++                  +-------------------+      +-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
+|                  |`SentiRuEval`_     |      | :config:`CNN on ELMo embeddings <classifiers/sentiment_sentirueval.json>`                       | F1       | 0.     | 0.     |  700 Mb   |
 +------------------+-------------------+      +-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
 | Intent           |`Yahoo-L31`_       |      | :config:`Yahoo-L31 on ELMo <classifiers/yahoo_convers_vs_info.json>` pre-trained on `Yahoo-L6`_ | ROC-AUC  | 0.9412 |   --   |  700 Mb   |
 +------------------+-------------------+------+-------------------------------------------------------------------------------------------------+----------+--------+--------+-----------+
@@ -196,6 +203,7 @@ Therefore, this model is available only for interaction.
 .. _`AG News`: https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html
 .. _`Twitter mokoron`: http://study.mokoron.com/
 .. _`RuSentiment`: http://text-machine.cs.uml.edu/projects/rusentiment/
+.. _`SentiRuEval`: http://www.dialog-21.ru/evaluation/2016/sentiment/
 .. _`Yahoo-L31`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 .. _`Yahoo-L6`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 
