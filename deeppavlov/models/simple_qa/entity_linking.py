@@ -1,14 +1,24 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import numpy as np
+from typing import List, Tuple
 
-from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.utils import download
 from deeppavlov.core.models.component import Component
-from deeppavlov.core.models.estimator import Estimator
-
-import os
 import pickle
+from pathlib import Path
 
 from collections import defaultdict
 from fuzzywuzzy import fuzz
@@ -17,32 +27,41 @@ from nltk.corpus import stopwords
 
 @register('entity_linking')
 class EntityLinking(Component):
+    """
+        Class for linking the words in the question and the corresponding entity
+        in Freebase, then extracting triplets from Freebase with the entity
+    """
     
-    def __init__(self, entities_load_path, freebase_load_path, *args, **kwargs):
+    def __init__(self, entities_load_path: str,
+                 freebase_load_path: str,
+                 *args, **kwargs) -> None:
+
         self.inverted_index = defaultdict(list)
         self.stopword = set(stopwords.words('english'))
+        entities_load_path = Path(entities_load_path).expanduser()
         with open(entities_load_path, "rb") as handler:
             self.inverted_index = pickle.load(handler, encoding='latin1')
             self.inverted_index = defaultdict(str, self.inverted_index)
 
-        g = open(freebase_load_path)
         self.entity_dict = defaultdict(list)
-        line = g.readline()
-        split = line.strip('\n').split('\t')
-        self.entity_dict[split[0]].append([split[1], split[2]])
-        count = 0
-        total = 0
-        while line:
-            total += 1
-            line = g.readline()
+        freebase_load_path = Path(freebase_load_path).expanduser()
+        with open(freebase_load_path) as fl:
+            line = fl.readline()
             split = line.strip('\n').split('\t')
-            if len(split) > 2:
-                self.entity_dict[split[0]].append([split[1], split[2]])
-            if len(split) < 3:
-                count += 1
+            self.entity_dict[split[0]].append([split[1], split[2]])
+            count = 0
+            total = 0
+            while line:
+                total += 1
+                line = fl.readline()
+                split = line.strip('\n').split('\t')
+                if len(split) > 2:
+                    self.entity_dict[split[0]].append([split[1], split[2]])
+                if len(split) < 3:
+                    count += 1
 
 
-    def get_ngram(self, text):
+    def get_ngram(self, text: str) -> List[str]:
         ngram = []
         tokens = text.split()
         for i in range(len(tokens)+1):
@@ -55,7 +74,9 @@ class EntityLinking(Component):
         ngram = sorted(ngram, key=lambda x: len(x.split()), reverse=True)
         return ngram
     
-    def __call__(self, texts, tags, *args, **kwargs):
+    def __call__(self, texts: List[List[str]],
+                 tags: List[List[int]],
+                  *args, **kwargs) -> List[List[List[str]]]:
         entities = []
         for i, text in enumerate(texts):
             entity = ""
@@ -70,7 +91,7 @@ class EntityLinking(Component):
 
         for entity in entities:
             link_scores = self.find_entity(entity)
-            link_scores_entity.append(link_scores[:50])
+            link_scores_entity.append(link_scores[:30])
 
         entity_triplets = []
         for link_scores in link_scores_entity:
@@ -85,7 +106,7 @@ class EntityLinking(Component):
         return entity_triplets
     
 
-    def find_entity(self, entity):
+    def find_entity(self, entity: str) -> List[Tuple]:
         C = []
         C_scored = []
         tokens = self.get_ngram(entity)
