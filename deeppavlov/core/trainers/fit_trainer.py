@@ -42,7 +42,10 @@ class FitTrainer:
         chainer_config: ``"chainer"`` block of a configuration file
         batch_size: batch_size to use for partial fitting (if available) and evaluation,
             the whole dataset is used if ``batch_size`` is negative or zero (default is ``-1``)
-        metrics: iterable of registered metrics names with optional lists of their inputs from chainer config
+        metrics: iterable of metrics where each metric can be a registered metric name or a dict of ``name`` and
+            ``inputs`` where ``name`` is a registered metric name and ``inputs`` is a collection of parameter names
+            from chainer’s inner memory that will be passed to the metric function;
+            default value for ``inputs`` parameter is a concatenation of chainer’s ``in_y`` and ``out`` fields
             (default is ``('accuracy',)``)
         evaluation_targets: data types on which to evaluate trained pipeline (default is ``('valid', 'test')``)
         show_examples: a flag used to print inputs, expected outputs and predicted outputs for the last batch

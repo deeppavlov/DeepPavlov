@@ -44,7 +44,10 @@ class NNTrainer(FitTrainer):
         epochs: maximum epochs number to train the pipeline, ignored if negative or zero (default is ``-1``)
         start_epoch_num: starting epoch number for reports (default is ``0``)
         max_batches: maximum batches number to train the pipeline, ignored if negative or zero (default is ``-1``)
-        metrics: iterable of registered metrics names with optional lists of their inputs from chainer config,
+        metrics: iterable of metrics where each metric can be a registered metric name or a dict of ``name`` and
+            ``inputs`` where ``name`` is a registered metric name and ``inputs`` is a collection of parameter names
+            from chainer’s inner memory that will be passed to the metric function;
+            default value for ``inputs`` parameter is a concatenation of chainer’s ``in_y`` and ``out`` fields;
             the first metric is used for early stopping (default is ``('accuracy',)``)
         train_metrics: metrics calculated for train logs (if omitted, ``metrics`` argument is used)
         metric_optimization: one of ``'maximize'`` or ``'minimize'`` — strategy for metric optimization used in early
