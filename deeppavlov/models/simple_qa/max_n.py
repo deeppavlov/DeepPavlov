@@ -29,8 +29,9 @@ class Max_n(Component, Serializable):
     '''
 
     def __init__(self, n_maximum_classes: int, load_path: str, *args, **kwargs) -> None:
-        super().__init__(save_path = None, load_path = load_path)
+        super().__init__(save_path=None, load_path=load_path)
         self.n_maximum_classes = n_maximum_classes
+        self.classes = None
         self.load()
 
     def load(self) -> None:
@@ -49,5 +50,5 @@ class Max_n(Component, Serializable):
             max_n = np.asarray(probas).argsort()[-5:][::-1]  # Make it top n and n to the __init__
             max_n_classes = [self.classes[num] for num in max_n]
             max_n_batch.append(max_n_classes)
-        
+
         return max_n_batch
