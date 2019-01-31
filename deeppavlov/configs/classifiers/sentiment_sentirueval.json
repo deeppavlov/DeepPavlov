@@ -93,10 +93,10 @@
         "learning_rate_decay": 1e-2,
         "loss": "categorical_crossentropy",
         "last_layer_activation": "softmax",
-        "coef_reg_gru": 1e-6,
-        "coef_reg_den": 1e-6,
-        "dropout_rate": 0.5,
-        "rec_dropout_rate": 0.5,
+        "coef_reg_gru": 1e-5,
+        "coef_reg_den": 1e-5,
+        "dropout_rate": 0.7,
+        "rec_dropout_rate": 0.7,
         "dense_size": 100,
         "model_name": "bigru_with_max_aver_pool_model"
       },
@@ -127,7 +127,7 @@
         "inputs": ["y_onehot", "y_pred_probas"]
       }
     ],
-    "validation_patience": 5,
+    "validation_patience": 10,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
     "show_examples": false,
@@ -139,7 +139,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/sentirueval_v2"
+      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/sentirueval_v3"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
