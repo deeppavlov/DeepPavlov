@@ -169,7 +169,7 @@ class NNTrainer(FitTrainer):
         if self.validation_patience > 0:
             report['patience_limit'] = self.validation_patience
 
-        self._chainer.process_event(event_name='after_validation', data=report)
+        self._send_event(event_name='after_validation', data=report)
         report = {'valid': report}
         print(json.dumps(report, ensure_ascii=False))
 
@@ -206,8 +206,21 @@ class NNTrainer(FitTrainer):
             self.tb_train_writer.add_summary(summary, tensorboard_index)
             self.tb_train_writer.flush()
 
+        self._send_event(event_name='after_train_log', data=report)
+
         report = {'train': report}
         print(json.dumps(report, ensure_ascii=False))
+
+    def _send_event(self, event_name: str, data: Optional[dict] = None) -> None:
+        report = {
+            'time_spent': str(datetime.timedelta(seconds=round(time.time() - self.start_time + 0.5))),
+            'epochs_done': self.epoch,
+            'batches_seen': self.train_batches_seen,
+            'train_examples_seen': self.examples
+        }
+        if data is not None:
+            report.update(data)
+        self._chainer.process_event(event_name=event_name, data=data)
 
     def train_on_batches(self, iterator: DataLearningIterator) -> None:
         """Train pipeline on batches using provided data iterator and initialization parameters"""
@@ -236,6 +249,8 @@ class NNTrainer(FitTrainer):
                     self._validate(iterator,
                                    tensorboard_tag='every_n_batches', tensorboard_index=self.train_batches_seen)
 
+                self._send_event(event_name='after_batch')
+
                 if 0 < self.max_batches <= self.train_batches_seen:
                     impatient = True
                     break
@@ -255,6 +270,8 @@ class NNTrainer(FitTrainer):
 
             if self.val_every_n_epochs > 0 and self.epoch % self.val_every_n_epochs == 0:
                 self._validate(iterator, tensorboard_tag='every_n_epochs', tensorboard_index=self.epoch)
+
+            self._send_event(event_name='after_epoch')
 
             if 0 < self.max_epochs <= self.epoch:
                 break
