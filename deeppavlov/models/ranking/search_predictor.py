@@ -13,17 +13,11 @@
 # limitations under the License.
 
 
-from typing import List, Union
-from operator import itemgetter
-
-import pickle
 import numpy as np
 
-from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.estimator import Component
-from deeppavlov.core.common.chainer import Chainer
 
 logger = get_logger(__name__)
 
@@ -38,4 +32,4 @@ class SearchPredictor(Component):
 
     def __call__(self, responses, preds):
         sorted_ids = np.flip(np.argsort(preds[0]), -1)
-        return [responses[0][sorted_ids[0]]]
+        return [responses[0][np.random.choice(sorted_ids[:5])]]

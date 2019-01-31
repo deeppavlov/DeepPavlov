@@ -1,4 +1,5 @@
 {
+  "info": "(v2) Using cleaned dataset, along with 2-replica dialogs. There are 636913 items in total",
   "chainer": {
     "in": ["context"],
     "pipe": [
@@ -11,8 +12,8 @@
       {
         "class_name": "hashing_tfidf_vectorizer",
         "id": "vectorizer",
-        "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v1/train_contexts_tfidf_matrix.npz",
-        "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v1/train_contexts_tfidf_matrix.npz",
+        "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v2/train_contexts_tfidf_matrix.npz",
+        "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v2/train_contexts_tfidf_matrix.npz",
         "tokenizer": {"class_name": "ru_tokenizer",
          "lemmas": true,
          "ngram_range": [1, 2]}
@@ -28,7 +29,7 @@
       {
         "info": "3. Search responses using context_ids",
         "class_name": "search_index",
-        "map_filename": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v1/train_index_dict.pickle",
+        "map_filename": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v2/train_index_dict_v2.pickle",
         "in": ["context", "tfidf_doc_ids"],
         "out": ["response_candidates_list", "response_candidates_str"]
       },
@@ -36,7 +37,7 @@
         "info": "4. Preprocess response candidates and choose the best one",
         "id": "preproc",
         "class_name": "siamese_preprocessor",
-        "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v1/preproc/tok.dict",
+        "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v2/preproc/tok.dict",
         "num_ranking_samples": 10,
         "num_context_turns": 10,
         "max_sequence_length": 50,
@@ -52,14 +53,14 @@
           "special_tokens": ["", "<UNK>"],
           "unk_token": "<UNK>",
           "id": "vocab_1",
-          "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v1/vocabs/int_tok.dict",
-          "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v1/vocabs/int_tok.dict"
+          "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v2/vocabs/int_tok.dict",
+          "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v2/vocabs/int_tok.dict"
         },
         "embedder": {
           "id": "word2vec_embedder",
           "class_name": "glove",
           "dim": 200,
-          "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v1/chitchat1.w2v.vectors.txt"
+          "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v2/chitchat1.w2v.vectors.txt"
         }
       },
       {
@@ -79,8 +80,8 @@
         "learning_rate": 1e-3,
         "batch_size": 500,
         "seed": 65,
-        "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v1/model_smn/model",
-        "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v1/model_smn/model"
+        "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v2/model_smn/model",
+        "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v2/model_smn/model"
       },
       {
         "info": "5. Return actual response",
@@ -107,7 +108,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/dev/chitchat_2staged_tfidf_smn_v1.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/dev/chitchat_2staged_tfidf_smn_v2.tar.gz",
         "subdir": "{MODELS_PATH}"
       }
     ]

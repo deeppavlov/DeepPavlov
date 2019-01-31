@@ -38,11 +38,12 @@ class SearchIndex(Component):
         ids = [int(i.split('.')[0]) for i in index[0]]
         candidates = [self.map[id][1] for id in ids]
 
+        context_ = list(context)
 
         # TODO: remove: now we use only 1 last replica
-        context_ = list(context)
-        context_[0] = context_[0].replace('&', '')
+        context_[0] = context_[0].replace('&', '')  # clean utterance
         context_[0] = "&&&&&&&&&" + context_[0]
+        # ############################################
 
         # concat context and response candidates
         smn_resp_inputs = context_[0]

@@ -33,4 +33,4 @@ class CleanInput(Component):
         if len(context_[0]) == 0:
             return ['>']     # TODO: remove, workaround for empty input
         else:
-            return context_[0].replace('&', '')
+            return [context_[0].replace('&', ' ')]
