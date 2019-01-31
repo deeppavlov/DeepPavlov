@@ -180,6 +180,7 @@ class MultiSquadRetrIterator(DataLearningIterator):
                  with_answer_rate: Optional[float] = None,
                  squad_rate: Optional[float] = None, *args, **kwargs) -> None:
         self.with_answer_rate = with_answer_rate
+        self.squad_rate = squad_rate
         self.seed = seed
         self.np_random = np.random.RandomState(seed)
         self.shuffle = shuffle
