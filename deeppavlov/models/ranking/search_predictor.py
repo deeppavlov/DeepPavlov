@@ -27,9 +27,9 @@ class SearchPredictor(Component):
 
     def __init__(self,
                  **kwargs):
-        pass
+        self.sample_size = 5
 
 
     def __call__(self, responses, preds):
         sorted_ids = np.flip(np.argsort(preds[0]), -1)
-        return [responses[0][np.random.choice(sorted_ids[:5])]]
+        return [responses[0][np.random.choice(sorted_ids[:self.sample_size])]]  # choose a random answer as the best one

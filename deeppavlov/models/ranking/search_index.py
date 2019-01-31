@@ -29,9 +29,11 @@ class SearchIndex(Component):
 
     def __init__(self,
                  map_filename: str = None,
+                 last_turn_only: bool = True,
                  **kwargs):
         map_filename = expand_path(map_filename)
         self.map = pickle.load(open(map_filename, 'rb'))
+        self.last_turn_only = last_turn_only
 
 
     def __call__(self, context, index):
@@ -40,12 +42,19 @@ class SearchIndex(Component):
 
         context_ = list(context)
 
-        # TODO: remove: now we use only 1 last replica
-        context_[0] = context_[0].replace('&', '')  # clean utterance
-        context_[0] = "&&&&&&&&&" + context_[0]
-        # ############################################
+        if self.last_turn_only:
+            # TODO: remove: now we use only 1 last replica
+            # context_ does contain a last utterance only like "Hello, bot!"
+            context_[0] = context_[0].replace('&', '')  # clean utterance
+            context_[0] = "&&&&&&&&&" + context_[0]
+            # ############################################
+        else:
+            # context_ does contain last utterance and context, like " & & & & & & & & Hello, bot! & Hello, human!"
+            pass
 
-        # concat context and response candidates
+        # print("[search_index] full_context:", context_[0])
+
+        # append several response candidates to the context
         smn_resp_inputs = context_[0]
         for r in candidates:
             smn_resp_inputs += " & " + r.replace('&', '')

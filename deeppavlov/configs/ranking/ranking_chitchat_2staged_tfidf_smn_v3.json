@@ -1,0 +1,117 @@
+{
+  "info": "(v3) Using cleaned dataset, along with 2-replica dialogs. There are 636913 items in total. Using dynamic context length, just type '.4' and set context depth to 4",
+  "chainer": {
+    "in": ["context"],
+    "pipe": [
+      {
+        "info": "1. Replace separators from input string",
+        "class_name": "clean_input_ranker",
+        "in": ["context"],
+        "out": ["context_clean"]
+      },
+      {
+        "class_name": "hashing_tfidf_vectorizer",
+        "id": "vectorizer",
+        "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v2/train_contexts_tfidf_matrix.npz",
+        "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v2/train_contexts_tfidf_matrix.npz",
+        "tokenizer": {"class_name": "ru_tokenizer",
+         "lemmas": true,
+         "ngram_range": [1, 2]}
+      },
+      {
+        "info": "2. Find relevant contexts",
+         "class_name": "tfidf_ranker",
+        "top_n": 400,
+        "in": ["context_clean"],
+        "out": ["tfidf_doc_ids", "tfidf_doc_scores"],
+        "vectorizer": "#vectorizer"
+      },
+      {
+        "info": "3. Search responses using context_ids",
+        "class_name": "search_index",
+        "last_turn_only": false,
+        "map_filename": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v2/train_index_dict_v2.pickle",
+        "in": ["context", "tfidf_doc_ids"],
+        "out": ["response_candidates_list", "response_candidates_str"]
+      },
+      {
+        "info": "4. Preprocess response candidates and choose the best one",
+        "id": "preproc",
+        "class_name": "siamese_preprocessor",
+        "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v2/preproc/tok.dict",
+        "num_ranking_samples": 10,
+        "num_context_turns": 10,
+        "max_sequence_length": 50,
+        "embedding_dim": 200,
+        "in": ["response_candidates_str"],
+        "out": ["x_proc"],
+        "tokenizer": {
+          "class_name": "ru_tokenizer",
+          "id": "tok_1"
+        },
+        "vocab": {
+          "class_name": "simple_vocab",
+          "special_tokens": ["", "<UNK>"],
+          "unk_token": "<UNK>",
+          "id": "vocab_1",
+          "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v2/vocabs/int_tok.dict",
+          "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v2/vocabs/int_tok.dict"
+        },
+        "embedder": {
+          "id": "word2vec_embedder",
+          "class_name": "glove",
+          "dim": 200,
+          "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v2/chitchat1.w2v.vectors.txt"
+        }
+      },
+      {
+        "id": "embeddings",
+        "class_name": "emb_mat_assembler",
+        "embedder": "#word2vec_embedder",
+        "vocab": "#vocab_1"
+      },
+      {
+        "in": ["x_proc"],
+        "out": ["y_predicted"],
+        "class_name": "smn_nn",
+        "num_context_turns": "#preproc.num_context_turns",
+        "max_sequence_length": "#preproc.max_sequence_length",
+        "embedding_dim": "#word2vec_embedder.dim",
+        "emb_matrix": "#embeddings.emb_mat",
+        "learning_rate": 1e-3,
+        "batch_size": 500,
+        "seed": 65,
+        "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v2/model_smn/model",
+        "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v2/model_smn/model"
+      },
+      {
+        "info": "5. Return actual response",
+        "class_name": "search_predictor",
+        "in": ["response_candidates_list", "y_predicted"],
+        "out": ["best_response"]
+      }
+    ],
+    "out": ["best_response"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf-gpu.txt",
+      "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
+    ],
+    "labels": {
+      "server_utils": "Ranker"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/dev/chitchat_2staged_tfidf_smn_v2.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      }
+    ]
+  }
+}
