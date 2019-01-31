@@ -35,7 +35,9 @@ def get_logger(logger_name):
         with log_config_path.open(encoding='utf8') as log_config_json:
             log_config = json.load(log_config_json)
 
-        configured_loggers = [log_config.get('root', {})] + log_config.get('loggers', [])
+        configured_loggers = [log_config.get('root', {})] + [logger for logger in
+                                                             log_config.get('loggers', {}).values()]
+
         used_handlers = {handler for log in configured_loggers for handler in log.get('handlers', [])}
 
         for handler_id, handler in list(log_config['handlers'].items()):
