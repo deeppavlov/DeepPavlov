@@ -157,8 +157,8 @@ class MultiSquadRetrIterator(DataLearningIterator):
     reads data from jsonl files
 
     With ``with_answer_rate`` rate samples context with answer and with ``1 - with_answer_rate`` samples context
-    from the same article, but without an answer. Contexts without an answer are sampled according to
-    their tfidf scores (tfidf score between question and context).
+    from the same article, but without an answer. Contexts without an answer are sampled from uniform distribution.
+    If ``with_answer_rate`` is None than we compute actual ratio for each data example.
 
     It extracts ``context``, ``question``, ``answer_text`` and ``answer_start`` position from dataset.
     Example from a dataset is a tuple of ``(context, question)`` and ``(answer_text, answer_start)``. If there is
@@ -169,6 +169,7 @@ class MultiSquadRetrIterator(DataLearningIterator):
         seed: random seed for data shuffling
         shuffle: whether to shuffle data during batching
         with_answer_rate: sampling rate of contexts with answer
+        squad_rate: sampling rate of context from squad dataset (actual rate would be with_answer_rate * squad_rate)
 
     Attributes:
         shuffle: whether to shuffle data during batching
@@ -176,7 +177,8 @@ class MultiSquadRetrIterator(DataLearningIterator):
     """
 
     def __init__(self, data, seed: Optional[int] = None, shuffle: bool = False,
-                 with_answer_rate: Optional[float] = None, *args, **kwargs) -> None:
+                 with_answer_rate: Optional[float] = None,
+                 squad_rate: Optional[float] = None, *args, **kwargs) -> None:
         self.with_answer_rate = with_answer_rate
         self.seed = seed
         self.np_random = np.random.RandomState(seed)
@@ -234,7 +236,14 @@ class MultiSquadRetrIterator(DataLearningIterator):
 
                     if random.rand() < with_answer_rate or noans_clen == 0:
                         # select random context with answer
-                        context = random.choice(ans_contexts)
+                        if self.squad_rate is not None:
+                            if random.rand() < self.squad_rate or len(ans_contexts) == 1:
+                                # first context is always from squad dataset
+                                context = ans_contexts[0]
+                            else:
+                                context = random.choice(ans_contexts[1:])
+                        else:
+                            context = random.choice(ans_contexts)
                     else:
                         # select random context without answer
                         # prob ~ context tfidf score
