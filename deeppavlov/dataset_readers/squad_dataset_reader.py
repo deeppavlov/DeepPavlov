@@ -120,7 +120,7 @@ class MultiSquadDatasetReader(DatasetReader):
         """
         if dataset == 'MultiSQuADRetr':
             self.url = self.url_multi_squad_retr
-        if dataset == 'MultiSQuADRuRetr':
+        elif dataset == 'MultiSQuADRuRetr':
             self.url = self.url_multi_squad_ru_retr
         else:
             raise RuntimeError('Dataset {} is unknown'.format(dataset))
