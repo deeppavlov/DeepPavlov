@@ -207,6 +207,7 @@ class FitTrainer:
                 out += list(val)
 
         if examples == 0:
+            log.warning('Got empty data iterable for scoring')
             return {'eval_examples_count': 0, 'metrics': None, 'time_spent': str(datetime.timedelta(seconds=0))}
 
         metrics_values = [(m.name, m.fn(*[outputs[i] for i in m.inputs])) for m in metrics]
