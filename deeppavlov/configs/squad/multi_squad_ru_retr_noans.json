@@ -37,8 +37,8 @@
         "level": "token",
         "emb_folder": "{DOWNLOADS_PATH}/embeddings/",
         "emb_url": "http://files.deeppavlov.ai/embeddings/wiki-news-300d-1M.vec",
-        "save_path": "{MODELS_PATH}/squad_model_ru/emb/vocab_embedder.pckl",
-        "load_path": "{MODELS_PATH}/squad_model_ru/emb/vocab_embedder.pckl",
+        "save_path": "{MODELS_PATH}/multi_squad_retr_model_ru_noans/emb/vocab_embedder.pckl",
+        "load_path": "{MODELS_PATH}/multi_squad_retr_model_ru_noans/emb/vocab_embedder.pckl",
         "context_limit": "#squad_prepr.context_limit",
         "question_limit": "#squad_prepr.question_limit",
         "char_limit": "#squad_prepr.char_limit",
@@ -52,8 +52,8 @@
         "level": "char",
         "emb_folder": "{DOWNLOADS_PATH}/embeddings/",
         "emb_url": "http://files.deeppavlov.ai/embeddings/wiki-news-300d-1M-char.vec",
-        "save_path": "{MODELS_PATH}/squad_model_ru/emb/char_vocab_embedder.pckl",
-        "load_path": "{MODELS_PATH}/squad_model_ru/emb/char_vocab_embedder.pckl",
+        "save_path": "{MODELS_PATH}/multi_squad_retr_model_ru_noans/emb/char_vocab_embedder.pckl",
+        "load_path": "{MODELS_PATH}/multi_squad_retr_model_ru_noans/emb/char_vocab_embedder.pckl",
         "context_limit": "#squad_prepr.context_limit",
         "question_limit": "#squad_prepr.question_limit",
         "char_limit": "#squad_prepr.char_limit",
@@ -150,7 +150,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/multi_squad_model_noans_1.1.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/multi_squad_model_ru_1.0.tar.gz",
         "subdir": "{MODELS_PATH}"
       },
       {
