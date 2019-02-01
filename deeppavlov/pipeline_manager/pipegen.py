@@ -108,6 +108,21 @@ class PipeGen:
 
         return product(*self.pipes)
 
+    def _universial(self, pipe: tuple, ind: int):
+        new_config = dict(dataset_reader=deepcopy(self.dataset_reader),
+                          dataset_iterator=self.main_config['dataset_iterator'],
+                          chainer=self.chainer, train=self.train_config)
+        if 'metadata' in self.main_config.keys():
+            new_config['metadata'] = self.main_config['metadata']
+
+        chainer_components = list(pipe)
+        dataset_name = self.dataset_reader['data_path'].split('/')[-1]
+        chainer_components = self.change_load_path(chainer_components, ind, self.save_path, dataset_name,
+                                                   self.test_mode)
+        new_config['chainer']['pipe'] = chainer_components
+        ind += 1
+        return new_config
+
     def pipeline_gen(self) -> Generator:
         """
         Creates a configs with a different set of hyperparameters based on the primary set of pipelines.
@@ -118,35 +133,11 @@ class PipeGen:
         p = 0
         for i, pipe_var in enumerate(self.enumerator):
             if self.mode == 'random':
-                for random_pipe in self.random_conf_gen(pipe_var):
-                    new_config = dict(dataset_reader=deepcopy(self.dataset_reader),
-                                      dataset_iterator=self.main_config['dataset_iterator'],
-                                      chainer=self.chainer, train=self.train_config)
-                    if 'metadata' in self.main_config.keys():
-                        new_config['metadata'] = self.main_config['metadata']
-
-                    chainer_components = list(random_pipe)
-                    dataset_name = self.dataset_reader['data_path'].split('/')[-1]
-                    chainer_components = self.change_load_path(chainer_components, p, self.save_path, dataset_name,
-                                                               self.test_mode)
-                    new_config['chainer']['pipe'] = chainer_components
-                    p += 1
-                    yield new_config
+                for pipe_ in self.random_conf_gen(pipe_var):
+                    yield self._universial(pipe_, p)
             else:
-                for grid_pipe in self.grid_conf_gen(pipe_var):
-                    new_config = dict(dataset_reader=deepcopy(self.dataset_reader),
-                                      dataset_iterator=self.main_config['dataset_iterator'],
-                                      chainer=self.chainer, train=self.train_config)
-                    if 'metadata' in self.main_config.keys():
-                        new_config['metadata'] = self.main_config['metadata']
-
-                    chainer_components = list(grid_pipe)
-                    dataset_name = self.dataset_reader['data_path'].split('/')[-1]
-                    chainer_components = self.change_load_path(chainer_components, p, self.save_path, dataset_name,
-                                                               self.test_mode)
-                    new_config['chainer']['pipe'] = chainer_components
-                    p += 1
-                    yield new_config
+                for pipe_ in self.grid_conf_gen(pipe_var):
+                    yield self._universial(pipe_, p)
 
     # random generation
     def random_conf_gen(self, pipe_components: List[dict]) -> Generator:
