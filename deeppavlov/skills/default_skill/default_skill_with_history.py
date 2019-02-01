@@ -39,7 +39,7 @@ class DefaultStatelessSkillWithHistory(Skill):
 
         # One can choose the context depth dynamically
         # by typing the command: ".3", where 3 is a new desired context length
-        self.num_turns = 4
+        self.num_turns = 2
 
     def __call__(self, utterances_batch: list, history_batch: list,
                  states_batch: Optional[list]=None) -> Tuple[list, list, list]:
