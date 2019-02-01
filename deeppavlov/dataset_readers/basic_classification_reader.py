@@ -14,10 +14,10 @@
 
 
 from logging import getLogger
+from pathlib import Path
 
 import pandas as pd
 from overrides import overrides
-from pathlib import Path
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader

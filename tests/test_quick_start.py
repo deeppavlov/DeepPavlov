@@ -7,6 +7,7 @@ import shutil
 import signal
 import sys
 from concurrent.futures import ProcessPoolExecutor
+from pathlib import Path
 from typing import Union
 from urllib.parse import urljoin
 
@@ -14,7 +15,6 @@ import pexpect
 import pexpect.popen_spawn
 import pytest
 import requests
-from pathlib import Path
 
 import deeppavlov
 from deeppavlov import build_model

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import sys
-
 from pathlib import Path
 
 from .core.common.log import init_logger

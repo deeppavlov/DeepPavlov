@@ -24,12 +24,12 @@ import zipfile
 from hashlib import md5
 from itertools import chain
 from logging import getLogger
+from pathlib import Path
 from typing import List, Union, Iterable, Optional
 from urllib.parse import urlparse
 
 import numpy as np
 import requests
-from pathlib import Path
 from tqdm import tqdm
 
 log = getLogger(__name__)

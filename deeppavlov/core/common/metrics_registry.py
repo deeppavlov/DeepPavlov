@@ -1,9 +1,8 @@
 import importlib
 import json
 from logging import getLogger
-from typing import Callable, Any
-
 from pathlib import Path
+from typing import Callable, Any
 
 from deeppavlov.core.common.errors import ConfigError
 

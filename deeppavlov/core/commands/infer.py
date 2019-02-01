@@ -16,9 +16,8 @@ import pickle
 import sys
 from itertools import islice
 from logging import getLogger
-from typing import Optional, Union
-
 from pathlib import Path
+from typing import Optional, Union
 
 from deeppavlov.core.commands.utils import import_packages, parse_config
 from deeppavlov.core.common.chainer import Chainer

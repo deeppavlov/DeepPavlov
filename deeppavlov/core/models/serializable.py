@@ -14,9 +14,8 @@
 
 from abc import ABCMeta, abstractmethod
 from logging import getLogger
-from typing import Union, Optional
-
 from pathlib import Path
+from typing import Union, Optional
 
 from deeppavlov.core.commands.utils import expand_path
 

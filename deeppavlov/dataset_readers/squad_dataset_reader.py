@@ -14,9 +14,8 @@
 
 
 import json
-from typing import Dict, Any
-
 from pathlib import Path
+from typing import Dict, Any
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader

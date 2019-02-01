@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pathlib
 from abc import abstractmethod
 from collections import defaultdict
 from typing import List, Dict, AnyStr, Union
 
 import numpy as np
-import pathlib
 from pymorphy2 import MorphAnalyzer
 from russian_tagsets import converters
 

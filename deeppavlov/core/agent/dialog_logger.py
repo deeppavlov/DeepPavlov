@@ -15,9 +15,8 @@
 import json
 from datetime import datetime
 from logging import getLogger
-from typing import Any, Optional, Hashable
-
 from pathlib import Path
+from typing import Any, Optional, Hashable
 
 from deeppavlov.core.agent.rich_content import RichMessage
 from deeppavlov.core.common.file import read_json

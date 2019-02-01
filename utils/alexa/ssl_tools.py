@@ -16,12 +16,12 @@ import base64
 import re
 import ssl
 from logging import getLogger
+from pathlib import Path
 from typing import List, Optional
 from urllib.parse import urlsplit
 
 import requests
 from OpenSSL import crypto
-from pathlib import Path
 
 log = getLogger(__name__)
 

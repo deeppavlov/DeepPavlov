@@ -14,11 +14,11 @@
 
 from abc import ABCMeta, abstractmethod
 from logging import getLogger
+from pathlib import Path
 from typing import List, Union, Iterator
 
 import numpy as np
 from overrides import overrides
-from pathlib import Path
 
 from deeppavlov.core.data.utils import zero_pad
 from deeppavlov.core.models.component import Component

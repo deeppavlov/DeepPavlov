@@ -15,10 +15,10 @@
 import shutil
 from collections import defaultdict
 from logging import getLogger
+from pathlib import Path
 
 import requests
 from lxml import html
-from pathlib import Path
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.file import load_pickle, save_pickle

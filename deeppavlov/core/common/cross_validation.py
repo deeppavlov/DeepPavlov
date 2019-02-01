@@ -15,9 +15,9 @@
 import shutil
 from collections import OrderedDict
 from logging import getLogger
+from pathlib import Path
 
 import numpy as np
-from pathlib import Path
 from sklearn.model_selection import KFold
 
 from deeppavlov.core.commands.train import train_evaluate_model_from_config, get_iterator_from_config, \

@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-from typing import Union, Dict, TypeVar
-
 from pathlib import Path
+from typing import Union, Dict, TypeVar
 
 from deeppavlov.core.common.file import read_json, find_config
 

@@ -15,10 +15,10 @@
 import itertools
 from collections import Counter, defaultdict
 from logging import getLogger
+from pathlib import Path
 from typing import List, Callable
 
 import numpy as np
-from pathlib import Path
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register

@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import getLogger
-from typing import List, Tuple
-
 import kenlm
+from logging import getLogger
 from pathlib import Path
+from typing import List, Tuple
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register

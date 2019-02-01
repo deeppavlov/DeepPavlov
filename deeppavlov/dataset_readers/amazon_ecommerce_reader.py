@@ -11,9 +11,8 @@
 
 import re
 from logging import getLogger
-from typing import List, Any, Dict, Tuple
-
 from pathlib import Path
+from typing import List, Any, Dict, Tuple
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register

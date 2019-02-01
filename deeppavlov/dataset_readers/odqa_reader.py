@@ -17,9 +17,9 @@ import logging
 import sqlite3
 import unicodedata
 from multiprocessing import Pool
+from pathlib import Path
 from typing import Union, List, Tuple, Generator, Any, Optional
 
-from pathlib import Path
 from tqdm import tqdm
 
 from deeppavlov.core.commands.utils import expand_path

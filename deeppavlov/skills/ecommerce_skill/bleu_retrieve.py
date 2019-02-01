@@ -14,10 +14,10 @@ import json
 from collections import Counter
 from logging import getLogger
 from operator import itemgetter
+from pathlib import Path
 from typing import List, Tuple, Dict, Any
 
 import numpy as np
-from pathlib import Path
 from scipy.stats import entropy
 
 from deeppavlov.core.commands.utils import expand_path

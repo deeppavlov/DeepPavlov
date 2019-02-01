@@ -13,10 +13,10 @@
 # limitations under the License.
 
 from logging import getLogger
+from pathlib import Path
 from typing import Dict, Optional, Union
 
 from overrides import overrides
-from pathlib import Path
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader

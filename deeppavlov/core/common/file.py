@@ -16,9 +16,8 @@ import json
 import pickle
 from collections import OrderedDict
 from logging import getLogger
-from typing import Union, Any
-
 from pathlib import Path
+from typing import Union, Any
 
 log = getLogger(__name__)
 

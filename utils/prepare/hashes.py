@@ -17,10 +17,9 @@ import gzip
 import sys
 import tarfile
 from hashlib import md5
+from pathlib import Path
 from typing import List, Dict, Union
 from zipfile import ZipFile
-
-from pathlib import Path
 
 from deeppavlov.core.data.utils import file_md5
 

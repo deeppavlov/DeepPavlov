@@ -15,7 +15,6 @@
 import json
 import logging
 import logging.config
-
 from pathlib import Path
 
 from .paths import get_settings_path

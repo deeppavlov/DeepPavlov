@@ -14,7 +14,6 @@
 
 import pickle
 from logging import getLogger
-
 from pathlib import Path
 
 from deeppavlov.core.common.registry import register

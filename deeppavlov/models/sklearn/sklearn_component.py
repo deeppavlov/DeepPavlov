@@ -15,10 +15,10 @@
 import inspect
 import pickle
 from logging import getLogger
+from pathlib import Path
 from typing import List, Tuple, Union, Callable
 
 import numpy as np
-from pathlib import Path
 from scipy.sparse import issparse, csr_matrix
 from scipy.sparse import spmatrix
 from scipy.sparse import vstack, hstack

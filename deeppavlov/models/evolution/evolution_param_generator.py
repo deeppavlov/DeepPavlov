@@ -14,10 +14,10 @@
 
 from copy import deepcopy
 from logging import getLogger
+from pathlib import Path
 from typing import List, Any
 
 import numpy as np
-from pathlib import Path
 
 from deeppavlov.core.common.params_search import ParamsSearch
 from deeppavlov.core.common.registry import register

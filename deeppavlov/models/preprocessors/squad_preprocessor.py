@@ -17,11 +17,11 @@ import pickle
 import unicodedata
 from collections import Counter
 from logging import getLogger
+from pathlib import Path
 from typing import Tuple, List, Union
 
 import numpy as np
 from nltk import word_tokenize
-from pathlib import Path
 from tqdm import tqdm
 
 from deeppavlov.core.commands.utils import expand_path

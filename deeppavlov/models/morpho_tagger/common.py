@@ -1,6 +1,5 @@
-from typing import List, Dict, Union, Optional
-
 from pathlib import Path
+from typing import List, Dict, Union, Optional
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import expand_path, parse_config

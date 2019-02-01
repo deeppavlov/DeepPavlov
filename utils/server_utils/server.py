@@ -14,12 +14,12 @@
 
 import ssl
 from logging import getLogger
+from pathlib import Path
 from typing import List, Tuple
 
 from flasgger import Swagger, swag_from
 from flask import Flask, request, jsonify, redirect, Response
 from flask_cors import CORS
-from pathlib import Path
 
 from deeppavlov.core.agent.dialog_logger import DialogLogger
 from deeppavlov.core.commands.infer import build_model

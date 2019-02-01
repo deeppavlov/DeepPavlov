@@ -14,11 +14,11 @@
 
 import sqlite3
 from logging import getLogger
+from pathlib import Path
 from random import Random
 from typing import List, Any, Dict, Optional, Union, Generator, Tuple
 
 from overrides import overrides
-from pathlib import Path
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register

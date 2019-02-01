@@ -13,9 +13,8 @@
 # limitations under the License.
 
 import csv
-from typing import List, Dict, Tuple, Union
-
 from pathlib import Path
+from typing import List, Dict, Tuple, Union
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register

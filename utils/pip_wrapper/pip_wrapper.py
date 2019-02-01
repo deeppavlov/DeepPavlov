@@ -3,7 +3,6 @@ import re
 import subprocess
 import sys
 from logging import getLogger
-
 from pathlib import Path
 
 from deeppavlov.core.commands.utils import expand_path, parse_config

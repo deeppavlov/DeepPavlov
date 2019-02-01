@@ -17,9 +17,9 @@ import sys
 from copy import deepcopy
 from itertools import product
 from logging import getLogger
+from pathlib import Path
 
 import numpy as np
-from pathlib import Path
 from sklearn.model_selection import train_test_split
 
 from deeppavlov.core.commands.train import train_evaluate_model_from_config, get_iterator_from_config, \

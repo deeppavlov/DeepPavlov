@@ -17,10 +17,10 @@ import sys
 from argparse import ArgumentParser, Namespace
 from collections import defaultdict
 from logging import getLogger
+from pathlib import Path
 from typing import Union, Optional, Dict, Iterable, Set, Tuple, List
 
 import requests
-from pathlib import Path
 
 import deeppavlov
 from deeppavlov.core.commands.utils import expand_path, parse_config

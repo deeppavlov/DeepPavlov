@@ -15,7 +15,6 @@
 import importlib
 import json
 from logging import getLogger
-
 from pathlib import Path
 
 from deeppavlov.core.common.errors import ConfigError

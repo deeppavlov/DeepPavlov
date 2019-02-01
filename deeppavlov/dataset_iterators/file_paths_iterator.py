@@ -13,10 +13,10 @@
 # limitations under the License.
 
 from logging import getLogger
+from pathlib import Path
 from typing import Tuple, Iterator, Optional, Dict, List, Union
 
 import numpy as np
-from pathlib import Path
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator

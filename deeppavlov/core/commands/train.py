@@ -17,9 +17,8 @@ import json
 import time
 from collections import OrderedDict, namedtuple
 from logging import getLogger
-from typing import List, Tuple, Dict, Union, Optional
-
 from pathlib import Path
+from typing import List, Tuple, Dict, Union, Optional
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import expand_path, import_packages, parse_config

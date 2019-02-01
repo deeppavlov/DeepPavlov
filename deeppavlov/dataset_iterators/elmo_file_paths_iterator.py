@@ -13,9 +13,8 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import Tuple, Iterator, Optional, Dict, List, Union
-
 from pathlib import Path
+from typing import Tuple, Iterator, Optional, Dict, List, Union
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.simple_vocab import SimpleVocabulary

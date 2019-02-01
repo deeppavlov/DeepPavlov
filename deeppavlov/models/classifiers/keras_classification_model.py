@@ -14,6 +14,7 @@
 
 from copy import deepcopy
 from logging import getLogger
+from pathlib import Path
 from typing import List, Tuple, Optional, Generator, Union
 
 import keras.metrics
@@ -31,7 +32,6 @@ from keras.layers.wrappers import Bidirectional
 from keras.models import Model
 from keras.regularizers import l2
 from overrides import overrides
-from pathlib import Path
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import save_json, read_json

@@ -1,11 +1,11 @@
 from logging import getLogger
+from pathlib import Path
 from queue import Queue
 from typing import Union, Optional
 
 from flasgger import Swagger
 from flask import Flask, request, jsonify, redirect
 from flask_cors import CORS
-from pathlib import Path
 
 from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.agents.processors.default_rich_content_processor import DefaultRichContentWrapper
