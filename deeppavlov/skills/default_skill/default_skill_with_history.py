@@ -93,7 +93,7 @@ class DefaultStatelessSkillWithHistory(Skill):
                     #########################################
                 else:
                     exp_context_str = "&&&&&&&&&" + utterance.replace('&', '.')
-                print('[utterance]:', utterance, "[input]: ", exp_context_str, "[num_turns]:", self.num_turns)
+                # print('[utterance]:', utterance, "[input]: ", exp_context_str, "[num_turns]:", self.num_turns)
 
                 states_batch[utt_i]['received_values'].append(exp_context_str)
 
