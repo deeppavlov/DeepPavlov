@@ -82,15 +82,18 @@ class DefaultStatelessSkillWithHistory(Skill):
                 if len(utterance) == 2:
                     if utterance.startswith('.') and utterance[1].isdigit():
                         self.num_turns = int(utterance[1])
-                        if self.num_turns < 1: self.num_turns = 1
-                    utterance = ''
-                # print('[utterance]:', utterance, "[num_turns]:", self.num_turns)
+                        # if self.num_turns < 1: self.num_turns = 1
+                        utterance = ''
 
-                #### Append history to the utterance ####
-                expanded_context = self._expand_context(history_batch[utt_i], padding="pre")
-                exp_context_str = " & ".join(expanded_context)
-                exp_context_str += " & {}".format(utterance)
-                #########################################
+                if self.num_turns != 0:
+                    #### Append history to the utterance ####
+                    expanded_context = self._expand_context(history_batch[utt_i], padding="pre")
+                    exp_context_str = " & ".join(expanded_context)
+                    exp_context_str += " & {}".format(utterance)
+                    #########################################
+                else:
+                    exp_context_str = "&&&&&&&&&" + utterance.replace('&', '.')
+                print('[utterance]:', utterance, "[input]: ", exp_context_str, "[num_turns]:", self.num_turns)
 
                 states_batch[utt_i]['received_values'].append(exp_context_str)
 

@@ -32,6 +32,6 @@ class CleanInput(Component):
         context_ = list(context)
 
         if len(context_[0].replace('&', '').strip()) == 0:
-            return ['>']     # TODO: remove, workaround for empty input
+            return ['.']     # TODO: remove, workaround for empty input
         else:
             return [context_[0].split('&')[-1]]  # search TF-IDF by last utterance only!
