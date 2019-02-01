@@ -33,10 +33,11 @@ class PipeGen:
     and load paths change to intermediate ones.
 
     Args:
-            config: str or dict; path to config file with search pattern, or dict with it config.
-            save_path: str; path to folder with pipelines checkpoints.
-            sample_num: int; determines the number of generated pipelines, if hyper_search == random.
-            test_mode: bool; trigger that determine logic of changing save and loads paths in config.
+            config: path to config file with search pattern, or dict with it config.
+            save_path: path to folder with pipelines checkpoints.
+            mode: working mode of generator, can be 'random' or 'grid'.
+            sample_num: determines the number of generated pipelines, if hyper_search == random.
+            test_mode: trigger that determine logic of changing save and loads paths in config.
     """
 
     def __init__(self,
@@ -102,28 +103,6 @@ class PipeGen:
         Returns:
             iterator of primary set of pipelines
         """
-        if isinstance(self.dataset_reader, list):
-            drs = []
-            for dr in self.dataset_reader:
-                drs.append(dr)
-        else:
-            drs = [self.dataset_reader]
-
-        if 'batch_size' in self.train_config.keys():
-            bs_conf = deepcopy(self.train_config)
-            if isinstance(self.train_config['batch_size'], list):
-                bss = []
-                for bs in self.train_config['batch_size']:
-                    bs_conf['batch_size'] = bs
-                    bss.append(bs_conf)
-            else:
-                bss = [self.train_config]
-        else:
-            bss = [self.train_config]
-
-        self.pipes.append(drs)
-        self.pipes.append(bss)
-
         for components in self.structure:
             self.pipes.append(components)
 
@@ -137,22 +116,17 @@ class PipeGen:
             iterator of final sets of configs (dicts)
         """
         p = 0
-        for i, variant in enumerate(self.enumerator):
-            variant = list(variant)
-            dr_config = variant[0]
-            train_config = variant[1]
-            pipe_var = variant[2:]
-
+        for i, pipe_var in enumerate(self.enumerator):
             if self.mode == 'random':
                 for random_pipe in self.random_conf_gen(pipe_var):
-                    new_config = dict(dataset_reader=deepcopy(dr_config),
+                    new_config = dict(dataset_reader=deepcopy(self.dataset_reader),
                                       dataset_iterator=self.main_config['dataset_iterator'],
-                                      chainer=self.chainer, train=train_config)
+                                      chainer=self.chainer, train=self.train_config)
                     if 'metadata' in self.main_config.keys():
                         new_config['metadata'] = self.main_config['metadata']
 
                     chainer_components = list(random_pipe)
-                    dataset_name = dr_config['data_path'].split('/')[-1]
+                    dataset_name = self.dataset_reader['data_path'].split('/')[-1]
                     chainer_components = self.change_load_path(chainer_components, p, self.save_path, dataset_name,
                                                                self.test_mode)
                     new_config['chainer']['pipe'] = chainer_components
@@ -160,14 +134,14 @@ class PipeGen:
                     yield new_config
             else:
                 for grid_pipe in self.grid_conf_gen(pipe_var):
-                    new_config = dict(dataset_reader=deepcopy(dr_config),
+                    new_config = dict(dataset_reader=deepcopy(self.dataset_reader),
                                       dataset_iterator=self.main_config['dataset_iterator'],
-                                      chainer=self.chainer, train=train_config)
+                                      chainer=self.chainer, train=self.train_config)
                     if 'metadata' in self.main_config.keys():
                         new_config['metadata'] = self.main_config['metadata']
 
                     chainer_components = list(grid_pipe)
-                    dataset_name = dr_config['data_path'].split('/')[-1]
+                    dataset_name = self.dataset_reader['data_path'].split('/')[-1]
                     chainer_components = self.change_load_path(chainer_components, p, self.save_path, dataset_name,
                                                                self.test_mode)
                     new_config['chainer']['pipe'] = chainer_components
