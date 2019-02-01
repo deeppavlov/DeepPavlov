@@ -144,23 +144,15 @@ class ExperimentObserver:
             sort_logs = sort_pipes(logs, target_metric)
 
         source = self.save_path / dataset_name
-        dest1 = self.save_path / (dataset_name + '_best_pipe')
-        if not dest1.is_dir():
-            dest1.mkdir()
+        dest1 = self.save_path / dataset_name / 'best_pipe'
+        dest1.mkdir(exist_ok=True)
 
-        files = source.iterdir()  # sorted(source.glob("*"))
+        files = source.iterdir()
         for f in files:
-            if not f.name.startswith('pipe') and not (dest1 / f.name).is_file():
-                shutil.move(str((source / f.name)), str(dest1))
+            if f.name.startswith('pipe') and f.name != 'pipe_{}'.format(sort_logs[0]['pipe_index']):
+                rmtree((source / f.name))
             elif f.name == 'pipe_{}'.format(sort_logs[0]['pipe_index']):
-                if (dest1 / f.name).is_dir():
-                    rmtree((dest1 / f.name))
-                    shutil.move(str(source / f.name), str(dest1))
-                else:
-                    shutil.move(str(source / f.name), str(dest1))
-
-        # del all tmp files in save path
-        rmtree(str(self.save_path / dataset_name))
+                shutil.move(str(source / f.name), str(dest1))
 
     def build_report(self) -> None:
         """
