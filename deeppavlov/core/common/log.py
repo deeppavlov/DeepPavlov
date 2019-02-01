@@ -49,7 +49,7 @@ def get_logger(logger_name):
                 handler['filename'] = str(logfile_path)
 
         logging.config.dictConfig(log_config)
-        logger = logging.getLogger(logger_name)
+        logger = logging.getLogger(f'_dp.{logger_name}')
 
     except Exception:
         logger = logging.getLogger(logger_name)

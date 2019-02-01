@@ -1,37 +1,35 @@
 {
   "version": 1,
-  "disable_existing_loggers": 0,
-  "root":
-  {
-    "level": "DEBUG",
-    "handlers": ["stderr"]
+  "disable_existing_loggers": false,
+  "loggers": {
+    "_dp": {
+      "level": "DEBUG",
+      "handlers": [
+        "stderr"
+      ],
+      "propagate": false
+    }
   },
-  "formatters":
-  {
-    "default":
-    {
+  "formatters": {
+    "default": {
       "format": "%(asctime)s.%(msecs)d %(levelname)s in '%(name)s'['%(module)s'] at line %(lineno)d: %(message)s",
       "datefmt": "%Y-%m-%d %H:%M:%S"
     }
   },
-  "handlers":
-  {
-    "file":
-    {
+  "handlers": {
+    "file": {
       "class": "logging.FileHandler",
       "level": "DEBUG",
       "formatter": "default",
       "filename": "~/.dp_lpg.log"
     },
-    "stdout":
-    {
+    "stdout": {
       "class": "logging.StreamHandler",
       "level": "DEBUG",
       "formatter": "default",
       "stream": "ext://sys.stdout"
     },
-    "stderr":
-    {
+    "stderr": {
       "class": "logging.StreamHandler",
       "level": "DEBUG",
       "formatter": "default",
