@@ -10,21 +10,21 @@
 # limitations under the License.
 
 from collections import Counter
-from typing import List, Tuple, Dict, Union, Any
+from logging import getLogger
 from operator import itemgetter
+from typing import List, Tuple, Dict, Union, Any
 
 import numpy as np
-from scipy.stats import entropy
 from scipy.sparse import csr_matrix, vstack
 from scipy.sparse.linalg import norm as sparse_norm
+from scipy.stats import entropy
 
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.common.file import save_pickle, load_pickle
 from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.file import save_pickle, load_pickle
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Component
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register("ecommerce_skill_tfidf")

@@ -1,5 +1,6 @@
-from pathlib import Path
 from typing import Iterator, Dict, Union, Iterable
+
+from pathlib import Path
 
 
 class Struct:

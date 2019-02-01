@@ -16,21 +16,20 @@
 import pickle
 import unicodedata
 from collections import Counter
-from pathlib import Path
+from logging import getLogger
 from typing import Tuple, List, Union
 
 import numpy as np
 from nltk import word_tokenize
+from pathlib import Path
 from tqdm import tqdm
 
 from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.utils import download
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.estimator import Estimator
 
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 
 @register('squad_preprocessor')

@@ -14,7 +14,7 @@
 
 
 import itertools
-from typing import List, Tuple
+
 import numpy as np
 
 from deeppavlov.core.common.metrics_registry import register_metric

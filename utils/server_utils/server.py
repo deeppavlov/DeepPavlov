@@ -13,25 +13,25 @@
 # limitations under the License.
 
 import ssl
-from pathlib import Path
+from logging import getLogger
 from typing import List, Tuple
 
 from flasgger import Swagger, swag_from
 from flask import Flask, request, jsonify, redirect, Response
 from flask_cors import CORS
+from pathlib import Path
 
+from deeppavlov.core.agent.dialog_logger import DialogLogger
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.paths import get_settings_path
-from deeppavlov.core.agent.dialog_logger import DialogLogger
 from deeppavlov.core.data.utils import check_nested_dict_keys, jsonify_data
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 app = Flask(__name__)
 Swagger(app)

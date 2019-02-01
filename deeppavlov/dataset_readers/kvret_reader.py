@@ -13,18 +13,17 @@
 # limitations under the License.
 
 import json
-from pathlib import Path
+from logging import getLogger
 from typing import Dict, List
 
 from overrides import overrides
+from pathlib import Path
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.data.utils import download_decompress, mark_done
-from deeppavlov.core.common.log import get_logger
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('kvret_reader')

@@ -13,9 +13,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from pathlib import Path
+from logging import getLogger
 
 import telebot
+from pathlib import Path
 
 from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.agents.processors.default_rich_content_processor import DefaultRichContentWrapper
@@ -23,12 +24,10 @@ from deeppavlov.core.agent import Agent
 from deeppavlov.core.agent.rich_content import RichMessage
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 TELEGRAM_MODELS_INFO_FILENAME = 'models_info.json'

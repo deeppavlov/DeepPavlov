@@ -19,6 +19,7 @@ import numpy as np
 
 from deeppavlov.core.common.metrics_registry import register_metric
 
+
 def recall_at_k(y_true: List[int], y_pred: List[List[np.ndarray]], k: int):
     """
     Calculates recall at k ranking metric.

@@ -2,12 +2,19 @@
   "version": 1,
   "disable_existing_loggers": false,
   "loggers": {
-    "_dp": {
+    "deeppavlov": {
       "level": "DEBUG",
       "handlers": [
         "stderr"
       ],
-      "propagate": false
+      "propagate": true
+    },
+    "utils": {
+      "level": "DEBUG",
+      "handlers": [
+        "stderr"
+      ],
+      "propagate": true
     }
   },
   "formatters": {
@@ -21,7 +28,7 @@
       "class": "logging.FileHandler",
       "level": "DEBUG",
       "formatter": "default",
-      "filename": "~/.dp_lpg.log"
+      "filename": "~/.deeppavlov/log.log"
     },
     "stdout": {
       "class": "logging.StreamHandler",

@@ -12,24 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import getLogger
 from typing import List
 
 import numpy as np
+from keras import backend as K
+from keras import losses
+from keras.initializers import glorot_uniform, Orthogonal
 from keras.layers import Input, LSTM, Embedding, GlobalMaxPooling1D, Lambda, Dense, Layer
 from keras.layers.merge import Multiply
-from keras.models import Model
 from keras.layers.wrappers import Bidirectional
+from keras.models import Model
 from keras.optimizers import Adam
-from keras.initializers import glorot_uniform, Orthogonal
-from keras import losses
-from keras import backend as K
 from tensorflow.python.framework.ops import Tensor
 
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
 from deeppavlov.models.ranking.keras_siamese_model import KerasSiameseModel
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('bilstm_nn')

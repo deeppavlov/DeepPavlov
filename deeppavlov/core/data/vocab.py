@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Callable
-from collections import Counter, defaultdict
 import itertools
-from pathlib import Path
+from collections import Counter, defaultdict
+from logging import getLogger
+from typing import List, Callable
 
 import numpy as np
+from pathlib import Path
 
-from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Estimator
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('default_vocab')

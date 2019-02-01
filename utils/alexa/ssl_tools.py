@@ -12,20 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
 import base64
+import re
 import ssl
-from pathlib import Path
+from logging import getLogger
 from typing import List, Optional
 from urllib.parse import urlsplit
 
 import requests
 from OpenSSL import crypto
+from pathlib import Path
 
-from deeppavlov.core.common.log import get_logger
-
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 def verify_sc_url(url: str) -> bool:
