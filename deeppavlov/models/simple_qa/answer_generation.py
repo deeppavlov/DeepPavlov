@@ -14,7 +14,7 @@
 from typing import List
 
 import numpy as np
-from core.models.serializable import Serializable
+from deeppavlov.core.models.serializable import Serializable
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
@@ -61,9 +61,9 @@ class AnswerGeneration(Component, Serializable):
                         obj = found_object.split('/')[-1]
                         found = True
                         break
-                if found == True:
+                if found:
                     break
-            if found == False:
+            if not found:
                 for relation in rel_list:
                     for triplet in entity_triplets[n]:
                         base_rel = triplet[0][0].split('com/')[1]
