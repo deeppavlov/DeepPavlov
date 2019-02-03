@@ -11,11 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from typing import List
 
-import numpy as np
 from deeppavlov.core.models.serializable import Serializable
-
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from pathlib import Path
