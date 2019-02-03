@@ -74,7 +74,7 @@ class AnswerGeneration(Component, Serializable):
                             obj = found_object.split('/')[-1]
                             found = True
                             break
-                    if found == True:
+                    if found:
                         break
             objects_batch.append(obj)
 
