@@ -60,7 +60,6 @@ class EntityLinking(Component):
                 if len(split) < 3:
                     count += 1
 
-
     def get_ngram(self, text: str) -> List[str]:
         ngram = []
         tokens = text.split()
@@ -104,29 +103,27 @@ class EntityLinking(Component):
             entity_triplets.append(triplets)
 
         return entity_triplets
-    
 
     def find_entity(self, entity: str) -> List[Tuple]:
-        C = []
-        C_scored = []
+        c = []
+        c_scored = []
         tokens = self.get_ngram(entity)
 
         if len(tokens) > 0:
             maxlen = len(tokens[0].split())
         for item in tokens:
-            if len(item.split()) < maxlen and len(C) == 0:
+            if len(item.split()) < maxlen and len(c) == 0:
                 maxlen = len(item.split())
-            if len(item.split()) < maxlen and len(C) > 0:
+            if len(item.split()) < maxlen and len(c) > 0:
                 break
             if item in self.stopword:
                 continue
-            C.extend(self.inverted_index[item])
+            c.extend(self.inverted_index[item])
 
-
-        for mid_text_type in sorted(set(C)):
+        for mid_text_type in sorted(set(c)):
             score = fuzz.ratio(mid_text_type[1], entity) / 100.0
-            C_scored.append((mid_text_type, score))
+            c_scored.append((mid_text_type, score))
 
-        C_scored.sort(key = lambda x: x[1], reverse = True)
+        c_scored.sort(key=lambda x: x[1], reverse=True)
     
-        return C_scored
+        return c_scored
