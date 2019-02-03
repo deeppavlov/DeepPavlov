@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Any, Tuple
+from logging import getLogger
 from operator import itemgetter
+from typing import List, Any, Tuple
 
 import numpy as np
 from sklearn.externals import joblib
 
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.estimator import Component
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.file import read_json
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.estimator import Component
 
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 
 @register('pop_ranker')

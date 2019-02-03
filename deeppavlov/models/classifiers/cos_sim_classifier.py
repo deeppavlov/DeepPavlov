@@ -13,20 +13,20 @@
 # limitations under the License.
 
 
+from logging import getLogger
 from typing import List, Tuple, Union
 
 import numpy as np
 from scipy.sparse import vstack, csr_matrix
 from scipy.sparse.linalg import norm as sparse_norm
 
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.models.estimator import Estimator
-from deeppavlov.core.common.file import save_pickle
 from deeppavlov.core.common.file import load_pickle
+from deeppavlov.core.common.file import save_pickle
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.serializable import Serializable
 
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 
 @register("cos_sim_classifier")

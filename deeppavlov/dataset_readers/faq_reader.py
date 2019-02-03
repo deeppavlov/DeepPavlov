@@ -16,8 +16,8 @@ from typing import Dict
 
 from pandas import read_csv
 
-from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.dataset_reader import DatasetReader
 
 
 @register('faq_reader')

@@ -13,17 +13,17 @@
 # limitations under the License.
 
 from itertools import chain
+from logging import getLogger
 from typing import List, Generator, Any, Optional, Union, Tuple, Iterable
 
 import spacy
 import spacy.language
 
-from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.component import Component
 from deeppavlov.models.tokenizers.utils import detokenize, ngramize
-from deeppavlov.core.common.log import get_logger
 
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 
 def _try_load_spacy_model(model_name: str, disable: Iterable[str] = ()):

@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Tuple, Iterator, Optional, Dict, List, Union
+from logging import getLogger
 from pathlib import Path
+from typing import Tuple, Iterator, Optional, Dict, List, Union
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.dataset_iterators.file_paths_iterator import FilePathsIterator
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.data.utils import chunk_generator
-from deeppavlov.models.preprocessors.str_utf8_encoder import StrUTF8Encoder
 from deeppavlov.core.data.simple_vocab import SimpleVocabulary
+from deeppavlov.core.data.utils import chunk_generator
+from deeppavlov.dataset_iterators.file_paths_iterator import FilePathsIterator
+from deeppavlov.models.preprocessors.str_utf8_encoder import StrUTF8Encoder
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('elmo_file_paths_iterator')

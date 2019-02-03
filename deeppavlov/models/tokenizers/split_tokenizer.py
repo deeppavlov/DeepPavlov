@@ -14,8 +14,8 @@
 
 from typing import List
 
-from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.component import Component
 
 
 @register("split_tokenizer")

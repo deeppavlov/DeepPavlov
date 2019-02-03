@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import getLogger
 from random import Random
 from typing import List, Generator, Tuple, Any, Optional
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.log import get_logger
 
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 
 @register('data_fitting_iterator')

@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from copy import deepcopy
+from logging import getLogger
 from pathlib import Path
 from typing import List, Tuple, Optional, Generator, Union
-from copy import deepcopy
 
-import numpy as np
 import keras.metrics
 import keras.optimizers
+import numpy as np
 from keras import backend as K
 from keras.layers import Dense, Input
 from keras.layers import concatenate, Activation, Concatenate, Reshape
@@ -35,12 +36,10 @@ from overrides import overrides
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import save_json, read_json
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.keras_model import KerasModel
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.layers.keras_layers import additive_self_attention, multiplicative_self_attention
+from deeppavlov.core.models.keras_model import KerasModel
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('keras_classification_model')

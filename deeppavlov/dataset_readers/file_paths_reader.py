@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import getLogger
 from pathlib import Path
 from typing import Dict, Optional, Union
 
 from overrides import overrides
 
-from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.data.dataset_reader import DatasetReader
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('file_paths_reader')

@@ -1,10 +1,10 @@
-from pathlib import Path
 import shutil
-import pytest
-
-import tensorflow as tf
-import numpy as np
 from functools import reduce
+from pathlib import Path
+
+import numpy as np
+import pytest
+import tensorflow as tf
 
 from deeppavlov.core.layers.tf_layers import cudnn_lstm, cudnn_compatible_lstm, cudnn_gru, cudnn_compatible_gru
 

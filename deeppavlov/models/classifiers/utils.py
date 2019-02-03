@@ -13,13 +13,12 @@
 # limitations under the License.
 
 
-import numpy as np
+from logging import getLogger
 from typing import List
 
-from deeppavlov.core.common.log import get_logger
+import numpy as np
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 def labels2onehot(labels: [List[str], List[List[str]], np.ndarray], classes:  [list, np.ndarray]) -> np.ndarray:

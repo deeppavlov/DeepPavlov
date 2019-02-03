@@ -15,16 +15,16 @@ import json
 import pickle
 import sys
 from itertools import islice
+from logging import getLogger
 from pathlib import Path
 from typing import Optional, Union
 
 from deeppavlov.core.commands.utils import import_packages, parse_config
 from deeppavlov.core.common.chainer import Chainer
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.params import from_params
 from deeppavlov.download import deep_download
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 def build_model(config: Union[str, Path, dict], mode: str = 'infer',

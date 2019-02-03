@@ -1,13 +1,13 @@
-from concurrent.futures import ProcessPoolExecutor
 import concurrent
+from concurrent.futures import ProcessPoolExecutor
+from logging import getLogger
 from typing import List
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.component import Component
 from deeppavlov.models.api_requester import ApiRequester
 
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 
 @register("api_router")
