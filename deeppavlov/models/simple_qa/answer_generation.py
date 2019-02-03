@@ -31,7 +31,8 @@ class AnswerGeneration(Component, Serializable):
     """
     
     def __init__(self, load_path: str, *args, **kwargs) -> None:
-        super().__init__(save_path = None, load_path = load_path)
+        super().__init__(save_path=None, load_path=load_path)
+        self.names_dict = None
         self.load()
 
     def load(self) -> None:

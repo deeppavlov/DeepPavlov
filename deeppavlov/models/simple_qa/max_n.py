@@ -15,7 +15,7 @@
 import numpy as np
 from typing import List
 
-from core.models.serializable import Serializable
+from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from pathlib import Path
