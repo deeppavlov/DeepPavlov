@@ -78,12 +78,12 @@ class AnswerGeneration(Component, Serializable):
             objects_batch.append(obj)
 
         word_batch = []
-        id_to_word = True
-        if id_to_word == True:
-            for obj in objects_batch:
-                if ("fb:m."+obj) in self.names_dict:
-                    word = self.names_dict[("fb:m."+obj)]
-                word_batch.append(word)
+
+        # Convert id to words
+        for obj in objects_batch:
+            if ("fb:m."+obj) in self.names_dict:
+                word = self.names_dict[("fb:m."+obj)]
+            word_batch.append(word)
 
         return word_batch
 
