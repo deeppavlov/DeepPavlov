@@ -14,7 +14,7 @@
 
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional, Union
 
 from deeppavlov.core.agent.dialog_logger import DialogLogger
 from deeppavlov.core.models.component import Component
@@ -35,7 +35,8 @@ class Agent(Component, metaclass=ABCMeta):
         skills: List of initiated agent skills instances.
 
     Attributes:
-        skills: List of initiated agent skills instances.
+        skills: List of initiated agent skill or component instances.
+            Components API should should implement API of Skill abstract class.
         history: Histories for each each dialog with agent indexed
             by dialog ID. Each history is represented by list of incoming
             and outcoming replicas of the dialog and updated automatically.
@@ -51,7 +52,7 @@ class Agent(Component, metaclass=ABCMeta):
         dialog_logger: DeepPavlov dialog logging facility.
     """
     def __init__(self, skills: List[Skill]) -> None:
-        self.skills: List[Skill] = skills
+        self.skills: Union[List[Skill], List[Component]] = skills
         self.history: Dict = defaultdict(list)
         self.states: Dict = defaultdict(lambda: [None] * len(self.skills))
         self.wrapped_skills: List[SkillWrapper] = \
