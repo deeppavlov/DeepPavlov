@@ -53,6 +53,7 @@ parser.add_argument("-s", "--ms-secret", default=None, help="microsoft bot frame
 
 parser.add_argument("--multi-instance", action="store_true", help="allow rising of several instances of the model")
 parser.add_argument("--stateful", action="store_true", help="interact with a stateful model")
+parser.add_argument("--default-skill", action="store_true", help="wrap with default skill")
 
 parser.add_argument("--https", action="store_true", help="run model in https mode")
 parser.add_argument("--key", default=None, help="ssl key", type=str)
@@ -99,7 +100,8 @@ def main():
                                 app_secret=ms_secret,
                                 multi_instance=multi_instance,
                                 stateful=stateful,
-                                port=args.port)
+                                port=args.port,
+                                default_skill_wrap=args.default_skill)
     elif args.mode == 'alexa':
         run_alexa_default_agent(model_config=pipeline_config_path,
                                 multi_instance=multi_instance,

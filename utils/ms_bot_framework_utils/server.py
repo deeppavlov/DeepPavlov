@@ -30,11 +30,16 @@ Swagger(app)
 CORS(app)
 
 
-def run_ms_bf_default_agent(model_config: Union[str, Path, dict], app_id: str, app_secret: str,
-                            multi_instance: bool = False, stateful: bool = False, port: Optional[int] = None):
+def run_ms_bf_default_agent(model_config: Union[str, Path, dict],
+                            app_id: str, app_secret: str,
+                            multi_instance: bool = False,
+                            stateful: bool = False,
+                            port: Optional[int] = None,
+                            default_skill_wrap: bool = True):
+
     def get_default_agent():
         model = build_model(model_config)
-        skill = DefaultStatelessSkill(model)
+        skill = DefaultStatelessSkill(model) if default_skill_wrap else model
         agent = DefaultAgent([skill], skills_processor=DefaultRichContentWrapper())
         return agent
 
