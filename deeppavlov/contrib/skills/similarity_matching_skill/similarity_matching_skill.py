@@ -22,6 +22,7 @@ class SimilarityMatchingSkill(Skill):
         data_path: URL or local path to '.csv' file that contains two columns with Utterances and Responses.
             User's utterance will be compared with Utterances column and response will be selected
             from matching row from Responses column. 'http://files.deeppavlov.ai/faq/school/faq_school.csv' by default.
+        config_type: Config, that is chosen as a base. 'tfidf_autofaq' by default.
         x_col_name: Name of the column in '.csv' file, that represents Utterances column. 'Question' by default.
         y_col_name: Name of the column in '.csv' file, that represents Responses column. 'Answer' by default.
         save_load_path: Path, where model will be saved or loaded from. './similarity_matching' by default.
@@ -32,12 +33,20 @@ class SimilarityMatchingSkill(Skill):
         model: Classifies user's utterance
     """
 
-    def __init__(self, data_path: Optional[str] = None,
+    def __init__(self, data_path: Optional[str] = None, config_type: Optional[str] = 'tfidf_autofaq',
                  x_col_name: Optional[str] = None, y_col_name: Optional[str] = None,
                  save_load_path: Optional[str] = './similarity_matching',
                  edit_dict: Optional[dict] = None, train: bool = True):
 
-        model_config = read_json(configs.faq.tfidf_autofaq)
+        if config_type == 'tfidf_autofaq':
+            model_config = read_json(configs.faq.tfidf_autofaq)
+        elif config_type == 'fasttext_avg_autofaq':
+            model_config = read_json(configs.faq.fasttext_avg_autofaq)
+        elif config_type == 'fasttext_tfidf_autofaq':
+            model_config = read_json(configs.faq.fasttext_tfidf_autofaq)
+        else:
+            raise ValueError("There is no config called '{}'".format(config_type))
+
         if x_col_name is not None:
             model_config['dataset_reader']['x_col_name'] = x_col_name
         if y_col_name is not None:
@@ -59,10 +68,10 @@ class SimilarityMatchingSkill(Skill):
             update_dict_recursive(model_config, edit_dict)
 
         if train:
-            self.model = train_model(model_config)
+            self.model = train_model(model_config, download=True)
             log.info('Your model was saved at: \'' + save_load_path + '\'')
         else:
-            self.model = build_model(model_config)
+            self.model = build_model(model_config, download=True)
 
     def __call__(self, utterances_batch: List[str], history_batch: List[List[str]],
                  states_batch: Optional[list] = None) -> Tuple[List[str], List[float]]:
@@ -79,4 +88,6 @@ class SimilarityMatchingSkill(Skill):
         Returns:
             Batches of skill inference results and estimated confidences
         """
-        return self.model(utterances_batch)
+        response = self.model(utterances_batch)
+        print(response)
+        return response
