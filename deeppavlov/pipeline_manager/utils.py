@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Union, Iterable, Optional
+from logging import getLogger
+from typing import Iterable, List, Optional, Union
 
 from py3nvml import py3nvml
 
 from deeppavlov.core.common.errors import GpuError
-from deeppavlov.core.common.log import get_logger
 
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 
 def get_available_gpus(num_gpus: Optional[int] = None,

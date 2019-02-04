@@ -15,14 +15,11 @@
 from copy import deepcopy
 from itertools import product
 from pathlib import Path
-from typing import Union, Dict, List, Generator, Iterator
+from typing import Dict, Generator, Iterator, List, Union
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.params_search import ParamsSearch
-
-log = get_logger(__name__)
 
 
 class PipeGen:
