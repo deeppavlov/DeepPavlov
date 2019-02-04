@@ -56,12 +56,8 @@
           "x_emb"
         ],
         "id": "my_embedder",
-        "class_name": "elmo_embedder",
-        "elmo_output_names": [
-          "elmo"
-        ],
-        "mini_batch_size": 8,
-        "spec": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-twitter_2013-01_2018-04_600k_steps.tar.gz",
+        "class_name": "fasttext",
+        "load_path": "{DOWNLOADS_PATH}/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
         "pad_zero": true
       },
       {
@@ -87,18 +83,18 @@
         "load_path": "{MODELS_PATH}/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
-        "units_gru": 512,
+        "filters_cnn": 256,
+        "kernel_sizes_cnn": [3,5,7],
         "optimizer": "Adam",
         "learning_rate": 1e-2,
         "learning_rate_decay": 1e-2,
         "loss": "categorical_crossentropy",
         "last_layer_activation": "softmax",
-        "coef_reg_gru": 1e-6,
+        "coef_reg_cnn": 1e-6,
         "coef_reg_den": 1e-6,
         "dropout_rate": 0.5,
-        "rec_dropout_rate": 0.5,
         "dense_size": 100,
-        "model_name": "bigru_with_max_aver_pool_model"
+        "model_name": "cnn_model"
       },
       {
         "in": "y_pred_probas",
@@ -139,7 +135,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/sentirueval_v3"
+      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/sentirueval_v5"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
