@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Callable, Union
 from itertools import chain
+from logging import getLogger
+from typing import List, Callable, Union
 
 from nltk import sent_tokenize
 
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 
 @register('document_chunker')

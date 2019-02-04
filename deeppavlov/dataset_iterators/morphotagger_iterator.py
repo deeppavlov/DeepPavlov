@@ -13,8 +13,9 @@
 # limitations under the License.
 
 import random
-import numpy as np
 from typing import Tuple, List, Dict, Any, Iterator
+
+import numpy as np
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator

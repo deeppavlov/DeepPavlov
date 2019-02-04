@@ -14,12 +14,12 @@
 
 from typing import List, Optional
 
+from deeppavlov.agents.filters.transparent_filter import TransparentFilter
+from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
 from deeppavlov.core.agent.agent import Agent
 from deeppavlov.core.agent.filter import Filter
 from deeppavlov.core.agent.processor import Processor
 from deeppavlov.core.skill.skill import Skill
-from deeppavlov.agents.filters.transparent_filter import TransparentFilter
-from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
 
 
 class DefaultAgent(Agent):

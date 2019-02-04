@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from collections import defaultdict
+from logging import getLogger
 from typing import Iterable, Tuple
 
 import numpy as np
@@ -20,12 +21,9 @@ import tensorflow as tf
 from tensorflow.python.ops import variables
 
 from deeppavlov.core.models.nn_model import NNModel
-from deeppavlov.core.common.log import get_logger
-
 from .tf_backend import TfModelMeta
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 class TFModel(NNModel, metaclass=TfModelMeta):

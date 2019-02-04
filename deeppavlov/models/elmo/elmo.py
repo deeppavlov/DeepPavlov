@@ -14,23 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional, List
 import copy
 import json
+from logging import getLogger
+from typing import Optional, List
 
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 from overrides import overrides
 
-from deeppavlov.core.models.nn_model import NNModel
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.models.elmo.bilm_model import LanguageModel
-from deeppavlov.models.elmo.train_utils import average_gradients, clip_grads, safely_str2int, dump_weights
 from deeppavlov.models.elmo.elmo2tfhub import export2hub
+from deeppavlov.models.elmo.train_utils import average_gradients, clip_grads, safely_str2int, dump_weights
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('elmo_model')
