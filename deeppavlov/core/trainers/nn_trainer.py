@@ -223,7 +223,7 @@ class NNTrainer(FitTrainer):
         }
         if data is not None:
             report.update(data)
-        self._chainer.process_event(event_name=event_name, data=data)
+        self._chainer.process_event(event_name=event_name, data=report)
 
     def train_on_batches(self, iterator: DataLearningIterator) -> None:
         """Train pipeline on batches using provided data iterator and initialization parameters"""
