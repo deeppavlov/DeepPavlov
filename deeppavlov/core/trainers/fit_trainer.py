@@ -16,13 +16,13 @@ import datetime
 import json
 import time
 from itertools import islice
+from logging import getLogger
 from pathlib import Path
 from typing import Tuple, Dict, Union, Optional, Iterable, Any, Collection
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.chainer import Chainer
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
@@ -30,7 +30,7 @@ from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.trainers.utils import Metric, parse_metrics, prettify_metrics
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('fit_trainer')

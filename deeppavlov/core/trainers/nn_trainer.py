@@ -16,17 +16,17 @@ import datetime
 import json
 import time
 from itertools import islice
+from logging import getLogger
 from pathlib import Path
 from typing import List, Tuple, Union, Optional, Iterable
 
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.trainers.fit_trainer import FitTrainer
 from deeppavlov.core.trainers.utils import parse_metrics
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('nn_trainer')

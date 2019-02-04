@@ -12,18 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
-import json
-import time
-from collections import OrderedDict, namedtuple
 from logging import getLogger
 from pathlib import Path
 from typing import Dict, Union, Optional, Iterable
 
 from deeppavlov.core.commands.utils import expand_path, import_packages, parse_config
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.common.metrics_registry import get_metric_by_name
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
