@@ -12,20 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Iterable, Optional, Any, Union, List, Tuple
-from enum import IntEnum
 import math
+from enum import IntEnum
+from logging import getLogger
+from typing import Iterable, Optional, Any, Union, Tuple
 
 import numpy as np
 import tensorflow as tf
 
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import cls_from_str
 from .tf_model import TFModel
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 class DecayType(IntEnum):

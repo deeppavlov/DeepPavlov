@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-from copy import deepcopy
 import random
+from copy import deepcopy
+from logging import getLogger
 from typing import List, Generator, Any, Tuple
 
+import numpy as np
+
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.log import get_logger
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('params_search')

@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import sys
+from logging import getLogger
 from typing import Iterator, List, Union, Optional
-
 
 import numpy as np
 import tensorflow as tf
@@ -22,13 +22,12 @@ import tensorflow_hub as hub
 from overrides import overrides
 
 from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import zero_pad, chunk_generator
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.tf_backend import TfModelMeta
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('elmo_embedder')

@@ -1,19 +1,19 @@
+from logging import getLogger
 from pathlib import Path
 from queue import Queue
 from typing import Union, Optional
 
-from flask import Flask, request, jsonify, redirect
 from flasgger import Swagger
+from flask import Flask, request, jsonify, redirect
 from flask_cors import CORS
 
-from utils.ms_bot_framework_utils.bot import Bot
-from deeppavlov.core.commands.infer import build_model
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.agents.processors.default_rich_content_processor import DefaultRichContentWrapper
+from deeppavlov.core.commands.infer import build_model
+from deeppavlov.core.common.file import read_json
+from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
+from utils.ms_bot_framework_utils.bot import Bot
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 
@@ -23,7 +23,7 @@ AUTH_CONTENT_TYPE = "application/x-www-form-urlencoded"
 AUTH_GRANT_TYPE = "client_credentials"
 AUTH_SCOPE = "https://api.botframework.com/.default"
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 app = Flask(__name__)
 Swagger(app)

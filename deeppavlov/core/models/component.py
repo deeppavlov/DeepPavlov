@@ -14,10 +14,10 @@
 
 from abc import ABCMeta, abstractmethod
 
-from deeppavlov.core.common.log import get_logger
+from logging import getLogger
 
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 class Component(metaclass=ABCMeta):

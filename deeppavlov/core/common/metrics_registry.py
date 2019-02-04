@@ -1,12 +1,12 @@
 import importlib
 import json
+from logging import getLogger
 from pathlib import Path
 from typing import Callable, Any
 
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.log import get_logger
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 _registry_path = Path(__file__).parent / 'metrics_registry.json'
 if _registry_path.exists():

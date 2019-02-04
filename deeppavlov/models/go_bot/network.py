@@ -12,27 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
 import collections
-from typing import Dict, Any
 import json
+import re
+from logging import getLogger
+from typing import Dict, Any
+
 import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer as xav
 
+import deeppavlov.models.go_bot.templates as templ
+from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.layers import tf_attention_mechanisms as am
 from deeppavlov.core.layers import tf_layers
-from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
 from deeppavlov.core.models.component import Component
-from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
 from deeppavlov.models.go_bot.tracker import Tracker
-import deeppavlov.models.go_bot.templates as templ
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register("go_bot")

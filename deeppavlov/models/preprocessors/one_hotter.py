@@ -13,12 +13,13 @@
 # limitations under the License.
 
 from typing import List, Union
+
 import numpy as np
 
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import zero_pad
+from deeppavlov.core.models.component import Component
 
 
 @register('one_hotter')

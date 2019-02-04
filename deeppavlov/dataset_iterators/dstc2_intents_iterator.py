@@ -13,14 +13,13 @@
 # limitations under the License.
 
 
+from logging import getLogger
 from typing import List
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.dataset_iterators.basic_classification_iterator import BasicClassificationDatasetIterator
-from deeppavlov.core.common.log import get_logger
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('dstc2_intents_iterator')

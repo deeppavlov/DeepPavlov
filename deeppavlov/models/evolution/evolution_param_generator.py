@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 from copy import deepcopy
+from logging import getLogger
 from pathlib import Path
 from typing import List, Any
 
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.common.params_search import ParamsSearch
+import numpy as np
 
-log = get_logger(__name__)
+from deeppavlov.core.common.params_search import ParamsSearch
+from deeppavlov.core.common.registry import register
+
+log = getLogger(__name__)
 
 
 @register('params_evolution')

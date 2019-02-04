@@ -13,15 +13,15 @@
 # limitations under the License.
 
 import inspect
+from logging import getLogger
 from typing import Dict, Any
 
 from deeppavlov.core.commands.utils import expand_path, parse_config
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.models.component import Component
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 _refs = {}
 
@@ -98,12 +98,10 @@ def from_params(params: Dict, mode: str = 'infer', serialized: Any = None, **kwa
             kwargs['mode'] = mode
 
         component = cls(**dict(config_params, **kwargs))
-
         try:
             _refs[config_params['id']] = component
         except KeyError:
             pass
-
     except Exception:
         log.exception("Exception in {}".format(cls))
         raise
