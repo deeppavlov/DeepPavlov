@@ -46,7 +46,8 @@
         "out": [
           "x_prep"
         ],
-        "class_name": "dirty_comments_preprocessor"
+        "class_name": "dirty_comments_preprocessor",
+        "remove_punctuation": false
       },
       {
         "in": "x_prep",
@@ -150,7 +151,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/rusentiment_v4"
+      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/rusentiment_v5"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -162,7 +163,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/rusentiment_v4.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/rusentiment_v5.tar.gz",
         "subdir": "{ROOT_PATH}/models/classifiers"
       }
     ]
