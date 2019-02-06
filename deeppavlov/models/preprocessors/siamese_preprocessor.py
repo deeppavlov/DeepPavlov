@@ -77,7 +77,6 @@ class SiamesePreprocessor(Estimator):
                  vocab: Estimator = None,
                  embedder: Optional[Component] = None,
                  sent_vocab: Optional[Estimator] = None,
-                 last_turn_only = False,
                  **kwargs):
 
         self.max_sequence_length = max_sequence_length
@@ -95,8 +94,6 @@ class SiamesePreprocessor(Estimator):
         self.save_path = expand_path(save_path).resolve()
         self.load_path = expand_path(load_path).resolve()
 
-        self.last_turn_only = last_turn_only
-
         super().__init__(load_path=self.load_path, save_path=self.save_path, **kwargs)
 
     def destroy(self) -> None:
@@ -111,14 +108,8 @@ class SiamesePreprocessor(Estimator):
 
     def __call__(self, x: Union[List[List[str]], List[str]]) -> Iterable[List[List[np.ndarray]]]:
         if len(x) == 0 or isinstance(x[0], str):
-            if len(x) == 1:
-                # interact mode: len(batch) == 1
-                x_ = list(x)
-                if self.last_turn_only:              # TODO: remove
-                    # this is for using last utterance only
-                    x_[0] = x_[0].replace('&', '')
-                    x_[0] = "&&&&&&&&&" + x_[0]
-                x_preproc = [[sent.strip() for sent in x_[0].split('&')]]  # List[str] -> List[List[str]]
+            if len(x) == 1:  # interact mode: len(batch) == 1
+                x_preproc = [[sent.strip() for sent in x[0].split('&')]]  # List[str] -> List[List[str]]
             elif len(x) == 0:
                 x_preproc = [['']]
             else:
