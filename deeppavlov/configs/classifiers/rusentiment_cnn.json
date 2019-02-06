@@ -87,18 +87,18 @@
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
+          1,
           3,
-          5,
-          7
+          5
         ],
         "filters_cnn": 256,
         "optimizer": "Adam",
         "learning_rate": 0.01,
         "learning_rate_decay": 0.1,
-        "loss": "binary_crossentropy",
+        "loss": "categorical_crossentropy",
         "last_layer_activation": "softmax",
-        "coef_reg_cnn": 1e-3,
-        "coef_reg_den": 1e-2,
+        "coef_reg_cnn": 1e-6,
+        "coef_reg_den": 1e-6,
         "dropout_rate": 0.5,
         "dense_size": 100,
         "model_name": "cnn_model"
@@ -142,7 +142,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/rusentiment_v3"
+      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/rusentiment_v9"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
