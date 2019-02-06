@@ -12,17 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import string
+from logging import getLogger
 from math import log10
 from typing import Iterable, List, Tuple
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
-from deeppavlov.core.common.log import get_logger
-
 from .levenshtein_searcher import LevenshteinSearcher
 
-
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 
 @register('spelling_levenshtein')

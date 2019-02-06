@@ -1,14 +1,13 @@
+import os
 import re
 import subprocess
 import sys
+from logging import getLogger
 from pathlib import Path
-import os
 
 from deeppavlov.core.commands.utils import expand_path, parse_config
-from deeppavlov.core.common.log import get_logger
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 _tf_re = re.compile(r'\s*tensorflow\s*([<=>;]|$)')
 

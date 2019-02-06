@@ -3,7 +3,6 @@ from typing import List, Dict, Union, Optional
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import expand_path, parse_config
-from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.common.registry import register

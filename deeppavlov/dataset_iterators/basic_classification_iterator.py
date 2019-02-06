@@ -13,15 +13,15 @@
 # limitations under the License.
 
 
+from logging import getLogger
 from typing import List
+
 from sklearn.model_selection import train_test_split
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
-from deeppavlov.core.common.log import get_logger
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('basic_classification_iterator')

@@ -12,20 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import getLogger
 from pathlib import Path
 from typing import Dict, List, Union, Tuple, Optional
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.utils import download_decompress, mark_done
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.data.dataset_reader import DatasetReader
-
-import sys
+from deeppavlov.core.data.utils import download_decompress, mark_done
 
 WORD_COLUMN, POS_COLUMN, TAG_COLUMN = 1, 3, 5
 
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 def get_language(filepath: str) -> str:
     """Extracts language from typical UD filename

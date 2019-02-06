@@ -15,6 +15,8 @@
 import sys
 from pathlib import Path
 
+from .core.common.log import init_logger
+
 try:
     from .configs import configs
     # noinspection PyUnresolvedReferences
@@ -49,3 +51,6 @@ assert sys.hexversion >= 0x3060000, 'Does not work in python3.5 or lower'
 dot_dp_path = Path('~/.deeppavlov').expanduser().resolve()
 if dot_dp_path.is_file():
     dot_dp_path.unlink()
+
+# initiate logging
+init_logger()

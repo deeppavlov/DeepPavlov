@@ -1,37 +1,42 @@
 {
   "version": 1,
-  "disable_existing_loggers": 0,
-  "root":
-  {
-    "level": "DEBUG",
-    "handlers": ["stderr"]
+  "disable_existing_loggers": false,
+  "loggers": {
+    "deeppavlov": {
+      "level": "DEBUG",
+      "handlers": [
+        "stderr"
+      ],
+      "propagate": true
+    },
+    "utils": {
+      "level": "DEBUG",
+      "handlers": [
+        "stderr"
+      ],
+      "propagate": true
+    }
   },
-  "formatters":
-  {
-    "default":
-    {
+  "formatters": {
+    "default": {
       "format": "%(asctime)s.%(msecs)d %(levelname)s in '%(name)s'['%(module)s'] at line %(lineno)d: %(message)s",
       "datefmt": "%Y-%m-%d %H:%M:%S"
     }
   },
-  "handlers":
-  {
-    "file":
-    {
+  "handlers": {
+    "file": {
       "class": "logging.FileHandler",
       "level": "DEBUG",
       "formatter": "default",
-      "filename": "~/.dp_lpg.log"
+      "filename": "~/.deeppavlov/log.log"
     },
-    "stdout":
-    {
+    "stdout": {
       "class": "logging.StreamHandler",
       "level": "DEBUG",
       "formatter": "default",
       "stream": "ext://sys.stdout"
     },
-    "stderr":
-    {
+    "stderr": {
       "class": "logging.StreamHandler",
       "level": "DEBUG",
       "formatter": "default",
