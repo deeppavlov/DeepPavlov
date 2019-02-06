@@ -14,14 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from logging import getLogger
 import numpy as np
 from typing import List, Iterable, Dict, Tuple
 
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.tf_model import TFModel
 from deeppavlov.models.ranking.siamese_model import SiameseModel
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 class TensorflowBaseMatchingModel(TFModel, SiameseModel):

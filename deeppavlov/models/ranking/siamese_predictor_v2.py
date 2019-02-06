@@ -12,18 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pickle
-import numpy as np
+from logging import getLogger
 from typing import List, Iterable, Callable, Union
 
+import pickle
+import numpy as np
+
 from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.component import Component
 from deeppavlov.models.ranking.keras_siamese_model import SiameseModel
-from deeppavlov.core.data.simple_vocab import SimpleVocabulary
 from deeppavlov.core.common.registry import register
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 @register('siamese_predictor_v2')
 class SiamesePredictor_v2(Component):

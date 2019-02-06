@@ -12,16 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import getLogger
 import pickle
-
-from copy import copy
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.estimator import Component
 
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 
 @register("search_index")

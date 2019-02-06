@@ -12,16 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import getLogger
+
 import numpy as np
 import tensorflow as tf
 
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
 from deeppavlov.models.ranking.tf_base_matching_model import TensorflowBaseMatchingModel
 from deeppavlov.models.ranking.matching_models.dam_utils import layers
 from deeppavlov.models.ranking.matching_models.dam_utils import operations as op
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('dam_nn')
