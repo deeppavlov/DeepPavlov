@@ -46,8 +46,7 @@
         "out": [
           "x_prep"
         ],
-        "class_name": "dirty_comments_preprocessor",
-        "remove_punctuation": false
+        "class_name": "dirty_comments_preprocessor"
       },
       {
         "in": "x_prep",
@@ -57,19 +56,11 @@
         "tokenizer": "wordpunct_tokenize"
       },
       {
-        "in": [
-          "x_tok"
-        ],
-        "out": [
-          "x_emb"
-        ],
+        "in": "x_tok",
+        "out": "x_emb",
         "id": "my_embedder",
-        "class_name": "elmo_embedder",
-        "elmo_output_names": [
-          "elmo"
-        ],
-        "mini_batch_size": 32,
-        "spec": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-twitter_2013-01_2018-04_600k_steps.tar.gz",
+        "class_name": "fasttext",
+        "load_path": "{DOWNLOADS_PATH}/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
         "pad_zero": true
       },
       {
@@ -95,22 +86,18 @@
         "load_path": "{MODELS_PATH}/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
-        "kernel_sizes_cnn": [
-          3,
-          5,
-          7
-        ],
-        "filters_cnn": 256,
+        "units_gru": 256,
         "optimizer": "Adam",
         "learning_rate": 0.01,
         "learning_rate_decay": 0.1,
         "loss": "binary_crossentropy",
         "last_layer_activation": "softmax",
-        "coef_reg_cnn": 1e-3,
+        "coef_reg_gru": 1e-3,
         "coef_reg_den": 1e-2,
-        "dropout_rate": 0.5,
+        "dropout_rate": 0,
+        "rec_dropout_rate": 0,
         "dense_size": 100,
-        "model_name": "cnn_model"
+        "model_name": "bigru_with_max_aver_pool_model"
       },
       {
         "in": "y_pred_probas",
@@ -130,10 +117,10 @@
   },
   "train": {
     "epochs": 100,
-    "batch_size": 32,
+    "batch_size": 64,
     "metrics": [
-      "f1_macro",
       "sets_accuracy",
+      "f1_macro",
       {
         "name": "roc_auc",
         "inputs": ["y_onehot", "y_pred_probas"]
@@ -151,11 +138,11 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/rusentiment_v4"
+      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/rusentiment_v6"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
     ],
     "labels": {
       "telegram_utils": "IntentModel",
@@ -163,7 +150,11 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/rusentiment_v4.tar.gz",
+        "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/rusentiment_v3.tar.gz",
         "subdir": "{ROOT_PATH}/models/classifiers"
       }
     ]
