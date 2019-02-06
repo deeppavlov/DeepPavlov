@@ -42,9 +42,12 @@ class ComposeInputsHybridRanker(Component):
             full_context = history_batch[i][-self.num_turns_const + 1:] + [utterances_batch[i]]
             expanded_context = self._expand_context(full_context, padding="pre")
 
-            # search TF-IDF by last utterance only!
-            query_batch.append(expanded_context[-1])
+            query_batch.append(expanded_context[-1])   # search TF-IDF by last utterance only!
+            # query_batch.append(" ".join(expanded_context))
             expanded_context_batch.append(expanded_context)
+
+        # print("query:", query_batch)
+        # print("expand_context:", expanded_context_batch)
 
         return query_batch, expanded_context_batch
 

@@ -53,8 +53,8 @@ class RetrieveCandidates(Component):
             item.extend(candidates_batch[i])  # append several response candidates to the each context
             model_inputs.append(item)
 
-        # candidates_batch shape = (batch_size, num_ranking_samples)
-        # model_inputs shape = (batch_size, num_context_turns+num_ranking_samples)
+        # NOTE: candidates_batch shape = (batch_size, num_ranking_samples)
+        # NOTE: model_inputs shape = (batch_size, num_context_turns+num_ranking_samples)
 
         # print("candidates_batch", candidates_batch)
         # print("model_inputs", model_inputs)

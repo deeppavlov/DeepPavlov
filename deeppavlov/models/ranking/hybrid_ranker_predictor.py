@@ -35,14 +35,24 @@ class HybridRankerPredictor(Component):
         return list of best responses and its confidences
         """
 
-        responses_preds = []
         responses_batch = []
+        responses_preds = []
 
         for i in range(len(candidates_batch)):
-            sorted_ids = np.flip(np.argsort(preds_batch[i]), -1)  # choose a random answer as the best one
-            chosen_index = np.random.choice(sorted_ids[:self.sample_size])
+            d = {candidates_batch[i][j]: preds_batch[i][j] for j in range(len(preds_batch[i]))}
+            candidates_list = list(set(candidates_batch[i]))
+            scores = [d[c] for c in candidates_list]
 
-            responses_batch.append(candidates_batch[i][chosen_index])
-            responses_preds.append(preds_batch[i][chosen_index])
+            # print("len cand, cands:", len(candidates_list), candidates_list)
+            # print("len scores, scores:", len(scores), scores)
+
+            sorted_ids = np.flip(np.argsort(scores), -1)
+            chosen_index = np.random.choice(sorted_ids[:self.sample_size])  # choose a random answer as the best one
+
+            responses_batch.append(candidates_list[chosen_index])
+            responses_preds.append(scores[chosen_index])
+
+        # print("responses", responses_batch)
+        # print("responses_scores", responses_preds)
 
         return responses_batch, responses_preds
