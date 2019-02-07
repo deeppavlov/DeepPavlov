@@ -33,7 +33,7 @@
         "in": ["tfidf_doc_text"],
         "out": ["chunks"],
         "flatten_result": true,
-        "paragraphs": true
+        "paragraphs": false
       },
       {
         "class_name": "string_multiplier",
