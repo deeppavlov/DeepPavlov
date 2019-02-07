@@ -29,8 +29,8 @@ def exact_match(y_true: List[List[str]], y_predicted: List[str]) -> float:
     The same as in SQuAD-v2.0
 
     Args:
-        y_true: list of tuples (y_true_text, y_true_start), y_true_text and y_true_start are lists of len num_answers
-        y_predicted: list of tuples (y_pred_text, y_pred_start, logit), y_pred_text : str, y_pred_start : int, logit: float
+        y_true: list of correct answers (correct answers are represented by list of strings)
+        y_predicted: list of predicted answers
 
     Returns:
         exact match score : float
@@ -47,8 +47,8 @@ def exact_match_v1(y_true: List[List[str]], y_predicted: List[str]) -> float:
             if y_pred equal at least to one answer in y_true then EM = 1, else EM = 0
         Skips examples without an answer.
     Args:
-        y_true: list of tuples (y_true_text, y_true_start), y_true_text and y_true_start are lists of len num_answers
-        y_predicted: list of tuples (y_pred_text, y_pred_start), y_pred_text : str, y_pred_start : int
+        y_true: list of correct answers (correct answers are represented by list of strings)
+        y_predicted: list of predicted answers
     Returns:
         exact match score : float
     """
@@ -72,8 +72,8 @@ def squad_f1(y_true: List[List[str]], y_predicted: List[str]) -> float:
     The same as in SQuAD-v2.0
 
     Args:
-        y_true: list of tuples (y_true_text, y_true_start), y_true_text and y_true_start are lists of len num_answers
-        y_predicted: list of tuples (y_pred_text, y_pred_start, logit), y_pred_text : str, y_pred_start : int, logit: float
+        y_true: list of correct answers (correct answers are represented by list of strings)
+        y_predicted: list of predicted answers
 
     Returns:
         F-1 score : float
@@ -107,8 +107,8 @@ def squad_f1_v1(y_true: List[List[str]], y_predicted: List[str]) -> float:
 
         Skips examples without an answer.
     Args:
-        y_true: list of tuples (y_true_text, y_true_start), y_true_text and y_true_start are lists of len num_answers
-        y_predicted: list of tuples (y_pred_text, y_pred_start), y_pred_text : str, y_pred_start : int
+        y_true: list of correct answers (correct answers are represented by list of strings)
+        y_predicted: list of predicted answers
     Returns:
         F-1 score : float
     """
