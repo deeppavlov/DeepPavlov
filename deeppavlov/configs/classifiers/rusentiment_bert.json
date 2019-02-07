@@ -49,8 +49,8 @@
         "one_hot_labels": true,
         "bert_config_file": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12/bert_config.json",
         "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12/bert_model.ckpt",
-        "save_path": "{MODELS_PATH}/rusentiment_bert/model_multi_1",
-        "load_path": "{MODELS_PATH}/rusentiment_bert/model_multi_1",
+        "save_path": "{MODELS_PATH}/rusentiment_bert/model_multi",
+        "load_path": "{MODELS_PATH}/rusentiment_bert/model_multi",
         "keep_prob": 0.5,
         "attention_probs_keep_prob": 0.9,
         "hidden_keep_prob": 0.6,
@@ -92,7 +92,7 @@
     "log_every_n_batches": 100,
     "validate_best": true,
     "test_best": true,
-    "tensorboard_log_dir": "{MODELS_PATH}/rusentiment_bert/logs_multi_1"
+    "tensorboard_log_dir": "{MODELS_PATH}/rusentiment_bert/logs_multi"
   },
   "metadata": {
     "variables": {
