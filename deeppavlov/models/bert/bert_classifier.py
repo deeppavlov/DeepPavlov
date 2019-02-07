@@ -105,21 +105,21 @@ class BertClassifierModel(LRScheduledTFModel):
             logits = tf.matmul(output_layer, output_weights, transpose_b=True)
             logits = tf.nn.bias_add(logits, output_bias)
 
-            if not self.multilabel:
-                log_probs = tf.nn.log_softmax(logits, axis=-1)
-                self.y_probas = tf.nn.softmax(logits, axis=-1)
-                self.y_predictions = tf.argmax(logits, axis=-1)
-            else:
-                log_probs = logits - tf.log(tf.exp(logits) + 1.0)
-                self.y_probas = tf.nn.sigmoid(logits)
-
             if self.one_hot_labels:
                 one_hot_labels = self.y_ph
             else:
                 one_hot_labels = tf.one_hot(self.y_ph, depth=self.n_classes, dtype=tf.float32)
 
-            per_example_loss = -tf.reduce_sum(one_hot_labels * log_probs, axis=-1)
-            self.loss = tf.reduce_mean(per_example_loss)
+            if not self.multilabel:
+                log_probs = tf.nn.log_softmax(logits, axis=-1)
+                self.y_probas = tf.nn.softmax(logits, axis=-1)
+                self.y_predictions = tf.argmax(logits, axis=-1)
+                per_example_loss = -tf.reduce_sum(one_hot_labels * log_probs, axis=-1)
+                self.loss = tf.reduce_mean(per_example_loss)
+            else:
+                self.y_probas = tf.nn.sigmoid(logits)
+                self.loss = tf.reduce_mean(
+                    tf.nn.sigmoid_cross_entropy_with_logits(labels=one_hot_labels, logits=logits))
 
     def _init_placeholders(self):
         self.input_ids_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='ids_ph')

@@ -51,7 +51,7 @@
         "attention_probs_keep_prob": 0.9,
         "hidden_keep_prob": 0.6,
         "learning_rate": 2e-05,
-        "learning_rate_drop_patience": 2,
+        "learning_rate_drop_patience": 3,
         "learning_rate_drop_div": 2.0,
         "in": ["bert_features"],
         "in_y": ["y_onehot"],
@@ -78,13 +78,13 @@
   },
   "train": {
     "metrics": [
-            {
-        "name": "roc_auc",
-        "inputs": ["y_onehot", "y_pred_probas"]
-      },
       {
         "name": "sets_accuracy",
         "inputs": ["y", "y_pred_labels"]
+      },
+      {
+        "name": "roc_auc",
+        "inputs": ["y_onehot", "y_pred_probas"]
       }
     ],
     "show_examples": false,
