@@ -10,6 +10,7 @@
   "dataset_iterator": {
     "class_name": "basic_classification_iterator",
     "seed": 42,
+    "split_seed": 23,
     "field_to_split": "train",
     "split_fields": [
       "train",
@@ -46,7 +47,8 @@
         "out": [
           "x_prep"
         ],
-        "class_name": "dirty_comments_preprocessor"
+        "class_name": "dirty_comments_preprocessor",
+        "remove_punctuation": false
       },
       {
         "in": "x_prep",
@@ -86,14 +88,14 @@
         "load_path": "{MODELS_PATH}/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
-        "units_gru": 128,
+        "units_gru": 256,
         "optimizer": "Adam",
         "learning_rate": 0.01,
         "learning_rate_decay": 0.01,
         "loss": "categorical_crossentropy",
         "last_layer_activation": "softmax",
-        "coef_reg_gru": 1e-5,
-        "coef_reg_den": 1e-5,
+        "coef_reg_gru": 1e-6,
+        "coef_reg_den": 1e-6,
         "dropout_rate": 0.2,
         "rec_dropout_rate": 0.2,
         "dense_size": 100,
@@ -154,7 +156,7 @@
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/rusentiment_v3.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/rusentiment_v6.tar.gz",
         "subdir": "{ROOT_PATH}/models/classifiers"
       }
     ]
