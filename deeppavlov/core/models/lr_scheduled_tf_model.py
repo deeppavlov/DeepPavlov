@@ -349,7 +349,7 @@ class LRScheduledTFModel(TFModel):
                 self._learning_rate_cur_div *= self._learning_rate_drop_div
                 self._lr /= self._learning_rate_drop_div
                 self._update_tf_variables(learning_rate=self._lr)
-                log.info(f"New learning rate dividor = {self._learning_rate_cur_div}")
+                log.info(f"New learning rate divider = {self._learning_rate_cur_div}")
         if event_name == 'after_batch':
             if (self._lr is not None) and self._lr_update_on_batch:
                 self._lr = self._lr_schedule.next_val() / self._learning_rate_cur_div
