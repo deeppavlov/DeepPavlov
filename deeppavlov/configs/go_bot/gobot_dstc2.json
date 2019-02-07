@@ -90,8 +90,11 @@
 
     "log_every_n_batches": 15,
     "show_examples": false,
-    "validate_best": true,
-    "test_best": true
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ],
+    "class_name": "nn_trainer"
   },
   "metadata": {
     "variables": {

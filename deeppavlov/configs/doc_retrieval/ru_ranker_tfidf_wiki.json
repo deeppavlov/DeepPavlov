@@ -56,9 +56,9 @@
     ]
   },
   "train": {
-    "validate_best": false,
-    "test_best": false,
-    "batch_size": 10000
+    "batch_size": 10000,
+    "evaluation_targets": [],
+    "class_name": "fit_trainer"
   },
   "metadata": {
     "variables": {
