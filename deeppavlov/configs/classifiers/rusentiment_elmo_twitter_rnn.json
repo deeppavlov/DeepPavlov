@@ -99,11 +99,11 @@
         "units_gru": 256,
         "optimizer": "Adam",
         "learning_rate": 0.01,
-        "learning_rate_decay": 0.001,
+        "learning_rate_decay": 0.01,
         "loss": "categorical_crossentropy",
         "last_layer_activation": "softmax",
-        "coef_reg_gru": 1e-5,
-        "coef_reg_den": 1e-5,
+        "coef_reg_gru": 1e-6,
+        "coef_reg_den": 1e-6,
         "dropout_rate": 0.2,
         "rec_dropout_rate": 0.2,
         "dense_size": 100,
@@ -127,7 +127,7 @@
   },
   "train": {
     "epochs": 100,
-    "batch_size": 128,
+    "batch_size": 64,
     "metrics": [
       "f1_macro",
       "sets_accuracy",
@@ -160,7 +160,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/rusentiment_v4.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/rusentiment_v8.tar.gz",
         "subdir": "{ROOT_PATH}/models/classifiers"
       }
     ]
