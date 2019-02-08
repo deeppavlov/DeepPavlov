@@ -6,6 +6,8 @@
   "basic_classification_reader": "deeppavlov.dataset_readers.basic_classification_reader:BasicClassificationDatasetReader",
   "bert_classifier": "deeppavlov.models.bert.bert_classifier:BertClassifierModel",
   "bert_preprocessor": "deeppavlov.models.preprocessors.bert_preprocessor:BertPreprocessor",
+  "bert_ranker": "deeppavlov.models.bert.bert_ranker:BertRankerModel",
+  "bert_split_preprocessor": "deeppavlov.models.preprocessors.bert_preprocessor:BertSplitPreprocessor",
   "bilstm_gru_nn": "deeppavlov.models.ranking.bilstm_gru_siamese_network:BiLSTMGRUSiameseNetwork",
   "bilstm_nn": "deeppavlov.models.ranking.bilstm_siamese_network:BiLSTMSiameseNetwork",
   "bow": "deeppavlov.models.embedders.bow_embedder:BoWEmbedder",

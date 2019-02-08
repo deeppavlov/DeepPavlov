@@ -46,27 +46,31 @@ class BertSplitPreprocessor(BertPreprocessor):
     # TODO: docs
 
     def __call__(self, texts):
-        examples = []
         texts_a = texts[0]
-        if len(texts) == 1:
-            texts_b = [None] * len(texts[0])
-            # TODO: add unique id
-            ex = [InputExample(unique_id=0, text_a=text_a, text_b=text_b) for text_a, text_b in zip(texts_a, texts_b)]
+        texts_b = [None] * len(texts[0])
+        # TODO: add unique id
+        example_a = [InputExample(unique_id=0, text_a=text_a, text_b=text_b) for text_a, text_b in zip(texts_a, texts_b)]
+        examples = []
+        for t in texts[1:]:
+            ex = [InputExample(unique_id=0, text_a=text_a, text_b=text_b) for text_a, text_b in
+                  zip(t, texts_b)]
             examples.append(ex)
-        else:
-            for t in texts[1:]:
-                ex = [InputExample(unique_id=0, text_a=text_a, text_b=text_b) for text_a, text_b in
-                      zip(texts_a, t)]
-                examples.append(ex)
+        feature_a = convert_examples_to_features(example_a, self.max_seq_length, self.tokenizer)
+        features = [convert_examples_to_features(el, self.max_seq_length, self.tokenizer) for el in examples]
+        split_features = [InputSplitFeatures(feature_a, el) for el in features]
 
-        return [convert_examples_to_features(el, self.max_seq_length, self.tokenizer) for el in examples]
+        return split_features
 
 class InputSplitFeatures(object):
   """A single set of features of data."""
 
-  def __init__(self, unique_id, tokens, input_ids, input_mask, input_type_ids):
-    self.unique_id = unique_id
-    self.tokens = tokens
-    self.input_ids = input_ids
-    self.input_mask = input_mask
-    self.input_type_ids = input_type_ids
+  def __init__(self, feature_a, feature_b):
+    self.unique_id = feature_a.unique_id
+    self.tokens_a = feature_a.tokens
+    self.input_ids_a = feature_a.input_ids
+    self.input_mask_a = feature_a.input_mask
+    self.input_type_ids_a = feature_a.input_type_ids
+    self.tokens_b = feature_b.tokens
+    self.input_ids_b = feature_b.input_ids
+    self.input_mask_b = feature_b.input_mask
+    self.input_type_ids_b = feature_b.input_type_ids
