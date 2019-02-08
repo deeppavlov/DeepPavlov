@@ -1,4 +1,5 @@
 from typing import Tuple, Optional, List
+import numpy as np
 
 from deeppavlov import train_model
 from deeppavlov import build_model
@@ -44,6 +45,10 @@ class SimilarityMatchingSkill(Skill):
             model_config = read_json(configs.faq.fasttext_avg_autofaq)
         elif config_type == 'fasttext_tfidf_autofaq':
             model_config = read_json(configs.faq.fasttext_tfidf_autofaq)
+        elif config_type == 'tfidf_logreg_autofaq':
+            model_config = read_json(configs.faq.tfidf_logreg_autofaq)
+        elif config_type == 'tfidf_logreg_en_faq':
+            model_config = read_json(configs.faq.tfidf_logreg_en_faq)
         else:
             raise ValueError("There is no config called '{}'".format(config_type))
 
@@ -68,10 +73,10 @@ class SimilarityMatchingSkill(Skill):
             update_dict_recursive(model_config, edit_dict)
 
         if train:
-            self.model = train_model(model_config, download=True)
+            self.model = train_model(model_config, download=False)
             log.info('Your model was saved at: \'' + save_load_path + '\'')
         else:
-            self.model = build_model(model_config, download=True)
+            self.model = build_model(model_config, download=False)
 
     def __call__(self, utterances_batch: List[str], history_batch: List[List[str]],
                  states_batch: Optional[list] = None) -> Tuple[List[str], List[float]]:
@@ -89,5 +94,9 @@ class SimilarityMatchingSkill(Skill):
             Batches of skill inference results and estimated confidences
         """
         response = self.model(utterances_batch)
+        response[0] = np.array(response[0]).flatten()
+        response[1] = np.array(response[1]).flatten()
         print(response)
+
+        response[1] = [max(response[1])]
         return response
