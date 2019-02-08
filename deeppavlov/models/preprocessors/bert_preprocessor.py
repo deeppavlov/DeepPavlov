@@ -41,7 +41,7 @@ class BertPreprocessor(Component):
         return convert_examples_to_features(examples, self.max_seq_length, self.tokenizer)
 
 
-@register('bert_preprocessor')
+@register('bert_split_preprocessor')
 class BertSplitPreprocessor(BertPreprocessor):
     # TODO: docs
 
@@ -60,3 +60,13 @@ class BertSplitPreprocessor(BertPreprocessor):
                 examples.append(ex)
 
         return [convert_examples_to_features(el, self.max_seq_length, self.tokenizer) for el in examples]
+
+class InputSplitFeatures(object):
+  """A single set of features of data."""
+
+  def __init__(self, unique_id, tokens, input_ids, input_mask, input_type_ids):
+    self.unique_id = unique_id
+    self.tokens = tokens
+    self.input_ids = input_ids
+    self.input_mask = input_mask
+    self.input_type_ids = input_type_ids
