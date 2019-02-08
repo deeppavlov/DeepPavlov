@@ -13,11 +13,10 @@
 # limitations under the License.
 
 import tensorflow as tf
-from tensorflow.contrib.layers import xavier_initializer
 import numpy as np
 from typing import List
 
-from deeppavlov.core.common.check_gpu import GPU_AVAILABLE
+from deeppavlov.core.common.check_gpu import check_gpu_existence
 from deeppavlov.core.common.log import get_logger
 
 
@@ -52,7 +51,7 @@ def stacked_cnn(units: tf.Tensor,
     Returns:
         units: tensor at the output of the last convolutional layer
     """
-
+    l2_reg = tf.nn.l2_loss if add_l2_losses else None
     for n_layer, n_hidden in enumerate(n_hidden_list):
         if use_dilation:
             dilation_rate = 2 ** n_layer
@@ -64,7 +63,7 @@ def stacked_cnn(units: tf.Tensor,
                                  padding='same',
                                  dilation_rate=dilation_rate,
                                  kernel_initializer=INITIALIZER(),
-                                 kernel_regularizer=tf.nn.l2_loss)
+                                 kernel_regularizer=l2_reg)
         if use_batch_norm:
             assert training_ph is not None
             units = tf.layers.batch_normalization(units, training=training_ph)
@@ -608,7 +607,7 @@ def cudnn_compatible_gru(units, n_hidden, n_layers=1, trainable_initial_states=F
 def cudnn_gru_wrapper(units, n_hidden, n_layers=1, trainable_initial_states=False,
                       seq_lengths=None, input_initial_h=None, name='cudnn_gru', reuse=False):
 
-    if GPU_AVAILABLE:
+    if check_gpu_existence():
         return cudnn_gru(units, n_hidden, n_layers, trainable_initial_states,
                          seq_lengths, input_initial_h, name, reuse)
 
@@ -750,7 +749,7 @@ def cudnn_compatible_lstm(units, n_hidden, n_layers=1, trainable_initial_states=
 def cudnn_lstm_wrapper(units, n_hidden, n_layers=1, trainable_initial_states=None, seq_lengths=None, initial_h=None,
                        initial_c=None, name='cudnn_lstm', reuse=False):
 
-    if GPU_AVAILABLE:
+    if check_gpu_existence():
         return cudnn_lstm(units, n_hidden, n_layers, trainable_initial_states,
                           seq_lengths, initial_h, initial_c, name, reuse)
 

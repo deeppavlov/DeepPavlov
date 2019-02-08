@@ -31,6 +31,14 @@ deeppavlov.models.preprocessors
 
     .. automethod:: __call__
 
+.. autoclass:: deeppavlov.models.preprocessors.str_token_reverser.StrTokenReverser
+
+    .. automethod:: __call__
+
+.. autoclass:: deeppavlov.models.preprocessors.str_utf8_encoder.StrUTF8Encoder
+
+    .. automethod:: __call__
+
 .. autoclass:: deeppavlov.models.preprocessors.odqa_preprocessors.DocumentChunker
 
     .. automethod:: __call__

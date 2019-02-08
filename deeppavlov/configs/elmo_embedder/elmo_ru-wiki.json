@@ -1,0 +1,46 @@
+{
+  "chainer": {
+    "in": [
+      "sentences"
+    ],
+    "pipe": [
+      {
+        "in": ["sentences"],
+        "class_name": "lazy_tokenizer",
+        "out": ["tokens"]
+      },
+      {
+        "class_name": "elmo_embedder",
+        "elmo_output_names": ["lstm_outputs1", "lstm_outputs2", "word_emb"],
+        "mini_batch_size": 32,
+        "in": [
+          "tokens"
+        ],
+        "spec": "{DOWNLOADS_PATH}/embeddings/elmo_ru_wiki",
+        "out": [
+          "tokens_emb"
+        ]
+      }
+    ],
+    "out": [
+      "tokens_emb"
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-wiki_600k_steps.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/embeddings/elmo_ru_wiki"
+      }
+    ]
+  }
+}

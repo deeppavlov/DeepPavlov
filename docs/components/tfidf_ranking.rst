@@ -4,69 +4,64 @@ TF-IDF Ranker
 
 This is an implementation of a document ranker based on tf-idf vectorization.
 The ranker implementation is based on `DrQA`_ project.
-The default ranker implementation takes a batch of queries as input and returns 5 document ids as output.
+The default ranker implementation takes a batch of queries as input and returns 25 document titles sorted via relevance.
+
+Quick Start
+===========
+
+Before using the model make sure that all required packages are installed running the command:
+
+.. code:: bash
+
+    python -m deeppavlov install en_ranker_tfidf_wiki
+
+Training and building (if you have your own data)
+
+.. code:: python
+
+    from deeppavlov import configs, train_model
+    ranker = train_model(configs.doc_retrieval.en_ranker_tfidf_wiki, download=True)
+
+Building (if you don't have your own data)
+
+.. code:: python
+
+    from deeppavlov import configs
+    from deeppavlov.core.commands.infer import build_model
+
+    ranker = build_model(configs.doc_retrieval.en_ranker_tfidf_wiki, load_trained=True)
+
+Inference
+
+.. code:: python
+
+    result = ranker(['Who is Ivan Pavlov?'])
+    print(result[:5])
+
+Output
 
 ::
 
-    :: Who is Ivan Pavlov?
     >> ['Ivan Pavlov (lawyer)', 'Ivan Pavlov', 'Pavlovian session', 'Ivan Pavlov (film)', 'Vladimir Bekhterev']
 
-Text for the output ids can be further extracted with :class:`~deeppavlov.vocabs.wiki_sqlite.WikiSQLiteVocab` class.
+Text for the output titles can be further extracted with :class:`~deeppavlov.vocabs.wiki_sqlite.WikiSQLiteVocab` class.
 
-Config
-======
+
+Configuration
+=============
 
 Default ranker config for **English** language is
-:config:`doc_retrieval/en_ranker_tfidf_wiki.json <ranking/en_ranker_tfidf_wiki.json>`
+:config:`doc_retrieval/en_ranker_tfidf_wiki.json <doc_retrieval/en_ranker_tfidf_wiki.json>`
 
 Default ranker config for **Russian** language is
-:config:`doc_retrieval/ru_ranker_tfidf_wiki.json <ranking/ru_ranker_tfidf_wiki.json>`
-
-Config Structure
-----------------
-
--  **dataset_iterator** - downloads Wikipidia DB, creates batches for
-   ranker fitting
-
-   -  **data_dir** - a directory to download DB to
-   -  **data_url** - an URL to download Wikipedia DB from
-   -  **shuffle** - whether to perform shuffling when iterating over DB or not
-
--  **chainer** - pipeline manager
-
-   -  **in** - pipeline input data (questions)
-   -  **out** - pipeline output data (Wikipedia articles ids)
-
--  **tfidf_ranker** - the ranker class
-
-   -  **top_n** - a number of document to return (when n=1 the most
-      relevant document is returned)
-   -  **in** - ranker input data (queries)
-   -  **out** - ranker output data (Wikipedia articles ids)
-   -  **fit_on_batch** - pass method to a vectorizer
-   -  **vectorizer** - a vectorizer class
-
-      -  **fit_on_batch** - fit the vectorizer on batches of Wikipedia articles
-      -  **save_path** - a path to serialize a vectorizer to
-      -  **load_path** - a path to load a vectorizer from
-      -  **tokenizer** - a tokenizer class
-
-         -  **lemmas** - whether to lemmatize tokens or not
-         -  **ngram_range** - ngram range for **vectorizer** features
-
--  **train** - parameters for vectorizer fitting
-
-   -  **validate_best**- is ingnored, any value
-   -  **test_best** - is ignored, any value
-   -  **batch_size** - how many Wikipedia articles should return
-      the **dataset_iterator** in a single batch
+:config:`doc_retrieval/ru_ranker_tfidf_wiki.json <doc_retrieval/ru_ranker_tfidf_wiki.json>`
 
 Running the Ranker
 ==================
 
 .. note::
 
-    Training and inferring the ranker requires ~16 GB RAM.
+    About **16 GB of RAM** required.
 
 .. _ranker_training:
 
@@ -77,15 +72,15 @@ Run the following to fit the ranker on **English** Wikipedia:
 
 .. code:: bash
 
-    cd deeppavlov/
-    python deep.py train deeppavlov/configs/doc_retrieval/en_ranker_tfidf_wiki.json
+    python -m deppavlov train en_ranker_tfidf_wiki
 
 Run the following to fit the ranker on **Russian** Wikipedia:
 
 .. code:: bash
 
-    cd deeppavlov/
-    python deep.py train deeppavlov/configs/doc_retrieval/ru_ranker_tfidf_wiki.json
+    python -m deeppavlov train ru_ranker_tfidf_wiki
+
+As a result of ranker training, a SQLite database and tf-idf matrix are created.
 
 Interacting
 -----------
@@ -97,26 +92,24 @@ Run the following to interact with the **English** ranker:
 
 .. code:: bash
 
-    cd deeppavlov/
-    python deep.py interact deeppavlov/configs/doc_retrieval/en_ranker_tfidf_wiki.json -d
+    python -m deeppavlov interact en_ranker_tfidf_wiki -d
 
 Run the following to interact with the **Russian** ranker:
 
 .. code:: bash
 
-    cd deeppavlov/
-    python deep.py interact deeppavlov/configs/doc_retrieval/ru_ranker_tfidf_wiki.json -d
+    python -m deeppavlov ru_ranker_tfidf_wiki -d
 
 Available Data and Pretrained Models
 ====================================
 
-Wikipedia DB and pretrained tfidf matrices are downloaded in
-``deeppavlov/download/odqa`` folder by default.
+Wikipedia DB is downloaded to ``~/.deeppavlov/downloads/odqa`` and pre-trained tfidf matrices are downloaded
+to ``~/.deeppavlov/models/odqa`` folder by default.
 
 enwiki.db
 ---------
 
-**enwiki.db** SQLite database consists of **5159530** Wikipedia articles
+**enwiki.db** SQLite database consists of **5180368** Wikipedia articles
 and is built by the following steps:
 
 #. Download a Wikipedia dump file. We took the latest
@@ -125,15 +118,14 @@ and is built by the following steps:
 #. Unpack and extract the articles with `WikiExtractor`_
    (with ``--json``, ``--no-templates``, ``--filter_disambig_pages``
    options)
-#. Build a database with the help of `DrQA
-   script <https://github.com/facebookresearch/DrQA/blob/master/scripts/retriever/build_db.py>`__.
+#. Build a database during :ref:`ranker_training`.
 
 enwiki_tfidf_matrix.npz
 -------------------------
 
 **enwiki_tfidf_matrix.npz** is a full Wikipedia tf-idf matrix of
 size **hash_size x number of documents** which is
-**2**24 x 5159530**. This matrix is built with
+|2**24| x 5180368. This matrix is built with
 :class:`~deeppavlov.models.vectorizers.hashing_tfidf_vectorizer.HashingTfIdfVectorizer` class.
 
 ruwiki.db
@@ -150,15 +142,14 @@ and is built by the following steps:
    `WikiExtractor <https://github.com/attardi/wikiextractor>`__
    (with ``--json``, ``--no-templates``, ``--filter_disambig_pages``
    options)
-#. Build a database with the help of `DrQA
-   script <https://github.com/facebookresearch/DrQA/blob/master/scripts/retriever/build_db.py>`__.
+#. Build a database during :ref:`ranker_training`.
 
 ruwiki_tfidf_matrix.npz
 -------------------------
 
 **ruwiki_tfidf_matrix.npz** is a full Wikipedia tf-idf matrix of
 size **hash_size x number of documents** which is
-**2**24 x 1463888**. This matrix is built with
+|2**24| x 1463888. This matrix is built with
 :class:`~deeppavlov.models.vectorizers.hashing_tfidf_vectorizer.HashingTfIdfVectorizer` class.
 class.
 
@@ -167,14 +158,15 @@ Comparison
 
 Scores for **TF-IDF Ranker** model:
 
-
-+-----------------------------------------------------------------+----------------+----------------------+-----------------+
-| Model                                                           | Dataset        |  Wiki dump           |  Recall (top 5) |
-+-----------------------------------------------------------------+----------------+----------------------+-----------------+
-| :config:`DeepPavlov <doc_retrieval/en_ranker_tfidf_wiki.json>`  | SQuAD (dev)    |  enwiki (2018-02-11) |       75.6      |
-+-----------------------------------------------------------------+----------------+----------------------+-----------------+
-| `DrQA`_                                                         | SQuAD (dev)    |  enwiki (2016-12-21) |       77.8      |
-+-----------------------------------------------------------------+----------------+----------------------+-----------------+
++------------------------------------------------------------------------------+----------------+-----------------+
+| Model                                                                        | Dataset        |   Recall@5      |
++------------------------------------------------------------------------------+----------------+-----------------+
+| :config:`enwiki20180211 <doc_retrieval/en_ranker_tfidf_wiki.json>`           |                |       75.6      |
++------------------------------------------------------------------------------+                +-----------------+
+| :config:`enwiki20161221 <doc_retrieval/en_ranker_tfidf_enwiki20161221.json>` |  SQuAD (dev)   |       76.2      |
++------------------------------------------------------------------------------+                +-----------------+
+| `DrQA`_ enwiki20161221                                                       |                |       77.8      |
++------------------------------------------------------------------------------+----------------+-----------------+
 
 
 References
@@ -184,4 +176,6 @@ References
 
 .. _`DrQA`: https://github.com/facebookresearch/DrQA/
 .. _`WikiExtractor`: https://github.com/attardi/wikiextractor
+
+.. |2**24| replace:: 2\ :sup:`24`
 

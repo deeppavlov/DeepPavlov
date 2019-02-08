@@ -16,18 +16,18 @@ from typing import List, Any, Optional, Union
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.models.component import Component
 from deeppavlov.dataset_iterators.sqlite_iterator import SQLiteDataIterator
 
 logger = get_logger(__name__)
 
 
 @register('wiki_sqlite_vocab')
-class WikiSQLiteVocab(SQLiteDataIterator):
+class WikiSQLiteVocab(SQLiteDataIterator, Component):
     """Get content from SQLite database by document ids.
 
     Args:
-        data_url: an URL where to download a DB from
-        data_dir:  a directory where to save downloaded DB to
+        load_path: a path to local DB file
         join_docs: whether to join extracted docs with ' ' or not
         shuffle: whether to shuffle data or not
 
@@ -36,8 +36,8 @@ class WikiSQLiteVocab(SQLiteDataIterator):
 
     """
 
-    def __init__(self, data_url: str, data_dir: str = '', join_docs: bool=True, shuffle: bool=False, **kwargs):
-        super().__init__(data_dir=data_dir, data_url=data_url, shuffle=shuffle)
+    def __init__(self, load_path: str, join_docs: bool = True, shuffle: bool = False, **kwargs) -> None:
+        SQLiteDataIterator.__init__(self, load_path=load_path, shuffle=shuffle)
         self.join_docs = join_docs
 
     def __call__(self, doc_ids: Optional[List[List[Any]]] = None, *args, **kwargs) -> List[Union[str, List[str]]]:

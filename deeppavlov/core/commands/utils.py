@@ -11,57 +11,51 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from pathlib import Path
-
-from typing import Union
-
-from deeppavlov.core.common import paths
-
 import os
+from pathlib import Path
+from typing import Union, Dict, TypeVar
 
-def set_deeppavlov_root(config: dict) -> None:
-    """Make a serialization user dir."""
-    try:
-        deeppavlov_root = Path(config['deeppavlov_root'])
-    except KeyError:
-        deeppavlov_root = Path(__file__, "..", "..", "..", "..", "download").resolve()
+from deeppavlov.core.common.file import read_json, find_config
 
-    deeppavlov_root.mkdir(exist_ok=True)
-
-    paths.deeppavlov_root = deeppavlov_root
+# noinspection PyShadowingBuiltins
+_T = TypeVar('_T', str, float, bool, list, dict)
 
 
-def get_deeppavlov_root() -> Path:
-    """Return DeepPavlov root directory."""
-    if not paths.deeppavlov_root:
-        set_deeppavlov_root({})
-    return paths.deeppavlov_root
+def _parse_config_property(item: _T, variables: Dict[str, Union[str, Path, float, bool, None]]) -> _T:
+    """Recursively apply config's variables values to its property"""
+    if isinstance(item, str):
+        return item.format(**variables)
+    elif isinstance(item, list):
+        return [_parse_config_property(item, variables) for item in item]
+    elif isinstance(item, dict):
+        return {k: _parse_config_property(v, variables) for k, v in item.items()}
+    else:
+        return item
+
+
+def parse_config(config: Union[str, Path, dict]) -> dict:
+    """Read config's variables and apply their values to all its properties"""
+    if isinstance(config, (str, Path)):
+        config = read_json(find_config(config))
+
+    variables = {
+        'DEEPPAVLOV_PATH': os.getenv(f'DP_DEEPPAVLOV_PATH', Path(__file__).parent.parent.parent)
+    }
+    for name, value in config.get('metadata', {}).get('variables', {}).items():
+        env_name = f'DP_{name}'
+        if env_name in os.environ:
+            value = os.getenv(env_name)
+        variables[name] = value.format(**variables)
+
+    return _parse_config_property(config, variables)
 
 
 def expand_path(path: Union[str, Path]) -> Path:
-    """Make path expansion."""
-    return get_deeppavlov_root() / Path(path).expanduser()
-
-
-def make_all_dirs(path: Union[str, Path]) -> None:
-    directory = os.path.dirname(path)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-def is_file_exist(path: Union[str, Path]):
-    if path is None:
-        return False
-
-    return os.path.exists(expand_path(path))
-
-
-def is_empty(d: Path) -> bool:
-    """Check if directory is empty."""
-    return not bool(list(d.iterdir()))
+    """Convert relative paths to absolute with resolving user directory."""
+    return Path(path).expanduser().resolve()
 
 
 def import_packages(packages: list) -> None:
-    """Simple function to import packages from list."""
+    """Import packages from list to execute their code."""
     for package in packages:
         __import__(package)

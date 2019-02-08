@@ -25,15 +25,16 @@ class UbuntuV2Reader(DatasetReader):
     """The class to read the Ubuntu V2 dataset from csv files.
 
     Please, see https://github.com/rkadlec/ubuntu-ranking-dataset-creator.
-
-    Args:
-        data_path: A path to a folder with dataset csv files.
-        num_samples: A number of data samples to use in ``train``, ``validation`` and ``test`` mode.
     """
 
     def read(self, data_path: str,
-             num_samples: int = None,
              *args, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
+        """Read the Ubuntu V2 dataset from csv files.
+
+        Args:
+            data_path: A path to a folder with dataset csv files.
+        """
+
         data_path = expand_path(data_path)
         dataset = {'train': None, 'valid': None, 'test': None}
         train_fname = Path(data_path) / 'train.csv'
@@ -43,9 +44,9 @@ class UbuntuV2Reader(DatasetReader):
         self.classes_vocab_train = {}
         self.classes_vocab_valid = {}
         self.classes_vocab_test = {}
-        dataset["train"] = self.preprocess_data_train(train_fname)[:num_samples]
-        dataset["valid"] = self.preprocess_data_validation(valid_fname)[:num_samples]
-        dataset["test"] = self.preprocess_data_validation(test_fname)[:num_samples]
+        dataset["train"] = self.preprocess_data_train(train_fname)
+        dataset["valid"] = self.preprocess_data_validation(valid_fname)
+        dataset["test"] = self.preprocess_data_validation(test_fname)
         return dataset
     
     def preprocess_data_train(self, train_fname: Union[Path, str]) -> List[Tuple[List[str], int]]:

@@ -22,10 +22,8 @@ from sklearn.utils import murmurhash3_32
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.estimator import Estimator
-from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 
 logger = get_logger(__name__)
 
@@ -46,7 +44,7 @@ def hash_(token: str, hash_size: int) -> int:
 
 
 @register('hashing_tfidf_vectorizer')
-class HashingTfIdfVectorizer(Estimator, Serializable):
+class HashingTfIdfVectorizer(Estimator):
     """Create a tfidf matrix from collection of documents of size [n_documents X n_features(hash_size)].
 
     Args:
@@ -87,7 +85,7 @@ class HashingTfIdfVectorizer(Estimator, Serializable):
             self.index2doc = self.get_index2doc()
         else:
             self.term_freqs = None
-            self.doc_index = doc_index
+            self.doc_index = doc_index or {}
 
     def __call__(self, questions: List[str]) -> Sparse:
         """Transform input list of documents to tfidf vectors.
@@ -207,23 +205,6 @@ class HashingTfIdfVectorizer(Estimator, Serializable):
         tfidfs = idfs.dot(tfs)
         return tfidfs, term_freqs
 
-    def fit_batch(self, docs: List[str], doc_ids: List[Any]) -> None:
-        """Fit batch of documents.
-
-        Args:
-            docs: a list of input documents
-            doc_ids: a list of document ids corresponding to input documents
-
-        Returns:
-            None
-
-        """
-
-        for batch_rows, batch_data, batch_cols in self.get_counts(docs, doc_ids):
-            self.rows.extend(batch_rows)
-            self.cols.extend(batch_cols)
-            self.data.extend(batch_data)
-
     def save(self) -> None:
         """Save tfidf matrix into **.npz** format.
 
@@ -287,20 +268,40 @@ class HashingTfIdfVectorizer(Estimator, Serializable):
                          loader['indptr']), shape=loader['shape'])
         return matrix, loader['opts'].item(0)
 
-    def fit_batches(self, iterator: DataFittingIterator, batch_size: int) -> None:
-        """Generate a batch to be fit to a vectorizer.
+    def partial_fit(self, docs: List[str], doc_ids: List[Any], doc_nums: List[int]) -> None:
+        """Partially fit on one batch.
 
         Args:
-            iterator: an instance of an iterator class
-            batch_size: a size of a generated batch
+            docs: a list of input documents
+            doc_ids: a list of document ids corresponding to input documents
+            doc_nums: a list of document integer ids as they appear in a database
 
         Returns:
             None
 
         """
-        self.doc_index = iterator.doc2index
-        for x, y in iterator.gen_batches(batch_size):
-            self.fit_batch(x, y)
+        for doc_id, i in zip(doc_ids, doc_nums):
+            self.doc_index[doc_id] = i
 
-    def fit(self):
-        pass
+        for batch_rows, batch_data, batch_cols in self.get_counts(docs, doc_ids):
+            self.rows.extend(batch_rows)
+            self.cols.extend(batch_cols)
+            self.data.extend(batch_data)
+
+    def fit(self, docs: List[str], doc_ids: List[Any], doc_nums: List[int]) -> None:
+        """Fit the vectorizer.
+
+        Args:
+            docs: a list of input documents
+            doc_ids: a list of document ids corresponding to input documents
+            doc_nums: a list of document integer ids as they appear in a database
+
+        Returns:
+            None
+
+        """
+        self.doc_index = {}
+        self.rows = []
+        self.cols = []
+        self.data = []
+        return self.partial_fit(docs, doc_ids, doc_nums)

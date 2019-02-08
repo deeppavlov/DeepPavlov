@@ -1,11 +1,10 @@
 import importlib
-from pathlib import Path
 import json
-from typing import List, Callable, Any
+from pathlib import Path
+from typing import Callable, Any
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.log import get_logger
-
 
 log = get_logger(__name__)
 
@@ -40,9 +39,8 @@ def register_metric(metric_name: str) -> Callable[..., Any]:
     return decorate
 
 
-def get_metrics_by_names(names: list) -> List[Callable[..., Any]]:
-    """Returns a list of metric callables with corresponding names."""
-    not_found = [name for name in names if name not in _REGISTRY]
-    if not_found:
-        raise ConfigError('Names {} are not registered as metrics'.format(not_found))
-    return [fn_from_str(_REGISTRY[name]) for name in names]
+def get_metric_by_name(name: str) -> Callable[..., Any]:
+    """Returns a metric callable with a corresponding name."""
+    if name not in _REGISTRY:
+        raise ConfigError(f'"{name}" is not registered as a metric')
+    return fn_from_str(_REGISTRY[name])

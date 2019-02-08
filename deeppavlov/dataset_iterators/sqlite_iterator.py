@@ -13,20 +13,18 @@
 # limitations under the License.
 
 import sqlite3
-from typing import List, Any, Dict, Optional
+from typing import List, Any, Dict, Optional, Union, Generator, Tuple
 from random import Random
+from pathlib import Path
 
 from overrides import overrides
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.utils import download
-from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
+from deeppavlov.core.commands.utils import expand_path
 
 logger = get_logger(__name__)
-
-DB_URL = 'http://files.deeppavlov.ai/datasets/wikipedia/enwiki.db'
 
 
 @register('sqlite_iterator')
@@ -36,8 +34,7 @@ class SQLiteDataIterator(DataFittingIterator):
     Get document ids and document.
 
     Args:
-        data_dir: a directory where to save downloaded DB to
-        data_url: an URL where to download a DB from
+        load_path: a path to local DB file
         batch_size: a number of samples in a single batch
         shuffle: whether to shuffle data during batching
         seed: random seed for data shuffling
@@ -53,15 +50,23 @@ class SQLiteDataIterator(DataFittingIterator):
 
     """
 
-    def __init__(self, data_dir: str = '', data_url: str = DB_URL, batch_size: int = None,
-                 shuffle: bool = None, seed: int = None, **kwargs):
+    def __init__(self, load_path: Union[str, Path], batch_size: Optional[int] = None,
+                 shuffle: Optional[bool] = None, seed: Optional[int] = None, **kwargs) -> None:
 
-        download_dir = expand_path(data_dir)
-        download_path = download_dir.joinpath(data_url.split("/")[-1])
-        download(download_path, data_url, force_download=False)
-
-        self.connect = sqlite3.connect(str(download_path), check_same_thread=False)
-        self.db_name = self.get_db_name()
+        load_path = str(expand_path(load_path))
+        logger.info("Connecting to database, path: {}".format(load_path))
+        try:
+            self.connect = sqlite3.connect(load_path, check_same_thread=False)
+        except sqlite3.OperationalError as e:
+            e.args = e.args + ("Check that DB path exists and is a valid DB file",)
+            raise e
+        try:
+            self.db_name = self.get_db_name()
+        except TypeError as e:
+            e.args = e.args + (
+                'Check that DB path was created correctly and is not empty. '
+                'Check that a correct dataset_format is passed to the ODQAReader config',)
+            raise e
         self.doc_ids = self.get_doc_ids()
         self.doc2index = self.map_doc2idx()
         self.batch_size = batch_size
@@ -126,3 +131,38 @@ class SQLiteDataIterator(DataFittingIterator):
         result = cursor.fetchone()
         cursor.close()
         return result if result is None else result[0]
+
+    @overrides
+    def gen_batches(self, batch_size: int, shuffle: bool = None) \
+            -> Generator[Tuple[List[str], List[int]], Any, None]:
+        """Gen batches of documents.
+
+        Args:
+            batch_size: a number of samples in a single batch
+            shuffle: whether to shuffle data during batching
+
+        Yields:
+            generated tuple of documents and their ids
+
+        """
+        if shuffle is None:
+            shuffle = self.shuffle
+
+        if shuffle:
+            _doc_ids = self.random.sample(self.doc_ids, len(self.doc_ids))
+        else:
+            _doc_ids = self.doc_ids
+
+        batches = [_doc_ids[i:i + batch_size] for i in
+                   range(0, len(_doc_ids), batch_size)]
+
+        # DEBUG
+        # len_batches = len(batches)
+
+        for i, doc_ids in enumerate(batches):
+            # DEBUG
+            # logger.info(
+            #     "Processing batch # {} of {} ({} documents)".format(i, len_batches, len(doc_index)))
+            docs = [self.get_doc_content(doc_id) for doc_id in doc_ids]
+            doc_nums = [self.doc2index[doc_id] for doc_id in doc_ids]
+            yield docs, zip(doc_ids, doc_nums)

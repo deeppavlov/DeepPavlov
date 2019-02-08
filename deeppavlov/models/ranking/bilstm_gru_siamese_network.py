@@ -47,10 +47,6 @@ class BiLSTMGRUSiameseNetwork(BiLSTMSiameseNetwork):
             If set to ``False`` random sampling will be used.
             Only required if ``triplet_loss`` is set to ``True``.
     """
-
-    def __init__(self, *args, **kwargs):
-        super(BiLSTMGRUSiameseNetwork, self).__init__(*args, **kwargs)
-
     def create_model(self) -> Model:
         input = []
         if self.use_matrix:

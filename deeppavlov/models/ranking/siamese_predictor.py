@@ -57,7 +57,7 @@ class SiamesePredictor(Component):
                  responses: SimpleVocabulary = None,
                  preproc_func: Callable = None,
                  interact_pred_num: int = 3,
-                 *args, **kwargs):
+                 *args, **kwargs) -> None:
 
         super().__init__()
 
@@ -99,10 +99,7 @@ class SiamesePredictor(Component):
                     b = self.model._make_batch([context])
                     context_emb = self.model._predict_context_on_batch(b)
                     context_emb = np.squeeze(context_emb, axis=0)
-                    norm = np.sqrt(context_emb @ context_emb) *\
-                           np.sqrt(np.diag(self.response_embeddings @ self.response_embeddings.T))
-                    scores = 1 - context_emb @ self.response_embeddings.T
-                    scores /= norm
+                    scores = context_emb @ self.response_embeddings.T
                 ids = np.flip(np.argsort(scores), -1)
                 return [[self.responses[el] for el in ids[:self.interact_pred_num]]]
             else:
@@ -140,6 +137,12 @@ class SiamesePredictor(Component):
             el = self.preproc_func(responses[i*self.batch_size: (i+1)*self.batch_size])
             self.preproc_responses += list(el)
 
+    def rebuild_responses(self, candidates) -> None:
+        self.attention = True
+        self.interact_pred_num = 1
+        self.preproc_responses = list()
+        self.responses = {idx: sentence for idx, sentence in enumerate(candidates)}
+        self._build_preproc_responses()
 
 
 

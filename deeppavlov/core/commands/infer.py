@@ -11,34 +11,39 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import json
+import pickle
+import sys
+from itertools import islice
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
-from deeppavlov.core.commands.utils import set_deeppavlov_root, import_packages
+from deeppavlov.core.commands.utils import import_packages, parse_config
 from deeppavlov.core.common.chainer import Chainer
-from deeppavlov.core.common.file import read_json
-
-from deeppavlov.core.agent.agent import Agent
-from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.log import get_logger
-
+from deeppavlov.core.common.params import from_params
+from deeppavlov.download import deep_download
 
 log = get_logger(__name__)
 
 
-def build_model_from_config(config: [str, Path, dict], mode: str = 'infer', load_trained: bool = False,
-                            as_component: bool = False) -> Chainer:
+def build_model(config: Union[str, Path, dict], mode: str = 'infer',
+                load_trained: bool = False, download: bool = False,
+                serialized: Optional[bytes] = None) -> Chainer:
     """Build and return the model described in corresponding configuration file."""
-    if isinstance(config, (str, Path)):
-        config = read_json(config)
-    set_deeppavlov_root(config)
+    config = parse_config(config)
+
+    if serialized:
+        serialized: list = pickle.loads(serialized)
+
+    if download:
+        deep_download(config)
 
     import_packages(config.get('metadata', {}).get('imports', []))
 
     model_config = config['chainer']
 
-    model = Chainer(model_config['in'], model_config['out'], model_config.get('in_y'), as_component=as_component)
+    model = Chainer(model_config['in'], model_config['out'], model_config.get('in_y'))
 
     for component_config in model_config['pipe']:
         if load_trained and ('fit_on' in component_config or 'in_y' in component_config):
@@ -46,8 +51,14 @@ def build_model_from_config(config: [str, Path, dict], mode: str = 'infer', load
                 component_config['load_path'] = component_config['save_path']
             except KeyError:
                 log.warning('No "save_path" parameter for the {} component, so "load_path" will not be renewed'
-                            .format(component_config.get('name', component_config.get('ref', 'UNKNOWN'))))
-        component = from_params(component_config, mode=mode)
+                            .format(component_config.get('class_name', component_config.get('ref', 'UNKNOWN'))))
+
+        if serialized and 'in' in component_config:
+            component_serialized = serialized.pop(0)
+        else:
+            component_serialized = None
+
+        component = from_params(component_config, mode=mode, serialized=component_serialized)
 
         if 'in' in component_config:
             c_in = component_config['in']
@@ -59,66 +70,27 @@ def build_model_from_config(config: [str, Path, dict], mode: str = 'infer', load
     return model
 
 
-def build_agent_from_config(config_path: str) -> Agent:
-    """Build and return the agent described in corresponding configuration file."""
-    config = read_json(config_path)
-    skill_configs = config['skills']
-    commutator_config = config['commutator']
-    return Agent(skill_configs, commutator_config)
-
-
-def interact_agent(config_path: str) -> None:
-    """Start interaction with the agent described in corresponding configuration file."""
-    a = build_agent_from_config(config_path)
-    commutator = from_params(a.commutator_config)
-
-    models = [build_model_from_config(sk) for sk in a.skill_configs]
-    while True:
-        # get input from user
-        context = input(':: ')
-
-        # check for exit command
-        if context == 'exit' or context == 'stop' or context == 'quit' or context == 'q':
-            return
-
-        predictions = []
-        for model in models:
-            predictions.append({model.__class__.__name__: model.infer(context, )})
-        idx, name, pred = commutator.infer(predictions, )
-        print('>>', pred)
-
-        a.history.append({'context': context, "predictions": predictions,
-                          "winner": {"idx": idx, "model": name, "prediction": pred}})
-        log.debug("Current history: {}".format(a.history))
-
-
-def interact_model(config_path: str) -> None:
+def interact_model(config: Union[str, Path, dict]) -> None:
     """Start interaction with the model described in corresponding configuration file."""
-    config = read_json(config_path)
-    model = build_model_from_config(config)
+    model = build_model(config)
 
     while True:
         args = []
         for in_x in model.in_x:
-            args.append(input('{}::'.format(in_x)))
+            args.append([input('{}::'.format(in_x))])
             # check for exit command
-            if args[-1] == 'exit' or args[-1] == 'stop' or args[-1] == 'quit' or args[-1] == 'q':
+            if args[-1][0] in {'exit', 'stop', 'quit', 'q'}:
                 return
 
-        if len(args) == 1:
-            pred = model(args)
-        else:
-            pred = model([args])
+        pred = model(*args)
+        if len(model.out_params) > 1:
+            pred = zip(*pred)
 
         print('>>', *pred)
 
 
-def predict_on_stream(config_path: str, batch_size: int = 1, file_path: Optional[str] = None) -> None:
+def predict_on_stream(config: Union[str, Path, dict], batch_size: int = 1, file_path: Optional[str] = None) -> None:
     """Make a prediction with the component described in corresponding configuration file."""
-    import sys
-    import json
-    from itertools import islice
-
     if file_path is None or file_path == '-':
         if sys.stdin.isatty():
             raise RuntimeError('To process data from terminal please use interact mode')
@@ -126,24 +98,24 @@ def predict_on_stream(config_path: str, batch_size: int = 1, file_path: Optional
     else:
         f = open(file_path, encoding='utf8')
 
-    config = read_json(config_path)
-    model: Chainer = build_model_from_config(config)
+    model: Chainer = build_model(config)
 
     args_count = len(model.in_x)
     while True:
-        batch = (l.strip() for l in islice(f, batch_size*args_count))
-        if args_count > 1:
-            batch = zip(*[batch]*args_count)
-        batch = list(batch)
+        batch = list((l.strip() for l in islice(f, batch_size * args_count)))
 
         if not batch:
             break
 
-        for res in model(batch):
-            if type(res).__module__ == 'numpy':
-                res = res.tolist()
-            if not isinstance(res, str):
-                res = json.dumps(res, ensure_ascii=False)
+        args = []
+        for i in range(args_count):
+            args.append(batch[i::args_count])
+
+        res = model(*args)
+        if len(model.out_params) == 1:
+            res = [res]
+        for res in zip(*res):
+            res = json.dumps(res, ensure_ascii=False)
             print(res, flush=True)
 
     if f is not sys.stdin:

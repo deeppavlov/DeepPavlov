@@ -2,13 +2,44 @@
 Frequently Asked Questions (FAQ)
 ================================
 
-This is implementation of FAQ skillgit which helps to classify incoming questions.
+This is implementation of FAQ skill which helps to classify incoming questions.
 
 ::
 
     :: What is your open hours?
     >> 8am - 8pm
 
+
+Quick Start
+===========
+
+Building
+--------
+
+.. code:: python
+
+    from deeppavlov import configs
+    from deeppavlov.core.commands.infer import build_model
+
+    faq = build_model(configs.faq.tfidf_logreg_en_faq, load_trained=True)
+
+
+Inference
+---------
+
+.. code:: python
+
+    result = faq(['What is your open hours?'])
+
+If some required packages are missing, install all the requirements by running in command line:
+
+.. code:: bash
+
+    python -m deeppavlov install fasttext_avg_autofaq
+    python -m deeppavlov install fasttext_tfidf_autofaq
+    python -m deeppavlov install tfidf_autofaq
+    python -m deeppavlov install tfidf_logreg_autofaq
+    python -m deeppavlov install tfidf_logreg_en_faq
 
 Config
 ======
@@ -42,14 +73,6 @@ Vectorizers
 
 Vectorizers produce numeric vectors of input sentences
 
--  **tfidf_vectorizer** - TF-IDF vectorizer
-
-   -  **in** - input data: question
-   -  **fit_on** - train data:   token lemmas of question
-   -  **save_path** - path where to save model
-   -  **load_path** - path where to load model
-   -  **out** - output data: vectorized sentence
-
 -  **sentence2vector_v2w_tfidf** - Sentence vectorizer: weighted sum of word embeddings from sentence
 
    -  **in** - input data: question
@@ -57,11 +80,6 @@ Vectorizers produce numeric vectors of input sentences
    -  **save_path** - path where to save model
    -  **load_path** - path where to load model
    -  **out** - output data: vectorized sentence
-
--  **sentence2vector_v2w_avg** - Sentence vectorizer: average sum of word embeddings from sentence
-   -  **in** - input data: question
-   -  **out** - output data: vectorized sentence
-
 
 
 Classifiers for FAQ
@@ -101,8 +119,7 @@ To train your own model by running command `train`, for example:
 
 .. code:: bash
 
-    cd deeppavlov/
-    python deep.py train configs/faq/tfidf_autofaq.json
+    python -m deeppavlov train tfidf_autofaq
 
 
 Interacting
@@ -112,8 +129,7 @@ After model has trained, you can use it for inference: model will return answers
 
 .. code:: bash
 
-    cd deeppavlov/
-    python deep.py interact configs/faq/tfidf_autofaq.json -d
+    python -m deeppavlov interact fidf_autofaq -d
 
 
 Inference example:

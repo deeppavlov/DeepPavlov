@@ -25,19 +25,19 @@ components:
 .. code:: python
 
     {
-      "class": "deeppavlov.models.preprocessors.str_lower:StrLower",
+      "class_name": "deeppavlov.models.preprocessors.str_lower:StrLower",
       "in": ["x"],
       "out": ["x_lower"]
     },
     {
-      "name": "nltk_tokenizer",
+      "class_name": "nltk_tokenizer",
       "in": ["x_lower"],
       "out": ["x_tokens"]
     },
 
 Each :class:`~deeppavlov.core.models.component.Component` in the pipeline must implement method :meth:`__call__` and has
-``name`` parameter, which is its registered codename, or ``class`` parameter in the form of
-``module_name:ClassName``. It can also have any other parameters which repeat its :meth:`__init__` method arguments.
+``class_name`` parameter, which is its registered codename, or full name of any python class in the form of
+``"module_name:ClassName"``. It can also have any other parameters which repeat its :meth:`__init__` method arguments.
 Default values of :meth:`__init__` arguments will be overridden with the config values during the initialization of a
 class instance.
 
@@ -47,7 +47,7 @@ parameters:
 .. code:: python
 
     {
-      "name": "nltk_tokenizer",
+      "class_name": "nltk_tokenizer",
       "id": "tokenizer",
       "in": ["x_lower"],
       "out": ["x_tokens"]
@@ -58,6 +58,48 @@ parameters:
       "out": ["y_tokens"]
     },
 
+
+Variables
+---------
+
+As of *version 0.1.0* every string value in a configuration file is interpreted
+as a `format string <https://docs.python.org/3.6/library/string.html#formatstrings>`__ where fields are evaluated
+from ``metadata.variables`` element:
+
+.. code:: python
+
+    {
+      "chainer": {
+        "in": ["x"],
+        "pipe": [
+          {
+            "class_name": "my_component",
+            "in": ["x"],
+            "out": ["x"],
+            "load_path": "{MY_PATH}/file.obj"
+          },
+          {
+            "in": ["x"],
+            "out": ["y_predicted"],
+            "config_path": "{CONFIGS_PATH}/classifiers/intents_snips.json"
+          }
+        ],
+        "out": ["y_predicted"]
+      },
+      "metadata": {
+        "variables": {
+          "MY_PATH": "/some/path",
+          "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+        }
+      }
+    }
+
+Variable ``DEEPPAVLOV_PATH`` is always preset to be a path to the ``deeppavlov`` python module.
+
+One can override configuration variables using environment variables with prefix ``DP_``. So environment variable
+``DP_VARIABLE_NAME`` will override ``VARIABLE_NAME`` inside a configuration file.
+
+For example, adding ``DP_ROOT_PATH=/my_path/to/large_hard_drive`` will make most configs use this path for downloading and reading  embeddings/models/datasets.
 
 Training
 --------
@@ -90,7 +132,7 @@ parameter which contains a list of ground truth answer names. For example:
     [
       {
         "id": "classes_vocab",
-        "name": "default_vocab",
+        "class_name": "default_vocab",
         "fit_on": ["y"],
         "level": "token",
         "save_path": "vocabs/classes.dict",
@@ -100,7 +142,7 @@ parameter which contains a list of ground truth answer names. For example:
         "in": ["x"],
         "in_y": ["y"],
         "out": ["y_predicted"],
-        "name": "intent_model",
+        "class_name": "intent_model",
         "save_path": "classifiers/intent_cnn",
         "load_path": "classifiers/intent_cnn",
         "classes_vocab": {
@@ -116,16 +158,16 @@ and ``train``:
 
     {
       "dataset_reader": {
-        "name": ...,
+        "class_name": ...,
         ...
-      }
+      },
       "dataset_iterator": {
-        "name": ...,
+        "class_name": ...,
         ...
       },
       "chainer": {
         ...
-      }
+      },
       "train": {
         ...
       }
@@ -144,8 +186,6 @@ Train Parameters
 
 -  ``epochs`` — maximum number of epochs to train NNModel, defaults to   ``-1`` (infinite)
 -  ``batch_size``,
--  ``metrics`` — list of names of registered :mod:`~deeppavlov.metrics` to evaluate the model. The first metric in
-   the list is used for early stopping
 -  ``metric_optimization`` — ``maximize`` or ``minimize`` a metric, defaults to ``maximize``
 -  ``validation_patience`` — how many times in a row the validation metric has to not improve for early stopping,
    defaults to ``5``
@@ -155,6 +195,37 @@ Train Parameters
 -  ``validate_best``, ``test_best`` flags to infer the best saved model on valid and test data, defaults to ``true``
 -  ``tensorboard_log_dir`` — path to write logged metrics during training. Use tensorboard to visualize metrics
    plots.
+-  ``metrics`` — list of :mod:`~deeppavlov.metrics` to evaluate the model.
+
+Metrics
+_______
+
+.. code:: python
+
+    "train": {
+      "metrics": [
+        "f1",
+        {
+          "name": "accuracy",
+          "inputs": ["y", "y_labels"]
+        },
+        {
+          "name": "roc_auc",
+          "inputs": ["y", "y_probabilities"]
+        }
+      ],
+      ...
+    }
+
+| The first metric in the list is used for early stopping.
+|
+| Each metric can be described as a JSON object with ``name`` and ``inputs`` properties, where ``name``
+  is a registered name of a metric function and ``inputs`` is a list of parameter names from chainer's
+  inner memory that will be passed to the metric function.
+|
+| If a metric is described as a single string, this string is interpreted as a registered name.
+|
+| Default value for ``inputs`` parameter is a concatenation of chainer's ``in_y`` and ``out`` parameters.
 
 
 DatasetReader

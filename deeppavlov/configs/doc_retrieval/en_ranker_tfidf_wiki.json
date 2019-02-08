@@ -1,28 +1,39 @@
 {
+  "dataset_reader": {
+    "class_name": "odqa_reader",
+    "data_path": "{DOWNLOADS_PATH}/odqa/enwiki",
+    "save_path": "{DOWNLOADS_PATH}/odqa/enwiki.db",
+    "dataset_format": "wiki"
+  },
   "dataset_iterator": {
-    "name": "sqlite_iterator",
-    "data_dir": "odqa",
+    "class_name": "sqlite_iterator",
     "shuffle": false,
-    "data_url": "http://files.deeppavlov.ai/datasets/wikipedia/enwiki.db"
+    "load_path": "{DOWNLOADS_PATH}/odqa/enwiki.db"
   },
   "chainer": {
     "in": [
-      "x"
+      "docs"
+    ],
+    "in_y": [
+      "doc_ids",
+      "doc_nums"
     ],
     "out": [
-      "y"
+      "tfidf_doc_ids"
     ],
     "pipe": [
       {
-        "name": "hashing_tfidf_vectorizer",
+        "class_name": "hashing_tfidf_vectorizer",
         "id": "vectorizer",
         "fit_on_batch": [
-          "x"
+          "docs",
+          "doc_ids",
+          "doc_nums"
         ],
-        "save_path": "odqa/enwiki_tfidf_matrix.npz",
-        "load_path": "odqa/enwiki_tfidf_matrix.npz",
+        "save_path": "{MODELS_PATH}/odqa/enwiki_tfidf_matrix.npz",
+        "load_path": "{MODELS_PATH}/odqa/enwiki_tfidf_matrix.npz",
         "tokenizer": {
-          "name": "stream_spacy_tokenizer",
+          "class_name": "stream_spacy_tokenizer",
           "lemmas": true,
           "ngram_range": [
             1,
@@ -31,14 +42,14 @@
         }
       },
       {
-        "name": "tfidf_ranker",
-        "top_n": 5,
+        "class_name": "tfidf_ranker",
+        "top_n": 25,
         "in": [
-          "x"
+          "docs"
         ],
         "out": [
-          "y",
-          "score"
+          "tfidf_doc_ids",
+          "tfidf_doc_scores"
         ],
         "vectorizer": "#vectorizer"
       }
@@ -50,16 +61,27 @@
     "batch_size": 10000
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/spacy.txt",
-      "../dp_requirements/en_core_web_sm.txt"
+      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
     ],
     "labels": {
       "server_utils": "Ranker"
     },
     "download": [
-      "http://files.deeppavlov.ai/datasets/wikipedia/enwiki.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/en_odqa.tar.gz"
+      {
+        "url": "http://files.deeppavlov.ai/datasets/wikipedia/enwiki.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/en_odqa.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      }
     ]
   }
 }

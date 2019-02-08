@@ -37,12 +37,14 @@ def read_requirements():
 def readme():
     with open(os.path.join(__location__, 'README.md'), encoding='utf8') as f:
         text = f.read()
-    return re.sub(r']\((?!https?://)', r'](https://github.com/deepmipt/DeepPavlov/blob/master/', text)
+    text = re.sub(r']\((?!https?://)', r'](https://github.com/deepmipt/DeepPavlov/blob/master/', text)
+    text = re.sub(r'\ssrc="(?!https?://)', r' src="https://raw.githubusercontent.com/deepmipt/DeepPavlov/master/', text)
+    return text
 
 
 setup(
     name='deeppavlov',
-    packages=find_packages(exclude=('tests', 'docs')) + ['dp_requirements'],
+    packages=find_packages(exclude=('tests', 'docs')),
     version=deeppavlov.__version__,
     description=deeppavlov.__description__,
     long_description=readme(),

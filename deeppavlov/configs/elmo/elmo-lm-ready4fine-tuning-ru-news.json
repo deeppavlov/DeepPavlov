@@ -1,0 +1,82 @@
+{
+  "dataset_reader": {
+    "class_name": "file_paths_reader",
+    "data_path": "{DOWNLOADS_PATH}/elmo-lm-ready4fine-example-data/data/",
+    "train": "train/*",
+    "valid": "heldout/*"
+  },
+  "dataset_iterator": {
+    "class_name": "elmo_file_paths_iterator",
+    "seed": 31415,
+    "unroll_steps": 20,
+    "max_word_length": 50,
+    "n_gpus": 1,
+    "shuffle": false,
+    "bos":"<S>",
+    "eos":"</S>",
+    "save_path": "{MODELS_PATH}/elmo-lm-ready4fine-tuning-ru-news/vocab.txt",
+    "load_path":"{MODELS_PATH}/elmo-lm-ready4fine-tuning-ru-news/vocab.txt"
+  },
+  "chainer": {
+    "in": [
+      "x_char_ids"
+    ],
+    "in_y": [
+      "y_token_ids"
+    ],
+    "pipe": [
+      {
+        "class_name": "elmo_model",
+        "options_json_path": "{MODELS_PATH}/elmo-lm-ready4fine-tuning-ru-news/options.json",
+        "unroll_steps": 20,
+        "batch_size": 128,
+        "save_path": "{MODELS_PATH}/elmo-lm-ready4fine-tuning-ru-news/saves/model",
+        "load_path": "{MODELS_PATH}/elmo-lm-ready4fine-tuning-ru-news/saves/model",
+        "in": ["x_char_ids", "y_token_ids"],
+        "in_y": [],
+        "n_gpus": 1,
+        "out": ["loss"]
+      }
+    ],
+   "out": [
+    "x_char_ids",
+    "y_token_ids"
+  ]
+  },
+  "train": {
+    "epochs": 20,
+    "batch_size": 128,
+    "log_every_n_batches": 100,
+    "val_every_n_epochs": 1,
+    "validation_patience": 4,
+    "metric_optimization": "minimize",
+    "metrics": [
+      {
+        "name": "elmo_loss2ppl",
+        "inputs": ["loss"]
+      }
+    ],
+    "tensorboard_log_dir": "{MODELS_PATH}/elmo-lm-ready4fine-tuning-ru-news/logs"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/elmo-lm-ready4fine-example-data.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/elmo-lm-ready4fine-tuning-ru-news.tar.gz",
+        "subdir": "{MODELS_PATH}/"
+      }
+    ]
+  }
+}

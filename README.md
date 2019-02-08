@@ -1,31 +1,47 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/deepmipt/DeepPavlov/blob/master/LICENSE)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
-
-__In version 0.0.6 everything from package `deeppavlov.skills` except `deeppavlov.skills.pattern_matching_skill` was moved to `deeppavlov.models` so your imports might break__  
-
+[![Downloads](https://pepy.tech/badge/deeppavlov)](https://pepy.tech/project/deeppavlov)
 
 DeepPavlov is an open-source conversational AI library built on [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). It is designed for
  * development of production ready chat-bots and complex conversational systems,
  * NLP and dialog systems research.
 
+
+### Breaking changes in version 0.1.0!
+- As of `version 0.1.0` all models, embeddings and other downloaded data for provided configurations are
+ by default downloaded to the `.deeppavlov` directory in current user's home directory.
+ This can be changed on per-model basis by modifying
+ a `ROOT_PATH` [variable](http://docs.deeppavlov.ai/en/latest/intro/config_description.html#variables)
+ or related fields one by one in model's configuration file.
+ 
+- In configuration files, for all components, dataset readers and iterators `"name"` and `"class"` fields are combined
+into the `"class_name"` field.
+
+- `deeppavlov.core.commands.infer.build_model_from_config()` was renamed to `build_model` and can be imported from the
+ `deeppavlov` module directly.
+
+- The way arguments are passed to metrics functions during training and evaluation was changed and
+ [documented](http://docs.deeppavlov.ai/en/latest/intro/config_description.html#metrics).
+
 # Hello Bot in DeepPavlov
 
 Import key components to build HelloBot. 
 ```python
-from deeppavlov.core.agent import Agent, HighestConfidenceSelector
 from deeppavlov.skills.pattern_matching_skill import PatternMatchingSkill
+from deeppavlov.agents.default_agent.default_agent import DefaultAgent 
+from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
 ```
 
-Create skills as pre-defined responses for a user's input containing specific keywords. Every skill returns response and confidence.
+Create skills as pre-defined responses for a user's input containing specific keywords or matching regexps. Every skill returns response and confidence.
 ```python
-hello = PatternMatchingSkill(responses=['Hello world! :)'], patterns=["hi", "hello", "good day"])
-bye = PatternMatchingSkill(['Goodbye world! :(', 'See you around.'], ["bye", "chao", "see you"])
-fallback = PatternMatchingSkill(["I don't understand, sorry :/", 'I can say "Hello world!" 8)'])
+hello = PatternMatchingSkill(responses=['Hello world!'], patterns=["hi", "hello", "good day"])
+bye = PatternMatchingSkill(['Goodbye world!', 'See you around'], patterns=["bye", "chao", "see you"])
+fallback = PatternMatchingSkill(["I don't understand, sorry", 'I can say "Hello world!"'])
 ```
 
 Agent executes skills and then takes response from the skill with the highest confidence.
 ```python
-HelloBot = Agent([hello, bye, fallback], skills_selector=HighestConfidenceSelector())
+HelloBot = DefaultAgent([hello, bye, fallback], skills_selector=HighestConfidenceSelector())
 ```
 
 Give the floor to the HelloBot!
@@ -33,7 +49,7 @@ Give the floor to the HelloBot!
 print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 ```
 
-[Jupyther notebook with HelloBot example.](docs/intro/hello_bot.ipynb)
+[Jupyter notebook with HelloBot example.](https://colab.research.google.com/github/deepmipt/DeepPavlov/blob/master/docs/intro/hello_bot.ipynb)
 
 
 # Features
@@ -42,23 +58,26 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 
 [Named Entity Recognition](http://docs.deeppavlov.ai/en/latest/components/ner.html) | [Slot filling](http://docs.deeppavlov.ai/en/latest/components/slot_filling.html)
 
-[Intent/Sentence Classification](http://docs.deeppavlov.ai/en/latest/components/classifiers.html) |  [Sentence Similarity/Ranking](http://docs.deeppavlov.ai/en/latest/components/neural_ranking.html)
+[Intent/Sentence Classification](http://docs.deeppavlov.ai/en/latest/components/classifiers.html) |  [Question Answering over Text (SQuAD)](http://docs.deeppavlov.ai/en/latest/components/squad.html) 
 
-[Question Answering over Text (SQuAD)](http://docs.deeppavlov.ai/en/latest/components/squad.html) 
+[Sentence Similarity/Ranking](http://docs.deeppavlov.ai/en/latest/components/neural_ranking.html) | [TF-IDF Ranking](http://docs.deeppavlov.ai/en/latest/components/tfidf_ranking.html) 
 
 [Morphological tagging](http://docs.deeppavlov.ai/en/latest/components/morphotagger.html) | [Automatic Spelling Correction](http://docs.deeppavlov.ai/en/latest/components/spelling_correction.html)
+
+[ELMo training and fine-tuning](http://docs.deeppavlov.ai/en/latest/apiref/models/elmo.html)
+
 
 **Skills**
 
 [Goal(Task)-oriented Bot](http://docs.deeppavlov.ai/en/latest/skills/go_bot.html) | [Seq2seq Goal-Oriented bot](http://docs.deeppavlov.ai/en/latest/skills/seq2seq_go_bot.html)
 
-[Open Domain Questions Answering](http://docs.deeppavlov.ai/en/latest/skills/odqa.html)
+[Open Domain Questions Answering](http://docs.deeppavlov.ai/en/latest/skills/odqa.html) | [eCommerce Bot](http://docs.deeppavlov.ai/en/master/skills/ecommerce.html) 
 
-[Frequently Asked Questions Answering](http://docs.deeppavlov.ai/en/latest/skills/faq.html)
+[Frequently Asked Questions Answering](http://docs.deeppavlov.ai/en/latest/skills/faq.html) | [Pattern Matching](http://docs.deeppavlov.ai/en/latest/skills/pattern_matching.html) 
 
 **Embeddings**
 
-[ELMo embeddings for the Russian language](http://docs.deeppavlov.ai/en/master/apiref/models/embedders.html#deeppavlov.models.embedders.elmo_embedder.ELMoEmbedder)
+[ELMo embeddings for the Russian language](http://docs.deeppavlov.ai/en/latest/apiref/models/embedders.html#deeppavlov.models.embedders.elmo_embedder.ELMoEmbedder)
 
 [FastText embeddings for the Russian language](http://docs.deeppavlov.ai/en/latest/intro/pretrained_vectors.html)
 
@@ -70,7 +89,7 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 
 0. Currently we support `Linux` and `Windows` platforms and `Python 3.6` 
     * **`Python 3.5` is not supported!**
-    * **`Windows` platform requires `Visual Studio 2015/2017` with `C++` build tools installed!**
+    * **`Windows` platform requires `Git` for Windows (for example, [git](https://git-scm.com/download/win)),  `Visual Studio 2015/2017` with `C++` build tools installed!**
 
 1. Create a virtual environment with `Python 3.6`:
     ```
@@ -118,14 +137,18 @@ python -m deeppavlov <mode> <path_to_config> [-d]
 or a name without the `.json` extension of one of the config files [provided](deeppavlov/configs) in this repository (e.g. `slotfill_dstc2`)
 
 For the `interactbot` mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` environment variable. Also if you want to get custom `/start` and `/help` Telegram messages for the running model you should:
-* Add section to `utils/telegram_utils/model_info.json` with your custom Telegram messages
-* In model config file specify `metadata.labels.telegram_utils` parameter with name which refers to the added section of `utils/telegram_utils/model_info.json`
+* Add section to [*utils/settings/models_info.json*](utils/settings/models_info.json) with your custom Telegram messages
+* In model config file specify `metadata.labels.telegram_utils` parameter with name which refers to the added section of [*utils/settings/models_info.json*](utils/settings/models_info.json)
 
-For the `interactmsbot` mode you should specify **Microsoft app id** in `-i` and **Microsoft app secret** in `-s`. Also before launch you should specify api deployment settings (host, port) in [*utils/server_config.json*](utils/server_utils/server_config.json) configuration file. Note, that Microsoft Bot Framework requires `https` endpoint with valid certificate from CA.
-Here is [detailed info on the Microsoft Bot Framework integration](http://docs.deeppavlov.ai/en/latest/devguides/ms_bot_integration.html) 
+For the `interactmsbot` mode you should specify **Microsoft app id** in `-i` and **Microsoft app secret** in `-s`. Also before launch you should specify api deployment settings (host, port) in [*utils/settings/server_config.json*](utils/settings/server_config.json) configuration file. Note, that Microsoft Bot Framework requires `https` endpoint with valid certificate from CA.
+Here is [detailed info on the Microsoft Bot Framework integration](http://docs.deeppavlov.ai/en/latest/devguides/ms_bot_integration.html)
 
-For `riseapi` mode you should specify api settings (host, port, etc.) in [*utils/server_config.json*](utils/server_utils/server_config.json) configuration file. If provided, values from *model_defaults* section override values for the same parameters from *common_defaults* section. Model names in *model_defaults* section should be similar to the class names of the models main component.
+You can also store your tokens, app ids, secrets in appropriate sections of [*utils/settings/server_config.json*](utils/settings/server_config.json). Please note, that all command line parameters override corresponding config ones.
+
+For `riseapi` mode you should specify api settings (host, port, etc.) in [*utils/settings/server_config.json*](utils/settings/server_config.json) configuration file. If provided, values from *model_defaults* section override values for the same parameters from *common_defaults* section. Model names in *model_defaults* section should be similar to the class names of the models main component.
 Here is [detailed info on the DeepPavlov REST API](http://docs.deeppavlov.ai/en/latest/devguides/rest_api.html)
+
+All DeepPavlov settings files are stored in `utils/settings` by default. You can get full path to it with `python -m deeppavlov.settings settings`. Also you can move it with with `python -m deeppavlov.settings settings -p <new/configs/dir/path>` (all your configuration settings will be preserved) or move it to default location with `python -m deeppavlov.settings settings -d` (all your configuration settings will be RESET to default ones).
 
 For `predict` you can specify path to input file with `-f` or `--input-file` parameter, otherwise, data will be taken
 from stdin.  
@@ -137,9 +160,17 @@ You can also specify batch size with `-b` or `--batch-size` parameter.
 
 [docs.deeppavlov.ai](http://docs.deeppavlov.ai/)
 
+# Docker images
+
+We have built several DeepPavlov based Docker images, which include:
+* DeepPavlov based Jupyter notebook Docker image;
+* Docker images which serve some of our models and allow to access them via REST API (`riseapi` mode).
+
+Here is our [DockerHub repository](https://hub.docker.com/u/deeppavlov/) with images and deployment instructions.   
+
 # Tutorials
 
-Jupyter notebooks and videos explaining how to use DeepPalov for different tasks can be found in [/examples/tutorials/](examples/tutorials/)
+Jupyter notebooks and videos explaining how to use DeepPalov for different tasks can be found in [/examples/tutorials/](examples/tutorials)
 
 # License
 
@@ -151,8 +182,12 @@ If you have any questions, bug reports or feature requests, please feel free to 
 
 # The Team
 
+<p align="center">
+<img src="docs/_static/ipavlov_logo.png" width="20%" height="20%"/>
+</p>
+
 DeepPavlov is built and maintained by [Neural Networks and Deep Learning Lab](https://mipt.ru/english/research/labs/neural-networks-and-deep-learning-lab) at [MIPT](https://mipt.ru/english/) within [iPavlov](http://ipavlov.ai/) project (part of [National Technology Initiative](https://asi.ru/eng/nti/)) and in partnership with [Sberbank](http://www.sberbank.com/).
 
 <p align="center">
-<img src="https://ipavlov.ai/img/ipavlov_footer.png" width="50%" height="50%"/>
+<img src="docs/_static/ipavlov_footer.png" width="50%" height="50%"/>
 </p>
