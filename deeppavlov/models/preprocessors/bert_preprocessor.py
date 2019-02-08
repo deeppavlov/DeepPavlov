@@ -40,30 +40,23 @@ class BertPreprocessor(Component):
 
         return convert_examples_to_features(examples, self.max_seq_length, self.tokenizer)
 
-class BertPreprocessor(Component):
-    # TODO: docs
 
-    def __init__(self, vocab_file, do_lower_case=True, max_seq_length: int = 512, *args, **kwargs):
-        self.max_seq_length = max_seq_length
-        vocab_file = str(expand_path(vocab_file))
-        self.tokenizer = FullTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
-
-    def __call__(self, texts_a, texts_b=None):
-        if texts_b is None:
-            texts_b = [None] * len(texts_a)
-        # TODO: add unique id
-        examples = [InputExample(unique_id=0, text_a=text_a, text_b=text_b) for text_a, text_b in zip(texts_a, texts_b)]
-
-        return convert_examples_to_features(examples, self.max_seq_length, self.tokenizer)
-
+@register('bert_preprocessor')
 class BertSplitPreprocessor(BertPreprocessor):
     # TODO: docs
 
     def __call__(self, texts):
+        examples = []
+        texts_a = texts[0]
+        if len(texts) == 1:
+            texts_b = [None] * len(texts[0])
+            # TODO: add unique id
+            ex = [InputExample(unique_id=0, text_a=text_a, text_b=text_b) for text_a, text_b in zip(texts_a, texts_b)]
+            examples.append(ex)
+        else:
+            for t in texts[1:]:
+                ex = [InputExample(unique_id=0, text_a=text_a, text_b=text_b) for text_a, text_b in
+                      zip(texts_a, t)]
+                examples.append(ex)
 
-        if len(texts) is None:
-            texts_b = [None] * len(texts_a)
-        # TODO: add unique id
-        examples = [InputExample(unique_id=0, text_a=text_a, text_b=text_b) for text_a, text_b in zip(texts_a, texts_b)]
-
-        return convert_examples_to_features(examples, self.max_seq_length, self.tokenizer)
+        return [convert_examples_to_features(el, self.max_seq_length, self.tokenizer) for el in examples]
