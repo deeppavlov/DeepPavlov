@@ -28,15 +28,13 @@ from nltk.corpus import stopwords
 @register('entity_linking')
 class EntityLinking(Component):
     """
-        Class for linking the words in the question and the corresponding entity
+        Class for linking words in the question and the corresponding entity
         in Freebase, then extracting triplets from Freebase with the entity
     """
     
     def __init__(self, entities_load_path: str,
                  freebase_load_path: str,
                  *args, **kwargs) -> None:
-
-        self.inverted_index = defaultdict(list)
         self.stopword = set(stopwords.words('english'))
         entities_load_path = Path(entities_load_path).expanduser()
         with open(entities_load_path, "rb") as handler:
