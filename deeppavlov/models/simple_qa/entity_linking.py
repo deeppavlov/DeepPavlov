@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 from typing import List, Tuple
 
 from deeppavlov.core.common.registry import register
@@ -58,7 +57,8 @@ class EntityLinking(Component):
                 if len(split) < 3:
                     count += 1
 
-    def get_ngram(self, text: str) -> List[str]:
+    @staticmethod
+    def get_ngram(text: str) -> List[str]:
         ngram = []
         tokens = text.split()
         for i in range(len(tokens)+1):
@@ -73,7 +73,7 @@ class EntityLinking(Component):
     
     def __call__(self, texts: List[List[str]],
                  tags: List[List[int]],
-                  *args, **kwargs) -> List[List[List[str]]]:
+                 *args, **kwargs) -> List[List[List[str]]]:
         entities = []
         for i, text in enumerate(texts):
             entity = ""
