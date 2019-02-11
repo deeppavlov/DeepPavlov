@@ -164,8 +164,8 @@
   "train": {
     "epochs": {
       "evolve_range": [
-        50,
-        500
+        5,
+        10
       ],
       "discrete": true
     },
