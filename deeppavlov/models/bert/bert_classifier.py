@@ -49,9 +49,9 @@ class BertClassifierModel(LRScheduledTFModel):
         self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
 
         if attention_probs_keep_prob is not None:
-            self.bert_config.attention_probs_keep_prob = 1.0 - attention_probs_keep_prob
+            self.bert_config.attention_probs_dropout_prob = 1.0 - attention_probs_keep_prob
         if hidden_keep_prob is not None:
-            self.bert_config.hidden_keep_prob = 1.0 - hidden_keep_prob
+            self.bert_config.hidden_dropout_prob = 1.0 - hidden_keep_prob
 
         self.sess_config = tf.ConfigProto(allow_soft_placement=True)
         self.sess_config.gpu_options.allow_growth = True

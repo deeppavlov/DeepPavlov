@@ -48,8 +48,6 @@
         "save_path": "{MODELS_PATH}/intents_dstc2_bert/model",
         "load_path": "{MODELS_PATH}/intents_dstc2_bert/model",
         "keep_prob": 0.5,
-        "attention_probs_keep_prob": 0.9,
-        "hidden_keep_prob": 0.6,
         "learning_rate": 2e-05,
         "learning_rate_drop_patience": 3,
         "learning_rate_drop_div": 2.0,
