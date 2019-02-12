@@ -1,5 +1,5 @@
 {
-  "info": "(v3) Using Books cleaned dataset+ VK dialogs+ pBot+ Toloka. There are 512924 items in total.",
+  "info": "(v3) Using Books cleaned dataset+ VK dialogs+ pBot+ Toloka. There are 540158 items in total.",
   "chainer": {
     "in": ["utterances_batch", "history_batch", "states_batch"],
     "pipe": [
