@@ -1,4 +1,57 @@
-from typing import List
+from typing import List, Dict
+import json
+from pymongo import MongoClient
+
+state_scheme = {'user_id': {'personality': None, 'device': None},
+                'sess_id': None,
+                'utt_id': None,
+                'user_type': None,
+                'annotations': {'ner': None,
+                                'sentiment': None,
+                                'coref': None,
+                                'topic': None},
+                'text': None,
+                'confidence': None,
+                'active_skill': None,
+                'date': None,
+                'location': None}
+
+
+# class StateScheme:
+#
+#     def __init__(self):
+#         self.user_id = {
+#             "personality": None,
+#             "device": None
+#         }
+#         self.sess_id = None
+#         self.utt_id = None
+#         self.user_type = "human"
+#         self.annotations = {
+#             "ner": None,
+#             "sentiment": None,
+#             "coref": None,
+#             "topic": None
+#         }
+#         self.text = None
+#         self.confidence = None
+#         self.active_skill = None
+#         self.date = None
+#         self.location = None
+
+
+class MongoConnector:
+    def __init__(self, database, collection, host, port):
+        self.database = database
+        self.collection = collection
+        self.host = host
+        self.port = port
+
+    def connect(self):
+        connection = MongoClient(self.host, self.port)
+        db = connection[self.database]
+        collection = db[self.collection]
+        return collection
 
 
 class State:
@@ -35,24 +88,48 @@ class State:
 
     """
 
-    def __init__(self, connector, db_conn: str = None, table: str = None, user_id_col: str = None,
-                 sess_id_col: str = None, state_col: str = None):
-        sess_state = connector(db_conn, table, user_id_col, sess_id_col, state_col)
-        self.dialog_state = sess_state.get('dialog_state')
-        self.memory = sess_state.get('memory')
-        self.skill_state = sess_state.get('skill_state')
+    test_state = {
+        "user_data": {
+            "user_id"
+            "personality",
+            "device",
+        },
+        "sess_id"
+        "utt_id"
+        "user_type"
+        "annotations": {
+            "ner",
+            "sentiment",
+            "tokens",
+            "coref",
+            "topic"
+        },
+        "text"
+        "confidence"
+        "active_skill"
+        "date"
+        "location"
+    }
 
-    def update_state(self, state):
-        """
-        Update dialog_state, memory and skill_state attributes.
+    def __init__(self, connector):
+        connection = connector.connect()
 
-        Args:
-            state: current state
+        # self.state = connection.get('state')
+        self.state_scheme = state_scheme
 
-        Returns: None
+    def update_annotations(self, annotations: Dict):
+        self.state_scheme.annotations.update(**annotations)
 
-        """
+    def update_text(self, text: str):
+        self.state_scheme.text = text
+
+    def get_session_state(self, sess_id):
+        self.connection.get("user_id")
+
+    def put_session_state(self):
         pass
+
+    # def get_user_state(self, user_id):
 
     def dump_state(self):
         """
