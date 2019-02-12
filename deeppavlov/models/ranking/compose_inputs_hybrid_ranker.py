@@ -26,9 +26,11 @@ class ComposeInputsHybridRanker(Component):
 
     def __init__(self,
                  context_depth: int = 1,
+                 use_context_for_query: bool = False,
                  **kwargs):
-         self.context_depth = context_depth
-         self.num_turns_const = 10
+        self.context_depth = context_depth
+        self.num_turns_const = 10
+        self.use_history = use_context_for_query
 
     def __call__(self,
                  utterances_batch: list,
@@ -42,7 +44,9 @@ class ComposeInputsHybridRanker(Component):
             full_context = history_batch[i][-self.num_turns_const + 1:] + [utterances_batch[i]]
             expanded_context = self._expand_context(full_context, padding="pre")
 
-            query_batch.append(expanded_context[-1])   # search TF-IDF by last utterance only!
+            # search TF-IDF by last utterance only OR using all history
+            query = expanded_context[-1] if not self.use_history else " ".join(expanded_context)
+            query_batch.append(query)
             # query_batch.append(" ".join(expanded_context))
             expanded_context_batch.append(expanded_context)
 
@@ -77,6 +81,6 @@ class ComposeInputsHybridRanker(Component):
                 sent_list.extend(tmp)
 
             for i in range(len(sent_list) - self.context_depth):
-                sent_list[i] = ''  # erase context until the desired depth
+                sent_list[i] = ''  # erase context until the desired depth TODO: this is a trick
 
             return sent_list
