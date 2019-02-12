@@ -17,21 +17,20 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
 from deeppavlov.core.commands.utils import expand_path
 from logging import getLogger
-import numpy as np
 
 from bert_dp.modeling import BertConfig, BertModel
 
 logger = getLogger(__name__)
 
 
-@register('bert_ranker')
-class BertRankerModel(LRScheduledTFModel):
+@register('bert_classifier')
+class BertClassifierModel(LRScheduledTFModel):
     # TODO: docs
     # TODO: add head-only pre-training
     def __init__(self, bert_config_file, n_classes, keep_prob,
                  one_hot_labels=False, multilabel=False,
                  attention_probs_keep_prob=None, hidden_keep_prob=None,
-                 return_probas=False, pretrained_bert=None, min_learning_rate=1e-06, **kwargs) -> None:
+                 return_probas=True, pretrained_bert=None, min_learning_rate=1e-06, **kwargs) -> None:
         super().__init__(**kwargs)
 
         self.return_probas = return_probas
@@ -50,9 +49,9 @@ class BertRankerModel(LRScheduledTFModel):
         self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
 
         if attention_probs_keep_prob is not None:
-            self.bert_config.attention_probs_dropout_prob = 1.0 - attention_probs_keep_prob
+            self.bert_config.attention_probs_keep_prob = 1.0 - attention_probs_keep_prob
         if hidden_keep_prob is not None:
-            self.bert_config.hidden_dropout_prob = 1.0 - hidden_keep_prob
+            self.bert_config.hidden_keep_prob = 1.0 - hidden_keep_prob
 
         self.sess_config = tf.ConfigProto(allow_soft_placement=True)
         self.sess_config.gpu_options.allow_growth = True
@@ -81,29 +80,17 @@ class BertRankerModel(LRScheduledTFModel):
 
     def _init_graph(self):
         self._init_placeholders()
-
         with tf.variable_scope("model"):
-            model_a = BertModel(
-                config=self.bert_config,
-                is_training=self.is_train_ph,
-                input_ids=self.input_masks_ph_a,
-                input_mask=self.input_masks_ph_a,
-                token_type_ids=self.token_types_ph_a,
-                use_one_hot_embeddings=False)
+            self.bert = BertModel(config=self.bert_config,
+                                  is_training=self.is_train_ph,
+                                  input_ids=self.input_ids_ph,
+                                  input_mask=self.input_masks_ph,
+                                  token_type_ids=self.token_types_ph,
+                                  use_one_hot_embeddings=False,
+                                  )
 
-        with tf.variable_scope("model", reuse=True):
-            model_b = BertModel(
-                config=self.bert_config,
-                is_training=self.is_train_ph,
-                input_ids=self.input_masks_ph_b,
-                input_mask=self.input_masks_ph_b,
-                token_type_ids=self.token_types_ph_b,
-                use_one_hot_embeddings=False)
-
-        output_layer_a = model_a.get_sequence_output()
-        output_layer_b = model_b.get_sequence_output()
+        output_layer_a = self.bert.get_sequence_output()
         output_layer_a = tf.reduce_max(output_layer_a, axis=1)
-        output_layer_b = tf.reduce_max(output_layer_b, axis=1)
         hidden_size = output_layer_a.shape[-1].value
 
         with tf.variable_scope("W"):
@@ -113,31 +100,15 @@ class BertRankerModel(LRScheduledTFModel):
                 activation=tf.tanh,
                 kernel_initializer=tf.truncated_normal_initializer(stddev=0.02))
 
-        with tf.variable_scope("W", reuse=True):
-            output_layer_b = tf.layers.dense(
-                output_layer_b,
-                hidden_size,
-                activation=tf.tanh,
-                kernel_initializer=tf.truncated_normal_initializer(stddev=0.02))
-
-        # output_layer_a = model_a.get_pooled_output()
-        # output_layer_b = model_b.get_pooled_output()
-
         with tf.variable_scope("loss"):
-            # output_layer_a = tf.nn.dropout(output_layer_a, keep_prob=0.5)
-            # output_layer_b = tf.nn.dropout(output_layer_b, keep_prob=0.5)
-            self.loss = tf.contrib.losses.metric_learning.npairs_loss(self.y_ph, output_layer_a, output_layer_b)
-            # logits = tf.multiply(output_layer_a, output_layer_b)
-            # self.y_probas = tf.reduce_sum(logits, 1)
-            self.y_probas = output_layer_a
+            with tf.variable_scope("loss"):
+                self.loss = tf.contrib.losses.metric_learning.npairs_loss(self.y_ph, output_layer_a, output_layer_a)
+                self.y_probas = output_layer_a
 
     def _init_placeholders(self):
-        self.input_ids_ph_a = tf.placeholder(shape=(None, None), dtype=tf.int32, name='ids_ph_a')
-        self.input_masks_ph_a = tf.placeholder(shape=(None, None), dtype=tf.int32, name='masks_ph_a')
-        self.token_types_ph_a = tf.placeholder(shape=(None, None), dtype=tf.int32, name='token_types_ph_a')
-        self.input_ids_ph_b = tf.placeholder(shape=(None, None), dtype=tf.int32, name='ids_ph_b')
-        self.input_masks_ph_b = tf.placeholder(shape=(None, None), dtype=tf.int32, name='masks_ph_b')
-        self.token_types_ph_b = tf.placeholder(shape=(None, None), dtype=tf.int32, name='token_types_ph_b')
+        self.input_ids_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='ids_ph')
+        self.input_masks_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='masks_ph')
+        self.token_types_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='token_types_ph')
 
         if not self.one_hot_labels:
             self.y_ph = tf.placeholder(shape=(None, ), dtype=tf.int32, name='y_ph')
@@ -155,16 +126,11 @@ class BertRankerModel(LRScheduledTFModel):
                                                initializer=tf.constant_initializer(0), trainable=False)
             self.train_op = self.get_train_op(self.loss, learning_rate=self.learning_rate_ph)
 
-    def _build_feed_dict(self, input_ids_a, input_masks_a, token_types_a,
-                         input_ids_b, input_masks_b, token_types_b, y=None):
+    def _build_feed_dict(self, input_ids, input_masks, token_types, y=None):
         feed_dict = {
-            self.input_ids_ph_a: input_ids_a,
-            self.input_masks_ph_a: input_masks_a,
-            self.token_types_ph_a: token_types_a,
-            self.input_ids_ph_b: input_ids_b,
-            self.input_masks_ph_b: input_masks_b,
-            self.token_types_ph_b: token_types_b,
-
+            self.input_ids_ph: input_ids,
+            self.input_masks_ph: input_masks,
+            self.token_types_ph: token_types,
         }
         if y is not None:
             feed_dict.update({
@@ -175,9 +141,6 @@ class BertRankerModel(LRScheduledTFModel):
             })
 
         return feed_dict
-
-    def train_on_batch(self, features, y):
-        pass
 
     def __call__(self, features_list):
         y_pred = []
