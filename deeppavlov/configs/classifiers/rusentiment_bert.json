@@ -10,6 +10,7 @@
   "dataset_iterator": {
     "class_name": "basic_classification_iterator",
     "seed": 42,
+    "split_seed": 23,
     "field_to_split": "train",
     "split_fields": ["train", "valid"],
     "split_proportions": [0.9, 0.1]
@@ -20,7 +21,7 @@
     "pipe": [
       {
         "class_name": "bert_preprocessor",
-        "vocab_file": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12/vocab.txt",
+        "vocab_file": "{DOWNLOADS_PATH}/bert_models/russian_1M_final_ckpt/vocab.txt",
         "do_lower_case": false,
         "max_seq_length": 64,
         "in": ["x"],
@@ -30,8 +31,8 @@
         "id": "classes_vocab",
         "class_name": "simple_vocab",
         "fit_on": ["y"],
-        "save_path": "{MODELS_PATH}/rusentiment_bert/classes.dict",
-        "load_path": "{MODELS_PATH}/rusentiment_bert/classes.dict",
+        "save_path": "{MODELS_PATH}/classes.dict",
+        "load_path": "{MODELS_PATH}/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -47,16 +48,10 @@
         "n_classes": "#classes_vocab.len",
         "return_probas": true,
         "one_hot_labels": true,
-        "bert_config_file": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12/bert_config.json",
-        "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12/bert_model.ckpt",
-        "save_path": "{MODELS_PATH}/rusentiment_bert/model_multi",
-        "load_path": "{MODELS_PATH}/rusentiment_bert/model_multi",
         "keep_prob": 0.5,
-        "attention_probs_keep_prob": 0.9,
-        "hidden_keep_prob": 0.6,
         "learning_rate": 2e-05,
-        "learning_rate_drop_patience": 2,
-        "learning_rate_drop_div": 2.0,
+        "learning_rate_drop_patience": 5,
+        "learning_rate_drop_div": 5.0,
         "in": ["bert_features"],
         "in_y": ["y_onehot"],
         "out": ["y_pred_probas"]
@@ -76,29 +71,30 @@
     "out": ["y_pred_labels"]
   },
   "train": {
+    "batch_size": 64,
+    "epochs": 100,
     "metrics": [
-      "sets_accuracy",
       "f1_macro",
+      "sets_accuracy",
       {
         "name": "roc_auc",
         "inputs": ["y_onehot", "y_pred_probas"]
       }
     ],
     "show_examples": false,
-    "batch_size": 32,
     "pytest_max_batches": 2,
     "validation_patience": 10,
-    "val_every_n_batches": 100,
-    "log_every_n_batches": 100,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
     "validate_best": true,
     "test_best": true,
-    "tensorboard_log_dir": "{MODELS_PATH}/rusentiment_bert/logs_multi"
+    "tensorboard_log_dir": "{MODELS_PATH}/"
   },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models"
+      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/rusentiment_rubert_v1/"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -110,7 +106,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/multi_cased_L-12_H-768_A-12.zip",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/russian_bert/russian_1M_final_ckpt.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/bert_models"
       }
     ]
