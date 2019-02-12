@@ -2,14 +2,13 @@ from datetime import datetime
 import uuid
 import json
 from json import JSONEncoder
-from bson import json_util
 
 from mongoengine import Document, DynamicDocument, ReferenceField, ListField, StringField, DynamicField, \
     UUIDField, DateTimeField, FloatField, DictField
 
 from mongoengine import connect
 
-connect(host='localhost', port=27017)
+db = connect(host='localhost', port=27017)
 
 
 class User(Document):
@@ -29,26 +28,26 @@ class User(Document):
 
 class Utterance(Document):
     # utt_id = UUIDField(required=True) # managed by db
-    channel_type = StringField(choices=['telegram', 'vkontakte', 'facebook'], default='telegram')
     text = StringField(required=True)
     annotations = DictField(default={'ner': {}, 'coref': {}, 'sentiment': {}})
     user = ReferenceField(User, required=True)
+    date = DateTimeField(required=True)
 
     meta = {'allow_inheritance': True}
 
     def to_dict(self):
         return {'id': str(self.id),
-                'channel_type': self.channel_type,
                 'text': self.text,
                 'user_id': str(self.user.id),
-                'annotations': self.annotations}
+                'annotations': self.annotations,
+                'date': str(self.date)}
 
 
 class DialogHistory(DynamicDocument):
     utterances = ListField(ReferenceField(Utterance), required=True)
 
     def to_dict(self):
-        return {'id': str(self.id), 'utterances': [utt.to_dict() for utt in self.utterances]}
+        return {'utterances': [utt.to_dict() for utt in self.utterances]}
 
 
 # class Annotations(Document):
@@ -70,26 +69,28 @@ class BotUtterance(Utterance):
             'id': str(self.id),
             'active_skill': self.active_skill,
             'confidence': self.confidence,
-            'channel_type': self.channel_type,
             'text': self.text,
-            'user_id': str(self.user.id)
+            'user_id': str(self.user.id),
+            'annotations': self.annotations,
+            'date': str(self.date)
         }
 
 
 class Dialog(DynamicDocument):
     # dialog_id = UUIDField(required=True) #managed by db
     location = DynamicField()
-    date = DateTimeField(required=True)
     history = ReferenceField(DialogHistory, required=True)
     users = ListField(ReferenceField(User), required=True)
+    channel_type = StringField(choices=['telegram', 'vkontakte', 'facebook'], default='telegram')
 
     def to_dict(self):
         return {
             'id': str(self.id),
             'location': self.location,
-            'date': str(self.date),
             'history': self.history.to_dict(),
-            'users': [u.to_dict() for u in self.users]
+            'user': [u.to_dict() for u in self.users if u.user_type == 'human'][0],
+            'bot': [u.to_dict() for u in self.users if u.user_type == 'bot'][0],
+            'channel_type': self.channel_type
         }
 
 
@@ -120,30 +121,43 @@ class MongoEncoder(JSONEncoder):
 # Utterance.objects.filter(users=some_user)
 # User.id
 
+Dialog.objects.delete()
+Utterance.objects.delete()
+BotUtterance.objects.delete()
+DialogHistory.objects.delete()
+User.objects.delete()
+
 ########################### Test case #######################################
 
 default_anno = {"ner": [], "coref": [], "sentiment": []}
 h_user = User(user_telegram_id=uuid.uuid4())
 b_user = User(user_telegram_id=uuid.uuid4(), user_type='bot')
 
-h_utt_1 = Utterance(text='Привет!', user=h_user, annotations=default_anno)
-b_utt_1 = BotUtterance(text='Привет, я бот!', user=b_user, annotations=default_anno, active_skill='chitchat', confidence=0.85)
+h_utt_1 = Utterance(text='Привет!', user=h_user, annotations=default_anno, date=datetime.utcnow())
+b_utt_1 = BotUtterance(text='Привет, я бот!', user=b_user, annotations=default_anno, active_skill='chitchat',
+                       confidence=0.85, date=datetime.utcnow())
 # h_anno_1 = Annotations(default_anno, utterance=h_utt_1)
 # b_anno_1 = Annotations(default_anno, utterance=b_utt_1)
 
-h_utt_2 = Utterance(channel_type='telegram', text='Как дела?', user=h_user, annotations=default_anno)
-b_utt_2 = BotUtterance(channel_type='telegram', text='Хорошо, а у тебя как?', user=b_user, annotations=default_anno, active_skill='chitchat',
-                       confidence=0.9333)
+h_utt_2 = Utterance(text='Как дела?', user=h_user, annotations=default_anno,
+                    date=datetime.utcnow())
+b_utt_2 = BotUtterance(text='Хорошо, а у тебя как?', user=b_user, annotations=default_anno,
+                       active_skill='chitchat',
+                       confidence=0.9333, date=datetime.utcnow())
 # h_anno_2 = Annotations(default_anno, utterance=h_utt_2)
 # b_anno_2 = Annotations(default_anno, utterance=b_utt_2)
 
-h_utt_3 = Utterance(text='И у меня нормально. Когда родился Петр Первый?', user=h_user, annotations=default_anno)
-b_utt_3 = BotUtterance(text='в 1672 году', user=b_user, annotations=default_anno, active_skill='odqa', confidence=0.74)
+h_utt_3 = Utterance(text='И у меня нормально. Когда родился Петр Первый?', user=h_user, annotations=default_anno,
+                    date=datetime.utcnow())
+b_utt_3 = BotUtterance(text='в 1672 году', user=b_user, annotations=default_anno, active_skill='odqa', confidence=0.74,
+                       date=datetime.utcnow())
 # h_anno_3 = Annotations(default_anno, utterance=h_utt_3)
 # b_anno_3 = Annotations(default_anno, utterance=b_utt_3)
 
-dh = DialogHistory([h_utt_1, b_utt_1, h_utt_2, b_utt_2, h_utt_3, b_utt_3])
-d = Dialog(date=datetime.utcnow(), history=dh, users=[h_user, b_user])
+h_utt_4 = Utterance(text='спасибо', user=h_user, annotations=default_anno, date=datetime.utcnow())
+
+dh = DialogHistory([h_utt_1, b_utt_1, h_utt_2, b_utt_2, h_utt_3, b_utt_3, h_utt_4])
+d = Dialog(history=dh, users=[h_user, b_user], channel_type='telegram')
 
 h_user.save()
 b_user.save()
@@ -157,11 +171,33 @@ b_utt_2.save()
 h_utt_3.save()
 b_utt_3.save()
 
+h_utt_4.save()
+
 dh.save()
 d.save()
 
-for d in Dialog.objects:
-    info = d.to_dict()
-    total = {'version': 0.9, 'context': info}
-    print(total)
+h_utt_5 = Utterance(text='Когда началась Вторая Мировая?', user=h_user, annotations=default_anno,
+                    date=datetime.utcnow())
+b_utt_5 = BotUtterance(text='1939', user=b_user, annotations=default_anno, active_skill='odqa', confidence=0.99,
+                       date=datetime.utcnow())
+h_utt_6 = Utterance(text='Спасибо, бот!', user=h_user, annotations=default_anno, date=datetime.utcnow())
+dh_1 = DialogHistory([h_utt_5, b_utt_5, h_utt_6])
+d_1 = Dialog(history=dh_1, users=[h_user, b_user], channel_type='facebook')
+h_utt_5.save()
+b_utt_5.save()
+h_utt_6.save()
+dh_1.save()
+d_1.save()
 
+count = 0
+total = {'version': 0.9}
+
+batch = []
+for d in Dialog.objects:
+    if count < 2:
+        info = d.to_dict()
+        batch.append(info)
+        count += 1
+
+total.update({'batch': batch})
+print(total)

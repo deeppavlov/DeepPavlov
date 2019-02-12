@@ -3,107 +3,232 @@
 ```json
 {
   "version": 0.9,
-  "context": {
-    "id": "5c62c80e0110b34e257d0d6f",
-    "location": null,
-    "date": "2019-02-12 13:20:14.719000",
-    "history": {
-      "id": "5c62c80e0110b34e257d0d6e",
-      "utterances": [
-        {
-          "id": "5c62c80e0110b34e257d0d68",
-          "channel_type": "telegram",
-          "text": "Привет!",
-          "user_id": "5c62c80e0110b34e257d0d66",
-          "annotations": {
-            "ner": [
-              
-            ],
-            "coref": [
-              
-            ],
-            "sentiment": [
-              
-            ]
+  "batch": [
+    {
+      "id": "5c62f7330110b36bdd1dc5df",
+      "location": null,
+      "history": {
+        "utterances": [
+          {
+            "id": "5c62f7330110b36bdd1dc5d7",
+            "text": "Привет!",
+            "user_id": "5c62f7330110b36bdd1dc5d5",
+            "annotations": {
+              "ner": [
+                
+              ],
+              "coref": [
+                
+              ],
+              "sentiment": [
+                
+              ]
+            },
+            "date": "2019-02-12 16:41:23.142000"
+          },
+          {
+            "id": "5c62f7330110b36bdd1dc5d8",
+            "active_skill": "chitchat",
+            "confidence": 0.85,
+            "text": "Привет, я бот!",
+            "user_id": "5c62f7330110b36bdd1dc5d6",
+            "annotations": {
+              "ner": [
+                
+              ],
+              "coref": [
+                
+              ],
+              "sentiment": [
+                
+              ]
+            },
+            "date": "2019-02-12 16:41:23.142000"
+          },
+          {
+            "id": "5c62f7330110b36bdd1dc5d9",
+            "text": "Как дела?",
+            "user_id": "5c62f7330110b36bdd1dc5d5",
+            "annotations": {
+              "ner": [
+                
+              ],
+              "coref": [
+                
+              ],
+              "sentiment": [
+                
+              ]
+            },
+            "date": "2019-02-12 16:41:23.142000"
+          },
+          {
+            "id": "5c62f7330110b36bdd1dc5da",
+            "active_skill": "chitchat",
+            "confidence": 0.9333,
+            "text": "Хорошо, а у тебя как?",
+            "user_id": "5c62f7330110b36bdd1dc5d6",
+            "annotations": {
+              "ner": [
+                
+              ],
+              "coref": [
+                
+              ],
+              "sentiment": [
+                
+              ]
+            },
+            "date": "2019-02-12 16:41:23.142000"
+          },
+          {
+            "id": "5c62f7330110b36bdd1dc5db",
+            "text": "И у меня нормально. Когда родился Петр Первый?",
+            "user_id": "5c62f7330110b36bdd1dc5d5",
+            "annotations": {
+              "ner": [
+                
+              ],
+              "coref": [
+                
+              ],
+              "sentiment": [
+                
+              ]
+            },
+            "date": "2019-02-12 16:41:23.143000"
+          },
+          {
+            "id": "5c62f7330110b36bdd1dc5dc",
+            "active_skill": "odqa",
+            "confidence": 0.74,
+            "text": "в 1672 году",
+            "user_id": "5c62f7330110b36bdd1dc5d6",
+            "annotations": {
+              "ner": [
+                
+              ],
+              "coref": [
+                
+              ],
+              "sentiment": [
+                
+              ]
+            },
+            "date": "2019-02-12 16:41:23.143000"
+          },
+          {
+            "id": "5c62f7330110b36bdd1dc5dd",
+            "text": "спасибо",
+            "user_id": "5c62f7330110b36bdd1dc5d5",
+            "annotations": {
+              "ner": [
+                
+              ],
+              "coref": [
+                
+              ],
+              "sentiment": [
+                
+              ]
+            },
+            "date": "2019-02-12 16:41:23.143000"
           }
-        },
-        {
-          "id": "5c62c80e0110b34e257d0d69",
-          "active_skill": "chitchat",
-          "confidence": 0.85,
-          "channel_type": "telegram",
-          "text": "Привет, я бот!",
-          "user_id": "5c62c80e0110b34e257d0d67"
-        },
-        {
-          "id": "5c62c80e0110b34e257d0d6a",
-          "channel_type": "telegram",
-          "text": "Как дела?",
-          "user_id": "5c62c80e0110b34e257d0d66",
-          "annotations": {
-            "ner": [
-              
-            ],
-            "coref": [
-              
-            ],
-            "sentiment": [
-              
-            ]
-          }
-        },
-        {
-          "id": "5c62c80e0110b34e257d0d6b",
-          "active_skill": "chitchat",
-          "confidence": 0.9333,
-          "channel_type": "telegram",
-          "text": "Хорошо, а у тебя как?",
-          "user_id": "5c62c80e0110b34e257d0d67"
-        },
-        {
-          "id": "5c62c80e0110b34e257d0d6c",
-          "channel_type": "telegram",
-          "text": "И у меня нормально. Когда родился Петр Первый?",
-          "user_id": "5c62c80e0110b34e257d0d66",
-          "annotations": {
-            "ner": [
-              
-            ],
-            "coref": [
-              
-            ],
-            "sentiment": [
-              
-            ]
-          }
-        },
-        {
-          "id": "5c62c80e0110b34e257d0d6d",
-          "active_skill": "odqa",
-          "confidence": 0.74,
-          "channel_type": "telegram",
-          "text": "в 1672 году",
-          "user_id": "5c62c80e0110b34e257d0d67"
-        }
-      ]
-    },
-    "users": [
-      {
-        "id": "5c62c80e0110b34e257d0d66",
-        "user_telegram_id": "47a4aa51-116f-4384-a383-72da90487985",
+        ]
+      },
+      "user": {
+        "id": "5c62f7330110b36bdd1dc5d5",
+        "user_telegram_id": "44d279ea-62ab-4c71-9adb-ed69143c12eb",
         "user_type": "human",
         "device_type": null,
-        "presonality": null
+        "personality": null
       },
-      {
-        "id": "5c62c80e0110b34e257d0d67",
-        "user_telegram_id": "2b0fc782-1d3a-4c14-a4c0-83c7ca2702d6",
+      "bot": {
+        "id": "5c62f7330110b36bdd1dc5d6",
+        "user_telegram_id": "56f1d5b2-db1a-4128-993d-6cd1bc1b938f",
         "user_type": "bot",
         "device_type": null,
-        "presonality": null
-      }
-    ]
-  }
+        "personality": null
+      },
+      "channel_type": "telegram"
+    },
+    {
+      "id": "5c62f7330110b36bdd1dc5e4",
+      "location": null,
+      "history": {
+        "utterances": [
+          {
+            "id": "5c62f7330110b36bdd1dc5e0",
+            "text": "Когда началась Вторая Мировая?",
+            "user_id": "5c62f7330110b36bdd1dc5d5",
+            "annotations": {
+              "ner": [
+                
+              ],
+              "coref": [
+                
+              ],
+              "sentiment": [
+                
+              ]
+            },
+            "date": "2019-02-12 16:41:23.158000"
+          },
+          {
+            "id": "5c62f7330110b36bdd1dc5e1",
+            "active_skill": "odqa",
+            "confidence": 0.99,
+            "text": "1939",
+            "user_id": "5c62f7330110b36bdd1dc5d6",
+            "annotations": {
+              "ner": [
+                
+              ],
+              "coref": [
+                
+              ],
+              "sentiment": [
+                
+              ]
+            },
+            "date": "2019-02-12 16:41:23.158000"
+          },
+          {
+            "id": "5c62f7330110b36bdd1dc5e2",
+            "text": "Спасибо, бот!",
+            "user_id": "5c62f7330110b36bdd1dc5d5",
+            "annotations": {
+              "ner": [
+                
+              ],
+              "coref": [
+                
+              ],
+              "sentiment": [
+                
+              ]
+            },
+            "date": "2019-02-12 16:41:23.158000"
+          }
+        ]
+      },
+      "user": {
+        "id": "5c62f7330110b36bdd1dc5d5",
+        "user_telegram_id": "44d279ea-62ab-4c71-9adb-ed69143c12eb",
+        "user_type": "human",
+        "device_type": null,
+        "personality": null
+      },
+      "bot": {
+        "id": "5c62f7330110b36bdd1dc5d6",
+        "user_telegram_id": "56f1d5b2-db1a-4128-993d-6cd1bc1b938f",
+        "user_type": "bot",
+        "device_type": null,
+        "personality": null
+      },
+      "channel_type": "facebook"
+    }
+  ]
 }
 ```
 
