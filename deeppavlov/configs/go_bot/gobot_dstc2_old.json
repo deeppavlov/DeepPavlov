@@ -1,0 +1,125 @@
+{
+  "dataset_reader": {
+    "class_name": "dstc2_reader",
+    "data_path": "{DOWNLOADS_PATH}/dstc2"
+  },
+  "dataset_iterator": {
+    "class_name": "dialog_iterator"
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "out": ["y_predicted"],
+    "pipe": [
+      {
+        "class_name": "deeppavlov.models.go_bot.wrapper:DialogComponentWrapper",
+        "component": { "class_name": "split_tokenizer" },
+        "in": ["x"],
+        "out": ["x_tokens"]
+      },
+      {
+        "id": "token_vocab",
+        "class_name": "simple_vocab",
+        "fit_on": ["x_tokens"],
+        "save_path": "{MODELS_PATH}/vocabs/token.dict",
+        "load_path": "{MODELS_PATH}/vocabs/token.dict"
+      },
+      {
+        "id": "restaurant_database",
+        "class_name": "sqlite_database",
+        "table_name": "mytable",
+        "primary_keys": ["name"],
+        "save_path": "{DOWNLOADS_PATH}/dstc2/resto.sqlite"
+      },
+      {
+        "in": ["x"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "main": true,
+        "class_name": "go_bot",
+        "load_path": "{MODELS_PATH}/gobot_dstc2/model",
+        "save_path": "{MODELS_PATH}/gobot_dstc2/model",
+        "debug": false,
+        "word_vocab": "#token_vocab",
+        "template_path": "{DOWNLOADS_PATH}/dstc2/dstc2-templates.txt",
+        "template_type": "DualTemplate",
+        "database": "#restaurant_database",
+        "api_call_action": "api_call",
+        "use_action_mask": false,
+        "network_parameters": {
+          "learning_rate": 0.005,
+          "dropout_rate": 0.85,
+          "l2_reg_coef": 7e-4,
+          "hidden_size": 128,
+          "dense_size": 160
+        },
+        "slot_filler": {
+          "config_path": "{CONFIGS_PATH}/ner/slotfill_dstc2.json"
+        },
+        "intent_classifier": {
+          "config_path": "{CONFIGS_PATH}/classifiers/intents_dstc2_big.json"
+        },
+        "embedder": null,
+        "bow_embedder": {
+          "class_name": "bow",
+          "depth": "#token_vocab.__len__()",
+          "with_counts": true
+        },
+        "tokenizer": {
+          "class_name": "stream_spacy_tokenizer",
+          "lowercase": false
+        },
+        "tracker": {
+          "class_name": "featurized_tracker",
+          "slot_names": ["pricerange", "this", "area", "food", "name"]
+        }
+      }
+    ]
+  },
+  "train": {
+    "epochs": 200,
+    "batch_size": 4,
+
+    "metrics": ["per_item_dialog_accuracy"],
+    "validation_patience": 20,
+    "val_every_n_epochs": 1,
+
+    "log_every_n_batches": -1,
+    "log_every_n_epochs": 1,
+    "show_examples": false,
+    "validate_best": true,
+    "test_best": true
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
+      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
+    ],
+    "labels": {
+      "telegram_utils": "GoalOrientedBot",
+      "server_utils": "GoalOrientedBot"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_v6.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/datasets/dstc2_v2.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/dstc2"
+      }
+    ]
+  }
+}

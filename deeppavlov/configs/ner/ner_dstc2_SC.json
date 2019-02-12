@@ -1,0 +1,130 @@
+{
+  "dataset_reader": {
+    "class_name": "dstc2_reader",
+    "data_path": "{DOWNLOADS_PATH}/dstc2"
+  },
+  "dataset_iterator": {
+    "class_name": "dstc2_ner_iterator",
+    "dataset_path": "{DOWNLOADS_PATH}/dstc2"
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "in": ["x"],
+        "class_name": "lazy_tokenizer",
+        "out": ["x_tokens"]
+      },
+      {
+        "in": ["x_tokens"],
+        "class_name": "str_lower",
+        "out": ["x_lower"]
+      },
+      {
+        "in": ["x_lower"],
+        "id": "word_vocab",
+        "class_name": "simple_vocab",
+        "pad_with_zeros": true,
+        "fit_on": ["x_lower"],
+        "load_path": "{MODELS_PATH}/slotfill_dstc2/word.dict",
+        "save_path": "{MODELS_PATH}/slotfill_dstc2/word.dict",
+        "out": ["x_tok_ind"]
+      },
+      {
+        "class_name": "random_emb_mat",
+        "id": "embeddings",
+        "vocab_len": "#word_vocab.len",
+        "emb_dim": 100
+      },
+      {
+        "in": ["y"],
+        "id": "tag_vocab",
+        "class_name": "simple_vocab",
+        "pad_with_zeros": true,
+        "fit_on": ["y"],
+        "load_path": "{MODELS_PATH}/slotfill_dstc2/tag.dict",
+        "save_path": "{MODELS_PATH}/slotfill_dstc2/tag.dict",
+        "out": ["y_ind"]
+      },
+      {
+        "in": ["x_tokens"],
+        "class_name": "mask",
+        "out": ["mask"]
+      },
+      {
+        "in": ["x_tok_ind", "mask"],
+        "in_y": ["y_ind"],
+        "out": ["y_predicted"],
+        "class_name": "ner",
+        "main": true,
+        "token_emb_mat": "#embeddings.emb_mat",
+        "n_hidden_list": [64, 64],
+        "net_type": "cnn",
+        "n_tags": "#tag_vocab.len",
+        "load_path": "{MODELS_PATH}/slotfill_dstc2/model",
+        "save_path": "{MODELS_PATH}/slotfill_dstc2/model",
+        "embeddings_dropout": true,
+        "top_dropout": true,
+        "intra_layer_dropout": false,
+        "use_batch_norm": true,
+        "learning_rate": [0.1, 0.01],
+        "learning_rate_decay": "cosine",
+        "learning_rate_decay_batches": 800,
+        "learning_rate_drop_div": null,
+        "learning_rate_drop_patience": null,
+        "fit_batch_size": 64,
+        "fit_on": ["x_tok_ind", "mask", "y_ind"],
+        "dropout_keep_prob": 0.5
+      },
+      {
+        "ref": "tag_vocab",
+        "in": ["y_predicted"],
+        "out": ["tags"]
+      }
+    ],
+    "out": ["x_tokens", "tags"]
+  },
+  "train": {
+    "max_batches": 1000,
+    "batch_size": 64,
+
+    "metrics": [
+      {
+        "name": "ner_f1",
+        "inputs": ["y", "tags"]
+      },
+      {
+        "name": "per_token_accuracy",
+        "inputs": ["y", "tags"]
+      }
+    ],
+    "validation_patience": 5,
+    "tensorboard_log_dir": "logs/ner_dstc2_sc_0211",
+    "val_every_n_epochs": 5,
+
+    "log_every_n_batches": 100,
+    "show_examples": false
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+    ],
+    "labels": {
+      "telegram_utils": "NERModel",
+      "server_utils": "NER"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/slotfill_dstc2.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      }
+    ]
+  }
+}
+

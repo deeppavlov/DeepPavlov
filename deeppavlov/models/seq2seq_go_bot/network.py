@@ -443,7 +443,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                 self._kb_mask: kb_masks
             }
         )
-        return loss_value
+        return {'loss': loss_value, 'learning_rate': self.get_learning_rate()}
 
     def get_learning_rate(self):
         # polynomial decay
