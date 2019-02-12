@@ -1,8 +1,7 @@
 {
   "dataset_reader": {
-    "class_name": "paraphraser_reader",
-    "data_path": "{DOWNLOADS_PATH}/paraphraser_data",
-    "do_lower_case": false
+    "class_name": "mailru_reader",
+    "data_path": "{DOWNLOADS_PATH}/mailru_bert"
   },
   "dataset_iterator": {
     "class_name": "siamese_iterator",
@@ -10,15 +9,15 @@
     "len_valid": 500
   },
   "chainer": {
-    "in": ["text_a", "text_b"],
+    "in": ["texts"],
     "in_y": ["y"],
     "pipe": [
       {
         "class_name": "bert_split_preprocessor",
         "vocab_file": "{DOWNLOADS_PATH}/bert_models/mailru_npair_pooling/vocab.txt",
-        "do_lower_case": false,
+        "do_lower_case": true,
         "max_seq_length": 64,
-        "in": ["text_a", "text_b"],
+        "in": ["texts"],
         "out": ["bert_features"]
       },
       {
@@ -26,12 +25,13 @@
         "n_classes": 2,
         "one_hot_labels": false,
         "bert_config_file": "{DOWNLOADS_PATH}/bert_models/mailru_npair_pooling/bert_config.json",
-        "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/mailru_npair_pooling/model.ckpt-466934.ckpt",
+        "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/mailru_npair_pooling/model.ckpt-466934",
         "save_path": "{MODELS_PATH}/paraphraser_bert/model_multi",
-        "load_path": "{MODELS_PATH}/paraphraser_bert/model_multi",
-        "keep_prob": 0.5,
-        "attention_probs_keep_prob": 0.9,
-        "hidden_keep_prob": 0.6,
+        "load_path": "{DOWNLOADS_PATH}/bert_models/mailru_npair_pooling/model.ckpt-466934",
+        "return_probas": true,
+        "keep_prob": 1.0,
+        "attention_probs_keep_prob": 1.0,
+        "hidden_keep_prob": 1.0,
         "learning_rate": 2e-05,
         "learning_rate_drop_patience": 2,
         "learning_rate_drop_div": 2.0,
@@ -45,8 +45,8 @@
   "train": {
     "batch_size": 8,
     "pytest_max_batches": 2,
-    "train_metrics": ["f1", "acc"],
-    "metrics": ["f1", "acc"],
+    "train_metrics": [],
+    "metrics": ["r@1", "r@2", "r@5"],
     "validation_patience": 10,
     "val_every_n_batches": 100,
     "log_every_n_batches": 100,

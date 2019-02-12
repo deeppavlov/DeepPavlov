@@ -63,9 +63,9 @@ class ParaphraserReader(DatasetReader):
                     y = None
                     for child in elem.iter():
                         if child.get('name') == 'text_1':
-                            question.append(child.text.lower if do_lower_case else child.text)
+                            question.append(child.text.lower() if do_lower_case else child.text)
                         if child.get('name') == 'text_2':
-                            question.append(child.text.lower if do_lower_case else child.text)
+                            question.append(child.text.lower() if do_lower_case else child.text)
                         if child.get('name') == 'class':
                             y = 1 if int(child.text) >= 0 else 0
                     root.clear()

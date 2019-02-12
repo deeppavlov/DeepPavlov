@@ -30,7 +30,7 @@ class BertClassifierModel(LRScheduledTFModel):
     def __init__(self, bert_config_file, n_classes, keep_prob,
                  one_hot_labels=False, multilabel=False,
                  attention_probs_keep_prob=None, hidden_keep_prob=None,
-                 return_probas=False, pretrained_bert=None, min_learning_rate=1e-06, **kwargs) -> None:
+                 return_probas=True, pretrained_bert=None, min_learning_rate=1e-06, **kwargs) -> None:
         super().__init__(**kwargs)
 
         self.return_probas = return_probas
@@ -80,46 +80,30 @@ class BertClassifierModel(LRScheduledTFModel):
 
     def _init_graph(self):
         self._init_placeholders()
+        with tf.variable_scope("model"):
+            self.bert = BertModel(config=self.bert_config,
+                                  is_training=self.is_train_ph,
+                                  input_ids=self.input_ids_ph,
+                                  input_mask=self.input_masks_ph,
+                                  token_type_ids=self.token_types_ph,
+                                  use_one_hot_embeddings=False,
+                                  )
 
-        self.bert = BertModel(config=self.bert_config,
-                              is_training=self.is_train_ph,
-                              input_ids=self.input_ids_ph,
-                              input_mask=self.input_masks_ph,
-                              token_type_ids=self.token_types_ph,
-                              use_one_hot_embeddings=False,
-                              )
+        output_layer_a = self.bert.get_sequence_output()
+        output_layer_a = tf.reduce_max(output_layer_a, axis=1)
+        hidden_size = output_layer_a.shape[-1].value
 
-        output_layer = self.bert.get_pooled_output()
-        hidden_size = output_layer.shape[-1].value
-
-        with tf.variable_scope('classification'):
-            output_weights = tf.get_variable(
-                "output_weights", [self.n_classes, hidden_size],
-                initializer=tf.truncated_normal_initializer(stddev=0.02))
-
-            output_bias = tf.get_variable(
-                "output_bias", [self.n_classes], initializer=tf.zeros_initializer())
+        with tf.variable_scope("W"):
+            output_layer_a = tf.layers.dense(
+                output_layer_a,
+                hidden_size,
+                activation=tf.tanh,
+                kernel_initializer=tf.truncated_normal_initializer(stddev=0.02))
 
         with tf.variable_scope("loss"):
-            output_layer = tf.nn.dropout(output_layer, keep_prob=self.keep_prob_ph)
-            logits = tf.matmul(output_layer, output_weights, transpose_b=True)
-            logits = tf.nn.bias_add(logits, output_bias)
-
-            if self.one_hot_labels:
-                one_hot_labels = self.y_ph
-            else:
-                one_hot_labels = tf.one_hot(self.y_ph, depth=self.n_classes, dtype=tf.float32)
-
-            if not self.multilabel:
-                log_probs = tf.nn.log_softmax(logits, axis=-1)
-                self.y_probas = tf.nn.softmax(logits, axis=-1)
-                self.y_predictions = tf.argmax(logits, axis=-1)
-                per_example_loss = -tf.reduce_sum(one_hot_labels * log_probs, axis=-1)
-                self.loss = tf.reduce_mean(per_example_loss)
-            else:
-                self.y_probas = tf.nn.sigmoid(logits)
-                self.loss = tf.reduce_mean(
-                    tf.nn.sigmoid_cross_entropy_with_logits(labels=one_hot_labels, logits=logits))
+            with tf.variable_scope("loss"):
+                self.loss = tf.contrib.losses.metric_learning.npairs_loss(self.y_ph, output_layer_a, output_layer_a)
+                self.y_probas = output_layer_a
 
     def _init_placeholders(self):
         self.input_ids_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='ids_ph')
@@ -169,10 +153,10 @@ class BertClassifierModel(LRScheduledTFModel):
         return loss
 
     def __call__(self, features):
-
-        input_ids = [f.input_ids for f in features]
-        input_masks = [f.input_mask for f in features]
-        input_type_ids = [f.input_type_ids for f in features]
+        features = features[0]
+        input_ids = [f.input_ids_a for f in features]
+        input_masks = [f.input_mask_a for f in features]
+        input_type_ids = [f.input_type_ids_a for f in features]
 
         feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids)
         if not self.return_probas:

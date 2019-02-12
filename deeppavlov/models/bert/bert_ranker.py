@@ -14,16 +14,71 @@
 
 import tensorflow as tf
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.bert.bert_classifier import BertClassifierModel
+from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
+from deeppavlov.core.commands.utils import expand_path
 from logging import getLogger
+import numpy as np
 
-from bert_dp.modeling import BertModel
+from bert_dp.modeling import BertConfig, BertModel
 
 logger = getLogger(__name__)
 
 
 @register('bert_ranker')
-class BertRankerModel(BertClassifierModel):
+class BertRankerModel(LRScheduledTFModel):
+    # TODO: docs
+    # TODO: add head-only pre-training
+    def __init__(self, bert_config_file, n_classes, keep_prob,
+                 one_hot_labels=False, multilabel=False,
+                 attention_probs_keep_prob=None, hidden_keep_prob=None,
+                 return_probas=False, pretrained_bert=None, min_learning_rate=1e-06, **kwargs) -> None:
+        super().__init__(**kwargs)
+
+        self.return_probas = return_probas
+        self.n_classes = n_classes
+        self.min_learning_rate = min_learning_rate
+        self.keep_prob = keep_prob
+        self.one_hot_labels = one_hot_labels
+        self.multilabel = multilabel
+
+        if self.multilabel and not self.one_hot_labels:
+            raise RuntimeError('Use one-hot encoded labels for multilabel classification!')
+
+        if self.multilabel and not self.return_probas:
+            raise RuntimeError('Set return_probas to True for multilabel classification!')
+
+        self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
+
+        if attention_probs_keep_prob is not None:
+            self.bert_config.attention_probs_dropout_prob = 1.0 - attention_probs_keep_prob
+        if hidden_keep_prob is not None:
+            self.bert_config.hidden_dropout_prob = 1.0 - hidden_keep_prob
+
+        self.sess_config = tf.ConfigProto(allow_soft_placement=True)
+        self.sess_config.gpu_options.allow_growth = True
+        self.sess = tf.Session(config=self.sess_config)
+
+        self._init_graph()
+
+        self._init_optimizer()
+
+        self.sess.run(tf.global_variables_initializer())
+
+        if pretrained_bert is not None:
+            pretrained_bert = str(expand_path(pretrained_bert))
+
+        if tf.train.checkpoint_exists(pretrained_bert) \
+                and not tf.train.checkpoint_exists(str(self.load_path.resolve())):
+            logger.info('[initializing model with Bert from {}]'.format(pretrained_bert))
+            # Exclude optimizer and classification variables from saved variables
+            var_list = self._get_saveable_variables(
+                exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'classification'))
+            saver = tf.train.Saver(var_list)
+            saver.restore(self.sess, pretrained_bert)
+
+        if self.load_path is not None:
+            self.load()
+
     def _init_graph(self):
         self._init_placeholders()
 
@@ -65,14 +120,16 @@ class BertRankerModel(BertClassifierModel):
                 activation=tf.tanh,
                 kernel_initializer=tf.truncated_normal_initializer(stddev=0.02))
 
+        # output_layer_a = model_a.get_pooled_output()
+        # output_layer_b = model_b.get_pooled_output()
+
         with tf.variable_scope("loss"):
-
-            output_layer_a = tf.nn.dropout(output_layer_a, keep_prob=0.9)
-            output_layer_b = tf.nn.dropout(output_layer_b, keep_prob=0.9)
-            loss = tf.contrib.losses.metric_learning.npairs_loss(self.y_ph, output_layer_a, output_layer_b)
-            logits = tf.multiply(output_layer_a, output_layer_b)
-            logits = tf.reduce_sum(logits, 1)
-
+            # output_layer_a = tf.nn.dropout(output_layer_a, keep_prob=0.5)
+            # output_layer_b = tf.nn.dropout(output_layer_b, keep_prob=0.5)
+            self.loss = tf.contrib.losses.metric_learning.npairs_loss(self.y_ph, output_layer_a, output_layer_b)
+            # logits = tf.multiply(output_layer_a, output_layer_b)
+            # self.y_probas = tf.reduce_sum(logits, 1)
+            self.y_probas = output_layer_a
 
     def _init_placeholders(self):
         self.input_ids_ph_a = tf.placeholder(shape=(None, None), dtype=tf.int32, name='ids_ph_a')
@@ -90,6 +147,13 @@ class BertRankerModel(BertClassifierModel):
         self.learning_rate_ph = tf.placeholder_with_default(0.0, shape=[], name='learning_rate_ph')
         self.keep_prob_ph = tf.placeholder_with_default(1.0, shape=[], name='keep_prob_ph')
         self.is_train_ph = tf.placeholder_with_default(False, shape=[], name='is_train_ph')
+
+    def _init_optimizer(self):
+        # TODO: use AdamWeightDecay optimizer
+        with tf.variable_scope('Optimizer'):
+            self.global_step = tf.get_variable('global_step', shape=[], dtype=tf.int32,
+                                               initializer=tf.constant_initializer(0), trainable=False)
+            self.train_op = self.get_train_op(self.loss, learning_rate=self.learning_rate_ph)
 
     def _build_feed_dict(self, input_ids_a, input_masks_a, token_types_a,
                          input_ids_b, input_masks_b, token_types_b, y=None):
@@ -112,19 +176,22 @@ class BertRankerModel(BertClassifierModel):
 
         return feed_dict
 
-    def __call__(self, features):
+    def train_on_batch(self, features, y):
+        pass
 
-        input_ids_a = [f.input_ids_a for f in features]
-        input_masks_a = [f.input_mask_a for f in features]
-        input_type_ids_a = [f.input_type_ids_a for f in features]
-        input_ids_b = [f.input_ids_b for f in features]
-        input_masks_b = [f.input_mask_b for f in features]
-        input_type_ids_b = [f.input_type_ids_b for f in features]
-
-        feed_dict = self._build_feed_dict(input_ids_a, input_masks_a, input_type_ids_a,
-                                          input_ids_b, input_masks_b, input_type_ids_b)
-        if not self.return_probas:
-            pred = self.sess.run(self.y_predictions, feed_dict=feed_dict)
-        else:
+    def __call__(self, features_list):
+        y_pred = []
+        for features in features_list:
+            input_ids_a = [f.input_ids_a for f in features]
+            input_masks_a = [f.input_mask_a for f in features]
+            input_type_ids_a = [f.input_type_ids_a for f in features]
+            input_ids_b = [f.input_ids_b for f in features]
+            input_masks_b = [f.input_mask_b for f in features]
+            input_type_ids_b = [f.input_type_ids_b for f in features]
+            feed_dict = self._build_feed_dict(input_ids_a, input_masks_a, input_type_ids_a,
+                                              input_ids_b, input_masks_b, input_type_ids_b)
             pred = self.sess.run(self.y_probas, feed_dict=feed_dict)
-        return pred
+            y_pred.append(pred)
+        y_pred = np.asarray(y_pred)
+        y_pred = np.transpose(y_pred)
+        return y_pred
