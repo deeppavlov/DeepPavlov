@@ -19,6 +19,7 @@ from deeppavlov.core.commands.utils import expand_path
 from logging import getLogger
 
 from bert_dp.modeling import BertConfig, BertModel
+from bert_dp.optimization import AdamWeightDecayOptimizer
 
 logger = getLogger(__name__)
 
@@ -30,6 +31,7 @@ class BertClassifierModel(LRScheduledTFModel):
     def __init__(self, bert_config_file, n_classes, keep_prob,
                  one_hot_labels=False, multilabel=False,
                  attention_probs_keep_prob=None, hidden_keep_prob=None,
+                 optimizer=None, num_warmup_steps=None, weight_decay_rate=0.01,
                  return_probas=False, pretrained_bert=None, min_learning_rate=1e-06, **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -39,6 +41,9 @@ class BertClassifierModel(LRScheduledTFModel):
         self.keep_prob = keep_prob
         self.one_hot_labels = one_hot_labels
         self.multilabel = multilabel
+        self.optimizer = optimizer
+        self.num_warmup_steps = num_warmup_steps
+        self.weight_decay_rate = weight_decay_rate
 
         if self.multilabel and not self.one_hot_labels:
             raise RuntimeError('Use one-hot encoded labels for multilabel classification!')
@@ -140,7 +145,23 @@ class BertClassifierModel(LRScheduledTFModel):
         with tf.variable_scope('Optimizer'):
             self.global_step = tf.get_variable('global_step', shape=[], dtype=tf.int32,
                                                initializer=tf.constant_initializer(0), trainable=False)
-            self.train_op = self.get_train_op(self.loss, learning_rate=self.learning_rate_ph)
+            # default optimizer for Bert is Adam with fixed L2 regularization
+            if self.optimizer is None:
+
+                self.train_op = self.get_train_op(self.loss, learning_rate=self.learning_rate_ph,
+                                                  optimizer=AdamWeightDecayOptimizer,
+                                                  weight_decay_rate=self.weight_decay_rate,
+                                                  beta_1=0.9,
+                                                  beta_2=0.999,
+                                                  epsilon=1e-6,
+                                                  exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"]
+                                                  )
+            else:
+                self.train_op = self.get_train_op(self.loss, learning_rate=self.learning_rate_ph)
+
+            if self.optimizer is None:
+                new_global_step = self.global_step + 1
+                self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
 
     def _build_feed_dict(self, input_ids, input_masks, token_types, y=None):
         feed_dict = {
@@ -166,7 +187,7 @@ class BertClassifierModel(LRScheduledTFModel):
         feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids, y)
 
         _, loss = self.sess.run([self.train_op, self.loss], feed_dict=feed_dict)
-        return loss
+        return {'loss': loss, 'learning_rate': feed_dict[self.learning_rate_ph]}
 
     def __call__(self, features):
 
