@@ -21,7 +21,7 @@
     "pipe": [
       {
         "class_name": "bert_preprocessor",
-        "vocab_file": "{DOWNLOADS_PATH}/bert_models/russian_1M_final_ckpt/vocab.txt",
+        "vocab_file": "{DOWNLOADS_PATH}/bert_models/russian_2M_final_ckpt/vocab.txt",
         "do_lower_case": false,
         "max_seq_length": 64,
         "in": ["x"],
@@ -48,8 +48,8 @@
         "n_classes": "#classes_vocab.len",
         "return_probas": true,
         "one_hot_labels": true,
-        "bert_config_file": "{DOWNLOADS_PATH}/bert_models/russian_1M_final_ckpt/bert_config.json",
-        "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/russian_1M_final_ckpt/model.ckpt-1000002",
+        "bert_config_file": "{DOWNLOADS_PATH}/bert_models/russian_2M_final_ckpt/bert_config.json",
+        "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/russian_2M_final_ckpt/model.ckpt-1000002",
         "save_path": "{MODELS_PATH}/model",
         "load_path": "{MODELS_PATH}/model",
         "keep_prob": 0.3,
@@ -98,7 +98,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/rusentiment_rubert_v1/"
+      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/rusentiment_rubert_v2/"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -110,7 +110,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/russian_bert/russian_1M_final_ckpt.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/russian_bert/russian_2M_final_ckpt.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/bert_models"
       }
     ]
