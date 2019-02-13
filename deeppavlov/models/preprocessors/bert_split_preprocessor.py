@@ -32,40 +32,21 @@ class BertSplitPreprocessor(Component):
         vocab_file = str(expand_path(vocab_file))
         self.tokenizer = FullTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
 
-    def __call__(self, samples):
-        texts = []
-        for i in range(len(samples[0])):
-            t = []
-            for el in samples:
-                t.append(el[i])
-            texts.append(t)
-        texts_a = texts[0]
-        texts_b = [None] * len(texts[0])
+    def __call__(self, batch):
+        samples = []
+        for i in range(len(batch[0])):
+            s = []
+            for el in batch:
+                s.append(el[i])
+            samples.append(s)
+        s_dummy = [None] * len(samples[0])
         # TODO: add unique id
-        example_a = [InputExample(unique_id=0, text_a=text_a, text_b=text_b) for text_a, text_b in zip(texts_a, texts_b)]
         examples = []
-        for t in texts[1:]:
+        for s in samples:
             ex = [InputExample(unique_id=0, text_a=text_a, text_b=text_b) for text_a, text_b in
-                  zip(t, texts_b)]
+                  zip(s, s_dummy)]
             examples.append(ex)
-        feature_a = convert_examples_to_features(example_a, self.max_seq_length, self.tokenizer)
         features = [convert_examples_to_features(el, self.max_seq_length, self.tokenizer) for el in examples]
-        split_features = []
-        for f in features:
-            split_features.append([InputSplitFeatures(*el) for el in zip(feature_a, f)])
 
-        return split_features
+        return features
 
-class InputSplitFeatures(object):
-  """A single set of features of data."""
-
-  def __init__(self, feature_a, feature_b):
-    self.unique_id = feature_a.unique_id
-    self.tokens_a = feature_a.tokens
-    self.input_ids_a = feature_a.input_ids
-    self.input_mask_a = feature_a.input_mask
-    self.input_type_ids_a = feature_a.input_type_ids
-    self.tokens_b = feature_b.tokens
-    self.input_ids_b = feature_b.input_ids
-    self.input_mask_b = feature_b.input_mask
-    self.input_type_ids_b = feature_b.input_type_ids

@@ -16,7 +16,7 @@
         "class_name": "bert_split_preprocessor",
         "vocab_file": "{DOWNLOADS_PATH}/bert_models/mailru_npair_pooling/vocab.txt",
         "do_lower_case": true,
-        "max_seq_length": 64,
+        "max_seq_length": 128,
         "in": ["texts"],
         "out": ["bert_features"]
       },

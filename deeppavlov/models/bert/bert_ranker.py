@@ -17,14 +17,15 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
 from deeppavlov.core.commands.utils import expand_path
 from logging import getLogger
+import numpy as np
 
 from bert_dp.modeling import BertConfig, BertModel
 
 logger = getLogger(__name__)
 
 
-@register('bert_classifier')
-class BertClassifierModel(LRScheduledTFModel):
+@register('bert_ranker')
+class BertRankerModel(LRScheduledTFModel):
     # TODO: docs
     # TODO: add head-only pre-training
     def __init__(self, bert_config_file, n_classes, keep_prob,
@@ -49,9 +50,9 @@ class BertClassifierModel(LRScheduledTFModel):
         self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
 
         if attention_probs_keep_prob is not None:
-            self.bert_config.attention_probs_keep_prob = 1.0 - attention_probs_keep_prob
+            self.bert_config.attention_probs_dropout_prob = 1.0 - attention_probs_keep_prob
         if hidden_keep_prob is not None:
-            self.bert_config.hidden_keep_prob = 1.0 - hidden_keep_prob
+            self.bert_config.hidden_dropout_prob = 1.0 - hidden_keep_prob
 
         self.sess_config = tf.ConfigProto(allow_soft_placement=True)
         self.sess_config.gpu_options.allow_growth = True
@@ -142,19 +143,17 @@ class BertClassifierModel(LRScheduledTFModel):
 
         return feed_dict
 
+    def train_on_batch(self, features, y):
+        pass
+
     def __call__(self, features_list):
         y_pred = []
         for features in features_list:
-            input_ids_a = [f.input_ids_a for f in features]
-            input_masks_a = [f.input_mask_a for f in features]
-            input_type_ids_a = [f.input_type_ids_a for f in features]
-            input_ids_b = [f.input_ids_b for f in features]
-            input_masks_b = [f.input_mask_b for f in features]
-            input_type_ids_b = [f.input_type_ids_b for f in features]
-            feed_dict = self._build_feed_dict(input_ids_a, input_masks_a, input_type_ids_a,
-                                              input_ids_b, input_masks_b, input_type_ids_b)
+            input_ids = [f.input_ids for f in features]
+            input_masks = [f.input_mask for f in features]
+            input_type_ids = [f.input_type_ids for f in features]
+            feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids)
             pred = self.sess.run(self.y_probas, feed_dict=feed_dict)
             y_pred.append(pred)
-        y_pred = np.asarray(y_pred)
-        y_pred = np.transpose(y_pred)
-        return y_pred
+        scores = np.hstack([np.sum(y_pred[0]*el, axis=1, keepdims=True) for el in y_pred[1:]])
+        return scores
