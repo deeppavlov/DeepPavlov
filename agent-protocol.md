@@ -236,10 +236,17 @@
 
 ```json
 {
-  "response": {
-    "text": "привет, я бот!",
-    "confidence": 0.947,
-    "other": {}
-  }
+  "responses": [
+    {
+      "text": "привет, я бот!",
+      "confidence": 0.947,
+      "other": {}
+    },
+    {
+      "text": "как дела?",
+      "confidence": 0.3333,
+      "other": {}
+    }
+  ]
 }
 ```
