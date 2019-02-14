@@ -100,6 +100,7 @@
   "squad_model": "deeppavlov.models.squad.squad:SquadModel",
   "squad_preprocessor": "deeppavlov.models.preprocessors.squad_preprocessor:SquadPreprocessor",
   "squad_vocab_embedder": "deeppavlov.models.preprocessors.squad_preprocessor:SquadVocabEmbedder",
+  "states_parser": "deeppavlov.models.dp_assistant.states_parser:StatesParser",
   "static_dictionary": "deeppavlov.vocabs.typos:StaticDictionary",
   "str_lower": "deeppavlov.models.preprocessors.str_lower:StrLower",
   "str_token_reverser": "deeppavlov.models.preprocessors.str_token_reverser:StrTokenReverser",

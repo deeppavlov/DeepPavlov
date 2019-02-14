@@ -3,7 +3,8 @@ from datetime import datetime
 
 from deeppavlov.core.agent_v2.state_schema import User, Utterance, BotUtterance, DialogHistory, Dialog
 from deeppavlov.core.agent_v2.connection import state_storage
-from deeppavlov.core.agent_v2.agent import TG_START_UTT
+
+TG_START_UTT = '\\start'
 
 
 class StatesManager:

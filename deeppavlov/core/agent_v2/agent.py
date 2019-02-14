@@ -1,9 +1,7 @@
 from typing import Sequence, Hashable
 
 from deeppavlov.core.agent_v2.preprocessor import Preprocessor
-from deeppavlov.core.agent_v2.states_manager import StatesManager
-
-TG_START_UTT = '\\start'
+from deeppavlov.core.agent_v2.states_manager import StatesManager, TG_START_UTT
 
 
 class Agent:
