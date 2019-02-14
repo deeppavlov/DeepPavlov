@@ -1,6 +1,5 @@
 {
   "amazon_ecommerce_reader": "deeppavlov.dataset_readers.amazon_ecommerce_reader:AmazonEcommerceReader",
-  "answer_generation_rus": "deeppavlov.models.kbqa.answer_generation_rus:AnswerGeneration",
   "api_requester": "deeppavlov.models.api_requester.api_requester:ApiRequester",
   "api_router": "deeppavlov.models.api_requester.api_router:ApiRouter",
   "basic_classification_iterator": "deeppavlov.dataset_iterators.basic_classification_iterator:BasicClassificationDatasetIterator",
@@ -33,7 +32,7 @@
   "elmo_model": "deeppavlov.models.elmo.elmo:ELMo",
   "emb_mat_assembler": "deeppavlov.models.preprocessors.assemble_embeddings_matrix:EmbeddingsMatrixAssembler",
   "entity_linking": "deeppavlov.models.kbqa.entity_linking:EntityLinking",
-  "entity_linking_rus": "deeppavlov.models.kbqa.entity_linking_rus:EntityLinking",
+  "entity_linking_wikidata": "deeppavlov.models.kbqa.entity_linking_wikidata:EntityLinkingWikidata",
   "faq_reader": "deeppavlov.dataset_readers.faq_reader:FaqDatasetReader",
   "fasttext": "deeppavlov.models.embedders.fasttext_embedder:FasttextEmbedder",
   "featurized_tracker": "deeppavlov.models.go_bot.tracker:FeaturizedTracker",
@@ -44,6 +43,7 @@
   "hashing_tfidf_vectorizer": "deeppavlov.models.vectorizers.hashing_tfidf_vectorizer:HashingTfIdfVectorizer",
   "insurance_reader": "deeppavlov.dataset_readers.insurance_reader:InsuranceReader",
   "kb_answer_parser": "deeppavlov.models.kbqa.kb_answer_parser:KBAnswerParser",
+  "kb_answer_parser_wikidata": "deeppavlov.models.kbqa.kb_answer_parser_wikidata:KBAnswerParserWikidata",
   "kenlm_elector": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
   "keras_classification_model": "deeppavlov.models.classifiers.keras_classification_model:KerasClassificationModel",
   "knowledge_base": "deeppavlov.models.seq2seq_go_bot.kb:KnowledgeBase",
