@@ -20,8 +20,8 @@ from deeppavlov.core.models.component import Component
 from pathlib import Path
 
 
-@register('answer_generation')
-class AnswerGeneration(Component, Serializable):
+@register('kb_answer_parser')
+class KBAnswerParser(Component, Serializable):
     """
        Class for generation of answer using triplets with the entity
        in the question and relations predicted from the question by the
