@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 from typing import List, Tuple
 
 from deeppavlov.core.common.registry import register
@@ -28,15 +27,13 @@ from nltk.corpus import stopwords
 @register('entity_linking')
 class EntityLinking(Component):
     """
-        Class for linking the words in the question and the corresponding entity
+        Class for linking words in the question and the corresponding entity
         in Freebase, then extracting triplets from Freebase with the entity
     """
     
     def __init__(self, entities_load_path: str,
                  freebase_load_path: str,
                  *args, **kwargs) -> None:
-
-        self.inverted_index = defaultdict(list)
         self.stopword = set(stopwords.words('english'))
         entities_load_path = Path(entities_load_path).expanduser()
         with open(entities_load_path, "rb") as handler:
@@ -60,8 +57,8 @@ class EntityLinking(Component):
                 if len(split) < 3:
                     count += 1
 
-
-    def get_ngram(self, text: str) -> List[str]:
+    @staticmethod
+    def get_ngram(text: str) -> List[str]:
         ngram = []
         tokens = text.split()
         for i in range(len(tokens)+1):
@@ -76,7 +73,7 @@ class EntityLinking(Component):
     
     def __call__(self, texts: List[List[str]],
                  tags: List[List[int]],
-                  *args, **kwargs) -> List[List[List[str]]]:
+                 *args, **kwargs) -> List[List[List[str]]]:
         entities = []
         for i, text in enumerate(texts):
             entity = ""
@@ -104,29 +101,27 @@ class EntityLinking(Component):
             entity_triplets.append(triplets)
 
         return entity_triplets
-    
 
     def find_entity(self, entity: str) -> List[Tuple]:
-        C = []
-        C_scored = []
+        c = []
+        c_scored = []
         tokens = self.get_ngram(entity)
 
         if len(tokens) > 0:
             maxlen = len(tokens[0].split())
         for item in tokens:
-            if len(item.split()) < maxlen and len(C) == 0:
+            if len(item.split()) < maxlen and len(c) == 0:
                 maxlen = len(item.split())
-            if len(item.split()) < maxlen and len(C) > 0:
+            if len(item.split()) < maxlen and len(c) > 0:
                 break
             if item in self.stopword:
                 continue
-            C.extend(self.inverted_index[item])
+            c.extend(self.inverted_index[item])
 
-
-        for mid_text_type in sorted(set(C)):
+        for mid_text_type in sorted(set(c)):
             score = fuzz.ratio(mid_text_type[1], entity) / 100.0
-            C_scored.append((mid_text_type, score))
+            c_scored.append((mid_text_type, score))
 
-        C_scored.sort(key = lambda x: x[1], reverse = True)
+        c_scored.sort(key=lambda x: x[1], reverse=True)
     
-        return C_scored
+        return c_scored

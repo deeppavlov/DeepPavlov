@@ -18,7 +18,6 @@
       {
         "in": "x",
         "out": "x_tok",
-        "id": "my_tokenizer",
         "class_name": "nltk_tokenizer",
         "tokenizer": "wordpunct_tokenize"
       },
@@ -68,19 +67,6 @@
         "dropout_rate": 0.5,
         "dense_size": 300,
         "model_name": "cnn_model"
-      },
-      {
-        "in": "y_pred_probas",
-        "out": "y_pred_ids",
-        "class_name": "proba2labels",
-        "max_proba": true
-      },
-      {
-          "in": ["y_pred_probas"],
-          "out": ["y_pred_classes"],
-          "load_path": "{MODELS_PATH}/simple_qa_relation_prediction/classes.dict",
-          "n_maximum_classes": 5,
-          "class_name": "max_n"
       },
       {
         "in": ["x"],
@@ -175,10 +161,13 @@
         "class_name": "entity_linking"
       },
       {
-        "in": ["y_pred_classes", "triplets"],
+        "in": ["y_pred_probas", "triplets"],
         "out": ["answers"],
         "load_path": "{DOWNLOADS_PATH}/simple_qa_freebase/FB_names.txt",
-        "class_name": "answer_generation"
+        "class_name": "kb_answer_parser",
+        "classes_vocab_keys": "#classes_vocab.keys()",
+        "load_path": "{MODELS_PATH}/simple_qa_relation_prediction/classes.dict",
+        "top_k_classes": 5
       }
     ],
     "out": [
