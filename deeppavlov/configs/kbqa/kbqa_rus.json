@@ -76,13 +76,6 @@
         "max_proba": true
       },
       {
-          "in": ["y_pred_probas"],
-          "out": ["y_pred_classes"],
-          "load_path": "{MODELS_PATH}/relation_prediction/classes.dict",
-          "n_maximum_classes": 5,
-          "class_name": "max_n"
-      },
-      {
         "in": ["x"],
         "class_name": "lazy_tokenizer",
         "out": ["x_tokens"]
@@ -196,13 +189,13 @@
         "out": ["triplets"],
         "entities_load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_name_to_q.pickle",
         "wiki_load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus.pickle",
-        "class_name": "entity_linking"
+        "class_name": "entity_linking_wikidata"
       },
       {
         "in": ["y_pred_probas", "triplets"],
         "out": ["answers"],
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_q_to_name.pickle",
-        "class_name": "kb_answer_parser",
+        "class_name": "kb_answer_parser_wikidata",
         "classes_vocab_keys": "#classes_vocab.keys()",
         "top_k_classes": 5
       }
@@ -231,7 +224,7 @@
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/kbqa.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/kbqa_rus.tar.gz",
         "subdir": "{ROOT_PATH}/models/kbqa"
       },
       {
