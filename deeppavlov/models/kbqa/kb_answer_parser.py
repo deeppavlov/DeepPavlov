@@ -34,7 +34,7 @@ class KBAnswerParser(Component, Serializable):
     def __init__(self, load_path: str, top_k_classes: int, classes_vocab_keys: Tuple, *args, **kwargs) -> None:
         super().__init__(save_path=None, load_path=load_path)
         self.top_k_classes = top_k_classes
-        self.classes = classes_vocab_keys
+        self.classes = list(classes_vocab_keys)
         self.names_dict = None
         self.load()
     
