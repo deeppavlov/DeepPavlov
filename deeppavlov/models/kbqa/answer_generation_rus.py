@@ -15,7 +15,7 @@ from typing import List
 
 import numpy as np
 import pickle
-from core.models.serializable import Serializable
+from deeppavlov.core.models.serializable import Serializable
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
