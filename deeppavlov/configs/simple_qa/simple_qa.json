@@ -77,8 +77,9 @@
       {
           "in": ["y_pred_probas"],
           "out": ["y_pred_classes"],
+          "classes_vocab_keys": "#classes_vocab.keys()",
           "load_path": "{MODELS_PATH}/simple_qa_relation_prediction/classes.dict",
-          "n_maximum_classes": 5,
+          "top_k_relations": 5,
           "class_name": "max_n"
       },
       {
