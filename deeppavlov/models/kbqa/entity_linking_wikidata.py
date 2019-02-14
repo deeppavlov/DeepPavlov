@@ -26,8 +26,8 @@ from nltk.corpus import stopwords
 import pymorphy2
 
 
-@register('entity_linking')
-class EntityLinking(Component):
+@register('entity_linking_wikidata')
+class EntityLinkingWikidata(Component):
     """
         Class for linking the words in the question and the corresponding entity
         in Freebase, then extracting triplets from Freebase with the entity

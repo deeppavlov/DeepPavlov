@@ -22,8 +22,8 @@ from deeppavlov.core.models.component import Component
 from pathlib import Path
 
 
-@register('kb_answer_parser')
-class KBAnswerParser(Component, Serializable):
+@register('kb_answer_parser_wikidata')
+class KBAnswerParserWikidata(Component, Serializable):
     """
        Class for generation of answer using triplets with the entity
        in the question and relations predicted from the question by the
