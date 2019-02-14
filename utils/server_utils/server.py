@@ -15,7 +15,7 @@
 import ssl
 from logging import getLogger
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 from flasgger import Swagger, swag_from
 from flask import Flask, request, jsonify, redirect, Response
@@ -55,6 +55,25 @@ def get_server_params(server_config_path, model_config):
                     server_params[param_name] = model_defaults[param_name]
 
     return server_params
+
+
+def interact_skill(model: Chainer):
+    if not request.is_json:
+        log.error("request Content-Type header is not application/json")
+        return jsonify({
+            "error": "request Content-Type header is not application/json"
+        }), 400
+
+    data = request.get_json()
+    dialog_states = data['dialogs']
+
+    result = model(dialog_states)
+    if len(model.out_params) == 1:
+        result = [result]
+
+    return jsonify({
+        'responses': [dict(zip(model.out_params, response)) for response in zip(*result)]
+    }), 200
 
 
 def interact(model: Chainer, params_names: List[str]) -> Tuple[Response, int]:
@@ -160,3 +179,113 @@ def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, p
         return interact(model, model_args_names)
 
     app.run(host=host, port=port, threaded=False, ssl_context=ssl_context)
+
+
+def skill_server(config: Union[dict, str, Path], host='0.0.0.0', port=80, endpoint='/skill', *,
+                 download=False):
+    model = build_model(config, download=download)
+
+    endpoint_description = {
+        'description': 'A model endpoint',
+        'parameters': [
+            {
+                'name': 'data',
+                'in': 'body',
+                'required': 'true',
+                'example': {
+                    'version': 0.9,
+                    'dialogs': [
+                        {
+                            'id': '5c65706b0110b377e17eba41',
+                            'location': None,
+                            'utterances': [
+                                {
+                                    "id": "5c62f7330110b36bdd1dc5d7",
+                                    "text": "Привет!",
+                                    "user_id": "5c62f7330110b36bdd1dc5d5",
+                                    "annotations": {
+                                        "ner": [
+                                        ],
+                                        "coref": [
+                                        ],
+                                        "sentiment": [
+                                        ]
+                                    },
+                                    "date": "2019-02-12 16:41:23.142000"
+                                },
+                                {
+                                    "id": "5c62f7330110b36bdd1dc5d8",
+                                    "active_skill": "chitchat",
+                                    "confidence": 0.85,
+                                    "text": "Привет, я бот!",
+                                    "user_id": "5c62f7330110b36bdd1dc5d6",
+                                    "annotations": {
+                                        "ner": [
+                                        ],
+                                        "coref": [
+                                        ],
+                                        "sentiment": [
+                                        ]
+                                    },
+                                    "date": "2019-02-12 16:41:23.142000"
+                                },
+                                {
+                                    "id": "5c62f7330110b36bdd1dc5d9",
+                                    "text": "Как дела?",
+                                    "user_id": "5c62f7330110b36bdd1dc5d5",
+                                    "annotations": {
+                                        "ner": [
+                                        ],
+                                        "coref": [
+                                        ],
+                                        "sentiment": [
+                                        ]
+                                    },
+                                    "date": "2019-02-12 16:41:23.142000"
+                                }
+                            ],
+                            'user': {
+                                'id': '5c62f7330110b36bdd1dc5d5',
+                                'user_telegram_id': '44d279ea-62ab-4c71-9adb-ed69143c12eb',
+                                'user_type': 'human',
+                                'device_type': None,
+                                'personality': None
+                            },
+                            'bot': {
+                                'id': '5c62f7330110b36bdd1dc5d6',
+                                'user_telegram_id': '56f1d5b2-db1a-4128-993d-6cd1bc1b938f',
+                                'user_type': 'bot',
+                                'device_type': None,
+                                'personality': None
+                            },
+                            'channel_type': 'telegram'
+                        }
+                    ]
+                }
+            }
+        ],
+        'responses': {
+            "200": {
+                "description": "A skill response",
+                'example': {
+                    'responses': [
+                        {
+                            'text': 'привет, я бот!',
+                            'confidence': 0.973
+                        }
+                    ]
+                }
+            }
+        }
+    }
+
+    @app.route('/')
+    def index():
+        return redirect('/apidocs/')
+
+    @app.route(endpoint, methods=['POST'])
+    @swag_from(endpoint_description)
+    def answer():
+        return interact_skill(model)
+
+    app.run(host=host, port=port, threaded=False)
