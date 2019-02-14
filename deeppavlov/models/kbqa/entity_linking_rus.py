@@ -12,17 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-from typing import List, Tuple
+from typing import List
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 import pickle
 from pathlib import Path
 
-from collections import defaultdict
 from fuzzywuzzy import fuzz
-from nltk.corpus import stopwords
 
 
 @register('entity_linking_rus')
@@ -63,7 +60,7 @@ class EntityLinking(Component):
      
         for entity in text_entities:
             candidate_entities = self.name_to_q[entity]
-            srtd_cand_ent = sorted(candidate_entities, key = lambda x: x[2], reverse = True)
+            srtd_cand_ent = sorted(candidate_entities, key=lambda x: x[2], reverse=True)
             if len(srtd_cand_ent) > 0:
                 wiki_entities.append(srtd_cand_ent[0][1])
             if len(srtd_cand_ent) == 0:
@@ -73,7 +70,7 @@ class EntityLinking(Component):
                     if ratio > 75:
                         candidates += self.name_to_q[title]
                 candidates = list(set(candidates))
-                srtd_cand_ent = sorted(candidates, key = lambda x: x[2], reverse = True)
+                srtd_cand_ent = sorted(candidates, key=lambda x: x[2], reverse=True)
                 if len(srtd_cand_ent) > 0:
                     wiki_entities.append(srtd_cand_ent[0][1])
             if len(srtd_cand_ent) == 0:
@@ -83,10 +80,9 @@ class EntityLinking(Component):
                     if f > -1:
                         candidates += self.name_to_q[title]
                 candidates = list(set(candidates))
-                srtd_cand_ent = sorted(candidates, key = lambda x: x[2], reverse = True)
+                srtd_cand_ent = sorted(candidates, key=lambda x: x[2], reverse = True)
                 if len(srtd_cand_ent) > 0:
                     wiki_entities.append(srtd_cand_ent[0][1])
-        
 
         entity_triplets = []
         for entity_id in wiki_entities:
