@@ -15,20 +15,20 @@ limitations under the License.
 """
 
 import argparse
-import sys
-import os
 import json
+import os
+import sys
+from logging import getLogger
 from subprocess import Popen
 
 import pandas as pd
 
-from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.models.evolution.evolution_param_generator import ParamsEvolution
-from deeppavlov.core.common.file import read_json, save_json, find_config
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.commands.utils import expand_path, parse_config
+from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.file import read_json, save_json, find_config
+from deeppavlov.models.evolution.evolution_param_generator import ParamsEvolution
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 parser = argparse.ArgumentParser()
 

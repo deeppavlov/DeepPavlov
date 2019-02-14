@@ -15,6 +15,7 @@
 import inspect
 from abc import abstractmethod
 from copy import deepcopy
+from logging import getLogger
 from typing import Optional, List, Union
 
 import numpy as np
@@ -22,11 +23,9 @@ import tensorflow as tf
 from keras import backend as K
 
 from deeppavlov.core.models.nn_model import NNModel
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.tf_backend import TfModelMeta
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 class KerasModel(NNModel, metaclass=TfModelMeta):

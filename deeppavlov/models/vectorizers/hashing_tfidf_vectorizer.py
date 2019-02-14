@@ -13,19 +13,19 @@
 # limitations under the License.
 
 from collections import Counter
+from logging import getLogger
 from typing import List, Any, Generator, Tuple, KeysView, ValuesView, Dict, Optional
 
+import numpy as np
 import scipy as sp
 from scipy import sparse
-import numpy as np
 from sklearn.utils import murmurhash3_32
 
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.estimator import Estimator
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.common.registry import register
 
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 Sparse = sp.sparse.csr_matrix
 

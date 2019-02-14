@@ -13,13 +13,13 @@
 # limitations under the License.
 
 
-from typing import Dict, Any
-from pathlib import Path
 import json
+from pathlib import Path
+from typing import Dict, Any
 
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.data.utils import download_decompress
-from deeppavlov.core.common.registry import register
 
 
 @register('squad_dataset_reader')

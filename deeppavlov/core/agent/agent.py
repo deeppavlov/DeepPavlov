@@ -13,12 +13,12 @@
 # limitations under the License.
 
 from abc import ABCMeta, abstractmethod
-from typing import List, Dict, Tuple, Optional
 from collections import defaultdict
+from typing import List, Dict, Tuple, Optional
 
+from deeppavlov.core.agent.dialog_logger import DialogLogger
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.skill.skill import Skill
-from deeppavlov.core.agent.dialog_logger import DialogLogger
 
 
 class Agent(Component, metaclass=ABCMeta):

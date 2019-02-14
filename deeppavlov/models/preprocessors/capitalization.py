@@ -13,15 +13,14 @@
 # limitations under the License.
 
 
-import re
-from typing import Union, Tuple, List, Optional
+from typing import Tuple, List, Optional
 
 import numpy as np
 
-from deeppavlov.core.models.component import Component
-from deeppavlov.core.data.utils import zero_pad
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.tokenizers.nltk_moses_tokenizer import NLTKMosesTokenizer
+from deeppavlov.core.data.utils import zero_pad
+from deeppavlov.core.models.component import Component
+
 
 @register('capitalization_featurizer')
 class CapitalizationPreprocessor(Component):
