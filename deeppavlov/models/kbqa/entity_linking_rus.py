@@ -26,7 +26,7 @@ from fuzzywuzzy import fuzz
 class EntityLinking(Component):
     """
         Class for linking the words in the question and the corresponding entity
-        in Freebase, then extracting triplets from Freebase with the entity
+        in Wikidata, then extracting triplets from Wikidata with the entity
     """
     
     def __init__(self, entities_load_path: str,
@@ -43,7 +43,7 @@ class EntityLinking(Component):
     
     def __call__(self, texts: List[List[str]],
                  tags: List[List[int]],
-                  *args, **kwargs) -> List[List[List[str]]]:
+                 *args, **kwargs) -> List[List[List[str]]]:
 
         text_entities = []
         for i, text in enumerate(texts):
@@ -54,7 +54,6 @@ class EntityLinking(Component):
                     entity += " "
             entity = entity[:-1]
             text_entities.append(entity)
-
 
         wiki_entities = []
      
@@ -80,7 +79,7 @@ class EntityLinking(Component):
                     if f > -1:
                         candidates += self.name_to_q[title]
                 candidates = list(set(candidates))
-                srtd_cand_ent = sorted(candidates, key=lambda x: x[2], reverse = True)
+                srtd_cand_ent = sorted(candidates, key=lambda x: x[2], reverse=True)
                 if len(srtd_cand_ent) > 0:
                     wiki_entities.append(srtd_cand_ent[0][1])
 
@@ -89,6 +88,4 @@ class EntityLinking(Component):
             if entity_id in self.wikidata:
                 entity_triplets.append(self.wikidata[entity_id])
 
-
         return entity_triplets
-    
