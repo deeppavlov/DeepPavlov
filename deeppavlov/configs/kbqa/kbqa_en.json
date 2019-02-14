@@ -166,7 +166,6 @@
         "load_path": "{DOWNLOADS_PATH}/simple_qa_freebase/FB_names.txt",
         "class_name": "kb_answer_parser",
         "classes_vocab_keys": "#classes_vocab.keys()",
-        "load_path": "{MODELS_PATH}/simple_qa_relation_prediction/classes.dict",
         "top_k_classes": 5
       }
     ],
