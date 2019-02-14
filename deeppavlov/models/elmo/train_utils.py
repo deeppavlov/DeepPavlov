@@ -16,8 +16,8 @@
 
 import re
 
-import tensorflow as tf
 import h5py
+import tensorflow as tf
 
 from deeppavlov.models.elmo.bilm_model import LanguageModel
 

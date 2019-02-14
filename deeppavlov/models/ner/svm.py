@@ -12,18 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from itertools import chain
-from typing import List, Union
 import pickle
+from itertools import chain
+from logging import getLogger
+from typing import List, Union
 
-from sklearn.svm import SVC
 import numpy as np
+from sklearn.svm import SVC
 
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Estimator
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('ner_svm')

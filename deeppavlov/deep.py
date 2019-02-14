@@ -15,22 +15,21 @@ limitations under the License.
 """
 
 import argparse
+from logging import getLogger
 
-from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.commands.infer import interact_model, predict_on_stream
-from deeppavlov.core.common.file import find_config
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.download import deep_download
+from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.common.cross_validation import calc_cv_score
-from utils.alice import start_alice_server
-from utils.telegram_utils.telegram_ui import interact_model_by_telegram
-from utils.server_utils.server import start_model_server
-from utils.ms_bot_framework_utils.server import run_ms_bf_default_agent
+from deeppavlov.core.common.file import find_config
+from deeppavlov.download import deep_download
 from utils.alexa.server import run_alexa_default_agent
+from utils.alice import start_alice_server
+from utils.ms_bot_framework_utils.server import run_ms_bf_default_agent
 from utils.pip_wrapper import install_from_config
+from utils.server_utils.server import start_model_server
+from utils.telegram_utils.telegram_ui import interact_model_by_telegram
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 parser = argparse.ArgumentParser()
 

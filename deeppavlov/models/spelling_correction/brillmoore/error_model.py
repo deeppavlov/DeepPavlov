@@ -14,21 +14,20 @@
 
 import csv
 import itertools
-from typing import List, Iterable, Tuple
 from collections import defaultdict, Counter
 from heapq import heappop, heappushpop, heappush
+from logging import getLogger
 from math import log, exp
+from typing import List, Iterable, Tuple
 
 from tqdm import tqdm
 
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.vocabs.typos import StaticDictionary
-from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.log import get_logger
 
-
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 
 @register('spelling_error_model')

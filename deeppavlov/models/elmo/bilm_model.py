@@ -14,9 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import tensorflow as tf
 import numpy as np
-
+import tensorflow as tf
 
 DTYPE = 'float32'
 DTYPE_INT = 'int64'
