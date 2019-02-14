@@ -38,8 +38,8 @@ class MailruReader(DatasetReader):
         valid_fname = data_path / 'dev.tsv'
         test_fname = data_path / 'test.tsv'
         dataset["train"] = self._preprocess_data_train(train_fname)
-        dataset["valid"] = self._preprocess_data_valid_test(valid_fname)
-        dataset["test"] = self._preprocess_data_valid_test(test_fname)
+        dataset["valid"] = self._preprocess_data_valid(valid_fname)
+        dataset["test"] = self._preprocess_data_train(test_fname)
         return dataset
 
     def _preprocess_data_train(self, fname: Path) -> List[Tuple[List[str], int]]:
@@ -51,7 +51,7 @@ class MailruReader(DatasetReader):
                 data.append((el[3:], int(el[0])))
         return data
 
-    def _preprocess_data_valid_test(self, fname: Path) -> List[Tuple[List[str], int]]:
+    def _preprocess_data_valid(self, fname: Path) -> List[Tuple[List[str], int]]:
         data = []
         with open(fname, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
@@ -71,3 +71,5 @@ class MailruReader(DatasetReader):
                     i = 1
             data.append((texts, 0))
         return data
+
+

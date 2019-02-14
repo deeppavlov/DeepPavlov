@@ -23,16 +23,23 @@ from bert_dp.tokenization import FullTokenizer
 logger = getLogger(__name__)
 
 
-@register('bert_split_preprocessor')
-class BertSplitPreprocessor(Component):
+@register('bert_ranker_preprocessor')
+class BertRankerPreprocessor(Component):
     # TODO: docs
 
-    def __init__(self, vocab_file, do_lower_case=True, max_seq_length: int = 512, *args, **kwargs):
+    def __init__(self, vocab_file, do_lower_case=True, max_seq_length: int = 512,
+                 resps= None, resp_vecs=None, *args, **kwargs):
         self.max_seq_length = max_seq_length
         vocab_file = str(expand_path(vocab_file))
         self.tokenizer = FullTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
+        self.resp_features = None
+        if resps is not None and resp_vecs is None:
+            resp_batch = [[el] for el in resps]
+            self.resp_features = self(resp_batch)
 
     def __call__(self, batch):
+        if isinstance(batch[0], str):
+            batch = [batch]
         samples = []
         for i in range(len(batch[0])):
             s = []

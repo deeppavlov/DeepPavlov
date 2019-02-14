@@ -29,23 +29,24 @@ class BertRankerModel(LRScheduledTFModel):
     # TODO: docs
     # TODO: add head-only pre-training
     def __init__(self, bert_config_file, n_classes, keep_prob,
-                 one_hot_labels=False, multilabel=False,
+                 batch_size, num_ranking_samples,
+                 one_hot_labels=False,
                  attention_probs_keep_prob=None, hidden_keep_prob=None,
-                 return_probas=True, pretrained_bert=None, min_learning_rate=1e-06, **kwargs) -> None:
+                 pretrained_bert=None,
+                 resps=None, resp_vecs=None, resp_features=None, resp_eval=True,
+                 min_learning_rate=1e-06, **kwargs) -> None:
         super().__init__(**kwargs)
 
-        self.return_probas = return_probas
+        self.batch_size = batch_size
+        self.num_ranking_samples = num_ranking_samples
+        self.resp_eval = resp_eval
         self.n_classes = n_classes
         self.min_learning_rate = min_learning_rate
         self.keep_prob = keep_prob
         self.one_hot_labels = one_hot_labels
-        self.multilabel = multilabel
-
-        if self.multilabel and not self.one_hot_labels:
-            raise RuntimeError('Use one-hot encoded labels for multilabel classification!')
-
-        if self.multilabel and not self.return_probas:
-            raise RuntimeError('Set return_probas to True for multilabel classification!')
+        self.resps = resps
+        self.resp_vecs = resp_vecs
+        self.batch_size = batch_size
 
         self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
 
@@ -78,6 +79,12 @@ class BertRankerModel(LRScheduledTFModel):
 
         if self.load_path is not None:
             self.load()
+
+        if self.resps is not None and self.resp_vecs is None:
+            self.resp_features = [resp_features[0][i * self.batch_size: (i + 1) * self.batch_size]
+                                  for i in range(len(resp_features[0]) // batch_size + 1)]
+            self.resp_vecs = self(self.resp_features)
+            np.save(self.save_path / "resp_vecs", self.resp_vecs)
 
     def _init_graph(self):
         self._init_placeholders()
@@ -147,13 +154,31 @@ class BertRankerModel(LRScheduledTFModel):
         pass
 
     def __call__(self, features_list):
-        y_pred = []
+        pred = []
         for features in features_list:
             input_ids = [f.input_ids for f in features]
             input_masks = [f.input_mask for f in features]
             input_type_ids = [f.input_type_ids for f in features]
             feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids)
-            pred = self.sess.run(self.y_probas, feed_dict=feed_dict)
-            y_pred.append(pred)
-        scores = np.hstack([np.sum(y_pred[0]*el, axis=1, keepdims=True) for el in y_pred[1:]])
-        return scores
+            p = self.sess.run(self.y_probas, feed_dict=feed_dict)
+            if len(p.shape) == 1:
+                p = np.expand_dims(p, 0)
+            pred.append(p)
+        if len (features_list[0]) == 1 and len(features_list) == 1:
+            s = pred[0] @ self.resp_vecs.T
+            return [self.resps[np.argmax(s)]]
+        elif len(features_list) != self.num_ranking_samples + 1:
+            return np.vstack(pred)
+        else:
+            c_vecs = list(pred[0])
+            scores = []
+            for i in range(len(c_vecs)):
+                r_vecs = np.vstack([el[i] for el in pred[1:]])
+                if self.resp_eval:
+                    r_vecs = np.vstack([r_vecs, self.resp_vecs])
+                s = c_vecs[i] @ r_vecs.T
+                scores.append(s)
+            scores = np.vstack(scores)
+            return scores
+
+
