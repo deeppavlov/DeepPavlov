@@ -48,6 +48,7 @@ parser.add_argument("-d", "--download", action="store_true", help="download mode
 parser.add_argument("--folds", help="number of folds", type=int, default=5)
 
 parser.add_argument("-t", "--token", default=None,  help="telegram bot token", type=str)
+parser.add_argument("--proxy", default=None, help="socks5 or https proxy string for telebot", type=str)
 parser.add_argument("-i", "--ms-id", default=None, help="microsoft bot framework app id", type=str)
 parser.add_argument("-s", "--ms-secret", default=None, help="microsoft bot framework app secret", type=str)
 
@@ -90,7 +91,7 @@ def main():
         interact_model(pipeline_config_path)
     elif args.mode == 'interactbot':
         token = args.token
-        interact_model_by_telegram(pipeline_config_path, token)
+        interact_model_by_telegram(pipeline_config_path, token, args.proxy)
     elif args.mode == 'interactmsbot':
         ms_id = args.ms_id
         ms_secret = args.ms_secret
