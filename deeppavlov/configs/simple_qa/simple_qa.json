@@ -69,20 +69,6 @@
         "model_name": "cnn_model"
       },
       {
-        "in": "y_pred_probas",
-        "out": "y_pred_ids",
-        "class_name": "proba2labels",
-        "max_proba": true
-      },
-      {
-          "in": ["y_pred_probas"],
-          "out": ["y_pred_classes"],
-          "classes_vocab_keys": "#classes_vocab.keys()",
-          "load_path": "{MODELS_PATH}/simple_qa_relation_prediction/classes.dict",
-          "top_k_relations": 5,
-          "class_name": "max_n"
-      },
-      {
         "in": ["x"],
         "class_name": "lazy_tokenizer",
         "out": ["x_tokens"]
@@ -175,10 +161,13 @@
         "class_name": "entity_linking"
       },
       {
-        "in": ["y_pred_classes", "triplets"],
+        "in": ["y_pred_probas", "triplets"],
         "out": ["answers"],
         "load_path": "{DOWNLOADS_PATH}/simple_qa_freebase/FB_names.txt",
-        "class_name": "kb_answer_parser"
+        "class_name": "kb_answer_parser",
+        "classes_vocab_keys": "#classes_vocab.keys()",
+        "load_path": "{MODELS_PATH}/simple_qa_relation_prediction/classes.dict",
+        "top_k_classes": 5
       }
     ],
     "out": [

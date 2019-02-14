@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+from typing import List, Tuple
+from pathlib import Path
+
+import numpy as np
 
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
-from pathlib import Path
 
 
 @register('kb_answer_parser')
@@ -29,30 +31,20 @@ class KBAnswerParser(Component, Serializable):
        We search a triplet with the predicted relations
     """
     
-    def __init__(self, load_path: str, *args, **kwargs) -> None:
+    def __init__(self, load_path: str, top_k_classes: int, classes_vocab_keys: Tuple, *args, **kwargs) -> None:
         super().__init__(save_path=None, load_path=load_path)
+        self.top_k_classes = top_k_classes
+        self.classes = classes_vocab_keys
         self.names_dict = None
         self.load()
-
-    def load(self) -> None:
-        load_path = Path(self.load_path).expanduser()
-        with open(load_path, 'r') as fl:
-            lines = fl.readlines()
-            self.names_dict = {}
-            for line in lines:
-                fb_id = line.strip('\n').split('\t')[0]
-                name = line.strip('\n').split('\t')[1]
-                self.names_dict[fb_id] = name
-
-    def save(self):
-        pass
     
-    def __call__(self, classes: List[List[str]],
+    def __call__(self, relations_probs: List[List[str]],
                  entity_triplets: List[List[List[str]]],
                  *args, **kwargs) -> List[str]:
-        
+
+        relations_batch = self._parse_relations_probs(relations_probs)
         objects_batch = []
-        for n, rel_list in enumerate(classes):
+        for n, rel_list in enumerate(relations_batch):
             found = False
             for relation in rel_list:
                 for triplet in entity_triplets[n]:
@@ -87,3 +79,23 @@ class KBAnswerParser(Component, Serializable):
 
         return word_batch
 
+    def _parse_relations_probs(self, probas_batch: List[List[float]]) -> List[List[str]]:
+        top_k_batch = []
+        for probas in probas_batch:
+            top_k_inds = np.asarray(probas).argsort()[-self.top_k_classes:][::-1]  # Make it top n and n to the __init__
+            top_k_classes = [self.classes[k] for k in top_k_inds]
+            top_k_batch.append(top_k_classes)
+        return top_k_batch
+
+    def load(self) -> None:
+        load_path = Path(self.load_path).expanduser()
+        with open(load_path, 'r') as fl:
+            lines = fl.readlines()
+            self.names_dict = {}
+            for line in lines:
+                fb_id = line.strip('\n').split('\t')[0]
+                name = line.strip('\n').split('\t')[1]
+                self.names_dict[fb_id] = name
+
+    def save(self) -> None:
+        pass
