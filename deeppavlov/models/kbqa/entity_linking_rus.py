@@ -72,16 +72,6 @@ class EntityLinking(Component):
                 srtd_cand_ent = sorted(candidates, key=lambda x: x[2], reverse=True)
                 if len(srtd_cand_ent) > 0:
                     wiki_entities.append(srtd_cand_ent[0][1])
-            if len(srtd_cand_ent) == 0:
-                candidates = []
-                for title in self.name_to_q:
-                    f = title.find(entity)
-                    if f > -1:
-                        candidates += self.name_to_q[title]
-                candidates = list(set(candidates))
-                srtd_cand_ent = sorted(candidates, key=lambda x: x[2], reverse=True)
-                if len(srtd_cand_ent) > 0:
-                    wiki_entities.append(srtd_cand_ent[0][1])
 
         entity_triplets = []
         for entity_id in wiki_entities:
