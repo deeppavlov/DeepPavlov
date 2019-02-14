@@ -10,8 +10,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "{MODELS_PATH}/qa_rus_relation_prediction_mix/classes.dict",
-        "load_path": "{MODELS_PATH}/qa_rus_relation_prediction_mix/classes.dict",
+        "save_path": "{MODELS_PATH}/relation_prediction/classes.dict",
+        "load_path": "{MODELS_PATH}/relation_prediction/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -47,8 +47,8 @@
         ],
         "main": true,
         "class_name": "keras_classification_model",
-        "save_path": "{MODELS_PATH}/qa_rus_relation_prediction_mix/model",
-        "load_path": "{MODELS_PATH}/qa_rus_relation_prediction_mix/model",
+        "save_path": "{MODELS_PATH}/relation_prediction/model",
+        "load_path": "{MODELS_PATH}/relation_prediction/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -78,7 +78,7 @@
       {
           "in": ["y_pred_probas"],
           "out": ["y_pred_classes"],
-          "load_path": "{MODELS_PATH}/qa_rus_relation_prediction_mix/classes.dict",
+          "load_path": "{MODELS_PATH}/relation_prediction/classes.dict",
           "n_maximum_classes": 5,
           "class_name": "max_n"
       },
@@ -105,8 +105,8 @@
         "pad_with_zeros": true,
         "special_tokens": ["<UNK>"],
         "fit_on": ["x_san"],
-        "save_path": "{MODELS_PATH}/qa_rus_ner/word.dict",
-        "load_path": "{MODELS_PATH}/qa_rus_ner/word.dict",
+        "save_path": "{MODELS_PATH}/ner/word.dict",
+        "load_path": "{MODELS_PATH}/ner/word.dict",
         "out": ["x_tok_ind"]
       },
       {
@@ -115,8 +115,8 @@
         "class_name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["y"],
-        "save_path": "{MODELS_PATH}/qa_rus_ner/tag.dict",
-        "load_path": "{MODELS_PATH}/qa_rus_ner/tag.dict",
+        "save_path": "{MODELS_PATH}/ner/tag.dict",
+        "load_path": "{MODELS_PATH}/ner/tag.dict",
         "out": ["y_ind"]
       },
       {
@@ -130,8 +130,8 @@
         "class_name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["x_char"],
-        "save_path": "{MODELS_PATH}/qa_rus_ner/char.dict",
-        "load_path": "{MODELS_PATH}/qa_rus_ner/char.dict",
+        "save_path": "{MODELS_PATH}/ner/char.dict",
+        "load_path": "{MODELS_PATH}/ner/char.dict",
         "out": ["x_char_ind"]
       },
       {
@@ -179,8 +179,8 @@
         "capitalization_dim": "#capitalization.dim",
         "token_emb_dim": "#embedder.dim",
         "char_emb_dim": 100,
-        "save_path": "{MODELS_PATH}/qa_rus_ner/model",
-        "load_path": "{MODELS_PATH}/qa_rus_ner/model",
+        "save_path": "{MODELS_PATH}/ner/model",
+        "load_path": "{MODELS_PATH}/ner/model",
         "char_emb_mat": "#embeddings_char.emb_mat",
         "use_crf": true,
         "use_batch_norm": true,
@@ -194,15 +194,17 @@
       {
         "in": ["x_tokens", "y_predicted"],
         "out": ["triplets"],
-        "entities_load_path": "{DOWNLOADS_PATH}/qa_rus_wiki/wiki_rus_name_to_q.pickle",
-        "wiki_load_path": "{DOWNLOADS_PATH}/qa_rus_wiki/wiki_rus.pickle",
-        "class_name": "entity_linking_rus"
+        "entities_load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_name_to_q.pickle",
+        "wiki_load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus.pickle",
+        "class_name": "entity_linking"
       },
       {
-        "in": ["y_pred_classes", "triplets"],
+        "in": ["y_pred_probas", "triplets"],
         "out": ["answers"],
-        "load_path": "{DOWNLOADS_PATH}/qa_rus_wiki/wiki_rus_q_to_name.pickle",
-        "class_name": "answer_generation_rus"
+        "load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_q_to_name.pickle",
+        "class_name": "kb_answer_parser",
+        "classes_vocab_keys": "#classes_vocab.keys()",
+        "top_k_classes": 5
       }
     ],
     "out": [
@@ -221,19 +223,19 @@
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/simple_questions_freebase/simple_qa_freebase.tar.gz",
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata_rus.tar.gz",
         "subdir": "{DOWNLOADS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/embeddings/reddit_fastText/wordpunct_tok_reddit_comments_2017_11_300.bin",
+        "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.bin",
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/simple_qa.tar.gz",
-        "subdir": "{ROOT_PATH}/models/simple_qa"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/kbqa.tar.gz",
+        "subdir": "{ROOT_PATH}/models/kbqa"
       },
       {
-        "url": "http://files.deeppavlov.ai/embeddings/glove.6B.100d.txt",
+        "url": "http://files.deeppavlov.ai/embeddings/lenta_lower_100.bin",
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
