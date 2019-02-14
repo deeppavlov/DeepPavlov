@@ -10,6 +10,7 @@
   },
   "chainer": {
     "in": "q",
+    "in_y": "y",
     "pipe": [
       {
         "class_name": "stream_spacy_tokenizer",
@@ -41,26 +42,50 @@
         "infer_method": "transform"
       },
       {
+        "id": "answers_vocab",
+        "class_name": "simple_vocab",
+        "fit_on": [
+          "y"
+        ],
+        "save_path": "{MODELS_PATH}/faq/answers.dict",
+        "load_path": "{MODELS_PATH}/faq/answers.dict",
+        "in": "y",
+        "out": "y_ids",
+        "special_tokens": ["<UNK>"]
+      },
+      {
         "in": "q_vect",
         "fit_on": [
           "q_vect",
           "y"
         ],
         "out": [
-          "answer"
+          "y_pred_proba"
         ],
         "class_name": "sklearn_component",
         "main": true,
         "save_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v2/logreg.pkl",
         "load_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v2/logreg.pkl",
         "model_class": "sklearn.linear_model:LogisticRegression",
-        "infer_method": "predict",
+        "infer_method": "predict_proba",
         "C": 1000,
         "penalty": "l2"
+      },
+      {
+        "in": "y_pred_proba",
+        "out": "y_pred_ids",
+        "class_name": "proba2labels",
+        "max_proba": true
+      },
+      {
+        "in": "y_pred_ids",
+        "out": "y_pred_answers",
+        "ref": "answers_vocab"
       }
     ],
     "out": [
-      "answer"
+      "y_pred_answers",
+      "y_pred_proba"
     ]
   },
   "train": {

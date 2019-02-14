@@ -63,6 +63,7 @@ class CosineSimilarityClassifier(Estimator, Serializable):
             cos_similarities = np.array(q_vects.dot(self.x_train_features.T).todense())/norm
         elif isinstance(q_vects[0], np.ndarray):
             q_vects = np.array(q_vects)
+            self.x_train_features = np.array(self.x_train_features)
             norm = np.linalg.norm(q_vects)*np.linalg.norm(self.x_train_features, axis=1)
             cos_similarities = q_vects.dot(self.x_train_features.T)/norm
         elif q_vects[0] is None:
