@@ -177,7 +177,7 @@
         "in": ["y_pred_classes", "triplets"],
         "out": ["answers"],
         "load_path": "{DOWNLOADS_PATH}/simple_qa_freebase/FB_names.txt",
-        "class_name": "answer_generation"
+        "class_name": "kb_answer_parser"
       }
     ],
     "out": [
