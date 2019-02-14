@@ -231,7 +231,7 @@
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/kbqa.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/kbqa_rus.tar.gz",
         "subdir": "{ROOT_PATH}/models/kbqa"
       },
       {
