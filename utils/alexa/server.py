@@ -14,28 +14,28 @@
 
 import ssl
 from datetime import timedelta
+from logging import getLogger
 from pathlib import Path
 from queue import Queue
 from typing import Union, Optional
 
-from flask import Flask, request, jsonify, redirect
 from flasgger import Swagger, swag_from
+from flask import Flask, request, jsonify, redirect
 from flask_cors import CORS
 
-from utils.alexa.bot import Bot
-from deeppavlov.core.commands.infer import build_model
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.agents.processors.default_rich_content_processor import DefaultRichContentWrapper
+from deeppavlov.core.commands.infer import build_model
+from deeppavlov.core.common.file import read_json
+from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
+from utils.alexa.bot import Bot
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 
 AMAZON_CERTIFICATE_LIFETIME = timedelta(hours=1)
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 app = Flask(__name__)
 Swagger(app)

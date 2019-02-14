@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import getLogger
+
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer as xav
 
 from deeppavlov.core.layers import tf_csoftmax_attention as csoftmax_attention
-from deeppavlov.core.common.log import get_logger
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 def general_attention(key, context, hidden_size, projected_align=False):

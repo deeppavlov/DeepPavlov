@@ -12,23 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from threading import Timer, Thread
-from datetime import timedelta, datetime
-from queue import Queue
-from typing import Optional, Dict
 from collections import namedtuple
+from datetime import timedelta, datetime
+from logging import getLogger
+from queue import Queue
+from threading import Timer, Thread
+from typing import Optional, Dict
 
 from OpenSSL.crypto import X509
 
+from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from utils.alexa.conversation import Conversation
 from utils.alexa.ssl_tools import verify_cert, verify_signature
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 
 REQUEST_TIMESTAMP_TOLERANCE_SECS = 150
 REFRESH_VALID_CERTS_PERIOD_SECS = 120
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 ValidatedCert = namedtuple('ValidatedCert', ['cert', 'expiration_timestamp'])
 

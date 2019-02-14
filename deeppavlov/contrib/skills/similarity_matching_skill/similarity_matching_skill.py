@@ -1,15 +1,15 @@
+from logging import getLogger
 from typing import Tuple, Optional, List
 
-from deeppavlov import train_model
 from deeppavlov import build_model
-from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.skill.skill import Skill
-from deeppavlov.core.common.file import read_json
+from deeppavlov import train_model
 from deeppavlov.configs import configs
+from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.file import read_json
 from deeppavlov.core.data.utils import update_dict_recursive
+from deeppavlov.core.skill.skill import Skill
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 class SimilarityMatchingSkill(Skill):

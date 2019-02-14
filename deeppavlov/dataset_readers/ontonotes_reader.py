@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pathlib import Path
 import pickle
+from logging import getLogger
+from pathlib import Path
 
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.data.utils import download
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.log import get_logger
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('ontonotes_reader')

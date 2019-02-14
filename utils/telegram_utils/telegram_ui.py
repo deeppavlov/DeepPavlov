@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from logging import getLogger
 from pathlib import Path
 
 import telebot
@@ -23,18 +24,19 @@ from deeppavlov.core.agent import Agent
 from deeppavlov.core.agent.rich_content import RichMessage
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 TELEGRAM_MODELS_INFO_FILENAME = 'models_info.json'
 
 
-def init_bot_for_model(agent: Agent, token: str, model_name: str):
+def init_bot_for_model(agent: Agent, token: str, model_name: str, proxy: str):
+    if proxy:
+        telebot.apihelper.proxy = {'https': proxy}
+
     bot = telebot.TeleBot(token)
 
     models_info_path = Path(get_settings_path(), TELEGRAM_MODELS_INFO_FILENAME).resolve()
@@ -66,7 +68,7 @@ def init_bot_for_model(agent: Agent, token: str, model_name: str):
     bot.polling()
 
 
-def interact_model_by_telegram(config, token=None):
+def interact_model_by_telegram(config, token=None, proxy=None):
     server_config_path = Path(get_settings_path(), SERVER_CONFIG_FILENAME)
     server_config = read_json(server_config_path)
     token = token if token else server_config['telegram_defaults']['token']
@@ -80,4 +82,4 @@ def interact_model_by_telegram(config, token=None):
     model_name = type(model.get_main_component()).__name__
     skill = DefaultStatelessSkill(model)
     agent = DefaultAgent([skill], skills_processor=DefaultRichContentWrapper())
-    init_bot_for_model(agent, token, model_name)
+    init_bot_for_model(agent, token, model_name, proxy)

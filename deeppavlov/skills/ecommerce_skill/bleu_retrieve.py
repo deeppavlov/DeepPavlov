@@ -11,23 +11,23 @@
 
 import copy
 import json
-from pathlib import Path
 from collections import Counter
-from typing import List, Tuple, Dict, Any
+from logging import getLogger
 from operator import itemgetter
+from pathlib import Path
+from typing import List, Tuple, Dict, Any
 
 import numpy as np
 from scipy.stats import entropy
 
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.common.file import save_pickle, load_pickle
 from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.file import save_pickle, load_pickle
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Component
 from deeppavlov.core.skill.skill import Skill
 from deeppavlov.metrics.bleu import bleu_advanced
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register("ecommerce_skill_bleu")

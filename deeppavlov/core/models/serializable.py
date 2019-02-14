@@ -13,14 +13,13 @@
 # limitations under the License.
 
 from abc import ABCMeta, abstractmethod
-from typing import Union, Optional
+from logging import getLogger
 from pathlib import Path
+from typing import Union, Optional
 
 from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.log import get_logger
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 class Serializable(metaclass=ABCMeta):

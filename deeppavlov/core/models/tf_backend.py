@@ -15,8 +15,8 @@
 from abc import ABCMeta
 from functools import wraps
 
-from six import with_metaclass
 import tensorflow as tf
+from six import with_metaclass
 
 
 def _graph_wrap(func, graph):

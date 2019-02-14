@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from deeppavlov.agents.rich_content.default_rich_content import PlainText
 from deeppavlov.core.agent.processor import Processor
 from deeppavlov.core.agent.rich_content import RichMessage
-from deeppavlov.agents.rich_content.default_rich_content import PlainText
 
 
 class DefaultRichContentWrapper(Processor):
