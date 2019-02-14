@@ -3,10 +3,20 @@ from mongoengine import Document, DynamicDocument, ReferenceField, ListField, St
 
 
 class User(Document):
-    user_telegram_id = UUIDField(required=True, unique=True)
     user_type = StringField(required=True, choices=['human', 'bot'], default='human')
-    device_type = DynamicField()
     personality = DynamicField()
+
+    meta = {'allow_inheritance': True}
+
+    def to_dict(self):
+        return {'id': str(self.id),
+                'user_type': self.user_type,
+                'personality': self.personality}
+
+
+class Human(User):
+    user_telegram_id = UUIDField(required=True, unique=True)
+    device_type = DynamicField()
 
     def to_dict(self):
         return {'id': str(self.id),
@@ -20,7 +30,7 @@ class Utterance(Document):
     text = StringField(required=True)
     annotations = DictField(default={'ner': {}, 'coref': {}, 'sentiment': {}})
     user = ReferenceField(User, required=True)
-    date = DateTimeField(required=True)
+    date_time = DateTimeField(required=True)
 
     meta = {'allow_inheritance': True}
 
@@ -29,14 +39,7 @@ class Utterance(Document):
                 'text': self.text,
                 'user_id': str(self.user.id),
                 'annotations': self.annotations,
-                'date': str(self.date)}
-
-
-class DialogHistory(DynamicDocument):
-    utterances = ListField(ReferenceField(Utterance), required=True)
-
-    def to_dict(self):
-        return {'utterances': [utt.to_dict() for utt in self.utterances]}
+                'date_time': str(self.date_time)}
 
 
 class BotUtterance(Utterance):
@@ -51,8 +54,15 @@ class BotUtterance(Utterance):
             'text': self.text,
             'user_id': str(self.user.id),
             'annotations': self.annotations,
-            'date': str(self.date)
+            'date_time': str(self.date_time)
         }
+
+
+class DialogHistory(DynamicDocument):
+    utterances = ListField(ReferenceField(Utterance), required=True)
+
+    def to_dict(self):
+        return {'utterances': [utt.to_dict() for utt in self.utterances]}
 
 
 class Dialog(DynamicDocument):
@@ -65,7 +75,7 @@ class Dialog(DynamicDocument):
         return {
             'id': str(self.id),
             'location': self.location,
-            'history': self.history.to_dict(),
+            'utterances': list(self.history.to_dict().values())[0],
             'user': [u.to_dict() for u in self.users if u.user_type == 'human'][0],
             'bot': [u.to_dict() for u in self.users if u.user_type == 'bot'][0],
             'channel_type': self.channel_type

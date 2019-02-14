@@ -1,37 +1,37 @@
 from datetime import datetime
 import uuid
 
-from deeppavlov.core.agent_v2.state_schema import User, Utterance, BotUtterance, DialogHistory, Dialog
+from deeppavlov.core.agent_v2.state_schema import User, Human, Utterance, BotUtterance, DialogHistory, Dialog
 from deeppavlov.core.agent_v2.connection import state_storage
 
 ########################### Test case #######################################
 
-# # Dialog.objects.delete()
-# # Utterance.objects.delete()
-# # BotUtterance.objects.delete()
-# # DialogHistory.objects.delete()
-# # User.objects.delete()
+Dialog.objects.delete()
+Utterance.objects.delete()
+BotUtterance.objects.delete()
+DialogHistory.objects.delete()
+User.objects.delete()
 
 default_anno = {"ner": [], "coref": [], "sentiment": []}
-h_user = User(user_telegram_id=uuid.uuid4())
-b_user = User(user_telegram_id=uuid.uuid4(), user_type='bot')
+h_user = Human(user_telegram_id=uuid.uuid4())
+b_user = User(user_type='bot')
 
-h_utt_1 = Utterance(text='Привет!', user=h_user, annotations=default_anno, date=datetime.utcnow())
+h_utt_1 = Utterance(text='Привет!', user=h_user, annotations=default_anno, date_time=datetime.utcnow())
 b_utt_1 = BotUtterance(text='Привет, я бот!', user=b_user, annotations=default_anno, active_skill='chitchat',
-                       confidence=0.85, date=datetime.utcnow())
+                       confidence=0.85, date_time=datetime.utcnow())
 
 h_utt_2 = Utterance(text='Как дела?', user=h_user, annotations=default_anno,
-                    date=datetime.utcnow())
+                    date_time=datetime.utcnow())
 b_utt_2 = BotUtterance(text='Хорошо, а у тебя как?', user=b_user, annotations=default_anno,
                        active_skill='chitchat',
-                       confidence=0.9333, date=datetime.utcnow())
+                       confidence=0.9333, date_time=datetime.utcnow())
 
 h_utt_3 = Utterance(text='И у меня нормально. Когда родился Петр Первый?', user=h_user, annotations=default_anno,
-                    date=datetime.utcnow())
+                    date_time=datetime.utcnow())
 b_utt_3 = BotUtterance(text='в 1672 году', user=b_user, annotations=default_anno, active_skill='odqa', confidence=0.74,
-                       date=datetime.utcnow())
+                       date_time=datetime.utcnow())
 
-h_utt_4 = Utterance(text='спасибо', user=h_user, annotations=default_anno, date=datetime.utcnow())
+h_utt_4 = Utterance(text='спасибо', user=h_user, annotations=default_anno, date_time=datetime.utcnow())
 
 dh = DialogHistory([h_utt_1, b_utt_1, h_utt_2, b_utt_2, h_utt_3, b_utt_3, h_utt_4])
 d = Dialog(history=dh, users=[h_user, b_user], channel_type='telegram')
@@ -53,13 +53,15 @@ h_utt_4.save()
 dh.save()
 d.save()
 
+h_user_2 = Human(user_telegram_id=uuid.uuid4())
 h_utt_5 = Utterance(text='Когда началась Вторая Мировая?', user=h_user, annotations=default_anno,
-                    date=datetime.utcnow())
+                    date_time=datetime.utcnow())
 b_utt_5 = BotUtterance(text='1939', user=b_user, annotations=default_anno, active_skill='odqa', confidence=0.99,
-                       date=datetime.utcnow())
-h_utt_6 = Utterance(text='Спасибо, бот!', user=h_user, annotations=default_anno, date=datetime.utcnow())
+                       date_time=datetime.utcnow())
+h_utt_6 = Utterance(text='Спасибо, бот!', user=h_user, annotations=default_anno, date_time=datetime.utcnow())
 dh_1 = DialogHistory([h_utt_5, b_utt_5, h_utt_6])
-d_1 = Dialog(history=dh_1, users=[h_user, b_user], channel_type='facebook')
+d_1 = Dialog(history=dh_1, users=[h_user_2, b_user], channel_type='telegram')
+h_user_2.save()
 h_utt_5.save()
 b_utt_5.save()
 h_utt_6.save()
@@ -76,5 +78,5 @@ for d in Dialog.objects:
         batch.append(info)
         count += 1
 
-total.update({'batch': batch})
+total.update({'dialogs': batch})
 print(total)
