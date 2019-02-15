@@ -103,6 +103,9 @@ def main():
                                 multi_instance=multi_instance,
                                 stateful=stateful,
                                 port=args.port,
+                                https=https,
+                                ssl_key=ssl_key,
+                                ssl_cert=ssl_cert,
                                 default_skill_wrap=not args.no_default_skill)
     elif args.mode == 'alexa':
         run_alexa_default_agent(model_config=pipeline_config_path,
