@@ -63,6 +63,7 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict],
         https: Flag for running Alexa skill service in https mode.
         ssl_key: SSL key file path.
         ssl_cert: SSL certificate file path.
+        default_skill_wrap: Wrap with default skill flag.
     """
 
     def get_default_agent() -> DefaultAgent:
