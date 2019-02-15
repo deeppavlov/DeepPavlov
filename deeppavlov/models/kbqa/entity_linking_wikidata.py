@@ -12,17 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-from typing import List, Tuple
+from typing import List
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 import pickle
 from pathlib import Path
 
-from collections import defaultdict
 from fuzzywuzzy import fuzz
-from nltk.corpus import stopwords
 import pymorphy2
 
 
