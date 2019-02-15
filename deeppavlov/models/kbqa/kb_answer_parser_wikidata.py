@@ -30,8 +30,9 @@ class KBAnswerParser(Component, Serializable):
        relation prediction model.
        We search a triplet with the predicted relations
     """
-    
-    def __init__(self, load_path: str, top_k_classes: int, classes_vocab_keys: Tuple, debug=False, *args, **kwargs) -> None:
+
+    def __init__(self, load_path: str, top_k_classes: int, classes_vocab_keys: Tuple, debug=False, *args,
+                 **kwargs) -> None:
         super().__init__(save_path=None, load_path=load_path)
         self.top_k_classes = top_k_classes
         self.classes = list(classes_vocab_keys)
@@ -45,7 +46,7 @@ class KBAnswerParser(Component, Serializable):
 
     def save(self):
         pass
-    
+
     def __call__(self, relations_probs: List[List[str]],
                  entity_triplets: List[List[List[str]]],
                  *args, **kwargs) -> List[str]:
@@ -70,7 +71,7 @@ class KBAnswerParser(Component, Serializable):
             objects_batch.append(obj)
 
         word_batch = []
-        
+
         for obj in objects_batch:
             if obj in self.q_to_name:
                 word = self.q_to_name[obj]["name"]
@@ -87,4 +88,3 @@ class KBAnswerParser(Component, Serializable):
             top_k_classes = [self.classes[k] for k in top_k_inds]
             top_k_batch.append(top_k_classes)
         return top_k_batch
-
