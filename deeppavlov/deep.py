@@ -91,7 +91,9 @@ def main():
         interact_model(pipeline_config_path)
     elif args.mode == 'interactbot':
         token = args.token
-        interact_model_by_telegram(pipeline_config_path, token)
+        interact_model_by_telegram(model_config=pipeline_config_path,
+                                   token=token,
+                                   default_skill_wrap=not args.no_default_skill)
     elif args.mode == 'interactmsbot':
         ms_id = args.ms_id
         ms_secret = args.ms_secret
