@@ -142,7 +142,7 @@ If you want to get custom `/start` and `/help` Telegram messages for the running
 * Add section to [*utils/settings/models_info.json*](utils/settings/models_info.json) with your custom Telegram messages
 * In model config file specify `metadata.labels.telegram_utils` parameter with name which refers to the added section of [*utils/settings/models_info.json*](utils/settings/models_info.json)
 
-You can also make available DeepPavlov pre-train models in:
+You can also serve DeepPavlov models for:
 * Microsoft Bot Framework ([see developer guide for the detailed instructions](http://docs.deeppavlov.ai/en/latest/devguides/ms_bot_integration.html)) 
 * Amazon Alexa ([see developer guide for the detailed instructions](http://docs.deeppavlov.ai/en/latest/devguides/amazon_alexa.html)) 
 
