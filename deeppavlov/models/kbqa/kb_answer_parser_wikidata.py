@@ -22,7 +22,7 @@ from deeppavlov.core.models.component import Component
 from pathlib import Path
 
 
-@register('kb_answer_parser')
+@register('kb_answer_parser_wikidata')
 class KBAnswerParser(Component, Serializable):
     """
        Class for generation of answer using triplets with the entity
@@ -31,10 +31,11 @@ class KBAnswerParser(Component, Serializable):
        We search a triplet with the predicted relations
     """
     
-    def __init__(self, load_path: str, top_k_classes: int, classes_vocab_keys: Tuple, *args, **kwargs) -> None:
-        super().__init__(save_path = None, load_path = load_path)
+    def __init__(self, load_path: str, top_k_classes: int, classes_vocab_keys: Tuple, debug=False, *args, **kwargs) -> None:
+        super().__init__(save_path=None, load_path=load_path)
         self.top_k_classes = top_k_classes
         self.classes = list(classes_vocab_keys)
+        self._debug = debug
         self.load()
 
     def load(self) -> None:
@@ -50,6 +51,8 @@ class KBAnswerParser(Component, Serializable):
                  *args, **kwargs) -> List[str]:
 
         relations_batch = self._parse_relations_probs(relations_probs)
+        if self._debug:
+            print(f'Relations extracted: {relations_batch}')
         objects_batch = []
         for rel_list, entities in zip(relations_batch, entity_triplets):
             found = False

@@ -26,7 +26,7 @@ from nltk.corpus import stopwords
 import pymorphy2
 
 
-@register('entity_linking')
+@register('entity_linking_wikidata')
 class EntityLinking(Component):
     """
         Class for linking the words in the question and the corresponding entity
