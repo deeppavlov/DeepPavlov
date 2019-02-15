@@ -89,7 +89,7 @@ Use *Microsoft App ID* and *Microsoft App Secret* obtained
 in the **Web App Bot connection configuration** section.
 
 If you redirect requests to your skills service from some https endpoint, you may want to run it in http mode by
-omitting ``https``, ``key``, ``cert`` keys.
+omitting ``--https``, ``--key``, ``--cert`` keys.
 
 Optional ``-d`` key can be provided for dependencies download
 before service start.
