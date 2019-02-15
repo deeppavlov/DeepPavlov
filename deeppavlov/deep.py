@@ -109,7 +109,8 @@ def main():
                                 port=args.port,
                                 https=https,
                                 ssl_key=ssl_key,
-                                ssl_cert=ssl_cert)
+                                ssl_cert=ssl_cert,
+                                default_skill_wrap=not args.no_default_skill)
     elif args.mode == 'riseapi':
         alice = args.api_mode == 'alice'
         if alice:
