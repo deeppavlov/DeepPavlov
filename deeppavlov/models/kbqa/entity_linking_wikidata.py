@@ -29,7 +29,7 @@ class EntityLinking(Component):
         Class for linking the words in the question and the corresponding entity
         in Freebase, then extracting triplets from Freebase with the entity
     """
-    
+
     def __init__(self, entities_load_path: str,
                  wiki_load_path: str,
                  *args, **kwargs) -> None:
@@ -43,10 +43,10 @@ class EntityLinking(Component):
             self.wikidata = pickle.load(f)
 
         self.morph = pymorphy2.MorphAnalyzer()
-    
+
     def __call__(self, texts: List[List[str]],
                  tags: List[List[int]],
-                  *args, **kwargs) -> List[List[List[str]]]:
+                 *args, **kwargs) -> List[List[List[str]]]:
 
         text_entities = []
         for i, text in enumerate(texts):
@@ -58,10 +58,9 @@ class EntityLinking(Component):
             entity = entity[:-1]
             text_entities.append(entity)
 
-
         wiki_entities = []
         confidences = []
-     
+
         for entity in text_entities:
             if not entity:
                 wiki_entities.append("None")
@@ -71,7 +70,7 @@ class EntityLinking(Component):
                 if entity[0].isupper():
                     lemmatized_entity = lemmatized_entity.capitalize()
                 candidate_entities = self.name_to_q[lemmatized_entity]
-                srtd_cand_ent = sorted(candidate_entities, key = lambda x: x[2], reverse = True)
+                srtd_cand_ent = sorted(candidate_entities, key=lambda x: x[2], reverse=True)
                 if len(srtd_cand_ent) > 0:
                     wiki_entities.append(srtd_cand_ent[0][1])
                 if len(srtd_cand_ent) == 0:
@@ -81,7 +80,7 @@ class EntityLinking(Component):
                         if ratio > 75:
                             candidates += self.name_to_q[title]
                     candidates = list(set(candidates))
-                    srtd_cand_ent = sorted(candidates, key = lambda x: x[2], reverse = True)
+                    srtd_cand_ent = sorted(candidates, key=lambda x: x[2], reverse=True)
                     if len(srtd_cand_ent) > 0:
                         wiki_entities.append(srtd_cand_ent[0][1])
                     else:
@@ -94,6 +93,4 @@ class EntityLinking(Component):
             else:
                 entity_triplets.append([])
 
-
         return entity_triplets
-    
