@@ -1,6 +1,9 @@
 from concurrent.futures import ThreadPoolExecutor
 from itertools import chain
 from typing import Collection, Dict, List, Any, Optional, Union, Callable
+from functools import partial
+
+from deeppavlov.core.common.chainer import Chainer
 
 
 class Preprocessor:
@@ -14,21 +17,25 @@ class Preprocessor:
             if isinstance(keys, str):
                 keys = [keys]
 
-            if len(keys) == 1:
-                old_preprocessor = preprocessor
+            old_preprocessor = preprocessor
 
-                def preprocessor(x):
-                    return [old_preprocessor(x)]
+            if len(keys) == 1:
+                def preprocessor(x, p):
+                    return [p(x)]
+
             elif None in keys:
                 indexes, keys = zip(*[(i, k) for i, k in enumerate(keys) if k is not None])
                 old_preprocessor = preprocessor
 
-                def preprocessor(x):
-                    res = old_preprocessor(x)
+                def preprocessor(x, p):
+                    res = p(x)
                     return [res[i] for i in indexes]
 
             self.keys.extend([k.split('.') for k in keys])
-            self.annotators.append(preprocessor)
+            if isinstance(preprocessor, Chainer):
+                self.annotators.append(preprocessor)
+            else:
+                self.annotators.append(partial(preprocessor, p=old_preprocessor))
 
     def __call__(self, utterances: Collection[str]) -> List[Dict[str, Any]]:
         annotations = []
