@@ -35,7 +35,7 @@ def run_ms_bf_default_agent(model_config: Union[str, Path, dict],
                             multi_instance: bool = False,
                             stateful: bool = False,
                             port: Optional[int] = None,
-                            default_skill_wrap: bool = False):
+                            default_skill_wrap: bool = True):
 
     def get_default_agent():
         model = build_model(model_config)
