@@ -1,8 +1,8 @@
-from deeppavlov.core.data.utils import download_decompress
-
-from deeppavlov.core.data.dataset_reader import DatasetReader
 from pathlib import Path
+
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.dataset_reader import DatasetReader
+from deeppavlov.core.data.utils import download_decompress
 
 
 @register('conll2003_reader')

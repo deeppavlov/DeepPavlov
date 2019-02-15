@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
-import numpy as np
 
 from deeppavlov.models.elmo.elmo_model import BidirectionalLanguageModel, weight_layers
 

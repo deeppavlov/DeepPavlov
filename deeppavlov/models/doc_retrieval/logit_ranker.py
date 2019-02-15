@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Union, Tuple
-from operator import itemgetter
 import warnings
+from logging import getLogger
+from operator import itemgetter
+from typing import List, Union, Tuple
 
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.models.estimator import Component
 from deeppavlov.core.common.chainer import Chainer
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.estimator import Component
 
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 
 @register("logit_ranker")

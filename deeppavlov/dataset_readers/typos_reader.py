@@ -13,20 +13,18 @@
 # limitations under the License.
 
 import csv
+from logging import getLogger
+from pathlib import Path
 from typing import Dict, List, Tuple
 
 import requests
-from pathlib import Path
-
 from lxml import html
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.utils import is_done, download, mark_done
 from deeppavlov.core.data.dataset_reader import DatasetReader
-from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.data.utils import is_done, download, mark_done
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('typos_custom_reader')

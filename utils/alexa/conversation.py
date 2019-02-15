@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from threading import Timer
 from copy import deepcopy
+from logging import getLogger
+from threading import Timer
 from typing import Optional
 
 from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.core.agent.rich_content import RichMessage
-from deeppavlov.core.common.log import get_logger
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 class Conversation:

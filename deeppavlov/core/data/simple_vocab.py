@@ -13,18 +13,18 @@
 # limitations under the License.
 
 from collections import Counter, defaultdict, Iterable
-from typing import Optional, Tuple, List
 from itertools import chain
+from logging import getLogger
+from typing import Optional, Tuple, List
 
 import numpy as np
 
-from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.models.estimator import Estimator
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import zero_pad, is_str_batch, flatten_str_batch
+from deeppavlov.core.models.estimator import Estimator
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('simple_vocab')

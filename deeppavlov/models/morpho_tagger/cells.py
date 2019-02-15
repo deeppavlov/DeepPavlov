@@ -1,11 +1,9 @@
-import numpy as np
-
-import keras.backend as kb
-import keras.layers as kl
 import keras.activations as kact
+import keras.backend as kb
 import keras.initializers as kinit
+import keras.layers as kl
+import numpy as np
 from keras.engine.topology import InputSpec
-
 
 INFTY = -100
 

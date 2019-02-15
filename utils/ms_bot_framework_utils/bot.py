@@ -1,15 +1,15 @@
 import threading
+from collections import namedtuple
+from logging import getLogger
 from queue import Queue
 from threading import Thread
-from collections import namedtuple
 
 import requests
 from requests.exceptions import HTTPError
 
 from .conversation import Conversation
-from deeppavlov.core.common.log import get_logger
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 ConvKey = namedtuple('ConvKey', ['channel_id', 'conversation_id'])
 

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+
 import nltk
 
 from deeppavlov.core.common.prints import RedirectedPrints
