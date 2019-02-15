@@ -18,7 +18,6 @@ from typing import List, Dict, Tuple, Optional, Union
 
 from deeppavlov.core.agent.dialog_logger import DialogLogger
 from deeppavlov.core.models.component import Component
-from deeppavlov.core.skill.skill import Skill
 
 
 class Agent(Component, metaclass=ABCMeta):
@@ -52,7 +51,7 @@ class Agent(Component, metaclass=ABCMeta):
         dialog_logger: DeepPavlov dialog logging facility.
     """
     def __init__(self, skills: List[Component]) -> None:
-        self.skills: Union[List[Skill], List[Component]] = skills
+        self.skills: List[Component] = skills
         self.history: Dict = defaultdict(list)
         self.states: Dict = defaultdict(lambda: [None] * len(self.skills))
         self.wrapped_skills: List[SkillWrapper] = \
@@ -119,7 +118,7 @@ class SkillWrapper:
         skill_id: Skill index in Agent.skills list.
         agent: Agent instance.
     """
-    def __init__(self, skill: Skill, skill_id: int, agent: Agent) -> None:
+    def __init__(self, skill: Component, skill_id: int, agent: Agent) -> None:
         self.skill = skill
         self.skill_id = skill_id
         self.agent = agent
