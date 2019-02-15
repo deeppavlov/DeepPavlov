@@ -81,9 +81,13 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict],
                      ssl_cert=ssl_cert)
 
 
-def run_alexa_server(agent_generator: callable, multi_instance: bool = False,
-                     stateful: bool = False, port: Optional[int] = None, https: bool = False,
-                     ssl_key: str = None, ssl_cert: str = None) -> None:
+def run_alexa_server(agent_generator: callable,
+                     multi_instance: bool = False,
+                     stateful: bool = False,
+                     port: Optional[int] = None,
+                     https: bool = False,
+                     ssl_key: str = None,
+                     ssl_cert: str = None) -> None:
     """Initiates Flask web service with Alexa skill.
 
     Args:
