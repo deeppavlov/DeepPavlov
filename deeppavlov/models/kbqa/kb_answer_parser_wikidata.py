@@ -46,19 +46,22 @@ class KBAnswerParserWikidata(Component, Serializable):
         pass
     
     def __call__(self, relations_probs: List[List[str]],
-                 entity_triplets: List[List[List[str]]],
+                 entity_triplets_batch: List[List[List[str]]],
                  *args, **kwargs) -> List[str]:
 
         relations_batch = self._parse_relations_probs(relations_probs)
         objects_batch = []
-        for rel_list, entities in zip(relations_batch, entity_triplets):
+        for rel_list, entity_triplets in zip(relations_batch, entity_triplets_batch):
             found = False
             for predicted_relation in rel_list:
-                for rel_triplets in entities:
-                    relation_from_wiki = rel_triplets[0]
-                    if predicted_relation == relation_from_wiki:
-                        obj = rel_triplets[1]
-                        found = True
+                for entities in entity_triplets:
+                    for rel_triplets in entities:
+                        relation_from_wiki = rel_triplets[0]
+                        if predicted_relation == relation_from_wiki:
+                            obj = rel_triplets[1]
+                            found = True
+                            break
+                    if found == True:
                         break
                 if found == True:
                     break

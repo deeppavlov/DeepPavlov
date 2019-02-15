@@ -208,7 +208,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models"
+      "MODELS_PATH": "{ROOT_PATH}/models/kbqa"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",

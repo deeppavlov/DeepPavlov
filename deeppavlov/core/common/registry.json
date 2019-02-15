@@ -96,6 +96,7 @@
   "spelling_error_model": "deeppavlov.models.spelling_correction.brillmoore.error_model:ErrorModel",
   "spelling_levenshtein": "deeppavlov.models.spelling_correction.levenshtein.searcher_component:LevenshteinSearcherComponent",
   "split_tokenizer": "deeppavlov.models.tokenizers.split_tokenizer:SplitTokenizer",
+  "sq_reader": "deeppavlov.dataset_readers.sq_reader:OntonotesReader",
   "sqlite_database": "deeppavlov.core.data.sqlite_database:Sqlite3Database",
   "sqlite_iterator": "deeppavlov.dataset_iterators.sqlite_iterator:SQLiteDataIterator",
   "squad_ans_postprocessor": "deeppavlov.models.preprocessors.squad_preprocessor:SquadAnsPostprocessor",
