@@ -69,21 +69,7 @@ def get_available_gpus(num_gpus: Optional[int] = None,
             except Exception:
                 raise GpuError("Please provide an int or an iterable of ints for 'gpu_select' parameter.")
 
-    # Print out GPU device info. Useful for debugging.
-    for i in range(numdevices):
-        # If the gpu was specified, examine it
-        if not gpu_check[i]:
-            continue
-
-        handle = py3nvml.nvmlDeviceGetHandleByIndex(i)
-        info = py3nvml.nvmlDeviceGetMemoryInfo(handle)
-
-        str_ = "GPU {}:\t".format(i) + \
-               "Used Mem: {:>6}MB\t".format(info.used / (1024 ** 2)) + \
-               "Total Mem: {:>6}MB".format(info.total / (1024 ** 2))
-        logger.debug(str_)
-
-    # Now check if any devices are suitable
+    # Now check if any devices are suitable. Print out GPU device info. Useful for debugging.
     for i in range(numdevices):
         # If the gpu was specified, examine it
         if not gpu_check[i]:
@@ -97,6 +83,11 @@ def get_available_gpus(num_gpus: Optional[int] = None,
             gpu_free[i] = True
         else:
             logger.info('GPU {} has processes on it. Skipping.'.format(i))
+
+        str_ = "GPU {}:\t".format(i) + \
+               "Used Mem: {:>6}MB\t".format(info.used / (1024 ** 2)) + \
+               "Total Mem: {:>6}MB".format(info.total / (1024 ** 2))
+        logger.debug(str_)
 
     py3nvml.nvmlShutdown()
 

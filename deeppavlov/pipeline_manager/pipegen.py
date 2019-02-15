@@ -163,12 +163,9 @@ class PipeGen:
                 if search:
                     for i in range(self.N):
                         new_components.append(sample_gen.sample_params(**component))
-                    new_pipes.append(new_components)
                 else:
                     new_components.append(component)
-                    new_pipes.append(new_components)
-            else:
-                pass
+                new_pipes.append(new_components)
 
         for new_config in product(*new_pipes):
             yield new_config
@@ -192,14 +189,8 @@ class PipeGen:
                 for key, item in component.items():
                     if isinstance(item, dict):
                         if 'grid_search' in item.keys():
-                            var_list = list()
-                            for var in item['grid_search']:
-                                var_dict = dict()
-                                var_dict[var] = [i, key]
-                                var_list.append(var_dict)
+                            var_list = [{var: [i, key]} for var in item['grid_search']]
                             list_of_variants.append(var_list)
-            else:
-                pass
         # create generator
         valgen = product(*list_of_variants)
         # run generator

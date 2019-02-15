@@ -16,13 +16,13 @@ import os
 import time
 from copy import copy, deepcopy
 from datetime import datetime
-from multiprocessing import Pool
+from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from shutil import rmtree
 from typing import Union, Dict, Generator, Optional, List
 from contextlib import redirect_stderr, redirect_stdout
 
-from psutil import cpu_count
+# from psutil import cpu_count
 from tqdm import tqdm
 
 from deeppavlov.core.commands.train import read_data_by_config, get_iterator_from_config
@@ -288,7 +288,7 @@ class PipelineManager:
         """
         if gpu:
             for i, pipe_conf in enumerate(self.pipeline_generator()):
-                gpu_ind = i - (i // len(self.available_gpu)) * len(self.available_gpu)
+                gpu_ind = i % len(self.available_gpu)
                 yield (deepcopy(pipe_conf), i, self.observer, gpu_ind)
         else:
             for i, pipe_conf in enumerate(self.pipeline_generator()):
@@ -432,7 +432,7 @@ class PipelineManager:
 
         def test_dataset_reader_and_iterator(config: Dict, i: int):
             """
-            Creating a test iterator with small peace of train dataset. Config and data validation.
+            Creating a test iterator with small piece of train dataset. Config and data validation.
 
             Args:
                 config: pipeline config as dict

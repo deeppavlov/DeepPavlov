@@ -41,9 +41,11 @@ def get_data(logs: list) -> Tuple[int, List]:
             max_com = len(val['config'])
 
         for component in val['config']:
-            for key in copy(list(component.keys())):
-                if key in stop_words:
-                    del component[key]  # dell = component.pop(key)
+            for key in stop_words:
+                component.pop(key, None)
+            # for key in copy(list(component.keys())):
+            #     if key in stop_words:
+            #         del component[key]  # dell = component.pop(key)
 
             comp_data = dict()
             comp_data['name'] = component.pop('component_name')
