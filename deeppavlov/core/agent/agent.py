@@ -35,7 +35,7 @@ class Agent(Component, metaclass=ABCMeta):
         skills: List of initiated agent skills instances.
 
     Attributes:
-        skills: List of initiated agent skill or component instances.
+        skills: List of initiated Skill or Component instances.
             Components API should should implement API of Skill abstract class.
         history: Histories for each each dialog with agent indexed
             by dialog ID. Each history is represented by list of incoming
@@ -51,7 +51,7 @@ class Agent(Component, metaclass=ABCMeta):
             We highly recommend to use wrapped skills for skills inference.
         dialog_logger: DeepPavlov dialog logging facility.
     """
-    def __init__(self, skills: List[Skill]) -> None:
+    def __init__(self, skills: List[Component]) -> None:
         self.skills: Union[List[Skill], List[Component]] = skills
         self.history: Dict = defaultdict(list)
         self.states: Dict = defaultdict(lambda: [None] * len(self.skills))

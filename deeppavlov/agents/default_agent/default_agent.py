@@ -19,7 +19,6 @@ from deeppavlov.agents.processors.highest_confidence_selector import HighestConf
 from deeppavlov.core.agent.agent import Agent
 from deeppavlov.core.agent.filter import Filter
 from deeppavlov.core.agent.processor import Processor
-from deeppavlov.core.skill.skill import Skill
 from deeppavlov.core.models.component import Component
 
 
@@ -39,7 +38,7 @@ class DefaultAgent(Agent):
     You can refer to :class:`deeppavlov.core.skill.Skill`, :class:`deeppavlov.core.agent.Filter`, :class:`deeppavlov.core.agent.Processor` base classes to get more info.
 
     Args:
-        skills: List of initiated agent skills instances.
+        skills: List of initiated agent skills or components instances.
         skills_processor: Initiated agent processor.
         skills_filter: Initiated agent filter.
 
@@ -48,7 +47,7 @@ class DefaultAgent(Agent):
         skills_processor: Initiated agent processor.
         skills_filter: Initiated agent filter.
     """
-    def __init__(self, skills: Union[List[Skill], List[Component]], skills_processor: Optional[Processor]=None,
+    def __init__(self, skills: List[Component], skills_processor: Optional[Processor]=None,
                  skills_filter: Optional[Filter]=None, *args, **kwargs) -> None:
         super(DefaultAgent, self).__init__(skills=skills)
         self.skills_filter: Filter = skills_filter or TransparentFilter(len(skills))
