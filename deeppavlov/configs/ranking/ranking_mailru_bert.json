@@ -21,7 +21,7 @@
       {
         "class_name": "bert_ranker_preprocessor",
         "id": "preproc",
-        "vocab_file": "{DOWNLOADS_PATH}/mailru_npair_pooling/vocab.txt",
+        "vocab_file": "{DOWNLOADS_PATH}/mailru_bert_npair_pooling/vocab.txt",
         "do_lower_case": true,
         "max_seq_length": 128,
         "resps": "#loader.resps",
