@@ -13,9 +13,10 @@
 # limitations under the License.
 
 import ssl
+from itertools import islice
 from logging import getLogger
 from pathlib import Path
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Optional
 
 from flasgger import Swagger, swag_from
 from flask import Flask, request, jsonify, redirect, Response
@@ -57,7 +58,7 @@ def get_server_params(server_config_path, model_config):
     return server_params
 
 
-def interact_skill(model: Chainer):
+def interact_skill(model: Chainer, batch_size: Optional[int] = None):
     if not request.is_json:
         log.error("request Content-Type header is not application/json")
         return jsonify({
@@ -65,14 +66,20 @@ def interact_skill(model: Chainer):
         }), 400
 
     data = request.get_json()
-    dialog_states = data['dialogs']
+    dialog_states = iter(data['dialogs'])
 
-    result = model(dialog_states)
-    if len(model.out_params) == 1:
-        result = [result]
+    responses = []
+    while True:
+        batch = list(islice(dialog_states, batch_size))
+        if not batch:
+            break
+        result = model(batch)
+        if len(model.out_params) == 1:
+            result = [result]
+        responses += [dict(zip(model.out_params, response)) for response in zip(*result)]
 
     return jsonify({
-        'responses': [dict(zip(model.out_params, response)) for response in zip(*result)]
+        'responses': responses
     }), 200
 
 
@@ -181,12 +188,15 @@ def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, p
     app.run(host=host, port=port, threaded=False, ssl_context=ssl_context)
 
 
-def skill_server(config: Union[dict, str, Path], host='0.0.0.0', port=80, endpoint='/skill', *,
-                 download=False):
+def skill_server(config: Union[dict, str, Path], host: str = '0.0.0.0', port: int = 80, endpoint: str = '/skill', *,
+                 download: bool = False, batch_size: Optional[int] = None):
+    if batch_size is not None and batch_size < 1:
+        log.warning(f'batch_size of {batch_size} is less than 1 and is interpreted as unlimited')
+        batch_size = None
     model = build_model(config, download=download)
 
     endpoint_description = {
-        'description': 'A model endpoint',
+        'description': 'A skill endpoint',
         'parameters': [
             {
                 'name': 'data',
@@ -268,12 +278,7 @@ def skill_server(config: Union[dict, str, Path], host='0.0.0.0', port=80, endpoi
             "200": {
                 "description": "A skill response",
                 'example': {
-                    'responses': [
-                        {
-                            'text': 'привет, я бот!',
-                            'confidence': 0.973
-                        }
-                    ]
+                    'responses': [{name: 'sample-answer' for name in model.out_params}]
                 }
             }
         }
@@ -286,6 +291,6 @@ def skill_server(config: Union[dict, str, Path], host='0.0.0.0', port=80, endpoi
     @app.route(endpoint, methods=['POST'])
     @swag_from(endpoint_description)
     def answer():
-        return interact_skill(model)
+        return interact_skill(model, batch_size)
 
     app.run(host=host, port=port, threaded=False)
