@@ -66,14 +66,25 @@ def interact_skill(model: Chainer, batch_size: Optional[int] = None):
         }), 400
 
     data = request.get_json()
-    dialog_states = iter(data['dialogs'])
+    try:
+        dialog_states = iter(data['dialogs'])
+    except (KeyError, TypeError):
+        return jsonify({
+            'error': 'illegal payload format'
+        }), 500
 
     responses = []
     while True:
         batch = list(islice(dialog_states, batch_size))
         if not batch:
             break
-        result = model(batch)
+        try:
+            result = model(batch)
+        except Exception as e:
+            log.error(f'Got an exception when trying to infer the model: {type(e).__name__}: {e}')
+            return jsonify({
+                'error': f'{type(e).__name__}: {e}'
+            }), 500
         if len(model.out_params) == 1:
             result = [result]
         responses += [dict(zip(model.out_params, response)) for response in zip(*result)]
