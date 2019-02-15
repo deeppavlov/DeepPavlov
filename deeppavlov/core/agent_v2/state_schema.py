@@ -59,7 +59,7 @@ class BotUtterance(Utterance):
 
 
 class DialogHistory(DynamicDocument):
-    utterances = ListField(ReferenceField(Utterance), required=True)
+    utterances = ListField(ReferenceField(Utterance), required=True, default=[])
 
     def to_dict(self):
         return {'utterances': [utt.to_dict() for utt in self.utterances]}
@@ -67,7 +67,7 @@ class DialogHistory(DynamicDocument):
 
 class Dialog(DynamicDocument):
     location = DynamicField()
-    history = ReferenceField(DialogHistory, required=True)
+    history = ReferenceField(DialogHistory, required=True, default=[])
     users = ListField(ReferenceField(User), required=True)
     channel_type = StringField(choices=['telegram', 'vkontakte', 'facebook'], default='telegram')
 
