@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from deeppavlov.agents.filters.transparent_filter import TransparentFilter
 from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
@@ -47,11 +47,11 @@ class DefaultAgent(Agent):
         skills_processor: Initiated agent processor.
         skills_filter: Initiated agent filter.
     """
-    def __init__(self, skills: List[Component], skills_processor: Optional[Processor]=None,
-                 skills_filter: Optional[Filter]=None, *args, **kwargs) -> None:
+    def __init__(self, skills: List[Component], skills_processor: Optional[Processor] = None,
+                 skills_filter: Optional[Filter] = None, *args, **kwargs) -> None:
         super(DefaultAgent, self).__init__(skills=skills)
-        self.skills_filter: Filter = skills_filter or TransparentFilter(len(skills))
-        self.skills_processor: Processor = skills_processor or HighestConfidenceSelector()
+        self.skills_filter = skills_filter or TransparentFilter(len(skills))
+        self.skills_processor = skills_processor or HighestConfidenceSelector()
 
     def _call(self, utterances_batch: list, utterances_ids: Optional[list]=None) -> list:
         """

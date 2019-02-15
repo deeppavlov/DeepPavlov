@@ -51,7 +51,7 @@ class Agent(Component, metaclass=ABCMeta):
         dialog_logger: DeepPavlov dialog logging facility.
     """
     def __init__(self, skills: List[Component]) -> None:
-        self.skills: List[Component] = skills
+        self.skills = skills
         self.history: Dict = defaultdict(list)
         self.states: Dict = defaultdict(lambda: [None] * len(self.skills))
         self.wrapped_skills: List[SkillWrapper] = \
