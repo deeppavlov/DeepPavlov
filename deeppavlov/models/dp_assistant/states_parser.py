@@ -9,8 +9,8 @@ class StatesParser(Component):
     def __init__(self, **kwargs):
         pass
 
-    def __call__(self, states: dict) -> Tuple[List[str], List[dict], List[List[str]], List[List[dict]],
-                                              List[str], List[str]]:
+    def __call__(self, states: List[dict]) -> Tuple[List[str], List[dict], List[List[str]], List[List[dict]],
+                                                    List[str], List[str]]:
         utterances_histories = []
         last_utterances = []
         annotations_histories = []
