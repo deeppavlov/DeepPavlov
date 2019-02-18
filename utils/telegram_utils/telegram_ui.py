@@ -15,6 +15,7 @@ limitations under the License.
 """
 from logging import getLogger
 from pathlib import Path
+from typing import Union
 
 import telebot
 
@@ -65,18 +66,22 @@ def init_bot_for_model(agent: Agent, token: str, model_name: str):
     bot.polling()
 
 
-def interact_model_by_telegram(config, token=None):
+def interact_model_by_telegram(model_config: Union[str, Path, dict],
+                               token=None,
+                               default_skill_wrap: bool = True):
+
     server_config_path = Path(get_settings_path(), SERVER_CONFIG_FILENAME)
     server_config = read_json(server_config_path)
     token = token if token else server_config['telegram_defaults']['token']
+
     if not token:
         e = ValueError('Telegram token required: initiate -t param or telegram_defaults/token '
                        'in server configuration file')
         log.error(e)
         raise e
 
-    model = build_model(config)
+    model = build_model(model_config)
     model_name = type(model.get_main_component()).__name__
-    skill = DefaultStatelessSkill(model)
+    skill = DefaultStatelessSkill(model) if default_skill_wrap else model
     agent = DefaultAgent([skill], skills_processor=DefaultRichContentWrapper())
     init_bot_for_model(agent, token, model_name)
