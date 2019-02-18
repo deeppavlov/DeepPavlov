@@ -13,6 +13,32 @@ class User(Document):
                 'user_type': self.user_type,
                 'personality': self.personality}
 
+    @classmethod
+    def get_or_create(cls, *args, **kwargs):
+        """
+        gets or creates an object from init specification
+
+        Args:
+            *args:
+            kwargs:
+
+        Returns: tuple (instance:User, is_created:bool)
+
+        """
+        results = cls.objects(*args, **kwargs)
+        if results:
+            if len(results)>1:
+                # raise Exception
+                raise Exception("Multiple instances found for %s: (%s, %s)!" % (cls.__name__, args, kwargs))
+            elif len(results)==1:
+                # ok
+                return results[0], False
+        else:
+            # need to create an instance:
+            instance = cls(*args, **kwargs)
+            instance.save()
+            return instance, True
+
 
 class Human(User):
     user_telegram_id = UUIDField(required=True, unique=True)
@@ -79,4 +105,19 @@ class Dialog(DynamicDocument):
             'user': [u.to_dict() for u in self.users if u.user_type == 'human'][0],
             'bot': [u.to_dict() for u in self.users if u.user_type == 'bot'][0],
             'channel_type': self.channel_type
+        }
+
+class SkillResponse(DynamicDocument):
+    """
+    Data Model for Skills responses. It specifies behavior hypothesis from particular skill
+    after processing new Utternace
+    """
+    text = StringField()
+    confidence = FloatField()
+
+    def to_dict(self):
+        return {
+            'id': str(self.id),
+            'text': self.text,
+            'confidence': self.confidence
         }
