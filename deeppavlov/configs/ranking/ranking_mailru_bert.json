@@ -15,13 +15,13 @@
       {
         "class_name": "response_base_loader",
         "id": "loader",
-        "save_path": "{DOWNLOADS_PATH}/mailru_bert_npair_simple",
-        "load_path": "{DOWNLOADS_PATH}/mailru_bert_npair_simple"
+        "save_path": "{DOWNLOADS_PATH}/mailru_bert_npair_pooling",
+        "load_path": "{DOWNLOADS_PATH}/mailru_bert_npair_pooling"
       },
       {
         "class_name": "bert_ranker_preprocessor",
         "id": "preproc",
-        "vocab_file": "{DOWNLOADS_PATH}/mailru_bert_npair_simple/vocab.txt",
+        "vocab_file": "{DOWNLOADS_PATH}/mailru_bert_npair_pooling/vocab.txt",
         "do_lower_case": true,
         "max_seq_length": 128,
         "resps": "#loader.resps",
@@ -36,10 +36,10 @@
         "resp_features": "#preproc.resp_features",
         "n_classes": 2,
         "one_hot_labels": false,
-        "bert_config_file": "{DOWNLOADS_PATH}/mailru_bert_npair_simple/bert_config.json",
-        "pretrained_bert": "{DOWNLOADS_PATH}/mailru_bert_npair_simple/model.ckpt-599058",
-        "save_path": "{DOWNLOADS_PATH}/mailru_bert_npair_simple",
-        "load_path": "{DOWNLOADS_PATH}/mailru_bert_npair_simple/model.ckpt-599058",
+        "bert_config_file": "{DOWNLOADS_PATH}/mailru_bert_npair_pooling/bert_config.json",
+        "pretrained_bert": "{DOWNLOADS_PATH}/mailru_bert_npair_pooling/model.ckpt-466934",
+        "save_path": "{DOWNLOADS_PATH}/mailru_bert_npair_pooling",
+        "load_path": "{DOWNLOADS_PATH}/mailru_bert_npair_pooling/model.ckpt-466934",
         "num_ranking_samples": 1,
         "batch_size": 32,
         "keep_prob": 1.0,
@@ -83,7 +83,7 @@
         "subdir": "{DOWNLOADS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/mailru_bert_npair_simple.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/mailru_bert_npair_pooling.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/"
       }
     ]

@@ -28,7 +28,7 @@ class BertRankerPreprocessor(Component):
     # TODO: docs
 
     def __init__(self, vocab_file, do_lower_case=True, max_seq_length: int = 512,
-                 resps= None, resp_vecs=None, *args, **kwargs):
+                 resps= None, resp_vecs=None, conts= None, cont_vecs=None, *args, **kwargs):
         self.max_seq_length = max_seq_length
         vocab_file = str(expand_path(vocab_file))
         self.tokenizer = FullTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
@@ -36,6 +36,9 @@ class BertRankerPreprocessor(Component):
         if resps is not None and resp_vecs is None:
             resp_batch = [[el] for el in resps]
             self.resp_features = self(resp_batch)
+        if conts is not None and cont_vecs is None:
+            cont_batch = [[el] for el in conts]
+            self.cont_features = self(cont_batch)
 
     def __call__(self, batch):
         if isinstance(batch[0], str):

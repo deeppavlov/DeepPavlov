@@ -34,19 +34,23 @@ class BertRankerModel(LRScheduledTFModel):
                  attention_probs_keep_prob=None, hidden_keep_prob=None,
                  pretrained_bert=None,
                  resps=None, resp_vecs=None, resp_features=None, resp_eval=True,
+                 conts=None, cont_vecs=None, cont_features=None, cont_eval=True,
                  min_learning_rate=1e-06, **kwargs) -> None:
         super().__init__(**kwargs)
 
         self.batch_size = batch_size
         self.num_ranking_samples = num_ranking_samples
-        self.resp_eval = resp_eval
         self.n_classes = n_classes
         self.min_learning_rate = min_learning_rate
         self.keep_prob = keep_prob
         self.one_hot_labels = one_hot_labels
+        self.batch_size = batch_size
+        self.resp_eval = resp_eval
         self.resps = resps
         self.resp_vecs = resp_vecs
-        self.batch_size = batch_size
+        self.cont_eval = cont_eval
+        self.conts = conts
+        self.cont_vecs = cont_vecs
 
         self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
 
@@ -85,6 +89,12 @@ class BertRankerModel(LRScheduledTFModel):
                                   for i in range(len(resp_features[0]) // batch_size + 1)]
             self.resp_vecs = self(self.resp_features)
             np.save(self.save_path / "resp_vecs", self.resp_vecs)
+
+        if self.conts is not None and self.cont_vecs is None:
+            self.cont_features = [cont_features[0][i * self.batch_size: (i + 1) * self.batch_size]
+                                  for i in range(len(cont_features[0]) // batch_size + 1)]
+            self.cont_vecs = self(self.cont_features)
+            np.save(self.save_path / "cont_vecs", self.cont_vecs)
 
     def _init_graph(self):
         self._init_placeholders()
