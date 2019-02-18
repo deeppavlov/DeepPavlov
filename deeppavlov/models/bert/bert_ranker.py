@@ -97,16 +97,7 @@ class BertRankerModel(LRScheduledTFModel):
                                   use_one_hot_embeddings=False,
                                   )
 
-        output_layer_a = self.bert.get_sequence_output()
-        output_layer_a = tf.reduce_max(output_layer_a, axis=1)
-        hidden_size = output_layer_a.shape[-1].value
-
-        with tf.variable_scope("W"):
-            output_layer_a = tf.layers.dense(
-                output_layer_a,
-                hidden_size,
-                activation=tf.tanh,
-                kernel_initializer=tf.truncated_normal_initializer(stddev=0.02))
+        output_layer_a = self.bert.get_pooled_output()
 
         with tf.variable_scope("loss"):
             with tf.variable_scope("loss"):
