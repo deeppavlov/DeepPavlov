@@ -46,7 +46,7 @@ class ResponseBaseLoader(Serializable):
                     self.conts = [el.strip('#\n') for el in contexts]
             cont_vec_file = self.load_path / "cont_vecs.npy"
             if cont_vec_file.exists():
-                self.resp_vecs = np.load(cont_vec_file)
+                self.cont_vecs = np.load(cont_vec_file)
 
     def load(self):
         pass

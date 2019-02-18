@@ -33,6 +33,7 @@ class BertRankerPreprocessor(Component):
         vocab_file = str(expand_path(vocab_file))
         self.tokenizer = FullTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
         self.resp_features = None
+        self.cont_features = None
         if resps is not None and resp_vecs is None:
             resp_batch = [[el] for el in resps]
             self.resp_features = self(resp_batch)
