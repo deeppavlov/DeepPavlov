@@ -23,16 +23,15 @@ from pathlib import Path
 
 
 @register('kb_answer_parser_wikidata')
-class KBAnswerParser(Component, Serializable):
+class KBAnswerParserWikidata(Component, Serializable):
     """
        Class for generation of answer using triplets with the entity
        in the question and relations predicted from the question by the
        relation prediction model.
        We search a triplet with the predicted relations
     """
-
-    def __init__(self, load_path: str, top_k_classes: int, classes_vocab_keys: Tuple, debug=False, *args,
-                 **kwargs) -> None:
+    
+    def __init__(self, load_path: str, top_k_classes: int, classes_vocab_keys: Tuple, *args, **kwargs) -> None:
         super().__init__(save_path=None, load_path=load_path)
         self.top_k_classes = top_k_classes
         self.classes = list(classes_vocab_keys)
@@ -48,21 +47,24 @@ class KBAnswerParser(Component, Serializable):
         pass
 
     def __call__(self, relations_probs: List[List[str]],
-                 entity_triplets: List[List[List[str]]],
+                 entity_triplets_batch: List[List[List[str]]],
                  *args, **kwargs) -> List[str]:
 
         relations_batch = self._parse_relations_probs(relations_probs)
         if self._debug:
             print(f'Relations extracted: {relations_batch}')
         objects_batch = []
-        for rel_list, entities in zip(relations_batch, entity_triplets):
+        for rel_list, entity_triplets in zip(relations_batch, entity_triplets_batch):
             found = False
             for predicted_relation in rel_list:
-                for rel_triplets in entities:
-                    relation_from_wiki = rel_triplets[0]
-                    if predicted_relation == relation_from_wiki:
-                        obj = rel_triplets[1]
-                        found = True
+                for entities in entity_triplets:
+                    for rel_triplets in entities:
+                        relation_from_wiki = rel_triplets[0]
+                        if predicted_relation == relation_from_wiki:
+                            obj = rel_triplets[1]
+                            found = True
+                            break
+                    if found == True:
                         break
                 if found == True:
                     break

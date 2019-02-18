@@ -195,7 +195,7 @@
         "in": ["y_pred_probas", "triplets"],
         "out": ["answers"],
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_q_to_name.pickle",
-        "class_name": "kb_answer_parser",
+        "class_name": "kb_answer_parser_wikidata",
         "classes_vocab_keys": "#classes_vocab.keys()",
         "top_k_classes": 5
       }
