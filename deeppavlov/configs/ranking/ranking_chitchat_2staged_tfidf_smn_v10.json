@@ -1,22 +1,22 @@
 {
-  "info": "(v3) Using Books cleaned dataset+ VK dialogs+ pBot+ Toloka. There are 540158 items in total.",
+  "info": "(v10) Using raw dataset, not filtered, but with new DP Components (v1 -> v10)",
   "chainer": {
     "in": ["utterances_batch", "history_batch", "states_batch"],
     "pipe": [
       {
         "info": "1. Replace separators from input string",
         "class_name": "compose_inputs_hybrid_ranker",
-        "context_depth": 2,
-        "use_user_context_only": false,
-        "use_context_for_query": true,
+        "context_depth": 3,
+        "use_user_context_only": true,
+        "use_context_for_query": false,
         "in": ["utterances_batch", "history_batch", "states_batch"],
         "out": ["query_batch", "expanded_context_batch"]
       },
       {
         "class_name": "hashing_tfidf_vectorizer",
         "id": "vectorizer",
-        "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v4/train_contexts_tfidf_matrix.npz",
-        "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v4/train_contexts_tfidf_matrix.npz",
+        "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v1/train_contexts_tfidf_matrix.npz",
+        "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v1/train_contexts_tfidf_matrix.npz",
         "tokenizer": {"class_name": "ru_tokenizer",
          "lemmas": true,
          "ngram_range": [1, 2]}
@@ -32,7 +32,7 @@
       {
         "info": "3. Retrieve response candidates using the context retrieved",
         "class_name": "retrieve_candidates",
-        "map_filename": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v4/train_index_dict_v4.pickle",
+        "map_filename": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v1/train_index_dict.pickle",
         "in": ["expanded_context_batch", "tfidf_doc_ids", "tfidf_doc_scores"],
         "out": ["response_candidates", "model_inputs"]
       },
@@ -40,7 +40,7 @@
         "info": "4. Preprocess response candidates and choose the best one",
         "id": "preproc",
         "class_name": "siamese_preprocessor",
-        "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v4/preproc/tok.dict",
+        "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v1/preproc/tok.dict",
         "num_ranking_samples": 500,
         "num_context_turns": 10,
         "max_sequence_length": 50,
@@ -56,14 +56,14 @@
           "special_tokens": ["", "<UNK>"],
           "unk_token": "<UNK>",
           "id": "vocab_1",
-          "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v4/vocabs/int_tok.dict",
-          "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v4/vocabs/int_tok.dict"
+          "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v1/vocabs/int_tok.dict",
+          "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v1/vocabs/int_tok.dict"
         },
         "embedder": {
           "id": "word2vec_embedder",
           "class_name": "glove",
           "dim": 200,
-          "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v4/chitchat1.w2v.vectors.txt"
+          "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v1/chitchat1.w2v.vectors.txt"
         }
       },
       {
@@ -83,8 +83,8 @@
         "learning_rate": 1e-3,
         "batch_size": 500,
         "seed": 65,
-        "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v4/model_smn/model",
-        "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v4/model_smn/model"
+        "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v1/model_smn/model",
+        "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v1/model_smn/model"
       },
       {
         "info": "5. Return actual response",
@@ -112,7 +112,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/dev/chitchat_2staged_tfidf_smn_v4.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/dev/chitchat_2staged_tfidf_smn_v1.tar.gz",
         "subdir": "{MODELS_PATH}"
       }
     ]

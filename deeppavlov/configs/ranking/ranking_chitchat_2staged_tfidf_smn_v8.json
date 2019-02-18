@@ -32,7 +32,7 @@
         "info": "3. Retrieve response candidates using the context retrieved",
         "class_name": "retrieve_candidates",
         "map_filename": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v5/train_index_dict_v5.pickle",
-        "in": ["expanded_context_batch", "tfidf_doc_ids"],
+        "in": ["expanded_context_batch", "tfidf_doc_ids", "tfidf_doc_scores"],
         "out": ["response_candidates", "model_inputs"]
       },
       {

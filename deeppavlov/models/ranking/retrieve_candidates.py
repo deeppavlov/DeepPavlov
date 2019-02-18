@@ -32,7 +32,7 @@ class RetrieveCandidates(Component):
         self.map = pickle.load(open(map_filename, 'rb'))
 
 
-    def __call__(self, context_batch, index_batch):
+    def __call__(self, context_batch, index_batch, scores_batch):
         """
         Get batch of contexts, retrieve their corresponded responses,
         return batch of lists of candidates and batch of model inputs.
@@ -42,9 +42,15 @@ class RetrieveCandidates(Component):
         """
 
         candidates_batch = []  # batch of list of candidates
-        for index in index_batch:
+        for idx, index in enumerate(index_batch):
             ids = [int(i.split('.')[0]) for i in index]
             candidates = [self.map[id][1] for id in ids]
+
+            candidates2 = [(kk, self.map[id][1]) for kk,id in enumerate(ids)]
+            contexts = [(kk, self.map[id][0]) for kk,id in enumerate(ids)]
+            scores = [(kk,"{:.2f}".format(j)) for kk,j in enumerate(scores_batch[idx])]
+            # print("[tf-idf] \nscores:", scores, "\ncontext:", contexts, "\nresponses:", candidates2)  # DEBUG
+
             candidates_batch.append(candidates)
 
         model_inputs = []
@@ -55,8 +61,5 @@ class RetrieveCandidates(Component):
 
         # NOTE: candidates_batch shape = (batch_size, num_ranking_samples)
         # NOTE: model_inputs shape = (batch_size, num_context_turns+num_ranking_samples)
-
-        # print("candidates_batch", candidates_batch)
-        # print("model_inputs", model_inputs)
 
         return candidates_batch, model_inputs

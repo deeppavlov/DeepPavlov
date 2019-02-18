@@ -26,8 +26,10 @@ class HybridRankerPredictor(Component):
 
     def __init__(self,
                  sample_size,
+                 lambda_coeff: float = 10.,
                  **kwargs):
         self.sample_size = sample_size
+        self.lambda_coeff = lambda_coeff
 
 
     def __call__(self, candidates_batch, preds_batch):
@@ -41,18 +43,27 @@ class HybridRankerPredictor(Component):
         for i in range(len(candidates_batch)):
             d = {candidates_batch[i][j]: preds_batch[i][j] for j in range(len(preds_batch[i]))}
             candidates_list = list(set(candidates_batch[i]))
-            scores = [d[c] for c in candidates_list]
-
-            # print("len cand, cands:", len(candidates_list), candidates_list)
-            # print("len scores, scores:", len(scores), scores)
+            scores = np.array([d[c] for c in candidates_list])
 
             sorted_ids = np.flip(np.argsort(scores), -1)
-            chosen_index = np.random.choice(sorted_ids[:self.sample_size])  # choose a random answer as the best one
+            # chosen_index = np.random.choice(sorted_ids[:self.sample_size])  # choose a random answer as the best one
+
+            # debug
+            sorted_scores = [scores[i] for i in sorted_ids]            # [0.9, 0.6, 0.55, 0.54, 0.4, 0.33, 0.32, 0.3]
+            # filtered_score_ids = np.where(np.array(sorted_scores) >= 0.5)  # array([0, 1, 2, 3]),)
+
+            i = np.arange(17)
+            w = np.exp(-i / self.lambda_coeff)
+            w = w / w.sum()
+            # print("distribution:", w)  # DEBUG
+
+            chosen_index = np.random.choice(sorted_ids[:17], p=w)
+
+            # print('candidates: ', [candidates_list[i] for i in sorted_ids[:17]], 'scores: ',
+            #       [sorted_scores[i] for i in range(17)])  # DEBUG
+            # print('answer: ', chosen_index, scores[chosen_index], candidates_list[chosen_index])  # DEBUG
 
             responses_batch.append(candidates_list[chosen_index])
             responses_preds.append(scores[chosen_index])
-
-        # print("responses", responses_batch)
-        # print("responses_scores", responses_preds)
 
         return responses_batch, responses_preds
