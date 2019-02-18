@@ -21,8 +21,8 @@ class StatesManager:
             users.append(user)
         return users
 
-    def get_states(self, users, utterances, locations, channel_types, should_reset):
-        states = []
+    def get_dialogs(self, users, utterances, locations, channel_types, should_reset):
+        dialogs = []
         for user, utt, loc, channel_type, reset in zip(users, utterances,
                                                        locations, channel_types,
                                                        should_reset):
@@ -31,11 +31,12 @@ class StatesManager:
                                                     utterances=[utt],
                                                     location=loc,
                                                     channel_type=channel_type)
-                states.append(new_dialog)
+                dialogs.append(new_dialog)
             else:
-                dialog_query = Dialog.objects(users__in=[user])
-                states.append(dialog_query[0])
-        return states
+                d = Dialog.objects(users__in=[user])[0]
+                d.utterances.append(utt)
+                dialogs.append(d)
+        return dialogs
 
     def get_utterances(self, texts, annotations, users, date_times):
         utterances = []

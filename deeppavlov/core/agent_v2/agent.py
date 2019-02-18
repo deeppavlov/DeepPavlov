@@ -20,11 +20,15 @@ class Agent:
         me_users = self.states_manager.get_users(user_telegram_ids, user_device_types)
         annotations = self.predict_annotations(utterances, should_reset)
         me_utterances = self.states_manager.get_utterances(utterances, annotations, me_users, date_times)
-        me_states = self.states_manager.get_states(me_users, me_utterances, locations, channel_types, should_reset)
+        me_dialos = self.states_manager.get_dialogs(me_users, me_utterances, locations, channel_types, should_reset)
 
         # DEBUG
-        # for state in me_states:
-        #     print(state.to_dict())
+        total = {'version': 0.9}
+        dialogs = []
+        for d in me_dialos:
+            dialogs.append(d.to_dict())
+        total['dialogs'] = dialogs
+        print(total)
 
     def predict_annotations(self, utterances, should_reset):
         informative_utterances = list(compress(utterances, map(operator.not_, should_reset)))

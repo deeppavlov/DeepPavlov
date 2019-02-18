@@ -9,7 +9,10 @@ from deeppavlov.core.agent_v2.preprocessor import Preprocessor
 ner = build_model(configs.ner.ner_rus, download=True)
 faq = build_model(configs.faq.tfidf_autofaq, download=True)
 sentiment = build_model(configs.classifiers.rusentiment_elmo_twitter_rnn, download=True)
-utterances = ['Привет, мир!', 'Сбербанк подтвердил про общежитие']
+utterances = ['Привет!', 'Когда началась Вторая Мировая?',
+              'Привет, я бот!', '1939', 'Как дела?', 'Спасибо, бот!',
+              'Хорошо, а у тебя как?', 'И у меня нормально. Когда родился Петр Первый?',
+              'в 1672 году', 'спасибо', ]
 print("DeepPavlov configs output:")
 print(ner(utterances))
 print(faq(utterances))
