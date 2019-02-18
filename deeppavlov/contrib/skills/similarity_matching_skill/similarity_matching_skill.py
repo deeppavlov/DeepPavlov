@@ -39,18 +39,10 @@ class SimilarityMatchingSkill(Skill):
                  save_load_path: Optional[str] = './similarity_matching',
                  edit_dict: Optional[dict] = None, train: bool = True):
 
-        if config_type == 'tfidf_autofaq':
-            model_config = read_json(configs.faq.tfidf_autofaq)
-        elif config_type == 'fasttext_avg_autofaq':
-            model_config = read_json(configs.faq.fasttext_avg_autofaq)
-        elif config_type == 'fasttext_tfidf_autofaq':
-            model_config = read_json(configs.faq.fasttext_tfidf_autofaq)
-        elif config_type == 'tfidf_logreg_autofaq':
-            model_config = read_json(configs.faq.tfidf_logreg_autofaq)
-        elif config_type == 'tfidf_logreg_en_faq':
-            model_config = read_json(configs.faq.tfidf_logreg_en_faq)
-        else:
-            raise ValueError("There is no config called '{}'".format(config_type))
+        if config_type not in configs.faq:
+            raise ValueError("There is no config named '{0}'. Possible options are: {1}"
+                             .format(config_type, ", ".join(configs.faq.keys())))
+        model_config = read_json(configs.faq[config_type])
 
         if x_col_name is not None:
             model_config['dataset_reader']['x_col_name'] = x_col_name
