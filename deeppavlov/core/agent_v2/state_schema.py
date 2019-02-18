@@ -1,4 +1,5 @@
-from mongoengine import Document, DynamicDocument, ReferenceField, ListField, StringField, DynamicField, \
+from mongoengine import Document, DynamicDocument, ReferenceField, ListField, StringField, \
+    DynamicField, \
     UUIDField, DateTimeField, FloatField, DictField
 
 
@@ -27,10 +28,11 @@ class User(Document):
         """
         results = cls.objects(*args, **kwargs)
         if results:
-            if len(results)>1:
+            if len(results) > 1:
                 # raise Exception
-                raise Exception("Multiple instances found for %s: (%s, %s)!" % (cls.__name__, args, kwargs))
-            elif len(results)==1:
+                raise Exception(
+                      f"Multiple instances found for {cls.__name__}: ({args}, {kwargs})!")
+            elif len(results) == 1:
                 # ok
                 return results[0], False
         else:
