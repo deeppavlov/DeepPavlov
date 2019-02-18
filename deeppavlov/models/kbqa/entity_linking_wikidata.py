@@ -91,7 +91,7 @@ class EntityLinkingWikidata(Component):
                         if length_ratio > 0.6 and length_ratio < 1.4:
                             ratio = fuzz.ratio(title, lemmatized_entity)
                             if ratio > 65:
-                                candidates += self.name_to_q[title]
+                                candidates += self.name_to_q.get(title, [])
                     candidates = list(set(candidates))
                     srtd_cand_ent = sorted(candidates, key=lambda x: x[2], reverse = True)
                     if len(srtd_cand_ent) > 0:
