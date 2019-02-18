@@ -3,6 +3,7 @@ import uuid
 
 from deeppavlov.core.agent_v2.state_schema import User, Human, Utterance, BotUtterance, DialogHistory, Dialog
 from deeppavlov.core.agent_v2.connection import state_storage
+import pprint
 
 ########################### Test case #######################################
 
@@ -79,4 +80,7 @@ for d in Dialog.objects:
         count += 1
 
 total.update({'dialogs': batch})
-print(total)
+
+pp = pprint.PrettyPrinter(indent=4)
+pp.pprint(total)
+# print(total)
