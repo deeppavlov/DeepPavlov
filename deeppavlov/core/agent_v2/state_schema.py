@@ -107,6 +107,7 @@ class Dialog(DynamicDocument):
             'channel_type': self.channel_type
         }
 
+
 class SkillResponse(DynamicDocument):
     """
     Data Model for Skills responses. It specifies behavior hypothesis from particular skill
