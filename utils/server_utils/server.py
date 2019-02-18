@@ -137,34 +137,41 @@ def interact(model: Chainer, params_names: List[str]) -> Tuple[Response, int]:
     return jsonify(result), 200
 
 
-def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, port=None):
+def _get_ssl_context(ssl_key, ssl_cert):
+    ssh_key_path = Path(ssl_key).resolve()
+    if not ssh_key_path.is_file():
+        e = FileNotFoundError('Ssh key file not found: please provide correct path in --key param or '
+                              'https_key_path param in server configuration file')
+        log.error(e)
+        raise e
+
+    ssh_cert_path = Path(ssl_cert).resolve()
+    if not ssh_cert_path.is_file():
+        e = FileNotFoundError('Ssh certificate file not found: please provide correct path in --cert param or '
+                              'https_cert_path param in server configuration file')
+        log.error(e)
+        raise e
+
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+    ssl_context.load_cert_chain(ssh_cert_path, ssh_key_path)
+    return ssl_context
+
+
+def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, *,
+                       host=None, port=None, endpoint=None):
     server_config_path = get_settings_path() / SERVER_CONFIG_FILENAME
     server_params = get_server_params(server_config_path, model_config)
 
-    host = server_params['host']
+    host = host or server_params['host']
     port = port or server_params['port']
-    model_endpoint = server_params['model_endpoint']
+    model_endpoint = endpoint or server_params['model_endpoint']
     model_args_names = server_params['model_args_names']
 
     https = https or server_params['https']
 
     if https:
-        ssh_key_path = Path(ssl_key or server_params['https_key_path']).resolve()
-        if not ssh_key_path.is_file():
-            e = FileNotFoundError('Ssh key file not found: please provide correct path in --key param or '
-                                  'https_key_path param in server configuration file')
-            log.error(e)
-            raise e
-
-        ssh_cert_path = Path(ssl_cert or server_params['https_cert_path']).resolve()
-        if not ssh_cert_path.is_file():
-            e = FileNotFoundError('Ssh certificate file not found: please provide correct path in --cert param or '
-                                  'https_cert_path param in server configuration file')
-            log.error(e)
-            raise e
-
-        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-        ssl_context.load_cert_chain(ssh_cert_path, ssh_key_path)
+        ssl_context = _get_ssl_context(ssl_key or server_params['https_key_path'],
+                                       ssl_cert or server_params['https_cert_path'])
     else:
         ssl_context = None
 
@@ -199,11 +206,18 @@ def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, p
     app.run(host=host, port=port, threaded=False, ssl_context=ssl_context)
 
 
-def skill_server(config: Union[dict, str, Path], host: str = '0.0.0.0', port: int = 80, endpoint: str = '/skill', *,
+def skill_server(config: Union[dict, str, Path], https=False, ssl_key=None, ssl_cert=None, *,
+                 host: Optional[str] = None, port: Optional[int] = None, endpoint: Optional[str] = None,
                  download: bool = False, batch_size: Optional[int] = None):
+    host = host or '0.0.0.0'
+    port = port or 80
+    endpoint = endpoint or '/skill'
     if batch_size is not None and batch_size < 1:
         log.warning(f'batch_size of {batch_size} is less than 1 and is interpreted as unlimited')
         batch_size = None
+
+    ssl_context = _get_ssl_context(ssl_key, ssl_cert) if https else None
+
     model = build_model(config, download=download)
 
     endpoint_description = {
@@ -304,4 +318,4 @@ def skill_server(config: Union[dict, str, Path], host: str = '0.0.0.0', port: in
     def answer():
         return interact_skill(model, batch_size)
 
-    app.run(host=host, port=port, threaded=False)
+    app.run(host=host, port=port, threaded=False, ssl_context=ssl_context)
