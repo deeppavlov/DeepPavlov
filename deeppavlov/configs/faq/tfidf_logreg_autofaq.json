@@ -51,14 +51,13 @@
         "save_path": "{MODELS_PATH}/faq/answers.dict",
         "load_path": "{MODELS_PATH}/faq/answers.dict",
         "in": "y",
-        "out": "y_ids",
-        "special_tokens": ["<UNK>"]
+        "out": "y_ids"
       },
       {
         "in": "q_vect",
         "fit_on": [
           "q_vect",
-          "y"
+          "y_ids"
         ],
         "out": [
           "y_pred_proba"

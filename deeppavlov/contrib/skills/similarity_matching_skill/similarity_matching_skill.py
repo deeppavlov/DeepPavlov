@@ -96,7 +96,6 @@ class SimilarityMatchingSkill(Skill):
         response = self.model(utterances_batch)
         response[0] = np.array(response[0]).flatten()
         response[1] = np.array(response[1]).flatten()
-        print(response)
 
         response[1] = [max(response[1])]
         return response
