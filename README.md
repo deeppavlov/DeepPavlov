@@ -179,7 +179,7 @@ DeepPavlov is Apache 2.0 - licensed.
 
 # Support and collaboration
 
-If you have any questions, bug reports or feature requests, please feel free to post on our [Github Issues](https://github.com/deepmipt/DeepPavlov/issues) page. Please tag your issue with `bug`, `feature request`, or `question`.  Also we’ll be glad to see your pull requests to add new datasets, models, embeddings, etc.
+If you have any questions, bug reports or feature requests, please feel free to post on our [Github Issues](https://github.com/deepmipt/DeepPavlov/issues) page. Please tag your issue with `bug`, `feature request`, or `question`.  Also we’ll be glad to see your pull requests to add new datasets, models, embeddings, etc. We also invite everyone here to join our [community forum](https://forum.ipavlov.ai/), where you can ask the DeepPavlov community any questions, share ideas, and find like-minded people.
 
 # The Team
 
