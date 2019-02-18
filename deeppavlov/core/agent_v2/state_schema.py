@@ -23,7 +23,7 @@ class User(Document):
             kwargs:
 
         Returns: tuple (instance:User, is_created:bool)
-
+            or raises Exception if Multiple instances are found
         """
         results = cls.objects(*args, **kwargs)
         if results:
