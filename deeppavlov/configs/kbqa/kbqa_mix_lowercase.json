@@ -185,7 +185,7 @@
       {
         "in": ["x_tokens", "y_predicted"],
         "out": ["triplets"],
-        "entities_load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_name_to_q.pickle",
+        "entities_load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_name_to_q_lowercase.pickle",
         "wiki_load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus.pickle",
         "class_name": "entity_linking_wikidata"
       },
