@@ -1,10 +1,10 @@
 {
   "chainer": {
-    "in": ["states"],
+    "in": ["dialogs"],
     "pipe": [
       {
-        "class_name": "states_parser",
-        "in": ["states"],
+        "class_name": "dialogs_parser",
+        "in": ["dialogs"],
         "out": [
           "last_utterances",
           "last_annotations",
