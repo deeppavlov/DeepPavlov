@@ -1,9 +1,11 @@
 from typing import Sequence, Hashable, List, Tuple, Any
 from datetime import datetime
+from collections import defaultdict
 
 from deeppavlov.core.agent_v2.state_schema import User, Human, Utterance, BotUtterance, Dialog
 from deeppavlov.core.agent_v2.connection import state_storage
 from deeppavlov.core.agent_v2.bot import BOT
+from deeppavlov.core.agent_v2 import VERSION
 
 TG_START_UTT = '\\start'
 
@@ -45,6 +47,13 @@ class StateManager:
         return utterances
 
     @staticmethod
+    def get_state(dialogs):
+        state = {'version': VERSION, 'dialogs': defaultdict(list)}
+        for d in dialogs:
+            state['dialogs'] += d.to_dict()
+        return state
+
+    @staticmethod
     def create_new_dialog(users, utterances, location=None, channel_type=None):
         dialog = Dialog(users=users,
                         utterances=utterances,
@@ -63,8 +72,19 @@ class StateManager:
 
     @staticmethod
     def create_new_utterance(text, user, date_time, annotations=None):
+        if user.user_type == 'bot':
+            raise RuntimeError(
+                'Utterances of bots should be created with different method. See create_new_bot_utterance()')
         utt = Utterance(text=text, user=user, date_time=date_time,
                         annotations=annotations or Utterance.annotations.default)
+        utt.save()
+        return utt
+
+    @staticmethod
+    def create_new_bot_utterance(text, user, date_time, active_skill, confidence, annotations=None):
+        utt = Utterance(text=text, user=user, date_time=date_time,
+                        active_skill=active_skill, confidence=confidence,
+                        annotations=annotations or BotUtterance.annotations.default)
         utt.save()
         return utt
 
@@ -76,10 +96,3 @@ class StateManager:
                 raise AttributeError(f'{object.__class__.__name__} object doesn\'t have an attribute {attr}')
             setattr(obj, attr, value)
             obj.save()
-
-    def save_state(self):
-        """Save dialogs and all related objects to DB.
-        Returns:
-
-        """
-        ...

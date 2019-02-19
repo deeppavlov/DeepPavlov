@@ -5,10 +5,12 @@ import operator
 
 from deeppavlov.core.agent_v2.preprocessor import Preprocessor
 from deeppavlov.core.agent_v2.state_manager import StateManager, TG_START_UTT
+from deeppavlov.core.agent_v2.skill_manager import SkillManager
 
 
 class Agent:
-    def __init__(self, state_manager: StateManager, preprocessor: Preprocessor) -> None:
+    def __init__(self, state_manager: StateManager, preprocessor: Preprocessor,
+                 skill_manager: SkillManager) -> None:
         self.state_manager = state_manager
         self.preprocessor = preprocessor
 
@@ -21,6 +23,8 @@ class Agent:
         annotations = self.predict_annotations(utterances, should_reset)
         me_utterances = self.state_manager.get_utterances(utterances, annotations, me_users, date_times)
         me_dialos = self.state_manager.get_dialogs(me_users, me_utterances, locations, channel_types, should_reset)
+        state = self.state_manager.get_state(me_dialos)
+        skill_responses = self.skill_manager.get_reponses(state)
 
         # DEBUG
         total = {'version': 0.9}
