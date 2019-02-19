@@ -8,7 +8,7 @@ from deeppavlov.core.agent_v2.bot import BOT
 TG_START_UTT = '\\start'
 
 
-class StatesManager:
+class StateManager:
 
     def get_users(self, user_telegram_ids=Sequence[Hashable], user_device_types=Sequence[Any]):
         users = []

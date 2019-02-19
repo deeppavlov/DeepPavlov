@@ -3,7 +3,7 @@ import uuid
 
 from deeppavlov import configs, build_model
 from deeppavlov.core.agent_v2.agent import Agent
-from deeppavlov.core.agent_v2.states_manager import StatesManager
+from deeppavlov.core.agent_v2.state_manager import StateManager
 from deeppavlov.core.agent_v2.preprocessor import Preprocessor
 
 ner = build_model(configs.ner.ner_rus, download=True)
@@ -18,7 +18,7 @@ print(ner(utterances))
 print(faq(utterances))
 print(sentiment(utterances))
 
-sm = StatesManager()
+sm = StateManager()
 preprocessor = Preprocessor(annotators={ner: ['ner.tokens', 'ner.tags'], faq: ['faq-answers', None],
                                         sentiment: 'sentiment'},
                             max_workers=4)
