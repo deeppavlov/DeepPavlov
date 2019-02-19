@@ -32,7 +32,7 @@ class EntityLinkingWikidata(Component):
         Class for linking the words in the question and the corresponding entity
         in Freebase, then extracting triplets from Freebase with the entity
     """
-    
+
     def __init__(self, entities_load_path: str,
                  wiki_load_path: str,
                  *args, **kwargs) -> None:
@@ -46,10 +46,10 @@ class EntityLinkingWikidata(Component):
             self.wikidata = pickle.load(f)
 
         self.morph = pymorphy2.MorphAnalyzer()
-    
+
     def __call__(self, texts: List[List[str]],
                  tags: List[List[int]],
-                  *args, **kwargs) -> List[List[List[str]]]:
+                 *args, **kwargs) -> List[List[List[str]]]:
 
         text_entities = []
         for i, text in enumerate(texts):
@@ -63,39 +63,37 @@ class EntityLinkingWikidata(Component):
 
         wiki_entities_batch = []
         confidences = []
-     
+
         for entity in text_entities:
             if not entity:
                 wiki_entities_batch.append(["None"])
             else:
-                entity_tokens = entity.split(' ')
+                entity_tokens = entity.lower().split(' ')
                 lemmatized_entity = ""
                 for j, tok in enumerate(entity_tokens):
                     morph_parse_tok = self.morph.parse(tok)[0]
                     lemmatized_tok = morph_parse_tok.normal_form
-                    if tok[0].isupper():
-                        lemmatized_tok = lemmatized_tok.capitalize()
                     lemmatized_entity += lemmatized_tok
                     lemmatized_entity += " "
                 lemmatized_entity = lemmatized_entity[:-1]
                 word_length = len(lemmatized_entity)
-                
+
                 candidate_entities = self.name_to_q[lemmatized_entity]
-                srtd_cand_ent = sorted(candidate_entities, key=lambda x: x[2], reverse = True)
+                srtd_cand_ent = sorted(candidate_entities, key=lambda x: x[2], reverse=True)
                 if len(srtd_cand_ent) > 0:
-                    wiki_entities_batch.append([srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))]) 
+                    wiki_entities_batch.append([srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))])
                 if len(srtd_cand_ent) == 0:
                     candidates = []
                     for title in self.name_to_q:
-                        length_ratio = len(title)/word_length
+                        length_ratio = len(title) / word_length
                         if length_ratio > 0.6 and length_ratio < 1.4:
                             ratio = fuzz.ratio(title, lemmatized_entity)
                             if ratio > 65:
                                 candidates += self.name_to_q.get(title, [])
                     candidates = list(set(candidates))
-                    srtd_cand_ent = sorted(candidates, key=lambda x: x[2], reverse = True)
+                    srtd_cand_ent = sorted(candidates, key=lambda x: x[2], reverse=True)
                     if len(srtd_cand_ent) > 0:
-                         wiki_entities_batch.append([srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))])
+                        wiki_entities_batch.append([srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))])
                     else:
                         wiki_entities_batch.append(["None"])
 
@@ -109,6 +107,4 @@ class EntityLinkingWikidata(Component):
                     entity_triplets.append([])
             entity_triplets_batch.append(entity_triplets)
 
-
         return entity_triplets_batch
-    
