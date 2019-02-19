@@ -147,7 +147,12 @@
     ],
     "validation_patience": 10,
     "val_every_n_epochs": 1,
-    "log_every_n_epochs": 1
+    "log_every_n_epochs": 1,
+    "class_name": "nn_trainer",
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ]
   },
   "predict": {
     "batch_size": 32,

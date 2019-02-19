@@ -9,37 +9,43 @@
     "seed": 243
   },
   "chainer": {
-    "in": ["x"],
-    "in_y": ["y"],
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
     "pipe": [
       {
         "id": "preproc",
         "class_name": "siamese_preprocessor",
         "use_matrix": false,
         "max_sequence_length": 28,
-        "fit_on": ["x"],
-        "in": ["x"],
-        "out": ["x_proc"],
-        "sent_vocab":
-        {
+        "fit_on": [
+          "x"
+        ],
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_proc"
+        ],
+        "sent_vocab": {
           "id": "siam_sent_vocab",
           "class_name": "simple_vocab",
           "save_path": "{MODELS_PATH}/paraphraser_vocabs/sent.dict",
           "load_path": "{MODELS_PATH}/paraphraser_vocabs/sent.dict"
         },
-        "tokenizer":
-        {
+        "tokenizer": {
           "class_name": "nltk_tokenizer"
         },
-        "vocab":
-        {
+        "vocab": {
           "id": "siam_vocab",
           "class_name": "simple_vocab",
           "save_path": "{MODELS_PATH}/paraphraser_vocabs/tok.dict",
           "load_path": "{MODELS_PATH}/paraphraser_vocabs/tok.dict"
         },
-        "embedder":
-        {
+        "embedder": {
           "id": "siam_embedder",
           "class_name": "fasttext",
           "load_path": "{DOWNLOADS_PATH}/embeddings/ft_dummy_ru_300.bin",
@@ -63,7 +69,7 @@
         "embedding_dim": "#siam_embedder.dim",
         "seed": 243,
         "hidden_dim": 200,
-        "learning_rate": 1e-3,
+        "learning_rate": 0.001,
         "triplet_loss": false,
         "batch_size": 256,
         "save_path": "{MODELS_PATH}/paraphraser_model/model_weights.h5",
@@ -71,9 +77,15 @@
         "preprocess": "#preproc.__call__"
       },
       {
-        "in": ["x_proc"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
+        "in": [
+          "x_proc"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "y_predicted"
+        ],
         "class_name": "siamese_predictor",
         "model": "#model",
         "ranking": false,
@@ -82,17 +94,32 @@
         "preproc_func": "#preproc.__call__"
       }
     ],
-    "out": ["y_predicted"]
+    "out": [
+      "y_predicted"
+    ]
   },
   "train": {
     "epochs": 200,
     "batch_size": 256,
     "pytest_max_batches": 2,
-    "train_metrics": ["f1", "acc", "log_loss"],
-    "metrics": ["f1", "acc", "log_loss"],
+    "train_metrics": [
+      "f1",
+      "acc",
+      "log_loss"
+    ],
+    "metrics": [
+      "f1",
+      "acc",
+      "log_loss"
+    ],
     "validation_patience": 10,
     "val_every_n_epochs": 5,
-    "log_every_n_batches": 12
+    "log_every_n_batches": 12,
+    "class_name": "nn_trainer",
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ]
   },
   "metadata": {
     "variables": {
