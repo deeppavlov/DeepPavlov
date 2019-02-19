@@ -18,39 +18,28 @@ from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
 from deeppavlov.core.commands.utils import expand_path
 from logging import getLogger
 
+from deeppavlov.models.squad.utils import softmax_mask
+
 from bert_dp.modeling import BertConfig, BertModel
 from bert_dp.optimization import AdamWeightDecayOptimizer
 
 logger = getLogger(__name__)
 
 
-@register('bert_classifier')
-class BertClassifierModel(LRScheduledTFModel):
+@register('squad_bert_model')
+class BertSQuADModel(LRScheduledTFModel):
     # TODO: docs
-    # TODO: add warmup
-    # TODO: add head-only pre-training
-    def __init__(self, bert_config_file, n_classes, keep_prob,
-                 one_hot_labels=False, multilabel=False,
+    def __init__(self, bert_config_file, keep_prob,
                  attention_probs_keep_prob=None, hidden_keep_prob=None,
-                 optimizer=None, num_warmup_steps=None, weight_decay_rate=0.01,
+                 optimizer=None, weight_decay_rate=0.01,
                  return_probas=False, pretrained_bert=None, min_learning_rate=1e-06, **kwargs) -> None:
         super().__init__(**kwargs)
 
         self.return_probas = return_probas
-        self.n_classes = n_classes
         self.min_learning_rate = min_learning_rate
         self.keep_prob = keep_prob
-        self.one_hot_labels = one_hot_labels
-        self.multilabel = multilabel
         self.optimizer = optimizer
-        self.num_warmup_steps = num_warmup_steps
         self.weight_decay_rate = weight_decay_rate
-
-        if self.multilabel and not self.one_hot_labels:
-            raise RuntimeError('Use one-hot encoded labels for multilabel classification!')
-
-        if self.multilabel and not self.return_probas:
-            raise RuntimeError('Set return_probas to True for multilabel classification!')
 
         self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
 
@@ -72,20 +61,25 @@ class BertClassifierModel(LRScheduledTFModel):
         if pretrained_bert is not None:
             pretrained_bert = str(expand_path(pretrained_bert))
 
+        """
         if tf.train.checkpoint_exists(pretrained_bert) \
                 and not tf.train.checkpoint_exists(str(self.load_path.resolve())):
             logger.info('[initializing model with Bert from {}]'.format(pretrained_bert))
-            # Exclude optimizer and classification variables from saved variables
             var_list = self._get_saveable_variables(
-                exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'classification'))
+                exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'squad'))
             saver = tf.train.Saver(var_list)
             saver.restore(self.sess, pretrained_bert)
+        """
 
         if self.load_path is not None:
             self.load()
 
     def _init_graph(self):
         self._init_placeholders()
+
+        seq_len = tf.shape(self.input_ids_ph)[-1]
+        self.y_st = tf.one_hot(self.y_st_ph, depth=seq_len)
+        self.y_end = tf.one_hot(self.y_end_ph, depth=seq_len)
 
         self.bert = BertModel(config=self.bert_config,
                               is_training=self.is_train_ph,
@@ -95,47 +89,58 @@ class BertClassifierModel(LRScheduledTFModel):
                               use_one_hot_embeddings=False,
                               )
 
-        output_layer = self.bert.get_pooled_output()
-        hidden_size = output_layer.shape[-1].value
+        last_layer = self.bert.get_sequence_output()
+        hidden_size = last_layer.get_shape().as_list()[-1]
+        bs = tf.shape(last_layer)[0]
 
-        with tf.variable_scope('classification'):
-            output_weights = tf.get_variable(
-                "output_weights", [self.n_classes, hidden_size],
-                initializer=tf.truncated_normal_initializer(stddev=0.02))
+        with tf.variable_scope('squad'):
+            output_weights = tf.get_variable('output_weights', [2, hidden_size],
+                                             initializer=tf.truncated_normal_initializer(stddev=0.02))
+            output_bias = tf.get_variable('output_bias', [2], initializer=tf.zeros_initializer())
 
-            output_bias = tf.get_variable(
-                "output_bias", [self.n_classes], initializer=tf.zeros_initializer())
+            last_layer_rs = tf.reshape(last_layer, [-1, hidden_size])
+
+            logits = tf.matmul(last_layer_rs, output_weights, transpose_b=True)
+            logits = tf.nn.bias_add(logits, output_bias)
+            logits = tf.reshape(logits, [bs, -1, 2])
+            logits = tf.transpose(logits, [2, 0, 1])
+
+            logits_st, logits_end = tf.unstack(logits, axis=0)
+
+            logit_mask = self.token_types_ph
+            # [CLS] token is used as no answer
+            mask = tf.concat([tf.ones((bs, 1), dtype=tf.int32), tf.zeros((bs, seq_len-1), dtype=tf.int32)], axis=-1)
+            logit_mask = logit_mask + mask
+
+            logits_st = softmax_mask(logits_st, logit_mask)
+            logits_end = softmax_mask(logits_end, logit_mask)
+            start_probs = tf.nn.softmax(logits_st)
+            end_probs = tf.nn.softmax(logits_end)
+
+            outer = tf.matmul(tf.expand_dims(start_probs, axis=2), tf.expand_dims(end_probs, axis=1))
+
+            context_max_len = tf.reduce_max(tf.reduce_sum(self.token_types_ph, axis=1))
+
+            max_ans_length = tf.cast(tf.minimum(20, context_max_len), tf.int64)
+            outer = tf.matrix_band_part(outer, 0, max_ans_length)
+
+            self.start_probs = start_probs
+            self.end_probs = end_probs
+            self.start_pred = tf.argmax(tf.reduce_max(outer, axis=2), axis=1)
+            self.end_pred = tf.argmax(tf.reduce_max(outer, axis=1), axis=1)
 
         with tf.variable_scope("loss"):
-            output_layer = tf.nn.dropout(output_layer, keep_prob=self.keep_prob_ph)
-            logits = tf.matmul(output_layer, output_weights, transpose_b=True)
-            logits = tf.nn.bias_add(logits, output_bias)
-
-            if self.one_hot_labels:
-                one_hot_labels = self.y_ph
-            else:
-                one_hot_labels = tf.one_hot(self.y_ph, depth=self.n_classes, dtype=tf.float32)
-
-            if not self.multilabel:
-                log_probs = tf.nn.log_softmax(logits, axis=-1)
-                self.y_probas = tf.nn.softmax(logits, axis=-1)
-                self.y_predictions = tf.argmax(logits, axis=-1)
-                per_example_loss = -tf.reduce_sum(one_hot_labels * log_probs, axis=-1)
-                self.loss = tf.reduce_mean(per_example_loss)
-            else:
-                self.y_probas = tf.nn.sigmoid(logits)
-                self.loss = tf.reduce_mean(
-                    tf.nn.sigmoid_cross_entropy_with_logits(labels=one_hot_labels, logits=logits))
+            loss_st = tf.nn.softmax_cross_entropy_with_logits(logits=logits_st, labels=self.y_st)
+            loss_end = tf.nn.softmax_cross_entropy_with_logits(logits=logits_end, labels=self.y_end)
+            self.loss = tf.reduce_mean(loss_st + loss_end)
 
     def _init_placeholders(self):
         self.input_ids_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='ids_ph')
         self.input_masks_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='masks_ph')
         self.token_types_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='token_types_ph')
 
-        if not self.one_hot_labels:
-            self.y_ph = tf.placeholder(shape=(None, ), dtype=tf.int32, name='y_ph')
-        else:
-            self.y_ph = tf.placeholder(shape=(None, self.n_classes), dtype=tf.float32, name='y_ph')
+        self.y_st_ph = tf.placeholder(shape=(None,), dtype=tf.int32, name='y_st_ph')
+        self.y_end_ph = tf.placeholder(shape=(None,), dtype=tf.int32, name='y_end_ph')
 
         self.learning_rate_ph = tf.placeholder_with_default(0.0, shape=[], name='learning_rate_ph')
         self.keep_prob_ph = tf.placeholder_with_default(1.0, shape=[], name='keep_prob_ph')
@@ -163,15 +168,16 @@ class BertClassifierModel(LRScheduledTFModel):
                 new_global_step = self.global_step + 1
                 self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
 
-    def _build_feed_dict(self, input_ids, input_masks, token_types, y=None):
+    def _build_feed_dict(self, input_ids, input_masks, token_types, y_st=None, y_end=None):
         feed_dict = {
             self.input_ids_ph: input_ids,
             self.input_masks_ph: input_masks,
             self.token_types_ph: token_types,
         }
-        if y is not None:
+        if y_st is not None and y_end is not None:
             feed_dict.update({
-                self.y_ph: y,
+                self.y_st_ph: y_st,
+                self.y_end_ph: y_end,
                 self.learning_rate_ph: max(self.get_learning_rate(), self.min_learning_rate),
                 self.keep_prob_ph: self.keep_prob,
                 self.is_train_ph: True,
@@ -179,28 +185,27 @@ class BertClassifierModel(LRScheduledTFModel):
 
         return feed_dict
 
-    def train_on_batch(self, features, y):
+    def train_on_batch(self, features, y_st, y_end):
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
 
-        feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids, y)
+        y_st = [x[0] for x in y_st]
+        y_end = [x[0] for x in y_end]
+
+        feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids, y_st, y_end)
 
         _, loss = self.sess.run([self.train_op, self.loss], feed_dict=feed_dict)
         return {'loss': loss, 'learning_rate': feed_dict[self.learning_rate_ph]}
 
     def __call__(self, features):
-
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
 
         feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids)
-        if not self.return_probas:
-            pred = self.sess.run(self.y_predictions, feed_dict=feed_dict)
-        else:
-            pred = self.sess.run(self.y_probas, feed_dict=feed_dict)
-        return pred
+        st, end = self.sess.run([self.start_pred, self.end_pred], feed_dict=feed_dict)
+        return st, end, [0] * len(features)
 
     def process_event(self, event_name: str, data) -> None:
         """
