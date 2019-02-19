@@ -69,19 +69,26 @@ class EntityLinkingWikidata(Component):
                 wiki_entities_batch.append(["None"])
             else:
                 entity_tokens = entity.lower().split(' ')
-                lemmatized_entity = ""
-                for j, tok in enumerate(entity_tokens):
-                    morph_parse_tok = self.morph.parse(tok)[0]
-                    lemmatized_tok = morph_parse_tok.normal_form
-                    lemmatized_entity += lemmatized_tok
-                    lemmatized_entity += " "
-                lemmatized_entity = lemmatized_entity[:-1]
-                word_length = len(lemmatized_entity)
+                for i in range(len(entity_tokens)):
+                    lemmatized_entity = ""
+                    for j, tok in enumerate(entity_tokens):
+                        if i == j:
+                            morph_parse_tok = self.morph.parse(tok)[0]
+                            lemmatized_tok = morph_parse_tok.normal_form
+                            lemmatized_entity += lemmatized_tok
+                            lemmatized_entity += " "
+                        else:
+                            lemmatized_entity += tok
+                            lemmatized_entity += " "
+                    lemmatized_entity = lemmatized_entity[:-1]
+                    word_length = len(lemmatized_entity)
 
-                candidate_entities = self.name_to_q[lemmatized_entity]
-                srtd_cand_ent = sorted(candidate_entities, key=lambda x: x[2], reverse=True)
-                if len(srtd_cand_ent) > 0:
-                    wiki_entities_batch.append([srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))])
+                    candidate_entities = self.name_to_q[lemmatized_entity]
+                    srtd_cand_ent = sorted(candidate_entities, key=lambda x: x[2], reverse=True)
+                    if len(srtd_cand_ent) > 0:
+                        wiki_entities_batch.append([srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))])
+                        break
+                        
                 if len(srtd_cand_ent) == 0:
                     candidates = []
                     for title in self.name_to_q:

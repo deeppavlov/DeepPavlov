@@ -20,6 +20,7 @@ from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from pathlib import Path
+from datetime import datetime
 
 
 @register('kb_answer_parser_wikidata')
@@ -50,6 +51,7 @@ class KBAnswerParserWikidata(Component, Serializable):
                  *args, **kwargs) -> List[str]:
 
         relations_batch = self._parse_relations_probs(relations_probs)
+        
         objects_batch = []
         for rel_list, entity_triplets in zip(relations_batch, entity_triplets_batch):
             found = False
@@ -72,11 +74,17 @@ class KBAnswerParserWikidata(Component, Serializable):
         word_batch = []
         
         for obj in objects_batch:
-            if obj in self.q_to_name:
-                word = self.q_to_name[obj]["name"]
-                word_batch.append(word)
+            if obj[0] == 'Q':
+                if obj in self.q_to_name:
+                    word = self.q_to_name[obj]["name"]
+                    word_batch.append(word)
+                else:
+                    word_batch.append('Not Found')
             else:
-                word_batch.append('Not Found')
+                if obj.count('-') == 2:
+                    dt = datetime.strptime(obj, "%Y-%m-%d")
+                    obj = dt.strftime("%d %B %Y")
+                word_batch.append(obj)
 
         return word_batch
 
