@@ -88,16 +88,8 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/squad_model_1.4_cpu_compatible.tar.gz",
-        "subdir": "{MODELS_PATH}"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/embeddings/wiki-news-300d-1M.vec",
-        "subdir": "{DOWNLOADS_PATH}/embeddings"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/embeddings/wiki-news-300d-1M-char.vec",
-        "subdir": "{DOWNLOADS_PATH}/embeddings"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
+        "subdir": "{DOWNLOADS_PATH}/bert_models"
       }
       ]
   }
