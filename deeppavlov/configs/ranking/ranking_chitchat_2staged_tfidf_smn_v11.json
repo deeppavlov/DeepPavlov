@@ -1,5 +1,5 @@
 {
-  "info": "(v11) Using Toloka V2 dataset only, 22944 dialogs",
+  "info": "(v11) Using Toloka V2 dataset only, 13825 dialogs",
   "chainer": {
     "in": ["utterances_batch", "history_batch", "states_batch"],
     "pipe": [
