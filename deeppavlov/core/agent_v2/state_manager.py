@@ -1,14 +1,16 @@
 from typing import Sequence, Hashable, List, Tuple, Any
 from datetime import datetime
+from collections import defaultdict
 
 from deeppavlov.core.agent_v2.state_schema import User, Human, Utterance, BotUtterance, Dialog
 from deeppavlov.core.agent_v2.connection import state_storage
 from deeppavlov.core.agent_v2.bot import BOT
+from deeppavlov.core.agent_v2 import VERSION
 
 TG_START_UTT = '\\start'
 
 
-class StatesManager:
+class StateManager:
 
     def get_users(self, user_telegram_ids=Sequence[Hashable], user_device_types=Sequence[Any]):
         users = []
@@ -21,8 +23,8 @@ class StatesManager:
             users.append(user)
         return users
 
-    def get_states(self, users, utterances, locations, channel_types, should_reset):
-        states = []
+    def get_dialogs(self, users, utterances, locations, channel_types, should_reset):
+        dialogs = []
         for user, utt, loc, channel_type, reset in zip(users, utterances,
                                                        locations, channel_types,
                                                        should_reset):
@@ -31,17 +33,25 @@ class StatesManager:
                                                     utterances=[utt],
                                                     location=loc,
                                                     channel_type=channel_type)
-                states.append(new_dialog)
+                dialogs.append(new_dialog)
             else:
-                dialog_query = Dialog.objects(users__in=[user])
-                states.append(dialog_query[0])
-        return states
+                d = Dialog.objects(users__in=[user])[0]
+                d.utterances.append(utt)
+                dialogs.append(d)
+        return dialogs
 
     def get_utterances(self, texts, annotations, users, date_times):
         utterances = []
         for text, anno, user, date_time in zip(texts, annotations, users, date_times):
             utterances.append(self.create_new_utterance(text, user, date_time, anno))
         return utterances
+
+    @staticmethod
+    def get_state(dialogs):
+        state = {'version': VERSION, 'dialogs': defaultdict(list)}
+        for d in dialogs:
+            state['dialogs'] += d.to_dict()
+        return state
 
     @staticmethod
     def create_new_dialog(users, utterances, location=None, channel_type=None):
@@ -62,8 +72,19 @@ class StatesManager:
 
     @staticmethod
     def create_new_utterance(text, user, date_time, annotations=None):
+        if user.user_type == 'bot':
+            raise RuntimeError(
+                'Utterances of bots should be created with different method. See create_new_bot_utterance()')
         utt = Utterance(text=text, user=user, date_time=date_time,
                         annotations=annotations or Utterance.annotations.default)
+        utt.save()
+        return utt
+
+    @staticmethod
+    def create_new_bot_utterance(text, user, date_time, active_skill, confidence, annotations=None):
+        utt = Utterance(text=text, user=user, date_time=date_time,
+                        active_skill=active_skill, confidence=confidence,
+                        annotations=annotations or BotUtterance.annotations.default)
         utt.save()
         return utt
 
@@ -75,10 +96,3 @@ class StatesManager:
                 raise AttributeError(f'{object.__class__.__name__} object doesn\'t have an attribute {attr}')
             setattr(obj, attr, value)
             obj.save()
-
-    def save_state(self):
-        """Save dialogs and all related objects to DB.
-        Returns:
-
-        """
-        ...

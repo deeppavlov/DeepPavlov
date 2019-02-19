@@ -4,13 +4,13 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 
 
-@register('states_parser')
-class StatesParser(Component):
+@register('dialogs_parser')
+class DialogsParser(Component):
     def __init__(self, **kwargs):
         pass
 
-    def __call__(self, states: List[dict]) -> Tuple[List[str], List[dict], List[List[str]], List[List[dict]],
-                                                    List[str], List[str]]:
+    def __call__(self, dialogs: List[dict]) -> Tuple[List[str], List[dict], List[List[str]], List[List[dict]],
+                                                     List[str], List[str]]:
         utterances_histories = []
         last_utterances = []
         annotations_histories = []
@@ -18,10 +18,10 @@ class StatesParser(Component):
         dialog_ids = []
         user_ids = []
 
-        for state in states:
+        for dialog in dialogs:
             utterances_history = []
             annotations_history = []
-            for utterance in state['utterances']:
+            for utterance in dialog['utterances']:
                 utterances_history.append(utterance['text'])
                 annotations_history.append(utterance['annotations'])
 
@@ -30,7 +30,7 @@ class StatesParser(Component):
             last_annotations = annotations_history[-1]
             annotations_histories.append(annotations_history)
 
-            dialog_ids.append(state['id'])
-            user_ids.append(state['user']['id'])
+            dialog_ids.append(dialog['id'])
+            user_ids.append(dialog['user']['id'])
 
         return last_utterances, last_annotations, utterances_histories, annotations_histories, dialog_ids, user_ids

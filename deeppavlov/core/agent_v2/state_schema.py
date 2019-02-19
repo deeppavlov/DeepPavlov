@@ -43,7 +43,7 @@ class User(Document):
 
 
 class Human(User):
-    user_telegram_id = UUIDField(required=True, unique=True, sparse=True)
+    user_telegram_id = StringField(required=True, unique=True, sparse=True)
     device_type = DynamicField()
 
     def to_dict(self):

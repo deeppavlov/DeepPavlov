@@ -13,15 +13,20 @@
           "text": "Привет!",
           "user_id": "5c65706b0110b377e17eba37",
           "annotations": {
-            "ner": [
-              
-            ],
+            "ner": {
+              "tokens": [
+                "Привет",
+                "!"
+              ],
+              "tags": [
+                "O",
+                "O"
+              ]
+            },
             "coref": [
               
             ],
-            "sentiment": [
-              
-            ]
+            "sentiment": "speech"
           },
           "date_time": "2019-02-14 13:43:07.594000"
         },
@@ -32,15 +37,26 @@
           "text": "Привет, я бот!",
           "user_id": "5c65706b0110b377e17eba38",
           "annotations": {
-            "ner": [
-              
-            ],
+            "ner": {
+              "tokens": [
+                "Привет",
+                ",",
+                "я",
+                "бот",
+                "!"
+              ],
+              "tags": [
+                "O",
+                "O",
+                "O",
+                "O",
+                "O"
+              ]
+            },
             "coref": [
               
             ],
-            "sentiment": [
-              
-            ]
+            "sentiment": "speech"
           },
           "date_time": "2019-02-14 13:43:07.595000"
         },
@@ -49,15 +65,22 @@
           "text": "Как дела?",
           "user_id": "5c65706b0110b377e17eba37",
           "annotations": {
-            "ner": [
-              
-            ],
+            "ner": {
+              "tokens": [
+                "Как",
+                "дела",
+                "?"
+              ],
+              "tags": [
+                "O",
+                "O",
+                "O"
+              ]
+            },
             "coref": [
               
             ],
-            "sentiment": [
-              
-            ]
+            "sentiment": "speech"
           },
           "date_time": "2019-02-14 13:43:07.595000"
         },
@@ -68,15 +91,30 @@
           "text": "Хорошо, а у тебя как?",
           "user_id": "5c65706b0110b377e17eba38",
           "annotations": {
-            "ner": [
-              
-            ],
+            "ner": {
+              "tokens": [
+                "Хорошо",
+                ",",
+                "а",
+                "у",
+                "тебя",
+                "как",
+                "?"
+              ],
+              "tags": [
+                "O",
+                "O",
+                "O",
+                "O",
+                "O",
+                "O",
+                "O"
+              ]
+            },
             "coref": [
               
             ],
-            "sentiment": [
-              
-            ]
+            "sentiment": "speech"
           },
           "date_time": "2019-02-14 13:43:07.595000"
         },
@@ -85,15 +123,36 @@
           "text": "И у меня нормально. Когда родился Петр Первый?",
           "user_id": "5c65706b0110b377e17eba37",
           "annotations": {
-            "ner": [
-              
-            ],
+            "ner": {
+              "tokens": [
+                "И",
+                "у",
+                "меня",
+                "нормально",
+                ".",
+                "Когда",
+                "родился",
+                "Петр",
+                "Первый",
+                "?"
+              ],
+              "tags": [
+                "O",
+                "O",
+                "O",
+                "O",
+                "O",
+                "O",
+                "O",
+                "B-PER",
+                "I-PER",
+                "O"
+              ]
+            },
             "coref": [
               
             ],
-            "sentiment": [
-              
-            ]
+            "sentiment": "neutral"
           },
           "date_time": "2019-02-14 13:43:07.595000"
         },
@@ -104,15 +163,22 @@
           "text": "в 1672 году",
           "user_id": "5c65706b0110b377e17eba38",
           "annotations": {
-            "ner": [
-              
-            ],
+            "ner": {
+              "tokens": [
+                "в",
+                "1672",
+                "году"
+              ],
+              "tags": [
+                "O",
+                "O",
+                "O"
+              ]
+            },
             "coref": [
               
             ],
-            "sentiment": [
-              
-            ]
+            "sentiment": "neutral"
           },
           "date_time": "2019-02-14 13:43:07.595000"
         },
@@ -121,15 +187,18 @@
           "text": "спасибо",
           "user_id": "5c65706b0110b377e17eba37",
           "annotations": {
-            "ner": [
-              
-            ],
+            "ner": {
+              "tokens": [
+                "спасибо"
+              ],
+              "tags": [
+                "O"
+              ]
+            },
             "coref": [
               
             ],
-            "sentiment": [
-              
-            ]
+            "sentiment": "speech"
           },
           "date_time": "2019-02-14 13:43:07.595000"
         }
@@ -157,15 +226,26 @@
           "text": "Когда началась Вторая Мировая?",
           "user_id": "5c65706b0110b377e17eba37",
           "annotations": {
-            "ner": [
-              
-            ],
+            "ner": {
+              "tokens": [
+                "Когда",
+                "началась",
+                "Вторая",
+                "Мировая",
+                "?"
+              ],
+              "tags": [
+                "O",
+                "O",
+                "O",
+                "O",
+                "O"
+              ]
+            },
             "coref": [
               
             ],
-            "sentiment": [
-              
-            ]
+            "sentiment": "neutral"
           },
           "date_time": "2019-02-14 13:43:07.601000"
         },
@@ -176,15 +256,18 @@
           "text": "1939",
           "user_id": "5c65706b0110b377e17eba38",
           "annotations": {
-            "ner": [
-              
-            ],
+            "ner": {
+              "tokens": [
+                "1939"
+              ],
+              "tags": [
+                "O"
+              ]
+            },
             "coref": [
               
             ],
-            "sentiment": [
-              
-            ]
+            "sentiment": "neutral"
           },
           "date_time": "2019-02-14 13:43:07.601000"
         },
@@ -193,15 +276,24 @@
           "text": "Спасибо, бот!",
           "user_id": "5c65706b0110b377e17eba37",
           "annotations": {
-            "ner": [
-              
-            ],
+            "ner": {
+              "tokens": [
+                "Спасибо",
+                ",",
+                "бот",
+                "!"
+              ],
+              "tags": [
+                "O",
+                "O",
+                "O",
+                "O"
+              ]
+            },
             "coref": [
               
             ],
-            "sentiment": [
-              
-            ]
+            "sentiment": "speech"
           },
           "date_time": "2019-02-14 13:43:07.601000"
         }
@@ -224,7 +316,7 @@
 }
 ```
 
-## Формат ответа
+## Базовый формат ответа скила
 
 ```json
 {
@@ -232,12 +324,12 @@
     {
       "text": "привет, я бот!",
       "confidence": 0.947,
-      "other": {}
+      "skill_name": "chitchat"
     },
     {
       "text": "как дела?",
       "confidence": 0.3333,
-      "other": {}
+      "skill_name": "chitchat"
     }
   ]
 }
