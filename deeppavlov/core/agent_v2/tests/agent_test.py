@@ -5,6 +5,10 @@ from deeppavlov import configs, build_model
 from deeppavlov.core.agent_v2.agent import Agent
 from deeppavlov.core.agent_v2.state_manager import StateManager
 from deeppavlov.core.agent_v2.preprocessor import Preprocessor
+from deeppavlov.core.agent_v2.skill_manager import SkillManager
+from deeppavlov.core.agent_v2.rest_caller import RestCaller
+from deeppavlov.core.agent_v2.config import AGENT_CONFIG
+
 
 ner = build_model(configs.ner.ner_rus, download=True)
 faq = build_model(configs.faq.tfidf_autofaq, download=True)
@@ -22,8 +26,10 @@ sm = StateManager()
 preprocessor = Preprocessor(annotators={ner: ['ner.tokens', 'ner.tags'], faq: ['faq-answers', None],
                                         sentiment: 'sentiment'},
                             max_workers=4)
+rest_caller = RestCaller(max_workers=AGENT_CONFIG["max_workers"])
+skill_manager = SkillManager(skills_selector=None, response_selector=None, rest_caller=RestCaller)
 
-agent = Agent(sm, preprocessor)
+agent = Agent(sm, preprocessor, skill_manager)
 
 # TEST predict_annotations()
 annotations = agent.predict_annotations(utterances, should_reset=[False]*len(utterances))

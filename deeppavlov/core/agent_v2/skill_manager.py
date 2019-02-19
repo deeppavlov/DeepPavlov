@@ -4,12 +4,12 @@ from deeppavlov.core.agent_v2.config import AGENT_CONFIG
 
 class SkillManager:
 
-    def __init__(self, skills_selector, response_selector, rest_caller: RestCaller):
+    def __init__(self, skills_selector, response_selector, rest_caller):
         self.skills_selector = skills_selector
         self.response_selector = response_selector
-        self.rest_caller = RestCaller(self.max_workers)
-        self.skills = AGENT_CONFIG['skills']
         self.max_workers = AGENT_CONFIG['max_workers']
+        self.rest_caller = rest_caller
+        self.skills = AGENT_CONFIG['skills']
 
     def __call__(self, state):
         active_skills = self.skills_selector.select_skills(self.skills, state)
