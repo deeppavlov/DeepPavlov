@@ -18,8 +18,9 @@
         "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v7/train_contexts_tfidf_matrix.npz",
         "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v7/train_contexts_tfidf_matrix.npz",
         "tokenizer": {"class_name": "ru_tokenizer",
+         "alfas_only": false,
          "lemmas": true,
-         "ngram_range": [1, 2]}
+         "ngram_range": [1, 2, 3, 4]}
       },
       {
         "info": "2. Find relevant contexts",
