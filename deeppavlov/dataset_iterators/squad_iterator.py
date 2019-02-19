@@ -38,11 +38,7 @@ class SquadIterator(DataLearningIterator):
 
     def split(self, *args, **kwargs) -> None:
         for dt in ['train', 'valid', 'test']:
-            # TODO: remove
-            if dt != 'valid':
                 setattr(self, dt, SquadIterator._extract_cqas(getattr(self, dt)))
-            else:
-                setattr(self, dt, SquadIterator._extract_cqas(getattr(self, dt))[:1000])
 
     @staticmethod
     def _extract_cqas(data: Dict[str, Any]) -> List[Tuple[Tuple[str, str], Tuple[List[str], List[int]]]]:
