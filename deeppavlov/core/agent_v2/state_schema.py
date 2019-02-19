@@ -17,26 +17,29 @@ class User(Document):
     @classmethod
     def get_or_create(cls, *args, **kwargs):
         """
-        gets or creates an object from init specification
+        Gets or creates an object from init specification
 
         Args:
             *args:
-            kwargs:
+            **kwargs:
 
-        Returns: tuple (instance:User, is_created:bool)
-            or raises Exception if Multiple instances are found
+        Returns:
+            tuple: (instance:cls, is_created:bool)
+                instance - is an object of the Class provided for arguments.
+                is_created - True if the instance created from provided arguments, False otherwise
+
+        Raises:
+            Exception: For multiple instances of the provided filter.
+
         """
         results = cls.objects(*args, **kwargs)
         if results:
             if len(results) > 1:
-                # raise Exception
                 raise Exception(
                       f"Multiple instances found for {cls.__name__}: ({args}, {kwargs})!")
             elif len(results) == 1:
-                # ok
                 return results[0], False
         else:
-            # need to create an instance:
             instance = cls(*args, **kwargs)
             instance.save()
             return instance, True
@@ -109,7 +112,7 @@ class SkillResponse(DynamicDocument):
     after processing new Utternace
     """
     text = StringField()
-    confidence = FloatField()
+    confidence = FloatField(default=1.0)
 
     def to_dict(self):
         return {
