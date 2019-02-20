@@ -12,14 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from operator import itemgetter
+
+
 import tensorflow as tf
+import numpy as np
+from logging import getLogger
+from bert_dp.modeling import BertConfig, BertModel
+
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
 from deeppavlov.core.commands.utils import expand_path
-from logging import getLogger
-import numpy as np
-
-from bert_dp.modeling import BertConfig, BertModel
 
 logger = getLogger(__name__)
 
@@ -35,7 +38,7 @@ class BertRankerModel(LRScheduledTFModel):
                  pretrained_bert=None,
                  resps=None, resp_vecs=None, resp_features=None, resp_eval=True,
                  conts=None, cont_vecs=None, cont_features=None, cont_eval=True,
-                 min_learning_rate=1e-06, **kwargs) -> None:
+                 bot_mode=0, min_learning_rate=1e-06, **kwargs) -> None:
         super().__init__(**kwargs)
 
         self.batch_size = batch_size
@@ -51,6 +54,7 @@ class BertRankerModel(LRScheduledTFModel):
         self.cont_eval = cont_eval
         self.conts = conts
         self.cont_vecs = cont_vecs
+        self.bot_mode = bot_mode
 
         self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
 
@@ -83,6 +87,13 @@ class BertRankerModel(LRScheduledTFModel):
 
         if self.load_path is not None:
             self.load()
+
+        if self.resp_eval:
+            assert(self.resps is not None)
+        if self.cont_eval:
+            assert(self.conts is not None)
+        if self.resp_eval and self.cont_eval:
+            assert(len(self.resps) == len(self.conts))
 
         if self.resps is not None and self.resp_vecs is None:
             self.resp_features = [resp_features[0][i * self.batch_size: (i + 1) * self.batch_size]
@@ -166,8 +177,24 @@ class BertRankerModel(LRScheduledTFModel):
                 p = np.expand_dims(p, 0)
             pred.append(p)
         if len (features_list[0]) == 1 and len(features_list) == 1:
-            s = pred[0] @ self.resp_vecs.T
-            return [self.resps[np.argmax(s)]]
+            if self.bot_mode == 0:
+                s = pred[0] @ self.resp_vecs.T
+                ans = [[self.conts[np.argmax(s)], self.resps[np.argmax(s)]]]
+            elif self.bot_mode == 1:
+                sr = pred[0] @ self.resp_vecs.T
+                sc = pred[0] @ self.cont_vecs.T
+                ids = list(np.argsort(np.squeeze(sr, 0))[-10:])
+                sc = list(np.take(sc, ids))
+                ids = sorted(zip(ids, sc), key=itemgetter(1), reverse=True)
+                ans = [[self.conts[ids[0][0]], self.resps[ids[0][0]]]]
+            elif self.bot_mode == 2:
+                sr = pred[0] @ self.resp_vecs.T
+                sc = pred[0] @ self.cont_vecs.T
+                ids = list(np.argsort(np.squeeze(sc, 0))[-10:])
+                sr = list(np.take(sr, ids))
+                ids = sorted(zip(ids, sr), key=itemgetter(1), reverse=True)
+                ans = [[self.conts[ids[0][0]], self.resps[ids[0][0]]]]
+            return ans
         elif len(features_list) != self.num_ranking_samples + 1:
             return np.vstack(pred)
         else:
