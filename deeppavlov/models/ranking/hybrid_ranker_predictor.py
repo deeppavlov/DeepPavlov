@@ -25,7 +25,7 @@ logger = getLogger(__name__)
 class HybridRankerPredictor(Component):
 
     def __init__(self,
-                 sample_size,
+                 sample_size: int = 17,
                  lambda_coeff: float = 10.,
                  **kwargs):
         self.sample_size = sample_size
@@ -59,9 +59,10 @@ class HybridRankerPredictor(Component):
 
             chosen_index = np.random.choice(sorted_ids[:17], p=w)
 
-            # print('candidates: ', [candidates_list[i] for i in sorted_ids[:17]], 'scores: ',
-            #       [sorted_scores[i] for i in range(17)])  # DEBUG
-            # print('answer: ', chosen_index, scores[chosen_index], candidates_list[chosen_index])  # DEBUG
+            # logger.debug('candidates: ' + str([candidates_list[i] for i in sorted_ids[:17]]) + 'scores: ' +
+            #              str([sorted_scores[i] for i in range(17)]))  # DEBUG
+            # logger.debug('answer: ' + str(chosen_index) + " ; " + str(scores[chosen_index]) + " ; " +
+            #              str(candidates_list[chosen_index]))  # DEBUG
 
             responses_batch.append(candidates_list[chosen_index])
             responses_preds.append(scores[chosen_index])

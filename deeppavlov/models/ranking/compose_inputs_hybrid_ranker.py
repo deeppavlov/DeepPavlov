@@ -54,7 +54,7 @@ class ComposeInputsHybridRanker(Component):
             else:
                 query = expanded_context[-1]
 
-            # print("\n\n[START]\nquery: ", query)   # DEBUG
+            # logger.debug("\n\n[START]\nquery:" + query + "\nexpand_context:" + str(expanded_context))   # DEBUG
             query_batch.append(query)
             expanded_context_batch.append(expanded_context)
 
