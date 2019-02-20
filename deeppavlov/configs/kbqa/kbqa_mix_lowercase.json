@@ -187,7 +187,8 @@
         "out": ["triplets"],
         "entities_load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_name_to_q_lowercase.pickle",
         "wiki_load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus.pickle",
-        "class_name": "entity_linking_wikidata"
+        "class_name": "entity_linking_wikidata",
+        "debug": true
       },
       {
         "in": ["y_pred_probas", "triplets"],
@@ -195,7 +196,9 @@
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_q_to_name.pickle",
         "class_name": "kb_answer_parser_wikidata",
         "classes_vocab_keys": "#classes_vocab.keys()",
-        "top_k_classes": 5
+        "top_k_classes": 5,
+        "relations_maping_filename": "wiki_properties_id_to_name.pickle",
+        "debug": true
       }
     ],
     "out": [
@@ -218,16 +221,8 @@
         "subdir": "{DOWNLOADS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.bin",
-        "subdir": "{DOWNLOADS_PATH}/embeddings"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/kbqa_mix_lowercase.tar.gz",
-        "subdir": "{ROOT_PATH}/models/kbqa_mix_lowercase"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/embeddings/lenta_lower_100.bin",
-        "subdir": "{DOWNLOADS_PATH}/embeddings"
+        "url": "http://files.deeppavlov.ai/kbqa/wiki_properties_id_to_name.pickle",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       }
     ]
   }

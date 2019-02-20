@@ -35,19 +35,26 @@ class KBAnswerParserWikidata(Component, Serializable):
        relation prediction model.
        We search a triplet with the predicted relations
     """
-    
+
     def __init__(self, load_path: str, top_k_classes: int, classes_vocab_keys: Tuple,
-                 debug: bool = False, *args, **kwargs) -> None:
+                 debug: bool = False, relations_maping_filename=None, *args, **kwargs) -> None:
         super().__init__(save_path=None, load_path=load_path)
         self.top_k_classes = top_k_classes
         self.classes = list(classes_vocab_keys)
         self._debug = debug
+        self._relations_filename = relations_maping_filename
+
+        self._q_to_name = None
+        self._relations_mapping = None
         self.load()
 
     def load(self) -> None:
         load_path = Path(self.load_path).expanduser()
         with open(load_path, 'rb') as fl:
-            self.q_to_name = pickle.load(fl)
+            self._q_to_name = pickle.load(fl)
+        if self._relations_filename is not None:
+            with open(self.load_path.parent / self._relations_filename, 'rb') as f:
+                self._relations_mapping = pickle.load(f)
 
     def save(self):
         pass
@@ -58,7 +65,13 @@ class KBAnswerParserWikidata(Component, Serializable):
 
         relations_batch = self._parse_relations_probs(relations_probs)
         if self._debug:
-            log.debug(f'Top-k relations extracted: {relations_batch}')
+            if self._relations_mapping is not None:
+                relations_batch_descriptions = []
+                for relations in relations_batch:
+                    relations_batch_descriptions.append([self._relations_mapping.get(r, r) for r in relations])
+            else:
+                relations_batch_descriptions = relations_batch
+            log.debug(f'Top-k relations extracted: {relations_batch_descriptions}')
         objects_batch = []
         for rel_list, entity_triplets in zip(relations_batch, entity_triplets_batch):
             found = False
@@ -82,12 +95,12 @@ class KBAnswerParserWikidata(Component, Serializable):
 
         for obj in objects_batch:
             if obj.startswith('Q'):
-                if obj in self.q_to_name:
-                    word = self.q_to_name[obj]["name"]
+                if obj in self._q_to_name:
+                    word = self._q_to_name[obj]["name"]
                     word_batch.append(word)
                 else:
                     word_batch.append('Not Found')
-            elif obj.count('-') == 2 and int(obj.split('-')[0])>1000:
+            elif obj.count('-') == 2 and int(obj.split('-')[0]) > 1000:
                 dt = datetime.strptime(obj, "%Y-%m-%d")
                 obj = dt.strftime("%d %B %Y")
                 word_batch.append(obj)

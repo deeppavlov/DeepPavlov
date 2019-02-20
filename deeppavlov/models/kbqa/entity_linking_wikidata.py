@@ -64,6 +64,8 @@ class EntityLinkingWikidata(Component):
             text_entities.append(entity)
 
         if self._debug:
+            questions = [' '.join(t) for t in texts]
+            log.debug(f'Questions: {questions}')
             log.debug(f'Entities extracted by NER: {text_entities}')
 
         wiki_entities_batch = []
@@ -90,7 +92,7 @@ class EntityLinkingWikidata(Component):
                     lemmatized_entity = lemmatized_entity[:-1]
                     word_length = len(lemmatized_entity)
 
-                    candidate_entities = self.name_to_q[lemmatized_entity]
+                    candidate_entities = self.name_to_q.get(lemmatized_entity, [])
                     srtd_cand_ent = sorted(candidate_entities, key=lambda x: x[2], reverse=True)
                     if len(srtd_cand_ent) > 0:
                         wiki_entities_batch.append([srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))])
