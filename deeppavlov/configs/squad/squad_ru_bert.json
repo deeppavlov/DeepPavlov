@@ -16,7 +16,7 @@
     "pipe": [
       {
         "class_name": "bert_preprocessor",
-        "vocab_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/vocab.txt",
+        "vocab_file": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12/vocab.txt",
         "do_lower_case": false,
         "max_seq_length": 384,
         "in": ["question_raw", "context_raw"],
@@ -52,7 +52,7 @@
         "out": ["ans_predicted", "ans_start_predicted", "ans_end_predicted"]
       }
     ],
-    "out": ["ans_predicted", "ans_start_predicted"]
+    "out": ["ans_predicted", "ans_start_predicted", "logits"]
   },
   "train": {
     "show_examples": false,

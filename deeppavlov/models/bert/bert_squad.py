@@ -15,10 +15,16 @@
 import tensorflow as tf
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
+from deeppavlov.core.models.estimator import Component
 from deeppavlov.core.commands.utils import expand_path
 from logging import getLogger
 
 from deeppavlov.models.squad.utils import softmax_mask
+from deeppavlov import build_model
+import json
+from bert_dp.tokenization import FullTokenizer
+import math
+import numpy as np
 
 from bert_dp.modeling import BertConfig, BertModel
 from bert_dp.optimization import AdamWeightDecayOptimizer
@@ -116,16 +122,20 @@ class BertSQuADModel(LRScheduledTFModel):
             end_probs = tf.nn.softmax(logits_end)
 
             outer = tf.matmul(tf.expand_dims(start_probs, axis=2), tf.expand_dims(end_probs, axis=1))
+            outer_logits = tf.exp(tf.expand_dims(logits_st, axis=2) + tf.expand_dims(logits_end, axis=1))
+
 
             context_max_len = tf.reduce_max(tf.reduce_sum(self.token_types_ph, axis=1))
 
             max_ans_length = tf.cast(tf.minimum(20, context_max_len), tf.int64)
             outer = tf.matrix_band_part(outer, 0, max_ans_length)
+            outer_logits = tf.matrix_band_part(outer_logits, 0, max_ans_length)
 
             self.start_probs = start_probs
             self.end_probs = end_probs
             self.start_pred = tf.argmax(tf.reduce_max(outer, axis=2), axis=1)
             self.end_pred = tf.argmax(tf.reduce_max(outer, axis=1), axis=1)
+            self.yp_logits = tf.reduce_max(tf.reduce_max(outer_logits, axis=2), axis=1)
 
         with tf.variable_scope("loss"):
             loss_st = tf.nn.softmax_cross_entropy_with_logits(logits=logits_st, labels=self.y_st)
@@ -202,8 +212,8 @@ class BertSQuADModel(LRScheduledTFModel):
         input_type_ids = [f.input_type_ids for f in features]
 
         feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids)
-        st, end = self.sess.run([self.start_pred, self.end_pred], feed_dict=feed_dict)
-        return st, end, [0] * len(features)
+        st, end, logits = self.sess.run([self.start_pred, self.end_pred, self.yp_logits], feed_dict=feed_dict)
+        return st, end, logits.tolist()
 
     def process_event(self, event_name: str, data) -> None:
         """
@@ -214,3 +224,53 @@ class BertSQuADModel(LRScheduledTFModel):
             data: number of examples, epochs, metrics sent by trainer
         """
         super().process_event(event_name, data)
+
+
+@register('squad_bert_infer')
+class BertSQuADInferModel(Component):
+    def __init__(self, squad_model_config, vocab_file, do_lower_case, max_seq_len=512,
+                 batch_size: int = 10, lang='en', **kwargs):
+        config = json.load(open(squad_model_config))
+        config['chainer']['pipe'][0]['max_seq_length'] = max_seq_len
+        self.model = build_model(config)
+        self.max_seq_len = max_seq_len
+        vocab_file = str(expand_path(vocab_file))
+        self.tokenizer = FullTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
+        self.batch_size = batch_size
+
+        if lang == 'en':
+            from nltk import sent_tokenize
+            self.sent_tokenizer = sent_tokenize
+        elif lang == 'ru':
+            from ru_sent_tokenize import ru_sent_tokenize
+            self.sent_tokenizer = ru_sent_tokenize
+        else:
+            raise RuntimeError('en and ru languages are supported only')
+
+    def __call__(self, contexts, questions, **kwargs):
+        # todo add batches
+        # todo remove prints
+        answers, answer_starts, logits = [], [], []
+        for context, question in zip(contexts, questions):
+            context_subtokens = self.tokenizer.tokenize(context)
+            question_subtokens = self.tokenizer.tokenize(question)
+            if len(context_subtokens) + len(question_subtokens) + 3 > self.max_seq_len:
+                max_chunk_len = self.max_seq_len - len(question_subtokens) - 3
+                number_of_chunks = math.ceil(len(context_subtokens) / max_chunk_len)
+                sentences = self.sent_tokenizer(context)
+                chunks = [' '.join(chunk) for chunk in np.array_split(sentences, number_of_chunks)]
+                print(len(context_subtokens), self.max_seq_len, number_of_chunks)
+                a, a_st, logits = self.model(chunks, [question] * number_of_chunks)
+                print(question)
+                print(a, logits)
+                best_answer_ind = np.argmax(logits)
+                answers += [a[best_answer_ind]]
+                answer_starts += [a_st[best_answer_ind]]
+                logits += [logits[best_answer_ind]]
+            else:
+                a, a_st, logits = self.model([context], [question])
+                answers += [a[0]]
+                answer_starts += [a_st[0]]
+                logits += [logits[0]]
+
+        return answers, answer_starts, logits
