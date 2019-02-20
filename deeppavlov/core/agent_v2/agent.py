@@ -25,9 +25,11 @@ class Agent:
         me_utterances = self.state_manager.get_utterances(utterances, annotations, me_users, date_times)
         me_dialos = self.state_manager.get_dialogs(me_users, me_utterances, locations, channel_types, should_reset)
         state = self.state_manager.get_state(me_dialos)
-        response = self.skill_manager(state)
+        responses = self.skill_manager(state)
 
-        # After response is chosen, state should be updated and saved to DB.
+        # TODO
+        # After response is chosen for each dialog in the state, dialog objects should be updated and saved to DB.
+        # Then response utterances should be sent to the users.
 
     def predict_annotations(self, utterances, should_reset):
         informative_utterances = list(compress(utterances, map(operator.not_, should_reset)))

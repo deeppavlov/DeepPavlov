@@ -7,7 +7,8 @@ from deeppavlov.core.agent_v2.state_manager import StateManager
 from deeppavlov.core.agent_v2.preprocessor import Preprocessor
 from deeppavlov.core.agent_v2.skill_manager import SkillManager
 from deeppavlov.core.agent_v2.rest_caller import RestCaller
-from deeppavlov.core.agent_v2.config import AGENT_CONFIG
+from deeppavlov.core.agent_v2.response_selector import ConfidenceResponseSelector
+from deeppavlov.core.agent_v2.config import MAX_WORKERS
 
 
 ner = build_model(configs.ner.ner_rus, download=True)
@@ -22,22 +23,23 @@ print(ner(utterances))
 print(faq(utterances))
 print(sentiment(utterances))
 
-sm = StateManager()
+state_manager = StateManager()
 preprocessor = Preprocessor(annotators={ner: ['ner.tokens', 'ner.tags'], faq: ['faq-answers', None],
                                         sentiment: 'sentiment'},
                             max_workers=4)
-rest_caller = RestCaller(max_workers=AGENT_CONFIG["max_workers"])
-skill_manager = SkillManager(skills_selector=None, response_selector=None, rest_caller=RestCaller)
+rest_caller = RestCaller(max_workers=MAX_WORKERS)
+response_selector = ConfidenceResponseSelector()
+skill_manager = SkillManager(skills_selector=None, response_selector=response_selector, rest_caller=rest_caller)
 
-agent = Agent(sm, preprocessor, skill_manager)
+agent = Agent(state_manager, preprocessor, skill_manager)
 
 # TEST predict_annotations()
-annotations = agent.predict_annotations(utterances, should_reset=[False]*len(utterances))
-print("Agent output:")
-print(annotations)
+# annotations = agent.predict_annotations(utterances, should_reset=[False]*len(utterances))
+# print("Agent output:")
+# print(annotations)
 
 # TEST __call__()
-u_tg_ids = ['dc96f30c-4a45-4225-8c2a-f23294f1d651', '4f5928be-27dc-4ac0-a7ac-ea76f9022636', str(uuid.uuid4())]
+u_tg_ids = ['d2e7e2e1-0d19-4b75-bef6-987cd53a883e', '373ed57a-3dd3-4e30-940e-6d94d0d4dd38', str(uuid.uuid4())]
 utts = ['Что еще скажешь интересного?', 'Бот, ты тупой', '\\start']
 u_d_types = ['iphone', 'android', 'iphone']
 date_times = [datetime.utcnow(), datetime.utcnow(), datetime.utcnow()]
