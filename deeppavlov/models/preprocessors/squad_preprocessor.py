@@ -463,9 +463,10 @@ class SquadBertAnsPostprocessor(Component):
                 ends += [-1]
             else:
                 st = self.get_char_position(sub2c, answer_st)
-                # TODO check
                 end = self.get_char_position(sub2c, answer_end)
-                answer = context[st:end+len(features.tokens[answer_end])] # end + len(last subtok)
+                subtok = features.tokens[answer_end]
+                subtok = subtok[2:] if subtok.startswith('##') else subtok
+                answer = context[st:end+len(subtok)]
                 answers += [answer]
                 starts += [st]
                 ends += [ends]
