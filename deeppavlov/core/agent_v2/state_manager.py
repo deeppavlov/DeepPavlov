@@ -1,6 +1,4 @@
-from typing import Sequence, Hashable, List, Tuple, Any
-from datetime import datetime
-from collections import defaultdict
+from typing import Sequence, Hashable, Any
 
 from deeppavlov.core.agent_v2.state_schema import User, Human, Utterance, BotUtterance, Dialog
 from deeppavlov.core.agent_v2.connection import state_storage
@@ -48,9 +46,9 @@ class StateManager:
 
     @staticmethod
     def get_state(dialogs):
-        state = {'version': VERSION, 'dialogs': defaultdict(list)}
+        state = {'version': VERSION, 'dialogs': []}
         for d in dialogs:
-            state['dialogs'] += d.to_dict()
+            state['dialogs'].append(d.to_dict())
         return state
 
     @staticmethod
