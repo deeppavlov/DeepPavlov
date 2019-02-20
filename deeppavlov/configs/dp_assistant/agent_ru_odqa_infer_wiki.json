@@ -4,7 +4,8 @@
       "dialogs"
     ],
     "out": [
-      "best_answer"
+      "text",
+      "confidence"
     ],
     "pipe": [
       {
