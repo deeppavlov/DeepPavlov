@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from logging import getLogger
 from typing import List
 
@@ -72,30 +73,35 @@ class EntityLinkingWikidata(Component):
             if not entity:
                 wiki_entities_batch.append(["None"])
             else:
-                entity_tokens = entity.split(' ')
-                lemmatized_entity = ""
-                for j, tok in enumerate(entity_tokens):
-                    morph_parse_tok = self.morph.parse(tok)[0]
-                    lemmatized_tok = morph_parse_tok.normal_form
-                    if tok[0].isupper():
-                        lemmatized_tok = lemmatized_tok.capitalize()
-                    lemmatized_entity += lemmatized_tok
-                    lemmatized_entity += " "
-                lemmatized_entity = lemmatized_entity[:-1]
-                word_length = len(lemmatized_entity)
-                candidate_entities = self.name_to_q.get(lemmatized_entity, [])
-                srtd_cand_ent = sorted(candidate_entities, key=lambda x: x[2], reverse=True)
-                if len(srtd_cand_ent) > 0:
-                    wiki_entities_batch.append([srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))])
+                entity_tokens = entity.lower().split(' ')
+                for i in range(len(entity_tokens)):
+                    lemmatized_entity = ""
+                    for j, tok in enumerate(entity_tokens):
+                        if i == j:
+                            morph_parse_tok = self.morph.parse(tok)[0]
+                            lemmatized_tok = morph_parse_tok.normal_form
+                            lemmatized_entity += lemmatized_tok
+                            lemmatized_entity += " "
+                        else:
+                            lemmatized_entity += tok
+                            lemmatized_entity += " "
+                    lemmatized_entity = lemmatized_entity[:-1]
+                    word_length = len(lemmatized_entity)
+
+                    candidate_entities = self.name_to_q[lemmatized_entity]
+                    srtd_cand_ent = sorted(candidate_entities, key=lambda x: x[2], reverse=True)
+                    if len(srtd_cand_ent) > 0:
+                        wiki_entities_batch.append([srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))])
+                        break
+
                 if len(srtd_cand_ent) == 0:
                     candidates = []
                     for title in self.name_to_q:
                         length_ratio = len(title) / word_length
-                        if 1.4 > length_ratio > 0.6:
+                        if length_ratio > 0.6 and length_ratio < 1.4:
                             ratio = fuzz.ratio(title, lemmatized_entity)
                             if ratio > 65:
-                                if title in self.name_to_q:
-                                    candidates += self.name_to_q[title]
+                                candidates += self.name_to_q.get(title, [])
                     candidates = list(set(candidates))
                     srtd_cand_ent = sorted(candidates, key=lambda x: x[2], reverse=True)
                     if len(srtd_cand_ent) > 0:

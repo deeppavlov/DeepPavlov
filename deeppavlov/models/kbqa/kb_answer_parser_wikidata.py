@@ -22,6 +22,7 @@ from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from pathlib import Path
+from datetime import datetime
 
 log = getLogger(__name__)
 
@@ -80,11 +81,17 @@ class KBAnswerParserWikidata(Component, Serializable):
         word_batch = []
 
         for obj in objects_batch:
-            if obj in self.q_to_name:
-                word = self.q_to_name[obj]["name"]
-                word_batch.append(word)
+            if obj[0] == 'Q':
+                if obj in self.q_to_name:
+                    word = self.q_to_name[obj]["name"]
+                    word_batch.append(word)
+                else:
+                    word_batch.append('Not Found')
             else:
-                word_batch.append('Not Found')
+                if obj.count('-') == 2:
+                    dt = datetime.strptime(obj, "%Y-%m-%d")
+                    obj = dt.strftime("%d %B %Y")
+                word_batch.append(obj)
 
         return word_batch
 
