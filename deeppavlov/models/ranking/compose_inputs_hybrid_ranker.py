@@ -28,11 +28,13 @@ class ComposeInputsHybridRanker(Component):
                  context_depth: int = 1,
                  use_context_for_query: bool = False,
                  use_user_context_only: bool = False,
+                 history_includes_last_utterance: Optional[bool] = False,
                  **kwargs):
         self.context_depth = context_depth
         self.num_turns_const = 10
         self.use_history = use_context_for_query
         self.use_user_context_for_query = use_user_context_only
+        self.history_includes_last_utterance = history_includes_last_utterance
 
     def __call__(self,
                  utterances_batch: list,
@@ -43,7 +45,8 @@ class ComposeInputsHybridRanker(Component):
         expanded_context_batch = []
 
         for i in range(len(utterances_batch)):
-            full_context = history_batch[i][-self.num_turns_const + 1:] + [utterances_batch[i]]
+            full_context = history_batch[i][-self.num_turns_const + 1:] + [utterances_batch[i]]  \
+                if not self.history_includes_last_utterance else history_batch[i][-self.num_turns_const:]
             expanded_context = self._expand_context(full_context, padding="pre")
 
             # search TF-IDF by last utterance only OR using all history
