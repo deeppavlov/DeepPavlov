@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from logging import getLogger
 from typing import List
 
 from deeppavlov.core.common.registry import register
@@ -21,6 +21,8 @@ from pathlib import Path
 
 from fuzzywuzzy import fuzz
 import pymorphy2
+
+log = getLogger(__name__)
 
 
 @register('entity_linking_wikidata')
@@ -32,6 +34,7 @@ class EntityLinkingWikidata(Component):
 
     def __init__(self, entities_load_path: str,
                  wiki_load_path: str,
+                 debug: bool = True,
                  *args, **kwargs) -> None:
 
         entities_load_path = Path(entities_load_path).expanduser()
@@ -43,6 +46,7 @@ class EntityLinkingWikidata(Component):
             self.wikidata = pickle.load(f)
 
         self.morph = pymorphy2.MorphAnalyzer()
+        self._debug = debug
 
     def __call__(self, texts: List[List[str]],
                  tags: List[List[int]],
@@ -57,6 +61,9 @@ class EntityLinkingWikidata(Component):
                     entity += " "
             entity = entity[:-1]
             text_entities.append(entity)
+
+        if self._debug:
+            log.debug(f'Entities extracted by NER: {text_entities}')
 
         wiki_entities_batch = []
         confidences = []
@@ -76,23 +83,23 @@ class EntityLinkingWikidata(Component):
                     lemmatized_entity += " "
                 lemmatized_entity = lemmatized_entity[:-1]
                 word_length = len(lemmatized_entity)
-
-                candidate_entities = self.name_to_q[lemmatized_entity]
-                srtd_cand_ent = sorted(candidate_entities, key=lambda x: x[2], reverse = True)
+                candidate_entities = self.name_to_q.get(lemmatized_entity, [])
+                srtd_cand_ent = sorted(candidate_entities, key=lambda x: x[2], reverse=True)
                 if len(srtd_cand_ent) > 0:
                     wiki_entities_batch.append([srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))])
                 if len(srtd_cand_ent) == 0:
                     candidates = []
                     for title in self.name_to_q:
-                        length_ratio = len(title)/word_length
-                        if length_ratio > 0.6 and length_ratio < 1.4:
+                        length_ratio = len(title) / word_length
+                        if 1.4 > length_ratio > 0.6:
                             ratio = fuzz.ratio(title, lemmatized_entity)
                             if ratio > 65:
-                                candidates += self.name_to_q[title]
+                                if title in self.name_to_q:
+                                    candidates += self.name_to_q[title]
                     candidates = list(set(candidates))
-                    srtd_cand_ent = sorted(candidates, key=lambda x: x[2], reverse = True)
+                    srtd_cand_ent = sorted(candidates, key=lambda x: x[2], reverse=True)
                     if len(srtd_cand_ent) > 0:
-                         wiki_entities_batch.append([srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))])
+                        wiki_entities_batch.append([srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))])
                     else:
                         wiki_entities_batch.append(["None"])
 
@@ -107,4 +114,3 @@ class EntityLinkingWikidata(Component):
             entity_triplets_batch.append(entity_triplets)
 
         return entity_triplets_batch
-    
