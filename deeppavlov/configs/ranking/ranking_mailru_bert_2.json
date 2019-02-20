@@ -39,7 +39,7 @@
         "conts": "#loader.conts",
         "cont_vecs": "#loader.cont_vecs",
         "cont_features": "#preproc.cont_features",
-        "bot_mode": 0,
+        "bot_mode": 1,
         "n_classes": 2,
         "one_hot_labels": false,
         "bert_config_file": "{DOWNLOADS_PATH}/mailru_bert_npair_simple/bert_config.json",
