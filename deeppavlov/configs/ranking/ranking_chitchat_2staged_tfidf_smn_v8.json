@@ -107,7 +107,7 @@
       "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
     ],
     "labels": {
-      "server_utils": "Ranker"
+      "server_utils": "ChitChatRanker"
     },
     "download": [
       {
