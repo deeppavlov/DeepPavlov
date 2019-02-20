@@ -63,6 +63,8 @@ class EntityLinkingWikidata(Component):
 
         wiki_entities_batch = []
         confidences = []
+        
+        print(text_entities)
 
         for entity in text_entities:
             if not entity:
@@ -103,6 +105,8 @@ class EntityLinkingWikidata(Component):
                         wiki_entities_batch.append([srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))])
                     else:
                         wiki_entities_batch.append(["None"])
+                        
+        print(wiki_entities_batch)
 
         entity_triplets_batch = []
         for entity_ids in wiki_entities_batch:

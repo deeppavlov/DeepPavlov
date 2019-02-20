@@ -52,6 +52,8 @@ class KBAnswerParserWikidata(Component, Serializable):
 
         relations_batch = self._parse_relations_probs(relations_probs)
         
+        print(relation_batch)
+        
         objects_batch = []
         for rel_list, entity_triplets in zip(relations_batch, entity_triplets_batch):
             found = False
@@ -68,23 +70,24 @@ class KBAnswerParserWikidata(Component, Serializable):
                 if found == True:
                     break
             if not found:
-                obj = None
+                obj = ''
             objects_batch.append(obj)
 
         word_batch = []
         
         for obj in objects_batch:
-            if obj[0] == 'Q':
+            if obj.startswith('Q'):
                 if obj in self.q_to_name:
                     word = self.q_to_name[obj]["name"]
                     word_batch.append(word)
                 else:
                     word_batch.append('Not Found')
-            else:
-                if obj.count('-') == 2:
-                    dt = datetime.strptime(obj, "%Y-%m-%d")
-                    obj = dt.strftime("%d %B %Y")
+            elif obj.count('-') == 2 and int(obj.split('-')[0])>1000:
+                dt = datetime.strptime(obj, "%Y-%m-%d")
+                obj = dt.strftime("%d %B %Y")
                 word_batch.append(obj)
+            else:
+                word_batch.append('Not Found')
 
         return word_batch
 
