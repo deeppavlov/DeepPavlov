@@ -194,6 +194,11 @@ class BertRankerModel(LRScheduledTFModel):
                 sr = list(np.take(sr, ids))
                 ids = sorted(zip(ids, sr), key=itemgetter(1), reverse=True)
                 ans = [[self.conts[ids[0][0]], self.resps[ids[0][0]]]]
+            elif self.bot_mode == 3:
+                sr = pred[0] @ self.resp_vecs.T
+                sc = pred[0] @ self.cont_vecs.T
+                s = sr + sc
+                ans = [[self.conts[np.argmax(s)], self.resps[np.argmax(s)]]]
             return ans
         elif len(features_list) != self.num_ranking_samples + 1:
             return np.vstack(pred)
