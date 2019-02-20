@@ -29,7 +29,7 @@ logger = getLogger(__name__)
 def _try_load_spacy_model(model_name: str, disable: Iterable[str] = ()):
     disable = set(disable)
     try:
-        model = spacy.load(model_name, disable=disable, parser=False, entity=False)
+        model = spacy.load(model_name, disable=disable)
     except OSError as e:
         try:
             model = __import__(model_name).load(disable=disable)
@@ -117,7 +117,6 @@ class StreamSpacyTokenizer(Component):
             TypeError: If the first element of ``batch`` is neither List, nor str.
 
         """
-        logger.info(f"batch = {batch}")
         if isinstance(batch[0], str):
             if self.lemmas:
                 return list(self._lemmatize(batch))
