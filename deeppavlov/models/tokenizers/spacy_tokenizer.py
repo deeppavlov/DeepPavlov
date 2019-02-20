@@ -29,7 +29,7 @@ logger = getLogger(__name__)
 def _try_load_spacy_model(model_name: str, disable: Iterable[str] = ()):
     disable = set(disable)
     try:
-        model = spacy.load(model_name, disable=disable)
+        model = spacy.load(model_name, disable=disable, parser=False, entity=False)
     except OSError as e:
         try:
             model = __import__(model_name).load(disable=disable)
@@ -99,6 +99,8 @@ class StreamSpacyTokenizer(Component):
         self.n_threads = n_threads
         self.lowercase = lowercase
         self.alphas_only = alphas_only
+        for sw in self.stopwords:
+            self.tokenizer.add_special_case(sw, [{spacy.symbols.ORTH: sw}])
 
     def __call__(self, batch: Union[List[str], List[List[str]]]) -> \
             Union[List[List[str]], List[str]]:
@@ -115,6 +117,7 @@ class StreamSpacyTokenizer(Component):
             TypeError: If the first element of ``batch`` is neither List, nor str.
 
         """
+        logger.info(f"batch = {batch}")
         if isinstance(batch[0], str):
             if self.lemmas:
                 return list(self._lemmatize(batch))
