@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+from logging import getLogger
 from typing import List, Tuple
 
 import numpy as np
@@ -20,6 +22,8 @@ from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from pathlib import Path
+
+log = getLogger(__name__)
 
 
 @register('kb_answer_parser_wikidata')
@@ -31,7 +35,8 @@ class KBAnswerParserWikidata(Component, Serializable):
        We search a triplet with the predicted relations
     """
     
-    def __init__(self, load_path: str, top_k_classes: int, classes_vocab_keys: Tuple, *args, **kwargs) -> None:
+    def __init__(self, load_path: str, top_k_classes: int, classes_vocab_keys: Tuple,
+                 debug: bool = False, *args, **kwargs) -> None:
         super().__init__(save_path=None, load_path=load_path)
         self.top_k_classes = top_k_classes
         self.classes = list(classes_vocab_keys)
@@ -52,7 +57,7 @@ class KBAnswerParserWikidata(Component, Serializable):
 
         relations_batch = self._parse_relations_probs(relations_probs)
         if self._debug:
-            print(f'Relations extracted: {relations_batch}')
+            log.debug(f'Top-k relations extracted: {relations_batch}')
         objects_batch = []
         for rel_list, entity_triplets in zip(relations_batch, entity_triplets_batch):
             found = False
