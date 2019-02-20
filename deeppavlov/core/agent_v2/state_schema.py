@@ -1,8 +1,8 @@
-from mongoengine import Document, DynamicDocument, ReferenceField, ListField, StringField, DynamicField, \
-    UUIDField, DateTimeField, FloatField, DictField
+from mongoengine import DynamicDocument, ReferenceField, ListField, StringField, DynamicField, \
+    DateTimeField, FloatField, DictField
 
 
-class User(Document):
+class User(DynamicDocument):
     user_type = StringField(required=True, choices=['human', 'bot'], default='human')
     personality = DynamicField()
 
@@ -26,7 +26,7 @@ class Human(User):
                 'personality': self.personality}
 
 
-class Utterance(Document):
+class Utterance(DynamicDocument):
     text = StringField(required=True)
     annotations = DictField(default={'ner': {}, 'coref': {}, 'sentiment': {}})
     user = ReferenceField(User, required=True)
