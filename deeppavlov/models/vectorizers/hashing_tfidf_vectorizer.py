@@ -110,7 +110,8 @@ class HashingTfIdfVectorizer(Estimator):
             # TODO revise policy if len(q_hashes) == 0
 
             if len(q_hashes) == 0:
-                return Sparse((1, self.hash_size))
+                sp_tfidfs.append(Sparse((1, self.hash_size)))
+                continue
 
             size = len(self.doc_index)
             Ns = self.term_freqs[hashes_unique]
