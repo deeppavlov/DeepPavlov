@@ -43,7 +43,7 @@ class SquadDatasetReader(DatasetReader):
     url_sber_squad = 'http://files.deeppavlov.ai/datasets/sber_squad-v1.1.tar.gz'
     url_multi_squad = 'http://files.deeppavlov.ai/datasets/multiparagraph_squad.tar.gz'
 
-    def read(self, dir_path: str, dataset: str = 'SQuAD', *args, **kwargs) -> Dict[str, Dict[str, Any]]:
+    def read(self, dir_path: str, dataset: str = 'SQuAD', url=None, *args, **kwargs) -> Dict[str, Dict[str, Any]]:
         """
 
         Args:
@@ -62,6 +62,8 @@ class SquadDatasetReader(DatasetReader):
             self.url = self.url_sber_squad
         elif dataset == 'MultiSQuAD':
             self.url = self.url_multi_squad
+        elif url is not None:
+            self.url = url
         else:
             raise RuntimeError('Dataset {} is unknown'.format(dataset))
 

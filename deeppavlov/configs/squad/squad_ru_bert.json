@@ -1,8 +1,9 @@
 {
   "dataset_reader": {
     "class_name": "squad_dataset_reader",
-    "dataset": "SberSQuAD",
-    "data_path": "{DOWNLOADS_PATH}/squad_ru/"
+    "dataset": "SberSQuADClean",
+    "url": "http://files.deeppavlov.ai/datasets/sber_squad_clean-v1.1.tar.gz",
+    "data_path": "{DOWNLOADS_PATH}/squad_ru_clean/"
   },
   "dataset_iterator": {
     "class_name": "squad_iterator",
