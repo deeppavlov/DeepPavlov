@@ -83,9 +83,9 @@ class KBAnswerParserWikidata(Component, Serializable):
                             obj = rel_triplets[1]
                             found = True
                             break
-                    if found == True:
+                    if found:
                         break
-                if found == True:
+                if found:
                     break
             if not found:
                 obj = ''
