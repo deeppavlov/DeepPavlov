@@ -87,9 +87,9 @@
         "learning_rate_decay": 0.1,
         "loss": "binary_crossentropy",
         "text_size": 15,
-        "coef_reg_cnn": 1e-4,
-        "coef_reg_lstm": 1e-4,
-        "coef_reg_den": 1e-4,
+        "coef_reg_cnn": 0.0001,
+        "coef_reg_lstm": 0.0001,
+        "coef_reg_den": 0.0001,
         "dropout_rate": 0.5,
         "rec_dropout_rate": 0.5,
         "dense_size": 100,
@@ -119,15 +119,20 @@
       "f1_macro",
       {
         "name": "roc_auc",
-        "inputs": ["y_onehot", "y_pred_probas"]
+        "inputs": [
+          "y_onehot",
+          "y_pred_probas"
+        ]
       }
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
     "log_every_n_epochs": 1,
     "show_examples": false,
-    "validate_best": true,
-    "test_best": false
+    "evaluation_targets": [
+      "valid"
+    ],
+    "class_name": "nn_trainer"
   },
   "metadata": {
     "variables": {

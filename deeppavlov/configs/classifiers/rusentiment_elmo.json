@@ -142,9 +142,13 @@
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
     "show_examples": false,
-    "validate_best": true,
-    "test_best": true,
-    "tensorboard_log_dir": "{MODELS_PATH}/"
+    "evaluation_targets": [
+      "train",
+      "valid",
+      "test"
+    ],
+    "tensorboard_log_dir": "{MODELS_PATH}/",
+    "class_name": "nn_trainer"
   },
   "metadata": {
     "variables": {
