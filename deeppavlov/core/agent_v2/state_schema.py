@@ -17,13 +17,24 @@ class User(DynamicDocument):
 class Human(User):
     user_telegram_id = StringField(required=True, unique=True, sparse=True)
     device_type = DynamicField()
+    profile = DictField(required=True, default={
+        "name": None,
+        "gender": None,
+        "birthdate": None,
+        "location": None,
+        "home_coordinates": None,
+        "work_coordinates": None,
+        "occupation": None,
+        "income_per_year": None
+    })
 
     def to_dict(self):
         return {'id': str(self.id),
                 'user_telegram_id': str(self.user_telegram_id),
                 'user_type': self.user_type,
                 'device_type': self.device_type,
-                'personality': self.personality}
+                'personality': self.personality,
+                'profile': self.profile}
 
 
 class Utterance(DynamicDocument):

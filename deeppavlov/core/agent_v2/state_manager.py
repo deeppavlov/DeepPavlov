@@ -62,9 +62,9 @@ class StateManager:
         return dialog
 
     @staticmethod
-    def create_new_human(user_telegram_id, device_type, personality=None):
+    def create_new_human(user_telegram_id, device_type, personality=None, profile=None):
         human = Human(user_telegram_id=user_telegram_id, device_type=device_type,
-                      personality=personality)
+                      personality=personality, profile=profile or Human.profile.default)
         human.save()
         return human
 
