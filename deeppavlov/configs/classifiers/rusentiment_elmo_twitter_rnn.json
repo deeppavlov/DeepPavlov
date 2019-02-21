@@ -119,10 +119,15 @@
         "in": "y_pred_ids",
         "out": "y_pred_labels",
         "ref": "classes_vocab"
+      },
+      {
+        "class_name": "extract_first",
+        "in": "y_pred_labels",
+        "out": "y_pred_first_labels"
       }
     ],
     "out": [
-      "y_pred_labels"
+      "y_pred_first_labels"
     ]
   },
   "train": {
