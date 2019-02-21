@@ -59,8 +59,13 @@ class CosineSimilarityClassifier(Estimator, Serializable):
         """
 
         if isinstance(q_vects[0], csr_matrix):
-            norm = sparse_norm(q_vects) * sparse_norm(self.x_train_features, axis=1)
-            cos_similarities = np.array(q_vects.dot(self.x_train_features.T).todense())/norm
+            q_norm = sparse_norm(q_vects)
+            if q_norm == 0.0:
+                cos_similarities = np.zeros((q_vects.shape[0], self.x_train_features.shape[0]))
+            else:
+                norm = q_norm * sparse_norm(self.x_train_features, axis=1)
+                cos_similarities = np.array(q_vects.dot(self.x_train_features.T).todense())
+                cos_similarities = cos_similarities/norm
         elif isinstance(q_vects[0], np.ndarray):
             q_vects = np.array(q_vects)
             self.x_train_features = np.array(self.x_train_features)
@@ -79,7 +84,12 @@ class CosineSimilarityClassifier(Estimator, Serializable):
                                           for i, value in enumerate(self.y_train) if value == label], axis=0)
 
         # normalize for each class
-        labels_scores = labels_scores/labels_scores.sum(axis=1, keepdims=True)
+        labels_scores_sum = labels_scores.sum(axis=1, keepdims=True)
+        if labels_scores_sum == 0.0:
+            labels_scores = np.zeros(labels_scores.shape)
+        else:
+            labels_scores = labels_scores/labels_scores_sum
+
         answer_ids = np.argsort(labels_scores)[:, -self.top_n:]
 
         # generate top_n asnwers and scores
