@@ -133,6 +133,7 @@
     "epochs": 100,
     "batch_size": 128,
     "metrics": [
+      "f1_weighted",
       "f1_macro",
       "sets_accuracy",
       {
