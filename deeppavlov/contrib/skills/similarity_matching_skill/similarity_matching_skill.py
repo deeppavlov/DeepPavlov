@@ -84,9 +84,12 @@ class SimilarityMatchingSkill(Skill):
         Returns:
             Batches of the skill inference results and estimated confidences.
         """
-        response = self.model(utterances_batch)
-        response[0] = np.array(response[0]).flatten()
-        response[1] = np.array(response[1]).flatten()
+        model_result = [self.model([u]) for u in utterances_batch]
 
-        response[1] = [max(response[1])]
-        return response
+        responses = [np.array(r[0]).flatten() for r in model_result]
+        confidences = [np.array(r[1]).flatten() for r in model_result]
+
+        responses = [r[0] for r in responses]
+        confidences = [max(c) for c in confidences]
+
+        return responses, confidences
