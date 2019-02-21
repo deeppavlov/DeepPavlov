@@ -58,6 +58,7 @@
         "batch_size": 10,
         "squad_model": {"config_path": "{CONFIGS_PATH}/squad/squad_ru.json"},
         "sort_noans": true,
+        "norm_coef": 10000.0,
         "in": [
           "chunks",
           "questions"
