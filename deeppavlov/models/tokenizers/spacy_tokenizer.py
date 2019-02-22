@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from itertools import chain
+
 from logging import getLogger
 from typing import List, Generator, Any, Optional, Union, Tuple, Iterable
 
@@ -48,7 +48,7 @@ class StreamSpacyTokenizer(Component):
 
     Args:
         disable: spacy pipeline elements to disable, serves a purpose of performing; if nothing
-        stopwords: a list of stopwords that should be ignored during tokenizing/lemmatizing
+        stopwords: a list of words that should be removed during tokenizing/lemmatizing
          and ngrams creation
         batch_size: a batch size for inner spacy multi-threading
         ngram_range: size of ngrams to create; only unigrams are returned by default
@@ -61,10 +61,11 @@ class StreamSpacyTokenizer(Component):
         spacy_model: a string name of spacy model to use; DeepPavlov searches for this name in
          downloaded spacy models; default model is **en_core_web_sm**, it downloads automatically
          during DeepPavlov installation
+        ignored_words: a list of strings that should not be modified during tokenizing / lemmatizing
 
 
     Attributes:
-        stopwords: a list of stopwords that should be ignored during tokenizing/lemmatizing
+        stopwords: a list of words that should be removed during tokenizing/lemmatizing
          and ngrams creation
         model: a loaded spacy model
         tokenizer: a loaded spacy tokenizer from the :attr:`model`
@@ -76,6 +77,7 @@ class StreamSpacyTokenizer(Component):
          and :meth:`_lemmatize` methods
         alphas_only: whether to filter out non-alpha tokens; is performed by default by :meth:`_filter`
          method
+        ignored_words: a list of strings that should not be modified during tokenizing / lemmatizing
 
     """
 
@@ -83,7 +85,7 @@ class StreamSpacyTokenizer(Component):
                  batch_size: Optional[int] = None, ngram_range: Optional[List[int]] = None,
                  lemmas: bool = False, n_threads: Optional[int] = None,
                  lowercase: Optional[bool] = None, alphas_only: Optional[bool] = None,
-                 spacy_model: str = 'en_core_web_sm', **kwargs):
+                 spacy_model: str = 'en_core_web_sm', ignored_words: Optional[List[str]] = None, **kwargs):
 
         if disable is None:
             disable = ['parser', 'ner']
@@ -99,6 +101,9 @@ class StreamSpacyTokenizer(Component):
         self.n_threads = n_threads
         self.lowercase = lowercase
         self.alphas_only = alphas_only
+        self.ignored_words = ignored_words or []
+        for iw in self.ignored_words:
+            self.tokenizer.add_special_case(iw, [{spacy.symbols.ORTH: iw}])
 
     def __call__(self, batch: Union[List[str], List[List[str]]]) -> \
             Union[List[List[str]], List[str]]:
@@ -162,7 +167,7 @@ class StreamSpacyTokenizer(Component):
             # DEBUG
             # logger.info("Tokenize doc {} from {}".format(i, size))
             if _lowercase:
-                tokens = [t.lower_ for t in doc]
+                tokens = [t.lower_ if t.text not in self.ignored_words else t.text for t in doc]
             else:
                 tokens = [t.text for t in doc]
             filtered = self._filter(tokens)
@@ -193,10 +198,10 @@ class StreamSpacyTokenizer(Component):
         _n_threads = self.n_threads or n_threads
 
         for i, doc in enumerate(
-                self.model.pipe(data, batch_size=_batch_size, n_threads=_n_threads)):
+                self.tokenizer.pipe(data, batch_size=_batch_size, n_threads=_n_threads)):
             # DEBUG
             # logger.info("Lemmatize doc {} from {}".format(i, size))
-            lemmas = chain.from_iterable([sent.lemma_.split() for sent in doc.sents])
+            lemmas = [t.lemma_ for t in doc]
             filtered = self._filter(lemmas)
             processed_doc = ngramize(filtered, ngram_range=_ngram_range)
             yield from processed_doc
@@ -212,15 +217,17 @@ class StreamSpacyTokenizer(Component):
             a list of filtered tokens/lemmas
 
         """
+        def filter_fn(x):
+            basic_condition = not x.isspace() and x not in self.stopwords
+            if _alphas_only:
+                return x.isalpha() and basic_condition
+            else:
+                return basic_condition
+
         if self.alphas_only is None:
             _alphas_only = alphas_only
         else:
             _alphas_only = self.alphas_only
-
-        if _alphas_only:
-            filter_fn = lambda x: x.isalpha() and not x.isspace() and x not in self.stopwords
-        else:
-            filter_fn = lambda x: not x.isspace() and x not in self.stopwords
 
         return list(filter(filter_fn, items))
 
