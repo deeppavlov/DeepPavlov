@@ -1,5 +1,5 @@
 {
-  "info": "(v13) Gopnik V1. Books_v2 + VK + pBot",
+  "info": "(v13) Gopnik V1 Bot. Books_v2 + VK + pBot. Total 856873 dialogs",
   "chainer": {
     "in": ["utterances_batch", "history_batch", "states_batch"],
     "pipe": [
@@ -17,10 +17,13 @@
         "id": "vectorizer",
         "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v8/train_contexts_tfidf_matrix.npz",
         "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v8/train_contexts_tfidf_matrix.npz",
-        "tokenizer": {"class_name": "ru_tokenizer",
+        "tokenizer":
+        {
+          "class_name": "ru_tokenizer",
           "alphas_only": false,
-         "lemmas": true,
-         "ngram_range": [1, 2, 3, 4, 5, 6]}
+          "lemmas": true,
+          "ngram_range": [1, 2, 3, 4, 5, 6]
+        }
       },
       {
         "info": "2. Find relevant contexts",
