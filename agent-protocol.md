@@ -2,7 +2,7 @@
 
 ```json
 {
-  "version": 0.9,
+  "version": "0.9.1",
   "dialogs": [
     {
       "id": "5c65706b0110b377e17eba41",
@@ -208,7 +208,17 @@
         "user_telegram_id": "0801e781-0b76-43fa-9002-fcdc147d35af",
         "user_type": "human",
         "device_type": null,
-        "personality": null
+        "personality": null,
+        "profile": {
+          "name": "Джо Неуловимый",
+          "gender": "male",
+          "birthdate": "2000-02-15",
+          "location": null,
+          "home_coordinates": null,
+          "work_coordinates": null,
+          "occupation": "data scientist",
+          "inc ome_per_year": 1000000000.0
+        }
       },
       "bot": {
         "id": "5c65706b0110b377e17eba38",
