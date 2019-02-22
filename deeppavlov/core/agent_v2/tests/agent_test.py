@@ -9,6 +9,7 @@ from deeppavlov.core.agent_v2.skill_manager import SkillManager
 from deeppavlov.core.agent_v2.rest_caller import RestCaller
 from deeppavlov.core.agent_v2.response_selector import ConfidenceResponseSelector
 from deeppavlov.core.agent_v2.config import MAX_WORKERS
+from deeppavlov.core.agent_v2.state_schema import Human
 
 
 ner = build_model(configs.ner.ner_rus, download=True)
@@ -39,7 +40,8 @@ agent = Agent(state_manager, preprocessor, skill_manager)
 # print(annotations)
 
 # TEST __call__()
-u_tg_ids = ['d2e7e2e1-0d19-4b75-bef6-987cd53a883e', '373ed57a-3dd3-4e30-940e-6d94d0d4dd38', str(uuid.uuid4())]
+exist_humans = Human.objects
+u_tg_ids = [exist_humans[0], exist_humans[1], str(uuid.uuid4())]
 utts = ['Что еще скажешь интересного?', 'Бот, ты тупой', '\\start']
 u_d_types = ['iphone', 'android', 'iphone']
 date_times = [datetime.utcnow(), datetime.utcnow(), datetime.utcnow()]
