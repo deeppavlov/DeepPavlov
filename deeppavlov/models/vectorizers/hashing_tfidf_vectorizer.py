@@ -179,7 +179,7 @@ class HashingTfIdfVectorizer(Estimator):
             a count csr_matrix
 
         """
-        count_matrix = sparse.csr_matrix((data, (row, col)), shape=(self.hash_size, size))
+        count_matrix = Sparse((data, (row, col)), shape=(self.hash_size, size))
         count_matrix.sum_duplicates()
         return count_matrix
 
