@@ -15,6 +15,8 @@
 from logging import getLogger
 import pickle
 
+import numpy as np
+
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Component
@@ -49,12 +51,16 @@ class RetrieveCandidates(Component):
             candidates2 = [(kk, self.map[id][1]) for kk,id in enumerate(ids)]
             contexts = [(kk, self.map[id][0]) for kk,id in enumerate(ids)]
             scores = [(kk,"{:.2f}".format(j)) for kk,j in enumerate(scores_batch[idx])]
-            # print("[tf-idf] \nscores:", scores, "\ncontext:", contexts, "\nresponses:", candidates2)  # DEBUG
+            # logger.debug("[tf-idf] \nscores:" + str(scores[:100]) + "\ncontext:" + str(contexts[:100]) + "\nresponses:" + str(candidates2[:100]))  # DEBUG
 
             candidates_batch.append(candidates)
 
         model_inputs = []
         for i in range(len(context_batch)):
+            # HACK: check invalid input string (when tf-idf score are zeros)
+            if all(np.asarray(scores_batch[i]) == 0.0001):
+                context_batch[i] = [''] * 9 + ['Давай подумаем над этим вместе, я пока не на все вопросы умею отвечать.']
+
             item = context_batch[i]
             item.extend(candidates_batch[i])  # append several response candidates to the each context
             model_inputs.append(item)
