@@ -11,8 +11,9 @@ scikit-learn==0.19.1
 fuzzywuzzy==0.16.0
 pymorphy2==0.8
 pymorphy2-dicts-ru
-requests==2.19.1
-pytelegrambotapi==3.5.2
+requests[socks]==2.10.0
+gunicorn==19.9.0
+pytelegrambotapi==3.6.6
 flask==1.0.2
 flasgger==0.9.1
 flask_cors==3.0.6
