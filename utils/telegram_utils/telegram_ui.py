@@ -16,6 +16,7 @@ limitations under the License.
 from pathlib import Path
 
 import telebot
+from telebot import apihelper
 
 from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.agents.processors.default_rich_content_processor import DefaultRichContentWrapper
@@ -34,12 +35,24 @@ SERVER_CONFIG_FILENAME = 'server_config.json'
 TELEGRAM_MODELS_INFO_FILENAME = 'models_info.json'
 
 
-def init_bot_for_model(agent: Agent, token: str, model_name: str):
-    bot = telebot.TeleBot(token)
+def init_bot_for_model(agent: Agent, token: str, model_name: str, proxy_key: str=None, proxy_val: str=None):
 
     models_info_path = Path(get_settings_path(), TELEGRAM_MODELS_INFO_FILENAME).resolve()
     models_info = read_json(str(models_info_path))
     model_info = models_info[model_name] if model_name in models_info else models_info['@default']
+
+# proxy added:
+#   apihelper.proxy = {'http':'http://10.10.1.10:3128'}
+#   IP: deimos.public.opennetwork.cc
+#   1090
+#   Login: 333744069
+#   Password: eMEKzCQu
+#    apihelper.proxy={'https':'socks5://333744069:eMEKzCQu@deimos.public.opennetwork.cc:1090'}		
+#
+# from: DeepPavlov\utils\settings\server_config.json
+    if  proxy_key and proxy_val:
+        apihelper.proxy = {proxy_key : proxy_val}
+    bot = telebot.TeleBot(token)
 
     @bot.message_handler(commands=['start'])
     def send_start_message(message):
@@ -66,10 +79,13 @@ def init_bot_for_model(agent: Agent, token: str, model_name: str):
     bot.polling()
 
 
-def interact_model_by_telegram(config, token=None):
+def interact_model_by_telegram(config, token=None, proxy_key=None, proxy_val=None):
     server_config_path = Path(get_settings_path(), SERVER_CONFIG_FILENAME)
     server_config = read_json(server_config_path)
     token = token if token else server_config['telegram_defaults']['token']
+# from: DeepPavlov\utils\settings\server_config.json
+    proxy_key = proxy_key if proxy_key else server_config['telegram_defaults']['proxy_key']
+    proxy_val = proxy_val if proxy_val else server_config['telegram_defaults']['proxy_val']
     if not token:
         e = ValueError('Telegram token required: initiate -t param or telegram_defaults/token '
                        'in server configuration file')
@@ -80,4 +96,4 @@ def interact_model_by_telegram(config, token=None):
     model_name = type(model.get_main_component()).__name__
     skill = DefaultStatelessSkill(model)
     agent = DefaultAgent([skill], skills_processor=DefaultRichContentWrapper())
-    init_bot_for_model(agent, token, model_name)
+    init_bot_for_model(agent, token, model_name, proxy_key, proxy_val)
