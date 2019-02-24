@@ -18,7 +18,11 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
 
-from .feb_common import NamedEntity, NamedEntityType, Utterance, UtteranceErrors
+# from .feb_common import NamedEntity, NamedEntityType, Utterance, UtteranceErrors
+
+from .feb_objects import *
+from .feb_common import FebComponent
+
 from question2wikidata import questions, functions
 
 
@@ -26,45 +30,66 @@ log = get_logger(__name__)
 
 
 @register('nent_to_qent')
-class NentToQent(Component):
+class NentToQent(FebComponent):
     """Convert batch of strings
-    sl = ["my_q ",
-          "my_q <author:Лев Николаевич Толстой>",
-          "my_q <author:Лев Николаевич Толстой> <t2:Лев Николаевич Толстой>"]
-
-      -(to)->
-
-        {'query_name': 'my_q', 'nent_lst': []}
-        {'query_name': 'my_q', 'nent_lst': [{'nent_type': 'author', 'nent_str': 'Лев Николаевич Толстой'}]}
-        {'query_name': 'my_q', 'nent_lst': [
-            {'nent_type': 'author', 'nent_str': 'Лев Николаевич Толстой'},
-            {'nent_type': 't2', 'nent_str': 'Лев Николаевич Толстой'}]}
       """
+
+    @classmethod
+    def component_type(cls):
+        return cls.INTERMEDIATE_COMPONENT
+
     def __init__(self, **kwargs):
-        pass
-        # # the mock-0.3.1 dir contains testcase.py, testutils.py & mock.py
-        # log.info(f'nent_to_qent __init__ question2wikidata_path={question2wikidata_path}')
-        # sys.path.append(question2wikidata_path)
-        # import questions
+        super().__init__(**kwargs)
 
-    @overrides
-    def __call__(self, batch, *args, **kwargs):
-        for utt in batch:
-            ne_l = utt.get(Utterance.NAMED_ENTITY_LST.value)
-            for ne in ne_l:
-                qid = self._extract_entities(ne.get(NamedEntity.NE_STRING.value),
-                                             ne.get(NamedEntity.NE_TYPE.value))
-                if qid:
-                    ne[NamedEntity.NE_QID.value] = qid
-                else:
-                    utt[Utterance.ERROR.value] = UtteranceErrors.QID_NOT_FOUND.value
-                    utt.get(Utterance.ERROR_VAL_LST.value, list()).append(ne)
-        return batch
+    def test_and_prepare(self, utt: FebUtterance):
+        """
+        Test input data and prepare data to process
+        :param utt: FebUtterance
+        :return: list(tuple(FebEntity, {})) - for FebEntity context is void
+        """
+        return [(e, {}) for e in utt.entities]
+
+    def process(self, entity: FebEntity, context):
+        """
+        Setting qid for entity
+        :param entity: FebEntity
+        :param context: void dict
+        :return: None (all results saved in place (for arguments))
+        """
+        entity.qid = functions.get_qid(entity.tokens_to_search_string(), entity.type)
+        return entity
 
 
-    def _extract_entities(self, ne_str, param_type):
-        log.info(f'nent_to_qent _extract_entities query={ne_str}, param_type={param_type}')
-        qid = functions.get_qid(ne_str, param_type)
-        log.info(f'nent_to_qent _extract_entities qid={qid}')
-        return qid
+    def pack_result(self, utt: FebUtterance, ret_obj_l):
+        """
+        Trivial packing
+        :param utt: current FebUtterance
+        :param ret_obj_l: list of entities
+        :return: utt with list of updated entities
+        """
+        utt.entities = ret_obj_l
+        return utt
+
+
+
+    # @overrides
+    # def __call__(self, batch, *args, **kwargs):
+    #     for utt in batch:
+    #         ne_l = utt.get(Utterance.NAMED_ENTITY_LST.value)
+    #         for ne in ne_l:
+    #             qid = self._extract_entities(ne.get(NamedEntity.NE_STRING.value),
+    #                                          ne.get(NamedEntity.NE_TYPE.value))
+    #             if qid:
+    #                 ne[NamedEntity.NE_QID.value] = qid
+    #             else:
+    #                 utt[Utterance.ERROR.value] = UtteranceErrors.QID_NOT_FOUND.value
+    #                 utt.get(Utterance.ERROR_VAL_LST.value, list()).append(ne)
+    #     return batch
+    #
+    #
+    # def _extract_entities(self, ne_str, param_type):
+    #     log.info(f'nent_to_qent _extract_entities query={ne_str}, param_type={param_type}')
+    #     qid = functions.get_qid(ne_str, param_type)
+    #     log.info(f'nent_to_qent _extract_entities qid={qid}')
+    #     return qid
 

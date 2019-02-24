@@ -1,0 +1,41 @@
+{
+  "dataset_reader": {},
+  "dataset_iterator": {},
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "in": ["x"],
+        "class_name": "deeppavlov.models.feb.t1_parser:FebT1Parser",
+        "out": ["utt_par"]
+      },
+      {
+        "in": ["utt_par"],
+        "class_name": "deeppavlov.models.feb.nent_to_qent:NentToQent",
+        "out": ["utt_qid"]
+      },
+      {
+        "in": ["utt_qid"],
+        "class_name": "deeppavlov.models.feb.t1_text_generator:FebT1TextGenerator",
+        "out": ["return_text"]
+      }
+    ],
+    "out": ["return_text"]
+  },
+  "train": {},
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "requirements": [],
+    "labels": {
+      "telegram_utils": "feb_test1_bot_label",
+      "server_utils": "feb_test1_bot_label"
+    },
+    "download": []
+  }
+}

@@ -19,25 +19,58 @@ from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
 import re
 
+from .feb_objects import *
+from .feb_common import FebComponent
+
+
 log = get_logger(__name__)
 
 
 @register('feb_t1_text_generator')
-class FebT1TextGenerator(Component):
-    """Convert batch of values -(to)-> batch of strings"""
+class FebT1TextGenerator(FebComponent):
+    """Convert utt to strings
+      """
+    @classmethod
+    def component_type(cls):
+        return cls.FINAL_COMPONENT
+
     def __init__(self, **kwargs):
-        pass
+        super().__init__(**kwargs)
 
-    @overrides
-    def __call__(self, batch, *args, **kwargs):
-        # if len(batch) > 0 and isinstance(batch[0], str):
-        batch = [self._generator(values) for values in batch]
-        return batch
-        # raise TypeError(
-        #     f"StreamSpacyTokenizer.__call__() is not implemented for `{type(batch[0])}`")
+    # don't override basic realization
+    # def test_and_prepare(self, utt):
 
-    def _generator(self, values):
-        log.info(f'feb_t1_text_generator _generator pars_str={values}')
-        return str(values)
+    def process(self, utt: FebUtterance, context):
+        """
+        Main processing function
+        :param obj: obj to process
+        :param context: dict with processing context
+        :return: processed object
+        """
+        result = '; '.join(intent.result_str for intent in utt.intents if intent.result_str)
+        utt.re_text = f'Result: {result} \n {repr(utt)}'
+        return  utt
+
+    # don't override basic realization
+    # def pack_result(self, utt, ret_obj_l):
+
+
+
+# class FebT1TextGenerator(Component):
+#     """Convert batch of values -(to)-> batch of strings"""
+#     def __init__(self, **kwargs):
+#         pass
+#
+#     @overrides
+#     def __call__(self, batch, *args, **kwargs):
+#         # if len(batch) > 0 and isinstance(batch[0], str):
+#         batch = [self._generator(values) for values in batch]
+#         return batch
+#         # raise TypeError(
+#         #     f"StreamSpacyTokenizer.__call__() is not implemented for `{type(batch[0])}`")
+#
+#     def _generator(self, values):
+#         log.info(f'feb_t1_text_generator _generator pars_str={values}')
+#         return str(values)
 
 
