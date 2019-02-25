@@ -65,12 +65,12 @@ class CosineSimilarityClassifier(Estimator, Serializable):
             else:
                 norm = q_norm * sparse_norm(self.x_train_features, axis=1)
                 cos_similarities = np.array(q_vects.dot(self.x_train_features.T).todense())
-                cos_similarities = cos_similarities/norm
+                cos_similarities = cos_similarities / norm
         elif isinstance(q_vects[0], np.ndarray):
             q_vects = np.array(q_vects)
             self.x_train_features = np.array(self.x_train_features)
-            norm = np.linalg.norm(q_vects)*np.linalg.norm(self.x_train_features, axis=1)
-            cos_similarities = q_vects.dot(self.x_train_features.T)/norm
+            norm = np.linalg.norm(q_vects) * np.linalg.norm(self.x_train_features, axis=1)
+            cos_similarities = q_vects.dot(self.x_train_features.T) / norm
         elif q_vects[0] is None:
             cos_similarities = np.zeros(len(self.x_train_features))
         else:
@@ -83,11 +83,13 @@ class CosineSimilarityClassifier(Estimator, Serializable):
             labels_scores[:, i] = np.max([cos_similarities[:, i]
                                           for i, value in enumerate(self.y_train) if value == label], axis=0)
 
-        labels_scores = labels_scores/labels_scores.sum(axis=1, keepdims=True)
+        labels_scores_sum = labels_scores.sum(axis=1, keepdims=True)
+        labels_scores = np.divide(labels_scores, labels_scores_sum,
+                                  out=np.zeros_like(labels_scores), where=(labels_scores_sum != 0))
 
         answer_ids = np.argsort(labels_scores)[:, -self.top_n:]
 
-        # generate top_n asnwers and scores
+        # generate top_n answers and scores
         answers = []
         scores = []
         for i in range(len(answer_ids)):
