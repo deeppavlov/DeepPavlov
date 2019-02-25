@@ -92,7 +92,7 @@ def main():
         token = args.token
         interact_model_by_telegram(model_config=pipeline_config_path,
                                    token=token,
-                                   args.proxy,
+                                   proxy=args.proxy,
                                    default_skill_wrap=not args.no_default_skill)
     elif args.mode == 'interactmsbot':
         ms_id = args.ms_id
