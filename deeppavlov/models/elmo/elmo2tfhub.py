@@ -207,7 +207,6 @@ def export2hub(weight_file, hub_dir, options):
 
             with tf.Session() as sess:
                 sess.run(tf.global_variables_initializer())
-                # import pdb; pdb.set_trace()
                 if hub_dir.exists():
                     rmdir(hub_dir)
                 module.export(str(hub_dir), sess)
