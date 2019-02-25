@@ -1,6 +1,7 @@
 {
   "chainer": {
     "in": ["x"],
+    "in_y": ["y"],
     "pipe": [
       {
         "id": "classes_vocab",
