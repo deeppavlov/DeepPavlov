@@ -47,6 +47,9 @@ class FebComponent(Component):
     INTERMEDIATE_COMPONENT = 'intermediate_component'
     FINAL_COMPONENT = 'final_component'
 
+    LOG_FILE = open('LOG_FILE.jsonl', 'a', encoding = 'utf-8')
+    DEBUG = False
+
     @classmethod
     def component_type(cls):
         # TODO: abstract
@@ -71,7 +74,7 @@ class FebComponent(Component):
                         raise TypeError(f"start_component is not implemented for `{type(in_obj)}`")
                 else:
                     utt = in_obj
-                var_dump(in_obj)
+                # var_dump(in_obj)
                 obj_l = self.test_and_prepare(utt)
                 ret_obj_l = []
                 # print(f'P1: obj_l={obj_l}, obj_t={type(obj_l)}')
@@ -86,15 +89,18 @@ class FebComponent(Component):
                         ret_obj_l.append(ret_obj)
                 utt = self.pack_result(utt, ret_obj_l)
                 # TODO: dump data:
-                log.info(f'DATA DUMP utt=`{utt}`')
-                var_dump(header = 'to_dump test', msg = utt.to_dump())
-                pretty_json(utt.to_dump())
+                # log.info(f'DATA DUMP utt=`{utt}`')
+                if FebComponent.DEBUG:
+                    FebComponent.LOG_FILE.write(f'{utt.to_dump()}\n'); 
+                    FebComponent.LOG_FILE.flush()
 
             except Exception as e:
                 log.exception(f'in UTT process(utt=`{utt}`)')
                 utt.add_error(FebError(FebError.ET_SYS, self, {FebError.EC_EXCEPTION: e}))
             if self.component_type() == self.FINAL_COMPONENT:
                 res_batch.append(utt.return_text())
+                pretty_json(utt.to_dump())
+                FebComponent.LOG_FILE.write(f'{utt.to_dump()}\n'); FebComponent.LOG_FILE.flush()
             else:
                 res_batch.append(utt)
         return res_batch
