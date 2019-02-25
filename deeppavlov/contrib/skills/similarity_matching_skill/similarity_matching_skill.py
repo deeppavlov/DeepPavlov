@@ -33,10 +33,10 @@ class SimilarityMatchingSkill(Skill):
         model: Classifies user's utterance
     """
 
-    def __init__(self, data_path: str = None, config_type: str = 'tfidf_autofaq',
-                 x_col_name: str = 'Question', y_col_name: str = 'Answer',
-                 save_load_path: str = './similarity_matching',
-                 edit_dict: dict = None, train: bool = True):
+    def __init__(self, data_path: Optional[str] = None, config_type: Optional[str] = 'tfidf_autofaq',
+                 x_col_name: Optional[str] = 'Question', y_col_name: Optional[str] = 'Answer',
+                 save_load_path: Optional[str] = './similarity_matching',
+                 edit_dict: Optional[dict] = None, train: Optional[bool] = True):
 
         if config_type not in configs.faq:
             raise ValueError("There is no config named '{0}'. Possible options are: {1}"
