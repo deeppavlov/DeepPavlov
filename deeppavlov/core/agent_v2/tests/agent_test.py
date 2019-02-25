@@ -11,7 +11,6 @@ from deeppavlov.core.agent_v2.response_selector import ConfidenceResponseSelecto
 from deeppavlov.core.agent_v2.config import MAX_WORKERS
 from deeppavlov.core.agent_v2.state_schema import Human
 
-
 ner = build_model(configs.ner.ner_rus, download=True)
 faq = build_model(configs.faq.tfidf_autofaq, download=True)
 sentiment = build_model(configs.classifiers.rusentiment_elmo_twitter_rnn, download=True)
@@ -41,12 +40,13 @@ agent = Agent(state_manager, preprocessor, skill_manager)
 
 # TEST __call__()
 exist_humans = Human.objects
-u_tg_ids = [exist_humans[0], exist_humans[1], str(uuid.uuid4())]
+u_tg_ids = [exist_humans[0].user_telegram_id, exist_humans[1].user_telegram_id, str(uuid.uuid4())]
 utts = ['Что еще скажешь интересного?', 'Бот, ты тупой', '\\start']
 u_d_types = ['iphone', 'android', 'iphone']
 date_times = [datetime.utcnow(), datetime.utcnow(), datetime.utcnow()]
 locations = ['moscow', 'novosibirsk', 'novokuznetsk']
 ch_types = ['telegram', 'telegram', 'telegram']
 
-agent(utterances=utts, user_telegram_ids=u_tg_ids, user_device_types=u_d_types,
-      date_times=date_times, locations=locations, channel_types=ch_types)
+responses = agent(utterances=utts, user_telegram_ids=u_tg_ids, user_device_types=u_d_types,
+                  date_times=date_times, locations=locations, channel_types=ch_types)
+print(responses)
