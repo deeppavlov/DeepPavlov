@@ -239,7 +239,10 @@ class SklearnComponent(Estimator):
 
         log.info("Saving model to {}".format(str(fname)))
         with open(fname, "wb") as f:
-            pickle.dump(self.model, f)
+            try:
+                pickle.dump(self.model, f)
+            except OverflowError:
+                pickle.dump(self.model, f, protocol=4)
         return
 
     @staticmethod
