@@ -273,7 +273,7 @@ class ELMo(NNModel):
         self._build_model(train=False, epoch=load_epoch_num)
 
         self.save()
-        # self.load_path = self.save_path
+        self.load_path = self.save_path
 
     def _load_options(self, options_json_path):
         if options_json_path:
