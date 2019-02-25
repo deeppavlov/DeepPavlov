@@ -210,7 +210,7 @@ class Chainer(Component):
         data = []
         for in_params, out_params, component in self.train_pipe:
             data.append(component.serialize())
-        return pickle.dumps(data)
+        return pickle.dumps(data, protocol=4)
 
     def deserialize(self, data: bytes) -> None:
         data = pickle.loads(data)

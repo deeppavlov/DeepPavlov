@@ -320,10 +320,10 @@ class SquadVocabEmbedder(Estimator):
         logger.info('SquadVocabEmbedder: saving {}s vocab to {}'.format(self.level, self.save_path))
         self.save_path.parent.mkdir(parents=True, exist_ok=True)
         with self.save_path.open('wb') as f:
-            pickle.dump((self.emb_dim, self.emb_mat, self.token2idx_dict), f)
+            pickle.dump((self.emb_dim, self.emb_mat, self.token2idx_dict), f, protocol=4)
 
     def serialize(self) -> bytes:
-        return pickle.dumps((self.emb_dim, self.emb_mat, self.token2idx_dict))
+        return pickle.dumps((self.emb_dim, self.emb_mat, self.token2idx_dict), protocol=4)
 
     def _get_idx(self, el: str) -> int:
         """ Returns idx for el (token or char).
