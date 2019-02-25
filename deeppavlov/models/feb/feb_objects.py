@@ -197,10 +197,24 @@ class FebEntity(FebObject):
         self.qid = kwargs.get('qid', None) # id in Wikidata
         self.qname = kwargs.get('qname', None) # name in Wikidata
         self.normal_form = kwargs.get('normal_form', None)
+        self.text_from_base = kwargs.get('text_from_base', None)
 
-    def tokens_to_search_string(self):
+
+    def to_text(self):
         return ' '.join(t.text for t in self.tokens)
 
+    def tokens_to_search_string(self):
+        return self.to_text()
+
+    def to_values_dict(self):
+        res_dict = {
+            'type': self.type,
+            'text': self.to_text(),
+            'normal_form': self.normal_form,
+            'qid': self.qid,
+            'text_from_base': self.text_from_base
+        }
+        return res_dict
 
 class FebAuthor(FebEntity):
 
@@ -230,12 +244,13 @@ class FebIntent(FebObject):
 'author_languages'
 'author_when_died'
 'author_where_died'
-'author_where_buried'
+'author_where_buriedF'
 'author_inspired_by'
 
     """
     supported_types = {q for q in queries.keys() if q[:5] != 'help_'}
     UNSUPPORTED_TYPE = 'unsupported_type'
+    INTENT_NOT_SET_TYPE = 'intent_not_set_type'
 
     @classmethod
     def in_supported_types(cls, type):
@@ -245,12 +260,23 @@ class FebIntent(FebObject):
         super().__init__(**kwargs)
 
         self.type = type
-        self.confidence = kwargs.get('confidence', None) # float confidence level
+        self.confidence = kwargs.get('confidence', 0.0) # float confidence level
 
         self.result_qid = kwargs.get('result_qid', None) # result id in Wikidata
-        self.result_str = kwargs.get('result_str', None) # result string type
+        self.result_val = kwargs.get('result_str', None) # result dict
+        # self.result_str = kwargs.get('result_str', None) # result string type
+
+    @property
+    def result_str(self):
+        """
+        Deprecated
+        :return:
+        """
+        return str(self.result_val)
 
 class FebUtterance(FebObject):
+
+    ERROR_IN_RESULT = 'error_in_result'
 
     def __init__(self, text, **kwargs):
         super().__init__(**kwargs)

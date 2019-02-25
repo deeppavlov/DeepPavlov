@@ -76,7 +76,8 @@ class WikidataQuery(FebComponent):
                                                                                {'param_name': param_name,
                                                                                 'param_type': param_type,
                                                                                 'entities': ent_l}}))
-            intent.result_str = str(functions.execute_query(query, **query_params))
+            intent.result_val = functions.execute_query(query, **query_params)
+            # intent.result_str = str()
         return intent
 
     def pack_result(self, utt: FebUtterance, ret_obj_l):
