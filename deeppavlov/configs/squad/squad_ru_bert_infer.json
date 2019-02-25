@@ -16,6 +16,7 @@
     "pipe": [
       {
         "class_name": "squad_bert_infer",
+        "lang": "ru",
         "batch_size": 10,
         "squad_model_config": "{CONFIGS_PATH}/squad/squad_ru_bert.json",
         "vocab_file": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12/vocab.txt",

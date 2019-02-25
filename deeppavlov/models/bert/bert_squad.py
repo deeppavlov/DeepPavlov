@@ -228,12 +228,12 @@ class BertSQuADModel(LRScheduledTFModel):
 
 @register('squad_bert_infer')
 class BertSQuADInferModel(Component):
-    def __init__(self, squad_model_config, vocab_file, do_lower_case, max_seq_len=512,
+    def __init__(self, squad_model_config, vocab_file, do_lower_case, max_seq_length=512,
                  batch_size: int = 10, lang='en', **kwargs):
         config = json.load(open(squad_model_config))
-        config['chainer']['pipe'][0]['max_seq_length'] = max_seq_len
+        config['chainer']['pipe'][0]['max_seq_length'] = max_seq_length
         self.model = build_model(config)
-        self.max_seq_len = max_seq_len
+        self.max_seq_length = max_seq_length
         vocab_file = str(expand_path(vocab_file))
         self.tokenizer = FullTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
         self.batch_size = batch_size
@@ -248,29 +248,43 @@ class BertSQuADInferModel(Component):
             raise RuntimeError('en and ru languages are supported only')
 
     def __call__(self, contexts, questions, **kwargs):
-        # todo add batches
-        # todo remove prints
-        answers, answer_starts, logits = [], [], []
-        for context, question in zip(contexts, questions):
+        batch_indices = []
+        contexts_to_predict = []
+        questions_to_predict = []
+        predictions = {}
+        for i, (context, question) in enumerate(zip(contexts, questions)):
             context_subtokens = self.tokenizer.tokenize(context)
             question_subtokens = self.tokenizer.tokenize(question)
-            if len(context_subtokens) + len(question_subtokens) + 3 > self.max_seq_len:
-                max_chunk_len = self.max_seq_len - len(question_subtokens) - 3
+            max_chunk_len = self.max_seq_length - len(question_subtokens) - 3
+            if max_chunk_len > 0 and len(context_subtokens) < max_chunk_len:
                 number_of_chunks = math.ceil(len(context_subtokens) / max_chunk_len)
                 sentences = self.sent_tokenizer(context)
-                chunks = [' '.join(chunk) for chunk in np.array_split(sentences, number_of_chunks)]
-                print(len(context_subtokens), self.max_seq_len, number_of_chunks)
-                a, a_st, logits = self.model(chunks, [question] * number_of_chunks)
-                print(question)
-                print(a, logits)
-                best_answer_ind = np.argmax(logits)
-                answers += [a[best_answer_ind]]
-                answer_starts += [a_st[best_answer_ind]]
-                logits += [logits[best_answer_ind]]
+                for chunk in np.array_split(sentences, number_of_chunks):
+                    contexts_to_predict += [' '.join(chunk)]
+                    questions_to_predict += [question]
+                    batch_indices += [i]
             else:
-                a, a_st, logits = self.model([context], [question])
-                answers += [a[0]]
-                answer_starts += [a_st[0]]
-                logits += [logits[0]]
+                contexts_to_predict += [context]
+                questions_to_predict += [question]
+                batch_indices += [i]
+
+        for j in range(0, len(contexts_to_predict), self.batch_size):
+            c_batch = contexts_to_predict[j: j + self.batch_size]
+            q_batch = questions_to_predict[j: j + self.batch_size]
+            ind_batch = batch_indices[j: j + self.batch_size]
+            a_batch, a_st_batch, logits_batch = self.model(c_batch, q_batch)
+            for a, a_st, logits, ind in zip(a_batch, a_st_batch, logits_batch, ind_batch):
+                if ind in predictions:
+                    predictions[ind] += [(a, a_st, logits)]
+                else:
+                    predictions[ind] = [(a, a_st, logits)]
+
+        answers, answer_starts, logits = [], [], []
+        for ind in sorted(predictions.keys()):
+            prediction = predictions[ind]
+            best_answer_ind = np.argmax([p[2] for p in prediction])
+            answers += [prediction[best_answer_ind][0]]
+            answer_starts += [prediction[best_answer_ind][1]]
+            logits += [prediction[best_answer_ind][2]]
 
         return answers, answer_starts, logits
