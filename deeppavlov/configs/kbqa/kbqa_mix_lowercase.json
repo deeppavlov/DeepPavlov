@@ -1,15 +1,11 @@
 {
   "chainer": {
-    "in": [
-      "x"
-    ],
+    "in": ["x"],
     "pipe": [
       {
         "id": "classes_vocab",
         "class_name": "simple_vocab",
-        "fit_on": [
-          "y"
-        ],
+        "fit_on": ["y"],
         "save_path": "{MODELS_PATH}/relation_prediction/classes.dict",
         "load_path": "{MODELS_PATH}/relation_prediction/classes.dict",
         "in": "y",
@@ -41,15 +37,9 @@
         "depth": "#classes_vocab.len"
       },
       {
-        "in": [
-          "x_emb"
-        ],
-        "in_y": [
-          "y_onehot"
-        ],
-        "out": [
-          "y_pred_probas"
-        ],
+        "in": ["x_emb"],
+        "in_y": ["y_onehot"],
+        "out": ["y_pred_probas"],
         "main": true,
         "class_name": "keras_classification_model",
         "save_path": "{MODELS_PATH}/relation_prediction/model",
