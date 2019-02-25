@@ -1,0 +1,19 @@
+{
+  "11": "book_author",
+  "12": "book_written",
+  "13": "book_published",
+  "14": "book_characters",
+  "15": "book_genre",
+  "16": "book_main_theme",
+  "21": "author_birthplace",
+  "22": "author_productions",
+  "23": "author_genres",
+  "24": "author_when_born",
+  "25": "author_where_lived",
+  "26": "author_languages",
+  "27": "author_when_died",
+  "28": "author_where_died",
+  "29": "author_where_buried",
+  "210": "author_inspired_by",
+  "999": "unsupported_type"
+}
