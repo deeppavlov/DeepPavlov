@@ -139,6 +139,7 @@ class NNTrainer(FitTrainer):
 
     def _validate(self, iterator: DataLearningIterator,
                   tensorboard_tag: Optional[str] = None, tensorboard_index: Optional[int] = None) -> None:
+        self._send_event(event_name='before_validation')
         report = self.test(iterator.gen_batches(self.batch_size, data_type='valid', shuffle=False),
                            start_time=self.start_time)
 
@@ -178,6 +179,7 @@ class NNTrainer(FitTrainer):
 
     def _log(self, iterator: DataLearningIterator,
              tensorboard_tag: Optional[str] = None, tensorboard_index: Optional[int] = None) -> None:
+        self._send_event(event_name='before_log')
         if self.log_on_k_batches == 0:
             report = {
                 'time_spent': str(datetime.timedelta(seconds=round(time.time() - self.start_time + 0.5)))
@@ -233,6 +235,7 @@ class NNTrainer(FitTrainer):
 
         while True:
             impatient = False
+            self._send_event(event_name='before_train')
             for x, y_true in iterator.gen_batches(self.batch_size, data_type='train'):
                 self.last_result = self._chainer.train_on_batch(x, y_true)
                 if self.last_result is None:
