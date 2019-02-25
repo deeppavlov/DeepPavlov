@@ -272,6 +272,7 @@ class ELMo(NNModel):
         self._build_model(train=False, epoch=load_epoch_num)
 
         self.save()
+        # self.load_path = self.save_path
 
     def _load_options(self, options_json_path):
         if options_json_path:
@@ -461,6 +462,7 @@ class ELMo(NNModel):
             path.resolve()
             log.info(f'[loading {epoch} epoch]')
 
+        # path.parent.mkdir(parents=True, exist_ok=True)
         path = str(path)
 
         # Check presence of the model files
