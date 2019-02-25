@@ -61,10 +61,12 @@ def init_bot_for_model(agent: Agent, token: str, model_name: str, proxy: str):
         chat_id = message.chat.id
         context = message.text
 
-        response: RichMessage = agent([context], [chat_id])[0]
-        for message in response.json():
-            message_text = message['content']
-            bot.send_message(chat_id, message_text)
+        bot.send_message(chat_id, agent([context], [chat_id])[0])
+
+        # response: RichMessage = agent([context], [chat_id])[0]
+        # for message in response.json():
+        #     message_text = message['content']
+        #     bot.send_message(chat_id, message_text)
 
     bot.polling()
 
@@ -90,5 +92,6 @@ def interact_model_by_telegram(model_config: Union[str, Path, dict],
     model = build_model(model_config)
     model_name = type(model.get_main_component()).__name__
     skill = DefaultStatelessSkill(model) if default_skill_wrap else model
-    agent = DefaultAgent([skill], skills_processor=DefaultRichContentWrapper())
+    # agent = DefaultAgent([skill], skills_processor=DefaultRichContentWrapper())
+    agent = DefaultAgent([skill])
     init_bot_for_model(agent, token, model_name, proxy)
