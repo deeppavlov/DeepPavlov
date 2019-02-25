@@ -58,6 +58,7 @@ class FebComponent(Component):
     def __call__(self, batch, *args, **kwargs):
         res_batch = []
         for in_obj in batch:
+
             try:  # Error isolation between objects of batch
                 if self.component_type() == self.START_COMPONENT:
                     if isinstance(in_obj, str):
@@ -68,6 +69,7 @@ class FebComponent(Component):
                         raise TypeError(f"start_component is not implemented for `{type(in_obj)}`")
                 else:
                     utt = in_obj
+                var_dump(in_obj)
                 obj_l = self.test_and_prepare(utt)
                 ret_obj_l = []
                 # print(f'P1: obj_l={obj_l}, obj_t={type(obj_l)}')

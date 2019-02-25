@@ -56,7 +56,7 @@ class NentToQent(FebComponent):
         :param context: void dict
         :return: None (all results saved in place (for arguments))
         """
-        entity.qid = functions.get_qid(entity.tokens_to_search_string(), entity.type)
+        entity.qid = functions.get_qid(entity.normal_form, entity.type)
         return entity
 
 

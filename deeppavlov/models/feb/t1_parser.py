@@ -22,6 +22,9 @@ import re
 from .feb_objects import *
 from .feb_common import FebComponent
 
+from question2wikidata import questions, functions
+
+
 log = get_logger(__name__)
 
 
@@ -39,6 +42,7 @@ class FebT1Parser(FebComponent):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+
     def test_and_prepare(self, utt):
         """
         Test input data and prepare data to process
@@ -50,13 +54,55 @@ class FebT1Parser(FebComponent):
         # if not isinstance(in_obj, str):
         #     raise TypeError(f"FebT1Parser is not implemented for `{type(in_obj)}`")
         # utt = FebUtterance(in_obj)
+
+        entities = questions.extract_entities(utt.text) #получаем словарь с сущностями. ключ - book_name или author_name, значение - список сущностей
+        var_dump(header='entities', msg=entities)
+
         utt.tokens = FebToken.tokenize(utt.text)
         tokens = [t for t in utt.tokens if t.type != FebToken.PUNCTUATION]
-        if len(tokens) < 3:
+
+        entity_tokens, normal_form = [], None
+
+        wrapped = questions.wrap_entities(utt.text, entities)
+        var_dump(header='Строка с отмеченными сущностями', msg = wrapped)
+
+        question_category = get_category(utt.text)  #получаем интент (get_category - временная, ищет тип вопроса в сообщении)
+
+        entity_code = FebEntity.AUTHOR if FebEntity.AUTHOR in question_category else FebEntity.BOOK #вопрос о книге или об авторе?
+
+        var_dump(header='entity_code', msg=entity_code)
+
+
+        #пока считаем, что может быть 1 искомая сущность в вопросе
+
+        if (entity_code == FebEntity.AUTHOR) and ('author_name' in entities): #если вопрос об авторе, не рассматриваем книжные сущности
+            for author_tokens in entities['author_name']:
+                for token in tokens:
+                    if (token.start >= author_tokens['start']) and (token.stop <= author_tokens['stop']):
+                        token.tags.update({FebToken.TAG_AUTHOR})
+                        entity_tokens.append(token)
+            normal_form = entities['author_name'][0]['normal_form']
+
+        elif  (entity_code == FebEntity.BOOK) and ('book_name' in entities):  #если вопрос о книге, не рассматриваем авторские сущности
+            for book_tokens in entities['book_name']:
+                for token in tokens: 
+                    if (token.start >= book_tokens['start']) and (token.stop <= book_tokens['stop']):
+                        token.tags.update({FebToken.TAG_BOOK})
+                        entity_tokens.append(token)  
+            normal_form = entities['book_name'][0]['normal_form']
+
+               
+        var_dump(header='test_and_prepare t1_parser', msg = tokens)
+        var_dump(header='Entity tokens', msg = entity_tokens)
+        var_dump(header='entity_code', msg = entity_code)
+
+        if question_category is None:
             utt.add_error(FebError(FebError.ET_INP_DATA, self, {FebError.EC_DATA_LACK: tokens}))
-        return [(utt, {'intents_code':tokens[0],
-                           'entity_code': tokens[1],
-                           'entity_text': tokens[2:]})]
+
+
+        return [(utt, {'intents_code':question_category,
+                           'entity_code': entity_code,
+                           'entity_text': (entity_tokens, normal_form)})]
 
     def process(self, obj, context):
         """
@@ -66,9 +112,9 @@ class FebT1Parser(FebComponent):
         :return: processed object
         """
         utt = obj
-        intents_code = context['intents_code'].text
-        entity_code = context['entity_code'].text
-        entity_text = context['entity_text']
+        intents_code = context['intents_code']
+        entity_code = context['entity_code']
+        entity_text, normal_form = context['entity_text']
         if FebIntent.in_supported_types(intents_code):
             intent = FebIntent(intents_code)
         else:
@@ -77,9 +123,9 @@ class FebT1Parser(FebComponent):
         utt.intents.append(intent)
 
         if entity_code == FebEntity.AUTHOR:
-            utt.entities.append(FebAuthor(tokens=entity_text))
+            utt.entities.append(FebAuthor(tokens=entity_text, normal_form=normal_form))
         elif entity_code == FebEntity.BOOK:
-            utt.entities.append(FebBook(tokens=entity_text))
+            utt.entities.append(FebBook(tokens=entity_text, normal_form=normal_form))
         else:
             utt.add_error(FebError(FebError.ET_INP_DATA, self, {FebError.EC_DATA_VAL: entity_text}))
         return  utt

@@ -5,6 +5,31 @@ import re
 from question2wikidata.server_queries import queries
 
 
+
+def var_dump(msg, header = ''): print(f'-----{header}-----\n{msg}\n----\n')
+def get_category(x): 
+    cats = ['book_author',
+        'book_written',
+        'book_published',
+        'book_characters',
+        'book_genre',
+        'book_main_theme',
+        'author_birthplace',
+        'author_productions',
+        'author_genres',
+        'author_when_born',
+        'author_where_lived',
+        'author_languages',
+        'author_when_died',
+        'author_where_died',
+        'author_where_buried',
+        'author_inspired_by']
+    for cat in cats: 
+        if cat in x:
+            return cat
+    else:
+        return None
+
 class FebError(object):
 
     ET = 'et_' # error type
@@ -82,6 +107,11 @@ class FebToken(FebObject):
 
     # Token tags:
     TAG_EOFS = 'tag_eofs'
+    TAG_AUTHOR = 'tag_author'
+    TAG_BOOK = 'tag_book'   
+
+
+
 
     @staticmethod
     def sentenize(text):
@@ -166,6 +196,7 @@ class FebEntity(FebObject):
         self.tokens = kwargs.get('tokens', None) # list of tokens
         self.qid = kwargs.get('qid', None) # id in Wikidata
         self.qname = kwargs.get('qname', None) # name in Wikidata
+        self.normal_form = kwargs.get('normal_form', None)
 
     def tokens_to_search_string(self):
         return ' '.join(t.text for t in self.tokens)
