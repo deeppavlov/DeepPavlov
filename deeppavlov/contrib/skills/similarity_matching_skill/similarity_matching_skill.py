@@ -84,12 +84,13 @@ class SimilarityMatchingSkill(Skill):
         Returns:
             Batches of the skill inference results and estimated confidences.
         """
-        model_result = [self.model([u]) for u in utterances_batch]
+        model_result = self.model(utterances_batch)
 
-        responses = [np.array(r[0]).flatten() for r in model_result]
-        confidences = [np.array(r[1]).flatten() for r in model_result]
+        responses = [r for r in model_result[0]]
+        confidences = [r for r in model_result[1]]
 
-        responses = [r[0] for r in responses]
-        confidences = [max(c) for c in confidences]
+        # in case if model returns not the highest probability, but the hole distribution
+        if isinstance(confidences[0], list):
+            confidences = [max(c) for c in confidences]
 
         return responses, confidences
