@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import time
+from logging import getLogger
 from multiprocessing import Process, Pipe
 from multiprocessing.connection import Connection
 from pathlib import Path
@@ -29,12 +30,10 @@ from deeppavlov.core.agent import Agent
 from deeppavlov.core.agent.rich_content import RichMessage
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 TELEGRAM_MODELS_INFO_FILENAME = 'models_info.json'
