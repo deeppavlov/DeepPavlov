@@ -65,6 +65,6 @@ class HybridRankerPredictor(Component):
             #              str(candidates_list[chosen_index]))  # DEBUG
 
             responses_batch.append(candidates_list[chosen_index])
-            responses_preds.append(scores[chosen_index])
+            responses_preds.append(float(scores[chosen_index]))
 
         return responses_batch, responses_preds
