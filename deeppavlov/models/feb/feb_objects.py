@@ -100,7 +100,7 @@ class FebObject(object):
             return [FebObject.recursive_json(element) for element in obj]
         elif isinstance(obj, dict):
             # print(obj, type(obj))s
-            props_to_cut = FebObject.IGNORE_IN_DUMP.get(obj.__class__.__name__, [])()
+            props_to_cut = FebObject.IGNORE_IN_DUMP.get(obj.__class__.__name__, [])
             return {k: FebObject.recursive_json(v) for k, v in obj.items() if k not in props_to_cut }
         elif isinstance(obj, FebObject) or isinstance(obj, FebError):
             # print(obj, type(obj))

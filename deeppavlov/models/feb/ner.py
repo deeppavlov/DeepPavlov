@@ -24,6 +24,8 @@ from .feb_common import FebComponent
 
 from question2wikidata import questions, functions
 
+from ..feb import BOOK_NAMES_EXTRACTOR
+
 
 log = get_logger(__name__)
 
@@ -54,7 +56,6 @@ class FebNER(FebComponent):
         # if not isinstance(in_obj, str):
         #     raise TypeError(f"FebT1Parser is not implemented for `{type(in_obj)}`")
         # utt = FebUtterance(in_obj)
-
         var_dump(header = 'ner', msg = utt)
         
         return [(utt, {'text':utt.text,
@@ -71,7 +72,7 @@ class FebNER(FebComponent):
 
         utt, text, tokens = obj, context['text'], context['tokens']
 
-        entities = questions.extract_entities(text) #получаем словарь с сущностями. ключ - book_name или author_name, значение - список сущностей
+        entities = questions.extract_entities(text, BOOK_NAMES_EXTRACTOR) #получаем словарь с сущностями. ключ - book_name или author_name, значение - список сущностей
         var_dump(header='entities', msg=entities)
 
 

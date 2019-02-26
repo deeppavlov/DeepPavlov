@@ -11,6 +11,9 @@ from deeppavlov.core.common.log import get_logger
 from .feb_objects import *
 
 from question2wikidata.questions import pretty_json
+from time import time
+
+from ..feb import LOG_FILE, DEBUG
 
 log = get_logger(__name__)
 
@@ -46,9 +49,7 @@ class FebComponent(Component):
     START_COMPONENT = 'start_component'
     INTERMEDIATE_COMPONENT = 'intermediate_component'
     FINAL_COMPONENT = 'final_component'
-
-    LOG_FILE = open('LOG_FILE.jsonl', 'a', encoding = 'utf-8')
-    DEBUG = False
+    TIME_TAKEN = 0
 
     @classmethod
     def component_type(cls):
@@ -61,6 +62,7 @@ class FebComponent(Component):
 
     @overrides
     def __call__(self, batch, *args, **kwargs):
+        start = time()
         res_batch = []
         for in_obj in batch:
 
@@ -90,19 +92,24 @@ class FebComponent(Component):
                 utt = self.pack_result(utt, ret_obj_l)
                 # TODO: dump data:
                 # log.info(f'DATA DUMP utt=`{utt}`')
-                if FebComponent.DEBUG:
-                    FebComponent.LOG_FILE.write(f'{utt.to_dump()}\n'); 
-                    FebComponent.LOG_FILE.flush()
+                if DEBUG:
+                    LOG_FILE.write(f'{utt.to_dump()}\n'); 
+                    LOG_FILE.flush()
 
             except Exception as e:
                 log.exception(f'in UTT process(utt=`{utt}`)')
                 utt.add_error(FebError(FebError.ET_SYS, self, {FebError.EC_EXCEPTION: e}))
             if self.component_type() == self.FINAL_COMPONENT:
                 res_batch.append(utt.return_text())
-                pretty_json(utt.to_dump())
-                FebComponent.LOG_FILE.write(f'{utt.to_dump()}\n'); FebComponent.LOG_FILE.flush()
+                # pretty_json(utt.to_dump())
+                LOG_FILE.write(f'{utt.to_dump()}\n'); LOG_FILE.flush()
             else:
                 res_batch.append(utt)
+        finish = time()
+        taken = finish - start
+        FebComponent.TIME_TAKEN += taken
+        var_dump(header = f'Компонент {self}', msg = f'Выполнение заняло {taken}. Выполняется уже: {FebComponent.TIME_TAKEN}')
+        if self.component_type() == self.FINAL_COMPONENT: FebComponent.TIME_TAKEN = 0
         return res_batch
 
     def test_and_prepare(self, utt):
