@@ -274,7 +274,7 @@ class ELMo(NNModel):
 
         self.save()
         # after building the model and saving to the specified save path
-        # you need to change the way to load the checkpoint
+        # change the way to load intermediate checkpoints
         self.load_path = self.save_path
 
     def _load_options(self, options_json_path):
