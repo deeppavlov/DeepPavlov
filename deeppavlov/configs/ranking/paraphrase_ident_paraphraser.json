@@ -19,26 +19,22 @@
         "fit_on": ["x"],
         "in": ["x"],
         "out": ["x_proc"],
-        "sent_vocab":
-        {
+        "sent_vocab": {
           "id": "siam_sent_vocab",
           "class_name": "simple_vocab",
           "save_path": "{MODELS_PATH}/paraphraser_vocabs/sent.dict",
           "load_path": "{MODELS_PATH}/paraphraser_vocabs/sent.dict"
         },
-        "tokenizer":
-        {
+        "tokenizer": {
           "class_name": "nltk_tokenizer"
         },
-        "vocab":
-        {
+        "vocab": {
           "id": "siam_vocab",
           "class_name": "simple_vocab",
           "save_path": "{MODELS_PATH}/paraphraser_vocabs/tok.dict",
           "load_path": "{MODELS_PATH}/paraphraser_vocabs/tok.dict"
         },
-        "embedder":
-        {
+        "embedder": {
           "id": "siam_embedder",
           "class_name": "fasttext",
           "load_path": "{DOWNLOADS_PATH}/embeddings/ft_native_300_ru_wiki_lenta_lower_case.bin"
@@ -81,7 +77,12 @@
     "metrics": ["f1", "acc", "log_loss"],
     "validation_patience": 10,
     "val_every_n_epochs": 1,
-    "log_every_n_batches": 24
+    "log_every_n_batches": 24,
+    "class_name": "nn_trainer",
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ]
   },
   "metadata": {
     "variables": {

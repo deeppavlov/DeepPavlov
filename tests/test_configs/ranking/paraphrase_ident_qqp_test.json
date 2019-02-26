@@ -9,37 +9,43 @@
     "seed": 243
   },
   "chainer": {
-    "in": ["x"],
-    "in_y": ["y"],
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
     "pipe": [
       {
         "id": "preproc",
         "class_name": "siamese_preprocessor",
         "use_matrix": false,
         "max_sequence_length": 28,
-        "fit_on": ["x"],
-        "in": ["x"],
-        "out": ["x_proc"],
-        "sent_vocab":
-        {
+        "fit_on": [
+          "x"
+        ],
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_proc"
+        ],
+        "sent_vocab": {
           "id": "siam_sent_vocab",
           "class_name": "simple_vocab",
           "save_path": "{MODELS_PATH}/qqp_vocabs/sent.dict",
           "load_path": "{MODELS_PATH}/qqp_vocabs/sent.dict"
         },
-        "tokenizer":
-        {
+        "tokenizer": {
           "class_name": "nltk_tokenizer"
         },
-        "vocab":
-        {
+        "vocab": {
           "id": "siam_vocab",
           "class_name": "simple_vocab",
           "save_path": "{MODELS_PATH}/qqp_vocabs/tok.dict",
           "load_path": "{MODELS_PATH}/qqp_vocabs/tok.dict"
         },
-        "embedder":
-        {
+        "embedder": {
           "id": "siam_embedder",
           "class_name": "fasttext",
           "load_path": "{DOWNLOADS_PATH}/embeddings/ft_dummy_300.bin",
@@ -53,9 +59,15 @@
         "vocab": "#siam_vocab"
       },
       {
-        "in": ["x_proc"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
+        "in": [
+          "x_proc"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "y_predicted"
+        ],
         "class_name": "mpm_nn",
         "len_vocab": "#siam_vocab.len",
         "use_matrix": "#preproc.use_matrix",
@@ -65,7 +77,7 @@
         "embedding_dim": "#siam_embedder.dim",
         "seed": 243,
         "hidden_dim": 200,
-        "learning_rate": 1e-3,
+        "learning_rate": 0.001,
         "triplet_loss": false,
         "batch_size": 256,
         "save_path": "{MODELS_PATH}/qqp_model/model_weights.h5",
@@ -73,18 +85,33 @@
         "preprocess": "#preproc.__call__"
       }
     ],
-    "out": ["y_predicted"]
+    "out": [
+      "y_predicted"
+    ]
   },
   "train": {
     "epochs": 200,
     "batch_size": 256,
     "pytest_max_batches": 2,
     "metric_optimization": "minimize",
-    "train_metrics": ["log_loss", "acc", "f1"],
-    "metrics": ["log_loss", "acc", "f1"],
+    "train_metrics": [
+      "log_loss",
+      "acc",
+      "f1"
+    ],
+    "metrics": [
+      "log_loss",
+      "acc",
+      "f1"
+    ],
     "validation_patience": 10,
     "val_every_n_epochs": 1,
-    "log_every_n_batches": 525
+    "log_every_n_batches": 525,
+    "class_name": "nn_trainer",
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ]
   },
   "metadata": {
     "variables": {

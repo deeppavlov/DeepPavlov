@@ -1,5 +1,5 @@
 {
-  "info": "(v3) Using cleaned dataset, along with 2-replica dialogs, along with pBot. There are 279901 items in total.",
+  "info": "(v4) Using cleaned dataset Books + VK 2-turns dialogs + pBot. There are 279901 items in total.",
   "chainer": {
     "in": ["utterances_batch", "history_batch", "states_batch"],
     "pipe": [
@@ -109,7 +109,7 @@
       "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
     ],
     "labels": {
-      "server_utils": "Ranker"
+      "server_utils": "ChitChatRanker"
     },
     "download": [
       {

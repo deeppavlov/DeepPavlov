@@ -80,7 +80,7 @@ def check_md5(url: str, dest_paths: List[Path]) -> bool:
     if r.status_code != 200:
         return False
     expected = {}
-    for line in r.text.splitlines():
+    for line in r.content.decode(encoding='utf-8').splitlines():
         _md5, fname = line.split(' ', maxsplit=1)
         if fname[0] != '*':
             if fname[0] == ' ':
