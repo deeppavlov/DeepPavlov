@@ -27,10 +27,10 @@
 
 import tensorflow as tf
 
-from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.common.log import init_logger 
 import deeppavlov.models.ranking.matching_models.dam_utils.operations as op
 
-log = get_logger(__name__)
+log = init_logger()
 
 
 def similarity(x, y, x_lengths, y_lengths):

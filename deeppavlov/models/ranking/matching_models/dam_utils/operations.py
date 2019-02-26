@@ -31,9 +31,9 @@ import tensorflow as tf
 
 from scipy.stats import multivariate_normal
 
-from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.common.log import init_logger
 
-log = get_logger(__name__)
+log = init_logger()
 
 
 def learning_rate(step_num, d_model=512, warmup_steps=4000):
