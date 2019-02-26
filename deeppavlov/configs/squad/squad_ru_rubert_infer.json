@@ -17,11 +17,11 @@
       {
         "class_name": "squad_bert_infer",
         "lang": "ru",
-        "batch_size": 10,
-        "squad_model_config": "{CONFIGS_PATH}/squad/squad_ru_bert.json",
-        "vocab_file": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12/vocab.txt",
+        "batch_size": 128,
+        "squad_model_config": "{CONFIGS_PATH}/squad/squad_ru_rubert.json",
+        "vocab_file": "/home/yurakuratov/data/rubert/vocab.txt",
         "do_lower_case": false,
-        "max_seq_length": 512,
+        "max_seq_length": 256,
         "in": ["context_raw", "question_raw"],
         "out": ["ans_predicted", "ans_start_predicted", "logits"]
       }
@@ -62,7 +62,17 @@
     "labels": {
       "telegram_utils": "SquadModel",
       "server_utils": "SquadModel"
-    }
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v1.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/bert_models"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/squad_model_ru_rubert.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      }
+    ]
   }
 }
 
