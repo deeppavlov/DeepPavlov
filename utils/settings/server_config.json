@@ -80,6 +80,12 @@
       "port": "",
       "model_endpoint": "/ranker",
       "model_args_names": ""
+    },
+    "ChitChatRanker": {
+      "host": "",
+      "port": "",
+      "model_endpoint": "/ranker",
+      "model_args_names": ["utterances_batch", "history_batch", "states_batch"]
     }
   }
 }
