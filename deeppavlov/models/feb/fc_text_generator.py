@@ -68,12 +68,12 @@ class FebTextGenerator(FebComponent):
             gen_context['results'] = {'error': FebUtterance.ERROR_IN_RESULT}
 
         # TODO:
-        # result = answers.answer(gen_context)
+        result = answers.answer(gen_context)
 
-        utt.re_text = f'Result: {str(gen_context)} \n {repr(utt)}'
+        # utt.re_text = f'Result: {str(gen_context)} \n {repr(utt)}'
         # result = '; '.join(intent.result_str for intent in utt.intents if intent.result_str)
         #TODO:
-        # utt.re_text = f'Result: {result} \n {repr(utt)}'
+        utt.re_text = f'Result: {result} \n {repr(utt)}'
         return  utt
 
 

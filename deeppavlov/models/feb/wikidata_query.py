@@ -60,6 +60,7 @@ class WikidataQuery(FebComponent):
             # algorithm support only one parameter of certain type!
             query = queries[intent.type]['query']
             query_params = {}
+            errors = False
             for param_name, param_type in queries[intent.type]['params'].items():
                 ent_l = [ent for ent in entities if ent.type == param_type]
                 # disambiguation problem!
@@ -71,12 +72,15 @@ class WikidataQuery(FebComponent):
                     intent.add_error(FebError(FebError.ET_INP_DATA, self, {FebError.EC_DATA_NONE:
                                                                                {'param_name': param_name,
                                                                                 'param_type': param_type}}))
+                    errors = True
                 else:
                     intent.add_error(FebError(FebError.ET_INP_DATA, self, {FebError.EC_DATA_DISABIG:
                                                                                {'param_name': param_name,
                                                                                 'param_type': param_type,
                                                                                 'entities': ent_l}}))
-            intent.result_val = functions.execute_query(query, **query_params)
+                    errors = True
+            if not errors:
+                intent.result_val = functions.execute_query(query, **query_params)
             # intent.result_str = str()
         return intent
 

@@ -7,11 +7,21 @@
     "pipe": [
       {
         "in": ["x"],
-        "class_name": "deeppavlov.models.feb.t1_parser:FebT1Parser",
+        "class_name": "deeppavlov.models.feb.text_parser:FebTextParser",
         "out": ["x_val"]
       },
       {
         "in": ["x_val"],
+        "class_name": "deeppavlov.models.feb.ner:FebNER",
+        "out": ["x_val_1"]
+      },
+          {
+        "in": ["x_val_1"],
+        "class_name": "deeppavlov.models.feb.intent_classifier:IntentClassifier",
+        "out": ["x_val_2"]
+      },
+      {
+        "in": ["x_val_2"],
         "class_name": "deeppavlov.models.feb.nent_to_qent:NentToQent",
         "out": ["x_val_qid"]
       },
@@ -22,7 +32,7 @@
       },
       {
         "in": ["x_result"],
-        "class_name": "deeppavlov.models.feb.t1_text_generator:FebT1TextGenerator",
+        "class_name": "deeppavlov.models.feb.fc_text_generator:FebTextGenerator",
         "out": ["val_str"]
       }
     ],

@@ -10,6 +10,8 @@ from deeppavlov.core.common.log import get_logger
 
 from .feb_objects import *
 
+from question2wikidata.questions import pretty_json
+
 log = get_logger(__name__)
 
 # class Utterance(Enum):
@@ -78,13 +80,16 @@ class FebComponent(Component):
                         ret_obj = self.process(obj, context)
                     except Exception as e:
                         log.exception(f'in OBJ process(obj=`{obj}`, context=`{context}`)')
-                        obj.add_error(FebError(FebError.ET_SYS, self, {FebError.EC_EXCEPTION: e}))
+                        obj.add_error(FebError(FebError.ET_SYS, self, {FebError.EC_EXCEPTION: repr(e)}))
                         ret_obj_l.append(obj)
                     else:
                         ret_obj_l.append(ret_obj)
                 utt = self.pack_result(utt, ret_obj_l)
                 # TODO: dump data:
                 log.info(f'DATA DUMP utt=`{utt}`')
+                var_dump(header = 'to_dump test', msg = utt.to_dump())
+                pretty_json(utt.to_dump())
+
             except Exception as e:
                 log.exception(f'in UTT process(utt=`{utt}`)')
                 utt.add_error(FebError(FebError.ET_SYS, self, {FebError.EC_EXCEPTION: e}))

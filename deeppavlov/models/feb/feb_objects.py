@@ -73,6 +73,8 @@ class FebError(object):
 
 
 
+
+
 class FebObject(object):
 
     def __init__(self, **kwargs):
@@ -90,6 +92,20 @@ class FebObject(object):
 
     def has_errors(self):
         return len(self.errors) != 0
+
+    @classmethod 
+    def recursive_json(cls, obj):
+        if isinstance(obj, list) or isinstance(obj, tuple) or isinstance(obj, set):
+            # print(obj, type(obj))
+            return [FebObject.recursive_json(element) for element in obj]
+        elif isinstance(obj, dict):
+            # print(obj, type(obj))
+            return {k: FebObject.recursive_json(v) for k, v in obj.items()}
+        elif isinstance(obj, FebObject) or isinstance(obj, FebError):
+            # print(obj, type(obj))
+            return {k: FebObject.recursive_json(v) for k,v in obj.__dict__.items()}
+        else:
+            return obj
 
 
 
@@ -137,6 +153,48 @@ class FebToken(FebObject):
         else:
             return sent_tok_ll
 
+
+    @staticmethod
+    def stemmer(sentence):
+        from pymystem3 import Mystem
+        STEMMER = Mystem()
+        pos_map = {
+                'A': 'ADJ',
+                'ADV': 'ADV',
+                'ADVPRO': 'ADV',
+                'ANUM': 'ADJ',
+                'APRO': 'DET',
+                'COM': 'ADJ',
+                'CONJ': 'SCONJ',
+                'INTJ': 'INTJ',
+                'NONLEX': 'X',
+                'NUM': 'NUM',
+                'PART': 'PART',
+                'PR': 'ADP',
+                'S': 'NOUN',
+                'SPRO': 'PRON',
+                'UNKN': 'X',
+                'V': 'VERB'
+            }
+        processed = STEMMER.analyze(sentence)
+        tagged = []
+        for w in processed:
+            try:
+                lemma = w["analysis"][0]["lex"].lower().strip()  
+                text = w['text']
+                pos = w["analysis"][0]["gr"].split(',')[0]
+                pos = pos.split('=')[0].strip()
+                pos = pos_map.get(pos, 'X')
+                start = sentence.index(text)
+                stop = start + len(text)
+                token = FebToken(0, 0, text, normal_form = lemma, pos=pos)
+                tagged.append(token)
+            except (KeyError, IndexError):
+                continue
+        return tagged
+
+
+
     def __init__(self, start, stop, text, **kwargs):
         """
 
@@ -154,6 +212,8 @@ class FebToken(FebObject):
         if self.text:
             self.set_t_type()
         self.lang = kwargs.get('lang', None)  # token language
+        self.normal_form = kwargs.get('normal_form', None)
+        self.pos = kwargs.get('pos', None)
         self.tags = set()  # tokens tags (example: markers of NER)
 
     # TODO: identify other types
@@ -167,6 +227,11 @@ class FebToken(FebObject):
         else:
             raise ValueError('text value is not set')
 
+    def set_pos(self, pos):
+        self.pos = pos
+    def set_normal_form(self, normal_form):
+        self.normal_form = normal_form        
+
     def __repr__(self):
         vals = str(self)
         return f'{self.__class__.__name__}({vals})'
@@ -179,8 +244,14 @@ class FebToken(FebObject):
             rs += f', lang={self.lang}'
         if self.tags:
             rs += f', tags={self.tags}'
+        if self.pos:
+            rs += f', pos={self.pos}' 
+        if self.normal_form:
+            rs += f', normal_form={self.normal_form}'                       
         rs += ')'
         return rs
+    def __eq__(self, other):
+        return self.text == other.text
 
 
 
@@ -274,6 +345,7 @@ class FebIntent(FebObject):
         """
         return str(self.result_val)
 
+
 class FebUtterance(FebObject):
 
     ERROR_IN_RESULT = 'error_in_result'
@@ -286,6 +358,13 @@ class FebUtterance(FebObject):
         self.entities = [] # list of entities
         self.intents = [] # list of intents
         self.re_text = None # responce text
+
+    def to_dump(self):
+        # return {k: [FebObject.recursive_json(item) for item in v if isinstance(item, (FebObject, FebError)) ] for k, v in self.__dict__.items() if v is not None }
+        return {k: FebObject.recursive_json(v) for k, v in self.__dict__.items() if v is not None}
+
+
+
 
     def return_text(self):
         if self.re_text:
