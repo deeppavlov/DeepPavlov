@@ -32,7 +32,7 @@
       },
       {
         "in": ["x_result"],
-        "class_name": "deeppavlov.models.feb.t1_text_generator:FebT1TextGenerator",
+        "class_name": "deeppavlov.models.feb.fc_text_generator:FebTextGenerator",
         "out": ["val_str"]
       }
     ],

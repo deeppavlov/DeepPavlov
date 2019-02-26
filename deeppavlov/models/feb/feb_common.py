@@ -83,7 +83,7 @@ class FebComponent(Component):
                         ret_obj = self.process(obj, context)
                     except Exception as e:
                         log.exception(f'in OBJ process(obj=`{obj}`, context=`{context}`)')
-                        obj.add_error(FebError(FebError.ET_SYS, self, {FebError.EC_EXCEPTION: e}))
+                        obj.add_error(FebError(FebError.ET_SYS, self, {FebError.EC_EXCEPTION: repr(e)}))
                         ret_obj_l.append(obj)
                     else:
                         ret_obj_l.append(ret_obj)

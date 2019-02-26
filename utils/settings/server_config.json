@@ -11,7 +11,7 @@
     "multi_instance": false
   },
   "telegram_defaults": {	
-    "token": "653514522:AAGopZyrCcWuEKmlNFJHRN6fElhDqwBBP_Q",
+    "token": "769729045:AAHSCzhGm1ZuW1draTIhbr0rszQpv1_8HZM",
     "proxy_key":"https",
     "proxy_val":"socks5://333744069:eMEKzCQu@deimos.public.opennetwork.cc:1090"
   },
