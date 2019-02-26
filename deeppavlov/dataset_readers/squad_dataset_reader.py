@@ -37,6 +37,10 @@ class SquadDatasetReader(DatasetReader):
 
     MultiSQuAD:
     SQuAD dataset with additional contexts retrieved (by tfidf) from original Wikipedia article.
+
+    MultiSQuADRetr:
+    SQuAD dataset with additional contexts retrieved by tfidf document ranker from full Wikipedia.
+
     """
 
     url_squad = 'http://files.deeppavlov.ai/datasets/squad-v1.1.tar.gz'
@@ -83,5 +87,59 @@ class SquadDatasetReader(DatasetReader):
                 dataset['valid'] = data
             else:
                 dataset['train'] = data
+
+        return dataset
+
+
+@register('multi_squad_dataset_reader')
+class MultiSquadDatasetReader(DatasetReader):
+    """
+    Downloads dataset files and prepares train/valid split.
+
+    MultiSQuADRetr:
+    Multiparagraph SQuAD dataset with additional contexts retrieved by tfidf document ranker from full En Wikipedia.
+
+    MultiSQuADRuRetr:
+    Multiparagraph SberSQuAD dataset with additional contexts retrieved by tfidf document ranker from  Ru Wikipedia.
+
+    """
+
+    url_multi_squad_retr = 'http://files.deeppavlov.ai/datasets/multi_squad_retr_enwiki20161221.tar.gz'
+    url_multi_squad_ru_retr = 'http://files.deeppavlov.ai/datasets/multi_squad_ru_retr.tar.gz'
+
+    def read(self, dir_path: str, dataset: str = 'MultiSQuADRetr', *args, **kwargs) -> Dict[str, Dict[str, Any]]:
+        """
+
+        Args:
+            dir_path: path to save data
+            dataset: dataset name: ``'MultiSQuADRetr'``, ``'MultiSQuADRuRetr'``
+
+        Returns:
+            dataset split on train/valid
+
+        Raises:
+            RuntimeError: if `dataset` is not one of these: ``'MultiSQuADRetr'``, ``'MultiSQuADRuRetr'``.
+        """
+        if dataset == 'MultiSQuADRetr':
+            self.url = self.url_multi_squad_retr
+        elif dataset == 'MultiSQuADRuRetr':
+            self.url = self.url_multi_squad_ru_retr
+        else:
+            raise RuntimeError('Dataset {} is unknown'.format(dataset))
+
+        dir_path = Path(dir_path)
+        required_files = ['{}.jsonl'.format(dt) for dt in ['train', 'dev']]
+        if not dir_path.exists():
+            dir_path.mkdir(parents=True)
+
+        if not all((dir_path / f).exists() for f in required_files):
+            download_decompress(self.url, dir_path)
+
+        dataset = {}
+        for f in required_files:
+            if 'dev' in f:
+                dataset['valid'] = dir_path.joinpath(f)
+            else:
+                dataset['train'] = dir_path.joinpath(f)
 
         return dataset

@@ -114,9 +114,8 @@ class SquadPreprocessor(Component):
             preprocessed line, raw2preprocessed mapping, preprocessed2raw mapping
 
         """
-        line = line.replace("''", '" ').replace("``", '" ')
         if not return_mapping:
-            return ''.join(c for c in line if not unicodedata.combining(c))
+            return ''.join(c for c in line if not unicodedata.combining(c)).replace("''", '" ').replace("``", '" ')
 
         r2p = [len(line)] * (len(line) + 1)
         p2r = [len(line)] * (len(line) + 1)
@@ -128,7 +127,7 @@ class SquadPreprocessor(Component):
                 s += c
                 r2p[i] = len(s) - 1
                 p2r[len(s) - 1] = i
-        return s, r2p, p2r
+        return s.replace("''", '" ').replace("``", '" '), r2p, p2r
 
     @staticmethod
     def convert_idx(text: str, tokens: List[str]) -> List[Tuple[int, int]]:
