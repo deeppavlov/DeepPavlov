@@ -60,7 +60,7 @@ def _model_process(model_function: Callable, conn: Connection, batch_size: int =
             conn.send((response, dialog_id))
 
 
-def experimental_bot(model_function: Callable[..., Callable[[Collection[str], Collection[Hashable]], Collection[str]]],
+def experimental_bot(model_function: Callable[..., Callable[[Collection[Message], Collection[Hashable]], Collection[str]]],
                      token: str, proxy: Optional[str] = None, *, batch_size: int = -1, poll_period: float = 0.5):
     """
 
@@ -94,7 +94,7 @@ def experimental_bot(model_function: Callable[..., Callable[[Collection[str], Co
 
     @bot.message_handler()
     def handle_message(message: Message):
-        parent_conn.send((message.text, message.chat.id))
+        parent_conn.send((message, message.chat.id))
 
     bot.polling()
 

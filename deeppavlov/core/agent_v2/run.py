@@ -1,7 +1,9 @@
 from datetime import datetime
-import uuid
+from typing import Collection, Optional, List
 
-from deeppavlov import configs, build_model
+from telebot.types import Message, Location, User
+
+from deeppavlov import configs
 
 from deeppavlov.core.agent_v2.agent import Agent
 from deeppavlov.core.agent_v2.state_manager import StateManager
@@ -34,14 +36,25 @@ agent = Agent(state_manager, preprocessor, skill_manager)
 
 def model_function():
 
-    def infer(messages, dialog_ids):
-        u_tg_ids = [str(uuid.uuid4()) for _ in range(len(messages))]
-        u_d_types = ['iphone'] * len(messages)
+    def infer(messages: Collection[Message], dialog_ids):
+        utterances: List[Optional[str]] = [message.text for message in messages]
+        tg_users: List[User] = [message.from_user for message in messages]
+
+        u_tg_ids: List[int] = [user.id for user in tg_users]
+        u_tg_data = [{
+            'id': user.id,
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name
+        }
+                     for user in tg_users]
+
+        u_d_types = [None] * len(messages)
         date_times = [datetime.utcnow()] * len(messages)
-        locations = ['moscow'] * len(messages)
+        locations: List[Optional[Location]] = [message.location for message in messages]
         ch_types = ['telegram'] * len(messages)
 
-        answers = agent(utterances=messages, user_telegram_ids=u_tg_ids, user_device_types=u_d_types,
+        answers = agent(utterances=utterances, user_telegram_ids=u_tg_ids, user_device_types=u_d_types,
                         date_times=date_times, locations=locations, channel_types=ch_types)
         return answers
 
