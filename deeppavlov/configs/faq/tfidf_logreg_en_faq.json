@@ -47,8 +47,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "{MODELS_PATH}/faq/answers.dict",
-        "load_path": "{MODELS_PATH}/faq/answers.dict",
+        "save_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v2/en_mipt_answers.dict",
+        "load_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v2/en_mipt_answers.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -105,6 +105,10 @@
       {
         "url": "http://files.deeppavlov.ai/faq/mipt/en_mipt_faq_v2.tar.gz",
         "subdir": "{MODELS_PATH}/faq/mipt"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/faq/mipt/en_mipt_answers.dict",
+        "subdir": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v2"
       }
     ]
   }

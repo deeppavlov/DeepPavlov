@@ -48,8 +48,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "{MODELS_PATH}/faq/answers.dict",
-        "load_path": "{MODELS_PATH}/faq/answers.dict",
+        "save_path": "{MODELS_PATH}/faq/ru_mipt_answers.dict",
+        "load_path": "{MODELS_PATH}/faq/ru_mipt_answers.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -106,6 +106,10 @@
       {
         "url": "http://files.deeppavlov.ai/vectorizer/tfidf_vectorizer_ruwiki.pkl",
         "subdir": "{MODELS_PATH}/vectorizer"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/faq/mipt/ru_mipt_answers.dict",
+        "subdir": "{MODELS_PATH}/faq"
       }
     ]
   }
