@@ -55,12 +55,11 @@ class EntityLinkingWikidata(Component):
 
         text_entities = []
         for i, text in enumerate(texts):
-            entity = ""
+            entity = []
             for j, tok in enumerate(text):
                 if tags[i][j] != 0:
-                    entity += tok
-                    entity += " "
-            entity = entity[:-1]
+                    entity.append(tok)
+            entity = ' '.join(entity)
             text_entities.append(entity)
 
         if self._debug:
@@ -70,59 +69,65 @@ class EntityLinkingWikidata(Component):
 
         wiki_entities_batch = []
         confidences = []
-        
-        print(text_entities)
 
         for entity in text_entities:
             if not entity:
                 wiki_entities_batch.append(["None"])
             else:
-                entity_tokens = entity.lower().split(' ')
-                for i in range(len(entity_tokens)):
-                    lemmatized_entity = ""
-                    for j, tok in enumerate(entity_tokens):
-                        if i == j:
-                            morph_parse_tok = self.morph.parse(tok)[0]
+                candidate_entities = []
+                candidate_entities += self.name_to_q.get(entity, [])
+                entity_split = entity.split(' ')
+                for tok in entity_split:
+                    entity_lemm = []
+                    for tok_2 in entity_split:
+                        if tok_2 == tok:
+                            morph_parse_tok = self.morph.parse(tok_2)[0]
                             lemmatized_tok = morph_parse_tok.normal_form
-                            lemmatized_entity += lemmatized_tok
-                            lemmatized_entity += " "
+                            entity_lemm.append(lemmatized_tok)
                         else:
-                            lemmatized_entity += tok
-                            lemmatized_entity += " "
-                    lemmatized_entity = lemmatized_entity[:-1]
-                    word_length = len(lemmatized_entity)
-
-                    candidate_entities = self.name_to_q.get(lemmatized_entity, [])
-                    srtd_cand_ent = sorted(candidate_entities, key=lambda x: x[2], reverse=True)
-                    if len(srtd_cand_ent) > 0:
-                        wiki_entities_batch.append([srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))])
-                        break
-
-                if len(srtd_cand_ent) == 0:
+                            entity_lemm.append(tok_2)
+                    entity_lemm = ' '.join(entity_lemm)
+                    if entity_lemm != entity:
+                        candidate_entities += self.name_to_q.get(entity_lemm, [])
+                            
+                srtd_cand_ent = sorted(candidate_entities, key=lambda x: x[2], reverse=True)
+                if len(srtd_cand_ent) > 0:
+                    wiki_entities_batch.append([srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))])
+                    confidences.append([1.0 for i in range(len(srtd_cand_ent))])
+                else:
+                    word_length = len(entity)
                     candidates = []
                     for title in self.name_to_q:
                         length_ratio = len(title) / word_length
-                        if length_ratio > 0.6 and length_ratio < 1.4:
-                            ratio = fuzz.ratio(title, lemmatized_entity)
-                            if ratio > 65:
-                                candidates += self.name_to_q.get(title, [])
+                        if length_ratio > 0.5 and length_ratio < 1.5:
+                            ratio = fuzz.ratio(title, entity)
+                            if ratio > 50:
+                                entity_candidates = self.name_to_q.get(title, [])
+                                for cand in entity_candidates:
+                                    candidates.append((cand, fuzz.ratio(entity, cand[0])))
+                    
                     candidates = list(set(candidates))
-                    srtd_cand_ent = sorted(candidates, key=lambda x: x[2], reverse=True)
+                    srtd_cand_ent = sorted(candidates, key=lambda x: x[1], reverse=True)
+                    
                     if len(srtd_cand_ent) > 0:
-                        wiki_entities_batch.append([srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))])
+                        wiki_entities_batch.append([srtd_cand_ent[i][0][1] for i in range(len(srtd_cand_ent))])
+                        confidences.append([srtd_cand_ent[i][1]*0.01 for i in range(len(srtd_cand_ent))])
                     else:
                         wiki_entities_batch.append(["None"])
-                        
-        print(wiki_entities_batch)
+                        confidences.append([0.0])
+        
+        if self._debug:
+            log.debug(f'results of entity: {wiki_entities_batch[0][:5]}')                
 
         entity_triplets_batch = []
         for entity_ids in wiki_entities_batch:
             entity_triplets = []
             for entity_id in entity_ids:
-                if entity_id in self.wikidata:
+                if entity_id in self.wikidata and entity_id.startswith('Q'):
                     entity_triplets.append(self.wikidata[entity_id])
                 else:
                     entity_triplets.append([])
             entity_triplets_batch.append(entity_triplets)
 
-        return entity_triplets_batch
+        return entity_triplets_batch, confidences
+

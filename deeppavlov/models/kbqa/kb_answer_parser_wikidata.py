@@ -59,11 +59,12 @@ class KBAnswerParserWikidata(Component, Serializable):
     def save(self):
         pass
 
-    def __call__(self, relations_probs: List[List[str]],
+    def __call__(self, relations_probs_batch: List[List[str]],
                  entity_triplets_batch: List[List[List[str]]],
+                 confidences_batch: List[List[float]],
                  *args, **kwargs) -> List[str]:
 
-        relations_batch = self._parse_relations_probs(relations_probs)
+        relations_batch = self._parse_relations_probs(relations_probs_batch)
         if self._debug:
             if self._relations_mapping is not None:
                 relations_batch_descriptions = []
@@ -73,41 +74,56 @@ class KBAnswerParserWikidata(Component, Serializable):
                 relations_batch_descriptions = relations_batch
             log.debug(f'Top-k relations extracted: {relations_batch_descriptions}')
         objects_batch = []
-        for rel_list, entity_triplets in zip(relations_batch, entity_triplets_batch):
+
+        found_rel_prob = []
+        found_entity_prob = []
+        for rel_list, entity_triplets, relations_probs, confidences in zip(relations_batch, entity_triplets_batch, relations_probs_batch, confidences_batch):
             found = False
-            for predicted_relation in rel_list:
-                for entities in entity_triplets:
+            for predicted_relation, rel_prob in zip(rel_list, relations_probs):
+                for n, entities in enumerate(entity_triplets):
                     for rel_triplets in entities:
                         relation_from_wiki = rel_triplets[0]
                         if predicted_relation == relation_from_wiki:
                             obj = rel_triplets[1]
+                            found_rel_prob.append(rel_prob)
+                            found_entity_prob.append(confidences[n])
                             found = True
                             break
-                    if found:
+                    if found or n == 5:
                         break
                 if found:
                     break
             if not found:
                 obj = ''
+                found_rel_prob.append(0.0)
+                found_entity_prob.append(0.0)
             objects_batch.append(obj)
+
+        final_confidences = []
+        for conf_rel, conf_ent in zip(found_rel_prob, found_entity_prob):
+            final_confidences.append(conf_rel*conf_ent)
 
         word_batch = []
 
-        for obj in objects_batch:
-            if obj.startswith('Q'):
-                if obj in self._q_to_name:
-                    word = self._q_to_name[obj]["name"]
-                    word_batch.append(word)
+        for n, obj in enumerate(objects_batch):
+            if len(obj) > 0:
+                if obj.startswith('Q'):
+                    if obj in self._q_to_name:
+                        word = self._q_to_name[obj]["name"]
+                        word_batch.append(word)
+                    else:
+                        word_batch.append('Not Found')
+                elif obj.count('-') == 2 and int(obj.split('-')[0]) > 1000:
+                    dt = datetime.strptime(obj, "%Y-%m-%d")
+                    obj = dt.strftime("%d %B %Y")
+                    word_batch.append(obj)
                 else:
-                    word_batch.append('Not Found')
-            elif obj.count('-') == 2 and int(obj.split('-')[0]) > 1000:
-                dt = datetime.strptime(obj, "%Y-%m-%d")
-                obj = dt.strftime("%d %B %Y")
-                word_batch.append(obj)
+                    word_batch.append(obj)
             else:
                 word_batch.append('Not Found')
+                final_confidences[n] = 0
 
-        return word_batch
+        return word_batch, final_confidences
 
     def _parse_relations_probs(self, probas_batch: List[List[float]]) -> List[List[str]]:
         top_k_batch = []

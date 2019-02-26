@@ -1,4 +1,11 @@
 {
+  "dataset_reader": {
+    "class_name": "kbqa_reader",
+    "data_path": "{DOWNLOADS_PATH}/wikidata_rus/"
+  },
+  "dataset_iterator": {
+    "class_name": "data_learning_iterator"
+  },
   "chainer": {
     "in": ["x"],
     "in_y": ["y"],
@@ -109,7 +116,7 @@
         "out": ["y_ind"]
       },
       {
-        "in": ["x_tokens"],
+        "in": ["x_lower"],
         "class_name": "char_splitter",
         "out": ["x_char"]
       },
@@ -175,15 +182,15 @@
       },
       {
         "in": ["x_tokens", "y_predicted"],
-        "out": ["triplets"],
+        "out": ["triplets", "confidences"],
         "entities_load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_name_to_q_lowercase.pickle",
         "wiki_load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus.pickle",
         "class_name": "entity_linking_wikidata",
         "debug": true
       },
       {
-        "in": ["y_pred_probas", "triplets"],
-        "out": ["answers"],
+        "in": ["y_pred_probas", "triplets", "confidences"],
+        "out": ["answers", "confidences_final"],
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_q_to_name.pickle",
         "class_name": "kb_answer_parser_wikidata",
         "classes_vocab_keys": "#classes_vocab.keys()",
@@ -210,6 +217,10 @@
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata_rus.tar.gz",
         "subdir": "{DOWNLOADS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/test_set_with_answers.txt",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wiki_properties_id_to_name.pickle",
