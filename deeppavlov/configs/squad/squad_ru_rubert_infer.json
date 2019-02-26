@@ -19,7 +19,7 @@
         "lang": "ru",
         "batch_size": 128,
         "squad_model_config": "{CONFIGS_PATH}/squad/squad_ru_rubert.json",
-        "vocab_file": "/home/yurakuratov/data/rubert/vocab.txt",
+        "vocab_file": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1/vocab.txt",
         "do_lower_case": false,
         "max_seq_length": 256,
         "in": ["context_raw", "question_raw"],
