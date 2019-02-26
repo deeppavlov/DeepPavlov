@@ -105,10 +105,10 @@
         "class_name": "hybrid_ranker_predictor",
         "sample_size": 5,
         "in": ["response_candidates", "y_predicted"],
-        "out": ["best_responses", "best_responses_scores"]
+        "out": ["text", "confidence"]
       }
     ],
-    "out": ["best_responses", "best_responses_scores"]
+    "out": ["text", "confidence"]
   },
   "metadata": {
     "variables": {
