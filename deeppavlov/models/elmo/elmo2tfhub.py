@@ -15,6 +15,7 @@
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
+import shutil
 
 from deeppavlov.models.elmo.elmo_model import BidirectionalLanguageModel, weight_layers
 
@@ -186,15 +187,6 @@ def make_module_spec(options, weight_file):
     return hub.create_module_spec(module_fn)
 
 
-def rmdir(dir):
-    for item in dir.iterdir():
-        if item.is_dir():
-            rmdir(item)
-        else:
-            item.unlink()
-    dir.rmdir()
-
-
 def export2hub(weight_file, hub_dir, options):
     """Exports a TF-Hub module
     """
@@ -208,7 +200,7 @@ def export2hub(weight_file, hub_dir, options):
             with tf.Session() as sess:
                 sess.run(tf.global_variables_initializer())
                 if hub_dir.exists():
-                    rmdir(hub_dir)
+                    shutil.rmtree(hub_dir)
                 module.export(str(hub_dir), sess)
     finally:
         pass
