@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Union, Callable
+from logging import getLogger
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
+
+logger = getLogger()
 
 
 @register('person_normalizer')
@@ -28,8 +31,12 @@ class PersonNormalizer(Component):
     Parameters:
         person_tag: tag name that corresponds to a person entity
     """
-    def __init__(self, person_tag: str = 'PER', **kwargs):
+    def __init__(self,
+                 person_tag: str = 'PER',
+                 state_slot: str = 'user_name',
+                 **kwargs):
         self.per_tag = person_tag
+        self.state_slot = state_slot
 
     def __call__(self,
                  tokens: List[List[str]],
@@ -37,11 +44,12 @@ class PersonNormalizer(Component):
                  states: List[Dict]) -> Tuple[List[List[str]], List[List[str]]]:
         out_tokens, out_tags = [], []
         tokens, tags = self.tag_mate_gooser_name(tokens, tags, person_tag=self.per_tag)
+        states = states if states else [{}] * len(tokens)
         for u_state, u_toks, u_tags in zip(states, tokens, tags):
-            if u_state.get('user_name'):
+            if u_state and u_state.get(self.state_slot):
                 u_toks, u_tags = self.replace_mate_gooser_name(u_toks,
                                                                u_tags,
-                                                               u_state['user_name'])
+                                                               u_state[self.state_slot])
             else:
                 u_toks, u_tags = self.remove_mate_gooser_name(u_toks, u_tags)
             out_tokens.append(u_toks)
@@ -163,6 +171,7 @@ class HistoryPersonNormalize(Component):
                  tags: LIST_LIST_STR_BATCH,
                  states: List[Dict]) -> Tuple[LIST_LIST_STR_BATCH, LIST_LIST_STR_BATCH]:
         out_tokens, out_tags = [], []
+        states = states if states else [{}] * len(tags)
         for u_state, u_hist_tokens, u_hist_tags in zip(states, history_tokens, tags):
             # TODO: normalize bot response history
             pass
@@ -191,11 +200,15 @@ class MyselfDetector(Component):
                  tags: List[List[str]],
                  states: List[Dict]) -> List[Dict]:
         out_states = []
+        states = states if states else [{}] * len(tokens)
         for u_state, u_toks, u_tags in zip(states, tokens, tags):
-            if not u_state.get('user_name'):
-                name_found = self.find_my_name(tokens, tags, person_tag=self.per_tag)
+            if not u_state or not u_state.get(self.state_slot):
+                name_found = self.find_my_name(u_toks, u_tags, person_tag=self.per_tag)
                 if name_found is not None:
-                    u_state['user_name'] = name_found
+                    if not u_state:
+                        u_state = {}
+                    u_state[self.state_slot] = name_found
+            out_states.append(u_state)
         return out_states
 
     @staticmethod
@@ -207,3 +220,48 @@ class MyselfDetector(Component):
         while (per_excl_end < len(tokens)) and (tags[per_excl_end] == 'I-' + person_tag):
             per_excl_end += 1
         return ' '.join(tokens[per_start:per_excl_end])
+
+
+@register('ner_with_context')
+class NerWithContextWrapper(Component):
+    """
+    Tokenizers utterance and history of dialogue and gets entity tags for
+    utterance's tokens.
+
+    Parameters:
+        ner_model: named entity recognition model
+        tokenizer: tokenizer to use
+
+    """
+    def __init__(self,
+                 ner_model: Union[Component, Callable],
+                 tokenizer: Union[Component, Callable],
+                 context_delimeter: str = None,
+                 **kwargs):
+        self.ner_model = ner_model
+        self.tokenizer = tokenizer
+        self.context_delimeter = context_delimeter
+
+    def __call__(self,
+                 utterances: List[str],
+                 history: List[List[str]]) -> Tuple[List[List[str]], List[List[str]]]:
+        history_toks = [[tok
+                         for toks in self.tokenizer(hist or [''])
+                         for tok in toks + [self.context_delimeter] if tok is not None]
+                        for hist in history]
+        utt_toks = self.tokenizer(utterances)
+        texts, ranges = [], []
+        for utt, hist in zip(utt_toks, history_toks):
+            if self.context_delimeter is not None:
+                txt = hist + utt + [self.context_delimeter]
+            else:
+                txt = hist + utt
+            ranges.append((len(hist), len(hist) + len(utt)))
+            texts.append(txt)
+
+        _, tags = self.ner_model(texts)
+        logger.info(f"texts = {texts}, ranges = {ranges}, tags = {tags}")
+        tags = [t[l:r] for t, (l, r) in zip(tags, ranges)]
+
+        return utt_toks, tags
+
