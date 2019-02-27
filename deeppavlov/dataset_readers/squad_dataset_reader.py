@@ -107,7 +107,7 @@ class MultiSquadDatasetReader(DatasetReader):
     url_multi_squad_retr = 'http://files.deeppavlov.ai/datasets/multi_squad_retr_enwiki20161221.tar.gz'
     url_multi_squad_ru_retr = 'http://files.deeppavlov.ai/datasets/multi_squad_ru_retr.tar.gz'
 
-    def read(self, dir_path: str, dataset: str = 'MultiSQuADRetr', *args, **kwargs) -> Dict[str, Dict[str, Any]]:
+    def read(self, dir_path: str, dataset: str = 'MultiSQuADRetr', url=None, *args, **kwargs) -> Dict[str, Dict[str, Any]]:
         """
 
         Args:
@@ -124,6 +124,8 @@ class MultiSquadDatasetReader(DatasetReader):
             self.url = self.url_multi_squad_retr
         elif dataset == 'MultiSQuADRuRetr':
             self.url = self.url_multi_squad_ru_retr
+        elif url is not None:
+            self.url = url
         else:
             raise RuntimeError('Dataset {} is unknown'.format(dataset))
 

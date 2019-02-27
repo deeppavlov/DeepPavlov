@@ -257,7 +257,8 @@ class MultiSquadRetrIterator(DataLearningIterator):
                     answer_start = [ans['answer_start']
                                     for ans in context['answer']] if len(context['answer']) > 0 else [-1]
                     batch.append(((context['context'], q), (answer_text, answer_start)))
-                yield tuple(zip(*batch))
+                if batch:
+                    yield tuple(zip(*batch))
 
     def get_instances(self, data_type: str = 'train') -> Tuple[Tuple[Tuple[str, str]], Tuple[List[str], List[int]]]:
         data_examples = []
