@@ -21,10 +21,15 @@ class Agent:
         should_reset = [utterance == TG_START_UTT for utterance in utterances]
         # here and further me stands for mongoengine
         me_users = self.state_manager.get_users(user_telegram_ids, user_device_types)
-        annotations = self.predict_annotations(utterances, should_reset)
-        me_utterances = self.state_manager.get_utterances(utterances, annotations, me_users, date_times)
+        me_utterances = self.state_manager.get_utterances(utterances, me_users, date_times)
         me_dialogs = self.state_manager.get_dialogs(me_users, me_utterances, locations, channel_types, should_reset)
+
         state = self.state_manager.get_state(me_dialogs)
+        annotations = self.predict_annotations(state, should_reset)
+        for utt, ann in zip(me_utterances, annotations):
+            utt.annotations = ann
+        state = self.state_manager.get_state(me_dialogs)
+
         responses = self.skill_manager(state)
 
         # TODO
@@ -34,9 +39,8 @@ class Agent:
 
     def predict_annotations(self, utterances, should_reset):
         informative_utterances = list(compress(utterances, map(operator.not_, should_reset)))
-        annotations = iter(self.preprocessor(informative_utterances))
+        annotations = iter(self.preprocessor(informative_utterances) if informative_utterances else [])
+        res = []
         for reset in should_reset:
-            if reset:
-                yield None
-            else:
-                yield next(annotations)
+            res.append(None if reset else next(annotations))
+        return res

@@ -5,7 +5,7 @@ from deeppavlov.core.agent_v2.connection import state_storage
 from deeppavlov.core.agent_v2.bot import BOT
 from deeppavlov.core.agent_v2 import VERSION
 
-TG_START_UTT = '\\start'
+TG_START_UTT = '/start'
 
 
 class StateManager:
@@ -38,8 +38,10 @@ class StateManager:
                 dialogs.append(d)
         return dialogs
 
-    def get_utterances(self, texts, annotations, users, date_times):
+    def get_utterances(self, texts, users, date_times, annotations=None):
         utterances = []
+        if annotations is None:
+            annotations = [None] * len(texts)
         for text, anno, user, date_time in zip(texts, annotations, users, date_times):
             utterances.append(self.create_new_utterance(text, user, date_time, anno))
         return utterances

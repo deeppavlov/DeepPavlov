@@ -37,8 +37,9 @@ class Preprocessor:
             else:
                 self.annotators.append(partial(preprocessor, p=old_preprocessor))
 
-    def __call__(self, utterances: Collection[str]) -> List[Dict[str, Any]]:
+    def __call__(self, states: dict) -> List[Dict[str, Any]]:
         annotations = []
+        utterances = [dialog['utterances'][-1]['text'] for dialog in states['dialogs']]
         for preprocessed in zip(*chain(*self.executor.map(lambda f: f(utterances), self.annotators))):
             dialog_annotations = {}
             for k, data in zip(self.keys, preprocessed):
