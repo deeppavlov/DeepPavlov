@@ -24,8 +24,7 @@ class Agent:
         me_utterances = self.state_manager.get_utterances(utterances, me_users, date_times)
         me_dialogs = self.state_manager.get_dialogs(me_users, me_utterances, locations, channel_types, should_reset)
 
-        state = self.state_manager.get_state(me_dialogs)
-        annotations = self.predict_annotations(state, should_reset)
+        annotations = self.predict_annotations(me_dialogs, should_reset)
         for utt, ann in zip(me_utterances, annotations):
             utt.annotations = ann
         state = self.state_manager.get_state(me_dialogs)
@@ -37,9 +36,10 @@ class Agent:
 
         return responses[1]  # return text only to the users
 
-    def predict_annotations(self, utterances, should_reset):
-        informative_utterances = list(compress(utterances, map(operator.not_, should_reset)))
-        annotations = iter(self.preprocessor(informative_utterances) if informative_utterances else [])
+    def predict_annotations(self, dialogs, should_reset):
+        informative_dialogs = list(compress(dialogs, map(operator.not_, should_reset)))
+        annotations = iter(self.preprocessor(self.state_manager.get_state(informative_dialogs))
+                           if informative_dialogs else [])
         res = []
         for reset in should_reset:
             res.append(None if reset else next(annotations))
