@@ -20,11 +20,11 @@ from enum import IntEnum
 import numpy as np
 import tensorflow as tf
 
-from deeppavlov.core.common.log import get_logger
+from logging import getLogger
 from deeppavlov.core.common.errors import ConfigError
 
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 class DecayType(IntEnum):
