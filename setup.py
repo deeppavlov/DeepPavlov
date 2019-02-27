@@ -9,9 +9,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from setuptools import setup, find_packages
 import os
 import re
+
+from setuptools import setup, find_packages
 
 import deeppavlov
 
@@ -38,7 +39,7 @@ def readme():
     with open(os.path.join(__location__, 'README.md'), encoding='utf8') as f:
         text = f.read()
     text = re.sub(r']\((?!https?://)', r'](https://github.com/deepmipt/DeepPavlov/blob/master/', text)
-    text = re.sub(r'\ssrc="(?!https?://)', r' src="https://github.com/deepmipt/DeepPavlov/blob/master/', text)
+    text = re.sub(r'\ssrc="(?!https?://)', r' src="https://raw.githubusercontent.com/deepmipt/DeepPavlov/master/', text)
     return text
 
 

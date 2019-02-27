@@ -12,14 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import inspect
 import pickle
-from typing import Union, Tuple, List
+from logging import getLogger
+from typing import Union, Tuple, List, Optional
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.models.serializable import Serializable
+
+log = getLogger(__name__)
 
 
 class Chainer(Component):
@@ -175,25 +177,31 @@ class Chainer(Component):
             res = res[0]
         return res
 
-    def get_main_component(self) -> Serializable:
-        return self.main or self.pipe[-1][-1]
+    def get_main_component(self) -> Optional[Serializable]:
+        try:
+            return self.main or self.pipe[-1][-1]
+        except IndexError:
+            log.warning('Cannot get a main component for an empty chainer')
+            return None
 
     def save(self) -> None:
-        self.get_main_component().save()
+        main_component = self.get_main_component()
+        if isinstance(main_component, Serializable):
+            main_component.save()
 
     def load(self) -> None:
         for in_params, out_params, component in self.train_pipe:
-            if inspect.ismethod(getattr(component, 'load', None)):
+            if callable(getattr(component, 'load', None)):
                 component.load()
 
     def reset(self) -> None:
         for in_params, out_params, component in self.train_pipe:
-            if inspect.ismethod(getattr(component, 'reset', None)):
+            if callable(getattr(component, 'reset', None)):
                 component.reset()
 
     def destroy(self):
         for in_params, out_params, component in self.train_pipe:
-            if inspect.ismethod(getattr(component, 'destroy', None)):
+            if callable(getattr(component, 'destroy', None)):
                 component.destroy()
         self.pipe.clear()
         self.train_pipe.clear()
@@ -202,7 +210,7 @@ class Chainer(Component):
         data = []
         for in_params, out_params, component in self.train_pipe:
             data.append(component.serialize())
-        return pickle.dumps(data)
+        return pickle.dumps(data, protocol=4)
 
     def deserialize(self, data: bytes) -> None:
         data = pickle.loads(data)

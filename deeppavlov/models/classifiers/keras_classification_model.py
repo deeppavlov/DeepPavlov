@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from copy import deepcopy
+from logging import getLogger
 from pathlib import Path
 from typing import List, Tuple, Optional, Generator, Union
-import inspect
-from copy import deepcopy
 
-import numpy as np
 import keras.metrics
 import keras.optimizers
+import numpy as np
 from keras import backend as K
 from keras.layers import Dense, Input
 from keras.layers import concatenate, Activation, Concatenate, Reshape
@@ -36,16 +36,14 @@ from overrides import overrides
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import save_json, read_json
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.keras_model import LRScheduledKerasModel
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.layers.keras_layers import additive_self_attention, multiplicative_self_attention
+from deeppavlov.core.models.keras_model import KerasModel
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('keras_classification_model')
-class KerasClassificationModel(LRScheduledKerasModel):
+class KerasClassificationModel(KerasModel):
     """
     Class implements Keras model for classification task for multi-class multi-labeled data.
 
@@ -55,6 +53,8 @@ class KerasClassificationModel(LRScheduledKerasModel):
         model_name: particular method of this class to initialize model configuration
         optimizer: function name from keras.optimizers
         loss: function name from keras.losses.
+        learning_rate: learning rate for optimizer.
+        learning_rate_decay: learning rate decay for optimizer
         last_layer_activation: parameter that determines activation function after classification layer.
                 For multi-label classification use `sigmoid`,
                 otherwise, `softmax`.
@@ -81,6 +81,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
 
     def __init__(self, embedding_size: int, n_classes: int,
                  model_name: str, optimizer: str = "Adam", loss: str = "binary_crossentropy",
+                 learning_rate: float = 0.01, learning_rate_decay: float = 0.,
                  last_layer_activation="sigmoid",
                  restore_lr: bool = False,
                  classes: Optional[Union[list, Generator]] = None,
@@ -91,29 +92,26 @@ class KerasClassificationModel(LRScheduledKerasModel):
         Initialize model using parameters
         from opt dictionary (from config), if model is being initialized from saved.
         """
-        kwargs['learning_rate'] = kwargs.get('learning_rate', 0.01)
-
         if classes is not None:
             classes = list(classes)
 
-        model_args = self.get_model_args(model_name=model_name)
-        model_kwargs = {k: v for k, v in kwargs.items()
-                        if k in ('save_path', 'load_path') or k in model_args}
         given_opt = {"embedding_size": embedding_size,
                      "n_classes": n_classes,
                      "model_name": model_name,
                      "optimizer": optimizer,
                      "loss": loss,
+                     "learning_rate": learning_rate,
+                     "learning_rate_decay": learning_rate_decay,
                      "last_layer_activation": last_layer_activation,
                      "restore_lr": restore_lr,
                      "classes": classes,
                      "text_size": text_size,
                      "padding": padding,
-                     **model_kwargs}
-        self.model = None
+                     **kwargs}
         self.opt = deepcopy(given_opt)
+        self.model = None
 
-        super().__init__(**kwargs)
+        super().__init__(**given_opt)
 
         if classes is not None:
             self.classes = self.opt.get("classes")
@@ -122,27 +120,20 @@ class KerasClassificationModel(LRScheduledKerasModel):
         if self.n_classes == 0:
             raise ConfigError("Please, provide vocabulary with considered intents.")
 
-        self.load()
+        self.load(model_name=model_name)
         # in case of pre-trained after loading in self.opt we have stored parameters
         # now we can restore lear rate if needed
-        if restore_lr and ('final_learning_rate' in self.opt):
-            raise NotImplementedError('option `restore_lr` is not implemented')
-            kwargs['learning_rate'] = self.opt["final_learning_rate"]
+        if restore_lr:
+            learning_rate = self.opt.get("final_learning_rate", learning_rate)
+
+        self.model = self.compile(self.model, optimizer_name=optimizer, loss_name=loss,
+                                  learning_rate=learning_rate, learning_rate_decay=learning_rate_decay)
 
         self._change_not_fixed_params(**given_opt)
 
         summary = ['Model was successfully initialized!', 'Model summary:']
         self.model.summary(print_fn=summary.append)
         log.info('\n'.join(summary))
-
-    @overrides
-    def get_optimizer(self):
-        return self.model.optimizer
-
-    def get_model_args(self, model_name):
-        model_func = getattr(self, model_name, None)
-        return [k for k in inspect.signature(model_func).parameters.keys()
-                if k != 'kwargs']
 
     def _change_not_fixed_params(self, **kwargs) -> None:
         """
@@ -287,7 +278,8 @@ class KerasClassificationModel(LRScheduledKerasModel):
 
         return model
 
-    def _load(self, model_name: str = None) -> None:
+    @overrides
+    def load(self, model_name: str) -> None:
         """
         Initialize uncompiled model from saved params and weights
 
@@ -298,7 +290,6 @@ class KerasClassificationModel(LRScheduledKerasModel):
             model with loaded weights and network parameters from files
             but compiled with given learning parameters
         """
-        model_name = model_name or self.opt.get('model_name')
         if self.load_path:
             if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
                 raise ConfigError("Provided load path is incorrect!")
@@ -331,13 +322,6 @@ class KerasClassificationModel(LRScheduledKerasModel):
             log.warning("No `load_path` is provided for {}".format(self.__class__.__name__))
             self.model = self.init_model_from_scratch(model_name)
             return None
-
-    @overrides
-    def load(self) -> None:
-        self._load(self.opt['model_name'])
-        self.model = self.compile(self.model,
-                                  optimizer_name=self.opt.get('optimizer'),
-                                  loss_name=self.opt.get('loss'))
 
     def compile(self, model: Model, optimizer_name: str, loss_name: str,
                 learning_rate: float = 0.01, learning_rate_decay: float = 0.) -> Model:

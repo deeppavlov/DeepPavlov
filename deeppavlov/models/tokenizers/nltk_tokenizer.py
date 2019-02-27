@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import nltk
 from typing import List
 
-from deeppavlov.core.models.component import Component
+import nltk
+
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.component import Component
 
 
 @register("nltk_tokenizer")

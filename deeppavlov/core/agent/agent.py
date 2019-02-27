@@ -13,12 +13,11 @@
 # limitations under the License.
 
 from abc import ABCMeta, abstractmethod
-from typing import List, Dict, Tuple, Optional
 from collections import defaultdict
+from typing import List, Dict, Tuple, Optional, Union
 
-from deeppavlov.core.models.component import Component
-from deeppavlov.core.skill.skill import Skill
 from deeppavlov.core.agent.dialog_logger import DialogLogger
+from deeppavlov.core.models.component import Component
 
 
 class Agent(Component, metaclass=ABCMeta):
@@ -35,7 +34,8 @@ class Agent(Component, metaclass=ABCMeta):
         skills: List of initiated agent skills instances.
 
     Attributes:
-        skills: List of initiated agent skills instances.
+        skills: List of initiated Skill or Component instances.
+            Components API should should implement API of Skill abstract class.
         history: Histories for each each dialog with agent indexed
             by dialog ID. Each history is represented by list of incoming
             and outcoming replicas of the dialog and updated automatically.
@@ -50,8 +50,8 @@ class Agent(Component, metaclass=ABCMeta):
             We highly recommend to use wrapped skills for skills inference.
         dialog_logger: DeepPavlov dialog logging facility.
     """
-    def __init__(self, skills: List[Skill]) -> None:
-        self.skills: List[Skill] = skills
+    def __init__(self, skills: List[Component]) -> None:
+        self.skills = skills
         self.history: Dict = defaultdict(list)
         self.states: Dict = defaultdict(lambda: [None] * len(self.skills))
         self.wrapped_skills: List[SkillWrapper] = \
@@ -118,7 +118,7 @@ class SkillWrapper:
         skill_id: Skill index in Agent.skills list.
         agent: Agent instance.
     """
-    def __init__(self, skill: Skill, skill_id: int, agent: Agent) -> None:
+    def __init__(self, skill: Component, skill_id: int, agent: Agent) -> None:
         self.skill = skill
         self.skill_id = skill_id
         self.agent = agent

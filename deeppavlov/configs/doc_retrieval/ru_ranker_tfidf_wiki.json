@@ -19,13 +19,13 @@
       "doc_nums"
     ],
     "out": [
-      "y"
+      "tfidf_doc_ids"
     ],
     "pipe": [
       {
         "class_name": "hashing_tfidf_vectorizer",
         "id": "vectorizer",
-        "fit_on_batch": [
+        "fit_on": [
           "docs",
           "doc_ids",
           "doc_nums"
@@ -43,22 +43,22 @@
       },
       {
         "class_name": "tfidf_ranker",
-        "top_n": 5,
+        "top_n": 1,
         "in": [
           "docs"
         ],
         "out": [
-          "y",
-          "score"
+          "tfidf_doc_ids",
+          "tfidf_doc_scores"
         ],
         "vectorizer": "#vectorizer"
       }
     ]
   },
   "train": {
-    "validate_best": false,
-    "test_best": false,
-    "batch_size": 10000
+    "batch_size": 10000,
+    "evaluation_targets": [],
+    "class_name": "fit_trainer"
   },
   "metadata": {
     "variables": {

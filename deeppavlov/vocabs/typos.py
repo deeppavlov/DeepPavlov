@@ -14,19 +14,18 @@
 
 import shutil
 from collections import defaultdict
+from logging import getLogger
 from pathlib import Path
 
 import requests
 from lxml import html
 
 from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.file import load_pickle, save_pickle
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import is_done, mark_done
-from deeppavlov.core.common.file import load_pickle, save_pickle
-from deeppavlov.core.common.log import get_logger
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('static_dictionary')

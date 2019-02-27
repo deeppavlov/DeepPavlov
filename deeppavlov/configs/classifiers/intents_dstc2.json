@@ -132,8 +132,12 @@
     "tensorboard_log_dir": "logs/intents_dstc2_2612",
     "log_every_n_batches": 100,
     "show_examples": false,
-    "validate_best": true,
-    "test_best": true
+    "evaluation_targets": [
+      "train",
+      "valid",
+      "test"
+    ],
+    "class_name": "nn_trainer"
   },
   "metadata": {
     "variables": {

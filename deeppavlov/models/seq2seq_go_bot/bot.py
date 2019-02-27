@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
+from logging import getLogger
 from typing import Dict
+
+import numpy as np
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.models.seq2seq_go_bot.network import Seq2SeqGoalOrientedBotNetwork
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register("seq2seq_go_bot")
@@ -150,9 +150,9 @@ class Seq2SeqGoalOrientedBot(NNModel):
             log.debug("b_tgt_lens = {}".format(b_tgt_lens))
             log.debug("b_tgt_weights = {}".format(b_tgt_weights))"""
 
-        self.network.train_on_batch(b_enc_ins_np, b_dec_ins_np, b_dec_outs_np,
-                                    b_src_lens, b_tgt_lens, b_tgt_weights_np,
-                                    b_kb_masks_np)
+        return self.network.train_on_batch(b_enc_ins_np, b_dec_ins_np, b_dec_outs_np,
+                                           b_src_lens, b_tgt_lens, b_tgt_weights_np,
+                                           b_kb_masks_np)
 
     def _encode_context(self, tokens):
         if self.debug:

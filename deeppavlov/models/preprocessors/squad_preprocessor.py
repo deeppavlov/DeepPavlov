@@ -16,6 +16,7 @@
 import pickle
 import unicodedata
 from collections import Counter
+from logging import getLogger
 from pathlib import Path
 from typing import Tuple, List, Union
 
@@ -24,13 +25,11 @@ from nltk import word_tokenize
 from tqdm import tqdm
 
 from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.utils import download
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.estimator import Estimator
 
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 
 @register('squad_preprocessor')
@@ -321,10 +320,10 @@ class SquadVocabEmbedder(Estimator):
         logger.info('SquadVocabEmbedder: saving {}s vocab to {}'.format(self.level, self.save_path))
         self.save_path.parent.mkdir(parents=True, exist_ok=True)
         with self.save_path.open('wb') as f:
-            pickle.dump((self.emb_dim, self.emb_mat, self.token2idx_dict), f)
+            pickle.dump((self.emb_dim, self.emb_mat, self.token2idx_dict), f, protocol=4)
 
     def serialize(self) -> bytes:
-        return pickle.dumps((self.emb_dim, self.emb_mat, self.token2idx_dict))
+        return pickle.dumps((self.emb_dim, self.emb_mat, self.token2idx_dict), protocol=4)
 
     def _get_idx(self, el: str) -> int:
         """ Returns idx for el (token or char).

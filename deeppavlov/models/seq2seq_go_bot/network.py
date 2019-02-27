@@ -13,19 +13,19 @@
 # limitations under the License.
 
 import json
-import tensorflow as tf
-import numpy as np
-from typing import List
 import math
+from logging import getLogger
+from typing import List
 
-from deeppavlov.core.common.registry import register
+import numpy as np
+import tensorflow as tf
+
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import TFModel
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.models.seq2seq_go_bot.kb_attn_layer import KBAttention
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register("seq2seq_go_bot_nn")
@@ -443,7 +443,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                 self._kb_mask: kb_masks
             }
         )
-        return loss_value
+        return {'loss': loss_value, 'learning_rate': self.get_learning_rate()}
 
     def get_learning_rate(self):
         # polynomial decay

@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from itertools import chain
 import itertools
 from collections import OrderedDict
+from itertools import chain
+from logging import getLogger
 
 import numpy as np
 from sklearn.metrics import f1_score
 
 from deeppavlov.core.common.metrics_registry import register_metric
-from deeppavlov.core.common.log import get_logger
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register_metric('ner_f1')

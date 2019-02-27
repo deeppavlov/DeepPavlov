@@ -12,16 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import tensorflow as tf
-from tensorflow.contrib.layers import xavier_initializer
-import numpy as np
+from logging import getLogger
 from typing import List
 
-from deeppavlov.core.common.check_gpu import GPU_AVAILABLE
-from deeppavlov.core.common.log import get_logger
+import numpy as np
+import tensorflow as tf
 
+from deeppavlov.core.common.check_gpu import check_gpu_existence
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 INITIALIZER = tf.orthogonal_initializer
@@ -608,7 +607,7 @@ def cudnn_compatible_gru(units, n_hidden, n_layers=1, trainable_initial_states=F
 def cudnn_gru_wrapper(units, n_hidden, n_layers=1, trainable_initial_states=False,
                       seq_lengths=None, input_initial_h=None, name='cudnn_gru', reuse=False):
 
-    if GPU_AVAILABLE:
+    if check_gpu_existence():
         return cudnn_gru(units, n_hidden, n_layers, trainable_initial_states,
                          seq_lengths, input_initial_h, name, reuse)
 
@@ -750,7 +749,7 @@ def cudnn_compatible_lstm(units, n_hidden, n_layers=1, trainable_initial_states=
 def cudnn_lstm_wrapper(units, n_hidden, n_layers=1, trainable_initial_states=None, seq_lengths=None, initial_h=None,
                        initial_c=None, name='cudnn_lstm', reuse=False):
 
-    if GPU_AVAILABLE:
+    if check_gpu_existence():
         return cudnn_lstm(units, n_hidden, n_layers, trainable_initial_states,
                           seq_lengths, initial_h, initial_c, name, reuse)
 

@@ -96,6 +96,10 @@ from ``metadata.variables`` element:
 
 Variable ``DEEPPAVLOV_PATH`` is always preset to be a path to the ``deeppavlov`` python module.
 
+One can override configuration variables using environment variables with prefix ``DP_``. So environment variable
+``DP_VARIABLE_NAME`` will override ``VARIABLE_NAME`` inside a configuration file.
+
+For example, adding ``DP_ROOT_PATH=/my_path/to/large_hard_drive`` will make most configs use this path for downloading and reading  embeddings/models/datasets.
 
 Training
 --------
@@ -180,18 +184,9 @@ of how to use simplified training pipeline in
 Train Parameters
 ~~~~~~~~~~~~~~~~
 
--  ``epochs`` — maximum number of epochs to train NNModel, defaults to   ``-1`` (infinite)
--  ``batch_size``,
--  ``metric_optimization`` — ``maximize`` or ``minimize`` a metric, defaults to ``maximize``
--  ``validation_patience`` — how many times in a row the validation metric has to not improve for early stopping,
-   defaults to ``5``
--  ``val_every_n_epochs`` — how often to validate the pipe, defaults to ``-1`` (never)
--  ``log_every_n_batches``, ``log_every_n_epochs`` — how often to calculate metrics for train data, defaults to ``-1``
-   (never)
--  ``validate_best``, ``test_best`` flags to infer the best saved model on valid and test data, defaults to ``true``
--  ``tensorboard_log_dir`` — path to write logged metrics during training. Use tensorboard to visualize metrics
-   plots.
--  ``metrics`` — list of :mod:`~deeppavlov.metrics` to evaluate the model.
+``train`` element can contain a ``class_name`` parameter that references a trainer class (default value is
+:class:`nn_trainer <deeppavlov.core.trainers.NNTrainer>`). All other parameters will be passed as keyword arguments
+to the trainer class's constructor.
 
 Metrics
 _______
@@ -199,6 +194,7 @@ _______
 .. code:: python
 
     "train": {
+      "class_name": "nn_trainer",
       "metrics": [
         "f1",
         {

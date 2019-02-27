@@ -14,23 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional, List
 import copy
 import json
+from logging import getLogger
+from typing import Optional, List
 
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 from overrides import overrides
 
-from deeppavlov.core.models.nn_model import NNModel
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.models.elmo.bilm_model import LanguageModel
-from deeppavlov.models.elmo.train_utils import average_gradients, clip_grads, safely_str2int, dump_weights
 from deeppavlov.models.elmo.elmo2tfhub import export2hub
+from deeppavlov.models.elmo.train_utils import average_gradients, clip_grads, safely_str2int, dump_weights
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('elmo_model')
@@ -250,6 +250,7 @@ class ELMo(NNModel):
 
         self.train_options = {}
         self.valid_options = {'batch_size': 256, 'unroll_steps': 1, 'n_gpus': 1}
+        self.model_mode=''
 
         tf.set_random_seed(seed)
         np.random.seed(seed)
@@ -272,6 +273,9 @@ class ELMo(NNModel):
         self._build_model(train=False, epoch=load_epoch_num)
 
         self.save()
+        # after building the model and saving to the specified save path
+        # change the way to load intermediate checkpoints
+        self.load_path = self.save_path
 
     def _load_options(self, options_json_path):
         if options_json_path:
@@ -461,6 +465,7 @@ class ELMo(NNModel):
             path.resolve()
             log.info(f'[loading {epoch} epoch]')
 
+        # path.parent.mkdir(parents=True, exist_ok=True)
         path = str(path)
 
         # Check presence of the model files
@@ -540,15 +545,17 @@ class ELMo(NNModel):
         self.load(epoch)
 
     def process_event(self, event_name, data):
-        if event_name == 'after_validation':
+        if event_name == 'before_train' and self.model_mode != 'train':
             self._build_model(train=True)
-        elif event_name == 'after_epoch':
+            self.model_mode = 'train'
+        elif event_name == 'before_validation' and self.model_mode != 'validation':
             epoch = self.save_epoch_num + int(data['epochs_done'])
             self.save(epoch)
             self.save()
             self.elmo_export(epoch)
 
             self._build_model(train=False)
+            self.model_mode = 'validation'
 
     def elmo_export(self, epoch: Optional[int] = None) -> None:
         """
@@ -589,4 +596,5 @@ class ELMo(NNModel):
             None
         """
         if hasattr(self, 'sess'):
-            self.sess.close()
+            for k in list(self.sess.graph.get_all_collection_keys()):
+                self.sess.graph.clear_collection(k)

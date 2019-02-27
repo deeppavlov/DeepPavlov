@@ -13,8 +13,8 @@
 # limitations under the License.
 import os
 import shutil
-from pathlib import Path
 
+from pathlib import Path
 
 _root_path = Path(__file__).resolve().parents[3]
 _default_settings_path: Path = _root_path / 'utils' / 'settings'

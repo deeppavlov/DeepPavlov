@@ -13,20 +13,20 @@
 # limitations under the License.
 
 import json
-from pathlib import Path
 from datetime import datetime
+from logging import getLogger
+from pathlib import Path
 from typing import Any, Optional, Hashable
 
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.common.paths import get_settings_path
-from deeppavlov.core.common.file import read_json
-from deeppavlov.core.data.utils import jsonify_data
 from deeppavlov.core.agent.rich_content import RichMessage
+from deeppavlov.core.common.file import read_json
+from deeppavlov.core.common.paths import get_settings_path
+from deeppavlov.core.data.utils import jsonify_data
 
 LOGGER_CONFIG_FILENAME = 'dialog_logger_config.json'
 LOG_TIMESTAMP_FORMAT = '%Y-%m-%d_%H-%M-%S_%f'
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 class DialogLogger:

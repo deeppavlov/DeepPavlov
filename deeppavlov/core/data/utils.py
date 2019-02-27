@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import collections
 import gzip
 import os
 import re
@@ -22,6 +23,7 @@ import tarfile
 import zipfile
 from hashlib import md5
 from itertools import chain
+from logging import getLogger
 from pathlib import Path
 from typing import List, Union, Iterable, Optional
 from urllib.parse import urlparse
@@ -30,9 +32,7 @@ import numpy as np
 import requests
 from tqdm import tqdm
 
-from deeppavlov.core.common.log import get_logger
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 _MARK_DONE = '.done'
 
@@ -422,3 +422,22 @@ def jsonify_data(data):
 def chunk_generator(items_list, chunk_size):
     for i in range(0, len(items_list), chunk_size):
         yield items_list[i:i + chunk_size]
+
+
+def update_dict_recursive(editable_dict: dict, editing_dict: dict) -> None:
+    """Updates dict recursively
+
+    You need to use this function to update dictionary if depth of editing_dict is more then 1
+
+    Args:
+        editable_dict: dictionary, that will be edited
+        editing_dict: dictionary, that contains edits
+    Returns:
+        None
+    """
+    for k, v in editing_dict.items():
+        if isinstance(v, collections.Mapping):
+            update_dict_recursive(editable_dict.get(k, {}), v)
+        else:
+            editable_dict[k] = v
+

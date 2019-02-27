@@ -15,8 +15,8 @@ from typing import List, Any, Dict, Iterable, Optional, Tuple
 import spacy
 from spacy.matcher import Matcher
 
-from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.component import Component
 from deeppavlov.models.tokenizers.spacy_tokenizer import _try_load_spacy_model
 
 

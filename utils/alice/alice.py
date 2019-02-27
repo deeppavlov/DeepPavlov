@@ -14,6 +14,7 @@
 
 import ssl
 from collections import namedtuple
+from logging import getLogger
 from pathlib import Path
 from typing import Union, Optional
 
@@ -26,14 +27,13 @@ from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.agents.processors.default_rich_content_processor import DefaultRichContentWrapper
 from deeppavlov.core.agent import Agent
 from deeppavlov.core.agent.rich_content import RichMessage
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
 from utils.server_utils.server import get_server_params
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 app = Flask(__name__)
 Swagger(app)

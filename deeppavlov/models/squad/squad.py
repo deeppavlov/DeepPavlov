@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import getLogger
 from typing import List, Tuple
 
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
+from deeppavlov.core.common.check_gpu import check_gpu_existence
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.tf_model import LRScheduledTFModel
-from deeppavlov.models.squad.utils import dot_attention, simple_attention, PtrNet, CudnnGRU, CudnnCompatibleGRU
-from deeppavlov.core.common.check_gpu import GPU_AVAILABLE
 from deeppavlov.core.layers.tf_layers import cudnn_bi_gru, variational_dropout
-from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
+from deeppavlov.models.squad.utils import dot_attention, simple_attention, PtrNet, CudnnGRU, CudnnCompatibleGRU
 
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 
 @register('squad_model')
@@ -76,7 +76,7 @@ class SquadModel(LRScheduledTFModel):
         self.last_impatience = 0
         self.lr_impatience = 0
 
-        if GPU_AVAILABLE:
+        if check_gpu_existence():
             self.GRU = CudnnGRU
         else:
             self.GRU = CudnnCompatibleGRU
