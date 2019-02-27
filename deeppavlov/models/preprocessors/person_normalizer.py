@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import itertools
+import random
 from typing import List, Dict, Tuple, Union, Callable
 from logging import getLogger
 
@@ -43,17 +45,34 @@ class PersonNormalizer(Component):
                  tags: List[List[str]],
                  states: List[Dict]) -> Tuple[List[List[str]], List[List[str]]]:
         out_tokens, out_tags = [], []
-        tokens, tags = self.tag_mate_gooser_name(tokens, tags, person_tag=self.per_tag)
         states = states if states else [{}] * len(tokens)
         for u_state, u_toks, u_tags in zip(states, tokens, tags):
+            u_toks, u_tags = self.tag_mate_gooser_name(u_toks,
+                                                       u_tags,
+                                                       person_tag=self.per_tag)
+            if 'B-MATE-GOOSER' in u_tags:
+                print("Found MATE-GOOSER name")
+            else:
+                print("Didn't find any MATE-GOOSER name")
             if u_state and u_state.get(self.state_slot):
+                print("Replacing all users name mentions.")
                 u_toks, u_tags = self.replace_mate_gooser_name(u_toks,
                                                                u_tags,
                                                                u_state[self.state_slot])
+                if random.random() > .8:
+                    print("Adding calling user by name")
+                    u_toks = [u_state[self.state_slot], ','] + u_toks
+                    u_tags = ['B-MATE-GOOSER', 'O'] + u_tags
+
+                    u_toks[0] = u_toks[0][0].upper() + u_toks[0][1:]
+                    if u_tags[2] == 'O':
+                        u_toks[2] = u_toks[2][0].lower() + u_toks[2][1:]
             else:
+                print("Removing all users name mentions.")
                 u_toks, u_tags = self.remove_mate_gooser_name(u_toks, u_tags)
             out_tokens.append(u_toks)
             out_tags.append(u_tags)
+        print(f"out_tags = {out_tags}")
         return out_tokens, out_tags
 
     @staticmethod
@@ -70,20 +89,29 @@ class PersonNormalizer(Component):
             tok, tag = tokens[i], tags[i]
             if i + 1 < len(tokens):
                 if (tok == ',') and (tags[i + 1] == 'B-' + person_tag):
-                    # it will be mate gooser name
+                    # it might be mate gooser name
                     out_tags.append(tag)
-                    i += 1
-                    while (i < len(tokens)) and (tags[i][2:] == person_tag):
-                        out_tags.append(tags[i][:2] + mate_tag)
-                        i += 1
+                    j = 1
+                    while (i + j < len(tokens)) and (tags[i + j][2:] == person_tag):
+                        j += 1
+                    if (i + j == len(tokens)) or (tokens[i + j] in ',.!?;)'):
+                        # it is mate gooser
+                        out_tags.extend([t[:2] + mate_tag for t in tags[i+1:i+j]])
+                    else:
+                        # it isn't
+                        out_tags.extend(tags[i+1:i+j])
+                    i += j + 1
                     continue
             if i > 0:
                 if (tok == ',') and (tags[i - 1][2:] == 'PER'):
-                    # that was mate gooser name
-                    step = 1
-                    while (len(out_tags) >= step) and (out_tags[-step][2:] == person_tag):
-                        out_tags[-step] = out_tags[-step][:2] + mate_tag
-                        step += 1
+                    # it might have been mate gooser name
+                    j = 1
+                    while (len(out_tags) >= j) and (out_tags[-j][2:] == person_tag):
+                        j += 1
+                    if (len(out_tags) < j) or (tokens[i-j] in ',.!?'):
+                        # it was mate gooser
+                        for k in range(j - 1):
+                            out_tags[-k-1] = out_tags[-k-1][:2] + mate_tag
                     out_tags.append(tag)
                     i += 1
                     continue
@@ -244,7 +272,13 @@ class NerWithContextWrapper(Component):
 
     def __call__(self,
                  utterances: List[str],
-                 history: List[List[str]]) -> Tuple[List[List[str]], List[List[str]]]:
+                 history: List[List[str]] = [[]],
+                 prev_utterances: List[str] = []) ->\
+            Tuple[List[List[str]], List[List[str]]]:
+        if prev_utterances:
+            history = history or itertools.repeat([])
+            history = [hist + [prev]
+                       for prev, hist in zip(prev_utterances, history)]
         history_toks = [[tok
                          for toks in self.tokenizer(hist or [''])
                          for tok in toks + [self.context_delimeter] if tok is not None]
@@ -260,7 +294,7 @@ class NerWithContextWrapper(Component):
             texts.append(txt)
 
         _, tags = self.ner_model(texts)
-        logger.info(f"texts = {texts}, ranges = {ranges}, tags = {tags}")
+        print(f"texts = {texts}, ranges = {ranges}, tags = {tags}")
         tags = [t[l:r] for t, (l, r) in zip(tags, ranges)]
 
         return utt_toks, tags
