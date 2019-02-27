@@ -40,7 +40,7 @@ def model_function():
         utterances: List[Optional[str]] = [message.text for message in messages]
         tg_users: List[User] = [message.from_user for message in messages]
 
-        u_tg_ids: List[int] = [user.id for user in tg_users]
+        u_tg_ids = [str(user.id) for user in tg_users]
         u_tg_data = [{
             'id': user.id,
             'username': user.username,
