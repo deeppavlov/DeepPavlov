@@ -12,116 +12,107 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple
+from logging import getLogger
+from typing import List
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 import pickle
 from pathlib import Path
 
-from collections import defaultdict
 from fuzzywuzzy import fuzz
-from nltk.corpus import stopwords
+import pymorphy2
+
+class EntityLinker:
+    def __init__(self, name_to_q, wikidata):
+        self.name_to_q = name_to_q
+        self.wikidata = wikidata
+        self.morph = pymorphy2.MorphAnalyzer()
+		
+    def __call__(self, entity):
+
+        if not entity:
+            wiki_entities = ["None"]
+        else:
+            candidate_entities = find_candidate_entities(entity, self.name_to_q, self.morph)
+	                    
+            srtd_cand_ent = sorted(candidate_entities, key=lambda x: x[2], reverse=True)
+            if len(srtd_cand_ent) > 0:
+                wiki_entities = [srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))]
+                print(wiki_entities[:5])
+                confidences = [1.0 for i in range(len(srtd_cand_ent))]
+            else:
+                candidates = substring_entity_search(entity, self.name_to_q)
+                candidates = list(set(candidates))
+                srtd_cand_ent = sorted(candidates, key=lambda x: x[2], reverse=True)
+                if len(srtd_cand_ent) > 0:
+                    candidates = fuzzy_entity_search(entity, self.name_to_q)
+                    candidates = list(set(candidates))
+                    srtd_cand_ent = sorted(candidates, key=lambda x: x[1], reverse=True)
+	            
+                if len(srtd_cand_ent) > 0:
+                    wiki_entities = [srtd_cand_ent[i][0][1] for i in range(len(srtd_cand_ent))]
+                    confidences = [srtd_cand_ent[i][1]*0.01 for i in range(len(srtd_cand_ent))]
+                    
+                else:
+                    wiki_entities = ["None"]
+                    confidences = [0.0] 
+
+        entity_triplets = extract_triplets_from_wiki(wiki_entities, self.wikidata)
+
+        return entity_triplets, confidences
+
+def find_candidate_entities(entity, name_to_q, morph):
+    candidate_entities = []
+    candidate_entities += name_to_q.get(entity, [])
+    entity_split = entity.split(' ')
+    for tok in entity_split:
+        entity_lemm = []
+        for tok_2 in entity_split:
+            if tok_2 == tok:
+                morph_parse_tok = morph.parse(tok_2)[0]
+                lemmatized_tok = morph_parse_tok.normal_form
+                entity_lemm.append(lemmatized_tok)
+            else:
+                entity_lemm.append(tok_2)
+        entity_lemm = ' '.join(entity_lemm)
+        if entity_lemm != entity:
+            candidate_entities += name_to_q.get(entity_lemm, [])
+
+    return candidate_entities
+
+def fuzzy_entity_search(entity, name_to_q):
+    word_length = len(entity)
+    candidates = []
+    for title in name_to_q:
+        length_ratio = len(title) / word_length
+        if length_ratio > 0.5 and length_ratio < 1.5:
+            ratio = fuzz.ratio(title, entity)
+            if ratio > 50:
+                entity_candidates = name_to_q.get(title, [])
+                for cand in entity_candidates:
+                    candidates.append((cand, fuzz.ratio(entity, cand[0])))
+    return candidates
+
+def substring_entity_search(entity, name_to_q):
+    entity_lower = entity.lower()
+    candidates = []
+    for title in name_to_q:
+        if title.find(entity_lower) > -1:
+            entity_candidates = name_to_q.get(title, [])
+            for cand in entity_candidates:
+                candidates.append(cand)
+    return candidates
+
+def extract_triplets_from_wiki(entity_ids, wikidata):
+
+    entity_triplets = []
+    for entity_id in entity_ids:
+        if entity_id in wikidata and entity_id.startswith('Q'):
+            entity_triplets.append(wikidata[entity_id])
+        else:
+            entity_triplets.append([])
+
+    return entity_triplets
 
 
-@register('entity_linking')
-class EntityLinking(Component):
-    """
-        Class for linking words in the question and the corresponding entity
-        in Freebase, then extracting triplets from Freebase with the entity
-    """
-    
-    def __init__(self, entities_load_path: str,
-                 freebase_load_path: str,
-                 *args, **kwargs) -> None:
-        self.stopword = set(stopwords.words('english'))
-        entities_load_path = Path(entities_load_path).expanduser()
-        with open(entities_load_path, "rb") as handler:
-            self.inverted_index = pickle.load(handler, encoding='latin1')
-            self.inverted_index = defaultdict(str, self.inverted_index)
-
-        self.entity_dict = defaultdict(list)
-        freebase_load_path = Path(freebase_load_path).expanduser()
-        with open(freebase_load_path) as fl:
-            line = fl.readline()
-            split = line.strip('\n').split('\t')
-            self.entity_dict[split[0]].append([split[1], split[2]])
-            count = 0
-            total = 0
-            while line:
-                total += 1
-                line = fl.readline()
-                split = line.strip('\n').split('\t')
-                if len(split) > 2:
-                    self.entity_dict[split[0]].append([split[1], split[2]])
-                if len(split) < 3:
-                    count += 1
-
-    @staticmethod
-    def get_ngram(text: str) -> List[str]:
-        ngram = []
-        tokens = text.split()
-        for i in range(len(tokens)+1):
-            for j in range(i):
-                if i-j <= 3:
-                    temp = " ".join(tokens[j:i])
-                    if temp not in ngram:
-                        ngram.append(temp)
-    
-        ngram = sorted(ngram, key=lambda x: len(x.split()), reverse=True)
-        return ngram
-    
-    def __call__(self, texts: List[List[str]],
-                 tags: List[List[int]],
-                 *args, **kwargs) -> List[List[List[str]]]:
-        entities = []
-        for i, text in enumerate(texts):
-            entity = ""
-            for j, tok in enumerate(text):
-                if tags[i][j] != 0:
-                    entity += tok
-                    entity += " "
-            entity = entity[:-1].lower()
-            entities.append(entity)
-
-        link_scores_entity = []
-
-        for entity in entities:
-            link_scores = self.find_entity(entity)
-            link_scores_entity.append(link_scores[:30])
-
-        entity_triplets = []
-        for link_scores in link_scores_entity:
-            triplets = []
-            for link_score in link_scores:
-                entity_to_search = "www.freebase.com/m/" + link_score[0][0].split('.')[-1]
-                triplet_list = self.entity_dict[entity_to_search]
-                for triplet in triplet_list:
-                    triplets.append([triplet, link_score[1]])
-            entity_triplets.append(triplets)
-
-        return entity_triplets
-
-    def find_entity(self, entity: str) -> List[Tuple]:
-        c = []
-        c_scored = []
-        tokens = self.get_ngram(entity)
-
-        if len(tokens) > 0:
-            maxlen = len(tokens[0].split())
-        for item in tokens:
-            if len(item.split()) < maxlen and len(c) == 0:
-                maxlen = len(item.split())
-            if len(item.split()) < maxlen and len(c) > 0:
-                break
-            if item in self.stopword:
-                continue
-            c.extend(self.inverted_index[item])
-
-        for mid_text_type in sorted(set(c)):
-            score = fuzz.ratio(mid_text_type[1], entity) / 100.0
-            c_scored.append((mid_text_type, score))
-
-        c_scored.sort(key=lambda x: x[1], reverse=True)
-    
-        return c_scored

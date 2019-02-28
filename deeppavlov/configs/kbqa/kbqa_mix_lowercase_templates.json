@@ -181,21 +181,16 @@
         "dropout_keep_prob": 0.7
       },
       {
-        "in": ["x_tokens", "y_predicted"],
-        "out": ["triplets", "confidences"],
-        "entities_load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_name_to_q_lowercase.pickle",
-        "wiki_load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus.pickle",
-        "class_name": "entity_linking_wikidata",
-        "debug": true
-      },
-      {
-        "in": ["y_pred_probas", "triplets", "confidences"],
-        "out": ["answers", "confidences_final"],
+        "in": ["x_tokens", "y_predicted", "y_pred_probas"],
+        "out": ["answers"],
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_q_to_name.pickle",
-        "class_name": "kb_answer_parser_wikidata",
+        "class_name": "kb_answer_parser_wikidata_templates",
         "classes_vocab_keys": "#classes_vocab.keys()",
         "top_k_classes": 5,
         "relations_maping_filename": "wiki_properties_id_to_name.pickle",
+        "entities_filename": "wiki_rus_name_to_q_lowercase.pickle",
+        "wiki_filename": "wiki_rus.pickle",
+        "templates_filename": "templates.pickle",
         "debug": true
       }
     ],
@@ -221,6 +216,10 @@
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
+        "url": "http://files.deeppavlov.ai/kbqa/templates.pickle",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+      },
+      {
         "url": "http://files.deeppavlov.ai/kbqa/wiki_properties_id_to_name.pickle",
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
@@ -232,6 +231,7 @@
         "url": "http://files.deeppavlov.ai/kbqa/kbqa_mix_lowercase.tar.gz",
         "subdir": "{ROOT_PATH}/models/kbqa_mix_lowercase"
       },
+
       {
         "url": "http://files.deeppavlov.ai/embeddings/lenta_lower_100.bin",
         "subdir": "{DOWNLOADS_PATH}/embeddings"

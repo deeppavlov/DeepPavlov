@@ -101,7 +101,7 @@ class KBAnswerParserWikidata(Component, Serializable):
 
         final_confidences = []
         for conf_rel, conf_ent in zip(found_rel_prob, found_entity_prob):
-            final_confidences.append(conf_rel*conf_ent)
+            final_confidences.append(conf_rel*conf_ent*100)
 
         word_batch = []
 

@@ -20,6 +20,8 @@ class Conll2003DatasetReader(DatasetReader):
         dataset = {}
 
         dataset["test"] = self.parse_ner_file(files[0])
+        dataset["train"] = []
+        dataset["valid"] = []
         return dataset
 
     def parse_ner_file(self, file_name: Path):

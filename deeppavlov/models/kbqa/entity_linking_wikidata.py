@@ -115,9 +115,6 @@ class EntityLinkingWikidata(Component):
                     else:
                         wiki_entities_batch.append(["None"])
                         confidences.append([0.0])
-        
-        if self._debug:
-            log.debug(f'results of entity: {wiki_entities_batch[0][:5]}')                
 
         entity_triplets_batch = []
         for entity_ids in wiki_entities_batch:
