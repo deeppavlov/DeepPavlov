@@ -60,6 +60,7 @@
   "morphotagger_dataset": "deeppavlov.dataset_iterators.morphotagger_iterator:MorphoTaggerDatasetIterator",
   "morphotagger_dataset_reader": "deeppavlov.dataset_readers.morphotagging_dataset_reader:MorphotaggerDatasetReader",
   "mpm_nn": "deeppavlov.models.ranking.mpm_siamese_network:MPMSiameseNetwork",
+  "mts_reader": "deeppavlov.dataset_readers.mts_reader:MtsReader",
   "multi_squad_iterator": "deeppavlov.dataset_iterators.squad_iterator:MultiSquadIterator",
   "ner": "deeppavlov.models.ner.network:NerNetwork",
   "ner_bio_converter": "deeppavlov.models.ner.bio:BIOMarkupRestorer",
