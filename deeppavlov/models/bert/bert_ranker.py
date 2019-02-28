@@ -38,7 +38,7 @@ class BertRankerModel(LRScheduledTFModel):
                  pretrained_bert=None,
                  resps=None, resp_vecs=None, resp_features=None, resp_eval=True,
                  conts=None, cont_vecs=None, cont_features=None, cont_eval=True,
-                 bot_mode=None, min_learning_rate=1e-06, **kwargs) -> None:
+                 bot_mode=0, min_learning_rate=1e-06, **kwargs) -> None:
         super().__init__(**kwargs)
 
         self.batch_size = batch_size
@@ -167,7 +167,6 @@ class BertRankerModel(LRScheduledTFModel):
 
     def __call__(self, features_list):
         pred = []
-        bot_ans = {0: [], 1: [], 2: [], 3: []}
         for features in features_list:
             input_ids = [f.input_ids for f in features]
             input_masks = [f.input_mask for f in features]
@@ -179,63 +178,32 @@ class BertRankerModel(LRScheduledTFModel):
             pred.append(p)
         pred = np.vstack(pred)
         bs = pred.shape[0]
-        if len (features_list[0]) == 1 and len(features_list) == 1 or self.bot_mode is None:
-            if self.bot_mode == 0 or self.bot_mode is None:
-                s = pred @ self.resp_vecs.T
-                ids = np.argmax(s, 1)
-                ans = [[self.conts[el] for el in ids], [self.resps[el] for el in ids]]
-                ba = [(self.conts[el], self.resps[el]) for el in ids]
-                bot_ans[0] += ba
-            if self.bot_mode == 1 or self.bot_mode is None:
-                sr = pred @ self.resp_vecs.T
-                sc = pred @ self.cont_vecs.T
-                ids = np.argsort(sr, 1)[:, -10:]
-                sc = [sc[i, ids[i]] for i in range(bs)]
-                ids = [sorted(zip(ids[i], sc[i]), key=itemgetter(1), reverse=True) for i in range(bs)]
-                ids = [list(map(lambda x: x[0], ids[i])) for i in range(bs)]
-                ans = [[self.conts[ids[i][0]] for i in range(bs)],
-                       [self.resps[ids[i][0]] for i in range(bs)]]
-                ba = [(self.conts[el[0]], self.resps[el[0]]) for el in ids]
-                bot_ans[1] += ba
-            if self.bot_mode == 2 or self.bot_mode is None:
-                sr = pred @ self.resp_vecs.T
-                sc = pred @ self.cont_vecs.T
-                ids = np.argsort(sc, 1)[:, -10:]
-                sr = [sr[i, ids[i]] for i in range(bs)]
-                ids = [sorted(zip(ids[i], sr[i]), key=itemgetter(1), reverse=True) for i in range(bs)]
-                ids = [list(map(lambda x: x[0], ids[i])) for i in range(bs)]
-                ans = [[self.conts[ids[i][0]] for i in range(bs)],
-                       [self.resps[ids[i][0]] for i in range(bs)]]
-                ba = [(self.conts[el[0]], self.resps[el[0]]) for el in ids]
-                bot_ans[2] += ba
-            if self.bot_mode == 3 or self.bot_mode is None:
-                sr = pred @ self.resp_vecs.T
-                sc = pred @ self.cont_vecs.T
-                s = sr + sc
-                ids = np.argmax(s, 1)
-                ans = [[self.conts[el] for el in ids], [self.resps[el] for el in ids]]
-                ba = [(self.conts[el], self.resps[el]) for el in ids]
-                bot_ans[3] += ba
-
-            with open('mts_cont_resp.csv', 'a') as f:
-                for i in range(bs):
-                    f.write('0\t{}\t{}\n'.format(*bot_ans[0][i]))
-                    f.write('1\t{}\t{}\n'.format(*bot_ans[1][i]))
-                    f.write('2\t{}\t{}\n'.format(*bot_ans[2][i]))
-                    f.write('3\t{}\t{}\n'.format(*bot_ans[3][i]))
-            return ans
-        elif len(features_list) != self.num_ranking_samples + 1:
-            return np.vstack(pred)
-        else:
-            c_vecs = list(pred[0])
-            scores = []
-            for i in range(len(c_vecs)):
-                r_vecs = np.vstack([el[i] for el in pred[1:]])
-                if self.resp_eval:
-                    r_vecs = np.vstack([r_vecs, self.resp_vecs])
-                s = c_vecs[i] @ r_vecs.T
-                scores.append(s)
-            scores = np.vstack(scores)
-            return scores
+        if self.bot_mode == 0:
+            s = pred @ self.resp_vecs.T
+            ids = np.argmax(s, 1)
+            ans = [[self.conts[el] for el in ids]]
+        if self.bot_mode == 1:
+            sr = pred @ self.resp_vecs.T
+            sc = pred @ self.cont_vecs.T
+            ids = np.argsort(sr, 1)[:, -10:]
+            sc = [sc[i, ids[i]] for i in range(bs)]
+            ids = [sorted(zip(ids[i], sc[i]), key=itemgetter(1), reverse=True) for i in range(bs)]
+            ids = [list(map(lambda x: x[0], ids[i])) for i in range(bs)]
+            ans = [[self.conts[ids[i][0]] for i in range(bs)]]
+        if self.bot_mode == 2:
+            sr = pred @ self.resp_vecs.T
+            sc = pred @ self.cont_vecs.T
+            ids = np.argsort(sc, 1)[:, -10:]
+            sr = [sr[i, ids[i]] for i in range(bs)]
+            ids = [sorted(zip(ids[i], sr[i]), key=itemgetter(1), reverse=True) for i in range(bs)]
+            ids = [list(map(lambda x: x[0], ids[i])) for i in range(bs)]
+            ans = [[self.conts[ids[i][0]] for i in range(bs)]]
+        if self.bot_mode == 3:
+            sr = pred @ self.resp_vecs.T
+            sc = pred @ self.cont_vecs.T
+            s = sr + sc
+            ids = np.argmax(s, 1)
+            ans = [[self.conts[el] for el in ids]]
+        return ans
 
 
