@@ -12,15 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import getLogger
 from typing import List, Union
+
 import numpy as np
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.component import Component
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('proba2labels')

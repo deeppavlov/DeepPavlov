@@ -67,20 +67,26 @@
   "train": {
     "epochs": 100,
     "batch_size": 64,
-
-    "metrics": [{
+    "metrics": [
+      {
         "name": "ner_f1",
         "inputs": [
           "tags_bio",
           "tags_bio_hat"
         ]
-      }],
+      }
+    ],
     "validation_patience": 7,
     "val_every_n_epochs": 1,
 
     "log_every_n_epochs": 1,
     "show_examples": false,
-    "tensorboard_log_dir": "{MODELS_PATH}/ner_fs/logs"
+    "tensorboard_log_dir": "{MODELS_PATH}/ner_fs/logs",
+    "class_name": "fit_trainer",
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ]
   },
   "metadata": {
     "variables": {
@@ -105,4 +111,3 @@
     ]
   }
 }
-

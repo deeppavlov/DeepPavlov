@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import getLogger
 from typing import List, Union, Tuple, Iterable
 
 import keras.layers as kl
@@ -20,13 +21,12 @@ import keras.regularizers as kreg
 from keras import Model
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.models.keras_model import KerasWrapper
 from deeppavlov.core.data.vocab import DefaultVocabulary
-from .common_tagger import *
+from deeppavlov.core.models.keras_model import KerasWrapper
 from .cells import Highway
+from .common_tagger import *
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 MAX_WORD_LENGTH = 30
 

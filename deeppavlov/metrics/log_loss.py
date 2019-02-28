@@ -13,9 +13,9 @@
 # limitations under the License.
 
 
-import numpy as np
 from typing import List, Union
 
+import numpy as np
 from sklearn.metrics import log_loss
 
 from deeppavlov.core.common.metrics_registry import register_metric

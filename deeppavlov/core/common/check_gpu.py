@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import getLogger
+
 import tensorflow as tf
 from tensorflow.python.client import device_lib
 
-from deeppavlov.core.common.log import get_logger
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 _gpu_available = None

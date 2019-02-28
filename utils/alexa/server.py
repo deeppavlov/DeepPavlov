@@ -14,37 +14,42 @@
 
 import ssl
 from datetime import timedelta
+from logging import getLogger
 from pathlib import Path
 from queue import Queue
 from typing import Union, Optional
 
-from flask import Flask, request, jsonify, redirect
 from flasgger import Swagger, swag_from
+from flask import Flask, request, jsonify, redirect
 from flask_cors import CORS
 
-from utils.alexa.bot import Bot
-from deeppavlov.core.commands.infer import build_model
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.agents.processors.default_rich_content_processor import DefaultRichContentWrapper
+from deeppavlov.core.commands.infer import build_model
+from deeppavlov.core.common.file import read_json
+from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
+from utils.alexa.bot import Bot
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 
 AMAZON_CERTIFICATE_LIFETIME = timedelta(hours=1)
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 app = Flask(__name__)
 Swagger(app)
 CORS(app)
 
 
-def run_alexa_default_agent(model_config: Union[str, Path, dict], multi_instance: bool = False,
-                            stateful: bool = False, port: Optional[int] = None, https: bool = False,
-                            ssl_key: str = None, ssl_cert: str = None) -> None:
+def run_alexa_default_agent(model_config: Union[str, Path, dict],
+                            multi_instance: bool = False,
+                            stateful: bool = False,
+                            port: Optional[int] = None,
+                            https: bool = False,
+                            ssl_key: str = None,
+                            ssl_cert: str = None,
+                            default_skill_wrap: bool = True) -> None:
     """Creates Alexa agents factory and initiates Alexa web service.
 
     Wrapper around run_alexa_server. Allows raise Alexa web service with
@@ -58,11 +63,12 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict], multi_instance
         https: Flag for running Alexa skill service in https mode.
         ssl_key: SSL key file path.
         ssl_cert: SSL certificate file path.
+        default_skill_wrap: Wrap with default skill flag.
     """
 
     def get_default_agent() -> DefaultAgent:
         model = build_model(model_config)
-        skill = DefaultStatelessSkill(model)
+        skill = DefaultStatelessSkill(model) if default_skill_wrap else model
         agent = DefaultAgent([skill], skills_processor=DefaultRichContentWrapper())
         return agent
 
@@ -75,9 +81,13 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict], multi_instance
                      ssl_cert=ssl_cert)
 
 
-def run_alexa_server(agent_generator: callable, multi_instance: bool = False,
-                     stateful: bool = False, port: Optional[int] = None, https: bool = False,
-                     ssl_key: str = None, ssl_cert: str = None) -> None:
+def run_alexa_server(agent_generator: callable,
+                     multi_instance: bool = False,
+                     stateful: bool = False,
+                     port: Optional[int] = None,
+                     https: bool = False,
+                     ssl_key: str = None,
+                     ssl_cert: str = None) -> None:
     """Initiates Flask web service with Alexa skill.
 
     Args:

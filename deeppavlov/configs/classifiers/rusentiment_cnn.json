@@ -134,8 +134,12 @@
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
     "show_examples": false,
-    "validate_best": true,
-    "test_best": true
+    "evaluation_targets": [
+      "train",
+      "valid",
+      "test"
+    ],
+    "class_name": "nn_trainer"
   },
   "metadata": {
     "variables": {
@@ -152,14 +156,6 @@
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      {
-        "url": "https://github.com/text-machine-lab/rusentiment/raw/master/Dataset/rusentiment_random_posts.csv",
-        "subdir": "{DOWNLOADS_PATH}/rusentiment"
-      },
-      {
-        "url": "https://github.com/text-machine-lab/rusentiment/raw/master/Dataset/rusentiment_test.csv",
-        "subdir": "{DOWNLOADS_PATH}/rusentiment"
-      },
       {
         "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
         "subdir": "{DOWNLOADS_PATH}/embeddings"

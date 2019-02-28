@@ -13,19 +13,20 @@
 # limitations under the License.
 
 
-from keras.layers import Input, LSTM, Lambda, Dense, Dropout
-from keras.models import Model
-from keras.layers.wrappers import Bidirectional
-from keras.initializers import glorot_uniform, Orthogonal
+from logging import getLogger
+
 from keras import backend as K
+from keras.initializers import glorot_uniform, Orthogonal
+from keras.layers import Input, LSTM, Lambda, Dense, Dropout
+from keras.layers.wrappers import Bidirectional
+from keras.models import Model
 
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.ranking.bilstm_siamese_network import BiLSTMSiameseNetwork
-from deeppavlov.core.layers.keras_layers import FullMatchingLayer, MaxpoolingMatchingLayer
 from deeppavlov.core.layers.keras_layers import AttentiveMatchingLayer, MaxattentiveMatchingLayer
+from deeppavlov.core.layers.keras_layers import FullMatchingLayer, MaxpoolingMatchingLayer
+from deeppavlov.models.ranking.bilstm_siamese_network import BiLSTMSiameseNetwork
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('mpm_nn')

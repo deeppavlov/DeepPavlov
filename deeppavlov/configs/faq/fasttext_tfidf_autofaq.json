@@ -81,8 +81,8 @@
     ]
   },
   "train": {
-    "validate_best": false,
-    "test_best": false
+    "evaluation_targets": [],
+    "class_name": "fit_trainer"
   },
   "metadata": {
     "variables": {
@@ -109,6 +109,3 @@
     ]
   }
 }
-
-
-

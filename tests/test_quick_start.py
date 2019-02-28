@@ -3,27 +3,26 @@ import json
 import logging
 import os
 import pickle
-import signal
 import shutil
+import signal
 import sys
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import Union
+from urllib.parse import urljoin
 
-import pytest
 import pexpect
 import pexpect.popen_spawn
+import pytest
 import requests
-from urllib.parse import urljoin
 
 import deeppavlov
 from deeppavlov import build_model
 from deeppavlov.core.commands.utils import parse_config
-from deeppavlov.download import deep_download
-from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.core.common.paths import get_settings_path
+from deeppavlov.core.data.utils import get_all_elems_from_json
+from deeppavlov.download import deep_download
 from utils.server_utils.server import get_server_params, SERVER_CONFIG_FILENAME
-
 
 tests_dir = Path(__file__).parent
 test_configs_path = tests_dir / "deeppavlov" / "configs"
@@ -89,8 +88,8 @@ PARAMS = {
         ("classifiers/sentiment_twitter.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_twitter_preproc.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/topic_ag_news.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/rusentiment_cnn.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/rusentiment_elmo.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/rusentiment_cnn.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/rusentiment_elmo.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/yahoo_convers_vs_info.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "snips": {
@@ -246,6 +245,8 @@ def download_config(config_path):
 
     # Update config for testing
     config.setdefault('train', {}).setdefault('pytest_epochs', 1)
+    config['train'].setdefault('pytest_max_batches', 2)
+    config['train'].setdefault('pytest_max_test_batches', 2)
     _override_with_test_values(config)
 
     config_path = test_configs_path / config_path

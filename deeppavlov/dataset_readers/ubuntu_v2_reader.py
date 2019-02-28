@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Dict, Tuple, Union
-from pathlib import Path
 import csv
+from pathlib import Path
+from typing import List, Dict, Tuple, Union
 
-from deeppavlov.core.data.dataset_reader import DatasetReader
-from deeppavlov.core.common.registry import register
 from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.dataset_reader import DatasetReader
+
 
 @register('ubuntu_v2_reader')
 class UbuntuV2Reader(DatasetReader):

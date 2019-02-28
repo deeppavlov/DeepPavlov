@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Dict
 import sqlite3
+from logging import getLogger
+from typing import List, Dict
 
-from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.models.estimator import Estimator
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('sqlite_database')
