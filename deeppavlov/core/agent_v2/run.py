@@ -7,11 +7,8 @@ from utils.telegram_utils.telegram_ui import experimental_bot
 
 
 def model_function():
-    from deeppavlov import configs
-
     from deeppavlov.core.agent_v2.agent import Agent
     from deeppavlov.core.agent_v2.state_manager import StateManager
-    from deeppavlov.core.agent_v2.preprocessor import RestPreprocessor
     from deeppavlov.core.agent_v2.skill_manager import SkillManager
     from deeppavlov.core.agent_v2.rest_caller import RestCaller
     from deeppavlov.core.agent_v2.response_selector import ConfidenceResponseSelector
@@ -25,7 +22,7 @@ def model_function():
     state_manager = StateManager()
 
     names, urls = zip(*[(annotator['name'], annotator['url']) for annotator in ANNOTATORS])
-    preprocessor = RestPreprocessor(names, urls)
+    preprocessor = RestCaller(max_workers=MAX_WORKERS, names=names, urls=urls)
 
     rest_caller = RestCaller(max_workers=MAX_WORKERS)
     response_selector = ConfidenceResponseSelector()

@@ -3,13 +3,13 @@ from typing import Sequence, Hashable, Any
 from itertools import compress
 import operator
 
-from deeppavlov.core.agent_v2.preprocessor import Preprocessor
+from deeppavlov.core.agent_v2.rest_caller import RestCaller
 from deeppavlov.core.agent_v2.state_manager import StateManager, TG_START_UTT
 from deeppavlov.core.agent_v2.skill_manager import SkillManager
 
 
 class Agent:
-    def __init__(self, state_manager: StateManager, preprocessor: Preprocessor,
+    def __init__(self, state_manager: StateManager, preprocessor: RestCaller,
                  skill_manager: SkillManager) -> None:
         self.state_manager = state_manager
         self.preprocessor = preprocessor
