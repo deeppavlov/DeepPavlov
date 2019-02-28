@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Iterable, Union
+from typing import List, Iterable, Union, Tuple, Dict
 
 import numpy as np
 
@@ -44,18 +44,47 @@ class SiameseModel(NNModel):
     def save(self, *args, **kwargs) -> None:
         pass
 
-    def train_on_batch(self, batch: List[List[np.ndarray]], y: List[int]) -> float:
-        b = self._make_batch(list(batch))
+    def train_on_batch(self, samples_generator: Iterable[List[np.ndarray]], y: List[int]) -> float:
+        """
+        This method is called by trainer to make one training step on one batch.
+        The number of samples returned by `samples_generator` is always equal to `batch_size`, so we need to:
+        1) accumulate data for all of the inputs of the model;
+        2) format inputs of a model in a proper way using `self._make_batch` function;
+        3) run a model with provided inputs and ground truth labels (`y`) using `self._train_on_batch` function;
+        4) return mean loss value on the batch
+
+        Args:
+            samples_generator (Iterable[List[np.ndarray]]): generator that returns list of numpy arrays
+                of words of all sentences represented as integers.
+                Its shape: (number_of_context_turns + 1, max_number_of_words_in_a_sentence)
+            y (List[int]): tuple of labels, with shape: (batch_size, )
+
+        Returns:
+            float: value of mean loss on the batch
+        """
+        buf = []
+        for sample in samples_generator:
+            self._append_sample_to_batch_buffer(sample, buf)
+        b = self._make_batch(buf)
         loss = self._train_on_batch(b, y)
         return loss
 
-    def __call__(self, batch: Iterable[List[np.ndarray]]) -> Union[np.ndarray, List[str]]:
+    def __call__(self, samples_generator: Iterable[List[np.ndarray]]) -> Union[np.ndarray, List[str]]:
+        """
+        This method is called by trainer to make one evaluation step on one batch.
+
+        Args:
+            samples_generator (Iterable[List[np.ndarray]]):  generator that returns list of numpy arrays
+            of words of all sentences represented as integers.
+            Has shape: (number_of_context_turns + 1, max_number_of_words_in_a_sentence)
+
+        Returns:
+            np.ndarray: predictions for the batch of samples
+        """
         y_pred = []
         buf = []
-        for j, el in enumerate(batch, start=1):
-            context = el[:self.num_context_turns]
-            responses = el[self.num_context_turns:]
-            buf += [context + [el] for el in responses]
+        for j, sample in enumerate(samples_generator, start=1):
+            n_responses = self._append_sample_to_batch_buffer(sample, buf)
             if len(buf) >= self.batch_size:
                 for i in range(len(buf) // self.batch_size):
                     b = self._make_batch(buf[i*self.batch_size:(i+1)*self.batch_size])
@@ -71,17 +100,25 @@ class SiameseModel(NNModel):
             yp = self._predict_on_batch(b)
             y_pred += list(yp)
         y_pred = np.asarray(y_pred)
-        if len(responses) > 1:
-            y_pred = np.reshape(y_pred, (j, len(responses)))
+        # reshape to [batch_size, n_responses] if needed (n_responses > 1)
+        y_pred = np.reshape(y_pred, (j, n_responses)) if n_responses > 1 else y_pred
         return y_pred
 
     def reset(self) -> None:
         pass
 
-    def _train_on_batch(self, batch: List[np.ndarray], y: List[int]) -> float:
+    def _append_sample_to_batch_buffer(self, sample: List,
+                                       buf: Union[List[List[np.ndarray]], List[Tuple[np.ndarray]]]) -> int:
+        context = sample[:self.num_context_turns]
+        responses = sample[self.num_context_turns:]
+        buf += [context + [el] for el in responses]
+
+        return len(responses)
+
+    def _train_on_batch(self, batch: Union[List[np.ndarray], Dict], y: List[int]) -> float:
         pass
 
-    def _predict_on_batch(self, batch: List[np.ndarray]) -> np.ndarray:
+    def _predict_on_batch(self, batch: Union[List[np.ndarray], Dict]) -> np.ndarray:
         pass
 
     def _predict_context_on_batch(self, batch: List[np.ndarray]) -> np.ndarray:

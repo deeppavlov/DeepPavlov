@@ -13,10 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import time
 from logging import getLogger
+from multiprocessing import Process, Pipe
+from multiprocessing.connection import Connection
 from pathlib import Path
+from threading import Thread
+from typing import Callable, Optional, Collection, Hashable, List, Tuple
 
 import telebot
+from telebot.types import Message
 
 from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.agents.processors.default_rich_content_processor import DefaultRichContentWrapper
@@ -33,10 +39,67 @@ SERVER_CONFIG_FILENAME = 'server_config.json'
 TELEGRAM_MODELS_INFO_FILENAME = 'models_info.json'
 
 
-def init_bot_for_model(agent: Agent, token: str, model_name: str, proxy: str):
-    if proxy:
+def _model_process(model_function: Callable, conn: Connection, batch_size: int = -1, *,
+                   poll_period: float = 0.5):
+    model: Callable[[Collection[str], Collection[Hashable]], Collection[str]] = model_function()
+    if batch_size <= 0:
+        batch_size = float('inf')
+
+    while True:
+        batch: List[Tuple[str, Hashable]] = []
+        while conn.poll() and len(batch) < batch_size:
+            batch.append(conn.recv())
+
+        if not batch:
+            time.sleep(poll_period)
+            continue
+
+        messages, dialog_ids = zip(*batch)
+        responses = model(messages, dialog_ids)
+        for response, dialog_id in zip(responses, dialog_ids):
+            conn.send((response, dialog_id))
+
+
+def experimental_bot(model_function: Callable[..., Callable[[Collection[Message], Collection[Hashable]], Collection[str]]],
+                     token: str, proxy: Optional[str] = None, *, batch_size: int = -1, poll_period: float = 0.5):
+    """
+
+    Args:
+        model_function: a function that produces an agent
+        token: telegram token string
+        proxy: https or socks5 proxy string for telebot
+        batch_size: maximum batch size for the model
+        poll_period: how long to wait every time no input was done for the model
+
+    Returns: None
+
+    """
+    if proxy is not None:
         telebot.apihelper.proxy = {'https': proxy}
 
+    bot = telebot.TeleBot(token)
+
+    parent_conn, child_conn = Pipe()
+    p = Process(target=_model_process, args=(model_function, child_conn),
+                kwargs={'batch_size': batch_size, 'poll_period': poll_period})
+    p.start()
+
+    def responder():
+        while True:
+            text, chat_id = parent_conn.recv()
+            bot.send_message(chat_id, text)
+
+    t = Thread(target=responder)
+    t.start()
+
+    @bot.message_handler()
+    def handle_message(message: Message):
+        parent_conn.send((message, message.chat.id))
+
+    bot.polling()
+
+
+def init_bot_for_model(agent: Agent, token: str, model_name: str):
     bot = telebot.TeleBot(token)
 
     models_info_path = Path(get_settings_path(), TELEGRAM_MODELS_INFO_FILENAME).resolve()
@@ -68,7 +131,7 @@ def init_bot_for_model(agent: Agent, token: str, model_name: str, proxy: str):
     bot.polling()
 
 
-def interact_model_by_telegram(config, token=None, proxy=None):
+def interact_model_by_telegram(config, token=None):
     server_config_path = Path(get_settings_path(), SERVER_CONFIG_FILENAME)
     server_config = read_json(server_config_path)
     token = token if token else server_config['telegram_defaults']['token']
@@ -82,4 +145,4 @@ def interact_model_by_telegram(config, token=None, proxy=None):
     model_name = type(model.get_main_component()).__name__
     skill = DefaultStatelessSkill(model)
     agent = DefaultAgent([skill], skills_processor=DefaultRichContentWrapper())
-    init_bot_for_model(agent, token, model_name, proxy)
+    init_bot_for_model(agent, token, model_name)
