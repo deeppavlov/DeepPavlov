@@ -121,3 +121,6 @@ download/
 
 # project data
 /data/
+
+deeppavlov/models/aug_text/ru_synset_aug/*
+/**/*.swp

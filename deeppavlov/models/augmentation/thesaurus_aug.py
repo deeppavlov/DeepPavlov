@@ -5,7 +5,7 @@ from deeppavlov.core.models.estimator import Component
 from deeppavlov.models.spelling_correction.electors.kenlm_elector import KenlmElector
 
 from nltk import sent_tokenize
-from nltk import pos_tag_sents
+from nltk import pos_tag
 from nltk.tokenize.moses import MosesDetokenizer
 from itertools import repeat
 
@@ -59,8 +59,11 @@ class ThesaurusAug():
     def _replace_by_synonyms(self, batch_text: List[str]):
         aug_batch_text = []
         for text in batch_text:
-            sents = [self.tokenizer([sent]) for sent in sent_tokenize(text)][0]
-            tagged_sents = pos_tag_sents(sents)
+            sents = [self.tokenizer([sent])[0] for sent in sent_tokenize(text)]
+            print(f"sents {sents}")
+            tagged_sents = [pos_tag(sent) for sent in sents] 
+            print(f"tagged_sents {tagged_sents}")
+            aug_sent = []
             for sent, tag_sent in zip(sents, tagged_sents):
                 #save the standard cases, because the next processing will require tokens in lowercase 
                 saved_cases = list(map(self._check_case, sent))
@@ -74,5 +77,6 @@ class ThesaurusAug():
                 synset = list(map(lambda x: list(zip(repeat(1/len(x), len(x)), x)) if not isinstance(x, str) else [(1,x)], synset))
                 augmented = self.lm([synset])[0]
                 augmented = self.detokenizer.detokenize(augmented, return_str=True)
-                aug_batch_text.append(augmented)
+                aug_sent.append(augmented)
+            aug_batch_text.append(" ".join(aug_sent))
         return aug_batch_text
