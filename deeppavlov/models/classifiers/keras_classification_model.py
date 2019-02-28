@@ -96,8 +96,8 @@ class KerasClassificationModel(LRScheduledKerasModel):
         elif learning_rate is None and learning_rate_decay is None:
             learning_rate = 0.01
             learning_rate_decay = 0.
-        elif learning_rate_decay == "no":
-            learning_rate_decay = 0.
+        elif isinstance(learning_rate, float) and "learning_rate_drop_patience" in kwargs:
+            learning_rate_decay = "no"
 
         if classes is not None:
             classes = list(classes)
@@ -344,7 +344,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
         """
         optimizer_func = getattr(keras.optimizers, optimizer_name, None)
         if callable(optimizer_func):
-            if isinstance(learning_rate, float):
+            if isinstance(learning_rate, float) and isinstance(learning_rate_decay, float):
                 # in this case decay will be either given in config or, by default, learning_rate_decay=0.
                 self.optimizer = optimizer_func(lr=learning_rate, decay=learning_rate_decay)
             else:

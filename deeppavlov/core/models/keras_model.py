@@ -180,6 +180,11 @@ class LRScheduledKerasModel(LRScheduledModel, KerasModel):
     KerasModel enhanced with optimizer, learning rate and momentum
     management and search.
     """
+    def __init__(self, **kwargs):
+        if isinstance(kwargs.get("learning_rate_decay"), str):
+            LRScheduledModel.__init__(self, **kwargs)
+        else:
+            KerasModel.__init__(self, **kwargs)
 
     @abstractmethod
     def get_optimizer(self):
