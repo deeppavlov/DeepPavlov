@@ -3,7 +3,7 @@ from typing import Dict, List, Tuple
 
 class ResponseSelector:
     def __init__(self, rest_caller=None):
-        self.model = rest_caller
+        self.rest_caller = rest_caller
 
     def __call__(self, responses: Dict, state: Dict) -> Tuple[List[str], List[str], List[float]]:
         """
