@@ -33,9 +33,18 @@ class StateManager:
                                                     channel_type=channel_type)
                 dialogs.append(new_dialog)
             else:
-                d = Dialog.objects(users__in=[user])[0]
-                d.utterances.append(utt)
-                dialogs.append(d)
+                exist_dialogs = Dialog.objects(users__in=[user])
+                if not exist_dialogs:
+                    # TODO remove this "if" condition: it should never happen in production, only while testing
+                    new_dialog = self.create_new_dialog(users=[user, BOT],
+                                                        utterances=[utt],
+                                                        location=loc,
+                                                        channel_type=channel_type)
+                    dialogs.append(new_dialog)
+                else:
+                    d = exist_dialogs[0]
+                    d.utterances.append(utt)
+                    dialogs.append(d)
         return dialogs
 
     def get_utterances(self, texts, users, date_times, annotations=None):

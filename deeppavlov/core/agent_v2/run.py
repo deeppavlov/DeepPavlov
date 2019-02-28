@@ -26,7 +26,7 @@ def model_function():
 
     rest_caller = RestCaller(max_workers=MAX_WORKERS)
     response_selector = ConfidenceResponseSelector()
-    skill_manager = SkillManager(skills_selector=None, response_selector=response_selector, rest_caller=rest_caller)
+    skill_manager = SkillManager(skill_selector=None, response_selector=response_selector, rest_caller=rest_caller)
 
     agent = Agent(state_manager, preprocessor, skill_manager)
 

@@ -1,10 +1,9 @@
 from typing import Dict, List, Tuple
-from operator import itemgetter
 
 
 class ResponseSelector:
-    def __init__(self, model=None):
-        self.model = model
+    def __init__(self, rest_caller=None):
+        self.model = rest_caller
 
     def __call__(self, responses: Dict, state: Dict) -> Tuple[List[str], List[str], List[float]]:
         """

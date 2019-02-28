@@ -23,8 +23,9 @@ class Agent:
         me_users = self.state_manager.get_users(user_telegram_ids, user_device_types)
         me_utterances = self.state_manager.get_utterances(utterances, me_users, date_times)
         me_dialogs = self.state_manager.get_dialogs(me_users, me_utterances, locations, channel_types, should_reset)
+        informative_dialogs = list(compress(me_dialogs, map(operator.not_, should_reset)))
 
-        annotations = self.predict_annotations(me_dialogs, should_reset)
+        annotations = self.preprocessor(self.state_manager.get_state(informative_dialogs), should_reset)
         for utt, ann in zip(me_utterances, annotations):
             utt.annotations = ann
         state = self.state_manager.get_state(me_dialogs)
@@ -35,12 +36,3 @@ class Agent:
         # After response is chosen for each dialog in the state, dialog objects should be updated and saved to DB.
 
         return responses[1]  # return text only to the users
-
-    def predict_annotations(self, dialogs, should_reset):
-        informative_dialogs = list(compress(dialogs, map(operator.not_, should_reset)))
-        annotations = iter(self.preprocessor(self.state_manager.get_state(informative_dialogs))
-                           if informative_dialogs else [])
-        res = []
-        for reset in should_reset:
-            res.append(None if reset else next(annotations))
-        return res

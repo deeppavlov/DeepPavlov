@@ -13,11 +13,6 @@ SKILLS = [
         "name": "chitchat",
         "url": "http://0.0.0.0:2081/chitchat",
         "path": configs.dp_assistant.agent_ranking_chitchat_2staged_tfidf_smn_v4
-    },
-    {
-        "name": "inquirer",
-        "url": "http://127.0.0.1:2085/ruler_call/",
-        "path": None
     }
 ]
 
@@ -37,8 +32,8 @@ ANNOTATORS = [
 SKILL_SELECTORS = [
     {
         "name": "chitchat_odqa",
-        "utl": "http://0.0.0.0:2082/chitchat_odqa_selector",
-        "path": ""
+        "url": "http://0.0.0.0:2082/chitchat_odqa_selector",
+        "path": "configs.dp_assistant.sselector_chitchat_odqa"
     }
 ]
 
