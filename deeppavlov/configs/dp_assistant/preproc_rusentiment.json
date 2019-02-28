@@ -1,0 +1,126 @@
+{
+  "chainer": {
+    "in": [
+      "dialogs"
+    ],
+    "pipe": [
+      {
+        "class_name": "dialogs_parser",
+        "in": ["dialogs"],
+        "out": [
+          "last_utterances",
+          "last_annotations",
+          "utterances_histories",
+          "annotations_histories",
+          "dialog_ids",
+          "user_ids"
+        ]
+      },
+      {
+        "id": "classes_vocab",
+        "class_name": "simple_vocab",
+        "save_path": "{MODELS_PATH}/classes.dict",
+        "load_path": "{MODELS_PATH}/classes.dict"
+      },
+      {
+        "in": [
+          "last_utterances"
+        ],
+        "out": [
+          "x_prep"
+        ],
+        "class_name": "dirty_comments_preprocessor",
+        "remove_punctuation": false
+      },
+      {
+        "in": "x_prep",
+        "out": "x_tok",
+        "id": "my_tokenizer",
+        "class_name": "nltk_tokenizer",
+        "tokenizer": "wordpunct_tokenize"
+      },
+      {
+        "in": [
+          "x_tok"
+        ],
+        "out": [
+          "x_emb"
+        ],
+        "id": "my_embedder",
+        "class_name": "elmo_embedder",
+        "elmo_output_names": [
+          "elmo"
+        ],
+        "mini_batch_size": 32,
+        "spec": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-twitter_2013-01_2018-04_600k_steps.tar.gz",
+        "pad_zero": true
+      },
+      {
+        "in": [
+          "x_emb"
+        ],
+        "out": [
+          "y_pred_probas"
+        ],
+        "main": true,
+        "class_name": "keras_classification_model",
+        "save_path": "{MODELS_PATH}/model",
+        "load_path": "{MODELS_PATH}/model",
+        "embedding_size": "#my_embedder.dim",
+        "n_classes": "#classes_vocab.len",
+        "units_gru": 256,
+        "optimizer": "Adam",
+        "learning_rate": 0.01,
+        "learning_rate_decay": 0.01,
+        "loss": "categorical_crossentropy",
+        "last_layer_activation": "softmax",
+        "coef_reg_gru": 1e-6,
+        "coef_reg_den": 1e-6,
+        "dropout_rate": 0.2,
+        "rec_dropout_rate": 0.2,
+        "dense_size": 100,
+        "model_name": "bigru_with_max_aver_pool_model"
+      },
+      {
+        "in": "y_pred_probas",
+        "out": "y_pred_ids",
+        "class_name": "proba2labels",
+        "max_proba": true
+      },
+      {
+        "in": "y_pred_ids",
+        "out": "y_pred_labels",
+        "ref": "classes_vocab"
+      },
+      {
+        "class_name": "extract_first",
+        "in": "y_pred_labels",
+        "out": "labels"
+      }
+    ],
+    "out": [
+      "labels"
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/rusentiment_v8"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
+    ],
+    "labels": {
+      "telegram_utils": "IntentModel",
+      "server_utils": "KerasIntentModel"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/rusentiment_v8.tar.gz",
+        "subdir": "{ROOT_PATH}/models/classifiers"
+      }
+    ]
+  }
+}

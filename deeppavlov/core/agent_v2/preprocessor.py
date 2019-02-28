@@ -4,6 +4,15 @@ from typing import Collection, Dict, List, Any, Optional, Union, Callable
 from functools import partial
 
 from deeppavlov.core.common.chainer import Chainer
+from .rest_caller import RestCaller
+
+
+class RestPreprocessor:
+    def __init__(self, names: Collection[str], urls: Collection[str], max_workers: Optional[int] = None ) -> None:
+        self.caller = partial(RestCaller(max_workers=max_workers), names, urls)
+
+    def __call__(self, states: dict) -> List[Dict[str, Dict[str, Any]]]:
+        return self.caller(states)
 
 
 class Preprocessor:
