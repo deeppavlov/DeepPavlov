@@ -33,7 +33,7 @@ SKILL_SELECTORS = [
     {
         "name": "chitchat_odqa",
         "url": "http://0.0.0.0:2082/chitchat_odqa_selector",
-        "path": "configs.dp_assistant.sselector_chitchat_odqa"
+        "path": configs.dp_assistant.sselector_chitchat_odqa
     }
 ]
 
