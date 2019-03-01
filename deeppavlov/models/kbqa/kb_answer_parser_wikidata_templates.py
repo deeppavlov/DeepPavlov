@@ -79,30 +79,31 @@ class KBAnswerParserWikidata(Component, Serializable):
                  *args, **kwargs) -> List[str]:
 
         objects_batch = []
+        confidences = []
         for tokens, tags, relations_probs in zip(tokens_batch, tags_batch, relations_probs_batch):
             entity, relation = self.entities_and_rels_from_templates(tokens)
             if entity:
-                entity_triplets, confidences = self.linker(entity)
+                entity_triplets, entity_linking_confidences = self.linker(entity)
                 found = False
-                for n, entities in enumerate(entity_triplets):
+                for entities, confidence in zip(entity_triplets, entity_linking_confidences):
                     for rel_triplets in entities:
                         relation_from_wiki = rel_triplets[0]
                         if relation == relation_from_wiki:
                             obj = rel_triplets[1]
+                            objects_batch.append(obj)
+                            confidences.append(confidence*relations_probs[0])
                             found = True
                             break
-                    if found or n == 5:
+                    if found:
                         break
-                if not found:
-                    obj = ''
-                objects_batch.append(obj)
 
-            if not entity:
+            if not entity or not found:
                 entity = self.extract_entities(tokens, tags)
                 if not entity:
                     objects_batch.append('')
+                    confidences.append(0.0)
                 else:
-                    entity_triplets, confidences = self.linker(entity)
+                    entity_triplets, entity_linking_confidences = self.linker(entity)
                     relations = self._parse_relations_probs(relations_probs)
 
                     found = False
@@ -112,6 +113,7 @@ class KBAnswerParserWikidata(Component, Serializable):
                                 relation_from_wiki = rel_triplets[0]
                                 if predicted_relation == relation_from_wiki:
                                     obj = rel_triplets[1]
+                                    confidences.append(entity_linking_confidences[n]*rel_prob)
                                     found = True
                                     break
                             if found or n == 5:
@@ -120,6 +122,7 @@ class KBAnswerParserWikidata(Component, Serializable):
                             break
                     if not found:
                         obj = ''
+                        confidences.append(0.0)
                     objects_batch.append(obj)
 
         word_batch = []
@@ -140,16 +143,17 @@ class KBAnswerParserWikidata(Component, Serializable):
                     word_batch.append(obj)
             else:
                 word_batch.append('Not Found')
+                confidences[n] = 0.0
 
         return word_batch
 
     def _parse_relations_probs(self, probas: List[float]) -> List[str]:
-        top_k_inds = np.asarray(probas).argsort()[-self.top_k:][::-1]  # Make it top n and n to the __init__
+        top_k_inds = np.asarray(probas).argsort()[-self.top_k_classes:][::-1]  # Make it top n and n to the __init__
         top_k_classes = [self.classes[k] for k in top_k_inds]
 
         return top_k_classes
 
-    def extract_entities(tokens, tags):
+    def extract_entities(self, tokens, tags):
         entity = []
         for j, tok in enumerate(tokens):
             if tags[j] != 0:
@@ -171,3 +175,4 @@ class KBAnswerParserWikidata(Component, Serializable):
                     relation = self.templates[template]
 
         return ent, relation
+

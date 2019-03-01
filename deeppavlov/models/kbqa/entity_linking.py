@@ -39,7 +39,6 @@ class EntityLinker:
             srtd_cand_ent = sorted(candidate_entities, key=lambda x: x[2], reverse=True)
             if len(srtd_cand_ent) > 0:
                 wiki_entities = [srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))]
-                print(wiki_entities[:5])
                 confidences = [1.0 for i in range(len(srtd_cand_ent))]
             else:
                 candidates = substring_entity_search(entity, self.name_to_q)
