@@ -14,7 +14,7 @@ for item in SKILLS + ANNOTATORS + SKILL_SELECTORS + RESPONSE_SELECTORS:
     url = item['url']
     parsed = pattern.search(url)
     if not parsed:
-        print(f'could not parse an url: `{url}`')
+        raise RuntimeError(f'could not parse an url: `{url}`')
     host, port, endpoint = parsed.groups()
     p = Process(target=skill_server, kwargs={'config': item['path'], 'port': port, 'endpoint': endpoint,
                                              'download': True})
