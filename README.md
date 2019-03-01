@@ -83,7 +83,7 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 
 **Auto ML**
 
-[Tuning Models with Evolutionary Algorithm](http://docs.deeppavlov.ai/en/latest/intro/parameters_evolution.html)
+[Tuning Models with Evolutionary Algorithm](http://docs.deeppavlov.ai/en/latest/intro/hypersearch.html)
 
 # Installation
 
