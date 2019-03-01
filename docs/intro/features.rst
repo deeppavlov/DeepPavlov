@@ -42,6 +42,7 @@ Component for classification tasks (intents, sentiment, etc) on word-level. Shal
 BiLSTM with self-attention and other models are presented. The model also allows multilabel classification of texts.
 Several pre-trained models are available and presented in Table below.
 
+
 +------------------+-------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | Task             | Dataset           | Lang | Model                                                                                           | Metric      | Valid  | Test   | Downloads |
 +==================+===================+======+=================================================================================================+=============+========+========+===========+
@@ -67,11 +68,14 @@ Several pre-trained models are available and presented in Table below.
 +                  +-------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 |                  |`RuSentiment`_     |      | :config:`RuWiki+Lenta emb <classifiers/rusentiment_cnn.json>`                                   | F1-weighted | 0.6541 | 0.7016 |  6.2 Gb   |
 +                  +                   +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |                   |      | :config:`Twitter emb super-convergence <classifiers/rusentiment_bigru_superconv.json>` [*]_     |             | 0.7301 | 0.7576 |  3.4 Gb   |
++                  +                   +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
 |                  |                   |      | :config:`ELMo <classifiers/rusentiment_elmo.json>`                                              |             | 0.7293 | 0.7648 |  700 Mb   |
 +------------------+-------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | Intent           |`Yahoo-L31`_       |      | :config:`Yahoo-L31 on ELMo <classifiers/yahoo_convers_vs_info.json>` pre-trained on `Yahoo-L6`_ | ROC-AUC     | 0.9412 |   --   |  700 Mb   |
 +------------------+-------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 
+.. [*] Smith L. N., Topin N. Super-convergence: Very fast training of residual networks using large learning rates. – 2018.
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
 .. _`SNIPS-2017`: https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines
 .. _`Insults`: https://www.kaggle.com/c/detecting-insults-in-social-commentary
