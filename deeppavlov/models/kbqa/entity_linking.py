@@ -27,88 +27,79 @@ class EntityLinker:
         if not entity:
             wiki_entities = ["None"]
         else:
-            candidate_entities = find_candidate_entities(entity, self.name_to_q, self.morph)
+            candidate_entities = self.find_candidate_entities(entity)
 
             srtd_cand_ent = sorted(candidate_entities, key=lambda x: x[2], reverse=True)
             if len(srtd_cand_ent) > 0:
                 wiki_entities = [srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))]
                 confidences = [1.0 for i in range(len(srtd_cand_ent))]
             else:
-                candidates = substring_entity_search(entity, self.name_to_q)
+                candidates = self.substring_entity_search(entity, self.name_to_q)
                 candidates = list(set(candidates))
                 srtd_cand_ent = sorted(candidates, key=lambda x: x[2], reverse=True)
                 if len(srtd_cand_ent) > 0:
-                    candidates = fuzzy_entity_search(entity, self.name_to_q)
+                    candidates = self.fuzzy_entity_search(entity, self.name_to_q)
                     candidates = list(set(candidates))
                     srtd_cand_ent = sorted(candidates, key=lambda x: x[1], reverse=True)
 
                 if len(srtd_cand_ent) > 0:
                     wiki_entities = [srtd_cand_ent[i][0][1] for i in range(len(srtd_cand_ent))]
                     confidences = [srtd_cand_ent[i][1]*0.01 for i in range(len(srtd_cand_ent))]
-                    
                 else:
                     wiki_entities = ["None"]
-                    confidences = [0.0] 
+                    confidences = [0.0]
 
-        entity_triplets = extract_triplets_from_wiki(wiki_entities, self.wikidata)
-
+        entity_triplets = self.extract_triplets_from_wiki(wiki_entities, self.wikidata)
         return entity_triplets, confidences
 
+    def find_candidate_entities(self, entity):
+        candidate_entities = []
+        candidate_entities += self.name_to_q.get(entity, [])
+        entity_split = entity.split(' ')
+        for tok in entity_split:
+            entity_lemm = []
+            for tok_2 in entity_split:
+                if tok_2 == tok:
+                    morph_parse_tok = self.morph.parse(tok_2)[0]
+                    lemmatized_tok = morph_parse_tok.normal_form
+                    entity_lemm.append(lemmatized_tok)
+                else:
+                    entity_lemm.append(tok_2)
+            entity_lemm = ' '.join(entity_lemm)
+            if entity_lemm != entity:
+                candidate_entities += self.name_to_q.get(entity_lemm, [])
 
-def find_candidate_entities(entity, name_to_q, morph):
-    candidate_entities = []
-    candidate_entities += name_to_q.get(entity, [])
-    entity_split = entity.split(' ')
-    for tok in entity_split:
-        entity_lemm = []
-        for tok_2 in entity_split:
-            if tok_2 == tok:
-                morph_parse_tok = morph.parse(tok_2)[0]
-                lemmatized_tok = morph_parse_tok.normal_form
-                entity_lemm.append(lemmatized_tok)
-            else:
-                entity_lemm.append(tok_2)
-        entity_lemm = ' '.join(entity_lemm)
-        if entity_lemm != entity:
-            candidate_entities += name_to_q.get(entity_lemm, [])
+        return candidate_entities
 
-    return candidate_entities
+    def fuzzy_entity_search(self, entity):
+        word_length = len(entity)
+        candidates = []
+        for title in self.name_to_q:
+            length_ratio = len(title) / word_length
+            if length_ratio > 0.5 and length_ratio < 1.5:
+                ratio = fuzz.ratio(title, entity)
+                if ratio > 50:
+                    entity_candidates = self.name_to_q.get(title, [])
+                    for cand in entity_candidates:
+                        candidates.append((cand, fuzz.ratio(entity, cand[0])))
+        return candidates
 
-
-def fuzzy_entity_search(entity, name_to_q):
-    word_length = len(entity)
-    candidates = []
-    for title in name_to_q:
-        length_ratio = len(title) / word_length
-        if length_ratio > 0.5 and length_ratio < 1.5:
-            ratio = fuzz.ratio(title, entity)
-            if ratio > 50:
-                entity_candidates = name_to_q.get(title, [])
+    def substring_entity_search(self, entity):
+        entity_lower = entity.lower()
+        candidates = []
+        for title in self.name_to_q:
+            if title.find(entity_lower) > -1:
+                entity_candidates = self.name_to_q.get(title, [])
                 for cand in entity_candidates:
-                    candidates.append((cand, fuzz.ratio(entity, cand[0])))
-    return candidates
+                    candidates.append(cand)
+        return candidates
 
+    def extract_triplets_from_wiki(self, entity_ids):
+        entity_triplets = []
+        for entity_id in entity_ids:
+            if entity_id in self.wikidata and entity_id.startswith('Q'):
+                entity_triplets.append(self.wikidata[entity_id])
+            else:
+                entity_triplets.append([])
 
-def substring_entity_search(entity, name_to_q):
-    entity_lower = entity.lower()
-    candidates = []
-    for title in name_to_q:
-        if title.find(entity_lower) > -1:
-            entity_candidates = name_to_q.get(title, [])
-            for cand in entity_candidates:
-                candidates.append(cand)
-    return candidates
-
-
-def extract_triplets_from_wiki(entity_ids, wikidata):
-
-    entity_triplets = []
-    for entity_id in entity_ids:
-        if entity_id in wikidata and entity_id.startswith('Q'):
-            entity_triplets.append(wikidata[entity_id])
-        else:
-            entity_triplets.append([])
-
-    return entity_triplets
-
-
+        return entity_triplets
