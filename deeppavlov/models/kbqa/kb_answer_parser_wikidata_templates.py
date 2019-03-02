@@ -147,7 +147,7 @@ class KBAnswerParserWikidata(Component, Serializable):
     def _parse_relations_probs(self, probs: List[float]) -> List[str]:
         top_k_inds = np.asarray(probs).argsort()[-self.top_k_classes:][::-1]
         top_k_classes = [self.classes[k] for k in top_k_inds]
-        top_k_probs = [self.probs[k] for k in top_k_inds]
+        top_k_probs = [probs[k] for k in top_k_inds]
         return top_k_classes, top_k_probs
 
     @staticmethod
