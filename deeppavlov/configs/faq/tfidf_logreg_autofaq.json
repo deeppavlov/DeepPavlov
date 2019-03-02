@@ -78,8 +78,10 @@
     "metrics": [
       "accuracy"
     ],
-    "validate_best": true,
-    "test_best": false
+    "evaluation_targets": [
+      "valid"
+    ],
+    "class_name": "fit_trainer"
   },
   "metadata": {
     "variables": {
@@ -99,6 +101,3 @@
     ]
   }
 }
-
-
-

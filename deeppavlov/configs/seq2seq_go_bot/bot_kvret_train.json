@@ -140,7 +140,12 @@
 
     "log_every_n_batches": -1,
     "log_every_n_epochs": 1,
-    "show_examples": false
+    "show_examples": false,
+    "class_name": "nn_trainer",
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ]
   },
   "metadata": {
     "variables": {

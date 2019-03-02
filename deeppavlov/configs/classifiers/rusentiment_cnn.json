@@ -123,6 +123,7 @@
     "epochs": 100,
     "batch_size": 64,
     "metrics": [
+      "f1_weighted",
       "sets_accuracy",
       "f1_macro",
       {
@@ -134,8 +135,12 @@
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
     "show_examples": false,
-    "validate_best": true,
-    "test_best": true
+    "evaluation_targets": [
+      "train",
+      "valid",
+      "test"
+    ],
+    "class_name": "nn_trainer"
   },
   "metadata": {
     "variables": {

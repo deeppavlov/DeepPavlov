@@ -239,7 +239,7 @@ class SklearnComponent(Estimator):
 
         log.info("Saving model to {}".format(str(fname)))
         with open(fname, "wb") as f:
-            pickle.dump(self.model, f)
+            pickle.dump(self.model, f, protocol=4)
         return
 
     @staticmethod

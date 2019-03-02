@@ -186,13 +186,18 @@ DeepPavlov skill/component can be made available for Amazon Alexa as a REST serv
 
 .. code:: bash
 
-    python -m deeppavlov alexa <config_path> -p <port> --https --key <SSL key file path> --cert <SSL certificate file path> [-d]
+    python -m deeppavlov alexa <config_path> --https --key <SSL key file path> --cert <SSL certificate file path> [-d] [-p <port_number>] [--no-default-skill]
 
 If you redirect requests to your skills service from some https endpoint, you may want to run it in http mode by
-omitting ``https``, ``key``, ``cert`` keys.
+omitting ``--https``, ``--key``, ``--cert`` keys.
 
 Optional ``-d`` key can be provided for dependencies download
 before service start.
+
+Optional ``-p`` key can be provided to override the port value from a settings file.
+
+You should use ``--no-default-skill`` optional flag if your component implements an interface of DeepPavlov *Skill*
+to skip its wrapping with DeepPavlov *DefaultStatelessSkill*.
 
 REST service properties (host, port, https options) are provided in ``utils/settings/server_config.json``. Please note,
 that all command line parameters override corresponding config ones.

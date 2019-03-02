@@ -141,7 +141,6 @@ class ELMoFilePathsIterator(FilePathsIterator):
 
         if data_type == 'train':
             unroll_steps = self.unroll_steps
-            batch_size = batch_size
             n_gpus = self.n_gpus
         else:
             unroll_steps = 1

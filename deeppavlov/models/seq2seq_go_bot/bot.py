@@ -150,9 +150,9 @@ class Seq2SeqGoalOrientedBot(NNModel):
             log.debug("b_tgt_lens = {}".format(b_tgt_lens))
             log.debug("b_tgt_weights = {}".format(b_tgt_weights))"""
 
-        self.network.train_on_batch(b_enc_ins_np, b_dec_ins_np, b_dec_outs_np,
-                                    b_src_lens, b_tgt_lens, b_tgt_weights_np,
-                                    b_kb_masks_np)
+        return self.network.train_on_batch(b_enc_ins_np, b_dec_ins_np, b_dec_outs_np,
+                                           b_src_lens, b_tgt_lens, b_tgt_weights_np,
+                                           b_kb_masks_np)
 
     def _encode_context(self, tokens):
         if self.debug:

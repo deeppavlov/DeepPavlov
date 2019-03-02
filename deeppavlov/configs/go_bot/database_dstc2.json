@@ -22,6 +22,11 @@
     ]
   },
   "train": {
+    "class_name": "fit_trainer",
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ]
   },
   "metadata": {
     "variables": {
