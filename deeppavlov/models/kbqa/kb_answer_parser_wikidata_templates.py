@@ -154,7 +154,7 @@ class KBAnswerParserWikidata(Component, Serializable):
     def extract_entities(tokens, tags):
         entity = []
         for j, tok in enumerate(tokens):
-            if tags[j] != 0:
+            if tags[j] != 0:  # TODO: replace with tag 'O' (not necessary 0)
                 entity.append(tok)
         entity = ' '.join(entity)
 
