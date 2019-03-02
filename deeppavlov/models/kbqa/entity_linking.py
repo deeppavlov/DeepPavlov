@@ -12,16 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import getLogger
-from typing import List
-
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.component import Component
-import pickle
-from pathlib import Path
-
 from fuzzywuzzy import fuzz
 import pymorphy2
+
 
 class EntityLinker:
     def __init__(self, name_to_q, wikidata):
