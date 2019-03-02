@@ -83,10 +83,7 @@ class KBAnswerParserWikidata(Component, Serializable):
         confidences = []
         for tokens, tags, relations_probs in zip(tokens_batch, tags_batch, relations_probs_batch):
             entity, relation = self.entities_and_rels_from_templates(tokens)
-            if not entity:
-                objects_batch.append('')
-                confidences.append(0.0)
-            else:
+            if entity:
                 entity_triplets, entity_linking_confidences = self.linker(entity)
                 found = False
                 for entities, confidence in zip(entity_triplets, entity_linking_confidences):
@@ -104,6 +101,9 @@ class KBAnswerParserWikidata(Component, Serializable):
                     obj, confidence = self._fuzzy_search(tokens, tags, relations_probs)
                     objects_batch.append(obj)
                     confidences.append(confidence)
+            else:
+                objects_batch.append('')
+                confidences.append(0.0)
         word_batch = []
 
         for n, obj in enumerate(objects_batch):
