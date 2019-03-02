@@ -40,7 +40,7 @@ class KBAnswerParserWikidata(Component, Serializable):
 
     def __init__(self, load_path: str, top_k_classes: int, classes_vocab_keys: Tuple,
                  debug: bool = False, relations_maping_filename=None, entities_filename=None,
-                 wiki_filename=None, templates_filename=None, *args, **kwargs) -> None:
+                 wiki_filename=None, templates_filename=None, return_confidences=True, *args, **kwargs) -> None:
         super().__init__(save_path=None, load_path=load_path)
         self.top_k_classes = top_k_classes
         self.classes = list(classes_vocab_keys)
@@ -54,6 +54,7 @@ class KBAnswerParserWikidata(Component, Serializable):
         self.name_to_q = None
         self.wikidata = None
         self.templates = None
+        self.return_confidences = return_confidences
         self.load()
         self.linker = EntityLinker(self.name_to_q, self.wikidata)
 
@@ -80,30 +81,26 @@ class KBAnswerParserWikidata(Component, Serializable):
                  *args, **kwargs) -> List[str]:
 
         objects_batch = []
-        confidences = []
+        confidences_batch = []
         for tokens, tags, relations_probs in zip(tokens_batch, tags_batch, relations_probs_batch):
-            entity, relation = self.entities_and_rels_from_templates(tokens)
-            if entity:
-                entity_triplets, entity_linking_confidences = self.linker(entity)
-                found = False
-                for entities, confidence in zip(entity_triplets, entity_linking_confidences):
-                    for rel_triplets in entities:
-                        relation_from_wiki = rel_triplets[0]
-                        if relation == relation_from_wiki:
-                            obj = rel_triplets[1]
-                            objects_batch.append(obj)
-                            confidences.append(confidence*relations_probs[0])
-                            found = True
-                            break
-                    if found:
-                        break
-                if not found:
-                    obj, confidence = self._fuzzy_search(tokens, tags, relations_probs)
-                    objects_batch.append(obj)
-                    confidences.append(confidence)
+            entity_from_template, relation_from_template = self.entities_and_rels_from_templates(tokens)
+            if entity_from_template:
+                entity_triplets, entity_linking_confidences = self.linker(entity_from_template)
+                relation_prob = 1.0
+                obj, confidence = self._match_triplet(entity_triplets,
+                                                      entity_linking_confidences,
+                                                      [relation_from_template],
+                                                      [relation_prob])
             else:
-                objects_batch.append('')
-                confidences.append(0.0)
+                entity_from_ner = self.extract_entities(tokens, tags)
+                entity_triplets, entity_linking_confidences = self.linker(entity_from_ner)
+                top_k_relations, top_k_probs = self._parse_relations_probs(relations_probs)
+                obj, confidence = self._match_triplet(entity_triplets,
+                                                      entity_linking_confidences,
+                                                      top_k_relations,
+                                                      top_k_probs)
+            objects_batch.append(obj)
+            confidences_batch.append(confidence)
         word_batch = []
 
         for n, obj in enumerate(objects_batch):
@@ -122,19 +119,18 @@ class KBAnswerParserWikidata(Component, Serializable):
                     word_batch.append(obj)
             else:
                 word_batch.append('Not Found')
-                confidences[n] = 0.0
+                confidences_batch[n] = 0.0
+        if self.return_confidences:
+            return word_batch, confidences_batch
+        else:
+            return word_batch
 
-        return word_batch
-
-    def _fuzzy_search(self, tokens, tags, relations_probs):
-        entity = self.extract_entities(tokens, tags)
-        entity_triplets, entity_linking_confidences = self.linker(entity)
-        relations = self._parse_relations_probs(relations_probs)
+    @staticmethod
+    def _match_triplet(entity_triplets, entity_linking_confidences, relations, relations_probs):
         obj = ''
         confidence = 0.0
-        max_entities_to_search = 5
         for predicted_relation, rel_prob in zip(relations, relations_probs):
-            for entities, linking_confidence in zip(entity_triplets[:max_entities_to_search], entity_linking_confidences[:max_entities_to_search]):
+            for entities, linking_confidence in zip(entity_triplets, entity_linking_confidences):
                 for rel_triplets in entities:
                     relation_from_wiki = rel_triplets[0]
                     if predicted_relation == relation_from_wiki:
@@ -143,11 +139,11 @@ class KBAnswerParserWikidata(Component, Serializable):
                         return obj, confidence
         return obj, confidence
 
-    def _parse_relations_probs(self, probas: List[float]) -> List[str]:
-        top_k_inds = np.asarray(probas).argsort()[-self.top_k_classes:][::-1]  # Make it top n and n to the __init__
+    def _parse_relations_probs(self, probs: List[float]) -> List[str]:
+        top_k_inds = np.asarray(probs).argsort()[-self.top_k_classes:][::-1]
         top_k_classes = [self.classes[k] for k in top_k_inds]
-
-        return top_k_classes
+        top_k_probs = [self.probs[k] for k in top_k_inds]
+        return top_k_classes, top_k_probs
 
     def extract_entities(self, tokens, tags):
         entity = []
