@@ -101,29 +101,34 @@ class KBAnswerParserWikidata(Component, Serializable):
                                                       top_k_probs)
             objects_batch.append(obj)
             confidences_batch.append(confidence)
-        word_batch = []
 
+        parsed_objects_batch, confidences_batch = self._parse_wikidata_object(objects_batch, confidences_batch)
+        if self.return_confidences:
+            return parsed_objects_batch, confidences_batch
+        else:
+            return parsed_objects_batch
+
+    def _parse_wikidata_object(self, objects_batch, confidences_batch):
+        parsed_objects = []
         for n, obj in enumerate(objects_batch):
             if len(obj) > 0:
                 if obj.startswith('Q'):
                     if obj in self._q_to_name:
-                        word = self._q_to_name[obj]["name"]
-                        word_batch.append(word)
+                        parsed_object = self._q_to_name[obj]["name"]
+                        parsed_objects.append(parsed_object)
                     else:
-                        word_batch.append('Not Found')
+                        parsed_objects.append('Not Found')
+                        confidences_batch[n] = 0.0
                 elif obj.count('-') == 2 and int(obj.split('-')[0]) > 1000:
                     dt = datetime.strptime(obj, "%Y-%m-%d")
-                    obj = dt.strftime("%d %B %Y")
-                    word_batch.append(obj)
+                    parsed_object = dt.strftime("%d %B %Y")
+                    parsed_objects.append(parsed_object)
                 else:
-                    word_batch.append(obj)
+                    parsed_objects.append(obj)
             else:
-                word_batch.append('Not Found')
+                parsed_objects.append('Not Found')
                 confidences_batch[n] = 0.0
-        if self.return_confidences:
-            return word_batch, confidences_batch
-        else:
-            return word_batch
+        return parsed_objects, confidences_batch
 
     @staticmethod
     def _match_triplet(entity_triplets, entity_linking_confidences, relations, relations_probs):
