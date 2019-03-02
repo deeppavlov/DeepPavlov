@@ -150,7 +150,8 @@ class KBAnswerParserWikidata(Component, Serializable):
         top_k_probs = [self.probs[k] for k in top_k_inds]
         return top_k_classes, top_k_probs
 
-    def extract_entities(self, tokens, tags):
+    @staticmethod
+    def extract_entities(tokens, tags):
         entity = []
         for j, tok in enumerate(tokens):
             if tags[j] != 0:
