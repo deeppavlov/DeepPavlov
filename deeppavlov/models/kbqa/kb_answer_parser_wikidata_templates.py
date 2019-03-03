@@ -39,8 +39,9 @@ class KBAnswerParserWikidata(Component, Serializable):
     """
 
     def __init__(self, load_path: str, top_k_classes: int, classes_vocab_keys: Tuple,
-                 debug: bool = False, relations_maping_filename=None, entities_filename=None,
-                 wiki_filename=None, templates_filename=None, return_confidences=True, *args, **kwargs) -> None:
+                 debug: bool = False, relations_maping_filename: str = None, entities_filename: str = None,
+                 wiki_filename: str = None, templates_filename: str = None, return_confidences: bool = True, *args,
+                 **kwargs) -> None:
         super().__init__(save_path=None, load_path=load_path)
         self.top_k_classes = top_k_classes
         self.classes = list(classes_vocab_keys)
@@ -72,12 +73,12 @@ class KBAnswerParserWikidata(Component, Serializable):
         with open(self.load_path.parent / self._templates_filename, 'rb') as t:
             self.templates = pickle.load(t)
 
-    def save(self):
+    def save(self) -> None:
         pass
 
     def __call__(self, tokens_batch: List[List[str]],
                  tags_batch: List[List[int]],
-                 relations_probs_batch: List[List[str]],
+                 relations_probs_batch: List[List[float]],
                  *args, **kwargs) -> List[str]:
 
         objects_batch = []
@@ -108,7 +109,9 @@ class KBAnswerParserWikidata(Component, Serializable):
         else:
             return parsed_objects_batch
 
-    def _parse_wikidata_object(self, objects_batch, confidences_batch):
+    def _parse_wikidata_object(self,
+                               objects_batch: List[str],
+                               confidences_batch: List[float]) -> Tuple[List[str], List[float]]:
         parsed_objects = []
         for n, obj in enumerate(objects_batch):
             if len(obj) > 0:
@@ -131,7 +134,10 @@ class KBAnswerParserWikidata(Component, Serializable):
         return parsed_objects, confidences_batch
 
     @staticmethod
-    def _match_triplet(entity_triplets, entity_linking_confidences, relations, relations_probs):
+    def _match_triplet(entity_triplets: List[List[str]],
+                       entity_linking_confidences: List[float],
+                       relations: List[int],
+                       relations_probs: List[float]) -> Tuple[str, float]:
         obj = ''
         confidence = 0.0
         for predicted_relation, rel_prob in zip(relations, relations_probs):
@@ -151,7 +157,7 @@ class KBAnswerParserWikidata(Component, Serializable):
         return top_k_classes, top_k_probs
 
     @staticmethod
-    def extract_entities(tokens, tags):
+    def extract_entities(tokens: List[str], tags: List[str]) -> str:
         entity = []
         for j, tok in enumerate(tokens):
             if tags[j] != 0:  # TODO: replace with tag 'O' (not necessary 0)
@@ -160,7 +166,7 @@ class KBAnswerParserWikidata(Component, Serializable):
 
         return entity
 
-    def entities_and_rels_from_templates(self, tokens):
+    def entities_and_rels_from_templates(self, tokens: List[List[str]]) -> Tuple[str, int]:
         s_sanitized = ' '.join([ch for ch in tokens if ch not in punctuation]).lower()
         ent = ''
         relation = ''
@@ -171,5 +177,4 @@ class KBAnswerParserWikidata(Component, Serializable):
                 if len(ent_cand) < len(ent) or len(ent) == 0:
                     ent = ent_cand
                     relation = self.templates[template]
-
         return ent, relation
