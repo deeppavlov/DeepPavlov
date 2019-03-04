@@ -197,6 +197,9 @@
     ],
     "out": ["answers"]
   },
+  "train":{
+
+  },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",

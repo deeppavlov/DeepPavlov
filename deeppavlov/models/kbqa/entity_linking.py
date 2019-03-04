@@ -23,7 +23,7 @@ class EntityLinker:
         self.wikidata = wikidata
         self.morph = pymorphy2.MorphAnalyzer()
 
-    def __call__(self, entity):
+    def __call__(self, entity, question_tokens):
 
         if not entity:
             wiki_entities = ["None"]
@@ -31,15 +31,16 @@ class EntityLinker:
             candidate_entities = self.find_candidate_entities(entity)
 
             srtd_cand_ent = sorted(candidate_entities, key=lambda x: x[2], reverse=True)
+            print(srtd_cand_ent)
             if len(srtd_cand_ent) > 0:
                 wiki_entities = [srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))]
                 confidences = [1.0 for i in range(len(srtd_cand_ent))]
             else:
-                candidates = self.substring_entity_search(entity, self.name_to_q)
+                candidates = self.substring_entity_search(entity)
                 candidates = list(set(candidates))
                 srtd_cand_ent = sorted(candidates, key=lambda x: x[2], reverse=True)
                 if len(srtd_cand_ent) > 0:
-                    candidates = self.fuzzy_entity_search(entity, self.name_to_q)
+                    candidates = self.fuzzy_entity_search(entity)
                     candidates = list(set(candidates))
                     srtd_cand_ent = sorted(candidates, key=lambda x: x[1], reverse=True)
 
@@ -50,7 +51,10 @@ class EntityLinker:
                     wiki_entities = ["None"]
                     confidences = [0.0]
 
-        entity_triplets = self.extract_triplets_from_wiki(wiki_entities)
+        print(wiki_entities)
+
+        entity_triplets = self.extract_triplets_from_wiki(wiki_entities, question_tokens)
+        
         return entity_triplets, confidences
 
     def find_candidate_entities(self, entity):
@@ -100,12 +104,26 @@ class EntityLinker:
                     candidates.append(cand)
         return candidates
 
-    def extract_triplets_from_wiki(self, entity_ids):
+    def extract_triplets_from_wiki(self, entity_ids, question_tokens):
+        question_begin = question_tokens[0].lower() + ' ' + question_tokens[1].lower()
+        what_is_templates = ['что такое', 'что есть', 'что означает', 'что значит']
         entity_triplets = []
         for entity_id in entity_ids:
             if entity_id in self.wikidata and entity_id.startswith('Q'):
-                entity_triplets.append(self.wikidata[entity_id])
+                triplets_for_entity = self.wikidata[entity_id]
+                entity_is_human = False
+                property_is_instance_of = "P31"
+                id_for_entity_human = "Q5"
+                for triplet in triplets_for_entity:
+                    if triplet[0] == property_is_instance_of and triplet[1] == id_for_entity_human:
+                        entity_is_human = True
+                        break
+                
+                if question_begin in what_is_templates and entity_is_human == True:
+                    continue
+                entity_triplets.append(triplets_for_entity)
             else:
                 entity_triplets.append([])
 
         return entity_triplets
+
