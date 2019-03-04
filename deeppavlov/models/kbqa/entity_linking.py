@@ -31,7 +31,6 @@ class EntityLinker:
             candidate_entities = self.find_candidate_entities(entity)
 
             srtd_cand_ent = sorted(candidate_entities, key=lambda x: x[2], reverse=True)
-            print(srtd_cand_ent)
             if len(srtd_cand_ent) > 0:
                 wiki_entities = [srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))]
                 confidences = [1.0 for i in range(len(srtd_cand_ent))]
@@ -50,8 +49,6 @@ class EntityLinker:
                 else:
                     wiki_entities = ["None"]
                     confidences = [0.0]
-
-        print(wiki_entities)
 
         entity_triplets = self.extract_triplets_from_wiki(wiki_entities, question_tokens)
         

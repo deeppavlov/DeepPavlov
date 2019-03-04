@@ -90,7 +90,7 @@ class KBAnswerParserWikidata(Component, Serializable):
             else:
                 entity_from_template = None
             if entity_from_template:
-                entity_triplets, entity_linking_confidences = self.linker(entity_from_template)
+                entity_triplets, entity_linking_confidences = self.linker(entity_from_template, tokens)
                 relation_prob = 1.0
                 obj, confidence = self._match_triplet(entity_triplets,
                                                       entity_linking_confidences,
@@ -98,7 +98,7 @@ class KBAnswerParserWikidata(Component, Serializable):
                                                       [relation_prob])
             else:
                 entity_from_ner = self.extract_entities(tokens, tags)
-                entity_triplets, entity_linking_confidences = self.linker(entity_from_ner)
+                entity_triplets, entity_linking_confidences = self.linker(entity_from_ner, tokens)
                 top_k_relations, top_k_probs = self._parse_relations_probs(relations_probs)
                 obj, confidence = self._match_triplet(entity_triplets,
                                                       entity_linking_confidences,
