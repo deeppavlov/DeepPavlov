@@ -37,14 +37,6 @@ class ChitchatOdqaSelector(SkillSelector):
 
         """
         response = self.rest_caller(payload=state)
-
-        # TODO put this functionality to configs.dp_assistant.sselector_chitchat_odqa skill,
-        # TODO so it would return only classes names
-        skill_names = []
-        for el in response:
-            probas = el['chitchat_odqa']['y_pred_probas']
-            if probas[0] > probas[1]:
-                skill_names.append('chitchat')
-            else:
-                skill_names.append('odqa')
+        # TODO refactor riseapi so it would not return keys?
+        skill_names = [el[self.rest_caller.names[0]]['skill_names'] for el in response]
         return skill_names

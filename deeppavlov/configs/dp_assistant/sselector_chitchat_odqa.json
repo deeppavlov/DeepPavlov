@@ -128,10 +128,15 @@
         "ref": "my_one_hotter",
         "in": "y_pred_ids",
         "out": "y_pred_onehot"
+      },
+      {
+        "class_name": "keras_probas_converter",
+        "in": "y_pred_probas",
+        "out": "skill_names"
       }
     ],
     "out": [
-      "y_pred_probas"
+      "skill_names"
     ]
   },
   "train": {

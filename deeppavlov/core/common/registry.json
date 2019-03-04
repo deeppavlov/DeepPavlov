@@ -50,6 +50,7 @@
   "insurance_reader": "deeppavlov.dataset_readers.insurance_reader:InsuranceReader",
   "kenlm_elector": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
   "keras_classification_model": "deeppavlov.models.classifiers.keras_classification_model:KerasClassificationModel",
+  "keras_probas_converter": "deeppavlov.models.preprocessors.dp_assistant_preprocessors:KerasClassificationProbasConverter",
   "knowledge_base": "deeppavlov.models.seq2seq_go_bot.kb:KnowledgeBase",
   "knowledge_base_entity_normalizer": "deeppavlov.models.seq2seq_go_bot.kb:KnowledgeBaseEntityNormalizer",
   "kvret_dialog_iterator": "deeppavlov.dataset_iterators.kvret_dialog_iterator:KvretDialogDatasetIterator",
