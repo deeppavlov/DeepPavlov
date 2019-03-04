@@ -126,7 +126,7 @@ PARAMS = {
             ]
     },
     "kbqa": {
-        ("kbqa/kbqa_mix_lowercase_templates.json", "kbqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("kbqa/kbqa_rus.json", "kbqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "elmo_embedder": {
         ("elmo_embedder/elmo_ru-news.json", "elmo_embedder_ru-news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
