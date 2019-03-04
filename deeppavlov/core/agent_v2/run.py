@@ -1,4 +1,5 @@
 from datetime import datetime
+from os import getenv
 from typing import Collection, Optional, List
 
 from telebot.types import Message, Location, User
@@ -61,5 +62,4 @@ def model_function():
     return infer
 
 
-experimental_bot(model_function, token='',
-                 proxy='')
+experimental_bot(model_function, token=getenv('TELEGRAM_TOKEN'), proxy=getenv('TELEGRAM_PROXY'))
