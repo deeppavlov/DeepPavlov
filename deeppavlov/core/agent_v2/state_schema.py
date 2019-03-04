@@ -14,9 +14,14 @@ class User(DynamicDocument):
                 'personality': self.personality}
 
 
+class Bot(User):
+    user_type = StringField(required=True, choices=['bot'], default='bot')
+
+
 class Human(User):
+    user_type = StringField(required=True, choices=['human'], default='human')
     user_telegram_id = StringField(required=True, unique=True, sparse=True)
-    device_type = DynamicField()
+    # device_type = DynamicField()
     profile = DictField(required=True, default={
         "name": None,
         "gender": None,
@@ -32,7 +37,7 @@ class Human(User):
         return {'id': str(self.id),
                 'user_telegram_id': str(self.user_telegram_id),
                 'user_type': self.user_type,
-                'device_type': self.device_type,
+                # 'device_type': self.device_type,
                 'personality': self.personality,
                 'profile': self.profile}
 
@@ -72,15 +77,16 @@ class BotUtterance(Utterance):
 class Dialog(DynamicDocument):
     location = DynamicField()
     utterances = ListField(ReferenceField(Utterance), required=True, default=[])
-    users = ListField(ReferenceField(User), required=True)
-    channel_type = StringField(choices=['telegram', 'vkontakte', 'facebook'], default='telegram')
+    user = ReferenceField(Human, required=True)
+    bot = ReferenceField(Bot, required=True)
+    channel_type = StringField(choices=['telegram', 'vk', 'facebook'], default='telegram')
 
     def to_dict(self):
         return {
             'id': str(self.id),
             'location': self.location,
             'utterances': [utt.to_dict() for utt in self.utterances],
-            'user': [u.to_dict() for u in self.users if u.user_type == 'human'][0],
-            'bot': [u.to_dict() for u in self.users if u.user_type == 'bot'][0],
+            'user': self.user.to_dict(),
+            'bot': self.bot.to_dict(),
             'channel_type': self.channel_type
         }
