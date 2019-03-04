@@ -23,6 +23,8 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from pathlib import Path
 from datetime import datetime
+from string import punctuation
+from deeppavlov.models.kbqa.entity_linking import EntityLinker
 
 log = getLogger(__name__)
 
@@ -37,16 +39,25 @@ class KBAnswerParserWikidata(Component, Serializable):
     """
 
     def __init__(self, load_path: str, top_k_classes: int, classes_vocab_keys: Tuple,
-                 debug: bool = False, relations_maping_filename=None, *args, **kwargs) -> None:
+                 debug: bool = False, relations_maping_filename: str = None, entities_filename: str = None,
+                 wiki_filename: str = None, templates_filename: str = None, return_confidences: bool = True, *args,
+                 **kwargs) -> None:
         super().__init__(save_path=None, load_path=load_path)
         self.top_k_classes = top_k_classes
         self.classes = list(classes_vocab_keys)
         self._debug = debug
         self._relations_filename = relations_maping_filename
-
+        self._entities_filename = entities_filename
+        self._wiki_filename = wiki_filename
+        self._templates_filename = templates_filename
         self._q_to_name = None
         self._relations_mapping = None
+        self.name_to_q = None
+        self.wikidata = None
+        self.templates = None
+        self.return_confidences = return_confidences
         self.load()
+        self.linker = EntityLinker(self.name_to_q, self.wikidata)
 
     def load(self) -> None:
         load_path = Path(self.load_path).expanduser()
@@ -55,80 +66,117 @@ class KBAnswerParserWikidata(Component, Serializable):
         if self._relations_filename is not None:
             with open(self.load_path.parent / self._relations_filename, 'rb') as f:
                 self._relations_mapping = pickle.load(f)
+        with open(self.load_path.parent / self._entities_filename, 'rb') as e:
+            self.name_to_q = pickle.load(e)
+        with open(self.load_path.parent / self._wiki_filename, 'rb') as w:
+            self.wikidata = pickle.load(w)
+        if self._templates_filename is not None:
+            with open(self.load_path.parent / self._templates_filename, 'rb') as t:
+                self.templates = pickle.load(t)
 
-    def save(self):
+    def save(self) -> None:
         pass
 
-    def __call__(self, relations_probs_batch: List[List[str]],
-                 entity_triplets_batch: List[List[List[str]]],
-                 confidences_batch: List[List[float]],
+    def __call__(self, tokens_batch: List[List[str]],
+                 tags_batch: List[List[int]],
+                 relations_probs_batch: List[List[float]],
                  *args, **kwargs) -> List[str]:
 
-        relations_batch = self._parse_relations_probs(relations_probs_batch)
-        if self._debug:
-            if self._relations_mapping is not None:
-                relations_batch_descriptions = []
-                for relations in relations_batch:
-                    relations_batch_descriptions.append([self._relations_mapping.get(r, r) for r in relations])
-            else:
-                relations_batch_descriptions = relations_batch
-            log.debug(f'Top-k relations extracted: {relations_batch_descriptions}')
         objects_batch = []
-
-        found_rel_prob = []
-        found_entity_prob = []
-        for rel_list, entity_triplets, relations_probs, confidences in zip(relations_batch, entity_triplets_batch, relations_probs_batch, confidences_batch):
-            found = False
-            for predicted_relation, rel_prob in zip(rel_list, relations_probs):
-                for n, entities in enumerate(entity_triplets):
-                    for rel_triplets in entities:
-                        relation_from_wiki = rel_triplets[0]
-                        if predicted_relation == relation_from_wiki:
-                            obj = rel_triplets[1]
-                            found_rel_prob.append(rel_prob)
-                            found_entity_prob.append(confidences[n])
-                            found = True
-                            break
-                    if found or n == 5:
-                        break
-                if found:
-                    break
-            if not found:
-                obj = ''
-                found_rel_prob.append(0.0)
-                found_entity_prob.append(0.0)
+        confidences_batch = []
+        for tokens, tags, relations_probs in zip(tokens_batch, tags_batch, relations_probs_batch):
+            if self._templates_filename is not None:
+                entity_from_template, relation_from_template = self.entities_and_rels_from_templates(tokens)
+            if entity_from_template:
+                entity_triplets, entity_linking_confidences = self.linker(entity_from_template)
+                relation_prob = 1.0
+                obj, confidence = self._match_triplet(entity_triplets,
+                                                      entity_linking_confidences,
+                                                      [relation_from_template],
+                                                      [relation_prob])
+            else:
+                entity_from_ner = self.extract_entities(tokens, tags)
+                entity_triplets, entity_linking_confidences = self.linker(entity_from_ner)
+                top_k_relations, top_k_probs = self._parse_relations_probs(relations_probs)
+                obj, confidence = self._match_triplet(entity_triplets,
+                                                      entity_linking_confidences,
+                                                      top_k_relations,
+                                                      top_k_probs)
             objects_batch.append(obj)
+            confidences_batch.append(confidence)
 
-        final_confidences = []
-        for conf_rel, conf_ent in zip(found_rel_prob, found_entity_prob):
-            final_confidences.append(conf_rel*conf_ent*100)
+        parsed_objects_batch, confidences_batch = self._parse_wikidata_object(objects_batch, confidences_batch)
+        if self.return_confidences:
+            return parsed_objects_batch, confidences_batch
+        else:
+            return parsed_objects_batch
 
-        word_batch = []
-
+    def _parse_wikidata_object(self,
+                               objects_batch: List[str],
+                               confidences_batch: List[float]) -> Tuple[List[str], List[float]]:
+        parsed_objects = []
         for n, obj in enumerate(objects_batch):
             if len(obj) > 0:
                 if obj.startswith('Q'):
                     if obj in self._q_to_name:
-                        word = self._q_to_name[obj]["name"]
-                        word_batch.append(word)
+                        parsed_object = self._q_to_name[obj]["name"]
+                        parsed_objects.append(parsed_object)
                     else:
-                        word_batch.append('Not Found')
+                        parsed_objects.append('Not Found')
+                        confidences_batch[n] = 0.0
                 elif obj.count('-') == 2 and int(obj.split('-')[0]) > 1000:
                     dt = datetime.strptime(obj, "%Y-%m-%d")
-                    obj = dt.strftime("%d %B %Y")
-                    word_batch.append(obj)
+                    parsed_object = dt.strftime("%d %B %Y")
+                    parsed_objects.append(parsed_object)
                 else:
-                    word_batch.append(obj)
+                    parsed_objects.append(obj)
             else:
-                word_batch.append('Not Found')
-                final_confidences[n] = 0
+                parsed_objects.append('Not Found')
+                confidences_batch[n] = 0.0
+        return parsed_objects, confidences_batch
 
-        return word_batch, final_confidences
+    @staticmethod
+    def _match_triplet(entity_triplets: List[List[str]],
+                       entity_linking_confidences: List[float],
+                       relations: List[int],
+                       relations_probs: List[float]) -> Tuple[str, float]:
+        obj = ''
+        confidence = 0.0
+        for predicted_relation, rel_prob in zip(relations, relations_probs):
+            for entities, linking_confidence in zip(entity_triplets, entity_linking_confidences):
+                for rel_triplets in entities:
+                    relation_from_wiki = rel_triplets[0]
+                    if predicted_relation == relation_from_wiki:
+                        obj = rel_triplets[1]
+                        confidence = linking_confidence * rel_prob
+                        return obj, confidence
+        return obj, confidence
 
-    def _parse_relations_probs(self, probas_batch: List[List[float]]) -> List[List[str]]:
-        top_k_batch = []
-        for probas in probas_batch:
-            top_k_inds = np.asarray(probas).argsort()[-self.top_k_classes:][::-1]  # Make it top n and n to the __init__
-            top_k_classes = [self.classes[k] for k in top_k_inds]
-            top_k_batch.append(top_k_classes)
-        return top_k_batch
+    def _parse_relations_probs(self, probs: List[float]) -> List[str]:
+        top_k_inds = np.asarray(probs).argsort()[-self.top_k_classes:][::-1]
+        top_k_classes = [self.classes[k] for k in top_k_inds]
+        top_k_probs = [probs[k] for k in top_k_inds]
+        return top_k_classes, top_k_probs
+
+    @staticmethod
+    def extract_entities(tokens: List[str], tags: List[str]) -> str:
+        entity = []
+        for j, tok in enumerate(tokens):
+            if tags[j] != 0:  # TODO: replace with tag 'O' (not necessary 0)
+                entity.append(tok)
+        entity = ' '.join(entity)
+
+        return entity
+
+    def entities_and_rels_from_templates(self, tokens: List[List[str]]) -> Tuple[str, int]:
+        s_sanitized = ' '.join([ch for ch in tokens if ch not in punctuation]).lower()
+        ent = ''
+        relation = ''
+        for template in self.templates:
+            template_start, template_end = template.lower().split('xxx')
+            if s_sanitized.startswith(template_start) and s_sanitized.endswith(template_end):
+                ent_cand = s_sanitized[len(template_start): -len(template_end) or len(s_sanitized)]
+                if len(ent_cand) < len(ent) or len(ent) == 0:
+                    ent = ent_cand
+                    relation = self.templates[template]
+        return ent, relation

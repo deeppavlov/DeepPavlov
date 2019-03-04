@@ -14,6 +14,7 @@
 
 from fuzzywuzzy import fuzz
 import pymorphy2
+import itertools
 
 
 class EntityLinker:
@@ -56,18 +57,23 @@ class EntityLinker:
         candidate_entities = []
         candidate_entities += self.name_to_q.get(entity, [])
         entity_split = entity.split(' ')
-        for tok in entity_split:
-            entity_lemm = []
-            for tok_2 in entity_split:
-                if tok_2 == tok:
-                    morph_parse_tok = self.morph.parse(tok_2)[0]
-                    lemmatized_tok = morph_parse_tok.normal_form
-                    entity_lemm.append(lemmatized_tok)
-                else:
-                    entity_lemm.append(tok_2)
-            entity_lemm = ' '.join(entity_lemm)
-            if entity_lemm != entity:
-                candidate_entities += self.name_to_q.get(entity_lemm, [])
+        if len(entity_split) < 6:
+            entity_lemm_tokens = []
+            for tok in entity_split:
+                morph_parse_tok = self.morph.parse(tok)[0]
+                lemmatized_tok = morph_parse_tok.normal_form
+                entity_lemm_tokens.append(lemmatized_tok)
+            masks = itertools.product('01', repeat = len(entity_split))
+            for mask in masks:
+                entity_lemm = []
+                for i in range(len(entity_split)):
+                    if mask[i] == 0:
+                        entity_lemm.append(entity_split[i])
+                    else:
+                        entity_lemm.append(entity_lemm_tokens[i])
+                entity_lemm = ' '.join(entity_lemm)
+                if entity_lemm != entity:
+                    candidate_entities += self.name_to_q.get(entity_lemm, [])
 
         return candidate_entities
 
