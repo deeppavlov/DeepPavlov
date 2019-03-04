@@ -84,10 +84,7 @@ class SimilarityMatchingSkill(Skill):
         Returns:
             Batches of the skill inference results and estimated confidences.
         """
-        model_result = self.model(utterances_batch)
-
-        responses = [r for r in model_result[0]]
-        confidences = [r for r in model_result[1]]
+        responses, confidences = self.model(utterances_batch)
 
         # in case if model returns not the highest probability, but the whole distribution
         if isinstance(confidences[0], list):
