@@ -49,7 +49,7 @@ class EntityLinker:
                     wiki_entities = ["None"]
                     confidences = [0.0]
 
-        entity_triplets = self.extract_triplets_from_wiki(wiki_entities, self.wikidata)
+        entity_triplets = self.extract_triplets_from_wiki(wiki_entities)
         return entity_triplets, confidences
 
     def find_candidate_entities(self, entity):
