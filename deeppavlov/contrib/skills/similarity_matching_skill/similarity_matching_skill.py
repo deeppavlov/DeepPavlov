@@ -89,7 +89,7 @@ class SimilarityMatchingSkill(Skill):
         responses = [r for r in model_result[0]]
         confidences = [r for r in model_result[1]]
 
-        # in case if model returns not the highest probability, but the hole distribution
+        # in case if model returns not the highest probability, but the whole distribution
         if isinstance(confidences[0], list):
             confidences = [max(c) for c in confidences]
 
