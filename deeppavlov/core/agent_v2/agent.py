@@ -28,11 +28,12 @@ class Agent:
         annotations = self.preprocessor(self.state_manager.get_state(informative_dialogs), should_reset)
         for utt, ann in zip(me_utterances, annotations):
             utt.annotations = ann
+
         state = self.state_manager.get_state(me_dialogs)
 
-        responses = self.skill_manager(state)
+        skill_names, utterances, confidences = self.skill_manager(state)
 
-        # TODO
-        # After response is chosen for each dialog in the state, dialog objects should be updated and saved to DB.
+        self.state_manager.add_bot_utterances(me_dialogs, utterances, [datetime.utcnow()] * len(me_dialogs),
+                                              skill_names, confidences)
 
-        return responses[1]  # return text only to the users
+        return utterances  # return text only to the users
