@@ -1,4 +1,4 @@
-from typing import Sequence, Hashable, Any, Collection
+from typing import Sequence, Hashable, Any
 
 from deeppavlov.core.agent_v2.state_schema import User, Human, Utterance, BotUtterance, Dialog
 from deeppavlov.core.agent_v2.connection import state_storage
@@ -61,7 +61,7 @@ class StateManager:
         return utterances
 
     @classmethod
-    def add_bot_utterances(cls, dialogs: Collection[Dialog], texts, date_times, active_skills, confidences,
+    def add_bot_utterances(cls, dialogs: Sequence[Dialog], texts, date_times, active_skills, confidences,
                            annotations=None):
         if annotations is None:
             annotations = [None] * len(dialogs)
