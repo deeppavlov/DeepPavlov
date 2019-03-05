@@ -94,7 +94,7 @@ class EntityLinker:
 
         return candidate_entities
 
-    def fuzzy_entity_search(self, entity: str) -> List[str] -> List[Tuple[Tuple, str]]:
+    def fuzzy_entity_search(self, entity: str) -> List[Tuple[Tuple, str]]:
         word_length = len(entity)
         candidates = []
         for title in self.name_to_q:
