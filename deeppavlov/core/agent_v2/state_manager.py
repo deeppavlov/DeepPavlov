@@ -106,7 +106,7 @@ class StateManager:
 
     @staticmethod
     def create_new_utterance(text, user, date_time, annotations=None):
-        if user.user_type == 'bot':
+        if user.__class__.__name__ == 'Bot':
             raise RuntimeError(
                 'Utterances of bots should be created with different method. See create_new_bot_utterance()')
         utt = Utterance(text=text,
