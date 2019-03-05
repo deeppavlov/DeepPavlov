@@ -23,12 +23,13 @@ log = getLogger(__name__)
 
 class EntityLinker:
     def __init__(self, name_to_q: Dict[str, List[Tuple[str]]], wikidata: Dict[str, List[List[str]]],
-        lemmatize: bool = True, debug: bool = False) -> None:
+        lemmatize: bool = True, debug: bool = False, rule_filter_entities: bool = True) -> None:
         self.name_to_q = name_to_q
         self.wikidata = wikidata
         self.morph = pymorphy2.MorphAnalyzer()
         self.lemmatize = lemmatize
         self.debug = debug
+        self.rule_filter_entities = rule_filter_entities
 
     def __call__(self, entity: str, question_tokens: List[str]) -> Tuple[List[List[List[str]]], List[str]]:
 
@@ -66,9 +67,11 @@ class EntityLinker:
                         wiki_entities = ["None"]
                         confidences = [0.0]
 
-        entity_triplets = self.extract_triplets_from_wiki(wiki_entities, question_tokens)
+        entity_triplets = self.extract_triplets_from_wiki(wiki_entities)
+        if self.rule_filter_entities:
+            filtered_entity_triplets = self.filter_triplets(entity_triplets, question_tokens)
         
-        return entity_triplets, confidences
+        return filtered_entity_triplets, confidences
 
     def find_candidate_entities(self, entity: str) -> List[str]:
         candidate_entities = []
@@ -117,26 +120,32 @@ class EntityLinker:
                     candidates.append(cand)
         return candidates
 
-    def extract_triplets_from_wiki(self, entity_ids: List[str], question_tokens: List[str]) -> List[List[List[str]]]:
-        question_begin = question_tokens[0].lower() + ' ' + question_tokens[1].lower()
-        what_is_templates = ['что такое', 'что есть', 'что означает', 'что значит']
+    def extract_triplets_from_wiki(self, entity_ids: List[str]) -> List[List[List[str]]]:
         entity_triplets = []
         for entity_id in entity_ids:
             if entity_id in self.wikidata and entity_id.startswith('Q'):
                 triplets_for_entity = self.wikidata[entity_id]
-                entity_is_human = False
-                property_is_instance_of = "P31"
-                id_for_entity_human = "Q5"
-                for triplet in triplets_for_entity:
-                    if triplet[0] == property_is_instance_of and triplet[1] == id_for_entity_human:
-                        entity_is_human = True
-                        break
-                
-                if question_begin in what_is_templates and entity_is_human == True:
-                    continue
                 entity_triplets.append(triplets_for_entity)
             else:
                 entity_triplets.append([])
 
         return entity_triplets
+
+    def filter_triplets(self, entity_triplets: List[List[List[str]]], question_tokens: List[str]) -> List[List[List[str]]]:
+        question_begin = question_tokens[0].lower() + ' ' + question_tokens[1].lower()
+        what_is_templates = ['что такое', 'что есть', 'что означает', 'что значит']
+        filtered_entity_triplets = []
+        for triplets_for_entity in entity_triplets:
+            entity_is_human = False
+            property_is_instance_of = "P31"
+            id_for_entity_human = "Q5"
+            for triplet in triplets_for_entity:
+                if triplet[0] == property_is_instance_of and triplet[1] == id_for_entity_human:
+                    entity_is_human = True
+                    break
+            if question_begin in what_is_templates and entity_is_human == True:
+                continue
+            filtered_entity_triplets.append(triplets_for_entity)
+
+        return filtered_entity_triplets
 

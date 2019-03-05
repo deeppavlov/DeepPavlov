@@ -41,7 +41,7 @@ class KBAnswerParserWikidata(Component, Serializable):
     def __init__(self, load_path: str, top_k_classes: int, classes_vocab_keys: Tuple,
                  debug: bool = False, relations_maping_filename: str = None, entities_filename: str = None,
                  wiki_filename: str = None, templates_filename: str = None, return_confidences: bool = True,
-                 lemmatize: bool = True, *args, **kwargs) -> None:
+                 lemmatize: bool = True, rule_filter_entities: bool = False, *args, **kwargs) -> None:
         super().__init__(save_path=None, load_path=load_path)
         self.top_k_classes = top_k_classes
         self.classes = list(classes_vocab_keys)
@@ -57,8 +57,9 @@ class KBAnswerParserWikidata(Component, Serializable):
         self.templates = None
         self.return_confidences = return_confidences
         self.lemmatize = lemmatize
+        self.rule_filter_entities = rule_filter_entities
         self.load()
-        self.linker = EntityLinker(self.name_to_q, self.wikidata, self.lemmatize, self._debug)
+        self.linker = EntityLinker(self.name_to_q, self.wikidata, self.lemmatize, self._debug, self.rule_filter_entities)
 
     def load(self) -> None:
         load_path = Path(self.load_path).expanduser()
