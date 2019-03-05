@@ -44,7 +44,7 @@
         "learning_rate_drop_div": 2.0,
         "in": ["bert_features"],
         "in_y": ["ans_start", "ans_end"],
-        "out": ["ans_start_predicted", "ans_end_predicted", "logits"]
+        "out": ["ans_start_predicted", "ans_end_predicted", "logits", "score"]
       },
       {
         "class_name": "squad_bert_ans_postprocessor",

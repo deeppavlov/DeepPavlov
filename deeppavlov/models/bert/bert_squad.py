@@ -131,6 +131,8 @@ class BertSQuADModel(LRScheduledTFModel):
             outer = tf.matrix_band_part(outer, 0, max_ans_length)
             outer_logits = tf.matrix_band_part(outer_logits, 0, max_ans_length)
 
+            self.yp_score = 1 - tf.nn.softmax(logits_st)[:, 0] * tf.nn.softmax(logits_end)[:, 0]
+
             self.start_probs = start_probs
             self.end_probs = end_probs
             self.start_pred = tf.argmax(tf.reduce_max(outer, axis=2), axis=1)
@@ -212,8 +214,8 @@ class BertSQuADModel(LRScheduledTFModel):
         input_type_ids = [f.input_type_ids for f in features]
 
         feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids)
-        st, end, logits = self.sess.run([self.start_pred, self.end_pred, self.yp_logits], feed_dict=feed_dict)
-        return st, end, logits.tolist()
+        st, end, logits, scores = self.sess.run([self.start_pred, self.end_pred, self.yp_logits, self.yp_score], feed_dict=feed_dict)
+        return st, end, logits.tolist(), scores.tolist()
 
     def process_event(self, event_name: str, data) -> None:
         """

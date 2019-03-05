@@ -23,7 +23,7 @@
         "do_lower_case": false,
         "max_seq_length": 512,
         "in": ["context_raw", "question_raw"],
-        "out": ["ans_predicted", "ans_start_predicted", "logits"]
+        "out": ["ans_predicted", "ans_start_predicted", "logits", "score"]
       }
     ],
     "out": ["ans_predicted", "ans_start_predicted", "logits"]
