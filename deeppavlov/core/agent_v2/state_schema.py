@@ -3,23 +3,22 @@ from mongoengine import DynamicDocument, ReferenceField, ListField, StringField,
 
 
 class User(DynamicDocument):
-    user_type = StringField(required=True, choices=['human', 'bot'], default='human')
     personality = DynamicField()
 
     meta = {'allow_inheritance': True}
 
     def to_dict(self):
-        return {'id': str(self.id),
-                'user_type': self.user_type,
-                'personality': self.personality}
+        raise NotImplementedError
 
 
 class Bot(User):
-    user_type = StringField(required=True, choices=['bot'], default='bot')
+    def to_dict(self):
+        return {'id': str(self.id),
+                'user_type': 'bot',
+                'personality': self.personality}
 
 
 class Human(User):
-    user_type = StringField(required=True, choices=['human'], default='human')
     user_telegram_id = StringField(required=True, unique=True, sparse=True)
     device_type = DynamicField()
     profile = DictField(required=True, default={
@@ -36,7 +35,7 @@ class Human(User):
     def to_dict(self):
         return {'id': str(self.id),
                 'user_telegram_id': str(self.user_telegram_id),
-                'user_type': self.user_type,
+                'user_type': 'human',
                 'device_type': self.device_type,
                 'personality': self.personality,
                 'profile': self.profile}
