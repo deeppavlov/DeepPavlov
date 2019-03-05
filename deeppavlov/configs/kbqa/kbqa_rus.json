@@ -192,13 +192,19 @@
         "wiki_filename": "wiki_rus.pickle",
         "templates_filename": "templates.pickle",
         "debug": true,
-        "return_confidences": false
+        "return_confidences": false,
+        "lemmatize": true
       }
     ],
     "out": ["answers"]
   },
   "train":{
-
+    "metrics": [
+      {
+        "name": "kbqa_accuracy",
+        "inputs": ["y", "answers"]
+      }
+    ]
   },
   "metadata": {
     "variables": {

@@ -29,6 +29,6 @@ class Conll2003DatasetReader(DatasetReader):
         with file_name.open(encoding='utf8') as f:
             for line in f:
                 line_split = line.strip('\n').split('\t')
-                samples.append((line_split[0], line_split[1]))
+                samples.append((line_split[0], tuple(line_split[1:])))
 
         return samples

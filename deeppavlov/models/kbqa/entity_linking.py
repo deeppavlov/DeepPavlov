@@ -15,16 +15,22 @@
 from fuzzywuzzy import fuzz
 import pymorphy2
 import itertools
+from logging import getLogger
+
+log = getLogger(__name__)
 
 
 class EntityLinker:
-    def __init__(self, name_to_q, wikidata):
+    def __init__(self, name_to_q, wikidata, lemmatize, debug):
         self.name_to_q = name_to_q
         self.wikidata = wikidata
         self.morph = pymorphy2.MorphAnalyzer()
+        self.lemmatize = lemmatize
+        self.debug = debug
 
     def __call__(self, entity, question_tokens):
 
+        confidences = []
         if not entity:
             wiki_entities = ["None"]
         else:
@@ -33,22 +39,30 @@ class EntityLinker:
             srtd_cand_ent = sorted(candidate_entities, key=lambda x: x[2], reverse=True)
             if len(srtd_cand_ent) > 0:
                 wiki_entities = [srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))]
+                if self.debug:
+                    log.info("wiki entities %s" % (str(wiki_entities[:5])))
                 confidences = [1.0 for i in range(len(srtd_cand_ent))]
             else:
                 candidates = self.substring_entity_search(entity)
                 candidates = list(set(candidates))
                 srtd_cand_ent = sorted(candidates, key=lambda x: x[2], reverse=True)
                 if len(srtd_cand_ent) > 0:
+                    wiki_entities = [srtd_cand_ent[i][1] for i in range(len(srtd_cand_ent))]
+                    if self.debug:
+                        log.info("wiki entities %s" % (str(wiki_entities[:5])))
+                else:
                     candidates = self.fuzzy_entity_search(entity)
                     candidates = list(set(candidates))
                     srtd_cand_ent = sorted(candidates, key=lambda x: x[1], reverse=True)
 
-                if len(srtd_cand_ent) > 0:
-                    wiki_entities = [srtd_cand_ent[i][0][1] for i in range(len(srtd_cand_ent))]
-                    confidences = [srtd_cand_ent[i][1]*0.01 for i in range(len(srtd_cand_ent))]
-                else:
-                    wiki_entities = ["None"]
-                    confidences = [0.0]
+                    if len(srtd_cand_ent) > 0:
+                        wiki_entities = [srtd_cand_ent[i][0][1] for i in range(len(srtd_cand_ent))]
+                        if self.debug:
+                            log.info("wiki entities %s" % (str(wiki_entities[:5])))
+                        confidences = [float(srtd_cand_ent[i][1])*0.01 for i in range(len(srtd_cand_ent))]
+                    else:
+                        wiki_entities = ["None"]
+                        confidences = [0.0]
 
         entity_triplets = self.extract_triplets_from_wiki(wiki_entities, question_tokens)
         
@@ -58,7 +72,7 @@ class EntityLinker:
         candidate_entities = []
         candidate_entities += self.name_to_q.get(entity, [])
         entity_split = entity.split(' ')
-        if len(entity_split) < 6:
+        if len(entity_split) < 6 and self.lemmatize:
             entity_lemm_tokens = []
             for tok in entity_split:
                 morph_parse_tok = self.morph.parse(tok)[0]
