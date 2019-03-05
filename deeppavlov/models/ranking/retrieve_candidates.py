@@ -28,10 +28,12 @@ logger = getLogger(__name__)
 class RetrieveCandidates(Component):
 
     def __init__(self,
+                 num_context_tuns: int = 10,
                  map_filename: str = None,
                  **kwargs):
         map_filename = expand_path(map_filename)
         self.map = pickle.load(open(map_filename, 'rb'))
+        self.num_context_turns = num_context_tuns
 
 
     def __call__(self, context_batch, index_batch, scores_batch):
@@ -51,7 +53,7 @@ class RetrieveCandidates(Component):
             candidates2 = [(kk, self.map[id][1]) for kk,id in enumerate(ids)]
             contexts = [(kk, self.map[id][0]) for kk,id in enumerate(ids)]
             scores = [(kk,"{:.2f}".format(j)) for kk,j in enumerate(scores_batch[idx])]
-            # logger.debug("[tf-idf] \nscores:" + str(scores[:100]) + "\ncontext:" + str(contexts[:100]) + "\nresponses:" + str(candidates2[:100]))  # DEBUG
+            # logger.debug("[tf-idf] \nscores:" + str(scores[:15]) + "\ncontext:" + str(contexts[:15]) + "\nresponses:" + str(candidates2[:15]))  # DEBUG
 
             candidates_batch.append(candidates)
 
@@ -59,11 +61,15 @@ class RetrieveCandidates(Component):
         for i in range(len(context_batch)):
             # HACK: check invalid input string (when tf-idf score are zeros)
             if all(np.asarray(scores_batch[i]) == 0.0001):
-                context_batch[i] = [''] * 9 + ['Давай подумаем над этим вместе, я пока не на все вопросы умею отвечать.']
+                context_batch[i] = [''] * (self.num_context_turns - 1) +\
+                                   ['Давай подумаем над этим вместе, я пока не на все вопросы умею отвечать.']
 
             item = context_batch[i]
             item.extend(candidates_batch[i])  # append several response candidates to the each context
             model_inputs.append(item)
+
+            # DEBUG
+            # logger.debug("model_inputs" + str(model_inputs[i]))
 
         # NOTE: candidates_batch shape = (batch_size, num_ranking_samples)
         # NOTE: model_inputs shape = (batch_size, num_context_turns+num_ranking_samples)

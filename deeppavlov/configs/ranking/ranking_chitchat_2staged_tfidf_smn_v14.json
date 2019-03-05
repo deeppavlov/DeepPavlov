@@ -7,6 +7,7 @@
         "info": "1. Replace separators from input string",
         "class_name": "compose_inputs_hybrid_ranker",
         "context_depth": 3,
+        "model_context_depth": 3,
         "use_user_context_only": true,
         "use_context_for_query": false,
         "in": ["utterances_batch", "history_batch", "states_batch"],
@@ -28,7 +29,7 @@
       {
         "info": "2. Find relevant contexts",
         "class_name": "tfidf_ranker",
-        "top_n": 1000,
+        "top_n": 2000,
         "in": ["query_batch"],
         "out": ["tfidf_doc_ids", "tfidf_doc_scores"],
         "vectorizer": "#vectorizer"
@@ -45,7 +46,7 @@
         "id": "preproc",
         "class_name": "siamese_preprocessor",
         "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v9/preproc/tok.dict",
-        "num_ranking_samples": 1000,
+        "num_ranking_samples": 2000,
         "num_context_turns": 10,
         "max_sequence_length": 50,
         "embedding_dim": 200,
@@ -85,7 +86,7 @@
         "embedding_dim": "#word2vec_embedder.dim",
         "emb_matrix": "#embeddings.emb_mat",
         "learning_rate": 1e-3,
-        "batch_size": 500,
+        "batch_size": 2000,
         "seed": 65,
         "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v9/model_smn/model",
         "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v9/model_smn/model"
