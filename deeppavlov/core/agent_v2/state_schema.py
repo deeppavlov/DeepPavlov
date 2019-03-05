@@ -21,7 +21,7 @@ class Bot(User):
 class Human(User):
     user_type = StringField(required=True, choices=['human'], default='human')
     user_telegram_id = StringField(required=True, unique=True, sparse=True)
-    # device_type = DynamicField()
+    device_type = DynamicField()
     profile = DictField(required=True, default={
         "name": None,
         "gender": None,
@@ -37,7 +37,7 @@ class Human(User):
         return {'id': str(self.id),
                 'user_telegram_id': str(self.user_telegram_id),
                 'user_type': self.user_type,
-                # 'device_type': self.device_type,
+                'device_type': self.device_type,
                 'personality': self.personality,
                 'profile': self.profile}
 
