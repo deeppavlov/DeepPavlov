@@ -28,6 +28,7 @@ class Agent:
         annotations = self.preprocessor(self.state_manager.get_state(informative_dialogs), should_reset)
         for utt, ann in zip(me_utterances, annotations):
             utt.annotations = ann
+            utt.save()
 
         state = self.state_manager.get_state(me_dialogs)
 
