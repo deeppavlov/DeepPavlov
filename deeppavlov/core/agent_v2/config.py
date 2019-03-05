@@ -7,7 +7,7 @@ SKILLS = [
     {
         "name": "odqa",
         "url": "http://0.0.0.0:2080/odqa",
-        "path": configs.dp_assistant.agent_ru_odqa_infer_wiki
+        "path": configs.dp_assistant.agent_ru_odqa_retr_noans_rubert_infer
     },
     {
         "name": "chitchat",
