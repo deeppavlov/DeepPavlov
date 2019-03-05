@@ -114,9 +114,9 @@ class StateManager:
 
     @staticmethod
     def create_new_bot_utterance(text, user, date_time, active_skill, confidence, annotations=None):
-        utt = Utterance(text=text, user=user, date_time=date_time,
-                        active_skill=active_skill, confidence=confidence,
-                        annotations=annotations or BotUtterance.annotations.default)
+        utt = BotUtterance(text=text, user=user, date_time=date_time,
+                           active_skill=active_skill, confidence=confidence,
+                           annotations=annotations or BotUtterance.annotations.default)
         utt.save()
         return utt
 
