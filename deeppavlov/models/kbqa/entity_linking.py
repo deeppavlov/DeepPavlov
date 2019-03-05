@@ -16,19 +16,21 @@ from fuzzywuzzy import fuzz
 import pymorphy2
 import itertools
 from logging import getLogger
+from typing import List, Dict, Tuple
 
 log = getLogger(__name__)
 
 
 class EntityLinker:
-    def __init__(self, name_to_q, wikidata, lemmatize, debug):
+    def __init__(self, name_to_q: Dict[str, List[Tuple[str]]], wikidata: Dict[str, List[List[str]]],
+        lemmatize: bool = True, debug: bool = False) -> None:
         self.name_to_q = name_to_q
         self.wikidata = wikidata
         self.morph = pymorphy2.MorphAnalyzer()
         self.lemmatize = lemmatize
         self.debug = debug
 
-    def __call__(self, entity, question_tokens):
+    def __call__(self, entity: str, question_tokens: List[str]) -> Tuple[List[List[List[str]]], List[str]]:
 
         confidences = []
         if not entity:
@@ -68,7 +70,7 @@ class EntityLinker:
         
         return entity_triplets, confidences
 
-    def find_candidate_entities(self, entity):
+    def find_candidate_entities(self, entity: str) -> List[str]:
         candidate_entities = []
         candidate_entities += self.name_to_q.get(entity, [])
         entity_split = entity.split(' ')
@@ -92,7 +94,7 @@ class EntityLinker:
 
         return candidate_entities
 
-    def fuzzy_entity_search(self, entity):
+    def fuzzy_entity_search(self, entity: str) -> List[str] -> List[Tuple[Tuple, str]]:
         word_length = len(entity)
         candidates = []
         for title in self.name_to_q:
@@ -105,7 +107,7 @@ class EntityLinker:
                         candidates.append((cand, fuzz.ratio(entity, cand[0])))
         return candidates
 
-    def substring_entity_search(self, entity):
+    def substring_entity_search(self, entity: str) -> List[Tuple[str]]:
         entity_lower = entity.lower()
         candidates = []
         for title in self.name_to_q:
@@ -115,7 +117,7 @@ class EntityLinker:
                     candidates.append(cand)
         return candidates
 
-    def extract_triplets_from_wiki(self, entity_ids, question_tokens):
+    def extract_triplets_from_wiki(self, entity_ids: List[str], question_tokens: List[str]) -> List[List[List[str]]]:
         question_begin = question_tokens[0].lower() + ' ' + question_tokens[1].lower()
         what_is_templates = ['что такое', 'что есть', 'что означает', 'что значит']
         entity_triplets = []

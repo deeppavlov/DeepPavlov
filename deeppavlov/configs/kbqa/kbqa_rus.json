@@ -193,7 +193,7 @@
         "templates_filename": "templates.pickle",
         "debug": true,
         "return_confidences": false,
-        "lemmatize": true
+        "lemmatize": false
       }
     ],
     "out": ["answers"]
