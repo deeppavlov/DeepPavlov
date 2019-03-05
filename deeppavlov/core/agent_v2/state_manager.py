@@ -1,6 +1,6 @@
 from typing import Sequence, Hashable, Any
 
-from deeppavlov.core.agent_v2.state_schema import User, Human, Utterance, BotUtterance, Dialog
+from deeppavlov.core.agent_v2.state_schema import Human, Utterance, BotUtterance, Dialog
 from deeppavlov.core.agent_v2.connection import state_storage
 from deeppavlov.core.agent_v2.bot import BOT
 from deeppavlov.core.agent_v2 import VERSION
@@ -97,8 +97,10 @@ class StateManager:
 
     @staticmethod
     def create_new_human(user_telegram_id, device_type, personality=None, profile=None):
-        human = Human(user_telegram_id=user_telegram_id, device_type=device_type,
-                      personality=personality, profile=profile or Human.profile.default)
+        human = Human(user_telegram_id=user_telegram_id,
+                      device_type=device_type,
+                      personality=personality,
+                      profile=profile or Human.profile.default)
         human.save()
         return human
 
@@ -107,15 +109,20 @@ class StateManager:
         if user.user_type == 'bot':
             raise RuntimeError(
                 'Utterances of bots should be created with different method. See create_new_bot_utterance()')
-        utt = Utterance(text=text, user=user, date_time=date_time,
+        utt = Utterance(text=text,
+                        user=user,
+                        date_time=date_time,
                         annotations=annotations or Utterance.annotations.default)
         utt.save()
         return utt
 
     @staticmethod
     def create_new_bot_utterance(text, user, date_time, active_skill, confidence, annotations=None):
-        utt = BotUtterance(text=text, user=user, date_time=date_time,
-                           active_skill=active_skill, confidence=confidence,
+        utt = BotUtterance(text=text,
+                           user=user,
+                           date_time=date_time,
+                           active_skill=active_skill,
+                           confidence=confidence,
                            annotations=annotations or BotUtterance.annotations.default)
         utt.save()
         return utt
