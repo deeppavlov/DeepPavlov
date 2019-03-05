@@ -17,15 +17,16 @@ from abc import abstractmethod
 from copy import deepcopy
 from logging import getLogger
 from typing import Optional, List, Union
-from overrides import overrides
 
 import numpy as np
 import tensorflow as tf
 from keras import backend as K
+from overrides import overrides
 
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.models.tf_backend import TfModelMeta
-from .lr_scheduled_model import LRScheduledModel
+from deeppavlov.core.models.lr_scheduled_model import LRScheduledModel
+
 
 log = getLogger(__name__)
 
