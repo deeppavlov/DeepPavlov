@@ -6,7 +6,7 @@
       {
         "info": "1. Replace separators from input string",
         "class_name": "compose_inputs_hybrid_ranker",
-        "context_depth": 3,
+        "context_depth": 1,
         "model_context_depth": 3,
         "use_user_context_only": true,
         "use_context_for_query": false,
