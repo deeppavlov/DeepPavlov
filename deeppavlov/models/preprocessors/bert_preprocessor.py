@@ -82,6 +82,9 @@ class BertNerPreprocessor(Component):
                  **kwargs):
         subword_tokens, subword_tok_ids, subword_masks, subword_tags = [], [], [], []
         for toks, ys in zip(tokens, tags):
+            assert len(toks) == len(ys), \
+                f"toks({len(toks)}) should have the same length as "\
+                f" ys({len(ys)}), tokens = {toks}."
             sw_toks, sw_mask, sw_ys = self._ner_bert_tokenize(toks,
                                                               [1] * len(toks),
                                                               ys,
@@ -103,7 +106,8 @@ class BertNerPreprocessor(Component):
             subword_tags.append(sw_ys)
             assert len(sw_mask) == len(sw_toks) == len(subword_tok_ids[-1]) == len(sw_ys),\
                 f"length of mask({len(sw_mask)}), tokens({len(sw_toks)}),"\
-                f" token ids({len(subword_tok_ids[-1])}) and ys({len(ys)}) should match"
+                f" token ids({len(subword_tok_ids[-1])}) and ys({len(ys)})"\
+                f" for tokens = `{toks}` should match"
         subword_tok_ids = zero_pad(subword_tok_ids, dtype=int, padding=0)
         subword_masks = zero_pad(subword_masks, dtype=int, padding=0)
         return subword_tokens, subword_tok_ids, subword_masks, subword_tags
@@ -114,13 +118,14 @@ class BertNerPreprocessor(Component):
                            tags: List[str],
                            tokenizer: FullTokenizer,
                            max_subword_len: int = None) -> Tuple[List[str], List[str]]:
-        tags_subword = ['X']
-        mask_subword = [0]
         tokens_subword = ['[CLS]']
+        mask_subword = [0]
+        tags_subword = ['X']
 
         for token, flag, tag in zip(tokens, mask, tags):
             subwords = tokenizer.tokenize(token)
-            if (max_subword_len is not None) and (len(subwords) > max_subword_len):
+            if not subwords or\
+                    ((max_subword_len is not None) and (len(subwords) > max_subword_len)):
                 tokens_subword.append('[UNK]')
                 mask_subword.append(0)
                 tags_subword.append('X')

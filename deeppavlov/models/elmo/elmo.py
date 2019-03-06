@@ -250,6 +250,7 @@ class ELMo(NNModel):
 
         self.train_options = {}
         self.valid_options = {'batch_size': 256, 'unroll_steps': 1, 'n_gpus': 1}
+        self.model_mode=''
 
         tf.set_random_seed(seed)
         np.random.seed(seed)
@@ -272,6 +273,9 @@ class ELMo(NNModel):
         self._build_model(train=False, epoch=load_epoch_num)
 
         self.save()
+        # after building the model and saving to the specified save path
+        # change the way to load intermediate checkpoints
+        self.load_path = self.save_path
 
     def _load_options(self, options_json_path):
         if options_json_path:
@@ -461,6 +465,7 @@ class ELMo(NNModel):
             path.resolve()
             log.info(f'[loading {epoch} epoch]')
 
+        # path.parent.mkdir(parents=True, exist_ok=True)
         path = str(path)
 
         # Check presence of the model files
@@ -540,15 +545,17 @@ class ELMo(NNModel):
         self.load(epoch)
 
     def process_event(self, event_name, data):
-        if event_name == 'after_validation':
+        if event_name == 'before_train' and self.model_mode != 'train':
             self._build_model(train=True)
-        elif event_name == 'after_epoch':
+            self.model_mode = 'train'
+        elif event_name == 'before_validation' and self.model_mode != 'validation':
             epoch = self.save_epoch_num + int(data['epochs_done'])
             self.save(epoch)
             self.save()
             self.elmo_export(epoch)
 
             self._build_model(train=False)
+            self.model_mode = 'validation'
 
     def elmo_export(self, epoch: Optional[int] = None) -> None:
         """

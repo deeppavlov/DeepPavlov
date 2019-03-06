@@ -245,6 +245,8 @@ def download_config(config_path):
 
     # Update config for testing
     config.setdefault('train', {}).setdefault('pytest_epochs', 1)
+    config['train'].setdefault('pytest_max_batches', 2)
+    config['train'].setdefault('pytest_max_test_batches', 2)
     _override_with_test_values(config)
 
     config_path = test_configs_path / config_path
