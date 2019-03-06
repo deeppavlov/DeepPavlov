@@ -185,7 +185,10 @@
         "id": "linker",
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "wiki_filename": "wiki_rus.pickle",
-        "entities_filename": "wiki_rus_name_to_q_lowercase.pickle"
+        "entities_filename": "wiki_rus_name_to_q_lowercase.pickle",
+        "rule_filter_entities": true,
+        "substring_entity_search": false,
+        "debug": false
       },
       {
         "in": ["x_tokens", "y_predicted", "y_pred_probas"],
@@ -199,7 +202,6 @@
         "debug": true,
         "return_confidences": false,
         "lemmatize": true,
-        "rule_filter_entities": true,
         "linker": "#linker"
       }
     ],
