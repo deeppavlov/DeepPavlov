@@ -81,7 +81,9 @@ class BertNerPreprocessor(Component):
                  tags: List[List[str]] = None,
                  **kwargs):
         subword_tokens, subword_tok_ids, subword_masks, subword_tags = [], [], [], []
-        for toks, ys in zip(tokens, tags):
+        for i in range(len(tokens)):
+            toks = tokens[i]
+            ys = ['X'] * len(toks) if tags is None else tags[i]
             assert len(toks) == len(ys), \
                 f"toks({len(toks)}) should have the same length as "\
                 f" ys({len(ys)}), tokens = {toks}."
@@ -110,7 +112,9 @@ class BertNerPreprocessor(Component):
                 f" for tokens = `{toks}` should match"
         subword_tok_ids = zero_pad(subword_tok_ids, dtype=int, padding=0)
         subword_masks = zero_pad(subword_masks, dtype=int, padding=0)
-        return subword_tokens, subword_tok_ids, subword_masks, subword_tags
+        if tags is not None:
+            return subword_tokens, subword_tok_ids, subword_masks, subword_tags
+        return subword_tokens, subword_tok_ids, subword_masks
 
     @staticmethod
     def _ner_bert_tokenize(tokens: List[str],
