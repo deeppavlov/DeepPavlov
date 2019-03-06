@@ -181,6 +181,13 @@
         "dropout_keep_prob": 0.7
       },
       {
+        "class_name": "entity_linker",
+        "id": "linker",
+        "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
+        "wiki_filename": "wiki_rus.pickle",
+        "entities_filename": "wiki_rus_name_to_q_lowercase.pickle"
+      },
+      {
         "in": ["x_tokens", "y_predicted", "y_pred_probas"],
         "out": ["answers"],
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_q_to_name.pickle",
@@ -188,13 +195,12 @@
         "classes_vocab_keys": "#classes_vocab.keys()",
         "top_k_classes": 5,
         "relations_maping_filename": "wiki_properties_id_to_name.pickle",
-        "entities_filename": "wiki_rus_name_to_q_lowercase.pickle",
-        "wiki_filename": "wiki_rus.pickle",
         "templates_filename": "templates.pickle",
         "debug": true,
         "return_confidences": false,
         "lemmatize": true,
-        "rule_filter_entities": true
+        "rule_filter_entities": true,
+        "linker": "#linker"
       }
     ],
     "out": ["answers"]
