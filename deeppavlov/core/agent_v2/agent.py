@@ -4,8 +4,9 @@ from itertools import compress
 import operator
 
 from deeppavlov.core.agent_v2.rest_caller import RestCaller
-from deeppavlov.core.agent_v2.state_manager import StateManager, TG_START_UTT
+from deeppavlov.core.agent_v2.state_manager import StateManager
 from deeppavlov.core.agent_v2.skill_manager import SkillManager
+from deeppavlov.core.agent_v2.hardcode_utterances import TG_START_UTT
 
 
 class Agent:

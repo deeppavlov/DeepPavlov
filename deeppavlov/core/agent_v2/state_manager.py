@@ -5,8 +5,6 @@ from deeppavlov.core.agent_v2.connection import state_storage
 from deeppavlov.core.agent_v2.bot import BOT
 from deeppavlov.core.agent_v2 import VERSION
 
-TG_START_UTT = '/start'
-
 
 class StateManager:
 

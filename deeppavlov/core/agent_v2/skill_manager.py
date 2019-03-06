@@ -1,4 +1,5 @@
 from deeppavlov.core.agent_v2.config import MAX_WORKERS, SKILLS
+from deeppavlov.core.agent_v2.hardcode_utterances import NOANSWER_UTT
 
 
 class SkillManager:
@@ -17,5 +18,6 @@ class SkillManager:
             active_skill_names = [s['name'] for s in self.skills]
         active_skill_urls = [s['url'] for s in self.skills if s['name'] in active_skill_names]
         skill_responses = self.skill_caller(payload=state, names=active_skill_names, urls=active_skill_urls)
-        responses = self.response_selector(skill_responses, state)
-        return responses
+        skill_names, utterances, confidences = self.response_selector(skill_responses, state)
+        utterances = [utt if utt else NOANSWER_UTT for utt in utterances]
+        return skill_names, utterances, confidences
