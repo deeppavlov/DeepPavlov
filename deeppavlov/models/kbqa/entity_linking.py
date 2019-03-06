@@ -23,7 +23,7 @@ log = getLogger(__name__)
 
 class EntityLinker:
     def __init__(self, name_to_q: Dict[str, List[Tuple[str]]], wikidata: Dict[str, List[List[str]]],
-        lemmatize: bool = True, debug: bool = False, rule_filter_entities: bool = True) -> None:
+                 lemmatize: bool = True, debug: bool = False, rule_filter_entities: bool = True) -> None:
         self.name_to_q = name_to_q
         self.wikidata = wikidata
         self.morph = pymorphy2.MorphAnalyzer()
@@ -62,7 +62,7 @@ class EntityLinker:
                         wiki_entities = [srtd_cand_ent[i][0][1] for i in range(len(srtd_cand_ent))]
                         if self.debug:
                             log.info("wiki entities %s" % (str(wiki_entities[:5])))
-                        confidences = [float(srtd_cand_ent[i][1])*0.01 for i in range(len(srtd_cand_ent))]
+                        confidences = [float(srtd_cand_ent[i][1]) * 0.01 for i in range(len(srtd_cand_ent))]
                     else:
                         wiki_entities = ["None"]
                         confidences = [0.0]
@@ -70,7 +70,7 @@ class EntityLinker:
         entity_triplets = self.extract_triplets_from_wiki(wiki_entities)
         if self.rule_filter_entities:
             filtered_entity_triplets = self.filter_triplets(entity_triplets, question_tokens)
-        
+
         return filtered_entity_triplets, confidences
 
     def find_candidate_entities(self, entity: str) -> List[str]:
@@ -83,7 +83,7 @@ class EntityLinker:
                 morph_parse_tok = self.morph.parse(tok)[0]
                 lemmatized_tok = morph_parse_tok.normal_form
                 entity_lemm_tokens.append(lemmatized_tok)
-            masks = itertools.product('01', repeat = len(entity_split))
+            masks = itertools.product('01', repeat=len(entity_split))
             for mask in masks:
                 entity_lemm = []
                 for i in range(len(entity_split)):
@@ -131,7 +131,9 @@ class EntityLinker:
 
         return entity_triplets
 
-    def filter_triplets(self, entity_triplets: List[List[List[str]]], question_tokens: List[str]) -> List[List[List[str]]]:
+    @staticmethod
+    def filter_triplets(entity_triplets: List[List[List[str]]], question_tokens: List[str]) -> \
+            List[List[List[str]]]:
         question_begin = question_tokens[0].lower() + ' ' + question_tokens[1].lower()
         what_is_templates = ['что такое', 'что есть', 'что означает', 'что значит']
         filtered_entity_triplets = []
@@ -143,9 +145,8 @@ class EntityLinker:
                 if triplet[0] == property_is_instance_of and triplet[1] == id_for_entity_human:
                     entity_is_human = True
                     break
-            if question_begin in what_is_templates and entity_is_human == True:
+            if question_begin in what_is_templates and entity_is_human:
                 continue
             filtered_entity_triplets.append(triplets_for_entity)
 
         return filtered_entity_triplets
-
