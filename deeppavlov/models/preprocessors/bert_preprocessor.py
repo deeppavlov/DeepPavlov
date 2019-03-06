@@ -11,38 +11,50 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import Tuple, List
-
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.component import Component
-from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.data.utils import zero_pad
 from logging import getLogger
+from typing import Tuple, List, Optional
 
-from bert_dp.preprocessing import convert_examples_to_features, InputExample
+from bert_dp.preprocessing import convert_examples_to_features, InputExample, InputFeatures
 from bert_dp.tokenization import FullTokenizer
+
+from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.utils import zero_pad
+from deeppavlov.core.models.component import Component
 
 logger = getLogger(__name__)
 
 
 @register('bert_preprocessor')
 class BertPreprocessor(Component):
-    # TODO: docs
+    """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks.
+
+    Check details in convert_examples_to_features function.
+
+    Args:
+        vocab_file: path to vocabulary
+        do_lower_case: set True if lowercasing is needed
+        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
+
+    Attributes:
+        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
+        tokenizer: instance of Bert FullTokenizer
+    """
 
     def __init__(self,
                  vocab_file: str,
                  do_lower_case: bool = True,
                  max_seq_length: int = 512,
-                 **kwargs):
+                 **kwargs) -> None:
         self.max_seq_length = max_seq_length
         vocab_file = str(expand_path(vocab_file))
         self.tokenizer = FullTokenizer(vocab_file=vocab_file,
                                        do_lower_case=do_lower_case)
 
-    def __call__(self, texts_a, texts_b=None):
+    def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> List[InputFeatures]:
         if texts_b is None:
             texts_b = [None] * len(texts_a)
-        # TODO: add unique id
+        # unique_id is not used
         examples = [InputExample(unique_id=0, text_a=text_a, text_b=text_b)
                     for text_a, text_b in zip(texts_a, texts_b)]
         return convert_examples_to_features(examples, self.max_seq_length, self.tokenizer)

@@ -12,14 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import tensorflow as tf
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
-from deeppavlov.core.commands.utils import expand_path
 from logging import getLogger
 
+import tensorflow as tf
 from bert_dp.modeling import BertConfig, BertModel
 from bert_dp.optimization import AdamWeightDecayOptimizer
+
+from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
 
 logger = getLogger(__name__)
 

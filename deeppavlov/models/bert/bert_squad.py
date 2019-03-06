@@ -12,22 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import tensorflow as tf
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
-from deeppavlov.core.models.estimator import Component
-from deeppavlov.core.commands.utils import expand_path
+import json
+import math
 from logging import getLogger
 
-from deeppavlov.models.squad.utils import softmax_mask
-from deeppavlov import build_model
-import json
-from bert_dp.tokenization import FullTokenizer
-import math
 import numpy as np
-
+import tensorflow as tf
 from bert_dp.modeling import BertConfig, BertModel
 from bert_dp.optimization import AdamWeightDecayOptimizer
+from bert_dp.tokenization import FullTokenizer
+
+from deeppavlov import build_model
+from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.estimator import Component
+from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
+from deeppavlov.models.squad.utils import softmax_mask
 
 logger = getLogger(__name__)
 
@@ -123,7 +123,6 @@ class BertSQuADModel(LRScheduledTFModel):
 
             outer = tf.matmul(tf.expand_dims(start_probs, axis=2), tf.expand_dims(end_probs, axis=1))
             outer_logits = tf.exp(tf.expand_dims(logits_st, axis=2) + tf.expand_dims(logits_end, axis=1))
-
 
             context_max_len = tf.reduce_max(tf.reduce_sum(self.token_types_ph, axis=1))
 
