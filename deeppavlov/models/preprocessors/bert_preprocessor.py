@@ -52,6 +52,19 @@ class BertPreprocessor(Component):
                                        do_lower_case=do_lower_case)
 
     def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> List[InputFeatures]:
+        """Call Bert convert_examples_to_features function to tokenize and create masks.
+
+        texts_a and texts_b are separated by [SEP] token
+
+        Args:
+            texts_a: list of texts,
+            texts_b: list of texts, it could be None, e.g. single sentence classification task
+
+        Returns:
+            batch of InputFeatures with subtokens, subtoken ids, subtoken mask, segment mask.
+
+        """
+
         if texts_b is None:
             texts_b = [None] * len(texts_a)
         # unique_id is not used
