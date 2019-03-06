@@ -116,10 +116,10 @@ class BertClassifierModel(LRScheduledTFModel):
             else:
                 one_hot_labels = tf.one_hot(self.y_ph, depth=self.n_classes, dtype=tf.float32)
 
+            self.y_predictions = tf.argmax(logits, axis=-1)
             if not self.multilabel:
                 log_probs = tf.nn.log_softmax(logits, axis=-1)
                 self.y_probas = tf.nn.softmax(logits, axis=-1)
-                self.y_predictions = tf.argmax(logits, axis=-1)
                 per_example_loss = -tf.reduce_sum(one_hot_labels * log_probs, axis=-1)
                 self.loss = tf.reduce_mean(per_example_loss)
             else:
