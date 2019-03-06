@@ -11,10 +11,10 @@
     "max_word_length": 50,
     "n_gpus": 1,
     "shuffle": false,
-    "bos":"<S>",
-    "eos":"</S>",
+    "bos": "<S>",
+    "eos": "</S>",
     "save_path": "{MODELS_PATH}/elmo-1b-benchmark/vocab-2016-09-10.txt",
-    "load_path":"{MODELS_PATH}/elmo-1b-benchmark/vocab-2016-09-10.txt"
+    "load_path": "{MODELS_PATH}/elmo-1b-benchmark/vocab-2016-09-10.txt"
   },
   "chainer": {
     "in": [
@@ -37,10 +37,10 @@
         "out": ["loss"]
       }
     ],
-   "out": [
-    "x_char_ids",
-    "y_token_ids"
-  ]
+    "out": [
+      "x_char_ids",
+      "y_token_ids"
+    ]
   },
   "train": {
     "epochs": 20,
@@ -55,7 +55,12 @@
         "inputs": ["loss"]
       }
     ],
-    "tensorboard_log_dir": "{MODELS_PATH}/elmo-1b-benchmark/logs"
+    "tensorboard_log_dir": "{MODELS_PATH}/elmo-1b-benchmark/logs",
+    "class_name": "nn_trainer",
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ]
   },
   "metadata": {
     "variables": {

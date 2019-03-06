@@ -83,7 +83,7 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 
 **Auto ML**
 
-[Tuning Models with Evolutionary Algorithm](http://docs.deeppavlov.ai/en/latest/intro/parameters_evolution.html)
+[Tuning Models with Evolutionary Algorithm](http://docs.deeppavlov.ai/en/latest/intro/hypersearch.html)
 
 # Installation
 
@@ -136,14 +136,15 @@ python -m deeppavlov <mode> <path_to_config> [-d]
 * `<path_to_config>` should be a path to an NLP pipeline json config (e.g. `deeppavlov/configs/ner/slotfill_dstc2.json`)
 or a name without the `.json` extension of one of the config files [provided](deeppavlov/configs) in this repository (e.g. `slotfill_dstc2`)
 
-For the `interactbot` mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` environment variable. Also if you want to get custom `/start` and `/help` Telegram messages for the running model you should:
+For the `interactbot` mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` environment variable.
+Also you should use `--no-default-skill` optional flag if your component implements an interface of DeepPavlov [*Skill*](deeppavlov/core/skill/skill.py) to skip its wrapping with DeepPavlov [*DefaultStatelessSkill*](deeppavlov/skills/default_skill/default_skill.py).
+If you want to get custom `/start` and `/help` Telegram messages for the running model you should:
 * Add section to [*utils/settings/models_info.json*](utils/settings/models_info.json) with your custom Telegram messages
 * In model config file specify `metadata.labels.telegram_utils` parameter with name which refers to the added section of [*utils/settings/models_info.json*](utils/settings/models_info.json)
 
-For the `interactmsbot` mode you should specify **Microsoft app id** in `-i` and **Microsoft app secret** in `-s`. Also before launch you should specify api deployment settings (host, port) in [*utils/settings/server_config.json*](utils/settings/server_config.json) configuration file. Note, that Microsoft Bot Framework requires `https` endpoint with valid certificate from CA.
-Here is [detailed info on the Microsoft Bot Framework integration](http://docs.deeppavlov.ai/en/latest/devguides/ms_bot_integration.html)
-
-You can also store your tokens, app ids, secrets in appropriate sections of [*utils/settings/server_config.json*](utils/settings/server_config.json). Please note, that all command line parameters override corresponding config ones.
+You can also serve DeepPavlov models for:
+* Microsoft Bot Framework ([see developer guide for the detailed instructions](http://docs.deeppavlov.ai/en/latest/devguides/ms_bot_integration.html)) 
+* Amazon Alexa ([see developer guide for the detailed instructions](http://docs.deeppavlov.ai/en/latest/devguides/amazon_alexa.html)) 
 
 For `riseapi` mode you should specify api settings (host, port, etc.) in [*utils/settings/server_config.json*](utils/settings/server_config.json) configuration file. If provided, values from *model_defaults* section override values for the same parameters from *common_defaults* section. Model names in *model_defaults* section should be similar to the class names of the models main component.
 Here is [detailed info on the DeepPavlov REST API](http://docs.deeppavlov.ai/en/latest/devguides/rest_api.html)
@@ -178,7 +179,7 @@ DeepPavlov is Apache 2.0 - licensed.
 
 # Support and collaboration
 
-If you have any questions, bug reports or feature requests, please feel free to post on our [Github Issues](https://github.com/deepmipt/DeepPavlov/issues) page. Please tag your issue with `bug`, `feature request`, or `question`.  Also we’ll be glad to see your pull requests to add new datasets, models, embeddings, etc.
+If you have any questions, bug reports or feature requests, please feel free to post on our [Github Issues](https://github.com/deepmipt/DeepPavlov/issues) page. Please tag your issue with `bug`, `feature request`, or `question`.  Also we’ll be glad to see your pull requests to add new datasets, models, embeddings, etc. In addition, we would like to invite everyone to join our [community forum](https://forum.ipavlov.ai/), where you can ask the DeepPavlov community any questions, share ideas, and find like-minded people.
 
 # The Team
 

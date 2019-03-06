@@ -42,9 +42,14 @@ Swagger(app)
 CORS(app)
 
 
-def run_alexa_default_agent(model_config: Union[str, Path, dict], multi_instance: bool = False,
-                            stateful: bool = False, port: Optional[int] = None, https: bool = False,
-                            ssl_key: str = None, ssl_cert: str = None) -> None:
+def run_alexa_default_agent(model_config: Union[str, Path, dict],
+                            multi_instance: bool = False,
+                            stateful: bool = False,
+                            port: Optional[int] = None,
+                            https: bool = False,
+                            ssl_key: str = None,
+                            ssl_cert: str = None,
+                            default_skill_wrap: bool = True) -> None:
     """Creates Alexa agents factory and initiates Alexa web service.
 
     Wrapper around run_alexa_server. Allows raise Alexa web service with
@@ -58,11 +63,12 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict], multi_instance
         https: Flag for running Alexa skill service in https mode.
         ssl_key: SSL key file path.
         ssl_cert: SSL certificate file path.
+        default_skill_wrap: Wrap with default skill flag.
     """
 
     def get_default_agent() -> DefaultAgent:
         model = build_model(model_config)
-        skill = DefaultStatelessSkill(model)
+        skill = DefaultStatelessSkill(model) if default_skill_wrap else model
         agent = DefaultAgent([skill], skills_processor=DefaultRichContentWrapper())
         return agent
 
@@ -75,9 +81,13 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict], multi_instance
                      ssl_cert=ssl_cert)
 
 
-def run_alexa_server(agent_generator: callable, multi_instance: bool = False,
-                     stateful: bool = False, port: Optional[int] = None, https: bool = False,
-                     ssl_key: str = None, ssl_cert: str = None) -> None:
+def run_alexa_server(agent_generator: callable,
+                     multi_instance: bool = False,
+                     stateful: bool = False,
+                     port: Optional[int] = None,
+                     https: bool = False,
+                     ssl_key: str = None,
+                     ssl_cert: str = None) -> None:
     """Initiates Flask web service with Alexa skill.
 
     Args:

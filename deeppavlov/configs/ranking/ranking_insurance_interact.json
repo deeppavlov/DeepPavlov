@@ -22,26 +22,22 @@
         "fit_on": ["x"],
         "in": ["x"],
         "out": ["x_proc"],
-        "sent_vocab":
-        {
+        "sent_vocab": {
           "id": "siam_sent_vocab",
           "class_name": "simple_vocab",
           "save_path": "{MODELS_PATH}/insurance_vocabs/sent.dict",
           "load_path": "{MODELS_PATH}/insurance_vocabs/sent.dict"
         },
-        "tokenizer":
-        {
+        "tokenizer": {
           "class_name": "split_tokenizer"
         },
-        "vocab":
-        {
+        "vocab": {
           "id": "siam_vocab",
           "class_name": "simple_vocab",
           "save_path": "{MODELS_PATH}/insurance_vocabs/tok.dict",
           "load_path": "{MODELS_PATH}/insurance_vocabs/tok.dict"
         },
-        "embedder":
-        {
+        "embedder": {
           "id": "siam_embedder",
           "class_name": "fasttext",
           "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin"
@@ -97,7 +93,12 @@
     "metrics": ["r@1_insQA", "rank_response"],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
-    "log_every_n_batches": 24
+    "log_every_n_batches": 24,
+    "class_name": "nn_trainer",
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ]
   },
   "metadata": {
     "variables": {

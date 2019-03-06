@@ -25,7 +25,7 @@
       {
         "class_name": "hashing_tfidf_vectorizer",
         "id": "vectorizer",
-        "fit_on_batch": [
+        "fit_on": [
           "docs",
           "doc_ids",
           "doc_nums"
@@ -53,7 +53,7 @@
         ],
         "vectorizer": "#vectorizer"
       },
-       {
+      {
         "class_name": "pop_ranker",
         "pop_dict_path": "{DOWNLOADS_PATH}/odqa/enwiki20180211_popularities.json",
         "load_path": "{MODELS_PATH}/odqa/logreg_3features.joblib",
@@ -64,9 +64,9 @@
     ]
   },
   "train": {
-    "validate_best": false,
-    "test_best": false,
-    "batch_size": 10000
+    "batch_size": 10000,
+    "evaluation_targets": [],
+    "class_name": "fit_trainer"
   },
   "metadata": {
     "variables": {

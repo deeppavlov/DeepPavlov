@@ -83,7 +83,7 @@ class Seq2SeqGoalOrientedBot(NNModel):
         if 'source_vocab_size' not in params:
             params['source_vocab_size'] = len(self.src_vocab)
         if 'target_vocab_size' not in params:
-            params['target_vocab_soze'] = len(self.tgt_vocab)
+            params['target_vocab_size'] = len(self.tgt_vocab)
         # contruct matrix of knowledge bases values embeddings
         params['knowledge_base_entry_embeddings'] = \
             [self._embed_kb_key(val) for val in self.kb_keys]
@@ -150,9 +150,9 @@ class Seq2SeqGoalOrientedBot(NNModel):
             log.debug("b_tgt_lens = {}".format(b_tgt_lens))
             log.debug("b_tgt_weights = {}".format(b_tgt_weights))"""
 
-        self.network.train_on_batch(b_enc_ins_np, b_dec_ins_np, b_dec_outs_np,
-                                    b_src_lens, b_tgt_lens, b_tgt_weights_np,
-                                    b_kb_masks_np)
+        return self.network.train_on_batch(b_enc_ins_np, b_dec_ins_np, b_dec_outs_np,
+                                           b_src_lens, b_tgt_lens, b_tgt_weights_np,
+                                           b_kb_masks_np)
 
     def _encode_context(self, tokens):
         if self.debug:

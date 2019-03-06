@@ -168,8 +168,11 @@
       "accuracy"
     ],
     "show_examples": true,
-    "validate_best": true,
-    "test_best": false
+    "evaluation_targets": [
+      "train",
+      "valid"
+    ],
+    "class_name": "fit_trainer"
   },
   "metadata": {
     "variables": {

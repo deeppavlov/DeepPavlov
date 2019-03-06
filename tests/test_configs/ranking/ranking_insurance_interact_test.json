@@ -11,8 +11,12 @@
     "seed": 243
   },
   "chainer": {
-    "in": ["x"],
-    "in_y": ["y"],
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
     "pipe": [
       {
         "id": "preproc",
@@ -20,29 +24,31 @@
         "use_matrix": false,
         "num_ranking_samples": 2,
         "max_sequence_length": 200,
-        "fit_on": ["x"],
-        "in": ["x"],
-        "out": ["x_proc"],
-        "sent_vocab":
-        {
+        "fit_on": [
+          "x"
+        ],
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_proc"
+        ],
+        "sent_vocab": {
           "id": "siam_sent_vocab",
           "class_name": "simple_vocab",
           "save_path": "{MODELS_PATH}/insurance_vocabs/sent.dict",
           "load_path": "{MODELS_PATH}/insurance_vocabs/sent.dict"
         },
-        "tokenizer":
-        {
+        "tokenizer": {
           "class_name": "split_tokenizer"
         },
-        "vocab":
-        {
+        "vocab": {
           "id": "siam_vocab",
           "class_name": "simple_vocab",
           "save_path": "{MODELS_PATH}/insurance_vocabs/tok.dict",
           "load_path": "{MODELS_PATH}/insurance_vocabs/tok.dict"
         },
-        "embedder":
-        {
+        "embedder": {
           "id": "siam_embedder",
           "class_name": "fasttext",
           "load_path": "{DOWNLOADS_PATH}/embeddings/ft_dummy_300.bin",
@@ -68,7 +74,7 @@
         "max_pooling": true,
         "shared_weights": true,
         "hidden_dim": 300,
-        "learning_rate": 1e-3,
+        "learning_rate": 0.001,
         "triplet_loss": true,
         "hard_triplets": false,
         "margin": 0.1,
@@ -79,9 +85,15 @@
         "interact_pred_num": 3
       },
       {
-        "in": ["x_proc"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
+        "in": [
+          "x_proc"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "y_predicted"
+        ],
         "class_name": "siamese_predictor",
         "model": "#model",
         "batch_size": "#model.batch_size",
@@ -90,17 +102,27 @@
         "preproc_func": "#preproc.__call__"
       }
     ],
-    "out": ["y_predicted"]
+    "out": [
+      "y_predicted"
+    ]
   },
   "train": {
     "epochs": 200,
     "batch_size": 256,
     "pytest_max_batches": 2,
     "train_metrics": [],
-    "metrics": ["r@1_insQA", "rank_response"],
+    "metrics": [
+      "r@1_insQA",
+      "rank_response"
+    ],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
-    "log_every_n_batches": 24
+    "log_every_n_batches": 24,
+    "class_name": "nn_trainer",
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ]
   },
   "metadata": {
     "variables": {

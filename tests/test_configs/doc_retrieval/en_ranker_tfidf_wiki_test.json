@@ -25,7 +25,7 @@
       {
         "class_name": "hashing_tfidf_vectorizer",
         "id": "vectorizer",
-        "fit_on_batch": [
+        "fit_on": [
           "docs",
           "doc_ids",
           "doc_nums"
@@ -56,9 +56,9 @@
     ]
   },
   "train": {
-    "validate_best": false,
-    "test_best": false,
-    "batch_size": 2
+    "batch_size": 2,
+    "evaluation_targets": [],
+    "class_name": "fit_trainer"
   },
   "metadata": {
     "variables": {

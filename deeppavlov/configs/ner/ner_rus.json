@@ -145,7 +145,12 @@
 
     "log_every_n_epochs": 1,
     "show_examples": false,
-    "tensorboard_log_dir": "{MODELS_PATH}/ner_rus/logs"
+    "tensorboard_log_dir": "{MODELS_PATH}/ner_rus/logs",
+    "class_name": "nn_trainer",
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ]
   },
   "metadata": {
     "variables": {
@@ -173,4 +178,3 @@
     ]
   }
 }
-
