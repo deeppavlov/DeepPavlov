@@ -11,28 +11,51 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from pathlib import Path
 
+import pickle
 from fuzzywuzzy import fuzz
 import pymorphy2
 import itertools
 from logging import getLogger
 from typing import List, Dict, Tuple
 
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.serializable import Serializable
+
 log = getLogger(__name__)
 
 
-class EntityLinker:
-    def __init__(self, name_to_q: Dict[str, List[Tuple[str]]], wikidata: Dict[str, List[List[str]]],
-                 lemmatize: bool = True, debug: bool = False, rule_filter_entities: bool = True) -> None:
-        self.name_to_q = name_to_q
-        self.wikidata = wikidata
+@register("entity_linker")
+class EntityLinker(Serializable):
+    def __init__(self, load_path: str, wiki_filename: str, entities_filename: str, lemmatize: bool = True,
+                 debug: bool = False, rule_filter_entities: bool = True, *args, **kwargs) -> None:
+        super().__init__(save_path=None, load_path=load_path)
         self.morph = pymorphy2.MorphAnalyzer()
         self.lemmatize = lemmatize
         self.debug = debug
         self.rule_filter_entities = rule_filter_entities
 
-    def __call__(self, entity: str, question_tokens: List[str]) -> Tuple[List[List[List[str]]], List[str]]:
+        self._wiki_filename = wiki_filename
+        self._entities_filename = entities_filename
 
+        self.name_to_q = None
+        self.wikidata = None
+        self.load()
+
+    def load(self) -> None:
+        load_path = Path(self.load_path).expanduser()
+        with open(load_path / self._entities_filename, 'rb') as e:
+            self.name_to_q = pickle.load(e)
+            self.name_to_q: Dict[str, List[Tuple[str]]]
+        with open(load_path / self._wiki_filename, 'rb') as w:
+            self.wikidata = pickle.load(w)
+            self.wikidata: Dict[str, List[List[str]]]
+
+    def save(self) -> None:
+        pass
+
+    def __call__(self, entity: str, question_tokens: List[str]) -> Tuple[List[List[List[str]]], List[str]]:
         confidences = []
         if not entity:
             wiki_entities = ["None"]
