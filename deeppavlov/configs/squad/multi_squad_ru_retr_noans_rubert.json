@@ -37,15 +37,15 @@
         "class_name": "squad_bert_model",
         "bert_config_file": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1/bert_config.json",
         "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1/bert_model.ckpt",
-        "save_path": "{MODELS_PATH}/multi_squad_ru_retr_bert/model_rubert",
-        "load_path": "{MODELS_PATH}/multi_squad_ru_retr_bert/model_rubert",
+        "save_path": "{MODELS_PATH}/multi_squad_ru_retr_bert/model_rubert_noans",
+        "load_path": "{MODELS_PATH}/multi_squad_ru_retr_bert/model_rubert_noans",
         "keep_prob": 0.5,
         "learning_rate": 2e-05,
         "learning_rate_drop_patience": 3,
         "learning_rate_drop_div": 2.0,
         "in": ["bert_features"],
         "in_y": ["ans_start", "ans_end"],
-        "out": ["ans_start_predicted", "ans_end_predicted", "logits"]
+        "out": ["ans_start_predicted", "ans_end_predicted", "logits", "score"]
       },
       {
         "class_name": "squad_bert_ans_postprocessor",
@@ -53,7 +53,7 @@
         "out": ["ans_predicted", "ans_start_predicted", "ans_end_predicted"]
       }
     ],
-    "out": ["ans_predicted", "ans_start_predicted", "logits"]
+    "out": ["ans_predicted", "ans_start_predicted", "score"]
   },
   "train": {
     "show_examples": false,
@@ -101,6 +101,10 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v1.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/bert_models"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/multi_squad_ru_retr_rubert.tar.gz",
+        "subdir": "{MODELS_PATH}"
       }
       ]
   }
