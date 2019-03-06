@@ -66,19 +66,19 @@ class BertNerModel(LRScheduledTFModel):
         self.sess = tf.Session(config=self.sess_config)
 
         self._init_graph()
-        #for var in tf.global_variables():
-        #    print('{:<31}'.format(repr(var.get_shape().as_list())), var.name)
-        #print("---------------------------------------")
 
         self._init_optimizer()
         for var in tf.global_variables():
             print('{:<31}'.format(repr(var.get_shape().as_list())), var.name)
 
         self.sess.run(tf.global_variables_initializer())
+        # print(self.sess.run(tf.trainable_variables()[-3]))
 
         if pretrained_bert is not None:
             pretrained_bert = str(expand_path(pretrained_bert))
 
+        # print(tf.train.checkpoint_exists(pretrained_bert))
+        # print(tf.train.checkpoint_exists(str(self.load_path.resolve())))
         if tf.train.checkpoint_exists(pretrained_bert) \
                 and not tf.train.checkpoint_exists(str(self.load_path.resolve())):
             logger.info('[initializing model with Bert from {}]'.format(pretrained_bert))
@@ -87,6 +87,7 @@ class BertNerModel(LRScheduledTFModel):
                 exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'ner'))
             saver = tf.train.Saver(var_list)
             saver.restore(self.sess, pretrained_bert)
+        # print(self.sess.run(tf.trainable_variables()[-3]))
 
         if self.load_path is not None:
             self.load()
