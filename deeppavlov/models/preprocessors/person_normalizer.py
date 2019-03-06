@@ -125,6 +125,8 @@ class PersonNormalizer(Component):
                                  replacement: str,
                                  mate_tag: str = 'MATE-GOOSER') ->\
             Tuple[List[str], List[str]]:
+        assert len(tokens) == len(tags),\
+            f"tokens({tokens}) and tags({tags}) should have the same length"
         if 'B-' + mate_tag not in tags:
             return tokens, tags
 
@@ -152,6 +154,8 @@ class PersonNormalizer(Component):
                                 tags: List[str],
                                 mate_tag: str = 'MATE-GOOSER') ->\
             Tuple[List[str], List[str]]:
+        assert len(tokens) == len(tags),\
+            f"tokens({tokens}) and tags({tags}) should have the same length"
         # TODO: uppercase first letter if name was removed
         if 'B-' + mate_tag not in tags:
             return tokens, tags
@@ -298,4 +302,35 @@ class NerWithContextWrapper(Component):
         tags = [t[l:r] for t, (l, r) in zip(tags, ranges)]
 
         return utt_toks, tags
+
+
+@register('name_asker')
+class NameAskerPostprocessor(Component):
+
+    def __init__(self,
+                 state_slot: str = 'user_name',
+                 **kwargs) -> None:
+        self.state_slot = state_slot
+
+    def __call__(self,
+                 utters: List[str],
+                 histories: List[List[str]],
+                 states: List[dict],
+                 responses: List[str],
+                 **kwargs) -> List[str]:
+        new_responses = []
+        states = states if states else [{}] * len(utters)
+        for utter, hist, state, resp in zip(utters, histories, states, responses):
+            if self.state_slot not in (state or {}):
+                if (len(hist) == 0) and (random.random() > 0.8):
+                    new_responses.append('Привет! Тебя как зовут?')
+                elif (len(hist) < 2) and (random.random() > 0.4):
+                    new_responses.append('Как тебя зовут?')
+                elif (len(hist) >= 2) and (random.random() > 0.9):
+                    new_responses.append('Тебя как зовут-то?')
+                else:
+                    new_responses.append(resp)
+            else:
+                new_responses.append(resp)
+        return new_responses
 

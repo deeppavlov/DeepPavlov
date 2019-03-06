@@ -64,6 +64,7 @@
   "mpm_nn": "deeppavlov.models.ranking.mpm_siamese_network:MPMSiameseNetwork",
   "multi_squad_iterator": "deeppavlov.dataset_iterators.squad_iterator:MultiSquadIterator",
   "myself_detector": "deeppavlov.models.preprocessors.person_normalizer:MyselfDetector",
+  "name_asker": "deeppavlov.models.preprocessors.person_normalizer:NameAskerPostprocessor",
   "ner": "deeppavlov.models.ner.network:NerNetwork",
   "ner_bio_converter": "deeppavlov.models.ner.bio:BIOMarkupRestorer",
   "ner_few_shot_iterator": "deeppavlov.dataset_iterators.ner_few_shot_iterator:NERFewShotIterator",
