@@ -15,11 +15,13 @@
 import json
 import math
 from logging import getLogger
+from typing import List, Tuple, Optional, Dict
 
 import numpy as np
 import tensorflow as tf
 from bert_dp.modeling import BertConfig, BertModel
 from bert_dp.optimization import AdamWeightDecayOptimizer
+from bert_dp.preprocessing import InputFeatures
 from bert_dp.tokenization import FullTokenizer
 
 from deeppavlov import build_model
@@ -34,14 +36,36 @@ logger = getLogger(__name__)
 
 @register('squad_bert_model')
 class BertSQuADModel(LRScheduledTFModel):
-    # TODO: docs
-    def __init__(self, bert_config_file, keep_prob,
-                 attention_probs_keep_prob=None, hidden_keep_prob=None,
-                 optimizer=None, weight_decay_rate=0.01,
-                 return_probas=False, pretrained_bert=None, min_learning_rate=1e-06, **kwargs) -> None:
+    """Bert-based model for SQuAD-like problem setting:
+    It predicts start and end position of answer for given question and context.
+
+    [CLS] token is used as no_answer. If model selects [CLS] token as most probable
+    answer, it means that there is no answer in given context.
+
+    Start and end position of answer are predicted by linear transformation
+    of Bert outputs.
+
+    Args:
+        bert_config_file
+        keep_prob: dropout keep_prob for non-Bert layers
+        attention_probs_keep_prob: keep_prob for Bert self-attention layers
+        hidden_keep_prob: keep_prob for Bert hidden layers
+        optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
+        weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
+        pretrained_bert: pretrained Bert checkpoint
+        min_learning_rate: min value of learning rate if learning rate decay is used
+    """
+
+    def __init__(self, bert_config_file: str,
+                 keep_prob: float,
+                 attention_probs_keep_prob: Optional[float] = None,
+                 hidden_keep_prob: Optional[float] = None,
+                 optimizer: Optional[str] = None,
+                 weight_decay_rate: Optional[float] = 0.01,
+                 pretrained_bert: Optional[str] = None,
+                 min_learning_rate: float = 1e-06, **kwargs) -> None:
         super().__init__(**kwargs)
 
-        self.return_probas = return_probas
         self.min_learning_rate = min_learning_rate
         self.keep_prob = keep_prob
         self.optimizer = optimizer
@@ -194,7 +218,8 @@ class BertSQuADModel(LRScheduledTFModel):
 
         return feed_dict
 
-    def train_on_batch(self, features, y_st, y_end):
+    def train_on_batch(self, features: List[InputFeatures], y_st, y_end) -> Dict:
+        # TODO: docs
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
@@ -207,7 +232,8 @@ class BertSQuADModel(LRScheduledTFModel):
         _, loss = self.sess.run([self.train_op, self.loss], feed_dict=feed_dict)
         return {'loss': loss, 'learning_rate': feed_dict[self.learning_rate_ph]}
 
-    def __call__(self, features):
+    def __call__(self, features: List[InputFeatures]) -> Tuple[List[int], List[int], List[float], List[float]]:
+        # TODO: docs
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
