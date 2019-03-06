@@ -182,7 +182,7 @@
       },
       {
         "in": ["x_tokens", "y_predicted", "y_pred_probas"],
-        "out": ["answers"],
+        "out": ["answers", "confidences"],
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_q_to_name.pickle",
         "class_name": "kb_answer_parser_wikidata",
         "classes_vocab_keys": "#classes_vocab.keys()",
@@ -194,10 +194,11 @@
         "debug": true,
         "return_confidences": false,
         "lemmatize": true,
-        "rule_filter_entities": true
+        "rule_filter_entities": true,
+        "return_confidences": true
       }
     ],
-    "out": ["answers"]
+    "out": ["answers", "confidences"]
   },
   "train":{
     "metrics": [
