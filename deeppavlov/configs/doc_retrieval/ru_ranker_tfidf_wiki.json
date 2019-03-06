@@ -43,7 +43,7 @@
       },
       {
         "class_name": "tfidf_ranker",
-        "top_n": 5,
+        "top_n": 1,
         "in": [
           "docs"
         ],
