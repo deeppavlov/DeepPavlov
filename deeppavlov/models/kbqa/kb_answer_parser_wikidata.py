@@ -38,28 +38,24 @@ class KBAnswerParserWikidata(Component, Serializable):
        We search a triplet with the predicted relations
     """
 
-    def __init__(self, load_path: str, top_k_classes: int, classes_vocab_keys: Tuple,
-                 debug: bool = False, relations_maping_filename: str = None, entities_filename: str = None,
-                 wiki_filename: str = None, templates_filename: str = None, return_confidences: bool = True,
-                 lemmatize: bool = True, rule_filter_entities: bool = False, *args, **kwargs) -> None:
+    def __init__(self, load_path: str, top_k_classes: int, linker: EntityLinker, classes_vocab_keys: Tuple,
+                 debug: bool = False, relations_maping_filename: str = None, templates_filename: str = None,
+                 return_confidences: bool = True, lemmatize: bool = True, rule_filter_entities: bool = False,
+                 *args, **kwargs) -> None:
         super().__init__(save_path=None, load_path=load_path)
         self.top_k_classes = top_k_classes
         self.classes = list(classes_vocab_keys)
         self._debug = debug
         self._relations_filename = relations_maping_filename
-        self._entities_filename = entities_filename
-        self._wiki_filename = wiki_filename
         self._templates_filename = templates_filename
         self._q_to_name = None
         self._relations_mapping = None
-        self.name_to_q = None
-        self.wikidata = None
         self.templates = None
         self.return_confidences = return_confidences
         self.lemmatize = lemmatize
         self.rule_filter_entities = rule_filter_entities
+        self.linker = linker
         self.load()
-        self.linker = EntityLinker(self.name_to_q, self.wikidata, self.lemmatize, self._debug, self.rule_filter_entities)
 
     def load(self) -> None:
         load_path = Path(self.load_path).expanduser()
@@ -68,10 +64,6 @@ class KBAnswerParserWikidata(Component, Serializable):
         if self._relations_filename is not None:
             with open(self.load_path.parent / self._relations_filename, 'rb') as f:
                 self._relations_mapping = pickle.load(f)
-        with open(self.load_path.parent / self._entities_filename, 'rb') as e:
-            self.name_to_q = pickle.load(e)
-        with open(self.load_path.parent / self._wiki_filename, 'rb') as w:
-            self.wikidata = pickle.load(w)
         if self._templates_filename is not None:
             with open(self.load_path.parent / self._templates_filename, 'rb') as t:
                 self.templates = pickle.load(t)
