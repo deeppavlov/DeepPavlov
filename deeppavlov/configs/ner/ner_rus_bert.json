@@ -87,8 +87,11 @@
     "val_every_n_batches": 10,
 
     "log_every_n_batches": 10,
+    "tensorboard_log_dir": "{NER_PATH}/logs",
+
     "show_examples": false,
-    "tensorboard_log_dir": "{NER_PATH}/logs"
+    "evaluation_targets": ["valid", "test"],
+    "class_name": "nn_trainer"
   },
   "metadata": {
     "variables": {
