@@ -1,0 +1,97 @@
+{
+  "dataset_reader": {
+    "class_name": "mailru_reader",
+    "data_path": "{DOWNLOADS_PATH}/mailru_bert"
+  },
+  "dataset_iterator": {
+    "class_name": "siamese_iterator",
+    "seed": 243,
+    "len_valid": 500
+  },
+  "chainer": {
+    "in": ["texts"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "class_name": "response_base_loader",
+        "id": "loader",
+        "save_path": "{DOWNLOADS_PATH}/mailru_bert_npair_simple",
+        "load_path": "{DOWNLOADS_PATH}/mailru_bert_npair_simple"
+      },
+      {
+        "class_name": "bert_ranker_preprocessor",
+        "id": "preproc",
+        "vocab_file": "{DOWNLOADS_PATH}/mailru_bert_npair_simple/vocab.txt",
+        "do_lower_case": true,
+        "max_seq_length": 128,
+        "resps": "#loader.resps",
+        "resp_vecs": "#loader.resp_vecs",
+        "conts": "#loader.conts",
+        "cont_vecs": "#loader.cont_vecs",
+        "in": ["texts"],
+        "out": ["bert_features"]
+      },
+      {
+        "class_name": "bert_ranker",
+        "resps": "#loader.resps",
+        "resp_vecs": "#loader.resp_vecs",
+        "resp_features": "#preproc.resp_features",
+        "conts": "#loader.conts",
+        "cont_vecs": "#loader.cont_vecs",
+        "cont_features": "#preproc.cont_features",
+        "bot_mode": 1,
+        "n_classes": 2,
+        "one_hot_labels": false,
+        "bert_config_file": "{DOWNLOADS_PATH}/mailru_bert_npair_simple/bert_config.json",
+        "pretrained_bert": "{DOWNLOADS_PATH}/mailru_bert_npair_simple/model.ckpt-599058",
+        "save_path": "{DOWNLOADS_PATH}/mailru_bert_npair_simple",
+        "load_path": "{DOWNLOADS_PATH}/mailru_bert_npair_simple/model.ckpt-599058",
+        "num_ranking_samples": 1,
+        "batch_size": 32,
+        "keep_prob": 1.0,
+        "attention_probs_keep_prob": 1.0,
+        "hidden_keep_prob": 1.0,
+        "learning_rate": 2e-05,
+        "learning_rate_drop_patience": 2,
+        "learning_rate_drop_div": 2.0,
+        "in": ["bert_features"],
+        "in_y": ["y"],
+        "out": ["predictions"]
+      }
+    ],
+    "out": ["predictions"]
+  },
+  "train": {
+    "batch_size": 32,
+    "pytest_max_batches": 2,
+    "train_metrics": [],
+    "metrics": ["r@1", "r@2", "r@5"],
+    "validation_patience": 10,
+    "val_every_n_batches": 100,
+    "log_every_n_batches": 100,
+    "validate_best": true,
+    "test_best": true,
+    "tensorboard_log_dir": "{MODELS_PATH}/mailru_bert_model/logs"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/datasets/mailru_bert.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/mailru_bert_npair_simple.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/"
+      }
+    ]
+  }
+}

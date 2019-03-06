@@ -15,7 +15,7 @@
 import warnings
 from logging import getLogger
 from operator import itemgetter
-from typing import List, Union, Tuple
+from typing import List, Union, Tuple, Optional
 
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.registry import register
@@ -41,10 +41,11 @@ class LogitRanker(Component):
     """
 
     def __init__(self, squad_model: Union[Chainer, Component], batch_size: int = 50,
-                 sort_noans: bool = False, **kwargs):
+                 sort_noans: bool = False, norm_coef: Optional[float] = None, **kwargs):
         self.squad_model = squad_model
         self.batch_size = batch_size
         self.sort_noans = sort_noans
+        self.norm_coef = norm_coef
 
     def __call__(self, contexts_batch: List[List[str]], questions_batch: List[List[str]]) -> \
             Tuple[List[str], List[float]]:
@@ -79,4 +80,6 @@ class LogitRanker(Component):
                 results = sorted(results, key=itemgetter(2), reverse=True)
             batch_best_answers.append(results[0][0])
             batch_best_answers_scores.append(results[0][2])
+        if self.norm_coef:
+            batch_best_answers_scores = map(lambda x: x / self.norm_coef, batch_best_answers_scores)
         return batch_best_answers, batch_best_answers_scores
