@@ -11,23 +11,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from pathlib import Path
-
 import pickle
+from logging import getLogger
+from typing import List, Dict, Tuple, Optional
+from pathlib import Path
+import itertools
+
 from fuzzywuzzy import fuzz
 import pymorphy2
-import itertools
-from logging import getLogger
-from typing import List, Dict, Tuple
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.serializable import Serializable
+from deeppavlov.core.models.component import Component
 
 log = getLogger(__name__)
 
 
 @register('entity_linker')
-class EntityLinker(Serializable):
+class EntityLinker(Component, Serializable):
     """
         This class extracts from Wikidata candidate entities for the entity mentioned in the question and then extracts
         triplets from Wikidata for the extracted entity. Candidate entities are searched in the dictionary where keys
@@ -63,16 +64,15 @@ class EntityLinker(Serializable):
         self._wiki_filename = wiki_filename
         self._entities_filename = entities_filename
 
-        self.name_to_q = None
-        self.wikidata = None
+        self.name_to_q: Optional[Dict[str, List[Tuple[str]]]] = None
+        self.wikidata: Optional[Dict[str, List[List[str]]]] = None
         self.load()
 
     def load(self) -> None:
-        load_path = Path(self.load_path).expanduser()
-        with open(load_path / self._entities_filename, 'rb') as e:
+        with open(self.load_path / self._entities_filename, 'rb') as e:
             self.name_to_q = pickle.load(e)
             self.name_to_q: Dict[str, List[Tuple[str]]]
-        with open(load_path / self._wiki_filename, 'rb') as w:
+        with open(self.load_path / self._wiki_filename, 'rb') as w:
             self.wikidata = pickle.load(w)
             self.wikidata: Dict[str, List[List[str]]]
 
@@ -126,8 +126,7 @@ class EntityLinker(Serializable):
         log.debug('\n'.join(entities_to_print))
 
     def find_candidate_entities(self, entity: str) -> List[str]:
-        candidate_entities = []
-        candidate_entities += self.name_to_q.get(entity, [])
+        candidate_entities = list(self.name_to_q.get(entity, []))
         entity_split = entity.split(' ')
         if len(entity_split) < 6 and self.lemmatize:
             entity_lemm_tokens = []

@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import getLogger
-from typing import List, Tuple
-
-import numpy as np
 import pickle
-from deeppavlov.core.models.serializable import Serializable
-
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.component import Component
 from pathlib import Path
 from string import punctuation
+from logging import getLogger
+from typing import List, Tuple, Optional, Dict
+
+import numpy as np
+
+from deeppavlov.core.models.serializable import Serializable
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.component import Component
 from deeppavlov.models.kbqa.entity_linking import EntityLinker
 
 log = getLogger(__name__)
@@ -64,16 +64,15 @@ class KBAnswerParserWikidata(Component, Serializable):
         self._debug = debug
         self._relations_filename = relations_maping_filename
         self._templates_filename = templates_filename
-        self._q_to_name = None
-        self._relations_mapping = None
-        self.templates = None
+        self._q_to_name: Optional[Dict[str, Dict[str, str]]] = None
+        self._relations_mapping: Optional[Dict[str, str]] = None
+        self.templates: Optional[Dict[str, str]] = None
         self.return_confidences = return_confidences
         self.linker = linker
         self.load()
 
     def load(self) -> None:
-        load_path = Path(self.load_path).expanduser()
-        with open(load_path, 'rb') as fl:
+        with open(self.load_path, 'rb') as fl:
             self._q_to_name = pickle.load(fl)
         if self._relations_filename is not None:
             with open(self.load_path.parent / self._relations_filename, 'rb') as f:
@@ -94,7 +93,7 @@ class KBAnswerParserWikidata(Component, Serializable):
         confidences_batch = []
         
         for tokens, tags, relations_probs in zip(tokens_batch, tags_batch, relations_probs_batch):
-            is_kbqa = self.whether_question_is_not_kbqa(tokens)
+            is_kbqa = self.is_kbqa_question(tokens)
             if is_kbqa:
                 if self._templates_filename is not None:
                     entity_from_template, relation_from_template = self.entities_and_rels_from_templates(tokens)
@@ -192,16 +191,16 @@ class KBAnswerParserWikidata(Component, Serializable):
         relation = ''
         for template in self.templates:
             template_start, template_end = template.lower().split('xxx')
-            template_start_pos = s_sanitized.find(template_start)
-            template_end_pos = s_sanitized.find(template_end)
-            if template_start_pos > -1 and template_end_pos > -1:
+            if template_start in s_sanitized and template_end in s_sanitized:
+                template_start_pos = s_sanitized.find(template_start)
+                template_end_pos = s_sanitized.find(template_end)
                 ent_cand = s_sanitized[template_start_pos+len(template_start): template_end_pos or len(s_sanitized)]
                 if len(ent_cand) < len(ent) or len(ent) == 0:
                     ent = ent_cand
                     relation = self.templates[template]
         return ent, relation
 
-    def whether_question_is_not_kbqa(self, question_tokens: List[List[str]]) -> bool:
+    def is_kbqa_question(self, question_tokens: List[List[str]]) -> bool:
         not_kbqa_question_templates = ["почему", "когда будет", "что будет", "что если", "для чего", "как "]
         kbqa_question_templates = ["как зовут", "как называется"]
         question_init = ' '.join(question_tokens)

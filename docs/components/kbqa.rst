@@ -58,4 +58,4 @@ Models can be used from Python using the following code:
 
     kbqa_model = build_model(configs.kbqa.kbqa_mix_lowercase, download=True)
     kbqa_model(['Когда родился Пушкин?'])
-    >>> ["26 May 1799"]
+    >>> ["1799-05-26"]
