@@ -62,5 +62,4 @@ def model_function():
     return infer
 
 
-experimental_bot(model_function, token='769111036:AAH6munDVBREi0fSCeiPij2K1dViKbBhE4E',
-                 proxy='socks5://tgproxy:tgproxy_pwd@159.65.126.171:1337')
+experimental_bot(model_function, token=getenv('TELEGRAM_TOKEN'), proxy=getenv('TELEGRAM_PROXY'))
