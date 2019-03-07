@@ -34,8 +34,8 @@ class SkillManager:
             s = copy.deepcopy(state)
             compressed_dialogs = list(compress(s['dialogs'], map(operator.not_, exclude)))
             if not compressed_dialogs:
-                skill_names = list(filter(lambda x: x != skill['name'], skill_names))
-                skill_urls = list(filter(lambda x: x != skill['url'], skill_urls))
+                skill_names = [n for n in skill_names if n != skill['name']]
+                skill_urls = [u for u in skill_names if u != skill['url']]
                 continue
             s['dialogs'] = compressed_dialogs
             payloads.append(s)

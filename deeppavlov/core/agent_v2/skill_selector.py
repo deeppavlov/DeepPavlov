@@ -26,7 +26,7 @@ class ChitchatQASelector(SkillSelector):
 
     def __init__(self, rest_caller):
         super().__init__(rest_caller)
-        self.skill_names_map = {selector_names: list(filter(lambda x: x not in self.rest_caller.names, agent_names))
+        self.skill_names_map = {selector_names: [an for an in agent_names if an in self.rest_caller.names]
                                 for selector_names, agent_names in self.SKILL_NAMES_MAP.items()}
 
     def __call__(self, state: Dict) -> List[List[str]]:
