@@ -22,7 +22,6 @@ from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from pathlib import Path
-from datetime import datetime
 from string import punctuation
 from deeppavlov.models.kbqa.entity_linking import EntityLinker
 
@@ -93,34 +92,40 @@ class KBAnswerParserWikidata(Component, Serializable):
 
         objects_batch = []
         confidences_batch = []
+        
         for tokens, tags, relations_probs in zip(tokens_batch, tags_batch, relations_probs_batch):
-            if self._templates_filename is not None:
-                entity_from_template, relation_from_template = self.entities_and_rels_from_templates(tokens)
+            is_kbqa = self.whether_question_is_not_kbqa(tokens)
+            if is_kbqa:
+                if self._templates_filename is not None:
+                    entity_from_template, relation_from_template = self.entities_and_rels_from_templates(tokens)
+                else:
+                    entity_from_template = None
+                if entity_from_template:
+                    if self._debug:
+                        relation_title = self._relations_mapping[relation_from_template]
+                        log.info("entity {}, relation {}".format(entity_from_template, relation_title))
+                    entity_triplets, entity_linking_confidences = self.linker(entity_from_template, tokens)
+                    relation_prob = 1.0
+                    obj, confidence = self._match_triplet(entity_triplets,
+                                                          entity_linking_confidences,
+                                                          [relation_from_template],
+                                                          [relation_prob])
+                else:
+                    entity_from_ner = self.extract_entities(tokens, tags)
+                    entity_triplets, entity_linking_confidences = self.linker(entity_from_ner, tokens)
+                    top_k_relations, top_k_probs = self._parse_relations_probs(relations_probs)
+                    top_k_relation_names = [self._relations_mapping[rel] for rel in top_k_relations]
+                    if self._debug:
+                        log.info("top k relations {}" .format(str(top_k_relation_names)))
+                    obj, confidence = self._match_triplet(entity_triplets,
+                                                          entity_linking_confidences,
+                                                          top_k_relations,
+                                                          top_k_probs)
+                objects_batch.append(obj)
+                confidences_batch.append(confidence)
             else:
-                entity_from_template = None
-            if entity_from_template:
-                if self._debug:
-                    relation_title = self._relations_mapping[relation_from_template]
-                    log.info("entity {}, relation {}".format(entity_from_template, relation_title))
-                entity_triplets, entity_linking_confidences = self.linker(entity_from_template, tokens)
-                relation_prob = 1.0
-                obj, confidence = self._match_triplet(entity_triplets,
-                                                      entity_linking_confidences,
-                                                      [relation_from_template],
-                                                      [relation_prob])
-            else:
-                entity_from_ner = self.extract_entities(tokens, tags)
-                entity_triplets, entity_linking_confidences = self.linker(entity_from_ner, tokens)
-                top_k_relations, top_k_probs = self._parse_relations_probs(relations_probs)
-                top_k_relation_names = [self._relations_mapping[rel] for rel in top_k_relations]
-                if self._debug:
-                    log.info("top k relations {}" .format(str(top_k_relation_names)))
-                obj, confidence = self._match_triplet(entity_triplets,
-                                                      entity_linking_confidences,
-                                                      top_k_relations,
-                                                      top_k_probs)
-            objects_batch.append(obj)
-            confidences_batch.append(confidence)
+                objects_batch.append('')
+                confidences_batch.append(0.0)
 
         parsed_objects_batch, confidences_batch = self._parse_wikidata_object(objects_batch, confidences_batch)
         if self.return_confidences:
@@ -165,7 +170,7 @@ class KBAnswerParserWikidata(Component, Serializable):
                         return obj, confidence
         return obj, confidence
 
-    def _parse_relations_probs(self, probs: List[float]) -> List[str]:
+    def _parse_relations_probs(self, probs: List[float]) -> Tuple[List[str], List[str]]:
         top_k_inds = np.asarray(probs).argsort()[-self.top_k_classes:][::-1]
         top_k_classes = [self.classes[k] for k in top_k_inds]
         top_k_probs = [probs[k] for k in top_k_inds]
@@ -187,9 +192,25 @@ class KBAnswerParserWikidata(Component, Serializable):
         relation = ''
         for template in self.templates:
             template_start, template_end = template.lower().split('xxx')
-            if s_sanitized.startswith(template_start) and s_sanitized.endswith(template_end):
-                ent_cand = s_sanitized[len(template_start): -len(template_end) or len(s_sanitized)]
+            template_start_pos = s_sanitized.find(template_start)
+            template_end_pos = s_sanitized.find(template_end)
+            if template_start_pos > -1 and template_end_pos > -1:
+                ent_cand = s_sanitized[template_start_pos+len(template_start): template_end_pos or len(s_sanitized)]
                 if len(ent_cand) < len(ent) or len(ent) == 0:
                     ent = ent_cand
                     relation = self.templates[template]
         return ent, relation
+
+    def whether_question_is_not_kbqa(self, question_tokens: List[List[str]]) -> bool:
+        not_kbqa_question_templates = ["почему", "когда будет", "что будет", "что если", "для чего", "как "]
+        kbqa_question_templates = ["как зовут", "как называется"]
+        question_init = ' '.join(question_tokens)
+        question = ''.join([ch for ch in question_init if ch not in punctuation]).lower()
+        is_kbqa = True
+        for template in not_kbqa_question_templates:
+            if question.find(template) > -1:
+                is_kbqa = False
+        for template in kbqa_question_templates:
+            if question.find(template) > -1:
+                is_kbqa = True
+        return is_kbqa
