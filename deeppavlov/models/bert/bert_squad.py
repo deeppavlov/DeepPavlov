@@ -218,8 +218,18 @@ class BertSQuADModel(LRScheduledTFModel):
 
         return feed_dict
 
-    def train_on_batch(self, features: List[InputFeatures], y_st, y_end) -> Dict:
-        # TODO: docs
+    def train_on_batch(self, features: List[InputFeatures], y_st: List[List[int]], y_end: List[List[int]]) -> Dict:
+        """call train_op using features and labels from y_st and y_end
+
+        Args:
+            features: batch of InputFeatures instances
+            y_st: batch of lists of ground truth answer start positions
+            y_end: batch of lists of ground truth answer end positions
+
+        Returns:
+            dict with values for logger: loss and current learning rate
+
+        """
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
@@ -233,7 +243,15 @@ class BertSQuADModel(LRScheduledTFModel):
         return {'loss': loss, 'learning_rate': feed_dict[self.learning_rate_ph]}
 
     def __call__(self, features: List[InputFeatures]) -> Tuple[List[int], List[int], List[float], List[float]]:
-        # TODO: docs
+        """get predictions using features as input
+
+        Args:
+            features: batch of InputFeatures instances
+
+        Returns:
+            predictions: start, end positions, logits for answer and no_answer score
+
+        """
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
@@ -241,16 +259,6 @@ class BertSQuADModel(LRScheduledTFModel):
         feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids)
         st, end, logits, scores = self.sess.run([self.start_pred, self.end_pred, self.yp_logits, self.yp_score], feed_dict=feed_dict)
         return st, end, logits.tolist(), scores.tolist()
-
-    def process_event(self, event_name: str, data) -> None:
-        """
-        Processes events sent by trainer. Implements learning rate decay.
-
-        Args:
-            event_name: event_name sent by trainer
-            data: number of examples, epochs, metrics sent by trainer
-        """
-        super().process_event(event_name, data)
 
 
 @register('squad_bert_infer')
