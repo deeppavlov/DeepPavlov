@@ -46,7 +46,7 @@ class BertSQuADModel(LRScheduledTFModel):
     of Bert outputs.
 
     Args:
-        bert_config_file
+        bert_config_file: path to Bert configuration file
         keep_prob: dropout keep_prob for non-Bert layers
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
