@@ -189,7 +189,7 @@ class BertNerModel(LRScheduledTFModel):
                        input_ids: List[List[int]],
                        input_masks: List[List[int]],
                        y: List[List[int]]) -> dict:
-        input_type_ids = [[0] * len(inputs) for inputs in input_ids]
+        input_type_ids = [[0] * len(inputs) for inputs in input_ids]  # TODO: make placeholder with default
         for ids, masks, ys in zip(input_ids, input_masks, y):
             assert len(ids) == len(masks) == len(ys), \
                 f"ids({len(ids)}) = {ids}, masks({len(masks)}) = {masks},"\
