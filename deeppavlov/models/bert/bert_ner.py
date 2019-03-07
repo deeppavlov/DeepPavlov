@@ -114,7 +114,7 @@ class BertNerModel(LRScheduledTFModel):
             logits = tf.layers.dense(output_layer, units=self.n_tags, name="output_dense")
 
             self.y_predictions = tf.argmax(logits, -1)
-            self.y_probas = tf.nn.sigmoid(logits)
+            self.y_probas = tf.nn.softmax(logits, axis=2)
 
         with tf.variable_scope("loss"):
             # NOTE: same mask as for inputs?
