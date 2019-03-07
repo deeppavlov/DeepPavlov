@@ -111,7 +111,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/multi_cased_L-12_H-768_A-12.zip",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v1.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/bert_models"
       }
     ]

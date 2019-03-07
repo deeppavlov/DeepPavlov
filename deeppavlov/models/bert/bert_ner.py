@@ -32,18 +32,18 @@ class BertNerModel(LRScheduledTFModel):
     # TODO: add warmup
     # TODO: add head-only pre-training
     def __init__(self,
-                 bert_config_file,
-                 n_tags,
-                 keep_prob,
-                 attention_probs_keep_prob=None,
-                 hidden_keep_prob=None,
-                 encoder_layer_ids=list(range(12)),
-                 optimizer=None,
-                 num_warmup_steps=None,
-                 weight_decay_rate=0.01,
-                 return_probas=False,
-                 pretrained_bert=None,
-                 min_learning_rate=1e-06,
+                 bert_config_file: str,
+                 n_tags: List[str],
+                 keep_prob: float,
+                 attention_probs_keep_prob: float = None,
+                 hidden_keep_prob: float = None,
+                 encoder_layer_ids: List[int] = list(range(12)),
+                 optimizer: str = None,
+                 num_warmup_steps: int = None,
+                 weight_decay_rate: float = 0.01,
+                 return_probas: bool = False,
+                 pretrained_bert: str = None,
+                 min_learning_rate: float = 1e-06,
                  **kwargs) -> None:
         super().__init__(**kwargs)
 
