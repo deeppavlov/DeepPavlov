@@ -9,7 +9,7 @@ pattern = re.compile(r'^https?://(?P<host>.*):(?P<port>\d*)(?P<endpoint>.*)$')
 
 processes = []
 for item in SKILLS + ANNOTATORS + SKILL_SELECTORS + RESPONSE_SELECTORS:
-    if not item['path']:
+    if item['path'] is None:
         continue
     url = item['url']
     parsed = pattern.search(url)

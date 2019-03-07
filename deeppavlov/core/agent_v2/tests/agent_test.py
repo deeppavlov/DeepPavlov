@@ -9,20 +9,20 @@ from deeppavlov.core.agent_v2.rest_caller import RestCaller
 from deeppavlov.core.agent_v2.preprocessor import IndependentPreprocessor
 from deeppavlov.core.agent_v2.response_selector import ConfidenceResponseSelector
 from deeppavlov.core.agent_v2.config import MAX_WORKERS, ANNOTATORS, SKILL_SELECTORS
-from deeppavlov.core.agent_v2.skill_selector import ChitchatOdqaSelector
+from deeppavlov.core.agent_v2.skill_selector import ChitchatQASelector
 from deeppavlov.core.agent_v2.state_schema import Human
 
-ner = build_model(configs.ner.ner_rus, download=True)
-faq = build_model(configs.faq.tfidf_autofaq, download=True)
-sentiment = build_model(configs.classifiers.rusentiment_elmo_twitter_rnn, download=True)
-utterances = ['Привет!', 'Когда началась Вторая Мировая?',
-              'Привет, я бот!', '1939', 'Как дела?', 'Спасибо, бот!',
-              'Хорошо, а у тебя как?', 'И у меня нормально. Когда родился Петр Первый?',
-              'в 1672 году', 'спасибо', ]
-print("DeepPavlov configs output:")
-print(ner(utterances))
-print(faq(utterances))
-print(sentiment(utterances))
+# ner = build_model(configs.ner.ner_rus, download=True)
+# faq = build_model(configs.faq.tfidf_autofaq, download=True)
+# sentiment = build_model(configs.classifiers.rusentiment_elmo_twitter_rnn, download=True)
+# utterances = ['Привет!', 'Когда началась Вторая Мировая?',
+#               'Привет, я бот!', '1939', 'Как дела?', 'Спасибо, бот!',
+#               'Хорошо, а у тебя как?', 'И у меня нормально. Когда родился Петр Первый?',
+#               'в 1672 году', 'спасибо', ]
+# print("DeepPavlov configs output:")
+# print(ner(utterances))
+# print(faq(utterances))
+# print(sentiment(utterances))
 
 state_manager = StateManager()
 
@@ -33,7 +33,7 @@ preprocessor = IndependentPreprocessor(
 skill_caller = RestCaller(max_workers=MAX_WORKERS)
 response_selector = ConfidenceResponseSelector()
 ss_names, ss_urls = zip(*[(selector['name'], selector['url']) for selector in SKILL_SELECTORS])
-skill_selector = ChitchatOdqaSelector(RestCaller(max_workers=MAX_WORKERS, names=ss_names, urls=ss_urls))
+skill_selector = ChitchatQASelector(RestCaller(max_workers=MAX_WORKERS, names=ss_names, urls=ss_urls))
 skill_manager = SkillManager(skill_selector=skill_selector, response_selector=response_selector,
                              skill_caller=skill_caller)
 
