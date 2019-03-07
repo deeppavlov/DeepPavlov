@@ -13,10 +13,12 @@
 # limitations under the License.
 
 from logging import getLogger
+from typing import List, Dict, Union
 
 import tensorflow as tf
 from bert_dp.modeling import BertConfig, BertModel
 from bert_dp.optimization import AdamWeightDecayOptimizer
+from bert_dp.preprocessing import InputFeatures
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
@@ -41,7 +43,7 @@ class BertClassifierModel(LRScheduledTFModel):
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
         optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
-        num_warmup_steps: 
+        num_warmup_steps:
         weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
         pretrained_bert: pretrained Bert checkpoint
         min_learning_rate: min value of learning rate if learning rate decay is used
@@ -198,7 +200,18 @@ class BertClassifierModel(LRScheduledTFModel):
 
         return feed_dict
 
-    def train_on_batch(self, features, y):
+    def train_on_batch(self, features: List[InputFeatures], y: Union[List[int], List[List[int]]]) -> Dict:
+        """Train model on given batch.
+        This method calls train_op using features and y (labels).
+
+        Args:
+            features: batch of InputFeatures
+            y: batch of labels (class id or one-hot encoding)
+
+        Returns:
+            dict with loss and learning_rate values
+
+        """
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
@@ -208,8 +221,16 @@ class BertClassifierModel(LRScheduledTFModel):
         _, loss = self.sess.run([self.train_op, self.loss], feed_dict=feed_dict)
         return {'loss': loss, 'learning_rate': feed_dict[self.learning_rate_ph]}
 
-    def __call__(self, features):
+    def __call__(self, features: List[InputFeatures]) -> Union[List[int], List[List[float]]]:
+        """Make prediction for given features (texts).
 
+        Args:
+            features: batch of InputFeatures
+
+        Returns:
+            predicted classes or probabilities of each class
+
+        """
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]

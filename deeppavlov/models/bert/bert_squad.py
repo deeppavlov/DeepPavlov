@@ -219,7 +219,8 @@ class BertSQuADModel(LRScheduledTFModel):
         return feed_dict
 
     def train_on_batch(self, features: List[InputFeatures], y_st: List[List[int]], y_end: List[List[int]]) -> Dict:
-        """call train_op using features and labels from y_st and y_end
+        """Train model on given batch.
+        This method calls train_op using features and labels from y_st and y_end
 
         Args:
             features: batch of InputFeatures instances
@@ -227,7 +228,7 @@ class BertSQuADModel(LRScheduledTFModel):
             y_end: batch of lists of ground truth answer end positions
 
         Returns:
-            dict with values for logger: loss and current learning rate
+            dict with loss and learning_rate values
 
         """
         input_ids = [f.input_ids for f in features]
