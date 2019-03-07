@@ -37,6 +37,7 @@ class BertNerModel(LRScheduledTFModel):
                  keep_prob,
                  attention_probs_keep_prob=None,
                  hidden_keep_prob=None,
+                 encoder_layer_ids=list(range(12)),
                  optimizer=None,
                  num_warmup_steps=None,
                  weight_decay_rate=0.01,
@@ -51,6 +52,7 @@ class BertNerModel(LRScheduledTFModel):
         self.min_learning_rate = min_learning_rate
         self.keep_prob = keep_prob
         self.optimizer = optimizer
+        self.encoder_layer_ids = encoder_layer_ids
         self.num_warmup_steps = num_warmup_steps
         self.weight_decay_rate = weight_decay_rate
 
@@ -102,7 +104,8 @@ class BertNerModel(LRScheduledTFModel):
                               token_type_ids=self.token_types_ph,
                               use_one_hot_embeddings=False)
 
-        encoder_layers = self.bert.all_encoder_layers
+        encoder_layers = [self.bert.all_encoder_layers[i]
+                          for i in self.encoder_layer_ids]
 
         with tf.variable_scope('ner'):
             output_layer = sum(encoder_layers) / len(encoder_layers)
