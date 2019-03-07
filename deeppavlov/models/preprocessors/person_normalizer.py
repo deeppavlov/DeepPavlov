@@ -100,7 +100,7 @@ class PersonNormalizer(Component):
                     else:
                         # it isn't
                         out_tags.extend(tags[i+1:i+j])
-                    i += j + 1
+                    i += j
                     continue
             if i > 0:
                 if (tok == ',') and (tags[i - 1][2:] == 'PER'):
