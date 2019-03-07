@@ -27,14 +27,32 @@ logger = getLogger(__name__)
 
 @register('bert_classifier')
 class BertClassifierModel(LRScheduledTFModel):
-    # TODO: docs
+    """Bert-based model for text classification.
+
+    It uses output from [CLS] token and predicts labels using linear transformation.
+
+    Args:
+        bert_config_file: path to Bert configuration file
+        n_classes: number of classes
+        keep_prob: dropout keep_prob for non-Bert layers
+        one_hot_labels: set True if one-hot encoding for labels is used
+        multilabel: set True if it is multi-label classification
+        return_probas: set True if return class probabilites instead of most probable label needed
+        attention_probs_keep_prob: keep_prob for Bert self-attention layers
+        hidden_keep_prob: keep_prob for Bert hidden layers
+        optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
+        num_warmup_steps: 
+        weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
+        pretrained_bert: pretrained Bert checkpoint
+        min_learning_rate: min value of learning rate if learning rate decay is used
+    """
     # TODO: add warmup
     # TODO: add head-only pre-training
     def __init__(self, bert_config_file, n_classes, keep_prob,
-                 one_hot_labels=False, multilabel=False,
+                 one_hot_labels=False, multilabel=False, return_probas=False,
                  attention_probs_keep_prob=None, hidden_keep_prob=None,
                  optimizer=None, num_warmup_steps=None, weight_decay_rate=0.01,
-                 return_probas=False, pretrained_bert=None, min_learning_rate=1e-06, **kwargs) -> None:
+                 pretrained_bert=None, min_learning_rate=1e-06, **kwargs) -> None:
         super().__init__(**kwargs)
 
         self.return_probas = return_probas
