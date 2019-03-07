@@ -16,7 +16,7 @@
         "class_name": "bert_ner_preprocessor",
         "vocab_file": "{BERT_PATH}/vocab.txt",
         "do_lower_case": false,
-        "max_seq_length": 213,
+        "max_seq_length": 231,
         "max_subword_length": 15,
         "in": ["x", "y"],
         "out": ["x_subword_tokens", "x_subword_tok_ids", "subword_mask", "y_subword"]
@@ -84,7 +84,7 @@
         "inputs": ["y_cut", "y_pred_cut"]
       }
     ],
-    "validation_patience": 20,
+    "validation_patience": 40,
     "val_every_n_batches": 20,
 
     "log_every_n_batches": 20,
