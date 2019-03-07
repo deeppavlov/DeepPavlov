@@ -37,8 +37,8 @@
         ],
         "id": "tfidf_vec",
         "class_name": "sklearn_component",
-        "save_path": "{MODELS_PATH}/vectorizer/tfidf_vectorizer_ruwiki.pkl",
-        "load_path": "{MODELS_PATH}/vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "save_path": "{MODELS_PATH}/vectorizer/tfidf_vectorizer_ruwiki_v1.pkl",
+        "load_path": "{MODELS_PATH}/vectorizer/tfidf_vectorizer_ruwiki_v1.pkl",
         "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
         "infer_method": "transform"
       },
@@ -104,7 +104,7 @@
         "subdir": "{MODELS_PATH}/faq"
       },
       {
-        "url": "http://files.deeppavlov.ai/vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "url": "http://files.deeppavlov.ai/vectorizer/tfidf_vectorizer_ruwiki_v1.pkl",
         "subdir": "{MODELS_PATH}/vectorizer"
       },
       {
