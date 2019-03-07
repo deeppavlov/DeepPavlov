@@ -27,7 +27,7 @@
 
 import tensorflow as tf
 
-from deeppavlov.core.common.log import init_logger 
+from deeppavlov.core.common.log import init_logger
 import deeppavlov.models.ranking.matching_models.dam_utils.operations as op
 
 log = init_logger()
