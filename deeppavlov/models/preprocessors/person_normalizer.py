@@ -309,8 +309,10 @@ class NameAskerPostprocessor(Component):
 
     def __init__(self,
                  state_slot: str = 'user_name',
+                 flag_slot: str = 'asked_name',
                  **kwargs) -> None:
         self.state_slot = state_slot
+        self.flag_slot = flag_slot
 
     def __call__(self,
                  utters: List[str],
@@ -318,19 +320,26 @@ class NameAskerPostprocessor(Component):
                  states: List[dict],
                  responses: List[str],
                  **kwargs) -> List[str]:
-        new_responses = []
+        new_responses, new_states = [], []
+        print(f"states in NameAsker = {states}")
         states = states if states else [{}] * len(utters)
         for utter, hist, state, resp in zip(utters, histories, states, responses):
-            if self.state_slot not in (state or {}):
-                if (len(hist) == 0) and (random.random() > 0.8):
+            state = state or {}
+            if (self.state_slot not in state) and\
+                    (self.flag_slot not in state):
+                if (len(hist) == 0) and (random.random() < 0.2):
                     new_responses.append('Привет! Тебя как зовут?')
-                elif (len(hist) < 2) and (random.random() > 0.4):
+                    state[self.flag_slot] = True
+                elif (len(hist) < 2) and (random.random() < 0.5):
                     new_responses.append('Как тебя зовут?')
-                elif (len(hist) >= 2) and (random.random() > 0.9):
+                    state[self.flag_slot] = True
+                elif (len(hist) >= 2) and (random.random() < 0.1):
                     new_responses.append('Тебя как зовут-то?')
+                    state[self.flag_slot] = True
                 else:
                     new_responses.append(resp)
             else:
                 new_responses.append(resp)
-        return new_responses
+            new_states.append(state)
+        return new_responses, new_states
 
