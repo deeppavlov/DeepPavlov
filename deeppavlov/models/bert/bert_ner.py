@@ -37,7 +37,7 @@ class BertNerModel(LRScheduledTFModel):
                  keep_prob: float,
                  attention_probs_keep_prob: float = None,
                  hidden_keep_prob: float = None,
-                 encoder_layer_ids: List[int] = list(range(12)),
+                 encoder_layer_ids: List[int] = tuple(range(12)),
                  optimizer: str = None,
                  num_warmup_steps: int = None,
                  weight_decay_rate: float = 0.01,
