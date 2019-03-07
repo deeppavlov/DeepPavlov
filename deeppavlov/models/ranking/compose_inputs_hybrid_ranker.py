@@ -54,11 +54,15 @@ class ComposeInputsHybridRanker(Component):
 
             # search TF-IDF by last utterance only OR using all history
             if self.use_history:
-                queries = expanded_context
+                queries = []
+                for i in expanded_context:
+                    if len(i) > 0: queries.append(i)
+                queries.append(" ".join(expanded_context))
             elif self.use_user_context_for_query:
                 queries = []
                 for i in expanded_context[1::2]:
                     if len(i) > 0: queries.append(i)
+                queries.append(" ".join(expanded_context[1::2]))
             else:
                 queries = expanded_context[:-1]
 

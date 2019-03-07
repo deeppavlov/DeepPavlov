@@ -59,10 +59,10 @@ class HybridRankerPredictor(Component):
 
             chosen_index = np.random.choice(sorted_ids[:self.sample_size], p=w)
 
-            # logger.debug('candidates: ' + str([candidates_list[i] for i in sorted_ids[:self.sample_size]]) + 'scores: ' +
-            #              str([sorted_scores[i] for i in range(self.sample_size)]))  # DEBUG
-            # logger.debug('answer: ' + str(chosen_index) + " ; " + str(scores[chosen_index]) + " ; " +
-            #              str(candidates_list[chosen_index]))  # DEBUG
+            logger.debug('candidates: ' + str([candidates_list[i] for i in sorted_ids[:self.sample_size]]) + 'scores: ' +
+                         str([sorted_scores[i] for i in range(self.sample_size)]))  # DEBUG
+            logger.debug('answer: ' + str(chosen_index) + " ; " + str(scores[chosen_index]) + " ; " +
+                         str(candidates_list[chosen_index]))  # DEBUG
 
             responses_batch.append(candidates_list[chosen_index])
             responses_preds.append(scores[chosen_index])

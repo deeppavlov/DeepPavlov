@@ -32,7 +32,7 @@ class TfidfRankerAdv(Component):
 
     """
 
-    def __init__(self, vectorizer: HashingTfIdfVectorizer, top_n=5, max_n=10, active: bool = True, **kwargs):
+    def __init__(self, vectorizer: HashingTfIdfVectorizer, top_n=5, max_n: List[int] = None, active: bool = True, **kwargs):
 
         self.max_n = max_n
         self.top_n = top_n
@@ -49,14 +49,15 @@ class TfidfRankerAdv(Component):
         batch_doc_ids, batch_docs_scores = [], []
 
         for batch_q in batch_questions:
-            self.top_n = self.max_n // len(batch_q)
-            logger.debug("batch_q: " + str(batch_q))
+
+            # logger.debug("batch_q: " + str(batch_q))
             q_tfidfs = self.vectorizer(batch_q)
 
             doc_scores = []
             doc_ids = []
-            for q_tfidf in q_tfidfs:
-                logger.debug("vector: " + str(q_tfidf))
+            for j, q_tfidf in enumerate(q_tfidfs):
+                self.top_n = self.max_n[j]
+                # logger.debug("vector: " + str(q_tfidf))
 
                 scores = q_tfidf * self.vectorizer.tfidf_matrix
                 scores = np.squeeze(
@@ -75,7 +76,7 @@ class TfidfRankerAdv(Component):
 
                 doc_scores.extend(scores[o_sort])
                 doc_ids.extend([self.vectorizer.index2doc[i] for i in o_sort])
-                logger.debug("[docs]: " + str(doc_scores) + str(doc_ids))
+                # logger.debug("[docs]: " + str(doc_scores) + str(doc_ids))
 
             # Then we should sort doc_ids, doc_scores
             # TODO:

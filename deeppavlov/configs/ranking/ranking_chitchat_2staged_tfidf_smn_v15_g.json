@@ -1,5 +1,5 @@
 {
-  "info": "(v13) Gopnik V2 Bot. Books_v2 + VK + pBot. +replaced replicas; -hedgehogs. Total 593060 dialogs",
+  "info": "(v15g) Gopnik V2 Bot. Books_v2 + VK + pBot. +replaced replicas; -hedgehogs. Total 593060 dialogs",
   "chainer": {
     "in": ["utterances_batch", "history_batch", "states_batch"],
     "pipe": [
