@@ -1,5 +1,7 @@
 from typing import Dict, List, Tuple
 
+from deeppavlov.core.agent_v2.config import SKILLS
+
 
 class SkillSelector:
     def __init__(self, rest_caller=None):
@@ -26,7 +28,8 @@ class ChitchatQASelector(SkillSelector):
 
     def __init__(self, rest_caller):
         super().__init__(rest_caller)
-        self.skill_names_map = {selector_names: [an for an in agent_names if an in self.rest_caller.names]
+        available_names = [s['name'] for s in SKILLS]
+        self.skill_names_map = {selector_names: [an for an in available_names if an in available_names]
                                 for selector_names, agent_names in self.SKILL_NAMES_MAP.items()}
 
     def __call__(self, state: Dict) -> List[List[str]]:

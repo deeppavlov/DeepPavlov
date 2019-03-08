@@ -33,10 +33,8 @@ class RestCaller:
         if not isinstance(payload, Sequence):
             payload = [payload] * len(names)
 
-        services_functions = [partial(_make_request, name, url, p)
-                              for name, url, p in zip(names, urls, payload)]
         total_result = []
-        for preprocessed in zip(*self.executor.map(lambda f: f(), services_functions)):
+        for preprocessed in zip(*self.executor.map(_make_request, names, urls, payload)):
             res = {}
             for data in preprocessed:
                 res.update(data)

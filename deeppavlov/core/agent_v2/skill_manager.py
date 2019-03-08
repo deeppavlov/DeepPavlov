@@ -22,7 +22,7 @@ class SkillManager:
         if self.skill_selector is not None:
             selected_skills = self.skill_selector(state)
         else:
-            selected_skills = [s['name'] for s in self.skills] * n_dialogs
+            selected_skills = skill_names * n_dialogs
 
         excluded_skills = []
         for active_names in selected_skills:
@@ -34,8 +34,8 @@ class SkillManager:
             s = copy.deepcopy(state)
             compressed_dialogs = list(compress(s['dialogs'], map(operator.not_, exclude)))
             if not compressed_dialogs:
-                skill_names = [n for n in skill_names if n != skill['name']]
-                skill_urls = [u for u in skill_names if u != skill['url']]
+                skill_names = skill_names.remove(skill['name'])
+                skill_urls = skill_urls.remove(skill['url'])
                 continue
             s['dialogs'] = compressed_dialogs
             payloads.append(s)
