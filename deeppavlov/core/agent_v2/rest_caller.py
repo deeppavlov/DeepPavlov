@@ -1,6 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
-from typing import Dict, List, Any, Optional, Iterable
+from typing import Dict, List, Any, Optional, Sequence, Union
 
 import requests
 
@@ -17,23 +17,24 @@ class RestCaller:
     Call to REST services, annotations or skills.
     """
 
-    def __init__(self, max_workers: Optional[int] = None, names: Optional[Iterable[str]] = None,
-                 urls: Optional[Iterable[str]] = None) -> None:
+    def __init__(self, max_workers: Optional[int] = None, names: Optional[Sequence[str]] = None,
+                 urls: Optional[Sequence[str]] = None) -> None:
         self.names = tuple(names or ())
         self.urls = tuple(urls or ())
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
 
-    def __call__(self, payload: dict, names: Optional[Iterable[str]] = None,
-                 urls: Optional[Iterable[str]] = None) -> List[Dict[str, Dict[str, Any]]]:
+    def __call__(self, payload: Union[Dict, Sequence[Dict]], names: Optional[Sequence[Sequence[str]]] = None,
+                 urls: Optional[Sequence[Sequence[str]]] = None) -> List[Dict[str, Dict[str, Any]]]:
         if names is None:
             names = self.names
         if urls is None:
             urls = self.urls
 
-        services_functions = [partial(_make_request, name, url)
-                              for name, url in zip(names, urls)]
+        if not isinstance(payload, Sequence):
+            payload = [payload] * len(names)
+
         total_result = []
-        for preprocessed in zip(*self.executor.map(lambda f: f(payload), services_functions)):
+        for preprocessed in zip(*self.executor.map(_make_request, names, urls, payload)):
             res = {}
             for data in preprocessed:
                 res.update(data)

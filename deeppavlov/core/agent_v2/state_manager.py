@@ -1,6 +1,6 @@
 from typing import Sequence, Hashable, Any
 
-from deeppavlov.core.agent_v2.state_schema import Human, Utterance, BotUtterance, Dialog
+from deeppavlov.core.agent_v2.state_schema import Human, Bot, Utterance, BotUtterance, Dialog
 from deeppavlov.core.agent_v2.connection import state_storage
 from deeppavlov.core.agent_v2.bot import BOT
 from deeppavlov.core.agent_v2 import VERSION
@@ -104,7 +104,7 @@ class StateManager:
 
     @staticmethod
     def create_new_utterance(text, user, date_time, annotations=None):
-        if user.__class__.__name__ == 'Bot':
+        if isinstance(user, Bot):
             raise RuntimeError(
                 'Utterances of bots should be created with different method. See create_new_bot_utterance()')
         utt = Utterance(text=text,
