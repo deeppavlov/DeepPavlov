@@ -1,0 +1,52 @@
+{
+  "info": "(v4) Agent_v2-based ranking chit-chat. Using cleaned dataset Books + VK 2-turns dialogs + pBot. There are 279901 items in total.",
+  "chainer": {
+    "in": ["dialogs"],
+    "pipe": [
+      {
+        "class_name": "dialogs_parser",
+        "in": ["dialogs"],
+        "out": [
+          "utterances_batch",
+          "last_annotations",
+          "history_batch",
+          "annotations_histories",
+          "dialog_ids",
+          "user_ids"
+        ]
+      },
+      {
+        "class_name": "dialogs_persona_parser",
+        "in": ["dialogs"],
+        "out": ["personas"]
+      },
+      {
+        "info": "Generate responses using a transformer",
+        "class_name": "transformer_chit_chat",
+        "bert_vocab_path": "{MODELS_PATH}/transformer_chit_chat_40k_v01_1_20/model/std_lm_vocab.40k.txt",
+        "load_path": "{MODELS_PATH}/transformer_chit_chat_40k_v01_1_20/model/bert_v40k_fin_v0.1.1.20",
+        "in": ["utterances_batch", "history_batch", "personas"],
+        "out": ["text", "confidence", "raw_responses"]
+      }
+    ],
+    "out": ["text", "confidence"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/pytorch-pretrained-bert.txt",
+      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/dev/chitchat_2staged_tfidf_smn_v3.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      }
+    ]
+  }
+}
