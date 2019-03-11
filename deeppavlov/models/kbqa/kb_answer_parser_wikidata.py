@@ -12,18 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pickle
+from pathlib import Path
+from string import punctuation
 from logging import getLogger
-from typing import List, Tuple
+from typing import List, Tuple, Optional, Dict
 
 import numpy as np
-import pickle
-from deeppavlov.core.models.serializable import Serializable
 
+from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
-from pathlib import Path
-from datetime import datetime
-from string import punctuation
 from deeppavlov.models.kbqa.entity_linking import EntityLinker
 
 log = getLogger(__name__)
@@ -32,34 +31,48 @@ log = getLogger(__name__)
 @register('kb_answer_parser_wikidata')
 class KBAnswerParserWikidata(Component, Serializable):
     """
-       Class for generation of answer using triplets with the entity
-       in the question and relations predicted from the question by the
-       relation prediction model.
-       We search a triplet with the predicted relations
+        This class generates an answer for a given question using Wikidata.
+        It searches for matching triplet from the Wikidata with entity and
+        relation mentioned in the question. It uses results of the Named
+        Entity Recognition component to extract entity mention and Classification
+        component to determine relation which connects extracted entity and the
+        answer entity.
     """
 
     def __init__(self, load_path: str, top_k_classes: int, linker: EntityLinker, classes_vocab_keys: Tuple,
                  debug: bool = False, relations_maping_filename: str = None, templates_filename: str = None,
-                 return_confidences: bool = True, lemmatize: bool = True, rule_filter_entities: bool = False,
-                 *args, **kwargs) -> None:
+                 return_confidences: bool = True, *args, **kwargs) -> None:
+        """
+
+        Args:
+            load_path: path to folder with wikidata files
+            top_k_classes: number of relations with top k probabilities
+            linker: component `deeppavlov.models.kbqa.entity_linking`
+            classes_vocab_keys: list of relations predicted by `deeppavlov.models.ner.network` model
+            debug: whether to print entities and relations extracted from the question
+            relations_maping_filename: file with the dictionary of ids(keys) and titles(values) of relations
+            from Wikidata
+            templates_filename: file with the dictionary of question templates(keys) and relations for these templates
+            (values)
+            return_confidences: whether to return confidences of answers
+            *args:
+            **kwargs:
+        """
         super().__init__(save_path=None, load_path=load_path)
         self.top_k_classes = top_k_classes
         self.classes = list(classes_vocab_keys)
         self._debug = debug
         self._relations_filename = relations_maping_filename
         self._templates_filename = templates_filename
-        self._q_to_name = None
-        self._relations_mapping = None
-        self.templates = None
+        self._q_to_name: Optional[Dict[str, Dict[str, str]]] = None
+        self._relations_mapping: Optional[Dict[str, str]] = None
+        self.templates: Optional[Dict[str, str]] = None
         self.return_confidences = return_confidences
-        self.lemmatize = lemmatize
-        self.rule_filter_entities = rule_filter_entities
         self.linker = linker
         self.load()
 
     def load(self) -> None:
-        load_path = Path(self.load_path).expanduser()
-        with open(load_path, 'rb') as fl:
+        with open(self.load_path, 'rb') as fl:
             self._q_to_name = pickle.load(fl)
         if self._relations_filename is not None:
             with open(self.load_path.parent / self._relations_filename, 'rb') as f:
@@ -78,32 +91,40 @@ class KBAnswerParserWikidata(Component, Serializable):
 
         objects_batch = []
         confidences_batch = []
+
         for tokens, tags, relations_probs in zip(tokens_batch, tags_batch, relations_probs_batch):
-            if self._templates_filename is not None:
-                entity_from_template, relation_from_template = self.entities_and_rels_from_templates(tokens)
-                if self._debug:
-                    log.info("entity %s, relation %s" % (entity_from_template, relation_from_template))
+            is_kbqa = self.is_kbqa_question(tokens)
+            if is_kbqa:
+                if self._templates_filename is not None:
+                    entity_from_template, relation_from_template = self.entities_and_rels_from_templates(tokens)
+                else:
+                    entity_from_template = None
+                if entity_from_template:
+                    if self._debug:
+                        relation_title = self._relations_mapping[relation_from_template]
+                        log.info("entity {}, relation {}".format(entity_from_template, relation_title))
+                    entity_triplets, entity_linking_confidences = self.linker(entity_from_template, tokens)
+                    relation_prob = 1.0
+                    obj, confidence = self._match_triplet(entity_triplets,
+                                                          entity_linking_confidences,
+                                                          [relation_from_template],
+                                                          [relation_prob])
+                else:
+                    entity_from_ner = self.extract_entities(tokens, tags)
+                    entity_triplets, entity_linking_confidences = self.linker(entity_from_ner, tokens)
+                    top_k_relations, top_k_probs = self._parse_relations_probs(relations_probs)
+                    top_k_relation_names = [self._relations_mapping[rel] for rel in top_k_relations]
+                    if self._debug:
+                        log.info("top k relations {}" .format(str(top_k_relation_names)))
+                    obj, confidence = self._match_triplet(entity_triplets,
+                                                          entity_linking_confidences,
+                                                          top_k_relations,
+                                                          top_k_probs)
+                objects_batch.append(obj)
+                confidences_batch.append(confidence)
             else:
-                entity_from_template = None
-            if entity_from_template:
-                entity_triplets, entity_linking_confidences = self.linker(entity_from_template, tokens)
-                relation_prob = 1.0
-                obj, confidence = self._match_triplet(entity_triplets,
-                                                      entity_linking_confidences,
-                                                      [relation_from_template],
-                                                      [relation_prob])
-            else:
-                entity_from_ner = self.extract_entities(tokens, tags)
-                entity_triplets, entity_linking_confidences = self.linker(entity_from_ner, tokens)
-                top_k_relations, top_k_probs = self._parse_relations_probs(relations_probs)
-                if self._debug:
-                    log.info("top k relations %s" % (str(top_k_relations)))
-                obj, confidence = self._match_triplet(entity_triplets,
-                                                      entity_linking_confidences,
-                                                      top_k_relations,
-                                                      top_k_probs)
-            objects_batch.append(obj)
-            confidences_batch.append(confidence)
+                objects_batch.append('')
+                confidences_batch.append(0.0)
 
         parsed_objects_batch, confidences_batch = self._parse_wikidata_object(objects_batch, confidences_batch)
         if self.return_confidences:
@@ -124,13 +145,6 @@ class KBAnswerParserWikidata(Component, Serializable):
                     else:
                         parsed_objects.append('Not Found')
                         confidences_batch[n] = 0.0
-                elif obj.count('-') == 2 and obj.split('-')[0][0].isdigit():
-                    if int(obj.split('-')[0]) > 1000:
-                        dt = datetime.strptime(obj, "%Y-%m-%d")
-                        parsed_object = dt.strftime("%d %B %Y")
-                        parsed_objects.append(parsed_object)
-                    else:
-                        parsed_objects.append(obj)
                 else:
                     parsed_objects.append(obj)
             else:
@@ -155,7 +169,7 @@ class KBAnswerParserWikidata(Component, Serializable):
                         return obj, confidence
         return obj, confidence
 
-    def _parse_relations_probs(self, probs: List[float]) -> List[str]:
+    def _parse_relations_probs(self, probs: List[float]) -> Tuple[List[str], List[str]]:
         top_k_inds = np.asarray(probs).argsort()[-self.top_k_classes:][::-1]
         top_k_classes = [self.classes[k] for k in top_k_inds]
         top_k_probs = [probs[k] for k in top_k_inds]
@@ -177,9 +191,25 @@ class KBAnswerParserWikidata(Component, Serializable):
         relation = ''
         for template in self.templates:
             template_start, template_end = template.lower().split('xxx')
-            if s_sanitized.startswith(template_start) and s_sanitized.endswith(template_end):
-                ent_cand = s_sanitized[len(template_start): -len(template_end) or len(s_sanitized)]
+            if template_start in s_sanitized and template_end in s_sanitized:
+                template_start_pos = s_sanitized.find(template_start)
+                template_end_pos = s_sanitized.find(template_end)
+                ent_cand = s_sanitized[template_start_pos+len(template_start): template_end_pos or len(s_sanitized)]
                 if len(ent_cand) < len(ent) or len(ent) == 0:
                     ent = ent_cand
                     relation = self.templates[template]
         return ent, relation
+
+    def is_kbqa_question(self, question_tokens: List[List[str]]) -> bool:
+        not_kbqa_question_templates = ["почему", "когда будет", "что будет", "что если", "для чего", "как "]
+        kbqa_question_templates = ["как зовут", "как называется"]
+        question_init = ' '.join(question_tokens)
+        question = ''.join([ch for ch in question_init if ch not in punctuation]).lower()
+        is_kbqa = True
+        for template in not_kbqa_question_templates:
+            if question.find(template) > -1:
+                is_kbqa = False
+        for template in kbqa_question_templates:
+            if question.find(template) > -1:
+                is_kbqa = True
+        return is_kbqa
