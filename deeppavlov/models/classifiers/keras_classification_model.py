@@ -79,7 +79,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
 
     def __init__(self, embedding_size: int, n_classes: int,
                  model_name: str, optimizer: str = "Adam", loss: str = "binary_crossentropy",
-                 learning_rate: Union[float, List[float]] = None,
+                 learning_rate: Union[None, float, List[float]] = None,
                  learning_rate_decay: Optional[Union[float, str]] = 0.,
                  last_layer_activation: str = "sigmoid",
                  restore_lr: bool = False,

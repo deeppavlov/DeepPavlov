@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Union, Tuple
+from typing import Any, Union, Tuple, List, Optional
 from abc import abstractmethod
 import math
 from enum import IntEnum
 
 import numpy as np
-import tensorflow as tf
 
 from logging import getLogger
 from deeppavlov.core.common.errors import ConfigError
@@ -28,7 +27,7 @@ log = getLogger(__name__)
 
 
 class DecayType(IntEnum):
-    ''' Data class, each decay type is assigned a number. '''
+    """ Data class, each decay type is assigned a number. """
     NO = 1
     LINEAR = 2
     COSINE = 3
@@ -46,11 +45,11 @@ class DecayType(IntEnum):
             raise NotImplementedError
 
 
-class DecayScheduler():
-    '''
+class DecayScheduler:
+    """
     Given initial and endvalue, this class generates the next value
     depending on decay type and number of iterations. (by calling next_val().)
-    '''
+    """
 
     def __init__(self, dec_type: Union[str, DecayType], start_val: float,
                  num_it: int = 0, end_val: float = None, extra: float = None):
@@ -116,18 +115,18 @@ class DecayScheduler():
 DType = Union[str, DecayType]
 
 
-class LRScheduledModel():
+class LRScheduledModel:
     """
     Abstract model enhanced with optimizer, learning rate and momentum
     management and search.
     """
 
     @abstractmethod
-    def _init_learning_rate_variable():
+    def _init_learning_rate_variable(self):
         pass
 
     @abstractmethod
-    def _init_momentum_variable():
+    def _init_momentum_variable(self):
         pass
 
     @abstractmethod
@@ -144,22 +143,22 @@ class LRScheduledModel():
             pass
 
     def __init__(self,
-                 learning_rate: Union[float, Tuple[float, float]] = None,
+                 learning_rate: Union[None, float, Tuple[float, float]] = None,
                  learning_rate_decay: Union[DType, Tuple[DType, Any]] = DecayType.NO,
                  learning_rate_decay_epochs: int = 0,
                  learning_rate_decay_batches: int = 0,
                  learning_rate_drop_div: float = 2.0,
-                 learning_rate_drop_patience: int = None,
-                 momentum: Union[float, Tuple[float, float]] = None,
+                 learning_rate_drop_patience: Optional[int] = None,
+                 momentum: Union[None, float, Tuple[float, float]] = None,
                  momentum_decay: Union[DType, Tuple[DType, Any]] = DecayType.NO,
                  momentum_decay_epochs: int = 0,
                  momentum_decay_batches: int = 0,
-                 fit_batch_size: Union[int, str] = None,
-                 fit_learning_rate: Tuple[float, float] = [1e-7, 100],
+                 fit_batch_size: Union[None, int, str] = None,
+                 fit_learning_rate: Tuple[float, float] = (1e-7, 100),
                  fit_learning_rate_div: float = 10.,
                  fit_beta: float = 0.98,
                  fit_min_batches: int = 10,
-                 fit_max_batches: int = None,
+                 fit_max_batches: Optional[int] = None,
                  *args, **kwargs) -> None:
         if learning_rate_decay_epochs and learning_rate_decay_batches:
             raise ConfigError("isn't able to update learning rate every batch"
@@ -298,7 +297,7 @@ class LRScheduledModel():
         return {'smoothed_loss': losses, 'learning_rate': lrs}
 
     @staticmethod
-    def _get_best(values, losses, max_loss_div=0.9, min_val_div=10.0):
+    def _get_best(values: List[float], losses: List[float], max_loss_div: float = 0.9, min_val_div: float = 10.0):
         assert len(values) == len(losses), "lengths of values and losses should be equal"
         min_ind = np.argmin(losses)
         for i in range(min_ind - 1, 0, -1):
@@ -307,7 +306,7 @@ class LRScheduledModel():
                 return values[i + 1]
         return values[min_ind] / min_val_div
 
-    def process_event(self, event_name, data):
+    def process_event(self, event_name: str, data: dict):
         if event_name == "after_validation":
             if data['impatience'] > self._learning_rate_last_impatience:
                 self._learning_rate_cur_impatience += 1
