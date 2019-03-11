@@ -14,7 +14,7 @@ punct = re.compile('[!.,?]')
 def hello_bye(input_utter):
     # correct
     answers = None
-    if [None for mtch in spec_utters.match_inttros if mtch in input_utter]:
+    if input_utter =='/start':
         answers = random.sample(spec_utters.sample_inttros, 1)[0]
     if [None for mtch in spec_utters.match_ends if mtch in input_utter]:
         answers = random.sample(spec_utters.sample_ends, 1)[0]
