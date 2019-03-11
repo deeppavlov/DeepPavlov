@@ -1,5 +1,5 @@
 {
-  "info": "(v17g) Gopnik V3 Bot. Books_v2 + VK + pBot. +replaced replicas; -hedgehogs. +1.5M books0. > 2M dialogs",
+  "info": "(v17_g) Gopnik V3 Bot. Books_v2 + VK + pBot. +replaced replicas; -hedgehogs. +6.5M books0. ~7M dialogs",
   "chainer": {
     "in": ["utterances_batch", "history_batch", "states_batch"],
     "pipe": [

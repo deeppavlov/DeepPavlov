@@ -66,11 +66,11 @@ class ComposeInputsHybridRanker(Component):
             else:
                 queries = expanded_context[:-1]
 
-            logger.debug("\n\n[START]\nqueries: " + str(queries))   # DEBUG
+            # logger.debug("\n\n[START]\nqueries: " + str(queries))   # DEBUG
             query_batch.append(queries)
 
             model_expanded_context = self._expand_context(full_context, padding="pre", context_depth=self.model_context_depth)
-            logger.debug("\nquery expand_context:" + str(model_expanded_context))
+            # logger.debug("\nquery expand_context:" + str(model_expanded_context))
 
             # ### Trick: shift of 2 positions to the left ###
             # for j in range(len(model_expanded_context) - 2):

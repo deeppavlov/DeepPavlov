@@ -56,7 +56,7 @@ class TfidfRankerAdv(Component):
             doc_scores = []
             doc_ids = []
             for j, q_tfidf in enumerate(q_tfidfs):
-                self.top_n = self.max_n[j]
+                top_n = self.max_n[j]
                 # logger.debug("vector: " + str(q_tfidf))
 
                 scores = q_tfidf * self.vectorizer.tfidf_matrix
@@ -64,7 +64,7 @@ class TfidfRankerAdv(Component):
                     scores.toarray() + 0.0001)  # add a small value to eliminate zero scores
 
                 if self.active:
-                    thresh = self.top_n
+                    thresh = top_n
                 else:
                     thresh = len(self.vectorizer.doc_index)
 
