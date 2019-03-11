@@ -53,7 +53,8 @@ class RetrieveCandidates(Component):
             candidates2 = [(kk, self.map[id][1]) for kk,id in enumerate(ids)]
             contexts = [(kk, self.map[id][0]) for kk,id in enumerate(ids)]
             scores = [(kk,"{:.2f}".format(j)) for kk,j in enumerate(scores_batch[idx])]
-            # logger.debug("[tf-idf] \nscores:" + str(scores[:15]) + "\ncontext:" + str(contexts[:15]) + "\nresponses:" + str(candidates2[:15]))  # DEBUG
+            # logger.debug("[tf-idf] len docs: " + str(len(candidates)))
+            # logger.debug("[tf-idf] \nscores:" + str(scores[:50]) + "\ncontext:" + str(contexts[:50]) + "\nresponses:" + str(candidates2[:50]))  # DEBUG
 
             candidates_batch.append(candidates)
 
@@ -69,7 +70,7 @@ class RetrieveCandidates(Component):
             model_inputs.append(item)
 
             # DEBUG
-            # logger.debug("model_inputs" + str(model_inputs[i]))
+            # logger.debug("len model_inputs: " + str(len(model_inputs[i])))
 
         # NOTE: candidates_batch shape = (batch_size, num_ranking_samples)
         # NOTE: model_inputs shape = (batch_size, num_context_turns+num_ranking_samples)

@@ -42,7 +42,7 @@ class ComposeInputsHybridRanker(Component):
     def __call__(self,
                  utterances_batch: list,
                  history_batch: list,
-                 states_batch: Optional[list]=None):
+                 states_batch: Optional[list]=None) -> List[List[str]] :
 
         query_batch = []
         expanded_context_batch = []
@@ -54,16 +54,23 @@ class ComposeInputsHybridRanker(Component):
 
             # search TF-IDF by last utterance only OR using all history
             if self.use_history:
-                query = " ".join(expanded_context)
+                queries = []
+                for i in expanded_context:
+                    if len(i) > 0: queries.append(i)
+                queries.append(" ".join(expanded_context))
             elif self.use_user_context_for_query:
-                query = " ".join(expanded_context[1::2])
+                queries = []
+                for i in expanded_context[1::2]:
+                    if len(i) > 0: queries.append(i)
+                queries.append(" ".join(expanded_context[1::2]))
             else:
-                query = expanded_context[-1]
+                queries = expanded_context[:-1]
 
-            # logger.debug("\n\n[START]\nquery: " + query + "\nquery expand_context:" + str(expanded_context))   # DEBUG
-            query_batch.append(query)
+            # logger.debug("\n\n[START]\nqueries: " + str(queries))   # DEBUG
+            query_batch.append(queries)
 
             model_expanded_context = self._expand_context(full_context, padding="pre", context_depth=self.model_context_depth)
+            # logger.debug("\nquery expand_context:" + str(model_expanded_context))
 
             # ### Trick: shift of 2 positions to the left ###
             # for j in range(len(model_expanded_context) - 2):
