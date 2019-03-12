@@ -8,13 +8,13 @@ from deeppavlov.core.agent_v2.bot import BOT
 ########################### Test case #######################################
 
 # User.drop_collection()
-# Human.drop_collection()
+Human.drop_collection()
 
 Dialog.objects.delete()
 Utterance.objects.delete()
 BotUtterance.objects.delete()
 # User.objects.delete()
-# Human.objects.delete()
+Human.objects.delete()
 
 
 h_user = Human(user_telegram_id=str(uuid.uuid4()))
@@ -35,7 +35,7 @@ b_utt_3 = BotUtterance(text='в 1672 году', user=BOT, active_skill='odqa', c
 h_utt_4 = Utterance(text='спасибо', user=h_user, date_time=datetime.utcnow())
 
 utterances = [h_utt_1, b_utt_1, h_utt_2, b_utt_2, h_utt_3, b_utt_3, h_utt_4]
-d = Dialog(utterances=utterances, users=[h_user, BOT], channel_type='telegram')
+d = Dialog(utterances=utterances, user=h_user, bot=BOT, channel_type='telegram')
 
 h_user.save()
 
@@ -58,7 +58,7 @@ b_utt_5 = BotUtterance(text='1939', user=BOT, active_skill='odqa', confidence=0.
                        date_time=datetime.utcnow())
 h_utt_6 = Utterance(text='Спасибо, бот!', user=h_user, date_time=datetime.utcnow())
 utterances_1 = [h_utt_5, b_utt_5, h_utt_6]
-d_1 = Dialog(utterances=utterances_1, users=[h_user_2, BOT], channel_type='telegram')
+d_1 = Dialog(utterances=utterances_1, user=h_user_2, bot=BOT, channel_type='telegram')
 h_user_2.save()
 h_utt_5.save()
 b_utt_5.save()

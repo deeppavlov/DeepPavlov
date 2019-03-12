@@ -19,6 +19,7 @@ from collections import Counter
 from logging import getLogger
 from pathlib import Path
 from typing import Tuple, List, Union
+import bisect
 
 import numpy as np
 from nltk import word_tokenize
@@ -35,10 +36,8 @@ logger = getLogger(__name__)
 @register('squad_preprocessor')
 class SquadPreprocessor(Component):
     """ SquadPreprocessor is used to preprocess context and question in SQuAD-like datasets.
-
         Preprocessing includes: sanitizing unicode symbols, quotes, word tokenizing and
         building mapping from raw text to processed text.
-
         Params:
             context_limit: max context length in tokens
             question_limit: max question length in tokens
@@ -61,7 +60,6 @@ class SquadPreprocessor(Component):
         Args:
             contexts_raw: batch of contexts to preprocess
             questions_raw: batch of questions to preprocess
-
         Returns:
             context: batch of processed contexts
             contexts_tokens: batch of tokenized contexts
@@ -104,18 +102,14 @@ class SquadPreprocessor(Component):
     @staticmethod
     def preprocess_str(line: str, return_mapping: bool = False) -> Union[Tuple[str, List[int], List[int]], str]:
         """ Removes unicode and other characters from str
-
         Args:
             line: string to process
             return_mapping: return mapping from line to preprocessed line or not
-
         Returns:
             preprocessed line, raw2preprocessed mapping, preprocessed2raw mapping
-
         """
-        line = line.replace("''", '" ').replace("``", '" ')
         if not return_mapping:
-            return ''.join(c for c in line if not unicodedata.combining(c))
+            return ''.join(c for c in line if not unicodedata.combining(c)).replace("''", '" ').replace("``", '" ')
 
         r2p = [len(line)] * (len(line) + 1)
         p2r = [len(line)] * (len(line) + 1)
@@ -127,7 +121,7 @@ class SquadPreprocessor(Component):
                 s += c
                 r2p[i] = len(s) - 1
                 p2r[len(s) - 1] = i
-        return s, r2p, p2r
+        return s.replace("''", '" ').replace("``", '" '), r2p, p2r
 
     @staticmethod
     def convert_idx(text: str, tokens: List[str]) -> List[Tuple[int, int]]:
@@ -154,17 +148,14 @@ class SquadAnsPreprocessor(Component):
                  r2ps: List[List[int]], spans: List[List[Tuple[int, int]]],
                  **kwargs) -> Tuple[List[List[str]], List[List[int]], List[List[int]]]:
         """ Processes answers for SQuAD dataset
-
         Args:
             answers_raw: list of str [batch_size x number_of_answers]
             answers_start: start position of answer (in chars) [batch_size x number_of_answers]
             r2ps: mapping from raw context to processed context
             spans: mapping tokens to position in context
-
         Returns:
             processed answer text, start position in tokens, end position in tokens
             [batch_size x number_of_answers]
-
         """
         answers = []
         start = []
@@ -195,9 +186,7 @@ class SquadAnsPreprocessor(Component):
 @register('squad_vocab_embedder')
 class SquadVocabEmbedder(Estimator):
     """ SquadVocabEmbedder is used to build tokens/chars vocabulary and embedding matrix.
-
         It extracts tokens/chars form dataset and looks for pretrained embeddings.
-
         Params:
             emb_folder: path to download pretrained embeddings
             emb_url: link to pretrained embeddings
@@ -235,11 +224,9 @@ class SquadVocabEmbedder(Estimator):
 
     def __call__(self, contexts: List[List[str]], questions: List[List[str]]) -> Tuple[np.ndarray, np.ndarray]:
         """ Transforms tokens/chars to indices.
-
         Args:
             contexts: batch of list of tokens in context
             questions: batch of list of tokens in question
-
         Returns:
             transformed contexts and questions
         """
@@ -327,10 +314,8 @@ class SquadVocabEmbedder(Estimator):
 
     def _get_idx(self, el: str) -> int:
         """ Returns idx for el (token or char).
-
         Args:
             el: token or character
-
         Returns:
             idx in vocabulary
         """
@@ -343,7 +328,6 @@ class SquadVocabEmbedder(Estimator):
 @register('squad_ans_postprocessor')
 class SquadAnsPostprocessor(Component):
     """ SquadAnsPostprocessor class is responsible for processing SquadModel output.
-
         It extract answer from context using predicted by SquadModel answer positions.
     """
 
@@ -354,14 +338,12 @@ class SquadAnsPostprocessor(Component):
                  p2rs: List[List[int]], spans: List[List[Tuple[int, int]]],
                  **kwargs) -> Tuple[List[str], List[int], List[int]]:
         """ Extracts answer from context using predicted answer positions.
-
         Args:
             ans_start: predicted start position in processed context: list of ints with len(ans_start) == batch_size
             ans_end: predicted end position in processed context
             contexts: raw contexts
             p2rs: mapping from processed context to raw
             spans: tokens positions in context
-
         Returns:
             postprocessed answer text, start position in raw context, end position in raw context
         """
@@ -378,3 +360,104 @@ class SquadAnsPostprocessor(Component):
                 end.append(p2r[span[a_end][1]])
                 answers.append(c[start[-1]:end[-1]])
         return answers, start, end
+
+
+@register('squad_bert_mapping')
+class SquadBertMappingPreprocessor(Component):
+    # TODO: docs
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, contexts, bert_features, **kwargs):
+        #TODO
+        subtok2chars = []
+        char2subtoks = []
+        for context, features in zip(contexts, bert_features):
+            subtokens = features.tokens
+            context_start = subtokens.index('[SEP]') + 1
+            idx = 0
+            subtok2char = {}
+            char2subtok = {}
+            for i, subtok in list(enumerate(features.tokens))[context_start:-1]:
+                subtok = subtok[2:] if subtok.startswith('##') else subtok
+                subtok_pos = context[idx:].find(subtok)
+                if subtok_pos == -1:
+                    # it could be UNK
+                    idx += 1  # len was at least one
+                else:
+                    # print(k, '\t', t, p + idx)
+                    idx += subtok_pos
+                    subtok2char[i] = idx
+                    for j in range(len(subtok)):
+                        char2subtok[idx + j] = i
+                    idx += len(subtok)
+            subtok2chars.append(subtok2char)
+            char2subtoks.append(char2subtok)
+
+        return subtok2chars, char2subtoks
+
+
+@register('squad_bert_ans_preprocessor')
+class SquadBertAnsPreprocessor(Component):
+    # TODO: docs
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, answers_raw, answers_start, char2subtoks, **kwargs):
+        answers, starts, ends = [], [], []
+        for answers_raw, answers_start, c2sub in zip(answers_raw, answers_start, char2subtoks):
+            answers.append([])
+            starts.append([])
+            ends.append([])
+            for ans, ans_st in zip(answers_raw, answers_start):
+                try:
+                    st = min({c2sub[i] for i in range(ans_st, ans_st + len(ans)) if i in c2sub})
+                    end = max({c2sub[i] for i in range(ans_st, ans_st + len(ans)) if i in c2sub})
+                except ValueError:
+                    # 0 - CLS token
+                    st, end = 0, 0
+                    ans = ''
+                starts[-1] += [st]
+                ends[-1] += [end]
+                answers[-1] += [ans]
+        return answers, starts, ends
+
+
+@register('squad_bert_ans_postprocessor')
+class SquadBertAnsPostprocessor(Component):
+    # TODO: docs
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, answers_start, answers_end, contexts, bert_features, subtok2chars, **kwargs):
+        answers = []
+        starts = []
+        ends = []
+        for answer_st, answer_end, context, features, sub2c in \
+                zip(answers_start, answers_end, contexts, bert_features, subtok2chars):
+            # CLS token is no_answer token
+            if answer_st == 0 or answer_end == 0:
+                answers += ['']
+                starts += [-1]
+                ends += [-1]
+            else:
+                st = self.get_char_position(sub2c, answer_st)
+                end = self.get_char_position(sub2c, answer_end)
+                subtok = features.tokens[answer_end]
+                subtok = subtok[2:] if subtok.startswith('##') else subtok
+                answer = context[st:end+len(subtok)]
+                answers += [answer]
+                starts += [st]
+                ends += [ends]
+        return answers, starts, ends
+
+    @staticmethod
+    def get_char_position(sub2c, sub_pos):
+        keys = list(sub2c.keys())
+        found_idx = bisect.bisect(keys, sub_pos)
+        if found_idx == 0:
+            return sub2c[keys[0]]
+
+        return sub2c[keys[found_idx - 1]]

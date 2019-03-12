@@ -4,8 +4,10 @@ from itertools import compress
 import operator
 
 from deeppavlov.core.agent_v2.preprocessor import Preprocessor
-from deeppavlov.core.agent_v2.state_manager import StateManager, TG_START_UTT
+from deeppavlov.core.agent_v2.state_manager import StateManager
 from deeppavlov.core.agent_v2.skill_manager import SkillManager
+from deeppavlov.core.agent_v2.hardcode_utterances import TG_START_UTT
+from deeppavlov.core.agent_v2.state_schema import Dialog
 
 
 class Agent:
@@ -20,27 +22,25 @@ class Agent:
                  date_times: Sequence[datetime], locations=Sequence[Any], channel_types=Sequence[str]):
         should_reset = [utterance == TG_START_UTT for utterance in utterances]
         # here and further me stands for mongoengine
-        me_users = self.state_manager.get_users(user_telegram_ids, user_device_types)
-        me_utterances = self.state_manager.get_utterances(utterances, me_users, date_times)
-        me_dialogs = self.state_manager.get_dialogs(me_users, me_utterances, locations, channel_types, should_reset)
+        me_users = self.state_manager.get_or_create_users(user_telegram_ids, user_device_types)
+        me_dialogs = self.state_manager.get_or_create_dialogs(me_users, locations, channel_types, should_reset)
+        self.state_manager.add_user_utterances(me_dialogs, utterances, date_times)
+        informative_dialogs = list(compress(me_dialogs, map(operator.not_, should_reset)))
 
-        annotations = self.predict_annotations(me_dialogs, should_reset)
-        for utt, ann in zip(me_utterances, annotations):
-            utt.annotations = ann
+        self._update_annotations(informative_dialogs)
+
         state = self.state_manager.get_state(me_dialogs)
 
-        responses = self.skill_manager(state)
+        skill_names, utterances, confidences = self.skill_manager(state)
 
-        # TODO
-        # After response is chosen for each dialog in the state, dialog objects should be updated and saved to DB.
+        self.state_manager.add_bot_utterances(me_dialogs, utterances, [datetime.utcnow()] * len(me_dialogs),
+                                              skill_names, confidences)
 
-        return responses[1]  # return text only to the users
+        self._update_annotations(me_dialogs)
 
-    def predict_annotations(self, dialogs, should_reset):
-        informative_dialogs = list(compress(dialogs, map(operator.not_, should_reset)))
-        annotations = iter(self.preprocessor(self.state_manager.get_state(informative_dialogs))
-                           if informative_dialogs else [])
-        res = []
-        for reset in should_reset:
-            res.append(None if reset else next(annotations))
-        return res
+        return utterances  # return text only to the users
+
+    def _update_annotations(self, me_dialogs: Sequence[Dialog]):
+        annotations = self.preprocessor(self.state_manager.get_state(me_dialogs))
+        utterances = [dialog.utterances[-1] for dialog in me_dialogs]
+        self.state_manager.add_annotations(utterances, annotations)
