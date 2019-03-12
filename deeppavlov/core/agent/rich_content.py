@@ -82,6 +82,9 @@ class RichControl(RichItem, metaclass=ABCMeta):
         self.content = None
         self.control_json: dict = {'type': control_type, 'content': None}
 
+    def __str__(self, *args, **kwargs) -> str:
+        return ''
+
 
 class RichMessage(RichItem):
     """Container for rich controls.
@@ -96,6 +99,10 @@ class RichMessage(RichItem):
 
     def __init__(self) -> None:
         self.controls: list = []
+
+    def __str__(self, *args, **kwargs):
+        result = '\n'.join([str(control) for control in self.controls if str(control)])
+        return result or ''
 
     def add_control(self, control: RichControl):
         """Adds RichControl instance to RichMessage.
