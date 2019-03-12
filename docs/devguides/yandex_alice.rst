@@ -42,7 +42,7 @@ You can also run :doc:`agents </apiref/agents>` as Alice skills:
     from deeppavlov.agents.default_agent.default_agent import DefaultAgent
     from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
     from deeppavlov.skills.pattern_matching_skill import PatternMatchingSkill
-    from utils.alice import start_agent_server
+    from deeppavlov.utils.alice import start_agent_server
 
     skill_hello = PatternMatchingSkill(['Привет, мир!'], patterns=['привет', 'здравствуй', 'добрый день'])
     skill_bye = PatternMatchingSkill(['Пока, мир', 'Ещё увидимся'], patterns=['пока', 'чао', 'увидимся', 'до свидания'])
