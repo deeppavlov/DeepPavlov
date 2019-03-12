@@ -22,8 +22,8 @@ class Agent:
                  date_times: Sequence[datetime], locations=Sequence[Any], channel_types=Sequence[str]):
         should_reset = [utterance == TG_START_UTT for utterance in utterances]
         # here and further me stands for mongoengine
-        me_users = self.state_manager.get_users(user_telegram_ids, user_device_types)
-        me_dialogs = self.state_manager.get_dialogs(me_users, locations, channel_types, should_reset)
+        me_users = self.state_manager.get_or_create_users(user_telegram_ids, user_device_types)
+        me_dialogs = self.state_manager.get_or_create_dialogs(me_users, locations, channel_types, should_reset)
         self.state_manager.add_user_utterances(me_dialogs, utterances, date_times)
         informative_dialogs = list(compress(me_dialogs, map(operator.not_, should_reset)))
 

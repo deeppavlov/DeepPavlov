@@ -9,7 +9,7 @@ from deeppavlov.core.agent_v2 import VERSION
 class StateManager:
 
     @classmethod
-    def get_users(cls, user_telegram_ids=Sequence[Hashable], user_device_types=Sequence[Any]):
+    def get_or_create_users(cls, user_telegram_ids=Sequence[Hashable], user_device_types=Sequence[Any]):
         users = []
         for user_telegram_id, device_type in zip(user_telegram_ids, user_device_types):
             user_query = Human.objects(user_telegram_id__exact=user_telegram_id)
@@ -21,7 +21,7 @@ class StateManager:
         return users
 
     @classmethod
-    def get_dialogs(cls, users, locations, channel_types, should_reset):
+    def get_or_create_dialogs(cls, users, locations, channel_types, should_reset):
         dialogs = []
         for user, loc, channel_type, reset in zip(users, locations, channel_types, should_reset):
             if reset:
