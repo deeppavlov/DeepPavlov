@@ -61,19 +61,12 @@
         "class_name": "nltk_moses_tokenizer"
       },
       {
-        "in": [
-          "x_tok"
-        ],
-        "out": [
-          "x_emb"
-        ],
+        "in": "x_tok",
+        "out": "x_emb",
         "id": "my_embedder",
-        "class_name": "elmo_embedder",
-        "elmo_output_names": [
-          "elmo"
-        ],
-        "mini_batch_size": 8,
-        "spec": "{DOWNLOADS_PATH}/embeddings/elmo_ru_tw",
+        "class_name": "fasttext",
+        "load_path": "{DOWNLOADS_PATH}/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
+        "dim": 300,
         "pad_zero": true
       },
       {
@@ -184,7 +177,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/chitchat_vs_odqa_v1"
+      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/chitchat_vs_odqa_v4"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -196,12 +189,12 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/chitchat_vs_odqa_v1.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/chitchat_vs_odqa_v4.tar.gz",
         "subdir": "{ROOT_PATH}/models/classifiers/"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-twitter_2013-01_2018-04_600k_steps.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/embeddings/elmo_ru_tw"
+        "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
       {
         "url": "http://files.deeppavlov.ai/datasets/chitchat_vs_odqa.tar.gz",

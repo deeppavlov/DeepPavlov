@@ -34,8 +34,8 @@ class SkillManager:
             s = copy.deepcopy(state)
             compressed_dialogs = list(compress(s['dialogs'], map(operator.not_, exclude)))
             if not compressed_dialogs:
-                skill_names = skill_names.remove(skill['name'])
-                skill_urls = skill_urls.remove(skill['url'])
+                skill_names.remove(skill['name'])
+                skill_urls.remove(skill['url'])
                 continue
             s['dialogs'] = compressed_dialogs
             payloads.append(s)
