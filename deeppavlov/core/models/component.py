@@ -30,7 +30,12 @@ class Component(metaclass=ABCMeta):
         pass
 
     def destroy(self):
-        pass
+        attr_list = list(self.__dict__.keys())
+        for attr_name in attr_list:
+            attr = getattr(self, attr_name)
+            if hasattr(attr, 'destroy'):
+                attr.destroy()
+            delattr(self, attr_name)
 
     def serialize(self):
         from deeppavlov.core.models.serializable import Serializable

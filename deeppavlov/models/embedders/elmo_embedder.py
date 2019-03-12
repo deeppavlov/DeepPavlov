@@ -309,3 +309,4 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
     def destroy(self):
         for k in list(self.sess.graph.get_all_collection_keys()):
             self.sess.graph.clear_collection(k)
+        super().destroy()

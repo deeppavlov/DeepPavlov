@@ -205,6 +205,7 @@ class Chainer(Component):
                 component.destroy()
         self.pipe.clear()
         self.train_pipe.clear()
+        super().destroy()
 
     def serialize(self) -> bytes:
         data = []
