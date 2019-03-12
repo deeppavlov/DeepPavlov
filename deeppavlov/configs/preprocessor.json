@@ -1,8 +1,3 @@
-{
-  "info": "Detect user introduction, update states",
-  "chainer": {
-    "in": ["utterances_batch", "history_batch", "states_batch"],
-    "pipe": [
       {
         "info": "0. Initialize tokenizer/detokenizer, and tokenize input & history",
         "id": "(de)tokenizer",
@@ -30,16 +25,4 @@
         "state_slot": "user_name",
         "in": ["utterance_toks", "utterance_tags", "states_batch"],
         "out": ["states_batch"]
-      }
-    ],
-    "out": ["states_batch"]
-  },
-  "metadata": {
-    "variables": {
-      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
-    },
-    "requirements": [],
-    "labels": {},
-    "download": []
-  }
-}
+      },

@@ -1,0 +1,183 @@
+{
+  "info": "(v18_g) Gopnik V4 Bot. Books_v2 + VK + pBot. +replaced replicas; -hedgehogs; +spherical horse. Total 589573 dialogs",
+  "chainer": {
+    "in": ["utterances_batch", "history_batch", "states_batch"],
+    "pipe": [
+      {
+        "info": "0. Initialize tokenizer/detokenizer, and tokenize input & history",
+        "id": "(de)tokenizer",
+        "class_name": "stream_spacy_tokenizer",
+        "lowercase": false,
+        "alphas_only": false
+      },
+      {
+        "info": "1. Initializer named entity recognizer, find entities in input",
+        "id": "ner",
+        "config_path": "{CONFIGS_PATH}/ner/ner_rus_lower_vpc_with_context.json"
+      },
+      {
+        "class_name": "ner_with_context",
+        "ner_model": "#ner",
+        "tokenizer": "#(de)tokenizer",
+        "context_delimeter": ".",
+        "in": ["utterances_batch", "history_batch"],
+        "out": ["utterance_toks", "utterance_tags"]
+      },
+      {
+        "info": "2. Detect if user introduced himself",
+        "class_name": "myself_detector",
+        "person_tag": "PER",
+        "state_slot": "user_name",
+        "in": ["utterance_toks", "utterance_tags", "states_batch"],
+        "out": ["states_batch"]
+      },
+      {
+        "info": "1. Replace separators from input string",
+        "class_name": "compose_inputs_hybrid_ranker",
+        "context_depth": 3,
+        "model_context_depth": 3,
+        "use_user_context_only": true,
+        "use_context_for_query": false,
+        "in": ["utterances_batch", "history_batch", "states_batch"],
+        "out": ["queries_batch", "expanded_context_batch"]
+      },
+      {
+        "class_name": "hashing_tfidf_vectorizer",
+        "id": "vectorizer",
+        "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v13/train_contexts_tfidf_matrix.npz",
+        "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v13/train_contexts_tfidf_matrix.npz",
+        "tokenizer":
+        {
+          "class_name": "ru_tokenizer",
+          "alphas_only": false,
+          "lemmas": true,
+          "ngram_range": [1, 3]
+        }
+      },
+      {
+        "info": "2. Find relevant contexts",
+        "class_name": "tfidf_ranker_adv",
+        "max_n": [100, 2800, 100],
+        "in": ["queries_batch"],
+        "out": ["tfidf_doc_ids", "tfidf_doc_scores"],
+        "vectorizer": "#vectorizer"
+      },
+      {
+        "info": "3. Retrieve response candidates using the context retrieved",
+        "class_name": "retrieve_candidates",
+        "map_filename": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v13/train_index_dict_v13.pickle",
+        "in": ["expanded_context_batch", "tfidf_doc_ids", "tfidf_doc_scores"],
+        "out": ["response_candidates", "model_inputs"]
+      },
+      {
+        "info": "4. Preprocess response candidates and choose the best one",
+        "id": "preproc",
+        "class_name": "siamese_preprocessor",
+        "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v13/preproc/tok.dict",
+        "num_ranking_samples": 3000,
+        "num_context_turns": 10,
+        "max_sequence_length": 50,
+        "embedding_dim": 200,
+        "in": ["model_inputs"],
+        "out": ["x_proc"],
+        "tokenizer": {
+          "class_name": "ru_tokenizer",
+          "id": "tok_1"
+        },
+        "vocab": {
+          "class_name": "simple_vocab",
+          "special_tokens": ["", "<UNK>"],
+          "unk_token": "<UNK>",
+          "id": "vocab_1",
+          "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v13/vocabs/int_tok.dict",
+          "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v13/vocabs/int_tok.dict"
+        },
+        "embedder": {
+          "id": "word2vec_embedder",
+          "class_name": "glove",
+          "dim": 200,
+          "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v13/chitchat1.w2v.vectors.txt"
+        }
+      },
+      {
+        "id": "embeddings",
+        "class_name": "emb_mat_assembler",
+        "embedder": "#word2vec_embedder",
+        "vocab": "#vocab_1"
+      },
+      {
+        "in": ["x_proc"],
+        "out": ["y_predicted"],
+        "class_name": "smn_nn",
+        "num_context_turns": "#preproc.num_context_turns",
+        "max_sequence_length": "#preproc.max_sequence_length",
+        "embedding_dim": "#word2vec_embedder.dim",
+        "emb_matrix": "#embeddings.emb_mat",
+        "learning_rate": 1e-3,
+        "batch_size": 3000,
+        "seed": 65,
+        "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v13/model_smn/model",
+        "save_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v13/model_smn/model"
+      },
+      {
+        "info": "5. Return actual response",
+        "class_name": "hybrid_ranker_predictor",
+        "sample_size": 13,
+        "lambda_coeff": 10.0,
+        "in": ["response_candidates", "y_predicted"],
+        "out": ["best_responses", "best_responses_scores"]
+      },
+      {
+        "info": "0. Detect named entities in response",
+        "class_name": "ner_with_context",
+        "ner_model": "#ner",
+        "tokenizer": "#(de)tokenizer",
+        "context_delimeter": ".",
+        "in": ["best_responses", "history_batch", "utterances_batch"],
+        "out": ["response_toks", "response_tags"]
+      },
+      {
+        "info": "2. Replace mate names in responses with user name",
+        "class_name": "person_normalizer",
+        "person_tag": "PER",
+        "state_slot": "user_name",
+        "in": ["response_toks", "response_tags", "states_batch"],
+        "out": ["response_toks_norm", "response_tags"]
+      },
+      {
+        "info": "3. Detokenize response",
+        "ref": "(de)tokenizer",
+        "in": ["response_toks_norm"],
+        "out": ["response_norm"]
+      },
+      {
+        "info": "4. Replace response with asking of the user's name (maybe).",
+        "class_name": "name_asker",
+        "in": ["utterances_batch", "history_batch", "states_batch", "response_norm"],
+        "out": ["response_norm", "states_batch"]
+      }
+    ],
+    "out": ["response_norm", "best_responses_scores", "states_batch"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf-gpu.txt",
+      "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
+    ],
+    "labels": {
+      "server_utils": "ChitChatRanker"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/dev/chitchat_2staged_tfidf_smn_v13.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      }
+    ]
+  }
+}

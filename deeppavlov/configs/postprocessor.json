@@ -1,0 +1,29 @@
+      {
+        "info": "0. Detect named entities in response",
+        "class_name": "ner_with_context",
+        "ner_model": "#ner",
+        "tokenizer": "#(de)tokenizer",
+        "context_delimeter": ".",
+        "in": ["best_responses", "history_batch", "utterances_batch"],
+        "out": ["response_toks", "response_tags"]
+      },
+      {
+        "info": "2. Replace mate names in responses with user name",
+        "class_name": "person_normalizer",
+        "person_tag": "PER",
+        "state_slot": "user_name",
+        "in": ["response_toks", "response_tags", "states_batch"],
+        "out": ["response_toks_norm", "response_tags"]
+      },
+      {
+        "info": "3. Detokenize response",
+        "ref": "(de)tokenizer",
+        "in": ["response_toks_norm"],
+        "out": ["response_norm"]
+      },
+      {
+        "info": "4. Replace response with asking of the user's name (maybe).",
+        "class_name": "name_asker",
+        "in": ["utterances_batch", "history_batch", "states_batch", "response_norm"],
+        "out": ["response_norm", "states_batch"]
+      }
