@@ -12,7 +12,10 @@ SKILLS = [
     {
         "name": "chitchat",
         "url": "http://0.0.0.0:2081/chitchat",
-        "path": configs.dp_assistant.agent_ranking_chitchat_2staged_tfidf_smn_v4
+        "path": configs.dp_assistant.agent_ranking_chitchat_2staged_tfidf_smn_v4,
+        "env": {
+            "CUDA_VISIBLE_DEVICES": ""
+        }
     },
     {
         "name": "hellobot",
@@ -30,12 +33,18 @@ ANNOTATORS = [
     {
         "name": "ner",
         "url": "http://0.0.0.0:2083/ner_rus",
-        "path": configs.dp_assistant.preproc_ner_rus
+        "path": configs.dp_assistant.preproc_ner_rus,
+        "env": {
+            "CUDA_VISIBLE_DEVICES": ""
+        }
     },
     {
         "name": "sentiment",
         "url": "http://0.0.0.0:2084/rusentiment",
-        "path": configs.dp_assistant.preproc_rusentiment
+        "path": configs.dp_assistant.preproc_rusentiment,
+        "env": {
+            "CUDA_VISIBLE_DEVICES": ""
+        }
     }
 ]
 
@@ -43,7 +52,10 @@ SKILL_SELECTORS = [
     {
         "name": "chitchat_odqa",
         "url": "http://0.0.0.0:2082/chitchat_odqa_selector",
-        "path": configs.dp_assistant.sselector_chitchat_odqa
+        "path": configs.dp_assistant.sselector_chitchat_odqa,
+        "env": {
+            "CUDA_VISIBLE_DEVICES": ""
+        }
     }
 ]
 
