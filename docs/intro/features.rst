@@ -292,15 +292,15 @@ question in a given context (`SQuAD <https://rajpurkar.github.io/SQuAD-explorer/
 
     All pre-trained models could be downloaded. Model for English language will download about 2.5 Gb and model for Russian about 5 Gb.
 
-+---------------+-------------------------------------------------------+-------+----------------+-----------------+
-|    Dataset    | Model config                                          | lang  |    EM (dev)    |    F-1 (dev)    |
-+===============+=======================================================+=======+================+=================+
-| `SQuAD-v1.1`_ | :config:`squad <squad/squad.json>`                    |  en   |     71.49      |     80.34       |
-+---------------+-------------------------------------------------------+-------+----------------+-----------------+
-|  SDSJ Task B  | :config:`squad_ru <squad/squad_ru.json>`              |  ru   |     60.62      |     80.04       |
-+---------------+-------------------------------------------------------+-------+----------------+-----------------+
-|  SDSJ Task B  | :config:`DeepPavlov <squad/squad_ru_bert_infer.json>` |  ru   |  64.35+-0.39   |   83.39+-0.08   |
-+---------------+-------------------------------------------------------+-------+----------------+-----------------+
++---------------+----------------------------------------------------------+-------+----------------+-----------------+
+|    Dataset    | Model config                                             | lang  |    EM (dev)    |    F-1 (dev)    |
++===============+==========================================================+=======+================+=================+
+| `SQuAD-v1.1`_ | :config:`squad <squad/squad.json>`                       |  en   |     71.49      |     80.34       |
++---------------+----------------------------------------------------------+-------+----------------+-----------------+
+|  SDSJ Task B  | :config:`squad_ru <squad/squad_ru.json>`                 |  ru   |     60.62      |     80.04       |
++---------------+----------------------------------------------------------+-------+----------------+-----------------+
+|  SDSJ Task B  | :config:`squad_ru_bert <squad/squad_ru_bert_infer.json>` |  ru   |  64.35+-0.39   |   83.39+-0.08   |
++---------------+----------------------------------------------------------+-------+----------------+-----------------+
 
 In the case when answer is not necessary present in given context we have :config:`squad_noans <squad/multi_squad_noans.json>`
 model. This model outputs empty string in case if there is no answer in context.
