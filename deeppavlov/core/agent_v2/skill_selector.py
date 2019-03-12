@@ -23,7 +23,7 @@ class SkillSelector:
 
 class ChitchatQASelector(SkillSelector):
     SKILL_NAMES_MAP = {
-        "chitchat": ["chitchat", "hellobot"],
+        "chitchat": ["chitchat", "hellobot", "sberchat"],
         "odqa": ["odqa"]
     }
 

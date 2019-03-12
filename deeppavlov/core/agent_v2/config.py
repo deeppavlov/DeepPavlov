@@ -18,6 +18,11 @@ SKILLS = [
         "name": "hellobot",
         "url": "http://127.0.0.1:2085/ruler_call/",
         "path": None
+    },
+    {
+        "name": "sberchat",
+        "url": "http://23.102.48.212:8443/api/",
+        "path": None
     }
 ]
 
