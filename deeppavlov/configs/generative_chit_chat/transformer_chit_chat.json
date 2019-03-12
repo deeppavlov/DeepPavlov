@@ -1,0 +1,38 @@
+{
+  "info": "(v13) Gopnik V1 Bot. Books_v2 + VK + pBot. Total 856873 dialogs",
+  "chainer": {
+    "in": ["utterances_batch", "history_batch", "states_batch"],
+    "pipe": [
+      {
+        "info": "Generative model",
+        "class_name": "transformer_chit_chat",
+        "bert_vocab_path": "{MODELS_PATH}/transformer_chit_chat/model/std_lm_vocab.40k.txt",
+        "load_path": "{MODELS_PATH}/transformer_chit_chat/model/last_checkpoint",
+        "in": ["utterances_batch", "history_batch", "states_batch"],
+        "out": ["answer_batch", "confidence","states_batch"]
+      }
+  ],
+    "out": ["answer_batch", "confidence","states_batch"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/pytorch-pretrained-bert.txt",
+      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt"
+    ],
+    "labels": {
+      "server_utils": "GenerativeTransformerChitChat"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/dev/chitchat_2staged_tfidf_smn_v8.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      }
+    ]
+  }
+}
