@@ -75,7 +75,7 @@ class BotUtterance(Utterance):
 
 class Dialog(DynamicDocument):
     location = DynamicField()
-    utterances = ListField(ReferenceField(Utterance), required=True, default=[])
+    utterances = ListField(ReferenceField(Utterance), default=[])
     user = ReferenceField(Human, required=True)
     bot = ReferenceField(Bot, required=True)
     channel_type = StringField(choices=['telegram', 'vk', 'facebook'], default='telegram')
