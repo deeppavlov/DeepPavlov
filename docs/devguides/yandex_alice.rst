@@ -8,7 +8,7 @@ Pipelines
 
 Any DeepPavlov pipeline can be launched as a skill for Yandex.Alice.
 
-Configure host, port, model endpoint, GET request arguments in ``utils/server_config.json`` or see default values there.
+Configure host, port, model endpoint, GET request arguments in ``deeppavlov/utils/settings/server_config.json`` or see default values there.
 
 Use your own certificate for HTTPS if you have; otherwise, generate self-signed one like that:
 

@@ -160,7 +160,7 @@
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
     ],
     "labels": {
-      "telegram_utils": "Seq2SeqGoalOrientedBot",
+      "telegram": "Seq2SeqGoalOrientedBot",
       "server_utils": "GoalOrientedBot"
     },
     "download": [

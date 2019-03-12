@@ -157,7 +157,7 @@
       "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
     ],
     "labels": {
-      "telegram_utils": "IntentModel",
+      "telegram": "IntentModel",
       "server_utils": "KerasIntentModel"
     },
     "download": [

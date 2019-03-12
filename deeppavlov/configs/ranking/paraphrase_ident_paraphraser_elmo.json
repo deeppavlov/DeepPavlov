@@ -100,7 +100,7 @@
       "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
     ],
     "labels": {
-      "telegram_utils": "SiameseModel",
+      "telegram": "SiameseModel",
       "server_utils": "Ranker"
     },
     "download": [

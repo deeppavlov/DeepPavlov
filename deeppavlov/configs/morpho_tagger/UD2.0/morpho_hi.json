@@ -178,7 +178,7 @@
       }
     ],
     "labels": {
-      "telegram_utils": "MorphoTaggerModel"
+      "telegram": "MorphoTaggerModel"
     }
   }
 }

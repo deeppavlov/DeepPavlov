@@ -199,7 +199,7 @@ The last part of the config is metadata:
 
     "metadata": {
         "labels": {
-          "telegram_utils": "NERModel"
+          "telegram": "NERModel"
         },
         "download": [
           "http://files.deeppavlov.ai/deeppavlov_data/slotfill_dstc2.tar.gz"

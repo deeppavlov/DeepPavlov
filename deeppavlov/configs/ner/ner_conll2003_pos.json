@@ -184,7 +184,7 @@
       "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
     "labels": {
-      "telegram_utils": "NERCoNLL2003Model",
+      "telegram": "NERCoNLL2003Model",
       "server_utils": "NER"
     },
     "download": [

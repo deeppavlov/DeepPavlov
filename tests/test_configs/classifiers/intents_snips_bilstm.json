@@ -138,7 +138,7 @@
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
     ],
     "labels": {
-      "telegram_utils": "IntentModel"
+      "telegram": "IntentModel"
     },
     "download": [
       {

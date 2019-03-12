@@ -52,7 +52,7 @@
       "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
     "labels": {
-      "telegram_utils": "NERModel",
+      "telegram": "NERModel",
       "server_utils": "DstcSlotFillingNetwork"
     },
     "download": [
