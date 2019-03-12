@@ -28,7 +28,26 @@ logger = getLogger(__name__)
 
 @register('bert_ner')
 class BertNerModel(LRScheduledTFModel):
-    # TODO: docs
+    """Bert-based model for text named entity tagging.
+
+    Uses bert token representation to predict it's bio tag.
+    Representation is obtained by averaging several hidden layers from bert encoder.
+    Ner head consists of linear layers.
+￼
+￼   Args:
+￼       bert_config_file: path to Bert configuration file
+￼       n_tags: number of distinct tags
+￼       keep_prob: dropout keep_prob for non-Bert layers
+￼       attention_probs_keep_prob: keep_prob for Bert self-attention layers
+￼       hidden_keep_prob: keep_prob for Bert hidden layers
+        encoder_layer_ids: list of averaged layers from Bert encoder (layer ids)
+￼       return_probas: set True if return class probabilites instead of most probable label needed
+￼       optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
+￼       num_warmup_steps:
+￼       weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
+￼       pretrained_bert: pretrained Bert checkpoint
+￼       min_learning_rate: min value of learning rate if learning rate decay is used
+￼   """
     # TODO: add warmup
     # TODO: add head-only pre-training
     def __init__(self,
