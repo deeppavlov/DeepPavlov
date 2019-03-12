@@ -11,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import os
 import ssl
 from itertools import islice
 from logging import getLogger
 from pathlib import Path
-from typing import List, Tuple, Union, Optional
+from typing import List, Tuple, Union, Optional, Dict
 
 from flasgger import Swagger, swag_from
 from flask import Flask, request, jsonify, redirect, Response
@@ -208,7 +208,9 @@ def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, *
 
 def skill_server(config: Union[dict, str, Path], https=False, ssl_key=None, ssl_cert=None, *,
                  host: Optional[str] = None, port: Optional[int] = None, endpoint: Optional[str] = None,
-                 download: bool = False, batch_size: Optional[int] = None):
+                 download: bool = False, batch_size: Optional[int] = None, env: Optional[Dict[str, str]] = None):
+    if env:
+        os.environ.update(env)
     host = host or '0.0.0.0'
     port = port or 80
     endpoint = endpoint or '/skill'

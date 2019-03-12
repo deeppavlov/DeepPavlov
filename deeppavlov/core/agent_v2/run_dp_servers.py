@@ -17,7 +17,7 @@ for item in SKILLS + ANNOTATORS + SKILL_SELECTORS + RESPONSE_SELECTORS:
         raise RuntimeError(f'could not parse an url: `{url}`')
     host, port, endpoint = parsed.groups()
     p = Process(target=skill_server, kwargs={'config': item['path'], 'port': port, 'endpoint': endpoint,
-                                             'download': True})
+                                             'download': True, 'env': item.get('env')})
     p.start()
     processes.append(p)
 
