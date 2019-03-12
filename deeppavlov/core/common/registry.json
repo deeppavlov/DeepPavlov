@@ -51,7 +51,7 @@
   "hybrid_ranker_predictor": "deeppavlov.models.ranking.hybrid_ranker_predictor:HybridRankerPredictor",
   "insurance_reader": "deeppavlov.dataset_readers.insurance_reader:InsuranceReader",
   "kb_answer_parser_wikidata": "deeppavlov.models.kbqa.kb_answer_parser_wikidata:KBAnswerParserWikidata",
-  "kbqa_reader": "deeppavlov.dataset_readers.kbqa_reader:Conll2003DatasetReader",
+  "kbqa_reader": "deeppavlov.dataset_readers.kbqa_reader:KBQAReader",
   "kenlm_elector": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
   "keras_classification_model": "deeppavlov.models.classifiers.keras_classification_model:KerasClassificationModel",
   "keras_probas_converter": "deeppavlov.models.preprocessors.dp_assistant_preprocessors:KerasClassificationProbasConverter",

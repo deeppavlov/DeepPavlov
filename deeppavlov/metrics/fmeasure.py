@@ -35,15 +35,6 @@ def ner_f1(y_true, y_predicted):
     f1 = results['__total__']['f1']
     return f1
 
-@register_metric('kbqa_accuracy')
-def kbqa_accuracy(y_true, y_predicted):
-    accuracy = 0
-    for answer_true, answer_predicted in zip(y_true, y_predicted):
-        if answer_predicted in list(answer_true):
-            accuracy += 1
-
-    return (accuracy/len(y_true))
-
 
 @register_metric('f1')
 def round_f1(y_true, y_predicted):

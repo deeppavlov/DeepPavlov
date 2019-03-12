@@ -200,7 +200,6 @@
         "relations_maping_filename": "wiki_properties_id_to_name.pickle",
         "templates_filename": "templates.pickle",
         "debug": true,
-        "return_confidences": false,
         "lemmatize": true,
         "rule_filter_entities": true,
         "return_confidences": true,

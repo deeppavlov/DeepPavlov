@@ -6,8 +6,8 @@ from deeppavlov.core.data.utils import download_decompress
 
 
 @register('kbqa_reader')
-class Conll2003DatasetReader(DatasetReader):
-    """Class to read training datasets in CoNLL-2003 format"""
+class KBQAReader(DatasetReader):
+    """Class to read test set of questions and answers for knowledge base question answering"""
 
     def read(self, data_path: str):
         data_path = Path(data_path)
