@@ -7,6 +7,7 @@ from deeppavlov.core.agent_v2.preprocessor import Preprocessor
 from deeppavlov.core.agent_v2.state_manager import StateManager
 from deeppavlov.core.agent_v2.skill_manager import SkillManager
 from deeppavlov.core.agent_v2.hardcode_utterances import TG_START_UTT
+from deeppavlov.core.agent_v2.state_schema import Dialog
 
 
 class Agent:
@@ -26,22 +27,22 @@ class Agent:
         me_dialogs = self.state_manager.get_dialogs(me_users, me_utterances, locations, channel_types, should_reset)
         informative_dialogs = list(compress(me_dialogs, map(operator.not_, should_reset)))
 
-        annotations = self.preprocessor(self.state_manager.get_state(informative_dialogs), should_reset)
-        for utt, ann in zip(me_utterances, annotations):
-            utt.annotations = ann
-            utt.save()
+        self._update_annotations(informative_dialogs)
 
         state = self.state_manager.get_state(me_dialogs)
 
         skill_names, utterances, confidences = self.skill_manager(state)
 
-        bot_utterances = self.state_manager.add_bot_utterances(me_dialogs, utterances,
-                                                               [datetime.utcnow()] * len(me_dialogs),
-                                                               skill_names, confidences)
+        self.state_manager.add_bot_utterances(me_dialogs, utterances, [datetime.utcnow()] * len(me_dialogs),
+                                              skill_names, confidences)
 
-        annotations = self.preprocessor(self.state_manager.get_state(me_dialogs), [False]*len(me_dialogs))
-        for utt, ann in zip(bot_utterances, annotations):
-            utt.annotations = ann
-            utt.save()
+        self._update_annotations(me_dialogs)
 
         return utterances  # return text only to the users
+
+    def _update_annotations(self, me_dialogs: Sequence[Dialog]):
+        annotations = self.preprocessor(self.state_manager.get_state(me_dialogs))
+        for dialog, ann in zip(me_dialogs, annotations):
+            utt = dialog.utterances[-1]
+            utt.annotations = ann
+            utt.save()
