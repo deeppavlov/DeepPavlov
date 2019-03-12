@@ -4,8 +4,8 @@
     "x": "text",
     "y": "label",
     "data_path": "{DOWNLOADS_PATH}/chitchat_vs_odqa/",
-    "train": "train.csv",
-    "valid": "valid.csv"
+    "train": "train_v3.csv",
+    "valid": "valid_v3.csv"
   },
   "dataset_iterator": {
     "class_name": "basic_classification_iterator",
@@ -137,6 +137,13 @@
     "batch_size": 32,
     "metrics": [
       {
+        "name": "roc_auc",
+        "inputs": [
+          "y_onehot",
+          "y_pred_probas"
+        ]
+      },
+      {
         "name": "f1_macro",
         "inputs": [
           "y",
@@ -148,13 +155,6 @@
         "inputs": [
           "y",
           "y_pred_labels"
-        ]
-      },
-      {
-        "name": "roc_auc",
-        "inputs": [
-          "y_onehot",
-          "y_pred_probas"
         ]
       },
       {
@@ -177,7 +177,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/chitchat_vs_odqa_v4"
+      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/chitchat_vs_odqa_v5"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -189,7 +189,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/chitchat_vs_odqa_v4.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/chitchat_vs_odqa_v5.tar.gz",
         "subdir": "{ROOT_PATH}/models/classifiers/"
       },
       {
