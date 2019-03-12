@@ -170,6 +170,7 @@
       "{DEEPPAVLOV_PATH}/requirements/tf-gpu.txt",
       "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
       "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
       "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
     ],
     "labels": {
