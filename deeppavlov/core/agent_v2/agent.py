@@ -3,14 +3,14 @@ from typing import Sequence, Hashable, Any
 from itertools import compress
 import operator
 
-from deeppavlov.core.agent_v2.rest_caller import RestCaller
+from deeppavlov.core.agent_v2.preprocessor import IndependentPreprocessor
 from deeppavlov.core.agent_v2.state_manager import StateManager
 from deeppavlov.core.agent_v2.skill_manager import SkillManager
 from deeppavlov.core.agent_v2.hardcode_utterances import TG_START_UTT
 
 
 class Agent:
-    def __init__(self, state_manager: StateManager, preprocessor: RestCaller,
+    def __init__(self, state_manager: StateManager, preprocessor: IndependentPreprocessor,
                  skill_manager: SkillManager) -> None:
         self.state_manager = state_manager
         self.preprocessor = preprocessor
@@ -35,7 +35,13 @@ class Agent:
 
         skill_names, utterances, confidences = self.skill_manager(state)
 
-        self.state_manager.add_bot_utterances(me_dialogs, utterances, [datetime.utcnow()] * len(me_dialogs),
-                                              skill_names, confidences)
+        bot_utterances = self.state_manager.add_bot_utterances(me_dialogs, utterances,
+                                                               [datetime.utcnow()] * len(me_dialogs),
+                                                               skill_names, confidences)
+
+        annotations = self.preprocessor(self.state_manager.get_state(me_dialogs), [False]*len(me_dialogs))
+        for utt, ann in zip(bot_utterances, annotations):
+            utt.annotations = ann
+            utt.save()
 
         return utterances  # return text only to the users
