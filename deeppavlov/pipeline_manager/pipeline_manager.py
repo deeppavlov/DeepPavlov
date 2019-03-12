@@ -14,19 +14,18 @@
 
 import os
 import time
+from contextlib import redirect_stderr, redirect_stdout
 from copy import copy, deepcopy
 from datetime import datetime
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from shutil import rmtree
-from typing import Union, Dict, Generator, Optional, List
-from contextlib import redirect_stderr, redirect_stdout
+from typing import Dict, Generator, List, Optional, Union
 
-# from psutil import cpu_count
 from tqdm import tqdm
 
-from deeppavlov.core.commands.train import read_data_by_config, get_iterator_from_config
-from deeppavlov.core.commands.train import train_evaluate_model_from_config
+from deeppavlov.core.commands.train import get_iterator_from_config, read_data_by_config, \
+    train_evaluate_model_from_config
 from deeppavlov.core.commands.utils import expand_path, parse_config
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
@@ -163,7 +162,7 @@ class PipelineManager:
                 raise ConfigError("The number of workers must be at least equal to one. "
                                   "Please check 'max_num_workers' parameter in config.")
 
-        self.use_gpu = self.exp_config['pipeline_search'].get('use_all_gpus', False)
+        self.use_gpu = self.exp_config['pipeline_search'].get('use_gpu', False)
         self.memory_fraction = self.exp_config['pipeline_search'].get('gpu_memory_fraction', 1.0)
         self.max_num_workers = None
         self.available_gpu = None
@@ -289,7 +288,7 @@ class PipelineManager:
         if gpu:
             for i, pipe_conf in enumerate(self.pipeline_generator()):
                 gpu_ind = i % len(self.available_gpu)
-                yield (deepcopy(pipe_conf), i, self.observer, gpu_ind)
+                yield (deepcopy(pipe_conf), i, self.observer, self.available_gpu[gpu_ind])
         else:
             for i, pipe_conf in enumerate(self.pipeline_generator()):
                 yield (deepcopy(pipe_conf), i, self.observer)
@@ -357,7 +356,7 @@ class PipelineManager:
             if gpu:
                 for j, pipe_conf in enumerate(pipe_gen()):
                     gpu_ind_ = j - (j // len(available_gpu)) * len(available_gpu)
-                    yield (j, deepcopy(pipe_conf), gpu_ind_)
+                    yield (j, deepcopy(pipe_conf), self.available_gpu[gpu_ind_])
             else:
                 for j, pipe_conf in enumerate(pipe_gen()):
                     yield (j, deepcopy(pipe_conf))
