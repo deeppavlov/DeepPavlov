@@ -137,7 +137,7 @@
     "validation_patience": 5,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
-    "tensorboard_log_dir": "logs/rusentiment_cnn_2612",
+    "tensorboard_log_dir": "{MODELS_PATH}/logs",
     "show_examples": false,
     "evaluation_targets": [
       "train",
