@@ -70,17 +70,12 @@ class BertNerModel(LRScheduledTFModel):
         self._init_graph()
 
         self._init_optimizer()
-        for var in tf.global_variables():
-            print('{:<31}'.format(repr(var.get_shape().as_list())), var.name)
 
         self.sess.run(tf.global_variables_initializer())
-        # print(self.sess.run(tf.trainable_variables()[-3]))
 
         if pretrained_bert is not None:
             pretrained_bert = str(expand_path(pretrained_bert))
 
-        # print(tf.train.checkpoint_exists(pretrained_bert))
-        # print(tf.train.checkpoint_exists(str(self.load_path.resolve())))
         if tf.train.checkpoint_exists(pretrained_bert) \
                 and not tf.train.checkpoint_exists(str(self.load_path.resolve())):
             logger.info('[initializing model with Bert from {}]'.format(pretrained_bert))
@@ -89,7 +84,6 @@ class BertNerModel(LRScheduledTFModel):
                 exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'ner'))
             saver = tf.train.Saver(var_list)
             saver.restore(self.sess, pretrained_bert)
-        # print(self.sess.run(tf.trainable_variables()[-3]))
 
         if self.load_path is not None:
             self.load()
@@ -117,7 +111,6 @@ class BertNerModel(LRScheduledTFModel):
             self.y_probas = tf.nn.softmax(logits, axis=2)
 
         with tf.variable_scope("loss"):
-            # NOTE: same mask as for inputs?
             y_mask = tf.cast(self.input_masks_ph, tf.float32)
             self.loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_ph,
                                                                logits=logits,
