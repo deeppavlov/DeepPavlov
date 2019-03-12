@@ -42,7 +42,5 @@ class Agent:
 
     def _update_annotations(self, me_dialogs: Sequence[Dialog]):
         annotations = self.preprocessor(self.state_manager.get_state(me_dialogs))
-        for dialog, ann in zip(me_dialogs, annotations):
-            utt = dialog.utterances[-1]
-            utt.annotations = ann
-            utt.save()
+        utterances = [dialog.utterances[-1] for dialog in me_dialogs]
+        self.state_manager.add_annotations(utterances, annotations)

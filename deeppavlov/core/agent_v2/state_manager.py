@@ -70,6 +70,12 @@ class StateManager:
             dialog.save()
 
     @staticmethod
+    def add_annotations(utterances: Sequence[Utterance], annotations: Sequence[dict]):
+        for utt, ann in zip(utterances, annotations):
+            utt.annotations = ann
+            utt.save()
+
+    @staticmethod
     def get_state(dialogs: Sequence[Dialog]):
         state = {'version': VERSION, 'dialogs': []}
         for d in dialogs:
@@ -81,8 +87,7 @@ class StateManager:
         dialog = Dialog(user=user,
                         bot=bot,
                         location=location or Dialog.location.default,
-                        channel_type=channel_type
-                        )
+                        channel_type=channel_type)
         dialog.save()
         return dialog
 
