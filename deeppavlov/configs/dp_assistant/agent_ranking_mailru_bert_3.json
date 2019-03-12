@@ -1,6 +1,8 @@
 {
   "chainer": {
     "in": ["dialogs"],
+    "out": ["predictions", "confidence"],
+
     "pipe": [
       {
         "class_name": "dialogs_parser",
@@ -41,7 +43,7 @@
         "conts": "#loader.conts",
         "cont_vecs": "#loader.cont_vecs",
         "cont_features": "#preproc.cont_features",
-        "bot_mode": 0,
+        "bot_mode": 2,
         "n_classes": 2,
         "one_hot_labels": false,
         "bert_config_file": "{DOWNLOADS_PATH}/mailru_bert_npair_simple/bert_config.json",
@@ -57,10 +59,9 @@
         "learning_rate_drop_patience": 2,
         "learning_rate_drop_div": 2.0,
         "in": ["bert_features"],
-        "out": ["predictions"]
+        "out": ["predictions", "confidence"]
       }
-    ],
-    "out": ["predictions"]
+    ]
   },
   "train": {
     "batch_size": 32,
