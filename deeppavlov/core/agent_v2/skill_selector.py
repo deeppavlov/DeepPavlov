@@ -32,10 +32,8 @@ class ChitchatQASelector(SkillSelector):
         available_names = [s['name'] for s in SKILLS]
         self.skill_names_map = defaultdict(list)
         for selector_names, agent_names in self.SKILL_NAMES_MAP.items():
-            for an in agent_names:
-                if an in available_names:
-                    if an not in self.skill_names_map[selector_names]:
-                        self.skill_names_map[selector_names] += agent_names
+            names = {an for an in agent_names if an in available_names}
+            self.skill_names_map[selector_names] += list(names)
 
     def __call__(self, state: Dict) -> List[List[str]]:
         """
