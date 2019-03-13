@@ -82,7 +82,7 @@ PARAMS = {
         ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "classifiers": {
-        ("classifiers/paraphraser_bert.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/paraphraser_bert.json", "classifiers", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/insults_kaggle_bert.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/rusentiment_bert.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_dstc2.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
