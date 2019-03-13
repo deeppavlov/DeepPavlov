@@ -1,6 +1,7 @@
 import copy
 from itertools import compress
 import operator
+from typing import List, Dict, Optional
 
 from deeppavlov.core.agent_v2.config import MAX_WORKERS, SKILLS
 from deeppavlov.core.agent_v2.hardcode_utterances import NOANSWER_UTT
@@ -14,9 +15,11 @@ class SkillManager:
         self.max_workers = MAX_WORKERS
         self.skill_caller = skill_caller
         self.skills = SKILLS
+        self.skill_names = [s['name'] for s in self.skills]
 
     def __call__(self, state):
-        n_dialogs = len(state['dialogs'])
+        dialogs = state['dialogs']
+        n_dialogs = len(dialogs)
         skill_names = [s['name'] for s in self.skills]
         skill_urls = [s['url'] for s in self.skills]
         if self.skill_selector is not None:
@@ -41,6 +44,22 @@ class SkillManager:
             payloads.append(s)
 
         skill_responses = self.skill_caller(payload=payloads, names=skill_names, urls=skill_urls)
-        skill_names, utterances, confidences = self.response_selector(skill_responses, state)
+        user_profiles = self._get_user_profiles(skill_responses, dialogs)
+        selected_skill_names, utterances, confidences = self.response_selector(skill_responses, state)
         utterances = [utt if utt else NOANSWER_UTT for utt in utterances]
-        return skill_names, utterances, confidences
+        return selected_skill_names, utterances, confidences, user_profiles
+
+    def _get_user_profiles(self, skill_responses, dialogs, skill_name='hellobot') -> Optional[List[Dict]]:
+        """
+        Get user profile names from 'hellobot' skill. If 'hellobot' skill is not connected, returns None.
+        """
+        if skill_name not in self.skill_names:
+            return None
+        user_profiles = []
+        for sr, dialog in zip(skill_responses, dialogs):
+            try:
+                name = sr[skill_name]['name']
+            except KeyError:
+                name = None
+            user_profiles.append({'name': name})
+        return user_profiles
