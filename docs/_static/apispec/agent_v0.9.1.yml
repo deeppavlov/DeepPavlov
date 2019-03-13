@@ -1,0 +1,638 @@
+openapi: "3.0.1"
+
+info:
+  title: "DeepPavlov Skills REST API"
+  version: "0.9.1"
+  description: >-
+    Agents built with DeepPavlov communicate with their Skills
+    via HTTP, so endpoints should be specified.
+
+servers:
+  - url: "http://localhost:{port}/"
+    description: "Local development server"
+    variables:
+      port:
+        default: 3978
+
+paths:
+  /:
+    get:
+      responses:
+        200:
+          description: Go to /apidocs/ to see graphical web UI for this API.
+
+  /api/v0/{skill_endpoint}/:
+    post:
+      parameters:
+        - name: skill_endpoint
+          in: path
+          required: true
+          schema:
+            enum:
+              - news
+              - currencies
+              - news_currencies
+      summary: Generic description of a skill endpoint
+      description: >-
+        An agent built with DeepPavlov sends requests to the skill endpoints
+        in order to retrieve the answers.
+      requestBody:
+        description: >-
+          Description of the request to be executed
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestBodySchema"
+      responses:
+        200:
+          description: Request finished succesfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ODQAChitChatResponse200Schema"
+        404:
+          description: This skill doesn't exsits.
+
+  /api/v0/news_currencies/:
+    post:
+      requestBody:
+        description: >-
+          Describe the request to be executed
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestBodySchema"
+            example:
+              $ref: "#/components/examples/GenericRequestBody/value"
+      responses:
+        200:
+          description: News retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ODQAChitChatResponse200Schema"
+              example:
+                $ref: "#/components/examples/NewsCurrenciesResponse/value"
+
+components:
+  schemas:
+    RequestBodySchema:
+      type: object
+      properties:
+        version:
+          description: Версия API.
+          type: string
+        dialogs:
+          description: >-
+            Батч независимых диалогов от разных пользователей.
+            В одном батче не могут находиться диалоги от одного и того же пользователя.
+            Размер батча нефиксированный, но ограничен сверху.
+            В одном диалоге могут принимать участие только два пользователя: человек и бот.
+          type: array
+          items:
+            $ref: "#/components/schemas/Dialog"
+    Dialog:
+      type: object
+      properties:
+        id:
+          description: Уникальный  id диалога.
+          type: string
+        location:
+          description: Город, в котором начался диалог.
+          type: string
+        utterances:
+          description: Список всех реплик данного диалога. Последняя реплика всегда принадлежит пользователю, и скилу нужно прислать ответ именно на эту реплику.
+          type: array
+          items:
+            $ref: "#/components/schemas/Utterance"
+        user:
+          $ref: "#/components/schemas/User"
+        bot:
+          $ref: "#/components/schemas/Bot"
+        channel_type:
+          description: Канал связи, по которому происходит общение. В данной версии API всегда “telegram”.
+          type: string
+    User:
+      description: Человек, принимающий участие в диалоге.
+      type: object
+      properties:
+        id:
+          description: Уникальный  id пользователя.
+          type: string
+        user_telegram_id:
+          description: Уникальный Telegram id пользователя.
+          type: string
+        user_type:
+          description: Тип пользователя. Всегда “human”.
+          type: string
+        device_type:
+          description: Кодовое название устройства, с которого пользователь написал первую реплику в диалоге. Может быть “iphone” или “android”.
+          type: string
+        personality:
+          description: Не имлементировано.
+          type: object
+        profile:
+          description: Персональная информация о пользователе.
+          type: object
+    Bot:
+      description: Бот, принимающий участие в диалоге. Бот - это конкретный агент с определенным набором скилов.
+      type: object
+      properties:
+        id:
+          description: Уникальный  id бота.
+          type: string
+        user_type:
+          description: Тип пользователя. Всегда “bot”.
+          type: string
+        personality:
+          description: Не имлементировано.
+          type: object
+    Profile:
+      description: Персональная информация о пользователе.
+      type: object
+      properties:
+        gender:
+          description: Пол человека. Может принимать значения “male”, “female”, “other”
+          type: string
+        birthdate:
+          description: Дата рождения человека. Может принимать строковые значения в формате YYYY-MM-DD.
+          type: string
+        name:
+          description: Имя человека.
+          type: string
+        location:
+          description: Местонахождение человека.
+          type: object
+        home_coordinates:
+          description: Координаты дома человека.
+          type: object
+        work_coordinates:
+          description: Координаты места работы человека.
+          type: object
+        occupation:
+          description: Профессия человека.
+          type: string
+        income_per_year:
+          description: Доход человека в год, в рублях.
+          type: number
+    Utterance:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Уникальный ID реплики.
+        text:
+          type: string
+          description: >-
+            Текст реплики. Либо текст, написанный пользователем, либо ответ, присланный одним из скилов.
+            В случае, если это начальная реплика диалога, имеет значение "/start".
+        user_id:
+          type: string
+          description: Уникальный id пользователя, сказавшего данную реплику.
+        annotations:
+          $ref: "#/components/schemas/Annotations"
+        date_time:
+          type: string
+          description: Время получения реплики сервером.
+        confidece:
+          type: number
+          description: Уверенность скила в своем ответе.
+        active_skill:
+          type: string
+          description: Кодовое название скила, который был ответственным за формирование данной реплики.
+    Annotations:
+      description: >-
+        Разметка реплик входящими в препроцессор моделями.
+        Дефолтная аннотация: {'ner': {}, 'coref': {}, 'sentiment': {}}
+        Начальная реплика диалога, если это команда "/start", имеет дефолтную аннотацию.
+      type: object
+      properties:
+        ner:
+          $ref: "#/components/schemas/NER"
+        coref:
+          $ref: "#/components/schemas/Coref"
+        sentiment:
+          $ref: "#/components/schemas/Sentiment"
+    NER:
+      description: По умолчанию пустой словарь.
+      type: object
+      properties:
+        tokens:
+          description: Список токенов, пришедших от компонента ner.
+          type: array
+          items:
+            type: string
+        tags:
+          description: >-
+            Список тэгов. Количество тэгов соответствует количеству токенов. Тэги имеют формат BIO-разметки. Поддерживаются следующие классы:
+            ‘PER’ - имя (и/или фамилия) человека
+            ‘ORG’ - название организации
+            ‘LOC’ - местонахождение
+          type: array
+          items:
+            type: string
+    Coref:
+      description: Не имплементировано. Всегда пустой словарь.
+      type: object
+    Sentiment:
+      description: >-
+        По умолчанию пустой словарь. Если sentiment определился, то возвращает строку с значением sentiment. Может принимать значения:
+        'neutral'
+        'positive'
+        'skip'
+        'speech'
+        'negative'
+      type: object
+    ODQAChitChatResponse200Unit:
+      description: Батч возвращаемых скилом ответов. Количество ответов соответствует количеству диалогов в запросе агента.
+      type: object
+      properties:
+        text:
+          description: Реплика-ответ скила.
+          type: string
+        confidence:
+          description: Уверенность скила в своем ответе. Для руловых скилов можно выставлять '1.0'.
+          type: number
+    ODQAChitChatResponse200Schema:
+      type: object
+      properties:
+        responses:
+          type: array
+          items:
+            $ref: "#/components/schemas/ODQAChitChatResponse200Unit"
+  examples:
+    GenericRequestBody:
+      description: one exaustive example of a request body from external json-file
+      value: '{
+        "version": "0.9.1",
+        "dialogs": [
+        {
+          "id": "5c65706b0110b377e17eba41",
+          "location": null,
+          "utterances": [
+          {
+            "id": "5c65706b0110b377e17eba39",
+            "text": "Привет!",
+            "user_id": "5c65706b0110b377e17eba37",
+            "annotations": {
+              "ner": {
+                "tokens": [
+                  "Привет",
+                  "!"
+                ],
+                "tags": [
+                  "O",
+                  "O"
+                ]
+              },
+              "coref": [
+
+              ],
+              "sentiment": "speech"
+            },
+            "date_time": "2019-02-14 13:43:07.594000"
+          },
+          {
+            "id": "5c65706b0110b377e17eba3a",
+            "active_skill": "chitchat",
+            "confidence": 0.85,
+            "text": "Привет, я бот!",
+            "user_id": "5c65706b0110b377e17eba38",
+            "annotations": {
+              "ner": {
+                "tokens": [
+                  "Привет",
+                  ",",
+                  "я",
+                  "бот",
+                  "!"
+                ],
+                "tags": [
+                  "O",
+                  "O",
+                  "O",
+                  "O",
+                  "O"
+                ]
+              },
+              "coref": [
+
+              ],
+              "sentiment": "speech"
+            },
+            "date_time": "2019-02-14 13:43:07.595000"
+          },
+          {
+            "id": "5c65706b0110b377e17eba3b",
+            "text": "Как дела?",
+            "user_id": "5c65706b0110b377e17eba37",
+            "annotations": {
+              "ner": {
+                "tokens": [
+                  "Как",
+                  "дела",
+                  "?"
+                ],
+                "tags": [
+                  "O",
+                  "O",
+                  "O"
+                ]
+              },
+              "coref": [
+
+              ],
+              "sentiment": "speech"
+            },
+            "date_time": "2019-02-14 13:43:07.595000"
+          },
+          {
+            "id": "5c65706b0110b377e17eba3c",
+            "active_skill": "chitchat",
+            "confidence": 0.9333,
+            "text": "Хорошо, а у тебя как?",
+            "user_id": "5c65706b0110b377e17eba38",
+            "annotations": {
+              "ner": {
+                "tokens": [
+                  "Хорошо",
+                  ",",
+                  "а",
+                  "у",
+                  "тебя",
+                  "как",
+                  "?"
+                ],
+                "tags": [
+                  "O",
+                  "O",
+                  "O",
+                  "O",
+                  "O",
+                  "O",
+                  "O"
+                ]
+              },
+              "coref": [
+
+              ],
+              "sentiment": "speech"
+            },
+            "date_time": "2019-02-14 13:43:07.595000"
+          },
+          {
+            "id": "5c65706b0110b377e17eba3d",
+            "text": "И у меня нормально. Когда родился Петр Первый?",
+            "user_id": "5c65706b0110b377e17eba37",
+            "annotations": {
+              "ner": {
+                "tokens": [
+                  "И",
+                  "у",
+                  "меня",
+                  "нормально",
+                  ".",
+                  "Когда",
+                  "родился",
+                  "Петр",
+                  "Первый",
+                  "?"
+                ],
+                "tags": [
+                  "O",
+                  "O",
+                  "O",
+                  "O",
+                  "O",
+                  "O",
+                  "O",
+                  "B-PER",
+                  "I-PER",
+                  "O"
+                ]
+              },
+              "coref": [
+
+              ],
+              "sentiment": "neutral"
+            },
+            "date_time": "2019-02-14 13:43:07.595000"
+          },
+          {
+            "id": "5c65706b0110b377e17eba3e",
+            "active_skill": "odqa",
+            "confidence": 0.74,
+            "text": "в 1672 году",
+            "user_id": "5c65706b0110b377e17eba38",
+            "annotations": {
+              "ner": {
+                "tokens": [
+                  "в",
+                  "1672",
+                  "году"
+                ],
+                "tags": [
+                  "O",
+                  "O",
+                  "O"
+                ]
+              },
+              "coref": [
+
+              ],
+              "sentiment": "neutral"
+            },
+            "date_time": "2019-02-14 13:43:07.595000"
+          },
+          {
+            "id": "5c65706b0110b377e17eba3f",
+            "text": "спасибо",
+            "user_id": "5c65706b0110b377e17eba37",
+            "annotations": {
+              "ner": {
+                "tokens": [
+                  "спасибо"
+                ],
+                "tags": [
+                  "O"
+                ]
+              },
+              "coref": [
+
+              ],
+              "sentiment": "speech"
+            },
+            "date_time": "2019-02-14 13:43:07.595000"
+          }
+          ],
+          "user": {
+            "id": "5c65706b0110b377e17eba37",
+            "user_telegram_id": "0801e781-0b76-43fa-9002-fcdc147d35af",
+            "user_type": "human",
+            "device_type": null,
+            "personality": null,
+            "profile": {
+              "name": "Джо Неуловимый",
+              "gender": "male",
+              "birthdate": "2000-02-15",
+              "location": null,
+              "home_coordinates": null,
+              "work_coordinates": null,
+              "occupation": "data scientist",
+              "income_per_year": 1000000000.0
+            }
+          },
+          "bot": {
+            "id": "5c65706b0110b377e17eba38",
+            "user_type": "bot",
+            "personality": null
+          },
+          "channel_type": "telegram"
+        },
+        {
+          "id": "5c65706b0110b377e17eba47",
+          "location": null,
+          "utterances": [
+          {
+            "id": "5c65706b0110b377e17eba43",
+            "text": "Когда началась Вторая Мировая?",
+            "user_id": "5c65706b0110b377e17eba37",
+            "annotations": {
+              "ner": {
+                "tokens": [
+                  "Когда",
+                  "началась",
+                  "Вторая",
+                  "Мировая",
+                  "?"
+                ],
+                "tags": [
+                  "O",
+                  "O",
+                  "O",
+                  "O",
+                  "O"
+                ]
+              },
+              "coref": [
+
+              ],
+              "sentiment": "neutral"
+            },
+            "date_time": "2019-02-14 13:43:07.601000"
+          },
+          {
+            "id": "5c65706b0110b377e17eba44",
+            "active_skill": "odqa",
+            "confidence": 0.99,
+            "text": "1939",
+            "user_id": "5c65706b0110b377e17eba38",
+            "annotations": {
+              "ner": {
+                "tokens": [
+                  "1939"
+                ],
+                "tags": [
+                  "O"
+                ]
+              },
+              "coref": [
+
+              ],
+              "sentiment": "neutral"
+            },
+            "date_time": "2019-02-14 13:43:07.601000"
+          },
+          {
+            "id": "5c65706b0110b377e17eba45",
+            "text": "Спасибо, бот!",
+            "user_id": "5c65706b0110b377e17eba37",
+            "annotations": {
+              "ner": {
+                "tokens": [
+                  "Спасибо",
+                  ",",
+                  "бот",
+                  "!"
+                ],
+                "tags": [
+                  "O",
+                  "O",
+                  "O",
+                  "O"
+                ]
+              },
+              "coref": [
+
+              ],
+              "sentiment": "speech"
+            },
+            "date_time": "2019-02-14 13:43:07.601000"
+          }
+          ],
+          "user": {
+            "id": "5c65706b0110b377e17eba42",
+            "user_telegram_id": "a27a94b6-2b9d-4802-8eb6-6581e6f8cd8c",
+            "user_type": "human",
+            "device_type": null,
+            "personality": null
+          },
+          "bot": {
+            "id": "5c65706b0110b377e17eba38",
+            "user_type": "bot",
+            "personality": null
+          },
+          "channel_type": "telegram"
+        }
+        ]
+      }'
+    ChitChatResponse:
+      description: Пример JSON-ответа сервера chitchat скила
+      value:
+        responses:
+          - text: "привет, я бот!"
+            confidence: 0.947
+          - text: "как дела?"
+            confidence": 0.3333
+    ODQAResponse:
+      description: Пример JSON-ответа сервера odqa скила
+      value:
+        responses:
+          - text: "Петр Первый родился в 1672 году."
+            confidence: 0.947
+          - text: "На Земле живет 7 миллиардов людей."
+            confidence": 0.3333
+    PersonalInfoResponse:
+      description: Пример JSON-ответа сервера personal-info скила
+      value:
+        responses:
+          - text: "Скажите, пожалуйста, как к Вам обращаться."
+            confidence: 1.0
+            gender: "male"
+            birthdate: 2019-02-14
+            name: null
+            location: null
+            home_coordinates: null
+            work_coordinates”: null
+            occupation: "data scientist"
+            income_per_year”: 100000000000
+          - text: "А где Вы живете?"
+            confidence": 1.0
+            gender: "male"
+            birthdate: 2019-02-14
+            name: "Джо Неуловимый"
+            location: null
+            home_coordinates: null
+            work_coordinates: null
+            occupation”: "data scientist"
+            income_per_year: 100000000000
+    NewsCurrenciesResponse:
+      summary: Example answer from the NewsCurrency skill
+      value:
+        responses:
+          - text: "Some news (with titles, bodies, etc.) or currencies info as plain text"
+            confidence: 1.0
+          - text: "Another news (with titles, bodies, etc.) or currencies info as plain text"
+            confidence: 1.0
