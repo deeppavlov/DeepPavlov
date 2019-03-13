@@ -101,7 +101,7 @@ class RichMessage(RichItem):
         self.controls: list = []
 
     def __str__(self, *args, **kwargs):
-        result = '\n'.join([str(control) for control in self.controls if str(control)])
+        result = '\n'.join(filter(bool, map(str, self.controls)))
         return result
 
     def add_control(self, control: RichControl):
