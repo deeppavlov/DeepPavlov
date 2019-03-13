@@ -1,6 +1,6 @@
 # You can use both dot styled and URI (absolute and relative to configs/ dir) config file path
 # switch use_config flag to true to start using this config
-use_config: true
+use_config: false
 
 db_config:
   DB_NAME: test
