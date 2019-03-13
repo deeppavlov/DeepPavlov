@@ -112,7 +112,7 @@ def round_accuracy(y_true, y_predicted):
 def kbqa_accuracy(y_true, y_predicted):
     total_correct = 0
     for answer_true, answer_predicted in zip(y_true, y_predicted):
-        if answer_predicted in list(answer_true):
+        if answer_predicted in answer_true:
             total_correct += 1
 
     return total_correct / len(y_true)

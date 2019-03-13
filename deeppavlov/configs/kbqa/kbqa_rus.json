@@ -229,23 +229,23 @@
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata_rus.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/wikidata_rus.tar.gz",
         "subdir": "{DOWNLOADS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/inverted_index.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/inverted_index.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/test_set_with_answers.txt",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/test_set_with_answers.txt",
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/templates.pickle",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/templates.pickle",
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wiki_properties_id_to_name.pickle",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/wiki_properties_id_to_name.pickle",
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
@@ -253,7 +253,7 @@
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/kbqa_mix_lowercase.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/kbqa_mix_lowercase.tar.gz",
         "subdir": "{ROOT_PATH}/models/kbqa_mix_lowercase"
       },
 
