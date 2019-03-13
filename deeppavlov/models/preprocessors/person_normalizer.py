@@ -59,7 +59,7 @@ class PersonNormalizer(Component):
                 u_toks, u_tags = self.replace_mate_gooser_name(u_toks,
                                                                u_tags,
                                                                u_state[self.state_slot])
-                if random.random() > .8:
+                if random.random() < 0.2:
                     print("Adding calling user by name")
                     u_toks = [u_state[self.state_slot], ','] + u_toks
                     u_tags = ['B-MATE-GOOSER', 'O'] + u_tags
@@ -325,15 +325,15 @@ class NameAskerPostprocessor(Component):
         states = states if states else [{}] * len(utters)
         for utter, hist, state, resp in zip(utters, histories, states, responses):
             state = state or {}
-            if (self.state_slot not in state) and\
-                    (self.flag_slot not in state):
+            if (self.state_slot not in state) and (self.flag_slot not in state):
+                print(f"len(history) = {len(hist)}")
                 if (len(hist) == 0) and (random.random() < 0.2):
                     new_responses.append('Привет! Тебя как зовут?')
                     state[self.flag_slot] = True
-                elif (len(hist) < 2) and (random.random() < 0.5):
+                elif (len(hist) < 5) and (random.random() < 0.5):
                     new_responses.append('Как тебя зовут?')
                     state[self.flag_slot] = True
-                elif (len(hist) >= 2) and (random.random() < 0.1):
+                elif (len(hist) >= 5) and (random.random() < 0.1):
                     new_responses.append('Тебя как зовут-то?')
                     state[self.flag_slot] = True
                 else:
