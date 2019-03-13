@@ -169,6 +169,7 @@ class TransformerChitChat(Serializable):
         history_batch = copy.deepcopy(history_batch)
 
         history_batch = [self.drop_rich_msg(his) for his in history_batch]
+        history_batch = [ h[:-1] for h in history_batch]
 
         [history.append(utter) for utter, history in zip(utterances_batch, history_batch)]
         tagged_persona_batch = [self.context2tagged_context(persona) for persona in personas]
