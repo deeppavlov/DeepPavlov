@@ -82,7 +82,7 @@ class RichControl(RichItem, metaclass=ABCMeta):
         self.content = None
         self.control_json: dict = {'type': control_type, 'content': None}
 
-    def __str__(self, *args, **kwargs) -> str:
+    def __str__(self) -> str:
         return ''
 
 
@@ -100,7 +100,7 @@ class RichMessage(RichItem):
     def __init__(self) -> None:
         self.controls: list = []
 
-    def __str__(self, *args, **kwargs) -> str:
+    def __str__(self) -> str:
         result = '\n'.join(filter(bool, map(str, self.controls)))
         return result
 
