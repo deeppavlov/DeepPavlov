@@ -146,7 +146,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/rusentiment_bert_v0.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/bert_models"
+        "subdir": "{ROOT_PATH}/models/classifiers/"
       }
     ]
   }
