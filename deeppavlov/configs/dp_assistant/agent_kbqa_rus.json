@@ -1,0 +1,48 @@
+{
+  "chainer": {
+    "in": [
+      "dialogs"
+    ],
+    "out": [
+      "text",
+      "confidence"
+    ],
+    "pipe": [
+      {
+        "class_name": "dialogs_parser",
+        "in": ["dialogs"],
+        "out": [
+          "last_utterances",
+          "last_annotations",
+          "utterances_histories",
+          "annotations_histories",
+          "dialog_ids",
+          "user_ids"
+        ]
+      },
+      {
+        "config_path": "{CONFIGS_PATH}/kbqa/kbqa_rus.json",
+        "in": [
+          "last_utterances"
+        ],
+        "out": [
+          "text",
+          "confidence"
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+    ],
+    "labels": {
+      "server_utils": "KBQA"
+    },
+    "download": [
+    ]
+  }
+}
