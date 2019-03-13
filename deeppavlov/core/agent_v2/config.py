@@ -31,6 +31,11 @@ SKILLS = [
         "name": "gen_chitchat",
         "url": "http://0.0.0.0:2086/gen_chitchat",
         "path": configs.dp_assistant.agent_transformer_chit_chat_40k_v01_1_20
+    },
+    {
+        "name": "kbqa",
+        "url": "http://0.0.0.0:2087/kbqa",
+        "path": configs.dp_assistant.agent_kbqa_rus
     }
 ]
 
