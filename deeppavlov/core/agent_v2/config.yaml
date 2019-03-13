@@ -11,9 +11,9 @@ agent_config:
   MAX_WORKERS: 4
 
   SKILLS:
-    #- name: odqa
-    #  url: http://10.11.1.251:8101/skill
-    #  path: configs.dp_assistant.agent_ru_odqa_retr_noans_rubert_infer
+    - name: odqa
+      url: http://10.11.1.251:8101/skill
+      path: configs.dp_assistant.agent_ru_odqa_retr_noans_rubert_infer
 
     - name: chitchat
       url: http://10.11.1.251:8102/skill
@@ -22,7 +22,7 @@ agent_config:
         CUDA_VISIBLE_DEVICES: ""
 
     - name: hellobot
-      url: http://10.11.1.251:8106/ruler_call
+      url: http://10.11.1.251:8106/ruler_call/
       path: null
 
     - name: sberchat
