@@ -59,7 +59,7 @@ class PersonNormalizer(Component):
                 u_toks, u_tags = self.replace_mate_gooser_name(u_toks,
                                                                u_tags,
                                                                u_state[self.state_slot])
-                if random.random() < 0.34:
+                if random.random() < 0.4:
                     print("Adding calling user by name")
                     u_toks = [u_state[self.state_slot], ','] + u_toks
                     u_tags = ['B-MATE-GOOSER', 'O'] + u_tags
