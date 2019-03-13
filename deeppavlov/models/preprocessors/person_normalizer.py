@@ -94,7 +94,7 @@ class PersonNormalizer(Component):
                     j = 1
                     while (i + j < len(tokens)) and (tags[i + j][2:] == person_tag):
                         j += 1
-                    if (i + j == len(tokens)) or (tokens[i + j] in ',.!?;)'):
+                    if (i + j == len(tokens)) or (tokens[i + j][0] in ',.!?;)'):
                         # it is mate gooser
                         out_tags.extend([t[:2] + mate_tag for t in tags[i+1:i+j]])
                     else:
@@ -108,7 +108,7 @@ class PersonNormalizer(Component):
                     j = 1
                     while (len(out_tags) >= j) and (out_tags[-j][2:] == person_tag):
                         j += 1
-                    if (len(out_tags) < j) or (tokens[i-j] in ',.!?'):
+                    if (len(out_tags) < j) or (tokens[i-j][-1] in ',.!?('):
                         # it was mate gooser
                         for k in range(j - 1):
                             out_tags[-k-1] = out_tags[-k-1][:2] + mate_tag
