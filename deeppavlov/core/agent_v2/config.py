@@ -115,6 +115,8 @@ if _run_config_path.is_file():
         config: dict = yaml.safe_load(f)
 
     if config.get('use_config', False) is True:
+        config = config.get('agent_config', {})
+
         MAX_WORKERS = config.get('MAX_WORKERS', MAX_WORKERS)
 
         for group in _component_groups:

@@ -1,46 +1,52 @@
 # You can use both dot styled and URI (absolute and relative to configs/ dir) config file path
 # switch use_config flag to true to start using this config
-use_config: false
+use_config: true
 
-MAX_WORKERS: 4
+db_config:
+  DB_NAME: test
+  HOST: 10.11.1.251
+  PORT: 8100
 
-SKILLS:
-  - name: odqa
-    url: http://0.0.0.0:2080/odqa
-    path: configs.dp_assistant.agent_ru_odqa_retr_noans_rubert_infer
+agent_config:
+  MAX_WORKERS: 4
 
-  - name: chitchat
-    url: http://0.0.0.0:2081/chitchat
-    path: configs.dp_assistant.agent_ranking_chitchat_2staged_tfidf_smn_v4
-    env:
-      CUDA_VISIBLE_DEVICES: ""
+  SKILLS:
+    #- name: odqa
+    #  url: http://10.11.1.251:8101/skill
+    #  path: configs.dp_assistant.agent_ru_odqa_retr_noans_rubert_infer
 
-  - name: hellobot
-    url: http://127.0.0.1:2085/ruler_call/
-    path: null
+    - name: chitchat
+      url: http://10.11.1.251:8102/skill
+      path: configs.dp_assistant.agent_ranking_chitchat_2staged_tfidf_smn_v4
+      env:
+        CUDA_VISIBLE_DEVICES: ""
 
-  - name: sberchat
-    url: http://23.102.48.212:8443/api/
-    path: null
+    - name: hellobot
+      url: http://10.11.1.251:8106/ruler_call
+      path: null
 
-ANNOTATORS:
-  - name: ner
-    url: http://0.0.0.0:2083/ner_rus
-    path: null #configs.dp_assistant.preproc_ner_rus
-    env:
-      CUDA_VISIBLE_DEVICES: ""
+    - name: sberchat
+      url: http://23.102.48.212:8443/api/
+      path: null
 
-  - name: sentiment
-    url: http://0.0.0.0:2084/rusentiment
-    path: configs.dp_assistant.preproc_rusentiment
-    env:
-      CUDA_VISIBLE_DEVICES: ""
+  ANNOTATORS:
+    - name: ner
+      url: http://10.11.1.251:8103/skill
+      path: null #configs.dp_assistant.preproc_ner_rus
+      env:
+        CUDA_VISIBLE_DEVICES: ""
 
-SKILL_SELECTORS:
-  - name: chitchat_odqa
-    url: http://0.0.0.0:2082/chitchat_odqa_selector
-    path: configs.dp_assistant.sselector_chitchat_odqa
-    env:
-      CUDA_VISIBLE_DEVICES: ""
+    - name: sentiment
+      url: http://10.11.1.251:8104/skill
+      path: configs.dp_assistant.preproc_rusentiment
+      env:
+        CUDA_VISIBLE_DEVICES: ""
 
-RESPONSE_SELECTORS: []
+  SKILL_SELECTORS:
+    - name: chitchat_odqa
+      url: http://10.11.1.251:8105/skill
+      path: configs.dp_assistant.sselector_chitchat_odqa
+      env:
+        CUDA_VISIBLE_DEVICES: ""
+
+  RESPONSE_SELECTORS: []
