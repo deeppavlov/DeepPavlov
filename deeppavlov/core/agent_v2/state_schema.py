@@ -3,7 +3,7 @@ from mongoengine import DynamicDocument, ReferenceField, ListField, StringField,
 
 
 class User(DynamicDocument):
-    personality = DynamicField()
+    persona = ListField(default=[])
 
     meta = {'allow_inheritance': True}
 
@@ -12,10 +12,17 @@ class User(DynamicDocument):
 
 
 class Bot(User):
+    persona = ListField(default=['Мне нравится общаться с людьми.',
+                                 'Пару лет назад я окончила вуз с отличием.',
+                                 'Я работаю в банке.',
+                                 'В свободное время помогаю пожилым людям в благотворительном фонде',
+                                 'Люблю путешествовать'])
+
     def to_dict(self):
         return {'id': str(self.id),
                 'user_type': 'bot',
-                'personality': self.personality}
+                'persona': self.persona,
+                }
 
 
 class Human(User):
@@ -37,7 +44,7 @@ class Human(User):
                 'user_telegram_id': str(self.user_telegram_id),
                 'user_type': 'human',
                 'device_type': self.device_type,
-                'personality': self.personality,
+                'persona': self.persona,
                 'profile': self.profile}
 
 
@@ -59,6 +66,7 @@ class Utterance(DynamicDocument):
 
 class BotUtterance(Utterance):
     active_skill = StringField()
+    user = ReferenceField(Bot, required=True)
     confidence = FloatField()
 
     def to_dict(self):
