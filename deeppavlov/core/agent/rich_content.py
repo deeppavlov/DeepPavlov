@@ -100,7 +100,7 @@ class RichMessage(RichItem):
     def __init__(self) -> None:
         self.controls: list = []
 
-    def __str__(self, *args, **kwargs):
+    def __str__(self, *args, **kwargs) -> str:
         result = '\n'.join(filter(bool, map(str, self.controls)))
         return result
 
