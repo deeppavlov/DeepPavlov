@@ -169,6 +169,7 @@ class TransformerChitChat(Serializable):
         history_batch = copy.deepcopy(history_batch)
 
         history_batch = [self.drop_rich_msg(his) for his in history_batch]
+        history_batch = [ h[:-1] for h in history_batch]
 
         [history.append(utter) for utter, history in zip(utterances_batch, history_batch)]
         tagged_persona_batch = [self.context2tagged_context(persona) for persona in personas]
@@ -194,8 +195,9 @@ class TransformerChitChat(Serializable):
         raw_responses = list(zip(predictions_batch, confidence))
         utter2conf = {}
         for hyp_answers, confs in zip(predictions_batch, confidence):
+            max_conf = max(confs)
             for ans, confs in zip(hyp_answers, confs):
-                utter2conf[ans]=confs
+                utter2conf[ans]=confs/max_conf
         predictions_batch = [hacks.hacking(persona, his, hyp_answers, confs) for his, hyp_answers, confs, persona in zip(history_batch, predictions_batch, confidence, personas)]
         confs_batch = [utter2conf.get(prediction,1) for prediction in predictions_batch]
         return predictions_batch, confs_batch, raw_responses
