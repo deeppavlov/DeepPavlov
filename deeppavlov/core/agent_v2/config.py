@@ -1,4 +1,8 @@
+import yaml
+import sys
+from pathlib import Path
 from deeppavlov import configs
+from copy import deepcopy
 
 
 MAX_WORKERS = 4
@@ -62,3 +66,46 @@ SKILL_SELECTORS = [
 RESPONSE_SELECTORS = []
 
 # TODO include Bot?
+
+
+def _get_config_path(component_config: dict) -> dict:
+    component_config = deepcopy(component_config)
+    raw_path = component_config.get('path', None)
+
+    if not raw_path:
+        return component_config
+    elif raw_path[0] == '/':
+        config_path = Path(raw_path).resolve()
+    else:
+        path_parsed = raw_path.rstrip('.json').replace('/', '.').split('.')
+        path_parsed = path_parsed[1:] if path_parsed[0] == 'configs' else path_parsed
+
+        config_path = deepcopy(configs)
+
+        for level in path_parsed:
+            try:
+                config_path = getattr(config_path, level) if not isinstance(config_path, Path) else None
+            except AttributeError:
+                config_path = None
+
+    if isinstance(config_path, Path) and config_path.is_file():
+        component_config['path'] = config_path
+    else:
+        raise FileNotFoundError(f'config {raw_path} does not exists')
+
+    return component_config
+
+
+_run_config_path: Path = Path(__file__).resolve().parent / 'config.yaml'
+_component_groups = ['SKILLS', 'ANNOTATORS', 'SKILL_SELECTORS', 'RESPONSE_SELECTORS']
+_module = sys.modules[__name__]
+
+if _run_config_path.is_file():
+    with _run_config_path.open('r', encoding='utf-8') as f:
+        config: dict = yaml.safe_load(f)
+
+    if config.get('use_config', False) is True:
+        MAX_WORKERS = config.get('MAX_WORKERS', MAX_WORKERS)
+
+        for group in _component_groups:
+            setattr(_module, group, list(map(_get_config_path, config.get(group, []))))
