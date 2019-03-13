@@ -12,14 +12,14 @@ class KBQAReader(DatasetReader):
     def read(self, data_path: str):
         data_path = Path(data_path)
         files = list(data_path.glob('*.txt'))
-        if 'test_set_with_answers.txt' not in {file_path.name for file_path in files}:
+        test_set_filename = "test_set_with_answers.txt"
+        if test_set_filename not in {file_path.name for file_path in files}:
             url = 'http://files.deeppavlov.ai/kbqa/test_set_with_answers.txt'
             data_path.mkdir(exist_ok=True, parents=True)
             download_decompress(url, data_path)
-            files = list(data_path.glob('*.txt'))
         dataset = {}
 
-        dataset["test"] = self.parse_ner_file(files[0])
+        dataset["test"] = self.parse_ner_file(data_path / test_set_filename)
         dataset["train"] = []
         dataset["valid"] = []
         return dataset

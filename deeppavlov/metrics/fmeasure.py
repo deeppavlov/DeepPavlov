@@ -39,7 +39,7 @@ def ner_f1(y_true, y_predicted):
 def kbqa_accuracy(y_true, y_predicted):
     accuracy = 0
     for answer_true, answer_predicted in zip(y_true, y_predicted):
-        if answer_predicted in list(answer_true):
+        if answer_predicted in answer_true:
             accuracy += 1
 
     return (accuracy/len(y_true))

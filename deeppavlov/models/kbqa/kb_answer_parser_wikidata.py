@@ -201,8 +201,9 @@ class KBAnswerParserWikidata(Component, Serializable):
         return ent, relation
 
     def is_kbqa_question(self, question_tokens: List[List[str]]) -> bool:
-        not_kbqa_question_templates = ["почему", "когда будет", "что будет", "что если", "для чего", "как "]
-        kbqa_question_templates = ["как зовут", "как называется"]
+        not_kbqa_question_templates = ["почему", "когда будет", "что будет", "что если", "для чего ", "как ", \
+                                       "что делать", "зачем", "что может"]
+        kbqa_question_templates = ["как зовут", "как называется", "как звали"]
         question_init = ' '.join(question_tokens)
         question = ''.join([ch for ch in question_init if ch not in punctuation]).lower()
         is_kbqa = True

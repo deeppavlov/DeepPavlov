@@ -186,8 +186,10 @@
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "wiki_filename": "wiki_rus.pickle",
         "entities_filename": "wiki_rus_name_to_q_lowercase.pickle",
+        "inverted_index_filename": "inverted_index.pickle",
+        "id_to_name_file": "wiki_rus_q_to_name.pickle",
+        "use_inverted_index": false,
         "rule_filter_entities": true,
-        "substring_entity_search": false,
         "debug": false
       },
       {
@@ -199,7 +201,7 @@
         "top_k_classes": 5,
         "relations_maping_filename": "wiki_properties_id_to_name.pickle",
         "templates_filename": "templates.pickle",
-        "debug": true,
+        "debug": false,
         "return_confidences": false,
         "lemmatize": true,
         "linker": "#linker"
@@ -229,6 +231,10 @@
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata_rus.tar.gz",
         "subdir": "{DOWNLOADS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/inverted_index.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/test_set_with_answers.txt",
