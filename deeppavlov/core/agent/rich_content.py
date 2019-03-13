@@ -102,7 +102,7 @@ class RichMessage(RichItem):
 
     def __str__(self, *args, **kwargs):
         result = '\n'.join([str(control) for control in self.controls if str(control)])
-        return result or ''
+        return result
 
     def add_control(self, control: RichControl):
         """Adds RichControl instance to RichMessage.
