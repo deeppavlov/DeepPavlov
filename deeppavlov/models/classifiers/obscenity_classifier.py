@@ -1,14 +1,16 @@
-from typing import List, Union
-from pathlib import Path
+import errno
 import json
-import pymorphy2
+import os
 import re
 from logging import getLogger
+from pathlib import Path
+from typing import List, Union
 
+import pymorphy2
+
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Component
-from deeppavlov.core.data.utils import download_decompress
-from deeppavlov.core.commands.utils import expand_path
 
 log = getLogger(__name__)
 
