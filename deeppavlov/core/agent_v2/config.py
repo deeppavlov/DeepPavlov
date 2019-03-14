@@ -60,6 +60,14 @@ ANNOTATORS = [
         "env": {
             "CUDA_VISIBLE_DEVICES": ""
         }
+    },
+    {
+        "name": "obscenity",
+        "url": "http://0.0.0.0:2088/obscenity",
+        "path": configs.dp_assistant.obscenity_classifier,
+        "env": {
+            "CUDA_VISIBLE_DEVICES": ""
+        }
     }
 ]
 

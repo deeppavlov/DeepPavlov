@@ -42,6 +42,12 @@ agent_config:
       env:
         CUDA_VISIBLE_DEVICES: ""
 
+    - name: obscenity
+      url: http://10.11.1.251:8107/skill
+      path: configs/dp_assistant/obscenity_classifier.json
+      env:
+        CUDA_VISIBLE_DEVICES: ""
+
   SKILL_SELECTORS:
     - name: chitchat_odqa
       url: http://10.11.1.251:8105/skill
