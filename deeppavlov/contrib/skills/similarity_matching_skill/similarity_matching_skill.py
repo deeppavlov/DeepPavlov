@@ -49,7 +49,7 @@ class SimilarityMatchingSkill(Skill):
         if y_col_name is not None:
             model_config['dataset_reader']['y_col_name'] = y_col_name
 
-        model_config['metadata']['variables']['ROOT_PATH'] = save_load_path
+        model_config['metadata']['variables']['MODELS_PATH'] = save_load_path
 
         if data_path is not None:
             if expand_path(data_path).exists():
