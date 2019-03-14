@@ -15,10 +15,10 @@
 from typing import Iterable, Union, Tuple
 from collections import defaultdict
 from logging import getLogger
-from overrides import overrides
 
 import numpy as np
 import tensorflow as tf
+from overrides import overrides
 from tensorflow.python.ops import variables
 
 from deeppavlov.core.common.errors import ConfigError
