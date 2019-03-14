@@ -166,7 +166,6 @@ class LRScheduledModel:
         if momentum_decay_epochs and momentum_decay_batches:
             raise ConfigError("isn't able to update momentum every batch"
                               " and every epoch simultaneously")
-        super().__init__(*args, **kwargs)
 
         start_val, end_val = learning_rate, None
         if isinstance(learning_rate, (tuple, list)):
