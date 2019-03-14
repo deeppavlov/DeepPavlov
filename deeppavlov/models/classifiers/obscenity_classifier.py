@@ -20,6 +20,7 @@ class ObscenityClassifier(Component):
 
     Args:
         data_path: a directory where required files are storing
+        
     Attributes:
         obscenity_words: list of russian obscenity words
         obscenity_words_extended: list of russian obscenity words
