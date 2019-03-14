@@ -1,9 +1,10 @@
-import yaml
 import sys
-from pathlib import Path
-from deeppavlov import configs
 from copy import deepcopy
+from pathlib import Path
 
+import yaml
+
+from deeppavlov import configs
 
 MAX_WORKERS = 4
 
