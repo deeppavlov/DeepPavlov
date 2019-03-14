@@ -172,15 +172,16 @@ class BertRankerModel(LRScheduledTFModel):
         if self.bot_mode == 0:
             s = pred @ self.resp_vecs.T
             ids = np.argmax(s, 1)
-            ans = [[self.resps[el] for el in ids], [self.resps[el] for el in ids]]
+            ans = [[self.resps[ids[i]] for i in range(bs)], [s[i][ids[i]] for i in range(bs)]]
         if self.bot_mode == 1:
-            sr = pred @ self.resp_vecs.T
-            sc = pred @ self.cont_vecs.T
+            sr = (pred @ self.resp_vecs.T + 1) / 2
+            sc = (pred @ self.cont_vecs.T + 1) / 2
             ids = np.argsort(sr, 1)[:, -10:]
             sc = [sc[i, ids[i]] for i in range(bs)]
             ids = [sorted(zip(ids[i], sc[i]), key=itemgetter(1), reverse=True) for i in range(bs)]
+            sc = [list(map(lambda x: x[1], ids[i])) for i in range(bs)]
             ids = [list(map(lambda x: x[0], ids[i])) for i in range(bs)]
-            ans = [[self.resps[ids[i][0]] for i in range(bs)]]
+            ans = [[self.resps[ids[i][0]] for i in range(bs)], [sc[i][0] for i in range(bs)]]
         if self.bot_mode == 2:
             sr = (pred @ self.resp_vecs.T + 1) / 2
             sc = (pred @ self.cont_vecs.T + 1) / 2
@@ -195,7 +196,7 @@ class BertRankerModel(LRScheduledTFModel):
             sc = pred @ self.cont_vecs.T
             s = sr + sc
             ids = np.argmax(s, 1)
-            ans = [[self.resps[el] for el in ids]]
+            ans = [[self.resps[ids[i]] for i in range(bs)], [s[i][ids[i]] for i in range(bs)]]
         return ans
 
 
