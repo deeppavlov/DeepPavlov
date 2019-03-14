@@ -26,7 +26,7 @@ class ObscenityClassifier(Component):
         obscenity_words_exception: list of words on that model makes mistake that they are obscene
         regexp: reg exp that finds various obscene words
         regexp2: reg exp that finds various obscene words
-        morph: pymorphy2.MorphAnalyzer object
+        morph: pymorphy2.MorphAnalyzer object for lemmatizing word
         word_pattern: reg exp that finds words in text
     """
 
