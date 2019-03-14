@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: DeepPavlov Skills REST API
-  version: 0.9.2
+  version: 0.9.3
   description: >-
     Agents built with DeepPavlov communicate with their Skills via HTTP, so
     endpoints should be specified.
@@ -14,6 +14,7 @@ servers:
 paths:
   /:
     get:
+      summary: Root path
       responses:
         '200':
           description: Go to /apidocs/ to see graphical web UI for this API.
@@ -25,10 +26,9 @@ paths:
           required: true
           schema:
             enum:
-              - news
-              - currencies
+              - personal_info
               - news_currencies
-      summary: Generic description of a skill endpoint
+      summary: Generic skill endpoint
       description: >-
         An agent built with DeepPavlov sends requests to the skill endpoints in
         order to retrieve the answers.
@@ -39,35 +39,27 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/RequestBodySchema'
+            examples:
+              general:
+                $ref: '#/components/examples/GenericRequestBody'
       responses:
         '200':
           description: Request finished succesfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ODQAChitChatResponse200Schema'
+                $ref: "#/components/schemas/ODQAChitChatResponse200Schema"
+              examples:
+                chitchat:
+                  $ref: "#/components/examples/ChitChatResponse"
+                odqa:
+                  $ref: "#/components/examples/ODQAResponse"
+                personal_info:
+                  $ref: '#/components/examples/PersonalInfoResponse'
+                news_currencies:
+                  $ref: '#/components/examples/NewsCurrenciesResponse'
         '404':
           description: This skill doesn't exsits.
-  /api/v0/news_currencies/:
-    post:
-      requestBody:
-        description: Describe the request to be executed
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RequestBodySchema'
-            example:
-              $ref: '#/components/examples/GenericRequestBody/value'
-      responses:
-        '200':
-          description: News retrieved successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ODQAChitChatResponse200Schema'
-              example:
-                $ref: '#/components/examples/NewsCurrenciesResponse/value'
 components:
   schemas:
     RequestBodySchema:
@@ -286,9 +278,9 @@ components:
             $ref: '#/components/schemas/ODQAChitChatResponse200Unit'
   examples:
     GenericRequestBody:
-      description: one exaustive example of a request body from external json-file
-      value: >-
-        version: 0.9.2
+      description: one exaustive example
+      value:
+        version: 0.9.3
         dialogs:
           - id: 5c8906200110b313394e6a55
             location: None
