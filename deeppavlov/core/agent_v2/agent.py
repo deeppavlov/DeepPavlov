@@ -31,12 +31,12 @@ class Agent:
 
         state = self.state_manager.get_state(me_dialogs)
 
-        skill_names, utterances, confidences, profiles = self.skill_manager(state)
+        skill_names, utterances, confidences, profiles, non_active_skills = self.skill_manager(state)
 
         self._update_profiles(me_users, profiles)
 
         self.state_manager.add_bot_utterances(me_dialogs, utterances, [datetime.utcnow()] * len(me_dialogs),
-                                              skill_names, confidences)
+                                              skill_names, confidences, non_active_skills=non_active_skills)
 
         self._update_annotations(me_dialogs)
 

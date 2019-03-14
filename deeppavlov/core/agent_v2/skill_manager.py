@@ -45,9 +45,10 @@ class SkillManager:
 
         skill_responses = self.skill_caller(payload=payloads, names=skill_names, urls=skill_urls)
         user_profiles = self._get_user_profiles(skill_responses, dialogs)
-        selected_skill_names, utterances, confidences = self.response_selector(skill_responses, state)
+        selected_skill_names, utterances, confidences, non_active_skills = self.response_selector(skill_responses,
+                                                                                                  state)
         utterances = [utt if utt else NOANSWER_UTT for utt in utterances]
-        return selected_skill_names, utterances, confidences, user_profiles
+        return selected_skill_names, utterances, confidences, user_profiles, non_active_skills
 
     def _get_user_profiles(self, skill_responses, dialogs, skill_name='hellobot') -> Optional[List[Dict]]:
         """

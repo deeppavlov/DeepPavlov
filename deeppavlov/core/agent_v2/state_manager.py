@@ -58,14 +58,17 @@ class StateManager:
     @classmethod
     def add_bot_utterances(cls, dialogs: Sequence[Dialog], texts: Sequence[str], date_times: Sequence[datetime],
                            active_skills: Sequence[str], confidences: Sequence[float],
-                           annotations: Optional[Sequence[dict]] = None) -> None:
+                           annotations: Optional[Sequence[dict]] = None,
+                           non_active_skills: Optional[Sequence[dict]] = None) -> None:
         if annotations is None:
             annotations = [None] * len(dialogs)
+        if non_active_skills is None:
+            non_active_skills = [None] * len(dialogs)
 
-        for dialog, text, date_time, active_skill, confidence, annotations in zip(dialogs, texts, date_times,
-                                                                                  active_skills, confidences,
-                                                                                  annotations):
-            utterance = cls.create_new_bot_utterance(text, dialog.bot, date_time, active_skill, confidence, annotations)
+        for dialog, text, date_time, active_skill, confidence, anno, nas in zip(dialogs, texts, date_times,
+                                                                                active_skills, confidences,
+                                                                                annotations, non_active_skills):
+            utterance = cls.create_new_bot_utterance(text, dialog.bot, date_time, active_skill, confidence, anno, nas)
             dialog.utterances.append(utterance)
             dialog.save()
 
@@ -113,13 +116,15 @@ class StateManager:
         return utt
 
     @staticmethod
-    def create_new_bot_utterance(text, user, date_time, active_skill, confidence, annotations=None):
+    def create_new_bot_utterance(text, user, date_time, active_skill, confidence, annotations=None,
+                                 non_active_skills=None):
         utt = BotUtterance(text=text,
                            user=user,
                            date_time=date_time,
                            active_skill=active_skill,
                            confidence=confidence,
-                           annotations=annotations or BotUtterance.annotations.default)
+                           annotations=annotations or BotUtterance.annotations.default,
+                           non_active_skills=non_active_skills or BotUtterance.non_active_skills.default)
         utt.save()
         return utt
 

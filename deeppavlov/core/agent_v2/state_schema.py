@@ -68,12 +68,14 @@ class BotUtterance(Utterance):
     active_skill = StringField()
     user = ReferenceField(Bot, required=True)
     confidence = FloatField()
+    non_active_skills = DynamicField(default=[])
 
     def to_dict(self):
         return {
             'id': str(self.id),
             'active_skill': self.active_skill,
             'confidence': self.confidence,
+            'non_active_skills': self.non_active_skills,
             'text': self.text,
             'user_id': str(self.user.id),
             'annotations': self.annotations,
