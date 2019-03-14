@@ -123,11 +123,12 @@ class StateManager:
         utt.save()
         return utt
 
-    # TODO rewrite with using mongoengine.Document.update()
     @staticmethod
-    def update_me_object(obj, **kwargs):
-        for attr, value in kwargs.items():
-            if not hasattr(obj, attr):
-                raise AttributeError(f'{object.__class__.__name__} object doesn\'t have an attribute {attr}')
-            setattr(obj, attr, value)
-            obj.save()
+    def update_me_object(me_obj, kwargs):
+        me_obj.update(**kwargs)
+        me_obj.save()
+
+    @staticmethod
+    def update_user_profile(me_user, profile):
+        me_user.profile.update(**profile)
+        me_user.save()
