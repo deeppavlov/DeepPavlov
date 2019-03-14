@@ -13,10 +13,10 @@
 # limitations under the License.
 
 
+import json
 from typing import Dict, Any, List, Tuple, Generator, Optional
 
 import numpy as np
-import json
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
