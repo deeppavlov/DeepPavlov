@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Sequence, Hashable, Any, Optional
 
-from deeppavlov.core.agent_v2.state_schema import Human, Bot, Utterance, BotUtterance, Dialog
+from deeppavlov.core.agent_v2.state_schema import Human, Bot, Utterance, HumanUtterance, BotUtterance, Dialog
 from deeppavlov.core.agent_v2.connection import state_storage
 from deeppavlov.core.agent_v2.bot import BOT
 from deeppavlov.core.agent_v2 import VERSION
@@ -45,30 +45,31 @@ class StateManager:
         return dialogs
 
     @classmethod
-    def add_user_utterances(cls, dialogs: Sequence[Dialog], texts: Sequence[str], date_times: Sequence[datetime],
-                            annotations: Optional[Sequence[dict]] = None) -> None:
+    def add_human_utterances(cls, dialogs: Sequence[Dialog], texts: Sequence[str], date_times: Sequence[datetime],
+                             annotations: Optional[Sequence[dict]] = None,
+                             selected_skills: Optional[Sequence[dict]] = None) -> None:
         if annotations is None:
             annotations = [None] * len(texts)
 
-        for dialog, text, anno, date_time in zip(dialogs, texts, annotations, date_times):
-            utterance = cls.create_new_utterance(text, dialog.user, date_time, anno)
+        if selected_skills is None:
+            selected_skills = [None] * len(texts)
+
+        for dialog, text, anno, date_time, ss in zip(dialogs, texts, annotations, date_times, selected_skills):
+            utterance = cls.create_new_human_utterance(text, dialog.user, date_time, anno, ss)
             dialog.utterances.append(utterance)
             dialog.save()
 
     @classmethod
     def add_bot_utterances(cls, dialogs: Sequence[Dialog], texts: Sequence[str], date_times: Sequence[datetime],
                            active_skills: Sequence[str], confidences: Sequence[float],
-                           annotations: Optional[Sequence[dict]] = None,
-                           non_active_skills: Optional[Sequence[dict]] = None) -> None:
+                           annotations: Optional[Sequence[dict]] = None) -> None:
         if annotations is None:
             annotations = [None] * len(dialogs)
-        if non_active_skills is None:
-            non_active_skills = [None] * len(dialogs)
 
-        for dialog, text, date_time, active_skill, confidence, anno, nas in zip(dialogs, texts, date_times,
-                                                                                active_skills, confidences,
-                                                                                annotations, non_active_skills):
-            utterance = cls.create_new_bot_utterance(text, dialog.bot, date_time, active_skill, confidence, anno, nas)
+        for dialog, text, date_time, active_skill, confidence, anno in zip(dialogs, texts, date_times,
+                                                                           active_skills, confidences,
+                                                                           annotations):
+            utterance = cls.create_new_bot_utterance(text, dialog.bot, date_time, active_skill, confidence, anno)
             dialog.utterances.append(utterance)
             dialog.save()
 
@@ -104,27 +105,26 @@ class StateManager:
         return human
 
     @staticmethod
-    def create_new_utterance(text, user, date_time, annotations=None):
+    def create_new_human_utterance(text, user, date_time, annotations=None, selected_skills=None):
         if isinstance(user, Bot):
             raise RuntimeError(
                 'Utterances of bots should be created with different method. See create_new_bot_utterance()')
-        utt = Utterance(text=text,
-                        user=user,
-                        date_time=date_time,
-                        annotations=annotations or Utterance.annotations.default)
+        utt = HumanUtterance(text=text,
+                             user=user,
+                             date_time=date_time,
+                             annotations=annotations or HumanUtterance.annotations.default,
+                             selected_skills=selected_skills or HumanUtterance.selected_skills.default)
         utt.save()
         return utt
 
     @staticmethod
-    def create_new_bot_utterance(text, user, date_time, active_skill, confidence, annotations=None,
-                                 non_active_skills=None):
+    def create_new_bot_utterance(text, user, date_time, active_skill, confidence, annotations=None):
         utt = BotUtterance(text=text,
                            user=user,
                            date_time=date_time,
                            active_skill=active_skill,
                            confidence=confidence,
-                           annotations=annotations or BotUtterance.annotations.default,
-                           non_active_skills=non_active_skills or BotUtterance.non_active_skills.default)
+                           annotations=annotations or BotUtterance.annotations.default)
         utt.save()
         return utt
 
