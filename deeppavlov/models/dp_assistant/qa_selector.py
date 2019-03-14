@@ -12,14 +12,14 @@ from deeppavlov.core.models.component import Component
 class QASelector(Component):
     def __init__(self, load_path: str, *args, **kwargs) -> None:
         self.count_vect = None
-        self.xgb = None
+        self.xgb_model = None
         self.load(load_path)
 
     def load(self, file_path: str):
         with open(file_path, 'rb') as f:
             models_dict = pickle.load(f)
             self.count_vect = models_dict['count_vectorizer']
-            self.xgb_model = models_dict['xgb']
+            self.xgb_model = models_dict['xgb_model']
 
     def __call__(self,
                  question_raw: List[str],
@@ -36,8 +36,9 @@ class QASelector(Component):
                 self.count_vect.transform(answer_rubert_retr).todense(),
                 self.count_vect.transform(answer_kbqa).todense()]
         x_counts = np.concatenate(vecs, 1)
-        confidences = np.stack([answer_rubert_score, answer_rubert_retr_score, answer_kbqa_score], 0)
+        confidences = np.stack([answer_rubert_score, answer_rubert_retr_score, answer_kbqa_score], 1)
         x_ar = self._compute_confidence_features(confidences)
+        print(x_ar.shape, x_counts.shape, confidences.shape)
         x_ar = np.concatenate([x_ar, x_counts], 1)
         d = xgb.DMatrix(x_ar)
         best_model_ids = self.xgb_model.predict(d)
@@ -45,12 +46,12 @@ class QASelector(Component):
         answers = [answer_rubert,
                    answer_rubert_retr,
                    answer_kbqa]
-        model_names = ['rubert',
+        model_names = ('rubert',
                        'rubert_retr',
-                       'kbqa']
+                       'kbqa')
         best_answers = []
         for n, idx in enumerate(best_model_ids):
-            best_answers.append([answers[idx][n], model_names[idx]])
+            best_answers.append([answers[int(idx)][n], model_names[int(idx)]])
 
         return best_answers
 
