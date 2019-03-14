@@ -31,7 +31,7 @@ class PatternMatchingSkill(Skill):
         default_confidence: The default confidence.
     """
     def __init__(self, responses: List[str], patterns: Optional[List[str]]=None,
-                 regex: bool=False, ignore_case: bool=True, default_confidence: float = 0.5) -> None:
+                 regex: bool=False, ignore_case: bool=True, default_confidence: float = 1) -> None:
         if isinstance(responses, str):
             responses = [responses]
         self.responses = responses
