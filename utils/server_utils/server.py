@@ -230,7 +230,7 @@ def skill_server(config: Union[dict, str, Path], https=False, ssl_key=None, ssl_
                 'in': 'body',
                 'required': 'true',
                 'example': {
-                    'version': 0.9,
+                    'version': '0.9.3',
                     'dialogs': [
                         {
                             'id': '5c65706b0110b377e17eba41',
@@ -241,12 +241,10 @@ def skill_server(config: Union[dict, str, Path], https=False, ssl_key=None, ssl_
                                     "text": "Привет!",
                                     "user_id": "5c62f7330110b36bdd1dc5d5",
                                     "annotations": {
-                                        "ner": [
-                                        ],
-                                        "coref": [
-                                        ],
-                                        "sentiment": [
-                                        ]
+                                        "ner": {},
+                                        "coref": {},
+                                        "sentiment": {},
+                                        "obscenity": {}
                                     },
                                     "date": "2019-02-12 16:41:23.142000"
                                 },
@@ -257,12 +255,10 @@ def skill_server(config: Union[dict, str, Path], https=False, ssl_key=None, ssl_
                                     "text": "Привет, я бот!",
                                     "user_id": "5c62f7330110b36bdd1dc5d6",
                                     "annotations": {
-                                        "ner": [
-                                        ],
-                                        "coref": [
-                                        ],
-                                        "sentiment": [
-                                        ]
+                                        "ner": {},
+                                        "coref": {},
+                                        "sentiment": {},
+                                        "obscenity": {}
                                     },
                                     "date": "2019-02-12 16:41:23.142000"
                                 },
@@ -271,12 +267,10 @@ def skill_server(config: Union[dict, str, Path], https=False, ssl_key=None, ssl_
                                     "text": "Как дела?",
                                     "user_id": "5c62f7330110b36bdd1dc5d5",
                                     "annotations": {
-                                        "ner": [
-                                        ],
-                                        "coref": [
-                                        ],
-                                        "sentiment": [
-                                        ]
+                                        "ner": {},
+                                        "coref": {},
+                                        "sentiment": {},
+                                        "obscenity": {}
                                     },
                                     "date": "2019-02-12 16:41:23.142000"
                                 }
@@ -286,7 +280,7 @@ def skill_server(config: Union[dict, str, Path], https=False, ssl_key=None, ssl_
                                 'user_telegram_id': '44d279ea-62ab-4c71-9adb-ed69143c12eb',
                                 'user_type': 'human',
                                 'device_type': None,
-                                'personality': None
+                                'persona': None
                             },
                             'bot': {
                                 'id': '5c62f7330110b36bdd1dc5d6',
