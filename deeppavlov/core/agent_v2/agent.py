@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Sequence, Hashable, Any
+from typing import Sequence, Hashable, Any, Dict
 from itertools import compress
 import operator
 
@@ -31,7 +31,9 @@ class Agent:
 
         state = self.state_manager.get_state(me_dialogs)
 
-        skill_names, utterances, confidences = self.skill_manager(state)
+        skill_names, utterances, confidences, profiles = self.skill_manager(state)
+
+        self._update_profiles(me_users, profiles)
 
         self.state_manager.add_bot_utterances(me_dialogs, utterances, [datetime.utcnow()] * len(me_dialogs),
                                               skill_names, confidences)
@@ -40,7 +42,13 @@ class Agent:
 
         return utterances  # return text only to the users
 
-    def _update_annotations(self, me_dialogs: Sequence[Dialog]):
+    def _update_annotations(self, me_dialogs: Sequence[Dialog]) -> None:
         annotations = self.preprocessor(self.state_manager.get_state(me_dialogs))
         utterances = [dialog.utterances[-1] for dialog in me_dialogs]
         self.state_manager.add_annotations(utterances, annotations)
+
+    def _update_profiles(self, me_users, profiles) -> None:
+        if not profiles:
+            return
+        for me_user, profile in zip(me_users, profiles):
+            self.state_manager.update_user_profile(me_user, profile)
