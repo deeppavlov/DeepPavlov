@@ -20,8 +20,8 @@ from typing import List
 from deeppavlov.core.common.metrics_registry import register_metric
 
 
-@register_metric('exact_match')
-def exact_match(y_true: List[List[str]], y_predicted: List[str]) -> float:
+@register_metric('squad_v2_em')
+def squad_v2_exact_match(y_true: List[List[str]], y_predicted: List[str]) -> float:
     """ Calculates Exact Match score between y_true and y_predicted
         EM score uses the best matching y_true answer:
             if y_pred equal at least to one answer in y_true then EM = 1, else EM = 0
@@ -40,8 +40,8 @@ def exact_match(y_true: List[List[str]], y_predicted: List[str]) -> float:
     return 100 * EM_total / len(y_true) if len(y_true) > 0 else 0
 
 
-@register_metric('exact_match_1.1')
-def exact_match_v1(y_true: List[List[str]], y_predicted: List[str]) -> float:
+@register_metric('squad_v1_em')
+def squad_v1_exact_match(y_true: List[List[str]], y_predicted: List[str]) -> float:
     """ Calculates Exact Match score between y_true and y_predicted
         EM score uses the best matching y_true answer:
             if y_pred equal at least to one answer in y_true then EM = 1, else EM = 0
@@ -64,8 +64,8 @@ def exact_match_v1(y_true: List[List[str]], y_predicted: List[str]) -> float:
     return 100 * EM_total / count if count > 0 else 0
 
 
-@register_metric('squad_f1')
-def squad_f1(y_true: List[List[str]], y_predicted: List[str]) -> float:
+@register_metric('squad_v2_f1')
+def squad_v2_f1(y_true: List[List[str]], y_predicted: List[str]) -> float:
     """ Calculates F-1 score between y_true and y_predicted
         F-1 score uses the best matching y_true answer
 
@@ -100,8 +100,8 @@ def squad_f1(y_true: List[List[str]], y_predicted: List[str]) -> float:
     return 100 * f1_total / len(y_true) if len(y_true) > 0 else 0
 
 
-@register_metric('squad_f1_1.1')
-def squad_f1_v1(y_true: List[List[str]], y_predicted: List[str]) -> float:
+@register_metric('squad_v1_f1')
+def squad_v1_f1(y_true: List[List[str]], y_predicted: List[str]) -> float:
     """ Calculates F-1 score between y_true and y_predicted
         F-1 score uses the best matching y_true answer
 
