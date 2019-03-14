@@ -141,7 +141,7 @@ components:
           description: Тип пользователя. Всегда “bot”.
           type: string
         persona:
-          description: Персона пользователя, которая хранится как список предложений-фактов о пользователе.
+          description: Персона бота, которая хранится как список предложений-фактов о пользователе.
           type: array
           items:
             type: string
@@ -253,7 +253,7 @@ components:
       properties:
         labels:
           description: >-
-            Тэг наличия обсценентной лексики. Может принимать значения 'obscene' и 'not_obscene'
+            Тэг наличия обсценной лексики. Может принимать значения 'obscene' и 'not_obscene'
           type: string
     ODQAChitChatResponse200Unit:
       description: >-
