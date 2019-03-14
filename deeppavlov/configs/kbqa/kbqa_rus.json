@@ -233,7 +233,7 @@
         "subdir": "{DOWNLOADS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/inverted_index.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/inverted_index.pickle",
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {

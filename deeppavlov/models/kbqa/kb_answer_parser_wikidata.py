@@ -91,7 +91,7 @@ class KBAnswerParserWikidata(Component, Serializable):
 
         objects_batch = []
         confidences_batch = []
-        
+
         for tokens, tags, relations_probs in zip(tokens_batch, tags_batch, relations_probs_batch):
             is_kbqa = self.is_kbqa_question(tokens)
             if is_kbqa:
@@ -203,7 +203,8 @@ class KBAnswerParserWikidata(Component, Serializable):
     def is_kbqa_question(self, question_tokens: List[List[str]]) -> bool:
         not_kbqa_question_templates = ["почему", "когда будет", "что будет", "что если", "для чего ", "как ", \
                                        "что делать", "зачем", "что может"]
-        kbqa_question_templates = ["как зовут", "как называется", "как звали"]
+        kbqa_question_templates = ["как зовут", "как называется", "как звали", "как ты думаешь", "как твое мнение", \
+                                   "как ты считаешь"]
         question_init = ' '.join(question_tokens)
         question = ''.join([ch for ch in question_init if ch not in punctuation]).lower()
         is_kbqa = True
