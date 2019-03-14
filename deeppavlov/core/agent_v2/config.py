@@ -85,19 +85,10 @@ def _get_config_path(component_config: dict) -> dict:
 
     if not raw_path:
         return component_config
-    elif raw_path[0] == '/':
-        config_path = Path(raw_path).resolve()
-    else:
-        path_parsed = raw_path.rstrip('.json').replace('/', '.').split('.')
-        path_parsed = path_parsed[1:] if path_parsed[0] == 'configs' else path_parsed
 
-        config_path = deepcopy(configs)
-
-        for level in path_parsed:
-            try:
-                config_path = getattr(config_path, level) if not isinstance(config_path, Path) else None
-            except AttributeError:
-                config_path = None
+    config_path = Path(raw_path)
+    if not config_path.is_absolute():
+        config_path = Path(__file__).resolve().parents[2] / config_path
 
     if isinstance(config_path, Path) and config_path.is_file():
         component_config['path'] = config_path

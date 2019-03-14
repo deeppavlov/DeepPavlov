@@ -13,11 +13,11 @@ agent_config:
   SKILLS:
     - name: odqa
       url: http://10.11.1.251:8101/skill
-      path: configs.dp_assistant.agent_ru_odqa_retr_noans_rubert_infer
+      path: configs/dp_assistant/agent_ru_odqa_retr_noans_rubert_infer.json
 
     - name: chitchat
       url: http://10.11.1.251:8102/skill
-      path: configs.dp_assistant.agent_ranking_chitchat_2staged_tfidf_smn_v4
+      path: configs/dp_assistant/agent_ranking_chitchat_2staged_tfidf_smn_v4.json
       env:
         CUDA_VISIBLE_DEVICES: ""
 
@@ -32,20 +32,20 @@ agent_config:
   ANNOTATORS:
     - name: ner
       url: http://10.11.1.251:8103/skill
-      path: null #configs.dp_assistant.preproc_ner_rus
+      path: null #configs/dp_assistant/preproc_ner_rus.json
       env:
         CUDA_VISIBLE_DEVICES: ""
 
     - name: sentiment
       url: http://10.11.1.251:8104/skill
-      path: configs.dp_assistant.preproc_rusentiment
+      path: configs/dp_assistant/preproc_rusentiment.json
       env:
         CUDA_VISIBLE_DEVICES: ""
 
   SKILL_SELECTORS:
     - name: chitchat_odqa
       url: http://10.11.1.251:8105/skill
-      path: configs.dp_assistant.sselector_chitchat_odqa
+      path: configs/dp_assistant/sselector_chitchat_odqa.json
       env:
         CUDA_VISIBLE_DEVICES: ""
 
