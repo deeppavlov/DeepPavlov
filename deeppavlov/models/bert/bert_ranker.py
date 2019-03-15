@@ -107,6 +107,9 @@ class BertRankerModel(LRScheduledTFModel):
             self.cont_vecs = self(self.cont_features)
             np.save(self.save_path / "cont_vecs", self.cont_vecs)
 
+        self.resp_vecs /= np.linalg.norm(self.resp_vecs, keepdims=True)
+        self.cont_vecs /= np.linalg.norm(self.cont_vecs, keepdims=True)
+
     def _init_graph(self):
         self._init_placeholders()
         with tf.variable_scope("model"):
@@ -177,6 +180,7 @@ class BertRankerModel(LRScheduledTFModel):
                 p = np.expand_dims(p, 0)
             pred.append(p)
         pred = np.vstack(pred)
+        pred = pred / np.linalg.norm(pred, keepdims=True)
         bs = pred.shape[0]
         if self.bot_mode == 0:
             s = pred @ self.resp_vecs.T
@@ -191,19 +195,20 @@ class BertRankerModel(LRScheduledTFModel):
             ids = [list(map(lambda x: x[0], ids[i])) for i in range(bs)]
             ans = [[self.resps[ids[i][0]] for i in range(bs)]]
         if self.bot_mode == 2:
-            sr = pred @ self.resp_vecs.T
-            sc = pred @ self.cont_vecs.T
+            sr = (pred @ self.resp_vecs.T + 1) / 2
+            sc = (pred @ self.cont_vecs.T + 1) / 2
             ids = np.argsort(sc, 1)[:, -10:]
             sr = [sr[i, ids[i]] for i in range(bs)]
             ids = [sorted(zip(ids[i], sr[i]), key=itemgetter(1), reverse=True) for i in range(bs)]
+            sr = [list(map(lambda x: x[1], ids[i])) for i in range(bs)]
             ids = [list(map(lambda x: x[0], ids[i])) for i in range(bs)]
-            ans = [[self.resps[ids[i][0]] for i in range(bs)]]
+            ans = [[self.resps[ids[i][0]] for i in range(bs)], [sr[i][0] for i in range(bs)]]
         if self.bot_mode == 3:
             sr = pred @ self.resp_vecs.T
             sc = pred @ self.cont_vecs.T
             s = sr + sc
             ids = np.argmax(s, 1)
             ans = [[self.resps[el] for el in ids]]
-        return ans[0]
+        return ans
 
 

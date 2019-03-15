@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: DeepPavlov Skills REST API
-  version: 0.9.2
+  version: 0.9.3
   description: >-
     Agents built with DeepPavlov communicate with their Skills via HTTP, so
     endpoints should be specified.
@@ -141,7 +141,7 @@ components:
           description: Тип пользователя. Всегда “bot”.
           type: string
         persona:
-          description: Персона пользователя, которая хранится как список предложений-фактов о пользователе.
+          description: Персона бота, которая хранится как список предложений-фактов о пользователе.
           type: array
           items:
             type: string
@@ -216,6 +216,8 @@ components:
           $ref: '#/components/schemas/Coref'
         sentiment:
           $ref: '#/components/schemas/Sentiment'
+        obscenity:
+          $ref: '#/components/schemas/Obscenity'
     NER:
       description: По умолчанию пустой словарь.
       type: object
@@ -238,11 +240,21 @@ components:
       description: Не имплементировано. Всегда пустой словарь.
       type: object
     Sentiment:
-      description: >-
-        По умолчанию пустой словарь. Если sentiment определился, то возвращает
-        строку с значением sentiment. Может принимать значения: 'neutral'
-        'positive' 'skip' 'speech' 'negative'
+      description: По умолчанию пустой словарь.
       type: object
+      properties:
+        labels:
+          description: >-
+            Тэг сентимента. Может принимать значения: 'neutral' 'positive' 'skip' 'speech' 'negative'
+          type: string
+    Obscenity:
+      description: По умолчанию пустой словарь.
+      type: object
+      properties:
+        labels:
+          description: >-
+            Тэг наличия обсценной лексики. Может принимать значения 'obscene' и 'not_obscene'
+          type: string
     ODQAChitChatResponse200Unit:
       description: >-
         Батч возвращаемых скилом ответов. Количество ответов соответствует
@@ -268,7 +280,7 @@ components:
     GenericRequestBody:
       description: one exaustive example
       value:
-        version: 0.9.2
+        version: 0.9.3
         dialogs:
           - id: 5c8906200110b313394e6a55
             location: None

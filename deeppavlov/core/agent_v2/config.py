@@ -25,7 +25,8 @@ SKILLS = [
     {
         "name": "hellobot",
         "url": "http://127.0.0.1:2085/ruler_call/",
-        "path": None
+        "path": None,
+        "profile_handler": True
     },
     {
         "name": "sberchat",
@@ -41,6 +42,11 @@ SKILLS = [
         "name": "kbqa",
         "url": "http://0.0.0.0:2087/kbqa",
         "path": configs.dp_assistant.agent_kbqa_rus
+    },
+    {
+        "name": "mailruqa",
+        "url": "http://0.0.0.0:2089/mailruqa",
+        "path": configs.dp_assistant.agent_ranking_mailru_bert_3
     }
 ]
 
@@ -57,6 +63,14 @@ ANNOTATORS = [
         "name": "sentiment",
         "url": "http://0.0.0.0:2084/rusentiment",
         "path": configs.dp_assistant.preproc_rusentiment,
+        "env": {
+            "CUDA_VISIBLE_DEVICES": ""
+        }
+    },
+    {
+        "name": "obscenity",
+        "url": "http://0.0.0.0:2088/obscenity",
+        "path": configs.dp_assistant.obscenity_classifier,
         "env": {
             "CUDA_VISIBLE_DEVICES": ""
         }

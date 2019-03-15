@@ -24,12 +24,14 @@ class Agent:
         # here and further me stands for mongoengine
         me_users = self.state_manager.get_or_create_users(user_telegram_ids, user_device_types)
         me_dialogs = self.state_manager.get_or_create_dialogs(me_users, locations, channel_types, should_reset)
-        self.state_manager.add_user_utterances(me_dialogs, utterances, date_times)
+        self.state_manager.add_human_utterances(me_dialogs, utterances, date_times)
         informative_dialogs = list(compress(me_dialogs, map(operator.not_, should_reset)))
 
         self._update_annotations(informative_dialogs)
 
         state = self.state_manager.get_state(me_dialogs)
+
+        self._update_utterances(me_dialogs, state)
 
         skill_names, utterances, confidences, profiles = self.skill_manager(state)
 
@@ -48,7 +50,14 @@ class Agent:
         self.state_manager.add_annotations(utterances, annotations)
 
     def _update_profiles(self, me_users, profiles) -> None:
-        if not profiles:
-            return
         for me_user, profile in zip(me_users, profiles):
-            self.state_manager.update_user_profile(me_user, profile)
+            if profile:
+                self.state_manager.update_user_profile(me_user, profile)
+
+    def _update_utterances(self, me_dialogs: Sequence[Dialog], state) -> None:
+        selected_skills = self.skill_manager.get_skill_responses(state)
+        if selected_skills:
+            utterances = [dialog.utterances[-1] for dialog in me_dialogs]
+            for utt, ss in zip(utterances, selected_skills):
+                self.state_manager.update_me_object(utt, {'selected_skills': ss})
+

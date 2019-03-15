@@ -1,5 +1,5 @@
 from mongoengine import DynamicDocument, ReferenceField, ListField, StringField, DynamicField, \
-    DateTimeField, FloatField, DictField
+    DateTimeField, FloatField, DictField, CachedReferenceField
 
 
 class User(DynamicDocument):
@@ -50,18 +50,26 @@ class Human(User):
 
 class Utterance(DynamicDocument):
     text = StringField(required=True)
-    annotations = DictField(default={'ner': {}, 'coref': {}, 'sentiment': {}})
+    annotations = DictField(default={'ner': {}, 'coref': {}, 'sentiment': {}, 'obscenity': {}})
     user = ReferenceField(User, required=True)
     date_time = DateTimeField(required=True)
 
     meta = {'allow_inheritance': True}
 
     def to_dict(self):
+        raise NotImplementedError
+
+
+class HumanUtterance(Utterance):
+    selected_skills = DynamicField(default=[])
+
+    def to_dict(self):
         return {'id': str(self.id),
                 'text': self.text,
                 'user_id': str(self.user.id),
                 'annotations': self.annotations,
-                'date_time': str(self.date_time)}
+                'date_time': str(self.date_time),
+                'selected_skills': self.selected_skills}
 
 
 class BotUtterance(Utterance):
@@ -83,7 +91,7 @@ class BotUtterance(Utterance):
 
 class Dialog(DynamicDocument):
     location = DynamicField()
-    utterances = ListField(ReferenceField(Utterance), default=[])
+    utterances = ListField(default=[])
     user = ReferenceField(Human, required=True)
     bot = ReferenceField(Bot, required=True)
     channel_type = StringField(choices=['telegram', 'vk', 'facebook'], default='telegram')

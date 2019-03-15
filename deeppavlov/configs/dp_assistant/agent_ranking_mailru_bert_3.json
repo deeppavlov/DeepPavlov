@@ -1,6 +1,8 @@
 {
   "chainer": {
     "in": ["dialogs"],
+    "out": ["predictions", "confidence"],
+
     "pipe": [
       {
         "class_name": "dialogs_parser",
@@ -17,13 +19,13 @@
       {
         "class_name": "response_base_loader",
         "id": "loader",
-        "save_path": "{DOWNLOADS_PATH}/mailru_bert_npair_simple",
-        "load_path": "{DOWNLOADS_PATH}/mailru_bert_npair_simple"
+        "save_path": "{DOWNLOADS_PATH}/mailru_bert_npair_simple_norm_vec",
+        "load_path": "{DOWNLOADS_PATH}/mailru_bert_npair_simple_norm_vec"
       },
       {
         "class_name": "bert_ranker_preprocessor",
         "id": "preproc",
-        "vocab_file": "{DOWNLOADS_PATH}/mailru_bert_npair_simple/vocab.txt",
+        "vocab_file": "{DOWNLOADS_PATH}/mailru_bert_npair_simple_norm_vec/vocab.txt",
         "do_lower_case": true,
         "max_seq_length": 128,
         "resps": "#loader.resps",
@@ -41,13 +43,13 @@
         "conts": "#loader.conts",
         "cont_vecs": "#loader.cont_vecs",
         "cont_features": "#preproc.cont_features",
-        "bot_mode": 0,
+        "bot_mode": 2,
         "n_classes": 2,
         "one_hot_labels": false,
-        "bert_config_file": "{DOWNLOADS_PATH}/mailru_bert_npair_simple/bert_config.json",
-        "pretrained_bert": "{DOWNLOADS_PATH}/mailru_bert_npair_simple/model.ckpt-599058",
-        "save_path": "{DOWNLOADS_PATH}/mailru_bert_npair_simple",
-        "load_path": "{DOWNLOADS_PATH}/mailru_bert_npair_simple/model.ckpt-599058",
+        "bert_config_file": "{DOWNLOADS_PATH}/mailru_bert_npair_simple_norm_vec/bert_config.json",
+        "pretrained_bert": "{DOWNLOADS_PATH}/mailru_bert_npair_simple_norm_vec/model.ckpt-599058",
+        "save_path": "{DOWNLOADS_PATH}/mailru_bert_npair_simple_norm_vec",
+        "load_path": "{DOWNLOADS_PATH}/mailru_bert_npair_simple_norm_vec/model.ckpt-599058",
         "num_ranking_samples": 1,
         "batch_size": 32,
         "keep_prob": 1.0,
@@ -57,10 +59,9 @@
         "learning_rate_drop_patience": 2,
         "learning_rate_drop_div": 2.0,
         "in": ["bert_features"],
-        "out": ["predictions"]
+        "out": ["predictions", "confidence"]
       }
-    ],
-    "out": ["predictions"]
+    ]
   },
   "train": {
     "batch_size": 32,
@@ -90,7 +91,7 @@
         "subdir": "{DOWNLOADS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/mailru_bert_npair_simple.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/mailru_bert_npair_simple_norm_vec.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/"
       }
     ]

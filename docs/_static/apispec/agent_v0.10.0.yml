@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: DeepPavlov Skills REST API
-  version: 0.9.2
+  version: 0.10.0
   description: >-
     Agents built with DeepPavlov communicate with their Skills via HTTP, so
     endpoints should be specified.
@@ -58,6 +58,8 @@ paths:
                   $ref: '#/components/examples/PersonalInfoResponse'
                 news_currencies:
                   $ref: '#/components/examples/NewsCurrenciesResponse'
+                response_selector:
+                  $ref: '#/components/examples/ResponseSelectorResponse'
         '404':
           description: This skill doesn't exsits.
 components:
@@ -66,11 +68,11 @@ components:
       type: object
       properties:
         version:
-          description: Версия API.
+          description: REQUIRED. Версия API.
           type: string
         dialogs:
           description: >-
-            Батч независимых диалогов от разных пользователей. В одном батче не
+            REQUIRED. Батч независимых диалогов от разных пользователей. В одном батче не
             могут находиться диалоги от одного и того же пользователя. Размер
             батча нефиксированный, но ограничен сверху. В одном диалоге могут
             принимать участие только два пользователя: человек и бот.
@@ -81,14 +83,14 @@ components:
       type: object
       properties:
         id:
-          description: Уникальный  id диалога.
+          description: REQUIRED. Уникальный  id диалога.
           type: string
         location:
-          description: 'Город, в котором начался диалог.'
+          description: 'REQUIRED. Город, в котором начался диалог.'
           type: string
         utterances:
           description: >-
-            Список всех реплик данного диалога. Последняя реплика всегда
+            REQUIRED. Список всех реплик данного диалога. Последняя реплика всегда
             принадлежит пользователю, и скилу нужно прислать ответ именно на эту
             реплику.
           type: array
@@ -100,29 +102,29 @@ components:
           $ref: '#/components/schemas/Bot'
         channel_type:
           description: >-
-            Канал связи, по которому происходит общение. В данной версии API
+            REQUIRED. Канал связи, по которому происходит общение. В данной версии API
             всегда “telegram”.
           type: string
     User:
-      description: 'Человек, принимающий участие в диалоге.'
+      description: 'REQUIRED. Человек, принимающий участие в диалоге.'
       type: object
       properties:
         id:
-          description: Уникальный  id пользователя.
+          description: REQUIRED. Уникальный  id пользователя.
           type: string
         user_telegram_id:
-          description: Уникальный Telegram id пользователя.
+          description:  REQUIRED. Уникальный Telegram id пользователя.
           type: string
         user_type:
-          description: Тип пользователя. Всегда “human”.
+          description: REQUIRED. Тип пользователя. Всегда “human”.
           type: string
         device_type:
           description: >-
-            Кодовое название устройства, с которого пользователь написал первую
+            REQUIRED. Кодовое название устройства, с которого пользователь написал первую
             реплику в диалоге. Может быть “iphone” или “android”.
           type: string
         persona:
-          description: Персона пользователя, которая хранится как список предложений-фактов о пользователе. По умолчанию пустой список.
+          description: REQUIRED. Персона пользователя, которая хранится как список предложений-фактов о пользователе. По умолчанию пустой список.
           type: array
           items:
             type: string
@@ -130,71 +132,73 @@ components:
           $ref: '#/components/schemas/Profile'
     Bot:
       description: >-
-        Бот, принимающий участие в диалоге. Бот - это конкретный агент с
+        REQUIRED. Бот, принимающий участие в диалоге. Бот - это конкретный агент с
         определенным набором скилов.
       type: object
       properties:
         id:
-          description: Уникальный  id бота.
+          description: REQUIRED. Уникальный  id бота.
           type: string
         user_type:
-          description: Тип пользователя. Всегда “bot”.
+          description: REQUIRED. Тип пользователя. Всегда “bot”.
           type: string
         persona:
-          description: Персона пользователя, которая хранится как список предложений-фактов о пользователе.
+          description: REQUIRED. Персона бота, которая хранится как список предложений-фактов о пользователе.
           type: array
           items:
             type: string
     Profile:
-      description: Персональная информация о пользователе.
+      description: REQUIRED. Персональная информация о пользователе.
       type: object
       properties:
         gender:
-          description: 'Пол человека. Может принимать значения “male”, “female”, “other”'
+          description: 'REQUIRED. Пол человека. Может принимать значения “male”, “female”, “other”'
           type: string
         birthdate:
           description: >-
-            Дата рождения человека. Может принимать строковые значения в формате
+            REQUIRED. Дата рождения человека. Может принимать строковые значения в формате
             YYYY-MM-DD.
           type: string
+          format: date
         name:
-          description: Имя человека.
+          description: REQUIRED. Имя человека.
           type: string
         location:
-          description: Местонахождение человека.
+          description: REQUIRED. Местонахождение человека.
           type: object
         home_coordinates:
-          description: Координаты дома человека.
+          description: REQUIRED. Координаты дома человека.
           type: object
         work_coordinates:
-          description: Координаты места работы человека.
+          description: REQUIRED. Координаты места работы человека.
           type: object
         occupation:
-          description: Профессия человека.
+          description: REQUIRED. Профессия человека.
           type: string
         income_per_year:
-          description: 'Доход человека в год, в рублях.'
+          description: 'REQUIRED. Доход человека в год, в рублях.'
           type: number
     Utterance:
       type: object
       properties:
         id:
           type: string
-          description: Уникальный ID реплики.
+          description: REQUIRED. Уникальный ID реплики.
         text:
           type: string
           description: >-
-            Текст реплики. Либо текст, написанный пользователем, либо ответ,
+            REQUIRED. Текст реплики. Либо текст, написанный пользователем, либо ответ,
             присланный одним из скилов. В случае, если это начальная реплика
             диалога, имеет значение "/start".
         user_id:
           type: string
-          description: 'Уникальный id пользователя, сказавшего данную реплику.'
+          description: 'REQUIRED. Уникальный id пользователя, сказавшего данную реплику.'
         annotations:
           $ref: '#/components/schemas/Annotations'
         date_time:
           type: string
-          description: Время получения реплики сервером.
+          format: datetime
+          description: REQUIRED. Время получения реплики сервером.
         confidece:
           type: number
           description: Уверенность скила в своем ответе.
@@ -203,10 +207,17 @@ components:
           description: >-
             Кодовое название скила, который был ответственным за формирование
             данной реплики.
+        selected_skills:
+          type: array
+          items:
+            type: object
+          description: >-
+            Список лейблов скилов, один из которых будет выбран ботом. Некоторые лейблы могут быть null
+            По умолчанию пустой список.
     Annotations:
       description: >-
-        Разметка реплик входящими в препроцессор моделями. Дефолтная аннотация:
-        {'ner': {}, 'coref': {}, 'sentiment': {}} Начальная реплика диалога,
+        REQUIRED. Разметка реплик входящими в препроцессор моделями. Дефолтная аннотация:
+        {'ner': {}, 'coref': {}, 'sentiment': {}, 'obscenity': {}} Начальная реплика диалога,
         если это команда "/start", имеет дефолтную аннотацию.
       type: object
       properties:
@@ -216,18 +227,20 @@ components:
           $ref: '#/components/schemas/Coref'
         sentiment:
           $ref: '#/components/schemas/Sentiment'
+        obscenity:
+          $ref: '#/components/schemas/Obscenity'
     NER:
-      description: По умолчанию пустой словарь.
+      description: REQUIRED. По умолчанию пустой словарь.
       type: object
       properties:
         tokens:
-          description: 'Список токенов, пришедших от компонента ner.'
+          description: 'REQUIRED. Список токенов, пришедших от компонента ner.'
           type: array
           items:
             type: string
         tags:
           description: >-
-            Список тэгов. Количество тэгов соответствует количеству токенов.
+            REQUIRED. Список тэгов. Количество тэгов соответствует количеству токенов.
             Тэги имеют формат BIO-разметки. Поддерживаются следующие классы:
             ‘PER’ - имя (и/или фамилия) человека ‘ORG’ - название организации
             ‘LOC’ - местонахождение
@@ -235,14 +248,24 @@ components:
           items:
             type: string
     Coref:
-      description: Не имплементировано. Всегда пустой словарь.
+      description: REQUIRED. Не имплементировано. Всегда пустой словарь.
       type: object
     Sentiment:
-      description: >-
-        По умолчанию пустой словарь. Если sentiment определился, то возвращает
-        строку с значением sentiment. Может принимать значения: 'neutral'
-        'positive' 'skip' 'speech' 'negative'
+      description: REQUIRED. По умолчанию пустой словарь.
       type: object
+      properties:
+        labels:
+          description: >-
+            REQUIRED. Тэг сентимента. Может принимать значения: 'neutral' 'positive' 'skip' 'speech' 'negative'
+          type: string
+    Obscenity:
+      description: REQUIRED. По умолчанию пустой словарь.
+      type: object
+      properties:
+        labels:
+          description: >-
+            REQUIRED. Тэг наличия обсценной лексики. Может принимать значения 'obscene' и 'not_obscene'
+          type: string
     ODQAChitChatResponse200Unit:
       description: >-
         Батч возвращаемых скилом ответов. Количество ответов соответствует
@@ -264,27 +287,52 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ODQAChitChatResponse200Unit'
+    ResponseSelectorResponse200Unit:
+      description: Лейбл класса или null.
+      type: string
+    ResponseSelectorResponse200schema:
+      description: >-
+        Батч возвращаемых ResponseSelector лейблов скилов. Количество ответов соответствует
+        количеству диалогов в запросе агента.
+      type: object
+      properties:
+         labels:
+          type: object
+          items:
+            $ref: '#/components/schemas/ResponseSelectorResponse200Unit'
   examples:
     GenericRequestBody:
       description: one exaustive example
       value:
-        version: 0.9.2
+        version: 0.10.0
         dialogs:
-          - id: 5c8906200110b313394e6a55
+          - id: 5c8ab1690110b35e343cd1af
             location: None
             utterances:
-              - id: 5c8906200110b313394e6a56
+              - id: 5c8ab1690110b35e343cd1b0
                 text: /start
                 user_id: 5c8903ef0110b311dcc08d4a
                 annotations:
                   ner: {}
                   coref: {}
                   sentiment: {}
-                date_time: '2019-03-13 13:31:12.113000'
-              - id: 5c8906330110b313394e6a57
-                active_skill: chitchat
-                confidence: 1
-                text: Горячий привет!
+                  obscenity: {}
+                date_time: '2019-03-14 19:54:17.908000'
+                selected_skills:
+                  chitchat:
+                    confidence: 0.4901230037212372
+                    text: ' Ну, помидоры подвязывать надо, а огурцы...'
+                  hellobot:
+                    text: Какие имеешь увлечения?
+                    confidence: 0.75
+                    name: Оля
+                  sberchat:
+                    confidence: 0.98
+                    text: Не пузырься.
+              - id: 5c8ab16b0110b35e343cd1b1
+                active_skill: sberchat
+                confidence: 0.98
+                text: Не пузырься.
                 user_id: 5c7cf00e5c70e839bf9cb115
                 annotations:
                   ner:
@@ -293,134 +341,16 @@ components:
                       - O
                       - O
                     tokens:
-                      - Горячий
-                      - привет
-                      - '!'
-                  sentiment:
-                    labels: speech
-                date_time: '2019-03-13 13:31:31.939000'
-              - id: 5c89063e0110b313394e6a58
-                text: 'и тебе привет : )'
-                user_id: 5c8903ef0110b311dcc08d4a
-                annotations:
-                  ner:
-                    tags:
-                      - O
-                      - O
-                      - O
-                      - O
-                      - O
-                    tokens:
-                      - и
-                      - тебе
-                      - привет
-                      - ':'
-                      - )
-                  sentiment:
-                    labels: speech
-                date_time: '2019-03-13 13:31:42.048000'
-              - id: 5c89063f0110b313394e6a59
-                active_skill: chitchat
-                confidence: 0.018443722277879715
-                text: Люблю общаться с людьми
-                user_id: 5c7cf00e5c70e839bf9cb115
-                annotations:
-                  ner:
-                    tags:
-                      - O
-                      - O
-                      - O
-                      - O
-                    tokens:
-                      - Люблю
-                      - общаться
-                      - с
-                      - людьми
-                  sentiment:
-                    labels: positive
-                date_time: '2019-03-13 13:31:43.082000'
-              - id: 5c8906460110b313394e6a5a
-                text: Давай пообщаемся
-                user_id: 5c8903ef0110b311dcc08d4a
-                annotations:
-                  ner:
-                    tags:
-                      - O
-                      - O
-                    tokens:
-                      - Давай
-                      - пообщаемся
-                  sentiment:
-                    labels: neutral
-                date_time: '2019-03-13 13:31:50.200000'
-              - id: 5c8906470110b313394e6a5b
-                active_skill: chitchat
-                confidence: 0.005199910141527653
-                text: 'давай, я люблю общаться с людьми'
-                user_id: 5c7cf00e5c70e839bf9cb115
-                annotations:
-                  ner:
-                    tags:
-                      - O
-                      - O
-                      - O
-                      - O
-                      - O
-                      - O
-                      - O
-                    tokens:
-                      - давай
-                      - ','
-                      - я
-                      - люблю
-                      - общаться
-                      - с
-                      - людьми
-                  sentiment:
-                    labels: neutral
-                date_time: '2019-03-13 13:31:51.278000'
-              - id: 5c89064e0110b313394e6a5c
-                text: Ну я поняла.
-                user_id: 5c8903ef0110b311dcc08d4a
-                annotations:
-                  ner:
-                    tags:
-                      - O
-                      - O
-                      - O
-                      - O
-                    tokens:
-                      - Ну
-                      - я
-                      - поняла
+                      - Не
+                      - пузырься
                       - .
                   sentiment:
-                    labels: neutral
-                date_time: '2019-03-13 13:31:58.434000'
-              - id: 5c89064f0110b313394e6a5d
-                active_skill: chitchat
-                confidence: 0.024425994604825974
-                text: мне нравится общаться с людьми
-                user_id: 5c7cf00e5c70e839bf9cb115
-                annotations:
-                  ner:
-                    tags:
-                      - O
-                      - O
-                      - O
-                      - O
-                      - O
-                    tokens:
-                      - мне
-                      - нравится
-                      - общаться
-                      - с
-                      - людьми
-                  sentiment:
-                    labels: positive
-                date_time: '2019-03-13 13:31:59.517000'
-              - id: 5c8906560110b313394e6a5e
-                text: иди-ка ты к черту
+                    labels: skip
+                  obscenity:
+                    labels: not_obscene
+                date_time: '2019-03-14 19:54:19.227000'
+              - id: 5c8ab1730110b35e343cd1b2
+                text: да иди нафиг
                 user_id: 5c8903ef0110b311dcc08d4a
                 annotations:
                   ner:
@@ -428,19 +358,30 @@ components:
                       - O
                       - O
                       - O
-                      - O
                     tokens:
-                      - иди-ка
-                      - ты
-                      - к
-                      - черту
+                      - да
+                      - иди
+                      - нафиг
                   sentiment:
                     labels: negative
-                date_time: '2019-03-13 13:32:06.146000'
-              - id: 5c8906570110b313394e6a5f
-                active_skill: chitchat
-                confidence: 0.053593460470438004
-                text: чем занимаешься в свободное время?
+                  obscenity:
+                    labels: obscene
+                date_time: '2019-03-14 19:54:27.836000'
+                selected_skills:
+                  chitchat:
+                    confidence: 0.8981378078460693
+                    text: 'Так я к тебе, пузатому черту, и пошел!'
+                  hellobot:
+                    text: Какие имеешь увлечения?
+                    confidence: 0.75
+                    name: Оля
+                  sberchat:
+                    confidence: 0.98
+                    text: 'Ты чо, пацану дерзить любишь?'
+              - id: 5c8ab1750110b35e343cd1b3
+                active_skill: sberchat
+                confidence: 0.98
+                text: 'Ты чо, пацану дерзить любишь?'
                 user_id: 5c7cf00e5c70e839bf9cb115
                 annotations:
                   ner:
@@ -451,196 +392,190 @@ components:
                       - O
                       - O
                       - O
+                      - O
                     tokens:
-                      - чем
-                      - занимаешься
+                      - Ты
+                      - чо
+                      - ','
+                      - пацану
+                      - дерзить
+                      - любишь
+                      - '?'
+                  sentiment:
+                    labels: skip
+                  obscenity:
+                    labels: not_obscene
+                date_time: '2019-03-14 19:54:29.259000'
+              - id: 5c8ab17b0110b35e343cd1b4
+                text: отстань
+                user_id: 5c8903ef0110b311dcc08d4a
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                    tokens:
+                      - отстань
+                  sentiment:
+                    labels: skip
+                  obscenity:
+                    labels: not_obscene
+                date_time: '2019-03-14 19:54:35.911000'
+                selected_skills:
+                  chitchat:
+                    confidence: 0.9483766555786133
+                    text: 'Так я к тебе, пузатому черту, и пошел!'
+                  hellobot:
+                    text: Какие имеешь увлечения?
+                    confidence: 0.75
+                    name: Оля
+                  sberchat:
+                    confidence: 0.98
+                    text: Блеснешь бескультурьем и сразу в кусты! Чо – стремаешсо пацана?
+              - id: 5c8ab17d0110b35e343cd1b5
+                active_skill: sberchat
+                confidence: 0.98
+                text: Блеснешь бескультурьем и сразу в кусты! Чо – стремаешсо пацана?
+                user_id: 5c7cf00e5c70e839bf9cb115
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - O
+                      - O
+                      - O
+                      - O
+                      - O
+                      - B-PER
+                      - O
+                      - O
+                      - O
+                      - O
+                    tokens:
+                      - Блеснешь
+                      - бескультурьем
+                      - и
+                      - сразу
                       - в
-                      - свободное
-                      - время
-                      - '?'
-                  sentiment:
-                    labels: neutral
-                date_time: '2019-03-13 13:32:07.132000'
-              - id: 5c8906650110b313394e6a63
-                text: привет
-                user_id: 5c8903ef0110b311dcc08d4a
-                annotations:
-                  ner:
-                    tags:
-                      - I-PER
-                    tokens:
-                      - привет
-                  sentiment:
-                    labels: speech
-                date_time: '2019-03-13 13:32:21.218000'
-              - id: 5c8906660110b313394e6a64
-                active_skill: chitchat
-                confidence: 0.030921930447220802
-                text: я люблю путешествовать
-                user_id: 5c7cf00e5c70e839bf9cb115
-                annotations:
-                  ner:
-                    tags:
-                      - O
-                      - O
-                      - O
-                    tokens:
-                      - я
-                      - люблю
-                      - путешествовать
-                  sentiment:
-                    labels: positive
-                date_time: '2019-03-13 13:32:22.159000'
-              - id: 5c89066f0110b313394e6a65
-                text: Какая страна твоя любимая?
-                user_id: 5c8903ef0110b311dcc08d4a
-                annotations:
-                  ner:
-                    tags:
-                      - O
-                      - O
-                      - O
-                      - O
-                      - O
-                    tokens:
-                      - Какая
-                      - страна
-                      - твоя
-                      - любимая
-                      - '?'
-                  sentiment:
-                    labels: neutral
-                date_time: '2019-03-13 13:32:31.771000'
-              - id: 5c8906710110b313394e6a66
-                active_skill: chitchat
-                confidence: 0.006310736294835806
-                text: по разным странам
-                user_id: 5c7cf00e5c70e839bf9cb115
-                annotations:
-                  ner:
-                    tags:
-                      - O
-                      - O
-                      - O
-                    tokens:
-                      - по
-                      - разным
-                      - странам
-                  sentiment:
-                    labels: neutral
-                date_time: '2019-03-13 13:32:33.089000'
-              - id: 5c8906780110b313394e6a67
-                text: где ты уже был?
-                user_id: 5c8903ef0110b311dcc08d4a
-                annotations:
-                  ner:
-                    tags:
-                      - O
-                      - O
-                      - O
-                      - O
-                      - O
-                    tokens:
-                      - где
-                      - ты
-                      - уже
-                      - был
-                      - '?'
-                  sentiment:
-                    labels: neutral
-                date_time: '2019-03-13 13:32:40.196000'
-              - id: 5c8906790110b313394e6a68
-                active_skill: chitchat
-                confidence: 0.001935996813699603
-                text: путешествовал в ОАЭ
-                user_id: 5c7cf00e5c70e839bf9cb115
-                annotations:
-                  ner:
-                    tags:
-                      - O
-                      - O
-                      - B-LOC
-                    tokens:
-                      - путешествовал
-                      - в
-                      - ОАЭ
-                  sentiment:
-                    labels: neutral
-                date_time: '2019-03-13 13:32:41.197000'
-              - id: 5c8906850110b313394e6a69
-                text: Вау! А я была в Австралии.
-                user_id: 5c8903ef0110b311dcc08d4a
-                annotations:
-                  ner:
-                    tags:
-                      - O
-                      - O
-                      - O
-                      - O
-                      - O
-                      - O
-                      - B-LOC
-                      - O
-                    tokens:
-                      - Вау
+                      - кусты
                       - '!'
-                      - А
-                      - я
-                      - была
+                      - Чо
+                      - –
+                      - стремаешсо
+                      - пацана
+                      - '?'
+                  sentiment:
+                    labels: skip
+                  obscenity:
+                    labels: not_obscene
+                date_time: '2019-03-14 19:54:37.307000'
+              - id: 5c8ab1900110b35e343cd1b9
+                text: Когда родился Пушкин Александр Сергеевич знаешь?
+                user_id: 5c8903ef0110b311dcc08d4a
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - B-LOC
+                      - B-PER
+                      - I-PER
+                      - O
+                      - O
+                    tokens:
+                      - Когда
+                      - родился
+                      - Пушкин
+                      - Александр
+                      - Сергеевич
+                      - знаешь
+                      - '?'
+                  sentiment:
+                    labels: neutral
+                  obscenity:
+                    labels: not_obscene
+                date_time: '2019-03-14 19:54:56.961000'
+                selected_skills:
+                  odqa:
+                    confidence: 0.00009999995827674866
+                    text: Пушкин родился г. в Москве
+              - id: 5c8ab1930110b35e343cd1ba
+                active_skill: odqa
+                confidence: 0.00009999995827674866
+                text: Пушкин родился г. в Москве
+                user_id: 5c7cf00e5c70e839bf9cb115
+                annotations:
+                  ner:
+                    tags:
+                      - B-PER
+                      - O
+                      - O
+                      - O
+                      - B-LOC
+                    tokens:
+                      - Пушкин
+                      - родился
+                      - г.
                       - в
-                      - Австралии
+                      - Москве
+                  sentiment:
+                    labels: neutral
+                  obscenity:
+                    labels: not_obscene
+                date_time: '2019-03-14 19:54:59.174000'
+              - id: 5c8ab1980110b35e343cd1bb
+                text: умник
+                user_id: 5c8903ef0110b311dcc08d4a
+                annotations:
+                  ner:
+                    tags:
+                      - B-ORG
+                    tokens:
+                      - умник
+                  sentiment:
+                    labels: skip
+                  obscenity:
+                    labels: not_obscene
+                date_time: '2019-03-14 19:55:04.359000'
+                selected_skills:
+                  chitchat:
+                    confidence: 0.9922587275505066
+                    text: я родился в декабре прошлого века.
+                  hellobot:
+                    text: Какие имеешь увлечения?
+                    confidence: 0.75
+                    name: Оля
+                  sberchat:
+                    confidence: 0.98
+                    text: Тебе пора на хутор! Бабочек ловить!
+              - id: 5c8ab1990110b35e343cd1bc
+                active_skill: chitchat
+                confidence: 0.9922587275505066
+                text: я родился в декабре прошлого века.
+                user_id: 5c7cf00e5c70e839bf9cb115
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - O
+                      - O
+                      - O
+                      - O
+                      - O
+                    tokens:
+                      - я
+                      - родился
+                      - в
+                      - декабре
+                      - прошлого
+                      - века
                       - .
                   sentiment:
                     labels: neutral
-                date_time: '2019-03-13 13:32:53.812000'
-              - id: 5c8906860110b313394e6a6a
-                active_skill: chitchat
-                confidence: 0.0393575020134449
-                text: мне нравится Индия
-                user_id: 5c7cf00e5c70e839bf9cb115
-                annotations:
-                  ner:
-                    tags:
-                      - O
-                      - O
-                      - B-LOC
-                    tokens:
-                      - мне
-                      - нравится
-                      - Индия
-                  sentiment:
-                    labels: positive
-                date_time: '2019-03-13 13:32:54.897000'
-              - id: 5c89068c0110b313394e6a6b
-                text: /start\\
-                user_id: 5c8903ef0110b311dcc08d4a
-                annotations:
-                  ner:
-                    tags:
-                      - O
-                    tokens:
-                      - /start\\
-                  sentiment:
-                    labels: neutral
-                date_time: '2019-03-13 13:33:00.501000'
-              - id: 5c89068d0110b313394e6a6c
-                active_skill: chitchat
-                confidence: 0.07003375142812729
-                text: спасибо за диалог
-                user_id: 5c7cf00e5c70e839bf9cb115
-                annotations:
-                  ner:
-                    tags:
-                      - O
-                      - O
-                      - O
-                    tokens:
-                      - спасибо
-                      - за
-                      - диалог
-                  sentiment:
-                    labels: speech
-                date_time: '2019-03-13 13:33:01.621000'
+                  obscenity:
+                    labels: not_obscene
+                date_time: '2019-03-14 19:55:05.716000'
             user:
               id: 5c8903ef0110b311dcc08d4a
               user_telegram_id: '217465130'
@@ -648,8 +583,8 @@ components:
               device_type: None
               persona: []
               profile:
-                name: None
-                gender: None
+                name: Оля
+                gender: female
                 birthdate: None
                 location: None
                 home_coordinates: None
@@ -666,35 +601,51 @@ components:
                 - В свободное время помогаю пожилым людям в благотворительном фонде
                 - Люблю путешествовать
             channel_type: telegram
-          - id: 5c89065d0110b313394e6a60
+          - id: 5c8ab1820110b35e343cd1b6
             location: None
             utterances:
-              - id: 5c89065d0110b313394e6a61
+              - id: 5c8ab1820110b35e343cd1b7
                 text: /start
                 user_id: 5c8903ef0110b311dcc08d4a
                 annotations:
                   ner: {}
                   coref: {}
                   sentiment: {}
-                date_time: '2019-03-13 13:32:13.274000'
-              - id: 5c89065e0110b313394e6a62
-                active_skill: chitchat
-                confidence: 1
-                text: Какие гости!
+                  obscenity: {}
+                date_time: '2019-03-14 19:54:42.015000'
+                selected_skills:
+                  chitchat:
+                    confidence: 0.4901230037212372
+                    text: ' Ну, помидоры подвязывать надо, а огурцы...'
+                  hellobot:
+                    text: Какие имеешь увлечения?
+                    confidence: 0.75
+                    name: Оля
+                  sberchat:
+                    confidence: 0.98
+                    text: Кодекс пацана знаешь?
+              - id: 5c8ab1830110b35e343cd1b8
+                active_skill: sberchat
+                confidence: 0.98
+                text: Кодекс пацана знаешь?
                 user_id: 5c7cf00e5c70e839bf9cb115
                 annotations:
                   ner:
                     tags:
-                      - O
-                      - O
-                      - O
+                      - B-ORG
+                      - I-ORG
+                      - I-ORG
+                      - I-ORG
                     tokens:
-                      - Какие
-                      - гости
-                      - '!'
+                      - Кодекс
+                      - пацана
+                      - знаешь
+                      - '?'
                   sentiment:
                     labels: neutral
-                date_time: '2019-03-13 13:32:14.110000'
+                  obscenity:
+                    labels: not_obscene
+                date_time: '2019-03-14 19:54:43.331000'
             user:
               id: 5c8903ef0110b311dcc08d4a
               user_telegram_id: '217465130'
@@ -702,8 +653,8 @@ components:
               device_type: None
               persona: []
               profile:
-                name: None
-                gender: None
+                name: Оля
+                gender: female
                 birthdate: None
                 location: None
                 home_coordinates: None
@@ -720,21 +671,33 @@ components:
                 - В свободное время помогаю пожилым людям в благотворительном фонде
                 - Люблю путешествовать
             channel_type: telegram
-          - id: 5c8906920110b313394e6a6d
+          - id: 5c8ab19f0110b35e343cd1bd
             location: None
             utterances:
-              - id: 5c8906920110b313394e6a6e
+              - id: 5c8ab19f0110b35e343cd1be
                 text: /start
                 user_id: 5c8903ef0110b311dcc08d4a
                 annotations:
                   ner: {}
                   coref: {}
                   sentiment: {}
-                date_time: '2019-03-13 13:33:06.727000'
-              - id: 5c8906930110b313394e6a6f
-                active_skill: chitchat
-                confidence: 1
-                text: Какие гости!
+                  obscenity: {}
+                date_time: '2019-03-14 19:55:11.867000'
+                selected_skills:
+                  chitchat:
+                    confidence: 0.4901230037212372
+                    text: ' Ну, помидоры подвязывать надо, а огурцы...'
+                  hellobot:
+                    text: Какие имеешь увлечения?
+                    confidence: 0.75
+                    name: Оля
+                  sberchat:
+                    confidence: 0.98
+                    text: Эта ты про чо?
+              - id: 5c8ab1a10110b35e343cd1bf
+                active_skill: sberchat
+                confidence: 0.98
+                text: Эта ты про чо?
                 user_id: 5c7cf00e5c70e839bf9cb115
                 annotations:
                   ner:
@@ -742,13 +705,19 @@ components:
                       - O
                       - O
                       - O
+                      - O
+                      - O
                     tokens:
-                      - Какие
-                      - гости
-                      - '!'
+                      - Эта
+                      - ты
+                      - про
+                      - чо
+                      - '?'
                   sentiment:
                     labels: neutral
-                date_time: '2019-03-13 13:33:07.544000'
+                  obscenity:
+                    labels: not_obscene
+                date_time: '2019-03-14 19:55:13.199000'
             user:
               id: 5c8903ef0110b311dcc08d4a
               user_telegram_id: '217465130'
@@ -756,8 +725,8 @@ components:
               device_type: None
               persona: []
               profile:
-                name: None
-                gender: None
+                name: Оля
+                gender: female
                 birthdate: None
                 location: None
                 home_coordinates: None
@@ -827,3 +796,7 @@ components:
               Another news (with titles, bodies, etc.) or currencies info as
               plain text
             confidence: 1
+    ResponseSelectorResponse:
+      description: Пример JSON-ответа сервера response selector
+      value:
+          - labels: ['chitcnat,', null, 'sberchat', 'sberhcat']
