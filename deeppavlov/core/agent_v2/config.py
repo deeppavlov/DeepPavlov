@@ -25,7 +25,8 @@ SKILLS = [
     {
         "name": "hellobot",
         "url": "http://127.0.0.1:2085/ruler_call/",
-        "path": None
+        "path": None,
+        "profile_handler": True
     },
     {
         "name": "sberchat",

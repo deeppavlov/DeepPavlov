@@ -50,10 +50,9 @@ class Agent:
         self.state_manager.add_annotations(utterances, annotations)
 
     def _update_profiles(self, me_users, profiles) -> None:
-        if not profiles:
-            return
         for me_user, profile in zip(me_users, profiles):
-            self.state_manager.update_user_profile(me_user, profile)
+            if profile:
+                self.state_manager.update_user_profile(me_user, profile)
 
     def _update_utterances(self, me_dialogs: Sequence[Dialog], state) -> None:
         selected_skills = self.skill_manager.get_skill_responses(state)
