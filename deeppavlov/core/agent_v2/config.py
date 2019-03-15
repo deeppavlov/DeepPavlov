@@ -29,11 +29,11 @@ SKILLS = [
     #     "path": None,
     #     "profile_handler": True
     # },
-    {
-        "name": "sberchat",
-        "url": "http://23.102.48.212:8443/api/",
-        "path": None
-    },
+    # {
+    #     "name": "sberchat",
+    #     "url": "http://23.102.48.212:8443/api/",
+    #     "path": None
+    # },
     # {
     #     "name": "gen_chitchat",
     #     "url": "http://0.0.0.0:2086/gen_chitchat",
@@ -96,14 +96,7 @@ SKILL_SELECTORS = [
 ]
 
 RESPONSE_SELECTORS = [
-    {
-        "name": "chitchat_rselector",
-        "url": "http://0.0.0.0:2091/chitchat_rselector",
-        "path": configs.dp_assistant.rselector_chitchat,
-        "env": {
-            "CUDA_VISIBLE_DEVICES": ""
-        }
-    }
+
 ]
 
 # TODO include Bot?

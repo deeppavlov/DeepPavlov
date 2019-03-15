@@ -11,9 +11,9 @@ agent_config:
   MAX_WORKERS: 4
 
   SKILLS:
-    - name: odqa
-      url: http://10.11.1.251:8101/skill
-      path: configs/dp_assistant/agent_ru_odqa_retr_noans_rubert_infer.json
+#    - name: odqa
+#      url: http://10.11.1.251:8101/skill
+#      path: configs/dp_assistant/agent_ru_odqa_retr_noans_rubert_infer.json
 
     - name: chitchat
       url: http://10.11.1.251:8102/skill
@@ -22,14 +22,23 @@ agent_config:
         CUDA_VISIBLE_DEVICES: ""
       profile_handler: true
 
-    - name: hellobot
-      url: http://10.11.1.251:8106/ruler_call/
-      path: null
-      profile_handler: true
+#    - name: hellobot
+#      url: http://10.11.1.251:8106/ruler_call/
+#      path: null
+#      profile_handler: true
+#
+#    - name: sberchat
+#      url: http://23.102.48.212:8443/api/
+#      path: null
 
-    - name: sberchat
-      url: http://23.102.48.212:8443/api/
-      path: null
+    - name: mailruqa
+      url: http://10.11.1.251:8108/mailruqa
+      path: configs.dp_assistant.agent_ranking_mailru_bert_3.json
+
+    - name: generalqa,
+      url: http://10.11.1.251:8109/generalqa",
+      path: configs.dp_assistant.agent_general_qa.json
+
 
   ANNOTATORS:
     - name: ner
