@@ -15,16 +15,16 @@ agent_config:
       url: http://10.11.1.251:8101/skill
       path: configs/dp_assistant/agent_ru_odqa_retr_noans_rubert_infer.json
 
-    - name: hellobot
-      url: http://10.11.1.251:8106/ruler_call/
-      path: null
-      profile_handler: true
-
     - name: chitchat
       url: http://10.11.1.251:8102/skill
       path: configs/dp_assistant/agent_ranking_chitchat_2staged_tfidf_smn_v4_prep.json
       env:
         CUDA_VISIBLE_DEVICES: ""
+
+    - name: hellobot
+      url: http://10.11.1.251:8106/ruler_call/
+      path: null
+      profile_handler: true
 
     - name: sberchat
       url: http://23.102.48.212:8443/api/
