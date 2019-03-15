@@ -17,10 +17,11 @@ SKILLS = [
     {
         "name": "chitchat",
         "url": "http://0.0.0.0:2081/chitchat",
-        "path": configs.dp_assistant.agent_ranking_chitchat_2staged_tfidf_smn_v4,
+        "path": configs.dp_assistant.agent_ranking_chitchat_2staged_tfidf_smn_v4_prep,
         "env": {
             "CUDA_VISIBLE_DEVICES": ""
-        }
+        },
+        "profile_handler": True
     },
     {
         "name": "hellobot",
