@@ -82,7 +82,9 @@ class SkillManager:
 
         skill_responses = self.skill_caller(payload=payloads, names=skill_names, urls=skill_urls)
         for response, dialog in zip(skill_responses, dialogs):
-            if 'hellobot' in response and len(dialog['utterances']) == 1 and not dialog['user']['profile']['name']:
-                response['hellobot']['confidence'] = 1.
+            # if 'hellobot' in response and len(dialog['utterances']) == 1 and not dialog['user']['profile']['name']:
+            #     response['hellobot']['confidence'] = 1.
+            if 'sberchat' in response:
+                response['sberchat'] = 0.85
         self.skill_responses = skill_responses
         return skill_responses
