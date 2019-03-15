@@ -46,7 +46,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/faq/school/general_qa.pckl",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/general_qa.pckl",
         "subdir": "{DOWNLOADS_PATH}"
       }
     ]
