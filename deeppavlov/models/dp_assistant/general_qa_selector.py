@@ -13,9 +13,10 @@ log = getLogger(__name__)
 
 @register('general_qa_selector')
 class GeneralQASelector(Component, Serializable):
-    def __init__(self, load_path: str, debug=True, *args, **kwargs) -> None:
+    def __init__(self, load_path: str, debug=True, return_confidences=False, *args, **kwargs) -> None:
         super(GeneralQASelector, self).__init__(load_path=load_path, save_path=None)
         self._debug = debug
+        self._return_confidences = return_confidences
         self.count_vect = None
         self.xgb_model = None
         self.load()
@@ -39,6 +40,7 @@ class GeneralQASelector(Component, Serializable):
                  answers_kbqa: List[str],
                  answers_kbqa_score: List[float]) -> List[Tuple[str, str]]:
         best_answers = []
+        confidences_batch = []
         for q, a_odqa, c_odqa, a_odqa_retr, c_odqa_retr, a_kbqa, c_kbqa in zip(questions_raw,
                                                                                answers_rubert,
                                                                                answers_rubert_score,
@@ -53,8 +55,9 @@ class GeneralQASelector(Component, Serializable):
                     self.count_vect.transform([a_odqa_retr]).todense(),
                     self.count_vect.transform([a_kbqa]).todense()]
             x_counts = np.concatenate(vecs, 1)
-            confidences = np.expand_dims(np.array([c_odqa, c_odqa_retr, c_kbqa]), 0)
-            x_ar = self._compute_confidence_features(confidences)
+            confidences = [c_odqa, c_odqa_retr, c_kbqa]
+            confs = np.expand_dims(np.array(confidences), 0)
+            x_ar = self._compute_confidence_features(confs)
             x_ar = np.concatenate([x_ar, x_counts], 1)
             model_probs = self.xgb_model.predict_proba(x_ar)
             best_model_id = np.argmax(model_probs)
@@ -63,6 +66,7 @@ class GeneralQASelector(Component, Serializable):
                 if self._debug:
                     log.debug('KBQA Template detected')
                 best_model_id = 2
+            confidences_batch.append(confidences[best_model_id])
             answers = [a_odqa, a_odqa_retr, a_kbqa]
             if self._ved_check(q):
                 best_answers.append('Первый заместитель Председателя Правления Сбербанка')
@@ -73,7 +77,10 @@ class GeneralQASelector(Component, Serializable):
                            'rubert_retr': a_odqa_retr,
                            'kbqa': a_kbqa})
                 log.debug(f'Chosen answer: {answers[best_model_id]}')
-        return best_answers
+        if self._return_confidences:
+            return best_answers, confidences_batch
+        else:
+            return best_answers
 
     @staticmethod
     def _is_kbqa_question(q):
