@@ -1,9 +1,9 @@
 from mongoengine import DynamicDocument, ReferenceField, ListField, StringField, DynamicField, \
-    DateTimeField, FloatField, DictField
+    DateTimeField, FloatField, DictField, CachedReferenceField
 
 
 class User(DynamicDocument):
-    personality = DynamicField()
+    persona = ListField(default=[])
 
     meta = {'allow_inheritance': True}
 
@@ -12,10 +12,17 @@ class User(DynamicDocument):
 
 
 class Bot(User):
+    persona = ListField(default=['Мне нравится общаться с людьми.',
+                                 'Пару лет назад я окончила вуз с отличием.',
+                                 'Я работаю в банке.',
+                                 'В свободное время помогаю пожилым людям в благотворительном фонде',
+                                 'Люблю путешествовать'])
+
     def to_dict(self):
         return {'id': str(self.id),
                 'user_type': 'bot',
-                'personality': self.personality}
+                'persona': self.persona,
+                }
 
 
 class Human(User):
@@ -37,28 +44,37 @@ class Human(User):
                 'user_telegram_id': str(self.user_telegram_id),
                 'user_type': 'human',
                 'device_type': self.device_type,
-                'personality': self.personality,
+                'persona': self.persona,
                 'profile': self.profile}
 
 
 class Utterance(DynamicDocument):
     text = StringField(required=True)
-    annotations = DictField(default={'ner': {}, 'coref': {}, 'sentiment': {}})
+    annotations = DictField(default={'ner': {}, 'coref': {}, 'sentiment': {}, 'obscenity': {}})
     user = ReferenceField(User, required=True)
     date_time = DateTimeField(required=True)
 
     meta = {'allow_inheritance': True}
 
     def to_dict(self):
+        raise NotImplementedError
+
+
+class HumanUtterance(Utterance):
+    selected_skills = DynamicField(default=[])
+
+    def to_dict(self):
         return {'id': str(self.id),
                 'text': self.text,
                 'user_id': str(self.user.id),
                 'annotations': self.annotations,
-                'date_time': str(self.date_time)}
+                'date_time': str(self.date_time),
+                'selected_skills': self.selected_skills}
 
 
 class BotUtterance(Utterance):
     active_skill = StringField()
+    user = ReferenceField(Bot, required=True)
     confidence = FloatField()
 
     def to_dict(self):
@@ -75,7 +91,7 @@ class BotUtterance(Utterance):
 
 class Dialog(DynamicDocument):
     location = DynamicField()
-    utterances = ListField(ReferenceField(Utterance), required=True, default=[])
+    utterances = ListField(default=[])
     user = ReferenceField(Human, required=True)
     bot = ReferenceField(Bot, required=True)
     channel_type = StringField(choices=['telegram', 'vk', 'facebook'], default='telegram')

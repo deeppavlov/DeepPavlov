@@ -1,0 +1,829 @@
+openapi: 3.0.1
+info:
+  title: DeepPavlov Skills REST API
+  version: 0.9.2
+  description: >-
+    Agents built with DeepPavlov communicate with their Skills via HTTP, so
+    endpoints should be specified.
+servers:
+  - url: 'http://localhost:{port}/'
+    description: Local development server
+    variables:
+      port:
+        default: '3978'
+paths:
+  /:
+    get:
+      summary: Root path
+      responses:
+        '200':
+          description: Go to /apidocs/ to see graphical web UI for this API.
+  '/api/v0/{skill_endpoint}/':
+    post:
+      parameters:
+        - name: skill_endpoint
+          in: path
+          required: true
+          schema:
+            enum:
+              - personal_info
+              - news_currencies
+      summary: Generic skill endpoint
+      description: >-
+        An agent built with DeepPavlov sends requests to the skill endpoints in
+        order to retrieve the answers.
+      requestBody:
+        description: Description of the request to be executed
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestBodySchema'
+            examples:
+              general:
+                $ref: '#/components/examples/GenericRequestBody'
+      responses:
+        '200':
+          description: Request finished succesfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ODQAChitChatResponse200Schema"
+              examples:
+                chitchat:
+                  $ref: "#/components/examples/ChitChatResponse"
+                odqa:
+                  $ref: "#/components/examples/ODQAResponse"
+                personal_info:
+                  $ref: '#/components/examples/PersonalInfoResponse'
+                news_currencies:
+                  $ref: '#/components/examples/NewsCurrenciesResponse'
+        '404':
+          description: This skill doesn't exsits.
+components:
+  schemas:
+    RequestBodySchema:
+      type: object
+      properties:
+        version:
+          description: Версия API.
+          type: string
+        dialogs:
+          description: >-
+            Батч независимых диалогов от разных пользователей. В одном батче не
+            могут находиться диалоги от одного и того же пользователя. Размер
+            батча нефиксированный, но ограничен сверху. В одном диалоге могут
+            принимать участие только два пользователя: человек и бот.
+          type: array
+          items:
+            $ref: '#/components/schemas/Dialog'
+    Dialog:
+      type: object
+      properties:
+        id:
+          description: Уникальный  id диалога.
+          type: string
+        location:
+          description: 'Город, в котором начался диалог.'
+          type: string
+        utterances:
+          description: >-
+            Список всех реплик данного диалога. Последняя реплика всегда
+            принадлежит пользователю, и скилу нужно прислать ответ именно на эту
+            реплику.
+          type: array
+          items:
+            $ref: '#/components/schemas/Utterance'
+        user:
+          $ref: '#/components/schemas/User'
+        bot:
+          $ref: '#/components/schemas/Bot'
+        channel_type:
+          description: >-
+            Канал связи, по которому происходит общение. В данной версии API
+            всегда “telegram”.
+          type: string
+    User:
+      description: 'Человек, принимающий участие в диалоге.'
+      type: object
+      properties:
+        id:
+          description: Уникальный  id пользователя.
+          type: string
+        user_telegram_id:
+          description: Уникальный Telegram id пользователя.
+          type: string
+        user_type:
+          description: Тип пользователя. Всегда “human”.
+          type: string
+        device_type:
+          description: >-
+            Кодовое название устройства, с которого пользователь написал первую
+            реплику в диалоге. Может быть “iphone” или “android”.
+          type: string
+        persona:
+          description: Персона пользователя, которая хранится как список предложений-фактов о пользователе. По умолчанию пустой список.
+          type: array
+          items:
+            type: string
+        profile:
+          $ref: '#/components/schemas/Profile'
+    Bot:
+      description: >-
+        Бот, принимающий участие в диалоге. Бот - это конкретный агент с
+        определенным набором скилов.
+      type: object
+      properties:
+        id:
+          description: Уникальный  id бота.
+          type: string
+        user_type:
+          description: Тип пользователя. Всегда “bot”.
+          type: string
+        persona:
+          description: Персона пользователя, которая хранится как список предложений-фактов о пользователе.
+          type: array
+          items:
+            type: string
+    Profile:
+      description: Персональная информация о пользователе.
+      type: object
+      properties:
+        gender:
+          description: 'Пол человека. Может принимать значения “male”, “female”, “other”'
+          type: string
+        birthdate:
+          description: >-
+            Дата рождения человека. Может принимать строковые значения в формате
+            YYYY-MM-DD.
+          type: string
+        name:
+          description: Имя человека.
+          type: string
+        location:
+          description: Местонахождение человека.
+          type: object
+        home_coordinates:
+          description: Координаты дома человека.
+          type: object
+        work_coordinates:
+          description: Координаты места работы человека.
+          type: object
+        occupation:
+          description: Профессия человека.
+          type: string
+        income_per_year:
+          description: 'Доход человека в год, в рублях.'
+          type: number
+    Utterance:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Уникальный ID реплики.
+        text:
+          type: string
+          description: >-
+            Текст реплики. Либо текст, написанный пользователем, либо ответ,
+            присланный одним из скилов. В случае, если это начальная реплика
+            диалога, имеет значение "/start".
+        user_id:
+          type: string
+          description: 'Уникальный id пользователя, сказавшего данную реплику.'
+        annotations:
+          $ref: '#/components/schemas/Annotations'
+        date_time:
+          type: string
+          description: Время получения реплики сервером.
+        confidece:
+          type: number
+          description: Уверенность скила в своем ответе.
+        active_skill:
+          type: string
+          description: >-
+            Кодовое название скила, который был ответственным за формирование
+            данной реплики.
+    Annotations:
+      description: >-
+        Разметка реплик входящими в препроцессор моделями. Дефолтная аннотация:
+        {'ner': {}, 'coref': {}, 'sentiment': {}} Начальная реплика диалога,
+        если это команда "/start", имеет дефолтную аннотацию.
+      type: object
+      properties:
+        ner:
+          $ref: '#/components/schemas/NER'
+        coref:
+          $ref: '#/components/schemas/Coref'
+        sentiment:
+          $ref: '#/components/schemas/Sentiment'
+    NER:
+      description: По умолчанию пустой словарь.
+      type: object
+      properties:
+        tokens:
+          description: 'Список токенов, пришедших от компонента ner.'
+          type: array
+          items:
+            type: string
+        tags:
+          description: >-
+            Список тэгов. Количество тэгов соответствует количеству токенов.
+            Тэги имеют формат BIO-разметки. Поддерживаются следующие классы:
+            ‘PER’ - имя (и/или фамилия) человека ‘ORG’ - название организации
+            ‘LOC’ - местонахождение
+          type: array
+          items:
+            type: string
+    Coref:
+      description: Не имплементировано. Всегда пустой словарь.
+      type: object
+    Sentiment:
+      description: >-
+        По умолчанию пустой словарь. Если sentiment определился, то возвращает
+        строку с значением sentiment. Может принимать значения: 'neutral'
+        'positive' 'skip' 'speech' 'negative'
+      type: object
+    ODQAChitChatResponse200Unit:
+      description: >-
+        Батч возвращаемых скилом ответов. Количество ответов соответствует
+        количеству диалогов в запросе агента.
+      type: object
+      properties:
+        text:
+          description: Реплика-ответ скила.
+          type: string
+        confidence:
+          description: >-
+            Уверенность скила в своем ответе. Для руловых скилов можно
+            выставлять '1.0'.
+          type: number
+    ODQAChitChatResponse200Schema:
+      type: object
+      properties:
+        responses:
+          type: array
+          items:
+            $ref: '#/components/schemas/ODQAChitChatResponse200Unit'
+  examples:
+    GenericRequestBody:
+      description: one exaustive example
+      value:
+        version: 0.9.2
+        dialogs:
+          - id: 5c8906200110b313394e6a55
+            location: None
+            utterances:
+              - id: 5c8906200110b313394e6a56
+                text: /start
+                user_id: 5c8903ef0110b311dcc08d4a
+                annotations:
+                  ner: {}
+                  coref: {}
+                  sentiment: {}
+                date_time: '2019-03-13 13:31:12.113000'
+              - id: 5c8906330110b313394e6a57
+                active_skill: chitchat
+                confidence: 1
+                text: Горячий привет!
+                user_id: 5c7cf00e5c70e839bf9cb115
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - O
+                    tokens:
+                      - Горячий
+                      - привет
+                      - '!'
+                  sentiment:
+                    labels: speech
+                date_time: '2019-03-13 13:31:31.939000'
+              - id: 5c89063e0110b313394e6a58
+                text: 'и тебе привет : )'
+                user_id: 5c8903ef0110b311dcc08d4a
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - O
+                      - O
+                      - O
+                    tokens:
+                      - и
+                      - тебе
+                      - привет
+                      - ':'
+                      - )
+                  sentiment:
+                    labels: speech
+                date_time: '2019-03-13 13:31:42.048000'
+              - id: 5c89063f0110b313394e6a59
+                active_skill: chitchat
+                confidence: 0.018443722277879715
+                text: Люблю общаться с людьми
+                user_id: 5c7cf00e5c70e839bf9cb115
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - O
+                      - O
+                    tokens:
+                      - Люблю
+                      - общаться
+                      - с
+                      - людьми
+                  sentiment:
+                    labels: positive
+                date_time: '2019-03-13 13:31:43.082000'
+              - id: 5c8906460110b313394e6a5a
+                text: Давай пообщаемся
+                user_id: 5c8903ef0110b311dcc08d4a
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                    tokens:
+                      - Давай
+                      - пообщаемся
+                  sentiment:
+                    labels: neutral
+                date_time: '2019-03-13 13:31:50.200000'
+              - id: 5c8906470110b313394e6a5b
+                active_skill: chitchat
+                confidence: 0.005199910141527653
+                text: 'давай, я люблю общаться с людьми'
+                user_id: 5c7cf00e5c70e839bf9cb115
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - O
+                      - O
+                      - O
+                      - O
+                      - O
+                    tokens:
+                      - давай
+                      - ','
+                      - я
+                      - люблю
+                      - общаться
+                      - с
+                      - людьми
+                  sentiment:
+                    labels: neutral
+                date_time: '2019-03-13 13:31:51.278000'
+              - id: 5c89064e0110b313394e6a5c
+                text: Ну я поняла.
+                user_id: 5c8903ef0110b311dcc08d4a
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - O
+                      - O
+                    tokens:
+                      - Ну
+                      - я
+                      - поняла
+                      - .
+                  sentiment:
+                    labels: neutral
+                date_time: '2019-03-13 13:31:58.434000'
+              - id: 5c89064f0110b313394e6a5d
+                active_skill: chitchat
+                confidence: 0.024425994604825974
+                text: мне нравится общаться с людьми
+                user_id: 5c7cf00e5c70e839bf9cb115
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - O
+                      - O
+                      - O
+                    tokens:
+                      - мне
+                      - нравится
+                      - общаться
+                      - с
+                      - людьми
+                  sentiment:
+                    labels: positive
+                date_time: '2019-03-13 13:31:59.517000'
+              - id: 5c8906560110b313394e6a5e
+                text: иди-ка ты к черту
+                user_id: 5c8903ef0110b311dcc08d4a
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - O
+                      - O
+                    tokens:
+                      - иди-ка
+                      - ты
+                      - к
+                      - черту
+                  sentiment:
+                    labels: negative
+                date_time: '2019-03-13 13:32:06.146000'
+              - id: 5c8906570110b313394e6a5f
+                active_skill: chitchat
+                confidence: 0.053593460470438004
+                text: чем занимаешься в свободное время?
+                user_id: 5c7cf00e5c70e839bf9cb115
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - O
+                      - O
+                      - O
+                      - O
+                    tokens:
+                      - чем
+                      - занимаешься
+                      - в
+                      - свободное
+                      - время
+                      - '?'
+                  sentiment:
+                    labels: neutral
+                date_time: '2019-03-13 13:32:07.132000'
+              - id: 5c8906650110b313394e6a63
+                text: привет
+                user_id: 5c8903ef0110b311dcc08d4a
+                annotations:
+                  ner:
+                    tags:
+                      - I-PER
+                    tokens:
+                      - привет
+                  sentiment:
+                    labels: speech
+                date_time: '2019-03-13 13:32:21.218000'
+              - id: 5c8906660110b313394e6a64
+                active_skill: chitchat
+                confidence: 0.030921930447220802
+                text: я люблю путешествовать
+                user_id: 5c7cf00e5c70e839bf9cb115
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - O
+                    tokens:
+                      - я
+                      - люблю
+                      - путешествовать
+                  sentiment:
+                    labels: positive
+                date_time: '2019-03-13 13:32:22.159000'
+              - id: 5c89066f0110b313394e6a65
+                text: Какая страна твоя любимая?
+                user_id: 5c8903ef0110b311dcc08d4a
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - O
+                      - O
+                      - O
+                    tokens:
+                      - Какая
+                      - страна
+                      - твоя
+                      - любимая
+                      - '?'
+                  sentiment:
+                    labels: neutral
+                date_time: '2019-03-13 13:32:31.771000'
+              - id: 5c8906710110b313394e6a66
+                active_skill: chitchat
+                confidence: 0.006310736294835806
+                text: по разным странам
+                user_id: 5c7cf00e5c70e839bf9cb115
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - O
+                    tokens:
+                      - по
+                      - разным
+                      - странам
+                  sentiment:
+                    labels: neutral
+                date_time: '2019-03-13 13:32:33.089000'
+              - id: 5c8906780110b313394e6a67
+                text: где ты уже был?
+                user_id: 5c8903ef0110b311dcc08d4a
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - O
+                      - O
+                      - O
+                    tokens:
+                      - где
+                      - ты
+                      - уже
+                      - был
+                      - '?'
+                  sentiment:
+                    labels: neutral
+                date_time: '2019-03-13 13:32:40.196000'
+              - id: 5c8906790110b313394e6a68
+                active_skill: chitchat
+                confidence: 0.001935996813699603
+                text: путешествовал в ОАЭ
+                user_id: 5c7cf00e5c70e839bf9cb115
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - B-LOC
+                    tokens:
+                      - путешествовал
+                      - в
+                      - ОАЭ
+                  sentiment:
+                    labels: neutral
+                date_time: '2019-03-13 13:32:41.197000'
+              - id: 5c8906850110b313394e6a69
+                text: Вау! А я была в Австралии.
+                user_id: 5c8903ef0110b311dcc08d4a
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - O
+                      - O
+                      - O
+                      - O
+                      - B-LOC
+                      - O
+                    tokens:
+                      - Вау
+                      - '!'
+                      - А
+                      - я
+                      - была
+                      - в
+                      - Австралии
+                      - .
+                  sentiment:
+                    labels: neutral
+                date_time: '2019-03-13 13:32:53.812000'
+              - id: 5c8906860110b313394e6a6a
+                active_skill: chitchat
+                confidence: 0.0393575020134449
+                text: мне нравится Индия
+                user_id: 5c7cf00e5c70e839bf9cb115
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - B-LOC
+                    tokens:
+                      - мне
+                      - нравится
+                      - Индия
+                  sentiment:
+                    labels: positive
+                date_time: '2019-03-13 13:32:54.897000'
+              - id: 5c89068c0110b313394e6a6b
+                text: /start\\
+                user_id: 5c8903ef0110b311dcc08d4a
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                    tokens:
+                      - /start\\
+                  sentiment:
+                    labels: neutral
+                date_time: '2019-03-13 13:33:00.501000'
+              - id: 5c89068d0110b313394e6a6c
+                active_skill: chitchat
+                confidence: 0.07003375142812729
+                text: спасибо за диалог
+                user_id: 5c7cf00e5c70e839bf9cb115
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - O
+                    tokens:
+                      - спасибо
+                      - за
+                      - диалог
+                  sentiment:
+                    labels: speech
+                date_time: '2019-03-13 13:33:01.621000'
+            user:
+              id: 5c8903ef0110b311dcc08d4a
+              user_telegram_id: '217465130'
+              user_type: human
+              device_type: None
+              persona: []
+              profile:
+                name: None
+                gender: None
+                birthdate: None
+                location: None
+                home_coordinates: None
+                work_coordinates: None
+                occupation: None
+                income_per_year: None
+            bot:
+              id: 5c7cf00e5c70e839bf9cb115
+              user_type: bot
+              persona:
+                - Мне нравится общаться с людьми.
+                - Пару лет назад я окончила вуз с отличием.
+                - Я работаю в банке.
+                - В свободное время помогаю пожилым людям в благотворительном фонде
+                - Люблю путешествовать
+            channel_type: telegram
+          - id: 5c89065d0110b313394e6a60
+            location: None
+            utterances:
+              - id: 5c89065d0110b313394e6a61
+                text: /start
+                user_id: 5c8903ef0110b311dcc08d4a
+                annotations:
+                  ner: {}
+                  coref: {}
+                  sentiment: {}
+                date_time: '2019-03-13 13:32:13.274000'
+              - id: 5c89065e0110b313394e6a62
+                active_skill: chitchat
+                confidence: 1
+                text: Какие гости!
+                user_id: 5c7cf00e5c70e839bf9cb115
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - O
+                    tokens:
+                      - Какие
+                      - гости
+                      - '!'
+                  sentiment:
+                    labels: neutral
+                date_time: '2019-03-13 13:32:14.110000'
+            user:
+              id: 5c8903ef0110b311dcc08d4a
+              user_telegram_id: '217465130'
+              user_type: human
+              device_type: None
+              persona: []
+              profile:
+                name: None
+                gender: None
+                birthdate: None
+                location: None
+                home_coordinates: None
+                work_coordinates: None
+                occupation: None
+                income_per_year: None
+            bot:
+              id: 5c7cf00e5c70e839bf9cb115
+              user_type: bot
+              persona:
+                - Мне нравится общаться с людьми.
+                - Пару лет назад я окончила вуз с отличием.
+                - Я работаю в банке.
+                - В свободное время помогаю пожилым людям в благотворительном фонде
+                - Люблю путешествовать
+            channel_type: telegram
+          - id: 5c8906920110b313394e6a6d
+            location: None
+            utterances:
+              - id: 5c8906920110b313394e6a6e
+                text: /start
+                user_id: 5c8903ef0110b311dcc08d4a
+                annotations:
+                  ner: {}
+                  coref: {}
+                  sentiment: {}
+                date_time: '2019-03-13 13:33:06.727000'
+              - id: 5c8906930110b313394e6a6f
+                active_skill: chitchat
+                confidence: 1
+                text: Какие гости!
+                user_id: 5c7cf00e5c70e839bf9cb115
+                annotations:
+                  ner:
+                    tags:
+                      - O
+                      - O
+                      - O
+                    tokens:
+                      - Какие
+                      - гости
+                      - '!'
+                  sentiment:
+                    labels: neutral
+                date_time: '2019-03-13 13:33:07.544000'
+            user:
+              id: 5c8903ef0110b311dcc08d4a
+              user_telegram_id: '217465130'
+              user_type: human
+              device_type: None
+              persona: []
+              profile:
+                name: None
+                gender: None
+                birthdate: None
+                location: None
+                home_coordinates: None
+                work_coordinates: None
+                occupation: None
+                income_per_year: None
+            bot:
+              id: 5c7cf00e5c70e839bf9cb115
+              user_type: bot
+              persona:
+                - Мне нравится общаться с людьми.
+                - Пару лет назад я окончила вуз с отличием.
+                - Я работаю в банке.
+                - В свободное время помогаю пожилым людям в благотворительном фонде
+                - Люблю путешествовать
+            channel_type: telegram
+
+    ChitChatResponse:
+      description: Пример JSON-ответа сервера chitchat скила
+      value:
+        responses:
+          - text: 'привет, я бот!'
+            confidence: 0.947
+          - text: как дела?
+            confidence": 0.3333
+    ODQAResponse:
+      description: Пример JSON-ответа сервера odqa скила
+      value:
+        responses:
+          - text: Петр Первый родился в 1672 году.
+            confidence: 0.947
+          - text: На Земле живет 7 миллиардов людей.
+            confidence": 0.3333
+    PersonalInfoResponse:
+      description: Пример JSON-ответа сервера personal-info скила
+      value:
+        responses:
+          - text: 'Скажите, пожалуйста, как к Вам обращаться.'
+            confidence: 1
+            gender: male
+            birthdate: 2019-02-14T00:00:00.000Z
+            name: null
+            location: null
+            home_coordinates: null
+            work_coordinates”: null
+            occupation: data scientist
+            income_per_year”: 100000000000
+          - text: А где Вы живете?
+            confidence": 1
+            gender: male
+            birthdate: 2019-02-14T00:00:00.000Z
+            name: Джо Неуловимый
+            location: null
+            home_coordinates: null
+            work_coordinates: null
+            occupation”: data scientist
+            income_per_year: 100000000000
+    NewsCurrenciesResponse:
+      summary: Example answer from the NewsCurrency skill
+      value:
+        responses:
+          - text: >-
+              Some news (with titles, bodies, etc.) or currencies info as plain
+              text
+            confidence: 1
+          - text: >-
+              Another news (with titles, bodies, etc.) or currencies info as
+              plain text
+            confidence: 1
