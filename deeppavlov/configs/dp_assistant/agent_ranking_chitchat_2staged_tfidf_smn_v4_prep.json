@@ -18,7 +18,7 @@
       {
         "info": "0.0. Initialize tokenizer/detokenizer, and tokenize input & history",
         "id": "(de)tokenizer",
-        "class_name": "ru_tokenizer",
+        "class_name": "stream_spacy_tokenizer",
         "lowercase": false,
         "alphas_only": false
       },
@@ -168,6 +168,8 @@
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf-gpu.txt",
+      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
+      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
       "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
     ],
