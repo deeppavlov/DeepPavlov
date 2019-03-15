@@ -20,6 +20,7 @@ agent_config:
       path: configs/dp_assistant/agent_ranking_chitchat_2staged_tfidf_smn_v4_prep.json
       env:
         CUDA_VISIBLE_DEVICES: ""
+      profile_handler: true
 
     - name: hellobot
       url: http://10.11.1.251:8106/ruler_call/
