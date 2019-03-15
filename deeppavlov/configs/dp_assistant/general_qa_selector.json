@@ -80,6 +80,9 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads"
     },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/xgb.txt"
+    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/general_qa.pckl",

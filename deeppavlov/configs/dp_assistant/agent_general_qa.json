@@ -39,7 +39,7 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads"
     },
     "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/"
+      "{DEEPPAVLOV_PATH}/requirements/xgb.txt"
     ],
     "labels": {
       "server_utils": "GeneralQA"
