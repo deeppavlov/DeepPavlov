@@ -1,0 +1,54 @@
+{
+  "chainer": {
+    "in": [
+      "dialogs"
+    ],
+    "out": [
+      "text",
+      "confidence"
+    ],
+    "pipe": [
+      {
+        "class_name": "dialogs_parser",
+        "in": ["dialogs"],
+        "out": [
+          "last_utterances",
+          "last_annotations",
+          "utterances_histories",
+          "annotations_histories",
+          "dialog_ids",
+          "user_ids"
+        ]
+      },
+      {
+        "config_path": "{CONFIGS_PATH}/dp_assistant/general_qa_selector.json",
+        "in": [
+          "last_utterances"
+        ],
+        "out": [
+          "text",
+          "confidence"
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/"
+    ],
+    "labels": {
+      "server_utils": "GeneralQA"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/faq/school/general_qa.pckl",
+        "subdir": "{DOWNLOADS_PATH}"
+      }
+    ]
+  }
+}
