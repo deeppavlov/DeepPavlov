@@ -1,15 +1,25 @@
 import copy
-from itertools import compress
 import operator
-from typing import List, Dict, Optional
+from itertools import compress
+from typing import List, Dict, Optional, Sequence
 
 from deeppavlov.core.agent_v2.config import MAX_WORKERS, SKILLS
 from deeppavlov.core.agent_v2.hardcode_utterances import NOANSWER_UTT
+from deeppavlov.core.agent_v2.state_schema import Human
 
 
 class SkillManager:
 
-    def __init__(self, response_selector, skill_caller, skill_selector=None):
+    def __init__(self, response_selector, skill_caller, skill_selector=None, profile_handlers: Sequence[str] = ()):
+        """
+
+        Args:
+            response_selector:
+            skill_caller:
+            skill_selector:
+            profile_handlers: list of skill names for getting user profiles info ordered from most to least important
+                names not in ``self.skill_names`` are ignored
+        """
         self.skill_selector = skill_selector
         self.response_selector = response_selector
         self.max_workers = MAX_WORKERS
@@ -18,6 +28,9 @@ class SkillManager:
         self.skill_names = [s['name'] for s in self.skills]
         self.skill_responses = []
 
+        self.profile_handlers = [name for name in reversed(profile_handlers) if name in self.skill_names]
+        self.profile_fields = list(Human.profile.default.keys())
+
     def __call__(self, state):
 
         user_profiles = self._get_user_profiles(self.skill_responses, state['dialogs'])
@@ -25,19 +38,20 @@ class SkillManager:
         utterances = [utt if utt else NOANSWER_UTT for utt in utterances]
         return selected_skill_names, utterances, confidences, user_profiles
 
-    def _get_user_profiles(self, skill_responses, dialogs, skill_name='hellobot') -> Optional[List[Dict]]:
+    def _get_user_profiles(self, skill_responses, dialogs) -> Optional[List[Dict]]:
         """
-        Get user profile names from 'hellobot' skill. If 'hellobot' skill is not connected, returns None.
+        Get user profile descriptors from compatible skills.
         """
-        if skill_name not in self.skill_names:
-            return None
         user_profiles = []
         for sr, dialog in zip(skill_responses, dialogs):
-            try:
-                name = sr[skill_name]['name']
-            except KeyError:
-                name = None
-            user_profiles.append({'name': name})
+            profile = {}
+            for item in self.profile_fields:
+                for skill in self.profile_handlers:
+                    try:
+                        profile[item] = sr[skill][item]
+                    except KeyError:
+                        pass
+            user_profiles.append(profile)
         return user_profiles
 
     def get_skill_responses(self, state):
