@@ -4,7 +4,7 @@
       "question_raw"
     ],
     "out": [
-      "best_answer"
+      "best_answer", "confidences"
     ],
     "pipe": [
       {
@@ -64,8 +64,9 @@
                "answer_rubert_retr_score",
                "answer_kbqa",
                "answer_kbqa_score"],
-        "out": ["best_answer"],
-        "load_path": "/home/mikhail/.deeppavlov/downloads/general_qa.pckl"
+        "out": ["best_answer", "confidences"],
+        "load_path": "{DOWNLOADS_PATH}/general_qa.pckl",
+        "return_confidences": true
       }
     ]
   },
@@ -75,5 +76,15 @@
     "batch_size": 10000
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/general_qa.pckl",
+        "subdir": "{DOWNLOADS_PATH}"
+      }
+    ]
   }
 }
