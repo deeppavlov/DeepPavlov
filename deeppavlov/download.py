@@ -76,7 +76,12 @@ def get_configs_downloads(config: Optional[Union[str, Path, dict]]=None) -> Dict
 
 
 def check_md5(url: str, dest_paths: List[Path]) -> bool:
-    r = requests.get(url + '.md5')
+    if "?" in url:
+        url_md5 = url.replace("?", '.md5?')
+    else:
+        url_md5 = url + '.md5'
+
+    r = requests.get(url_md5)
     if r.status_code != 200:
         return False
     expected = {}
@@ -113,12 +118,13 @@ def download_resource(url: str, dest_paths: Iterable[Path]) -> None:
 
     if check_md5(url, dest_paths):
         log.info(f'Skipped {url} download because of matching hashes')
-    elif url.endswith(('.tar.gz', '.gz', '.zip')):
+    elif any(ext in url for ext in ('.tar.gz', '.gz', '.zip')):
         download_path = dest_paths[0].parent
         download_decompress(url, download_path, dest_paths)
     else:
-        file_name = url.split('/')[-1]
+        file_name = url.split('/')[-1].split('?')[0]
         dest_files = [dest_path / file_name for dest_path in dest_paths]
+        print(dest_files)
         download(dest_files, url)
 
 
@@ -140,6 +146,7 @@ def deep_download(config: Union[str, Path, dict]) -> None:
     downloads = get_configs_downloads(config)
 
     for url, dest_paths in downloads.items():
+        url += "?" + config.stem
         download_resource(url, dest_paths)
 
 
