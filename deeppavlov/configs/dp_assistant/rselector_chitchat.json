@@ -22,7 +22,6 @@
         "out": ["model_inputs"]
       },
       {
-        "info": "4. Preprocess response candidates and choose the best one",
         "id": "preproc",
         "class_name": "siamese_preprocessor",
         "load_path": "{MODELS_PATH}/chitchat_2staged_tfidf_smn_v3/preproc/tok.dict",
