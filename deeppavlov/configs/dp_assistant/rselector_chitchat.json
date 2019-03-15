@@ -76,7 +76,7 @@
         "out": ["chosen_skills_batch"]
       }
     ],
-    "out": ["text", "confidence"]
+    "out": ["chosen_skills_batch"]
   },
   "metadata": {
     "variables": {
