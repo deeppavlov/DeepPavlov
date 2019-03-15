@@ -4,7 +4,7 @@
       "question_raw"
     ],
     "out": [
-      "answer_rubert", "answer_rubert_retr", "answer_kbqa", "best_answer"
+      "best_answer"
     ],
     "pipe": [
       {
@@ -56,7 +56,7 @@
         ]
       },
       {
-        "class_name": "qa_selector",
+        "class_name": "general_qa_selector",
         "in": ["question_raw",
                "answer_rubert",
                "answer_rubert_score",
@@ -64,8 +64,8 @@
                "answer_rubert_retr_score",
                "answer_kbqa",
                "answer_kbqa_score"],
-        "out": ["best_answer", "best_model"],
-        "load_path": "/tmp/test.pckl"
+        "out": ["best_answer"],
+        "load_path": "/home/mikhail/.deeppavlov/downloads/general_qa.pckl"
       }
     ]
   },
