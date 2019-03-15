@@ -24,7 +24,7 @@ class SkillSelector:
 class ChitchatQASelector(SkillSelector):
     SKILL_NAMES_MAP = {
         "chitchat": ["chitchat", "hellobot", "sberchat", "gen_chitchat"],
-        "odqa": ["odqa", "kbqa"]
+        "odqa": ["odqa", "kbqa", "generalqa", "mailruqa"]
     }
 
     def __init__(self, rest_caller):
