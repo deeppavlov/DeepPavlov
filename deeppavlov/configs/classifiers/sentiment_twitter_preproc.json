@@ -146,7 +146,7 @@
     ],
     "labels": {
       "telegram": "IntentModel",
-      "server_utils": "KerasIntentModel"
+      "server": "KerasIntentModel"
     },
     "download": [
       {

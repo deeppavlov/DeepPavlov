@@ -69,7 +69,7 @@
     },
     "labels": {
       "telegram": "EcommerceSkill",
-      "server_utils": "EcommerceSkill"
+      "server": "EcommerceSkill"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/spacy.txt",

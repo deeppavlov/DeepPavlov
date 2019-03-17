@@ -51,7 +51,7 @@
     ],
     "labels": {
       "telegram": "ErrorModel",
-      "server_utils": "ErrorModel"
+      "server": "ErrorModel"
     },
     "download": [
       {

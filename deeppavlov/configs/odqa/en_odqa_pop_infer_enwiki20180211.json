@@ -81,7 +81,7 @@
       "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
     ],
     "labels": {
-      "server_utils": "ODQA"
+      "server": "ODQA"
     },
     "download": [
     ]

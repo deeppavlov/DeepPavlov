@@ -24,9 +24,9 @@ from deeppavlov.core.common.file import find_config
 from deeppavlov.download import deep_download
 from deeppavlov.utils.alexa.server import run_alexa_default_agent
 from deeppavlov.utils.alice import start_alice_server
-from deeppavlov.utils.ms_bot_framework_utils.server import run_ms_bf_default_agent
+from deeppavlov.utils.ms_bot_framework.server import run_ms_bf_default_agent
 from deeppavlov.utils.pip_wrapper import install_from_config
-from deeppavlov.utils.server_utils.server import start_model_server
+from deeppavlov.utils.server.server import start_model_server
 from deeppavlov.utils.telegram.telegram_ui import interact_model_by_telegram
 
 log = getLogger(__name__)

@@ -121,7 +121,7 @@
     ],
     "labels": {
       "telegram": "SiameseModel",
-      "server_utils": "Ranker"
+      "server": "Ranker"
     },
     "download": [
       {

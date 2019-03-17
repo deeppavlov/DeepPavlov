@@ -53,7 +53,7 @@
     ],
     "labels": {
       "telegram": "NERModel",
-      "server_utils": "DstcSlotFillingNetwork"
+      "server": "DstcSlotFillingNetwork"
     },
     "download": [
       {

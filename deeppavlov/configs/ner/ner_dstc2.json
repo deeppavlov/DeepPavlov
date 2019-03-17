@@ -115,7 +115,7 @@
     ],
     "labels": {
       "telegram": "NERModel",
-      "server_utils": "NER"
+      "server": "NER"
     },
     "download": [
       {

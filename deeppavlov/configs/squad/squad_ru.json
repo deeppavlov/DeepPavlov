@@ -126,7 +126,7 @@
     ],
     "labels": {
       "telegram": "SquadModel",
-      "server_utils": "SquadModel"
+      "server": "SquadModel"
     },
     "download": [
       {

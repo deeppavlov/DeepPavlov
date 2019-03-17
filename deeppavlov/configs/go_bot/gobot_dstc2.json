@@ -111,7 +111,7 @@
     ],
     "labels": {
       "telegram": "GoalOrientedBot",
-      "server_utils": "GoalOrientedBot"
+      "server": "GoalOrientedBot"
     },
     "download": [
       {

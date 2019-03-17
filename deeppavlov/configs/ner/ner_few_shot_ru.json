@@ -101,7 +101,7 @@
     ],
     "labels": {
       "telegram": "NERCoNLL2003Model",
-      "server_utils": "NER"
+      "server": "NER"
     },
     "download": [
       {

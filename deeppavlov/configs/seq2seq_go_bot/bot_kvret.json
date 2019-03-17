@@ -128,7 +128,7 @@
     ],
     "labels": {
       "telegram": "Seq2SeqGoalOrientedBot",
-      "server_utils": "GoalOrientedBot"
+      "server": "GoalOrientedBot"
     },
     "download": [
       {

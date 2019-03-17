@@ -46,8 +46,8 @@ def get_server_params(server_config_path, model_config):
 
     server_params = server_config['common_defaults']
 
-    if check_nested_dict_keys(model_config, ['metadata', 'labels', 'server_utils']):
-        model_tag = model_config['metadata']['labels']['server_utils']
+    if check_nested_dict_keys(model_config, ['metadata', 'labels', 'server']):
+        model_tag = model_config['metadata']['labels']['server']
         if model_tag in server_config['model_defaults']:
             model_defaults = server_config['model_defaults'][model_tag]
             for param_name in model_defaults.keys():
