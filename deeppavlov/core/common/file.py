@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+import jstyleson
 import pickle
 from collections import OrderedDict
 from pathlib import Path
@@ -34,8 +35,8 @@ def find_config(pipeline_config_path: Union[str, Path]) -> Path:
 
 
 def read_json(fpath: Union[str, Path]) -> dict:
-    with open(fpath, encoding='utf8') as fin:
-        return json.load(fin, object_pairs_hook=OrderedDict)
+    with open(fpath, encoding='utf8') as fin:  #read json with comments
+        return jstyleson.load(fin, object_pairs_hook=OrderedDict)
 
 
 def save_json(data: dict, fpath: Union[str, Path]) -> None:
