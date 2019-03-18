@@ -241,13 +241,3 @@ class BertClassifierModel(LRScheduledTFModel):
         else:
             pred = self.sess.run(self.y_probas, feed_dict=feed_dict)
         return pred
-
-    def process_event(self, event_name: str, data) -> None:
-        """
-        Processes events sent by trainer. Implements learning rate decay.
-
-        Args:
-            event_name: event_name sent by trainer
-            data: number of examples, epochs, metrics sent by trainer
-        """
-        super().process_event(event_name, data)

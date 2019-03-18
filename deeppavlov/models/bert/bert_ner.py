@@ -11,17 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from logging import getLogger
 from typing import List, Any
 
 import tensorflow as tf
+from bert_dp.modeling import BertConfig, BertModel
+from bert_dp.optimization import AdamWeightDecayOptimizer
+
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
-from deeppavlov.core.commands.utils import expand_path
-from logging import getLogger
-
-from bert_dp.modeling import BertConfig, BertModel
-from bert_dp.optimization import AdamWeightDecayOptimizer
 
 logger = getLogger(__name__)
 
@@ -227,16 +227,6 @@ class BertNerModel(LRScheduledTFModel):
         else:
             pred = self.sess.run(self.y_probas, feed_dict=feed_dict)
         return pred
-
-    def process_event(self, event_name: str, data) -> None:
-        """
-        Processes events sent by trainer. Implements learning rate decay.
-
-        Args:
-            event_name: event_name sent by trainer
-            data: number of examples, epochs, metrics sent by trainer
-        """
-        super().process_event(event_name, data)
 
 
 class MaskCutter(Component):
