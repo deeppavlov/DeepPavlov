@@ -186,7 +186,7 @@ DeepPavlov skill/component can be made available for Amazon Alexa as a REST serv
 
 .. code:: bash
 
-    python -m deeppavlov alexa <config_path> --https --key <SSL key file path> --cert <SSL certificate file path> [-d] [-p <port_number>] [--no-default-skill]
+    python -m deeppavlov alexa <config_path> --https --key <SSL key file path> --cert <SSL certificate file path> [-d] [-p <port_number>] [--stateful] [--multi-instance] [--no-default-skill]
 
 If you redirect requests to your skills service from some https endpoint, you may want to run it in http mode by
 omitting ``--https``, ``--key``, ``--cert`` keys.
@@ -195,6 +195,11 @@ Optional ``-d`` key can be provided for dependencies download
 before service start.
 
 Optional ``-p`` key can be provided to override the port value from a settings file.
+
+Optional ``--stateful`` flag should be provided for stateful skills/components.
+
+Optional ``--multi-instance`` can be provided if you wish to raise separate skill/component instance
+for **each** conversation.
 
 You should use ``--no-default-skill`` optional flag if your component implements an interface of DeepPavlov *Skill*
 to skip its wrapping with DeepPavlov *DefaultStatelessSkill*.
