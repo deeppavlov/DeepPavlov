@@ -146,7 +146,7 @@ def deep_download(config: Union[str, Path, dict]) -> None:
     downloads = get_configs_downloads(config)
 
     for url, dest_paths in downloads.items():
-        url += "?" + config.stem
+        url += "?config=" + config.stem
         download_resource(url, dest_paths)
 
 
