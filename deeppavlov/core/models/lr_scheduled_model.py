@@ -37,7 +37,18 @@ class DecayType(IntEnum):
     TRAPEZOID = 7
 
     @classmethod
-    def from_str(cls, label: str):
+    def from_str(cls, label: str) -> int:
+        """
+        Convert given string label of decay type to special index
+
+        Args:
+            label: name of decay type.
+                Set of values: `"linear"`, `"cosine"`, `"exponential"`,
+                 `"onecycle"`, `"trapezoid"`, `["polynomial", K]`, where K is a polynomial power
+
+        Returns:
+            index of decay type
+        """
         label_norm = label.replace('1', 'one').upper()
         if label_norm in cls.__members__:
             return DecayType[label_norm]
@@ -52,7 +63,7 @@ class DecayScheduler:
     """
 
     def __init__(self, dec_type: Union[str, DecayType], start_val: float,
-                 num_it: int = 0, end_val: float = None, extra: float = None):
+                 num_it: int = 0, end_val: float = None, extra: float = None) -> None:
         if isinstance(dec_type, DecayType):
             self.dec_type = dec_type
         else:
@@ -72,7 +83,7 @@ class DecayScheduler:
         return f"DecayScheduler(start_val={self.start_val}, end_val={self.end_val}"\
             f", dec_type={self.dec_type.name}, num_it={self.nb}, extra={self.extra})"
 
-    def next_val(self):
+    def next_val(self) -> float:
         self.iters = min(self.iters + 1, self.nb)
         # print(f"iters = {self.iters}/{self.nb}")
         if self.dec_type == DecayType.NO:
@@ -119,6 +130,32 @@ class LRScheduledModel:
     """
     Abstract model enhanced with optimizer, learning rate and momentum
     management and search.
+
+    Args:
+        learning_rate: learning rate value or ranges
+        learning_rate_decay: learning rate decay type
+                Set of values: `"linear"`, `"onecycle"`, `"trapezoid"`,
+                               `"exponential"`, `"cosine"`, `["polynomial", K]`, where K is a polynomial power
+        learning_rate_decay_epochs: number of epochs for learning rate decay process
+        learning_rate_decay_batches: number of batches for learning rate decay process
+        learning_rate_drop_div: division coefficient for learning rate in case of
+                exceeding patience `learning_rate_drop_patience`
+        learning_rate_drop_patience: patience limit of loss increase
+        momentum: range of momentum values
+        momentum_decay: momentum decay type.
+                Set of values: `"linear"`, `"onecycle"`, `"trapezoid"`,
+                               `"exponential"`, `"cosine"`, `["polynomial", K]`, where K is a polynomial power
+        momentum_decay_epochs: number of epochs for momentum decay process
+        momentum_decay_batches: number of batches for momentum decay process
+        fit_batch_size: batch size when fitting learning rate
+        fit_learning_rate: range of learning rate values to explore
+        fit_learning_rate_div: division coefficient for best learning rate obtained from fitting,
+                divided learning rate value will be used when training model
+        fit_beta: smoothing coefficient for loss calculation when fitting learning rate
+        fit_min_batches: number of batches to train model on before fitting learning rate
+        fit_max_batches: number of batches to train model on when fitting learning rate
+        *args: other parameters
+        **kwargs: other parameters
     """
 
     @abstractmethod
@@ -160,6 +197,9 @@ class LRScheduledModel:
                  fit_min_batches: int = 10,
                  fit_max_batches: Optional[int] = None,
                  *args, **kwargs) -> None:
+        """
+        Initialize learning rate scheduler
+        """
         if learning_rate_decay_epochs and learning_rate_decay_batches:
             raise ConfigError("isn't able to update learning rate every batch"
                               " and every epoch simultaneously")
@@ -213,21 +253,56 @@ class LRScheduledModel:
         self._fit_max_batches = fit_max_batches
 
     def get_learning_rate(self):
+        """
+        Return current learning rate value
+
+        Returns:
+            learning rate
+        """
         if self._lr is None:
             raise ConfigError("Please specify `learning_rate` parameter"
                               " before training")
         return self._lr
 
     def get_learning_rate_variable(self):
+        """
+        Return current learning rate variable
+
+        Returns:
+            learning rate variable
+        """
         return self._lr_var
 
     def get_momentum(self):
+        """
+        Return current momentum value
+
+        Returns:
+            momentum
+        """
         return self._mom
 
     def get_momentum_variable(self):
+        """
+        Return current momentum variable
+
+        Returns:
+            momentum variable
+        """
         return self._mom_var
 
     def fit(self, *args):
+        """
+        Find the best learning rate schedule, and set obtained values of learning rate
+        and momentum for further model training. Best learning rate will be divided
+        by `fit_learning_rate_div` for further training model.
+
+        Args:
+            *args: arguments
+
+        Returns:
+
+        """
         data = list(zip(*args))
         self.save()
         if self._fit_batch_size is None:
@@ -296,7 +371,20 @@ class LRScheduledModel:
         return {'smoothed_loss': losses, 'learning_rate': lrs}
 
     @staticmethod
-    def _get_best(values: List[float], losses: List[float], max_loss_div: float = 0.9, min_val_div: float = 10.0):
+    def _get_best(values: List[float], losses: List[float],
+                  max_loss_div: float = 0.9, min_val_div: float = 10.0) -> float:
+        """
+        Find the best value according to given losses
+
+        Args:
+            values: list of considered values
+            losses: list of obtained loss values corresponding to `values`
+            max_loss_div: maximal divergence of loss to be considered significant
+            min_val_div: minimum divergence of loss to be considered significant
+
+        Returns:
+            best value divided by `min_val_div`
+        """
         assert len(values) == len(losses), "lengths of values and losses should be equal"
         min_ind = np.argmin(losses)
         for i in range(min_ind - 1, 0, -1):
@@ -305,7 +393,18 @@ class LRScheduledModel:
                 return values[i + 1]
         return values[min_ind] / min_val_div
 
-    def process_event(self, event_name: str, data: dict):
+    def process_event(self, event_name: str, data: dict) -> None:
+        """
+        Update learning rate and momentum variables after event (given by `event_name`)
+
+        Args:
+            event_name: name of event after which the method was called.
+                    Set of values: `"after_validation"`, `"after_batch"`, `"after_epoch"`, `"after_train_log"`
+            data: dictionary with parameters values
+
+        Returns:
+            None
+        """
         if event_name == "after_validation":
             if data['impatience'] > self._learning_rate_last_impatience:
                 self._learning_rate_cur_impatience += 1
