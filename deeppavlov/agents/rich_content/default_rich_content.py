@@ -30,6 +30,9 @@ class PlainText(RichControl):
         super(PlainText, self).__init__('plain_text')
         self.content: str = text
 
+    def __str__(self) -> str:
+        return self.content
+
     def json(self) -> dict:
         """Returns json compatible state of the PlainText instance.
 
