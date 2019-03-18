@@ -24,7 +24,7 @@ import requests
 
 import deeppavlov
 from deeppavlov.core.commands.utils import expand_path, parse_config
-from deeppavlov.core.data.utils import download, download_decompress, get_all_elems_from_json, file_md5
+from deeppavlov.core.data.utils import download, download_decompress, get_all_elems_from_json, file_md5, set_query_parameter, path_set_md5
 
 log = getLogger(__name__)
 
@@ -76,11 +76,7 @@ def get_configs_downloads(config: Optional[Union[str, Path, dict]]=None) -> Dict
 
 
 def check_md5(url: str, dest_paths: List[Path]) -> bool:
-    if "?" in url:
-        url_md5 = url.replace("?", '.md5?')
-    else:
-        url_md5 = url + '.md5'
-
+    url_md5 = path_set_md5(url)
     r = requests.get(url_md5)
     if r.status_code != 200:
         return False
@@ -124,7 +120,6 @@ def download_resource(url: str, dest_paths: Iterable[Path]) -> None:
     else:
         file_name = url.split('/')[-1].split('?')[0]
         dest_files = [dest_path / file_name for dest_path in dest_paths]
-        print(dest_files)
         download(dest_files, url)
 
 
@@ -146,7 +141,7 @@ def deep_download(config: Union[str, Path, dict]) -> None:
     downloads = get_configs_downloads(config)
 
     for url, dest_paths in downloads.items():
-        url += "?config=" + config.stem
+        url = set_query_parameter(url, 'config', config.stem)
         download_resource(url, dest_paths)
 
 
