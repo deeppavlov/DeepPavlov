@@ -140,7 +140,7 @@ For the `interactbot` mode you should specify Telegram bot token in `-t` paramet
 Also you should use `--no-default-skill` optional flag if your component implements an interface of DeepPavlov [*Skill*](deeppavlov/core/skill/skill.py) to skip its wrapping with DeepPavlov [*DefaultStatelessSkill*](deeppavlov/skills/default_skill/default_skill.py).
 If you want to get custom `/start` and `/help` Telegram messages for the running model you should:
 * Add section to [*deeppavlov/utils/settings/models_info.json*](deeppavlov/utils/settings/models_info.json) with your custom Telegram messages
-* In model config file specify `metadata.labels.telegram` parameter with name which refers to the added section of [*utils/settings/models_info.json*](utils/settings/models_info.json)
+* In model config file specify `metadata.labels.telegram` parameter with name which refers to the added section of [*deeppavlov/utils/settings/models_info.json*](deeppavlov/utils/settings/models_info.json)
 
 You can also serve DeepPavlov models for:
 * Microsoft Bot Framework ([see developer guide for the detailed instructions](http://docs.deeppavlov.ai/en/latest/devguides/ms_bot_integration.html)) 
