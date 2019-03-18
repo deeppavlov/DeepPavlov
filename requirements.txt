@@ -1,3 +1,4 @@
+PyYAML==5.1
 Cython==0.28.5
 overrides==1.9
 numpy==1.14.5
@@ -19,4 +20,4 @@ flasgger==0.9.1
 flask_cors==3.0.6
 rusenttokenize==0.0.4
 pyopenssl==18.0.0
-mongoengine
+mongoengine==0.17.0

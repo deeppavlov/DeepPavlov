@@ -1,0 +1,69 @@
+# You can use both dot styled and URI (absolute and relative to configs/ dir) config file path
+# switch use_config flag to true to start using this config
+use_config: false
+
+db_config:
+  DB_NAME: test
+  HOST: 10.11.1.251
+  PORT: 8100
+
+agent_config:
+  MAX_WORKERS: 4
+
+  SKILLS:
+#    - name: odqa
+#      url: http://10.11.1.251:8101/skill
+#      path: configs/dp_assistant/agent_ru_odqa_retr_noans_rubert_infer.json
+
+    - name: chitchat
+      url: http://10.11.1.251:8102/skill
+      path: configs/dp_assistant/agent_ranking_chitchat_2staged_tfidf_smn_v4_prep.json
+      env:
+        CUDA_VISIBLE_DEVICES: ""
+      profile_handler: true
+
+#    - name: hellobot
+#      url: http://10.11.1.251:8106/ruler_call/
+#      path: null
+#      profile_handler: true
+#
+#    - name: sberchat
+#      url: http://23.102.48.212:8443/api/
+#      path: null
+
+    - name: mailruqa
+      url: http://10.11.1.251:8108/mailruqa
+      path: configs.dp_assistant.agent_ranking_mailru_bert_3.json
+
+    - name: generalqa,
+      url: http://10.11.1.251:8109/generalqa",
+      path: configs.dp_assistant.agent_general_qa.json
+
+
+  ANNOTATORS:
+    - name: ner
+      url: http://10.11.1.251:8103/skill
+      path: null #configs/dp_assistant/preproc_ner_rus.json
+      env:
+        CUDA_VISIBLE_DEVICES: ""
+
+    - name: sentiment
+      url: http://10.11.1.251:8104/skill
+      path: configs/dp_assistant/preproc_rusentiment.json
+      env:
+        CUDA_VISIBLE_DEVICES: ""
+
+    - name: obscenity
+      url: http://10.11.1.251:8107/skill
+      path: configs/dp_assistant/obscenity_classifier.json
+      env:
+        CUDA_VISIBLE_DEVICES: ""
+
+  SKILL_SELECTORS:
+    - name: chitchat_odqa
+      url: http://10.11.1.251:8105/skill
+      path: configs/dp_assistant/sselector_chitchat_odqa.json
+      env:
+        CUDA_VISIBLE_DEVICES: ""
+
+  RESPONSE_SELECTORS: []

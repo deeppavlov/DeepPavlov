@@ -1,7 +1,7 @@
 {
   "chainer": {
     "in": ["dialogs"],
-    "out": ["predictions", "confidence"],
+    "out": ["text", "confidence"],
 
     "pipe": [
       {
@@ -59,7 +59,7 @@
         "learning_rate_drop_patience": 2,
         "learning_rate_drop_div": 2.0,
         "in": ["bert_features"],
-        "out": ["predictions", "confidence"]
+        "out": ["text", "confidence"]
       }
     ]
   },

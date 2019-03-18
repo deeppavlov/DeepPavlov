@@ -44,7 +44,7 @@
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/dev/chitchat_2staged_tfidf_smn_v3.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/dev/transformer_chit_chat_40k_v01_1_20.tar.gz",
         "subdir": "{MODELS_PATH}"
       }
     ]

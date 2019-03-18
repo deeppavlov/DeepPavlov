@@ -1,0 +1,93 @@
+{
+  "chainer": {
+    "in": [
+      "question_raw"
+    ],
+    "out": [
+      "best_answer", "confidences"
+    ],
+    "pipe": [
+      {
+        "class_name": "api_router",
+        "in": "question_raw",
+        "n_workers": 3,
+        "out": [
+          "answer_rubert",
+          "answer_rubert_score",
+          "answer_rubert_retr",
+          "answer_rubert_retr_score",
+          "answer_kbqa",
+          "answer_kbqa_score"
+        ],
+        "api_requesters": [
+          {
+            "class_name": "api_requester",
+            "url": "http://gpu2.ipavlov.mipt.ru:5022/odqa",
+            "in": "question_raw",
+            "param_names": [
+              "context"
+            ],
+            "out": [
+              "answer_rubert", "answer_rubert_score"
+            ]
+          },
+          {
+            "class_name": "api_requester",
+            "url": "http://gpu2.ipavlov.mipt.ru:5023/odqa",
+            "in": "question_raw",
+            "param_names": [
+              "context"
+            ],
+            "out": [
+              "answer_rubert_retr", "answer_rubert_retr_score"
+            ]
+          },
+          {
+            "class_name": "api_requester",
+            "url": "http://gpu2.ipavlov.mipt.ru:5024/model",
+            "in": "question_raw",
+            "param_names": [
+              "context"
+            ],
+            "out": [
+              "answer_kbqa", "answer_kbqa_score"
+            ]
+          }
+        ]
+      },
+      {
+        "class_name": "general_qa_selector",
+        "in": ["question_raw",
+               "answer_rubert",
+               "answer_rubert_score",
+               "answer_rubert_retr",
+               "answer_rubert_retr_score",
+               "answer_kbqa",
+               "answer_kbqa_score"],
+        "out": ["best_answer", "confidences"],
+        "load_path": "{DOWNLOADS_PATH}/general_qa.pckl",
+        "return_confidences": true
+      }
+    ]
+  },
+  "train": {
+    "validate_best": false,
+    "test_best": false,
+    "batch_size": 10000
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/xgb.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/general_qa.pckl",
+        "subdir": "{DOWNLOADS_PATH}"
+      }
+    ]
+  }
+}

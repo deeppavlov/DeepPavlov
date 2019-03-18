@@ -5,7 +5,7 @@ class ResponseSelector:
     def __init__(self, rest_caller=None):
         self.rest_caller = rest_caller
 
-    def __call__(self, responses: Dict, state: Dict) -> Tuple[List[str], List[str], List[float]]:
+    def __call__(self, responses: List, state) -> Tuple[List[str], List[str], List[float]]:
         """
         Select a single response for each dialog in the state.
 
@@ -20,7 +20,6 @@ class ResponseSelector:
 
         Args:
             responses:
-            state:
 
         Returns: a list of skill names, a list of response utterances, a list of condfidences
 
@@ -33,7 +32,7 @@ class ConfidenceResponseSelector(ResponseSelector):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, responses: Dict, state: Dict) -> Tuple[List[str], List[str], List[float]]:
+    def __call__(self, responses: List, state: Dict) -> Tuple[List[str], List[str], List[float]]:
         skill_names = []
         utterances = []
         confidences = []

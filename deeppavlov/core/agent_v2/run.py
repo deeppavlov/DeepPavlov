@@ -15,7 +15,7 @@ def model_function():
     from deeppavlov.core.agent_v2.preprocessor import IndependentPreprocessor
     from deeppavlov.core.agent_v2.response_selector import ConfidenceResponseSelector
     from deeppavlov.core.agent_v2.skill_selector import ChitchatQASelector
-    from deeppavlov.core.agent_v2.config import MAX_WORKERS, ANNOTATORS, SKILL_SELECTORS
+    from deeppavlov.core.agent_v2.config import MAX_WORKERS, ANNOTATORS, SKILL_SELECTORS, SKILLS
     # from deeppavlov.core.agent_v2.bot import BOT
 
     import logging
@@ -33,7 +33,8 @@ def model_function():
     ss_names, ss_urls = zip(*[(annotator['name'], annotator['url']) for annotator in SKILL_SELECTORS])
     skill_selector = ChitchatQASelector(rest_caller=RestCaller(max_workers=MAX_WORKERS, names=ss_names, urls=ss_urls))
     skill_manager = SkillManager(skill_selector=skill_selector, response_selector=response_selector,
-                                 skill_caller=skill_caller)
+                                 skill_caller=skill_caller, profile_handlers=[skill['name'] for skill in SKILLS
+                                                                              if skill.get('profile_handler')])
 
     agent = Agent(state_manager, preprocessor, skill_manager)
 
