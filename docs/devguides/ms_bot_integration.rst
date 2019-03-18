@@ -83,7 +83,7 @@ as a REST service by:
 
 .. code:: bash
 
-    python -m deeppavlov interactmsbot <config_path> -i <microsoft_app_id> -s <microsoft_app_secret> --https --key <SSL key file path> --cert <SSL certificate file path> [-d] [-p <port_number>] [--no-default-skill]
+    python -m deeppavlov interactmsbot <config_path> -i <microsoft_app_id> -s <microsoft_app_secret> --https --key <SSL key file path> --cert <SSL certificate file path> [-d] [-p <port_number>] [--stateful] [--multi-instance] [--no-default-skill]
 
 Use *Microsoft App ID* and *Microsoft App Secret* obtained
 in the **Web App Bot connection configuration** section.
@@ -95,6 +95,11 @@ Optional ``-d`` key can be provided for dependencies download
 before service start.
 
 Optional ``-p`` key can be provided to override the port value from a settings file.
+
+Optional ``--stateful`` flag should be provided for stateful skills/components.
+
+Optional ``--multi-instance`` can be provided if you wish to raise separate skill/component instance
+for **each** conversation.
 
 You should use ``--no-default-skill`` optional flag if your component implements an interface of DeepPavlov *Skill*
 to skip its wrapping with DeepPavlov *DefaultStatelessSkill*.
