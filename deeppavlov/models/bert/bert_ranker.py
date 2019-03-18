@@ -167,7 +167,7 @@ class BertRankerModel(LRScheduledTFModel):
                 p = np.expand_dims(p, 0)
             pred.append(p)
         pred = np.vstack(pred)
-        pred = pred / np.linalg.norm(pred, keepdims=True)
+        pred = pred / np.linalg.norm(pred, axis=1, keepdims=True)
         bs = pred.shape[0]
         if self.bot_mode == 0:
             s = pred @ self.resp_vecs.T

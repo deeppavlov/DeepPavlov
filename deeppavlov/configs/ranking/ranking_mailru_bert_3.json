@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
-    "class_name": "mailru_reader",
-    "data_path": "{DOWNLOADS_PATH}/mailru_bert"
+    "class_name": "general_qa_reader",
+    "data_path": "{DOWNLOADS_PATH}/general_qa_data"
   },
   "dataset_iterator": {
     "class_name": "siamese_iterator",
