@@ -129,8 +129,6 @@ class KerasClassificationModel(LRScheduledKerasModel):
 
         self.load()
 
-        self._change_not_fixed_params(**given_opt)
-
         summary = ['Model was successfully initialized!', 'Model summary:']
         self.model.summary(print_fn=summary.append)
         log.info('\n'.join(summary))
@@ -138,36 +136,6 @@ class KerasClassificationModel(LRScheduledKerasModel):
     @overrides
     def get_optimizer(self):
         return self.model.optimizer
-
-    def _change_not_fixed_params(self, **kwargs) -> None:
-        """
-        Change changable parameters from saved model to given ones.
-
-        Args:
-            kwargs: dictionary of new parameters
-
-        Returns:
-            None
-        """
-        fixed_params = [
-            "n_classes",
-            "model_name",
-            "embedding_size",
-            "fasttext_md5",
-            "kernel_sizes_cnn",
-            "filters_cnn",
-            "dense_size",
-            "units_gru",
-            "units_lstm",
-            "units_lstm_1",
-            "units_lstm_2",
-            "self_att_hid",
-            "self_att_out"
-        ]
-        for param in kwargs.keys():
-            if param not in fixed_params:
-                self.opt[param] = kwargs.get(param)
-        return
 
     def pad_texts(self, sentences: List[List[np.ndarray]]) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """
@@ -304,7 +272,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
 
                 log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
 
-                self.opt = read_json(opt_path)
+                self.opt["final_learning_rate"] = read_json(opt_path).get("final_learning_rate")
 
                 model_func = getattr(self, model_name, None)
                 if callable(model_func):
@@ -313,7 +281,10 @@ class KerasClassificationModel(LRScheduledKerasModel):
                     raise AttributeError("Model {} is not defined".format(model_name))
 
                 log.info("[loading weights from {}]".format(weights_path.name))
-                model.load_weights(str(weights_path))
+                try:
+                    model.load_weights(str(weights_path))
+                except ValueError:
+                    ConfigError("Some non-changable parameters of neural network differ from given pre-trained model")
 
                 self.model = model
 
