@@ -183,6 +183,7 @@ class LRScheduledKerasModel(LRScheduledModel, KerasModel):
     """
     def __init__(self, **kwargs):
         if isinstance(kwargs.get("learning_rate_decay"), str):
+            KerasModel.__init__(self, **kwargs)
             LRScheduledModel.__init__(self, **kwargs)
         else:
             KerasModel.__init__(self, **kwargs)
