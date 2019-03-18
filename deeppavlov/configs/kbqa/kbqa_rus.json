@@ -237,10 +237,6 @@
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/test_set_with_answers.txt",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
-      },
-      {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/templates.pickle",
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
