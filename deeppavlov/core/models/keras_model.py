@@ -182,11 +182,11 @@ class LRScheduledKerasModel(LRScheduledModel, KerasModel):
     management and search.
     """
     def __init__(self, **kwargs):
-        if isinstance(kwargs.get("learning_rate_decay"), str):
+        if isinstance(kwargs.get("learning_rate_decay"), float):
             KerasModel.__init__(self, **kwargs)
-            LRScheduledModel.__init__(self, **kwargs)
         else:
             KerasModel.__init__(self, **kwargs)
+            LRScheduledModel.__init__(self, **kwargs)
 
     @abstractmethod
     def get_optimizer(self):
