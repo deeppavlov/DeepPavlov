@@ -16,7 +16,7 @@ from overrides import overrides
 from typing import Iterator
 
 import numpy as np
-import fastText
+import fasttext as fastText
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
