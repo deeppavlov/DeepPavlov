@@ -200,11 +200,14 @@ class Chainer(Component):
                 component.reset()
 
     def destroy(self):
-        for in_params, out_params, component in self.train_pipe:
-            if callable(getattr(component, 'destroy', None)):
-                component.destroy()
-        self.pipe.clear()
-        self.train_pipe.clear()
+        if hasattr(self, 'train_pipe'):
+            for in_params, out_params, component in self.train_pipe:
+                if callable(getattr(component, 'destroy', None)):
+                    component.destroy()
+        if hasattr(self, 'pipe'):
+            self.pipe.clear()
+        if hasattr(self, 'train_pipe'):
+            self.train_pipe.clear()
         super().destroy()
 
     def serialize(self) -> bytes:
