@@ -13,10 +13,10 @@
 # limitations under the License.
 
 
+import json
 from typing import Dict, Any, List, Tuple, Generator, Optional
 
 import numpy as np
-import json
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
@@ -39,7 +39,7 @@ class SquadIterator(DataLearningIterator):
 
     def split(self, *args, **kwargs) -> None:
         for dt in ['train', 'valid', 'test']:
-                setattr(self, dt, SquadIterator._extract_cqas(getattr(self, dt)))
+            setattr(self, dt, SquadIterator._extract_cqas(getattr(self, dt)))
 
     @staticmethod
     def _extract_cqas(data: Dict[str, Any]) -> List[Tuple[Tuple[str, str], Tuple[List[str], List[int]]]]:

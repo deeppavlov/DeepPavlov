@@ -15,8 +15,8 @@
         "id": "classes_vocab",
         "class_name": "simple_vocab",
         "fit_on": ["y"],
-        "save_path": "{MODELS_PATH}/intents_dstc2_bert/classes.dict",
-        "load_path": "{MODELS_PATH}/intents_dstc2_bert/classes.dict",
+        "save_path": "{MODELS_PATH}/classes.dict",
+        "load_path": "{MODELS_PATH}/classes.dict",
         "in": "y",
         "out": "y_ids",
         "special_tokens": ["<UNK>"]
@@ -45,8 +45,8 @@
         "multilabel": true,
         "bert_config_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/bert_config.json",
         "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/bert_model.ckpt",
-        "save_path": "{MODELS_PATH}/intents_dstc2_bert/model",
-        "load_path": "{MODELS_PATH}/intents_dstc2_bert/model",
+        "save_path": "{MODELS_PATH}/model",
+        "load_path": "{MODELS_PATH}/model",
         "keep_prob": 0.5,
         "learning_rate": 2e-05,
         "learning_rate_drop_patience": 3,
@@ -93,13 +93,13 @@
     "log_every_n_batches": 100,
     "validate_best": true,
     "test_best": true,
-    "tensorboard_log_dir": "{MODELS_PATH}/intents_dstc2_bert/logs"
+    "tensorboard_log_dir": "{MODELS_PATH}/logs"
   },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models"
+      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/intents_dstc2_bert_v0"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -117,6 +117,10 @@
       {
         "url": "http://files.deeppavlov.ai/datasets/dstc2_v2.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/dstc2"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/intents_dstc2_bert_v0.tar.gz",
+        "subdir": "{ROOT_PATH}/models/classifiers"
       }
 
     ]
