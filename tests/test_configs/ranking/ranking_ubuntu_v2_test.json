@@ -118,8 +118,8 @@
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
     ],
     "labels": {
-      "telegram": "SiameseModel",
-      "server": "Ranker"
+      "telegram_utils": "SiameseModel",
+      "server_utils": "Ranker"
     },
     "download": [
       {

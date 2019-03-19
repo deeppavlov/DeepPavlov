@@ -71,7 +71,7 @@
       "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
     ],
     "labels": {
-      "server": "Ranker"
+      "server_utils": "Ranker"
     },
     "download": [
       {

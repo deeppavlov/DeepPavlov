@@ -68,8 +68,8 @@
       "MODELS_PATH": "{ROOT_PATH}/models"
     },
     "labels": {
-      "telegram": "EcommerceSkill",
-      "server": "EcommerceSkill"
+      "telegram_utils": "EcommerceSkill",
+      "server_utils": "EcommerceSkill"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/spacy.txt",

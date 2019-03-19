@@ -125,8 +125,8 @@
       "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
     "labels": {
-      "telegram": "SquadModel",
-      "server": "SquadModel"
+      "telegram_utils": "SquadModel",
+      "server_utils": "SquadModel"
     },
     "download": [
       {

@@ -203,8 +203,8 @@
       "MODELS_PATH": "{ROOT_PATH}/models/classifiers/intents_snips_evolution"
     },
     "labels": {
-      "telegram": "IntentModel",
-      "server": "KerasIntentModel"
+      "telegram_utils": "IntentModel",
+      "server_utils": "KerasIntentModel"
     },
     "download": [
       {

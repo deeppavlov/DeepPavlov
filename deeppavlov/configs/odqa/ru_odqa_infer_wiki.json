@@ -67,7 +67,7 @@
       "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
     "labels": {
-      "server": "ODQA"
+      "server_utils": "ODQA"
     },
     "download": [
     ]

@@ -40,7 +40,7 @@
       "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
     "labels": {
-      "telegram": "NERModel"
+      "telegram_utils": "NERModel"
     },
     "download": [
       {

@@ -110,8 +110,8 @@
       "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
     ],
     "labels": {
-      "telegram": "GoalOrientedBot",
-      "server": "GoalOrientedBot"
+      "telegram_utils": "GoalOrientedBot",
+      "server_utils": "GoalOrientedBot"
     },
     "download": [
       {

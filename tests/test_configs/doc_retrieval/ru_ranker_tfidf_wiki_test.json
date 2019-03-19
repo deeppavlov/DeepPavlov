@@ -68,7 +68,7 @@
     },
     "requirements": [],
     "labels": {
-      "server": "Ranker"
+      "server_utils": "Ranker"
     },
     "download": [
       {

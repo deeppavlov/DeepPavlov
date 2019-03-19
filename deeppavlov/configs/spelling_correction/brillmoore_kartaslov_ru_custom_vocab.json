@@ -74,8 +74,8 @@
       "{DEEPPAVLOV_PATH}/requirements/spelling.txt"
     ],
     "labels": {
-      "telegram": "ErrorModel",
-      "server": "ErrorModel"
+      "telegram_utils": "ErrorModel",
+      "server_utils": "ErrorModel"
     },
     "download": [
       {
