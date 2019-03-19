@@ -65,7 +65,7 @@ class SimilarityMatchingSkill(Skill):
             update_dict_recursive(model_config, edit_dict)
 
         if train:
-            self.model = train_model(model_config, download=False)
+            self.model = train_model(model_config, download=True)
             log.info('Your model was saved at: \'' + save_load_path + '\'')
         else:
             self.model = build_model(model_config, download=False)
