@@ -96,7 +96,7 @@ def experimental_bot(model_function: Callable[..., Callable[[Collection[Message]
     def handle_message(message: Message):
         parent_conn.send((message, message.chat.id))
 
-    bot.polling()
+    bot.polling(none_stop=True)
 
 
 def init_bot_for_model(agent: Agent, token: str, model_name: str):
