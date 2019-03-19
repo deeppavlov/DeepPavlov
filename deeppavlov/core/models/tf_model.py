@@ -162,5 +162,7 @@ class TFModel(NNModel, metaclass=TfModelMeta):
         log.info('Total number of parameters equal {}'.format(total_num_parameters))
 
     def destroy(self):
-        for k in list(self.sess.graph.get_all_collection_keys()):
-            self.sess.graph.clear_collection(k)
+        if hasattr(self, 'sess'):
+            for k in list(self.sess.graph.get_all_collection_keys()):
+                self.sess.graph.clear_collection(k)
+        super().destroy()

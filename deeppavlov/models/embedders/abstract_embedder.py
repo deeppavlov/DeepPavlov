@@ -55,9 +55,6 @@ class Embedder(Component, Serializable, metaclass=ABCMeta):
         self.model = None
         self.load()
 
-    def destroy(self):
-        del self.model
-
     @overrides
     def save(self) -> None:
         """

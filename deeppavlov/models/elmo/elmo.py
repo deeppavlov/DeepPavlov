@@ -598,3 +598,4 @@ class ELMo(NNModel):
         if hasattr(self, 'sess'):
             for k in list(self.sess.graph.get_all_collection_keys()):
                 self.sess.graph.clear_collection(k)
+        super().destroy()
