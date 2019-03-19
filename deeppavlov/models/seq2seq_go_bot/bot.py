@@ -83,7 +83,7 @@ class Seq2SeqGoalOrientedBot(NNModel):
         if 'source_vocab_size' not in params:
             params['source_vocab_size'] = len(self.src_vocab)
         if 'target_vocab_size' not in params:
-            params['target_vocab_soze'] = len(self.tgt_vocab)
+            params['target_vocab_size'] = len(self.tgt_vocab)
         # contruct matrix of knowledge bases values embeddings
         params['knowledge_base_entry_embeddings'] = \
             [self._embed_kb_key(val) for val in self.kb_keys]
@@ -226,5 +226,3 @@ class Seq2SeqGoalOrientedBot(NNModel):
     def load(self):
         pass
 
-    def destroy(self):
-        self.embedder.destroy()

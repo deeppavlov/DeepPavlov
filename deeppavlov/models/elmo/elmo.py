@@ -111,18 +111,18 @@ class ELMo(NNModel):
 
 
     LM model pre-trained on `ru-news` dataset ( lines = 63M, tokens = 946M, size = 12GB ), model is available by
-    :config:`elmo-lm-ready4fine-tuning-ru-news </elmo/elmo-lm-ready4fine-tuning-ru-news.json>` configuration file
-    or :config:`elmo-lm-ready4fine-tuning-ru-news-simple </elmo/elmo-lm-ready4fine-tuning-ru-news-simple.json>`
+    :config:`elmo_lm_ready4fine_tuning_ru_news </elmo/elmo_lm_ready4fine_tuning_ru_news.json>` configuration file
+    or :config:`elmo_lm_ready4fine_tuning_ru_news_simple </elmo/elmo_lm_ready4fine_tuning_ru_news_simple.json>`
     configuration file.
 
     LM model pre-trained on `ru-twitter` dataset ( lines = 104M, tokens = 810M, size = 8.5GB ), model is available by
-    :config:`elmo-lm-ready4fine-tuning-ru-twitter </elmo/elmo-lm-ready4fine-tuning-ru-twitter.json>` configuration file 
-    or :config:`elmo-lm-ready4fine-tuning-ru-twitter-simple </elmo/elmo-lm-ready4fine-tuning-ru-twitter-simple.json>`
+    :config:`elmo_lm_ready4fine_tuning_ru_twitter </elmo/elmo_lm_ready4fine_tuning_ru_twitter.json>` configuration file
+    or :config:`elmo_lm_ready4fine_tuning_ru_twitter_simple </elmo/elmo_lm_ready4fine_tuning_ru_twitter_simple.json>`
     configuration file.
 
     LM model pre-trained on `ru-wiki` dataset ( lines = 1M, tokens = 386M, size = 5GB ), model is available by
-    :config:`elmo-lm-ready4fine-tuning-ru-wiki </elmo/elmo-lm-ready4fine-tuning-ru-wiki.json>` configuration file 
-    or :config:`elmo-lm-ready4fine-tuning-ru-wiki-simple </elmo/elmo-lm-ready4fine-tuning-ru-wiki-simple.json>`
+    :config:`elmo_lm_ready4fine_tuning_ru_wiki </elmo/elmo_lm_ready4fine_tuning_ru_wiki.json>` configuration file
+    or :config:`elmo_lm_ready4fine_tuning_ru_wiki_simple </elmo/elmo_lm_ready4fine_tuning_ru_wiki_simple.json>`
     configuration file.
 
     `simple` configuration file is a configuration of a model without special tags of output
@@ -131,7 +131,7 @@ class ELMo(NNModel):
     .. note::
 
         You need to download about **4 GB** also by default about **32 GB** of RAM and **10 GB** of GPU memory
-        required to running the :config:`elmo-lm-ready4fine-tuning-ru-* </elmo/>`
+        required to running the :config:`elmo_lm_ready4fine_tuning_ru_* </elmo/>`
         on one GPU.
 
     After training you can use ``{MODELS_PATH}/elmo_model/saves/hubs/tf_hub_model_epoch_n_*/``
@@ -153,14 +153,14 @@ class ELMo(NNModel):
 
     .. code:: bash
 
-        python -m deeppavlov install elmo-1b-benchmark_test
+        python -m deeppavlov install elmo_1b_benchmark_test
         
     Examples:
         For a quick start, you can run test training of the test model on small data by this command from bash:
 
         .. code:: bash
 
-            python -m deeppavlov train deeppavlov/configs/elmo/elmo-1b-benchmark_test.json -d
+            python -m deeppavlov train deeppavlov/configs/elmo/elmo_1b_benchmark_test.json -d
 
         To download the prepared `1 Billion Word Benchmark dataset <http://www.statmt.org/lm-benchmark/>`__ and
         start a training model use this command from bash:
@@ -168,11 +168,11 @@ class ELMo(NNModel):
         .. note::
 
             You need to download about **2 GB** also by default about **10 GB** of RAM and **10 GB** of GPU memory
-            required to running :config:`elmo-1b-benchmark <elmo/elmo-1b-benchmark.json>` on one GPU.
+            required to running :config:`elmo_1b_benchmark <elmo/elmo_1b_benchmark.json>` on one GPU.
 
         .. code:: bash
 
-            python -m deeppavlov train deeppavlov/configs/elmo/elmo-1b-benchmark.json -d
+            python -m deeppavlov train deeppavlov/configs/elmo/elmo_1b_benchmark.json -d
 
         To fine-tune ELMo as LM model on `1 Billion Word Benchmark dataset <http://www.statmt.org/lm-benchmark/>`__
         use commands from bash :
@@ -180,7 +180,7 @@ class ELMo(NNModel):
         .. code:: bash
 
             # download the prepared 1 Billion Word Benchmark dataset
-            python -m deeppavlov download deeppavlov/configs/elmo/elmo-1b-benchmark.json
+            python -m deeppavlov download deeppavlov/configs/elmo/elmo_1b_benchmark.json
             # copy model checkpoint, network configuration, vocabulary of pre-trained LM model
             mkdir -p ${MODELS_PATH}/elmo-1b-benchmark/saves/epochs/0
             cp my_ckpt.data-00000-of-00001 ${MODELS_PATH}/elmo-1b-benchmark/saves/epochs/0/model.data-00000-of-00001
@@ -190,7 +190,7 @@ class ELMo(NNModel):
             cp my_options.json ${MODELS_PATH}/elmo-1b-benchmark/options.json
             cp my_vocab {MODELS_PATH}/elmo-1b-benchmark/vocab-2016-09-10.txt
             # start a fine-tuning
-            python -m deeppavlov train deeppavlov/configs/elmo/elmo-1b-benchmark.json
+            python -m deeppavlov train deeppavlov/configs/elmo/elmo_1b_benchmark.json
 
         After training you can use the ELMo model from tf_hub wrapper by
         `TensorFlow Hub <https://www.tensorflow.org/hub/overview>`__ or by
@@ -598,3 +598,4 @@ class ELMo(NNModel):
         if hasattr(self, 'sess'):
             for k in list(self.sess.graph.get_all_collection_keys()):
                 self.sess.graph.clear_collection(k)
+        super().destroy()
