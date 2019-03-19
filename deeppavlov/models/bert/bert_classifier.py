@@ -98,7 +98,7 @@ class BertClassifierModel(LRScheduledTFModel):
             logger.info('[initializing model with Bert from {}]'.format(pretrained_bert))
             # Exclude optimizer and classification variables from saved variables
             var_list = self._get_saveable_variables(
-                exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'classification'))
+                exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'output_weights', 'output_bias'))
             saver = tf.train.Saver(var_list)
             saver.restore(self.sess, pretrained_bert)
 
@@ -119,13 +119,12 @@ class BertClassifierModel(LRScheduledTFModel):
         output_layer = self.bert.get_pooled_output()
         hidden_size = output_layer.shape[-1].value
 
-        with tf.variable_scope('classification'):
-            output_weights = tf.get_variable(
-                "output_weights", [self.n_classes, hidden_size],
-                initializer=tf.truncated_normal_initializer(stddev=0.02))
+        output_weights = tf.get_variable(
+            "output_weights", [self.n_classes, hidden_size],
+            initializer=tf.truncated_normal_initializer(stddev=0.02))
 
-            output_bias = tf.get_variable(
-                "output_bias", [self.n_classes], initializer=tf.zeros_initializer())
+        output_bias = tf.get_variable(
+            "output_bias", [self.n_classes], initializer=tf.zeros_initializer())
 
         with tf.variable_scope("loss"):
             output_layer = tf.nn.dropout(output_layer, keep_prob=self.keep_prob_ph)
