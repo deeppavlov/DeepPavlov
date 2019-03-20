@@ -26,7 +26,7 @@ from itertools import chain
 from logging import getLogger
 from pathlib import Path
 from typing import List, Union, Iterable, Optional
-from urllib.parse import urlparse
+from urllib.parse import urlencode, parse_qs, urlsplit, urlunsplit, urlparse
 
 import numpy as np
 import requests
@@ -441,3 +441,36 @@ def update_dict_recursive(editable_dict: dict, editing_dict: dict) -> None:
         else:
             editable_dict[k] = v
 
+
+def path_set_md5(url):
+    """Given a file URL, return a md5 query of the file
+
+    Args:
+        url: a given URL
+    Returns:
+        URL of the md5 file
+    """
+    scheme, netloc, path, query_string, fragment = urlsplit(url)
+    path += '.md5'
+
+    return urlunsplit((scheme, netloc, path, query_string, fragment))
+
+
+def set_query_parameter(url, param_name, param_value):
+    """Given a URL, set or replace a query parameter and return the modified URL.
+
+    Args:
+        url: a given  URL
+        param_name: the parameter name to add
+        param_value: the parameter value
+    Returns:
+        URL with the added parameter
+
+    """
+    scheme, netloc, path, query_string, fragment = urlsplit(url)
+    query_params = parse_qs(query_string)
+
+    query_params[param_name] = [param_value]
+    new_query_string = urlencode(query_params, doseq=True)
+
+    return urlunsplit((scheme, netloc, path, new_query_string, fragment))
