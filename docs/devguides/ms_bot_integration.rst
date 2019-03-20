@@ -104,7 +104,7 @@ for **each** conversation.
 You should use ``--no-default-skill`` optional flag if your component implements an interface of DeepPavlov *Skill*
 to skip its wrapping with DeepPavlov *DefaultStatelessSkill*.
 
-REST service properties (host, port) are provided in ``utils/settings/server_config.json``. You can also store your
+REST service properties (host, port) are provided in ``deeppavlov/utils/settings/server_config.json``. You can also store your
 app id and app secret in appropriate section of ``server_config.json``. Please note, that all command line parameters
 override corresponding config ones.
 
