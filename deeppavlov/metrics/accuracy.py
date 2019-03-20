@@ -115,4 +115,4 @@ def kbqa_accuracy(y_true, y_predicted):
         if answer_predicted in answer_true:
             total_correct += 1
 
-    return total_correct / len(y_true)
+    return total_correct / len(y_true) if len(y_true) else 0
