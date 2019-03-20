@@ -102,7 +102,7 @@ class KBAnswerParserWikidata(Component, Serializable):
                 if entity_from_template:
                     if self._debug:
                         relation_title = self._relations_mapping[relation_from_template]
-                        log.info("entity {}, relation {}".format(entity_from_template, relation_title))
+                        log.debug("entity {}, relation {}".format(entity_from_template, relation_title))
                     entity_triplets, entity_linking_confidences = self.linker(entity_from_template, tokens)
                     relation_prob = 1.0
                     obj, confidence = self._match_triplet(entity_triplets,
@@ -115,7 +115,7 @@ class KBAnswerParserWikidata(Component, Serializable):
                     top_k_relations, top_k_probs = self._parse_relations_probs(relations_probs)
                     top_k_relation_names = [self._relations_mapping[rel] for rel in top_k_relations]
                     if self._debug:
-                        log.info("top k relations {}" .format(str(top_k_relation_names)))
+                        log.debug("top k relations {}" .format(str(top_k_relation_names)))
                     obj, confidence = self._match_triplet(entity_triplets,
                                                           entity_linking_confidences,
                                                           top_k_relations,
@@ -207,11 +207,6 @@ class KBAnswerParserWikidata(Component, Serializable):
                                    "как ты считаешь"]
         question_init = ' '.join(question_tokens)
         question = ''.join([ch for ch in question_init if ch not in punctuation]).lower()
-        is_kbqa = True
-        for template in not_kbqa_question_templates:
-            if question.find(template) > -1:
-                is_kbqa = False
-        for template in kbqa_question_templates:
-            if question.find(template) > -1:
-                is_kbqa = True
+        is_kbqa = (all(template not in question for template in not_kbqa_question_templates) or
+                   all(template in question for template in kbqa_question_templates))
         return is_kbqa

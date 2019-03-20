@@ -113,7 +113,8 @@ class EntityLinker(Component, Serializable):
             if self.use_inverted_index:
                 candidate_entities = self.candidate_entities_inverted_index(entity)
                 candidate_names = self.candidate_entities_names(candidate_entities)
-                wiki_entities, confidences, srtd_cand_ent = self.sort_found_entities(candidate_entities, candidate_names, entity)
+                wiki_entities, confidences, srtd_cand_ent = self.sort_found_entities(candidate_entities,
+                                                                                     candidate_names, entity)
             else:
                 candidate_entities = self.find_candidate_entities(entity)
 
@@ -137,7 +138,7 @@ class EntityLinker(Component, Serializable):
 
         entity_triplets = self.extract_triplets_from_wiki(wiki_entities)
         if self.rule_filter_entities and self._language == 'rus':
-            filtered_entities, filtered_entity_triplets = self.filter_triplets_rus(entity_triplets, \
+            filtered_entities, filtered_entity_triplets = self.filter_triplets_rus(entity_triplets,
                                                                                    question_tokens, srtd_cand_ent)
         if self.debug:
             self._log_entities(filtered_entities[:10])
@@ -205,8 +206,7 @@ class EntityLinker(Component, Serializable):
         question = ' '.join(question_tokens).lower()
         what_template = 'что '
         found_what_template = False
-        if question.find(what_template) > -1:
-            found_what_template = True
+        found_what_template = question.find(what_template) > -1
         filtered_entity_triplets = []
         filtered_entities = []
         for wiki_entity, triplets_for_entity in zip(srtd_cand_ent, entity_triplets):
