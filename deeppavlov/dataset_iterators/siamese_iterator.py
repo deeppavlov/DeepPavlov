@@ -20,6 +20,7 @@ from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 log = getLogger(__name__)
 
+
 @register('siamese_iterator')
 class SiameseIterator(DataLearningIterator):
     """The class contains methods for iterating over a dataset for ranking in training, validation and test mode.
@@ -55,14 +56,14 @@ class SiameseIterator(DataLearningIterator):
         self.data["all"] = self.train + self.valid + self.test
 
     def split(self, *args, **kwargs) -> None:
-        if len(self.valid) == 0:
+        if len(self.valid) == 0 and self.len_valid != 0:
             self.random.shuffle(self.train)
-            self.valid = self.train[-1000:]
-            self.train = self.train[:-1000]
+            self.valid = self.train[-self.len_valid:]
+            self.train = self.train[:-self.len_valid]
         if len(self.test) == 0:
             self.random.shuffle(self.train)
-            self.test = self.train[-1000:]
-            self.train = self.train[:-1000]
+            self.test = self.train[-self.len_test:]
+            self.train = self.train[:-self.len_test]
 
     def gen_batches(self, batch_size: int, data_type: str = "train", shuffle: bool = True)->\
             Tuple[List[List[Tuple[int, int]]], List[int]]:

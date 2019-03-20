@@ -125,7 +125,7 @@ class TFModel(NNModel, metaclass=TfModelMeta):
                     variables_to_train.extend(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope_name))
 
             if optimizer is None:
-                optimizer = tf.train.AdamOptimizer(learning_rate, **kwargs)
+                optimizer = tf.train.AdamOptimizer
 
             # For batch norm it is necessary to update running averages
             extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)

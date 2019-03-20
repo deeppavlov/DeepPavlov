@@ -1,14 +1,14 @@
 {
   "dataset_reader": {
-    "class_name": "squad_dataset_reader",
-    "dataset": "MultiSQuAD",
-    "data_path": "{DOWNLOADS_PATH}/multi_squad/"
+    "class_name": "multi_squad_dataset_reader",
+    "dataset": "MultiSQuADRetr",
+    "data_path": "{DOWNLOADS_PATH}/multi_squad_retr/"
   },
   "dataset_iterator": {
-    "class_name": "multi_squad_iterator",
+    "class_name": "multi_squad_retr_iterator",
     "seed": 1337,
-    "shuffle": true,
-    "with_answer_rate": 0.666
+    "shuffle": false,
+    "with_answer_rate": 0.333
   },
   "chainer": {
     "in": ["context_raw", "question_raw"],
@@ -17,7 +17,7 @@
       {
         "class_name": "squad_preprocessor",
         "id": "squad_prepr",
-        "context_limit": 400,
+        "context_limit": 500,
         "question_limit": 150,
         "char_limit": 16,
         "in": ["context_raw", "question_raw"],
@@ -42,7 +42,7 @@
         "context_limit": "#squad_prepr.context_limit",
         "question_limit": "#squad_prepr.question_limit",
         "char_limit": "#squad_prepr.char_limit",
-        "fit_on": ["context_tokens", "question_tokens"],
+        "fit_lol": ["context_tokens", "question_tokens"],
         "in": ["context_tokens", "question_tokens"],
         "out": ["context_tokens_idxs", "question_tokens_idxs"]
       },
@@ -57,7 +57,7 @@
         "context_limit": "#squad_prepr.context_limit",
         "question_limit": "#squad_prepr.question_limit",
         "char_limit": "#squad_prepr.char_limit",
-        "fit_on": ["context_chars", "question_chars"],
+        "fit_lol": ["context_chars", "question_chars"],
         "in": ["context_chars", "question_chars"],
         "out": ["context_chars_idxs", "question_chars_idxs"]
       },
@@ -75,13 +75,16 @@
         "attention_hidden_size": 75,
         "learning_rate": 0.1,
         "min_learning_rate": 0.001,
-        "learning_rate_patience": 5,
+        "learning_rate_drop_patience": 5,
+        "learning_rate_drop_div": 2.0,
+        "optimizer": "tf.train:AdadeltaOptimizer",
+        "momentum": 0.95,
         "keep_prob": 0.7,
         "grad_clip": 5.0,
         "weight_decay": 1.0,
         "noans_token": true,
-        "save_path": "{MODELS_PATH}/multi_squad_model_noans/model",
-        "load_path": "{MODELS_PATH}/multi_squad_model_noans/model",
+        "save_path": "{MODELS_PATH}/multi_squad_retr_model_noans/model",
+        "load_path": "{MODELS_PATH}/multi_squad_retr_model_noans/model",
         "in": {
           "c_tokens": "context_tokens_idxs",
           "c_chars": "context_chars_idxs",
@@ -105,12 +108,22 @@
   },
   "train": {
     "show_examples": false,
+    "test_best": false,
+    "validate_best": true,
     "log_every_n_batches": 250,
     "val_every_n_epochs": 1,
     "batch_size": 64,
     "pytest_max_batches": 2,
     "validation_patience": 10,
     "metrics": [
+      {
+        "name": "squad_v1_f1",
+        "inputs": ["ans_raw", "ans_predicted"]
+      },
+      {
+        "name": "squad_v1_em",
+        "inputs": ["ans_raw", "ans_predicted"]
+      },
       {
         "name": "squad_v2_f1",
         "inputs": ["ans_raw", "ans_predicted"]
@@ -120,9 +133,7 @@
         "inputs": ["ans_raw", "ans_predicted"]
       }
     ],
-    "tensorboard_log_dir": "{MODELS_PATH}/multi_squad_model_noans/logs",
-    "evaluation_targets": ["valid"],
-    "class_name": "nn_trainer"
+    "tensorboard_log_dir": "{MODELS_PATH}/multi_squad_retr_model_noans/logs"
   },
   "metadata": {
     "variables": {
@@ -150,6 +161,6 @@
         "url": "http://files.deeppavlov.ai/embeddings/wiki-news-300d-1M-char.vec",
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
-    ]
+      ]
   }
 }
