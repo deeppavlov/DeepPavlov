@@ -41,8 +41,8 @@ class BertNerModel(LRScheduledTFModel):
                  encoder_layer_ids: List[int] = list(range(12)),
                  optimizer: str = None,
                  num_warmup_steps: int = None,
-                 focal_alpha: float = 0.95,
-                 focal_gamma: float = 1.0,
+                 focal_alpha: float = None,
+                 focal_gamma: float = None,
                  weight_decay_rate: float = 0.01,
                  return_probas: bool = False,
                  pretrained_bert: str = None,
@@ -79,7 +79,6 @@ class BertNerModel(LRScheduledTFModel):
             print('{:<31}'.format(repr(var.get_shape().as_list())), var.name)
 
         self.sess.run(tf.global_variables_initializer())
-        # print(self.sess.run(tf.trainable_variables()[-3]))
 
         if pretrained_bert is not None:
             pretrained_bert = str(expand_path(pretrained_bert))
@@ -124,15 +123,17 @@ class BertNerModel(LRScheduledTFModel):
         with tf.variable_scope("loss"):
             # NOTE: same mask as for inputs?
             y_mask = tf.cast(self.input_masks_ph, tf.float32)
-            self.loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_ph,
-                                                               logits=logits,
-                                                               weights=y_mask)
-            # y_onehot = tf.one_hot(self.y_ph, self.n_tags)
-            # self.loss = self.focal_loss2(labels=y_onehot,
-            #                            probs=self.y_probas,
-            #                            weights=y_mask,
-            #                            alpha=self.focal_alpha,
-            #                            gamma=self.focal_gamma)
+            if (self.focal_alpha is None) or (self.focal_gamma is None):
+                self.loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_ph,
+                                                                   logits=logits,
+                                                                   weights=y_mask)
+            else:
+                y_onehot = tf.one_hot(self.y_ph, self.n_tags)
+                self.loss = self.focal_loss2(labels=y_onehot,
+                                             probs=self.y_probas,
+                                             weights=y_mask,
+                                             alpha=self.focal_alpha,
+                                             gamma=self.focal_gamma)
 
     @staticmethod
     def focal_loss(labels, probs, weights=None, gamma=2.0, alpha=4.0):
