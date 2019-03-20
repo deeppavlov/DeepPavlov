@@ -14,6 +14,7 @@
 from typing import List, Any
 
 import tensorflow as tf
+from tensorflow.python.ops import array_ops
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
@@ -40,6 +41,8 @@ class BertNerModel(LRScheduledTFModel):
                  encoder_layer_ids: List[int] = list(range(12)),
                  optimizer: str = None,
                  num_warmup_steps: int = None,
+                 focal_alpha: float = 0.95,
+                 focal_gamma: float = 1.0,
                  weight_decay_rate: float = 0.01,
                  return_probas: bool = False,
                  pretrained_bert: str = None,
@@ -52,6 +55,8 @@ class BertNerModel(LRScheduledTFModel):
         self.min_learning_rate = min_learning_rate
         self.keep_prob = keep_prob
         self.optimizer = optimizer
+        self.focal_alpha = focal_alpha
+        self.focal_gamma = focal_gamma
         self.encoder_layer_ids = encoder_layer_ids
         self.num_warmup_steps = num_warmup_steps
         self.weight_decay_rate = weight_decay_rate
@@ -114,7 +119,7 @@ class BertNerModel(LRScheduledTFModel):
             logits = tf.layers.dense(output_layer, units=self.n_tags, name="output_dense")
 
             self.y_predictions = tf.argmax(logits, -1)
-            self.y_probas = tf.nn.sigmoid(logits)
+            self.y_probas = tf.nn.softmax(logits)
 
         with tf.variable_scope("loss"):
             # NOTE: same mask as for inputs?
@@ -122,6 +127,79 @@ class BertNerModel(LRScheduledTFModel):
             self.loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_ph,
                                                                logits=logits,
                                                                weights=y_mask)
+            # y_onehot = tf.one_hot(self.y_ph, self.n_tags)
+            # self.loss = self.focal_loss2(labels=y_onehot,
+            #                            probs=self.y_probas,
+            #                            weights=y_mask,
+            #                            alpha=self.focal_alpha,
+            #                            gamma=self.focal_gamma)
+
+    @staticmethod
+    def focal_loss(labels, probs, weights=None, gamma=2.0, alpha=4.0):
+        """
+	focal loss for multi-classification
+	FL(p_t)=-alpha(1-p_t)^{gamma}ln(p_t)
+	gradient is d(Fl)/d(p_t) not d(Fl)/d(x) as described in paper
+	d(Fl)/d(p_t) * [p_t(1-p_t)] = d(Fl)/d(x)
+	Lin, T.-Y., Goyal, P., Girshick, R., He, K., & Dollár, P. (2017).
+	Focal Loss for Dense Object Detection, 130(4), 485–491.
+	https://doi.org/10.1016/j.ajodo.2005.02.022
+	:param labels: ground truth one-hot encoded labels,
+            shape of [batch_size, num_cls]
+	:param probs: model's output, shape of [batch_size, num_cls]
+	:param gamma:
+	:param alpha:
+	:return: shape of [batch_size]
+	"""
+        epsilon = 1e-9
+        labels = tf.cast(labels, tf.float32)
+        probs = tf.cast(probs, tf.float32)
+        
+        probs = tf.clip_by_value(probs, epsilon, 1.0 - epsilon)
+        ce = tf.multiply(labels, -tf.log(probs))
+        weight = tf.multiply(labels, tf.pow(tf.subtract(1., probs), gamma))
+        fl = tf.multiply(alpha, tf.multiply(weight, ce))
+        if weights is not None:
+            fl = tf.multiply(tf.reduce_sum(fl, axis=2), weights)
+        return tf.reduce_sum(fl)
+
+    @staticmethod
+    def focal_loss2(labels, probs, weights=None, alpha=1.0, gamma=1):
+        r"""Compute focal loss for predictions.
+            Multi-labels Focal loss formula:
+                FL = -alpha * (z-p)^gamma * log(p) -(1-alpha) * p^gamma * log(1-p)
+                     ,which alpha = 0.25, gamma = 2, p = sigmoid(x), z = target_tensor.
+        Args:
+         labels: A float tensor of shape [batch_size, num_anchors,
+            num_classes] representing the predicted logits for each class
+         probs: A float tensor of shape [batch_size, num_anchors,
+            num_classes] representing one-hot encoded classification targets
+         weights: A float tensor of shape [batch_size, num_anchors]
+         alpha: A scalar tensor for focal loss alpha hyper-parameter
+         gamma: A scalar tensor for focal loss gamma hyper-parameter
+        Returns:
+            loss: A (scalar) tensor representing the value of the loss function
+        """
+        labels = tf.cast(labels, tf.float32)
+        probs = tf.cast(probs, tf.float32)
+
+        zeros = array_ops.zeros_like(probs, dtype=probs.dtype)
+        
+        # For positive prediction, only need consider front part loss, back part is 0;
+        # target_tensor > zeros <=> z=1, so poitive coefficient = z - p.
+        pos_p_sub = array_ops.where(labels > zeros, labels - probs, zeros)
+        
+        # For negative prediction, only need consider back part loss, front part is 0;
+        # target_tensor > zeros <=> z=1, so negative coefficient = 0.
+        neg_p_sub = array_ops.where(labels > zeros, zeros, probs)
+        per_entry_cross_ent = - alpha * (pos_p_sub ** gamma) *\
+                tf.log(tf.clip_by_value(probs, 1e-8, 1.0)) \
+                - (1 - alpha) * (neg_p_sub ** gamma) * \
+                tf.log(tf.clip_by_value(1.0 - probs, 1e-8, 1.0))
+        if weights is not None:
+            per_entry_cross_ent = tf.multiply(per_entry_cross_ent,
+                    tf.expand_dims(weights, -1))
+        return tf.reduce_sum(per_entry_cross_ent)
 
     def _init_placeholders(self):
         self.input_ids_ph = tf.placeholder(shape=(None, None),
