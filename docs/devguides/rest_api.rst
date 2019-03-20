@@ -15,8 +15,8 @@ Properties from ``common_defaults`` section are used by default unless
 they are overridden by component-specific properties, provided in
 ``model_defaults`` section of the ``server_config.json``.
 Component-specific properties are bound to the component by
-``server`` label in ``metadata/labels`` section of the component
-config. Value of ``server`` label from component config should
+``server_utils`` label in ``metadata/labels`` section of the component
+config. Value of ``server_utils`` label from component config should
 match with properties key from ``model_defaults`` section of
 ``server_config.json``.
 
