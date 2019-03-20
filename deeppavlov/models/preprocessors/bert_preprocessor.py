@@ -75,7 +75,23 @@ class BertPreprocessor(Component):
 
 @register('bert_ner_preprocessor')
 class BertNerPreprocessor(Component):
-    # TODO: docs
+    """Takes tokens and splits them into bert subtokens, encode subtokens with their indices.
+    Creates mask of subtokens (one for first subtoken, zero for later subtokens).
+    
+    If tags are provided, calculate tags for subtokens.
+
+    Args:
+        vocab_file: path to vocabulary
+        do_lower_case: set True if lowercasing is needed
+        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
+        max_subword_length: replace token to <unk> if it's length is larger than this
+            (defaults to None, which is equal to +infinity)
+
+    Attributes:
+        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
+        max_subword_length: rmax lenght of a bert subtoken
+        tokenizer: instance of Bert FullTokenizer
+    """
 
     def __init__(self,
                  vocab_file: str,
@@ -117,7 +133,7 @@ class BertNerPreprocessor(Component):
                     sw_ys[-1] = 'X'
             subword_tokens.append(sw_toks)
             subword_tok_ids.append(self.tokenizer.convert_tokens_to_ids(sw_toks))
-            subword_masks.append(sw_mask)
+            subword_masks.append(sw_mask)eplace token to <unk> if it's length is larger than this
             subword_tags.append(sw_ys)
             assert len(sw_mask) == len(sw_toks) == len(subword_tok_ids[-1]) == len(sw_ys),\
                 f"length of mask({len(sw_mask)}), tokens({len(sw_toks)}),"\
