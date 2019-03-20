@@ -20,7 +20,7 @@ config. Value of ``server_utils`` label from component config should
 match with properties key from ``model_defaults`` section of
 ``server_config.json``.
 
-For example, ``metadata/labels/server`` tag from
+For example, ``metadata/labels/server_utils`` tag from
 ``go_bot/gobot_dstc2.json`` references to the *GoalOrientedBot* section
 of ``server_config.json``. Therefore, ``model_endpoint`` parameter in
 ``common_defaults`` will be will be overridden with the same parameter
