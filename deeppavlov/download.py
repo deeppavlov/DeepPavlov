@@ -141,8 +141,8 @@ def deep_download(config: Union[str, Path, dict]) -> None:
     downloads = get_configs_downloads(config)
 
     for url, dest_paths in downloads.items():
-        if isinstance(config, Path):
-            url = set_query_parameter(url, 'config', config.stem)
+        if not isinstance(config, dict):
+            url = set_query_parameter(url, 'config', Path(config).stem)
         download_resource(url, dest_paths)
 
 
