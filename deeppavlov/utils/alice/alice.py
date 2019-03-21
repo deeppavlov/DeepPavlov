@@ -29,7 +29,7 @@ from deeppavlov.core.agent import Agent
 from deeppavlov.core.agent.rich_content import RichMessage
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
-from utils.server_utils.server import get_server_params
+from deeppavlov.utils.server.server import get_server_params
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 

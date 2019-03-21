@@ -23,7 +23,7 @@ from deeppavlov.core.agent.rich_content import RichMessage
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.skill.skill import Skill
 from deeppavlov.deep import find_config
-from utils.ms_bot_framework_utils.server import run_ms_bot_framework_server
+from deeppavlov.utils.ms_bot_framework.server import run_ms_bot_framework_server
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--ms-id", help="microsoft bot framework app id", type=str)
