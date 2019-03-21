@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Iterable, Union, Tuple
+from typing import Iterable, Union, Tuple, Optional
 from collections import defaultdict
 from logging import getLogger
 
@@ -252,4 +252,9 @@ class LRScheduledTFModel(TFModel, LRScheduledModel):
 
     def get_optimizer(self):
         return self._optimizer
+
+    def load(self, exclude_scopes: Optional[Iterable] = ('Optimizer',
+                                                         'learning_rate',
+                                                         'momentum')):
+        return super().load(exclude_scopes=exclude_scopes)
 
