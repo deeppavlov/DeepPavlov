@@ -22,7 +22,7 @@ from bert_dp.preprocessing import InputFeatures
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
+from deeppavlov.core.models.tf_model import LRScheduledTFModel
 
 logger = getLogger(__name__)
 

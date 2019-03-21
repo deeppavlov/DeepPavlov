@@ -21,7 +21,7 @@ from bert_dp.optimization import AdamWeightDecayOptimizer
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
-from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
+from deeppavlov.core.models.tf_model import LRScheduledTFModel
 
 logger = getLogger(__name__)
 

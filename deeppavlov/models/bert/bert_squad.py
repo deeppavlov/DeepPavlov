@@ -28,7 +28,7 @@ from deeppavlov import build_model
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Component
-from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
+from deeppavlov.core.models.tf_model import LRScheduledTFModel
 from deeppavlov.models.squad.utils import softmax_mask
 
 logger = getLogger(__name__)
