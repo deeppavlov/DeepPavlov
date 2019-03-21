@@ -44,6 +44,7 @@ class BertNerModel(LRScheduledTFModel):
                  focal_alpha: float = None,
                  focal_gamma: float = None,
                  ema_decay: float = None,
+                 ema_variables_on_cpu: bool = True,
                  weight_decay_rate: float = 0.01,
                  return_probas: bool = False,
                  pretrained_bert: str = None,
@@ -59,6 +60,7 @@ class BertNerModel(LRScheduledTFModel):
         self.focal_alpha = focal_alpha
         self.focal_gamma = focal_gamma
         self.ema_decay = ema_decay
+        self.ema_variables_on_cpu = ema_variables_on_cpu
         self.encoder_layer_ids = encoder_layer_ids
         self.num_warmup_steps = num_warmup_steps
         self.weight_decay_rate = weight_decay_rate
@@ -261,7 +263,9 @@ class BertNerModel(LRScheduledTFModel):
                                                                   "bias",
                                                                   "learning_rate",
                                                                   "momentum"])
-            self.ema = ExponentialMovingAverage(self.ema_decay)
+
+            self.ema = ExponentialMovingAverage(self.ema_decay,
+                                                variables_on_cpu=self.ema_variables_on_cpu)
             self.train_op = self.ema.build(self.train_op, _vars, name="EMA")
         else:
             self.ema = None
@@ -347,9 +351,12 @@ class MaskCutter(Component):
 
 class ExponentialMovingAverage:
 
-    def __init__(self, decay: float = 0.999) -> None:
+    def __init__(self,
+                 decay: float = 0.999,
+                 variables_on_cpu: bool = True) -> None:
         self.decay = decay
         self.ema = tf.train.ExponentialMovingAverage(decay=decay)
+        self.var_device_name = '/cpu:0' if variables_on_cpu else None
         self.train_mode = None 
 
     def build(self,
@@ -359,31 +366,37 @@ class ExponentialMovingAverage:
         with tf.variable_scope(name):
             if update_vars is None:
                 update_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
+
             with tf.control_dependencies([minimize_op]):
                 minimize_op = self.ema.apply(update_vars)
-            # Make backup variables
-            with tf.variable_scope('BackupVariables'):
-                backup_vars = [tf.get_variable(var.op.name,
-                                               dtype=var.value().dtype,
-                                               trainable=False,
-                                               initializer=var.initialized_value())
-                               for var in update_vars]
 
-            def ema_to_weights():
-                return tf.group(*(tf.assign(var, self.ema.average(var).read_value())
-                                 for var in update_vars))
+            with tf.device(self.var_device_name):
+                # Make backup variables
+                with tf.variable_scope('BackupVariables'):
+                    backup_vars = [tf.get_variable(var.op.name,
+                                                   dtype=var.value().dtype,
+                                                   trainable=False,
+                                                   initializer=var.initialized_value())
+                                   for var in update_vars]
 
-            def save_weight_backups():
-                return tf.group(*(tf.assign(bck, var.read_value())
-                                 for var, bck in zip(update_vars, backup_vars)))
+                def ema_to_weights():
+                    return tf.group(*(tf.assign(var, self.ema.average(var).read_value())
+                                     for var in update_vars))
 
-            def restore_weight_backups():
-                return tf.group(*(tf.assign(var, bck.read_value())
-                                 for var, bck in zip(update_vars, backup_vars)))
+                def save_weight_backups():
+                    return tf.group(*(tf.assign(bck, var.read_value())
+                                     for var, bck in zip(update_vars, backup_vars)))
 
-            self.train_switch_op = restore_weight_backups()
-            with tf.control_dependencies([save_weight_backups()]):
-                self.test_switch_op = ema_to_weights() 
+                def restore_weight_backups():
+                    return tf.group(*(tf.assign(var, bck.read_value())
+                                     for var, bck in zip(update_vars, backup_vars)))
+
+                train_switch_op = restore_weight_backups()
+                with tf.control_dependencies([save_weight_backups()]):
+                    test_switch_op = ema_to_weights() 
+
+            self.train_switch_op = train_switch_op
+            self.test_switch_op = test_switch_op
             self.do_nothing_op = tf.no_op()
 
         return minimize_op
