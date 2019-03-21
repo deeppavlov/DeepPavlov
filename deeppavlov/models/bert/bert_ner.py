@@ -1,4 +1,4 @@
-# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Neural Networks and Deep Learning lab, MIPT
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import List, Any
+from typing import List, Any, Tuple
 
 import tensorflow as tf
 from tensorflow.python.ops import array_ops
@@ -24,7 +24,7 @@ from logging import getLogger
 from bert_dp.modeling import BertConfig, BertModel
 from bert_dp.optimization import AdamWeightDecayOptimizer
 
-logger = getLogger(__name__)
+log = getLogger(__name__)
 
 
 @register('bert_ner')
@@ -43,6 +43,7 @@ class BertNerModel(LRScheduledTFModel):
                  num_warmup_steps: int = None,
                  focal_alpha: float = None,
                  focal_gamma: float = None,
+                 ema_decay: float = None,
                  weight_decay_rate: float = 0.01,
                  return_probas: bool = False,
                  pretrained_bert: str = None,
@@ -57,6 +58,7 @@ class BertNerModel(LRScheduledTFModel):
         self.optimizer = optimizer
         self.focal_alpha = focal_alpha
         self.focal_gamma = focal_gamma
+        self.ema_decay = ema_decay
         self.encoder_layer_ids = encoder_layer_ids
         self.num_warmup_steps = num_warmup_steps
         self.weight_decay_rate = weight_decay_rate
@@ -87,16 +89,19 @@ class BertNerModel(LRScheduledTFModel):
         # print(tf.train.checkpoint_exists(str(self.load_path.resolve())))
         if tf.train.checkpoint_exists(pretrained_bert) \
                 and not tf.train.checkpoint_exists(str(self.load_path.resolve())):
-            logger.info('[initializing model with Bert from {}]'.format(pretrained_bert))
+            log.info('[initializing model with Bert from {}]'.format(pretrained_bert))
             # Exclude optimizer and classification variables from saved variables
             var_list = self._get_saveable_variables(
-                exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'ner'))
+                exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'ner', 'EMA'))
             saver = tf.train.Saver(var_list)
             saver.restore(self.sess, pretrained_bert)
         # print(self.sess.run(tf.trainable_variables()[-3]))
 
         if self.load_path is not None:
             self.load()
+
+        if self.ema:
+            self.sess.run(self.ema.init_op)
 
     def _init_graph(self):
         self._init_placeholders()
@@ -237,7 +242,8 @@ class BertNerModel(LRScheduledTFModel):
                                   optimizer_scope_name='Optimizer',
                                   exclude_from_weight_decay=["LayerNorm",
                                                              "layer_norm",
-                                                             "bias"])
+                                                             "bias",
+                                                             "EMA"])
         else:
             self.train_op = self.get_train_op(self.loss,
                                               optimizer_scope_name='Optimizer',
@@ -247,6 +253,18 @@ class BertNerModel(LRScheduledTFModel):
             with tf.variable_scope('Optimizer'):
                 new_global_step = self.global_step + 1
                 self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
+
+        if self.ema_decay is not None:
+            _vars = self._get_trainable_variables(exclude_scopes=["Optimizer",
+                                                                  "LayerNorm",
+                                                                  "layer_norm",
+                                                                  "bias",
+                                                                  "learning_rate",
+                                                                  "momentum"])
+            self.ema = ExponentialMovingAverage(self.ema_decay)
+            self.train_op = self.ema.build(self.train_op, _vars, name="EMA")
+        else:
+            self.ema = None
 
     def _build_feed_dict(self, input_ids, input_masks, token_types, y=None):
         feed_dict = {
@@ -276,6 +294,8 @@ class BertNerModel(LRScheduledTFModel):
 
         feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids, y)
 
+        if self.ema:
+            self.sess.run(self.ema.switch_to_train_op)
         _, loss = self.sess.run([self.train_op, self.loss], feed_dict=feed_dict)
         return {'loss': loss, 'learning_rate': feed_dict[self.learning_rate_ph]}
 
@@ -289,6 +309,8 @@ class BertNerModel(LRScheduledTFModel):
                 f" should have the same length."
 
         feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids)
+        if self.ema:
+            self.sess.run(self.ema.switch_to_test_op)
         if not self.return_probas:
             pred = self.sess.run(self.y_predictions, feed_dict=feed_dict)
         else:
@@ -322,3 +344,70 @@ class MaskCutter(Component):
                     samples_cut[-1].append(s_list[j])
         return samples_cut
  
+
+class ExponentialMovingAverage:
+
+    def __init__(self, decay: float = 0.999) -> None:
+        self.decay = decay
+        self.ema = tf.train.ExponentialMovingAverage(decay=decay)
+        self.train_mode = None 
+
+    def build(self,
+              minimize_op: tf.Tensor,
+              update_vars: List[tf.Variable] = None,
+              name: str = "EMA") -> tf.Tensor:
+        with tf.variable_scope(name):
+            if update_vars is None:
+                update_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
+            with tf.control_dependencies([minimize_op]):
+                minimize_op = self.ema.apply(update_vars)
+            # Make backup variables
+            with tf.variable_scope('BackupVariables'):
+                backup_vars = [tf.get_variable(var.op.name,
+                                               dtype=var.value().dtype,
+                                               trainable=False,
+                                               initializer=var.initialized_value())
+                               for var in update_vars]
+
+            def ema_to_weights():
+                return tf.group(*(tf.assign(var, self.ema.average(var).read_value())
+                                 for var in update_vars))
+
+            def save_weight_backups():
+                return tf.group(*(tf.assign(bck, var.read_value())
+                                 for var, bck in zip(update_vars, backup_vars)))
+
+            def restore_weight_backups():
+                return tf.group(*(tf.assign(var, bck.read_value())
+                                 for var, bck in zip(update_vars, backup_vars)))
+
+            self.train_switch_op = restore_weight_backups()
+            with tf.control_dependencies([save_weight_backups()]):
+                self.test_switch_op = ema_to_weights() 
+            self.do_nothing_op = tf.no_op()
+
+        return minimize_op
+    
+    @property
+    def init_op(self) -> tf.Operation:
+        self.train_mode = False 
+        return self.test_switch_op
+
+    @property
+    def switch_to_train_op(self) -> tf.Operation:
+        assert self.train_mode is not None, "ema variables aren't initialized"
+        if not self.train_mode:
+            log.info("switching to train mode")
+            self.train_mode = True
+            return self.train_switch_op
+        return self.do_nothing_op
+
+    @property
+    def switch_to_test_op(self) -> tf.Operation:
+        assert self.train_mode is not None, "ema variables aren't initialized"
+        if self.train_mode:
+            log.info("switching to test mode")
+            self.train_mode = False
+            return self.test_switch_op
+        return self.do_nothing_op
+
