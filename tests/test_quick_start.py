@@ -129,6 +129,9 @@ PARAMS = {
                 ("moderate price range", "{'pricerange': 'moderate'}")
             ]
     },
+    "kbqa": {
+        ("kbqa/kbqa_rus.json", "kbqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+    },
     "elmo_embedder": {
         ("elmo_embedder/elmo_ru_news.json", "elmo_embedder_ru_news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
     },
