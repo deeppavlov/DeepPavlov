@@ -1,4 +1,4 @@
-# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Neural Networks and Deep Learning lab, MIPT
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from logging import getLogger
-from typing import List, Any
+from typing import List, Any, Tuple
 
 import tensorflow as tf
+from tensorflow.python.ops import array_ops
 from bert_dp.modeling import BertConfig, BertModel
 from bert_dp.optimization import AdamWeightDecayOptimizer
 
@@ -23,7 +24,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
 
-logger = getLogger(__name__)
+log = getLogger(__name__)
 
 
 @register('bert_ner')
@@ -59,6 +60,10 @@ class BertNerModel(LRScheduledTFModel):
                  encoder_layer_ids: List[int] = tuple(range(12)),
                  optimizer: str = None,
                  num_warmup_steps: int = None,
+                 focal_alpha: float = None,
+                 focal_gamma: float = None,
+                 ema_decay: float = None,
+                 ema_variables_on_cpu: bool = True,
                  weight_decay_rate: float = 0.01,
                  return_probas: bool = False,
                  pretrained_bert: str = None,
@@ -71,6 +76,10 @@ class BertNerModel(LRScheduledTFModel):
         self.min_learning_rate = min_learning_rate
         self.keep_prob = keep_prob
         self.optimizer = optimizer
+        self.focal_alpha = focal_alpha
+        self.focal_gamma = focal_gamma
+        self.ema_decay = ema_decay
+        self.ema_variables_on_cpu = ema_variables_on_cpu
         self.encoder_layer_ids = encoder_layer_ids
         self.num_warmup_steps = num_warmup_steps
         self.weight_decay_rate = weight_decay_rate
@@ -97,15 +106,18 @@ class BertNerModel(LRScheduledTFModel):
 
         if tf.train.checkpoint_exists(pretrained_bert) \
                 and not tf.train.checkpoint_exists(str(self.load_path.resolve())):
-            logger.info('[initializing model with Bert from {}]'.format(pretrained_bert))
+            log.info('[initializing model with Bert from {}]'.format(pretrained_bert))
             # Exclude optimizer and classification variables from saved variables
             var_list = self._get_saveable_variables(
-                exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'ner'))
+                exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'ner', 'EMA'))
             saver = tf.train.Saver(var_list)
             saver.restore(self.sess, pretrained_bert)
 
         if self.load_path is not None:
             self.load()
+
+        if self.ema:
+            self.sess.run(self.ema.init_op)
 
     def _init_graph(self):
         self._init_placeholders()
@@ -131,9 +143,84 @@ class BertNerModel(LRScheduledTFModel):
 
         with tf.variable_scope("loss"):
             y_mask = tf.cast(self.input_masks_ph, tf.float32)
-            self.loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_ph,
-                                                               logits=logits,
-                                                               weights=y_mask)
+            if (self.focal_alpha is None) or (self.focal_gamma is None):
+                self.loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_ph,
+                                                                   logits=logits,
+                                                                   weights=y_mask)
+            else:
+                y_onehot = tf.one_hot(self.y_ph, self.n_tags)
+                self.loss = self.focal_loss2(labels=y_onehot,
+                                             probs=self.y_probas,
+                                             weights=y_mask,
+                                             alpha=self.focal_alpha,
+                                             gamma=self.focal_gamma)
+
+    @staticmethod
+    def focal_loss(labels, probs, weights=None, gamma=2.0, alpha=4.0):
+        """
+	focal loss for multi-classification
+	FL(p_t)=-alpha(1-p_t)^{gamma}ln(p_t)
+	gradient is d(Fl)/d(p_t) not d(Fl)/d(x) as described in paper
+	d(Fl)/d(p_t) * [p_t(1-p_t)] = d(Fl)/d(x)
+	Lin, T.-Y., Goyal, P., Girshick, R., He, K., & Dollár, P. (2017).
+	Focal Loss for Dense Object Detection, 130(4), 485–491.
+	https://doi.org/10.1016/j.ajodo.2005.02.022
+	:param labels: ground truth one-hot encoded labels,
+            shape of [batch_size, num_cls]
+	:param probs: model's output, shape of [batch_size, num_cls]
+	:param gamma:
+	:param alpha:
+	:return: shape of [batch_size]
+	"""
+        epsilon = 1e-9
+        labels = tf.cast(labels, tf.float32)
+        probs = tf.cast(probs, tf.float32)
+        
+        probs = tf.clip_by_value(probs, epsilon, 1.0 - epsilon)
+        ce = tf.multiply(labels, -tf.log(probs))
+        weight = tf.multiply(labels, tf.pow(tf.subtract(1., probs), gamma))
+        fl = tf.multiply(alpha, tf.multiply(weight, ce))
+        if weights is not None:
+            fl = tf.multiply(tf.reduce_sum(fl, axis=2), weights)
+        return tf.reduce_sum(fl)
+
+    @staticmethod
+    def focal_loss2(labels, probs, weights=None, alpha=1.0, gamma=1):
+        r"""Compute focal loss for predictions.
+            Multi-labels Focal loss formula:
+                FL = -alpha * (z-p)^gamma * log(p) -(1-alpha) * p^gamma * log(1-p)
+                     ,which alpha = 0.25, gamma = 2, p = sigmoid(x), z = target_tensor.
+        Args:
+         labels: A float tensor of shape [batch_size, num_anchors,
+            num_classes] representing the predicted logits for each class
+         probs: A float tensor of shape [batch_size, num_anchors,
+            num_classes] representing one-hot encoded classification targets
+         weights: A float tensor of shape [batch_size, num_anchors]
+         alpha: A scalar tensor for focal loss alpha hyper-parameter
+         gamma: A scalar tensor for focal loss gamma hyper-parameter
+        Returns:
+            loss: A (scalar) tensor representing the value of the loss function
+        """
+        labels = tf.cast(labels, tf.float32)
+        probs = tf.cast(probs, tf.float32)
+
+        zeros = array_ops.zeros_like(probs, dtype=probs.dtype)
+        
+        # For positive prediction, only need consider front part loss, back part is 0;
+        # target_tensor > zeros <=> z=1, so poitive coefficient = z - p.
+        pos_p_sub = array_ops.where(labels > zeros, labels - probs, zeros)
+        
+        # For negative prediction, only need consider back part loss, front part is 0;
+        # target_tensor > zeros <=> z=1, so negative coefficient = 0.
+        neg_p_sub = array_ops.where(labels > zeros, zeros, probs)
+        per_entry_cross_ent = - alpha * (pos_p_sub ** gamma) *\
+                tf.log(tf.clip_by_value(probs, 1e-8, 1.0)) \
+                - (1 - alpha) * (neg_p_sub ** gamma) * \
+                tf.log(tf.clip_by_value(1.0 - probs, 1e-8, 1.0))
+        if weights is not None:
+            per_entry_cross_ent = tf.multiply(per_entry_cross_ent,
+                    tf.expand_dims(weights, -1))
+        return tf.reduce_sum(per_entry_cross_ent)
 
     def _init_placeholders(self):
         self.input_ids_ph = tf.placeholder(shape=(None, None),
@@ -170,7 +257,8 @@ class BertNerModel(LRScheduledTFModel):
                                   optimizer_scope_name='Optimizer',
                                   exclude_from_weight_decay=["LayerNorm",
                                                              "layer_norm",
-                                                             "bias"])
+                                                             "bias",
+                                                             "EMA"])
         else:
             self.train_op = self.get_train_op(self.loss,
                                               optimizer_scope_name='Optimizer',
@@ -180,6 +268,20 @@ class BertNerModel(LRScheduledTFModel):
             with tf.variable_scope('Optimizer'):
                 new_global_step = self.global_step + 1
                 self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
+
+        if self.ema_decay is not None:
+            _vars = self._get_trainable_variables(exclude_scopes=["Optimizer",
+                                                                  "LayerNorm",
+                                                                  "layer_norm",
+                                                                  "bias",
+                                                                  "learning_rate",
+                                                                  "momentum"])
+
+            self.ema = ExponentialMovingAverage(self.ema_decay,
+                                                variables_on_cpu=self.ema_variables_on_cpu)
+            self.train_op = self.ema.build(self.train_op, _vars, name="EMA")
+        else:
+            self.ema = None
 
     def _build_feed_dict(self, input_ids, input_masks, token_types, y=None):
         feed_dict = {
@@ -209,6 +311,8 @@ class BertNerModel(LRScheduledTFModel):
 
         feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids, y)
 
+        if self.ema:
+            self.sess.run(self.ema.switch_to_train_op)
         _, loss = self.sess.run([self.train_op, self.loss], feed_dict=feed_dict)
         return {'loss': loss, 'learning_rate': feed_dict[self.learning_rate_ph]}
 
@@ -222,6 +326,8 @@ class BertNerModel(LRScheduledTFModel):
                 f" should have the same length."
 
         feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids)
+        if self.ema:
+            self.sess.run(self.ema.switch_to_test_op)
         if not self.return_probas:
             pred = self.sess.run(self.y_predictions, feed_dict=feed_dict)
         else:
@@ -245,3 +351,79 @@ class MaskCutter(Component):
                     samples_cut[-1].append(s_list[j])
         return samples_cut
  
+
+class ExponentialMovingAverage:
+
+    def __init__(self,
+                 decay: float = 0.999,
+                 variables_on_cpu: bool = True) -> None:
+        self.decay = decay
+        self.ema = tf.train.ExponentialMovingAverage(decay=decay)
+        self.var_device_name = '/cpu:0' if variables_on_cpu else None
+        self.train_mode = None 
+
+    def build(self,
+              minimize_op: tf.Tensor,
+              update_vars: List[tf.Variable] = None,
+              name: str = "EMA") -> tf.Tensor:
+        with tf.variable_scope(name):
+            if update_vars is None:
+                update_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
+
+            with tf.control_dependencies([minimize_op]):
+                minimize_op = self.ema.apply(update_vars)
+
+            with tf.device(self.var_device_name):
+                # Make backup variables
+                with tf.variable_scope('BackupVariables'):
+                    backup_vars = [tf.get_variable(var.op.name,
+                                                   dtype=var.value().dtype,
+                                                   trainable=False,
+                                                   initializer=var.initialized_value())
+                                   for var in update_vars]
+
+                def ema_to_weights():
+                    return tf.group(*(tf.assign(var, self.ema.average(var).read_value())
+                                     for var in update_vars))
+
+                def save_weight_backups():
+                    return tf.group(*(tf.assign(bck, var.read_value())
+                                     for var, bck in zip(update_vars, backup_vars)))
+
+                def restore_weight_backups():
+                    return tf.group(*(tf.assign(var, bck.read_value())
+                                     for var, bck in zip(update_vars, backup_vars)))
+
+                train_switch_op = restore_weight_backups()
+                with tf.control_dependencies([save_weight_backups()]):
+                    test_switch_op = ema_to_weights() 
+
+            self.train_switch_op = train_switch_op
+            self.test_switch_op = test_switch_op
+            self.do_nothing_op = tf.no_op()
+
+        return minimize_op
+    
+    @property
+    def init_op(self) -> tf.Operation:
+        self.train_mode = False 
+        return self.test_switch_op
+
+    @property
+    def switch_to_train_op(self) -> tf.Operation:
+        assert self.train_mode is not None, "ema variables aren't initialized"
+        if not self.train_mode:
+            log.info("switching to train mode")
+            self.train_mode = True
+            return self.train_switch_op
+        return self.do_nothing_op
+
+    @property
+    def switch_to_test_op(self) -> tf.Operation:
+        assert self.train_mode is not None, "ema variables aren't initialized"
+        if self.train_mode:
+            log.info("switching to test mode")
+            self.train_mode = False
+            return self.test_switch_op
+        return self.do_nothing_op
+
