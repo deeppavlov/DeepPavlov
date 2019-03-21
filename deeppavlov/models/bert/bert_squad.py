@@ -46,7 +46,7 @@ class BertSQuADModel(LRScheduledTFModel):
     of Bert outputs.
 
     Args:
-        bert_config_file
+        bert_config_file: path to Bert configuration file
         keep_prob: dropout keep_prob for non-Bert layers
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
@@ -218,8 +218,19 @@ class BertSQuADModel(LRScheduledTFModel):
 
         return feed_dict
 
-    def train_on_batch(self, features: List[InputFeatures], y_st, y_end) -> Dict:
-        # TODO: docs
+    def train_on_batch(self, features: List[InputFeatures], y_st: List[List[int]], y_end: List[List[int]]) -> Dict:
+        """Train model on given batch.
+        This method calls train_op using features and labels from y_st and y_end
+
+        Args:
+            features: batch of InputFeatures instances
+            y_st: batch of lists of ground truth answer start positions
+            y_end: batch of lists of ground truth answer end positions
+
+        Returns:
+            dict with loss and learning_rate values
+
+        """
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
@@ -233,7 +244,15 @@ class BertSQuADModel(LRScheduledTFModel):
         return {'loss': loss, 'learning_rate': feed_dict[self.learning_rate_ph]}
 
     def __call__(self, features: List[InputFeatures]) -> Tuple[List[int], List[int], List[float], List[float]]:
-        # TODO: docs
+        """get predictions using features as input
+
+        Args:
+            features: batch of InputFeatures instances
+
+        Returns:
+            predictions: start, end positions, logits for answer and no_answer score
+
+        """
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
@@ -242,21 +261,39 @@ class BertSQuADModel(LRScheduledTFModel):
         st, end, logits, scores = self.sess.run([self.start_pred, self.end_pred, self.yp_logits, self.yp_score], feed_dict=feed_dict)
         return st, end, logits.tolist(), scores.tolist()
 
-    def process_event(self, event_name: str, data) -> None:
-        """
-        Processes events sent by trainer. Implements learning rate decay.
-
-        Args:
-            event_name: event_name sent by trainer
-            data: number of examples, epochs, metrics sent by trainer
-        """
-        super().process_event(event_name, data)
-
 
 @register('squad_bert_infer')
 class BertSQuADInferModel(Component):
-    def __init__(self, squad_model_config, vocab_file, do_lower_case, max_seq_length=512,
-                 batch_size: int = 10, lang='en', **kwargs):
+    """This model wraps BertSQuADModel to make predictions on longer than 512 tokens sequences.
+
+    It splits context on chunks with `max_seq_length - 3 - len(question)` length, preserving sentences boundaries.
+
+    It reassembles batches with chunks instead of full contexts to optimize performance, e.g.,:
+        batch_size = 5
+        number_of_contexts == 2
+        number of first context chunks == 8
+        number of second context chunks == 2
+
+        we will create two batches with 5 chunks
+
+    For each context the best answer is selected via logits or scores from BertSQuADModel.
+
+
+    Args:
+        squad_model_config: path to DeepPavlov BertSQuADModel config file
+        vocab_file: path to Bert vocab file
+        do_lower_case: set True if lowercasing is needed
+        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
+        batch_size: size of batch to use during inference
+        lang: either `en` or `ru`, it is used to select sentence tokenizer
+
+    """
+    def __init__(self, squad_model_config: str,
+                 vocab_file: str,
+                 do_lower_case: bool,
+                 max_seq_length: int = 512,
+                 batch_size: int = 10,
+                 lang='en', **kwargs) -> None:
         config = json.load(open(squad_model_config))
         config['chainer']['pipe'][0]['max_seq_length'] = max_seq_length
         self.model = build_model(config)
@@ -274,7 +311,17 @@ class BertSQuADInferModel(Component):
         else:
             raise RuntimeError('en and ru languages are supported only')
 
-    def __call__(self, contexts, questions, **kwargs):
+    def __call__(self, contexts: List[str], questions: List[str], **kwargs) -> Tuple[List[str], List[int], List[float]]:
+        """get predictions for given contexts and questions
+
+        Args:
+            contexts: batch of contexts
+            questions: batch of questions
+
+        Returns:
+            predictions: answer, answer start position, logits or scores
+
+        """
         batch_indices = []
         contexts_to_predict = []
         questions_to_predict = []

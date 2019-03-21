@@ -11,24 +11,43 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from logging import getLogger
 from typing import List, Any
 
 import tensorflow as tf
+from bert_dp.modeling import BertConfig, BertModel
+from bert_dp.optimization import AdamWeightDecayOptimizer
+
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
-from deeppavlov.core.commands.utils import expand_path
-from logging import getLogger
-
-from bert_dp.modeling import BertConfig, BertModel
-from bert_dp.optimization import AdamWeightDecayOptimizer
 
 logger = getLogger(__name__)
 
 
 @register('bert_ner')
 class BertNerModel(LRScheduledTFModel):
-    # TODO: docs
+    """Bert-based model for text named entity tagging.
+
+    Uses bert token representation to predict it's bio tag.
+    Representation is obtained by averaging several hidden layers from bert encoder.
+    Ner head consists of linear layers.
+￼
+￼   Args:
+￼       bert_config_file: path to Bert configuration file
+￼       n_tags: number of distinct tags
+￼       keep_prob: dropout keep_prob for non-Bert layers
+￼       attention_probs_keep_prob: keep_prob for Bert self-attention layers
+￼       hidden_keep_prob: keep_prob for Bert hidden layers
+        encoder_layer_ids: list of averaged layers from Bert encoder (layer ids)
+￼       return_probas: set True if return class probabilites instead of most probable label needed
+￼       optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
+￼       num_warmup_steps:
+￼       weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
+￼       pretrained_bert: pretrained Bert checkpoint
+￼       min_learning_rate: min value of learning rate if learning rate decay is used
+￼   """
     # TODO: add warmup
     # TODO: add head-only pre-training
     def __init__(self,
@@ -37,7 +56,7 @@ class BertNerModel(LRScheduledTFModel):
                  keep_prob: float,
                  attention_probs_keep_prob: float = None,
                  hidden_keep_prob: float = None,
-                 encoder_layer_ids: List[int] = list(range(12)),
+                 encoder_layer_ids: List[int] = tuple(range(12)),
                  optimizer: str = None,
                  num_warmup_steps: int = None,
                  weight_decay_rate: float = 0.01,
@@ -70,17 +89,12 @@ class BertNerModel(LRScheduledTFModel):
         self._init_graph()
 
         self._init_optimizer()
-        for var in tf.global_variables():
-            print('{:<31}'.format(repr(var.get_shape().as_list())), var.name)
 
         self.sess.run(tf.global_variables_initializer())
-        # print(self.sess.run(tf.trainable_variables()[-3]))
 
         if pretrained_bert is not None:
             pretrained_bert = str(expand_path(pretrained_bert))
 
-        # print(tf.train.checkpoint_exists(pretrained_bert))
-        # print(tf.train.checkpoint_exists(str(self.load_path.resolve())))
         if tf.train.checkpoint_exists(pretrained_bert) \
                 and not tf.train.checkpoint_exists(str(self.load_path.resolve())):
             logger.info('[initializing model with Bert from {}]'.format(pretrained_bert))
@@ -89,7 +103,6 @@ class BertNerModel(LRScheduledTFModel):
                 exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'ner'))
             saver = tf.train.Saver(var_list)
             saver.restore(self.sess, pretrained_bert)
-        # print(self.sess.run(tf.trainable_variables()[-3]))
 
         if self.load_path is not None:
             self.load()
@@ -114,10 +127,9 @@ class BertNerModel(LRScheduledTFModel):
             logits = tf.layers.dense(output_layer, units=self.n_tags, name="output_dense")
 
             self.y_predictions = tf.argmax(logits, -1)
-            self.y_probas = tf.nn.sigmoid(logits)
+            self.y_probas = tf.nn.softmax(logits, axis=2)
 
         with tf.variable_scope("loss"):
-            # NOTE: same mask as for inputs?
             y_mask = tf.cast(self.input_masks_ph, tf.float32)
             self.loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_ph,
                                                                logits=logits,
@@ -215,16 +227,6 @@ class BertNerModel(LRScheduledTFModel):
         else:
             pred = self.sess.run(self.y_probas, feed_dict=feed_dict)
         return pred
-
-    def process_event(self, event_name: str, data) -> None:
-        """
-        Processes events sent by trainer. Implements learning rate decay.
-
-        Args:
-            event_name: event_name sent by trainer
-            data: number of examples, epochs, metrics sent by trainer
-        """
-        super().process_event(event_name, data)
 
 
 class MaskCutter(Component):

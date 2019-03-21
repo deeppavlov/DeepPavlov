@@ -39,11 +39,11 @@
     "validation_patience": 10,
     "metrics": [
       {
-        "name": "squad_f1",
+        "name": "squad_v2_f1",
         "inputs": ["ans_raw", "ans_predicted"]
       },
       {
-        "name": "exact_match",
+        "name": "squad_v2_em",
         "inputs": ["ans_raw", "ans_predicted"]
       }
     ]
@@ -62,7 +62,17 @@
     "labels": {
       "telegram_utils": "SquadModel",
       "server_utils": "SquadModel"
-    }
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/multi_cased_L-12_H-768_A-12.zip",
+        "subdir": "{DOWNLOADS_PATH}/bert_models"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/squad_ru_bert.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      }
+      ]
   }
 }
 

@@ -63,11 +63,19 @@
     "validation_patience": 10,
     "metrics": [
       {
-        "name": "squad_f1",
+        "name": "squad_v1_f1",
         "inputs": ["ans", "ans_predicted"]
       },
       {
-        "name": "exact_match",
+        "name": "squad_v1_em",
+        "inputs": ["ans", "ans_predicted"]
+      },
+      {
+        "name": "squad_v2_f1",
+        "inputs": ["ans", "ans_predicted"]
+      },
+      {
+        "name": "squad_v2_em",
         "inputs": ["ans", "ans_predicted"]
       }
     ],
@@ -80,7 +88,8 @@
       "MODELS_PATH": "{ROOT_PATH}/models"
     },
     "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
     ],
     "labels": {
       "telegram_utils": "SquadModel",
@@ -90,6 +99,10 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
         "subdir": "{DOWNLOADS_PATH}/bert_models"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/squad_bert.tar.gz",
+        "subdir": "{MODELS_PATH}"
       }
       ]
   }

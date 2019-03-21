@@ -75,7 +75,23 @@ class BertPreprocessor(Component):
 
 @register('bert_ner_preprocessor')
 class BertNerPreprocessor(Component):
-    # TODO: docs
+    """Takes tokens and splits them into bert subtokens, encode subtokens with their indices.
+    Creates mask of subtokens (one for first subtoken, zero for later subtokens).
+    
+    If tags are provided, calculate tags for subtokens.
+
+    Args:
+        vocab_file: path to vocabulary
+        do_lower_case: set True if lowercasing is needed
+        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
+        max_subword_length: replace token to <unk> if it's length is larger than this
+            (defaults to None, which is equal to +infinity)
+
+    Attributes:
+        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
+        max_subword_length: rmax lenght of a bert subtoken
+        tokenizer: instance of Bert FullTokenizer
+    """
 
     def __init__(self,
                  vocab_file: str,

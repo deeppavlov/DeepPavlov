@@ -15,7 +15,7 @@
 
 import json
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
@@ -47,12 +47,14 @@ class SquadDatasetReader(DatasetReader):
     url_sber_squad = 'http://files.deeppavlov.ai/datasets/sber_squad-v1.1.tar.gz'
     url_multi_squad = 'http://files.deeppavlov.ai/datasets/multiparagraph_squad.tar.gz'
 
-    def read(self, dir_path: str, dataset: str = 'SQuAD', url=None, *args, **kwargs) -> Dict[str, Dict[str, Any]]:
+    def read(self, dir_path: str, dataset: Optional[str] = 'SQuAD', url: Optional[str] = None, *args, **kwargs)\
+            -> Dict[str, Dict[str, Any]]:
         """
 
         Args:
             dir_path: path to save data
-            dataset: dataset name: ``'SQuAD'``, ``'SberSQuAD'`` or ``'MultiSQuAD'``
+            dataset: default dataset names: ``'SQuAD'``, ``'SberSQuAD'`` or ``'MultiSQuAD'``
+            url: link to archive with dataset, use url argument if non-default dataset is used
 
         Returns:
             dataset split on train/valid
@@ -60,14 +62,14 @@ class SquadDatasetReader(DatasetReader):
         Raises:
             RuntimeError: if `dataset` is not one of these: ``'SQuAD'``, ``'SberSQuAD'``, ``'MultiSQuAD'``.
         """
-        if dataset == 'SQuAD':
+        if url is not None:
+            self.url = url
+        elif dataset == 'SQuAD':
             self.url = self.url_squad
         elif dataset == 'SberSQuAD':
             self.url = self.url_sber_squad
         elif dataset == 'MultiSQuAD':
             self.url = self.url_multi_squad
-        elif url is not None:
-            self.url = url
         else:
             raise RuntimeError('Dataset {} is unknown'.format(dataset))
 
@@ -107,12 +109,14 @@ class MultiSquadDatasetReader(DatasetReader):
     url_multi_squad_retr = 'http://files.deeppavlov.ai/datasets/multi_squad_retr_enwiki20161221.tar.gz'
     url_multi_squad_ru_retr = 'http://files.deeppavlov.ai/datasets/multi_squad_ru_retr.tar.gz'
 
-    def read(self, dir_path: str, dataset: str = 'MultiSQuADRetr', url=None, *args, **kwargs) -> Dict[str, Dict[str, Any]]:
+    def read(self, dir_path: str, dataset: Optional[str] = 'MultiSQuADRetr', url: Optional[str] = None, *args,
+             **kwargs) -> Dict[str, Dict[str, Any]]:
         """
 
         Args:
             dir_path: path to save data
-            dataset: dataset name: ``'MultiSQuADRetr'``, ``'MultiSQuADRuRetr'``
+            dataset: default dataset names: ``'MultiSQuADRetr'``, ``'MultiSQuADRuRetr'``
+            url: link to archive with dataset, use url argument if non-default dataset is used
 
         Returns:
             dataset split on train/valid
@@ -120,12 +124,12 @@ class MultiSquadDatasetReader(DatasetReader):
         Raises:
             RuntimeError: if `dataset` is not one of these: ``'MultiSQuADRetr'``, ``'MultiSQuADRuRetr'``.
         """
-        if dataset == 'MultiSQuADRetr':
+        if url is not None:
+            self.url = url
+        elif dataset == 'MultiSQuADRetr':
             self.url = self.url_multi_squad_retr
         elif dataset == 'MultiSQuADRuRetr':
             self.url = self.url_multi_squad_ru_retr
-        elif url is not None:
-            self.url = url
         else:
             raise RuntimeError('Dataset {} is unknown'.format(dataset))
 

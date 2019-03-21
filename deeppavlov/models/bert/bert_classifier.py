@@ -13,10 +13,12 @@
 # limitations under the License.
 
 from logging import getLogger
+from typing import List, Dict, Union
 
 import tensorflow as tf
 from bert_dp.modeling import BertConfig, BertModel
 from bert_dp.optimization import AdamWeightDecayOptimizer
+from bert_dp.preprocessing import InputFeatures
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
@@ -27,14 +29,32 @@ logger = getLogger(__name__)
 
 @register('bert_classifier')
 class BertClassifierModel(LRScheduledTFModel):
-    # TODO: docs
+    """Bert-based model for text classification.
+
+    It uses output from [CLS] token and predicts labels using linear transformation.
+
+    Args:
+        bert_config_file: path to Bert configuration file
+        n_classes: number of classes
+        keep_prob: dropout keep_prob for non-Bert layers
+        one_hot_labels: set True if one-hot encoding for labels is used
+        multilabel: set True if it is multi-label classification
+        return_probas: set True if return class probabilites instead of most probable label needed
+        attention_probs_keep_prob: keep_prob for Bert self-attention layers
+        hidden_keep_prob: keep_prob for Bert hidden layers
+        optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
+        num_warmup_steps:
+        weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
+        pretrained_bert: pretrained Bert checkpoint
+        min_learning_rate: min value of learning rate if learning rate decay is used
+    """
     # TODO: add warmup
     # TODO: add head-only pre-training
     def __init__(self, bert_config_file, n_classes, keep_prob,
-                 one_hot_labels=False, multilabel=False,
+                 one_hot_labels=False, multilabel=False, return_probas=False,
                  attention_probs_keep_prob=None, hidden_keep_prob=None,
                  optimizer=None, num_warmup_steps=None, weight_decay_rate=0.01,
-                 return_probas=False, pretrained_bert=None, min_learning_rate=1e-06, **kwargs) -> None:
+                 pretrained_bert=None, min_learning_rate=1e-06, **kwargs) -> None:
         super().__init__(**kwargs)
 
         self.return_probas = return_probas
@@ -78,7 +98,7 @@ class BertClassifierModel(LRScheduledTFModel):
             logger.info('[initializing model with Bert from {}]'.format(pretrained_bert))
             # Exclude optimizer and classification variables from saved variables
             var_list = self._get_saveable_variables(
-                exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'classification'))
+                exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'output_weights', 'output_bias'))
             saver = tf.train.Saver(var_list)
             saver.restore(self.sess, pretrained_bert)
 
@@ -99,13 +119,12 @@ class BertClassifierModel(LRScheduledTFModel):
         output_layer = self.bert.get_pooled_output()
         hidden_size = output_layer.shape[-1].value
 
-        with tf.variable_scope('classification'):
-            output_weights = tf.get_variable(
-                "output_weights", [self.n_classes, hidden_size],
-                initializer=tf.truncated_normal_initializer(stddev=0.02))
+        output_weights = tf.get_variable(
+            "output_weights", [self.n_classes, hidden_size],
+            initializer=tf.truncated_normal_initializer(stddev=0.02))
 
-            output_bias = tf.get_variable(
-                "output_bias", [self.n_classes], initializer=tf.zeros_initializer())
+        output_bias = tf.get_variable(
+            "output_bias", [self.n_classes], initializer=tf.zeros_initializer())
 
         with tf.variable_scope("loss"):
             output_layer = tf.nn.dropout(output_layer, keep_prob=self.keep_prob_ph)
@@ -180,7 +199,18 @@ class BertClassifierModel(LRScheduledTFModel):
 
         return feed_dict
 
-    def train_on_batch(self, features, y):
+    def train_on_batch(self, features: List[InputFeatures], y: Union[List[int], List[List[int]]]) -> Dict:
+        """Train model on given batch.
+        This method calls train_op using features and y (labels).
+
+        Args:
+            features: batch of InputFeatures
+            y: batch of labels (class id or one-hot encoding)
+
+        Returns:
+            dict with loss and learning_rate values
+
+        """
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
@@ -190,8 +220,16 @@ class BertClassifierModel(LRScheduledTFModel):
         _, loss = self.sess.run([self.train_op, self.loss], feed_dict=feed_dict)
         return {'loss': loss, 'learning_rate': feed_dict[self.learning_rate_ph]}
 
-    def __call__(self, features):
+    def __call__(self, features: List[InputFeatures]) -> Union[List[int], List[List[float]]]:
+        """Make prediction for given features (texts).
 
+        Args:
+            features: batch of InputFeatures
+
+        Returns:
+            predicted classes or probabilities of each class
+
+        """
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
@@ -202,13 +240,3 @@ class BertClassifierModel(LRScheduledTFModel):
         else:
             pred = self.sess.run(self.y_probas, feed_dict=feed_dict)
         return pred
-
-    def process_event(self, event_name: str, data) -> None:
-        """
-        Processes events sent by trainer. Implements learning rate decay.
-
-        Args:
-            event_name: event_name sent by trainer
-            data: number of examples, epochs, metrics sent by trainer
-        """
-        super().process_event(event_name, data)
