@@ -177,7 +177,7 @@ Pretrained model is available and can be downloaded (~2.5Gb):
 SDSJ Task B
 ~~~~~~~~~~~
 
-Pretrained models is available and can be downloaded (~4.8Gb):
+Pretrained models are available and can be downloaded (~4.8Gb):
 
 .. code:: bash
 
