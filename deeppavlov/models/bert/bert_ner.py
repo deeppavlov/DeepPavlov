@@ -142,7 +142,7 @@ class BertNerModel(LRScheduledTFModel):
             self.y_probas = tf.nn.softmax(logits, axis=2)
 
         with tf.variable_scope("loss"):
-            y_mask = tf.cast(self.input_masks_ph, tf.float32)
+            y_mask = tf.cast(self.y_masks_ph, tf.float32)
             if (self.focal_alpha is None) or (self.focal_gamma is None):
                 self.loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_ph,
                                                                    logits=logits,
@@ -214,12 +214,12 @@ class BertNerModel(LRScheduledTFModel):
         # target_tensor > zeros <=> z=1, so negative coefficient = 0.
         neg_p_sub = array_ops.where(labels > zeros, zeros, probs)
         per_entry_cross_ent = - alpha * (pos_p_sub ** gamma) *\
-                tf.log(tf.clip_by_value(probs, 1e-8, 1.0)) \
-                - (1 - alpha) * (neg_p_sub ** gamma) * \
-                tf.log(tf.clip_by_value(1.0 - probs, 1e-8, 1.0))
+            tf.log(tf.clip_by_value(probs, 1e-8, 1.0)) \
+            - (1 - alpha) * (neg_p_sub ** gamma) * \
+            tf.log(tf.clip_by_value(1.0 - probs, 1e-8, 1.0))
         if weights is not None:
             per_entry_cross_ent = tf.multiply(per_entry_cross_ent,
-                    tf.expand_dims(weights, -1))
+                                              tf.expand_dims(weights, -1))
         return tf.reduce_sum(per_entry_cross_ent)
 
     def _init_placeholders(self):
@@ -234,6 +234,9 @@ class BertNerModel(LRScheduledTFModel):
                                              name='token_types_ph')
 
         self.y_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='y_ph')
+        self.y_masks_ph = tf.placeholder(shape=(None, None),
+                                         dtype=tf.int32,
+                                         name='y_mask_ph')
 
         self.learning_rate_ph = tf.placeholder_with_default(0.0, shape=[], name='learning_rate_ph')
         self.keep_prob_ph = tf.placeholder_with_default(1.0, shape=[], name='keep_prob_ph')
@@ -283,11 +286,12 @@ class BertNerModel(LRScheduledTFModel):
         else:
             self.ema = None
 
-    def _build_feed_dict(self, input_ids, input_masks, token_types, y=None):
+    def _build_feed_dict(self, input_ids, input_masks, token_types, y_masks, y=None):
         feed_dict = {
             self.input_ids_ph: input_ids,
             self.input_masks_ph: input_masks,
             self.token_types_ph: token_types,
+            self.y_masks_ph: y_masks
         }
         if y is not None:
             feed_dict.update({
@@ -302,6 +306,7 @@ class BertNerModel(LRScheduledTFModel):
     def train_on_batch(self,
                        input_ids: List[List[int]],
                        input_masks: List[List[int]],
+                       y_masks: List[List[int]],
                        y: List[List[int]]) -> dict:
         input_type_ids = [[0] * len(inputs) for inputs in input_ids]
         for ids, masks, ys in zip(input_ids, input_masks, y):
@@ -309,7 +314,8 @@ class BertNerModel(LRScheduledTFModel):
                 f"ids({len(ids)}) = {ids}, masks({len(masks)}) = {masks},"\
                 f" ys({len(ys)}) = {ys} should have the same length."
 
-        feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids, y)
+        feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids,
+                                          y_masks, y)
 
         if self.ema:
             self.sess.run(self.ema.switch_to_train_op)
@@ -318,14 +324,16 @@ class BertNerModel(LRScheduledTFModel):
 
     def __call__(self,
                  input_ids: List[List[int]],
-                 input_masks: List[List[int]]):
+                 input_masks: List[List[int]],
+                 y_masks: List[List[int]]):
         input_type_ids = [[0] * len(inputs) for inputs in input_ids]
         for ids, masks in zip(input_ids, input_masks):
             assert len(ids) == len(masks), \
                 f"ids({len(ids)}) = {ids}, masks({len(masks)}) = {masks}"\
                 f" should have the same length."
 
-        feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids)
+        feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids,
+                                          y_masks)
         if self.ema:
             self.sess.run(self.ema.switch_to_test_op)
         if not self.return_probas:
@@ -350,7 +358,7 @@ class MaskCutter(Component):
                 if m_list[j]:
                     samples_cut[-1].append(s_list[j])
         return samples_cut
- 
+
 
 class ExponentialMovingAverage:
 
@@ -360,7 +368,7 @@ class ExponentialMovingAverage:
         self.decay = decay
         self.ema = tf.train.ExponentialMovingAverage(decay=decay)
         self.var_device_name = '/cpu:0' if variables_on_cpu else None
-        self.train_mode = None 
+        self.train_mode = None
 
     def build(self,
               minimize_op: tf.Tensor,
