@@ -189,6 +189,8 @@ Therefore, this model is available only for interaction.
 +                  +-------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 |                  |`RuSentiment`_     |      | :config:`RuWiki+Lenta emb <classifiers/rusentiment_cnn.json>`                                   | F1-weighted | 0.6541 | 0.7016 |  6.2 Gb   |
 +                  +                   +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |                   |      | :config:`Twitter emb super-convergence <classifiers/rusentiment_bigru_superconv.json>` [6]_     |             | 0.7301 | 0.7576 |  3.4 Gb   |
++                  +                   +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
 |                  |                   |      | :config:`ELMo <classifiers/rusentiment_elmo.json>`                                              |             | 0.7293 | 0.7648 |  700 Mb   |
 +                  +                   +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
 |                  |                   |      | :config:`Multi-language BERT <classifiers/rusentiment_bert.json>`                               |             | 0.6809 | 0.7193 |  1900 Mb  |
@@ -416,3 +418,5 @@ References
 .. [4] P. Bojanowski\ *, E. Grave*, A. Joulin, T. Mikolov, Enriching Word Vectors with Subword Information.
 
 .. [5] Peters, Matthew E., et al. "Deep contextualized word representations." arXiv preprint arXiv:1802.05365 (2018).
+
+.. [6] Smith L. N., Topin N. Super-convergence: Very fast training of residual networks using large learning rates. – 2018.

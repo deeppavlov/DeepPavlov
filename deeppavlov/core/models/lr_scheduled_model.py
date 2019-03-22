@@ -12,23 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Any, Union, Tuple, List, Optional
+from logging import getLogger
+from abc import abstractmethod
 import math
 from enum import IntEnum
-from logging import getLogger
-from typing import Iterable, Optional, Any, Union, Tuple
 
 import numpy as np
-import tensorflow as tf
 
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.registry import cls_from_str
-from .tf_model import TFModel
+
 
 log = getLogger(__name__)
 
 
 class DecayType(IntEnum):
-    ''' Data class, each decay type is assigned a number. '''
+    """ Data class, each decay type is assigned a number. """
     NO = 1
     LINEAR = 2
     COSINE = 3
@@ -38,7 +37,18 @@ class DecayType(IntEnum):
     TRAPEZOID = 7
 
     @classmethod
-    def from_str(cls, label: str):
+    def from_str(cls, label: str) -> int:
+        """
+        Convert given string label of decay type to special index
+
+        Args:
+            label: name of decay type.
+                Set of values: `"linear"`, `"cosine"`, `"exponential"`,
+                 `"onecycle"`, `"trapezoid"`, `["polynomial", K]`, where K is a polynomial power
+
+        Returns:
+            index of decay type
+        """
         label_norm = label.replace('1', 'one').upper()
         if label_norm in cls.__members__:
             return DecayType[label_norm]
@@ -46,14 +56,14 @@ class DecayType(IntEnum):
             raise NotImplementedError
 
 
-class DecayScheduler():
-    '''
+class DecayScheduler:
+    """
     Given initial and endvalue, this class generates the next value
     depending on decay type and number of iterations. (by calling next_val().)
-    '''
+    """
 
     def __init__(self, dec_type: Union[str, DecayType], start_val: float,
-                 num_it: int = None, end_val: float = None, extra: float = None):
+                 num_it: int = 0, end_val: float = None, extra: float = None) -> None:
         if isinstance(dec_type, DecayType):
             self.dec_type = dec_type
         else:
@@ -73,7 +83,7 @@ class DecayScheduler():
         return f"DecayScheduler(start_val={self.start_val}, end_val={self.end_val}"\
             f", dec_type={self.dec_type.name}, num_it={self.nb}, extra={self.extra})"
 
-    def next_val(self):
+    def next_val(self) -> float:
         self.iters = min(self.iters + 1, self.nb)
         # print(f"iters = {self.iters}/{self.nb}")
         if self.dec_type == DecayType.NO:
@@ -116,45 +126,86 @@ class DecayScheduler():
 DType = Union[str, DecayType]
 
 
-class LRScheduledTFModel(TFModel):
+class LRScheduledModel:
     """
-    TFModel enhanced with optimizer, learning rate and momentum
+    Abstract model enhanced with optimizer, learning rate and momentum
     management and search.
+
+    Args:
+        learning_rate: learning rate value or ranges
+        learning_rate_decay: learning rate decay type
+                Set of values: `"linear"`, `"onecycle"`, `"trapezoid"`,
+                               `"exponential"`, `"cosine"`, `["polynomial", K]`, where K is a polynomial power
+        learning_rate_decay_epochs: number of epochs for learning rate decay process
+        learning_rate_decay_batches: number of batches for learning rate decay process
+        learning_rate_drop_div: division coefficient for learning rate in case of
+                exceeding patience `learning_rate_drop_patience`
+        learning_rate_drop_patience: patience limit of loss increase
+        momentum: range of momentum values
+        momentum_decay: momentum decay type.
+                Set of values: `"linear"`, `"onecycle"`, `"trapezoid"`,
+                               `"exponential"`, `"cosine"`, `["polynomial", K]`, where K is a polynomial power
+        momentum_decay_epochs: number of epochs for momentum decay process
+        momentum_decay_batches: number of batches for momentum decay process
+        fit_batch_size: batch size when fitting learning rate
+        fit_learning_rate: range of learning rate values to explore
+        fit_learning_rate_div: division coefficient for best learning rate obtained from fitting,
+                divided learning rate value will be used when training model
+        fit_beta: smoothing coefficient for loss calculation when fitting learning rate
+        fit_min_batches: number of batches to train model on before fitting learning rate
+        fit_max_batches: number of batches to train model on when fitting learning rate
+        *args: other parameters
+        **kwargs: other parameters
     """
+
+    @abstractmethod
+    def _init_learning_rate_variable(self):
+        pass
+
+    @abstractmethod
+    def _init_momentum_variable(self):
+        pass
+
+    @abstractmethod
+    def _update_graph_variables(self, learning_rate=None, momentum=None):
+        """
+        Update learning rate in graph if `learning_rate` is not None,
+        Update momentum in graph if `momentum` is not None
+        """
+        if learning_rate is not None:
+            # update learning rate
+            pass
+        if momentum is not None:
+            # update momentum
+            pass
+
     def __init__(self,
-                 learning_rate: Union[float, Tuple[float, float]] = None,
-                 learning_rate_decay: Union[DType, Tuple[DType, Any]] = DecayType.NO,
+                 learning_rate: Union[None, float, Tuple[float, float]] = None,
+                 learning_rate_decay: Union[DType, Tuple[DType, float]] = DecayType.NO,
                  learning_rate_decay_epochs: int = 0,
                  learning_rate_decay_batches: int = 0,
                  learning_rate_drop_div: float = 2.0,
-                 learning_rate_drop_patience: int = None,
-                 momentum: Union[float, Tuple[float, float]] = None,
-                 momentum_decay: Union[DType, Tuple[DType, Any]] = DecayType.NO,
+                 learning_rate_drop_patience: Optional[int] = None,
+                 momentum: Union[None, float, Tuple[float, float]] = None,
+                 momentum_decay: Union[DType, Tuple[DType, float]] = DecayType.NO,
                  momentum_decay_epochs: int = 0,
                  momentum_decay_batches: int = 0,
-                 optimizer: str = 'AdamOptimizer',
-                 clip_norm: float = None,
-                 fit_batch_size: Union[int, str] = None,
-                 fit_learning_rate: Tuple[float, float] = [1e-7, 100],
+                 fit_batch_size: Union[None, int, str] = None,
+                 fit_learning_rate: Tuple[float, float] = (1e-7, 100),
                  fit_learning_rate_div: float = 10.,
                  fit_beta: float = 0.98,
                  fit_min_batches: int = 10,
-                 fit_max_batches: int = None,
+                 fit_max_batches: Optional[int] = None,
                  *args, **kwargs) -> None:
+        """
+        Initialize learning rate scheduler
+        """
         if learning_rate_decay_epochs and learning_rate_decay_batches:
             raise ConfigError("isn't able to update learning rate every batch"
-                              " and every epoch sumalteniously")
+                              " and every epoch simultaneously")
         if momentum_decay_epochs and momentum_decay_batches:
             raise ConfigError("isn't able to update momentum every batch"
-                              " and every epoch sumalteniously")
-        super().__init__(*args, **kwargs)
-
-        try:
-            self._optimizer = cls_from_str(optimizer)
-        except Exception:
-            self._optimizer = getattr(tf.train, optimizer.split(':')[-1])
-        if not issubclass(self._optimizer, tf.train.Optimizer):
-            raise ConfigError("`optimizer` should be tensorflow.train.Optimizer subclass")
+                              " and every epoch simultaneously")
 
         start_val, end_val = learning_rate, None
         if isinstance(learning_rate, (tuple, list)):
@@ -170,16 +221,8 @@ class LRScheduledTFModel(TFModel):
 
         self._lr_schedule = DecayScheduler(start_val=start_val, end_val=end_val,
                                            num_it=num_it, dec_type=dec_type, extra=extra)
-        #self._lr_var = tf.placeholder(tf.float32, shape=[], name='learning_rate')
-        self._lr_var = tf.Variable(self._lr or 0., dtype=tf.float32, name='learning_rate')
+        self._lr_var = self._init_learning_rate_variable()
 
-        if (momentum is None) and\
-                self._optimizer not in (tf.train.AdagradDAOptimizer,
-                                        tf.train.AdagradOptimizer,
-                                        tf.train.GradientDescentOptimizer,
-                                        tf.train.ProximalGradientDescentOptimizer,
-                                        tf.train.ProximalAdagradOptimizer):
-            momentum = 0.9
         start_val, end_val = momentum, None
         if isinstance(momentum, (tuple, list)):
             start_val, end_val = momentum
@@ -189,37 +232,77 @@ class LRScheduledTFModel(TFModel):
 
         self._mom = start_val
         num_it, self._mom_update_on_batch = momentum_decay_epochs, False
-        if momentum_decay_batches > 0:
-            num_it, self._mom_update_on_batch = momentum_decay_batches, True
+        self._mom_update_on_batch = momentum_decay_batches > 0
+        num_it = momentum_decay_epochs if self._mom_update_on_batch else momentum_decay_batches
 
         self._mom_schedule = DecayScheduler(start_val=start_val, end_val=end_val,
                                             num_it=num_it, dec_type=dec_type,
                                             extra=extra)
-        # self._mom_var = tf.placeholder_with_default(0.9, shape=[], name='momentum')
-        # self._mom_var = tf.placeholder(tf.float32, shape=[], name='momentum')
-        self._mom_var = tf.Variable(self._mom or 0., dtype=tf.float32, name='momentum')
+        self._mom_var = self._init_momentum_variable()
 
         self._learning_rate_drop_patience = learning_rate_drop_patience
         self._learning_rate_drop_div = learning_rate_drop_div
         self._learning_rate_cur_impatience = 0.
         self._learning_rate_last_impatience = 0.
         self._learning_rate_cur_div = 1.
-        self._clip_norm = clip_norm
         self._fit_batch_size = fit_batch_size
         self._fit_learning_rate = fit_learning_rate
         self._fit_learning_rate_div = fit_learning_rate_div
         self._fit_beta = fit_beta
         self._fit_min_batches = fit_min_batches
         self._fit_max_batches = fit_max_batches
-        self._external_lr = False
-        self._external_mom = False
 
-    def load(self, exclude_scopes: Optional[Iterable] = ('Optimizer',
-                                                         'learning_rate',
-                                                         'momentum')):
-        return super().load(exclude_scopes=exclude_scopes)
+    def get_learning_rate(self):
+        """
+        Return current learning rate value
+
+        Returns:
+            learning rate
+        """
+        if self._lr is None:
+            raise ConfigError("Please specify `learning_rate` parameter"
+                              " before training")
+        return self._lr
+
+    def get_learning_rate_variable(self):
+        """
+        Return current learning rate variable
+
+        Returns:
+            learning rate variable
+        """
+        return self._lr_var
+
+    def get_momentum(self):
+        """
+        Return current momentum value
+
+        Returns:
+            momentum
+        """
+        return self._mom
+
+    def get_momentum_variable(self):
+        """
+        Return current momentum variable
+
+        Returns:
+            momentum variable
+        """
+        return self._mom_var
 
     def fit(self, *args):
+        """
+        Find the best learning rate schedule, and set obtained values of learning rate
+        and momentum for further model training. Best learning rate will be divided
+        by `fit_learning_rate_div` for further training model.
+
+        Args:
+            *args: arguments
+
+        Returns:
+
+        """
         data = list(zip(*args))
         self.save()
         if self._fit_batch_size is None:
@@ -238,7 +321,7 @@ class LRScheduledTFModel(TFModel):
                                            num_it=num_batches)
         self._lr = _lr_find_schedule.start_val
         self._mom = 0.
-        self._update_tf_variables(learning_rate=self._lr, momentum=self._mom)
+        self._update_graph_variables(learning_rate=self._lr, momentum=self._mom)
         best_lr = _lr_find_schedule.start_val
         for i in range(num_batches):
             batch_start = (i * bs) % data_len
@@ -259,7 +342,7 @@ class LRScheduledTFModel(TFModel):
                 best_loss = smoothed_loss
                 best_lr = self._lr
             self._lr = _lr_find_schedule.next_val()
-            self._update_tf_variables(learning_rate=self._lr)
+            self._update_graph_variables(learning_rate=self._lr)
 
             if i >= num_batches:
                 break
@@ -270,7 +353,7 @@ class LRScheduledTFModel(TFModel):
         if self._lr_schedule.dec_type in (DecayType.ONECYCLE, DecayType.TRAPEZOID):
             start_val = end_val / self._fit_learning_rate_div
         elif self._lr_schedule.dec_type in (DecayType.POLYNOMIAL, DecayType.EXPONENTIAL,
-                                            DecayType.LINEAR):
+                                            DecayType.LINEAR, DecayType.COSINE):
             start_val = end_val
             end_val = end_val / self._fit_learning_rate_div
         self._lr_schedule = DecayScheduler(start_val=start_val,
@@ -284,11 +367,24 @@ class LRScheduledTFModel(TFModel):
         self.load()
         self._lr = self._lr_schedule.start_val
         self._mom = self._mom_schedule.start_val
-        self._update_tf_variables(learning_rate=self._lr, momentum=self._mom)
+        self._update_graph_variables(learning_rate=self._lr, momentum=self._mom)
         return {'smoothed_loss': losses, 'learning_rate': lrs}
 
     @staticmethod
-    def _get_best(values, losses, max_loss_div=0.9, min_val_div=10.0):
+    def _get_best(values: List[float], losses: List[float],
+                  max_loss_div: float = 0.9, min_val_div: float = 10.0) -> float:
+        """
+        Find the best value according to given losses
+
+        Args:
+            values: list of considered values
+            losses: list of obtained loss values corresponding to `values`
+            max_loss_div: maximal divergence of loss to be considered significant
+            min_val_div: minimum divergence of loss to be considered significant
+
+        Returns:
+            best value divided by `min_val_div`
+        """
         assert len(values) == len(losses), "lengths of values and losses should be equal"
         min_ind = np.argmin(losses)
         for i in range(min_ind - 1, 0, -1):
@@ -297,43 +393,18 @@ class LRScheduledTFModel(TFModel):
                 return values[i + 1]
         return values[min_ind] / min_val_div
 
-    def get_train_op(self,
-                     *args,
-                     learning_rate: Union[float, tf.placeholder] = None,
-                     optimizer: tf.train.Optimizer = None,
-                     momentum: Union[float, tf.placeholder] = None,
-                     clip_norm: float = None,
-                     **kwargs):
-        if learning_rate is not None:
-            self._external_lr = True
-            kwargs['learning_rate'] = learning_rate
-        else:
-            kwargs['learning_rate'] = self.get_learning_rate_var()
-        kwargs['optimizer'] = optimizer or self.get_optimizer()
-        kwargs['clip_norm'] = clip_norm or self._clip_norm
+    def process_event(self, event_name: str, data: dict) -> None:
+        """
+        Update learning rate and momentum variables after event (given by `event_name`)
 
-        momentum_param = 'momentum'
-        if kwargs['optimizer'] == tf.train.AdamOptimizer:
-            momentum_param = 'beta1'
-        elif kwargs['optimizer'] == tf.train.AdadeltaOptimizer:
-            momentum_param = 'rho'
+        Args:
+            event_name: name of event after which the method was called.
+                    Set of values: `"after_validation"`, `"after_batch"`, `"after_epoch"`, `"after_train_log"`
+            data: dictionary with parameters values
 
-        if momentum is not None:
-            self._external_mom = True
-            kwargs[momentum_param] = momentum
-        elif self.get_momentum() is not None:
-            kwargs[momentum_param] = self.get_momentum_var()
-        return super().get_train_op(*args, **kwargs)
-
-    def _update_tf_variables(self, learning_rate=None, momentum=None):
-        if learning_rate is not None:
-            self.sess.run(tf.assign(self._lr_var, learning_rate))
-            #log.info(f"Learning rate = {learning_rate}")
-        if momentum is not None:
-            self.sess.run(tf.assign(self._mom_var, momentum))
-            #log.info(f"Momentum      = {momentum}")
-
-    def process_event(self, event_name, data):
+        Returns:
+            None
+        """
         if event_name == "after_validation":
             if data['impatience'] > self._learning_rate_last_impatience:
                 self._learning_rate_cur_impatience += 1
@@ -348,42 +419,25 @@ class LRScheduledTFModel(TFModel):
                 self._learning_rate_cur_impatience = 0
                 self._learning_rate_cur_div *= self._learning_rate_drop_div
                 self._lr /= self._learning_rate_drop_div
-                self._update_tf_variables(learning_rate=self._lr)
-                log.info(f"New learning rate divider = {self._learning_rate_cur_div}")
+                self._update_graph_variables(learning_rate=self._lr)
+                log.info(f"New learning rate dividor = {self._learning_rate_cur_div}")
         if event_name == 'after_batch':
             if (self._lr is not None) and self._lr_update_on_batch:
                 self._lr = self._lr_schedule.next_val() / self._learning_rate_cur_div
-                self._update_tf_variables(learning_rate=self._lr)
+                self._update_graph_variables(learning_rate=self._lr)
             if (self._mom is not None) and self._mom_update_on_batch:
                 self._mom = min(1., max(0., self._mom_schedule.next_val()))
-                self._update_tf_variables(momentum=self._mom)
+                self._update_graph_variables(momentum=self._mom)
         if event_name == 'after_epoch':
             if (self._lr is not None) and not self._lr_update_on_batch:
                 self._lr = self._lr_schedule.next_val() / self._learning_rate_cur_div
-                self._update_tf_variables(learning_rate=self._lr)
+                self._update_graph_variables(learning_rate=self._lr)
             if (self._mom is not None) and not self._mom_update_on_batch:
                 self._mom = min(1., max(0., self._mom_schedule.next_val()))
-                self._update_tf_variables(momentum=self._mom)
+                self._update_graph_variables(momentum=self._mom)
         if event_name == 'after_train_log':
-            if (self._lr is not None) and not self._external_lr:
+            if (self._lr is not None) and ('learning_rate' not in data):
                 data['learning_rate'] = self._lr
-            if (self._mom is not None) and not self._external_mom:
+            if (self._mom is not None) and ('momentum' not in data):
                 data['momentum'] = self._mom
 
-    def get_learning_rate(self):
-        if self._lr is None:
-            raise ConfigError("Please specify `learning_rate` parameter"
-                              " before training")
-        return self._lr
-
-    def get_learning_rate_var(self):
-        return self._lr_var
-
-    def get_momentum(self):
-        return self._mom
-
-    def get_momentum_var(self):
-        return self._mom_var
-
-    def get_optimizer(self):
-        return self._optimizer

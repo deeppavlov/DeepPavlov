@@ -29,7 +29,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.layers import tf_attention_mechanisms as am
 from deeppavlov.core.layers import tf_layers
 from deeppavlov.core.models.component import Component
-from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
+from deeppavlov.core.models.tf_model import LRScheduledTFModel
 from deeppavlov.models.go_bot.tracker import Tracker
 
 log = getLogger(__name__)
@@ -535,7 +535,9 @@ class GoalOrientedBot(LRScheduledTFModel):
         _, loss_value, prediction = \
             self.sess.run([self._train_op, self._loss, self._prediction],
                           feed_dict=feed_dict)
-        return {'loss': loss_value}
+        return {'loss': loss_value,
+                'learning_rate': self.get_learning_rate(),
+                'momentum': self.get_momentum()}
 
     def _init_network_params(self):
         self.dropout_rate = self.opt['dropout_rate']
