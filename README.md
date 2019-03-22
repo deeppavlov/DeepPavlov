@@ -7,6 +7,12 @@ DeepPavlov is an open-source conversational AI library built on [TensorFlow](htt
  * NLP and dialog systems research.
 
 
+### Breaking changes in version 0.2.0!
+- `utils` module was moved from repository root in to `deeppavlov` module
+- `ms_bot_framework_utils`,`server_utils`, `telegram utils` modules was renamed to `ms_bot_framework`, `server` and `telegram` correspondingly
+- rename metric functions `exact_match` to `squad_v2_em` and  `squad_f1` to `squad_v2_f1`
+- replace dashes in configs name with underscores
+
 ### Breaking changes in version 0.1.0!
 - As of `version 0.1.0` all models, embeddings and other downloaded data for provided configurations are
  by default downloaded to the `.deeppavlov` directory in current user's home directory.
