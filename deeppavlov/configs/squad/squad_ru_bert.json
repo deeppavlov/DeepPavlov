@@ -62,6 +62,7 @@
     "val_every_n_batches": 500,
     "batch_size": 10,
     "pytest_max_batches": 2,
+    "pytest_batch_size": 5,
     "validation_patience": 10,
     "metrics": [
       {
