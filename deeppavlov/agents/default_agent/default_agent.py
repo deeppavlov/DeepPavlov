@@ -14,12 +14,12 @@
 
 from typing import List, Optional
 
+from deeppavlov.agents.filters.transparent_filter import TransparentFilter
+from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
 from deeppavlov.core.agent.agent import Agent
 from deeppavlov.core.agent.filter import Filter
 from deeppavlov.core.agent.processor import Processor
-from deeppavlov.core.skill.skill import Skill
-from deeppavlov.agents.filters.transparent_filter import TransparentFilter
-from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
+from deeppavlov.core.models.component import Component
 
 
 class DefaultAgent(Agent):
@@ -38,7 +38,7 @@ class DefaultAgent(Agent):
     You can refer to :class:`deeppavlov.core.skill.Skill`, :class:`deeppavlov.core.agent.Filter`, :class:`deeppavlov.core.agent.Processor` base classes to get more info.
 
     Args:
-        skills: List of initiated agent skills instances.
+        skills: List of initiated agent skills or components instances.
         skills_processor: Initiated agent processor.
         skills_filter: Initiated agent filter.
 
@@ -47,11 +47,11 @@ class DefaultAgent(Agent):
         skills_processor: Initiated agent processor.
         skills_filter: Initiated agent filter.
     """
-    def __init__(self, skills: List[Skill], skills_processor: Optional[Processor]=None,
-                 skills_filter: Optional[Filter]=None, *args, **kwargs) -> None:
+    def __init__(self, skills: List[Component], skills_processor: Optional[Processor] = None,
+                 skills_filter: Optional[Filter] = None, *args, **kwargs) -> None:
         super(DefaultAgent, self).__init__(skills=skills)
-        self.skills_filter: Filter = skills_filter or TransparentFilter(len(skills))
-        self.skills_processor: Processor = skills_processor or HighestConfidenceSelector()
+        self.skills_filter = skills_filter or TransparentFilter(len(skills))
+        self.skills_processor = skills_processor or HighestConfidenceSelector()
 
     def _call(self, utterances_batch: list, utterances_ids: Optional[list]=None) -> list:
         """

@@ -13,19 +13,19 @@
 # limitations under the License.
 
 from collections import Counter
+from logging import getLogger
 from typing import List, Any, Generator, Tuple, KeysView, ValuesView, Dict, Optional
 
+import numpy as np
 import scipy as sp
 from scipy import sparse
-import numpy as np
 from sklearn.utils import murmurhash3_32
 
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.estimator import Estimator
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.common.registry import register
 
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 Sparse = sp.sparse.csr_matrix
 
@@ -107,10 +107,9 @@ class HashingTfIdfVectorizer(Estimator):
             hashes_unique, q_hashes = np.unique(hashes, return_counts=True)
             tfs = np.log1p(q_hashes)
 
-            # TODO revise policy if len(q_hashes) == 0
-
             if len(q_hashes) == 0:
-                return Sparse((1, self.hash_size))
+                sp_tfidfs.append(Sparse((1, self.hash_size)))
+                continue
 
             size = len(self.doc_index)
             Ns = self.term_freqs[hashes_unique]
@@ -180,7 +179,7 @@ class HashingTfIdfVectorizer(Estimator):
             a count csr_matrix
 
         """
-        count_matrix = sparse.csr_matrix((data, (row, col)), shape=(self.hash_size, size))
+        count_matrix = Sparse((data, (row, col)), shape=(self.hash_size, size))
         count_matrix.sum_duplicates()
         return count_matrix
 

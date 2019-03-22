@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unicodedata
-import sys
 import re
+import sys
+import unicodedata
 
-from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.component import Component
 
 
 @register('sanitizer')

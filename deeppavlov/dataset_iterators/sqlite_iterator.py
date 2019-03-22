@@ -13,18 +13,18 @@
 # limitations under the License.
 
 import sqlite3
-from typing import List, Any, Dict, Optional, Union, Generator, Tuple
-from random import Random
+from logging import getLogger
 from pathlib import Path
+from random import Random
+from typing import List, Any, Dict, Optional, Union, Generator, Tuple
 
 from overrides import overrides
 
-from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
-from deeppavlov.core.commands.utils import expand_path
 
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 
 @register('sqlite_iterator')
@@ -153,16 +153,20 @@ class SQLiteDataIterator(DataFittingIterator):
         else:
             _doc_ids = self.doc_ids
 
-        batches = [_doc_ids[i:i + batch_size] for i in
-                   range(0, len(_doc_ids), batch_size)]
-
-        # DEBUG
-        # len_batches = len(batches)
+        if batch_size > 0:
+            batches = [_doc_ids[i:i + batch_size] for i in
+                       range(0, len(_doc_ids), batch_size)]
+        else:
+            batches = [_doc_ids]
 
         for i, doc_ids in enumerate(batches):
-            # DEBUG
-            # logger.info(
-            #     "Processing batch # {} of {} ({} documents)".format(i, len_batches, len(doc_index)))
             docs = [self.get_doc_content(doc_id) for doc_id in doc_ids]
             doc_nums = [self.doc2index[doc_id] for doc_id in doc_ids]
             yield docs, zip(doc_ids, doc_nums)
+
+    def get_instances(self):
+        """Get all data"""
+        doc_ids = list(self.doc_ids)
+        docs = [self.get_doc_content(doc_id) for doc_id in doc_ids]
+        doc_nums = [self.doc2index[doc_id] for doc_id in doc_ids]
+        return docs, zip(doc_ids, doc_nums)

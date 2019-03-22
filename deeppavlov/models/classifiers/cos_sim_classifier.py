@@ -13,20 +13,20 @@
 # limitations under the License.
 
 
+from logging import getLogger
 from typing import List, Tuple, Union
 
 import numpy as np
 from scipy.sparse import vstack, csr_matrix
 from scipy.sparse.linalg import norm as sparse_norm
 
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.models.estimator import Estimator
-from deeppavlov.core.common.file import save_pickle
 from deeppavlov.core.common.file import load_pickle
+from deeppavlov.core.common.file import save_pickle
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.serializable import Serializable
 
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 
 @register("cos_sim_classifier")
@@ -59,12 +59,18 @@ class CosineSimilarityClassifier(Estimator, Serializable):
         """
 
         if isinstance(q_vects[0], csr_matrix):
-            norm = sparse_norm(q_vects) * sparse_norm(self.x_train_features, axis=1)
-            cos_similarities = np.array(q_vects.dot(self.x_train_features.T).todense())/norm
+            q_norm = sparse_norm(q_vects)
+            if q_norm == 0.0:
+                cos_similarities = np.zeros((q_vects.shape[0], self.x_train_features.shape[0]))
+            else:
+                norm = q_norm * sparse_norm(self.x_train_features, axis=1)
+                cos_similarities = np.array(q_vects.dot(self.x_train_features.T).todense())
+                cos_similarities = cos_similarities / norm
         elif isinstance(q_vects[0], np.ndarray):
             q_vects = np.array(q_vects)
-            norm = np.linalg.norm(q_vects)*np.linalg.norm(self.x_train_features, axis=1)
-            cos_similarities = q_vects.dot(self.x_train_features.T)/norm
+            self.x_train_features = np.array(self.x_train_features)
+            norm = np.linalg.norm(q_vects) * np.linalg.norm(self.x_train_features, axis=1)
+            cos_similarities = q_vects.dot(self.x_train_features.T) / norm
         elif q_vects[0] is None:
             cos_similarities = np.zeros(len(self.x_train_features))
         else:
@@ -77,11 +83,13 @@ class CosineSimilarityClassifier(Estimator, Serializable):
             labels_scores[:, i] = np.max([cos_similarities[:, i]
                                           for i, value in enumerate(self.y_train) if value == label], axis=0)
 
-        # normalize for each class
-        labels_scores = labels_scores/labels_scores.sum(axis=1, keepdims=True)
+        labels_scores_sum = labels_scores.sum(axis=1, keepdims=True)
+        labels_scores = np.divide(labels_scores, labels_scores_sum,
+                                  out=np.zeros_like(labels_scores), where=(labels_scores_sum != 0))
+
         answer_ids = np.argsort(labels_scores)[:, -self.top_n:]
 
-        # generate top_n asnwers and scores
+        # generate top_n answers and scores
         answers = []
         scores = []
         for i in range(len(answer_ids)):

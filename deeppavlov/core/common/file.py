@@ -15,12 +15,11 @@
 import json
 import pickle
 from collections import OrderedDict
+from logging import getLogger
 from pathlib import Path
 from typing import Union, Any
 
-from deeppavlov.core.common.log import get_logger
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 def find_config(pipeline_config_path: Union[str, Path]) -> Path:
@@ -45,7 +44,7 @@ def save_json(data: dict, fpath: Union[str, Path]) -> None:
 
 def save_pickle(data: dict, fpath: Union[str, Path]) -> None:
     with open(fpath, 'wb') as fout:
-        pickle.dump(data, fout)
+        pickle.dump(data, fout, protocol=4)
 
 
 def load_pickle(fpath: Union[str, Path]) -> Any:

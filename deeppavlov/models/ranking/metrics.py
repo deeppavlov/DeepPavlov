@@ -17,7 +17,6 @@ import numpy as np
 from deeppavlov.core.common.metrics_registry import register_metric
 
 
-
 @register_metric('rank_response')
 def rank_response(y_true, y_pred):
     num_examples = float(len(y_pred))

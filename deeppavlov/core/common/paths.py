@@ -13,11 +13,11 @@
 # limitations under the License.
 import os
 import shutil
+
 from pathlib import Path
 
-
 _root_path = Path(__file__).resolve().parents[3]
-_default_settings_path: Path = _root_path / 'utils' / 'settings'
+_default_settings_path: Path = _root_path / 'deeppavlov' / 'utils' / 'settings'
 _settings_path = Path(os.getenv('DP_SETTINGS_PATH', _default_settings_path)).expanduser().resolve()
 if _settings_path.is_file():
     raise FileExistsError(f'DP_SETTINGS_PATH={_settings_path} is a file and not a directory')

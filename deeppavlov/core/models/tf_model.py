@@ -12,20 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Iterable, Union, Tuple, Optional
 from collections import defaultdict
-from typing import Iterable, Tuple
+from logging import getLogger
 
 import numpy as np
 import tensorflow as tf
+from overrides import overrides
 from tensorflow.python.ops import variables
 
+from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.registry import cls_from_str
 from deeppavlov.core.models.nn_model import NNModel
-from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.models.tf_backend import TfModelMeta
+from deeppavlov.core.models.lr_scheduled_model import LRScheduledModel
 
-from .tf_backend import TfModelMeta
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 class TFModel(NNModel, metaclass=TfModelMeta):
@@ -127,7 +130,7 @@ class TFModel(NNModel, metaclass=TfModelMeta):
                     variables_to_train.extend(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope_name))
 
             if optimizer is None:
-                optimizer = tf.train.AdamOptimizer(learning_rate, **kwargs)
+                optimizer = tf.train.AdamOptimizer
 
             # For batch norm it is necessary to update running averages
             extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
@@ -164,5 +167,94 @@ class TFModel(NNModel, metaclass=TfModelMeta):
         log.info('Total number of parameters equal {}'.format(total_num_parameters))
 
     def destroy(self):
-        for k in list(self.sess.graph.get_all_collection_keys()):
-            self.sess.graph.clear_collection(k)
+        if hasattr(self, 'sess'):
+            for k in list(self.sess.graph.get_all_collection_keys()):
+                self.sess.graph.clear_collection(k)
+        super().destroy()
+
+
+class LRScheduledTFModel(TFModel, LRScheduledModel):
+    """
+    TFModel enhanced with optimizer, learning rate and momentum
+    management and search.
+    """
+
+    def __init__(self,
+                 optimizer: str = 'AdamOptimizer',
+                 clip_norm: float = None,
+                 momentum: float = None,
+                 **kwargs) -> None:
+        TFModel.__init__(self, **kwargs)
+
+        try:
+            self._optimizer = cls_from_str(optimizer)
+        except Exception:
+            self._optimizer = getattr(tf.train, optimizer.split(':')[-1])
+        if not issubclass(self._optimizer, tf.train.Optimizer):
+            raise ConfigError("`optimizer` should be tensorflow.train.Optimizer subclass")
+        self._clip_norm = clip_norm
+
+        if (momentum is None) and\
+                self._optimizer not in (tf.train.AdagradOptimizer,
+                                        tf.train.AdagradOptimizer,
+                                        tf.train.GradientDescentOptimizer,
+                                        tf.train.ProximalGradientDescentOptimizer,
+                                        tf.train.ProximalAdagradOptimizer):
+            momentum = 0.9
+        kwargs['momentum'] = momentum
+
+        LRScheduledModel.__init__(self, **kwargs)
+
+    @overrides
+    def _init_learning_rate_variable(self):
+        return tf.Variable(self._lr or 0., dtype=tf.float32, name='learning_rate')
+
+    @overrides
+    def _init_momentum_variable(self):
+        return tf.Variable(self._mom or 0., dtype=tf.float32, name='momentum')
+
+    @overrides
+    def _update_graph_variables(self, learning_rate=None, momentum=None):
+        if learning_rate is not None:
+            self.sess.run(tf.assign(self._lr_var, learning_rate))
+            # log.info(f"Learning rate = {learning_rate}")
+        if momentum is not None:
+            self.sess.run(tf.assign(self._mom_var, momentum))
+            # log.info(f"Momentum      = {momentum}")
+
+    def get_train_op(self,
+                     *args,
+                     learning_rate: Union[float, tf.placeholder] = None,
+                     optimizer: tf.train.Optimizer = None,
+                     momentum: Union[float, tf.placeholder] = None,
+                     clip_norm: float = None,
+                     **kwargs):
+        if learning_rate is not None:
+            self._external_lr = True
+            kwargs['learning_rate'] = learning_rate
+        else:
+            kwargs['learning_rate'] = self._lr_var
+        kwargs['optimizer'] = optimizer or self.get_optimizer()
+        kwargs['clip_norm'] = clip_norm or self._clip_norm
+
+        momentum_param = 'momentum'
+        if kwargs['optimizer'] == tf.train.AdamOptimizer:
+            momentum_param = 'beta1'
+        elif kwargs['optimizer'] == tf.train.AdadeltaOptimizer:
+            momentum_param = 'rho'
+
+        if momentum is not None:
+            self._external_mom = True
+            kwargs[momentum_param] = momentum
+        elif self.get_momentum() is not None:
+            kwargs[momentum_param] = self._mom_var
+        return TFModel.get_train_op(self, *args, **kwargs)
+
+    def get_optimizer(self):
+        return self._optimizer
+
+    def load(self, exclude_scopes: Optional[Iterable] = ('Optimizer',
+                                                         'learning_rate',
+                                                         'momentum')):
+        return super().load(exclude_scopes=exclude_scopes)
+

@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from overrides import overrides
+from logging import getLogger
 from typing import Iterator
 
-import numpy as np
 import fastText
+import numpy as np
+from overrides import overrides
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.models.embedders.abstract_embedder import Embedder
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('fasttext')

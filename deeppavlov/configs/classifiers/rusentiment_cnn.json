@@ -93,8 +93,11 @@
         ],
         "filters_cnn": 256,
         "optimizer": "Adam",
-        "learning_rate": 0.01,
-        "learning_rate_decay": 0.1,
+        "learning_rate": [0.01, 1e-4],
+        "learning_rate_decay": "exponential",
+        "learning_rate_decay_batches": 5000,
+        "learning_rate_drop_patience": 5,
+        "learning_rate_drop_div": 5.0,
         "loss": "binary_crossentropy",
         "last_layer_activation": "softmax",
         "coef_reg_cnn": 1e-3,
@@ -123,6 +126,7 @@
     "epochs": 100,
     "batch_size": 64,
     "metrics": [
+      "f1_weighted",
       "sets_accuracy",
       "f1_macro",
       {
@@ -133,9 +137,14 @@
     "validation_patience": 5,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
+    "tensorboard_log_dir": "{MODELS_PATH}/logs",
     "show_examples": false,
-    "validate_best": true,
-    "test_best": true
+    "evaluation_targets": [
+      "train",
+      "valid",
+      "test"
+    ],
+    "class_name": "nn_trainer"
   },
   "metadata": {
     "variables": {

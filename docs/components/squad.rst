@@ -32,7 +32,7 @@ Datasets, which follow this task format:
 
 -  Stanford Question Answering Dataset
    (`SQuAD <https://rajpurkar.github.io/SQuAD-explorer/>`__) (EN)
--  `SDSJ Task B <https://www.sdsj.ru/ru/contest.html>`__ (RU)
+-  `SDSJ Task B <https://sdsj.sberbank.ai/2017/ru/contest.html>`__ (RU)
 
 Model
 -----
@@ -118,6 +118,8 @@ Leadearboad <https://rajpurkar.github.io/SQuAD-explorer/>`__.
 +----------------------------------------------+----------------+-----------------+
 | Model (single model)                         |    EM (dev)    |    F-1 (dev)    |
 +==============================================+================+=================+
+| :config:`BERT <squad/squad_bert.json>`       |     80.88      |     88.49       |
++----------------------------------------------+----------------+-----------------+
 | :config:`DeepPavlov <squad/squad.json>`      |     71.49      |     80.34       |
 +----------------------------------------------+----------------+-----------------+
 | `BiDAF + Self Attention + ELMo`_             |       --       |     85.6        |
@@ -175,14 +177,20 @@ Pretrained model is available and can be downloaded (~2.5Gb):
 SDSJ Task B
 ~~~~~~~~~~~
 
-Pretrained model is available and can be downloaded (~4.8Gb):
+Pretrained models are available and can be downloaded (~4.8Gb):
 
 .. code:: bash
 
     python -m deeppavlov download deeppavlov/configs/squad/squad_ru.json
 
-+---------------+---------------------------------+----------------+-----------------+
-| Model config                                    |    EM (dev)    |    F-1 (dev)    |
-+=================================================+================+=================+
-| :config:`DeepPavlov <squad/squad_ru.json>`      |     60.62      |     80.04       |
-+-------------------------------------------------+----------------+-----------------+
+    python -m deeppavlov download deeppavlov/configs/squad/squad_ru_bert_infer.json
+
+Link to SDSJ Task B dataset: http://files.deeppavlov.ai/datasets/sber_squad-v1.1.tar.gz
+
++------------------------------------------------------------------------+----------------+-----------------+
+| Model config                                                           |    EM (dev)    |    F-1 (dev)    |
++========================================================================+================+=================+
+| :config:`DeepPavlov multilingual BERT <squad/squad_ru_bert_infer.json>`|   64.35+-0.39  |    83.39+-0.08  |
++------------------------------------------------------------------------+----------------+-----------------+
+| :config:`DeepPavlov <squad/squad_ru.json>`                             |     60.62      |     80.04       |
++------------------------------------------------------------------------+----------------+-----------------+

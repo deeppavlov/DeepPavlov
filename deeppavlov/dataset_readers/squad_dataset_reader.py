@@ -13,13 +13,13 @@
 # limitations under the License.
 
 
-from typing import Dict, Any
-from pathlib import Path
 import json
+from pathlib import Path
+from typing import Dict, Any, Optional
 
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.data.utils import download_decompress
-from deeppavlov.core.common.registry import register
 
 
 @register('squad_dataset_reader')
@@ -37,18 +37,24 @@ class SquadDatasetReader(DatasetReader):
 
     MultiSQuAD:
     SQuAD dataset with additional contexts retrieved (by tfidf) from original Wikipedia article.
+
+    MultiSQuADRetr:
+    SQuAD dataset with additional contexts retrieved by tfidf document ranker from full Wikipedia.
+
     """
 
     url_squad = 'http://files.deeppavlov.ai/datasets/squad-v1.1.tar.gz'
     url_sber_squad = 'http://files.deeppavlov.ai/datasets/sber_squad-v1.1.tar.gz'
     url_multi_squad = 'http://files.deeppavlov.ai/datasets/multiparagraph_squad.tar.gz'
 
-    def read(self, dir_path: str, dataset: str = 'SQuAD', *args, **kwargs) -> Dict[str, Dict[str, Any]]:
+    def read(self, dir_path: str, dataset: Optional[str] = 'SQuAD', url: Optional[str] = None, *args, **kwargs)\
+            -> Dict[str, Dict[str, Any]]:
         """
 
         Args:
             dir_path: path to save data
-            dataset: dataset name: ``'SQuAD'``, ``'SberSQuAD'`` or ``'MultiSQuAD'``
+            dataset: default dataset names: ``'SQuAD'``, ``'SberSQuAD'`` or ``'MultiSQuAD'``
+            url: link to archive with dataset, use url argument if non-default dataset is used
 
         Returns:
             dataset split on train/valid
@@ -56,7 +62,9 @@ class SquadDatasetReader(DatasetReader):
         Raises:
             RuntimeError: if `dataset` is not one of these: ``'SQuAD'``, ``'SberSQuAD'``, ``'MultiSQuAD'``.
         """
-        if dataset == 'SQuAD':
+        if url is not None:
+            self.url = url
+        elif dataset == 'SQuAD':
             self.url = self.url_squad
         elif dataset == 'SberSQuAD':
             self.url = self.url_sber_squad
@@ -81,5 +89,63 @@ class SquadDatasetReader(DatasetReader):
                 dataset['valid'] = data
             else:
                 dataset['train'] = data
+
+        return dataset
+
+
+@register('multi_squad_dataset_reader')
+class MultiSquadDatasetReader(DatasetReader):
+    """
+    Downloads dataset files and prepares train/valid split.
+
+    MultiSQuADRetr:
+    Multiparagraph SQuAD dataset with additional contexts retrieved by tfidf document ranker from full En Wikipedia.
+
+    MultiSQuADRuRetr:
+    Multiparagraph SberSQuAD dataset with additional contexts retrieved by tfidf document ranker from  Ru Wikipedia.
+
+    """
+
+    url_multi_squad_retr = 'http://files.deeppavlov.ai/datasets/multi_squad_retr_enwiki20161221.tar.gz'
+    url_multi_squad_ru_retr = 'http://files.deeppavlov.ai/datasets/multi_squad_ru_retr.tar.gz'
+
+    def read(self, dir_path: str, dataset: Optional[str] = 'MultiSQuADRetr', url: Optional[str] = None, *args,
+             **kwargs) -> Dict[str, Dict[str, Any]]:
+        """
+
+        Args:
+            dir_path: path to save data
+            dataset: default dataset names: ``'MultiSQuADRetr'``, ``'MultiSQuADRuRetr'``
+            url: link to archive with dataset, use url argument if non-default dataset is used
+
+        Returns:
+            dataset split on train/valid
+
+        Raises:
+            RuntimeError: if `dataset` is not one of these: ``'MultiSQuADRetr'``, ``'MultiSQuADRuRetr'``.
+        """
+        if url is not None:
+            self.url = url
+        elif dataset == 'MultiSQuADRetr':
+            self.url = self.url_multi_squad_retr
+        elif dataset == 'MultiSQuADRuRetr':
+            self.url = self.url_multi_squad_ru_retr
+        else:
+            raise RuntimeError('Dataset {} is unknown'.format(dataset))
+
+        dir_path = Path(dir_path)
+        required_files = ['{}.jsonl'.format(dt) for dt in ['train', 'dev']]
+        if not dir_path.exists():
+            dir_path.mkdir(parents=True)
+
+        if not all((dir_path / f).exists() for f in required_files):
+            download_decompress(self.url, dir_path)
+
+        dataset = {}
+        for f in required_files:
+            if 'dev' in f:
+                dataset['valid'] = dir_path.joinpath(f)
+            else:
+                dataset['train'] = dir_path.joinpath(f)
 
         return dataset

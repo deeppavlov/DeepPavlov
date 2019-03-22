@@ -16,6 +16,7 @@ import shutil
 import sys
 from argparse import ArgumentParser, Namespace
 from collections import defaultdict
+from logging import getLogger
 from pathlib import Path
 from typing import Union, Optional, Dict, Iterable, Set, Tuple, List
 
@@ -23,10 +24,9 @@ import requests
 
 import deeppavlov
 from deeppavlov.core.commands.utils import expand_path, parse_config
-from deeppavlov.core.data.utils import download, download_decompress, get_all_elems_from_json, file_md5
-from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.data.utils import download, download_decompress, get_all_elems_from_json, file_md5, set_query_parameter, path_set_md5
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 parser = ArgumentParser()
 
@@ -76,7 +76,8 @@ def get_configs_downloads(config: Optional[Union[str, Path, dict]]=None) -> Dict
 
 
 def check_md5(url: str, dest_paths: List[Path]) -> bool:
-    r = requests.get(url + '.md5')
+    url_md5 = path_set_md5(url)
+    r = requests.get(url_md5)
     if r.status_code != 200:
         return False
     expected = {}
@@ -113,11 +114,11 @@ def download_resource(url: str, dest_paths: Iterable[Path]) -> None:
 
     if check_md5(url, dest_paths):
         log.info(f'Skipped {url} download because of matching hashes')
-    elif url.endswith(('.tar.gz', '.gz', '.zip')):
+    elif any(ext in url for ext in ('.tar.gz', '.gz', '.zip')):
         download_path = dest_paths[0].parent
         download_decompress(url, download_path, dest_paths)
     else:
-        file_name = url.split('/')[-1]
+        file_name = url.split('/')[-1].split('?')[0]
         dest_files = [dest_path / file_name for dest_path in dest_paths]
         download(dest_files, url)
 
@@ -140,6 +141,8 @@ def deep_download(config: Union[str, Path, dict]) -> None:
     downloads = get_configs_downloads(config)
 
     for url, dest_paths in downloads.items():
+        if not isinstance(config, dict):
+            url = set_query_parameter(url, 'config', Path(config).stem)
         download_resource(url, dest_paths)
 
 

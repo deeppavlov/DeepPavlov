@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union
 from abc import ABCMeta, abstractmethod
+from typing import Union
 
 
 class RichItem(metaclass=ABCMeta):
@@ -82,6 +82,9 @@ class RichControl(RichItem, metaclass=ABCMeta):
         self.content = None
         self.control_json: dict = {'type': control_type, 'content': None}
 
+    def __str__(self) -> str:
+        return ''
+
 
 class RichMessage(RichItem):
     """Container for rich controls.
@@ -96,6 +99,10 @@ class RichMessage(RichItem):
 
     def __init__(self) -> None:
         self.controls: list = []
+
+    def __str__(self) -> str:
+        result = '\n'.join(filter(bool, map(str, self.controls)))
+        return result
 
     def add_control(self, control: RichControl):
         """Adds RichControl instance to RichMessage.

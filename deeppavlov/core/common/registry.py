@@ -14,13 +14,12 @@
 
 import importlib
 import json
+from logging import getLogger
 from pathlib import Path
 
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.errors import ConfigError
 
-
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 _registry_path = Path(__file__).parent / 'registry.json'
 if _registry_path.exists():

@@ -14,19 +14,19 @@
 
 import json
 import logging
-from pathlib import Path
-import unicodedata
 import sqlite3
-from typing import Union, List, Tuple, Generator, Any, Optional
+import unicodedata
 from multiprocessing import Pool
+from pathlib import Path
+from typing import Union, List, Tuple, Generator, Any, Optional
 
 from tqdm import tqdm
 
-from deeppavlov.core.data.dataset_reader import DatasetReader
-from deeppavlov.core.common.registry import register
 from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.data.utils import download
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.dataset_reader import DatasetReader
+from deeppavlov.core.data.utils import download
 
 logger = logging.getLogger(__name__)
 

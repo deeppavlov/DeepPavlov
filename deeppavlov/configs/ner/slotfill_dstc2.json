@@ -34,7 +34,12 @@
     "out": ["slots"]
   },
   "train": {
-    "metrics": ["slots_accuracy"]
+    "metrics": ["slots_accuracy"],
+    "class_name": "fit_trainer",
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ]
   },
   "metadata": {
     "variables": {
