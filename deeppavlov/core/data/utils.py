@@ -25,7 +25,7 @@ from hashlib import md5
 from itertools import chain
 from logging import getLogger
 from pathlib import Path
-from typing import List, Union, Iterable, Optional
+from typing import List, Union, Iterable, Optional, Sized, Sequence
 from urllib.parse import urlencode, parse_qs, urlsplit, urlunsplit, urlparse
 
 import numpy as np
@@ -266,18 +266,22 @@ def tokenize_reg(s):
     return re.findall(re.compile(pattern), s)
 
 
-def get_dimensions(batch):
+def get_all_dimensions(batch: Sequence, level: int = 0, res: Optional[List[List[int]]] = None) -> List[List[int]]:
+    if not level:
+        res = [[len(batch)]]
+    if len(batch) and isinstance(batch[0], Sized) and not isinstance(batch[0], str):
+        level += 1
+        if len(res) <= level:
+            res.append([])
+        for item in batch:
+            res[level].append(len(item))
+            get_all_dimensions(item, level, res)
+    return res
+
+
+def get_dimensions(batch) -> List[int]:
     """"""
-    if len(batch) > 0 and isinstance(batch[0], Iterable) and not isinstance(batch, str):
-        max_list = [get_dimensions(sample) for sample in batch]
-        max_depth = max(len(m) for m in max_list)
-        max_lens = np.zeros(max_depth, dtype=np.int32)
-        for m in max_list:
-            lm = len(m)
-            max_lens[:lm] = np.maximum(max_lens[:lm], m)
-        return [len(batch)] + list(max_lens)
-    else:
-        return [len(batch)]
+    return list(map(max, get_all_dimensions(batch)))
 
 
 def zero_pad(batch, zp_batch=None, dtype=np.float32, padding=0):
