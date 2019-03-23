@@ -53,6 +53,7 @@
         "learning_rate": 1.6443457513284065e-05,
         "learning_rate_drop_patience": 30,
         "learning_rate_drop_div": 3,
+        "min_learning_rate": 1e-6,
         "in": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask"],
         "in_y": ["y_subword_ind"],
         "out": ["y_subword_pred_ind"]
