@@ -133,9 +133,15 @@ class BertNerModel(LRScheduledTFModel):
                           for i in self.encoder_layer_ids]
 
         with tf.variable_scope('ner'):
-            output_layer = sum(encoder_layers) / len(encoder_layers)
+            layer_weights = tf.get_variable('layer_weights_',
+                                            shape=len(encoder_layers),
+                                            initializer=tf.ones_initializer(),
+                                            trainable=True)
+            layer_weights = tf.unstack(layer_weights / len(encoder_layers))
+            # TODO: may be stack and reduce_sum is faster
+            output_layer = sum(w * l for w, l in zip(layer_weights, encoder_layers))
             output_layer = tf.nn.dropout(output_layer, keep_prob=self.keep_prob_ph)
-
+            # TODO: maybe add one more layer?
             logits = tf.layers.dense(output_layer, units=self.n_tags, name="output_dense")
 
             self.y_predictions = tf.argmax(logits, -1)
@@ -158,24 +164,24 @@ class BertNerModel(LRScheduledTFModel):
     @staticmethod
     def focal_loss(labels, probs, weights=None, gamma=2.0, alpha=4.0):
         """
-	focal loss for multi-classification
-	FL(p_t)=-alpha(1-p_t)^{gamma}ln(p_t)
-	gradient is d(Fl)/d(p_t) not d(Fl)/d(x) as described in paper
-	d(Fl)/d(p_t) * [p_t(1-p_t)] = d(Fl)/d(x)
-	Lin, T.-Y., Goyal, P., Girshick, R., He, K., & Dollár, P. (2017).
-	Focal Loss for Dense Object Detection, 130(4), 485–491.
-	https://doi.org/10.1016/j.ajodo.2005.02.022
-	:param labels: ground truth one-hot encoded labels,
-            shape of [batch_size, num_cls]
-	:param probs: model's output, shape of [batch_size, num_cls]
-	:param gamma:
-	:param alpha:
-	:return: shape of [batch_size]
-	"""
+            focal loss for multi-classification
+            FL(p_t)=-alpha(1-p_t)^{gamma}ln(p_t)
+            gradient is d(Fl)/d(p_t) not d(Fl)/d(x) as described in paper
+            d(Fl)/d(p_t) * [p_t(1-p_t)] = d(Fl)/d(x)
+            Lin, T.-Y., Goyal, P., Girshick, R., He, K., & Dollár, P. (2017).
+            Focal Loss for Dense Object Detection, 130(4), 485–491.
+            https://doi.org/10.1016/j.ajodo.2005.02.022
+            :param labels: ground truth one-hot encoded labels,
+                    shape of [batch_size, num_cls]
+            :param probs: model's output, shape of [batch_size, num_cls]
+            :param gamma:
+            :param alpha:
+            :return: shape of [batch_size]
+            """
         epsilon = 1e-9
         labels = tf.cast(labels, tf.float32)
         probs = tf.cast(probs, tf.float32)
-        
+
         probs = tf.clip_by_value(probs, epsilon, 1.0 - epsilon)
         ce = tf.multiply(labels, -tf.log(probs))
         weight = tf.multiply(labels, tf.pow(tf.subtract(1., probs), gamma))
@@ -205,11 +211,11 @@ class BertNerModel(LRScheduledTFModel):
         probs = tf.cast(probs, tf.float32)
 
         zeros = array_ops.zeros_like(probs, dtype=probs.dtype)
-        
+
         # For positive prediction, only need consider front part loss, back part is 0;
         # target_tensor > zeros <=> z=1, so poitive coefficient = z - p.
         pos_p_sub = array_ops.where(labels > zeros, labels - probs, zeros)
-        
+
         # For negative prediction, only need consider back part loss, front part is 0;
         # target_tensor > zeros <=> z=1, so negative coefficient = 0.
         neg_p_sub = array_ops.where(labels > zeros, zeros, probs)
@@ -404,17 +410,17 @@ class ExponentialMovingAverage:
 
                 train_switch_op = restore_weight_backups()
                 with tf.control_dependencies([save_weight_backups()]):
-                    test_switch_op = ema_to_weights() 
+                    test_switch_op = ema_to_weights()
 
             self.train_switch_op = train_switch_op
             self.test_switch_op = test_switch_op
             self.do_nothing_op = tf.no_op()
 
         return minimize_op
-    
+
     @property
     def init_op(self) -> tf.Operation:
-        self.train_mode = False 
+        self.train_mode = False
         return self.test_switch_op
 
     @property
