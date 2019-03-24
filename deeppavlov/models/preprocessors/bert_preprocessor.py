@@ -14,6 +14,7 @@
 from logging import getLogger
 from typing import Tuple, List, Optional
 
+import numpy as np
 from bert_dp.preprocessing import convert_examples_to_features, InputExample, InputFeatures
 from bert_dp.tokenization import FullTokenizer
 
@@ -77,7 +78,7 @@ class BertPreprocessor(Component):
 class BertNerPreprocessor(Component):
     """Takes tokens and splits them into bert subtokens, encode subtokens with their indices.
     Creates mask of subtokens (one for first subtoken, zero for later subtokens).
-    
+
     If tags are provided, calculate tags for subtokens.
 
     Args:
@@ -86,6 +87,7 @@ class BertNerPreprocessor(Component):
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
         max_subword_length: replace token to <unk> if it's length is larger than this
             (defaults to None, which is equal to +infinity)
+        token_mask_prob: probability of masking token while training
 
     Attributes:
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
@@ -98,12 +100,16 @@ class BertNerPreprocessor(Component):
                  do_lower_case: bool = True,
                  max_seq_length: int = 512,
                  max_subword_length: int = None,
+                 token_maksing_prob: float = 0.0,
                  **kwargs):
+
+        self.mode = kwargs.get('mode')
         self.max_seq_length = max_seq_length
         self.max_subword_length = max_subword_length
         vocab_file = str(expand_path(vocab_file))
         self.tokenizer = FullTokenizer(vocab_file=vocab_file,
                                        do_lower_case=do_lower_case)
+        self.token_maksing_prob = token_maksing_prob
 
     def __call__(self,
                  tokens: List[List[str]],
@@ -114,13 +120,15 @@ class BertNerPreprocessor(Component):
             toks = tokens[i]
             ys = ['X'] * len(toks) if tags is None else tags[i]
             assert len(toks) == len(ys), \
-                f"toks({len(toks)}) should have the same length as "\
+                f"toks({len(toks)}) should have the same length as " \
                 f" ys({len(ys)}), tokens = {toks}."
             sw_toks, sw_mask, sw_ys = self._ner_bert_tokenize(toks,
                                                               [1] * len(toks),
                                                               ys,
                                                               self.tokenizer,
-                                                              self.max_subword_length)
+                                                              self.max_subword_length,
+                                                              mode=self.mode,
+                                                              token_maksing_prob=self.token_maksing_prob)
             if self.max_seq_length is not None:
                 sw_toks = sw_toks[:self.max_seq_length]
                 sw_mask = sw_mask[:self.max_seq_length]
@@ -135,9 +143,9 @@ class BertNerPreprocessor(Component):
             subword_tok_ids.append(self.tokenizer.convert_tokens_to_ids(sw_toks))
             subword_masks.append(sw_mask)
             subword_tags.append(sw_ys)
-            assert len(sw_mask) == len(sw_toks) == len(subword_tok_ids[-1]) == len(sw_ys),\
-                f"length of mask({len(sw_mask)}), tokens({len(sw_toks)}),"\
-                f" token ids({len(subword_tok_ids[-1])}) and ys({len(ys)})"\
+            assert len(sw_mask) == len(sw_toks) == len(subword_tok_ids[-1]) == len(sw_ys), \
+                f"length of mask({len(sw_mask)}), tokens({len(sw_toks)})," \
+                f" token ids({len(subword_tok_ids[-1])}) and ys({len(ys)})" \
                 f" for tokens = `{toks}` should match"
         subword_tok_ids = zero_pad(subword_tok_ids, dtype=int, padding=0)
         subword_masks = zero_pad(subword_masks, dtype=int, padding=0)
@@ -150,20 +158,24 @@ class BertNerPreprocessor(Component):
                            mask: List[int],
                            tags: List[str],
                            tokenizer: FullTokenizer,
-                           max_subword_len: int = None) -> Tuple[List[str], List[str]]:
+                           max_subword_len: int = None,
+                           mode: str = None,
+                           token_maksing_prob: float = 0.0) -> Tuple[List[str], List[str]]:
         tokens_subword = ['[CLS]']
         mask_subword = [0]
         tags_subword = ['X']
-
         for token, flag, tag in zip(tokens, mask, tags):
             subwords = tokenizer.tokenize(token)
-            if not subwords or\
+            if not subwords or \
                     ((max_subword_len is not None) and (len(subwords) > max_subword_len)):
                 tokens_subword.append('[UNK]')
                 mask_subword.append(0)
                 tags_subword.append('X')
             else:
-                tokens_subword.extend(subwords)
+                if mode == 'train' and token_maksing_prob > 0.0 and np.random.rand() < token_maksing_prob:
+                    tokens_subword.extend(['[MASK]'] * len(subwords))
+                else:
+                    tokens_subword.extend(subwords)
                 mask_subword.extend([flag] + [0] * (len(subwords) - 1))
                 tags_subword.extend([tag] + ['X'] * (len(subwords) - 1))
 
@@ -171,4 +183,3 @@ class BertNerPreprocessor(Component):
         mask_subword.append(0)
         tags_subword.append('X')
         return tokens_subword, mask_subword, tags_subword
-

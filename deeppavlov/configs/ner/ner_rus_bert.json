@@ -18,6 +18,7 @@
         "do_lower_case": false,
         "max_seq_length": 231,
         "max_subword_length": 15,
+        "token_maksing_prob": 0.0,
         "in": ["x", "y"],
         "out": ["x_subword_tokens", "x_subword_tok_ids", "pred_subword_mask", "y_subword"]
       },
