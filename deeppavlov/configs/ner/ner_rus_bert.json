@@ -16,7 +16,7 @@
         "class_name": "bert_ner_preprocessor",
         "vocab_file": "{BERT_PATH}/vocab.txt",
         "do_lower_case": false,
-        "max_seq_length": 231,
+        "max_seq_length": 512,
         "max_subword_length": 15,
         "token_maksing_prob": 0.0,
         "in": ["x", "y"],
@@ -41,6 +41,7 @@
       {
         "class_name": "bert_ner",
         "n_tags": "#tag_vocab.len",
+        "use_crf": false,
         "return_probas": false,
         "bert_config_file": "{BERT_PATH}/bert_config.json",
         "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
@@ -49,7 +50,6 @@
         "keep_prob": 0.1,
         "ema_decay": 0.9,
         "ema_variables_on_cpu": true,
-        "encoder_layer_ids": [-4, -3, -2, -1],
         "optimizer": "tf.train:AdamOptimizer",
         "learning_rate": 1.6443457513284065e-05,
         "learning_rate_drop_patience": 20,
@@ -57,30 +57,15 @@
         "min_learning_rate": 1e-6,
         "in": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask"],
         "in_y": ["y_subword_ind"],
-        "out": ["y_subword_pred_ind"]
+        "out": ["y_pred_ind"]
       },
       {
         "ref": "tag_vocab",
-        "in": ["y_subword_pred_ind"],
-        "out": ["y_subword_pred"]
-      },
-      {
-        "class_name": "deeppavlov.models.bert.bert_ner:MaskCutter",
-        "in": ["y_subword_pred", "pred_subword_mask"],
-        "out": ["y_pred_cut"]
-      },
-      {
-        "class_name": "deeppavlov.models.bert.bert_ner:MaskCutter",
-        "in": ["y_subword", "pred_subword_mask"],
-        "out": ["y_cut"]
-      },
-      {
-        "class_name": "deeppavlov.models.bert.bert_ner:MaskCutter",
-        "in": ["x_subword_tokens", "pred_subword_mask"],
-        "out": ["x_tokens_cut"]
+        "in": ["y_pred_ind"],
+        "out": ["y_pred"]
       }
     ],
-    "out": ["x_tokens_cut", "y_pred_cut"]
+    "out": ["x", "y_pred"]
   },
   "train": {
     "epochs": 20,
@@ -88,7 +73,7 @@
     "metrics": [
       {
         "name": "ner_f1",
-        "inputs": ["y_cut", "y_pred_cut"]
+        "inputs": ["y", "y_pred"]
       }
     ],
     "validation_patience": 100,
