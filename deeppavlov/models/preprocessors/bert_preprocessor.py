@@ -101,8 +101,9 @@ class BertNerPreprocessor(Component):
                  max_seq_length: int = 512,
                  max_subword_length: int = None,
                  token_maksing_prob: float = 0.0,
+                 provide_not_subword_tags: bool = True,
                  **kwargs):
-
+        self.provide_not_subword_tags = provide_not_subword_tags
         self.mode = kwargs.get('mode')
         self.max_seq_length = max_seq_length
         self.max_subword_length = max_subword_length
@@ -119,9 +120,9 @@ class BertNerPreprocessor(Component):
         for i in range(len(tokens)):
             toks = tokens[i]
             ys = ['X'] * len(toks) if tags is None else tags[i]
-            assert len(toks) == len(ys), \
-                f"toks({len(toks)}) should have the same length as " \
-                f" ys({len(ys)}), tokens = {toks}."
+            # assert len(toks) == len(ys), \
+            #     f"toks({len(toks)}) should have the same length as " \
+            #     f" ys({len(ys)}), tokens = {toks}."
             sw_toks, sw_mask, sw_ys = self._ner_bert_tokenize(toks,
                                                               [1] * len(toks),
                                                               ys,
@@ -150,7 +151,16 @@ class BertNerPreprocessor(Component):
         subword_tok_ids = zero_pad(subword_tok_ids, dtype=int, padding=0)
         subword_masks = zero_pad(subword_masks, dtype=int, padding=0)
         if tags is not None:
-            return subword_tokens, subword_tok_ids, subword_masks, subword_tags
+            if self.provide_not_subword_tags:
+                for swts, swms, ts in zip(subword_tokens, subword_masks, tags):
+                    if not (len(ts) == sum(swms)):
+                        logger.warning('Not matching lengths of the tokenizaion!')
+                        logger.warning(f'Tokens len: {len(swts)}\n Tokens: {swts}')
+                        logger.warning(f'Masks len: {len(swms)}\n {sum(swms)} Masks: {swms}')
+                        logger.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
+                return subword_tokens, subword_tok_ids, subword_masks, tags
+            else:
+                return subword_tokens, subword_tok_ids, subword_masks, subword_tags
         return subword_tokens, subword_tok_ids, subword_masks
 
     @staticmethod
@@ -169,8 +179,8 @@ class BertNerPreprocessor(Component):
             if not subwords or \
                     ((max_subword_len is not None) and (len(subwords) > max_subword_len)):
                 tokens_subword.append('[UNK]')
-                mask_subword.append(0)
-                tags_subword.append('X')
+                mask_subword.append(flag)
+                tags_subword.append(tag)
             else:
                 if mode == 'train' and token_maksing_prob > 0.0 and np.random.rand() < token_maksing_prob:
                     tokens_subword.extend(['[MASK]'] * len(subwords))
