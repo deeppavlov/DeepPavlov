@@ -44,7 +44,7 @@ class DecayType(IntEnum):
         Args:
             label: name of decay type.
                 Set of values: `"linear"`, `"cosine"`, `"exponential"`,
-                 `"onecycle"`, `"trapezoid"`, `["polynomial", K]`, where K is a polynomial power
+                `"onecycle"`, `"trapezoid"`, `["polynomial", K]`, where K is a polynomial power
 
         Returns:
             index of decay type
@@ -133,9 +133,9 @@ class LRScheduledModel:
 
     Args:
         learning_rate: learning rate value or ranges
-        learning_rate_decay: learning rate decay type
+        learning_rate_decay: learning rate decay type.
                 Set of values: `"linear"`, `"onecycle"`, `"trapezoid"`,
-                               `"exponential"`, `"cosine"`, `["polynomial", K]`, where K is a polynomial power
+                `"exponential"`, `"cosine"`, `["polynomial", K]`, where K is a polynomial power
         learning_rate_decay_epochs: number of epochs for learning rate decay process
         learning_rate_decay_batches: number of batches for learning rate decay process
         learning_rate_drop_div: division coefficient for learning rate in case of
@@ -144,7 +144,7 @@ class LRScheduledModel:
         momentum: range of momentum values
         momentum_decay: momentum decay type.
                 Set of values: `"linear"`, `"onecycle"`, `"trapezoid"`,
-                               `"exponential"`, `"cosine"`, `["polynomial", K]`, where K is a polynomial power
+                `"exponential"`, `"cosine"`, `["polynomial", K]`, where K is a polynomial power
         momentum_decay_epochs: number of epochs for momentum decay process
         momentum_decay_batches: number of batches for momentum decay process
         fit_batch_size: batch size when fitting learning rate
