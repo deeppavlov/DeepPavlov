@@ -24,7 +24,7 @@ class DefaultPostprocessor(Postprocessor):
             ner_annotations = response['annotations']['ner']
             user_name = d_state['user']['profile']['name']
             # replace names with user name
-            if ner_annotations:
+            if ner_annotations and (response['active_skill'] == 'chitchat'):
                 response_toks_norm, _ = \
                     self.person_normalizer([ner_annotations['tokens']],
                                            [ner_annotations['tags']],
