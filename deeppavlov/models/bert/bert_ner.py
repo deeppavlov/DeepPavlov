@@ -438,8 +438,12 @@ class BertNerModel(LRScheduledTFModel):
                                       nf], 0), tf.float32)
 
         tensor_flat = tf.dynamic_stitch([x_idxs, y_idxs], [els, paddings])
+        # tensor_flat -> [x, x, x, x, x, 0, x, 0, 0]
 
         tensor = tf.reshape(tensor_flat, tf.stack([bs, max_token_seq_len, nf_int], 0))
+        # tensor_flat -> [[x, x, x],
+        #                 [x, x, 0],
+        #                 [x, 0, 0]]
 
         return tensor
 
