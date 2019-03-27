@@ -1,14 +1,14 @@
 import re
 from multiprocessing import Process
 
-from deeppavlov.core.agent_v2.config import ANNOTATORS, SKILL_SELECTORS, SKILLS, RESPONSE_SELECTORS
+from deeppavlov.core.agent_v2.config import ANNOTATORS, SKILL_SELECTORS, SKILLS, RESPONSE_SELECTORS, POSTPROCESSORS
 from utils.server_utils.server import skill_server
 
 
 pattern = re.compile(r'^https?://(?P<host>.*):(?P<port>\d*)(?P<endpoint>.*)$')
 
 processes = []
-for item in SKILLS + ANNOTATORS + SKILL_SELECTORS + RESPONSE_SELECTORS:
+for item in SKILLS + ANNOTATORS + SKILL_SELECTORS + RESPONSE_SELECTORS + POSTPROCESSORS:
     if item['path'] is None:
         continue
     url = item['url']

@@ -99,6 +99,10 @@ RESPONSE_SELECTORS = [
 
 ]
 
+POSTPROCESSORS = [
+
+]
+
 # TODO include Bot?
 
 
@@ -122,7 +126,7 @@ def _get_config_path(component_config: dict) -> dict:
 
 
 _run_config_path: Path = Path(__file__).resolve().parent / 'config.yaml'
-_component_groups = ['SKILLS', 'ANNOTATORS', 'SKILL_SELECTORS', 'RESPONSE_SELECTORS']
+_component_groups = ['SKILLS', 'ANNOTATORS', 'SKILL_SELECTORS', 'RESPONSE_SELECTORS', 'POSTPROCESSORS']
 _module = sys.modules[__name__]
 
 if _run_config_path.is_file():
