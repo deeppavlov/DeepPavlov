@@ -49,6 +49,7 @@ class BertNerModel(LRScheduledTFModel):
 ￼       pretrained_bert: pretrained Bert checkpoint
 ￼       min_learning_rate: min value of learning rate if learning rate decay is used
 ￼   """
+
     # TODO: add warmup
     # TODO: add head-only pre-training
     def __init__(self,
@@ -68,6 +69,7 @@ class BertNerModel(LRScheduledTFModel):
                  return_probas: bool = False,
                  pretrained_bert: str = None,
                  min_learning_rate: float = 1e-06,
+                 use_crf=False,
                  **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -83,6 +85,7 @@ class BertNerModel(LRScheduledTFModel):
         self.encoder_layer_ids = encoder_layer_ids
         self.num_warmup_steps = num_warmup_steps
         self.weight_decay_rate = weight_decay_rate
+        self.use_crf = use_crf
 
         self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
 
@@ -144,12 +147,34 @@ class BertNerModel(LRScheduledTFModel):
             # TODO: maybe add one more layer?
             logits = tf.layers.dense(output_layer, units=self.n_tags, name="output_dense")
 
+            self.logits = self.token_from_subtoken(logits, self.y_masks_ph)
+
+            self.seq_lengths = tf.reduce_sum(self.y_masks_ph, axis=1)
+            max_length = tf.reduce_max(self.seq_lengths)
+            one_hot_max_len = tf.one_hot(self.seq_lengths - 1, max_length)
+            tag_mask = tf.cumsum(one_hot_max_len[:, ::-1], axis=1)[:, ::-1]
+
+            # CRF
+            if self.use_crf:
+                transition_params = tf.get_variable('Transition_Params',
+                                                    shape=[self.n_tags,
+                                                           self.n_tags],
+                                                    initializer=tf.zeros_initializer())
+                log_likelihood, transition_params = tf.contrib.crf.crf_log_likelihood(self.logits,
+                                                                                      self.y_ph,
+                                                                                      self.seq_lengths,
+                                                                                      transition_params)
+                loss_tensor = -log_likelihood
+                self._transition_params = transition_params
+
             self.y_predictions = tf.argmax(logits, -1)
             self.y_probas = tf.nn.softmax(logits, axis=2)
 
         with tf.variable_scope("loss"):
-            y_mask = tf.cast(self.y_masks_ph, tf.float32)
-            if (self.focal_alpha is None) or (self.focal_gamma is None):
+            y_mask = tf.cast(tag_mask, tf.float32)
+            if self.use_crf:
+                self.loss = tf.reduce_mean(loss_tensor)
+            elif (self.focal_alpha is None) or (self.focal_gamma is None):
                 self.loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_ph,
                                                                    logits=logits,
                                                                    weights=y_mask)
@@ -219,7 +244,7 @@ class BertNerModel(LRScheduledTFModel):
         # For negative prediction, only need consider back part loss, front part is 0;
         # target_tensor > zeros <=> z=1, so negative coefficient = 0.
         neg_p_sub = array_ops.where(labels > zeros, zeros, probs)
-        per_entry_cross_ent = - alpha * (pos_p_sub ** gamma) *\
+        per_entry_cross_ent = - alpha * (pos_p_sub ** gamma) * \
             tf.log(tf.clip_by_value(probs, 1e-8, 1.0)) \
             - (1 - alpha) * (neg_p_sub ** gamma) * \
             tf.log(tf.clip_by_value(1.0 - probs, 1e-8, 1.0))
@@ -292,6 +317,132 @@ class BertNerModel(LRScheduledTFModel):
         else:
             self.ema = None
 
+    @staticmethod
+    def token_from_subtoken(units, mask):
+        """ Assemble token level units from subtoken level units
+
+        Args:
+            units: tf.Tensor of shape [batch_size, SUBTOKEN_seq_length, n_features]
+            mask: mask of startings of new tokens. Example: for tokens
+                [['[CLS]' 'My', 'capybara', '[SEP]'],
+                 ['[CLS]' 'Your', 'aar', '##dvark', 'is', 'awesome', '[SEP]']]
+                the mask will be
+                [[0, 1, 1, 0, 0, 0, 0],
+                 [0, 1, 1, 0, 1, 1, 0]]
+
+        Returns:
+            word_level_units: Units assembled from ones in the mask. For the
+                example above this units will correspond to the following
+
+                [['My', 'capybara'],
+                 ['Your', 'aar', '##dvark', 'is', 'awesome',]]
+
+                the shape of this thesor will be [batch_size, TOKEN_seq_length, n_features]
+        """
+        shape = tf.cast(tf.shape(units), tf.int64)
+        bs = shape[0]
+        nf = shape[2]
+        nf_int = units.get_shape().as_list()[-1]
+
+        # numer of TOKENS in each sentence
+        token_seq_lenghs = tf.cast(tf.reduce_sum(mask, 1), tf.int64)
+        # for a matrix m =
+        # [[1, 1, 1],
+        #  [0, 1, 1],
+        #  [1, 0, 0]]
+        # it will be
+        # [3, 2, 1]
+
+        n_words = tf.reduce_sum(token_seq_lenghs)
+        # n_words -> 6
+
+        max_token_seq_len = tf.reduce_max(token_seq_lenghs)
+        max_token_seq_len = tf.cast(max_token_seq_len, tf.int64)
+        # max_token_seq_len -> 3
+
+        idxs = tf.where(mask)
+        # for the matrix mentioned above
+        # tf.where(mask) ->
+        # [[0, 0],
+        #  [0, 1]
+        #  [0, 2],
+        #  [1, 1],
+        #  [1, 2]
+        #  [2, 0]]
+
+        sample_id_in_batch = tf.pad(idxs[:, 0], [[1, 0]])
+        # for indices
+        # [[0, 0],
+        #  [0, 1]
+        #  [0, 2],
+        #  [1, 1],
+        #  [1, 2],
+        #  [2, 0]]
+        # it will be
+        # [0, 0, 0, 0, 1, 1, 2]
+        # padding is for computing change from one sample to another in the batch
+
+        a = tf.cast(tf.not_equal(sample_id_in_batch[1:], sample_id_in_batch[:-1]), tf.int64)
+        # for the example above the result of this line will be
+        # [0, 0, 0, 1, 0, 1]
+        # so the number of the sample in batch changes only in the last word element
+
+        q = a * tf.cast(tf.range(n_words), tf.int64)
+        # [0, 0, 0, 3, 0, 5]
+
+        count_to_substract = tf.pad(tf.boolean_mask(q, q), [(1, 0)])
+        # [0, 3, 5]
+
+        new_word_indices = tf.cast(tf.range(n_words), tf.int64) - tf.gather(count_to_substract, tf.cumsum(a))
+        # tf.range(n_words) -> [0, 1, 2, 3, 4, 5]
+        # tf.cumsum(a) -> [0, 0, 0, 1, 1, 2]
+        # tf.gather(count_to_substract, tf.cumsum(a)) -> [0, 0, 0, 3, 3, 5]
+        # new_word_indices -> [0, 1, 2, 3, 4, 5] - [0, 0, 0, 3, 3, 5] = [0, 1, 2, 0, 1, 0]
+        # this is new indices token dimension
+
+        n_total_word_elements = tf.cast(bs * max_token_seq_len, tf.int32)
+        x_mask = tf.reduce_sum(tf.one_hot(idxs[:, 0] * max_token_seq_len + new_word_indices, n_total_word_elements), 0)
+        x_mask = tf.cast(x_mask, tf.bool)
+        # to get absolute indices we add max_token_seq_len:
+        # idxs[:, 0] * max_token_seq_len -> [0, 0, 0, 1, 1, 2] * 2 = [0, 0, 0, 3, 3, 6]
+        # idxs[:, 0] * max_token_seq_len + new_word_indices ->
+        # [0, 0, 0, 3, 3, 6] + [0, 1, 2, 0, 1, 0] = [0, 1, 2, 3, 4, 6]
+        # total number of words in the batch (including paddings)
+        # bs * max_token_seq_len -> 3 * 2 = 6
+        # tf.one_hot(...) ->
+        # [[1. 0. 0. 0. 0. 0. 0. 0. 0.]
+        #  [0. 1. 0. 0. 0. 0. 0. 0. 0.]
+        #  [0. 0. 1. 0. 0. 0. 0. 0. 0.]
+        #  [0. 0. 0. 1. 0. 0. 0. 0. 0.]
+        #  [0. 0. 0. 0. 1. 0. 0. 0. 0.]
+        #  [0. 0. 0. 0. 0. 0. 1. 0. 0.]]
+        #  x_mask -> [1, 1, 1, 1, 1, 0, 1, 0, 0]
+
+        # full_range -> [0, 1, 2, 3, 4, 5, 6, 7, 8]
+        full_range = tf.cast(tf.range(bs * max_token_seq_len), tf.int32)
+
+        x_idxs = tf.boolean_mask(full_range, x_mask)
+        # x_idxs -> [0, 1, 2, 3, 4, 6]
+
+        y_mask = tf.math.logical_not(x_mask)
+        y_idxs = tf.boolean_mask(full_range, y_mask)
+        # y_idxs -> [5, 7, 8]
+
+        # get a sequence of units corresponding to the start subtokens of the words
+        # size: [n_words, n_features]
+        els = tf.gather_nd(units, idxs)
+
+        # prepare zeros for paddings
+        # size: [batch_size * TOKEN_seq_length - n_words, n_features]
+        paddings = tf.zeros(tf.stack([tf.reduce_sum(max_token_seq_len - token_seq_lenghs),
+                                      nf], 0), tf.float32)
+
+        tensor_flat = tf.dynamic_stitch([x_idxs, y_idxs], [els, paddings])
+
+        tensor = tf.reshape(tensor_flat, tf.stack([bs, max_token_seq_len, nf_int], 0))
+
+        return tensor
+
     def _build_feed_dict(self, input_ids, input_masks, token_types, y_masks, y=None):
         feed_dict = {
             self.input_ids_ph: input_ids,
@@ -314,11 +465,11 @@ class BertNerModel(LRScheduledTFModel):
                        input_masks: List[List[int]],
                        y_masks: List[List[int]],
                        y: List[List[int]]) -> dict:
-        input_type_ids = [[0] * len(inputs) for inputs in input_ids]
-        for ids, masks, ys in zip(input_ids, input_masks, y):
-            assert len(ids) == len(masks) == len(ys), \
-                f"ids({len(ids)}) = {ids}, masks({len(masks)}) = {masks},"\
-                f" ys({len(ys)}) = {ys} should have the same length."
+        input_type_ids = [[0] * len(inputs) for inputs in input_ids]  # TODO: make placeholder with default
+        # for ids, masks, ys in zip(input_ids, input_masks, y):
+        #     assert len(ids) == len(masks) == len(ys), \
+        #         f"ids({len(ids)}) = {ids}, masks({len(masks)}) = {masks},"\
+        #         f" ys({len(ys)}) = {ys} should have the same length."
 
         feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids,
                                           y_masks, y)
@@ -335,7 +486,7 @@ class BertNerModel(LRScheduledTFModel):
         input_type_ids = [[0] * len(inputs) for inputs in input_ids]
         for ids, masks in zip(input_ids, input_masks):
             assert len(ids) == len(masks), \
-                f"ids({len(ids)}) = {ids}, masks({len(masks)}) = {masks}"\
+                f"ids({len(ids)}) = {ids}, masks({len(masks)}) = {masks}" \
                 f" should have the same length."
 
         feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids,
@@ -343,14 +494,31 @@ class BertNerModel(LRScheduledTFModel):
         if self.ema:
             self.sess.run(self.ema.switch_to_test_op)
         if not self.return_probas:
-            pred = self.sess.run(self.y_predictions, feed_dict=feed_dict)
+            if self.use_crf:
+                pred = self._decode_crf(feed_dict)
+            else:
+                pred, seq_lengths = self.sess.run([self.y_predictions, self.seq_lengths], feed_dict=feed_dict)
+                pred = [p[:l] for l, p in zip(seq_lengths, pred)]
         else:
             pred = self.sess.run(self.y_probas, feed_dict=feed_dict)
         return pred
 
+    def _decode_crf(self, feed_dict):
+        logits, trans_params, mask, seq_lengths = self.sess.run([self.logits,
+                                                                 self._transition_params,
+                                                                 self.y_masks_ph,
+                                                                 self.seq_lengths],
+                                                                feed_dict=feed_dict)
+        # iterate over the sentences because no batching in viterbi_decode
+        y_pred = []
+        for logit, sequence_length in zip(logits, seq_lengths):
+            logit = logit[:int(sequence_length)]  # keep only the valid steps
+            viterbi_seq, viterbi_score = tf.contrib.crf.viterbi_decode(logit, trans_params)
+            y_pred += [viterbi_seq]
+        return y_pred
+
 
 class MaskCutter(Component):
-
     def __init__(self, **kwargs):
         pass
 
@@ -367,7 +535,6 @@ class MaskCutter(Component):
 
 
 class ExponentialMovingAverage:
-
     def __init__(self,
                  decay: float = 0.999,
                  variables_on_cpu: bool = True) -> None:
@@ -398,15 +565,15 @@ class ExponentialMovingAverage:
 
                 def ema_to_weights():
                     return tf.group(*(tf.assign(var, self.ema.average(var).read_value())
-                                     for var in update_vars))
+                                      for var in update_vars))
 
                 def save_weight_backups():
                     return tf.group(*(tf.assign(bck, var.read_value())
-                                     for var, bck in zip(update_vars, backup_vars)))
+                                      for var, bck in zip(update_vars, backup_vars)))
 
                 def restore_weight_backups():
                     return tf.group(*(tf.assign(var, bck.read_value())
-                                     for var, bck in zip(update_vars, backup_vars)))
+                                      for var, bck in zip(update_vars, backup_vars)))
 
                 train_switch_op = restore_weight_backups()
                 with tf.control_dependencies([save_weight_backups()]):
@@ -440,4 +607,3 @@ class ExponentialMovingAverage:
             self.train_mode = False
             return self.test_switch_op
         return self.do_nothing_op
-
