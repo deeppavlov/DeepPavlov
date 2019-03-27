@@ -167,8 +167,8 @@ class BertNerModel(LRScheduledTFModel):
                 loss_tensor = -log_likelihood
                 self._transition_params = transition_params
 
-            self.y_predictions = tf.argmax(logits, -1)
-            self.y_probas = tf.nn.softmax(logits, axis=2)
+            self.y_predictions = tf.argmax(self.logits, -1)
+            self.y_probas = tf.nn.softmax(self.logits, axis=2)
 
         with tf.variable_scope("loss"):
             y_mask = tf.cast(tag_mask, tf.float32)
@@ -176,7 +176,7 @@ class BertNerModel(LRScheduledTFModel):
                 self.loss = tf.reduce_mean(loss_tensor)
             elif (self.focal_alpha is None) or (self.focal_gamma is None):
                 self.loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_ph,
-                                                                   logits=logits,
+                                                                   logits=self.logits,
                                                                    weights=y_mask)
             else:
                 y_onehot = tf.one_hot(self.y_ph, self.n_tags)
