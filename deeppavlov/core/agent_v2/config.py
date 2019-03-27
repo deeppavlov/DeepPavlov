@@ -61,7 +61,7 @@ ANNOTATORS = [
     {
         "name": "ner",
         "url": "http://0.0.0.0:2083/ner_rus",
-        "path": configs.dp_assistant.preproc_ner_rus,
+        "path": configs.dp_assistant.preproc_ner_rus_vpc,
         "env": {
             "CUDA_VISIBLE_DEVICES": ""
         }

@@ -1,0 +1,56 @@
+{
+  "chainer": {
+    "in": ["dialogs"],
+    "pipe": [
+      {
+        "info": "0. Retrieve required attributes from dialogs",
+        "class_name": "dialogs_parser",
+        "in": ["dialogs"],
+        "out": [
+          "last_utterances",
+          "last_annotations",
+          "utterances_histories",
+          "annotations_histories",
+          "dialog_ids",
+          "user_ids"
+        ]
+      },
+      {
+        "info": "1. Initialize tokenizer (for input & history)",
+        "id": "tokenizer",
+        "class_name": "ru_tokenizer",
+        "lowercase": false,
+        "alphas_only": false
+      },
+      {
+        "info": "2. Initialize named entity recognizer (to find entities in input)",
+        "id": "ner",
+        "config_path": "{CONFIGS_PATH}/ner/ner_rus_lower_vpc_with_context.json"
+      },
+      {
+        "class_name": "deeppavlov.models.preprocessors.person_normalizer:NerWithContextWrapper",
+        "ner_model": "#ner",
+        "tokenizer": "#tokenizer",
+        "context_delimeter": ".",
+        "in": ["last_utterances", "utterances_histories"],
+        "out": ["tokens", "tags"]
+      }
+    ],
+    "out": ["tokens", "tags"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+    ],
+    "labels": {
+      "telegram_utils": "NERCoNLL2003Model",
+      "server_utils": "NER"
+    },
+    "download": []
+  }
+}
