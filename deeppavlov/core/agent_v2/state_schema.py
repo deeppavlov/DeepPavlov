@@ -73,6 +73,7 @@ class HumanUtterance(Utterance):
 
 
 class BotUtterance(Utterance):
+    sent_text = StringField()
     active_skill = StringField()
     user = ReferenceField(Bot, required=True)
     confidence = FloatField()
@@ -83,6 +84,7 @@ class BotUtterance(Utterance):
             'active_skill': self.active_skill,
             'confidence': self.confidence,
             'text': self.text,
+            'sent_text': self.sent_text or self.text,
             'user_id': str(self.user.id),
             'annotations': self.annotations,
             'date_time': str(self.date_time)

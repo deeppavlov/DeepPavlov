@@ -60,16 +60,16 @@ class StateManager:
             dialog.save()
 
     @classmethod
-    def add_bot_utterances(cls, dialogs: Sequence[Dialog], texts: Sequence[str], date_times: Sequence[datetime],
-                           active_skills: Sequence[str], confidences: Sequence[float],
-                           annotations: Optional[Sequence[dict]] = None) -> None:
+    def add_bot_utterances(cls, dialogs: Sequence[Dialog], texts: Sequence[str], orig_texts: Sequence[str],
+                           date_times: Sequence[datetime], active_skills: Sequence[str],
+                           confidences: Sequence[float], annotations: Optional[Sequence[dict]] = None) -> None:
         if annotations is None:
             annotations = [None] * len(dialogs)
 
-        for dialog, text, date_time, active_skill, confidence, anno in zip(dialogs, texts, date_times,
-                                                                           active_skills, confidences,
-                                                                           annotations):
-            utterance = cls.create_new_bot_utterance(text, dialog.bot, date_time, active_skill, confidence, anno)
+        for dialog, text, o_text, date_time, active_skill, confidence, anno in zip(dialogs, texts, orig_texts,
+                                                                                   date_times, active_skills,
+                                                                                   confidences, annotations):
+            utterance = cls.create_new_bot_utterance(text, o_text, dialog.bot, date_time, active_skill, confidence, anno)
             dialog.utterances.append(utterance)
             dialog.save()
 
@@ -118,8 +118,9 @@ class StateManager:
         return utt
 
     @staticmethod
-    def create_new_bot_utterance(text, user, date_time, active_skill, confidence, annotations=None):
+    def create_new_bot_utterance(text, orig_text, user, date_time, active_skill, confidence, annotations=None):
         utt = BotUtterance(text=text,
+                           orig_text=orig_text,
                            user=user,
                            date_time=date_time,
                            active_skill=active_skill,
