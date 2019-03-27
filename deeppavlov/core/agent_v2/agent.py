@@ -1,9 +1,10 @@
 from datetime import datetime
-from typing import Sequence, Hashable, Any, Dict
+from typing import Sequence, Hashable, Any
 from itertools import compress
 import operator
 
 from deeppavlov.core.agent_v2.preprocessor import Preprocessor
+from deeppavlov.core.agent_v2.postprocessor import Postprocessor
 from deeppavlov.core.agent_v2.state_manager import StateManager
 from deeppavlov.core.agent_v2.skill_manager import SkillManager
 from deeppavlov.core.agent_v2.hardcode_utterances import TG_START_UTT
@@ -12,9 +13,11 @@ from deeppavlov.core.agent_v2.state_schema import Dialog
 
 class Agent:
     def __init__(self, state_manager: StateManager, preprocessor: Preprocessor,
+                 postprocessor: Postprocessor,
                  skill_manager: SkillManager) -> None:
         self.state_manager = state_manager
         self.preprocessor = preprocessor
+        self.postprocessor = postprocessor
         self.skill_manager = skill_manager
 
     def __call__(self, utterances: Sequence[str], user_telegram_ids: Sequence[Hashable],
@@ -31,18 +34,24 @@ class Agent:
 
         state = self.state_manager.get_state(me_dialogs)
 
-        self._update_utterances(me_dialogs, state)
+        selected_skills = self.skill_manager.get_skill_responses(state)
+        self._update_utterances(me_dialogs, selected_skills, key='selected_skills')
 
-        skill_names, utterances, confidences, profiles = self.skill_manager(state)
+        skill_names, responses, confidences, profiles = self.skill_manager(state)
 
         self._update_profiles(me_users, profiles)
 
-        self.state_manager.add_bot_utterances(me_dialogs, utterances, [datetime.utcnow()] * len(me_dialogs),
+        self.state_manager.add_bot_utterances(me_dialogs, responses, responses,
+                                              [datetime.utcnow()] * len(me_dialogs),
                                               skill_names, confidences)
 
         self._update_annotations(me_dialogs)
 
-        return utterances  # return text only to the users
+        state = self.state_manager.get_state(me_dialogs)
+        sent_responses = self.postprocessor(state)
+        self._update_utterances(me_dialogs, sent_responses, key='sent_text')
+
+        return sent_responses # return text only to the users
 
     def _update_annotations(self, me_dialogs: Sequence[Dialog]) -> None:
         annotations = self.preprocessor(self.state_manager.get_state(me_dialogs))
@@ -54,10 +63,9 @@ class Agent:
             if profile:
                 self.state_manager.update_user_profile(me_user, profile)
 
-    def _update_utterances(self, me_dialogs: Sequence[Dialog], state) -> None:
-        selected_skills = self.skill_manager.get_skill_responses(state)
-        if selected_skills:
+    def _update_utterances(self, me_dialogs: Sequence[Dialog], values: Sequence[Any], key: str) -> None:
+        if values:
             utterances = [dialog.utterances[-1] for dialog in me_dialogs]
-            for utt, ss in zip(utterances, selected_skills):
-                self.state_manager.update_me_object(utt, {'selected_skills': ss})
+            for utt, val in zip(utterances, values):
+                self.state_manager.update_me_object(utt, {key: val})
 
