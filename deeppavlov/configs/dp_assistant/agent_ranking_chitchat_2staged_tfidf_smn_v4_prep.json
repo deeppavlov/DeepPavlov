@@ -132,29 +132,7 @@
         "class_name": "hybrid_ranker_predictor",
         "sample_size": 5,
         "in": ["response_candidates", "y_predicted"],
-        "out": ["best_responses", "confidence"]
-      },
-      {
-        "info": "6.0 Detect named entities in response",
-        "class_name": "deeppavlov.models.preprocessors.person_normalizer:NerWithContextWrapper",
-        "ner_model": "#ner",
-        "tokenizer": "#(de)tokenizer",
-        "context_delimeter": ".",
-        "in": ["best_responses", "history_batch", "utterances_batch"],
-        "out": ["response_toks", "response_tags"]
-      },
-      {
-        "info": "6.1 Replace mate names in responses with user name",
-        "class_name": "deeppavlov.models.preprocessors.person_normalizer:PersonNormalizer",
-        "person_tag": "PER",
-        "in": ["response_toks", "response_tags", "name"],
-        "out": ["response_toks_norm", "response_tags"]
-      },
-      {
-        "info": "6.2 Detokenize response",
-        "ref": "(de)tokenizer",
-        "in": ["response_toks_norm"],
-        "out": ["text"]
+        "out": ["text", "confidence"]
       }
     ],
     "out": ["text", "confidence", "name"]
