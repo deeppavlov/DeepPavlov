@@ -1,16 +1,17 @@
 from datetime import datetime
 import uuid
 
-from deeppavlov import configs, build_model
 from deeppavlov.core.agent_v2.agent import Agent
 from deeppavlov.core.agent_v2.state_manager import StateManager
 from deeppavlov.core.agent_v2.skill_manager import SkillManager
 from deeppavlov.core.agent_v2.rest_caller import RestCaller
 from deeppavlov.core.agent_v2.preprocessor import IndependentPreprocessor
+from deeppavlov.core.agent_v2.postprocessor import DefaultPostprocessor
 from deeppavlov.core.agent_v2.response_selector import ConfidenceResponseSelector
 from deeppavlov.core.agent_v2.config import MAX_WORKERS, ANNOTATORS, SKILL_SELECTORS
 from deeppavlov.core.agent_v2.skill_selector import ChitchatQASelector
 from deeppavlov.core.agent_v2.state_schema import Human
+# from deeppavlov import configs, build_model
 
 # ner = build_model(configs.ner.ner_rus, download=True)
 # faq = build_model(configs.faq.tfidf_autofaq, download=True)
@@ -29,6 +30,7 @@ state_manager = StateManager()
 anno_names, anno_urls = zip(*[(annotator['name'], annotator['url']) for annotator in ANNOTATORS])
 preprocessor = IndependentPreprocessor(
     rest_caller=RestCaller(max_workers=MAX_WORKERS, names=anno_names, urls=anno_urls))
+postprocessor = DefaultPostprocessor()
 
 skill_caller = RestCaller(max_workers=MAX_WORKERS)
 response_selector = ConfidenceResponseSelector()
@@ -37,7 +39,7 @@ skill_selector = ChitchatQASelector(RestCaller(max_workers=MAX_WORKERS, names=ss
 skill_manager = SkillManager(skill_selector=skill_selector, response_selector=response_selector,
                              skill_caller=skill_caller)
 
-agent = Agent(state_manager, preprocessor, skill_manager)
+agent = Agent(state_manager, preprocessor, postprocessor, skill_manager)
 
 # TEST predict_annotations()
 # annotations = agent.predict_annotations(utterances, should_reset=[False]*len(utterances))
