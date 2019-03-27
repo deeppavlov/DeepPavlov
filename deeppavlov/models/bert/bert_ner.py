@@ -335,7 +335,7 @@ class BertNerModel(LRScheduledTFModel):
                 example above this units will correspond to the following
 
                 [['My', 'capybara'],
-                 ['Your', 'aar', '##dvark', 'is', 'awesome',]]
+                 ['Your', 'aar', 'is', 'awesome',]]
 
                 the shape of this thesor will be [batch_size, TOKEN_seq_length, n_features]
         """
