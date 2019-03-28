@@ -4,7 +4,7 @@ from deeppavlov.models.preprocessors.person_normalizer import PersonNormalizer
 from deeppavlov.models.tokenizers.utils import detokenize
 
 
-class Postprocessor:
+class Postprocessor(metaclass=ABCMeta):
     def __init__(self):
         pass
 
