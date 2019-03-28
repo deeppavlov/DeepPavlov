@@ -1,14 +1,14 @@
 from typing import Sequence
+from abc import abstractmethod, ABCMeta
 
 from deeppavlov.models.preprocessors.person_normalizer import PersonNormalizer
 from deeppavlov.models.tokenizers.utils import detokenize
 
 
 class Postprocessor(metaclass=ABCMeta):
-    def __init__(self):
-        pass
 
-    def __call__(self, responses):
+    @abstractmethod
+    def __call__(self, state: dict) -> Sequence[str]:
         raise NotImplementedError
 
 
