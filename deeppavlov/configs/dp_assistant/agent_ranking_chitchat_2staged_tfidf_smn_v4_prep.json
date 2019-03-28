@@ -16,27 +16,13 @@
         ]
       },
       {
-        "info": "0.0. Initialize tokenizer/detokenizer, and tokenize input & history",
-        "id": "(de)tokenizer",
-        "class_name": "ru_tokenizer",
-        "lowercase": false,
-        "alphas_only": false
-      },
-      {
-        "info": "0.1. Initializer named entity recognizer, find entities in input",
-        "id": "ner",
-        "config_path": "{CONFIGS_PATH}/ner/ner_rus_lower_vpc_with_context.json"
-      },
-      {
-        "class_name": "deeppavlov.models.preprocessors.person_normalizer:NerWithContextWrapper",
-        "ner_model": "#ner",
-        "tokenizer": "#(de)tokenizer",
-        "context_delimeter": ".",
-        "in": ["utterances_batch", "history_batch"],
+        "class_name": "annotations_parser",
+        "keys": ["ner.tokens", "ner.tags"],
+        "in": ["last_annotations"],
         "out": ["utterance_toks", "utterance_tags"]
       },
       {
-        "info": "0.2. Detect if user introduced himself",
+        "info": "0. Detect if user introduced himself",
         "class_name": "deeppavlov.models.preprocessors.person_normalizer:MyselfDetector",
         "person_tag": "PER",
         "in": ["utterance_toks", "utterance_tags", "dialogs"],
