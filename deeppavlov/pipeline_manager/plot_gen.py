@@ -13,7 +13,9 @@
 # limitations under the License.
 
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict
+from typing import List
+from typing import Union
 
 import matplotlib
 import numpy as np

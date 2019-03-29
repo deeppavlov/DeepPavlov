@@ -14,19 +14,28 @@
 
 import os
 import time
-from contextlib import redirect_stderr, redirect_stdout
-from copy import copy, deepcopy
+from contextlib import redirect_stderr
+from contextlib import redirect_stdout
+from copy import copy
+from copy import deepcopy
 from datetime import datetime
-from multiprocessing import Pool, cpu_count
+from multiprocessing import Pool
+from multiprocessing import cpu_count
 from pathlib import Path
 from shutil import rmtree
-from typing import Dict, Generator, List, Optional, Union
+from typing import Dict
+from typing import Generator
+from typing import List
+from typing import Optional
+from typing import Union
 
 from tqdm import tqdm
 
-from deeppavlov.core.commands.train import get_iterator_from_config, read_data_by_config, \
-    train_evaluate_model_from_config
-from deeppavlov.core.commands.utils import expand_path, parse_config
+from deeppavlov.core.commands.train import get_iterator_from_config
+from deeppavlov.core.commands.train import read_data_by_config
+from deeppavlov.core.commands.train import train_evaluate_model_from_config
+from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator

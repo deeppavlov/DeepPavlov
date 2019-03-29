@@ -19,9 +19,10 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Union
 
-from deeppavlov.pipeline_manager.table_gen import sort_pipes
+from deeppavlov.pipeline_manager.plot_gen import get_met_info
+from deeppavlov.pipeline_manager.plot_gen import plot_res
 from deeppavlov.pipeline_manager.table_gen import build_pipeline_table
-from deeppavlov.pipeline_manager.plot_gen import plot_res, get_met_info
+from deeppavlov.pipeline_manager.table_gen import sort_pipes
 
 
 class ExperimentObserver:

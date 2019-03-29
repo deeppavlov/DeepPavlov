@@ -13,7 +13,10 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import Iterable, List, Optional, Union
+from typing import Iterable
+from typing import List
+from typing import Optional
+from typing import Union
 
 from py3nvml import py3nvml
 

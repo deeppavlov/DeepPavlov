@@ -15,7 +15,11 @@
 from copy import deepcopy
 from itertools import product
 from pathlib import Path
-from typing import Dict, Generator, Iterator, List, Union
+from typing import Dict
+from typing import Generator
+from typing import Iterator
+from typing import List
+from typing import Union
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json

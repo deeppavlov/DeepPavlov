@@ -13,9 +13,11 @@
 # limitations under the License.
 
 import json
-from copy import copy
 from pathlib import Path
-from typing import Dict, List, Tuple, Union
+from typing import Dict
+from typing import List
+from typing import Tuple
+from typing import Union
 
 import xlsxwriter
 
