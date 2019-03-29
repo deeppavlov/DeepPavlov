@@ -18,7 +18,6 @@ from typing import List, Dict, Tuple, Union, Callable
 from logging import getLogger
 from copy import copy
 
-from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 
 logger = getLogger()
@@ -70,7 +69,7 @@ class PersonNormalizer(Component):
                              person_tag: str = 'PER',
                              mate_tag: str = 'MATE-GOOSER') -> \
             Tuple[List[str], List[str]]:
-        if 'B-PER' not in tags:
+        if 'B-' + person_tag not in tags:
             return tokens, tags
         out_tags = []
         i = 0
@@ -92,7 +91,7 @@ class PersonNormalizer(Component):
                     i += j
                     continue
             if i > 0:
-                if (tok == ',') and (tags[i - 1][2:] == 'PER'):
+                if (tok == ',') and (tags[i - 1][2:] == person_tag):
                     # it might have been mate gooser name
                     j = 1
                     while (len(out_tags) >= j) and (out_tags[-j][2:] == person_tag):
