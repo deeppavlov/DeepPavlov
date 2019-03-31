@@ -180,43 +180,14 @@ class BertNerModel(LRScheduledTFModel):
                                                                    weights=y_mask)
             else:
                 y_onehot = tf.one_hot(self.y_ph, self.n_tags)
-                self.loss = self.focal_loss2(labels=y_onehot,
-                                             probs=self.y_probas,
-                                             weights=y_mask,
-                                             alpha=self.focal_alpha,
-                                             gamma=self.focal_gamma)
+                self.loss = self.focal_loss(labels=y_onehot,
+                                            probs=self.y_probas,
+                                            weights=y_mask,
+                                            alpha=self.focal_alpha,
+                                            gamma=self.focal_gamma)
 
     @staticmethod
-    def focal_loss(labels, probs, weights=None, gamma=2.0, alpha=4.0):
-        """
-            focal loss for multi-classification
-            FL(p_t)=-alpha(1-p_t)^{gamma}ln(p_t)
-            gradient is d(Fl)/d(p_t) not d(Fl)/d(x) as described in paper
-            d(Fl)/d(p_t) * [p_t(1-p_t)] = d(Fl)/d(x)
-            Lin, T.-Y., Goyal, P., Girshick, R., He, K., & Dollár, P. (2017).
-            Focal Loss for Dense Object Detection, 130(4), 485–491.
-            https://doi.org/10.1016/j.ajodo.2005.02.022
-            :param labels: ground truth one-hot encoded labels,
-                    shape of [batch_size, num_cls]
-            :param probs: model's output, shape of [batch_size, num_cls]
-            :param gamma:
-            :param alpha:
-            :return: shape of [batch_size]
-            """
-        epsilon = 1e-9
-        labels = tf.cast(labels, tf.float32)
-        probs = tf.cast(probs, tf.float32)
-
-        probs = tf.clip_by_value(probs, epsilon, 1.0 - epsilon)
-        ce = tf.multiply(labels, -tf.log(probs))
-        weight = tf.multiply(labels, tf.pow(tf.subtract(1., probs), gamma))
-        fl = tf.multiply(alpha, tf.multiply(weight, ce))
-        if weights is not None:
-            fl = tf.multiply(tf.reduce_sum(fl, axis=2), weights)
-        return tf.reduce_sum(fl)
-
-    @staticmethod
-    def focal_loss2(labels, probs, weights=None, alpha=1.0, gamma=1):
+    def focal_loss(labels, probs, weights=None, alpha=1.0, gamma=1):
         r"""Compute focal loss for predictions.
             Multi-labels Focal loss formula:
                 FL = -alpha * (z-p)^gamma * log(p) -(1-alpha) * p^gamma * log(1-p)
