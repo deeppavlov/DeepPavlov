@@ -120,12 +120,13 @@ class BertNerPreprocessor(Component):
         subword_tokens, subword_tok_ids, subword_masks, subword_tags = [], [], [], []
         for i in range(len(tokens)):
             toks = tokens[i]
-            ys = ['X'] * len(toks) if tags is None else tags[i]
-            # assert len(toks) == len(ys), \
-            #     f"toks({len(toks)}) should have the same length as " \
-            #     f" ys({len(ys)}), tokens = {toks}."
+            ys = ['O'] * len(toks) if tags is None else tags[i]
+            mask = [int(y != 'X') for y in ys]
+            assert len(toks) == len(ys) == len(mask), \
+                f"toks({len(toks)}) should have the same length as " \
+                f" ys({len(ys)}) and mask({len(mask)}), tokens = {toks}."
             sw_toks, sw_mask, sw_ys = self._ner_bert_tokenize(toks,
-                                                              [1] * len(toks),
+                                                              mask,
                                                               ys,
                                                               self.tokenizer,
                                                               self.max_subword_length,
@@ -153,13 +154,15 @@ class BertNerPreprocessor(Component):
         subword_masks = zero_pad(subword_masks, dtype=int, padding=0)
         if tags is not None:
             if self.provide_not_subword_tags:
-                for swts, swms, ts in zip(subword_tokens, subword_masks, tags):
+                nonmasked_tags = [[t for t in ts if t != 'X']
+                                  for ts in tags]
+                for swts, swms, ts in zip(subword_tokens, subword_masks, nonmasked_tags):
                     if not (len(ts) == sum(swms)):
                         logger.warning('Not matching lengths of the tokenizaion!')
                         logger.warning(f'Tokens len: {len(swts)}\n Tokens: {swts}')
                         logger.warning(f'Masks len: {len(swms)}\n {sum(swms)} Masks: {swms}')
                         logger.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
-                return subword_tokens, subword_tok_ids, subword_masks, tags
+                return subword_tokens, subword_tok_ids, subword_masks, nonmasked_tags 
             else:
                 return subword_tokens, subword_tok_ids, subword_masks, subword_tags
         return subword_tokens, subword_tok_ids, subword_masks
