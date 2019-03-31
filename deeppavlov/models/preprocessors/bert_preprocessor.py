@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import random
 from logging import getLogger
 from typing import Tuple, List, Optional
 
@@ -193,3 +194,94 @@ class BertNerPreprocessor(Component):
         mask_subword.append(0)
         tags_subword.append('X')
         return tokens_subword, mask_subword, tags_subword
+
+
+@register('bert_context_add')
+class BertContextAdd(Component):
+    """Takes tokens and splits them into bert subtokens, encode subtokens with their indices.
+    Creates mask of subtokens (one for first subtoken, zero for later subtokens).
+
+    If tags are provided, calculate tags for subtokens.
+
+    Args:
+        vocab_file: path to vocabulary
+        left_context_size:
+        right_context_size:
+        left_context_rate:
+        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
+
+    Attributes:
+        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
+        l_size:
+        r_size:
+        l_rate:
+        tokenizer: instance of Bert FullTokenizer
+    """
+
+    def __init__(self,
+                 vocab_file: str,
+                 left_context_size: int = 3,
+                 right_context_size: int = 3,
+                 left_context_rate: float = 0.5,
+                 max_seq_length: int = None,
+                 **kwargs):
+        self.l_size = left_context_size
+        self.r_size = right_context_size
+        self.l_rate = left_context_rate
+        self.max_seq_length = max_seq_length or float('inf')
+
+        vocab_file = str(expand_path(vocab_file))
+        self.tokenizer = FullTokenizer(vocab_file=vocab_file,
+                                       do_lower_case=False)
+
+    def __call__(self,
+                 tokens: List[List[str]],
+                 left_context: List[List[str]],
+                 right_context: List[List[str]] = None,
+                 tags: List[List[str]] = None,
+                 **kwargs):
+        tokens_rich, tags_rich = [], []
+        for i in range(len(tokens)):
+            toks = tokens[i]
+            #logger.info(f"{len(left_context)}, {len(left_context[i])}")
+            #if left_context[i]:
+            #    logger.info(f"{len(left_context[i][-1])}, {left_context[i][-1]}")
+            l_ctx = [t for ts in left_context[i][-self.l_size:] for t in ts]
+            r_ctx = []
+            if right_context is None:
+                r_ctx = [t for ts in right_context[i][:self.r_size] for t in ts]
+            ys = ['X'] * len(toks) if tags is None else tags[i]
+            #logger.info(f"l_ctx[:2] = {l_ctx[:2]}")
+
+            tokens_rich.append(toks)
+            tags_rich.append(ys)
+            subtoks_len = len([st for t in toks 
+                               for st in self.tokenizer.tokenize(t)])
+            l_i, r_i = 0, 0
+            while (l_i < len(l_ctx)) or (r_i < len(r_ctx)):
+                l_rate = self.l_rate if r_i < len(r_ctx) else 1.0
+                if (l_i < len(l_ctx)) and (random.random() < l_rate):
+                    # add one token from left_context
+                    subtoks = self.tokenizer.tokenize(l_ctx[-l_i-1])
+                    if subtoks_len + len(subtoks) > self.max_seq_length:
+                        break 
+                    tokens_rich[i] = [l_ctx[-l_i-1]] + tokens_rich[i]
+                    tags_rich[i] = ['X'] + tags_rich[i]
+                    subtoks_len += len(subtoks)
+                    l_i += 1
+                else:
+                    # add one token from right_context
+                    subtoks = self.tokenizer.tokenize(r_ctx[r_i])
+                    if subtoks_len + len(subtoks) > self.max_seq_length:
+                        break 
+                    tokens_rich[i].append(r_ctx[r_i])
+                    tags_rich[i].append('X')
+                    subtoks_len += len(subtoks)
+                    r_i += 1
+
+            assert len(tokens_rich[-1]) == len(tags_rich[-1]), \
+                    "unequal lenghts for tokens and tags"
+        if tags is not None:
+            return tokens_rich, tags_rich
+        return tokens_rich
+
