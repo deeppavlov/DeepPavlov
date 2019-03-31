@@ -42,14 +42,14 @@ class Conll2003DatasetReader(DatasetReader):
     def parse_ner_file(self, file_name: Path):
 
         def add_context(samples, left, right=None, max_size=self.context_size):
-            def get_tokens(sample, with_pos=self.provide_pos):
-                return sample[0][0] if with_pos else sample[0]
+            def get_tokens(sample, is_tuple=self.provide_pos):
+                return sample[0][0] if is_tuple else sample[0]
 
             for i in range(left, right or 0):
                 x, y = samples[i]
                 l = max(left, i - max_size)
                 r = min(right or (i + max_size + 1), i + max_size + 1)
-                l_context = [get_tokens(s) for s in samples[l:i]]
+                l_context = [get_tokens(s, is_tuple=True) for s in samples[l:i]]
                 r_context = [get_tokens(s) for s in samples[i+1:r]]
                 new_x = x if self.provide_pos else (x,)
                 new_x += (l_context, r_context,)
