@@ -131,6 +131,9 @@ PARAMS = {
     "elmo_model": {
         ("elmo/elmo-1b-benchmark_test.json", "elmo-1b-benchmark_test", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
     },
+    "elmo_bilm": {
+        ("bidirectional_lms/elmo_ru_news.json", "bilm", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+    },
 
     "ranking": {
         ("ranking/ranking_insurance_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],

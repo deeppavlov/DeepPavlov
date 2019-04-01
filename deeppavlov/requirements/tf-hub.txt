@@ -1,1 +1,1 @@
-tensorflow-hub==0.1.1
+git+git://github.com/allenai/bilm-tf.git@master
