@@ -25,8 +25,8 @@ from hashlib import md5
 from itertools import chain
 from logging import getLogger
 from pathlib import Path
-from typing import List, Union, Iterable, Optional
-from urllib.parse import urlparse
+from typing import List, Union, Iterable, Optional, Sized, Sequence
+from urllib.parse import urlencode, parse_qs, urlsplit, urlunsplit, urlparse
 
 import numpy as np
 import requests
@@ -266,18 +266,22 @@ def tokenize_reg(s):
     return re.findall(re.compile(pattern), s)
 
 
-def get_dimensions(batch):
+def get_all_dimensions(batch: Sequence, level: int = 0, res: Optional[List[List[int]]] = None) -> List[List[int]]:
+    if not level:
+        res = [[len(batch)]]
+    if len(batch) and isinstance(batch[0], Sized) and not isinstance(batch[0], str):
+        level += 1
+        if len(res) <= level:
+            res.append([])
+        for item in batch:
+            res[level].append(len(item))
+            get_all_dimensions(item, level, res)
+    return res
+
+
+def get_dimensions(batch) -> List[int]:
     """"""
-    if len(batch) > 0 and isinstance(batch[0], Iterable) and not isinstance(batch, str):
-        max_list = [get_dimensions(sample) for sample in batch]
-        max_depth = max(len(m) for m in max_list)
-        max_lens = np.zeros(max_depth, dtype=np.int32)
-        for m in max_list:
-            lm = len(m)
-            max_lens[:lm] = np.maximum(max_lens[:lm], m)
-        return [len(batch)] + list(max_lens)
-    else:
-        return [len(batch)]
+    return list(map(max, get_all_dimensions(batch)))
 
 
 def zero_pad(batch, zp_batch=None, dtype=np.float32, padding=0):
@@ -441,3 +445,36 @@ def update_dict_recursive(editable_dict: dict, editing_dict: dict) -> None:
         else:
             editable_dict[k] = v
 
+
+def path_set_md5(url):
+    """Given a file URL, return a md5 query of the file
+
+    Args:
+        url: a given URL
+    Returns:
+        URL of the md5 file
+    """
+    scheme, netloc, path, query_string, fragment = urlsplit(url)
+    path += '.md5'
+
+    return urlunsplit((scheme, netloc, path, query_string, fragment))
+
+
+def set_query_parameter(url, param_name, param_value):
+    """Given a URL, set or replace a query parameter and return the modified URL.
+
+    Args:
+        url: a given  URL
+        param_name: the parameter name to add
+        param_value: the parameter value
+    Returns:
+        URL with the added parameter
+
+    """
+    scheme, netloc, path, query_string, fragment = urlsplit(url)
+    query_params = parse_qs(query_string)
+
+    query_params[param_name] = [param_value]
+    new_query_string = urlencode(query_params, doseq=True)
+
+    return urlunsplit((scheme, netloc, path, new_query_string, fragment))

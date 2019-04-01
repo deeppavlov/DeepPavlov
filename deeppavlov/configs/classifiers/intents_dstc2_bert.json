@@ -1,0 +1,128 @@
+{
+  "dataset_reader": {
+    "class_name": "dstc2_reader",
+    "data_path": "{DOWNLOADS_PATH}/dstc2"
+  },
+  "dataset_iterator": {
+    "class_name": "dstc2_intents_iterator",
+    "seed": 42
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "id": "classes_vocab",
+        "class_name": "simple_vocab",
+        "fit_on": ["y"],
+        "save_path": "{MODELS_PATH}/classes.dict",
+        "load_path": "{MODELS_PATH}/classes.dict",
+        "in": "y",
+        "out": "y_ids",
+        "special_tokens": ["<UNK>"]
+      },
+      {
+        "class_name": "bert_preprocessor",
+        "vocab_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/vocab.txt",
+        "do_lower_case": false,
+        "max_seq_length": 64,
+        "in": ["x"],
+        "out": ["bert_features"]
+      },
+      {
+        "in": "y_ids",
+        "out": "y_onehot",
+        "class_name": "one_hotter",
+        "id": "my_one_hotter",
+        "depth": "#classes_vocab.len",
+        "single_vector": true
+      },
+      {
+        "class_name": "bert_classifier",
+        "n_classes": "#classes_vocab.len",
+        "return_probas": true,
+        "one_hot_labels": true,
+        "multilabel": true,
+        "bert_config_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/bert_config.json",
+        "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/bert_model.ckpt",
+        "save_path": "{MODELS_PATH}/model",
+        "load_path": "{MODELS_PATH}/model",
+        "keep_prob": 0.5,
+        "learning_rate": 2e-05,
+        "learning_rate_drop_patience": 3,
+        "learning_rate_drop_div": 2.0,
+        "in": ["bert_features"],
+        "in_y": ["y_onehot"],
+        "out": ["y_pred_probas"]
+      },
+      {
+        "in": "y_pred_probas",
+        "out": "y_pred_ids",
+        "class_name": "proba2labels",
+        "confident_threshold": 0.5
+      },
+      {
+        "in": "y_pred_ids",
+        "out": "y_pred_labels",
+        "ref": "classes_vocab"
+      },
+      {
+        "ref": "my_one_hotter",
+        "in": "y_pred_ids",
+        "out": "y_pred_onehot"
+      }
+    ],
+    "out": ["y_pred_probas", "y_pred_labels"]
+  },
+  "train": {
+    "metrics": [
+      {
+        "name": "sets_accuracy",
+        "inputs": ["y", "y_pred_labels"]
+      },
+      {
+        "name": "roc_auc",
+        "inputs": ["y_onehot", "y_pred_probas"]
+      }
+    ],
+    "show_examples": false,
+    "batch_size": 32,
+    "pytest_max_batches": 2,
+    "validation_patience": 10,
+    "val_every_n_batches": 100,
+    "log_every_n_batches": 100,
+    "validate_best": true,
+    "test_best": true,
+    "tensorboard_log_dir": "{MODELS_PATH}/logs"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/intents_dstc2_bert_v0"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+    ],
+    "labels": {
+      "telegram_utils": "IntentModel",
+      "server_utils": "KerasIntentModel"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
+        "subdir": "{DOWNLOADS_PATH}/bert_models"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/datasets/dstc2_v2.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/dstc2"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/intents_dstc2_bert_v0.tar.gz",
+        "subdir": "{ROOT_PATH}/models/classifiers"
+      }
+
+    ]
+  }
+}

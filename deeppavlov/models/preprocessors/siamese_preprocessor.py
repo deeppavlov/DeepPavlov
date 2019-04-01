@@ -92,9 +92,6 @@ class SiamesePreprocessor(Estimator):
 
         super().__init__(load_path=self.load_path, save_path=self.save_path, **kwargs)
 
-    def destroy(self) -> None:
-        self.embedder.destroy()
-
     def fit(self, x: List[List[str]]) -> None:
             self.sent_vocab.fit([el[self.num_context_turns:] for el in x])
             x_tok = [self.tokenizer(el) for el in x]

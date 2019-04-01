@@ -21,7 +21,7 @@ import tensorflow as tf
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.layers.tf_layers import cudnn_bi_lstm, cudnn_bi_gru, bi_rnn, stacked_cnn, INITIALIZER
 from deeppavlov.core.layers.tf_layers import embedding_layer, character_embedding_network, variational_dropout
-from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
+from deeppavlov.core.models.tf_model import LRScheduledTFModel
 
 log = getLogger(__name__)
 
@@ -316,7 +316,9 @@ class NerNetwork(LRScheduledTFModel):
         *xs, y = args
         feed_dict = self._fill_feed_dict(xs, y, train=True)
         _, loss_value = self.sess.run([self.train_op, self.loss], feed_dict)
-        return {'loss': loss_value}
+        return {'loss': loss_value,
+                'learning_rate': self.get_learning_rate(),
+                'momentum': self.get_momentum()}
 
     def process_event(self, event_name, data):
         super().process_event(event_name, data)

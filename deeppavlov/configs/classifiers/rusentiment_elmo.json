@@ -131,6 +131,7 @@
     "epochs": 100,
     "batch_size": 32,
     "metrics": [
+      "f1_weighted",
       "f1_macro",
       "sets_accuracy",
       {
@@ -147,7 +148,7 @@
       "valid",
       "test"
     ],
-    "tensorboard_log_dir": "{MODELS_PATH}/",
+    "tensorboard_log_dir": "{MODELS_PATH}/logs",
     "class_name": "nn_trainer"
   },
   "metadata": {

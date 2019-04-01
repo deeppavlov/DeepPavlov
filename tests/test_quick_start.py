@@ -22,7 +22,7 @@ from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
-from utils.server_utils.server import get_server_params, SERVER_CONFIG_FILENAME
+from deeppavlov.utils.server.server import get_server_params, SERVER_CONFIG_FILENAME
 
 tests_dir = Path(__file__).parent
 test_configs_path = tests_dir / "deeppavlov" / "configs"
@@ -82,6 +82,10 @@ PARAMS = {
         ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "classifiers": {
+        ("classifiers/paraphraser_bert.json", "classifiers", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/insults_kaggle_bert.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/rusentiment_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_dstc2_bert.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_dstc2.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_dstc2_big.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/insults_kaggle.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
@@ -90,6 +94,7 @@ PARAMS = {
         ("classifiers/topic_ag_news.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/rusentiment_cnn.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/rusentiment_elmo.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/rusentiment_bigru_superconv.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/yahoo_convers_vs_info.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "snips": {
@@ -125,11 +130,14 @@ PARAMS = {
                 ("moderate price range", "{'pricerange': 'moderate'}")
             ]
     },
+    "kbqa": {
+        ("kbqa/kbqa_rus.json", "kbqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+    },
     "elmo_embedder": {
-        ("elmo_embedder/elmo_ru-news.json", "elmo_embedder_ru-news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("elmo_embedder/elmo_ru_news.json", "elmo_embedder_ru_news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
     },
     "elmo_model": {
-        ("elmo/elmo-1b-benchmark_test.json", "elmo-1b-benchmark_test", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("elmo/elmo_1b_benchmark_test.json", "elmo_1b_benchmark_test", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
     },
     "elmo_bilm": {
         ("bidirectional_lms/elmo_ru_news.json", "bilm", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -165,6 +173,10 @@ PARAMS = {
             ONE_ARGUMENT_INFER_CHECK]
     },
     "squad": {
+        ("squad/squad_ru_bert.json", "squad_ru_bert", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_ru_bert_infer.json", "squad_ru_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_bert.json", "squad_bert", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_bert_infer.json", "squad_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/multi_squad_noans.json", "multi_squad_noans", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK]

@@ -302,5 +302,3 @@ class TfidfWeightedEmbedder(Component):
 
         return embedded_tokens
 
-    def destroy(self):
-        pass
