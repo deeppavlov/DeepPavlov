@@ -128,6 +128,7 @@ class LRScheduledTFModel(TFModel):
                  learning_rate_decay_batches: int = 0,
                  learning_rate_drop_div: float = 2.0,
                  learning_rate_drop_patience: int = None,
+                 load_before_drop: bool = False,
                  momentum: Union[float, Tuple[float, float]] = None,
                  momentum_decay: Union[DType, Tuple[DType, Any]] = DecayType.NO,
                  momentum_decay_epochs: int = 0,
@@ -204,6 +205,7 @@ class LRScheduledTFModel(TFModel):
         self._learning_rate_cur_impatience = 0.
         self._learning_rate_last_impatience = 0.
         self._learning_rate_cur_div = 1.
+        self._load_before_drop = load_before_drop
         self._clip_norm = clip_norm
         self._fit_batch_size = fit_batch_size
         self._fit_learning_rate = fit_learning_rate
@@ -348,6 +350,8 @@ class LRScheduledTFModel(TFModel):
                 self._learning_rate_cur_impatience = 0
                 self._learning_rate_cur_div *= self._learning_rate_drop_div
                 self._lr /= self._learning_rate_drop_div
+                if self._load_before_drop:
+                    self.load()
                 self._update_tf_variables(learning_rate=self._lr)
                 log.info(f"New learning rate divider = {self._learning_rate_cur_div}")
         if event_name == 'after_batch':
