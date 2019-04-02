@@ -17,7 +17,6 @@ from itertools import product
 from pathlib import Path
 from typing import Dict
 from typing import Generator
-from typing import Iterator
 from typing import List
 from typing import Union
 
@@ -48,19 +47,6 @@ class PipeGen:
                  sample_num: int = 10,
                  test_mode: bool = False) -> None:
         """ Initialize generator with input params. """
-        if isinstance(config, dict):
-            self.main_config = deepcopy(config)
-        else:
-            self.main_config = deepcopy(read_json(config))
-
-        self.dataset_reader = self.main_config.pop("dataset_reader")
-        if not isinstance(self.main_config["dataset_iterator"], dict):
-            raise ConfigError("Dataset iterator must be one for hole experiment.")
-
-        self.train_config = self.main_config.pop("train")
-        self.chainer = self.main_config.pop('chainer')
-        self.structure = self.chainer['pipe']
-
         if mode in ['random', 'grid']:
             self.mode = mode
         else:
@@ -68,61 +54,23 @@ class PipeGen:
 
         self.test_mode = test_mode
         self.save_path = save_path
-        self.length = None
-        self.pipes = []
         self.N = sample_num
-
-        self._check_component_name()
-        self.get_len()
-        self.enumerator = self.pipeline_enumeration()
-        self.generator = self.pipeline_gen()
-
-    def _check_component_name(self) -> None:
-        """ Checks incoming config for the presence of a "component_name" key in the component description dict. """
-        for i, component in enumerate(self.structure):
-            for j, example in enumerate(component):
-                if example is not None:
-                    if "component_name" not in example.keys():
-                        raise ConfigError("The pipeline element in config file, on position {0} and with number {1}"
-                                          "don't contain the 'component_name' key.".format(i + 1, j + 1))
-
-    def get_len(self) -> None:
-        """ Calculate the length of generator. """
-        self.enumerator = self.pipeline_enumeration()
-        generator = self.pipeline_gen()
-        self.length = len(list(generator))
         self.pipes = []
-        del generator
 
-    def __len__(self):
-        return self.length
+        if not isinstance(config, dict):
+            config = read_json(config)
+        self.tmp_config = deepcopy(config)
 
-    def pipeline_enumeration(self) -> Iterator:
-        """
-        Creates a primary set of pipelines using a self.main_config attribute.
-
-        Returns:
-            iterator of primary set of pipelines
-        """
-        for components in self.structure:
-            self.pipes.append(components)
-
-        return product(*self.pipes)
+        self.dataset_reader = config["dataset_reader"]
+        self.train_config = config["train"]
+        self.structure = config['chainer']['pipe']
 
     def _universial(self, pipe: tuple, ind: int):
-        new_config = dict(dataset_reader=deepcopy(self.dataset_reader),
-                          dataset_iterator=self.main_config['dataset_iterator'],
-                          chainer=self.chainer, train=self.train_config)
-        if 'metadata' in self.main_config.keys():
-            new_config['metadata'] = self.main_config['metadata']
-
         chainer_components = list(pipe)
-        dataset_name = self.dataset_reader['data_path'].split('/')[-1]
-        chainer_components = self.change_load_path(chainer_components, ind, self.save_path, dataset_name,
-                                                   self.test_mode)
-        new_config['chainer']['pipe'] = chainer_components
+        chainer_components = self.change_load_path(chainer_components, ind, self.save_path, self.test_mode)
+        self.tmp_config['chainer']['pipe'] = chainer_components
         ind += 1
-        return new_config
+        return self.tmp_config
 
     def pipeline_gen(self) -> Generator:
         """
@@ -131,8 +79,11 @@ class PipeGen:
         Returns:
             iterator of final sets of configs (dicts)
         """
+        for components in self.structure:
+            self.pipes.append(components)
+
         p = 0
-        for i, pipe_var in enumerate(self.enumerator):
+        for i, pipe_var in enumerate(product(*self.pipes)):
             if self.mode == 'random':
                 for pipe_ in self.random_conf_gen(pipe_var):
                     yield self._universial(pipe_, p)
@@ -209,7 +160,6 @@ class PipeGen:
     def change_load_path(config: List[dict],
                          n: int,
                          save_path: Union[str, Path],
-                         dataset_name: str,
                          test_mode: bool = False) -> List[dict]:
         """
         Change save_path and load_path attributes in standard DeepPavlov config.
