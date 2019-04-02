@@ -127,8 +127,12 @@
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
     "show_examples": false,
-    "validate_best": true,
-    "test_best": true
+    "evaluation_targets": [
+      "train",
+      "valid",
+      "test"
+    ],
+    "class_name": "nn_trainer"
   },
   "metadata": {
     "variables": {

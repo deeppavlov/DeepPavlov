@@ -239,7 +239,7 @@ class SklearnComponent(Estimator):
 
         log.info("Saving model to {}".format(str(fname)))
         with open(fname, "wb") as f:
-            pickle.dump(self.model, f)
+            pickle.dump(self.model, f, protocol=4)
         return
 
     @staticmethod
@@ -281,16 +281,6 @@ class SklearnComponent(Estimator):
             x_features = np.hstack(list(x_features))
 
         return x_features
-
-    def destroy(self) -> None:
-        """
-        Delete ``self.model`` from memory
-
-        Returns:
-            None
-        """
-        del self.model
-        return
 
     @staticmethod
     def get_function_params(f: Callable) -> List[str]:

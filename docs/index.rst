@@ -31,6 +31,7 @@ Welcome to DeepPavlov's documentation!
    Spelling Correction <components/spelling_correction>
    TF-IDF Ranking <components/tfidf_ranking>
    Popularity Ranking <components/popularity_ranking>
+   Knowledge Base Question answering <components/kbqa>
 
 
 .. toctree::

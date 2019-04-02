@@ -44,7 +44,7 @@ def save_json(data: dict, fpath: Union[str, Path]) -> None:
 
 def save_pickle(data: dict, fpath: Union[str, Path]) -> None:
     with open(fpath, 'wb') as fout:
-        pickle.dump(data, fout)
+        pickle.dump(data, fout, protocol=4)
 
 
 def load_pickle(fpath: Union[str, Path]) -> Any:

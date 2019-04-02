@@ -80,6 +80,10 @@ def from_params(params: Dict, mode: str = 'infer', serialized: Any = None, **kwa
         model = build_model(config, serialized=serialized)
         _refs.clear()
         _refs.update(refs)
+        try:
+            _refs[config_params['id']] = model 
+        except KeyError:
+            pass
         return model
 
     cls_name = config_params.pop('class_name', None)

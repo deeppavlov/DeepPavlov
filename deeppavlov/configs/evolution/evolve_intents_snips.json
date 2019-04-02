@@ -164,8 +164,8 @@
   "train": {
     "epochs": {
       "evolve_range": [
-        50,
-        500
+        5,
+        10
       ],
       "discrete": true
     },
@@ -190,8 +190,11 @@
     "validation_patience": 5,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
-    "validate_best": true,
-    "test_best": false
+    "evaluation_targets": [
+      "train",
+      "valid"
+    ],
+    "class_name": "nn_trainer"
   },
   "metadata": {
     "variables": {

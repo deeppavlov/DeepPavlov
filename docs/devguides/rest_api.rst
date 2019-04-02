@@ -9,7 +9,7 @@ inference as a REST web service. The general method is:
 (optional ``-d`` key is for dependencies download before service start)
 
 Web service properties (host, port, model endpoint, GET request
-arguments) are provided in ``utils/settings/server_config.json``,
+arguments) are provided in ``deeppavlov/utils/settings/server_config.json``,
 but port can be overridden with the ``-p`` key in command line.
 Properties from ``common_defaults`` section are used by default unless
 they are overridden by component-specific properties, provided in
