@@ -754,7 +754,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
             output_i = MaxPooling1D()(output_i)
             outputs.append(output_i)
 
-        output = concatenate(outputs, axis=1)
+        output = concatenate(outputs, axis=-1)
         output = Dropout(rate=dropout_rate)(output)
 
         output = Bidirectional(LSTM(units_lstm, activation='tanh',
