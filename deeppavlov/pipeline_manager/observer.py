@@ -36,17 +36,56 @@ class ExperimentObserver:
             info: additional information that you want to add to the log, the content of the dictionary
              does not affect the algorithm
             date: date of the experiment.
+            test_mode:
+            plot:
     """
 
-    def __init__(self, name: str, root: Union[str, Path], info: dict, date: str, plot: bool) -> None:
+    def __init__(self,
+                 name: str,
+                 launch_name: Union[str, Path],
+                 root: Union[str, Path],
+                 info: dict,
+                 date: str,
+                 plot: bool,
+                 test_mode: bool = False) -> None:
         """ Initializes the log, creates a folders tree and files necessary for the observer to work. """
-
-        self.exp_name = name
-        self.exp_inf = info
-        self.root = root
-        self.date = date
         self.plot = plot
+        self.test_mode = test_mode
 
+        # build folder dependencies
+        self.exp_log_path = root.joinpath(name, date)
+        if test_mode:
+            self.exp_log_path = self.exp_log_path.joinpath("tmp")
+            if self.exp_log_path.exists():
+                rmtree(str(self.exp_log_path))
+
+        container = [x.name.split('_')[-1] for x in self.exp_log_path.glob(launch_name + "*")]
+        if len(container) == 0:
+            self.exp_log_path = self.exp_log_path.joinpath(launch_name)
+        else:
+            container.remove(launch_name)
+            if len(container) == 0:
+                self.exp_log_path = self.exp_log_path.joinpath(launch_name + '_2')
+            else:
+                self.exp_log_path = self.exp_log_path.joinpath(launch_name + f'_{max(int(x) for x in container) + 1}')
+
+        self.exp_file = self.exp_log_path.joinpath(launch_name + '.json')
+        self.log_file = self.exp_log_path.joinpath('logs.jsonl')
+
+        self.save_path = self.exp_log_path.joinpath('checkpoints')
+        self.save_path.mkdir(parents=True, exist_ok=True)
+        if plot:
+            self.exp_log_path.joinpath('images').mkdir(exist_ok=True)
+
+        self.exp_info = OrderedDict(date=date,
+                                    exp_name=launch_name,
+                                    root=str(root),
+                                    info=info,
+                                    number_of_pipes=None,
+                                    metrics=None,
+                                    target_metric=None,
+                                    dataset_name=None)
+        self.log = None
         # tmp parameters
         self.pipe_ind = 0
         self.pipe_conf = None
@@ -54,26 +93,6 @@ class ExperimentObserver:
         self.pipe_res = None
         self.pipe_time = None
         self.batch_size = None
-
-        # build folder dependencies
-        self.save_path = self.root / self.date / self.exp_name / 'checkpoints'
-        self.log_path = self.root / date / self.exp_name
-        self.exp_file = self.log_path / (self.exp_name + '.json')
-        self.log_file = self.log_path / 'logs.jsonl'
-
-        self.save_path.mkdir(parents=True, exist_ok=True)
-        if self.plot:
-            self.log_path.joinpath('images').mkdir(exist_ok=True)
-
-        self.exp_info = OrderedDict(date=date,
-                                    exp_name=self.exp_name,
-                                    root=str(self.root),
-                                    info=self.exp_inf,
-                                    number_of_pipes=None,
-                                    metrics=None,
-                                    target_metric=None,
-                                    dataset_name=None)
-        self.log = None
 
     def save_exp_info(self, time: str) -> None:
         """
@@ -125,9 +144,9 @@ class ExperimentObserver:
         self.tmp_reset()
         return self
 
-    def save_config(self, conf: dict, dataset_name: str, ind: int) -> None:
+    def save_config(self, conf: dict, ind: int) -> None:
         """ Save train config in checkpoint folder. """
-        with self.save_path.joinpath(dataset_name, f'pipe_{ind}', 'config.json').open('w', encoding='utf8') as cf:
+        with self.save_path.joinpath(f'pipe_{ind}', 'config.json').open('w', encoding='utf8') as cf:
             json.dump(conf, cf)
 
     def save_best_pipe(self) -> None:
@@ -164,7 +183,7 @@ class ExperimentObserver:
             None
         """
         logs = []
-        with self.log_path.joinpath(self.log_path.name + '.json').open('r', encoding='utf8') as exp_log:
+        with self.exp_file.open('r', encoding='utf8') as exp_log:
             exp_info = json.load(exp_log)
 
         with self.log_file.open('r', encoding='utf8') as log_file:
@@ -172,10 +191,20 @@ class ExperimentObserver:
                 logs.append(json.loads(line))
 
         # create the xlsx file with results of experiments
-        build_pipeline_table(exp_info, logs, save_path=self.log_path)
+        build_pipeline_table(exp_info, logs, save_path=self.exp_log_path)
 
         if self.plot:
             # scrub data from log for image creating
             info = get_met_info(logs)
             # plot histograms
-            plot_res(info, exp_info['dataset_name'], self.log_path.joinpath('images'))
+            plot_res(info, exp_info['dataset_name'], self.exp_log_path.joinpath('images'))
+
+    def build_pipe_checkpoint_folder(self, pipe, ind):
+        save_path_i = self.save_path.joinpath("pipe_{}".format(ind + 1))
+        save_path_i.mkdir()
+        # save config in checkpoint folder
+        self.save_config(pipe, ind + 1)
+        return save_path_i
+
+    def del_log(self):
+        rmtree(str(self.exp_log_path))
