@@ -76,18 +76,21 @@
     ]
   },
   "train": {
-	"epochs": 200,
-	"batch_size": 4,
+    "epochs": 200,
+    "batch_size": 4,
 
-	"metrics": ["per_item_dialog_accuracy"],
-	"validation_patience": 10,
-	"val_every_n_epochs": 1,
+    "metrics": ["per_item_dialog_accuracy"],
+    "validation_patience": 10,
+    "val_every_n_epochs": 1,
 
-	"log_every_n_batches": -1,
-	"log_every_n_epochs": 1,
-	"show_examples": false,
-    "validate_best": true,
-    "test_best": true
+    "log_every_n_batches": -1,
+    "log_every_n_epochs": 1,
+    "show_examples": false,
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ],
+    "class_name": "nn_trainer"
   },
   "metadata": {
     "variables": {

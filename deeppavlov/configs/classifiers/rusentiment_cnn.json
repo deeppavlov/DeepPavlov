@@ -11,7 +11,6 @@
     "class_name": "basic_classification_iterator",
     "seed": 42,
     "field_to_split": "train",
-    "split_seed": 23,
     "split_fields": [
       "train",
       "valid"
@@ -47,8 +46,7 @@
         "out": [
           "x_prep"
         ],
-        "class_name": "dirty_comments_preprocessor",
-        "remove_punctuation": false
+        "class_name": "dirty_comments_preprocessor"
       },
       {
         "in": "x_prep",
@@ -95,9 +93,12 @@
         ],
         "filters_cnn": 256,
         "optimizer": "Adam",
-        "learning_rate": 0.01,
-        "learning_rate_decay": 0.1,
-        "loss": "categorical_crossentropy",
+        "learning_rate": [0.01, 1e-4],
+        "learning_rate_decay": "exponential",
+        "learning_rate_decay_batches": 5000,
+        "learning_rate_drop_patience": 5,
+        "learning_rate_drop_div": 5.0,
+        "loss": "binary_crossentropy",
         "last_layer_activation": "softmax",
         "coef_reg_cnn": 1e-3,
         "coef_reg_den": 1e-2,
@@ -126,8 +127,8 @@
     "batch_size": 64,
     "metrics": [
       "f1_weighted",
-      "f1_macro",
       "sets_accuracy",
+      "f1_macro",
       {
         "name": "roc_auc",
         "inputs": ["y_onehot", "y_pred_probas"]
@@ -136,16 +137,20 @@
     "validation_patience": 5,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
+    "tensorboard_log_dir": "{MODELS_PATH}/logs",
     "show_examples": false,
-    "validate_best": true,
-    "test_best": true,
-    "tensorboard_log_dir": "{MODELS_PATH}/"
+    "evaluation_targets": [
+      "train",
+      "valid",
+      "test"
+    ],
+    "class_name": "nn_trainer"
   },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/rusentiment_v9"
+      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/rusentiment_v3"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -161,7 +166,7 @@
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/rusentiment_v9.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/rusentiment_v3.tar.gz",
         "subdir": "{ROOT_PATH}/models/classifiers"
       }
     ]

@@ -96,8 +96,6 @@
   },
   "train": {
     "show_examples": false,
-    "test_best": false,
-    "validate_best": true,
     "log_every_n_batches": 250,
     "val_every_n_epochs": 1,
     "batch_size": 50,
@@ -105,14 +103,16 @@
     "validation_patience": 10,
     "metrics": [
       {
-        "name": "squad_f1",
+        "name": "squad_v1_f1",
         "inputs": ["ans_raw", "ans_predicted"]
       },
       {
-        "name": "exact_match",
+        "name": "squad_v1_em",
         "inputs": ["ans_raw", "ans_predicted"]
       }
-    ]
+    ],
+    "evaluation_targets": ["valid"],
+    "class_name": "nn_trainer"
   },
   "metadata": {
     "variables": {
@@ -140,7 +140,6 @@
         "url": "http://files.deeppavlov.ai/embeddings/wiki-news-300d-1M-char.vec",
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
-      ]
+    ]
   }
 }
-

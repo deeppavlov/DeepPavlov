@@ -12,27 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
 import collections
-from typing import Dict, Any
 import json
+import re
+from logging import getLogger
+from typing import Dict, Any
+
 import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer as xav
 
+import deeppavlov.models.go_bot.templates as templ
+from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.layers import tf_attention_mechanisms as am
 from deeppavlov.core.layers import tf_layers
-from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
 from deeppavlov.core.models.component import Component
-from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.models.tf_model import LRScheduledTFModel
 from deeppavlov.models.go_bot.tracker import Tracker
-import deeppavlov.models.go_bot.templates as templ
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register("go_bot")
@@ -498,15 +498,6 @@ class GoalOrientedBot(LRScheduledTFModel):
         if self.debug:
             log.debug("Bot reset.")
 
-    def destroy(self):
-        if callable(getattr(self.slot_filler, 'destroy', None)):
-            self.slot_filler.destroy()
-        if callable(getattr(self.embedder, 'destroy', None)):
-            self.embedder.destroy()
-        if callable(getattr(self.intent_classifier, 'destroy', None)):
-            self.intent_classifier.destroy()
-        super().destroy()
-
     def network_call(self, features, emb_context, key, action_mask, prob=False):
         feed_dict = {
             self._features: features,
@@ -544,7 +535,9 @@ class GoalOrientedBot(LRScheduledTFModel):
         _, loss_value, prediction = \
             self.sess.run([self._train_op, self._loss, self._prediction],
                           feed_dict=feed_dict)
-        return {'loss': loss_value}
+        return {'loss': loss_value,
+                'learning_rate': self.get_learning_rate(),
+                'momentum': self.get_momentum()}
 
     def _init_network_params(self):
         self.dropout_rate = self.opt['dropout_rate']

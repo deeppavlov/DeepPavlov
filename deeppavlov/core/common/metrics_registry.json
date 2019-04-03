@@ -4,11 +4,11 @@
   "bleu": "deeppavlov.metrics.bleu:bleu",
   "bleu_advanced": "deeppavlov.metrics.bleu:bleu_advanced",
   "elmo_loss2ppl": "deeppavlov.metrics.elmo_metrics:elmo_loss2ppl",
-  "exact_match": "deeppavlov.metrics.squad_metrics:exact_match",
   "f1": "deeppavlov.metrics.fmeasure:round_f1",
   "f1_macro": "deeppavlov.metrics.fmeasure:round_f1_macro",
   "f1_weighted": "deeppavlov.metrics.fmeasure:round_f1_weighted",
   "google_bleu": "deeppavlov.metrics.bleu:google_bleu",
+  "kbqa_accuracy": "deeppavlov.metrics.accuracy:kbqa_accuracy",
   "log_loss": "deeppavlov.metrics.log_loss:sk_log_loss",
   "ner_f1": "deeppavlov.metrics.fmeasure:ner_f1",
   "per_item_accuracy": "deeppavlov.metrics.accuracy:per_item_accuracy",
@@ -25,5 +25,8 @@
   "roc_auc": "deeppavlov.metrics.roc_auc_score:roc_auc_score",
   "sets_accuracy": "deeppavlov.metrics.accuracy:sets_accuracy",
   "slots_accuracy": "deeppavlov.metrics.accuracy:slots_accuracy",
-  "squad_f1": "deeppavlov.metrics.squad_metrics:squad_f1"
+  "squad_v2_em": "deeppavlov.metrics.squad_metrics:squad_v2_exact_match",
+  "squad_v1_em": "deeppavlov.metrics.squad_metrics:squad_v1_exact_match",
+  "squad_v2_f1": "deeppavlov.metrics.squad_metrics:squad_v2_f1",
+  "squad_v1_f1": "deeppavlov.metrics.squad_metrics:squad_v1_f1"
 }

@@ -12,17 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
+from logging import getLogger
 from typing import List, Union, Iterable
 
+import numpy as np
+
 from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.utils import zero_pad_truncate
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.estimator import Estimator
-from deeppavlov.core.data.utils import zero_pad_truncate
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('siamese_preprocessor')
@@ -90,9 +91,6 @@ class SiamesePreprocessor(Estimator):
         self.load_path = expand_path(load_path).resolve()
 
         super().__init__(load_path=self.load_path, save_path=self.save_path, **kwargs)
-
-    def destroy(self) -> None:
-        self.embedder.destroy()
 
     def fit(self, x: List[List[str]]) -> None:
             self.sent_vocab.fit([el[self.num_context_turns:] for el in x])

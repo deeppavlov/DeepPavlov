@@ -16,7 +16,6 @@ import argparse
 
 from deeppavlov.core.common.paths import get_settings_path, populate_settings_dir
 
-
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-d", "--default", action="store_true", help="return to defaults")

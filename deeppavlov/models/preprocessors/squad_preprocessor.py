@@ -16,21 +16,21 @@
 import pickle
 import unicodedata
 from collections import Counter
+from logging import getLogger
 from pathlib import Path
 from typing import Tuple, List, Union
+import bisect
 
 import numpy as np
 from nltk import word_tokenize
 from tqdm import tqdm
 
 from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.utils import download
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.estimator import Estimator
 
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 
 @register('squad_preprocessor')
@@ -114,9 +114,8 @@ class SquadPreprocessor(Component):
             preprocessed line, raw2preprocessed mapping, preprocessed2raw mapping
 
         """
-        line = line.replace("''", '" ').replace("``", '" ')
         if not return_mapping:
-            return ''.join(c for c in line if not unicodedata.combining(c))
+            return ''.join(c for c in line if not unicodedata.combining(c)).replace("''", '" ').replace("``", '" ')
 
         r2p = [len(line)] * (len(line) + 1)
         p2r = [len(line)] * (len(line) + 1)
@@ -128,7 +127,7 @@ class SquadPreprocessor(Component):
                 s += c
                 r2p[i] = len(s) - 1
                 p2r[len(s) - 1] = i
-        return s, r2p, p2r
+        return s.replace("''", '" ').replace("``", '" '), r2p, p2r
 
     @staticmethod
     def convert_idx(text: str, tokens: List[str]) -> List[Tuple[int, int]]:
@@ -321,10 +320,10 @@ class SquadVocabEmbedder(Estimator):
         logger.info('SquadVocabEmbedder: saving {}s vocab to {}'.format(self.level, self.save_path))
         self.save_path.parent.mkdir(parents=True, exist_ok=True)
         with self.save_path.open('wb') as f:
-            pickle.dump((self.emb_dim, self.emb_mat, self.token2idx_dict), f)
+            pickle.dump((self.emb_dim, self.emb_mat, self.token2idx_dict), f, protocol=4)
 
     def serialize(self) -> bytes:
-        return pickle.dumps((self.emb_dim, self.emb_mat, self.token2idx_dict))
+        return pickle.dumps((self.emb_dim, self.emb_mat, self.token2idx_dict), protocol=4)
 
     def _get_idx(self, el: str) -> int:
         """ Returns idx for el (token or char).
@@ -379,3 +378,104 @@ class SquadAnsPostprocessor(Component):
                 end.append(p2r[span[a_end][1]])
                 answers.append(c[start[-1]:end[-1]])
         return answers, start, end
+
+
+@register('squad_bert_mapping')
+class SquadBertMappingPreprocessor(Component):
+    # TODO: docs
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, contexts, bert_features, **kwargs):
+        #TODO
+        subtok2chars = []
+        char2subtoks = []
+        for context, features in zip(contexts, bert_features):
+            subtokens = features.tokens
+            context_start = subtokens.index('[SEP]') + 1
+            idx = 0
+            subtok2char = {}
+            char2subtok = {}
+            for i, subtok in list(enumerate(features.tokens))[context_start:-1]:
+                subtok = subtok[2:] if subtok.startswith('##') else subtok
+                subtok_pos = context[idx:].find(subtok)
+                if subtok_pos == -1:
+                    # it could be UNK
+                    idx += 1  # len was at least one
+                else:
+                    # print(k, '\t', t, p + idx)
+                    idx += subtok_pos
+                    subtok2char[i] = idx
+                    for j in range(len(subtok)):
+                        char2subtok[idx + j] = i
+                    idx += len(subtok)
+            subtok2chars.append(subtok2char)
+            char2subtoks.append(char2subtok)
+
+        return subtok2chars, char2subtoks
+
+
+@register('squad_bert_ans_preprocessor')
+class SquadBertAnsPreprocessor(Component):
+    # TODO: docs
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, answers_raw, answers_start, char2subtoks, **kwargs):
+        answers, starts, ends = [], [], []
+        for answers_raw, answers_start, c2sub in zip(answers_raw, answers_start, char2subtoks):
+            answers.append([])
+            starts.append([])
+            ends.append([])
+            for ans, ans_st in zip(answers_raw, answers_start):
+                try:
+                    st = min({c2sub[i] for i in range(ans_st, ans_st + len(ans)) if i in c2sub})
+                    end = max({c2sub[i] for i in range(ans_st, ans_st + len(ans)) if i in c2sub})
+                except ValueError:
+                    # 0 - CLS token
+                    st, end = 0, 0
+                    ans = ''
+                starts[-1] += [st]
+                ends[-1] += [end]
+                answers[-1] += [ans]
+        return answers, starts, ends
+
+
+@register('squad_bert_ans_postprocessor')
+class SquadBertAnsPostprocessor(Component):
+    # TODO: docs
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, answers_start, answers_end, contexts, bert_features, subtok2chars, **kwargs):
+        answers = []
+        starts = []
+        ends = []
+        for answer_st, answer_end, context, features, sub2c in \
+                zip(answers_start, answers_end, contexts, bert_features, subtok2chars):
+            # CLS token is no_answer token
+            if answer_st == 0 or answer_end == 0:
+                answers += ['']
+                starts += [-1]
+                ends += [-1]
+            else:
+                st = self.get_char_position(sub2c, answer_st)
+                end = self.get_char_position(sub2c, answer_end)
+                subtok = features.tokens[answer_end]
+                subtok = subtok[2:] if subtok.startswith('##') else subtok
+                answer = context[st:end+len(subtok)]
+                answers += [answer]
+                starts += [st]
+                ends += [ends]
+        return answers, starts, ends
+
+    @staticmethod
+    def get_char_position(sub2c, sub_pos):
+        keys = list(sub2c.keys())
+        found_idx = bisect.bisect(keys, sub_pos)
+        if found_idx == 0:
+            return sub2c[keys[0]]
+
+        return sub2c[keys[found_idx - 1]]

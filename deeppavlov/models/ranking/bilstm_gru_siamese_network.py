@@ -12,15 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import getLogger
+
+from keras import backend as K
 from keras.layers import Input, GlobalMaxPooling1D, Lambda, Dense, GRU
 from keras.models import Model
-from keras import backend as K
 
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
 from deeppavlov.models.ranking.bilstm_siamese_network import BiLSTMSiameseNetwork
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 @register('bilstm_gru_nn')
 class BiLSTMGRUSiameseNetwork(BiLSTMSiameseNetwork):

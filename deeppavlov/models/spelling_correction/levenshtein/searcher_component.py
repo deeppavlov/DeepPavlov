@@ -12,17 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import string
+from logging import getLogger
 from math import log10
-from typing import Iterable, List, Tuple
+from typing import Iterable, List, Tuple, Optional
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
-from deeppavlov.core.common.log import get_logger
-
 from .levenshtein_searcher import LevenshteinSearcher
 
-
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 
 @register('spelling_levenshtein')
@@ -33,6 +31,7 @@ class LevenshteinSearcherComponent(Component):
         words: list of every correct word
         max_distance: maximum allowed Damerau-Levenshtein distance between source words and candidates
         error_probability: assigned probability for every edit
+        vocab_penalty: assigned probability of an out of vocabulary token being the correct one without changes
 
     Attributes:
         max_distance: maximum allowed Damerau-Levenshtein distance between source words and candidates
@@ -43,12 +42,13 @@ class LevenshteinSearcherComponent(Component):
 
     _punctuation = frozenset(string.punctuation)
 
-    def __init__(self, words: Iterable[str], max_distance: int=1, error_probability: float=1e-4, *args, **kwargs):
+    def __init__(self, words: Iterable[str], max_distance: int = 1, error_probability: float = 1e-4,
+                 vocab_penalty: Optional[float] = None, **kwargs):
         words = list({word.strip().lower().replace('ё', 'е') for word in words})
         alphabet = sorted({letter for word in words for letter in word})
         self.max_distance = max_distance
         self.error_probability = log10(error_probability)
-        self.vocab_penalty = self.error_probability * 2
+        self.vocab_penalty = self.error_probability if vocab_penalty is None else log10(vocab_penalty)
         self.searcher = LevenshteinSearcher(alphabet, words, allow_spaces=True, euristics=2)
 
     def _infer_instance(self, tokens: Iterable[str]) -> List[List[Tuple[float, str]]]:

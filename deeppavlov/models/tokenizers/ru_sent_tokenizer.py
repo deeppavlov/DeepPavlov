@@ -14,9 +14,10 @@
 
 from typing import Set, Tuple
 
-from deeppavlov.core.models.component import Component
-from deeppavlov.core.common.registry import register
 from rusenttokenize import ru_sent_tokenize, SHORTENINGS, JOINING_SHORTENINGS, PAIRED_SHORTENINGS
+
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.component import Component
 
 
 @register("ru_sent_tokenizer")

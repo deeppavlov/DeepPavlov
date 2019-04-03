@@ -7,16 +7,7 @@
   },
   "dataset_iterator": {
     "class_name": "basic_classification_iterator",
-    "seed": 42,
-    "field_to_split": "train",
-    "split_fields": [
-      "train",
-      "valid"
-    ],
-    "split_proportions": [
-      0.9,
-      0.1
-    ]
+    "seed": 42
   },
   "chainer": {
     "in": "q",
@@ -46,40 +37,60 @@
         ],
         "id": "tfidf_vec",
         "class_name": "sklearn_component",
-        "save_path": "{MODELS_PATH}/vectorizer/tfidf_vectorizer_ruwiki.pkl",
-        "load_path": "{MODELS_PATH}/vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "save_path": "{MODELS_PATH}/vectorizer/tfidf_vectorizer_ruwiki_v1.pkl",
+        "load_path": "{MODELS_PATH}/vectorizer/tfidf_vectorizer_ruwiki_v1.pkl",
         "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
         "infer_method": "transform"
+      },
+      {
+        "id": "answers_vocab",
+        "class_name": "simple_vocab",
+        "fit_on": [
+          "y"
+        ],
+        "save_path": "{MODELS_PATH}/faq/ru_mipt_answers.dict",
+        "load_path": "{MODELS_PATH}/faq/ru_mipt_answers.dict",
+        "in": "y",
+        "out": "y_ids"
       },
       {
         "in": "q_vect",
         "fit_on": [
           "q_vect",
-          "y"
+          "y_ids"
         ],
         "out": [
-          "y_pred"
+          "y_pred_proba"
         ],
-        "C": 1000,
-        "penalty": "l2",
         "class_name": "sklearn_component",
         "main": true,
-        "save_path": "{MODELS_PATH}/faq/tfidf_logreg_classifier.pkl",
-        "load_path": "{MODELS_PATH}/faq/tfidf_logreg_classifier.pkl",
+        "save_path": "{MODELS_PATH}/faq/tfidf_logreg_classifier_v1.pkl",
+        "load_path": "{MODELS_PATH}/faq/tfidf_logreg_classifier_v1.pkl",
         "model_class": "sklearn.linear_model:LogisticRegression",
-        "infer_method": "predict"
+        "infer_method": "predict_proba",
+        "C": 1000,
+        "penalty": "l2"
+      },
+      {
+        "in": "y_pred_proba",
+        "out": "y_pred_ids",
+        "class_name": "proba2labels",
+        "max_proba": true
+      },
+      {
+        "in": "y_pred_ids",
+        "out": "y_pred_answers",
+        "ref": "answers_vocab"
       }
     ],
     "out": [
-      "y_pred"
+      "y_pred_answers",
+      "y_pred_proba"
     ]
   },
   "train": {
-    "metrics": [
-      "accuracy"
-    ],
-    "validate_best": true,
-    "test_best": false
+    "class_name": "fit_trainer",
+    "evaluation_targets": []
   },
   "metadata": {
     "variables": {
@@ -89,16 +100,17 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/faq/school/tfidf_logreg_classifier.pkl",
+        "url": "http://files.deeppavlov.ai/faq/school/tfidf_logreg_classifier_v1.pkl",
         "subdir": "{MODELS_PATH}/faq"
       },
       {
-        "url": "http://files.deeppavlov.ai/vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "url": "http://files.deeppavlov.ai/vectorizer/tfidf_vectorizer_ruwiki_v1.pkl",
         "subdir": "{MODELS_PATH}/vectorizer"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/faq/mipt/ru_mipt_answers.dict",
+        "subdir": "{MODELS_PATH}/faq"
       }
     ]
   }
 }
-
-
-

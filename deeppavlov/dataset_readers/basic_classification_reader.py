@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+from logging import getLogger
 from pathlib import Path
 
 import pandas as pd
@@ -20,11 +21,9 @@ from overrides import overrides
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
-from deeppavlov.core.data.utils import download, mark_done
-from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.data.utils import download
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('basic_classification_reader')
@@ -88,7 +87,6 @@ class BasicClassificationDatasetReader(DatasetReader):
 
                 x = kwargs.get("x", "text")
                 y = kwargs.get('y', 'labels')
-                class_sep = kwargs.get('class_sep', ',')
                 if isinstance(x, list):
                     data[data_type] = [([row[x_] for x_ in x], str(row[y]).split(class_sep)) for _, row in df.iterrows()]
                 else:

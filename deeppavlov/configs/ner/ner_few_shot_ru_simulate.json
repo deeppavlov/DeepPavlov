@@ -9,77 +9,120 @@
     "target_tag": "PER"
   },
   "chainer": {
-    "in": ["x"],
-    "in_y": ["tags"],
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "tags"
+    ],
     "pipe": [
       {
-        "in": ["x"],
+        "in": [
+          "x"
+        ],
         "class_name": "lazy_tokenizer",
-        "out": ["x_tokens"]
+        "out": [
+          "x_tokens"
+        ]
       },
       {
-        "in": ["tags"],
+        "in": [
+          "tags"
+        ],
         "id": "tag_vocab",
         "class_name": "simple_vocab",
         "pad_with_zeros": false,
-        "fit_on": ["tags"],
+        "fit_on": [
+          "tags"
+        ],
         "save_path": "{MODELS_PATH}/ner_fs/tag.dict",
         "load_path": "{MODELS_PATH}/ner_fs/tag.dict",
-        "out": ["tag_indices"]
+        "out": [
+          "tag_indices"
+        ]
       },
       {
         "class_name": "elmo_embedder",
-        "elmo_output_names": ["lstm_outputs1", "lstm_outputs2", "word_emb"],
+        "elmo_output_names": [
+          "lstm_outputs1",
+          "lstm_outputs2",
+          "word_emb"
+        ],
         "mini_batch_size": 32,
-        "in": ["x_tokens"],
+        "in": [
+          "x_tokens"
+        ],
         "spec": "{DOWNLOADS_PATH}/embeddings/elmo_ru_news",
-        "out": ["tokens_emb"]
+        "out": [
+          "tokens_emb"
+        ]
       },
       {
         "class_name": "ner_svm",
         "in": "tokens_emb",
         "out": "tag_indices",
-        "fit_on": ["tokens_emb", "tag_indices"],
+        "fit_on": [
+          "tokens_emb",
+          "tag_indices"
+        ],
         "save_path": "{MODELS_PATH}/ner_fs/model",
         "load_path": "{MODELS_PATH}/ner_fs/model"
       },
       {
         "ref": "tag_vocab",
-        "in": ["tag_indices"],
-        "out": ["tags_hat"]
+        "in": [
+          "tag_indices"
+        ],
+        "out": [
+          "tags_hat"
+        ]
       },
       {
         "class_name": "ner_bio_converter",
-        "in": ["tags_hat"],
-        "out": ["tags_bio_hat"]
+        "in": [
+          "tags_hat"
+        ],
+        "out": [
+          "tags_bio_hat"
+        ]
       },
       {
         "class_name": "ner_bio_converter",
-        "in": ["tags"],
-        "out": ["tags_bio"]
+        "in": [
+          "tags"
+        ],
+        "out": [
+          "tags_bio"
+        ]
       }
-
     ],
-
-    "out": ["x_tokens", "tags_bio_hat"]
+    "out": [
+      "x_tokens",
+      "tags_bio_hat"
+    ]
   },
   "train": {
     "epochs": 100,
     "batch_size": 64,
-
-    "metrics": [{
+    "metrics": [
+      {
         "name": "ner_f1",
         "inputs": [
           "tags_bio",
           "tags_bio_hat"
         ]
-      }],
+      }
+    ],
     "validation_patience": 7,
     "val_every_n_epochs": 1,
-
     "log_every_n_epochs": 1,
     "show_examples": false,
-    "tensorboard_log_dir": "{MODELS_PATH}/ner_fs/logs"
+    "tensorboard_log_dir": "{MODELS_PATH}/ner_fs/logs",
+    "class_name": "fit_trainer",
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ]
   },
   "metadata": {
     "variables": {
@@ -104,4 +147,3 @@
     ]
   }
 }
-

@@ -15,9 +15,9 @@ limitations under the License.
 """
 
 import tensorflow as tf
+from tensorflow.python.framework import tensor_shape
 from tensorflow.python.layers import base
 from tensorflow.python.ops import init_ops
-from tensorflow.python.framework import tensor_shape
 
 
 class KBAttention(base.Layer):
