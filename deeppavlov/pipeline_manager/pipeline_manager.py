@@ -38,7 +38,7 @@ from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
 from deeppavlov.pipeline_manager.gpu_utils import get_available_gpus
 from deeppavlov.pipeline_manager.observer import ExperimentObserver
-from deeppavlov.pipeline_manager.pipegen import PipeGen
+from deeppavlov.pipeline_manager.pipelines_generator import PipeGen
 
 
 class PipelineManager:

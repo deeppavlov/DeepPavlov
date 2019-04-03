@@ -14,4 +14,4 @@
 
 from .pipeline_manager import PipelineManager
 from .observer import ExperimentObserver
-from .pipegen import PipeGen
+from .pipelines_generator import PipeGen

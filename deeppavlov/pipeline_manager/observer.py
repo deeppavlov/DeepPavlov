@@ -13,16 +13,15 @@
 # limitations under the License.
 
 import json
-import shutil
 from collections import OrderedDict
 from pathlib import Path
 from shutil import rmtree
 from typing import Union
 
-from deeppavlov.pipeline_manager.plot_gen import get_met_info
-from deeppavlov.pipeline_manager.plot_gen import plot_res
-from deeppavlov.pipeline_manager.table_gen import build_pipeline_table
-from deeppavlov.pipeline_manager.table_gen import sort_pipes
+from deeppavlov.pipeline_manager.plot_utils import get_met_info
+from deeppavlov.pipeline_manager.plot_utils import plot_res
+from deeppavlov.pipeline_manager.table_utils import build_pipeline_table
+from deeppavlov.pipeline_manager.table_utils import sort_pipes
 
 
 class ExperimentObserver:
@@ -139,6 +138,8 @@ class ExperimentObserver:
             pipe_component_names.append(comp_name)
             if component.get('main'):
                 self.model = comp_name
+            if 'component_name' not in component:
+                component['component_name'] = comp_name
 
         pipe_name = '-->'.join(pipe_component_names)
 
@@ -171,15 +172,10 @@ class ExperimentObserver:
                 logs.append(json.loads(line))
             sort_logs = sort_pipes(logs, target_metric)
 
-        dest1 = self.save_path / 'best_pipe'
-        dest1.mkdir(exist_ok=True)
-
         files = self.save_path.iterdir()
         for f in files:
             if f.name.startswith('pipe') and f.name != f"pipe_{sort_logs[0]['pipe_index']}":
                 rmtree((self.save_path / f.name))
-            elif f.name == f"pipe_{sort_logs[0]['pipe_index']}":
-                shutil.move(str(self.save_path / f.name), str(dest1))
 
     def build_report(self) -> None:
         """
@@ -198,7 +194,7 @@ class ExperimentObserver:
                 logs.append(json.loads(line))
 
         # create the xlsx file with results of experiments
-        build_pipeline_table(exp_info, logs, save_path=self.exp_log_path)
+        build_pipeline_table(logs, self.exp_log_path, exp_info['target_metric'], exp_info['metrics'])
 
         if self.plot:
             # scrub data from log for image creating
