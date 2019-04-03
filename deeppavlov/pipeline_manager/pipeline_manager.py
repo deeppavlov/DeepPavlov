@@ -232,7 +232,11 @@ class PipelineManager:
             self.num_workers = len(self.available_gpu)
 
     @staticmethod
-    def train_pipe(pipe: Dict, i: int, observer_: ExperimentObserver, gpu_ind: Optional[int] = None) -> None:
+    def train_pipe(pipe: Dict,
+                   i: int,
+                   observer_: ExperimentObserver,
+                   available_gpu: Optional[List[int]] = None,
+                   memory_fraction: Optional[float] = None) -> None:
         """
         Start learning single pipeline. Observer write all info in log file.
 
@@ -240,7 +244,8 @@ class PipelineManager:
             pipe: config dict of pipeline
             i:  number of pipeline
             observer_: link to observer object
-            gpu_ind: number of gpu to use (if multiprocessing is True)
+            available_gpu: list of available gpu
+            memory_fraction:
 
         """
         observer_.pipe_ind = i + 1
@@ -249,10 +254,13 @@ class PipelineManager:
         pipe_start = time.time()
 
         # modify project environment
-        if gpu_ind:
-            os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_ind)
+        if available_gpu and memory_fraction:
+            visible_gpu = get_available_gpus(gpu_select=available_gpu, gpu_fraction=memory_fraction)
+            assert len(visible_gpu) != 0
+            os.environ['CUDA_VISIBLE_DEVICES'] = str(visible_gpu[0])
         else:
             os.environ['CUDA_VISIBLE_DEVICES'] = ''
+
         # run pipeline train with redirected output flow
         save_path = observer_.build_pipe_checkpoint_folder(pipe, i + 1)
         proc_out_path = save_path / f"out_{i + 1}.txt"
@@ -267,11 +275,11 @@ class PipelineManager:
         # update logger
         observer_.update_log()
 
-    # TODO refactor gpu index sampling for coincidence with done processes
     def gpu_gen(self,
                 pipes_list: Optional[List] = None,
                 observer: Optional[ExperimentObserver] = None,
-                gpu: bool = False) -> Generator:
+                gpu: bool = False,
+                test_mode: bool = False) -> Generator:
         """
         Create generator that returning tuple of args fore self.train_pipe method.
 
@@ -279,6 +287,7 @@ class PipelineManager:
             pipes_list:
             observer:
             gpu: boolean trigger, determine to use gpu or not
+            test_mode:
 
         """
         if not pipes_list:
@@ -288,10 +297,15 @@ class PipelineManager:
 
         for i, pipe_conf in enumerate(pipes_list):
             if gpu:
-                gpu_ind = i % len(self.available_gpu)
-                yield (deepcopy(pipe_conf), i, observer, self.available_gpu[gpu_ind])
+                if test_mode:
+                    yield (deepcopy(pipe_conf), i, self.available_gpu, self.memory_fraction)
+                else:
+                    yield (deepcopy(pipe_conf), i, observer, self.available_gpu, self.memory_fraction)
             else:
-                yield (deepcopy(pipe_conf), i, observer)
+                if test_mode:
+                    yield (deepcopy(pipe_conf), i)
+                else:
+                    yield (deepcopy(pipe_conf), i, observer)
 
     def run(self):
         """
@@ -358,16 +372,15 @@ class PipelineManager:
                                                     gpu=(self.available_gpu is not None))]
                 for _ in tqdm(as_completed(futures), total=len(futures)):
                     pass
-            del futures
         else:
             for i, pipe in enumerate(tqdm(test_pipes, total=len_gen)):
                 if self.available_gpu is not None:
-                    self.test_pipe(pipe, i, test_observer, self.available_gpu[0])
+                    self.test_pipe(pipe, i, self.available_gpu[0])
                 else:
-                    self.test_pipe(pipe, i, test_observer)
+                    self.test_pipe(pipe, i)
 
         test_observer.del_log()
-        del test_observer, test_pipe_generator, len_gen
+        del test_observer, test_pipe_generator, len_gen, test_pipes
         print("[ The test was successful ]")
 
     # def test(self) -> None:
@@ -379,14 +392,13 @@ class PipelineManager:
     #         print("[ The test was interrupt ]")
 
     @staticmethod
-    def test_pipe(pipe_conf: Dict, ind: int, observer: ExperimentObserver, gpu_ind: Optional[int] = None) -> None:
+    def test_pipe(pipe_conf: Dict, ind: int, gpu_ind: Optional[int] = None) -> None:
         """
         Start testing single pipeline.
 
         Args:
             pipe_conf: pipeline config as dict
             ind: pipeline number
-            observer: test observer class
             gpu_ind: number of gpu card
 
         Returns:
@@ -399,7 +411,7 @@ class PipelineManager:
         else:
             os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
-        data_iterator_i = dataset_reader_and_iterator_test(pipe_conf, ind)
+        data_iterator_i = get_dataset_reader_and_iterator_for_test(pipe_conf, ind)
         results = train_evaluate_model_from_config(pipe_conf,
                                                    iterator=data_iterator_i,
                                                    to_train=True,
@@ -407,7 +419,7 @@ class PipelineManager:
         del results
 
 
-def dataset_reader_and_iterator_test(config: Dict, i: int):
+def get_dataset_reader_and_iterator_for_test(config: Dict, i: int):
     """
     Creating a test iterator with small piece of train dataset. Config and data validation.
 
