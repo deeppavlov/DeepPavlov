@@ -38,22 +38,19 @@ class PipeGen:
             save_path: path to folder with pipelines checkpoints.
             mode: working mode of generator, can be 'random' or 'grid'.
             sample_num: determines the number of generated pipelines, if hyper_search == random.
-            test_mode: trigger that determine logic of changing save and loads paths in config.
     """
 
     def __init__(self,
                  config: Union[str, Dict, Path],
                  save_path: Union[str, Path],
                  mode: str = 'random',
-                 sample_num: int = 10,
-                 test_mode: bool = False) -> None:
+                 sample_num: int = 10) -> None:
         """ Initialize generator with input params. """
         if mode in ['random', 'grid']:
             self.search_mode = mode
         else:
             raise ConfigError(f"'{mode} search' not implemented. Only 'grid' and 'random' search are available.")
 
-        self.test_mode = test_mode
         self.save_path = save_path
         self.N = sample_num
         self.pipe_ind = None
@@ -61,16 +58,12 @@ class PipeGen:
 
         if not isinstance(config, dict):
             config = read_json(config)
-        self.tmp_config = deepcopy(config)
 
-        self.dataset_reader = config["dataset_reader"]
-        self.train_config = config["train"]
+        self.tmp_config = deepcopy(config)
         self.structure = config['chainer']['pipe']
 
     def modify_config(self, pipe: tuple):
-        self.pipe_ind += 1
-        chainer_components = list(pipe)
-        chainer_components = self.change_load_path(chainer_components, self.pipe_ind, self.save_path, self.test_mode)
+        chainer_components = self.change_load_path(list(pipe), self.pipe_ind, self.save_path)
         self.tmp_config['chainer']['pipe'] = chainer_components
         return self.tmp_config
 
@@ -95,6 +88,7 @@ class PipeGen:
 
         for pipe_var in product(*self.pipes):
             for pipe_ in gen_method(pipe_var):
+                self.pipe_ind += 1
                 yield self.modify_config(pipe_)
 
     # random generation
@@ -159,8 +153,7 @@ class PipeGen:
     @staticmethod
     def change_load_path(config: List[dict],
                          pipe_ind: int,
-                         save_path: Union[str, Path],
-                         test_mode: bool = False) -> List[dict]:
+                         save_path: Union[str, Path]) -> List[dict]:
         """
         Change save_path and load_path attributes in standard DeepPavlov config.
 
@@ -168,14 +161,11 @@ class PipeGen:
             config: dict; the chainer content.
             pipe_ind: int; pipeline number
             save_path: str; path to root folder where will be saved all checkpoints
-            test_mode: bool; trigger that determine a regime of pipeline manager work
 
         Returns:
             config: dict; new config with changed save and load paths
         """
         base_path = Path(save_path)
-        if test_mode:
-            base_path /= 'tmp'
         base_path /= f'pipe_{pipe_ind}'
         for component in config:
             if 'save_path' in component:

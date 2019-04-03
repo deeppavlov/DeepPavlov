@@ -55,6 +55,7 @@ class ExperimentObserver:
         # build folder dependencies
         self.exp_log_path = root.joinpath(name, date)
         if test_mode:
+            self.tmp_log_path = root.joinpath(name, date, "tmp")
             self.exp_log_path /= "tmp"
             if self.exp_log_path.exists():
                 rmtree(str(self.exp_log_path))
@@ -73,9 +74,9 @@ class ExperimentObserver:
         self.log_file = self.exp_log_path.joinpath('logs.jsonl')
 
         self.save_path = self.exp_log_path.joinpath('checkpoints')
-        self.save_path.mkdir(parents=True, exist_ok=True)
+        self.save_path.mkdir(parents=True, exist_ok=False)
         if plot:
-            self.exp_log_path.joinpath('images').mkdir(exist_ok=True)
+            self.exp_log_path.joinpath('images').mkdir(exist_ok=False)
 
         self.exp_info = OrderedDict(date=date,
                                     exp_name=launch_name,
@@ -141,7 +142,7 @@ class ExperimentObserver:
 
         pipe_name = '-->'.join(pipe_component_names)
 
-        self.log = {'pipe_index': self.pipe_ind,
+        self.log = {'pipe_index': self.pipe_ind + 1,
                     'model': self.model,
                     'config': self.pipe_conf,
                     'light_config': pipe_name,
@@ -212,5 +213,5 @@ class ExperimentObserver:
         self.save_config(pipe, ind + 1)
         return save_path_i
 
-    def del_log(self):
-        rmtree(str(self.exp_log_path))
+    def del_tmp_log(self):
+        rmtree(str(self.tmp_log_path))

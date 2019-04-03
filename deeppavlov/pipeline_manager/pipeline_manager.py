@@ -131,7 +131,7 @@ class PipelineManager:
         self.exp_name = self.exp_config['pipeline_search'].get('exp_name')
         if not self.exp_name:
             raise ConfigError("In 'pipeline_search' configs section is not specified experiment name.")
-        launch_name = self.exp_config['pipeline_search'].get('launch_name', 'exp_')
+        launch_name = self.exp_config['pipeline_search'].get('launch_name', 'exp')
 
         self.root_path = expand_path(
             Path(self.exp_config['pipeline_search'].get('experiments_root',
@@ -154,8 +154,7 @@ class PipelineManager:
         self.observer = ExperimentObserver(self.exp_name, launch_name, self.root_path, self.info, self.date,
                                            self.create_plots)
         # create the pipeline generator
-        self.pipeline_generator = PipeGen(self.exp_config, self.observer.save_path, self.search_type, self.sample_num,
-                                          test_mode=False)
+        self.pipeline_generator = PipeGen(self.exp_config, self.observer.save_path, self.search_type, self.sample_num)
         self.generated_configs = [conf for conf in self.pipeline_generator()]
         self.gen_len = len(self.generated_configs)
 
@@ -248,11 +247,8 @@ class PipelineManager:
             memory_fraction:
 
         """
-        observer_.pipe_ind = i + 1
-        observer_.pipe_conf = pipe['chainer']['pipe']
         # start pipeline time
         pipe_start = time.time()
-
         # modify project environment
         if available_gpu and memory_fraction:
             visible_gpu = get_available_gpus(gpu_select=available_gpu, gpu_fraction=memory_fraction)
@@ -262,7 +258,9 @@ class PipelineManager:
             os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
         # run pipeline train with redirected output flow
-        save_path = observer_.build_pipe_checkpoint_folder(pipe, i + 1)
+        observer_.pipe_ind = i
+        observer_.pipe_conf = pipe['chainer']['pipe']
+        save_path = observer_.build_pipe_checkpoint_folder(pipe, i)
         proc_out_path = save_path / f"out_{i + 1}.txt"
         proc_err_path = save_path / f"err_{i + 1}.txt"
         with proc_out_path.open("a", encoding='utf8') as out_file, proc_err_path.open("a", encoding='utf8') as err_file:
@@ -358,7 +356,7 @@ class PipelineManager:
         # create the pipeline generator
         test_observer = ExperimentObserver(self.exp_name, "test", self.root_path, self.info, self.date,
                                            self.create_plots, True)
-        test_pipe_generator = PipeGen(self.exp_config, test_observer.save_path, self.search_type, self.sample_num, True)
+        test_pipe_generator = PipeGen(self.exp_config, test_observer.save_path, self.search_type, self.sample_num)
         test_pipes = [conf for conf in test_pipe_generator()]
         len_gen = len(test_pipes)
 
@@ -379,7 +377,7 @@ class PipelineManager:
                 else:
                     self.test_pipe(pipe, i)
 
-        test_observer.del_log()
+        test_observer.del_tmp_log()
         del test_observer, test_pipe_generator, len_gen, test_pipes
         print("[ The test was successful ]")
 
