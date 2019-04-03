@@ -65,7 +65,7 @@ class PipeGen:
     def modify_config(self, pipe: tuple):
         chainer_components = self.change_load_path(list(pipe), self.pipe_ind, self.save_path)
         self.tmp_config['chainer']['pipe'] = chainer_components
-        return self.tmp_config
+        return deepcopy(self.tmp_config)
 
     def __call__(self) -> Generator:
         """
