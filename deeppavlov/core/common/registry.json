@@ -25,6 +25,7 @@
   "dictionary_vectorizer": "deeppavlov.models.vectorizers.word_vectorizer:DictionaryVectorizer",
   "dirty_comments_preprocessor": "deeppavlov.models.preprocessors.dirty_comments_preprocessor:DirtyCommentsPreprocessor",
   "document_chunker": "deeppavlov.models.preprocessors.odqa_preprocessors:DocumentChunker",
+  "document_bert_ner_iterator": "deeppavlov.dataset_iterators.document_bert_ner_iterator:DocumentBertNerIterator",
   "dstc2_intents_iterator": "deeppavlov.dataset_iterators.dstc2_intents_iterator:Dstc2IntentsDatasetIterator",
   "dstc2_ner_iterator": "deeppavlov.dataset_iterators.dstc2_ner_iterator:Dstc2NerDatasetIterator",
   "dstc2_reader": "deeppavlov.dataset_readers.dstc2_reader:DSTC2DatasetReader",
