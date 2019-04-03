@@ -246,15 +246,11 @@ class BertContextAdd(Component):
         tokens_rich, tags_rich = [], []
         for i in range(len(tokens)):
             toks = tokens[i]
-            #logger.info(f"{len(left_context)}, {len(left_context[i])}")
-            #if left_context[i]:
-            #    logger.info(f"{len(left_context[i][-1])}, {left_context[i][-1]}")
-            l_ctx = [t for ts in left_context[i][-self.l_size:] for t in ts]
+            l_ctx = left_context[i][-self.l_size:]
             r_ctx = []
             if right_context is None:
-                r_ctx = [t for ts in right_context[i][:self.r_size] for t in ts]
+                r_ctx = right_context[i][:self.r_size]
             ys = ['X'] * len(toks) if tags is None else tags[i]
-            #logger.info(f"l_ctx[:2] = {l_ctx[:2]}")
 
             tokens_rich.append(toks)
             tags_rich.append(ys)
@@ -265,20 +261,22 @@ class BertContextAdd(Component):
                 l_rate = self.l_rate if r_i < len(r_ctx) else 1.0
                 if (l_i < len(l_ctx)) and (random.random() < l_rate):
                     # add one token from left_context
-                    subtoks = self.tokenizer.tokenize(l_ctx[-l_i-1])
+                    subtoks = [st for t in l_ctx[-l_i-1]
+                               for st in self.tokenizer.tokenize(t)]
                     if subtoks_len + len(subtoks) > self.max_seq_length:
                         break 
-                    tokens_rich[i] = [l_ctx[-l_i-1]] + tokens_rich[i]
-                    tags_rich[i] = ['X'] + tags_rich[i]
+                    tokens_rich[i] = l_ctx[-l_i-1] + tokens_rich[i]
+                    tags_rich[i] = ['X'] * len(l_ctx[-l_i-1]) + tags_rich[i]
                     subtoks_len += len(subtoks)
                     l_i += 1
                 else:
                     # add one token from right_context
-                    subtoks = self.tokenizer.tokenize(r_ctx[r_i])
+                    subtoks = [st for t in r_ctx[r_i]
+                               for st in self.tokenizer.tokenize(t)]
                     if subtoks_len + len(subtoks) > self.max_seq_length:
                         break 
-                    tokens_rich[i].append(r_ctx[r_i])
-                    tags_rich[i].append('X')
+                    tokens_rich[i].extend(r_ctx[r_i])
+                    tags_rich[i].extend(['X'] * len(r_ctx[r_i]))
                     subtoks_len += len(subtoks)
                     r_i += 1
 
