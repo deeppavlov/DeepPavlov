@@ -55,19 +55,19 @@ class ExperimentObserver:
         # build folder dependencies
         self.exp_log_path = root.joinpath(name, date)
         if test_mode:
-            self.exp_log_path = self.exp_log_path.joinpath("tmp")
+            self.exp_log_path /= "tmp"
             if self.exp_log_path.exists():
                 rmtree(str(self.exp_log_path))
 
         container = [x.name.split('_')[-1] for x in self.exp_log_path.glob(launch_name + "*")]
         if len(container) == 0:
-            self.exp_log_path = self.exp_log_path.joinpath(launch_name)
+            self.exp_log_path /= launch_name
         else:
             container.remove(launch_name)
             if len(container) == 0:
-                self.exp_log_path = self.exp_log_path.joinpath(launch_name + '_2')
+                self.exp_log_path /= launch_name + '_2'
             else:
-                self.exp_log_path = self.exp_log_path.joinpath(launch_name + f'_{max(int(x) for x in container) + 1}')
+                self.exp_log_path /= launch_name + f'_{max(int(x) for x in container) + 1}'
 
         self.exp_file = self.exp_log_path.joinpath(launch_name + '.json')
         self.log_file = self.exp_log_path.joinpath('logs.jsonl')
@@ -83,8 +83,7 @@ class ExperimentObserver:
                                     info=info,
                                     number_of_pipes=None,
                                     metrics=None,
-                                    target_metric=None,
-                                    dataset_name=None)
+                                    target_metric=None)
         self.log = None
         # tmp parameters
         self.pipe_ind = 0
@@ -116,7 +115,6 @@ class ExperimentObserver:
         self.model = None
         self.pipe_res = None
         self.pipe_time = None
-        self.batch_size = None
         self.log = None
 
     def write(self) -> None:
@@ -126,18 +124,28 @@ class ExperimentObserver:
 
     def update_log(self):
         """ Updates a log with new pipeline information. """
-        for component in self.pipe_conf:
-            if component.get('main') is True:
-                self.model = component['component_name']
+        def get_comp_name(comp):
+            if 'component_name' in comp:
+                return comp['component_name']
+            elif 'model_class' in comp:
+                return comp['model_class'].split(":")[-1]
+            else:
+                return comp['class_name'].split(":")[-1]
 
-        pipe_name = '-->'.join([x['component_name'] for x in self.pipe_conf])
+        pipe_component_names = []
+        for component in self.pipe_conf:
+            comp_name = get_comp_name(component)
+            pipe_component_names.append(comp_name)
+            if component.get('main'):
+                self.model = comp_name
+
+        pipe_name = '-->'.join(pipe_component_names)
 
         self.log = {'pipe_index': self.pipe_ind,
                     'model': self.model,
                     'config': self.pipe_conf,
                     'light_config': pipe_name,
                     'time': self.pipe_time,
-                    'batch_size': self.batch_size,
                     'results': self.pipe_res}
 
         self.write()
@@ -155,7 +163,6 @@ class ExperimentObserver:
             exp_info = json.load(info)
 
         target_metric = exp_info['target_metric']
-        dataset_name = exp_info['dataset_name']
 
         logs = []
         with self.log_file.open('r', encoding='utf8') as log_file:
@@ -163,16 +170,15 @@ class ExperimentObserver:
                 logs.append(json.loads(line))
             sort_logs = sort_pipes(logs, target_metric)
 
-        source = self.save_path / dataset_name
-        dest1 = self.save_path / dataset_name / 'best_pipe'
+        dest1 = self.save_path / 'best_pipe'
         dest1.mkdir(exist_ok=True)
 
-        files = source.iterdir()
+        files = self.save_path.iterdir()
         for f in files:
-            if f.name.startswith('pipe') and f.name != 'pipe_{}'.format(sort_logs[0]['pipe_index']):
-                rmtree((source / f.name))
-            elif f.name == 'pipe_{}'.format(sort_logs[0]['pipe_index']):
-                shutil.move(str(source / f.name), str(dest1))
+            if f.name.startswith('pipe') and f.name != f"pipe_{sort_logs[0]['pipe_index']}":
+                rmtree((self.save_path / f.name))
+            elif f.name == f"pipe_{sort_logs[0]['pipe_index']}":
+                shutil.move(str(self.save_path / f.name), str(dest1))
 
     def build_report(self) -> None:
         """
@@ -197,10 +203,10 @@ class ExperimentObserver:
             # scrub data from log for image creating
             info = get_met_info(logs)
             # plot histograms
-            plot_res(info, exp_info['dataset_name'], self.exp_log_path.joinpath('images'))
+            plot_res(info, self.exp_info['exp_name'], self.exp_log_path.joinpath('images'))
 
     def build_pipe_checkpoint_folder(self, pipe, ind):
-        save_path_i = self.save_path.joinpath("pipe_{}".format(ind + 1))
+        save_path_i = self.save_path.joinpath(f"pipe_{ind + 1}")
         save_path_i.mkdir()
         # save config in checkpoint folder
         self.save_config(pipe, ind + 1)

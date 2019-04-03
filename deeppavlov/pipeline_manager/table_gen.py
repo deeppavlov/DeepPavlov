@@ -37,7 +37,7 @@ def get_data(logs: list) -> Tuple[int, List]:
     max_com = 0
     pipelines = []
     for val in logs:
-        pipe = dict(index=int(val['pipe_index']), components=[], results={}, time=val['time'])
+        pipe = {"index": int(val['pipe_index']), "components": [], "results": {}, "time": val['time']}
         # max amount of components
         if max_com < len(val['config']):
             max_com = len(val['config'])
@@ -49,7 +49,7 @@ def get_data(logs: list) -> Tuple[int, List]:
             #     if key in stop_words:
             #         del component[key]  # dell = component.pop(key)
 
-            comp_data = dict()
+            comp_data = {}
             comp_data['name'] = component.pop('component_name')
             comp_data['conf'] = component
             pipe['components'].append(comp_data)
@@ -235,7 +235,7 @@ def get_best(data: List[Dict], target: str) -> List[Dict]:
 
     best_pipes = []
     inds = []
-    buf = dict()
+    buf = {}
     for pipe in data:
         pipe_name = get_name(pipe)
         if pipe_name not in buf.keys():
@@ -294,7 +294,7 @@ def build_pipeline_table(exp_data: dict, log_data: list, save_path: Union[str, P
     # read data from log
     max_l, pipe_data = get_data(log_data)
     # create xlsx table form
-    workbook = xlsxwriter.Workbook(str(save_path / 'Report_{0}_{1}.xlsx'.format(exp_name, date)))
+    workbook = xlsxwriter.Workbook(str(save_path / f"Report_{exp_name}_{date}.xlsx"))
     worksheet_1 = workbook.add_worksheet("Pipelines_sort")
     worksheet_2 = workbook.add_worksheet("Pipelines_table")
     # Create a cell format

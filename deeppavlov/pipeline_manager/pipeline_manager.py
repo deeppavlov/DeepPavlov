@@ -209,7 +209,7 @@ class PipelineManager:
 
                 if len(self.use_gpu) == 0:
                     raise ValueError("GPU numbers in 'use_gpu' and 'CUDA_VISIBLE_DEVICES' "
-                                     "has not intersections".format(set(visible_gpu)))
+                                     "has not intersections;")
             elif isinstance(self.use_gpu, int):
                 self.use_gpu = [self.use_gpu]
             elif isinstance(self.use_gpu, str):
@@ -224,7 +224,7 @@ class PipelineManager:
             self.available_gpu = get_available_gpus(gpu_select=self.use_gpu, gpu_fraction=self.memory_fraction)
 
             if len(self.available_gpu) == 0:
-                raise ValueError("All selected GPU with numbers: ({}), are busy.".format(set(self.use_gpu)))
+                raise ValueError(f"All selected GPU with numbers: ({set(self.use_gpu)}), are busy.")
             elif len(self.available_gpu) < len(self.use_gpu):
                 print(f"PipelineManagerWarning: 'CUDA_VISIBLE_DEVICES' = ({self.use_gpu}), "
                       f"but only {self.available_gpu} are available.")
@@ -430,8 +430,8 @@ def dataset_reader_and_iterator_test(config: Dict, i: int):
     else:
         for dtype in dataset_composition_.keys():
             if len(data.get(dtype, [])) == 0 and dataset_composition_[dtype]:
-                raise ConfigError("The file structure in the {0} dataset differs "
-                                  "from the rest datasets.".format(config['dataset_reader']['data_path']))
+                raise ConfigError(f"The file structure in the {config['dataset_reader']['data_path']} dataset differs "
+                                  "from the rest datasets.")
 
     iterator = get_iterator_from_config(config, data)
 

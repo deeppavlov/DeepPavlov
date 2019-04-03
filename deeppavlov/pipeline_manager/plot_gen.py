@@ -33,23 +33,23 @@ def get_met_info(logs_: List[Dict]) -> Dict:
     Returns:
         data: experiments logs grouped by model name
     """
-    main = dict()
+    main = {}
 
     if logs_[0]['results'].get('test'):
         metrics_ = list(logs_[0]['results']['test'].keys())
     else:
         metrics_ = list(logs_[0]['results']['valid'].keys())
 
-    group_data = dict()
+    group_data = {}
     for val in logs_:
         if val['model'] not in group_data:
-            group_data[val['model']] = dict()
+            group_data[val['model']] = {}
             group_data[val['model']][val['pipe_index']] = val
         else:
             group_data[val['model']][val['pipe_index']] = val
 
     for name in group_data.keys():
-        main[name] = dict()
+        main[name] = {}
         for met in metrics_:
             met_max = -1
             for key, val in group_data[name].items():
@@ -61,9 +61,9 @@ def get_met_info(logs_: List[Dict]) -> Dict:
                         if val['results']['valid'][met] > met_max:
                             met_max = val['results']['valid'][met]
                     else:
-                        raise ValueError("Pipe with number {0} not contain 'test' or 'valid' keys in results, "
+                        raise ValueError(f"Pipe with number {key} not contain 'test' or 'valid' keys in results, "
                                          "and it will not participate in comparing the results to display "
-                                         "the final plot.".format(key))
+                                         "the final plot.")
             main[name][met] = met_max
     return main
 
@@ -156,6 +156,6 @@ def plot_res(info: dict,
     else:
         if not savepath.is_dir():
             savepath.mkdir()
-        adr = savepath / '{0}.{1}'.format(name, ext)
+        adr = savepath / f"{name}.{ext}"
         fig.savefig(str(adr), dpi=100)
         plt.close(fig)
