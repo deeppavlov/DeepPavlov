@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Dict
 from typing import Generator
 from typing import List
+from typing import Tuple
 from typing import Union
 
 from deeppavlov.core.common.errors import ConfigError
@@ -48,13 +49,14 @@ class PipeGen:
                  test_mode: bool = False) -> None:
         """ Initialize generator with input params. """
         if mode in ['random', 'grid']:
-            self.mode = mode
+            self.search_mode = mode
         else:
             raise ConfigError(f"'{mode} search' not implemented. Only 'grid' and 'random' search are available.")
 
         self.test_mode = test_mode
         self.save_path = save_path
         self.N = sample_num
+        self.pipe_ind = None
         self.pipes = []
 
         if not isinstance(config, dict):
@@ -65,34 +67,38 @@ class PipeGen:
         self.train_config = config["train"]
         self.structure = config['chainer']['pipe']
 
-    def _universial(self, pipe: tuple, ind: int):
+    def modify_config(self, pipe: tuple):
+        self.pipe_ind += 1
         chainer_components = list(pipe)
-        chainer_components = self.change_load_path(chainer_components, ind, self.save_path, self.test_mode)
+        chainer_components = self.change_load_path(chainer_components, self.pipe_ind, self.save_path, self.test_mode)
         self.tmp_config['chainer']['pipe'] = chainer_components
-        ind += 1
         return self.tmp_config
 
-    def pipeline_gen(self) -> Generator:
+    def __call__(self) -> Generator:
         """
         Creates a configs with a different set of hyperparameters based on the primary set of pipelines.
 
         Returns:
             iterator of final sets of configs (dicts)
         """
-        for components in self.structure:
-            self.pipes.append(components)
+        self.pipe_ind = 0
+        if self.search_mode == 'random':
+            gen_method = self.random_conf_gen
+        else:
+            gen_method = self.grid_conf_gen
 
-        p = 0
-        for i, pipe_var in enumerate(product(*self.pipes)):
-            if self.mode == 'random':
-                for pipe_ in self.random_conf_gen(pipe_var):
-                    yield self._universial(pipe_, p)
+        for components in self.structure:
+            if isinstance(components, dict):
+                self.pipes.append([components])
             else:
-                for pipe_ in self.grid_conf_gen(pipe_var):
-                    yield self._universial(pipe_, p)
+                self.pipes.append(components)
+
+        for pipe_var in product(*self.pipes):
+            for pipe_ in gen_method(pipe_var):
+                yield self.modify_config(pipe_)
 
     # random generation
-    def random_conf_gen(self, pipe_components: List[dict]) -> Generator:
+    def random_conf_gen(self, pipe_components: Tuple[dict]) -> Generator:
         """
         Creates a set of configs with a different set of hyperparameters using "random search".
 
@@ -107,14 +113,9 @@ class PipeGen:
         for component in pipe_components:
             new_components = []
             if component:
-                search = False
-                for key, item in component.items():
-                    if isinstance(item, dict):
-                        for item_key in item.keys():
-                            if item_key.startswith('random_'):
-                                search = True
-                                break
-
+                search = any(item_key.startswith('random_')
+                             for item in component.values() if isinstance(item, dict)
+                             for item_key in item.keys())
                 if search:
                     for i in range(self.N):
                         new_components.append(sample_gen.sample_params(**component))
@@ -127,7 +128,7 @@ class PipeGen:
 
     # grid generation
     @staticmethod
-    def grid_conf_gen(pipe_components: List[dict]) -> Generator:
+    def grid_conf_gen(pipe_components: Tuple[dict]) -> Generator:
         """
         Creates a set of configs with a different set of hyperparameters using "grid search".
 
@@ -142,10 +143,9 @@ class PipeGen:
         for i, component in enumerate(pipe_components):
             if component is not None:
                 for key, item in component.items():
-                    if isinstance(item, dict):
-                        if 'grid_search' in item.keys():
-                            var_list = [{var: [i, key]} for var in item['grid_search']]
-                            list_of_variants.append(var_list)
+                    if isinstance(item, dict) and 'grid_search' in item:
+                        var_list = [{var: [i, key]} for var in item['grid_search']]
+                        list_of_variants.append(var_list)
         # create generator
         valgen = product(*list_of_variants)
         # run generator
@@ -158,7 +158,7 @@ class PipeGen:
 
     @staticmethod
     def change_load_path(config: List[dict],
-                         n: int,
+                         pipe_ind: int,
                          save_path: Union[str, Path],
                          test_mode: bool = False) -> List[dict]:
         """
@@ -166,53 +166,20 @@ class PipeGen:
 
         Args:
             config: dict; the chainer content.
-            n: int; pipeline number
+            pipe_ind: int; pipeline number
             save_path: str; path to root folder where will be saved all checkpoints
-            dataset_name: str; name of dataset
             test_mode: bool; trigger that determine a regime of pipeline manager work
 
         Returns:
             config: dict; new config with changed save and load paths
         """
+        base_path = Path(save_path)
+        if test_mode:
+            base_path /= 'tmp'
+        base_path /= f'pipe_{pipe_ind}'
         for component in config:
-            if component.get('main') is True:
-                if component.get('save_path', None) is not None:
-                    sp = Path(component['save_path']).name
-                    if not test_mode:
-                        new_save_path = str(save_path / dataset_name / 'pipe_{}'.format(n + 1) / sp)
-                        component['save_path'] = new_save_path
-                    else:
-                        new_save_path = str(save_path / "tmp" / dataset_name /
-                                            'pipe_{}'.format(n + 1) / sp)
-                        component['save_path'] = new_save_path
-                if component.get('load_path', None) is not None:
-                    lp = Path(component['load_path']).name
-                    if not test_mode:
-                        new_load_path = str(save_path / dataset_name / 'pipe_{}'.format(n + 1) / lp)
-                        component['load_path'] = new_load_path
-                    else:
-                        new_load_path = str(save_path / "tmp" / dataset_name /
-                                            'pipe_{}'.format(n + 1) / lp)
-                        component['load_path'] = new_load_path
-            else:
-                if component.get('save_path', None) is not None:
-                    sp = Path(component['save_path']).name
-                    if not test_mode:
-                        new_save_path = str(save_path / dataset_name / sp)
-                        component['save_path'] = new_save_path
-                    else:
-                        new_save_path = str(save_path / "tmp" / dataset_name / sp)
-                        component['save_path'] = new_save_path
-                if component.get('load_path', None) is not None:
-                    lp = Path(component['load_path']).name
-                    if not test_mode:
-                        new_load_path = str(save_path / dataset_name / lp)
-                        component['load_path'] = new_load_path
-                    else:
-                        new_load_path = str(save_path / "tmp" / dataset_name / lp)
-                        component['load_path'] = new_load_path
-
+            if 'save_path' in component:
+                component['save_path'] = str(base_path / Path(component['save_path']).name)
+            if 'load_path' in component:
+                component['load_path'] = str(base_path / Path(component['load_path']).name)
         return config
-
-    def __call__(self, *args, **kwargs) -> Generator:
-        return self.generator

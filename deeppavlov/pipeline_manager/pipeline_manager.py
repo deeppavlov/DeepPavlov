@@ -23,6 +23,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict
 from typing import Generator
+from typing import List
 from typing import Optional
 from typing import Union
 
@@ -35,10 +36,9 @@ from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
-from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
+from deeppavlov.pipeline_manager.gpu_utils import get_available_gpus
 from deeppavlov.pipeline_manager.observer import ExperimentObserver
 from deeppavlov.pipeline_manager.pipegen import PipeGen
-from deeppavlov.pipeline_manager.utils import get_available_gpus
 
 
 class PipelineManager:
@@ -154,10 +154,10 @@ class PipelineManager:
         self.observer = ExperimentObserver(self.exp_name, launch_name, self.root_path, self.info, self.date,
                                            self.create_plots)
         # create the pipeline generator
-        # TODO refactor generator structure
         self.pipeline_generator = PipeGen(self.exp_config, self.observer.save_path, self.search_type, self.sample_num,
                                           test_mode=False)
-        self.gen_len = self.pipeline_generator.length
+        self.generated_configs = [conf for conf in self.pipeline_generator()]
+        self.gen_len = len(self.generated_configs)
 
         # write train data in observer
         self.observer.exp_info['number_of_pipes'] = self.gen_len
@@ -269,29 +269,28 @@ class PipelineManager:
 
     # TODO refactor gpu index sampling for coincidence with done processes
     def gpu_gen(self,
-                pipe_gen: Optional[PipeGen] = None,
+                pipes_list: Optional[List] = None,
                 observer: Optional[ExperimentObserver] = None,
                 gpu: bool = False) -> Generator:
         """
         Create generator that returning tuple of args fore self.train_pipe method.
 
         Args:
-            pipe_gen:
+            pipes_list:
             observer:
             gpu: boolean trigger, determine to use gpu or not
 
         """
-        if not pipe_gen:
-            pipe_gen = self.pipeline_generator
+        if not pipes_list:
+            pipes_list = self.generated_configs
         if not observer:
             observer = self.observer
 
-        if gpu:
-            for i, pipe_conf in enumerate(pipe_gen()):
+        for i, pipe_conf in enumerate(pipes_list):
+            if gpu:
                 gpu_ind = i % len(self.available_gpu)
                 yield (deepcopy(pipe_conf), i, observer, self.available_gpu[gpu_ind])
-        else:
-            for i, pipe_conf in enumerate(pipe_gen()):
+            else:
                 yield (deepcopy(pipe_conf), i, observer)
 
     def run(self):
@@ -308,7 +307,7 @@ class PipelineManager:
                 for _ in tqdm(as_completed(futures), total=len(futures)):
                     pass
         else:
-            for i, pipe in enumerate(tqdm(self.pipeline_generator(), total=self.gen_len)):
+            for i, pipe in enumerate(tqdm(self.generated_configs, total=self.gen_len)):
                 if self.available_gpu is not None:
                     self.train_pipe(pipe, i, self.observer, self.available_gpu[0])
                 else:
@@ -346,21 +345,22 @@ class PipelineManager:
         test_observer = ExperimentObserver(self.exp_name, "test", self.root_path, self.info, self.date,
                                            self.create_plots, True)
         test_pipe_generator = PipeGen(self.exp_config, test_observer.save_path, self.search_type, self.sample_num, True)
-        len_gen = test_pipe_generator.length
+        test_pipes = [conf for conf in test_pipe_generator()]
+        len_gen = len(test_pipes)
 
         # Start generating pipelines configs
         print(f"[ Test start - {len_gen} pipes, will be run]")
         if self.multiprocessing:
             with ProcessPoolExecutor(self.num_workers) as executor:
                 futures = [executor.submit(self.test_pipe, *args)
-                           for args in self.gpu_gen(test_pipe_generator,
+                           for args in self.gpu_gen(test_pipes,
                                                     test_observer,
                                                     gpu=(self.available_gpu is not None))]
                 for _ in tqdm(as_completed(futures), total=len(futures)):
                     pass
             del futures
         else:
-            for i, pipe in enumerate(tqdm(test_pipe_generator(), total=len_gen)):
+            for i, pipe in enumerate(tqdm(test_pipes, total=len_gen)):
                 if self.available_gpu is not None:
                     self.test_pipe(pipe, i, test_observer, self.available_gpu[0])
                 else:
@@ -434,27 +434,6 @@ def dataset_reader_and_iterator_test(config: Dict, i: int):
                                   "from the rest datasets.".format(config['dataset_reader']['data_path']))
 
     iterator = get_iterator_from_config(config, data)
-
-    # todo it is really need ? (may be users shoud be able to learn it)
-    if isinstance(iterator, DataFittingIterator):
-        raise ConfigError("Instance of a class 'DataFittingIterator' is not supported.")
-    else:
-        if config.get('train', None):
-            if config['train']['test_best'] and len(iterator.data['test']) == 0:
-                raise ConfigError(
-                    "The 'test' part of dataset is empty, but 'test_best' in train config is 'True'."
-                    " Please check the dataset_iterator config.")
-
-            if (config['train']['validate_best'] or config['train'].get('val_every_n_epochs', False) > 0) and \
-                    len(iterator.data['valid']) == 0:
-                raise ConfigError(
-                    "The 'valid' part of dataset is empty, but 'valid_best' in train config is 'True'"
-                    " or 'val_every_n_epochs' > 0. Please check the dataset_iterator config.")
-        else:
-            if len(iterator.data['test']) == 0:
-                raise ConfigError("The 'test' part of dataset is empty as a 'train' part of config file, "
-                                  "but default value of 'test_best' is 'True'. "
-                                  "Please check the dataset_iterator config.")
 
     # get a tiny data from dataset
     if len(iterator.data['train']) <= 100:
