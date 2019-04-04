@@ -120,7 +120,7 @@ class ExperimentObserver:
     def write(self) -> None:
         """ Write pipeline logs in jsonl file. """
         with self.log_file.open('a', encoding='utf8') as f:
-            print(json.dumps(self.log, indent=4), file=f)
+            print(json.dumps(self.log), file=f)
 
     def update_log(self):
         """ Updates a log with new pipeline information. """

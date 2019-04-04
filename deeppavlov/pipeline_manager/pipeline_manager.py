@@ -160,7 +160,7 @@ class PipelineManager:
 
         # write train data in observer
         self.observer.exp_info['number_of_pipes'] = self.gen_len
-        self.observer.exp_info['experiment_config'] = config_path
+        self.observer.exp_info['experiment_config'] = str(config_path)
 
         self.observer.exp_info['metrics'] = []
         for met in self.exp_config['train']['metrics']:
