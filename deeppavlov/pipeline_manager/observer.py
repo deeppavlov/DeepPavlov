@@ -105,7 +105,7 @@ class ExperimentObserver:
         """
         self.exp_info['full_time'] = time
         with self.exp_file.open('w', encoding='utf8') as exp_file:
-            json.dump(self.exp_info, exp_file)
+            json.dump(self.exp_info, exp_file, indent=4)
 
     def tmp_reset(self) -> None:
         """ Reinitialize temporary attributes. """
@@ -120,7 +120,7 @@ class ExperimentObserver:
     def write(self) -> None:
         """ Write pipeline logs in jsonl file. """
         with self.log_file.open('a', encoding='utf8') as f:
-            print(json.dumps(self.log), file=f)
+            print(json.dumps(self.log, indent=4), file=f)
 
     def update_log(self):
         """ Updates a log with new pipeline information. """
@@ -157,7 +157,7 @@ class ExperimentObserver:
     def save_config(self, conf: dict, ind: int) -> None:
         """ Save train config in checkpoint folder. """
         with self.save_path.joinpath(f'pipe_{ind}', 'config.json').open('w', encoding='utf8') as cf:
-            json.dump(conf, cf)
+            json.dump(conf, cf, indent=4)
 
     def save_best_pipe(self) -> None:
         """ Calculate the best pipeline and delete others pipelines checkpoints. """
