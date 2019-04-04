@@ -168,13 +168,16 @@ class PipeGen:
         base_path = Path(save_path).joinpath(f'pipe_{pipe_ind}')
         for component in config:
             if 'save_path' in component:
-                if len(Path(component['save_path']).name.split('.')) != 1:
-                    component['save_path'] = str(base_path / Path(component['save_path']).name)
+                component_path = Path(component['save_path'])
+                if len(component_path.name.split('.')) != 1:
+                    component['save_path'] = str(base_path / component_path.name)
                 else:
-                    component['save_path'] = str(base_path)
-            if 'load_path' in component:
-                if len(Path(component['load_path']).name.split('.')) != 1:
-                    component['load_path'] = str(base_path / Path(component['load_path']).name)
-                else:
-                    component['load_path'] = str(base_path)
+                    component['save_path'] = str(base_path / component_path.parent.name / component_path.name)
+
+                if 'load_path' in component:
+                    if len(component_path.name.split('.')) != 1:
+                        component['load_path'] = str(base_path / component_path.name)
+                    else:
+                        component['load_path'] = str(base_path / component_path.parent.name / component_path.name)
+
         return config

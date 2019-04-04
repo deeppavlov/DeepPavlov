@@ -174,8 +174,7 @@ class PipelineManager:
         else:
             self.observer.exp_info['target_metric'] = self.observer.exp_info['metrics'][0]
 
-        if self.multiprocessing:
-            self.prepare_multiprocess()
+        self.prepare_multiprocess()
 
         # write time of experiment start
         self.start_exp = time.time()
@@ -202,15 +201,16 @@ class PipelineManager:
             except KeyError:
                 visible_gpu = None
 
-            if isinstance(self.use_gpu, list):
+            if isinstance(self.use_gpu, (list, int)):
+                if isinstance(self.use_gpu, int):
+                    self.use_gpu = [self.use_gpu]
+
                 if visible_gpu:
                     self.use_gpu = list(set(self.use_gpu) & set(visible_gpu))
 
                 if len(self.use_gpu) == 0:
                     raise ValueError("GPU numbers in 'use_gpu' and 'CUDA_VISIBLE_DEVICES' "
                                      "has not intersections;")
-            elif isinstance(self.use_gpu, int):
-                self.use_gpu = [self.use_gpu]
             elif isinstance(self.use_gpu, str):
                 if self.use_gpu == "all":
                     self.use_gpu = visible_gpu
@@ -224,7 +224,7 @@ class PipelineManager:
 
             if len(self.available_gpu) == 0:
                 raise ValueError(f"All selected GPU with numbers: ({set(self.use_gpu)}), are busy.")
-            elif len(self.available_gpu) < len(self.use_gpu):
+            elif self.use_gpu and len(self.available_gpu) < len(self.use_gpu):
                 print(f"PipelineManagerWarning: 'CUDA_VISIBLE_DEVICES' = ({self.use_gpu}), "
                       f"but only {self.available_gpu} are available.")
 
@@ -250,7 +250,7 @@ class PipelineManager:
         # start pipeline time
         pipe_start = time.time()
         # modify project environment
-        if available_gpu and memory_fraction:
+        if available_gpu is not None and memory_fraction is not None:
             visible_gpu = get_available_gpus(gpu_select=available_gpu, gpu_fraction=memory_fraction)
             assert len(visible_gpu) != 0
             os.environ['CUDA_VISIBLE_DEVICES'] = str(visible_gpu[0])
@@ -320,8 +320,8 @@ class PipelineManager:
                     pass
         else:
             for i, pipe in enumerate(tqdm(self.generated_configs, total=self.gen_len)):
-                if self.available_gpu is not None:
-                    self.train_pipe(pipe, i, self.observer, self.available_gpu[0])
+                if self.available_gpu:
+                    self.train_pipe(pipe, i, self.observer, self.available_gpu[0], self.memory_fraction)
                 else:
                     self.train_pipe(pipe, i, self.observer)
 

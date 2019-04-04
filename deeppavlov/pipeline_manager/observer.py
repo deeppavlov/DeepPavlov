@@ -129,6 +129,8 @@ class ExperimentObserver:
                 return comp['component_name']
             elif 'model_class' in comp:
                 return comp['model_class'].split(":")[-1]
+            elif 'ref' in comp:
+                return comp['ref'].split(":")[-1]
             else:
                 return comp['class_name'].split(":")[-1]
 
