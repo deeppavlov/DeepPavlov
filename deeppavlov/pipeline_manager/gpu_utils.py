@@ -102,3 +102,27 @@ def get_available_gpus(num_gpus: Optional[int] = None,
         available_gpu = available_gpu[0:num_gpus]
 
     return available_gpu
+
+
+def gpu_free(gpu_ind: int, gpu_fraction: float = 1.0) -> bool:
+    # Try connect with NVIDIA drivers
+    try:
+        py3nvml.nvmlInit()
+    except Exception:
+        raise GpuError("Couldn't connect to nvidia drivers. Check they are installed correctly.")
+
+    numdevices = py3nvml.nvmlDeviceGetCount()
+    if gpu_ind > numdevices - 1:
+        raise GpuError(f"Have not gpu with number {gpu_ind}")
+
+    handle = py3nvml.nvmlDeviceGetHandleByIndex(gpu_ind)
+    info = py3nvml.nvmlDeviceGetMemoryInfo(handle)
+
+    free = False
+    # Sometimes GPU has a few MB used when it is actually free
+    if (info.free + 10) / info.total >= gpu_fraction:
+        free = True
+
+    py3nvml.nvmlShutdown()
+
+    return free

@@ -112,7 +112,7 @@
     "sample_num": 4,
     "create_plots": false,
     "save_best": false,
-    "multiprocessing": false,
+    "multiprocessing": true,
     "use_gpu": "all",
     "gpu_memory_fraction": 0.8
   },

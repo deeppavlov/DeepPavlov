@@ -36,7 +36,7 @@ from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
-from deeppavlov.pipeline_manager.gpu_utils import get_available_gpus
+from deeppavlov.pipeline_manager.gpu_utils import get_available_gpus, gpu_free
 from deeppavlov.pipeline_manager.observer import ExperimentObserver
 from deeppavlov.pipeline_manager.pipelines_generator import PipeGen
 
@@ -234,8 +234,7 @@ class PipelineManager:
     def train_pipe(pipe: Dict,
                    i: int,
                    observer_: ExperimentObserver,
-                   available_gpu: Optional[List[int]] = None,
-                   memory_fraction: Optional[float] = None) -> None:
+                   gpu: Optional[int] = None) -> None:
         """
         Start learning single pipeline. Observer write all info in log file.
 
@@ -243,17 +242,14 @@ class PipelineManager:
             pipe: config dict of pipeline
             i:  number of pipeline
             observer_: link to observer object
-            available_gpu: list of available gpu
-            memory_fraction:
+            gpu: index of available gpu
 
         """
         # start pipeline time
         pipe_start = time.time()
         # modify project environment
-        if available_gpu is not None and memory_fraction is not None:
-            visible_gpu = get_available_gpus(gpu_select=available_gpu, gpu_fraction=memory_fraction)
-            assert len(visible_gpu) != 0
-            os.environ['CUDA_VISIBLE_DEVICES'] = str(visible_gpu[0])
+        if gpu is not None:  # gpu can be equal 0
+            os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
         else:
             os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
@@ -295,10 +291,16 @@ class PipelineManager:
 
         for i, pipe_conf in enumerate(pipes_list):
             if gpu:
+                gpu_ind = self.available_gpu[i % len(self.available_gpu)]
+                if not gpu_free(gpu_ind, self.memory_fraction):
+                    visible_gpu = get_available_gpus(self.available_gpu, self.memory_fraction)
+                    assert len(visible_gpu) != 0
+                    gpu_ind = visible_gpu[0]
+
                 if test_mode:
-                    yield (deepcopy(pipe_conf), i, self.available_gpu, self.memory_fraction)
+                    yield (deepcopy(pipe_conf), i, gpu_ind)
                 else:
-                    yield (deepcopy(pipe_conf), i, observer, self.available_gpu, self.memory_fraction)
+                    yield (deepcopy(pipe_conf), i, observer, gpu_ind)
             else:
                 if test_mode:
                     yield (deepcopy(pipe_conf), i)
@@ -321,7 +323,7 @@ class PipelineManager:
         else:
             for i, pipe in enumerate(tqdm(self.generated_configs, total=self.gen_len)):
                 if self.available_gpu:
-                    self.train_pipe(pipe, i, self.observer, self.available_gpu[0], self.memory_fraction)
+                    self.train_pipe(pipe, i, self.observer, self.available_gpu[0])
                 else:
                     self.train_pipe(pipe, i, self.observer)
 
