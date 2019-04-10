@@ -72,6 +72,14 @@
       {
         "name": "squad_v2_em",
         "inputs": ["ans", "ans_predicted"]
+      },
+      {
+        "name": "squad_v1_f1",
+        "inputs": ["ans", "ans_predicted"]
+      },
+      {
+        "name": "squad_v1_em",
+        "inputs": ["ans", "ans_predicted"]
       }
     ],
     "tensorboard_log_dir": "{MODELS_PATH}/squad_ru_bert/logs"
