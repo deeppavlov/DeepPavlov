@@ -50,7 +50,7 @@ def get_available_gpus(num_gpus: Optional[int] = None,
         raise GpuError("Couldn't connect to nvidia drivers. Check they are installed correctly.")
 
     numdevices = py3nvml.nvmlDeviceGetCount()
-    gpu_free = [False] * numdevices
+    gpus_free = [False] * numdevices
 
     if num_gpus is None:
         num_gpus = numdevices
@@ -83,7 +83,7 @@ def get_available_gpus(num_gpus: Optional[int] = None,
 
         # Sometimes GPU has a few MB used when it is actually free
         if (info.free + 10) / info.total >= gpu_fraction:
-            gpu_free[i] = True
+            gpus_free[i] = True
         else:
             logger.info('GPU {} has processes on it. Skipping.'.format(i))
 
@@ -95,7 +95,7 @@ def get_available_gpus(num_gpus: Optional[int] = None,
     py3nvml.nvmlShutdown()
 
     # get available gpu numbers
-    available_gpu = [i for i, x in enumerate(gpu_free) if x]
+    available_gpu = [i for i, x in enumerate(gpus_free) if x]
     if num_gpus > len(available_gpu):
         print("GpuWarning: only {0} of {1} gpu is available.".format(len(available_gpu), numdevices))
     else:
