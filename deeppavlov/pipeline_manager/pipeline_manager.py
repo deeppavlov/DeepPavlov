@@ -139,7 +139,8 @@ class PipelineManager:
         self.observer.exp_info['experiment_config'] = str(config_path)
 
         self.observer_preparation()
-        self.gpu_preparation()
+        if self.use_gpu is not False:
+            self.gpu_preparation()
 
         # write time of experiment start
         self.start_exp = time.time()
