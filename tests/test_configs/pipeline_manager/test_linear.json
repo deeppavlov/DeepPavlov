@@ -151,14 +151,13 @@
   },
   "pipeline_search": {
     "exp_name": "lin_clf",
-    "root": "{EXP_PATH}",
-    "do_test": true,
+    "experiments_root": "{EXP_PATH}",
+    "do_test": false,
     "search_type": "random",
     "sample_num": 1,
-    "plot": true,
-    "save_best": true,
+    "save_best": false,
     "multiprocessing": true,
-    "max_num_workers": 4,
+    "num_workers": 4,
     "use_gpu": false,
     "gpu_memory_fraction": 1.0
   },
