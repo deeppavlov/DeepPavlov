@@ -18,8 +18,6 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Union
 
-from deeppavlov.pipeline_manager.plot_utils import get_met_info
-from deeppavlov.pipeline_manager.plot_utils import plot_res
 from deeppavlov.pipeline_manager.table_utils import build_pipeline_table
 from deeppavlov.pipeline_manager.table_utils import sort_pipes
 
@@ -36,7 +34,6 @@ class ExperimentObserver:
              does not affect the algorithm
             date: date of the experiment.
             test_mode:
-            plot:
     """
 
     def __init__(self,
@@ -45,10 +42,8 @@ class ExperimentObserver:
                  root: Union[str, Path],
                  info: dict,
                  date: str,
-                 plot: bool,
                  test_mode: bool = False) -> None:
         """ Initializes the log, creates a folders tree and files necessary for the observer to work. """
-        self.plot = plot
         self.test_mode = test_mode
 
         # build folder dependencies
@@ -74,8 +69,6 @@ class ExperimentObserver:
 
         self.save_path = self.exp_log_path.joinpath('checkpoints')
         self.save_path.mkdir(parents=True, exist_ok=False)
-        if plot:
-            self.exp_log_path.joinpath('images').mkdir(exist_ok=False)
 
         self.exp_info = OrderedDict(date=date,
                                     exp_name=launch_name,
@@ -124,6 +117,7 @@ class ExperimentObserver:
 
     def update_log(self):
         """ Updates a log with new pipeline information. """
+
         def get_comp_name(comp):
             if 'component_name' in comp:
                 return comp['component_name']
@@ -197,12 +191,6 @@ class ExperimentObserver:
 
         # create the xlsx file with results of experiments
         build_pipeline_table(logs, self.exp_log_path, exp_info['target_metric'], exp_info['metrics'])
-
-        if self.plot:
-            # scrub data from log for image creating
-            info = get_met_info(logs)
-            # plot histograms
-            plot_res(info, self.exp_info['exp_name'], self.exp_log_path.joinpath('images'))
 
     def build_pipe_checkpoint_folder(self, pipe, ind):
         save_path_i = self.save_path.joinpath(f"pipe_{ind + 1}")

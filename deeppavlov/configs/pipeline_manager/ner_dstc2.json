@@ -110,7 +110,6 @@
     "do_test": false,
     "search_type": "random",
     "sample_num": 4,
-    "create_plots": false,
     "save_best": false,
     "multiprocessing": true,
     "use_gpu": "all",

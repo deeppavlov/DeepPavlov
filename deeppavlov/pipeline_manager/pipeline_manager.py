@@ -36,7 +36,8 @@ from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
-from deeppavlov.pipeline_manager.gpu_utils import get_available_gpus, gpu_free
+from deeppavlov.pipeline_manager.gpu_utils import get_available_gpus
+from deeppavlov.pipeline_manager.gpu_utils import gpu_free
 from deeppavlov.pipeline_manager.observer import ExperimentObserver
 from deeppavlov.pipeline_manager.pipelines_generator import PipeGen
 
@@ -70,7 +71,6 @@ class PipelineManager:
         info: dict with some additional information that you want to add to the log, the content of the dictionary
               does not affect the algorithm and therefore can be arbitrary. The default value is None.
         root_path: root path, the root path where the report will be generated and saved checkpoints
-        create_plots: boolean trigger, which determines whether to draw a graph of results or not
         save_best: boolean trigger, which determines whether to save all models or only the best model
         search_type: string parameter defining the type of hyperparams search, can be "grid" or "random"
         sample_num: determines the number of generated pipelines, if parameter search_type == "random"
@@ -137,7 +137,6 @@ class PipelineManager:
             Path(self.exp_config['pipeline_search'].get('experiments_root',
                                                         Path('~/.deeppavlov/experiments').resolve())))
 
-        self.create_plots = self.exp_config['pipeline_search'].get('create_plots', False)
         self.save_best = self.exp_config['pipeline_search'].get('save_best', False)
 
         self.search_type = self.exp_config['pipeline_search'].get('search_type', 'random')
@@ -151,8 +150,7 @@ class PipelineManager:
         self.available_gpu = None
 
         # create the observer
-        self.observer = ExperimentObserver(self.exp_name, launch_name, self.root_path, self.info, self.date,
-                                           self.create_plots)
+        self.observer = ExperimentObserver(self.exp_name, launch_name, self.root_path, self.info, self.date)
         # create the pipeline generator
         self.pipeline_generator = PipeGen(self.exp_config, self.observer.save_path, self.search_type, self.sample_num)
         self.generated_configs = [conf for conf in self.pipeline_generator()]
@@ -339,25 +337,12 @@ class PipelineManager:
         self.observer.build_report()
         print("[ Report created ]")
 
-    # def run(self) -> None:
-    #     try:
-    #         self._run()
-    #     except KeyboardInterrupt:
-    #         # save log
-    #         self.observer.save_exp_info(time.strftime('%H:%M:%S', time.gmtime(time.time() - self.start_exp)))
-    #         print("[ The experiment was interrupt]")
-    #         # visualization of results
-    #         print("[ Create an intermediate report ... ]")
-    #         self.observer.build_report()
-    #         print("[ The intermediate report was created ]")
-
     def test(self) -> None:
         """
         Run a test experiment on a small piece of data. The test supports multiprocessing.
         """
         # create the pipeline generator
-        test_observer = ExperimentObserver(self.exp_name, "test", self.root_path, self.info, self.date,
-                                           self.create_plots, True)
+        test_observer = ExperimentObserver(self.exp_name, "test", self.root_path, self.info, self.date, True)
         test_pipe_generator = PipeGen(self.exp_config, test_observer.save_path, self.search_type, self.sample_num)
         test_pipes = [conf for conf in test_pipe_generator()]
         len_gen = len(test_pipes)
@@ -382,14 +367,6 @@ class PipelineManager:
         test_observer.del_tmp_log()
         del test_observer, test_pipe_generator, len_gen, test_pipes
         print("[ The test was successful ]")
-
-    # def test(self) -> None:
-    #     try:
-    #         self._test()
-    #     except KeyboardInterrupt:
-    #         # del all tmp files in save path
-    #         rmtree(str(self.save_path / "tmp"))
-    #         print("[ The test was interrupt ]")
 
     @staticmethod
     def test_pipe(pipe_conf: Dict, ind: int, gpu_ind: Optional[int] = None) -> None:

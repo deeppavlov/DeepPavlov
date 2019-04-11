@@ -155,7 +155,6 @@
     "do_test": false,
     "search_type": "random",
     "sample_num": 2,
-    "create_plots": false,
     "save_best": true,
     "multiprocessing": true,
     "num_workers": 4,
