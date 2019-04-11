@@ -18,8 +18,7 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Union
 
-from deeppavlov.pipeline_manager.table_utils import build_pipeline_table
-from deeppavlov.pipeline_manager.table_utils import sort_pipes
+from deeppavlov.pipeline_manager.table_utils import build_pipeline_table, sort_pipes
 
 
 class ExperimentObserver:
@@ -45,7 +44,6 @@ class ExperimentObserver:
                  test_mode: bool = False) -> None:
         """ Initializes the log, creates a folders tree and files necessary for the observer to work. """
         self.test_mode = test_mode
-
         # build folder dependencies
         self.exp_log_path = root.joinpath(name, date)
         if test_mode:
@@ -53,7 +51,7 @@ class ExperimentObserver:
             self.exp_log_path /= "tmp"
             if self.exp_log_path.exists():
                 rmtree(str(self.exp_log_path))
-
+        # build experiments folder
         container = [x.name.split('_')[-1] for x in self.exp_log_path.glob(launch_name + "*")]
         if len(container) == 0:
             self.exp_log_path /= launch_name
@@ -77,8 +75,8 @@ class ExperimentObserver:
                                     number_of_pipes=None,
                                     metrics=None,
                                     target_metric=None)
-        self.log = None
         # tmp parameters
+        self.log = None
         self.pipe_ind = 0
         self.pipe_conf = None
         self.model = None
@@ -162,11 +160,8 @@ class ExperimentObserver:
 
         target_metric = exp_info['target_metric']
 
-        logs = []
         with self.log_file.open('r', encoding='utf8') as log_file:
-            for line in log_file.readlines():
-                logs.append(json.loads(line))
-            sort_logs = sort_pipes(logs, target_metric)
+            sort_logs = sort_pipes([json.loads(line) for line in log_file.readlines()], target_metric)
 
         files = self.save_path.iterdir()
         for f in files:
@@ -181,14 +176,10 @@ class ExperimentObserver:
         Returns:
             None
         """
-        logs = []
         with self.exp_file.open('r', encoding='utf8') as exp_log:
             exp_info = json.load(exp_log)
-
         with self.log_file.open('r', encoding='utf8') as log_file:
-            for line in log_file.readlines():
-                logs.append(json.loads(line))
-
+            logs = [json.loads(line) for line in log_file.readlines()]
         # create the xlsx file with results of experiments
         build_pipeline_table(logs, self.exp_log_path, exp_info['target_metric'], exp_info['metrics'])
 

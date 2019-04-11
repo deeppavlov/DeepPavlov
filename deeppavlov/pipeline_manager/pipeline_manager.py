@@ -14,30 +14,21 @@
 
 import os
 import time
-from concurrent.futures import ProcessPoolExecutor
-from concurrent.futures import as_completed
-from contextlib import redirect_stderr
-from contextlib import redirect_stdout
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from contextlib import redirect_stderr, redirect_stdout
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
-from typing import Dict
-from typing import Generator
-from typing import List
-from typing import Optional
-from typing import Union
+from typing import Dict, Generator, List, Optional, Union
 
 from tqdm import tqdm
 
-from deeppavlov.core.commands.train import get_iterator_from_config
-from deeppavlov.core.commands.train import read_data_by_config
+from deeppavlov.core.commands.train import get_iterator_from_config, read_data_by_config
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
-from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.commands.utils import parse_config
+from deeppavlov.core.commands.utils import expand_path, parse_config
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
-from deeppavlov.pipeline_manager.gpu_utils import get_available_gpus
-from deeppavlov.pipeline_manager.gpu_utils import gpu_free
+from deeppavlov.pipeline_manager.gpu_utils import get_available_gpus, gpu_free
 from deeppavlov.pipeline_manager.observer import ExperimentObserver
 from deeppavlov.pipeline_manager.pipelines_generator import PipeGen
 
@@ -49,7 +40,7 @@ class PipelineManager:
     additional parameters, which are class attributes. Based on this information, a list of deeppavlov configs is
     created. Experiments can be run sequentially or in parallel, both on GPU and on the CPU.
     A special class is responsible for describing and logging experiments, their execution time and results.
-    After passing all the experiments based on the logs, a small report is created in the form of a xlsx table,
+    After passing all the experiments based on the logs, a small report is created in the form of a csv table,
     and histogram with metrics info. When you start the experiment, you can also search for optimal hyperparameters,
     "grid" and "random" search is available.
 
@@ -105,13 +96,6 @@ class PipelineManager:
         pipeline_generator: A special class that generates configs for training.
         gen_len: amount of pipelines in experiment
 
-        .. note::
-
-            **WARNING!:** Remember that when learning neural networks on the CPU, by default tensorflow parallelizes
-            tensor calculations, so if you run several pipelines with neural networks training on the CPU in parallel
-            mode, you will get an error. Use video cards. Learning pipelines in parallel mode on the CPU is better
-            suited for training estimators from scikit-learn. In our library there is such an opportunity.
-
     """
 
     def __init__(self, config_path: Union[str, Dict, Path]) -> None:
@@ -126,30 +110,24 @@ class PipelineManager:
 
         self.exp_config = parse_config(self.exp_config)
 
+        default_root = Path('~/.deeppavlov/experiments').resolve()
+
         self.date = self.exp_config['pipeline_search'].get('date', datetime.now().strftime('%Y-%m-%d'))
         self.info = self.exp_config['pipeline_search'].get('info')
         self.exp_name = self.exp_config['pipeline_search'].get('exp_name')
-        if not self.exp_name:
-            raise ConfigError("In 'pipeline_search' configs section is not specified experiment name.")
-        launch_name = self.exp_config['pipeline_search'].get('launch_name', 'exp')
-
-        self.root_path = expand_path(
-            Path(self.exp_config['pipeline_search'].get('experiments_root',
-                                                        Path('~/.deeppavlov/experiments').resolve())))
-
+        self.root_path = expand_path(Path(self.exp_config['pipeline_search'].get('experiments_root', default_root)))
         self.save_best = self.exp_config['pipeline_search'].get('save_best', False)
-
         self.search_type = self.exp_config['pipeline_search'].get('search_type', 'random')
         self.sample_num = self.exp_config['pipeline_search'].get('sample_num', 10)
         self.target_metric = self.exp_config['pipeline_search'].get('target_metric')
         self.multiprocessing = self.exp_config['pipeline_search'].get('multiprocessing', False)
-
         self.num_workers = self.exp_config['pipeline_search'].get('num_workers')
         self.use_gpu = self.exp_config['pipeline_search'].get('use_gpu', False)
         self.memory_fraction = self.exp_config['pipeline_search'].get('gpu_memory_fraction', 0.99)
         self.available_gpu = None
 
         # create the observer
+        launch_name = self.exp_config['pipeline_search'].get('launch_name', 'exp')
         self.observer = ExperimentObserver(self.exp_name, launch_name, self.root_path, self.info, self.date)
         # create the pipeline generator
         self.pipeline_generator = PipeGen(self.exp_config, self.observer.save_path, self.search_type, self.sample_num)
@@ -160,6 +138,16 @@ class PipelineManager:
         self.observer.exp_info['number_of_pipes'] = self.gen_len
         self.observer.exp_info['experiment_config'] = str(config_path)
 
+        self.observer_preparation()
+        self.gpu_preparation()
+
+        # write time of experiment start
+        self.start_exp = time.time()
+        # start test
+        if self.exp_config['pipeline_search'].get('do_test', False):
+            self.test()
+
+    def observer_preparation(self):
         self.observer.exp_info['metrics'] = []
         for met in self.exp_config['train']['metrics']:
             if isinstance(met, dict):
@@ -172,61 +160,48 @@ class PipelineManager:
         else:
             self.observer.exp_info['target_metric'] = self.observer.exp_info['metrics'][0]
 
-        self.prepare_multiprocess()
-
-        # write time of experiment start
-        self.start_exp = time.time()
-        # start test
-        if self.exp_config['pipeline_search'].get('do_test', False):
-            self.test()
-
-    def prepare_multiprocess(self) -> None:
+    def gpu_preparation(self) -> None:
         """
         Calculates the number of workers and the set of available video cards, if gpu is used, based on init attributes.
         """
-        if not self.num_workers and not self.use_gpu:
-            raise ConfigError("In config file parameter 'multiprocessing' was set as True, "
-                              "but 'use_gpu' or 'num_workers' was not specified")
-
-        if self.use_gpu:
-            try:
-                cuda_vis_dev = os.environ['CUDA_VISIBLE_DEVICES']
-                if cuda_vis_dev != '':
-                    visible_gpu = [int(q) for q in cuda_vis_dev.split(',')]
-                    os.environ['CUDA_VISIBLE_DEVICES'] = ""
-                else:
-                    visible_gpu = None
-            except KeyError:
-                visible_gpu = None
-
-            if isinstance(self.use_gpu, (list, int)):
-                if isinstance(self.use_gpu, int):
-                    self.use_gpu = [self.use_gpu]
-
-                if visible_gpu:
-                    self.use_gpu = list(set(self.use_gpu) & set(visible_gpu))
-
-                if len(self.use_gpu) == 0:
-                    raise ValueError("GPU numbers in 'use_gpu' and 'CUDA_VISIBLE_DEVICES' "
-                                     "has not intersections;")
-            elif isinstance(self.use_gpu, str):
-                if self.use_gpu == "all":
-                    self.use_gpu = visible_gpu
-                else:
-                    raise ConfigError(f"Not supported tag for 'use_gpu' parameter: {self.use_gpu}")
+        try:
+            cuda_vis_dev = os.environ['CUDA_VISIBLE_DEVICES']
+            if cuda_vis_dev != '':
+                visible_gpu = [int(q) for q in cuda_vis_dev.split(',')]
+                os.environ['CUDA_VISIBLE_DEVICES'] = ""
             else:
-                raise ConfigError("For 'use_gpu' parameter expected types: int, List[int] or 'all' tag, "
-                                  f"but {type(self.use_gpu)} was found.")
+                visible_gpu = None
+        except KeyError:
+            visible_gpu = None
 
-            self.available_gpu = get_available_gpus(gpu_select=self.use_gpu, gpu_fraction=self.memory_fraction)
+        if isinstance(self.use_gpu, (list, int)):
+            if isinstance(self.use_gpu, int):
+                self.use_gpu = [self.use_gpu]
 
-            if len(self.available_gpu) == 0:
-                raise ValueError(f"All selected GPU with numbers: ({set(self.use_gpu)}), are busy.")
-            elif self.use_gpu and len(self.available_gpu) < len(self.use_gpu):
-                print(f"PipelineManagerWarning: 'CUDA_VISIBLE_DEVICES' = ({self.use_gpu}), "
-                      f"but only {self.available_gpu} are available.")
+            if visible_gpu:
+                self.use_gpu = list(set(self.use_gpu) & set(visible_gpu))
 
-            self.num_workers = len(self.available_gpu)
+            if len(self.use_gpu) == 0:
+                raise ValueError("GPU numbers in 'use_gpu' and 'CUDA_VISIBLE_DEVICES' "
+                                 "has not intersections;")
+        elif isinstance(self.use_gpu, str):
+            if self.use_gpu == "all":
+                self.use_gpu = visible_gpu
+            else:
+                raise ConfigError(f"Not supported tag for 'use_gpu' parameter: {self.use_gpu}")
+        else:
+            raise ConfigError("For 'use_gpu' parameter expected types: int, List[int] or 'all' tag, "
+                              f"but {type(self.use_gpu)} was found.")
+
+        self.available_gpu = get_available_gpus(gpu_select=self.use_gpu, gpu_fraction=self.memory_fraction)
+
+        if len(self.available_gpu) == 0:
+            raise ValueError(f"All selected GPU with numbers: ({set(self.use_gpu)}), are busy.")
+        elif self.use_gpu and len(self.available_gpu) < len(self.use_gpu):
+            print(f"PipelineManagerWarning: 'CUDA_VISIBLE_DEVICES' = ({self.use_gpu}), "
+                  f"but only {self.available_gpu} are available.")
+
+        self.num_workers = len(self.available_gpu)
 
     @staticmethod
     def train_pipe(pipe: Dict,
@@ -267,19 +242,17 @@ class PipelineManager:
         # update logger
         observer_.update_log()
 
-    def gpu_gen(self,
-                pipes_list: Optional[List] = None,
-                observer: Optional[ExperimentObserver] = None,
-                gpu: bool = False,
-                test_mode: bool = False) -> Generator:
+    def process_pool_executor_generator(self,
+                                        pipes_list: Optional[List] = None,
+                                        observer: Optional[ExperimentObserver] = None,
+                                        gpu: bool = False) -> Generator:
         """
         Create generator that returning tuple of args fore self.train_pipe method.
 
         Args:
             pipes_list:
-            observer:
+            observer: ExperimentObserver object
             gpu: boolean trigger, determine to use gpu or not
-            test_mode:
 
         """
         if not pipes_list:
@@ -295,15 +268,9 @@ class PipelineManager:
                     assert len(visible_gpu) != 0
                     gpu_ind = visible_gpu[0]
 
-                if test_mode:
-                    yield (deepcopy(pipe_conf), i, gpu_ind)
-                else:
-                    yield (deepcopy(pipe_conf), i, observer, gpu_ind)
+                yield (deepcopy(pipe_conf), i, observer, gpu_ind)
             else:
-                if test_mode:
-                    yield (deepcopy(pipe_conf), i)
-                else:
-                    yield (deepcopy(pipe_conf), i, observer)
+                yield (deepcopy(pipe_conf), i, observer)
 
     def run(self):
         """
@@ -315,7 +282,7 @@ class PipelineManager:
             # start multiprocessing
             with ProcessPoolExecutor(self.num_workers) as executor:
                 futures = [executor.submit(self.train_pipe, *args)
-                           for args in self.gpu_gen(gpu=(self.available_gpu is not None))]
+                           for args in self.process_pool_executor_generator(gpu=(self.available_gpu is not None))]
                 for _ in tqdm(as_completed(futures), total=len(futures)):
                     pass
         else:
@@ -330,7 +297,6 @@ class PipelineManager:
         # delete all checkpoints and save only best pipe
         if self.save_best:
             self.observer.save_best_pipe()
-
         print("[ End of experiment ]")
         # visualization of results
         print("[ Create an experiment report ... ]")
@@ -352,24 +318,24 @@ class PipelineManager:
         if self.multiprocessing:
             with ProcessPoolExecutor(self.num_workers) as executor:
                 futures = [executor.submit(self.test_pipe, *args)
-                           for args in self.gpu_gen(test_pipes,
-                                                    test_observer,
-                                                    gpu=(self.available_gpu is not None))]
+                           for args in self.process_pool_executor_generator(test_pipes,
+                                                                            test_observer,
+                                                                            gpu=(self.available_gpu is not None))]
                 for _ in tqdm(as_completed(futures), total=len(futures)):
                     pass
         else:
             for i, pipe in enumerate(tqdm(test_pipes, total=len_gen)):
                 if self.available_gpu is not None:
-                    self.test_pipe(pipe, i, self.available_gpu[0])
+                    self.test_pipe(pipe, i, test_observer, self.available_gpu[0])
                 else:
-                    self.test_pipe(pipe, i)
+                    self.test_pipe(pipe, i, test_observer)
 
         test_observer.del_tmp_log()
         del test_observer, test_pipe_generator, len_gen, test_pipes
         print("[ The test was successful ]")
 
     @staticmethod
-    def test_pipe(pipe_conf: Dict, ind: int, gpu_ind: Optional[int] = None) -> None:
+    def test_pipe(pipe_conf: Dict, ind: int, observer_: ExperimentObserver, gpu_ind: Optional[int] = None) -> None:
         """
         Start testing single pipeline.
 
@@ -377,6 +343,7 @@ class PipelineManager:
             pipe_conf: pipeline config as dict
             ind: pipeline number
             gpu_ind: number of gpu card
+            observer_:
 
         Returns:
             None
@@ -393,6 +360,7 @@ class PipelineManager:
                                                    iterator=data_iterator_i,
                                                    to_train=True,
                                                    to_validate=False)
+        observer_.pipe_res = results
         del results
 
 

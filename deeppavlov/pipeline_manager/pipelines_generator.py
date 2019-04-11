@@ -15,11 +15,7 @@
 from copy import deepcopy
 from itertools import product
 from pathlib import Path
-from typing import Dict
-from typing import Generator
-from typing import List
-from typing import Tuple
-from typing import Union
+from typing import Dict, Generator, List, Tuple, Union
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
@@ -34,10 +30,10 @@ class PipeGen:
     and load paths change to intermediate ones.
 
     Args:
-            config: path to config file with search pattern, or dict with it config.
-            save_path: path to folder with pipelines checkpoints.
-            mode: working mode of generator, can be 'random' or 'grid'.
-            sample_num: determines the number of generated pipelines, if hyper_search == random.
+        config: path to config file with search pattern, or dict with it config.
+        save_path: path to folder with pipelines checkpoints.
+        mode: working mode of generator, can be 'random' or 'grid'.
+        sample_num: determines the number of generated pipelines, if hyper_search == random.
     """
 
     def __init__(self,
@@ -46,10 +42,10 @@ class PipeGen:
                  mode: str = 'random',
                  sample_num: int = 10) -> None:
         """ Initialize generator with input params. """
-        if mode in ['random', 'grid']:
-            self.search_mode = mode
-        else:
+        if mode not in ['random', 'grid']:
             raise ConfigError(f"'{mode} search' not implemented. Only 'grid' and 'random' search are available.")
+        else:
+            self.search_mode = mode
 
         self.save_path = save_path
         self.N = sample_num

@@ -13,10 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import Iterable
-from typing import List
-from typing import Optional
-from typing import Union
+from typing import Iterable, List, Optional, Union
 
 from py3nvml import py3nvml
 
@@ -117,12 +114,6 @@ def gpu_free(gpu_ind: int, gpu_fraction: float = 1.0) -> bool:
 
     handle = py3nvml.nvmlDeviceGetHandleByIndex(gpu_ind)
     info = py3nvml.nvmlDeviceGetMemoryInfo(handle)
-
-    free = False
-    # Sometimes GPU has a few MB used when it is actually free
-    if (info.free + 10) / info.total >= gpu_fraction:
-        free = True
-
+    free = True if ((info.free + 10) / info.total) >= gpu_fraction else False
     py3nvml.nvmlShutdown()
-
     return free
