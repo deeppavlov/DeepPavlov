@@ -14,21 +14,32 @@
 
 import os
 import time
-from concurrent.futures import ProcessPoolExecutor, as_completed
-from contextlib import redirect_stderr, redirect_stdout
+from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import as_completed
+from contextlib import redirect_stderr
+from contextlib import redirect_stdout
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Generator, List, Optional, Union
+from typing import Dict
+from typing import Generator
+from typing import List
+from typing import Optional
+from typing import Union
 
 from tqdm import tqdm
 
-from deeppavlov.core.commands.train import get_iterator_from_config, read_data_by_config
+from deeppavlov.core.commands.train import get_iterator_from_config
+from deeppavlov.core.commands.train import read_data_by_config
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
-from deeppavlov.core.commands.utils import expand_path, parse_config
+from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
-from deeppavlov.pipeline_manager.gpu_utils import get_available_gpus, gpu_free
+from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
+from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
+from deeppavlov.pipeline_manager.gpu_utils import get_available_gpus
+from deeppavlov.pipeline_manager.gpu_utils import gpu_free
 from deeppavlov.pipeline_manager.observer import ExperimentObserver
 from deeppavlov.pipeline_manager.pipelines_generator import PipeGen
 
@@ -36,41 +47,35 @@ from deeppavlov.pipeline_manager.pipelines_generator import PipeGen
 class PipelineManager:
     """
     The :class:`~deeppavlov.pipeline_manager.PipelineManager` implements the functions of automatic experiment
-    management. The class accepts a config in the input in which the structure of the experiments is described, and
-    additional parameters, which are class attributes. Based on this information, a list of deeppavlov configs is
-    created. Experiments can be run sequentially or in parallel, both on GPU and on the CPU.
-    A special class is responsible for describing and logging experiments, their execution time and results.
-    After passing all the experiments based on the logs, a small report is created in the form of a csv table,
-    and histogram with metrics info. When you start the experiment, you can also search for optimal hyperparameters,
-    "grid" and "random" search is available.
+    management. The class accepts a DeepPavlov config with structure of the experiments and additional parameters
+    (class attributes) as input. Based on this information, a set of DeepPavlov configs is generated for each
+    experiment. Described experiments can be run sequentially or in parallel, both on GPU and on the CPU.
+    Over the course of the experiments, results, execution time and e.t.c are logged. After passing all the experiments
+    a report is created in the form of a csv table. The :class:`~deeppavlov.pipeline_manager.PipelineManager` also
+    supports the search for optimal hyperparameters. "grid" and "random" search modes is available.
 
-    Running a large number of experiments, especially with large neural models, may take a large amount of time, so a
-    special test was added to check the correctness of the joints of individual blocks in all pipelines, or another
-    errors. During the test, all pipelines are trained on a small piece of the original dataset, if the test passed
-    without errors, you can not worry about the experiment, and then a normal experiments is automatically started.
-    The test starts automatically, nothing else needs to be done, but it can also be turned off. In this case, the
-    experiment will start immediately. Test supports multiprocessing.
-
-    Also you can save checkpoints for all pipelines, or only the best.
+    Running a large number of experiments especially with complex neural models may take a large amount of time.
+    To avoid errors during the experiment a special test was added to check the correctness of pipelines. During the
+    test, all pipelines are trained on a small part of the original dataset. All of the temporary files are saved in the
+    folder “~/tmp/” and after successfully passing the test the folder is automatically deleted. If the test is failed,
+    the “~/tmp/” folder with all its content remains for debugging. Test supports multiprocessing.
 
     Args:
         config_path: path to config file, or config dict.
 
     Attributes:
-        exp_name: str, name of the experiment.
-        date: str, date of the experiment.
+        exp_name: name of the experiment.
+        date: date of the experiment.
         info: dict with some additional information that you want to add to the log, the content of the dictionary
-              does not affect the algorithm and therefore can be arbitrary. The default value is None.
+              does not affect on the algorithm work. The default value is None.
         root_path: root path, the root path where the report will be generated and saved checkpoints
-        save_best: boolean trigger, which determines whether to save all models or only the best model
+        save_best: boolean trigger, which determines whether to save checkpoints for all models or only for best model
         search_type: string parameter defining the type of hyperparams search, can be "grid" or "random"
         sample_num: determines the number of generated pipelines, if parameter search_type == "random"
         target_metric: The metric name on the basis of which the results will be sorted when the report
-                       is generated. The parameter was added as when evaluating the quality of models in DeepPavlov
-                       several metrics can be applied simultaneously. The default value is None, in this case the target
+                       is generated. The default value is None, in this case the target
                        metric is taken the first name from those names that are specified in the config file.
-                       If the specified metric is not contained in DeepPavlov will be called error.
-        multiprocessing: boolean trigger, determining the run mode of the experiment.
+        multiprocessing: boolean trigger, determining the running mode of the experiment.
         num_workers: upper limit on the number of workers if experiment running in multiprocessing mode
         use_gpu: may take values ["all", int, List[int], False];
                  If the parameter takes the value "all" (str) the pipeline manager automatically considers
@@ -85,14 +90,13 @@ class PipelineManager:
                  then only the remaining cards from the presented list will be used. If all of the presented GPU are
                  busy, an error message will appear.
 
-                 If the parameter takes the value False GPU will not be used during training.
+                 If the parameter takes the value 'False' GPU will not be used during training.
         memory_fraction: the parameter determines the criterion of whether the gpu card is free or not.
                          If memory_fraction == 1.0 only those cards whose memory is completely free will be
                          considered as available. If memory_fraction == 0.5 cards with no more than half of the memory
                          will be considered as available.
-        available_gpu: list with numbers of available gpu
         observer: A special class that collects auxiliary statistics and results during training, and stores
-                all the collected data in a separate log.
+                  all the collected data in a separate log.
         pipeline_generator: A special class that generates configs for training.
         gen_len: amount of pipelines in experiment
 
@@ -138,7 +142,7 @@ class PipelineManager:
         self.observer.exp_info['number_of_pipes'] = self.gen_len
         self.observer.exp_info['experiment_config'] = str(config_path)
 
-        self.observer_preparation()
+        self.add_metric_info()
         if self.use_gpu is not False:
             self.gpu_preparation()
 
@@ -148,7 +152,8 @@ class PipelineManager:
         if self.exp_config['pipeline_search'].get('do_test', False):
             self.test()
 
-    def observer_preparation(self):
+    def add_metric_info(self) -> None:
+        """ Adding metrics information in observer. """
         self.observer.exp_info['metrics'] = []
         for met in self.exp_config['train']['metrics']:
             if isinstance(met, dict):
@@ -273,7 +278,7 @@ class PipelineManager:
             else:
                 yield (deepcopy(pipe_conf), i, observer)
 
-    def run(self):
+    def run(self) -> None:
         """
         Run the experiment. Creates a report after the experiments.
         """
@@ -343,11 +348,8 @@ class PipelineManager:
         Args:
             pipe_conf: pipeline config as dict
             ind: pipeline number
-            gpu_ind: number of gpu card
-            observer_:
-
-        Returns:
-            None
+            gpu_ind: index of available gpu
+            observer_: ExperimentObserver object
 
         """
         # modify project environment
@@ -365,7 +367,7 @@ class PipelineManager:
         del results
 
 
-def get_dataset_reader_and_iterator_for_test(config: Dict, i: int):
+def get_dataset_reader_and_iterator_for_test(config: Dict, i: int) -> Union[DataLearningIterator, DataFittingIterator]:
     """
     Creating a test iterator with small piece of train dataset. Config and data validation.
 

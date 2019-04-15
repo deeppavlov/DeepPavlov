@@ -16,23 +16,23 @@ import json
 from collections import OrderedDict
 from pathlib import Path
 from shutil import rmtree
-from typing import Union
+from typing import Dict, Union
 
 from deeppavlov.pipeline_manager.table_utils import build_pipeline_table, sort_pipes
 
 
 class ExperimentObserver:
     """
-    Implements the functions of observing the course of experiments,
-    collecting results, time and other useful information, logging and storing it.
+    Implements the functions of observing the course of experiments, collecting results, time and other
+    useful information, logging and storing it.
 
     Args:
             name: name of the experiments.
             root: path to root folder.
             info: additional information that you want to add to the log, the content of the dictionary
-             does not affect the algorithm
+                  does not affect the algorithm
             date: date of the experiment.
-            test_mode:
+            test_mode: boolean trigger that determines which mode the experiment is performed
     """
 
     def __init__(self,
@@ -113,7 +113,7 @@ class ExperimentObserver:
         with self.log_file.open('a', encoding='utf8') as f:
             print(json.dumps(self.log), file=f)
 
-    def update_log(self):
+    def update_log(self) -> 'ExperimentObserver':
         """ Updates a log with new pipeline information. """
 
         def get_comp_name(comp):
@@ -172,9 +172,6 @@ class ExperimentObserver:
         """
         It builds a reporting table and a histogram of results for different models,
         based on data from the experiment log.
-
-        Returns:
-            None
         """
         with self.exp_file.open('r', encoding='utf8') as exp_log:
             exp_info = json.load(exp_log)
@@ -183,12 +180,14 @@ class ExperimentObserver:
         # create the xlsx file with results of experiments
         build_pipeline_table(logs, self.exp_log_path, exp_info['target_metric'], exp_info['metrics'])
 
-    def build_pipe_checkpoint_folder(self, pipe, ind):
+    def build_pipe_checkpoint_folder(self, pipe: Dict, ind: int) -> Path:
+        """ Create 'pipe_ind' folder and save config there. """
         save_path_i = self.save_path.joinpath(f"pipe_{ind + 1}")
         save_path_i.mkdir()
         # save config in checkpoint folder
         self.save_config(pipe, ind + 1)
         return save_path_i
 
-    def del_tmp_log(self):
+    def del_tmp_log(self) -> None:
+        """ Remove temporary log folder """
         rmtree(str(self.tmp_log_path))

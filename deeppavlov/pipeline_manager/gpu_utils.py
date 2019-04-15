@@ -31,14 +31,14 @@ def get_available_gpus(num_gpus: Optional[int] = None,
     inaccessible. For the value of the parameter "X" is responsible "gpu_fraction" argument.
 
     Args:
-        num_gpus : int; How many gpus you need (optional)
-        gpu_select : iterable; A single int or an iterable of ints indicating gpu numbers to search through.
-         If left blank, will search through all gpus.
-        gpu_fraction : float; The fractional of a gpu memory that must be free for the script to see the gpu as free.
-         Defaults to 1. Useful if someone has grabbed a tiny amount of memory on a gpu but isn't using it.
+        num_gpus : How many gpus you need (optional)
+        gpu_select : A single int or an iterable of ints indicating gpu numbers to search through. If left blank,
+                     will search through all gpus.
+        gpu_fraction : The fractional of a gpu memory that must be free for the script to see the gpu as free.
+                       Defaults to 1. Useful if someone has grabbed a tiny amount of memory on a gpu but isn't using it.
 
     Returns:
-        available_gpu: list of ints; List with available gpu numbers
+        available_gpu: List with available gpu numbers
     """
     # Try connect with NVIDIA drivers
     try:
@@ -102,6 +102,20 @@ def get_available_gpus(num_gpus: Optional[int] = None,
 
 
 def gpu_free(gpu_ind: int, gpu_fraction: float = 1.0) -> bool:
+    """
+    Determines whether the card with number 'gpu_ind' satisfies the memory criteria.
+    If the memory of a video card is occupied by more than "X" percent, then the video card is considered inaccessible.
+    For the value of the parameter "X" is responsible "gpu_fraction" argument.
+
+    Args:
+        gpu_ind: A single int indicating gpu numbers to search through.
+        gpu_fraction: The fractional of a gpu memory that must be free for the script to see the gpu as free.
+                      Defaults to 1. Useful if someone has grabbed a tiny amount of memory on a gpu but isn't using it.
+
+    Returns:
+        True/False
+
+    """
     # Try connect with NVIDIA drivers
     try:
         py3nvml.nvmlInit()

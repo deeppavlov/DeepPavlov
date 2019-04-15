@@ -58,14 +58,15 @@ class PipeGen:
         self.tmp_config = deepcopy(config)
         self.structure = config['chainer']['pipe']
 
-    def modify_config(self, pipe: tuple):
+    def modify_config(self, pipe: tuple) -> Dict:
+        """ Change save and load paths in generated config. """
         chainer_components = self.change_load_path(list(pipe), self.pipe_ind, self.save_path)
         self.tmp_config['chainer']['pipe'] = chainer_components
         return deepcopy(self.tmp_config)
 
     def __call__(self) -> Generator:
         """
-        Creates a configs with a different set of hyperparameters based on the primary set of pipelines.
+        Creates a iterator that return set of configs as dicts.
 
         Returns:
             iterator of final sets of configs (dicts)
@@ -90,7 +91,7 @@ class PipeGen:
     # random generation
     def random_conf_gen(self, pipe_components: Tuple[dict]) -> Generator:
         """
-        Creates a set of configs with a different set of hyperparameters using "random search".
+        Creates a iterator that return set of configs with different components hyperparameters using "random search".
 
         Args:
             pipe_components: list of dicts; config if components
@@ -120,7 +121,7 @@ class PipeGen:
     @staticmethod
     def grid_conf_gen(pipe_components: Tuple[dict]) -> Generator:
         """
-        Creates a set of configs with a different set of hyperparameters using "grid search".
+        Creates a iterator that return set of configs with different components hyperparameters using "grid search".
 
         Args:
             pipe_components: list of dicts; config if components

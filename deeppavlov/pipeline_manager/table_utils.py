@@ -13,14 +13,13 @@
 # limitations under the License.
 
 from pathlib import Path
-from typing import List
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 
 
 def sort_pipes(pipes: List[dict], target_metric: str, name: str = 'results') -> List[dict]:
     """ Sorts pipelines by target metric """
-
     if pipes[0][name]['test']:
         sorted_logs = sorted(pipes, key=lambda x: x[name]['test'][target_metric], reverse=True)
     else:
@@ -29,11 +28,23 @@ def sort_pipes(pipes: List[dict], target_metric: str, name: str = 'results') -> 
     return sorted_logs
 
 
-def get_val(v_name, def_val=None):
+def get_val(v_name: str, def_val: Optional[str] = None) -> Any:
+    """ Captures dataframe values by the 'v_name' key. """
     return lambda x: x.get(v_name, def_val) if isinstance(x, dict) else x
 
 
-def reshape_logs(logs: List[dict], max_len: int, metrics: List[str]):
+def reshape_logs(logs: List[dict], max_len: int, metrics: List[str]) -> Tuple[List[dict], List, Dict]:
+    """
+    Parsing experiments logs and rewrite its in convenient format for building experiment report.
+
+    Args:
+        logs: logs if every experiment
+        max_len: the biggest number of components in experiments
+        metrics: metric names
+
+    Returns:
+        Logs in new format.
+    """
     pipe_inds = []
     set_dict = {}
     for pipe_log in logs:
@@ -63,6 +74,17 @@ def build_pipeline_table(log_data: list,
                          save_path: Path,
                          target_metric: str,
                          metrics_names: List[str]) -> None:
+    """
+    Builds pandas dataframe with all additional information about experiments and saved its in 'csv' format. Also build
+    excel table with sorted experiments results.
+
+    Args:
+        log_data: experiments logs
+        save_path: the path where will be saved table with results and report
+        target_metric: name of the metric by which the results will be sorted
+        metrics_names: list of metric names
+
+    """
     max_pipe_len = max(len(log['config']) for log in log_data)
     log_data, pipe_inds, data_type = reshape_logs(log_data, max_pipe_len, metrics_names)
 
