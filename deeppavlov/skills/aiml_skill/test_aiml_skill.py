@@ -1,20 +1,5 @@
 # -*- coding: utf-8 -*-
 import unittest
-# ################# Universal Import ###################################################
-# import sys
-# import os
-#
-#
-# SELF_DIR = os.path.dirname(os.path.abspath(__file__))
-# ROOT_DIR = os.path.dirname(SELF_DIR)
-# PREROOT_DIR = os.path.dirname(ROOT_DIR)
-# print(ROOT_DIR)
-# sys.path.append(ROOT_DIR)
-# os.environ.setdefault("DJANGO_SETTINGS_MODULE", "ruler_bot.settings")
-# # #####################################################
-# import django
-#
-# django.setup()
 import os
 
 from deeppavlov.agents.default_agent.default_agent import DefaultAgent
@@ -54,16 +39,19 @@ class TestAIMLSkill(unittest.TestCase):
         ]
         # batch of ids for one new user
         dialog_ids_batch = [1, ]
-        # import ipdb; ipdb.set_trace()
 
+        history_of_responses = []
         for each_utt in user_messages_sequence:
             print(f"User says: {each_utt}")
             responses_batch = self.agent([each_utt], dialog_ids_batch)
             print(f" Bot says: {responses_batch[0]}")
-        import ipdb; ipdb.set_trace()
-        print(agent)
-        # userdialog = self.agent.conjugate_autouser_with_agent(user_messages_sequence, self.user_id)
-        # self.assertIn("Well, hello!", userdialog[1].text)
+            history_of_responses.append(responses_batch)
+
+        # check the first greeting message in 0th batch
+        self.assertIn("Well, hello!", history_of_responses[0][0])
+        # check fifth message in 0th batch
+        self.assertIn("Yes movies", history_of_responses[4][0])
+
 
 
 if __name__ == "__main__":
