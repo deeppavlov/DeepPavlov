@@ -22,11 +22,13 @@
       },
       {
         "class_name": "squad_bert_mapping",
+        "do_lower_case": false,
         "in": ["context_raw", "bert_features"],
         "out": ["subtok2chars", "char2subtoks"]
       },
       {
         "class_name": "squad_bert_ans_preprocessor",
+        "do_lower_case": false,
         "in": ["ans_raw", "ans_raw_start","char2subtoks"],
         "out": ["ans", "ans_start", "ans_end"]
       },
