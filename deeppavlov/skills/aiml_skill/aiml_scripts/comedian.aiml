@@ -1,0 +1,19 @@
+<aiml version = "1.0.1" encoding = "UTF-8">
+   <category>
+      <pattern>LET DISCUSS MOVIES</pattern>
+      <template>Yes <set name="topic">movies</set></template>
+
+   </category>
+   <topic name = "movies">
+      <category>
+         <pattern>*</pattern>
+         <template>Watching good movie refreshes our minds.</template>
+      </category>
+
+      <category>
+         <pattern>I LIKE WATCHING COMEDY!</pattern>
+         <template>I like comedy movies too.</template>
+      </category>
+
+   </topic>
+</aiml>
