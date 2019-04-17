@@ -86,11 +86,12 @@
     "batch_size": 8,
     "metrics": [
       {
+        "name": "ner_token_f1",
+        "inputs": ["y", "tags"]
+      },
+      {
         "name": "ner_f1",
-        "inputs": [
-          "y_cut",
-          "y_pred_cut"
-        ]
+        "inputs": ["y", "tags"]
       }
     ],
     "validation_patience": 120,
