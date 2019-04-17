@@ -129,6 +129,11 @@ class DocumentBertNerIterator(DataLearningIterator):
                 yield tuple(zip(*[samples[o]
                                   for o in order[i * batch_size: (i + 1) * batch_size]]))
 
+    def get_instances(self, data_type: str = 'train') -> Tuple[tuple, tuple]:
+        data = self.data[data_type]
+        data_wo_doc_ids = (self.rm_doc_id(s) for s in data)
+        return tuple(zip(*data_wo_doc_ids))
+
     @staticmethod
     def get_doc_id(sample: Tuple[Any, Any]) -> int:
         return sample[0][-1]
