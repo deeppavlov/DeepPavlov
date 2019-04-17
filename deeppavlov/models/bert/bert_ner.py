@@ -462,10 +462,10 @@ class BertNerModel(LRScheduledTFModel):
                        input_masks: List[List[int]],
                        y_masks: List[List[int]],
                        y: List[List[int]]) -> dict:
-        # for ids, masks, ys in zip(input_ids, input_masks, y):
-        #     assert len(ids) == len(masks) == len(ys), \
-        #         f"ids({len(ids)}) = {ids}, masks({len(masks)}) = {masks},"\
-        #         f" ys({len(ys)}) = {ys} should have the same length."
+        for ids, ms, y_ms, ys in zip(input_ids, input_masks, y_masks, y):
+            assert len(ids) == len(ms) == len(y_ms), \
+                f"ids({len(ids)}) = {ids}, masks({len(ms)}) = {ms},"\
+                f" y_masks({len(y_ms)}) should have the same length."
 
         feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks, y=y)
 
