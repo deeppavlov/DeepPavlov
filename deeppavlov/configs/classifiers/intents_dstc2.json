@@ -156,10 +156,6 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/intents_dstc2_v10.tar.gz",
         "subdir": "{ROOT_PATH}/models/classifiers"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/datasets/dstc2_v2.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/dstc2"
       }
     ]
   }
