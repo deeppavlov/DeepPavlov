@@ -246,7 +246,7 @@ class LRScheduledTFModel(TFModel, LRScheduledModel):
             kwargs[momentum_param] = momentum
         elif self.get_momentum() is not None:
             kwargs[momentum_param] = self._mom_var
-        return TFModel.get_train_op(self, *args, **kwargs)
+        return TFModel.get_train_op(self, loss, **kwargs)
 
     def get_optimizer(self):
         return self._optimizer
