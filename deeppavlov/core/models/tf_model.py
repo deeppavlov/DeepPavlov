@@ -223,7 +223,7 @@ class LRScheduledTFModel(TFModel, LRScheduledModel):
             # log.info(f"Momentum      = {momentum}")
 
     def get_train_op(self,
-                     *args,
+                     loss,
                      learning_rate: Union[float, tf.placeholder] = None,
                      optimizer: tf.train.Optimizer = None,
                      momentum: Union[float, tf.placeholder] = None,
