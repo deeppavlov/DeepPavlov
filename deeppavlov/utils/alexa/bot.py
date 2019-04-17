@@ -22,8 +22,8 @@ from typing import Optional, Dict
 from OpenSSL.crypto import X509
 
 from deeppavlov.agents.default_agent.default_agent import DefaultAgent
-from utils.alexa.conversation import Conversation
-from utils.alexa.ssl_tools import verify_cert, verify_signature
+from deeppavlov.utils.alexa.conversation import Conversation
+from deeppavlov.utils.alexa.ssl_tools import verify_cert, verify_signature
 
 REQUEST_TIMESTAMP_TOLERANCE_SECS = 150
 REFRESH_VALID_CERTS_PERIOD_SECS = 120

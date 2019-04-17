@@ -8,13 +8,6 @@
         "stderr"
       ],
       "propagate": true
-    },
-    "utils": {
-      "level": "DEBUG",
-      "handlers": [
-        "stderr"
-      ],
-      "propagate": true
     }
   },
   "formatters": {

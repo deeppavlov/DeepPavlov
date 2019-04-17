@@ -28,7 +28,7 @@ from deeppavlov import build_model
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Component
-from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
+from deeppavlov.core.models.tf_model import LRScheduledTFModel
 from deeppavlov.models.squad.utils import softmax_mask
 
 logger = getLogger(__name__)
@@ -330,7 +330,7 @@ class BertSQuADInferModel(Component):
             context_subtokens = self.tokenizer.tokenize(context)
             question_subtokens = self.tokenizer.tokenize(question)
             max_chunk_len = self.max_seq_length - len(question_subtokens) - 3
-            if max_chunk_len > 0 and len(context_subtokens) < max_chunk_len:
+            if 0 < max_chunk_len < len(context_subtokens):
                 number_of_chunks = math.ceil(len(context_subtokens) / max_chunk_len)
                 sentences = self.sent_tokenizer(context)
                 for chunk in np.array_split(sentences, number_of_chunks):

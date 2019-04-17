@@ -21,7 +21,7 @@ import tensorflow as tf
 from deeppavlov.core.common.check_gpu import check_gpu_existence
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.layers.tf_layers import cudnn_bi_gru, variational_dropout
-from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
+from deeppavlov.core.models.tf_model import LRScheduledTFModel
 from deeppavlov.models.squad.utils import dot_attention, simple_attention, PtrNet, CudnnGRU, CudnnCompatibleGRU
 
 logger = getLogger(__name__)
@@ -276,7 +276,7 @@ class SquadModel(LRScheduledTFModel):
         feed_dict = self._build_feed_dict(c_tokens, c_chars, q_tokens, q_chars, y1s, y2s)
         loss, _, lear_rate = self.sess.run([self.loss, self.train_op, self.lear_rate_ph],
                                            feed_dict=feed_dict)
-        report = {'loss': loss, 'learning_rate': float(lear_rate)}
+        report = {'loss': loss, 'learning_rate': float(lear_rate), 'momentum': self.get_momentum()}
         return report
 
     def __call__(self, c_tokens: np.ndarray, c_chars: np.ndarray, q_tokens: np.ndarray, q_chars: np.ndarray,

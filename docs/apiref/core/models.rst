@@ -17,3 +17,5 @@ Abstract model classes and interfaces.
 .. autoclass:: deeppavlov.core.models.keras_model.KerasModel
 
 .. autoclass:: deeppavlov.core.models.keras_model.KerasWrapper
+
+.. autoclass:: deeppavlov.core.models.lr_scheduled_model.LRScheduledModel

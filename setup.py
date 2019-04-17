@@ -45,7 +45,7 @@ def readme():
 
 setup(
     name='deeppavlov',
-    packages=find_packages(exclude=('tests', 'docs')),
+    packages=find_packages(exclude=('tests', 'docs', 'utils')),
     version=deeppavlov.__version__,
     description=deeppavlov.__description__,
     long_description=readme(),

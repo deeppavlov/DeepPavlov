@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import random
 from logging import getLogger
 from typing import Tuple, List, Optional
 
@@ -101,8 +102,9 @@ class BertNerPreprocessor(Component):
                  max_seq_length: int = 512,
                  max_subword_length: int = None,
                  token_maksing_prob: float = 0.0,
+                 provide_not_subword_tags: bool = True,
                  **kwargs):
-
+        self.provide_not_subword_tags = provide_not_subword_tags
         self.mode = kwargs.get('mode')
         self.max_seq_length = max_seq_length
         self.max_subword_length = max_subword_length
@@ -118,12 +120,13 @@ class BertNerPreprocessor(Component):
         subword_tokens, subword_tok_ids, subword_masks, subword_tags = [], [], [], []
         for i in range(len(tokens)):
             toks = tokens[i]
-            ys = ['X'] * len(toks) if tags is None else tags[i]
-            assert len(toks) == len(ys), \
+            ys = ['O'] * len(toks) if tags is None else tags[i]
+            mask = [int(y != 'X') for y in ys]
+            assert len(toks) == len(ys) == len(mask), \
                 f"toks({len(toks)}) should have the same length as " \
-                f" ys({len(ys)}), tokens = {toks}."
+                f" ys({len(ys)}) and mask({len(mask)}), tokens = {toks}."
             sw_toks, sw_mask, sw_ys = self._ner_bert_tokenize(toks,
-                                                              [1] * len(toks),
+                                                              mask,
                                                               ys,
                                                               self.tokenizer,
                                                               self.max_subword_length,
@@ -150,7 +153,18 @@ class BertNerPreprocessor(Component):
         subword_tok_ids = zero_pad(subword_tok_ids, dtype=int, padding=0)
         subword_masks = zero_pad(subword_masks, dtype=int, padding=0)
         if tags is not None:
-            return subword_tokens, subword_tok_ids, subword_masks, subword_tags
+            if self.provide_not_subword_tags:
+                nonmasked_tags = [[t for t in ts if t != 'X']
+                                  for ts in tags]
+                for swts, swms, ts in zip(subword_tokens, subword_masks, nonmasked_tags):
+                    if not (len(ts) == sum(swms)):
+                        logger.warning('Not matching lengths of the tokenizaion!')
+                        logger.warning(f'Tokens len: {len(swts)}\n Tokens: {swts}')
+                        logger.warning(f'Masks len: {len(swms)}\n {sum(swms)} Masks: {swms}')
+                        logger.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
+                return subword_tokens, subword_tok_ids, subword_masks, nonmasked_tags
+            else:
+                return subword_tokens, subword_tok_ids, subword_masks, subword_tags
         return subword_tokens, subword_tok_ids, subword_masks
 
     @staticmethod
@@ -169,8 +183,8 @@ class BertNerPreprocessor(Component):
             if not subwords or \
                     ((max_subword_len is not None) and (len(subwords) > max_subword_len)):
                 tokens_subword.append('[UNK]')
-                mask_subword.append(0)
-                tags_subword.append('X')
+                mask_subword.append(flag)
+                tags_subword.append(tag)
             else:
                 if mode == 'train' and token_maksing_prob > 0.0 and np.random.rand() < token_maksing_prob:
                     tokens_subword.extend(['[MASK]'] * len(subwords))
@@ -183,3 +197,92 @@ class BertNerPreprocessor(Component):
         mask_subword.append(0)
         tags_subword.append('X')
         return tokens_subword, mask_subword, tags_subword
+
+
+@register('bert_context_add')
+class BertContextAdd(Component):
+    """Takes tokens and splits them into bert subtokens, encode subtokens with their indices.
+    Creates mask of subtokens (one for first subtoken, zero for later subtokens).
+
+    If tags are provided, calculate tags for subtokens.
+
+    Args:
+        vocab_file: path to vocabulary
+        left_context_size:
+        right_context_size:
+        left_context_rate:
+        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
+
+    Attributes:
+        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
+        l_size:
+        r_size:
+        l_rate:
+        tokenizer: instance of Bert FullTokenizer
+    """
+
+    def __init__(self,
+                 vocab_file: str,
+                 left_context_size: int = 3,
+                 right_context_size: int = 3,
+                 left_context_rate: float = 0.5,
+                 max_seq_length: int = None,
+                 **kwargs):
+        self.l_size = left_context_size
+        self.r_size = right_context_size
+        self.l_rate = left_context_rate
+        self.max_seq_length = max_seq_length or float('inf')
+
+        vocab_file = str(expand_path(vocab_file))
+        self.tokenizer = FullTokenizer(vocab_file=vocab_file,
+                                       do_lower_case=False)
+
+    def __call__(self,
+                 tokens: List[List[str]],
+                 left_context: List[List[str]],
+                 right_context: List[List[str]] = None,
+                 tags: List[List[str]] = None,
+                 **kwargs):
+        tokens_rich, tags_rich = [], []
+        for i in range(len(tokens)):
+            toks = tokens[i]
+            l_ctx = left_context[i][-self.l_size:]
+            r_ctx = []
+            if right_context is None:
+                r_ctx = right_context[i][:self.r_size]
+            ys = ['X'] * len(toks) if tags is None else tags[i]
+
+            tokens_rich.append(toks)
+            tags_rich.append(ys)
+            subtoks_len = len([st for t in toks
+                               for st in self.tokenizer.tokenize(t)])
+            l_i, r_i = 0, 0
+            while (l_i < len(l_ctx)) or (r_i < len(r_ctx)):
+                l_rate = self.l_rate if r_i < len(r_ctx) else 1.0
+                if (l_i < len(l_ctx)) and (random.random() < l_rate):
+                    # add one token from left_context
+                    subtoks = [st for t in l_ctx[-l_i-1]
+                               for st in self.tokenizer.tokenize(t)]
+                    if subtoks_len + len(subtoks) > self.max_seq_length:
+                        break
+                    tokens_rich[i] = l_ctx[-l_i-1] + tokens_rich[i]
+                    tags_rich[i] = ['X'] * len(l_ctx[-l_i-1]) + tags_rich[i]
+                    subtoks_len += len(subtoks)
+                    l_i += 1
+                else:
+                    # add one token from right_context
+                    subtoks = [st for t in r_ctx[r_i]
+                               for st in self.tokenizer.tokenize(t)]
+                    if subtoks_len + len(subtoks) > self.max_seq_length:
+                        break
+                    tokens_rich[i].extend(r_ctx[r_i])
+                    tags_rich[i].extend(['X'] * len(r_ctx[r_i]))
+                    subtoks_len += len(subtoks)
+                    r_i += 1
+
+            assert len(tokens_rich[-1]) == len(tags_rich[-1]), \
+                    "unequal lenghts for tokens and tags"
+        if tags is not None:
+            return tokens_rich, tags_rich
+        return tokens_rich
+
