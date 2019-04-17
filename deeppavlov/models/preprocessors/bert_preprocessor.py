@@ -24,7 +24,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import zero_pad
 from deeppavlov.core.models.component import Component
 
-logger = getLogger(__name__)
+log = getLogger(__name__)
 
 
 @register('bert_preprocessor')
@@ -89,6 +89,7 @@ class BertNerPreprocessor(Component):
         max_subword_length: replace token to <unk> if it's length is larger than this
             (defaults to None, which is equal to +infinity)
         token_mask_prob: probability of masking token while training
+        provide_subword_tags: 
 
     Attributes:
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
@@ -102,9 +103,9 @@ class BertNerPreprocessor(Component):
                  max_seq_length: int = 512,
                  max_subword_length: int = None,
                  token_maksing_prob: float = 0.0,
-                 provide_not_subword_tags: bool = True,
+                 provide_subword_tags: bool = False,
                  **kwargs):
-        self.provide_not_subword_tags = provide_not_subword_tags
+        self.provide_subword_tags = provide_subword_tags
         self.mode = kwargs.get('mode')
         self.max_seq_length = max_seq_length
         self.max_subword_length = max_subword_length
@@ -153,18 +154,21 @@ class BertNerPreprocessor(Component):
         subword_tok_ids = zero_pad(subword_tok_ids, dtype=int, padding=0)
         subword_masks = zero_pad(subword_masks, dtype=int, padding=0)
         if tags is not None:
-            if self.provide_not_subword_tags:
-                nonmasked_tags = [[t for t in ts if t != 'X']
-                                  for ts in tags]
-                for swts, swms, ts in zip(subword_tokens, subword_masks, nonmasked_tags):
-                    if not (len(ts) == sum(swms)):
-                        logger.warning('Not matching lengths of the tokenizaion!')
-                        logger.warning(f'Tokens len: {len(swts)}\n Tokens: {swts}')
-                        logger.warning(f'Masks len: {len(swms)}\n {sum(swms)} Masks: {swms}')
-                        logger.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
-                return subword_tokens, subword_tok_ids, subword_masks, nonmasked_tags
-            else:
+            if self.provide_subword_tags:
                 return subword_tokens, subword_tok_ids, subword_masks, subword_tags
+            else:
+                nonmasked_tags = [[t for t in ts if t != 'X'] for ts in tags]
+                for swts, swids, swms, ts in zip(subword_tokens,
+                                                 subword_tok_ids,
+                                                 subword_masks,
+                                                 nonmasked_tags):
+                    if (len(swids) != len(swms)) or (len(ts) != sum(swms)):
+                        log.warning('Not matching lengths of the tokenization!')
+                        log.warning(f'Tokens len: {len(swts)}\n Tokens: {swts}')
+                        log.warning(f'Masks len: {len(swms)}, sum: {sum(swms)}')
+                        log.warning(f'Masks: {swms}')
+                        log.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
+                return subword_tokens, subword_tok_ids, subword_masks, nonmasked_tags
         return subword_tokens, subword_tok_ids, subword_masks
 
     @staticmethod

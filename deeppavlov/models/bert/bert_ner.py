@@ -68,6 +68,7 @@ class BertNerModel(LRScheduledTFModel):
                  weight_decay_rate: float = 0.01,
                  return_probas: bool = False,
                  pretrained_bert: str = None,
+                 head_learning_rate_mult = 1.0,
                  min_learning_rate: float = 1e-06,
                  use_crf=False,
                  **kwargs) -> None:
@@ -75,6 +76,7 @@ class BertNerModel(LRScheduledTFModel):
 
         self.return_probas = return_probas
         self.n_tags = n_tags
+        self.head_learning_rate_mult = head_learning_rate_mult
         self.min_learning_rate = min_learning_rate
         self.keep_prob = keep_prob
         self.optimizer = optimizer
@@ -231,9 +233,10 @@ class BertNerModel(LRScheduledTFModel):
         self.input_masks_ph = tf.placeholder(shape=(None, None),
                                              dtype=tf.int32,
                                              name='token_mask_ph')
-        self.token_types_ph = tf.placeholder(shape=(None, None),
-                                             dtype=tf.int32,
-                                             name='token_types_ph')
+        self.token_types_ph = \
+                tf.placeholder_with_default(tf.zeros_like(self.input_ids_ph, dtype=tf.int32),
+                                            shape=self.input_ids_ph.shape,
+                                            name='token_types_ph')
 
         self.y_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='y_ph')
         self.y_masks_ph = tf.placeholder(shape=(None, None),
@@ -246,10 +249,13 @@ class BertNerModel(LRScheduledTFModel):
 
     def _init_optimizer(self):
         with tf.variable_scope('Optimizer'):
-            self.global_step = tf.get_variable('global_step', shape=[], dtype=tf.int32,
+            self.global_step = tf.get_variable('global_step',
+                                               shape=[],
+                                               dtype=tf.int32,
                                                initializer=tf.constant_initializer(0),
                                                trainable=False)
             # default optimizer for Bert is Adam with fixed L2 regularization
+
         if self.optimizer is None:
             self.train_op = \
                 self.get_train_op(self.loss,
@@ -266,8 +272,8 @@ class BertNerModel(LRScheduledTFModel):
                                                              "EMA"])
         else:
             self.train_op = self.get_train_op(self.loss,
-                                              optimizer_scope_name='Optimizer',
-                                              learning_rate=self.learning_rate_ph)
+                                              learning_rate=self.learning_rate_ph,
+                                              optimizer_scope_name='Optimizer')
 
         if self.optimizer is None:
             with tf.variable_scope('Optimizer'):
@@ -287,6 +293,21 @@ class BertNerModel(LRScheduledTFModel):
             self.train_op = self.ema.build(self.train_op, _vars, name="EMA")
         else:
             self.ema = None
+
+    def get_train_op(self, loss, learning_rate, **kwargs):
+        assert "learnable_scopes" not in kwargs, "learnable scopes unsupported"
+        # train_op for bert variables
+        kwargs['learnable_scopes'] = ('(?!ner)',)
+        bert_train_op = super().get_train_op(loss,
+                                             learning_rate,
+                                             **kwargs)
+        # train_op for ner head variables
+        kwargs['learnable_scopes'] = ('ner',)
+        head_learning_rate = learning_rate * self.head_learning_rate_mult
+        head_train_op = super().get_train_op(loss,
+                                             head_learning_rate,
+                                             **kwargs)
+        return tf.group(bert_train_op, head_train_op)
 
     @staticmethod
     def token_from_subtoken(units, mask):
@@ -418,13 +439,14 @@ class BertNerModel(LRScheduledTFModel):
 
         return tensor
 
-    def _build_feed_dict(self, input_ids, input_masks, token_types, y_masks, y=None):
+    def _build_feed_dict(self, input_ids, input_masks, y_masks, token_types=None, y=None):
         feed_dict = {
             self.input_ids_ph: input_ids,
             self.input_masks_ph: input_masks,
-            self.token_types_ph: token_types,
             self.y_masks_ph: y_masks
         }
+        if token_types is not None:
+            feed_dict[self.token_types_ph] = token_types
         if y is not None:
             feed_dict.update({
                 self.y_ph: y,
@@ -440,14 +462,12 @@ class BertNerModel(LRScheduledTFModel):
                        input_masks: List[List[int]],
                        y_masks: List[List[int]],
                        y: List[List[int]]) -> dict:
-        input_type_ids = [[0] * len(inputs) for inputs in input_ids]  # TODO: make placeholder with default
-        # for ids, masks, ys in zip(input_ids, input_masks, y):
-        #     assert len(ids) == len(masks) == len(ys), \
-        #         f"ids({len(ids)}) = {ids}, masks({len(masks)}) = {masks},"\
-        #         f" ys({len(ys)}) = {ys} should have the same length."
+        for ids, ms, y_ms, ys in zip(input_ids, input_masks, y_masks, y):
+            assert len(ids) == len(ms) == len(y_ms), \
+                f"ids({len(ids)}) = {ids}, masks({len(ms)}) = {ms},"\
+                f" y_masks({len(y_ms)}) should have the same length."
 
-        feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids,
-                                          y_masks, y)
+        feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks, y=y)
 
         if self.ema:
             self.sess.run(self.ema.switch_to_train_op)
@@ -458,14 +478,12 @@ class BertNerModel(LRScheduledTFModel):
                  input_ids: List[List[int]],
                  input_masks: List[List[int]],
                  y_masks: List[List[int]]):
-        input_type_ids = [[0] * len(inputs) for inputs in input_ids]
         for ids, masks in zip(input_ids, input_masks):
             assert len(ids) == len(masks), \
                 f"ids({len(ids)}) = {ids}, masks({len(masks)}) = {masks}" \
                 f" should have the same length."
 
-        feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids,
-                                          y_masks)
+        feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks)
         if self.ema:
             self.sess.run(self.ema.switch_to_test_op)
         if not self.return_probas:
@@ -569,7 +587,7 @@ class ExponentialMovingAverage:
     def switch_to_train_op(self) -> tf.Operation:
         assert self.train_mode is not None, "ema variables aren't initialized"
         if not self.train_mode:
-            log.info("switching to train mode")
+            # log.info("switching to train mode")
             self.train_mode = True
             return self.train_switch_op
         return self.do_nothing_op
@@ -578,7 +596,7 @@ class ExponentialMovingAverage:
     def switch_to_test_op(self) -> tf.Operation:
         assert self.train_mode is not None, "ema variables aren't initialized"
         if self.train_mode:
-            log.info("switching to test mode")
+            # log.info("switching to test mode")
             self.train_mode = False
             return self.test_switch_op
         return self.do_nothing_op

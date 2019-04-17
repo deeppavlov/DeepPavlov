@@ -21,14 +21,17 @@ from deeppavlov.core.common.file import read_json, find_config
 _T = TypeVar('_T', str, float, bool, list, dict)
 
 
-def _parse_config_property(item: _T, variables: Dict[str, Union[str, Path, float, bool, None]]) -> _T:
+def _parse_config_property(item: _T, variables: Dict[str, Union[str, Path, float, bool, int, None]],
+                           variables_exact: Dict[str, Union[str, Path, float, bool, int, None]]) -> _T:
     """Recursively apply config's variables values to its property"""
     if isinstance(item, str):
+        if item in variables_exact:
+            return variables_exact[item]
         return item.format(**variables)
     elif isinstance(item, list):
-        return [_parse_config_property(item, variables) for item in item]
+        return [_parse_config_property(item, variables, variables_exact) for item in item]
     elif isinstance(item, dict):
-        return {k: _parse_config_property(v, variables) for k, v in item.items()}
+        return {k: _parse_config_property(v, variables, variables_exact) for k, v in item.items()}
     else:
         return item
 
@@ -45,9 +48,12 @@ def parse_config(config: Union[str, Path, dict]) -> dict:
         env_name = f'DP_{name}'
         if env_name in os.environ:
             value = os.getenv(env_name)
-        variables[name] = value.format(**variables)
-
-    return _parse_config_property(config, variables)
+        if isinstance(value, str):
+            variables[name] = value.format(**variables)
+        else:
+            variables[name] = value
+    variables_exact = {f'{{{k}}}': v for k, v in variables.items()}
+    return _parse_config_property(config, variables, variables_exact)
 
 
 def expand_path(path: Union[str, Path]) -> Path:
