@@ -230,7 +230,6 @@ class LRScheduledTFModel(TFModel, LRScheduledModel):
                      clip_norm: float = None,
                      **kwargs):
         if learning_rate is not None:
-            self._external_lr = True
             kwargs['learning_rate'] = learning_rate
         else:
             kwargs['learning_rate'] = self._lr_var
@@ -244,7 +243,6 @@ class LRScheduledTFModel(TFModel, LRScheduledModel):
             momentum_param = 'rho'
 
         if momentum is not None:
-            self._external_mom = True
             kwargs[momentum_param] = momentum
         elif self.get_momentum() is not None:
             kwargs[momentum_param] = self._mom_var

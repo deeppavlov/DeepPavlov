@@ -24,7 +24,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
 
-logger = getLogger(__name__)
+log = getLogger(__name__)
 
 
 @register('bert_ner')
