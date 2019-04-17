@@ -382,15 +382,22 @@ class SquadAnsPostprocessor(Component):
 
 @register('squad_bert_mapping')
 class SquadBertMappingPreprocessor(Component):
-    # TODO: docs
-    def __init__(self, *args, **kwargs):
-        pass
+    """Create mapping from BERT subtokens to their characters positions and vice versa.
+
+        Args:
+            do_lower_case: set True if lowercasing is needed
+
+    """
+
+    def __init__(self, do_lower_case: bool = True, *args, **kwargs):
+        self.do_lower_case = do_lower_case
 
     def __call__(self, contexts, bert_features, **kwargs):
-        #TODO
         subtok2chars = []
         char2subtoks = []
         for context, features in zip(contexts, bert_features):
+            if self.do_lower_case:
+                context = context.lower()
             subtokens = features.tokens
             context_start = subtokens.index('[SEP]') + 1
             idx = 0
@@ -417,10 +424,15 @@ class SquadBertMappingPreprocessor(Component):
 
 @register('squad_bert_ans_preprocessor')
 class SquadBertAnsPreprocessor(Component):
-    # TODO: docs
+    """Create answer start and end positions in subtokens.
 
-    def __init__(self, *args, **kwargs):
-        pass
+        Args:
+            do_lower_case: set True if lowercasing is needed
+
+    """
+
+    def __init__(self, do_lower_case: bool = True, *args, **kwargs):
+        self.do_lower_case = do_lower_case
 
     def __call__(self, answers_raw, answers_start, char2subtoks, **kwargs):
         answers, starts, ends = [], [], []
@@ -429,9 +441,12 @@ class SquadBertAnsPreprocessor(Component):
             starts.append([])
             ends.append([])
             for ans, ans_st in zip(answers_raw, answers_start):
+                if self.do_lower_case:
+                    ans = ans.lower()
                 try:
-                    st = min({c2sub[i] for i in range(ans_st, ans_st + len(ans)) if i in c2sub})
-                    end = max({c2sub[i] for i in range(ans_st, ans_st + len(ans)) if i in c2sub})
+                    indices = {c2sub[i] for i in range(ans_st, ans_st + len(ans)) if i in c2sub}
+                    st = min(indices)
+                    end = max(indices)
                 except ValueError:
                     # 0 - CLS token
                     st, end = 0, 0
@@ -444,7 +459,7 @@ class SquadBertAnsPreprocessor(Component):
 
 @register('squad_bert_ans_postprocessor')
 class SquadBertAnsPostprocessor(Component):
-    # TODO: docs
+    """Extract answer and create answer start and end positions in characters from subtoken positions."""
 
     def __init__(self, *args, **kwargs):
         pass

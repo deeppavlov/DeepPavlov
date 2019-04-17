@@ -39,6 +39,14 @@
     "validation_patience": 10,
     "metrics": [
       {
+        "name": "squad_v1_f1",
+        "inputs": ["ans_raw", "ans_predicted"]
+      },
+      {
+        "name": "squad_v1_em",
+        "inputs": ["ans_raw", "ans_predicted"]
+      },
+      {
         "name": "squad_v2_f1",
         "inputs": ["ans_raw", "ans_predicted"]
       },

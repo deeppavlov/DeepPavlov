@@ -12,16 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Iterable, Union, Tuple, Optional
 from collections import defaultdict
 from logging import getLogger
-from typing import Iterable, Tuple
 
 import numpy as np
 import tensorflow as tf
+from overrides import overrides
 from tensorflow.python.ops import variables
 
+from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.registry import cls_from_str
 from deeppavlov.core.models.nn_model import NNModel
-from .tf_backend import TfModelMeta
+from deeppavlov.core.models.tf_backend import TfModelMeta
+from deeppavlov.core.models.lr_scheduled_model import LRScheduledModel
+
 
 log = getLogger(__name__)
 
@@ -225,7 +230,6 @@ class LRScheduledTFModel(TFModel, LRScheduledModel):
                      clip_norm: float = None,
                      **kwargs):
         if learning_rate is not None:
-            self._external_lr = True
             kwargs['learning_rate'] = learning_rate
         else:
             kwargs['learning_rate'] = self._lr_var
@@ -239,11 +243,10 @@ class LRScheduledTFModel(TFModel, LRScheduledModel):
             momentum_param = 'rho'
 
         if momentum is not None:
-            self._external_mom = True
             kwargs[momentum_param] = momentum
         elif self.get_momentum() is not None:
             kwargs[momentum_param] = self._mom_var
-        return TFModel.get_train_op(self, loss, **kwargs)
+        return TFModel.get_train_op(self, *args, **kwargs)
 
     def get_optimizer(self):
         return self._optimizer

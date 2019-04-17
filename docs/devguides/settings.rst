@@ -6,7 +6,7 @@ DeepPavlov provides some tools to facilitate its usage (e.g. dialog logging, set
 1. Settings files access and management
 ---------------------------------------
 
-Most of DeepPavlov settings are located in settings files, which in turn are located in a settings folder. Default settings folder location is ``utils/settings`` .
+Most of DeepPavlov settings are located in settings files, which in turn are located in a settings folder. Default settings folder location is ``deeppavlov/utils/settings`` .
 
 You can override a settings directory path by setting the ``DP_SETTINGS_PATH`` environment variable. Missing files will be added automatically when running any deeppavlov script.
 

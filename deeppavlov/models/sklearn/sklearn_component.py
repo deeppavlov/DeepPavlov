@@ -282,16 +282,6 @@ class SklearnComponent(Estimator):
 
         return x_features
 
-    def destroy(self) -> None:
-        """
-        Delete ``self.model`` from memory
-
-        Returns:
-            None
-        """
-        del self.model
-        return
-
     @staticmethod
     def get_function_params(f: Callable) -> List[str]:
         """
