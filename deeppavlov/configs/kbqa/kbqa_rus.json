@@ -1,0 +1,262 @@
+{
+  "dataset_reader": {
+    "class_name": "kbqa_reader",
+    "data_path": "{DOWNLOADS_PATH}/wikidata_rus/"
+  },
+  "dataset_iterator": {
+    "class_name": "data_learning_iterator"
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "id": "classes_vocab",
+        "class_name": "simple_vocab",
+        "fit_on": ["y"],
+        "save_path": "{MODELS_PATH}/relation_prediction/classes.dict",
+        "load_path": "{MODELS_PATH}/relation_prediction/classes.dict",
+        "in": "y",
+        "out": "y_ids"
+      },
+      {
+        "in": "x",
+        "out": "x_tok",
+        "id": "my_tokenizer",
+        "class_name": "nltk_tokenizer",
+        "tokenizer": "wordpunct_tokenize"
+      },
+      {
+        "in": ["x_tok"],
+        "class_name": "str_lower",
+        "out": ["x_lower"]
+      },
+      {
+        "in": "x_lower",
+        "out": "x_emb",
+        "id": "my_embedder",
+        "class_name": "fasttext",
+        "load_path": "{DOWNLOADS_PATH}/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.bin"
+      },
+      {
+        "in": "y_ids",
+        "out": "y_onehot",
+        "class_name": "one_hotter",
+        "depth": "#classes_vocab.len"
+      },
+      {
+        "in": ["x_emb"],
+        "in_y": ["y_onehot"],
+        "out": ["y_pred_probas"],
+        "main": true,
+        "class_name": "keras_classification_model",
+        "save_path": "{MODELS_PATH}/relation_prediction/model",
+        "load_path": "{MODELS_PATH}/relation_prediction/model",
+        "embedding_size": "#my_embedder.dim",
+        "n_classes": "#classes_vocab.len",
+        "kernel_sizes_cnn": [
+          1,
+          2,
+          3
+        ],
+        "filters_cnn": 256,
+        "optimizer": "Adam",
+        "learning_rate": 0.05,
+        "learning_rate_decay": 0.1,
+        "loss": "categorical_crossentropy",
+        "last_layer_activation": "softmax",
+        "text_size": 36,
+        "coef_reg_cnn": 1e-3,
+        "coef_reg_den": 1e-2,
+        "dropout_rate": 0.5,
+        "dense_size": 300,
+        "model_name": "cnn_model"
+      },
+      {
+        "in": "y_pred_probas",
+        "out": "y_pred_ids",
+        "class_name": "proba2labels",
+        "max_proba": true
+      },
+      {
+        "in": ["x"],
+        "class_name": "lazy_tokenizer",
+        "out": ["x_tokens"]
+      },
+      {
+        "in": ["x_tokens"],
+        "class_name": "str_lower",
+        "out": ["x_lower"]
+      },
+      {
+        "in": ["x_lower"],
+        "class_name": "sanitizer",
+        "nums": true,
+        "out": ["x_san"]
+      },
+      {
+        "in": ["x_san"],
+        "id": "word_vocab",
+        "class_name": "simple_vocab",
+        "pad_with_zeros": true,
+        "special_tokens": ["<UNK>"],
+        "fit_on": ["x_san"],
+        "save_path": "{MODELS_PATH}/ner/word.dict",
+        "load_path": "{MODELS_PATH}/ner/word.dict",
+        "out": ["x_tok_ind"]
+      },
+      {
+        "in": ["y"],
+        "id": "tag_vocab",
+        "class_name": "simple_vocab",
+        "pad_with_zeros": true,
+        "fit_on": ["y"],
+        "save_path": "{MODELS_PATH}/ner/tag.dict",
+        "load_path": "{MODELS_PATH}/ner/tag.dict",
+        "out": ["y_ind"]
+      },
+      {
+        "in": ["x_lower"],
+        "class_name": "char_splitter",
+        "out": ["x_char"]
+      },
+      {
+        "in": ["x_char"],
+        "id": "char_vocab",
+        "class_name": "simple_vocab",
+        "pad_with_zeros": true,
+        "fit_on": ["x_char"],
+        "save_path": "{MODELS_PATH}/ner/char.dict",
+        "load_path": "{MODELS_PATH}/ner/char.dict",
+        "out": ["x_char_ind"]
+      },
+      {
+        "in": ["x_san"],
+        "id": "embedder",
+        "class_name": "fasttext",
+        "pad_zero": true,
+        "load_path": "{DOWNLOADS_PATH}/embeddings/lenta_lower_100.bin",
+        "out": ["x_emb"]
+      },
+      {
+        "in": ["x_tokens"],
+        "class_name": "mask",
+        "out": ["mask"]
+      },
+      {
+        "class_name": "random_emb_mat",
+        "id": "embeddings",
+        "vocab_len": "#word_vocab.len",
+        "emb_dim": 100
+      },
+      {
+        "class_name": "random_emb_mat",
+        "id": "embeddings_char",
+        "vocab_len": "#char_vocab.len",
+        "emb_dim": 100
+      },
+      {
+        "in": ["x_emb", "mask", "x_char_ind"],
+        "in_y": ["y_ind"],
+        "out": ["y_predicted"],
+        "class_name": "ner",
+        "main": true,
+        "n_hidden_list": [128],
+        "net_type": "rnn",
+        "cell_type": "lstm",
+        "use_cudnn_rnn": true,
+        "n_tags": "#tag_vocab.len",
+        "token_emb_dim": "#embedder.dim",
+        "char_emb_dim": 100,
+        "save_path": "{MODELS_PATH}/ner/model",
+        "load_path": "{MODELS_PATH}/ner/model",
+        "char_emb_mat": "#embeddings_char.emb_mat",
+        "use_crf": true,
+        "use_batch_norm": true,
+        "embeddings_dropout": true,
+        "top_dropout": true,
+        "intra_layer_dropout": true,
+        "l2_reg": 0,
+        "learning_rate": 1e-2,
+        "dropout_keep_prob": 0.7
+      },
+      {
+        "class_name": "entity_linker",
+        "id": "linker",
+        "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
+        "wiki_filename": "wiki_rus.pickle",
+        "entities_filename": "wiki_rus_name_to_q_lowercase.pickle",
+        "inverted_index_filename": "inverted_index.pickle",
+        "id_to_name_file": "wiki_rus_q_to_name.pickle",
+        "use_inverted_index": false,
+        "rule_filter_entities": true,
+        "debug": false
+      },
+      {
+        "in": ["x_tokens", "y_predicted", "y_pred_probas"],
+        "out": ["answers"],
+        "load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_q_to_name.pickle",
+        "class_name": "kb_answer_parser_wikidata",
+        "classes_vocab_keys": "#classes_vocab.keys()",
+        "top_k_classes": 5,
+        "relations_maping_filename": "wiki_properties_id_to_name.pickle",
+        "templates_filename": "templates.pickle",
+        "debug": false,
+        "return_confidences": false,
+        "lemmatize": true,
+        "linker": "#linker"
+      }
+    ],
+    "out": ["answers"]
+  },
+  "train":{
+    "metrics": [
+      {
+        "name": "kbqa_accuracy",
+        "inputs": ["y", "answers"]
+      }
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models/kbqa_mix_lowercase"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/wikidata_rus.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/inverted_index.pickle",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/templates.pickle",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/wiki_properties_id_to_name.pickle",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.bin",
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/kbqa_mix_lowercase.tar.gz",
+        "subdir": "{ROOT_PATH}/models/kbqa_mix_lowercase"
+      },
+
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/lenta_lower_100.bin",
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
+      }
+    ]
+  }
+}

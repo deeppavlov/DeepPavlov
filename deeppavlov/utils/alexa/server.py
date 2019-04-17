@@ -29,7 +29,7 @@ from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
-from utils.alexa.bot import Bot
+from deeppavlov.utils.alexa.bot import Bot
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 

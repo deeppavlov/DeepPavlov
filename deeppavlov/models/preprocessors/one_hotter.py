@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Union
+from typing import List, Union, Iterable
 
 import numpy as np
 
@@ -56,7 +56,7 @@ class OneHotter(Component):
         one_hotted_batch = []
 
         for utt in batch:
-            if isinstance(utt, list):
+            if isinstance(utt, Iterable):
                 one_hotted_utt = self._to_one_hot(utt, self._depth)
             elif isinstance(utt, int):
                 if self._pad_zeros or self.single_vector:
@@ -77,5 +77,5 @@ class OneHotter(Component):
     def _to_one_hot(x, n):
         b = np.zeros([len(x), n], dtype=np.float32)
         for q, tok in enumerate(x):
-            b[q, tok] = 1
+            b[q, int(tok)] = 1
         return b

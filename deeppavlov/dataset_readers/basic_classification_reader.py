@@ -87,7 +87,6 @@ class BasicClassificationDatasetReader(DatasetReader):
 
                 x = kwargs.get("x", "text")
                 y = kwargs.get('y', 'labels')
-                class_sep = kwargs.get('class_sep', ',')
                 if isinstance(x, list):
                     data[data_type] = [([row[x_] for x_ in x], str(row[y]).split(class_sep)) for _, row in df.iterrows()]
                 else:

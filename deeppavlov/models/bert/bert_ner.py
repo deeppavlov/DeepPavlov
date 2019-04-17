@@ -1,4 +1,4 @@
-# Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,9 +22,9 @@ from bert_dp.optimization import AdamWeightDecayOptimizer
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
-from deeppavlov.core.models.lr_scheduled_tf_model import LRScheduledTFModel
+from deeppavlov.core.models.tf_model import LRScheduledTFModel
 
-log = getLogger(__name__)
+logger = getLogger(__name__)
 
 
 @register('bert_ner')

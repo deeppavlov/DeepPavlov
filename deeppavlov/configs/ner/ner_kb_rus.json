@@ -1,0 +1,174 @@
+{
+  "dataset_reader": {
+    "class_name": "sq_reader",
+    "data_path": "/home/dmitry/download/ner_ontonotes"
+  },
+  "dataset_iterator": {
+    "class_name": "data_learning_iterator"
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "in": ["x"],
+        "class_name": "lazy_tokenizer",
+        "out": ["x_tokens"]
+      },
+      {
+        "in": ["x_tokens"],
+        "class_name": "str_lower",
+        "out": ["x_lower"]
+      },
+      {
+        "in": ["x_lower"],
+        "class_name": "sanitizer",
+        "nums": true,
+        "out": ["x_san"]
+      },
+      {
+        "in": ["x_san"],
+        "id": "word_vocab",
+        "class_name": "simple_vocab",
+        "pad_with_zeros": true,
+        "special_tokens": ["<UNK>"],
+        "fit_on": ["x_san"],
+        "save_path": "{MODELS_PATH}/ner/word.dict",
+        "load_path": "{MODELS_PATH}/ner/word.dict",
+        "out": ["x_tok_ind"]
+      },
+      {
+        "in": ["y"],
+        "id": "tag_vocab",
+        "class_name": "simple_vocab",
+        "pad_with_zeros": true,
+        "fit_on": ["y"],
+        "save_path": "{MODELS_PATH}/ner/tag.dict",
+        "load_path": "{MODELS_PATH}/ner/tag.dict",
+        "out": ["y_ind"]
+      },
+      {
+        "in": ["x_tokens"],
+        "class_name": "char_splitter",
+        "out": ["x_char"]
+      },
+      {
+        "in": ["x_char"],
+        "id": "char_vocab",
+        "class_name": "simple_vocab",
+        "pad_with_zeros": true,
+        "fit_on": ["x_char"],
+        "save_path": "{MODELS_PATH}/ner/char.dict",
+        "load_path": "{MODELS_PATH}/ner/char.dict",
+        "out": ["x_char_ind"]
+      },
+      {
+        "in": ["x_san"],
+        "id": "embedder",
+        "class_name": "fasttext",
+        "pad_zero": true,
+        "load_path": "{DOWNLOADS_PATH}/embeddings/lenta_lower_100.bin",
+        "out": ["x_emb"]
+      },
+      {
+        "in": ["x_tokens"],
+        "class_name": "mask",
+        "out": ["mask"]
+      },
+      {
+        "class_name": "random_emb_mat",
+        "id": "embeddings",
+        "vocab_len": "#word_vocab.len",
+        "emb_dim": 100
+      },
+      {
+        "class_name": "random_emb_mat",
+        "id": "embeddings_char",
+        "vocab_len": "#char_vocab.len",
+        "emb_dim": 100
+      },
+      {
+        "id": "capitalization",
+        "class_name": "capitalization_featurizer",
+        "in": ["x_tokens"],
+        "out": ["cap"]
+      },
+      {
+        "in": ["x_emb", "mask", "x_char_ind", "cap"],
+        "in_y": ["y_ind"],
+        "out": ["y_predicted"],
+        "class_name": "ner",
+        "main": true,
+        "n_hidden_list": [128],
+        "net_type": "rnn",
+        "cell_type": "lstm",
+        "use_cudnn_rnn": true,
+        "n_tags": "#tag_vocab.len",
+        "capitalization_dim": "#capitalization.dim",
+        "token_emb_dim": "#embedder.dim",
+        "char_emb_dim": 100,
+        "save_path": "{MODELS_PATH}/ner/model",
+        "load_path": "{MODELS_PATH}/ner/model",
+        "char_emb_mat": "#embeddings_char.emb_mat",
+        "use_crf": true,
+        "use_batch_norm": true,
+        "embeddings_dropout": true,
+        "top_dropout": true,
+        "intra_layer_dropout": true,
+        "l2_reg": 0,
+        "learning_rate": 1e-2,
+        "dropout_keep_prob": 0.7
+      },
+      {
+        "ref": "tag_vocab",
+        "in": ["y_predicted"],
+        "out": ["tags"]
+      }
+    ],
+
+    "out": ["x_tokens", "tags"]
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 64,
+
+    "metrics": [
+      {
+        "name": "ner_f1",
+        "inputs": ["y", "tags"]
+      }
+    ],
+    "validation_patience": 7,
+    "val_every_n_epochs": 1,
+
+    "log_every_n_epochs": 1,
+    "show_examples": false,
+    "tensorboard_log_dir": "{MODELS_PATH}/ner/logs"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models/kbqa"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+    ],
+    "labels": {
+      "telegram_utils": "NERCoNLL2003Model",
+      "server_utils": "NER"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_rus_v2_cpu_compatible.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/lenta_lower_100.bin",
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
+      }
+    ]
+  }
+}
+

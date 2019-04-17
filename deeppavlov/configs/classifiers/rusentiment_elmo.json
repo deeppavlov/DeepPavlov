@@ -148,7 +148,7 @@
       "valid",
       "test"
     ],
-    "tensorboard_log_dir": "{MODELS_PATH}/",
+    "tensorboard_log_dir": "{MODELS_PATH}/logs",
     "class_name": "nn_trainer"
   },
   "metadata": {

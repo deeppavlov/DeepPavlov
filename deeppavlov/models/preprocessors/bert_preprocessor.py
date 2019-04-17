@@ -162,7 +162,7 @@ class BertNerPreprocessor(Component):
                         logger.warning(f'Tokens len: {len(swts)}\n Tokens: {swts}')
                         logger.warning(f'Masks len: {len(swms)}\n {sum(swms)} Masks: {swms}')
                         logger.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
-                return subword_tokens, subword_tok_ids, subword_masks, nonmasked_tags 
+                return subword_tokens, subword_tok_ids, subword_masks, nonmasked_tags
             else:
                 return subword_tokens, subword_tok_ids, subword_masks, subword_tags
         return subword_tokens, subword_tok_ids, subword_masks
@@ -254,7 +254,7 @@ class BertContextAdd(Component):
 
             tokens_rich.append(toks)
             tags_rich.append(ys)
-            subtoks_len = len([st for t in toks 
+            subtoks_len = len([st for t in toks
                                for st in self.tokenizer.tokenize(t)])
             l_i, r_i = 0, 0
             while (l_i < len(l_ctx)) or (r_i < len(r_ctx)):
@@ -264,7 +264,7 @@ class BertContextAdd(Component):
                     subtoks = [st for t in l_ctx[-l_i-1]
                                for st in self.tokenizer.tokenize(t)]
                     if subtoks_len + len(subtoks) > self.max_seq_length:
-                        break 
+                        break
                     tokens_rich[i] = l_ctx[-l_i-1] + tokens_rich[i]
                     tags_rich[i] = ['X'] * len(l_ctx[-l_i-1]) + tags_rich[i]
                     subtoks_len += len(subtoks)
@@ -274,7 +274,7 @@ class BertContextAdd(Component):
                     subtoks = [st for t in r_ctx[r_i]
                                for st in self.tokenizer.tokenize(t)]
                     if subtoks_len + len(subtoks) > self.max_seq_length:
-                        break 
+                        break
                     tokens_rich[i].extend(r_ctx[r_i])
                     tags_rich[i].extend(['X'] * len(r_ctx[r_i]))
                     subtoks_len += len(subtoks)
