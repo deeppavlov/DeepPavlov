@@ -256,3 +256,6 @@ class LRScheduledTFModel(TFModel, LRScheduledModel):
                                                          'momentum')):
         return super().load(exclude_scopes=exclude_scopes)
 
+    def process_event(self, *args, **kwargs):
+        LRScheduledModel.process_event(self, *args, **kwargs)
+
