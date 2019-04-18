@@ -46,7 +46,7 @@ def ner_token_f1(y_true, y_pred):
 
     y_true = [tag.split('-')[-1] for tag in y_true]
     y_pred = [tag.split('-')[-1] for tag in y_pred]
-    tags = set(y_true) or set(y_pred)
+    tags = set(y_true) | set(y_pred)
     tags_dict = {tag: n for n, tag in enumerate(tags)}
 
     y_true_inds = np.array([tags_dict[tag] for tag in y_true])
