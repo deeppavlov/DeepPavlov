@@ -21,6 +21,7 @@ from bert_dp.optimization import AdamWeightDecayOptimizer
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.layers.tf_layers import bi_rnn
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
 
@@ -42,6 +43,9 @@ class BertNerModel(LRScheduledTFModel):
 ￼       attention_probs_keep_prob: keep_prob for Bert self-attention layers
 ￼       hidden_keep_prob: keep_prob for Bert hidden layers
         encoder_layer_ids: list of averaged layers from Bert encoder (layer ids)
+        use_birnn:
+        birnn_cell_type:
+        birnn_hidden_size:
 ￼       return_probas: set True if return class probabilites instead of most probable label needed
 ￼       optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
 ￼       num_warmup_steps:
@@ -66,6 +70,9 @@ class BertNerModel(LRScheduledTFModel):
                  ema_decay: float = None,
                  ema_variables_on_cpu: bool = True,
                  weight_decay_rate: float = 0.01,
+                 use_birnn: bool = False,
+                 birnn_cell_type: str = 'lstm',
+                 birnn_hidden_size: int = 128,
                  return_probas: bool = False,
                  pretrained_bert: str = None,
                  head_learning_rate_mult = 1.0,
@@ -87,6 +94,9 @@ class BertNerModel(LRScheduledTFModel):
         self.encoder_layer_ids = encoder_layer_ids
         self.num_warmup_steps = num_warmup_steps
         self.weight_decay_rate = weight_decay_rate
+        self.use_birnn = use_birnn
+        self.birnn_cell_type = birnn_cell_type
+        self.birnn_hidden_size = birnn_hidden_size
         self.use_crf = use_crf
 
         self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
@@ -126,6 +136,8 @@ class BertNerModel(LRScheduledTFModel):
 
     def _init_graph(self):
         self._init_placeholders()
+        
+        self.seq_lengths = tf.reduce_sum(self.y_masks_ph, axis=1)
 
         self.bert = BertModel(config=self.bert_config,
                               is_training=self.is_train_ph,
@@ -145,13 +157,20 @@ class BertNerModel(LRScheduledTFModel):
             layer_weights = tf.unstack(layer_weights / len(encoder_layers))
             # TODO: may be stack and reduce_sum is faster
             output_layer = sum(w * l for w, l in zip(layer_weights, encoder_layers))
-            output_layer = tf.nn.dropout(output_layer, keep_prob=self.keep_prob_ph)
+            units = tf.nn.dropout(output_layer, keep_prob=self.keep_prob_ph)
+            if self.use_birnn:
+                units, _ = bi_rnn(output_layer,
+                                  self.birnn_hidden_size,
+                                  cell_type=self.birnn_cell_type,
+                                  seq_lengths=self.seq_lengths,
+                                  name='birnn')
+                units = tf.concat(units, -1)
+                units = tf.nn.dropout(units, keep_prob=self.keep_prob_ph)
             # TODO: maybe add one more layer?
-            logits = tf.layers.dense(output_layer, units=self.n_tags, name="output_dense")
+            logits = tf.layers.dense(units, units=self.n_tags, name="output_dense")
 
             self.logits = self.token_from_subtoken(logits, self.y_masks_ph)
 
-            self.seq_lengths = tf.reduce_sum(self.y_masks_ph, axis=1)
             max_length = tf.reduce_max(self.seq_lengths)
             one_hot_max_len = tf.one_hot(self.seq_lengths - 1, max_length)
             tag_mask = tf.cumsum(one_hot_max_len[:, ::-1], axis=1)[:, ::-1]
