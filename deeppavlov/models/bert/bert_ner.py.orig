@@ -110,7 +110,12 @@ class BertNerModel(LRScheduledTFModel):
             pretrained_bert = str(expand_path(pretrained_bert))
 
         if tf.train.checkpoint_exists(pretrained_bert) \
+<<<<<<< HEAD
+                and (self.load_path is None or not
+                        tf.train.checkpoint_exists(str(self.load_path.resolve()))):
+=======
                 and not tf.train.checkpoint_exists(str(self.load_path.resolve())):
+>>>>>>> feat/bert
             log.info('[initializing model with Bert from {}]'.format(pretrained_bert))
             # Exclude optimizer and classification variables from saved variables
             var_list = self._get_saveable_variables(
@@ -159,13 +164,13 @@ class BertNerModel(LRScheduledTFModel):
             # CRF
             if self.use_crf:
                 transition_params = tf.get_variable('Transition_Params',
-                                                    shape=[self.n_tags, self.n_tags],
+                                                    shape=[self.n_tags,
+                                                           self.n_tags],
                                                     initializer=tf.zeros_initializer())
-                log_likelihood, transition_params = \
-                        tf.contrib.crf.crf_log_likelihood(self.logits,
-                                                          self.y_ph,
-                                                          self.seq_lengths,
-                                                          transition_params)
+                log_likelihood, transition_params = tf.contrib.crf.crf_log_likelihood(self.logits,
+                                                                                      self.y_ph,
+                                                                                      self.seq_lengths,
+                                                                                      transition_params)
                 loss_tensor = -log_likelihood
                 self._transition_params = transition_params
 
@@ -462,14 +467,10 @@ class BertNerModel(LRScheduledTFModel):
                        input_masks: List[List[int]],
                        y_masks: List[List[int]],
                        y: List[List[int]]) -> dict:
-        for ids, ms, y_ms in zip(input_ids, input_masks, y_masks):
-            assert len(ids) == len(ms) == len(y_ms), \
-                f"ids({len(ids)}) = {ids}, masks({len(ms)}) = {ms},"\
-                f" y_masks({len(y_ms)}) should have the same length."
-        max_seq_len = int(max(sum(y_ms) for y_ms in y_masks))
-        if max_seq_len != len(y[0]):
-            log.warning("input sequence max length should match length of padded y")
-            y = [ys[:max_seq_len] for ys in y]
+        # for ids, masks, ys in zip(input_ids, input_masks, y):
+        #     assert len(ids) == len(masks) == len(ys), \
+        #         f"ids({len(ids)}) = {ids}, masks({len(masks)}) = {masks},"\
+        #         f" ys({len(ys)}) = {ys} should have the same length."
 
         feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks, y=y)
 
@@ -482,10 +483,10 @@ class BertNerModel(LRScheduledTFModel):
                  input_ids: List[List[int]],
                  input_masks: List[List[int]],
                  y_masks: List[List[int]]):
-        for ids, ms, y_ms in zip(input_ids, input_masks, y_masks):
-            assert len(ids) == len(ms) == len(y_ms), \
-                f"ids({len(ids)}) = {ids}, masks({len(ms)}) = {ms},"\
-                f" y_masks({len(y_ms)}) should have the same length."
+        for ids, masks in zip(input_ids, input_masks):
+            assert len(ids) == len(masks), \
+                f"ids({len(ids)}) = {ids}, masks({len(masks)}) = {masks}" \
+                f" should have the same length."
 
         feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks)
         if self.ema:
