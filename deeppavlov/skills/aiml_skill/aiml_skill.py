@@ -14,8 +14,10 @@ class AIMLSkill(Skill):
 
     def __init__(self,
                  path_to_aiml_scripts: Union[str, None] = None,
+                 positive_confidence: float = 0.66,
                  null_response: str = "I don't know",
-                 default_confidence: float = 0.66):
+                 null_confidence: float = 0.33
+                 ):
         """
         Construct skill:
             read AIML scripts,
@@ -24,7 +26,8 @@ class AIMLSkill(Skill):
         Args:
             path_to_aiml_scripts: string path to folder with AIML scripts
             null_response: Response string to answer if no AIML Patterns matched
-            default_confidence: The default confidence.
+            positive_confidence: The confidence of response if response was found in AIML scripts
+            null_confidence: The confidence when AIML scripts has no rule for responding and system returns null_response
         """
 
         if not path_to_aiml_scripts:
@@ -34,7 +37,8 @@ class AIMLSkill(Skill):
         else:
             self.path_to_aiml_scripts = Path(path_to_aiml_scripts)
 
-        self.default_confidence = default_confidence
+        self.positive_confidence = positive_confidence
+        self.null_confidence = null_confidence
         self.null_response = null_response
         self.kernel = aiml.Kernel()
         # to block AIML output:
@@ -57,13 +61,13 @@ class AIMLSkill(Skill):
     def process_step(self, utterance_str: str, user_id: any):
         response = self.kernel.respond(utterance_str, sessionID=user_id)
         # here put your estimation of confidence:
-        confidence = self.default_confidence
         if response:
             # print(f"AIML responds: {response}")
-            pass
+            confidence = self.positive_confidence
         else:
             # print("AIML responses silently...")
             response = self.null_response
+            confidence = self.null_confidence
         return response, confidence
 
     def _generate_user_id(self):
