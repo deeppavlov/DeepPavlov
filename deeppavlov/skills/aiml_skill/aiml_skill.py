@@ -1,7 +1,9 @@
 from pathlib import Path
 from typing import Union
+from typing import Tuple, Optional, List
 from logging import getLogger
 import aiml
+import uuid
 from deeppavlov.core.skill.skill import Skill
 log = getLogger(__name__)
 
@@ -17,7 +19,7 @@ class AIMLSkill(Skill):
                  positive_confidence: float = 0.66,
                  null_response: str = "I don't know",
                  null_confidence: float = 0.33
-                 ):
+                 ) -> None:
         """
         Construct skill:
             read AIML scripts,
@@ -36,6 +38,7 @@ class AIMLSkill(Skill):
             log.warning(f"path_to_aiml_scripts is not provided, use default path: `{self.path_to_aiml_scripts}`")
         else:
             self.path_to_aiml_scripts = Path(path_to_aiml_scripts)
+            log.info(f"path_to_aiml_scripts is: `{self.path_to_aiml_scripts}`")
 
         self.positive_confidence = positive_confidence
         self.null_confidence = null_confidence
@@ -45,10 +48,10 @@ class AIMLSkill(Skill):
         self.kernel._verboseMode = False
         self._load_scripts()
 
-    def _load_scripts(self):
+    def _load_scripts(self) -> None:
         """
         Scripts are loaded recursively from files with extensions .xml and .aiml
-        Returns:
+        Returns: None
 
         """
         # learn kernel to all aimls in directory tree:
@@ -58,7 +61,7 @@ class AIMLSkill(Skill):
                 # learn the script file
                 self.kernel.learn(str(each_file_path))
 
-    def process_step(self, utterance_str: str, user_id: any):
+    def process_step(self, utterance_str: str, user_id: any) -> Tuple[str, float]:
         response = self.kernel.respond(utterance_str, sessionID=user_id)
         # here put your estimation of confidence:
         if response:
@@ -70,7 +73,7 @@ class AIMLSkill(Skill):
             confidence = self.null_confidence
         return response, confidence
 
-    def _generate_user_id(self):
+    def _generate_user_id(self) -> str:
         """
         Here you put user id generative logic if you want to implement it in the skill.
 
@@ -78,10 +81,9 @@ class AIMLSkill(Skill):
         Returns: int
 
         """
-        import datetime
-        return datetime.datetime.utcnow().timestamp() * 10e6
+        return uuid.uuid1()
 
-    def __call__(self, utterances_batch: list, history_batch: list, states_batch: list):
+    def __call__(self, utterances_batch: list, history_batch: list, states_batch: list) -> Tuple[list, list, list]:
         """Returns skill inference result.
 
         Returns batches of skill inference results, estimated confidence
@@ -111,7 +113,7 @@ class AIMLSkill(Skill):
         # In this implementation we use current datetime for generating uniqe ids
         output_states_batch = []
         user_ids = []
-        for idx, each_state in enumerate(states_batch):
+        for each_state in states_batch:
             if not each_state:
                 user_id = self._generate_user_id()
                 new_state = {'user_id': user_id}
