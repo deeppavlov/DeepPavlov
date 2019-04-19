@@ -34,13 +34,11 @@ class TestAIMLSkill:
                                   "I LIKE WATCHING COMEDY!",
                                   "Ok, goodbye"
         ]
-        # batch of ids for one new user
-        dialog_ids_batch = [1, ]
 
         history_of_responses = []
         for each_utt in user_messages_sequence:
             print(f"User says: {each_utt}")
-            responses_batch = self.agent([each_utt], dialog_ids_batch)
+            responses_batch = self.agent([each_utt])
             print(f" Bot says: {responses_batch[0]}")
             history_of_responses.append(responses_batch)
 
