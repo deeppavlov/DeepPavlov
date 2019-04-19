@@ -1,9 +1,7 @@
-import random
-import re
-import os
-from typing import List, Tuple, Optional, Union
-from deeppavlov.core.skill.skill import Skill
+from pathlib import Path
+from typing import Union
 import aiml
+from deeppavlov.core.skill.skill import Skill
 
 
 class AIMLSkill(Skill):
@@ -28,11 +26,10 @@ class AIMLSkill(Skill):
         """
 
         if not path_to_aiml_scripts:
-            import os
-            cur_dir = os.path.dirname(os.path.abspath(__file__))
-            path_to_aiml_scripts = cur_dir + "/aiml_scripts"
-
-        self.path_to_aiml_scripts = path_to_aiml_scripts
+            cur_dir = Path(__file__).absolute().parent
+            self.path_to_aiml_scripts = cur_dir.joinpath("aiml_scripts")
+        else:
+            self.path_to_aiml_scripts = Path(path_to_aiml_scripts)
 
         self.default_confidence = default_confidence
         self.null_response = null_response
@@ -48,12 +45,11 @@ class AIMLSkill(Skill):
 
         """
         # learn kernel to all aimls in directory tree:
-
-        for root, dirs, files in os.walk(self.path_to_aiml_scripts):
-            for file in files:
-                if file.endswith(".xml") or file.endswith(".aiml"):
-                    file_path = os.path.join(root, file)
-                    self.kernel.learn(file_path)
+        all_files = sorted(self.path_to_aiml_scripts.rglob('*.*'))
+        for each_file_path in all_files:
+            if each_file_path.suffix in ['.aiml', '.xml']:
+                # learn the script file
+                self.kernel.learn(str(each_file_path))
 
     def process_step(self, utterance_str: str, user_id: any):
         response = self.kernel.respond(utterance_str, sessionID=user_id)
