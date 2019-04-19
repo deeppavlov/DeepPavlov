@@ -1,7 +1,9 @@
 from pathlib import Path
 from typing import Union
+from logging import getLogger
 import aiml
 from deeppavlov.core.skill.skill import Skill
+log = getLogger(__name__)
 
 
 class AIMLSkill(Skill):
@@ -28,6 +30,7 @@ class AIMLSkill(Skill):
         if not path_to_aiml_scripts:
             cur_dir = Path(__file__).absolute().parent
             self.path_to_aiml_scripts = cur_dir.joinpath("aiml_scripts")
+            log.warning(f"path_to_aiml_scripts is not provided, use default path: `{self.path_to_aiml_scripts}`")
         else:
             self.path_to_aiml_scripts = Path(path_to_aiml_scripts)
 
