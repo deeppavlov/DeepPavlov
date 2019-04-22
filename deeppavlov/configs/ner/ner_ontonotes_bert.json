@@ -1,8 +1,8 @@
 {
   "dataset_reader": {
     "class_name": "conll2003_reader",
-    "data_path": "{DOWNLOADS_PATH}/conll2003/",
-    "dataset_name": "conll2003",
+    "data_path": "{DOWNLOADS_PATH}/ontonotes/",
+    "dataset_name": "ontonotes",
     "provide_pos": false
   },
   "dataset_iterator": {
@@ -60,7 +60,7 @@
         "learning_rate_drop_patience": 30,
         "learning_rate_drop_div": 1.5,
         "load_before_drop": true,
-        "head_learning_rate_mult": 4.0,
+        "head_learning_rate_mult": 500.0,
         "clip_norm": null,
         "min_learning_rate": 1e-7,
         "in": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask"],
@@ -81,11 +81,11 @@
     "metrics": [
       {
         "name": "ner_f1",
-        "inputs": ["y", "y_pred"]
+        "inputs": ["y_prep", "y_pred"]
       },
       {
         "name": "ner_token_f1",
-        "inputs": ["y", "y_pred"]
+        "inputs": ["y_prep", "y_pred"]
       }
     ],
     "validation_patience": 100,
@@ -100,8 +100,8 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "BERT_PATH": "{ROOT_PATH}/downloads/bert_models/cased_L-12_H-768_A-12",
-      "NER_PATH": "{ROOT_PATH}/models/ner_conll2003_bert"
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",
+      "NER_PATH": "{ROOT_PATH}/models/ner_ontonotes_bert"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",

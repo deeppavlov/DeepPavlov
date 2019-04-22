@@ -136,11 +136,11 @@
 
     "metrics": [
       {
-        "name": "ner_token_f1",
+        "name": "ner_f1",
         "inputs": ["y", "tags"]
       },
       {
-        "name": "ner_f1",
+        "name": "ner_token_f1",
         "inputs": ["y", "tags"]
       }
     ],

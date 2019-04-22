@@ -126,6 +126,10 @@
       {
         "name": "ner_f1",
         "inputs": ["y", "tags"]
+      },
+      {
+        "name": "ner_token_f1",
+        "inputs": ["y", "tags"]
       }
     ],
     "validation_patience": 7,
