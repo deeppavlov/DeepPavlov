@@ -65,9 +65,6 @@ As an example of configuration file see
 :config:`ranking_ubuntu_v2_mt_word2vec_smn.json <ranking/ranking_ubuntu_v2_mt_word2vec_smn.json>`.
 
 
-Paraphrase identification
--------------------------
-
 To use the model trained on the `InsuranceQA V1`_ dataset for
 inference one can use the following code in python:
 
