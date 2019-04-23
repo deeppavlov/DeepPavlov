@@ -11,6 +11,7 @@
     "class_name": "basic_classification_iterator",
     "seed": 42,
     "field_to_split": "train",
+    "split_seed": 23,
     "split_fields": [
       "train",
       "valid"
@@ -46,7 +47,8 @@
         "out": [
           "x_prep"
         ],
-        "class_name": "dirty_comments_preprocessor"
+        "class_name": "dirty_comments_preprocessor",
+        "remove_punctuation": false
       },
       {
         "in": "x_prep",
@@ -103,7 +105,7 @@
         "optimizer": "Adam",
         "learning_rate": 0.01,
         "learning_rate_decay": 0.1,
-        "loss": "binary_crossentropy",
+        "loss": "categorical_crossentropy",
         "last_layer_activation": "softmax",
         "coef_reg_cnn": 1e-3,
         "coef_reg_den": 1e-2,
@@ -129,7 +131,7 @@
   },
   "train": {
     "epochs": 100,
-    "batch_size": 32,
+    "batch_size": 128,
     "metrics": [
       "f1_weighted",
       "f1_macro",
@@ -155,7 +157,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/rusentiment_v4"
+      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/rusentiment_v10"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -167,7 +169,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/rusentiment_v4.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/rusentiment_v10.tar.gz",
         "subdir": "{ROOT_PATH}/models/classifiers"
       }
     ]

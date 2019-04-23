@@ -152,6 +152,11 @@ is based on punctuation and syntax.
 **sentiment classification** of social media posts for Russian language within 5 classes 'positive', 'negative',
 'neutral', 'speech', 'skip'.
 
+`SentiRuEval dataset <http://www.dialog-21.ru/evaluation/2016/sentiment/>`__ contains
+**sentiment classification** of reviews for Russian language within 4 classes 'positive', 'negative',
+'neutral', 'both'. Datasets on four different themes 'Banks', 'Telecom', 'Restaurants', 'Cars' are
+combined to one big dataset.
+
 `Questions on Yahoo Answers labeled as either informational or conversational dataset <https://webscope.sandbox.yahoo.com/catalog.php?datatype=l>`__
 contains **intent classification** of English questions into two category: informational (`0`) and conversational (`1`) questions.
 The dataset includes some additional metadata but for the presented pre-trained model only `Title` of questions and `Label` were used.
@@ -192,7 +197,7 @@ Therefore, this model is available only for interaction.
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
 |                  |                    |      | :config:`Twitter emb super-convergence <classifiers/rusentiment_bigru_superconv.json>` [6]_     |             | 0.7301 | 0.7576 |  3.4 Gb   |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
-|                  |                    |      | :config:`ELMo <classifiers/rusentiment_elmo.json>`                                              |             | 0.7293 | 0.7648 |  700 Mb   |
+|                  |                    |      | :config:`ELMo <classifiers/rusentiment_elmo_twitter_cnn.json>`                                  |             | 0.7519 | 0.7875 |  700 Mb   |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
 |                  |                    |      | :config:`Multi-language BERT <classifiers/rusentiment_bert.json>`                               |             | 0.6809 | 0.7193 |  1900 Mb  |
 +------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
@@ -205,6 +210,7 @@ Therefore, this model is available only for interaction.
 .. _`AG News`: https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html
 .. _`Twitter mokoron`: http://study.mokoron.com/
 .. _`RuSentiment`: http://text-machine.cs.uml.edu/projects/rusentiment/
+.. _`SentiRuEval`: http://www.dialog-21.ru/evaluation/2016/sentiment/
 .. _`Yahoo-L31`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 .. _`Yahoo-L6`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 
@@ -223,7 +229,7 @@ DeepPavlov provides the following **pre-trained models**:
 -  :config:`topic_ag_news.json <classifiers/topic_ag_news.json>` -- AG News topic analysis for English language.
 -  :config:`sentiment_twitter.json <classifiers/sentiment_twitter.json>` -- Twitter Mokoron sentiment analysis for **Russian** language.
 -  :config:`rusentiment_cnn.json <classifiers/rusentiment_cnn.json>` -- sentiment analysis for **Russian** language on Rusentiment dataset using fastText embeddings.
--  :config:`rusentiment_elmo.json <classifiers/rusentiment_elmo.json>` -- sentiment analysis for **Russian** language on Rusentiment dataset using ELMo.
+-  :config:`rusentiment_elmo_twitter_cnn.json <classifiers/rusentiment_elmo_twitter_cnn.json>` -- sentiment analysis for **Russian** language on Rusentiment dataset using ELMo.
 -  :config:`yahoo_convers_vs_info.json <classifiers/yahoo_convers_vs_info.json>` -- intent analysis for **English** language to detect whether the question is conversational or informational.
 
 To download pre-trained models, vocabs, embeddings on the dataset of interest one should run the following command
