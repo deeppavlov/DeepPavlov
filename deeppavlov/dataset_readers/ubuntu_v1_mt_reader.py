@@ -22,7 +22,7 @@ from deeppavlov.core.data.dataset_reader import DatasetReader
 
 @register('ubuntu_v1_mt_reader')
 class UbuntuV1MTReader(DatasetReader):
-    """The class to read the Ubuntu V2 dataset from csv files taking into account multi-turn dialogue ``context``.
+    """The class to read the Ubuntu V1 dataset from csv files taking into account multi-turn dialogue ``context``.
 
     Please, see https://github.com/rkadlec/ubuntu-ranking-dataset-creator.
 
