@@ -1,14 +1,15 @@
 {
   "dataset_reader": {
-    "class_name": "squad_dataset_reader",
-    "dataset": "SberSQuADClean",
-    "url": "http://files.deeppavlov.ai/datasets/sber_squad_clean-v1.1.tar.gz",
-    "data_path": "{DOWNLOADS_PATH}/squad_ru_clean/"
+    "class_name": "multi_squad_dataset_reader",
+    "dataset": "MultiSQuADRuRetrClean",
+    "url": "http://files.deeppavlov.ai/datasets/multi_squad_ru_retr_clean.tar.gz",
+    "data_path": "{DOWNLOADS_PATH}/multi_squad_ru_retr_clean/"
   },
   "dataset_iterator": {
-    "class_name": "squad_iterator",
+    "class_name": "multi_squad_retr_iterator",
     "seed": 1337,
-    "shuffle": true
+    "shuffle": false,
+    "with_answer_rate": 0.666
   },
   "chainer": {
     "in": ["context_raw", "question_raw"],
@@ -17,20 +18,20 @@
       {
         "class_name": "bert_preprocessor",
         "vocab_file": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1/vocab.txt",
-        "do_lower_case": "{lowercase}",
+        "do_lower_case": false,
         "max_seq_length": 384,
         "in": ["question_raw", "context_raw"],
         "out": ["bert_features"]
       },
       {
         "class_name": "squad_bert_mapping",
-        "do_lower_case": "{lowercase}",
+        "do_lower_case": false,
         "in": ["context_raw", "bert_features"],
         "out": ["subtok2chars", "char2subtoks"]
       },
       {
         "class_name": "squad_bert_ans_preprocessor",
-        "do_lower_case": "{lowercase}",
+        "do_lower_case": false,
         "in": ["ans_raw", "ans_raw_start","char2subtoks"],
         "out": ["ans", "ans_start", "ans_end"]
       },
@@ -38,8 +39,8 @@
         "class_name": "squad_bert_model",
         "bert_config_file": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1/bert_config.json",
         "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1/bert_model.ckpt",
-        "save_path": "{MODELS_PATH}/squad_ru_bert/model_rubert",
-        "load_path": "{MODELS_PATH}/squad_ru_bert/model_rubert",
+        "save_path": "{MODELS_PATH}/multi_squad_ru_retr_bert/model_rubert_noans",
+        "load_path": "{MODELS_PATH}/multi_squad_ru_retr_bert/model_rubert_noans",
         "keep_prob": 0.5,
         "learning_rate": 2e-05,
         "learning_rate_drop_patience": 3,
@@ -54,7 +55,7 @@
         "out": ["ans_predicted", "ans_start_predicted", "ans_end_predicted"]
       }
     ],
-    "out": ["ans_predicted", "ans_start_predicted", "logits"]
+    "out": ["ans_predicted", "ans_start_predicted", "score"]
   },
   "train": {
     "show_examples": false,
@@ -62,40 +63,37 @@
     "validate_best": true,
     "log_every_n_batches": 250,
     "val_every_n_batches": 500,
-    "batch_size": 10,
+    "batch_size": 17,
     "pytest_max_batches": 2,
-    "pytest_batch_size": 5,
     "validation_patience": 10,
     "metrics": [
       {
-        "name": "squad_v2_f1",
-        "inputs": ["ans", "ans_predicted"]
+        "name": "squad_f1",
+        "inputs": ["ans_raw", "ans_predicted"]
       },
       {
-        "name": "squad_v2_em",
-        "inputs": ["ans", "ans_predicted"]
+        "name": "squad_f1_1.1",
+        "inputs": ["ans_raw", "ans_predicted"]
       },
       {
-        "name": "squad_v1_f1",
-        "inputs": ["ans", "ans_predicted"]
+        "name": "exact_match",
+        "inputs": ["ans_raw", "ans_predicted"]
       },
       {
-        "name": "squad_v1_em",
-        "inputs": ["ans", "ans_predicted"]
+        "name": "exact_match_1.1",
+        "inputs": ["ans_raw", "ans_predicted"]
       }
     ],
-    "tensorboard_log_dir": "{MODELS_PATH}/squad_ru_bert/logs_rubert"
+    "tensorboard_log_dir": "{MODELS_PATH}/multi_squad_ru_retr_bert/logs_rubert"
   },
   "metadata": {
     "variables": {
-      "lowercase": false,
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models"
     },
     "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
     "labels": {
       "telegram_utils": "SquadModel",
@@ -107,9 +105,9 @@
         "subdir": "{DOWNLOADS_PATH}/bert_models"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/squad_model_ru_rubert.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/multi_squad_ru_retr_rubert.tar.gz",
         "subdir": "{MODELS_PATH}"
       }
-    ]
+      ]
   }
 }

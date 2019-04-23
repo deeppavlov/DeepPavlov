@@ -83,6 +83,7 @@ PARAMS = {
     },
     "classifiers": {
         ("classifiers/paraphraser_bert.json", "classifiers", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/paraphraser_rubert.json", "classifiers", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/insults_kaggle_bert.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/rusentiment_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_dstc2_bert.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
@@ -172,6 +173,8 @@ PARAMS = {
     "squad": {
         ("squad/squad_ru_bert.json", "squad_ru_bert", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_ru_bert_infer.json", "squad_ru_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_ru_rubert.json", "squad_ru_rubert", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_ru_rubert_infer.json", "squad_ru_rubert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_bert.json", "squad_bert", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_bert_infer.json", "squad_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],

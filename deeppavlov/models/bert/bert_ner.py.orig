@@ -21,7 +21,6 @@ from bert_dp.optimization import AdamWeightDecayOptimizer
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.layers.tf_layers import bi_rnn
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
 
@@ -37,69 +36,58 @@ class BertNerModel(LRScheduledTFModel):
     Ner head consists of linear layers.
 ￼
 ￼   Args:
+￼       bert_config_file: path to Bert configuration file
 ￼       n_tags: number of distinct tags
 ￼       keep_prob: dropout keep_prob for non-Bert layers
-￼       bert_config_file: path to Bert configuration file
-￼       pretrained_bert: pretrained Bert checkpoint
 ￼       attention_probs_keep_prob: keep_prob for Bert self-attention layers
 ￼       hidden_keep_prob: keep_prob for Bert hidden layers
-        use_crf:
         encoder_layer_ids: list of averaged layers from Bert encoder (layer ids)
-￼       optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
-￼       weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
-        ema_decay:
-        ema_variables_on_cpu:
 ￼       return_probas: set True if return class probabilites instead of most probable label needed
-        learning_rate:
-        bert_learning_rate:
+￼       optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
+￼       num_warmup_steps:
+￼       weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
+￼       pretrained_bert: pretrained Bert checkpoint
 ￼       min_learning_rate: min value of learning rate if learning rate decay is used
-        learning_rate_drop_patience:
-        learning_rate_drop_div:
-        load_before_drop:
-        clip_norm:
 ￼   """
 
+    # TODO: add warmup
     # TODO: add head-only pre-training
     def __init__(self,
+                 bert_config_file: str,
                  n_tags: List[str],
                  keep_prob: float,
-                 bert_config_file: str,
-                 pretrained_bert: str = None,
                  attention_probs_keep_prob: float = None,
                  hidden_keep_prob: float = None,
-                 use_crf=False,
                  encoder_layer_ids: List[int] = tuple(range(12)),
                  optimizer: str = None,
-                 weight_decay_rate: float = 1e-6,
+                 num_warmup_steps: int = None,
+                 focal_alpha: float = None,
+                 focal_gamma: float = None,
                  ema_decay: float = None,
                  ema_variables_on_cpu: bool = True,
+                 weight_decay_rate: float = 0.01,
                  return_probas: bool = False,
-                 learning_rate: float = 1e-3,
-                 bert_learning_rate: float = 2e-5,
-                 min_learning_rate: float = 1e-07,
-                 learning_rate_drop_patience: int = 20,
-                 learning_rate_drop_div: float = 2.0,
-                 load_before_drop: bool = True,
-                 clip_norm: float = 1.0,
+                 pretrained_bert: str = None,
+                 head_learning_rate_mult = 1.0,
+                 min_learning_rate: float = 1e-06,
+                 use_crf=False,
                  **kwargs) -> None:
-        super().__init__(learning_rate=learning_rate,
-                         learning_rate_drop_div=learning_rate_drop_div,
-                         learning_rate_drop_patience=learning_rate_drop_patience,
-                         load_before_drop=load_before_drop,
-                         clip_norm=clip_norm,
-                         **kwargs)
+        super().__init__(**kwargs)
 
+        self.return_probas = return_probas
         self.n_tags = n_tags
+        self.head_learning_rate_mult = head_learning_rate_mult
+        self.min_learning_rate = min_learning_rate
         self.keep_prob = keep_prob
-        self.use_crf = use_crf
-        self.encoder_layer_ids = encoder_layer_ids
         self.optimizer = optimizer
-        self.weight_decay_rate = weight_decay_rate
+        self.focal_alpha = focal_alpha
+        self.focal_gamma = focal_gamma
         self.ema_decay = ema_decay
         self.ema_variables_on_cpu = ema_variables_on_cpu
-        self.return_probas = return_probas
-        self.bert_learning_rate_multiplier = bert_learning_rate / learning_rate
-        self.min_learning_rate = min_learning_rate
+        self.encoder_layer_ids = encoder_layer_ids
+        self.num_warmup_steps = num_warmup_steps
+        self.weight_decay_rate = weight_decay_rate
+        self.use_crf = use_crf
 
         self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
 
@@ -122,7 +110,12 @@ class BertNerModel(LRScheduledTFModel):
             pretrained_bert = str(expand_path(pretrained_bert))
 
         if tf.train.checkpoint_exists(pretrained_bert) \
+<<<<<<< HEAD
+                and (self.load_path is None or not
+                        tf.train.checkpoint_exists(str(self.load_path.resolve()))):
+=======
                 and not tf.train.checkpoint_exists(str(self.load_path.resolve())):
+>>>>>>> feat/bert
             log.info('[initializing model with Bert from {}]'.format(pretrained_bert))
             # Exclude optimizer and classification variables from saved variables
             var_list = self._get_saveable_variables(
@@ -138,8 +131,6 @@ class BertNerModel(LRScheduledTFModel):
 
     def _init_graph(self):
         self._init_placeholders()
-        
-        self.seq_lengths = tf.reduce_sum(self.y_masks_ph, axis=1)
 
         self.bert = BertModel(config=self.bert_config,
                               is_training=self.is_train_ph,
@@ -165,6 +156,7 @@ class BertNerModel(LRScheduledTFModel):
 
             self.logits = self.token_from_subtoken(logits, self.y_masks_ph)
 
+            self.seq_lengths = tf.reduce_sum(self.y_masks_ph, axis=1)
             max_length = tf.reduce_max(self.seq_lengths)
             one_hot_max_len = tf.one_hot(self.seq_lengths - 1, max_length)
             tag_mask = tf.cumsum(one_hot_max_len[:, ::-1], axis=1)[:, ::-1]
@@ -172,13 +164,13 @@ class BertNerModel(LRScheduledTFModel):
             # CRF
             if self.use_crf:
                 transition_params = tf.get_variable('Transition_Params',
-                                                    shape=[self.n_tags, self.n_tags],
+                                                    shape=[self.n_tags,
+                                                           self.n_tags],
                                                     initializer=tf.zeros_initializer())
-                log_likelihood, transition_params = \
-                        tf.contrib.crf.crf_log_likelihood(self.logits,
-                                                          self.y_ph,
-                                                          self.seq_lengths,
-                                                          transition_params)
+                log_likelihood, transition_params = tf.contrib.crf.crf_log_likelihood(self.logits,
+                                                                                      self.y_ph,
+                                                                                      self.seq_lengths,
+                                                                                      transition_params)
                 loss_tensor = -log_likelihood
                 self._transition_params = transition_params
 
@@ -189,10 +181,55 @@ class BertNerModel(LRScheduledTFModel):
             y_mask = tf.cast(tag_mask, tf.float32)
             if self.use_crf:
                 self.loss = tf.reduce_mean(loss_tensor)
-            else:
+            elif (self.focal_alpha is None) or (self.focal_gamma is None):
                 self.loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_ph,
                                                                    logits=self.logits,
                                                                    weights=y_mask)
+            else:
+                y_onehot = tf.one_hot(self.y_ph, self.n_tags)
+                self.loss = self.focal_loss(labels=y_onehot,
+                                            probs=self.y_probas,
+                                            weights=y_mask,
+                                            alpha=self.focal_alpha,
+                                            gamma=self.focal_gamma)
+
+    @staticmethod
+    def focal_loss(labels, probs, weights=None, alpha=1.0, gamma=1):
+        r"""Compute focal loss for predictions.
+            Multi-labels Focal loss formula:
+                FL = -alpha * (z-p)^gamma * log(p) -(1-alpha) * p^gamma * log(1-p)
+                     ,which alpha = 0.25, gamma = 2, p = sigmoid(x), z = target_tensor.
+        Args:
+         labels: A float tensor of shape [batch_size, num_anchors,
+            num_classes] representing the predicted logits for each class
+         probs: A float tensor of shape [batch_size, num_anchors,
+            num_classes] representing one-hot encoded classification targets
+         weights: A float tensor of shape [batch_size, num_anchors]
+         alpha: A scalar tensor for focal loss alpha hyper-parameter
+         gamma: A scalar tensor for focal loss gamma hyper-parameter
+        Returns:
+            loss: A (scalar) tensor representing the value of the loss function
+        """
+        labels = tf.cast(labels, tf.float32)
+        probs = tf.cast(probs, tf.float32)
+
+        zeros = array_ops.zeros_like(probs, dtype=probs.dtype)
+
+        # For positive prediction, only need consider front part loss, back part is 0;
+        # target_tensor > zeros <=> z=1, so poitive coefficient = z - p.
+        pos_p_sub = array_ops.where(labels > zeros, labels - probs, zeros)
+
+        # For negative prediction, only need consider back part loss, front part is 0;
+        # target_tensor > zeros <=> z=1, so negative coefficient = 0.
+        neg_p_sub = array_ops.where(labels > zeros, zeros, probs)
+        per_entry_cross_ent = - alpha * (pos_p_sub ** gamma) * \
+            tf.log(tf.clip_by_value(probs, 1e-8, 1.0)) \
+            - (1 - alpha) * (neg_p_sub ** gamma) * \
+            tf.log(tf.clip_by_value(1.0 - probs, 1e-8, 1.0))
+        if weights is not None:
+            per_entry_cross_ent = tf.multiply(per_entry_cross_ent,
+                                              tf.expand_dims(weights, -1))
+        return tf.reduce_sum(per_entry_cross_ent)
 
     def _init_placeholders(self):
         self.input_ids_ph = tf.placeholder(shape=(None, None),
@@ -266,14 +303,14 @@ class BertNerModel(LRScheduledTFModel):
         assert "learnable_scopes" not in kwargs, "learnable scopes unsupported"
         # train_op for bert variables
         kwargs['learnable_scopes'] = ('(?!ner)',)
-        bert_learning_rate = learning_rate * self.bert_learning_rate_multiplier
         bert_train_op = super().get_train_op(loss,
-                                             bert_learning_rate,
+                                             learning_rate,
                                              **kwargs)
         # train_op for ner head variables
         kwargs['learnable_scopes'] = ('ner',)
+        head_learning_rate = learning_rate * self.head_learning_rate_mult
         head_train_op = super().get_train_op(loss,
-                                             learning_rate,
+                                             head_learning_rate,
                                              **kwargs)
         return tf.group(bert_train_op, head_train_op)
 
@@ -430,14 +467,10 @@ class BertNerModel(LRScheduledTFModel):
                        input_masks: List[List[int]],
                        y_masks: List[List[int]],
                        y: List[List[int]]) -> dict:
-        for ids, ms, y_ms in zip(input_ids, input_masks, y_masks):
-            assert len(ids) == len(ms) == len(y_ms), \
-                f"ids({len(ids)}) = {ids}, masks({len(ms)}) = {ms},"\
-                f" y_masks({len(y_ms)}) should have the same length."
-        max_seq_len = int(max(sum(y_ms) for y_ms in y_masks))
-        if max_seq_len != len(y[0]):
-            log.warning("input sequence max length should match length of padded y")
-            y = [ys[:max_seq_len] for ys in y]
+        # for ids, masks, ys in zip(input_ids, input_masks, y):
+        #     assert len(ids) == len(masks) == len(ys), \
+        #         f"ids({len(ids)}) = {ids}, masks({len(masks)}) = {masks},"\
+        #         f" ys({len(ys)}) = {ys} should have the same length."
 
         feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks, y=y)
 
@@ -450,10 +483,10 @@ class BertNerModel(LRScheduledTFModel):
                  input_ids: List[List[int]],
                  input_masks: List[List[int]],
                  y_masks: List[List[int]]):
-        for ids, ms, y_ms in zip(input_ids, input_masks, y_masks):
-            assert len(ids) == len(ms) == len(y_ms), \
-                f"ids({len(ids)}) = {ids}, masks({len(ms)}) = {ms},"\
-                f" y_masks({len(y_ms)}) should have the same length."
+        for ids, masks in zip(input_ids, input_masks):
+            assert len(ids) == len(masks), \
+                f"ids({len(ids)}) = {ids}, masks({len(masks)}) = {masks}" \
+                f" should have the same length."
 
         feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks)
         if self.ema:
@@ -481,6 +514,22 @@ class BertNerModel(LRScheduledTFModel):
             viterbi_seq, viterbi_score = tf.contrib.crf.viterbi_decode(logit, trans_params)
             y_pred += [viterbi_seq]
         return y_pred
+
+
+class MaskCutter(Component):
+    def __init__(self, **kwargs):
+        pass
+
+    def __call__(self,
+                 samples: List[List[Any]],
+                 masks: List[List[int]]):
+        samples_cut = []
+        for s_list, m_list in zip(samples, masks):
+            samples_cut.append([])
+            for j in range(len(s_list)):
+                if m_list[j]:
+                    samples_cut[-1].append(s_list[j])
+        return samples_cut
 
 
 class ExponentialMovingAverage:
