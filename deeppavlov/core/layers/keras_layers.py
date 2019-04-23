@@ -133,7 +133,7 @@ class FullMatchingLayer(Layer):
         if self.output_dim > 1:
             persp = K.concatenate(m, 2)
         else:
-            persp = m
+            persp = m[0]
         return [persp, persp]
 
     def compute_output_shape(self, input_shape):
