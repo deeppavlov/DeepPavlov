@@ -35,6 +35,38 @@ To train from command line:
 As an example of configuration file see
 :config:`ranking_insurance.json <ranking/ranking_insurance.json>`.
 
+To use Sequential Matching Network (SMN) or Deep Attention Matching Network (DAM) or
+Deep Attention Matching Network with Universal Sentence Encoder (DAM-USE-T)
+on the `Ubuntu Dialogue Corpus v2`_ for inference, please run one of the following commands:
+
+::
+
+    python -m deeppavlov interact -d ranking_ubuntu_v2_mt_word2vec_smn
+    python -m deeppavlov interact -d ranking_ubuntu_v2_mt_word2vec_dam
+    python -m deeppavlov interact -d ranking_ubuntu_v2_mt_word2vec_dam_transformer
+
+Now a user can enter a dialog consists of 10 context sentences and several (>=1) candidate response sentences separated by '&'
+and then get the probability that the response is proper continuation of the dialog:
+
+::
+
+    :: & & & & & & & & bonhoeffer  whar drives do you want to mount what &  i have an ext3 usb drive  & look with fdisk -l & hello there & fdisk is all you need
+    >> [0.9776373  0.05753616 0.9642599 ]
+
+To train the models on the `Ubuntu Dialogue Corpus v2`_ dataset please run one of the following commands:
+
+::
+
+    python -m deeppavlov train -d ranking_ubuntu_v2_mt_word2vec_smn
+    python -m deeppavlov train -d ranking_ubuntu_v2_mt_word2vec_dam
+    python -m deeppavlov train -d ranking_ubuntu_v2_mt_word2vec_dam_transformer
+
+As an example of configuration file see
+:config:`ranking_ubuntu_v2_mt_word2vec_smn.json <ranking/ranking_ubuntu_v2_mt_word2vec_smn.json>`.
+
+
+Paraphrase identification
+-------------------------
 
 To use the model trained on the `InsuranceQA V1`_ dataset for
 inference one can use the following code in python:
@@ -282,3 +314,4 @@ such as ``f1``, ``acc`` and ``log_loss``  can be calculated.
 .. _`InsuranceQA V1`: https://github.com/shuzi/insuranceQA
 .. _`paraphraser.ru`: https://paraphraser.ru
 .. _`Quora Question Pairs`: https://www.kaggle.com/c/quora-question-pairs/data
+.. _`Ubuntu Dialogue Corpus v2`: https://github.com/rkadlec/ubuntu-ranking-dataset-creator

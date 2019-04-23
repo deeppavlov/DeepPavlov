@@ -217,26 +217,54 @@ on Automatic Spelling Correction for Russian:
 :doc:`Ranking component </components/neural_ranking>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Based on `LSTM-based deep learning models for non-factoid answer selection <https://arxiv.org/abs/1511.04108>`__. The
-model performs ranking of responses or contexts from some database by their relevance for the given context.
+The main neural ranking model based on `LSTM-based deep learning models for non-factoid answer selection
+<https://arxiv.org/abs/1511.04108>`__. The model performs ranking of responses or contexts from some database by their
+relevance for the given context.
+
+There are 3 alternative neural architectures available as well:
+
+Sequential Matching Network (SMN)
+   Based on the work `Wu, Yu, et al. "Sequential Matching Network: A New Architecture for Multi-turn Response Selection in Retrieval-based Chatbots". ACL. 2017. <https://arxiv.org/abs/1612.01627>`__
+
+Deep Attention Matching Network (DAM)
+   Based on the work `Xiangyang Zhou, et al. "Multi-Turn Response Selection for Chatbots with Deep Attention Matching Network". Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers). 2018 <http://aclweb.org/anthology/P18-1103>`__
+
+Deep Attention Matching Network + Universal Sentence Encoder v3 (DAM-USE-T)
+   Our new proposed architecture based on the works: `Xiangyang Zhou, et al. "Multi-Turn Response Selection for Chatbots with Deep Attention Matching Network". Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers). 2018 <http://aclweb.org/anthology/P18-1103>`__
+   and `Daniel Cer, Yinfei Yang, Sheng-yi Kong, Nan Hua, Nicole Limtiaco, Rhomni St. John, Noah Constant, Mario Guajardo-Cespedes, Steve Yuan, Chris Tar, Brian Strope, Ray Kurzweil. 2018a. Universal Sentence Encoder for English. <https://arxiv.org/abs/1803.11175>`__
+
 
 Available pre-trained models for ranking:
 
 .. table::
    :widths: auto
 
-   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+----------+
-   |    Dataset        | Model config                                                                        | Validation (Recall@1) | Test1 (Recall@1) |Downloads |
-   +===================+=====================================================================================+=======================+==================+==========+
-   | `InsuranceQA V1`_ | :config:`ranking_insurance_interact <ranking/ranking_insurance_interact.json>`      |   72.0                |   72.2           |8374M     |
-   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+----------+
-   | `Ubuntu V2`_      |:config:`ranking_ubuntu_v2_interact <ranking/ranking_ubuntu_v2_interact.json>`       |   52.9                |   52.4           |8913M     |
-   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+----------+
-   | `Ubuntu V2`_      |:config:`ranking_ubuntu_v2_mt_interact <ranking/ranking_ubuntu_v2_mt_interact.json>` |   59.2                |   58.7           |8906M     |
-   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+----------+
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-----------------------------------+
+   |    Dataset        |   Model config                                                                                                       |    Val    |               Test                |
+   |                   |                                                                                                                      +-----------+-------+-------+-------+-----------+
+   |                   |                                                                                                                      |   R10@1   | R10@1 | R10@2 | R10@5 | Downloads |
+   +===================+======================================================================================================================+===========+=======+=======+=======+===========+
+   | `InsuranceQA v1`_ | :config:`ranking_insurance_interact <ranking/ranking_insurance_interact.json>`                                       |   72.0    | 72.2  |   -   |   -   |  8374 Mb  |
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
+   | `Ubuntu v2`_      | :config:`ranking_ubuntu_v2_mt_word2vec_dam_transformer <ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json>` |   74.32   | 74.46 | 86.77 | 97.38 |  2457 Mb  |
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
+   | `Ubuntu v2`_      | :config:`ranking_ubuntu_v2_mt_word2vec_dam <ranking/ranking_ubuntu_v2_mt_word2vec_dam.json>`                         |   71.20   | 71.54 | 83.66 | 96.33 |  1645 Mb  |
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+---------------+-----------+
+   | `Ubuntu v2`_      | :config:`ranking_ubuntu_v2_mt_word2vec_smn <ranking/ranking_ubuntu_v2_mt_word2vec_smn.json>`                         |   68.56   | 67.91 | 81.49 | 95.63 |  1609 Mb  |
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+---------------+-----------+
+   | `Ubuntu v2`_      | :config:`ranking_ubuntu_v2_interact <ranking/ranking_ubuntu_v2_interact.json>`                                       |   52.9    | 52.4  |   -   |   -   |  8913 Mb  |
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+---------------+-----------+
+   | `Ubuntu v2`_      | :config:`ranking_ubuntu_v2_mt_interact <ranking/ranking_ubuntu_v2_mt_interact.json>`                                 |   59.2    | 58.7  |   -   |   -   |  8906 Mb  |
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+---------------+-----------+
+   | `Ubuntu v1`_      | :config:`ranking_ubuntu_v1_mt_word2vec_dam_transformer <ranking/ranking_ubuntu_v1_mt_word2vec_dam_transformer.json>` |   -       | 79.57 | 89.32 | 97.34 |  2439 Mb  |
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
+   | `Ubuntu v1`_      | :config:`ranking_ubuntu_v1_mt_word2vec_smn <ranking/ranking_ubuntu_v1_mt_word2vec_smn.json>`                         |   -       | 76.04 | 87.12 | 96.86 |  1591 Mb  |
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+---------------+-----------+
+
 
 .. _`InsuranceQA V1`: https://github.com/shuzi/insuranceQA
-.. _`Ubuntu V2`: https://github.com/rkadlec/ubuntu-ranking-dataset-creator
+.. _`Ubuntu v2`: https://github.com/rkadlec/ubuntu-ranking-dataset-creator
+.. _`Ubuntu v1`: https://arxiv.org/abs/1506.08909
 
 Available pre-trained models for paraphrase identification:
 
