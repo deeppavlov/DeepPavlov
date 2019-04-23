@@ -1,8 +1,8 @@
 {
   "dataset_reader": {
     "class_name": "conll2003_reader",
-    "data_path": "{DOWNLOADS_PATH}/conll2003/",
-    "dataset_name": "conll2003",
+    "data_path": "{DOWNLOADS_PATH}/ontonotes/",
+    "dataset_name": "ontonotes",
     "provide_pos": false
   },
   "dataset_iterator": {
@@ -51,7 +51,7 @@
         "encoder_layer_ids": [-1],
         "optimizer": null,
         "weight_decay_rate": 1e-6,
-        "learning_rate": 1e-3,
+        "learning_rate": 1e-2,
         "bert_learning_rate": 2e-5,
         "min_learning_rate": 1e-7,
         "learning_rate_drop_patience": 30,
@@ -98,8 +98,8 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "BERT_PATH": "{ROOT_PATH}/downloads/bert_models/cased_L-12_H-768_A-12",
-      "NER_PATH": "{ROOT_PATH}/models/ner_conll2003_bert"
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",
+      "NER_PATH": "{ROOT_PATH}/models/ner_ontonotes_bert"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",

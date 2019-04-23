@@ -37,67 +37,78 @@ class BertNerModel(LRScheduledTFModel):
     Ner head consists of linear layers.
 ￼
 ￼   Args:
-￼       bert_config_file: path to Bert configuration file
 ￼       n_tags: number of distinct tags
 ￼       keep_prob: dropout keep_prob for non-Bert layers
+￼       bert_config_file: path to Bert configuration file
+￼       pretrained_bert: pretrained Bert checkpoint
 ￼       attention_probs_keep_prob: keep_prob for Bert self-attention layers
 ￼       hidden_keep_prob: keep_prob for Bert hidden layers
+        use_crf:
         encoder_layer_ids: list of averaged layers from Bert encoder (layer ids)
+￼       optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
+￼       weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
         use_birnn:
         birnn_cell_type:
         birnn_hidden_size:
+        ema_decay:
+        ema_variables_on_cpu:
 ￼       return_probas: set True if return class probabilites instead of most probable label needed
-￼       optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
-￼       num_warmup_steps:
-￼       weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
-￼       pretrained_bert: pretrained Bert checkpoint
+        learning_rate:
+        bert_learning_rate:
 ￼       min_learning_rate: min value of learning rate if learning rate decay is used
+        learning_rate_drop_patience:
+        learning_rate_drop_div:
+        load_before_drop:
+        clip_norm:
 ￼   """
 
-    # TODO: add warmup
     # TODO: add head-only pre-training
     def __init__(self,
-                 bert_config_file: str,
                  n_tags: List[str],
                  keep_prob: float,
+                 bert_config_file: str,
+                 pretrained_bert: str = None,
                  attention_probs_keep_prob: float = None,
                  hidden_keep_prob: float = None,
+                 use_crf=False,
                  encoder_layer_ids: List[int] = tuple(range(12)),
                  optimizer: str = None,
-                 num_warmup_steps: int = None,
-                 focal_alpha: float = None,
-                 focal_gamma: float = None,
-                 ema_decay: float = None,
-                 ema_variables_on_cpu: bool = True,
-                 weight_decay_rate: float = 0.01,
+                 weight_decay_rate: float = 1e-6,
                  use_birnn: bool = False,
                  birnn_cell_type: str = 'lstm',
                  birnn_hidden_size: int = 128,
+                 ema_decay: float = None,
+                 ema_variables_on_cpu: bool = True,
                  return_probas: bool = False,
-                 pretrained_bert: str = None,
-                 head_learning_rate_mult = 1.0,
-                 min_learning_rate: float = 1e-06,
-                 use_crf=False,
+                 learning_rate: float = 1e-3,
+                 bert_learning_rate: float = 2e-5,
+                 min_learning_rate: float = 1e-07,
+                 learning_rate_drop_patience: int = 20,
+                 learning_rate_drop_div: float = 2.0,
+                 load_before_drop: bool = True,
+                 clip_norm: float = 1.0,
                  **kwargs) -> None:
-        super().__init__(**kwargs)
+        super().__init__(learning_rate=learning_rate,
+                         learning_rate_drop_div=learning_rate_drop_div,
+                         learning_rate_drop_patience=learning_rate_drop_patience,
+                         load_before_drop=load_before_drop,
+                         clip_norm=clip_norm,
+                         **kwargs)
 
-        self.return_probas = return_probas
         self.n_tags = n_tags
-        self.head_learning_rate_mult = head_learning_rate_mult
-        self.min_learning_rate = min_learning_rate
         self.keep_prob = keep_prob
-        self.optimizer = optimizer
-        self.focal_alpha = focal_alpha
-        self.focal_gamma = focal_gamma
-        self.ema_decay = ema_decay
-        self.ema_variables_on_cpu = ema_variables_on_cpu
+        self.use_crf = use_crf
         self.encoder_layer_ids = encoder_layer_ids
-        self.num_warmup_steps = num_warmup_steps
+        self.optimizer = optimizer
         self.weight_decay_rate = weight_decay_rate
         self.use_birnn = use_birnn
         self.birnn_cell_type = birnn_cell_type
         self.birnn_hidden_size = birnn_hidden_size
-        self.use_crf = use_crf
+        self.ema_decay = ema_decay
+        self.ema_variables_on_cpu = ema_variables_on_cpu
+        self.return_probas = return_probas
+        self.bert_learning_rate_multiplier = bert_learning_rate / learning_rate
+        self.min_learning_rate = min_learning_rate
 
         self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
 
@@ -156,16 +167,15 @@ class BertNerModel(LRScheduledTFModel):
                                             trainable=True)
             layer_weights = tf.unstack(layer_weights / len(encoder_layers))
             # TODO: may be stack and reduce_sum is faster
-            output_layer = sum(w * l for w, l in zip(layer_weights, encoder_layers))
-            units = tf.nn.dropout(output_layer, keep_prob=self.keep_prob_ph)
+            units = sum(w * l for w, l in zip(layer_weights, encoder_layers))
+            units = tf.nn.dropout(units, keep_prob=self.keep_prob_ph)
             if self.use_birnn:
-                units, _ = bi_rnn(output_layer,
+                units, _ = bi_rnn(units,
                                   self.birnn_hidden_size,
                                   cell_type=self.birnn_cell_type,
                                   seq_lengths=self.seq_lengths,
                                   name='birnn')
                 units = tf.concat(units, -1)
-                units = tf.nn.dropout(units, keep_prob=self.keep_prob_ph)
             # TODO: maybe add one more layer?
             logits = tf.layers.dense(units, units=self.n_tags, name="output_dense")
 
@@ -195,55 +205,10 @@ class BertNerModel(LRScheduledTFModel):
             y_mask = tf.cast(tag_mask, tf.float32)
             if self.use_crf:
                 self.loss = tf.reduce_mean(loss_tensor)
-            elif (self.focal_alpha is None) or (self.focal_gamma is None):
+            else:
                 self.loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_ph,
                                                                    logits=self.logits,
                                                                    weights=y_mask)
-            else:
-                y_onehot = tf.one_hot(self.y_ph, self.n_tags)
-                self.loss = self.focal_loss(labels=y_onehot,
-                                            probs=self.y_probas,
-                                            weights=y_mask,
-                                            alpha=self.focal_alpha,
-                                            gamma=self.focal_gamma)
-
-    @staticmethod
-    def focal_loss(labels, probs, weights=None, alpha=1.0, gamma=1):
-        r"""Compute focal loss for predictions.
-            Multi-labels Focal loss formula:
-                FL = -alpha * (z-p)^gamma * log(p) -(1-alpha) * p^gamma * log(1-p)
-                     ,which alpha = 0.25, gamma = 2, p = sigmoid(x), z = target_tensor.
-        Args:
-         labels: A float tensor of shape [batch_size, num_anchors,
-            num_classes] representing the predicted logits for each class
-         probs: A float tensor of shape [batch_size, num_anchors,
-            num_classes] representing one-hot encoded classification targets
-         weights: A float tensor of shape [batch_size, num_anchors]
-         alpha: A scalar tensor for focal loss alpha hyper-parameter
-         gamma: A scalar tensor for focal loss gamma hyper-parameter
-        Returns:
-            loss: A (scalar) tensor representing the value of the loss function
-        """
-        labels = tf.cast(labels, tf.float32)
-        probs = tf.cast(probs, tf.float32)
-
-        zeros = array_ops.zeros_like(probs, dtype=probs.dtype)
-
-        # For positive prediction, only need consider front part loss, back part is 0;
-        # target_tensor > zeros <=> z=1, so poitive coefficient = z - p.
-        pos_p_sub = array_ops.where(labels > zeros, labels - probs, zeros)
-
-        # For negative prediction, only need consider back part loss, front part is 0;
-        # target_tensor > zeros <=> z=1, so negative coefficient = 0.
-        neg_p_sub = array_ops.where(labels > zeros, zeros, probs)
-        per_entry_cross_ent = - alpha * (pos_p_sub ** gamma) * \
-            tf.log(tf.clip_by_value(probs, 1e-8, 1.0)) \
-            - (1 - alpha) * (neg_p_sub ** gamma) * \
-            tf.log(tf.clip_by_value(1.0 - probs, 1e-8, 1.0))
-        if weights is not None:
-            per_entry_cross_ent = tf.multiply(per_entry_cross_ent,
-                                              tf.expand_dims(weights, -1))
-        return tf.reduce_sum(per_entry_cross_ent)
 
     def _init_placeholders(self):
         self.input_ids_ph = tf.placeholder(shape=(None, None),
@@ -317,14 +282,14 @@ class BertNerModel(LRScheduledTFModel):
         assert "learnable_scopes" not in kwargs, "learnable scopes unsupported"
         # train_op for bert variables
         kwargs['learnable_scopes'] = ('(?!ner)',)
+        bert_learning_rate = learning_rate * self.bert_learning_rate_multiplier
         bert_train_op = super().get_train_op(loss,
-                                             learning_rate,
+                                             bert_learning_rate,
                                              **kwargs)
         # train_op for ner head variables
         kwargs['learnable_scopes'] = ('ner',)
-        head_learning_rate = learning_rate * self.head_learning_rate_mult
         head_train_op = super().get_train_op(loss,
-                                             head_learning_rate,
+                                             learning_rate,
                                              **kwargs)
         return tf.group(bert_train_op, head_train_op)
 
@@ -494,8 +459,11 @@ class BertNerModel(LRScheduledTFModel):
 
         if self.ema:
             self.sess.run(self.ema.switch_to_train_op)
-        _, loss = self.sess.run([self.train_op, self.loss], feed_dict=feed_dict)
-        return {'loss': loss, 'learning_rate': feed_dict[self.learning_rate_ph]}
+        _, loss, lr = self.sess.run([self.train_op, self.loss, self.learning_rate_ph],
+                                     feed_dict=feed_dict)
+        return {'loss': loss,
+                'head_learning_rate': float(lr),
+                'bert_learning_rate': float(lr) * self.bert_learning_rate_multiplier}
 
     def __call__(self,
                  input_ids: List[List[int]],
@@ -532,22 +500,6 @@ class BertNerModel(LRScheduledTFModel):
             viterbi_seq, viterbi_score = tf.contrib.crf.viterbi_decode(logit, trans_params)
             y_pred += [viterbi_seq]
         return y_pred
-
-
-class MaskCutter(Component):
-    def __init__(self, **kwargs):
-        pass
-
-    def __call__(self,
-                 samples: List[List[Any]],
-                 masks: List[List[int]]):
-        samples_cut = []
-        for s_list, m_list in zip(samples, masks):
-            samples_cut.append([])
-            for j in range(len(s_list)):
-                if m_list[j]:
-                    samples_cut[-1].append(s_list[j])
-        return samples_cut
 
 
 class ExponentialMovingAverage:
