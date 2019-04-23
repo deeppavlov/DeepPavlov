@@ -47,6 +47,9 @@ class BertNerModel(LRScheduledTFModel):
         encoder_layer_ids: list of averaged layers from Bert encoder (layer ids)
 ￼       optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
 ￼       weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
+        use_birnn:
+        birnn_cell_type:
+        birnn_hidden_size:
         ema_decay:
         ema_variables_on_cpu:
 ￼       return_probas: set True if return class probabilites instead of most probable label needed
@@ -71,6 +74,9 @@ class BertNerModel(LRScheduledTFModel):
                  encoder_layer_ids: List[int] = tuple(range(12)),
                  optimizer: str = None,
                  weight_decay_rate: float = 1e-6,
+                 use_birnn: bool = False,
+                 birnn_cell_type: str = 'lstm',
+                 birnn_hidden_size: int = 128,
                  ema_decay: float = None,
                  ema_variables_on_cpu: bool = True,
                  return_probas: bool = False,
@@ -95,6 +101,9 @@ class BertNerModel(LRScheduledTFModel):
         self.encoder_layer_ids = encoder_layer_ids
         self.optimizer = optimizer
         self.weight_decay_rate = weight_decay_rate
+        self.use_birnn = use_birnn
+        self.birnn_cell_type = birnn_cell_type
+        self.birnn_hidden_size = birnn_hidden_size
         self.ema_decay = ema_decay
         self.ema_variables_on_cpu = ema_variables_on_cpu
         self.return_probas = return_probas
@@ -158,10 +167,17 @@ class BertNerModel(LRScheduledTFModel):
                                             trainable=True)
             layer_weights = tf.unstack(layer_weights / len(encoder_layers))
             # TODO: may be stack and reduce_sum is faster
-            output_layer = sum(w * l for w, l in zip(layer_weights, encoder_layers))
-            output_layer = tf.nn.dropout(output_layer, keep_prob=self.keep_prob_ph)
+            units = sum(w * l for w, l in zip(layer_weights, encoder_layers))
+            units = tf.nn.dropout(units, keep_prob=self.keep_prob_ph)
+            if self.use_birnn:
+                units, _ = bi_rnn(units,
+                                  self.birnn_hidden_size,
+                                  cell_type=self.birnn_cell_type,
+                                  seq_lengths=self.seq_lengths,
+                                  name='birnn')
+                units = tf.concat(units, -1)
             # TODO: maybe add one more layer?
-            logits = tf.layers.dense(output_layer, units=self.n_tags, name="output_dense")
+            logits = tf.layers.dense(units, units=self.n_tags, name="output_dense")
 
             self.logits = self.token_from_subtoken(logits, self.y_masks_ph)
 
@@ -443,8 +459,11 @@ class BertNerModel(LRScheduledTFModel):
 
         if self.ema:
             self.sess.run(self.ema.switch_to_train_op)
-        _, loss = self.sess.run([self.train_op, self.loss], feed_dict=feed_dict)
-        return {'loss': loss, 'learning_rate': feed_dict[self.learning_rate_ph]}
+        _, loss, lr = self.sess.run([self.train_op, self.loss, self.learning_rate_ph],
+                                     feed_dict=feed_dict)
+        return {'loss': loss,
+                'head_learning_rate': float(lr),
+                'bert_learning_rate': float(lr) * self.bert_learning_rate_multiplier}
 
     def __call__(self,
                  input_ids: List[List[int]],
