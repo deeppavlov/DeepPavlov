@@ -20,7 +20,8 @@ class AIMLSkill(Skill):
                  path_to_aiml_scripts: Union[str, None] = None,
                  positive_confidence: float = 0.66,
                  null_response: str = "I don't know",
-                 null_confidence: float = 0.33
+                 null_confidence: float = 0.33,
+                 **kwargs
                  ) -> None:
         """
         Construct skill:

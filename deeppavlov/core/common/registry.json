@@ -1,4 +1,5 @@
 {
+  "aiml_skill": "deeppavlov.skills.aiml_skill.aiml_skill:AIMLSkill",
   "amazon_ecommerce_reader": "deeppavlov.dataset_readers.amazon_ecommerce_reader:AmazonEcommerceReader",
   "api_requester": "deeppavlov.models.api_requester.api_requester:ApiRequester",
   "api_router": "deeppavlov.models.api_requester.api_router:ApiRouter",
