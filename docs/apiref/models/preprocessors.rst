@@ -47,3 +47,15 @@ deeppavlov.models.preprocessors
 
     .. automethod:: __call__
 
+.. autoclass:: deeppavlov.models.preprocessors.bert_preprocessor.BertPreprocessor
+
+    .. automethod:: __call__
+
+.. autoclass:: deeppavlov.models.preprocessors.bert_preprocessor.BertNerPreprocessor
+
+    .. automethod:: __call__
+
+.. autoclass:: deeppavlov.models.preprocessors.bert_preprocessor.BertContextAdd
+
+    .. automethod:: __call__
+
