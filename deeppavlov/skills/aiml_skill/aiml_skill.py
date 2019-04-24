@@ -4,10 +4,12 @@ from typing import Tuple, Optional, List
 from logging import getLogger
 import aiml
 import uuid
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.skill.skill import Skill
 log = getLogger(__name__)
 
 
+@register("aiml_skill")
 class AIMLSkill(Skill):
     """Skill wraps python-aiml library into DeepPavlov interfrace.
     AIML uses directory with AIML scripts which are loaded at initialization and used as patterns
