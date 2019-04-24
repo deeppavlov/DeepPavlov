@@ -8,11 +8,11 @@ Models can be used for binary, multi-class or multi-label classification.
 
 Available classifiers are:
 
-* **deeppavlov.models.bert.BertClassifierModel** (registered as ``bert_classifier``) builds BERT [8]_ architecture for classification problem on Tensorflow. It requires use of ``bert_preprocessor`` to featurize input texts.
+* **deeppavlov.models.bert.BertClassifierModel** (see :doc:`here </apiref/models/bert>`) builds BERT [8]_ architecture for classification problem on Tensorflow. It requires use of ``bert_preprocessor`` to featurize input texts.
 
-* **deeppavlov.models.classifiers.KerasClassificationModel** (registered as ``keras_classification_model``) builds neural network on Keras with tensorflow backend. One of the available network configurations can be chosen in ``model_name`` parameter in config. List of implemented networks can be found bellow.
+* **deeppavlov.models.classifiers.KerasClassificationModel** (see :doc:`here </apiref/models/classifiers>`) builds neural network on Keras with tensorflow backend. One of the available network configurations can be chosen in ``model_name`` parameter in config. List of implemented networks can be found bellow.
 
-* **deeppavlov.models.sklearn.SklearnComponent** (registered as ``sklearn_component``) builds most of sklearn classifiers. Chosen model should be passed to ``model_class``, e.g. ``"model_class": "sklearn.neighbors:KNeighborsClassifier"``, as well as ``infer_method`` can be assigned to any sklearn model's prediction methods (e.g. ``predict`` or ``predict_proba``). As for text classification in DeepPavlov we assign list of labels for each sample, it is required to ensure that output of a classifier-``sklearn_component`` is a list of labels for each sample. Therefore, for sklearn component classifier one should set ``ensure_list_output`` to ``true``.
+* **deeppavlov.models.sklearn.SklearnComponent** (see :doc:`here </apiref/models/sklearn>`) builds most of sklearn classifiers. Chosen model should be passed to ``model_class``, e.g. ``"model_class": "sklearn.neighbors:KNeighborsClassifier"``, as well as ``infer_method`` can be assigned to any sklearn model's prediction methods (e.g. ``predict`` or ``predict_proba``). As for text classification in DeepPavlov we assign list of labels for each sample, it is required to ensure that output of a classifier-``sklearn_component`` is a list of labels for each sample. Therefore, for sklearn component classifier one should set ``ensure_list_output`` to ``true``.
 
 Quick start
 -----------
@@ -86,14 +86,14 @@ BERT (Bidirectional Encoder Representations from Transformers) [8]_ is a Transfo
 and next sentence prediction tasks. This approach showed state-of-the-art results on a wide range of NLP tasks in
 English.
 
-**deeppavlov.models.bert.BertClassifierModel** (:doc:`bert_classifier </apiref/models/bert>`) provides easy to use
+**deeppavlov.models.bert.BertClassifierModel** (see :doc:`here </apiref/models/bert>`) provides easy to use
 solution for classification problem using pre-trained BERT.
 Several **pre-trained English, multi-lingual and Russian BERT** models are provided in
 :doc:`our BERT documentation </components/bert>`.
 
 Two main components of BERT classifier pipeline in DeepPavlov are
-``deeppavlov.models.preprocessors.BertPreprocessor`` (:doc:`bert_preprocessor </apiref/models/bert>`)
-and ``deeppavlov.models.bert.BertClassifierModel`` (:doc:`bert_classifier </apiref/models/bert>`).
+``deeppavlov.models.preprocessors.BertPreprocessor`` (see :doc:`here </apiref/models/bert>`)
+and ``deeppavlov.models.bert.BertClassifierModel`` (see :doc:`here </apiref/models/bert>`).
 Non-processed texts should be given to ``bert_preprocessor`` for tokenization on subtokens,
 encoding subtokens with their indices and creating tokens and segment masks.
 If one processed classes to one-hot labels in pipeline, ``one_hot_labels`` should be set to ``true``.
@@ -101,12 +101,13 @@ If one processed classes to one-hot labels in pipeline, ``one_hot_labels`` shoul
 ``bert_classifier`` has a dense layer of number of classes size upon pooled outputs of Transformer encoder,
 it is followed by ``softmax`` activation (``sigmoid`` if ``multilabel`` parameter is set to ``true`` in config).
 
-
 Neural Networks on Keras
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-DeepPavlov contains a number of different model configurations for
-classification task. Please, pay attention that each model has its own parameters that should be specified in config.
+**deeppavlov.models.classifiers.KerasClassificationModel** (see :doc:`here </apiref/models/classifiers>`)
+contains a number of different neural network configurations for classification task.
+Please, pay attention that each model has its own parameters that should be specified in config.
+Information about parameters could be found :doc:`here </apiref/models/classifiers>`.
 Below the list of available models is presented:
 
 * ``cnn_model`` -- Shallow-and-wide CNN with max pooling after convolution,
@@ -124,7 +125,12 @@ Below the list of available models is presented:
 Sklearn models
 ~~~~~~~~~~~~~~
 
-
+**deeppavlov.models.sklearn.SklearnComponent** (see :doc:`here </apiref/models/sklearn>`) is
+a universal wrapper for all ``sklearn`` model that could be fitted.
+One can set ``model_class`` parameter to full name of model (for example,
+``sklearn.feature_extraction.text:TfidfVectorizer`` or ``sklearn.linear_model:LogisticRegression``).
+Parameter ``infer_method`` should be set to class method for prediction
+(``predict``, ``predict_proba``, ``predict_log_proba`` or ``transform``).
 
 Pre-trained models
 ------------------
