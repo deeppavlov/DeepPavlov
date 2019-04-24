@@ -447,7 +447,7 @@ class BertNerModel(LRScheduledTFModel):
                        input_ids: Union[List[List[int]], np.ndarray],
                        input_masks: Union[List[List[int]], np.ndarray],
                        y_masks: Union[List[List[int]], np.ndarray],
-                       y: Union[List[List[int]], np.ndarray]) -> dict:
+                       y: Union[List[List[int]], np.ndarray]) -> Dict[str, float]:
         """
 
         Args:
@@ -511,7 +511,7 @@ class BertNerModel(LRScheduledTFModel):
             pred = self.sess.run(self.y_probas, feed_dict=feed_dict)
         return pred
 
-    def _decode_crf(self, feed_dict: Dict[np.ndarray]) -> List[np.ndarray]:
+    def _decode_crf(self, feed_dict: Dict[tf.Tensor, np.ndarray]) -> List[np.ndarray]:
         logits, trans_params, mask, seq_lengths = self.sess.run([self.logits,
                                                                  self._transition_params,
                                                                  self.y_masks_ph,
