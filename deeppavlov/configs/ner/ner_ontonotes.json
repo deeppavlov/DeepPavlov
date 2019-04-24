@@ -136,6 +136,7 @@
     "val_every_n_epochs": 1,
 
     "log_every_n_batches": -1,
+    "tensorboard_log_dir": "{MODELS_PATH}/ner_ontonotes/logs",
     "show_examples": false,
     "class_name": "nn_trainer",
     "evaluation_targets": [
