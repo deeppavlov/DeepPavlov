@@ -34,7 +34,10 @@ SERVER_CONFIG_FILENAME = 'server_config.json'
 TELEGRAM_MODELS_INFO_FILENAME = 'models_info.json'
 
 
-def init_bot_for_model(agent: Agent, token: str, model_name: str):
+def init_bot_for_model(agent: Agent, token: str, model_name: str, proxy: str):
+    if proxy:
+        telebot.apihelper.proxy = {'https': proxy}
+
     bot = telebot.TeleBot(token)
 
     models_info_path = Path(get_settings_path(), TELEGRAM_MODELS_INFO_FILENAME).resolve()
@@ -58,17 +61,24 @@ def init_bot_for_model(agent: Agent, token: str, model_name: str):
         chat_id = message.chat.id
         context = message.text
 
-        response: RichMessage = agent([context], [chat_id])[0]
-        for message in response.json():
-            message_text = message['content']
-            bot.send_message(chat_id, message_text)
+        # use str instead of using RichMessage
+        bot.send_message(chat_id, agent([context], [chat_id])[0])
+
+        # response: RichMessage = agent([context], [chat_id])[0]
+        # for message in response.json():
+        #     message_text = message['content']
+        #     bot.send_message(chat_id, message_text)
 
     bot.polling()
 
 
 def interact_model_by_telegram(model_config: Union[str, Path, dict],
                                token=None,
-                               default_skill_wrap: bool = True):
+                               default_skill_wrap: bool = True,
+                               proxy=None
+                               ):
+    if proxy:
+        telebot.apihelper.proxy = {'https': proxy}
 
     server_config_path = Path(get_settings_path(), SERVER_CONFIG_FILENAME)
     server_config = read_json(server_config_path)
@@ -83,5 +93,6 @@ def interact_model_by_telegram(model_config: Union[str, Path, dict],
     model = build_model(model_config)
     model_name = type(model.get_main_component()).__name__
     skill = DefaultStatelessSkill(model) if default_skill_wrap else model
-    agent = DefaultAgent([skill], skills_processor=DefaultRichContentWrapper())
-    init_bot_for_model(agent, token, model_name)
+    # agent = DefaultAgent([skill], skills_processor=DefaultRichContentWrapper())
+    agent = DefaultAgent([skill])   # do not use DefaultRichContentWrapper
+    init_bot_for_model(agent, token, model_name, proxy)
