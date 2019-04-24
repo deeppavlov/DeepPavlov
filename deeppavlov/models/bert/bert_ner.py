@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from logging import getLogger
-from typing import List, Any, Tuple
+from typing import List, Any, Tuple, Union, Dict
 
+import numpy as np
 import tensorflow as tf
 from tensorflow.python.ops import array_ops
 from bert_dp.modeling import BertConfig, BertModel
@@ -30,11 +31,9 @@ log = getLogger(__name__)
 
 @register('bert_ner')
 class BertNerModel(LRScheduledTFModel):
-    """Bert-based model for text named entity tagging.
+    """BERT-based model for text tagging.
 
-    Uses bert token representation to predict it's bio tag.
-    Representation is obtained by averaging several hidden layers from bert encoder.
-    Ner head consists of linear layers.
+    For each token a tag is predicted. Can be used for any tagging.
 ￼
 ￼   Args:
 ￼       n_tags: number of distinct tags
@@ -47,19 +46,22 @@ class BertNerModel(LRScheduledTFModel):
         encoder_layer_ids: list of averaged layers from Bert encoder (layer ids)
 ￼       optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
 ￼       weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
-        use_birnn:
-        birnn_cell_type:
-        birnn_hidden_size:
-        ema_decay:
-        ema_variables_on_cpu:
+        use_birnn: whether to add bi rnn on top of the representations prouced by BERT
+        birnn_cell_type: type of cell to use. Either 'lstm' or 'gru'
+        birnn_hidden_size: number of hidden units in the lstm
+        ema_decay: what exponential moving averaging to use for network parameters, value from 0.0 to 1.0.
+            Values closer to 1.0 put weight on the parameters history and values closer to 0.0 corresponds put weight
+            on the current parameters.
+        ema_variables_on_cpu: whether to put EMA variables to CPU. It may save a lot of GPU memory
 ￼       return_probas: set True if return class probabilites instead of most probable label needed
-        learning_rate:
-        bert_learning_rate:
+        learning_rate: learning rate of the NER head
+        bert_learning_rate: learning rate of the BERT body
 ￼       min_learning_rate: min value of learning rate if learning rate decay is used
-        learning_rate_drop_patience:
-        learning_rate_drop_div:
-        load_before_drop:
-        clip_norm:
+        learning_rate_drop_patience: how many validations with no improvements to wait
+        learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
+            validations
+        load_before_drop: whether to load best model before dropping learning rate or not
+        clip_norm: clip gradients by norm
 ￼   """
 
     # TODO: add head-only pre-training
@@ -145,7 +147,7 @@ class BertNerModel(LRScheduledTFModel):
         if self.ema:
             self.sess.run(self.ema.init_op)
 
-    def _init_graph(self):
+    def _init_graph(self) -> None:
         self._init_placeholders()
         
         self.seq_lengths = tf.reduce_sum(self.y_masks_ph, axis=1)
@@ -210,7 +212,7 @@ class BertNerModel(LRScheduledTFModel):
                                                                    logits=self.logits,
                                                                    weights=y_mask)
 
-    def _init_placeholders(self):
+    def _init_placeholders(self) -> None:
         self.input_ids_ph = tf.placeholder(shape=(None, None),
                                            dtype=tf.int32,
                                            name='token_indices_ph')
@@ -231,7 +233,7 @@ class BertNerModel(LRScheduledTFModel):
         self.keep_prob_ph = tf.placeholder_with_default(1.0, shape=[], name='keep_prob_ph')
         self.is_train_ph = tf.placeholder_with_default(False, shape=[], name='is_train_ph')
 
-    def _init_optimizer(self):
+    def _init_optimizer(self) -> None:
         with tf.variable_scope('Optimizer'):
             self.global_step = tf.get_variable('global_step',
                                                shape=[],
@@ -278,7 +280,7 @@ class BertNerModel(LRScheduledTFModel):
         else:
             self.ema = None
 
-    def get_train_op(self, loss, learning_rate, **kwargs):
+    def get_train_op(self, loss: tf.Tensor, learning_rate: Union[tf.Tensor, float], **kwargs) -> tf.Operation:
         assert "learnable_scopes" not in kwargs, "learnable scopes unsupported"
         # train_op for bert variables
         kwargs['learnable_scopes'] = ('(?!ner)',)
@@ -294,7 +296,7 @@ class BertNerModel(LRScheduledTFModel):
         return tf.group(bert_train_op, head_train_op)
 
     @staticmethod
-    def token_from_subtoken(units, mask):
+    def token_from_subtoken(units: tf.Tensor, mask: tf.Tensor) -> tf.Tensor:
         """ Assemble token level units from subtoken level units
 
         Args:
@@ -442,10 +444,21 @@ class BertNerModel(LRScheduledTFModel):
         return feed_dict
 
     def train_on_batch(self,
-                       input_ids: List[List[int]],
-                       input_masks: List[List[int]],
-                       y_masks: List[List[int]],
-                       y: List[List[int]]) -> dict:
+                       input_ids: Union[List[List[int]], np.ndarray],
+                       input_masks: Union[List[List[int]], np.ndarray],
+                       y_masks: Union[List[List[int]], np.ndarray],
+                       y: Union[List[List[int]], np.ndarray]) -> dict:
+        """
+
+        Args:
+            input_ids: batch of indices of subwords
+            input_masks: batch of masks which determine what should be attended
+            y_masks: batch of masks of the first subtokens in the token
+            y: batch of indices of tags
+
+        Returns:
+            dict with fields 'loss', 'head_learning_rate', and 'bert_learning_rate'
+        """
         for ids, ms, y_ms in zip(input_ids, input_masks, y_masks):
             assert len(ids) == len(ms) == len(y_ms), \
                 f"ids({len(ids)}) = {ids}, masks({len(ms)}) = {ms},"\
@@ -466,9 +479,20 @@ class BertNerModel(LRScheduledTFModel):
                 'bert_learning_rate': float(lr) * self.bert_learning_rate_multiplier}
 
     def __call__(self,
-                 input_ids: List[List[int]],
-                 input_masks: List[List[int]],
-                 y_masks: List[List[int]]):
+                 input_ids: Union[List[List[int]], np.ndarray],
+                 input_masks: Union[List[List[int]], np.ndarray],
+                 y_masks: Union[List[List[int]], np.ndarray]) -> Union[List[List[int]], List[np.ndarray]]:
+        """ Predicts tag indices for a given subword tokens batch
+
+        Args:
+            input_ids: indices of the subwords
+            input_masks: mask that determines where to attend and where not to
+            y_masks: mask which determines the first subword units in the the word
+
+        Returns:
+            Predictions indices or predicted probabilities fro each token (not subtoken)
+
+        """
         for ids, ms, y_ms in zip(input_ids, input_masks, y_masks):
             assert len(ids) == len(ms) == len(y_ms), \
                 f"ids({len(ids)}) = {ids}, masks({len(ms)}) = {ms},"\
@@ -487,7 +511,7 @@ class BertNerModel(LRScheduledTFModel):
             pred = self.sess.run(self.y_probas, feed_dict=feed_dict)
         return pred
 
-    def _decode_crf(self, feed_dict):
+    def _decode_crf(self, feed_dict: Dict[np.ndarray]) -> List[np.ndarray]:
         logits, trans_params, mask, seq_lengths = self.sess.run([self.logits,
                                                                  self._transition_params,
                                                                  self.y_masks_ph,
