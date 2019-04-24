@@ -1,11 +1,12 @@
-import aiml
 import uuid
 from pathlib import Path
 from typing import Union
 from typing import Tuple, Optional, List
 from logging import getLogger
+import aiml
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.skill.skill import Skill
+
 log = getLogger(__name__)
 
 
@@ -75,17 +76,17 @@ class AIMLSkill(Skill):
             confidence = self.null_confidence
         return response, confidence
 
-    def _generate_user_id(self) -> uuid.UUID:
+    def _generate_user_id(self) -> str:
         """
         Here you put user id generative logic if you want to implement it in the skill.
 
         Although it is better to delegate user_id generation to Agent Layer
-        Returns: uuid.UUID instance
+        Returns: str
 
         """
-        return uuid.uuid1()
+        return uuid.uuid1().hex
 
-    def __call__(self, utterances_batch: list, history_batch: list, states_batch: list) -> Tuple[list, list, list]:
+    def __call__(self, utterances_batch: List, history_batch: List, states_batch: List) -> Tuple[List, ...]:
         """Returns skill inference result.
 
         Returns batches of skill inference results, estimated confidence
@@ -115,18 +116,18 @@ class AIMLSkill(Skill):
         # In this implementation we use current datetime for generating uniqe ids
         output_states_batch = []
         user_ids = []
-        for each_state in states_batch:
-            if not each_state:
+        for state in states_batch:
+            if not state:
                 user_id = self._generate_user_id()
                 new_state = {'user_id': user_id}
 
-            elif 'user_id' not in each_state:
-                new_state = each_state
+            elif 'user_id' not in state:
+                new_state = state
                 user_id = self._generate_user_id()
                 new_state['user_id'] = self._generate_user_id()
 
             else:
-                new_state = each_state
+                new_state = state
                 user_id = new_state['user_id']
 
             user_ids.append(user_id)

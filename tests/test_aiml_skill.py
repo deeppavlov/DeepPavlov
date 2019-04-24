@@ -1,8 +1,11 @@
-import pytest
 from pathlib import Path
+from logging import getLogger
+import pytest
 from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
 from deeppavlov import configs, build_model
+
+log = getLogger(__name__)
 
 
 class TestAIMLSkill:
@@ -23,9 +26,9 @@ class TestAIMLSkill:
 
         history_of_responses = []
         for each_utt in user_messages_sequence:
-            print(f"User says: {each_utt}")
+            log.info(f"User says: {each_utt}")
             responses_batch = self.agent([each_utt])
-            print(f" Bot says: {responses_batch[0]}")
+            log.info(f" Bot says: {responses_batch[0]}")
             history_of_responses.append(responses_batch)
 
         # check the first greeting message in 0th batch
