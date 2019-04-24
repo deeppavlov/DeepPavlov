@@ -14,6 +14,12 @@ For the case when no match occured the wrapper returns the argument `null_respon
 
 Quick Start
 -----------
+To setup AIML Skill you need load your AIML scripts to some folder and specify path to it with initilization
+parameter `path_to_aiml_scripts`.
+
+You can download bunch of free and ready for use AIML scripts from pandorabots repo:
+https://github.com/pandorabots/Free-AIML
+
 
 Usage
 ^^^^^^^^
