@@ -46,16 +46,3 @@ deeppavlov.models.preprocessors
 .. autoclass:: deeppavlov.models.preprocessors.odqa_preprocessors.StringMultiplier
 
     .. automethod:: __call__
-
-.. autoclass:: deeppavlov.models.preprocessors.bert_preprocessor.BertPreprocessor
-
-    .. automethod:: __call__
-
-.. autoclass:: deeppavlov.models.preprocessors.bert_preprocessor.BertNerPreprocessor
-
-    .. automethod:: __call__
-
-.. autoclass:: deeppavlov.models.preprocessors.bert_preprocessor.BertContextAdd
-
-    .. automethod:: __call__
-
