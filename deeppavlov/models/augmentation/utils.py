@@ -1,8 +1,9 @@
 import pymorphy2
 from typing import List
-import pattern.en as en
+#import pattern.en as en
 import xml.etree.ElementTree as ET
 from pathlib import Path
+import time
 
 
 class CaseSaver():
@@ -59,11 +60,11 @@ class RuInflector():
         return self.morph.parse(token)[0].normal_form
 
 
-    def inflect_token(self, token: str, morpho_tag: pymorphy2.analyzer.Parse) 
+    def inflect_token(self, token: str, morpho_tag: pymorphy2.analyzer.Parse):
         return self.morph.parse(token)[0].inflect(morpho_tag)
 
 
-    def force_inflect_token(self, token: str, morpho_tag: pymorphy2.analyzer.Parse) 
+    def force_inflect_token(self, token: str, morpho_tag: pymorphy2.analyzer.Parse):
         form = _extract_morpho_requirements(morpho_tag)
         return self.morph.parse(token)[0].inflect(form)
 
@@ -102,7 +103,7 @@ class EnInflector():
         self.classical_pluralize = classical_pluralize
 
     
-    def _nltk_postag_to_pattern_postag(self, pos_tag): str
+    def _nltk_postag_to_pattern_postag(self, pos_tag: str):
         if pos_tag[1].startswith('N'):
             return en.NOUN
         elif pos_tag[1].startswith('V'):
@@ -145,7 +146,51 @@ class RuThesaurus():
     """
     """
 
-    def __init__(dir_path, with_source_token: bool=False):
+    def __init__(self, dir_path, with_source_token: bool=False):
         self.dir_path = Path(dir_path) 
         self.with_source_token = with_source_token
-        self.entry_root = ET.parse(dir_path).getroot()
+        self.entry_root = ET.parse(self.dir_path / "text_entry.xml").getroot()
+        self.synonyms_root = ET.parse(self.dir_path / "synonyms.xml").getroot()
+        self.test_time = []
+        print(self.test_time)
+
+    
+    def _find_synonyms(self, lemma: str) -> List[str]:
+        start = time.time() #TEST
+
+        lemma = lemma.upper()
+        #1 
+        entry_id_set = set(map(lambda x: x.get('id'), self.entry_root.findall(f"./entry[lemma='{lemma}']")))
+        #2
+        concept_id_set = set()
+        for entry_id in entry_id_set:
+            concept_id_set.update(set(map(lambda x: x.get('concept_id'), self.synonyms_root.findall(f"./entry_rel[@entry_id='{entry_id}']"))))
+        #3
+        syn_entry_id_set = set()
+        for concept_id in concept_id_set:
+            syn_entry_id_set.update(set(map(lambda x: x.get('entry_id'), self.synonyms_root.findall(f"./entry_rel[@concept_id='{concept_id}']"))))
+        #4
+        synlist = list()
+        for syn_entry_id in syn_entry_id_set:
+            synlist += list(map(lambda x: x.text, self.entry_root.findall(f"./entry[@id='{syn_entry_id}']/lemma")))
+        
+        end = time.time() #TEST
+        self.test_time.append(end-start) #TEST
+
+        return synlist
+
+
+    def _filter(self, synlist: List[str], source_lemma: str) -> List[str]:
+        filtered_syn = set(filter(lambda x: len(x.split()) == 1, synlist))
+        if self.with_source_token:
+            filtered_syn.update([source_lemma])
+        else:
+            filtered_syn.discard([source_lemma])
+        return list(filtered_syn)
+
+    
+    def get_syn(self, lemma: str, pos_tag: str=None) -> List[str]:
+        lemma = lemma.upper()
+        synonyms = self._find_synonyms(lemma)
+        synonyms = self._filter(synonyms, lemma)
+        return synonyms
