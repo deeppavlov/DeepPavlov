@@ -54,6 +54,8 @@ class BertNerModel(LRScheduledTFModel):
             on the current parameters.
         ema_variables_on_cpu: whether to put EMA variables to CPU. It may save a lot of GPU memory
 ￼       return_probas: set True if return class probabilites instead of most probable label needed
+        freeze_embeddings: set True to not train input embeddings set True to
+        not train input embeddings set True to not train input embeddings
         learning_rate: learning rate of the NER head
         bert_learning_rate: learning rate of the BERT body
 ￼       min_learning_rate: min value of learning rate if learning rate decay is used
@@ -82,6 +84,7 @@ class BertNerModel(LRScheduledTFModel):
                  ema_decay: float = None,
                  ema_variables_on_cpu: bool = True,
                  return_probas: bool = False,
+                 freeze_embeddings: bool = False,
                  learning_rate: float = 1e-3,
                  bert_learning_rate: float = 2e-5,
                  min_learning_rate: float = 1e-07,
@@ -109,6 +112,7 @@ class BertNerModel(LRScheduledTFModel):
         self.ema_decay = ema_decay
         self.ema_variables_on_cpu = ema_variables_on_cpu
         self.return_probas = return_probas
+        self.freeze_embeddings = freeze_embeddings
         self.bert_learning_rate_multiplier = bert_learning_rate / learning_rate
         self.min_learning_rate = min_learning_rate
 
@@ -283,7 +287,9 @@ class BertNerModel(LRScheduledTFModel):
     def get_train_op(self, loss: tf.Tensor, learning_rate: Union[tf.Tensor, float], **kwargs) -> tf.Operation:
         assert "learnable_scopes" not in kwargs, "learnable scopes unsupported"
         # train_op for bert variables
-        kwargs['learnable_scopes'] = ('(?!ner)',)
+        kwargs['learnable_scopes'] = ('bert/encoder', 'bert/embeddings')
+        if self.freeze_embeddings:
+            kwargs['learnable_scope'] = ('bert/encoder',)
         bert_learning_rate = learning_rate * self.bert_learning_rate_multiplier
         bert_train_op = super().get_train_op(loss,
                                              bert_learning_rate,
@@ -473,7 +479,7 @@ class BertNerModel(LRScheduledTFModel):
         if self.ema:
             self.sess.run(self.ema.switch_to_train_op)
         _, loss, lr = self.sess.run([self.train_op, self.loss, self.learning_rate_ph],
-                                     feed_dict=feed_dict)
+                                    feed_dict=feed_dict)
         return {'loss': loss,
                 'head_learning_rate': float(lr),
                 'bert_learning_rate': float(lr) * self.bert_learning_rate_multiplier}
