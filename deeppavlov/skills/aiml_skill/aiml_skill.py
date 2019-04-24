@@ -1,9 +1,9 @@
+import aiml
+import uuid
 from pathlib import Path
 from typing import Union
 from typing import Tuple, Optional, List
 from logging import getLogger
-import aiml
-import uuid
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.skill.skill import Skill
 log = getLogger(__name__)
@@ -17,7 +17,7 @@ class AIMLSkill(Skill):
     """
 
     def __init__(self,
-                 path_to_aiml_scripts: Union[str, None] = None,
+                 path_to_aiml_scripts: str,
                  positive_confidence: float = 0.66,
                  null_response: str = "I don't know",
                  null_confidence: float = 0.33,
@@ -34,14 +34,8 @@ class AIMLSkill(Skill):
             positive_confidence: The confidence of response if response was found in AIML scripts
             null_confidence: The confidence when AIML scripts has no rule for responding and system returns null_response
         """
-
-        if not path_to_aiml_scripts:
-            cur_dir = Path(__file__).absolute().parent
-            self.path_to_aiml_scripts = cur_dir.joinpath("aiml_scripts")
-            log.warning(f"path_to_aiml_scripts is not provided, use default path: `{self.path_to_aiml_scripts}`")
-        else:
-            self.path_to_aiml_scripts = Path(path_to_aiml_scripts)
-            log.info(f"path_to_aiml_scripts is: `{self.path_to_aiml_scripts}`")
+        self.path_to_aiml_scripts = Path(path_to_aiml_scripts)
+        log.info(f"path_to_aiml_scripts is: `{self.path_to_aiml_scripts}`")
 
         self.positive_confidence = positive_confidence
         self.null_confidence = null_confidence
@@ -59,10 +53,14 @@ class AIMLSkill(Skill):
         """
         # learn kernel to all aimls in directory tree:
         all_files = sorted(self.path_to_aiml_scripts.rglob('*.*'))
+        learned_files = []
         for each_file_path in all_files:
             if each_file_path.suffix in ['.aiml', '.xml']:
                 # learn the script file
                 self.kernel.learn(str(each_file_path))
+                learned_files.append(each_file_path)
+        if not learned_files:
+            log.error(f"No .aiml or .xml files found for AIML Kernel in directory {self.path_to_aiml_scripts}")
 
     def process_step(self, utterance_str: str, user_id: any) -> Tuple[str, float]:
         response = self.kernel.respond(utterance_str, sessionID=user_id)
