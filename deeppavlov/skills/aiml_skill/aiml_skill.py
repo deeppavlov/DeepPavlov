@@ -19,7 +19,7 @@ class AIMLSkill(Skill):
     def __init__(self,
                  path_to_aiml_scripts: str,
                  positive_confidence: float = 0.66,
-                 null_response: str = "I don't know",
+                 null_response: str = "I don't know what to answer you",
                  null_confidence: float = 0.33,
                  **kwargs
                  ) -> None:
@@ -34,7 +34,8 @@ class AIMLSkill(Skill):
             positive_confidence: The confidence of response if response was found in AIML scripts
             null_confidence: The confidence when AIML scripts has no rule for responding and system returns null_response
         """
-        self.path_to_aiml_scripts = Path(path_to_aiml_scripts)
+        # we need absolute path (expanded for user home and resolved if it relative path):
+        self.path_to_aiml_scripts = Path(path_to_aiml_scripts).expanduser().resolve()
         log.info(f"path_to_aiml_scripts is: `{self.path_to_aiml_scripts}`")
 
         self.positive_confidence = positive_confidence
@@ -74,12 +75,12 @@ class AIMLSkill(Skill):
             confidence = self.null_confidence
         return response, confidence
 
-    def _generate_user_id(self) -> str:
+    def _generate_user_id(self) -> uuid.UUID:
         """
         Here you put user id generative logic if you want to implement it in the skill.
 
         Although it is better to delegate user_id generation to Agent Layer
-        Returns: int
+        Returns: uuid.UUID instance
 
         """
         return uuid.uuid1()
