@@ -1,9 +1,6 @@
 This skill wraps python-aiml library and allows developer to integrate AIML scripts into DeepPavlov dialog system.
 
-Try: `test_aiml_skill.py` to understand usage.
-
 If you'd like to find more free AIML scripts here is link:
 https://github.com/pandorabots/Free-AIML 
 
-You can set path to folder with your AIML scripts as config param (see attr `path_to_aiml_scripts`) or just download 
-scripts into folder `aiml_scripts` inside the skill folder.
+You can set path to folder with your AIML scripts as config param (see attr `path_to_aiml_scripts`).  
