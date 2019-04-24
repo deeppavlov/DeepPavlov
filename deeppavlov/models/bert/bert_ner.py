@@ -42,11 +42,11 @@ class BertNerModel(LRScheduledTFModel):
 ￼       pretrained_bert: pretrained Bert checkpoint
 ￼       attention_probs_keep_prob: keep_prob for Bert self-attention layers
 ￼       hidden_keep_prob: keep_prob for Bert hidden layers
-        use_crf:
+        use_crf: whether to use CRF on top or not
         encoder_layer_ids: list of averaged layers from Bert encoder (layer ids)
 ￼       optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
 ￼       weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
-        use_birnn: whether to add bi rnn on top of the representations prouced by BERT
+        use_birnn: whether to add bi rnn on top of the representations produced by BERT
         birnn_cell_type: type of cell to use. Either 'lstm' or 'gru'
         birnn_hidden_size: number of hidden units in the lstm
         ema_decay: what exponential moving averaging to use for network parameters, value from 0.0 to 1.0.
@@ -73,7 +73,7 @@ class BertNerModel(LRScheduledTFModel):
                  attention_probs_keep_prob: float = None,
                  hidden_keep_prob: float = None,
                  use_crf=False,
-                 encoder_layer_ids: List[int] = tuple(range(12)),
+                 encoder_layer_ids: List[int] = (-1,),
                  optimizer: str = None,
                  weight_decay_rate: float = 1e-6,
                  use_birnn: bool = False,
