@@ -84,7 +84,6 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
                  **kwargs):
 
         self.seed = seed
-        np.random.seed(self.seed)
         tf.set_random_seed(self.seed)
 
         self.batch_size = batch_size

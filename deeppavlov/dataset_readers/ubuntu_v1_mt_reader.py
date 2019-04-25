@@ -54,7 +54,7 @@ class UbuntuV1MTReader(DatasetReader):
         contexts = []
         responses = []
         labels = []
-        with codecs.open(train_fname, 'r', 'utf-8') as f:
+        with open(train_fname, encoding='utf-8') as f:
             for line in f:
                 line = line.replace('_', '')
                 parts = line.strip().split('\t')
@@ -73,7 +73,7 @@ class UbuntuV1MTReader(DatasetReader):
     def preprocess_data_validation(self, fname: Union[Path, str]) -> List[Tuple[List[str], int]]:
         contexts = []
         responses = []
-        with codecs.open(fname, 'r', 'utf-8') as f:
+        with open(fname, encoding='utf-8') as f:
             responses_buf = []
             for line in f:
                 line = line.replace('_', '')

@@ -77,21 +77,21 @@ class TensorflowBaseMatchingModel(TFModel, SiameseModel):
         # 4 model inputs
 
         # 1. Token indices for context
-        batch_buffer_context += [context_sentences for sent in response_sentences]
+        batch_buffer_context += [context_sentences] * len(response_sentences)
         # 2. Token indices for response
-        batch_buffer_response += [response_sentence for response_sentence in response_sentences]
+        batch_buffer_response += list(response_sentences)
         # 3. Lens of context sentences
         lens = []
-        for context in [context_sentences for sent in response_sentences]:
+        for context in [context_sentences] * len(response_sentences):
             context_sentences_lens = []
             for sent in context:
                 context_sentences_lens.append(len(sent[sent != 0]))
             lens.append(context_sentences_lens)
         batch_buffer_context_len += lens
-        # 4. Lens of context sentences
+        # 4. Lens of response sentences
         lens = []
-        for context in [response_sentence for response_sentence in response_sentences]:
-            lens.append(len(context[context != 0]))
+        for response_sent in response_sentences:
+            lens.append(len(response_sent[response_sent != 0]))
         batch_buffer_response_len += lens
 
         for i in range(len(batch_buffer_context)):

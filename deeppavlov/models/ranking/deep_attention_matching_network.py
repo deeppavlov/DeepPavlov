@@ -75,8 +75,6 @@ class DAMNetwork(TensorflowBaseMatchingModel):
                  **kwargs):
 
         self.seed = seed
-
-        np.random.seed(self.seed)
         tf.set_random_seed(self.seed)
 
         self.num_context_turns = num_context_turns

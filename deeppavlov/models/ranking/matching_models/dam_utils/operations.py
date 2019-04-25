@@ -26,8 +26,8 @@
 # Based on authors' Tensorflow code: https://github.com/baidu/Dialogue/tree/master/DAM
 
 from logging import getLogger
-
 import math
+
 import numpy as np
 import tensorflow as tf
 
