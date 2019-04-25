@@ -1,10 +1,9 @@
 import pymorphy2
 from typing import List, Set
 import pattern.en as en
-import xml.etree.ElementTree as ET
 from pathlib import Path
 from nltk.corpus import wordnet as wn
-
+import pandas as pd
 
 class CaseSaver:
     """It can save lettercases of tokens and then restore them.
@@ -132,33 +131,39 @@ class RuInflector:
 
 
 class RuThesaurus:
-    """
+    """Class that finds synonyms, for russian language.
+    Args:
+        with_source_token: wheither source symbol is considered as synonyms to itself
+        dir_path: path to ruthes_lite2 thesaurus
+    Attributes:
+        with_source_token: wheither source symbol is considered as synonyms to itself
+        dir_path: path to ruthes_lite2 thesaurus
+        synonyms_data: pd.DataFrame that contains synonyms relations
+        text_entry_data: pd.DataFrame that contains lemma and entry_id
     """
 
     def __init__(self, dir_path, with_source_token: bool = False):
         self.dir_path = Path(dir_path)
         self.with_source_token = with_source_token
-        self.entry_root = ET.parse(self.dir_path / "text_entry.xml").getroot()
-        self.synonyms_root = ET.parse(self.dir_path / "synonyms.xml").getroot()
+        self.synonyms_data = pd.read_csv(self.dir_path / "synonyms.csv", index_col=0)
+        self.text_entry_data = pd.read_csv(self.dir_path / "text_entry.csv", index_col=0)
 
     def _find_synonyms(self, lemma: str) -> List[str]:
         lemma = lemma.upper()
-        # 1
-        entry_id_set = set(map(lambda x: x.get('id'), self.entry_root.findall(f"./entry[lemma='{lemma}']")))
-        # 2
+        #1
+        entry_id_set = set(self.text_entry_data[self.text_entry_data['lemma'] == lemma]['entry_id'])
+        #2
         concept_id_set = set()
         for entry_id in entry_id_set:
-            concept_id_set.update(set(
-                map(lambda x: x.get('concept_id'), self.synonyms_root.findall(f"./entry_rel[@entry_id='{entry_id}']"))))
-        # 3
+            concept_id_set.update(set(self.synonyms_data[self.synonyms_data['entry_id'] == entry_id]['concept_id']))
+        #3
         syn_entry_id_set = set()
         for concept_id in concept_id_set:
-            syn_entry_id_set.update(set(map(lambda x: x.get('entry_id'),
-                                            self.synonyms_root.findall(f"./entry_rel[@concept_id='{concept_id}']"))))
-        # 4
+            syn_entry_id_set.update(set(self.synonyms_data[self.synonyms_data['concept_id']==concept_id]['entry_id']))
+        #4
         synlist = list()
         for syn_entry_id in syn_entry_id_set:
-            synlist += list(map(lambda x: x.text, self.entry_root.findall(f"./entry[@id='{syn_entry_id}']/lemma")))
+            synlist += list(self.text_entry_data[self.text_entry_data['entry_id']==syn_entry_id]['lemma'])
         return synlist
 
     def _filter(self, synlist: List[str], source_lemma: str) -> List[str]:
@@ -170,6 +175,13 @@ class RuThesaurus:
         return list(filtered_syn)
 
     def get_syn(self, lemma: str, pos_tag: str = None) -> List[str]:
+        """It returns synonyms for certain word
+        Args:
+            lemma: word for that it will search synonyms
+            pos_tag: pos_tag in nltk.pos_tag format of 'lemma'
+        Return:
+             List of synonyms
+        """
         lemma = lemma.upper()
         synonyms = self._find_synonyms(lemma)
         synonyms = self._filter(synonyms, lemma)
@@ -201,6 +213,10 @@ class EnInflector:
 
     def get_lemma_form(self, token: str):
         """It returns lemma-form of given token. Phrasal verbs should be linked with '_' symbol.
+        Args:
+            token: token that will be converted into lemma-form
+        Return:
+            token in lemma-form
         """
         split = token.split('_')
         if len(split) == 1:
@@ -228,6 +244,11 @@ class EnInflector:
 
     def get_morpho_tag(self, token: str, pos_tag):
         """Return morpho-form of token. Phrasal verbs should be linked with '_' symbol.
+        Args:
+            token: token that will be morpho-analysed
+            pos_tag: pos tag in nltk.pos_tag format
+        Return:
+            morpho_tags in format {'pos_tag', 'plur', 'tense', 'comp', 'supr'}
         """
         morpho_tag = {}
         split = token.split('_')
@@ -242,7 +263,12 @@ class EnInflector:
         return morpho_tag
     
     def inflect_token(self, token, morpho_tag):
-        """It inflects token in certain morpho-form
+        """It inflects token in certain morpho-form. Phrasal verbs should be linked with '_' symbol.
+        Args:
+            token: token that will be inflected
+            morpho_tag: morpho_tags in {'pos_tag', 'plur', 'tense', 'comp', 'supr'} format
+        Return:
+            inflected token
         """
         split = token.split('_')
         if morpho_tag['tense']:
@@ -308,9 +334,5 @@ class EnThesaurus:
         synonyms = self._filter(synonyms, lemma)
         return synonyms
 
-
-if __name__ == '__main__':
-    e = EnThesaurus(False)
-    print(e.get_syn('build', 'VBN'))
 
 
