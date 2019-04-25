@@ -22,8 +22,9 @@ from bert_dp.optimization import AdamWeightDecayOptimizer
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.layers.tf_layers import bi_rnn
+from deeppavlov.core.data.utils import zero_pad
 from deeppavlov.core.models.component import Component
+from deeppavlov.core.layers.tf_layers import bi_rnn
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
 
 log = getLogger(__name__)
@@ -467,16 +468,17 @@ class BertNerModel(LRScheduledTFModel):
         Returns:
             dict with fields 'loss', 'head_learning_rate', and 'bert_learning_rate'
         """
-        for ids, ms, y_ms in zip(input_ids, input_masks, y_masks):
+        for i, (ids, ms, y_ms, y_inds) in enumerate(zip(input_ids, input_masks, y_masks, y)):
             assert len(ids) == len(ms) == len(y_ms), \
-                f"ids({len(ids)}) = {ids}, masks({len(ms)}) = {ms}," \
+                    f"ids({len(ids)}) = {ids}, masks({len(ms)}) = {ms}," \
                     f" y_masks({len(y_ms)}) should have the same length."
-        max_seq_len = int(max(sum(y_ms) for y_ms in y_masks))
-        if max_seq_len != len(y[0]):
-            log.warning("input sequence max length should match length of padded y")
-            y = [ys[:max_seq_len] for ys in y]
+            seq_len = sum(y_ms)
+            if seq_len != len(y_inds):
+                log.warning("number of ones in mask should match length of ys")
+                y[i] = y_inds[:seq_len]
+        y_padded = zero_pad(y, dtype=int, padding=0)
 
-        feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks, y=y)
+        feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks, y=y_padded)
 
         if self.ema:
             self.sess.run(self.ema.switch_to_train_op)
