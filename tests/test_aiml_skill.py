@@ -4,7 +4,7 @@ import pytest
 from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
 from deeppavlov import configs, build_model
-from tests.test_quick_start import install_config
+from deeppavlov.utils.pip_wrapper.pip_wrapper import install_from_config
 
 log = getLogger(__name__)
 
@@ -12,7 +12,7 @@ log = getLogger(__name__)
 class TestAIMLSkill:
     def setup(self):
         config_ref = configs.aiml_skill.aiml_skill
-        install_config(config_ref)
+        install_from_config(config_ref)
         aiml_skill = build_model(config_ref, download=True)
         self.agent = DefaultAgent([aiml_skill], skills_selector=HighestConfidenceSelector())
 
