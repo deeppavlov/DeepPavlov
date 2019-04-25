@@ -45,18 +45,16 @@
         "bert_config_file": "{BERT_PATH}/bert_config.json",
         "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
         "attention_probs_keep_prob": 0.5,
-        "use_crf": false,
+        "use_crf": true,
         "return_probas": false,
         "ema_decay": 0.9,
         "encoder_layer_ids": [-1],
-        "optimizer": null,
-        "weight_decay_rate": 1e-6,
+        "optimizer": "tf.train:AdamOptimizer",
         "learning_rate": 1e-3,
         "bert_learning_rate": 2e-5,
         "min_learning_rate": 1e-7,
-        "learning_rate_drop_patience": 30,
+        "learning_rate_drop_patience": 10,
         "learning_rate_drop_div": 1.5,
-        "load_before_drop": true,
         "clip_norm": 1.0,
         "save_path": "{NER_PATH}/model",
         "load_path": "{NER_PATH}/model",
@@ -85,7 +83,7 @@
         "inputs": ["y", "y_pred"]
       }
     ],
-    "validation_patience": 100,
+    "validation_patience": 80,
     "val_every_n_batches": 20,
 
     "log_every_n_batches": 20,
@@ -98,8 +96,9 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "BERT_PATH": "{ROOT_PATH}/downloads/bert_models/cased_L-12_H-768_A-12",
-      "NER_PATH": "{ROOT_PATH}/models/ner_conll2003_bert"
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",
+      "NER_PATH": "{MODELS_PATH}/ner_conll2003_bert"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -110,6 +109,10 @@
       "server_utils": "NER"
     },
     "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_conll2003_bert.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
         "subdir": "{DOWNLOADS_PATH}/bert_models"

@@ -24,7 +24,7 @@ class Conll2003DatasetReader(DatasetReader):
             if dataset_name == 'conll2003':
                 url = 'http://files.deeppavlov.ai/deeppavlov_data/conll2003_v2.tar.gz'
             elif dataset_name == 'collection_rus':
-                url = 'http://files.deeppavlov.ai/deeppavlov_data/collection5.tar.gz'
+                url = 'http://files.deeppavlov.ai/deeppavlov_data/collection3.tar.gz'
             elif dataset_name == 'ontonotes':
                 url = 'http://files.deeppavlov.ai/deeppavlov_data/ontonotes_ner.tar.gz'
             else:
