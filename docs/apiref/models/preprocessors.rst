@@ -46,4 +46,3 @@ deeppavlov.models.preprocessors
 .. autoclass:: deeppavlov.models.preprocessors.odqa_preprocessors.StringMultiplier
 
     .. automethod:: __call__
-

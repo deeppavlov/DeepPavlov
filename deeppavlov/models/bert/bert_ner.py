@@ -34,20 +34,20 @@ class BertNerModel(LRScheduledTFModel):
     """BERT-based model for text tagging.
 
     For each token a tag is predicted. Can be used for any tagging.
-￼
-￼   Args:
-￼       n_tags: number of distinct tags
-￼       keep_prob: dropout keep_prob for non-Bert layers
-￼       bert_config_file: path to Bert configuration file
-￼       pretrained_bert: pretrained Bert checkpoint
-￼       attention_probs_keep_prob: keep_prob for Bert self-attention layers
-￼       hidden_keep_prob: keep_prob for Bert hidden layers
+
+    Args:
+        n_tags: number of distinct tags
+        keep_prob: dropout keep_prob for non-Bert layers
+        bert_config_file: path to Bert configuration file
+        pretrained_bert: pretrained Bert checkpoint
+        attention_probs_keep_prob: keep_prob for Bert self-attention layers
+        hidden_keep_prob: keep_prob for Bert hidden layers
         use_crf: whether to use CRF on top or not
         encoder_layer_ids: list of averaged layers from Bert encoder (layer ids)
-￼       optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
-￼       weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
+            optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
+            weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
         use_birnn: whether to add bi rnn on top of the representations produced by BERT
-        birnn_cell_type: type of cell to use. Either 'lstm' or 'gru'
+        birnn_cell_type: type of cell to use. Either `lstm` or `gru`
         birnn_hidden_size: number of hidden units in the lstm
         ema_decay: what exponential moving averaging to use for network parameters, value from 0.0 to 1.0.
             Values closer to 1.0 put weight on the parameters history and values closer to 0.0 corresponds put weight
@@ -55,18 +55,17 @@ class BertNerModel(LRScheduledTFModel):
         ema_variables_on_cpu: whether to put EMA variables to CPU. It may save a lot of GPU memory
 ￼       return_probas: set True if return class probabilites instead of most probable label needed
         freeze_embeddings: set True to not train input embeddings set True to
-        not train input embeddings set True to not train input embeddings
+            not train input embeddings set True to not train input embeddings
         learning_rate: learning rate of the NER head
         bert_learning_rate: learning rate of the BERT body
-￼       min_learning_rate: min value of learning rate if learning rate decay is used
+            min_learning_rate: min value of learning rate if learning rate decay is used
         learning_rate_drop_patience: how many validations with no improvements to wait
         learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
             validations
         load_before_drop: whether to load best model before dropping learning rate or not
         clip_norm: clip gradients by norm
-￼   """
+    """
 
-    # TODO: add head-only pre-training
     def __init__(self,
                  n_tags: List[str],
                  keep_prob: float,
@@ -153,7 +152,7 @@ class BertNerModel(LRScheduledTFModel):
 
     def _init_graph(self) -> None:
         self._init_placeholders()
-        
+
         self.seq_lengths = tf.reduce_sum(self.y_masks_ph, axis=1)
 
         self.bert = BertModel(config=self.bert_config,
@@ -197,10 +196,10 @@ class BertNerModel(LRScheduledTFModel):
                                                     shape=[self.n_tags, self.n_tags],
                                                     initializer=tf.zeros_initializer())
                 log_likelihood, transition_params = \
-                        tf.contrib.crf.crf_log_likelihood(self.logits,
-                                                          self.y_ph,
-                                                          self.seq_lengths,
-                                                          transition_params)
+                    tf.contrib.crf.crf_log_likelihood(self.logits,
+                                                      self.y_ph,
+                                                      self.seq_lengths,
+                                                      transition_params)
                 loss_tensor = -log_likelihood
                 self._transition_params = transition_params
 
@@ -224,9 +223,9 @@ class BertNerModel(LRScheduledTFModel):
                                              dtype=tf.int32,
                                              name='token_mask_ph')
         self.token_types_ph = \
-                tf.placeholder_with_default(tf.zeros_like(self.input_ids_ph, dtype=tf.int32),
-                                            shape=self.input_ids_ph.shape,
-                                            name='token_types_ph')
+            tf.placeholder_with_default(tf.zeros_like(self.input_ids_ph, dtype=tf.int32),
+                                        shape=self.input_ids_ph.shape,
+                                        name='token_types_ph')
 
         self.y_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='y_ph')
         self.y_masks_ph = tf.placeholder(shape=(None, None),
@@ -308,18 +307,21 @@ class BertNerModel(LRScheduledTFModel):
         Args:
             units: tf.Tensor of shape [batch_size, SUBTOKEN_seq_length, n_features]
             mask: mask of startings of new tokens. Example: for tokens
-                [['[CLS]' 'My', 'capybara', '[SEP]'],
-                 ['[CLS]' 'Your', 'aar', '##dvark', 'is', 'awesome', '[SEP]']]
+
+                    [[`[CLS]` `My`, `capybara`, `[SEP]`],
+                    [`[CLS]` `Your`, `aar`, `##dvark`, `is`, `awesome`, `[SEP]`]]
+
                 the mask will be
-                [[0, 1, 1, 0, 0, 0, 0],
-                 [0, 1, 1, 0, 1, 1, 0]]
+
+                    [[0, 1, 1, 0, 0, 0, 0],
+                    [0, 1, 1, 0, 1, 1, 0]]
 
         Returns:
             word_level_units: Units assembled from ones in the mask. For the
                 example above this units will correspond to the following
 
-                [['My', 'capybara'],
-                 ['Your', 'aar', 'is', 'awesome',]]
+                    [[`My`, `capybara`],
+                    [`Your`, `aar`, `is`, `awesome`,]]
 
                 the shape of this thesor will be [batch_size, TOKEN_seq_length, n_features]
         """
@@ -467,8 +469,8 @@ class BertNerModel(LRScheduledTFModel):
         """
         for ids, ms, y_ms in zip(input_ids, input_masks, y_masks):
             assert len(ids) == len(ms) == len(y_ms), \
-                f"ids({len(ids)}) = {ids}, masks({len(ms)}) = {ms},"\
-                f" y_masks({len(y_ms)}) should have the same length."
+                f"ids({len(ids)}) = {ids}, masks({len(ms)}) = {ms}," \
+                    f" y_masks({len(y_ms)}) should have the same length."
         max_seq_len = int(max(sum(y_ms) for y_ms in y_masks))
         if max_seq_len != len(y[0]):
             log.warning("input sequence max length should match length of padded y")
@@ -501,8 +503,8 @@ class BertNerModel(LRScheduledTFModel):
         """
         for ids, ms, y_ms in zip(input_ids, input_masks, y_masks):
             assert len(ids) == len(ms) == len(y_ms), \
-                f"ids({len(ids)}) = {ids}, masks({len(ms)}) = {ms},"\
-                f" y_masks({len(y_ms)}) should have the same length."
+                f"ids({len(ids)}) = {ids}, masks({len(ms)}) = {ms}," \
+                    f" y_masks({len(y_ms)}) should have the same length."
 
         feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks)
         if self.ema:
