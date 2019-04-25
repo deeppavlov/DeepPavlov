@@ -53,7 +53,7 @@ class BertNerModel(LRScheduledTFModel):
             Values closer to 1.0 put weight on the parameters history and values closer to 0.0 corresponds put weight
             on the current parameters.
         ema_variables_on_cpu: whether to put EMA variables to CPU. It may save a lot of GPU memory
-￼       return_probas: set True if return class probabilites instead of most probable label needed
+        return_probas: set True if return class probabilites instead of most probable label needed
         freeze_embeddings: set True to not train input embeddings set True to
             not train input embeddings set True to not train input embeddings
         learning_rate: learning rate of the NER head
