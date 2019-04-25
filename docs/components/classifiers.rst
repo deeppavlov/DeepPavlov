@@ -1,18 +1,16 @@
 Classification models in DeepPavlov
 ===================================
 
-In this repository one can find code for training and using classification models
-which are implemented as a number of different **neural networks** (for example, shallow-and-wide Convolutional
-Neural Network [1]_) or **sklearn models**.
+In DeepPavlov one can find code for training and using classification models
+which are implemented as a number of different **neural networks** or **sklearn models**.
 Models can be used for binary, multi-class or multi-label classification.
+List of available classifiers (more info see below):
 
-Available classifiers are:
+* **BERT classifier** (see :doc:`here </apiref/models/bert>`) builds BERT [8]_ architecture for classification problem on Tensorflow.
 
-* **deeppavlov.models.bert.BertClassifierModel** (see :doc:`here </apiref/models/bert>`) builds BERT [8]_ architecture for classification problem on Tensorflow. It requires use of ``bert_preprocessor`` to featurize input texts.
+* **Keras classifier** (see :doc:`here </apiref/models/classifiers>`) builds neural network on Keras with tensorflow backend.
 
-* **deeppavlov.models.classifiers.KerasClassificationModel** (see :doc:`here </apiref/models/classifiers>`) builds neural network on Keras with tensorflow backend. One of the available network configurations can be chosen in ``model_name`` parameter in config. List of implemented networks can be found bellow.
-
-* **deeppavlov.models.sklearn.SklearnComponent** (see :doc:`here </apiref/models/sklearn>`) builds most of sklearn classifiers. Chosen model should be passed to ``model_class``, e.g. ``"model_class": "sklearn.neighbors:KNeighborsClassifier"``, as well as ``infer_method`` can be assigned to any sklearn model's prediction methods (e.g. ``predict`` or ``predict_proba``). As for text classification in DeepPavlov we assign list of labels for each sample, it is required to ensure that output of a classifier-``sklearn_component`` is a list of labels for each sample. Therefore, for sklearn component classifier one should set ``ensure_list_output`` to ``true``.
+* **Sklearn classifier** (see :doc:`here </apiref/models/sklearn>`) builds most of sklearn classifiers.
 
 Quick start
 -----------
@@ -20,17 +18,25 @@ Quick start
 Command line
 ~~~~~~~~~~~~
 
-First whatever model you have chose you would need to install additional requirements
-(also available as ``deeppavlov/requirements/tf.txt``, ``deeppavlov/requirements/tf-gpu.txt``,
-``deeppavlov/requirements/bert_dp.txt``, ``deeppavlov/requirements/fasttext.txt``,
-``deeppavlov/requirements/gensim.txt``, ``deeppavlov/requirements/tf-hub.txt``):
+**INSTALL** First whatever model you have chose you would need to install additional requirements:
 
 .. code:: bash
 
     python -m deeppavlov install <path_to_config>
 
 where ``<path_to_config>`` is a path to one of the :config:`provided config files <classifiers>`
-or its name without an extension, for example :config:`intents_snips <classifiers/intents_snips.json>`.
+or its name without an extension, for example :config:`"intents_snips" <classifiers/intents_snips.json>`.
+
+To download pre-trained models, vocabs, embeddings on the dataset of interest one should run the following command
+providing corresponding name of the config file (see above)
+or provide flag ``-d`` for commands like ``interact``, ``interactbot``, ``train``, ``evaluate``.:
+
+.. code:: bash
+
+    python -m deeppavlov download  <path_to_config>
+
+where ``<path_to_config>`` is a path to one of the :config:`provided config files <classifiers>`
+or its name without an extension, for example :config:`"intents_snips" <classifiers/intents_snips.json>`.
 
 When using KerasClassificationModel for **Windows** platforms one have to set `KERAS_BACKEND` to `tensorflow`:
 
@@ -38,14 +44,34 @@ When using KerasClassificationModel for **Windows** platforms one have to set `K
 
     set "KERAS_BACKEND=tensorflow"
 
-One can run the following command to interact in command line interface with provided config:
+**INTERACT** One can run the following command to interact in command line interface with provided config:
 
 .. code:: bash
 
     python -m deeppavlov interact <path_to_config> [-d]
 
 where ``<path_to_config>`` is a path to one of the :config:`provided config files <classifiers>`
-or its name without an extension, for example :config:`intents_snips <classifiers/intents_snips.json>`.
+or its name without an extension, for example :config:`"intents_snips" <classifiers/intents_snips.json>`.
+With the optional ``-d`` parameter all the data required to run selected pipeline will be **downloaded**.
+
+**TRAIN** After preparing the config file (including change of dataset, pipeline elements or parameters)
+one can train model from scratch or from pre-trained model optionally.
+To train model **from scratch** one should set  ``load_path`` to an **empty or non-existing** directory,
+and ``save_path`` to a directory where trained model will be saved.
+To train model **from saved** one should set ``load_path`` to **existing** directory containing
+model's files (pay attention that model can be loaded from saved only if the clue sizes of network
+layers coincide, other parameters of model as well as training parameters,
+embedder, tokenizer, preprocessor and postprocessors could be changed
+but be attentive in case of changing embedder - different embeddings of tokens will not give
+the same results).
+Then training can be run in the following way:
+
+.. code:: bash
+
+    python -m deeppavlov train <path_to_config>
+
+where ``<path_to_config>`` is a path to one of the :config:`provided config files <classifiers>`
+or its name without an extension, for example :config:`"intents_snips" <classifiers/intents_snips.json>`.
 With the optional ``-d`` parameter all the data required to run selected pipeline will be **downloaded**.
 
 Python code
@@ -61,26 +87,37 @@ one needs to set `KERAS_BACKEND` to `tensorflow` in the following way:
 
     os.environ["KERAS_BACKEND"] = "tensorflow"
 
-And then run the following code in the same python file.
-To **download** required data one have to set ``download`` parameter to ``True``.
+**INTERACT** To download required data one have to set ``download`` parameter to ``True``.
+Then one can build and interact a model from configuration file:
 
 .. code:: python
 
     from deeppavlov import build_model, configs
 
-    CONFIG_PATH = configs.classifiers.intents_snips
+    CONFIG_PATH = configs.classifiers.intents_snips  # could also be configuration dictionary or string path or `pathlib.Path` instance
 
-    model = build_model(CONFIG_PATH, download=True)
+    model = build_model(CONFIG_PATH, download=True)  # in case of necessity to download some data
+
+    model = build_model(CONFIG_PATH, download=False)  # otherwise
 
     print(model(["What is the weather in Boston today?"]))
 
     >>> [['GetWeather']]
 
-Presented models
-----------------
+**TRAIN** Also training can be run in the following way:
+
+.. code:: python
+
+    from deeppavlov import train_model, configs
+
+    CONFIG_PATH = configs.classifiers.intents_snips  # could also be configuration dictionary or string path or `pathlib.Path` instance
+
+    model = train_model(CONFIG_PATH, download=True)  # in case of necessity to download some data
+
+    model = train_model(CONFIG_PATH, download=False)  # otherwise
 
 BERT models
-~~~~~~~~~~~
+-----------
 
 BERT (Bidirectional Encoder Representations from Transformers) [8]_ is a Transformer pre-trained on masked language model
 and next sentence prediction tasks. This approach showed state-of-the-art results on a wide range of NLP tasks in
@@ -102,17 +139,18 @@ If one processed classes to one-hot labels in pipeline, ``one_hot_labels`` shoul
 it is followed by ``softmax`` activation (``sigmoid`` if ``multilabel`` parameter is set to ``true`` in config).
 
 Neural Networks on Keras
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 **deeppavlov.models.classifiers.KerasClassificationModel** (see :doc:`here </apiref/models/classifiers>`)
 contains a number of different neural network configurations for classification task.
 Please, pay attention that each model has its own parameters that should be specified in config.
 Information about parameters could be found :doc:`here </apiref/models/classifiers>`.
+One of the available network configurations can be chosen in ``model_name`` parameter in config.
 Below the list of available models is presented:
 
-* ``cnn_model`` -- Shallow-and-wide CNN with max pooling after convolution,
+* ``cnn_model`` -- Shallow-and-wide CNN [1]_ with max pooling after convolution,
 * ``dcnn_model`` -- Deep CNN with number of layers determined by the given number of kernel sizes and filters,
-* ``cnn_model_max_and_aver_pool`` -- Shallow-and-wide CNN with max and average pooling concatenation after convolution,
+* ``cnn_model_max_and_aver_pool`` -- Shallow-and-wide CNN [1]_ with max and average pooling concatenation after convolution,
 * ``bilstm_model`` -- Bidirectional LSTM,
 * ``bilstm_bilstm_model`` -- 2-layers bidirectional LSTM,
 * ``bilstm_cnn_model`` -- Bidirectional LSTM followed by shallow-and-wide CNN,
@@ -123,7 +161,7 @@ Below the list of available models is presented:
 
 
 Sklearn models
-~~~~~~~~~~~~~~
+--------------
 
 **deeppavlov.models.sklearn.SklearnComponent** (see :doc:`here </apiref/models/sklearn>`) is
 a universal wrapper for all ``sklearn`` model that could be fitted.
@@ -131,6 +169,10 @@ One can set ``model_class`` parameter to full name of model (for example,
 ``sklearn.feature_extraction.text:TfidfVectorizer`` or ``sklearn.linear_model:LogisticRegression``).
 Parameter ``infer_method`` should be set to class method for prediction
 (``predict``, ``predict_proba``, ``predict_log_proba`` or ``transform``).
+As for text classification in DeepPavlov we assign list of labels for each sample,
+it is required to ensure that output of a classifier-``sklearn_component`` is a list of labels for each sample.
+Therefore, for sklearn component classifier one should set ``ensure_list_output`` to ``true``.
+
 
 Pre-trained models
 ------------------
@@ -275,117 +317,16 @@ Therefore, this model is available only for interaction.
 .. _`Yahoo-L31`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 .. _`Yahoo-L6`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 
-Download pre-trained model
---------------------------
 
-To download pre-trained models, vocabs, embeddings on the dataset of interest one should run the following command
-providing corresponding name of the config file (see above):
+How to train on other datasets
+------------------------------
 
-.. code:: bash
-
-    python -m deeppavlov download  <path_to_config>
-
-where ``<path_to_config>`` is a path to one of the :config:`provided config files <classifiers>`
-or its name without an extension, for example :config:`intents_snips <classifiers/intents_snips.json>`.
-
-or provide flag ``-d`` for commands like ``interact``, ``interactbot``, ``train``, ``evaluate``.
-
-Infer from pre-trained model
-----------------------------
-
-Pre-trained models can be inferred from **command line** in the following way
-(for 'interactbot' mode one should specify a Telegram bot token in ``-t`` parameter or in the ``TELEGRAM_TOKEN``
-environment variable):
-
-.. code:: bash
-
-    python -m deeppavlov interact deeppavlov/configs/classifiers/intents_dstc2.json [-d]
-
-or
-
-.. code:: bash
-
-    python -m deeppavlov interactbot deeppavlov/configs/classifiers/intents_dstc2.json -t <TELEGRAM_TOKEN> [-d]
-
-or in **python** code:
-
-.. code:: python
-
-    from deeppavlov import build_model, configs
-
-    snips_model = build_model(configs.classifiers.intents_snips , download=True)
-    snips_model(["Hello! What is the weather in Boston tomorrow?"])
-
-Now user can enter a text string and get output of the model: array of classes names
-which the string belongs to or probability distribution among all the considered classes
-(take into account that for multi-class classification sum of probabilities
-is not equal to 1).
-
-An example of interacting the model from :config:`intents_dstc2.json <classifiers/intents_dstc2.json>`
-
-.. code:: bash
-
-    :: hey! I want cheap restaurant
-    >> ['inform_pricerange']
-
-and an example of interacting the model from
-:config:`intents_dstc2_big.json <classifiers/intents_dstc2_big.json>`
-
-.. code:: bash
-
-    :: I want cheap chinese restaurant
-    >> ['inform_food', 'inform_pricerange']
-
-Train model
------------
-
-Training from scratch or from saved
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-After preparing the config file (including change of dattaset, pipeline elements or parameters)
-one can train model from scratch or from pre-trained model optionally.
-To **train model from scratch** one should set  ``load_path`` to an **empty or non-existing** directory,
-and ``save_path`` to a directory where trained model will be saved.
-To **train model from saved** one should set ``load_path`` to **existing** directory containing
-model's files (pay attention that model can be loaded from saved only if the clue sizes of network
-layers coincide, other parameters of model as well as training parameters,
-embedder, tokenizer, preprocessor and postprocessors could be changed
-but be attentive in case of changing embedder - different embeddings of tokens will not give
-the same results).
-Then training can be run in the following way in **command line**:
-
-.. code:: bash
-
-    python -m deeppavlov train <path_to_config>
-
-where ``<path_to_config>`` is a path to one of the :config:`provided config files <classifiers>`
-or its name without an extension, for example :config:`intents_snips <classifiers/intents_snips.json>`.
-If one needs to download some data linked in config, one could add ``-d`` parameter.
-
-And training can be run in the following way from **python** code:
-
-.. code:: python
-
-    from deeppavlov import train_model, configs
-
-    CONFIG_PATH = configs.classifiers.intents_snips # could also be configuration dictionary or string path or `pathlib.Path` instance
-
-    model = train_model(CONFIG_PATH, download=True) # in case of necessity to download some data
-
-    model = train_model(CONFIG_PATH, download=False) # otherwise
-
-
-Train on other datasets
-~~~~~~~~~~~~~~~~~~~~~~~
-
-Constructing intents from DSTC 2 makes ``Dstc2IntentsDatasetIterator`` difficult to use.
-Therefore, we also provide another dataset reader ``BasicClassificationDatasetReader`` and dataset
+We provide dataset reader ``BasicClassificationDatasetReader`` and dataset
 ``BasicClassificationDatasetIterator`` to work with ``.csv`` and ``.json`` files. These classes are described in
-``deeppavlov/dataset_readers/basic_classification_reader.py`` and
-``deeppavlov/dataset_iterators/basic_classification_dataset_iterator.py``.
+:doc:`readers docs </apiref/dataset_readers>` and :doc:`dataset iterators docs </apiref/dataset_iterators>`.
 
 Data files should be in the following format (classes can be separated by custom symbol
-given in the config as ``class_sep``):
+given in the config as ``class_sep``, here ``class_sep=","``):
 
 +-----------+---------------------------------+
 | x         | y                               |
@@ -411,17 +352,12 @@ Then training process can be run in the same way:
 
 .. code:: bash
 
-    python -m deeppavlov train "path_to_config"
-
-The current version of :config:`intents_snips_big.json <classifiers/intents_snips_big.json>` contains parameters for
-intent recognition for SNIPS [7]_ benchmark dataset that was restored in
-``.csv`` format and will be downloaded automatically.
+    python -m deeppavlov train <path_to_config>
 
 Comparison
 ----------
 
-As no one had published intent recognition for DSTC-2 data, the
-comparison of the presented model is given on **SNIPS** dataset [7]_. The
+The comparison of the presented model is given on **SNIPS** dataset [7]_. The
 evaluation of model scores was conducted in the same way as in [3]_ to
 compare with the results from the report of the authors of the dataset.
 The results were achieved with tuning of parameters and embeddings
@@ -451,10 +387,10 @@ trained on Reddit dataset.
 How to improve the performance
 ------------------------------
 
-
 -  One can use FastText [4]_ to train embeddings that are better suited
    for considered datasets.
--  One can use ELMo [5]_ embeddings.
+-  One can use some custom preprocessing to clean texts.
+-  One can use ELMo [5]_ or BERT [8]_.
 -  All the parameters should be tuned on the validation set.
 
 References
