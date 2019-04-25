@@ -27,7 +27,21 @@ ranking. We provide pre-trained models and examples on how to use BERT with Deep
 
 BERT for Classification
 -----------------------
-TODO
+
+**deeppavlov.models.bert.BertClassifierModel** (see :doc:`here </apiref/models/bert>`) provides easy to use
+solution for classification problem using pre-trained BERT.
+One can use several pre-trained English, multi-lingual and Russian BERT models that are listed above.
+
+Two main components of BERT classifier pipeline in DeepPavlov are
+``deeppavlov.models.preprocessors.BertPreprocessor`` (see :doc:`here </apiref/models/bert>`)
+and ``deeppavlov.models.bert.BertClassifierModel`` (see :doc:`here </apiref/models/bert>`).
+Non-processed texts should be given to ``bert_preprocessor`` for tokenization on subtokens,
+encoding subtokens with their indices and creating tokens and segment masks.
+If one processed classes to one-hot labels in pipeline, ``one_hot_labels`` should be set to ``true``.
+
+``bert_classifier`` has a dense layer of number of classes size upon pooled outputs of Transformer encoder,
+it is followed by ``softmax`` activation (``sigmoid`` if ``multilabel`` parameter is set to ``true`` in config).
+
 
 BERT for Named Entity Recognition (Sequence Tagging)
 ----------------------------------------------------
