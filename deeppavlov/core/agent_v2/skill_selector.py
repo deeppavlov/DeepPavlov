@@ -1,27 +1,11 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List
 from collections import defaultdict
 
 from deeppavlov.core.agent_v2.config import SKILLS
+from deeppavlov.core.agent_v2.service import Service
 
 
-class SkillSelector:
-    def __init__(self, rest_caller=None):
-        self.rest_caller = rest_caller
-
-    def __call__(self, state: Dict) -> Tuple[List[str], List[str], List[float]]:
-        """
-        Select a single response for each dialog in the state.
-
-        Args:
-            state:
-
-        Returns: a list of skill names
-
-        """
-        raise NotImplementedError
-
-
-class ChitchatQASelector(SkillSelector):
+class ChitchatQASelector(Service):
     SKILL_NAMES_MAP = {
         "chitchat": ["chitchat", "hellobot", "sberchat", "gen_chitchat"],
         "odqa": ["odqa", "kbqa", "generalqa", "mailruqa"]
