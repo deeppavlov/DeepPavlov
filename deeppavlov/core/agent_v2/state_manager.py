@@ -1,10 +1,17 @@
 from datetime import datetime
-from typing import Sequence, Hashable, Any, Optional
+from typing import Sequence, Hashable, Any, Optional, Dict
 
 from deeppavlov.core.agent_v2.state_schema import Human, Bot, Utterance, HumanUtterance, BotUtterance, Dialog
 from deeppavlov.core.agent_v2.connection import state_storage
 from deeppavlov.core.agent_v2.bot import BOT
 from deeppavlov.core.agent_v2 import VERSION
+
+
+def get_state(dialogs: Sequence[Dialog]):
+    state = {'version': VERSION, 'dialogs': []}
+    for d in dialogs:
+        state['dialogs'].append(d.to_dict())
+    return state
 
 
 class StateManager:
@@ -60,31 +67,25 @@ class StateManager:
             dialog.save()
 
     @classmethod
-    def add_bot_utterances(cls, dialogs: Sequence[Dialog], texts: Sequence[str], sent_texts: Sequence[str],
+    def add_bot_utterances(cls, dialogs: Sequence[Dialog], orig_texts: Sequence[str], texts: Sequence[str],
                            date_times: Sequence[datetime], active_skills: Sequence[str],
                            confidences: Sequence[float], annotations: Optional[Sequence[dict]] = None) -> None:
         if annotations is None:
             annotations = [None] * len(dialogs)
 
-        for dialog, text, s_text, date_time, active_skill, confidence, anno in zip(dialogs, texts, sent_texts,
-                                                                                   date_times, active_skills,
-                                                                                   confidences, annotations):
-            utterance = cls.create_new_bot_utterance(text, s_text, dialog.bot, date_time, active_skill, confidence, anno)
+        for dialog, orig_text, text, date_time, active_skill, confidence, anno in zip(dialogs, orig_texts, texts,
+                                                                                      date_times, active_skills,
+                                                                                      confidences, annotations):
+            utterance = cls.create_new_bot_utterance(orig_text, text, dialog.bot, date_time, active_skill, confidence,
+                                                     anno)
             dialog.utterances.append(utterance)
             dialog.save()
 
     @staticmethod
-    def add_annotations(utterances: Sequence[Utterance], annotations: Sequence[dict]):
+    def add_annotations(utterances: Sequence[Utterance], annotations: Sequence[Dict]):
         for utt, ann in zip(utterances, annotations):
             utt.annotations = ann
             utt.save()
-
-    @staticmethod
-    def get_state(dialogs: Sequence[Dialog]):
-        state = {'version': VERSION, 'dialogs': []}
-        for d in dialogs:
-            state['dialogs'].append(d.to_dict())
-        return state
 
     @staticmethod
     def create_new_dialog(user, bot, location=None, channel_type=None):
@@ -118,9 +119,9 @@ class StateManager:
         return utt
 
     @staticmethod
-    def create_new_bot_utterance(text, sent_text, user, date_time, active_skill, confidence, annotations=None):
-        utt = BotUtterance(text=text,
-                           sent_text=sent_text,
+    def create_new_bot_utterance(orig_text, text, user, date_time, active_skill, confidence, annotations=None):
+        utt = BotUtterance(orig_text=orig_text,
+                           text=text,
                            user=user,
                            date_time=date_time,
                            active_skill=active_skill,
@@ -131,7 +132,7 @@ class StateManager:
 
     @staticmethod
     def update_me_object(me_obj, kwargs):
-        me_obj.update(**kwargs)
+        me_obj.modify(**kwargs)
         me_obj.save()
 
     @staticmethod

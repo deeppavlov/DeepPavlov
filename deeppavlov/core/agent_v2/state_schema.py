@@ -1,5 +1,5 @@
 from mongoengine import DynamicDocument, ReferenceField, ListField, StringField, DynamicField, \
-    DateTimeField, FloatField, DictField, CachedReferenceField
+    DateTimeField, FloatField, DictField
 
 
 class User(DynamicDocument):
@@ -73,7 +73,7 @@ class HumanUtterance(Utterance):
 
 
 class BotUtterance(Utterance):
-    sent_text = StringField()
+    orig_text = StringField()
     active_skill = StringField()
     user = ReferenceField(Bot, required=True)
     confidence = FloatField()
@@ -84,7 +84,7 @@ class BotUtterance(Utterance):
             'active_skill': self.active_skill,
             'confidence': self.confidence,
             'text': self.text,
-            'sent_text': self.sent_text or self.text,
+            'orig_text': self.orig_text,
             'user_id': str(self.user.id),
             'annotations': self.annotations,
             'date_time': str(self.date_time)
@@ -93,7 +93,7 @@ class BotUtterance(Utterance):
 
 class Dialog(DynamicDocument):
     location = DynamicField()
-    utterances = ListField(default=[])
+    utterances = ListField(ReferenceField(Utterance), default=[])
     user = ReferenceField(Human, required=True)
     bot = ReferenceField(Bot, required=True)
     channel_type = StringField(choices=['telegram', 'vk', 'facebook'], default='telegram')
