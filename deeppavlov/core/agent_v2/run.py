@@ -12,7 +12,7 @@ def model_function():
     from deeppavlov.core.agent_v2.state_manager import StateManager
     from deeppavlov.core.agent_v2.skill_manager import SkillManager
     from deeppavlov.core.agent_v2.rest_caller import RestCaller
-    from deeppavlov.core.agent_v2.preprocessor import IndependentPreprocessor
+    from deeppavlov.core.agent_v2.service import Service
     from deeppavlov.core.agent_v2.postprocessor import DefaultPostprocessor
     from deeppavlov.core.agent_v2.response_selector import ConfidenceResponseSelector
     from deeppavlov.core.agent_v2.skill_selector import ChitchatQASelector
@@ -26,10 +26,9 @@ def model_function():
     state_manager = StateManager()
 
     anno_names, anno_urls = zip(*[(annotator['name'], annotator['url']) for annotator in ANNOTATORS])
-    preprocessor = IndependentPreprocessor(
+    preprocessor = Service(
         rest_caller=RestCaller(max_workers=MAX_WORKERS, names=anno_names, urls=anno_urls))
     postprocessor = DefaultPostprocessor()
-
     skill_caller = RestCaller(max_workers=MAX_WORKERS)
     response_selector = ConfidenceResponseSelector()
     ss_names, ss_urls = zip(*[(annotator['name'], annotator['url']) for annotator in SKILL_SELECTORS])

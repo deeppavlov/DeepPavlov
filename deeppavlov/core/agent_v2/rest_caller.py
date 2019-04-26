@@ -1,5 +1,4 @@
 from concurrent.futures import ThreadPoolExecutor
-from functools import partial
 from typing import Dict, List, Any, Optional, Sequence, Union
 
 import requests
