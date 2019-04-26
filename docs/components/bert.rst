@@ -44,8 +44,14 @@ it is followed by ``softmax`` activation (``sigmoid`` if ``multilabel`` paramete
 
 
 BERT for Named Entity Recognition (Sequence Tagging)
+
 ----------------------------------------------------
-TODO
+Pre-trained BERT model can be used for sequence tagging. Examples of usage of BERT for sequence tagging can be
+found here :doc:`here </components/ner>`. To tag each word epresentations of the first sub-word elements in each word
+are extracted from representations produced by BERT. So for each word there is only one vector produced.
+These representations are passed to a dense layer or Bi-RNN layer to produce distribution over tags. There is
+also an optional CRF layer on the top.
+
 
 BERT for Context Question Answering (SQuAD)
 -------------------------------------------

@@ -4,6 +4,8 @@ Named Entity Recognition (NER)
 Train and use the model
 -----------------------
 
+There are two main types of models available: standard RNN based and BERT based. To see details about BERT based
+models see :doc:`here </components/bert>`.
 Any pre-trained model can be used for inference from both Command Line Interface (CLI) and Python. Before using the
 model make sure that all required packages are installed using the command:
 
@@ -74,7 +76,7 @@ The data for training should be placed in the folder provided in the config:
     print(config_dict['dataset_reader']['data_path'])
     >>> '~/.deeppavlov/downloads/ontonotes_ner_data'
 
-There must be three txt files: train.txt, valid.txt, and test.txt. Furthermore the `data_path` can be changeged from coder
+There must be three txt files: train.txt, valid.txt, and test.txt. Furthermore the `data_path` can be changeged from code.
 
 
 NER task
