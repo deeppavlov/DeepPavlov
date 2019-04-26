@@ -61,10 +61,18 @@ class Chainer(Component):
         self.forward_map = set(self.in_x)
         self.train_map = self.forward_map.union(self.in_y)
 
+        self._components_dict = {}
+
         self.main = None
 
-    def append(self, component: Component, in_x: [str, list, dict]=None, out_params: [str, list]=None,
-               in_y: [str, list, dict]=None, main=False):
+    def __getitem__(self, item):
+        return self._components_dict[item]
+
+    def _ipython_key_completions_(self):
+        return self._components_dict.keys()
+
+    def append(self, component: Component, in_x: [str, list, dict] = None, out_params: [str, list] = None,
+               in_y: [str, list, dict] = None, main: bool = False):
         if isinstance(in_x, str):
             in_x = [in_x]
         if isinstance(in_y, str):
