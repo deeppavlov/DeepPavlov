@@ -235,8 +235,8 @@ class LRScheduledModel:
 
         self._mom = start_val
         num_it, self._mom_update_on_batch = momentum_decay_epochs, False
-        self._mom_update_on_batch = momentum_decay_batches > 0
-        num_it = momentum_decay_epochs if self._mom_update_on_batch else momentum_decay_batches
+        if momentum_decay_batches > 0:
+            num_it, self._mom_update_on_batch = momentum_decay_batches, False
 
         self._mom_schedule = DecayScheduler(start_val=start_val, end_val=end_val,
                                             num_it=num_it, dec_type=dec_type,
