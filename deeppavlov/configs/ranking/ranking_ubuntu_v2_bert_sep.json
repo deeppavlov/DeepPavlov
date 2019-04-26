@@ -12,7 +12,7 @@
     "in_y": ["y"],
     "pipe": [
       {
-        "class_name": "bert_ranker_preprocessor",
+        "class_name": "bert_sep_ranker_preprocessor",
         "vocab_file": "{DOWNLOADS_PATH}/bert_models/uncased_L-12_H-768_A-12/vocab.txt",
         "do_lower_case": true,
         "max_seq_length": 128,
@@ -20,9 +20,8 @@
         "out": ["bert_features"]
       },
       {
-        "class_name": "bert_ranker",
+        "class_name": "bert_sep_ranker",
         "n_classes": 2,
-        "one_hot_labels": false,
         "bert_config_file": "{DOWNLOADS_PATH}/bert_models/uncased_L-12_H-768_A-12/bert_config.json",
         "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/uncased_L-12_H-768_A-12/bert_model.ckpt",
         "save_path": "{DOWNLOADS_PATH}/model_uncased",
@@ -42,7 +41,7 @@
     "out": ["predictions"]
   },
   "train": {
-    "batch_size": 32,
+    "batch_size": 8,
     "pytest_max_batches": 2,
     "train_metrics": [],
     "metrics": ["r@1", "r@2", "r@5"],

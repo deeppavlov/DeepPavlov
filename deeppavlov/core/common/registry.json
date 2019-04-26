@@ -11,6 +11,8 @@
   "bert_preprocessor": "deeppavlov.models.preprocessors.bert_preprocessor:BertPreprocessor",
   "bert_ranker": "deeppavlov.models.bert.bert_ranker:BertRankerModel",
   "bert_ranker_preprocessor": "deeppavlov.models.preprocessors.bert_preprocessor:BertRankerPreprocessor",
+  "bert_sep_ranker": "deeppavlov.models.bert.bert_ranker:BertSepRankerModel",
+  "bert_sep_ranker_preprocessor": "deeppavlov.models.preprocessors.bert_preprocessor:BertSepRankerPreprocessor",
   "bilstm_gru_nn": "deeppavlov.models.ranking.bilstm_gru_siamese_network:BiLSTMGRUSiameseNetwork",
   "bilstm_nn": "deeppavlov.models.ranking.bilstm_siamese_network:BiLSTMSiameseNetwork",
   "bow": "deeppavlov.models.embedders.bow_embedder:BoWEmbedder",
