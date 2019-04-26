@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import random
+import re
 from logging import getLogger
-from typing import Tuple, List, Optional
+from typing import Tuple, List, Optional, Union
 
 import numpy as np
 from bert_dp.preprocessing import convert_examples_to_features, InputExample, InputFeatures
@@ -108,6 +109,7 @@ class BertNerPreprocessor(Component):
                  provide_subword_tags: bool = False,
                  cut_sequences: bool = False,
                  **kwargs):
+        self._re_tokenizer = re.compile(r"[\w']+|[^\w ]")
         self.provide_subword_tags = provide_subword_tags
         self.mode = kwargs.get('mode')
         self.max_seq_length = max_seq_length
@@ -119,9 +121,11 @@ class BertNerPreprocessor(Component):
         self.cut_sequences = cut_sequences
 
     def __call__(self,
-                 tokens: List[List[str]],
+                 tokens: Union[List[List[str]], List[str]],
                  tags: List[List[str]] = None,
                  **kwargs):
+        if isinstance(tokens[0], str):
+            tokens = [re.findall(self._re_tokenizer, s) for s in tokens]
         subword_tokens, subword_tok_ids, subword_masks, subword_tags = [], [], [], []
         for i in range(len(tokens)):
             toks = tokens[i]
