@@ -166,7 +166,7 @@ class BertNerPreprocessor(Component):
         subword_masks = zero_pad(subword_masks, dtype=int, padding=0)
         if tags is not None:
             if self.provide_subword_tags:
-                return subword_tokens, subword_tok_ids, subword_masks, subword_tags
+                return tokens, subword_tokens, subword_tok_ids, subword_masks, subword_tags
             else:
                 nonmasked_tags = [[t for t in ts if t != 'X'] for ts in tags]
                 for swts, swids, swms, ts in zip(subword_tokens,
@@ -179,8 +179,8 @@ class BertNerPreprocessor(Component):
                         log.warning(f'Masks len: {len(swms)}, sum: {sum(swms)}')
                         log.warning(f'Masks: {swms}')
                         log.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
-                return subword_tokens, subword_tok_ids, subword_masks, nonmasked_tags
-        return subword_tokens, subword_tok_ids, subword_masks
+                return tokens, subword_tokens, subword_tok_ids, subword_masks, nonmasked_tags
+        return tokens, subword_tokens, subword_tok_ids, subword_masks
 
     @staticmethod
     def _ner_bert_tokenize(tokens: List[str],
