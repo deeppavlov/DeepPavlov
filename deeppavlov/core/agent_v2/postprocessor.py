@@ -1,28 +1,21 @@
 from typing import Sequence
-from abc import abstractmethod, ABCMeta
 
+from deeppavlov.core.agent_v2.state_schema import Dialog
 from deeppavlov.models.preprocessors.person_normalizer import PersonNormalizer
 from deeppavlov.models.tokenizers.utils import detokenize
 
 
-class Postprocessor(metaclass=ABCMeta):
-
-    @abstractmethod
-    def __call__(self, state: dict) -> Sequence[str]:
-        raise NotImplementedError
-
-
-class DefaultPostprocessor(Postprocessor):
+class DefaultPostprocessor:
     def __init__(self) -> None:
         self.person_normalizer = PersonNormalizer(per_tag='PER')
 
-    def __call__(self, state: dict) -> Sequence[str]:
+    def __call__(self, dialogs: Sequence[Dialog]) -> Sequence[str]:
         new_responses = []
-        for d_state in state['dialogs']:
+        for d in dialogs:
             # get tokens & tags
-            response = d_state['utterances'][-1]
+            response = d['utterances'][-1]
             ner_annotations = response['annotations']['ner']
-            user_name = d_state['user']['profile']['name']
+            user_name = d['user']['profile']['name']
             # replace names with user name
             if ner_annotations and (response['active_skill'] == 'chitchat'):
                 response_toks_norm, _ = \

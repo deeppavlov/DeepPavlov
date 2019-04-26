@@ -6,6 +6,7 @@ from typing import List, Dict, Optional, Sequence
 from deeppavlov.core.agent_v2.config import MAX_WORKERS, SKILLS
 from deeppavlov.core.agent_v2.hardcode_utterances import NOANSWER_UTT
 from deeppavlov.core.agent_v2.state_schema import Human
+from deeppavlov.core.agent_v2.state_manager import get_state
 
 
 class SkillManager:
@@ -31,19 +32,19 @@ class SkillManager:
         self.profile_handlers = [name for name in reversed(profile_handlers) if name in self.skill_names]
         self.profile_fields = list(Human.profile.default.keys())
 
-    def __call__(self, state):
+    def __call__(self, dialogs):
 
-        user_profiles = self._get_user_profiles(self.skill_responses, state['dialogs'])
-        selected_skill_names, utterances, confidences = self.response_selector(self.skill_responses, state)
+        user_profiles = self._get_user_profiles(self.skill_responses)
+        selected_skill_names, utterances, confidences = self.response_selector(self.skill_responses)
         utterances = [utt if utt else NOANSWER_UTT for utt in utterances]
         return selected_skill_names, utterances, confidences, user_profiles
 
-    def _get_user_profiles(self, skill_responses, dialogs) -> Optional[List[Dict]]:
+    def _get_user_profiles(self, skill_responses) -> Optional[List[Dict]]:
         """
         Get user profile descriptors from compatible skills.
         """
         user_profiles = []
-        for sr, dialog in zip(skill_responses, dialogs):
+        for sr in skill_responses:
             profile = {}
             for item in self.profile_fields:
                 for skill in self.profile_handlers:
@@ -54,16 +55,15 @@ class SkillManager:
             user_profiles.append(profile)
         return user_profiles
 
-    def get_skill_responses(self, state):
-        dialogs = state['dialogs']
+    def get_skill_responses(self, dialogs):
         n_dialogs = len(dialogs)
         skill_names = [s['name'] for s in self.skills]
         skill_urls = [s['url'] for s in self.skills]
+        state = get_state(dialogs)
         if self.skill_selector is not None:
             selected_skills = self.skill_selector(state)
         else:
-            selected_skills = skill_names * n_dialogs
-
+            selected_skills = [skill_names] * n_dialogs
         excluded_skills = []
         for active_names in selected_skills:
             excluded_skills.append([n not in active_names for n in skill_names])
@@ -79,7 +79,6 @@ class SkillManager:
                 continue
             s['dialogs'] = compressed_dialogs
             payloads.append(s)
-
         skill_responses = self.skill_caller(payload=payloads, names=skill_names, urls=skill_urls)
         for response, dialog in zip(skill_responses, dialogs):
             # if 'hellobot' in response and len(dialog['utterances']) == 1 and not dialog['user']['profile']['name']:
