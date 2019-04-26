@@ -289,7 +289,7 @@ class BertNerModel(LRScheduledTFModel):
         # train_op for bert variables
         kwargs['learnable_scopes'] = ('bert/encoder', 'bert/embeddings')
         if self.freeze_embeddings:
-            kwargs['learnable_scope'] = ('bert/encoder',)
+            kwargs['learnable_scopes'] = ('bert/encoder',)
         bert_learning_rate = learning_rate * self.bert_learning_rate_multiplier
         bert_train_op = super().get_train_op(loss,
                                              bert_learning_rate,
