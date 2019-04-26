@@ -66,6 +66,9 @@ class Chainer(Component):
         self.main = None
 
     def __getitem__(self, item):
+        if isinstance(item, int):
+            in_params, out_params, component = self.train_pipe[item]
+            return component
         return self._components_dict[item]
 
     def _ipython_key_completions_(self):
