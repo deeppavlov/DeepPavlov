@@ -1,18 +1,27 @@
 from datetime import datetime
 import uuid
 
-from deeppavlov.core.agent_v2.state_schema import Human, Bot, Utterance, BotUtterance, Dialog
+from deeppavlov.core.agent_v2.state_schema import Human, Bot, Utterance, BotUtterance, Dialog, HumanUtterance
 from deeppavlov.core.agent_v2.connection import state_storage
 from deeppavlov.core.agent_v2.bot import BOT
 
 ########################### Test case #######################################
 
 # User.drop_collection()
+
+
+state = {'version': '0.10.1', 'dialogs': []}
+for d in Dialog.objects:
+    state['dialogs'].append(d.to_dict())
+
+print(state)
+
 Human.drop_collection()
 
 Dialog.objects.delete()
 Utterance.objects.delete()
 BotUtterance.objects.delete()
+HumanUtterance.objects.delete()
 # User.objects.delete()
 Human.objects.delete()
 
