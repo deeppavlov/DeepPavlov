@@ -122,8 +122,19 @@ class EnWordFilter(WordFilter):
 
 
 class RuWordFilter(WordFilter):
-    """
-
+    """Class that decides which tokens should not be replaced, for russian language
+    Args:
+        replace_freq: [0, 1] propability of token that passed thought other filters to be replaced
+        isalpha_only: filter based on string method 'isalpha'
+        not_replaced_tokens: List of tokens that shouldn't be replaced
+        replaced_pos_tags: List of pos_tags that can be replaced, e.g. 's' for Noun, 'v' for Verb, 'a' for Adjective, 'r' for Adverb, 'num' for Numerical
+        is_replace_numeral_adjective: to replace numeral adjective or not, based on pos_tag
+    Attributes:
+        replace_freq: [0, 1] propability of token that passed thought other filters to be replaced
+        isalpha_only: filter based on string method 'isalpha'
+        not_replaced_tokens: List of tokens that shouldn't be replaced
+        replaced_pos_tags: List of pos_tags that can be replaced, e.g. 's' for Noun, 'v' for Verb, 'a' for Adjective, 'r' for Adverb, 'num' for Numerical
+        is_replace_numeral_adjective: to replace numeral adjective or not, based on pos_tag
     """
 
     def __init__(self,
@@ -131,7 +142,7 @@ class RuWordFilter(WordFilter):
                  isalpha_only: bool,
                  not_replaced_tokens: List[str],
                  replaced_pos_tags: List[str],
-                 is_use_numeral_adjective):
+                 is_replace_numeral_adjective):
         super(RuWordFilter, self).__init__(replace_freq, isalpha_only, not_replaced_tokens)
         self.replaced_pos_tags = replaced_pos_tags
         self.postag_to_nltk_postag = {
@@ -141,13 +152,20 @@ class RuWordFilter(WordFilter):
             'a': ['A'],
             'r': ['ADV']
         }
-        if is_use_numeral_adjective:
+        if is_replace_numeral_adjective:
             self.postag_to_nltk_postag['a'].append('ANUM')
 
     def get_nltk_replaced_postags(self, tag_list):
         return sum(map(lambda x: self.postag_to_nltk_postag[x], tag_list), [])
 
     def filter_based_on_pos_tag(self, tokens, pos_tags):
+        """Function that filters tokens with pos_tags and rules
+        Args:
+            tokens: tokens that will be filtered
+            pos_tags: pos_tags for 'tokens', in nltk.pos_tag format
+        Return:
+            List of boolean values
+        """
         replaced_nltk_postags = self.get_nltk_replaced_postags(self.replaced_pos_tags)
         print(pos_tags)
         return map(lambda x: x[1] in replaced_nltk_postags, pos_tags)

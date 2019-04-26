@@ -1,82 +1,63 @@
-from deeppavlov.models.tokenizers.nltk_moses_tokenizer import NLTKMosesTokenizer
-
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.estimator import Component
+from utils import CaseSaver
+from utils import RuInflector
+from utils import RuThesaurus
+from utils import EnInflector
+from utils import EnThesaurus
+from utils import EnWordFilter
+from utils import RuWordFilter
 from deeppavlov.models.spelling_correction.electors.kenlm_elector import KenlmElector
+from nltk import pos_tag as nltk_pos_tagger
 
-from nltk import sent_tokenize
-from nltk import pos_tag
-from nltk.tokenize.moses import MosesDetokenizer
-from itertools import repeat
-
-from typing import List
-from ru_wordnet_reader import RuSynWordnet
-from en_wordnet_reader import EnSynWordnet
-
-
-
-class ThesaurusAug():
+class ThesaurusAug:
     """
-    666
     """
-    def _download():
-        pass
 
-    def _check_case(self, token):
-        for case_type in self.standard_cases:
-            if token == self.standard_cases[case_type](token):
-                return case_type
-            return 'default'
-    
-    def _filter(self, token):
-        if not(self.isalpha_only and token.isalpha()):
-            return None
-        if not(self.standard_cases_only and (self._check_case(token) == 'default')):
-            return None
-        return token
-
-    def __init__(self, lang: str, standard_cases: dict=None, isalpha_only: bool=True,
-                 standard_cases_only: bool=True):
-        self.supported_lang = ['rus', 'eng']
-        assert(lang in self.supported_lang)
+    def __init__(self,
+                 threshold_of_lm_confidence: float=0.3,
+                 penalty_for_source_token: float=0.5,
+                 kenlm_model_path = None,
+                 kenlm_beam_size: int=4,
+                 replace_freq: float=1.0,
+                 isalpha_only: bool=True,
+                 not_replaced_tokens: List[str]=None,
+                 with_source_token: bool=True,
+                 cases: dict=None,
+                 default_case = None,
+                 lang: str,
+                 replaced_pos_tags: List[str]=None,
+                 ru_thes_dirpath = None,
+                 ru_is_replace_numeral_adjective: bool=True,
+                 en_classical_pluralize: bool=True,
+                 en_is_replace_proper_noun: bool=True,
+                 en_is_replace_modal_verb: bool=True)
+        self.kenlm_elector = KenlmElector(load_path=kenlm_model_path,
+                                          beam_size=kenlm_beam_size)
+        self.case_saver = CaseSaver(cases=cases,
+                                    default_case=default_case)
+        assert lang in ['rus', 'eng'], "it supports only russian and english languages, e.g. 'rus' for russian, 'eng' for english"
+        if lang == 'rus':
+            self.inlfector = RuInflector()
+            self.thesaurus = RuThesaurus(dir_path=ru_thes_dirpath,
+                                         with_source_token=with_source_token)
+            self.word_filter = RuWordFilter(replace_freq=replace_freq,
+                                            isalpha_only=isalpha_only,
+                                            not_replaced_tokens=not_replaced_tokens,
+                                            replaced_pos_tags=replaced_pos_tags,
+                                            is_replace_numeral_adjective=ru_is_replace_numeral_adjective)
+        elif lang == 'eng':
+            self.inflector = EnInflector(classical_pluralize=en_classical_pluralize)
+            self.thesaurus = EnThesaurus(with_source_token=with_source_token)
+            self.word_filter = EnWordFilter(replace_freq=replace_freq,
+                                            isalpha_only=isalpha_only,
+                                            not_replaced_tokens=not_replaced_tokens,
+                                            replaced_pos_tags=replaced_pos_tags,
+                                            is_replace_proper_noun=en_is_replace_proper_noun,
+                                            is_replace_modal_verb=en_is_replace_modal_verb)
+        self.threshold_of_lm_confidence = threshold_of_lm_confidence
         self.lang = lang
-        self.isalpha_only = isalpha_only
-        self.standard_cases_only = standard_cases_only
-        self.tokenizer = NLTKMosesTokenizer()
-        self.detokenizer = MosesDetokenizer()
-        self.thesaurus = RuSynWordnet('./') if lang == 'rus' else EnSynWordnet('./')
-        self.lm = KenlmElector('ru_wiyalen_no_punkt.arpa.binary') if lang == 'rus'\
-            else KenlmElector('en_wiki_no_punkt.arpa.binary')
-        if standard_cases:
-            self.standard_cases = standard_cases
-        else:
-            self.standard_cases = {'default': lambda x: x.lower(),\
-                                    'upper': lambda x: x.upper(),\
-                                    'capit': lambda x: x.capitalize(),\
-                                    'lower': lambda x: x.lower()}
+        self.penalty_for_source_token = penalty_for_source_token
 
-    #необходимо сделать чтобы была возможность подцепить deeppavlov NER 
-    def _replace_by_synonyms(self, batch_text: List[str]):
-        aug_batch_text = []
-        for text in batch_text:
-            sents = [self.tokenizer([sent])[0] for sent in sent_tokenize(text)]
-            print(f"sents {sents}")
-            tagged_sents = [pos_tag(sent) for sent in sents] 
-            print(f"tagged_sents {tagged_sents}")
-            aug_sent = []
-            for sent, tag_sent in zip(sents, tagged_sents):
-                #save the standard cases, because the next processing will require tokens in lowercase 
-                saved_cases = list(map(self._check_case, sent))
-                #token filtering
-                filtered_sent = list(map(self._filter, sent))
-                #lowercasing
-                filtered_sent = list(map(lambda x: x.lower() if x else x, filtered_sent))
-                synset = self.thesaurus.get_synset(filtered_sent, tag_sent)
-                synset = [syn if syn else source for syn, source in zip(synset, sent)]
-                #transfor for kenlm_elector
-                synset = list(map(lambda x: list(zip(repeat(1/len(x), len(x)), x)) if not isinstance(x, str) else [(1,x)], synset))
-                augmented = self.lm([synset])[0]
-                augmented = self.detokenizer.detokenize(augmented, return_str=True)
-                aug_sent.append(augmented)
-            aug_batch_text.append(" ".join(aug_sent))
-        return aug_batch_text
+        def transform_sentece(self, tokens: List[str]) -> List[str]:
+            self.case_saver.save_cases(tokens)
+            tokens_pos_tags = nltk_pos_tagger(tokens, lang=self.)
+            filter_result = self.word_filter
