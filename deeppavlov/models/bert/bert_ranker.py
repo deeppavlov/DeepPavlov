@@ -209,7 +209,7 @@ class BertSepRankerModel(LRScheduledTFModel):
         self.input_ids_b_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='ids_b_ph')
         self.input_masks_b_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='masks_b_ph')
         self.token_types_b_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='token_types_b_ph')
-        self.y_ph = tf.placeholder(shape=(None, self.n_classes), dtype=tf.float32, name='y_ph')
+        self.y_ph = tf.placeholder(shape=(None,), dtype=tf.int32, name='y_ph')
         self.learning_rate_ph = tf.placeholder_with_default(0.0, shape=[], name='learning_rate_ph')
         self.keep_prob_ph = tf.placeholder_with_default(1.0, shape=[], name='keep_prob_ph')
         self.is_train_ph = tf.placeholder_with_default(False, shape=[], name='is_train_ph')
