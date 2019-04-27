@@ -1,7 +1,8 @@
 {
   "dataset_reader": {
     "class_name": "ubuntu_v2_reader",
-    "data_path": "{DOWNLOADS_PATH}/ubuntu_v2_small_data"
+    "sep_by_space": true,
+    "data_path": "{DOWNLOADS_PATH}/ubuntu_v2_data"
   },
   "dataset_iterator": {
     "class_name": "siamese_iterator",
@@ -21,19 +22,12 @@
       },
       {
         "class_name": "bert_ranker",
-        "n_classes": 2,
         "one_hot_labels": false,
         "bert_config_file": "{DOWNLOADS_PATH}/bert_models/uncased_L-12_H-768_A-12/bert_config.json",
         "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/uncased_L-12_H-768_A-12/bert_model.ckpt",
-        "save_path": "{DOWNLOADS_PATH}/model_uncased",
-        "load_path": "{DOWNLOADS_PATH}/model_uncased",
-        "num_ranking_samples": 1,
-        "keep_prob": 0.9,
-        "attention_probs_keep_prob": 1.0,
-        "hidden_keep_prob": 1.0,
+        "save_path": "{MODELS_PATH}/model",
+        "load_path": "{MODELS_PATH}/model",
         "learning_rate": 2e-05,
-        "learning_rate_drop_patience": 2,
-        "learning_rate_drop_div": 2.0,
         "in": ["bert_features"],
         "in_y": ["y"],
         "out": ["predictions"]
@@ -46,9 +40,10 @@
     "pytest_max_batches": 2,
     "train_metrics": [],
     "metrics": ["r@1", "r@2", "r@5"],
-    "validation_patience": 10,
-    "val_every_n_batches": 100,
-    "log_every_n_batches": 100,
+    "validation_patience": 1,
+    "val_every_n_batches": -1,
+    "val_every_n_epochs": 1,
+    "log_every_n_batches": -1,
     "validate_best": true,
     "test_best": true,
     "tensorboard_log_dir": "{MODELS_PATH}/"
@@ -57,7 +52,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/ubuntu_v2_bert"
+      "MODELS_PATH": "{ROOT_PATH}/models/ubuntu_v2_uncased_tok_bert_model"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",

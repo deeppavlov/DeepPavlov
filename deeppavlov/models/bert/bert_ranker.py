@@ -33,7 +33,7 @@ logger = getLogger(__name__)
 
 @register('bert_ranker')
 class BertRankerModel(BertClassifierModel):
-    def __init__(self, bert_config_file, n_classes, keep_prob,
+    def __init__(self, bert_config_file, n_classes=2, keep_prob=0.9,
                  one_hot_labels=False, multilabel=False, return_probas=True,
                  attention_probs_keep_prob=None, hidden_keep_prob=None,
                  optimizer=None, num_warmup_steps=None, weight_decay_rate=0.01,
@@ -99,7 +99,7 @@ class BertRankerModel(BertClassifierModel):
 
 @register('bert_sep_ranker')
 class BertSepRankerModel(LRScheduledTFModel):
-    def __init__(self, bert_config_file, n_classes, keep_prob,
+    def __init__(self, bert_config_file, keep_prob=0.9,
                  one_hot_labels=False, multilabel=False, return_probas=True,
                  attention_probs_keep_prob=None, hidden_keep_prob=None,
                  optimizer=None, num_warmup_steps=None, weight_decay_rate=0.01,
@@ -107,7 +107,6 @@ class BertSepRankerModel(LRScheduledTFModel):
         super().__init__(**kwargs)
 
         self.return_probas = return_probas
-        self.n_classes = n_classes
         self.min_learning_rate = min_learning_rate
         self.keep_prob = keep_prob
         self.one_hot_labels = one_hot_labels
@@ -137,8 +136,6 @@ class BertSepRankerModel(LRScheduledTFModel):
 
         self._init_optimizer()
 
-        self.sess.run(tf.global_variables_initializer())
-
         if pretrained_bert is not None:
             pretrained_bert = str(expand_path(pretrained_bert))
 
@@ -148,15 +145,13 @@ class BertSepRankerModel(LRScheduledTFModel):
             # Exclude optimizer and classification variables from saved variables
             var_list = self._get_saveable_variables(
                 exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'output_weights', 'output_bias'))
-
-            # saver = tf.train.Saver(var_list)
-            # saver.restore(self.sess, pretrained_bert)
             assignment_map = self._get_assignment_map_from_checkpoint(var_list, pretrained_bert)
-            # tf.train.init_from_checkpoint(pretrained_bert, {'/bert/': '/model/bert/'})
             tf.train.init_from_checkpoint(pretrained_bert, assignment_map)
+            self.sess.run(tf.global_variables_initializer())
 
         if self.load_path is not None:
             self.load()
+
 
     def _get_assignment_map_from_checkpoint(self, tvars, init_checkpoint):
         """Compute the union of the current variables and checkpoint variables."""
@@ -200,14 +195,10 @@ class BertSepRankerModel(LRScheduledTFModel):
         output_layer_b = model_b.get_pooled_output()
 
         with tf.variable_scope("loss"):
-            output_layer_a = tf.nn.dropout(output_layer_a, keep_prob=0.9)
-            output_layer_b = tf.nn.dropout(output_layer_b, keep_prob=0.9)
-            if not self.one_hot_labels:
-                one_hot_labels = self.y_ph
-            else:
-                one_hot_labels = tf.one_hot(self.y_ph, depth=self.n_classes, dtype=tf.float32)
-
-            self.loss = tf.contrib.losses.metric_learning.npairs_loss(one_hot_labels, output_layer_a, output_layer_b)
+            output_layer_a = tf.nn.dropout(output_layer_a, keep_prob=self.keep_prob_ph)
+            output_layer_b = tf.nn.dropout(output_layer_b, keep_prob=self.keep_prob_ph)
+            labels = self.y_ph
+            self.loss = tf.contrib.losses.metric_learning.npairs_loss(labels, output_layer_a, output_layer_b)
             logits = tf.multiply(output_layer_a, output_layer_b)
             self.y_probas = tf.reduce_sum(logits, 1)
 
@@ -218,12 +209,7 @@ class BertSepRankerModel(LRScheduledTFModel):
         self.input_ids_b_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='ids_b_ph')
         self.input_masks_b_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='masks_b_ph')
         self.token_types_b_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='token_types_b_ph')
-
-        if not self.one_hot_labels:
-            self.y_ph = tf.placeholder(shape=(None, ), dtype=tf.int32, name='y_ph')
-        else:
-            self.y_ph = tf.placeholder(shape=(None, self.n_classes), dtype=tf.float32, name='y_ph')
-
+        self.y_ph = tf.placeholder(shape=(None, self.n_classes), dtype=tf.float32, name='y_ph')
         self.learning_rate_ph = tf.placeholder_with_default(0.0, shape=[], name='learning_rate_ph')
         self.keep_prob_ph = tf.placeholder_with_default(1.0, shape=[], name='keep_prob_ph')
         self.is_train_ph = tf.placeholder_with_default(False, shape=[], name='is_train_ph')

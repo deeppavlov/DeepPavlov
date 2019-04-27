@@ -16,6 +16,8 @@ import csv
 from pathlib import Path
 from typing import List, Dict, Tuple, Union
 
+from nltk import word_tokenize
+
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
@@ -29,6 +31,8 @@ class UbuntuV2Reader(DatasetReader):
     """
 
     def read(self, data_path: str,
+             sep_by_space: bool = False,
+             positive_samples = False,
              *args, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
         """Read the Ubuntu V2 dataset from csv files.
 
@@ -41,6 +45,8 @@ class UbuntuV2Reader(DatasetReader):
         train_fname = Path(data_path) / 'train.csv'
         valid_fname = Path(data_path) / 'valid.csv'
         test_fname = Path(data_path) / 'test.csv'
+        self.sep_by_space = sep_by_space
+        self.positive_samples = positive_samples
         self.sen2int_vocab = {}
         self.classes_vocab_train = {}
         self.classes_vocab_valid = {}
@@ -58,9 +64,22 @@ class UbuntuV2Reader(DatasetReader):
             reader = csv.reader(f)
             next(reader)
             for el in reader:
-                contexts.append(el[0])
-                responses.append(el[1])
-                labels.append(int(el[2]))
+                if self.sep_by_space:
+                    c = ' '.join(word_tokenize(el[0]))
+                    r = ' '.join(word_tokenize(el[1]))
+                else:
+                    c = el[0]
+                    r = el[1]
+                label = int(el[2])
+                if self.positive_samples:
+                    if label == 1:
+                        contexts.append(c)
+                        responses.append(r)
+                        labels.append(label)
+                else:
+                    contexts.append(c)
+                    responses.append(r)
+                    labels.append(label)
         data = list(zip(contexts, responses))
         data = list(zip(data, labels))
         return data
@@ -72,8 +91,14 @@ class UbuntuV2Reader(DatasetReader):
             reader = csv.reader(f)
             next(reader)
             for el in reader:
-                contexts.append(el[0])
-                responses.append(el[1:])
+                if self.sep_by_space:
+                    c = ' '.join(word_tokenize(el[0]))
+                    r = [' '.join(word_tokenize(x)) for x in el[1:]]
+                else:
+                    c = el[0]
+                    r = el[1:]
+                contexts.append(c)
+                responses.append(r)
         data = [[el[0]] + el[1] for el in zip(contexts, responses)]
         data = [(el, 1) for el in data]
         return data

@@ -1,8 +1,7 @@
 {
   "dataset_reader": {
     "class_name": "ubuntu_v2_reader",
-    "data_path": "{DOWNLOADS_PATH}/ubuntu_v2_data",
-    "positive_samples": true
+    "data_path": "{DOWNLOADS_PATH}/ubuntu_v2_data"
   },
   "dataset_iterator": {
     "class_name": "siamese_iterator",
@@ -13,17 +12,18 @@
     "in_y": ["y"],
     "pipe": [
       {
-        "class_name": "bert_sep_ranker_preprocessor",
-        "vocab_file": "{DOWNLOADS_PATH}/bert_models/uncased_L-12_H-768_A-12/vocab.txt",
-        "do_lower_case": true,
+        "class_name": "bert_ranker_preprocessor",
+        "vocab_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/vocab.txt",
+        "do_lower_case": false,
         "max_seq_length": 128,
         "in": ["x"],
         "out": ["bert_features"]
       },
       {
-        "class_name": "bert_sep_ranker",
-        "bert_config_file": "{DOWNLOADS_PATH}/bert_models/uncased_L-12_H-768_A-12/bert_config.json",
-        "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/uncased_L-12_H-768_A-12/bert_model.ckpt",
+        "class_name": "bert_ranker",
+        "one_hot_labels": false,
+        "bert_config_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/bert_config.json",
+        "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/bert_model.ckpt",
         "save_path": "{MODELS_PATH}/model",
         "load_path": "{MODELS_PATH}/model",
         "learning_rate": 2e-05,
@@ -51,7 +51,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/ubuntu_v2_uncased_bert_sep_model"
+      "MODELS_PATH": "{ROOT_PATH}/models/ubuntu_v2_cased_bert_model"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -63,7 +63,7 @@
         "subdir": "{DOWNLOADS_PATH}/ubuntu_v2_data"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/uncased_L-12_H-768_A-12.zip",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
         "subdir": "{DOWNLOADS_PATH}/bert_models"
       }
     ]
