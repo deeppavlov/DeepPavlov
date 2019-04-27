@@ -33,16 +33,8 @@ logger = getLogger(__name__)
 
 @register('bert_ranker')
 class BertRankerModel(BertClassifierModel):
-    def __init__(self, bert_config_file, n_classes=2, keep_prob=0.9,
-                 one_hot_labels=False, multilabel=False, return_probas=True,
-                 attention_probs_keep_prob=None, hidden_keep_prob=None,
-                 optimizer=None, num_warmup_steps=None, weight_decay_rate=0.01,
-                 pretrained_bert=None, min_learning_rate=1e-06, **kwargs) -> None:
-        super().__init__(bert_config_file, n_classes, keep_prob,
-                         one_hot_labels, multilabel, return_probas,
-                         attention_probs_keep_prob, hidden_keep_prob,
-                         optimizer, num_warmup_steps, weight_decay_rate,
-                         pretrained_bert, min_learning_rate, **kwargs)
+    def __init__(self, bert_config_file, n_classes=2, keep_prob=0.9, return_probas=True, **kwargs) -> None:
+        super().__init__(bert_config_file, n_classes, keep_prob, return_probas, **kwargs)
 
 
     def train_on_batch(self, features_li: List[List[InputFeatures]], y: Union[List[int], List[List[int]]]) -> Dict:
@@ -100,26 +92,16 @@ class BertRankerModel(BertClassifierModel):
 @register('bert_sep_ranker')
 class BertSepRankerModel(LRScheduledTFModel):
     def __init__(self, bert_config_file, keep_prob=0.9,
-                 one_hot_labels=False, multilabel=False, return_probas=True,
                  attention_probs_keep_prob=None, hidden_keep_prob=None,
                  optimizer=None, num_warmup_steps=None, weight_decay_rate=0.01,
                  pretrained_bert=None, min_learning_rate=1e-06, **kwargs) -> None:
         super().__init__(**kwargs)
 
-        self.return_probas = return_probas
         self.min_learning_rate = min_learning_rate
         self.keep_prob = keep_prob
-        self.one_hot_labels = one_hot_labels
-        self.multilabel = multilabel
         self.optimizer = optimizer
         self.num_warmup_steps = num_warmup_steps
         self.weight_decay_rate = weight_decay_rate
-
-        if self.multilabel and not self.one_hot_labels:
-            raise RuntimeError('Use one-hot encoded labels for multilabel classification!')
-
-        if self.multilabel and not self.return_probas:
-            raise RuntimeError('Set return_probas to True for multilabel classification!')
 
         self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
 
@@ -197,8 +179,7 @@ class BertSepRankerModel(LRScheduledTFModel):
         with tf.variable_scope("loss"):
             output_layer_a = tf.nn.dropout(output_layer_a, keep_prob=self.keep_prob_ph)
             output_layer_b = tf.nn.dropout(output_layer_b, keep_prob=self.keep_prob_ph)
-            labels = self.y_ph
-            self.loss = tf.contrib.losses.metric_learning.npairs_loss(labels, output_layer_a, output_layer_b)
+            self.loss = tf.contrib.losses.metric_learning.npairs_loss(self.y_ph, output_layer_a, output_layer_b)
             logits = tf.multiply(output_layer_a, output_layer_b)
             self.y_probas = tf.reduce_sum(logits, 1)
 
@@ -303,10 +284,7 @@ class BertSepRankerModel(LRScheduledTFModel):
 
             feed_dict = self._build_feed_dict(input_ids_a, input_masks_a, input_type_ids_a,
                                               input_ids_b, input_masks_b, input_type_ids_b)
-            if not self.return_probas:
-                pred = self.sess.run(self.y_predictions, feed_dict=feed_dict)
-            else:
-                pred = self.sess.run(self.y_probas, feed_dict=feed_dict)
+            pred = self.sess.run(self.y_probas, feed_dict=feed_dict)
             predictions.append(pred)
         if len(features_li) == 1:
             predictions = predictions[0]

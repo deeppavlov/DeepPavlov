@@ -35,7 +35,7 @@
     "out": ["predictions"]
   },
   "train": {
-    "batch_size": 32,
+    "batch_size": 16,
     "pytest_max_batches": 2,
     "train_metrics": [],
     "metrics": ["r@1", "r@2", "r@5"],
