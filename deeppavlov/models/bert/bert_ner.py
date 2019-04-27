@@ -468,17 +468,7 @@ class BertNerModel(LRScheduledTFModel):
         Returns:
             dict with fields 'loss', 'head_learning_rate', and 'bert_learning_rate'
         """
-        for i, (ids, ms, y_ms, y_inds) in enumerate(zip(input_ids, input_masks, y_masks, y)):
-            assert len(ids) == len(ms) == len(y_ms), \
-                    f"ids({len(ids)}) = {ids}, masks({len(ms)}) = {ms}," \
-                    f" y_masks({len(y_ms)}) should have the same length."
-            seq_len = sum(y_ms)
-            if seq_len != len(y_inds):
-                log.warning("number of ones in mask should match length of ys")
-                y[i] = y_inds[:seq_len]
-        y_padded = zero_pad(y, dtype=int, padding=0)
-
-        feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks, y=y_padded)
+        feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks, y=y)
 
         if self.ema:
             self.sess.run(self.ema.switch_to_train_op)
@@ -503,11 +493,6 @@ class BertNerModel(LRScheduledTFModel):
             Predictions indices or predicted probabilities fro each token (not subtoken)
 
         """
-        for ids, ms, y_ms in zip(input_ids, input_masks, y_masks):
-            assert len(ids) == len(ms) == len(y_ms), \
-                f"ids({len(ids)}) = {ids}, masks({len(ms)}) = {ms}," \
-                    f" y_masks({len(y_ms)}) should have the same length."
-
         feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks)
         if self.ema:
             self.sess.run(self.ema.switch_to_test_op)

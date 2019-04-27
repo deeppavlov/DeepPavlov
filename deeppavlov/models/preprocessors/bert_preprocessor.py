@@ -91,8 +91,6 @@ class BertNerPreprocessor(Component):
             (defaults to None, which is equal to +infinity)
         token_mask_prob: probability of masking token while training
         provide_subword_tags: output tags for subwords or for words
-        cut_sequences: set True to cut input sequences to max_sequence_length,
-            else raise an error it input sequence is too long
 
     Attributes:
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
@@ -107,7 +105,6 @@ class BertNerPreprocessor(Component):
                  max_subword_length: int = None,
                  token_maksing_prob: float = 0.0,
                  provide_subword_tags: bool = False,
-                 cut_sequences: bool = False,
                  **kwargs):
         self._re_tokenizer = re.compile(r"[\w']+|[^\w ]")
         self.provide_subword_tags = provide_subword_tags
@@ -118,7 +115,6 @@ class BertNerPreprocessor(Component):
         self.tokenizer = FullTokenizer(vocab_file=vocab_file,
                                        do_lower_case=do_lower_case)
         self.token_maksing_prob = token_maksing_prob
-        self.cut_sequences = cut_sequences
 
     def __call__(self,
                  tokens: Union[List[List[str]], List[str]],
@@ -142,15 +138,6 @@ class BertNerPreprocessor(Component):
                                                               mode=self.mode,
                                                               token_maksing_prob=self.token_maksing_prob)
             if self.max_seq_length is not None:
-                if self.cut_sequences:
-                    sw_toks = sw_toks[:self.max_seq_length]
-                    sw_mask = sw_mask[:self.max_seq_length]
-                    sw_ys = sw_ys[:self.max_seq_length]
-                    # add [sep] if we cut it
-                    if sw_toks[-1] != '[SEP]':
-                        sw_toks[-1] = '[SEP]'
-                        sw_mask[-1] = 0
-                        sw_ys[-1] = 'X'
                 if len(sw_toks) > self.max_seq_length:
                     raise RuntimeError(f"input sequence after bert tokenization"
                                        f" shouldn't exceed {self.max_seq_length} tokens.")
