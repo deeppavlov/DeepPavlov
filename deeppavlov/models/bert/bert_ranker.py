@@ -16,6 +16,7 @@ from logging import getLogger
 from typing import List, Dict, Union
 from collections import OrderedDict
 import re
+from operator import itemgetter
 
 import numpy as np
 import tensorflow as tf
@@ -291,3 +292,111 @@ class BertSepRankerModel(LRScheduledTFModel):
         return predictions
 
 
+@register('bert_sep_ranker_predictor')
+class BertSepRankerPredictor(BertSepRankerModel):
+    # TODO: docs
+    # TODO: add head-only pre-training
+    def __init__(self, bert_config_file,
+                 batch_size, num_ranking_samples,
+                 num_resp = 1,
+                 resps=None, resp_vecs=None, resp_features=None, resp_eval=True,
+                 conts=None, cont_vecs=None, cont_features=None, **kwargs) -> None:
+        super().__init__(bert_config_file=bert_config_file,
+                         **kwargs)
+
+        self.batch_size = batch_size
+        self.num_ranking_samples = num_ranking_samples
+        self.resp_eval = resp_eval
+        self.resps = resps
+        self.resp_vecs = resp_vecs
+        self.conts = conts
+        self.cont_vecs = cont_vecs
+        self.num_resp = num_resp
+
+        if self.resps is not None and self.resp_vecs is None:
+            self.resp_features = [resp_features[0][i * self.batch_size: (i + 1) * self.batch_size]
+                                  for i in range(len(resp_features[0]) // batch_size + 1)]
+            self.resp_vecs = self(self.resp_features)
+            self.resp_vecs /= np.linalg.norm(self.resp_vecs, axis=1, keepdims=True)
+            np.save(self.save_path / "resp_vecs", self.resp_vecs)
+
+        if self.conts is not None and self.cont_vecs is None:
+            self.cont_features = [cont_features[0][i * self.batch_size: (i + 1) * self.batch_size]
+                                  for i in range(len(cont_features[0]) // batch_size + 1)]
+            self.cont_vecs = self(self.cont_features)
+            self.cont_vecs /= np.linalg.norm(self.cont_vecs, axis=1, keepdims=True)
+            np.save(self.save_path / "cont_vecs", self.cont_vecs)
+
+    def train_on_batch(self, features, y):
+        pass
+
+    def __call__(self, features_list):
+        pred = []
+        for features in features_list:
+            input_ids = [f.input_ids for f in features]
+            input_masks = [f.input_mask for f in features]
+            input_type_ids = [f.input_type_ids for f in features]
+            feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids)
+            p = self.sess.run(self.y_probas, feed_dict=feed_dict)
+            if len(p.shape) == 1:
+                p = np.expand_dims(p, 0)
+            p /= np.linalg.norm(p, axis=1, keepdims=True)
+            pred.append(p)
+        # interact mode
+        if len (features_list[0]) == 1 and len(features_list) == 1:
+            return self._retrieve_db_response(pred)
+        # generate database vectors of responses (and contexts) for further usage
+        elif len(features_list) != self.num_ranking_samples + 1:
+            return self._build_dp_vectors(pred)
+        # return scores over responses including database responses if self.resp_vecs is set to True
+        else:
+            return self._evaluate_response_scores(pred)
+
+    def _retrieve_db_response(self, ctx_vec_li):
+        ctx_vec = np.vstack(ctx_vec_li)
+        bs = ctx_vec.shape[0]
+        if self.bot_mode == 0:
+            s = ctx_vec @ self.resp_vecs.T
+            ids = np.argmax(s, 1)
+            rsp = [[self.resps[ids[i]] for i in range(bs)], [s[i][ids[i]] for i in range(bs)]]
+        if self.bot_mode == 1:
+            sr = (ctx_vec @ self.resp_vecs.T + 1) / 2
+            sc = (ctx_vec @ self.cont_vecs.T + 1) / 2
+            ids = np.argsort(sr, 1)[:, -10:]
+            sc = [sc[i, ids[i]] for i in range(bs)]
+            ids = [sorted(zip(ids[i], sc[i]), key=itemgetter(1), reverse=True) for i in range(bs)]
+            sc = [list(map(lambda x: x[1], ids[i])) for i in range(bs)]
+            ids = [list(map(lambda x: x[0], ids[i])) for i in range(bs)]
+            rsp = [[self.resps[ids[i][0]] for i in range(bs)], [float(sc[i][0]) for i in range(bs)]]
+        if self.bot_mode == 2:
+            sr = (ctx_vec @ self.resp_vecs.T + 1) / 2
+            sc = (ctx_vec @ self.cont_vecs.T + 1) / 2
+            ids = np.argsort(sc, 1)[:, -10:]
+            sr = [sr[i, ids[i]] for i in range(bs)]
+            ids = [sorted(zip(ids[i], sr[i]), key=itemgetter(1), reverse=True) for i in range(bs)]
+            sr = [list(map(lambda x: x[1], ids[i])) for i in range(bs)]
+            ids = [list(map(lambda x: x[0], ids[i])) for i in range(bs)]
+            rsp = [[self.resps[ids[i][0]] for i in range(bs)], [float(sr[i][0]) for i in range(bs)]]
+        if self.bot_mode == 3:
+            sr = (ctx_vec @ self.resp_vecs.T + 1) / 2
+            sc = (ctx_vec @ self.cont_vecs.T + 1) / 2
+            s = (sr + sc) / 2
+            ids = np.argmax(s, 1)
+            rsp = [[self.resps[ids[i]] for i in range(bs)], [float(s[i][ids[i]]) for i in range(bs)]]
+        return rsp
+
+    def _build_db_vectors(self, db_vecs):
+        return np.vstack(db_vecs)
+
+    def _evaluate_response_scores(self, ctx_rsp_vecs):
+        ctx_vecs = list(ctx_rsp_vecs[0])
+        rsp_vecs = ctx_rsp_vecs[1:]
+        scores = []
+        for i in range(len(ctx_vecs)):
+            rsp_vecs_i = np.vstack([el[i] for el in rsp_vecs])
+            if self.resp_eval:
+                rsp_vecs_i = np.vstack([rsp_vecs_i, self.resp_vecs])
+            s = ctx_vecs[i] @ rsp_vecs_i.T
+            scores.append(s)
+        scores = np.vstack(scores)
+        return scores
