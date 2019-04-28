@@ -34,8 +34,8 @@ logger = getLogger(__name__)
 @register('bert_ranker')
 class BertRankerModel(BertClassifierModel):
     def __init__(self, bert_config_file, n_classes=2, keep_prob=0.9, return_probas=True, **kwargs) -> None:
-        super().__init__(bert_config_file, n_classes, keep_prob, return_probas, **kwargs)
-
+        super().__init__(bert_config_file=bert_config_file, n_classes=n_classes, keep_prob=keep_prob,
+                         return_probas=return_probas, **kwargs)
 
     def train_on_batch(self, features_li: List[List[InputFeatures]], y: Union[List[int], List[List[int]]]) -> Dict:
         """Train model on given batch.
@@ -58,7 +58,6 @@ class BertRankerModel(BertClassifierModel):
 
         _, loss = self.sess.run([self.train_op, self.loss], feed_dict=feed_dict)
         return {'loss': loss, 'learning_rate': feed_dict[self.learning_rate_ph]}
-
 
     def __call__(self, features_li: List[List[InputFeatures]]) -> Union[List[int], List[List[float]]]:
         """Make prediction for given features (texts).
