@@ -294,22 +294,19 @@ class BertSepRankerModel(LRScheduledTFModel):
 
 @register('bert_sep_ranker_predictor')
 class BertSepRankerPredictor(BertSepRankerModel):
-    def __init__(self, bert_config_file,
-                 batch_size, num_ranking_samples,
-                 num_resp = 1,
+    def __init__(self, bert_config_file, mode=0, interact_mode=0, batch_size=32,
                  resps=None, resp_vecs=None, resp_features=None, resp_eval=True,
                  conts=None, cont_vecs=None, cont_features=None, **kwargs) -> None:
         super().__init__(bert_config_file=bert_config_file,
                          **kwargs)
-
+        self.mode = mode
+        self.interact_mode = interact_mode
         self.batch_size = batch_size
-        self.num_ranking_samples = num_ranking_samples
         self.resp_eval = resp_eval
         self.resps = resps
         self.resp_vecs = resp_vecs
         self.conts = conts
         self.cont_vecs = cont_vecs
-        self.num_resp = num_resp
 
         if self.resps is not None and self.resp_vecs is None:
             self.resp_features = [resp_features[0][i * self.batch_size: (i + 1) * self.batch_size]
@@ -341,23 +338,24 @@ class BertSepRankerPredictor(BertSepRankerModel):
             p /= np.linalg.norm(p, axis=1, keepdims=True)
             pred.append(p)
         # interact mode
-        if len (features_list[0]) == 1 and len(features_list) == 1:
+        if self.mode == 0:
+            assert(len(features_list[0]) == 1 and len(features_list) == 1)
             return self._retrieve_db_response(pred)
         # generate database vectors of responses (and contexts) for further usage
-        elif len(features_list) != self.num_ranking_samples + 1:
+        elif self.mode == 1:
             return self._build_dp_vectors(pred)
         # return scores over responses including database responses if self.resp_vecs is set to True
-        else:
+        elif self.mode == 2:
             return self._evaluate_response_scores(pred)
 
     def _retrieve_db_response(self, ctx_vec_li):
         ctx_vec = np.vstack(ctx_vec_li)
         bs = ctx_vec.shape[0]
-        if self.bot_mode == 0:
+        if self.interact_mode == 0:
             s = ctx_vec @ self.resp_vecs.T
             ids = np.argmax(s, 1)
             rsp = [[self.resps[ids[i]] for i in range(bs)], [s[i][ids[i]] for i in range(bs)]]
-        if self.bot_mode == 1:
+        if self.interact_mode == 1:
             sr = (ctx_vec @ self.resp_vecs.T + 1) / 2
             sc = (ctx_vec @ self.cont_vecs.T + 1) / 2
             ids = np.argsort(sr, 1)[:, -10:]
@@ -366,7 +364,7 @@ class BertSepRankerPredictor(BertSepRankerModel):
             sc = [list(map(lambda x: x[1], ids[i])) for i in range(bs)]
             ids = [list(map(lambda x: x[0], ids[i])) for i in range(bs)]
             rsp = [[self.resps[ids[i][0]] for i in range(bs)], [float(sc[i][0]) for i in range(bs)]]
-        if self.bot_mode == 2:
+        if self.interact_mode == 2:
             sr = (ctx_vec @ self.resp_vecs.T + 1) / 2
             sc = (ctx_vec @ self.cont_vecs.T + 1) / 2
             ids = np.argsort(sc, 1)[:, -10:]
@@ -375,7 +373,7 @@ class BertSepRankerPredictor(BertSepRankerModel):
             sr = [list(map(lambda x: x[1], ids[i])) for i in range(bs)]
             ids = [list(map(lambda x: x[0], ids[i])) for i in range(bs)]
             rsp = [[self.resps[ids[i][0]] for i in range(bs)], [float(sr[i][0]) for i in range(bs)]]
-        if self.bot_mode == 3:
+        if self.interact_mode == 3:
             sr = (ctx_vec @ self.resp_vecs.T + 1) / 2
             sc = (ctx_vec @ self.cont_vecs.T + 1) / 2
             s = (sr + sc) / 2
