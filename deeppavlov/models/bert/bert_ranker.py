@@ -134,7 +134,6 @@ class BertSepRankerModel(LRScheduledTFModel):
         if self.load_path is not None:
             self.load()
 
-
     def _get_assignment_map_from_checkpoint(self, tvars, init_checkpoint):
         """Compute the union of the current variables and checkpoint variables."""
         assignment_map = OrderedDict()
