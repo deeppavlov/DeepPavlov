@@ -385,6 +385,8 @@ class BertSepRankerPreprocessor(Component):
             batch of InputFeatures with subtokens, subtoken ids, subtoken mask, segment mask.
 
         """
+        if isinstance(batch[0], str):
+            batch = [batch]
         samples = []
         for i in range(len(batch[0])):
             s = []
@@ -404,7 +406,7 @@ class BertSepRankerPreprocessor(Component):
 
 
 @register('bert_sep_ranker_predictor_preprocessor')
-class BertSepRankerPreprocessor(Component):
+class BertSepRankerPredictorPreprocessor(BertSepRankerPreprocessor):
     """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks.
 
     Check details in convert_examples_to_features function.
@@ -420,43 +422,13 @@ class BertSepRankerPreprocessor(Component):
     """
 
     def __init__(self,
-                 vocab_file: str,
-                 do_lower_case: bool = True,
-                 max_seq_length: int = 512,
-                 **kwargs) -> None:
-        self.max_seq_length = max_seq_length
-        vocab_file = str(expand_path(vocab_file))
-        self.tokenizer = FullTokenizer(vocab_file=vocab_file,
-                                       do_lower_case=do_lower_case)
-
-    def __call__(self, batch: List[List[str]]) -> List[List[InputFeatures]]:
-        """Call Bert convert_examples_to_features function to tokenize and create masks.
-
-        texts_a and texts_b are separated by [SEP] token
-
-        Args:
-            texts_a: list of texts,
-            texts_b: list of texts, it could be None, e.g. single sentence classification task
-
-        Returns:
-            batch of InputFeatures with subtokens, subtoken ids, subtoken mask, segment mask.
-
-        """
-        samples = []
-        for i in range(len(batch[0])):
-            s = []
-            for el in batch:
-                s.append(el[i])
-            samples.append(s)
-        s_empt = [None] * len(samples[0])
-        # TODO: add unique id
-        examples = []
-        for s in samples:
-            ex = [InputExample(unique_id=0, text_a=text_a, text_b=text_b) for text_a, text_b in
-                  zip(s, s_empt)]
-            examples.append(ex)
-        features = [convert_examples_to_features(el, self.max_seq_length, self.tokenizer) for el in examples]
-
-        return features
-
-
+                 resps=None, resp_vecs=None, conts=None, cont_vecs=None, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.resp_features = None
+        self.cont_features = None
+        if resps is not None and resp_vecs is None:
+            resp_batch = [[el] for el in resps]
+            self.resp_features = self(resp_batch)
+        if conts is not None and cont_vecs is None:
+            cont_batch = [[el] for el in conts]
+            self.cont_features = self(cont_batch)

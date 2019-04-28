@@ -181,6 +181,7 @@ class BertSepRankerModel(LRScheduledTFModel):
             self.loss = tf.contrib.losses.metric_learning.npairs_loss(self.y_ph, output_layer_a, output_layer_b)
             logits = tf.multiply(output_layer_a, output_layer_b)
             self.y_probas = tf.reduce_sum(logits, 1)
+            self.pooled_out = output_layer_a
 
     def _init_placeholders(self):
         self.input_ids_a_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='ids_a_ph')
@@ -305,51 +306,48 @@ class BertSepRankerPredictor(BertSepRankerModel):
         self.resp_eval = resp_eval
         self.resps = resps
         self.resp_vecs = resp_vecs
+        self.resp_features = resp_features
         self.conts = conts
         self.cont_vecs = cont_vecs
+        self.cont_features = cont_features
 
         if self.resps is not None and self.resp_vecs is None:
             self.resp_features = [resp_features[0][i * self.batch_size: (i + 1) * self.batch_size]
                                   for i in range(len(resp_features[0]) // batch_size + 1)]
-            self.resp_vecs = self(self.resp_features)
+            self.resp_vecs = self._get_predictions(self.resp_features)
             self.resp_vecs /= np.linalg.norm(self.resp_vecs, axis=1, keepdims=True)
             np.save(self.save_path / "resp_vecs", self.resp_vecs)
 
         if self.conts is not None and self.cont_vecs is None:
             self.cont_features = [cont_features[0][i * self.batch_size: (i + 1) * self.batch_size]
                                   for i in range(len(cont_features[0]) // batch_size + 1)]
-            self.cont_vecs = self(self.cont_features)
+            self.cont_vecs = self._get_predictions(self.cont_features)
             self.cont_vecs /= np.linalg.norm(self.cont_vecs, axis=1, keepdims=True)
-            np.save(self.save_path / "cont_vecs", self.cont_vecs)
+            np.save(self.save_path / "cont_vecs", self.resp_vecs)
 
     def train_on_batch(self, features, y):
         pass
 
-    def __call__(self, features_list):
+    def __call__(self, features_li):
+            pred = self._get_predictions(features_li)
+            return self._retrieve_db_response(pred)
+
+    def _get_predictions(self, features_li):
         pred = []
-        for features in features_list:
+        for features in features_li:
             input_ids = [f.input_ids for f in features]
             input_masks = [f.input_mask for f in features]
             input_type_ids = [f.input_type_ids for f in features]
-            feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids)
-            p = self.sess.run(self.y_probas, feed_dict=feed_dict)
+            feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids,
+                                              input_ids, input_masks, input_type_ids)
+            p = self.sess.run(self.pooled_out, feed_dict=feed_dict)
             if len(p.shape) == 1:
                 p = np.expand_dims(p, 0)
             p /= np.linalg.norm(p, axis=1, keepdims=True)
             pred.append(p)
-        # interact mode
-        if self.mode == 0:
-            assert(len(features_list[0]) == 1 and len(features_list) == 1)
-            return self._retrieve_db_response(pred)
-        # generate database vectors of responses (and contexts) for further usage
-        elif self.mode == 1:
-            return self._build_dp_vectors(pred)
-        # return scores over responses including database responses if self.resp_vecs is set to True
-        elif self.mode == 2:
-            return self._evaluate_response_scores(pred)
+        return np.vstack(pred)
 
-    def _retrieve_db_response(self, ctx_vec_li):
-        ctx_vec = np.vstack(ctx_vec_li)
+    def _retrieve_db_response(self, ctx_vec):
         bs = ctx_vec.shape[0]
         if self.interact_mode == 0:
             s = ctx_vec @ self.resp_vecs.T
@@ -379,20 +377,9 @@ class BertSepRankerPredictor(BertSepRankerModel):
             s = (sr + sc) / 2
             ids = np.argmax(s, 1)
             rsp = [[self.resps[ids[i]] for i in range(bs)], [float(s[i][ids[i]]) for i in range(bs)]]
+        # remove special tokens if they are presented
+        rsp = [[el.remove('__eou__').remove('__eot__').strip for el in rsp[0]], rsp[1]]
         return rsp
 
     def _build_db_vectors(self, db_vecs):
         return np.vstack(db_vecs)
-
-    def _evaluate_response_scores(self, ctx_rsp_vecs):
-        ctx_vecs = list(ctx_rsp_vecs[0])
-        rsp_vecs = ctx_rsp_vecs[1:]
-        scores = []
-        for i in range(len(ctx_vecs)):
-            rsp_vecs_i = np.vstack([el[i] for el in rsp_vecs])
-            if self.resp_eval:
-                rsp_vecs_i = np.vstack([rsp_vecs_i, self.resp_vecs])
-            s = ctx_vecs[i] @ rsp_vecs_i.T
-            scores.append(s)
-        scores = np.vstack(scores)
-        return scores
