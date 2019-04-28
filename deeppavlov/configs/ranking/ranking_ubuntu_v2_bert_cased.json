@@ -13,7 +13,7 @@
     "pipe": [
       {
         "class_name": "bert_ranker_preprocessor",
-        "vocab_file": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12/vocab.txt",
+        "vocab_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/vocab.txt",
         "do_lower_case": false,
         "max_seq_length": 128,
         "in": ["x"],
@@ -22,8 +22,8 @@
       {
         "class_name": "bert_ranker",
         "one_hot_labels": false,
-        "bert_config_file": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12/bert_config.json",
-        "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12/bert_model.ckpt",
+        "bert_config_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/bert_config.json",
+        "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/bert_model.ckpt",
         "save_path": "{MODELS_PATH}/model",
         "load_path": "{MODELS_PATH}/model",
         "learning_rate": 2e-05,
@@ -51,7 +51,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/ubuntu_v2_multi_cased_bert_model"
+      "MODELS_PATH": "{ROOT_PATH}/models/ubuntu_v2_cased_bert_model"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -63,7 +63,7 @@
         "subdir": "{DOWNLOADS_PATH}/ubuntu_v2_data"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/multi_cased_L-12_H-768_A-12.zip",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
         "subdir": "{DOWNLOADS_PATH}/bert_models"
       }
     ]
