@@ -294,8 +294,6 @@ class BertSepRankerModel(LRScheduledTFModel):
 
 @register('bert_sep_ranker_predictor')
 class BertSepRankerPredictor(BertSepRankerModel):
-    # TODO: docs
-    # TODO: add head-only pre-training
     def __init__(self, bert_config_file,
                  batch_size, num_ranking_samples,
                  num_resp = 1,
