@@ -34,22 +34,33 @@ logger = getLogger(__name__)
 
 @register('bert_ranker')
 class BertRankerModel(BertClassifierModel):
+    """BERT-based model for text ranking.
+
+    Linear transformation is trained over the BERT pooled output from [CLS] token.
+    Predicted probabilities of classes are used as a similarity measure for ranking.
+
+    Args:
+        bert_config_file: path to Bert configuration file
+        n_classes: number of classes
+        keep_prob: dropout keep_prob for non-Bert layers
+        return_probas: set True if return class probabilites instead of most probable label needed
+    """
+
     def __init__(self, bert_config_file, n_classes=2, keep_prob=0.9, return_probas=True, **kwargs) -> None:
         super().__init__(bert_config_file=bert_config_file, n_classes=n_classes, keep_prob=keep_prob,
                          return_probas=return_probas, **kwargs)
 
     def train_on_batch(self, features_li: List[List[InputFeatures]], y: Union[List[int], List[List[int]]]) -> Dict:
-        """Train model on given batch.
-        This method calls train_op using features and y (labels).
+        """Train the model on the given batch.
 
         Args:
-            features: batch of InputFeatures
+            features_li: list with the single element containing the batch of InputFeatures
             y: batch of labels (class id or one-hot encoding)
 
         Returns:
-            dict with loss and learning_rate values
-
+            dict with loss and learning rate values
         """
+
         features = features_li[0]
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
@@ -61,15 +72,16 @@ class BertRankerModel(BertClassifierModel):
         return {'loss': loss, 'learning_rate': feed_dict[self.learning_rate_ph]}
 
     def __call__(self, features_li: List[List[InputFeatures]]) -> Union[List[int], List[List[float]]]:
-        """Make prediction for given features (texts).
+        """Calculate scores for the given context over candidate responses.
 
         Args:
-            features: batch of InputFeatures
+            features_li: list of elements where each element contains the batch of features
+             for contexts with particular response candidates
 
         Returns:
-            predicted classes or probabilities of each class
-
+            predicted scores for contexts over response candidates
         """
+
         predictions = []
         for features in features_li:
             input_ids = [f.input_ids for f in features]
@@ -91,16 +103,31 @@ class BertRankerModel(BertClassifierModel):
 
 @register('bert_sep_ranker')
 class BertSepRankerModel(LRScheduledTFModel):
+    """BERT-based model for text ranking.
+
+     BERT pooled output from [CLS] token is used to get separate representation of context and response.
+     Similarity measure is calculated as cosine similarity between these representations.
+
+    Args:
+        bert_config_file: path to Bert configuration file
+        keep_prob: dropout keep_prob for non-Bert layers
+        attention_probs_keep_prob: keep_prob for Bert self-attention layers
+        hidden_keep_prob: keep_prob for Bert hidden layers
+        optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
+        weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
+        pretrained_bert: pretrained Bert checkpoint
+        min_learning_rate: min value of learning rate if learning rate decay is used
+    """
+
     def __init__(self, bert_config_file, keep_prob=0.9,
                  attention_probs_keep_prob=None, hidden_keep_prob=None,
-                 optimizer=None, num_warmup_steps=None, weight_decay_rate=0.01,
+                 optimizer=None, weight_decay_rate=0.01,
                  pretrained_bert=None, min_learning_rate=1e-06, **kwargs) -> None:
         super().__init__(**kwargs)
 
         self.min_learning_rate = min_learning_rate
         self.keep_prob = keep_prob
         self.optimizer = optimizer
-        self.num_warmup_steps = num_warmup_steps
         self.weight_decay_rate = weight_decay_rate
 
         self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
@@ -136,6 +163,7 @@ class BertSepRankerModel(LRScheduledTFModel):
 
     def _get_assignment_map_from_checkpoint(self, tvars, init_checkpoint):
         """Compute the union of the current variables and checkpoint variables."""
+
         assignment_map = OrderedDict()
         graph_names = []
         for var in tvars:
@@ -238,17 +266,17 @@ class BertSepRankerModel(LRScheduledTFModel):
         return feed_dict
 
     def train_on_batch(self, features_li: List[List[InputFeatures]], y: Union[List[int], List[List[int]]]) -> Dict:
-        """Train model on given batch.
-        This method calls train_op using features and y (labels).
+        """Train the model on the given batch.
 
         Args:
-            features: batch of InputFeatures
+            features_li: list with two elements containing, one containing the batch of context features
+             and the other containing the batch of response features
             y: batch of labels (class id or one-hot encoding)
 
         Returns:
-            dict with loss and learning_rate values
-
+            dict with loss and learning rate values
         """
+
         input_ids_a = [f.input_ids for f in features_li[0]]
         input_masks_a = [f.input_mask for f in features_li[0]]
         input_type_ids_a = [f.input_type_ids for f in features_li[0]]
@@ -264,15 +292,16 @@ class BertSepRankerModel(LRScheduledTFModel):
 
 
     def __call__(self, features_li: List[List[InputFeatures]]) -> Union[List[int], List[List[float]]]:
-        """Make prediction for given features (texts).
+        """Calculate scores for the given context over candidate responses.
 
         Args:
-            features: batch of InputFeatures
+            features_li: list of elements where the first element represents the context batch of features
+            and the rest of elements represents response candidates batches of features
 
         Returns:
-            predicted classes or probabilities of each class
-
+            predicted scores for contexts over response candidates
         """
+
         predictions = []
         input_ids_a = [f.input_ids for f in features_li[0]]
         input_masks_a = [f.input_mask for f in features_li[0]]
@@ -295,15 +324,35 @@ class BertSepRankerModel(LRScheduledTFModel):
 
 @register('bert_sep_ranker_predictor')
 class BertSepRankerPredictor(BertSepRankerModel):
-    def __init__(self, bert_config_file, mode=0, interact_mode=0, batch_size=32,
-                 resps=None, resp_vecs=None, resp_features=None, resp_eval=True,
-                 conts=None, cont_vecs=None, cont_features=None, **kwargs) -> None:
+    """Bert-based model for ranking and receiving a text response.
+
+     BERT pooled output from [CLS] token is used to get separate representation of context and response.
+     A similarity score is calculated as cosine similarity between these representations.
+     Based on this similarity scores a text response is retrieved provided some base
+        with possible responses (and corresponding contexts).
+     Contexts of responses are used to get the best possible result of retrieval from the base.
+
+    Args:
+        bert_config_file: path to Bert configuration file
+        interact_mode: mode setting a policy to retrieve the response from the base
+        batch_size: batch size for building response (and context) vectors over the base
+        keep_prob: dropout keep_prob for non-Bert layers
+        resps: list of strings containing the base of text responses
+        resp_vecs: BERT vector respresentations of `resps`, if is `None` it will be build
+        resp_features: features of `resps` to build their BERT vector representations
+        conts: list of strings containing the base of text contexts
+        cont_vecs: BERT vector respresentations of `conts`, if is `None` it will be build
+        cont_features: features of `conts` to build their BERT vector representations
+    """
+
+    def __init__(self, bert_config_file, interact_mode=0, batch_size=32,
+                 resps=None, resp_features=None,  resp_vecs=None,
+                 conts=None,  cont_features=None, cont_vecs=None, **kwargs) -> None:
         super().__init__(bert_config_file=bert_config_file,
                          **kwargs)
-        self.mode = mode
+
         self.interact_mode = interact_mode
         self.batch_size = batch_size
-        self.resp_eval = resp_eval
         self.resps = resps
         self.resp_vecs = resp_vecs
         self.resp_features = resp_features
@@ -329,10 +378,24 @@ class BertSepRankerPredictor(BertSepRankerModel):
         pass
 
     def __call__(self, features_li):
-            pred = self._get_predictions(features_li)
-            return self._retrieve_db_response(pred)
+        """Get context vector representation and retrieve a text response from the database.
+
+        Uses cosine similarity scores over vectors of responses (and corresponding contexts) from the base.
+        Based on these scores retrieves the text response from the base.
+
+        Args:
+            features_li: list of elements where elements represent context batches of features
+
+        Returns:
+            text response with the highest similarity score and its similarity score from the response base
+        """
+
+        pred = self._get_predictions(features_li)
+        return self._retrieve_db_response(pred)
 
     def _get_predictions(self, features_li):
+        """Get BERT vector representations for a list of feature batches."""
+
         pred = []
         for features in features_li:
             input_ids = [f.input_ids for f in features]
@@ -348,6 +411,11 @@ class BertSepRankerPredictor(BertSepRankerModel):
         return np.vstack(pred)
 
     def _retrieve_db_response(self, ctx_vec):
+        """Retrieve a text response from the base based on the policy determined by `interact_mode`.
+
+        Uses cosine similarity scores over vectors of responses (and corresponding contexts) from the base.
+        """
+
         bs = ctx_vec.shape[0]
         if self.interact_mode == 0:
             s = ctx_vec @ self.resp_vecs.T

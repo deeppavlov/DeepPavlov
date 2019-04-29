@@ -1,3 +1,17 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import sys
 
 import numpy as np
@@ -11,10 +25,10 @@ logger = getLogger(__name__)
 
 @register('response_base_loader')
 class ResponseBaseLoader(Serializable):
-    # TODO: docs
+    """Class for loading a base with text responses (and contexts) and their vector representations."""
 
-    def __init__(self, save_path, *args, **kwargs):
-        super().__init__(save_path, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.resps = None
         self.resp_vecs = None
         self.conts = None
