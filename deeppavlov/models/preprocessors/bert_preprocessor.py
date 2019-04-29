@@ -291,13 +291,13 @@ class BertContextAdd(Component):
 
 @register('bert_ranker_preprocessor')
 class BertRankerPreprocessor(BertPreprocessor):
-    """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks for ranking.
+    """Tokenize text to sub-tokens, encode sub-tokens with their indices, create tokens and segment masks for ranking.
 
     Builds features for a pair of context with each of the response candidates.
     """
 
     def __call__(self, batch: List[List[str]]) -> List[List[InputFeatures]]:
-        """Call Bert convert_examples_to_features function to tokenize and create masks.
+        """Call BERT convert_examples_to_features function to tokenize and create masks.
 
         Args:
             batch: list of elemenents where the first element represents the batch with contexts
@@ -325,13 +325,13 @@ class BertRankerPreprocessor(BertPreprocessor):
 
 @register('bert_sep_ranker_preprocessor')
 class BertSepRankerPreprocessor(BertPreprocessor):
-    """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks for ranking.
+    """Tokenize text to sub-tokens, encode sub-tokens with their indices, create tokens and segment masks for ranking.
 
     Builds features for a context and for each of the response candidates separately.
     """
 
     def __call__(self, batch: List[List[str]]) -> List[List[InputFeatures]]:
-        """Call Bert convert_examples_to_features function to tokenize and create masks.
+        """Call BERT convert_examples_to_features function to tokenize and create masks.
 
         Args:
             batch: list of elemenents where the first element represents the batch with contexts
@@ -339,7 +339,7 @@ class BertSepRankerPreprocessor(BertPreprocessor):
 
         Returns:
             list of feature batches with subtokens, subtoken ids, subtoken mask, segment mask
-                for the context and each of response candidates separately.
+            for the context and each of response candidates separately.
         """
 
         if isinstance(batch[0], str):
@@ -364,7 +364,7 @@ class BertSepRankerPreprocessor(BertPreprocessor):
 
 @register('bert_sep_ranker_predictor_preprocessor')
 class BertSepRankerPredictorPreprocessor(BertSepRankerPreprocessor):
-    """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks for ranking.
+    """Tokenize text to sub-tokens, encode sub-tokens with their indices, create tokens and segment masks for ranking.
 
     Builds features for a context and for each of the response candidates separately.
     In addition, builds features for a response (and corresponding context) text base.

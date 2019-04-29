@@ -34,7 +34,7 @@ logger = getLogger(__name__)
 
 @register('bert_ranker')
 class BertRankerModel(BertClassifierModel):
-    """BERT-based model for text ranking.
+    """BERT-based model for interaction-based text ranking.
 
     Linear transformation is trained over the BERT pooled output from [CLS] token.
     Predicted probabilities of classes are used as a similarity measure for ranking.
@@ -103,9 +103,9 @@ class BertRankerModel(BertClassifierModel):
 
 @register('bert_sep_ranker')
 class BertSepRankerModel(LRScheduledTFModel):
-    """BERT-based model for text ranking.
+    """BERT-based model for representation-based text ranking.
 
-     BERT pooled output from [CLS] token is used to get separate representation of context and response.
+     BERT pooled output from [CLS] token is used to get a separate representation of a context and a response.
      Similarity measure is calculated as cosine similarity between these representations.
 
     Args:
@@ -269,7 +269,7 @@ class BertSepRankerModel(LRScheduledTFModel):
         """Train the model on the given batch.
 
         Args:
-            features_li: list with two elements containing, one containing the batch of context features
+            features_li: list with two elements, one containing the batch of context features
              and the other containing the batch of response features
             y: batch of labels (class id or one-hot encoding)
 
@@ -296,7 +296,7 @@ class BertSepRankerModel(LRScheduledTFModel):
 
         Args:
             features_li: list of elements where the first element represents the context batch of features
-            and the rest of elements represent response candidates batches of features
+                and the rest of elements represent response candidates batches of features
 
         Returns:
             predicted scores for contexts over response candidates
@@ -326,11 +326,11 @@ class BertSepRankerModel(LRScheduledTFModel):
 class BertSepRankerPredictor(BertSepRankerModel):
     """Bert-based model for ranking and receiving a text response.
 
-     BERT pooled output from [CLS] token is used to get separate representation of context and response.
-     A similarity score is calculated as cosine similarity between these representations.
-     Based on this similarity scores a text response is retrieved provided some base
-        with possible responses (and corresponding contexts).
-     Contexts of responses are used to get the best possible result of retrieval from the base.
+    BERT pooled output from [CLS] token is used to get a separate representation of a context and a response.
+    A similarity score is calculated as cosine similarity between these representations.
+    Based on this similarity score the text response is retrieved provided some base
+    with possible responses (and corresponding contexts).
+    Contexts of responses are used additionaly to get the best possible result of retrieval from the base.
 
     Args:
         bert_config_file: path to Bert configuration file
@@ -380,7 +380,7 @@ class BertSepRankerPredictor(BertSepRankerModel):
         pass
 
     def __call__(self, features_li):
-        """Get context vector representation and retrieve a text response from the database.
+        """Get the context vector representation and retrieve the text response from the database.
 
         Uses cosine similarity scores over vectors of responses (and corresponding contexts) from the base.
         Based on these scores retrieves the text response from the base.
@@ -448,8 +448,5 @@ class BertSepRankerPredictor(BertSepRankerModel):
             ids = np.argmax(s, 1)
             rsp = [[self.resps[ids[i]] for i in range(bs)], [float(s[i][ids[i]]) for i in range(bs)]]
         # remove special tokens if they are presented
-        rsp = [[el.remove('__eou__').remove('__eot__').strip for el in rsp[0]], rsp[1]]
+        rsp = [[el.replace('__eou__', '').replace('__eot__', '').strip() for el in rsp[0]], rsp[1]]
         return rsp
-
-    def _build_db_vectors(self, db_vecs):
-        return np.vstack(db_vecs)

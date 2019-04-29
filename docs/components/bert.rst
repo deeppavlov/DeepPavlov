@@ -59,4 +59,17 @@ TODO
 
 BERT for Ranking
 ----------------
-TODO
+There are two main approaches in text ranking. The first one is interaction-based which is relatively accurate but
+works slow and the second one is representation-based which is less accurate but faster.
+The interaction-based ranking based on BERT is represented in the DeepPavlov with two main components
+:class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertRankerPreprocessor`
+and :class:`~deeppavlov.models.bert.bert_ranker.BertRankerModel`
+and the representation-based ranking with components
+:class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertSepRankerPreprocessor`
+and :class:`~deeppavlov.models.bert.bert_ranker.BertSepRankerModel`.
+Additional components
+:class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertSepRankerPredictorPreprocessor`
+and :class:`~deeppavlov.models.bert.bert_ranker.BertSepRankerPredictor` are for usage in the ``interact`` mode
+where the task for ranking is to retrieve the best possible response from some provided response base with the help of
+the trained model. Working examples with the trained models are given :doc:`here </components/neural_ranking>`.
+Statistics are available :doc:`here </intro/features>`.
