@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import random
+import re
 from logging import getLogger
-from typing import Tuple, List, Optional
+from typing import Tuple, List, Optional, Union
 
 import numpy as np
 from bert_dp.preprocessing import convert_examples_to_features, InputExample, InputFeatures
@@ -89,7 +90,7 @@ class BertNerPreprocessor(Component):
         max_subword_length: replace token to <unk> if it's length is larger than this
             (defaults to None, which is equal to +infinity)
         token_mask_prob: probability of masking token while training
-        provide_subword_tags: 
+        provide_subword_tags: output tags for subwords or for words
 
     Attributes:
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
@@ -105,6 +106,7 @@ class BertNerPreprocessor(Component):
                  token_maksing_prob: float = 0.0,
                  provide_subword_tags: bool = False,
                  **kwargs):
+        self._re_tokenizer = re.compile(r"[\w']+|[^\w ]")
         self.provide_subword_tags = provide_subword_tags
         self.mode = kwargs.get('mode')
         self.max_seq_length = max_seq_length
@@ -115,9 +117,11 @@ class BertNerPreprocessor(Component):
         self.token_maksing_prob = token_maksing_prob
 
     def __call__(self,
-                 tokens: List[List[str]],
+                 tokens: Union[List[List[str]], List[str]],
                  tags: List[List[str]] = None,
                  **kwargs):
+        if isinstance(tokens[0], str):
+            tokens = [re.findall(self._re_tokenizer, s) for s in tokens]
         subword_tokens, subword_tok_ids, subword_masks, subword_tags = [], [], [], []
         for i in range(len(tokens)):
             toks = tokens[i]
@@ -134,15 +138,9 @@ class BertNerPreprocessor(Component):
                                                               mode=self.mode,
                                                               token_maksing_prob=self.token_maksing_prob)
             if self.max_seq_length is not None:
-                sw_toks = sw_toks[:self.max_seq_length]
-                sw_mask = sw_mask[:self.max_seq_length]
-                sw_ys = sw_ys[:self.max_seq_length]
-
-                # add [sep] if we cut it
-                if sw_toks[-1] != '[SEP]':
-                    sw_toks[-1] = '[SEP]'
-                    sw_mask[-1] = 0
-                    sw_ys[-1] = 'X'
+                if len(sw_toks) > self.max_seq_length:
+                    raise RuntimeError(f"input sequence after bert tokenization"
+                                       f" shouldn't exceed {self.max_seq_length} tokens.")
             subword_tokens.append(sw_toks)
             subword_tok_ids.append(self.tokenizer.convert_tokens_to_ids(sw_toks))
             subword_masks.append(sw_mask)
@@ -155,7 +153,7 @@ class BertNerPreprocessor(Component):
         subword_masks = zero_pad(subword_masks, dtype=int, padding=0)
         if tags is not None:
             if self.provide_subword_tags:
-                return subword_tokens, subword_tok_ids, subword_masks, subword_tags
+                return tokens, subword_tokens, subword_tok_ids, subword_masks, subword_tags
             else:
                 nonmasked_tags = [[t for t in ts if t != 'X'] for ts in tags]
                 for swts, swids, swms, ts in zip(subword_tokens,
@@ -168,8 +166,8 @@ class BertNerPreprocessor(Component):
                         log.warning(f'Masks len: {len(swms)}, sum: {sum(swms)}')
                         log.warning(f'Masks: {swms}')
                         log.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
-                return subword_tokens, subword_tok_ids, subword_masks, nonmasked_tags
-        return subword_tokens, subword_tok_ids, subword_masks
+                return tokens, subword_tokens, subword_tok_ids, subword_masks, nonmasked_tags
+        return tokens, subword_tokens, subword_tok_ids, subword_masks
 
     @staticmethod
     def _ner_bert_tokenize(tokens: List[str],

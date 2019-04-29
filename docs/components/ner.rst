@@ -4,6 +4,8 @@ Named Entity Recognition (NER)
 Train and use the model
 -----------------------
 
+There are two main types of models available: standard RNN based and BERT based. To see details about BERT based
+models see :doc:`here </components/bert>`.
 Any pre-trained model can be used for inference from both Command Line Interface (CLI) and Python. Before using the
 model make sure that all required packages are installed using the command:
 
@@ -31,15 +33,15 @@ Here is the list of all available configs:
     +--------------------------------------------------------------+--------------------+-----------------+------------+----------+
     | Model                                                        | Dataset            | Embeddings Size | Model Size | F1 score |
     +==============================================================+====================+=================+============+==========+
-    | :config:`ner_conll2003_bert <ner/ner_conll2003_bert.json>`   | CoNLL-2003         | ---             | 2,1 GB     | 91.3     |
+    | :config:`ner_conll2003_bert <ner/ner_conll2003_bert.json>`   | CoNLL-2003         | ---             | 2.1 GB     | 91.5     |
     +--------------------------------------------------------------+--------------------+-----------------+------------+----------+
-    | :config:`ner_conll2003_bert <ner/ner_onotonotes_bert.json>`  | OnotoNotes         | ---             | 2,1 GB     | 88.4     |
+    | :config:`ner_conll2003_bert <ner/ner_onotonotes_bert.json>`  | OnotoNotes         | ---             | 2.1 GB     | 88.4     |
     +--------------------------------------------------------------+--------------------+-----------------+------------+----------+
     | :config:`ner_rus_bert <ner/ner_rus_bert.json>`               | Collection3 [13]_  | ---             | 2.1 GB     | 97.7     |
     +--------------------------------------------------------------+--------------------+-----------------+------------+----------+
     | :config:`ner_ontonotes <ner/ner_ontonotes.json>`             | OnotoNotes         | 331 MB          | 7.8 MB     | 87.1     |
     +--------------------------------------------------------------+--------------------+-----------------+------------+----------+
-    | :config:`ner_rus <ner/ner_rus.json>`                         | Collection3 [13]_  | 1.0 GB          | 5.6 MB     | 95.3     |
+    | :config:`ner_rus <ner/ner_rus.json>`                         | Collection3 [13]_  | 1.0 GB          | 5.6 MB     | 95.1     |
     +--------------------------------------------------------------+--------------------+-----------------+------------+----------+
     | :config:`ner_dstc <ner/ner_dstc.json>`                       | DSTC2              | ---             | 626 KB     | 97.2     |
     +--------------------------------------------------------------+--------------------+-----------------+------------+----------+
@@ -74,7 +76,7 @@ The data for training should be placed in the folder provided in the config:
     print(config_dict['dataset_reader']['data_path'])
     >>> '~/.deeppavlov/downloads/ontonotes_ner_data'
 
-There must be three txt files: train.txt, valid.txt, and test.txt. Furthermore the `data_path` can be changeged from coder
+There must be three txt files: train.txt, valid.txt, and test.txt. Furthermore the `data_path` can be changeged from code.
 
 
 NER task
