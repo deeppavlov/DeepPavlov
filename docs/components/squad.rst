@@ -34,8 +34,23 @@ Datasets, which follow this task format:
    (`SQuAD <https://rajpurkar.github.io/SQuAD-explorer/>`__) (EN)
 -  `SDSJ Task B <https://sdsj.sberbank.ai/2017/ru/contest.html>`__ (RU)
 
-Model
------
+Models
+------
+
+There are two models for this task in DeepPavlov: BERT-based and R-Net. Both models predict answer start and end
+position in a given context.
+Their performance is compared in :ref:`pretrained models <pretrained_models>` section of this documentation.
+
+BERT
+~~~~
+Pretrained BERT can be used for Question Answering on SQuAD dataset just by applying two linear transformations to
+BERT outputs for each subtoken. First/second linear transformation is used for prediction of probability that current
+subtoken is start/end position of an answer.
+
+BERT for SQuAD model documentation :class:`~deeppavlov.models.bert.bert_squad.BertSQuADModel`
+
+R-Net
+~~~~~
 
 Question Answering Model is based on R-Net, proposed by Microsoft
 Research Asia (`"R-NET: Machine Reading Comprehension with Self-matching
@@ -43,12 +58,12 @@ Networks" <https://www.microsoft.com/en-us/research/publication/mcr/>`__)
 and its `implementation <https://github.com/HKUST-KnowComp/R-Net>`__ by
 Wenxuan Zhou.
 
-Model documentation: :class:`~deeppavlov.models.squad.squad.SquadModel`
+R-Net for SQuAD model documentation: :class:`~deeppavlov.models.squad.squad.SquadModel`
 
 Configuration
 -------------
 
-Default config could be found at :config:`deeppavlov/configs/squad/squad.json <squad/squad.json>`
+Default configs could be found in :config:`deeppavlov/configs/squad/ <squad/>` folder.
 
 Prerequisites
 -------------
@@ -57,7 +72,10 @@ Before using the model make sure that all required packages are installed runnin
 
 .. code:: bash
 
-    python -m deeppavlov install squad
+    python -m deeppavlov install squad_bert
+
+By running this command we will install requirements for
+:config:`deeppavlov/configs/squad/squad_bert.json <squad/squad_bert.json>`
 
 Model usage from Python
 -----------------------
@@ -78,12 +96,12 @@ Model usage from CLI
 Training
 ~~~~~~~~
 
-**Warning**: training with default config requires about 9Gb on GPU. Run
+**Warning**: training with default config requires about 10Gb on GPU. Run
 following command to train the model:
 
 .. code:: bash
 
-    python -m deeppavlov train deeppavlov/configs/squad/squad.json
+    python -m deeppavlov train deeppavlov/configs/squad/squad_bert.json
 
 Interact mode
 ~~~~~~~~~~~~~
@@ -94,9 +112,11 @@ To run model in interact mode run the following command:
 
 .. code:: bash
 
-    python -m deeppavlov interact deeppavlov/configs/squad/squad.json
+    python -m deeppavlov interact deeppavlov/configs/squad/squad_bert.json
 
 Model will ask you to type in context and question.
+
+.. _pretrained_models:
 
 Pretrained models:
 ------------------
@@ -104,34 +124,34 @@ Pretrained models:
 SQuAD
 ~~~~~
 
-Pretrained model is available and can be downloaded (~2.4Gb):
+We have all pretrained model available to download:
 
 .. code:: bash
 
-    python -m deeppavlov download deeppavlov/configs/squad/squad.json
+    python -m deeppavlov download deeppavlov/configs/squad/squad_bert.json
 
-It achieves ~80 F-1 score and ~71 EM on `SQuAD-v1.1`_ dev set.
+It achieves ~88 F-1 score and ~80 EM on `SQuAD-v1.1`_ dev set.
 
 In the following table you can find comparison with published results. Results of the most recent competitive solutions could be found on `SQuAD
 Leadearboad <https://rajpurkar.github.io/SQuAD-explorer/>`__.
 
-+----------------------------------------------+----------------+-----------------+
-| Model (single model)                         |    EM (dev)    |    F-1 (dev)    |
-+==============================================+================+=================+
-| :config:`BERT <squad/squad_bert.json>`       |     80.88      |     88.49       |
-+----------------------------------------------+----------------+-----------------+
-| :config:`DeepPavlov <squad/squad.json>`      |     71.49      |     80.34       |
-+----------------------------------------------+----------------+-----------------+
-| `BiDAF + Self Attention + ELMo`_             |       --       |     85.6        |
-+----------------------------------------------+----------------+-----------------+
-| `QANet`_                                     |     75.1       |     83.8        |
-+----------------------------------------------+----------------+-----------------+
-| `FusionNet`_                                 |     75.3       |     83.6        |
-+----------------------------------------------+----------------+-----------------+
-| `R-Net`_                                     |     71.1       |     79.5        |
-+----------------------------------------------+----------------+-----------------+
-| `BiDAF`_                                     |     67.7       |     77.3        |
-+----------------------------------------------+----------------+-----------------+
++---------------------------------------------------------+----------------+-----------------+
+| Model (single model)                                    |    EM (dev)    |    F-1 (dev)    |
++=========================================================+================+=================+
+| :config:`DeepPavlov BERT <squad/squad_bert.json>`       |     80.88      |     88.49       |
++---------------------------------------------------------+----------------+-----------------+
+| :config:`DeepPavlov R-Net <squad/squad.json>`           |     71.49      |     80.34       |
++---------------------------------------------------------+----------------+-----------------+
+| `BiDAF + Self Attention + ELMo`_                        |       --       |     85.6        |
++---------------------------------------------------------+----------------+-----------------+
+| `QANet`_                                                |     75.1       |     83.8        |
++---------------------------------------------------------+----------------+-----------------+
+| `FusionNet`_                                            |     75.3       |     83.6        |
++---------------------------------------------------------+----------------+-----------------+
+| `R-Net`_                                                |     71.1       |     79.5        |
++---------------------------------------------------------+----------------+-----------------+
+| `BiDAF`_                                                |     67.7       |     77.3        |
++---------------------------------------------------------+----------------+-----------------+
 
 .. _`SQuAD-v1.1`: https://arxiv.org/abs/1606.05250
 .. _`BiDAF`: https://arxiv.org/abs/1611.01603
@@ -177,11 +197,13 @@ Pretrained model is available and can be downloaded (~2.5Gb):
 SDSJ Task B
 ~~~~~~~~~~~
 
-Pretrained models are available and can be downloaded (~4.8Gb):
+Pretrained models are available and can be downloaded:
 
 .. code:: bash
 
     python -m deeppavlov download deeppavlov/configs/squad/squad_ru.json
+
+    python -m deeppavlov download deeppavlov/configs/squad/squad_ru_rubert_infer.json
 
     python -m deeppavlov download deeppavlov/configs/squad/squad_ru_bert_infer.json
 
@@ -190,7 +212,9 @@ Link to SDSJ Task B dataset: http://files.deeppavlov.ai/datasets/sber_squad-v1.1
 +------------------------------------------------------------------------+----------------+-----------------+
 | Model config                                                           |    EM (dev)    |    F-1 (dev)    |
 +========================================================================+================+=================+
+| :config:`DeepPavlov RuBERT <squad/squad_ru_rubert_infer.json>`         |   66.30+-0.24  |    84.60+-0.11  |
++------------------------------------------------------------------------+----------------+-----------------+
 | :config:`DeepPavlov multilingual BERT <squad/squad_ru_bert_infer.json>`|   64.35+-0.39  |    83.39+-0.08  |
 +------------------------------------------------------------------------+----------------+-----------------+
-| :config:`DeepPavlov <squad/squad_ru.json>`                             |     60.62      |     80.04       |
+| :config:`DeepPavlov R-Net <squad/squad_ru.json>`                       |     60.62      |     80.04       |
 +------------------------------------------------------------------------+----------------+-----------------+

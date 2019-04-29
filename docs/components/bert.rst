@@ -27,15 +27,39 @@ ranking. We provide pre-trained models and examples on how to use BERT with Deep
 
 BERT for Classification
 -----------------------
-TODO
+
+**deeppavlov.models.bert.BertClassifierModel** (see :doc:`here </apiref/models/bert>`) provides easy to use
+solution for classification problem using pre-trained BERT.
+One can use several pre-trained English, multi-lingual and Russian BERT models that are listed above.
+
+Two main components of BERT classifier pipeline in DeepPavlov are
+``deeppavlov.models.preprocessors.BertPreprocessor`` (see :doc:`here </apiref/models/bert>`)
+and ``deeppavlov.models.bert.BertClassifierModel`` (see :doc:`here </apiref/models/bert>`).
+Non-processed texts should be given to ``bert_preprocessor`` for tokenization on subtokens,
+encoding subtokens with their indices and creating tokens and segment masks.
+If one processed classes to one-hot labels in pipeline, ``one_hot_labels`` should be set to ``true``.
+
+``bert_classifier`` has a dense layer of number of classes size upon pooled outputs of Transformer encoder,
+it is followed by ``softmax`` activation (``sigmoid`` if ``multilabel`` parameter is set to ``true`` in config).
+
 
 BERT for Named Entity Recognition (Sequence Tagging)
 ----------------------------------------------------
-TODO
+
+Pre-trained BERT model can be used for sequence tagging. Examples of usage of BERT for sequence tagging can be
+found :doc:`here </components/ner>`. To tag each word representations of the first sub-word elements
+are extracted. So for each word there is only one vector produced.
+These representations are passed to a dense layer or Bi-RNN layer to produce distribution over tags. There is
+also an optional CRF layer on the top.
+
 
 BERT for Context Question Answering (SQuAD)
 -------------------------------------------
-TODO
+Context Question Answering on `SQuAD <https://rajpurkar.github.io/SQuAD-explorer/>`__ dataset is a task
+of looking for an answer on a question in a given context. This task could be formalized as predicting answer start
+and end position in a given context. :class:`~deeppavlov.models.bert.bert_squad.BertSQuADModel` uses two linear
+transformations to predict probability that currents subtoken is start/end position of an answer. For details check
+:doc:`Context Question Answering documentation page </components/squad>`.
 
 BERT for Ranking
 ----------------

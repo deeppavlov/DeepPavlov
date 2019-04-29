@@ -14,7 +14,7 @@ which is inspired by Bi-LSTM+CRF architecture from https://arxiv.org/pdf/1603.01
 +---------------------------------------------------------------------------------------------------------------------------+------------------+
 | Dataset                                                                                                                   |     Test F1      |
 +===========================================================================================================================+==================+
-| :config:`Persons-1000 dataset with additional LOC and ORG markup <ner/ner_rus.json>`                                      |       95.25      |
+| :config:`Persons-1000 dataset with additional LOC and ORG markup <ner/ner_rus.json>`                                      |       95.14      |
 +---------------------------------------------------------------------------------------------------------------------------+------------------+
 | :config:`DSTC 2 <ner/ner_dstc2.json>`                                                                                     |       98.40      |
 +---------------------------------------------------------------------------------------------------------------------------+------------------+
@@ -291,26 +291,30 @@ Based on `Reading Wikipedia to Answer Open-Domain Questions <https://github.com/
 
 :doc:`Question Answering component </components/squad>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Based on `R-NET: Machine Reading Comprehension with Self-matching Networks
-<https://www.microsoft.com/en-us/research/publication/mcr/>`__. The model solves the task of looking for an answer on a
+Models in this section solve the task of looking for an answer on a
 question in a given context (`SQuAD <https://rajpurkar.github.io/SQuAD-explorer/>`__ task format).
+There are two models for this task in DeepPavlov: BERT-based and R-Net. Both models predict answer start and end
+position in a given context.
 
-.. note::
+BERT-based model is described in  `BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding
+<https://arxiv.org/abs/1810.04805>`__.
 
-    All pre-trained models could be downloaded. Model for English language will download about 2.5 Gb and model for Russian about 5 Gb.
+R-Net model is based on `R-NET: Machine Reading Comprehension with Self-matching Networks
+<https://www.microsoft.com/en-us/research/publication/mcr/>`__.
 
-+---------------+----------------------------------------------------------+-------+----------------+-----------------+
-|    Dataset    | Model config                                             | lang  |    EM (dev)    |    F-1 (dev)    |
-+===============+==========================================================+=======+================+=================+
-| `SQuAD-v1.1`_ | :config:`squad_bert <squad/squad_bert.json>`             |  en   |     80.88      |     88.49       |
-+---------------+----------------------------------------------------------+-------+----------------+-----------------+
-| `SQuAD-v1.1`_ | :config:`squad <squad/squad.json>`                       |  en   |     71.49      |     80.34       |
-+---------------+----------------------------------------------------------+-------+----------------+-----------------+
-|  SDSJ Task B  | :config:`squad_ru <squad/squad_ru.json>`                 |  ru   |     60.62      |     80.04       |
-+---------------+----------------------------------------------------------+-------+----------------+-----------------+
-|  SDSJ Task B  | :config:`squad_ru_bert <squad/squad_ru_bert_infer.json>` |  ru   |  64.35+-0.39   |   83.39+-0.08   |
-+---------------+----------------------------------------------------------+-------+----------------+-----------------+
++---------------+------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
+|    Dataset    | Model config                                                           | lang  |    EM (dev)    |    F-1 (dev)    |    Downloads    |
++===============+========================================================================+=======+================+=================+=================+
+| `SQuAD-v1.1`_ | :config:`DeepPavlov BERT <squad/squad_bert.json>`                      |  en   |     80.88      |     88.49       |     806Mb       |
++---------------+------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
+| `SQuAD-v1.1`_ | :config:`DeepPavlov R-Net <squad/squad.json>`                          |  en   |     71.49      |     80.34       |     ~2.5Gb      |
++---------------+------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
+|  SDSJ Task B  | :config:`DeepPavlov RuBERT <squad/squad_ru_bert_infer.json>`           |  ru   |  66.30+-0.24   |   84.60+-0.11   |   1325Mb        |
++---------------+------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
+|  SDSJ Task B  | :config:`DeepPavlov multilingual BERT <squad/squad_ru_bert_infer.json>`|  ru   |  64.35+-0.39   |   83.39+-0.08   |   1323Mb        |
++---------------+------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
+|  SDSJ Task B  | :config:`DeepPavlov R-Net <squad/squad_ru.json>`                       |  ru   |     60.62      |     80.04       |     ~5Gb        |
++---------------+------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
 
 In the case when answer is not necessary present in given context we have :config:`squad_noans <squad/multi_squad_noans.json>`
 model. This model outputs empty string in case if there is no answer in context.

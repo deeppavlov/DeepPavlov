@@ -154,6 +154,8 @@ class LRScheduledModel:
         fit_beta: smoothing coefficient for loss calculation when fitting learning rate
         fit_min_batches: number of batches to train model on before fitting learning rate
         fit_max_batches: number of batches to train model on when fitting learning rate
+        load_before_drop: set True to load saved model from disk when learning
+                rate is dropped, set False to continue training current model
         *args: other parameters
         **kwargs: other parameters
     """
@@ -186,7 +188,6 @@ class LRScheduledModel:
                  learning_rate_decay_batches: int = 0,
                  learning_rate_drop_div: float = 2.0,
                  learning_rate_drop_patience: Optional[int] = None,
-                 load_before_drop: bool = False,
                  momentum: Union[None, float, Tuple[float, float]] = None,
                  momentum_decay: Union[DType, Tuple[DType, float]] = DecayType.NO,
                  momentum_decay_epochs: int = 0,
@@ -197,6 +198,7 @@ class LRScheduledModel:
                  fit_beta: float = 0.98,
                  fit_min_batches: int = 10,
                  fit_max_batches: Optional[int] = None,
+                 load_before_drop: bool = False,
                  *args, **kwargs) -> None:
         """
         Initialize learning rate scheduler
@@ -233,8 +235,8 @@ class LRScheduledModel:
 
         self._mom = start_val
         num_it, self._mom_update_on_batch = momentum_decay_epochs, False
-        self._mom_update_on_batch = momentum_decay_batches > 0
-        num_it = momentum_decay_epochs if self._mom_update_on_batch else momentum_decay_batches
+        if momentum_decay_batches > 0:
+            num_it, self._mom_update_on_batch = momentum_decay_batches, False
 
         self._mom_schedule = DecayScheduler(start_val=start_val, end_val=end_val,
                                             num_it=num_it, dec_type=dec_type,

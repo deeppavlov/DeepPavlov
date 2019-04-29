@@ -194,16 +194,7 @@ class LRScheduledTFModel(TFModel, LRScheduledModel):
             raise ConfigError("`optimizer` should be tensorflow.train.Optimizer subclass")
         self._clip_norm = clip_norm
 
-        if (momentum is None) and\
-                self._optimizer not in (tf.train.AdagradOptimizer,
-                                        tf.train.AdagradOptimizer,
-                                        tf.train.GradientDescentOptimizer,
-                                        tf.train.ProximalGradientDescentOptimizer,
-                                        tf.train.ProximalAdagradOptimizer):
-            momentum = 0.9
-        kwargs['momentum'] = momentum
-
-        LRScheduledModel.__init__(self, **kwargs)
+        LRScheduledModel.__init__(self, momentum=momentum, **kwargs)
 
     @overrides
     def _init_learning_rate_variable(self):

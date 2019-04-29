@@ -22,8 +22,9 @@ from bert_dp.optimization import AdamWeightDecayOptimizer
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.layers.tf_layers import bi_rnn
+from deeppavlov.core.data.utils import zero_pad
 from deeppavlov.core.models.component import Component
+from deeppavlov.core.layers.tf_layers import bi_rnn
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
 
 log = getLogger(__name__)
@@ -288,7 +289,7 @@ class BertNerModel(LRScheduledTFModel):
         # train_op for bert variables
         kwargs['learnable_scopes'] = ('bert/encoder', 'bert/embeddings')
         if self.freeze_embeddings:
-            kwargs['learnable_scope'] = ('bert/encoder',)
+            kwargs['learnable_scopes'] = ('bert/encoder',)
         bert_learning_rate = learning_rate * self.bert_learning_rate_multiplier
         bert_train_op = super().get_train_op(loss,
                                              bert_learning_rate,
@@ -467,15 +468,6 @@ class BertNerModel(LRScheduledTFModel):
         Returns:
             dict with fields 'loss', 'head_learning_rate', and 'bert_learning_rate'
         """
-        for ids, ms, y_ms in zip(input_ids, input_masks, y_masks):
-            assert len(ids) == len(ms) == len(y_ms), \
-                f"ids({len(ids)}) = {ids}, masks({len(ms)}) = {ms}," \
-                    f" y_masks({len(y_ms)}) should have the same length."
-        max_seq_len = int(max(sum(y_ms) for y_ms in y_masks))
-        if max_seq_len != len(y[0]):
-            log.warning("input sequence max length should match length of padded y")
-            y = [ys[:max_seq_len] for ys in y]
-
         feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks, y=y)
 
         if self.ema:
@@ -501,11 +493,6 @@ class BertNerModel(LRScheduledTFModel):
             Predictions indices or predicted probabilities fro each token (not subtoken)
 
         """
-        for ids, ms, y_ms in zip(input_ids, input_masks, y_masks):
-            assert len(ids) == len(ms) == len(y_ms), \
-                f"ids({len(ids)}) = {ids}, masks({len(ms)}) = {ms}," \
-                    f" y_masks({len(y_ms)}) should have the same length."
-
         feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks)
         if self.ema:
             self.sess.run(self.ema.switch_to_test_op)
