@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 
 import numpy as np
 import tensorflow as tf
@@ -74,7 +74,7 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
                  num_context_turns: int = 10,
                  max_sequence_length: int = 50,
                  learning_rate: float = 1e-3,
-                 emb_matrix: np.ndarray = None,
+                 emb_matrix: Optional[np.ndarray] = None,
                  trainable_embeddings: bool = False,
                  is_positional: bool = True,
                  stack_num: int = 5,
@@ -84,7 +84,6 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
                  **kwargs):
 
         self.seed = seed
-        np.random.seed(self.seed)
         tf.set_random_seed(self.seed)
 
         self.batch_size = batch_size

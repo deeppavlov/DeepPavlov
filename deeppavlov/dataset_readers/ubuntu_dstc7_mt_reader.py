@@ -15,6 +15,7 @@
 from typing import List, Tuple, Dict
 from pathlib import Path
 import json
+
 import numpy as np
 
 from deeppavlov.core.common.registry import register
@@ -41,11 +42,13 @@ class UbuntuDSTC7MTReader(DatasetReader):
              num_context_turns: int = 10,
              num_responses: int = 100,
              padding: str = "post",
+             seed: int = 42,
              *args, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
 
         self.num_turns = num_context_turns
         self.padding = padding
         self.num_responses = num_responses
+        self.np_random = np.random.RandomState(seed)
 
         dataset = {}
         dataset["train"] = self._create_dialog_iter(Path(data_path) / 'ubuntu_train_subtask_1.json', "train")
@@ -103,11 +106,11 @@ class UbuntuDSTC7MTReader(DatasetReader):
 
                 if mode == 'train':
                     data.append((expanded_context + [true_response], 1))
-                    data.append((expanded_context + list(np.random.choice(fake_responses, size=1)), 0))  # random 1 from 99
+                    data.append((expanded_context + list(self.np_random.choice(fake_responses, size=1)), 0))  # random 1 from 99
 
                 elif mode == 'valid':
                     # NOTE: labels are useless here...
-                    data.append((expanded_context + [true_response] + list(np.random.choice(fake_responses, self.num_responses-1)), 0))
+                    data.append((expanded_context + [true_response] + list(self.np_random.choice(fake_responses, self.num_responses-1)), 0))
 
                 elif mode == 'test':
                     data.append((expanded_context + fake_responses, 0))

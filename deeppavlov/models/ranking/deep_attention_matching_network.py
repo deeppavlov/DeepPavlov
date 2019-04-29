@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
+from typing import Optional
 
 import numpy as np
 import tensorflow as tf
@@ -64,7 +65,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
                  num_context_turns: int = 10,
                  max_sequence_length: int = 50,
                  learning_rate: float = 1e-3,
-                 emb_matrix: np.ndarray = None,
+                 emb_matrix: Optional[np.ndarray] = None,
                  trainable_embeddings: bool = False,
                  is_positional: bool = True,
                  filters2_conv3d: int = 16,
@@ -75,8 +76,6 @@ class DAMNetwork(TensorflowBaseMatchingModel):
                  **kwargs):
 
         self.seed = seed
-
-        np.random.seed(self.seed)
         tf.set_random_seed(self.seed)
 
         self.num_context_turns = num_context_turns

@@ -74,7 +74,7 @@ class SiamesePreprocessor(Estimator):
                  num_ranking_samples: int = 1,
                  add_raw_text: bool = False,
                  tokenizer: Component = None,
-                 vocab: Estimator = None,
+                 vocab: Optional[Estimator] = None,
                  embedder: Optional[Component] = None,
                  sent_vocab: Optional[Estimator] = None,
                  **kwargs):
