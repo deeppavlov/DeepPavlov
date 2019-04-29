@@ -296,7 +296,7 @@ class BertSepRankerModel(LRScheduledTFModel):
 
         Args:
             features_li: list of elements where the first element represents the context batch of features
-            and the rest of elements represents response candidates batches of features
+            and the rest of elements represent response candidates batches of features
 
         Returns:
             predicted scores for contexts over response candidates

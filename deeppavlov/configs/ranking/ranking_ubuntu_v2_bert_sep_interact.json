@@ -85,7 +85,7 @@
         "subdir": "{DOWNLOADS_PATH}/bert_models"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/rankers/ubuntu_v2_uncased_bert_sep_predictor_model.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v2_uncased_bert_sep_predictor_model.tar.gz",
         "subdir": "{ROOT_PATH}/models"
       }
 

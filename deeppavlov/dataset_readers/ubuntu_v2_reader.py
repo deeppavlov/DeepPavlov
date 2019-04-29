@@ -35,6 +35,7 @@ class UbuntuV2Reader(DatasetReader):
 
         Args:
             data_path: A path to a folder with dataset csv files.
+            positive_samples: if `True`, only positive context-response pairs will be taken for train
         """
 
         data_path = expand_path(data_path)

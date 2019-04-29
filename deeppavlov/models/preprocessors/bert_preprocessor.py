@@ -292,43 +292,21 @@ class BertContextAdd(Component):
 
 
 @register('bert_ranker_preprocessor')
-class BertRankerPreprocessor(Component):
-    """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks.
+class BertRankerPreprocessor(BertPreprocessor):
+    """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks for ranking.
 
-    Check details in convert_examples_to_features function.
-
-    Args:
-        vocab_file: path to vocabulary
-        do_lower_case: set True if lowercasing is needed
-        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
-
-    Attributes:
-        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
-        tokenizer: instance of Bert FullTokenizer
+    Builds features for a pair of context with each of the response candidates.
     """
-
-    def __init__(self,
-                 vocab_file: str,
-                 do_lower_case: bool = True,
-                 max_seq_length: int = 512,
-                 **kwargs) -> None:
-        self.max_seq_length = max_seq_length
-        vocab_file = str(expand_path(vocab_file))
-        self.tokenizer = FullTokenizer(vocab_file=vocab_file,
-                                       do_lower_case=do_lower_case)
 
     def __call__(self, batch: List[List[str]]) -> List[List[InputFeatures]]:
         """Call Bert convert_examples_to_features function to tokenize and create masks.
 
-        texts_a and texts_b are separated by [SEP] token
-
         Args:
-            texts_a: list of texts,
-            texts_b: list of texts, it could be None, e.g. single sentence classification task
+            batch: list of elemenents where the first element represents the batch with contexts
+                and the rest of elements represent response candidates batches
 
         Returns:
-            batch of InputFeatures with subtokens, subtoken ids, subtoken mask, segment mask.
-
+            list of feature batches with subtokens, subtoken ids, subtoken mask, segment mask.
         """
 
         cont_resp_pairs = []
@@ -346,45 +324,26 @@ class BertRankerPreprocessor(Component):
 
         return features
 
+
 @register('bert_sep_ranker_preprocessor')
-class BertSepRankerPreprocessor(Component):
-    """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks.
+class BertSepRankerPreprocessor(BertPreprocessor):
+    """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks for ranking.
 
-    Check details in convert_examples_to_features function.
-
-    Args:
-        vocab_file: path to vocabulary
-        do_lower_case: set True if lowercasing is needed
-        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
-
-    Attributes:
-        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
-        tokenizer: instance of Bert FullTokenizer
+    Builds features for a context and for each of the response candidates separately.
     """
-
-    def __init__(self,
-                 vocab_file: str,
-                 do_lower_case: bool = True,
-                 max_seq_length: int = 512,
-                 **kwargs) -> None:
-        self.max_seq_length = max_seq_length
-        vocab_file = str(expand_path(vocab_file))
-        self.tokenizer = FullTokenizer(vocab_file=vocab_file,
-                                       do_lower_case=do_lower_case)
 
     def __call__(self, batch: List[List[str]]) -> List[List[InputFeatures]]:
         """Call Bert convert_examples_to_features function to tokenize and create masks.
 
-        texts_a and texts_b are separated by [SEP] token
-
         Args:
-            texts_a: list of texts,
-            texts_b: list of texts, it could be None, e.g. single sentence classification task
+            batch: list of elemenents where the first element represents the batch with contexts
+                and the rest of elements represent response candidates batches
 
         Returns:
-            batch of InputFeatures with subtokens, subtoken ids, subtoken mask, segment mask.
-
+            list of feature batches with subtokens, subtoken ids, subtoken mask, segment mask
+                for the context and each of response candidates separately.
         """
+
         if isinstance(batch[0], str):
             batch = [batch]
         samples = []
@@ -407,18 +366,16 @@ class BertSepRankerPreprocessor(Component):
 
 @register('bert_sep_ranker_predictor_preprocessor')
 class BertSepRankerPredictorPreprocessor(BertSepRankerPreprocessor):
-    """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks.
+    """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks for ranking.
 
-    Check details in convert_examples_to_features function.
+    Builds features for a context and for each of the response candidates separately.
+    In addition, builds features for a response (and corresponding context) text base.
 
     Args:
-        vocab_file: path to vocabulary
-        do_lower_case: set True if lowercasing is needed
-        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
-
-    Attributes:
-        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
-        tokenizer: instance of Bert FullTokenizer
+        resps: list of strings containing the base of text responses
+        resp_vecs: BERT vector respresentations of `resps`, if is `None` features for the response base will be build
+        conts: list of strings containing the base of text contexts
+        cont_vecs: BERT vector respresentations of `conts`, if is `None` features for the response base will be build
     """
 
     def __init__(self,

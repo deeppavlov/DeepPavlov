@@ -65,6 +65,10 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/uncased_L-12_H-768_A-12.zip",
         "subdir": "{DOWNLOADS_PATH}/bert_models"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v2_uncased_bert_model.tar.gz",
+        "subdir": "{ROOT_PATH}/models"
       }
     ]
   }
