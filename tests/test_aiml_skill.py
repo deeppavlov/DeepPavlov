@@ -1,5 +1,6 @@
 from pathlib import Path
 from logging import getLogger
+
 import pytest
 
 from deeppavlov.agents.default_agent.default_agent import DefaultAgent
