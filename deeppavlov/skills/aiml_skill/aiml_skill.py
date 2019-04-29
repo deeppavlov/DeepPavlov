@@ -64,7 +64,7 @@ class AIMLSkill(Skill):
                 self.kernel.learn(str(each_file_path))
                 learned_files.append(each_file_path)
         if not learned_files:
-            log.error(f"No .aiml or .xml files found for AIML Kernel in directory {self.path_to_aiml_scripts}")
+            log.warning(f"No .aiml or .xml files found for AIML Kernel in directory {self.path_to_aiml_scripts}")
 
     def process_step(self, utterance_str: str, user_id: any) -> Tuple[str, float]:
         response = self.kernel.respond(utterance_str, sessionID=user_id)
