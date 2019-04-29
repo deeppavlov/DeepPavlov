@@ -427,8 +427,10 @@ class BertSepRankerPredictorPreprocessor(BertSepRankerPreprocessor):
         self.resp_features = None
         self.cont_features = None
         if resps is not None and resp_vecs is None:
+            log.info("Building BERT features for the response base...")
             resp_batch = [[el] for el in resps]
             self.resp_features = self(resp_batch)
         if conts is not None and cont_vecs is None:
+            log.info("Building BERT features for the context base...")
             cont_batch = [[el] for el in conts]
             self.cont_features = self(cont_batch)
