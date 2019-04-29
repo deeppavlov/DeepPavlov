@@ -39,7 +39,7 @@
         "conts": "#loader.conts",
         "cont_vecs": "#loader.cont_vecs",
         "cont_features": "#preproc.cont_features",
-        "interact_mode": 0,
+        "interact_mode": 3,
         "bert_config_file": "{DOWNLOADS_PATH}/bert_models/uncased_L-12_H-768_A-12/bert_config.json",
         "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/uncased_L-12_H-768_A-12/bert_model.ckpt",
         "save_path": "{MODELS_PATH}",
