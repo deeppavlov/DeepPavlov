@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Union
 from typing import Tuple, Optional, List
 from logging import getLogger
+
 import aiml
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.skill.skill import Skill
