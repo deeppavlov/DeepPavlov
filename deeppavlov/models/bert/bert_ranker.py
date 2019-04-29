@@ -82,6 +82,11 @@ class BertRankerModel(BertClassifierModel):
             predicted scores for contexts over response candidates
         """
 
+        if len(features_li) == 1 and len(features_li[0]) == 1:
+            msg = "It is not intended to use the {} in the interact mode.".format(self.__class__)
+            logger.error(msg)
+            return [msg]
+
         predictions = []
         for features in features_li:
             input_ids = [f.input_ids for f in features]
@@ -301,6 +306,11 @@ class BertSepRankerModel(LRScheduledTFModel):
         Returns:
             predicted scores for contexts over response candidates
         """
+
+        if len(features_li) == 1 and len(features_li[0]) == 1:
+            msg = "It is not intended to use the {} in the interact mode.".format(self.__class__)
+            logger.error(msg)
+            return [msg]
 
         predictions = []
         input_ids_a = [f.input_ids for f in features_li[0]]

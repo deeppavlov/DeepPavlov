@@ -307,13 +307,21 @@ class BertRankerPreprocessor(BertPreprocessor):
             list of feature batches with subtokens, subtoken ids, subtoken mask, segment mask.
         """
 
+        if isinstance(batch[0], str):
+            batch = [batch]
+
         cont_resp_pairs = []
-        contexts = [el[0] for el in batch]
-        for i in range(1, len(batch[0])):
-            responses = []
-            for el in batch:
-                responses.append(el[i])
-            cont_resp_pairs.append(zip(contexts, responses))
+        if len(batch[0]) == 1:
+            contexts = batch[0]
+            responses_empt = [None] * len(batch)
+            cont_resp_pairs.append(zip(contexts, responses_empt))
+        else:
+            contexts = [el[0] for el in batch]
+            for i in range(1, len(batch[0])):
+                responses = []
+                for el in batch:
+                    responses.append(el[i])
+                cont_resp_pairs.append(zip(contexts, responses))
         examples = []
         for s in cont_resp_pairs:
             ex = [InputExample(unique_id=0, text_a=context, text_b=response) for context, response in s]
@@ -344,6 +352,7 @@ class BertSepRankerPreprocessor(BertPreprocessor):
 
         if isinstance(batch[0], str):
             batch = [batch]
+
         samples = []
         for i in range(len(batch[0])):
             s = []
