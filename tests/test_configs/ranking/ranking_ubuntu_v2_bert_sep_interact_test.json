@@ -78,7 +78,7 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/ubuntu_v2_small_data.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/ubuntu_v2_data"
+        "subdir": "{DOWNLOADS_PATH}"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/uncased_L-12_H-768_A-12.zip",
