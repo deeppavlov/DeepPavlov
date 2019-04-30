@@ -64,7 +64,7 @@ transformations to predict probability that currents subtoken is start/end posit
 BERT for Ranking
 ----------------
 There are two main approaches in text ranking. The first one is interaction-based which is relatively accurate but
-works slow and the second one is representation-based which is less accurate but faster.
+works slow and the second one is representation-based which is less accurate but faster [1]_.
 The interaction-based ranking based on BERT is represented in the DeepPavlov with two main components
 :class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertRankerPreprocessor`
 and :class:`~deeppavlov.models.bert.bert_ranker.BertRankerModel`
@@ -77,3 +77,5 @@ and :class:`~deeppavlov.models.bert.bert_ranker.BertSepRankerPredictor` are for 
 where the task for ranking is to retrieve the best possible response from some provided response base with the help of
 the trained model. Working examples with the trained models are given :doc:`here </components/neural_ranking>`.
 Statistics are available :doc:`here </intro/features>`.
+
+.. [1] McDonald, R., Brokos, G. I., & Androutsopoulos, I. (2018). Deep relevance ranking using enhanced document-query interactions. arXiv preprint arXiv:1809.01682.
