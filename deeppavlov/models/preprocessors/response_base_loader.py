@@ -33,6 +33,9 @@ class ResponseBaseLoader(Serializable):
         self.resp_vecs = None
         self.conts = None
         self.cont_vecs = None
+        self.load()
+
+    def load(self):
         if self.load_path is not None:
             resp_file = self.load_path / "responses.csv"
             if resp_file.exists():
@@ -57,8 +60,5 @@ class ResponseBaseLoader(Serializable):
             if cont_vec_file.exists():
                 self.cont_vecs = np.load(cont_vec_file)
 
-    def load(self):
-        pass
-
     def save(self):
-        pass
+        logger.error("The method save of the {} class is not used.".format(self.__class__))

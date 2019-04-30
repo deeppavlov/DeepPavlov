@@ -159,7 +159,7 @@ class BertSepRankerModel(LRScheduledTFModel):
             # Exclude optimizer and classification variables from saved variables
             var_list = self._get_saveable_variables(
                 exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'output_weights', 'output_bias'))
-            assignment_map = self._get_assignment_map_from_checkpoint(var_list, pretrained_bert)
+            assignment_map = self.get_variables_to_restore(var_list, pretrained_bert)
             tf.train.init_from_checkpoint(pretrained_bert, assignment_map)
 
         self.sess.run(tf.global_variables_initializer())
@@ -167,8 +167,9 @@ class BertSepRankerModel(LRScheduledTFModel):
         if self.load_path is not None:
             self.load()
 
-    def _get_assignment_map_from_checkpoint(self, tvars, init_checkpoint):
-        """Compute the union of the current variables and checkpoint variables."""
+    @classmethod
+    def get_variables_to_restore(cls, tvars, init_checkpoint):
+        """Determine correspondence of checkpoint variables to current variables."""
 
         assignment_map = OrderedDict()
         graph_names = []
