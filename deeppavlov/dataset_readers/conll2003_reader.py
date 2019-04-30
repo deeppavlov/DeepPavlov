@@ -42,9 +42,9 @@ class Conll2003DatasetReader(DatasetReader):
     def parse_ner_file(self, file_name: Path):
         samples = []
         with file_name.open(encoding='utf8') as f:
-            tokens = []
-            pos_tags = []
-            tags = []
+            tokens = ['<DOCSTART>']
+            pos_tags = ['O']
+            tags = ['O']
             for line in f:
                 # Check end of the document
                 if 'DOCSTART' in line:
