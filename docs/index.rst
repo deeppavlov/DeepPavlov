@@ -12,7 +12,6 @@ Welcome to DeepPavlov's documentation!
    Configuration files <intro/config_description>
    Pre-trained embeddings <intro/pretrained_vectors>
    AutoML <intro/hypersearch>
-   Tutorials <intro/tutorials>
 
 
 .. toctree::
