@@ -15,6 +15,7 @@
 from typing import Iterable, Union, Tuple, Optional
 from collections import defaultdict
 from logging import getLogger
+from pathlib import Path
 
 import numpy as np
 import tensorflow as tf
@@ -39,12 +40,13 @@ class TFModel(NNModel, metaclass=TfModelMeta):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    def load(self, exclude_scopes: tuple = ('Optimizer',)) -> None:
+    def load(self, exclude_scopes: tuple = ('Optimizer',), path: Union[Path, str] = None) -> None:
         """Load model parameters from self.load_path"""
         if not hasattr(self, 'sess'):
             raise RuntimeError('Your TensorFlow model {} must'
                                ' have sess attribute!'.format(self.__class__.__name__))
-        path = str(self.load_path.resolve())
+        path = path or self.load_path
+        path = str(Path(path).resolve())
         # Check presence of the model files
         if tf.train.checkpoint_exists(path):
             log.info('[loading model from {}]'.format(path))
@@ -242,10 +244,12 @@ class LRScheduledTFModel(TFModel, LRScheduledModel):
     def get_optimizer(self):
         return self._optimizer
 
-    def load(self, exclude_scopes: Optional[Iterable] = ('Optimizer',
-                                                         'learning_rate',
-                                                         'momentum')):
-        return super().load(exclude_scopes=exclude_scopes)
+    def load(self, 
+             exclude_scopes: Optional[Iterable] = ('Optimizer',
+                                                   'learning_rate',
+                                                   'momentum'),
+             **kwargs):
+        return super().load(exclude_scopes=exclude_scopes, **kwargs)
 
     def process_event(self, *args, **kwargs):
         LRScheduledModel.process_event(self, *args, **kwargs)
