@@ -25,15 +25,15 @@ which is inspired by Bi-LSTM+CRF architecture from https://arxiv.org/pdf/1603.01
 +                                                         +      +-----------------------------------------------------------------+-------------+
 | (Collection 3)                                          |      | :config:`ner_rus.json <ner/ner_rus.json>`                       |    95.1     |
 +---------------------------------------------------------+------+-----------------------------------------------------------------+-------------+
-| ConLL-2003                                              | En   | :config:`ner_conll2003_bert.json <ner/ner_conll2003_bert.json`  |    91.5     |
+| ConLL-2003                                              | En   | :config:`ner_conll2003_bert.json <ner/ner_conll2003_bert.json>` |    91.5     |
 +                                                         +      +-----------------------------------------------------------------+-------------+
-|                                                         |      | :config:`ner_conll2003.json <ner/ner_conll2003.json`            |    89.9     |
+|                                                         |      | :config:`ner_conll2003.json <ner/ner_conll2003.json>`           |    89.9     |
 +---------------------------------------------------------+      +-----------------------------------------------------------------+-------------+
-| OntoNotes                                               |      | :config:`ner_ontonotes_bert.json <ner/ner_ontonotes_bert.json`  |    88.4     |
+| OntoNotes                                               |      | :config:`ner_ontonotes_bert.json <ner/ner_ontonotes_bert.json>` |    88.4     |
 +                                                         +      +-----------------------------------------------------------------+-------------+
-|                                                         |      | :config:`ner_ontonotes.json <ner/ner_ontonotes.json`            |    87.1     |
+|                                                         |      | :config:`ner_ontonotes.json <ner/ner_ontonotes.json>`           |    87.1     |
 +---------------------------------------------------------+      +-----------------------------------------------------------------+-------------+
-| DSTC2                                                   |      | :config:`ner_dstc2.json <ner/ner_dstc2.json>`                   |    86.7     |
+| DSTC2                                                   |      | :config:`ner_dstc2.json <ner/ner_dstc2.json>`                   |    97.1     |
 +---------------------------------------------------------+------+-----------------------------------------------------------------+-------------+
 
 :doc:`Slot filling components </components/slot_filling>`
