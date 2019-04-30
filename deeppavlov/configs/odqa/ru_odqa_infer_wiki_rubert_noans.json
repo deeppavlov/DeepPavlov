@@ -65,7 +65,8 @@
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
     "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
     ],
     "labels": {
       "server_utils": "ODQA"

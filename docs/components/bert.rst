@@ -55,7 +55,11 @@ also an optional CRF layer on the top.
 
 BERT for Context Question Answering (SQuAD)
 -------------------------------------------
-TODO
+Context Question Answering on `SQuAD <https://rajpurkar.github.io/SQuAD-explorer/>`__ dataset is a task
+of looking for an answer on a question in a given context. This task could be formalized as predicting answer start
+and end position in a given context. :class:`~deeppavlov.models.bert.bert_squad.BertSQuADModel` uses two linear
+transformations to predict probability that currents subtoken is start/end position of an answer. For details check
+:doc:`Context Question Answering documentation page </components/squad>`.
 
 BERT for Ranking
 ----------------
