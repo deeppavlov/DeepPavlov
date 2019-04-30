@@ -12,10 +12,6 @@ deeppavlov.models.bert
 
     .. automethod:: __call__
 
-.. autoclass:: deeppavlov.models.preprocessors.bert_preprocessor.BertContextAdd
-
-    .. automethod:: __call__
-
 .. autoclass:: deeppavlov.models.bert.bert_classifier.BertClassifierModel
 
     .. automethod:: __call__
@@ -35,7 +31,4 @@ deeppavlov.models.bert
 .. autoclass:: deeppavlov.models.bert.bert_squad.BertSQuADInferModel
 
     .. automethod:: __call__
-
-
-
 

@@ -33,19 +33,19 @@ Here is the list of all available configs:
     +--------------------------------------------------------------+--------------------+-----------------+------------+----------+
     | Model                                                        | Dataset            | Embeddings Size | Model Size | F1 score |
     +==============================================================+====================+=================+============+==========+
-    | :config:`ner_conll2003_bert <ner/ner_conll2003_bert.json>`   | CoNLL-2003         | ---             | 2.1 GB     | 91.5     |
-    +--------------------------------------------------------------+--------------------+-----------------+------------+----------+
-    | :config:`ner_conll2003_bert <ner/ner_onotonotes_bert.json>`  | OnotoNotes         | ---             | 2.1 GB     | 88.4     |
-    +--------------------------------------------------------------+--------------------+-----------------+------------+----------+
     | :config:`ner_rus_bert <ner/ner_rus_bert.json>`               | Collection3 [13]_  | ---             | 2.1 GB     | 97.7     |
     +--------------------------------------------------------------+--------------------+-----------------+------------+----------+
-    | :config:`ner_ontonotes <ner/ner_ontonotes.json>`             | OnotoNotes         | 331 MB          | 7.8 MB     | 87.1     |
+    | :config:`ner_conll2003_bert <ner/ner_conll2003_bert.json>`   | CoNLL-2003         | ---             | 2.1 GB     | 91.5     |
+    +--------------------------------------------------------------+--------------------+-----------------+------------+----------+
+    | :config:`ner_ontonotes_bert <ner/ner_ontonotes_bert.json>`   | OntoNotes          | ---             | 2.1 GB     | 88.4     |
     +--------------------------------------------------------------+--------------------+-----------------+------------+----------+
     | :config:`ner_rus <ner/ner_rus.json>`                         | Collection3 [13]_  | 1.0 GB          | 5.6 MB     | 95.1     |
     +--------------------------------------------------------------+--------------------+-----------------+------------+----------+
     | :config:`ner_dstc <ner/ner_dstc.json>`                       | DSTC2              | ---             | 626 KB     | 97.2     |
     +--------------------------------------------------------------+--------------------+-----------------+------------+----------+
     | :config:`ner_conll2003 <ner/ner_conll2003.json>`             | CoNLL-2003         | 331 MB          | 3.1 MB     | 89.9     |
+    +--------------------------------------------------------------+--------------------+-----------------+------------+----------+
+    | :config:`ner_ontonotes <ner/ner_ontonotes.json>`             | OntoNotes          | 331 MB          | 7.8 MB     | 87.1     |
     +--------------------------------------------------------------+--------------------+-----------------+------------+----------+
 
 
@@ -74,9 +74,9 @@ The data for training should be placed in the folder provided in the config:
     from deeppavlov.core.commands.utils import parse_config
     config_dict = parse_config(configs.ner.ner_ontonotes_bert)
     print(config_dict['dataset_reader']['data_path'])
-    >>> '~/.deeppavlov/downloads/ontonotes_ner_data'
+    >>> '~/.deeppavlov/downloads/ontonotes'
 
-There must be three txt files: train.txt, valid.txt, and test.txt. Furthermore the `data_path` can be changeged from code.
+There must be three txt files: train.txt, valid.txt, and test.txt. Furthermore the `data_path` can be changed from code.
 
 
 NER task
