@@ -12,6 +12,18 @@ deeppavlov.models.bert
 
     .. automethod:: __call__
 
+.. autoclass:: deeppavlov.models.preprocessors.bert_preprocessor.BertRankerPreprocessor
+
+    .. automethod:: __call__
+
+.. autoclass:: deeppavlov.models.preprocessors.bert_preprocessor.BertSepRankerPreprocessor
+
+    .. automethod:: __call__
+
+.. autoclass:: deeppavlov.models.preprocessors.bert_preprocessor.BertSepRankerPredictorPreprocessor
+
+    .. automethod:: __call__
+
 .. autoclass:: deeppavlov.models.bert.bert_classifier.BertClassifierModel
 
     .. automethod:: __call__
@@ -32,3 +44,16 @@ deeppavlov.models.bert
 
     .. automethod:: __call__
 
+.. autoclass:: deeppavlov.models.bert.bert_ranker.BertRankerModel
+
+    .. automethod:: __call__
+    .. automethod:: train_on_batch
+
+.. autoclass:: deeppavlov.models.bert.bert_ranker.BertSepRankerModel
+
+    .. automethod:: __call__
+    .. automethod:: train_on_batch
+
+.. autoclass:: deeppavlov.models.bert.bert_ranker.BertSepRankerPredictor
+
+    .. automethod:: __call__
