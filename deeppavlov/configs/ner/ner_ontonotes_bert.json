@@ -90,6 +90,8 @@
     "log_every_n_batches": 40,
     "tensorboard_log_dir": "{NER_PATH}/logs",
     "show_examples": false,
+    "pytest_max_batches": 2,
+    "pytest_batch_size": 8,
     "evaluation_targets": ["valid", "test"],
     "class_name": "nn_trainer"
   },
