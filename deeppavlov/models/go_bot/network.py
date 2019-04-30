@@ -282,7 +282,7 @@ class GoalOrientedBot(LRScheduledTFModel):
         # Intent features
         intent_features = []
         if callable(self.intent_classifier):
-            intent_features = self.intent_classifier([context])[0]
+            intent_features = self.intent_classifier([context])[1][0]
 
             if self.debug:
                 intent = self.intents[np.argmax(intent_features[0])]

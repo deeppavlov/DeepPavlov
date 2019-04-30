@@ -13,12 +13,12 @@
 # limitations under the License.
 
 import sys
+from logging import getLogger
 
 import numpy as np
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.serializable import Serializable
-from logging import getLogger
 
 logger = getLogger(__name__)
 
