@@ -9,6 +9,39 @@ It is possible to build automatic semantic FAQ systems with such neural architec
 Training and inference models on predifined datasets
 ----------------------------------------------------
 
+BERT Ranking
+~~~~~~~~~~~~
+
+Before using models make sure that all required packages are installed running the command:
+
+.. code:: bash
+
+    python -m deeppavlov install ranking_ubuntu_v2_bert_uncased
+    python -m deeppavlov install ranking_ubuntu_v2_bert_sep
+    python -m deeppavlov install ranking_ubuntu_v2_bert_sep_interact
+
+To train the interaction-based (accurate, slow) model on the `Ubuntu V2`_ from command line:
+
+::
+
+    python -m deeppavlov train ranking_ubuntu_v2_bert_uncased [-d]
+
+To train the representation-based (accurate, fast) model on the `Ubuntu V2`_ from command line:
+
+::
+
+    python -m deeppavlov train ranking_ubuntu_v2_bert_sep [-d]
+
+Further the trained representation-based model can be run for inference over the provided response base
+(~500K in our case) from command line:
+
+::
+
+    python -m deeppavlov interact ranking_ubuntu_v2_bert_sep_interact [-d]
+
+Statistics on the models quality are available :doc:`here </intro/features>`.
+
+
 Ranking
 ~~~~~~~
 
@@ -282,3 +315,4 @@ such as ``f1``, ``acc`` and ``log_loss``  can be calculated.
 .. _`InsuranceQA V1`: https://github.com/shuzi/insuranceQA
 .. _`paraphraser.ru`: https://paraphraser.ru
 .. _`Quora Question Pairs`: https://www.kaggle.com/c/quora-question-pairs/data
+.. _`Ubuntu V2`: https://github.com/rkadlec/ubuntu-ranking-dataset-creator
