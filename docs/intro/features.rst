@@ -7,20 +7,34 @@ Components
 :doc:`NER component </components/ner>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Based on neural Named Entity Recognition network. The NER component reproduces architecture from the paper `Application
+There are two models for Named Entity Recognition task in DeepPavlov:
+BERT-based and Bi-LSTM+CRF. The models predict tags (in BIO format) for tokens
+in input.
+
+BERT-based model is described in  `BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding
+<https://arxiv.org/abs/1810.04805>`__.
+
+The second model reproduces architecture from the paper `Application
 of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition <https://arxiv.org/pdf/1709.09686.pdf>`__
 which is inspired by Bi-LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf.
 
-+---------------------------------------------------------------------------------------------------------------------------+------------------+
-| Dataset                                                                                                                   |     Test F1      |
-+===========================================================================================================================+==================+
-| :config:`Persons-1000 dataset with additional LOC and ORG markup <ner/ner_rus.json>`                                      |       95.14      |
-+---------------------------------------------------------------------------------------------------------------------------+------------------+
-| :config:`DSTC 2 <ner/ner_dstc2.json>`                                                                                     |       98.40      |
-+---------------------------------------------------------------------------------------------------------------------------+------------------+
-| :config:`OntoNotes  <ner/ner_ontonotes.json>`                                                                             |       87.07      |
-+---------------------------------------------------------------------------------------------------------------------------+------------------+
-
++---------------------------------------------------------+------+-----------------------------------------------------------------+--------------+
+| Dataset                                                 | Lang | Model                                                           |   Test F1   |
++=========================================================+======+=================================================================+=============+
+| Persons-1000 dataset with additional LOC and ORG markup | Ru   | :config:`ner_rus_bert.json <ner/ner_rus_bert.json>`             |    97.7     |
++                                                         +      +-----------------------------------------------------------------+-------------+
+| (Collection 3)                                          |      | :config:`ner_rus.json <ner/ner_rus.json>`                       |    95.1     |
++---------------------------------------------------------+------+-----------------------------------------------------------------+-------------+
+| ConLL-2003                                              | En   | :config:`ner_conll2003_bert.json <ner/ner_conll2003_bert.json`  |    91.5     |
++                                                         +      +-----------------------------------------------------------------+-------------+
+|                                                         |      | :config:`ner_conll2003.json <ner/ner_conll2003.json`            |    89.9     |
++---------------------------------------------------------+      +-----------------------------------------------------------------+-------------+
+| OntoNotes                                               |      | :config:`ner_ontonotes_bert.json <ner/ner_ontonotes_bert.json`  |    88.4     |
++                                                         +      +-----------------------------------------------------------------+-------------+
+|                                                         |      | :config:`ner_ontonotes.json <ner/ner_ontonotes.json`            |    87.1     |
++---------------------------------------------------------+      +-----------------------------------------------------------------+-------------+
+| DSTC2                                                   |      | :config:`ner_dstc2.json <ner/ner_dstc2.json>`                   |    86.7     |
++---------------------------------------------------------+------+-----------------------------------------------------------------+-------------+
 
 :doc:`Slot filling components </components/slot_filling>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
