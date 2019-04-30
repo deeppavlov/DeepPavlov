@@ -94,7 +94,7 @@ PARAMS = {
         ("classifiers/sentiment_twitter_preproc.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/topic_ag_news.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/rusentiment_cnn.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/rusentiment_elmo.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/rusentiment_elmo_twitter_cnn.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/rusentiment_bigru_superconv.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/yahoo_convers_vs_info.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
@@ -119,6 +119,9 @@ PARAMS = {
         ("classifiers/intents_sample_json.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "ner": {
+        ("ner/ner_conll2003_bert.json", "ner_conll2003_bert", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_ontonotes_bert.json", "ner_ontonotes_bert", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_rus_bert.json", "ner_rus_bert", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_ontonotes.json", "ner_ontonotes", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],

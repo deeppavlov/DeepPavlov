@@ -424,7 +424,7 @@ class LRScheduledModel:
                 self._learning_rate_cur_div *= self._learning_rate_drop_div
                 self._lr /= self._learning_rate_drop_div
                 if self._load_before_drop:
-                    self.load()
+                    self.load(path=self.save_path)
                     self._update_graph_variables(momentum=self._mom)
                 self._update_graph_variables(learning_rate=self._lr)
                 log.info(f"New learning rate dividor = {self._learning_rate_cur_div}")
