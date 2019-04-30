@@ -8,18 +8,18 @@ from numpy.random import sample
 from itertools import repeat
 
 
-from nltk import pos_tag as nltk_pos_tagger
-
-class CaseSaver:
-    """It can save lettercases of tokens and then restore them.
+class Lettercaser:
+    """It defines lettercases of tokens and can restore them.
     By default it detects only ['lower', 'upper', 'capitalize'] lettercases,
     but there is opportunity to expand that list with 'cases' argument
     Args:
         cases: dictionary that describes map,
                name of lettercase -> func that takes str and convert it in certain lettercase
+        default_case: func: str->str that define transformation of string when lettercase was not be detected
     Attributes:
         cases: dictionary that describes map,
                name of lettercase -> func that takes str and convert it in certain lettercase
+        default_case: func: str->str that define transformation of string when lettercase was not be detected
     """
 
     def __init__(self, cases: dict = None, default_case = None):
@@ -36,42 +36,35 @@ class CaseSaver:
         else:
             self.cases = cases
 
-    def _determine_case(self, token):
+    def get_case(self, token):
+        """It detects case of token with 'cases' attribute
+        Args:
+            token: token lettercases of that will be detected
+        """
         for case in self.cases:
             if token == self.cases[case](token):
                 return case
         return None
 
-    def save_cases(self, tokens: List[str]):
-        """It detects case of tokens with 'cases' attribute
-        and saves them into 'saved_cases' attribute
+    def put_in_case(self, token: str, case: str):
+        """It restore lettercases of tokens according to 'case' arg,
+        if lettercase was not detected (case==None), 'default_case' func would be used
         Args:
-            tokens: List of tokens lettercases of that will be saved
+            tokens: token that will be put in case
+            case: name of lettercase
+        Return:
+            tokens in certain lettercase
+            if lettercase was not detected then 'default_case'would be used
         """
-        self.saved_cases = [self._determine_case(token) for token in tokens]
-
-    def _rest_case(self, token: str, case: str):
         if case is None:
             return self.default_case(token)
         return self.cases[case](token)
-
-    def rest_cases(self, tokens: List[str]) -> List[str]:
-        """It restore lettercases of tokens according to 'saved_cases' attribute,
-        if lettercase was not detected, 'default_case' func would be used
-        Args:
-            tokens: List of tokens lettercases of that will be restored
-                    according to 'saved_cases' attribute
-        Return:
-            Tokens with restored lettercases, if lettercase was not detected
-            then 'default_case'would be used
-        """
-        return [self._rest_case(token, saved_case) for saved_case, token in zip(self.saved_cases, tokens)]
 
 
 class RuInflector:
     """Class that morpho-analyses given token and inflects
     random token into certain morpho-form, for russian language.
-    It is based on pymorphy2 library
+    It is based on pymorphy2 library. it doesn't support phrases.
     Attributes:
         morph: pymorphy2.MorphAnalyzer object
     """
@@ -79,7 +72,7 @@ class RuInflector:
     def __init__(self):
         self.morph = pymorphy2.MorphAnalyzer()
 
-    def get_morpho_tag(self, token: str) -> pymorphy2.tagset.OpencorporaTag:
+    def get_morpho_tag(self, token: str, pos_tag=None) -> pymorphy2.tagset.OpencorporaTag:
         """Return morpho-form of token
         Args:
             token: token that will be morpho-analysed
@@ -93,7 +86,7 @@ class RuInflector:
         """
         return self.morph.parse(token)[0].normal_form
 
-    def inflect_token(self, token: str, morpho_tag, force: bool=False) -> str:
+    def inflect_token(self, token: str, morpho_tag: pymorphy2.tagset.OpencorporaTag, force: bool=True) -> str:
         """It inflects token in certain morpho-form
         Args:
             token: token that will be inflected
@@ -106,7 +99,10 @@ class RuInflector:
             morpho_tag = self.extract_morpho_requirements(morpho_tag)
         else:
             morpho_tag = morpho_tag.grammemes
-        return self.morph.parse(token)[0].inflect(morpho_tag)
+        inflected = self.morph.parse(token)[0].inflect(morpho_tag)
+        if inflected is None:
+            return None
+        return inflected.word
 
     @staticmethod
     def extract_morpho_requirements(tag: pymorphy2.tagset.OpencorporaTag) -> Set:
@@ -118,7 +114,7 @@ class RuInflector:
         elif tag.POS == "ADJS":
             keys = {"ADJS", "gender", "number"}
         elif tag.POS == "VERB":
-            keys = {"mood", "tense", "aspect", "person", "voice", "gender", "number"}
+            keys = {"VERB", "mood", "tense", "aspect", "person", "voice", "gender", "number"}
         elif tag.POS == "INFN":
             keys = {"INFN", "aspect"}
         elif tag.POS in ["PRTF"]:
@@ -149,26 +145,22 @@ class RuThesaurus:
 
     def __init__(self, dir_path, with_source_token: bool = False):
         self.dir_path = Path(dir_path)
-        required_files = (f"{}.csv" for dt in ('synonyms', 'text_entry'))
-        if not all(Path(data_path, f).exists() for f in required_files):
+        required_files = (f"{dt}.csv" for dt in ('synonyms', 'text_entry'))
+        if not all(Path(dir_path, f).exists() for f in required_files):
             raise FileNotFoundError('Files: synonyms.csv, text_entry was not found, in specified path')
         self.with_source_token = with_source_token
         self.synonyms_data = pd.read_csv(self.dir_path / "synonyms.csv", index_col=0)
         self.text_entry_data = pd.read_csv(self.dir_path / "text_entry.csv", index_col=0)
 
-    def _find_synonyms(self, lemma: str) -> List[str]:
+    def _find_synonyms(self, lemma: str, pos_tag=None) -> List[str]:
         lemma = lemma.upper()
-        #1
         entry_id_set = set(self.text_entry_data[self.text_entry_data['lemma'] == lemma]['entry_id'])
-        #2
         concept_id_set = set()
         for entry_id in entry_id_set:
             concept_id_set.update(set(self.synonyms_data[self.synonyms_data['entry_id'] == entry_id]['concept_id']))
-        #3
         syn_entry_id_set = set()
         for concept_id in concept_id_set:
             syn_entry_id_set.update(set(self.synonyms_data[self.synonyms_data['concept_id']==concept_id]['entry_id']))
-        #4
         synlist = list()
         for syn_entry_id in syn_entry_id_set:
             synlist += list(self.text_entry_data[self.text_entry_data['entry_id']==syn_entry_id]['lemma'])
@@ -233,15 +225,15 @@ class EnInflector:
             return '_'.join([en.lemma(split[0])] + split[1:])
 
     def _is_plur(self, token, pos_tag):
-        return token == en.inflect.pluralize(token,
+        return token == en.inflect.pluralize(en.lemma(token),
                                              pos=self._nltk_postag_to_pattern_postag(pos_tag),
                                              classical=self.classical_pluralize)
 
-    def _is_comp(self, token):
-        return token == en.inflect.comparative(token)
+    def _is_comp(self, token, pos_tag):
+        return pos_tag == 'JJR'
 
-    def _is_supr(self, token):
-        return token == en.inflect.superlative(token)
+    def _is_supr(self, token, pos_tag):
+        return pos_tag == 'JJS'
 
     def _get_verb_tense(self, token):
         candidates = en.tenses(token)
@@ -265,12 +257,12 @@ class EnInflector:
         elif pos_tag.startswith('V'):
             morpho_tag.update({'pos_tag': pos_tag, 'tense': self._get_verb_tense(split[0])})
         elif pos_tag.startswith('J'):
-            morpho_tag.update({'pos_tag': pos_tag, 'comp': self._is_comp(token), 'supr': self._is_supr(token)})
+            morpho_tag.update({'pos_tag': pos_tag, 'comp': self._is_comp(token, pos_tag), 'supr': self._is_supr(token, pos_tag)})
         elif pos_tag.startswith('R'):
-            morpho_tag.update({'pos_tag': pos_tag, 'comp': self._is_comp(token), 'supr': self._is_supr(token)})
+            morpho_tag.update({'pos_tag': pos_tag})
         return morpho_tag
     
-    def inflect_token(self, token, morpho_tag):
+    def inflect_token(self, token, morpho_tag, force: bool=False):
         """It inflects token in certain morpho-form. Phrasal verbs should be linked with '_' symbol.
         Args:
             token: token that will be inflected
@@ -279,15 +271,15 @@ class EnInflector:
             inflected token
         """
         split = token.split('_')
-        if morpho_tag['tense']:
-            return "_".join([en.conjugate(split[0], morpho_tag['tense'])] + split[1:])
-        if morpho_tag['plur']:
+        if morpho_tag.get('tense'):
+            return "_".join([en.conjugate(split[0], morpho_tag.get('tense'))] + split[1:])
+        if morpho_tag.get('plur'):
             return "_".join(split[:-1] + [en.inflect.pluralize(split[-1],
-                                                               pos=self._nltk_postag_to_pattern_postag(morpho_tag['pos_tag']),
+                                                               pos=self._nltk_postag_to_pattern_postag(morpho_tag.get('pos_tag')),
                                                                classical=self.classical_pluralize)])
-        if morpho_tag['comp']:
+        if morpho_tag.get('comp'):
             return en.inflect.comparative(token)
-        if morpho_tag['supr']:
+        if morpho_tag.get('supr'):
             return en.inflect.superlative(token)
         return token
 
@@ -300,8 +292,9 @@ class EnThesaurus:
         with_source_token: wheither source symbol is considered as synonyms to itself
     """
 
-    def __init__(self, with_source_token: bool=False):
+    def __init__(self, with_source_token: bool=False, without_phrase: bool=False):
         self.with_source_token = with_source_token
+        self.without_phrase = without_phrase
 
     def _nltk_postag_to_wordnet_postag(self, pos_tag: str):
         if pos_tag.startswith('N'):
@@ -323,7 +316,7 @@ class EnThesaurus:
         return synonyms
 
     def _filter(self, synlist: List[str], source_lemma: str) -> List[str]:
-        filtered_syn = set(filter(lambda x: len(x.split('_')) == 1, synlist))
+        filtered_syn = set(filter(lambda x: len(x.split('_')) == 1, synlist)) if self.without_phrase else set(synlist)
         filtered_syn.discard(source_lemma)
         if self.with_source_token:
             return [source_lemma] + list(filtered_syn)
@@ -361,7 +354,10 @@ class WordFilter:
                  not_replaced_tokens: List[str]):
         self.replace_freq = replace_freq
         self.isalpha_only = isalpha_only
-        self.not_replaced_tokens = not_replaced_tokens
+        if not_replaced_tokens is None:
+            self.not_replaced_tokens = []
+        else:
+            self.not_replaced_tokens = not_replaced_tokens
 
     def filter_isalpha_only(self, tokens):
         if self.isalpha_only:
@@ -379,10 +375,10 @@ class WordFilter:
         return map(lambda x: sample() < self.replace_freq if x else x, prev_decision)
 
     def filter_united(self, tokens, pos_tags):
-        return map(lambda x, y, z: all([x,y,z]),
-                   self.filter_based_on_pos_tag(tokens, pos_tags),
-                   self.filter_not_replaced_token(tokens),
-                   self.filter_isalpha_only(tokens))
+        return list(map(lambda x, y, z: all([x,y,z]),
+                        self.filter_based_on_pos_tag(tokens, pos_tags),
+                        self.filter_not_replaced_token(tokens),
+                        self.filter_isalpha_only(tokens)))
 
     def filter_words(self, tokens, pos_tags):
         """It filters tokens based on replace_freq, isalpha_only, not_replaced_token and pos_tags of tokens
@@ -394,7 +390,7 @@ class WordFilter:
             'True' for tokens that can be replaced
         """
         filtered = self.filter_united(tokens, pos_tags)
-        return self.filter_frequence(filtered)
+        return list(self.filter_frequence(filtered))
 
 
 class EnWordFilter(WordFilter):
@@ -418,13 +414,15 @@ class EnWordFilter(WordFilter):
     def __init__(self,
                  replace_freq: float,
                  isalpha_only: bool,
-                 not_replaced_tokens: List[str]=None, # = ["n't"],
+                 not_replaced_tokens: List[str]=None,
                  replaced_pos_tags: List[str]=None,
-                 is_replace_proper_noun: bool,
-                 is_replace_modal_verb):
+                 is_replace_proper_noun: bool=True,
+                 is_replace_modal_verb: bool=True):
         super(EnWordFilter, self).__init__(replace_freq, isalpha_only, not_replaced_tokens)
         if not_replaced_tokens is None:
-            not_replaced_tokens = ["n't"]
+            self.not_replaced_tokens = ["n't", "have", "has", "had", "be", "was", "is", "are", "am", "'m", "been", "will"]
+        else:
+            self.not_replaced_tokens = not_replaced_tokens
         if replaced_pos_tags is None:
             replaced_pos_tags = ['n', 'v', 'a', 'r']
         self.replaced_pos_tags = replaced_pos_tags
@@ -438,7 +436,6 @@ class EnWordFilter(WordFilter):
             self.postag_to_nltk_postag['n'].extend(['NNP', 'NNPS'])
         if is_replace_modal_verb:
             self.postag_to_nltk_postag['v'].extend(['MD'])
-        self._sentence_pos_tag = []
 
     def get_nltk_replaced_postags(self, tag_list):
         return sum(map(lambda x: self.postag_to_nltk_postag[x], tag_list),[])
@@ -456,7 +453,7 @@ class EnWordFilter(WordFilter):
         replaced_nltk_postags = self.get_nltk_replaced_postags(self.replaced_pos_tags)
         result = []
         prev_postag_is_EX = False
-        for token, pos_tag in self._sentence_pos_tag:
+        for token, pos_tag in zip(tokens, pos_tags):
             if pos_tag == 'EX':
                 prev_postag_is_EX = True
                 result.append(False)
@@ -489,7 +486,7 @@ class RuWordFilter(WordFilter):
                  isalpha_only: bool,
                  not_replaced_tokens: List[str]=None,
                  replaced_pos_tags: List[str]=None,
-                 is_replace_numeral_adjective):
+                 is_replace_numeral_adjective: bool=True):
         super(RuWordFilter, self).__init__(replace_freq, isalpha_only, not_replaced_tokens)
         if not_replaced_tokens is None:
             not_replaced_tokens = []
@@ -520,14 +517,5 @@ class RuWordFilter(WordFilter):
             'True' for tokens that can be replaced
         """
         replaced_nltk_postags = self.get_nltk_replaced_postags(self.replaced_pos_tags)
-        print(pos_tags)
-        return map(lambda x: x[1] in replaced_nltk_postags, pos_tags)
+        return list(map(lambda x: x in replaced_nltk_postags, pos_tags))
 
-if __name__ == '__main__':
-    #a = EnWordFilter(1, True, ['suka'], ['n', 'v', 'a', 'r'], True, True)
-    a = RuWordFilter(1, False, ['Илья'], ['s', 'num', 'a', 'r', 'v'], True)
-    #print(list(a.filter_frequence([True]*100)))
-    test_str = "Илья оторопел и дважды перечитал бумажку ."
-    posss = nltk_pos_tagger(test_str.split(), lang='rus')
-    result = list(a(test_str.split(), posss))
-    print(*list(zip(posss, result)), sep='\n')

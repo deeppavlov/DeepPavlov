@@ -1,0 +1,45 @@
+{
+  "chainer": {
+    "in": [
+      "x"
+    ],
+    "pipe": [
+      {
+        "in": "x",
+        "out": "x_tok",
+        "id": "my_tokenizer",
+        "class_name": "nltk_moses_tokenizer"
+      },
+      {
+        "in": [
+          "x_tok"
+        ],
+        "out": [
+          "aug_x_tok"
+        ],
+        "class_name": "thesaurus_aug",
+        "lang": "rus",
+        "penalty_for_source_token": 0.01,
+        "kenlm_model_path": "{KENLM_MODELS_PATH}",
+        "ru_thes_dirpath": "/Users/sultanovar/.deeppavlov/downloads/ruthes_lite2",
+        "replace_freq": 1.0,
+        "with_source_token": true
+      },
+      {
+        "in": "aug_x_tok",
+        "out": "aug_x",
+        "class_name": "nltk_moses_tokenizer"
+      }
+    ],
+    "out": [
+      "aug_x"
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "KENLM_MODELS_PATH": "{ROOT_PATH}/models/lms/ru_wiyalen_no_punkt.arpa.binary"
+    }
+  }
+}
