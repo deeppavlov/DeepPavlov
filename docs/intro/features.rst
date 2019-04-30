@@ -18,7 +18,7 @@ The second model reproduces architecture from the paper `Application
 of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition <https://arxiv.org/pdf/1709.09686.pdf>`__
 which is inspired by Bi-LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf.
 
-+---------------------------------------------------------+------+-----------------------------------------------------------------+--------------+
++---------------------------------------------------------+------+-----------------------------------------------------------------+-------------+
 | Dataset                                                 | Lang | Model                                                           |   Test F1   |
 +=========================================================+======+=================================================================+=============+
 | Persons-1000 dataset with additional LOC and ORG markup | Ru   | :config:`ner_rus_bert.json <ner/ner_rus_bert.json>`             |    97.7     |
