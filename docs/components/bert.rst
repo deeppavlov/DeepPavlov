@@ -47,8 +47,8 @@ BERT for Named Entity Recognition (Sequence Tagging)
 ----------------------------------------------------
 
 Pre-trained BERT model can be used for sequence tagging. Examples of usage of BERT for sequence tagging can be
-found :doc:`here </components/ner>`. To tag each word representations of the first sub-word elements
-are extracted. So for each word there is only one vector produced.
+found :doc:`here </components/ner>`. The module used for tagging is :class:`~deeppavlov.models.bert.bert_ner.BertNerModel`.
+To tag each word representations of the first sub-word elements are extracted. So for each word there is only one vector produced.
 These representations are passed to a dense layer or Bi-RNN layer to produce distribution over tags. There is
 also an optional CRF layer on the top.
 
