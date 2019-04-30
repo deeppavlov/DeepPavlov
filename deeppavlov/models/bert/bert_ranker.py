@@ -161,7 +161,8 @@ class BertSepRankerModel(LRScheduledTFModel):
                 exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'output_weights', 'output_bias'))
             assignment_map = self._get_assignment_map_from_checkpoint(var_list, pretrained_bert)
             tf.train.init_from_checkpoint(pretrained_bert, assignment_map)
-            self.sess.run(tf.global_variables_initializer())
+
+        self.sess.run(tf.global_variables_initializer())
 
         if self.load_path is not None:
             self.load()
