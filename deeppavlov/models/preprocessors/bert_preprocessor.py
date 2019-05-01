@@ -176,7 +176,7 @@ class BertNerPreprocessor(Component):
                            tokenizer: FullTokenizer,
                            max_subword_len: int = None,
                            mode: str = None,
-                           token_maksing_prob: float = 0.0) -> Tuple[List[str], List[str]]:
+                           token_maksing_prob: float = 0.0) -> Tuple[List[str], List[int], List[str]]:
         tokens_subword = ['[CLS]']
         mask_subword = [0]
         tags_subword = ['X']
