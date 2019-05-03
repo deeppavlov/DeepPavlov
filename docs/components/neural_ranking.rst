@@ -9,6 +9,39 @@ It is possible to build automatic semantic FAQ systems with such neural architec
 Training and inference models on predifined datasets
 ----------------------------------------------------
 
+BERT Ranking
+~~~~~~~~~~~~
+
+Before using models make sure that all required packages are installed running the command:
+
+.. code:: bash
+
+    python -m deeppavlov install ranking_ubuntu_v2_bert_uncased
+    python -m deeppavlov install ranking_ubuntu_v2_bert_sep
+    python -m deeppavlov install ranking_ubuntu_v2_bert_sep_interact
+
+To train the interaction-based (accurate, slow) model on the `Ubuntu V2`_ from command line:
+
+::
+
+    python -m deeppavlov train ranking_ubuntu_v2_bert_uncased [-d]
+
+To train the representation-based (accurate, fast) model on the `Ubuntu V2`_ from command line:
+
+::
+
+    python -m deeppavlov train ranking_ubuntu_v2_bert_sep [-d]
+
+Further the trained representation-based model can be run for inference over the provided response base
+(~500K in our case) from command line:
+
+::
+
+    python -m deeppavlov interact ranking_ubuntu_v2_bert_sep_interact [-d]
+
+Statistics on the models quality are available :doc:`here </intro/features>`.
+
+
 Ranking
 ~~~~~~~
 
@@ -37,7 +70,7 @@ As an example of configuration file see
 
 To use Sequential Matching Network (SMN) or Deep Attention Matching Network (DAM) or
 Deep Attention Matching Network with Universal Sentence Encoder (DAM-USE-T)
-on the `Ubuntu Dialogue Corpus v2`_ for inference, please run one of the following commands:
+on the `Ubuntu V2`_ for inference, please run one of the following commands:
 
 ::
 
@@ -53,7 +86,7 @@ and then get the probability that the response is proper continuation of the dia
     :: & & & & & & & & bonhoeffer  whar drives do you want to mount what &  i have an ext3 usb drive  & look with fdisk -l & hello there & fdisk is all you need
     >> [0.9776373  0.05753616 0.9642599 ]
 
-To train the models on the `Ubuntu Dialogue Corpus v2`_ dataset please run one of the following commands:
+To train the models on the `Ubuntu V2`_ dataset please run one of the following commands:
 
 ::
 
@@ -311,4 +344,4 @@ such as ``f1``, ``acc`` and ``log_loss``  can be calculated.
 .. _`InsuranceQA V1`: https://github.com/shuzi/insuranceQA
 .. _`paraphraser.ru`: https://paraphraser.ru
 .. _`Quora Question Pairs`: https://www.kaggle.com/c/quora-question-pairs/data
-.. _`Ubuntu Dialogue Corpus v2`: https://github.com/rkadlec/ubuntu-ranking-dataset-creator
+.. _`Ubuntu V2`: https://github.com/rkadlec/ubuntu-ranking-dataset-creator

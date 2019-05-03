@@ -101,6 +101,7 @@
       }
     ],
     "out": [
+      "y_pred_labels",
       "y_pred_probas"
     ]
   },
