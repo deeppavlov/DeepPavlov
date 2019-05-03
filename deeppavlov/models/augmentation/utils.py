@@ -6,6 +6,8 @@ from nltk.corpus import wordnet as wn
 import pandas as pd
 from numpy.random import sample
 from itertools import repeat
+from nltk.stem import WordNetLemmatizer
+from itertools import dropwhile
 
 
 class Lettercaser:
@@ -62,15 +64,61 @@ class Lettercaser:
 
 
 class RuInflector:
-    """Class that morpho-analyses given token and inflects
-    random token into certain morpho-form, for russian language.
-    It is based on pymorphy2 library. it doesn't support phrases.
-    Attributes:
-        morph: pymorphy2.MorphAnalyzer object
+    """Works only with noun verb adjective and adverb
     """
 
     def __init__(self):
         self.morph = pymorphy2.MorphAnalyzer()
+
+    def _get_pymorphy_postag(self, morpho_tag):
+        if morpho_tag['pos_tag'] == 'NOUN':
+            return 'NOUN'
+
+        elif morpho_tag['pos_tag'] == 'ADJ' and\
+             morpho_tag['features'].get('Variant') != 'Short' and\
+             morpho_tag['features'].get('Degree') == 'Pos':
+            return 'ADJF'
+
+        elif morpho_tag['pos_tag'] == 'ADJ' and \
+             morpho_tag['features'].get('Variant') == 'Short' and \
+             morpho_tag['features'].get('Degree') == 'Pos':
+            return 'ADJS'
+
+        elif morpho_tag['features'].get('Degree') == 'Cmp':
+            return 'COMP'
+
+        elif morpho_tag['pos_tag'] == 'VERB' and\
+             morpho_tag['features'].get('VerbForm') != 'Inf' and\
+             morpho_tag['features'].get('VerbForm') != 'Part' and\
+             morpho_tag['features'].get('VerbForm') != 'Conv':
+            return 'VERB'
+
+        elif morpho_tag['pos_tag'] == 'VERB' and\
+             morpho_tag['features'].get('VerbForm') == 'Inf':
+            return 'INFN'
+
+        elif morpho_tag['pos_tag'] == 'VERB' and\
+             morpho_tag['features'].get('VerbForm') == 'Part' and\
+             morpho_tag['features'].get('Variant') != 'Short':
+            return 'PRTF'
+
+        elif morpho_tag['pos_tag'] == 'VERB' and\
+             morpho_tag['features'].get('VerbForm') == 'Part' and\
+             morpho_tag['features'].get('Variant') == 'Short':
+            return 'PRTS'
+
+        elif morpho_tag['pos_tag'] == 'VERB' and\
+             morpho_tag['features'].get('VerbForm') == 'Conv':
+            return 'GRND'
+
+        elif morpho_tag['pos_tag'] == 'NUM':
+            return 'NUMR'
+
+        elif morpho_tag['pos_tag'] == 'ADV' and\
+             morpho_tag['features'].get('Degree') != 'Cmp':
+            return 'ADVB'
+
+
 
     def get_morpho_tag(self, token: str, pos_tag=None) -> pymorphy2.tagset.OpencorporaTag:
         """Return morpho-form of token
@@ -81,7 +129,7 @@ class RuInflector:
         """
         return self.morph.parse(token)[0].tag
 
-    def get_lemma_form(self, token: str) -> str:
+    def get_lemma_form(self, token: str, morpho_tag = None) -> str:
         """Return lemma-form of given token
         """
         return self.morph.parse(token)[0].normal_form
@@ -147,12 +195,19 @@ class RuThesaurus:
         self.dir_path = Path(dir_path)
         required_files = (f"{dt}.csv" for dt in ('synonyms', 'text_entry'))
         if not all(Path(dir_path, f).exists() for f in required_files):
-            raise FileNotFoundError('Files: synonyms.csv, text_entry was not found, in specified path')
+            raise FileNotFoundError(f"""Files: synonyms.csv, text_entry.csv was not found,
+                                        in specified path - {self.dir_path}""")
         self.with_source_token = with_source_token
         self.synonyms_data = pd.read_csv(self.dir_path / "synonyms.csv", index_col=0)
         self.text_entry_data = pd.read_csv(self.dir_path / "text_entry.csv", index_col=0)
+        self.to_wn_postag = {
+            'NOUN': ['N', 'Num', 'NumG', 'Prtc'],
+            'VERB': ['V'],
+            'ADJ':  ['Adj', 'AdjGprep', 'Num', 'Pron'],
+            'ADV':  ['Adv', 'Prdc', 'PrepG']
+        }
 
-    def _find_synonyms(self, lemma: str, pos_tag=None) -> List[str]:
+    def _find_synonyms(self, lemma: str, morpho_tag) -> List[str]:
         lemma = lemma.upper()
         entry_id_set = set(self.text_entry_data[self.text_entry_data['lemma'] == lemma]['entry_id'])
         concept_id_set = set()
@@ -160,21 +215,24 @@ class RuThesaurus:
             concept_id_set.update(set(self.synonyms_data[self.synonyms_data['entry_id'] == entry_id]['concept_id']))
         syn_entry_id_set = set()
         for concept_id in concept_id_set:
-            syn_entry_id_set.update(set(self.synonyms_data[self.synonyms_data['concept_id']==concept_id]['entry_id']))
+            syn_entry_id_set.update(set(self.synonyms_data[self.synonyms_data['concept_id'] == concept_id]['entry_id']))
         synlist = list()
         for syn_entry_id in syn_entry_id_set:
-            synlist += list(self.text_entry_data[self.text_entry_data['entry_id']==syn_entry_id]['lemma'])
+            filter_by_pos_tag = self.text_entry_data['pos'].isin(self.to_wn_postag[morpho_tag['pos_tag']])
+            filter_by_entry_id = (self.text_entry_data['entry_id'] == syn_entry_id)
+            synonyms_table = self.text_entry_data[filter_by_pos_tag & filter_by_entry_id]
+            synlist += list(synonyms_table['lemma'])
         return synlist
 
     def _filter(self, synlist: List[str], source_lemma: str) -> List[str]:
-        filtered_syn = set(filter(lambda x: len(x.split()) == 1, synlist))
+        filtered_syn = set(filter(lambda x: len(x.split('_')) == 1, synlist))
         filtered_syn.discard(source_lemma)
         if self.with_source_token:
             return [source_lemma] + list(filtered_syn)
         else:
             return list(filtered_syn)
 
-    def get_syn(self, lemma: str, pos_tag: str = None) -> List[str]:
+    def get_syn(self, lemma: str, morpho_tag: str) -> List[str]:
         """It returns synonyms for certain word
         Args:
             lemma: word for that it will search synonyms
@@ -183,7 +241,7 @@ class RuThesaurus:
              List of synonyms
         """
         lemma = lemma.upper()
-        synonyms = self._find_synonyms(lemma)
+        synonyms = self._find_synonyms(lemma, morpho_tag)
         synonyms = self._filter(synonyms, lemma)
         return synonyms
 
@@ -200,87 +258,134 @@ class EnInflector:
 
     def __init__(self, classical_pluralize: bool=True):
         self.classical_pluralize = classical_pluralize
+        self.lemmatizer = WordNetLemmatizer()
+        self.ud_to_en_tense = {
+            'Past': 'past',
+            'Pres': 'present',
+            'Fut': 'future'
+        }
+        self.ud_to_en_person = {
+            '1': 1,
+            '2': 2,
+            '3': 3
+        }
+        self.ud_to_en_number = {
+            'Sing': 'singular',
+            'Plur': 'plural'
+        }
+        self.ud_to_en_mood = {
+            'Ind': 'indicative',
+            'Imp': 'imperative',
+            'Cnd': 'conditional',
+            'Sub': 'subjunctive'
+        }
+        self.ud_to_en_aspect = {
+            'Imp': 'imperfective',
+            'Perf': 'perfective',
+            'Prog': 'progressive'
+        }
 
-    def _nltk_postag_to_pattern_postag(self, pos_tag: str):
-        if pos_tag.startswith('N'):
-            return en.NOUN
-        elif pos_tag.startswith('V'):
-            return en.VERB
-        elif pos_tag.startswith('J'):
-            return en.ADJECTIVE
-        elif pos_tag.startswith('R'):
-            return en.ADVERB
+    def get_lemma_form(self, token: str, morpho_tag):
+        if morpho_tag['pos_tag'] == 'VERB':
+            return self.get_lemma_verb(token)
+        return self.lemmatizer.lemmatize(token)
 
-    def get_lemma_form(self, token: str):
-        """It returns lemma-form of given token. Phrasal verbs should be linked with '_' symbol.
-        Args:
-            token: token that will be converted into lemma-form
-        Return:
-            token in lemma-form
-        """
-        split = token.split('_')
-        if len(split) == 1:
-            return en.lemma(token)
-        else:
-            return '_'.join([en.lemma(split[0])] + split[1:])
+    def get_lemma_verb(self, token: str):
+        """"""
+        splited = token.split('_')
+        if len(splited) > 1:
+            return "_".join([en.lemma(splited[0])] + splited[1:])
+        return en.lemma(token)
 
-    def _is_plur(self, token, pos_tag):
-        return token == en.inflect.pluralize(en.lemma(token),
-                                             pos=self._nltk_postag_to_pattern_postag(pos_tag),
-                                             classical=self.classical_pluralize)
+    def pluralize(self, token, morpho_tag):
+        """"""
+        splited = token.split('_')
+        if len(splited) > 1:
+            return "_".join(splited[:-1] + en.pluralize(splited[-1],
+                                                        self.to_en_pos(morpho_tag['pos_tag']),
+                                                        self.classical_pluralize))
+        return en.pluralize(token, self.to_en_pos(morpho_tag['pos_tag']), self.classical_pluralize)
 
-    def _is_comp(self, token, pos_tag):
-        return pos_tag == 'JJR'
+    def singularize(self, token, morpho_tag):
+        """"""
+        splited = token.split('_')
+        if len(splited) > 1:
+            return "_".join(splited[:-1] + en.singularize(splited[-1], self.to_en_pos(morpho_tag['pos_tag'])))
+        return en.pluralize(token, self.to_en_pos(morpho_tag['pos_tag']), self.classical_pluralize)
 
-    def _is_supr(self, token, pos_tag):
-        return pos_tag == 'JJS'
+    def _get_verb_tense(self, morpho_tag):
+        return self.ud_to_en_tense.get(morpho_tag['features'].get('tense'), 'INFINITIVE')
 
-    def _get_verb_tense(self, token):
-        candidates = en.tenses(token)
-        if len(candidates) == 0:
-            return None
-        else:
-            return candidates[0]
+    def _get_verb_person(self, morpho_tag):
+        return self.ud_to_en_person.get(morpho_tag['features'].get('person'), None)
 
-    def get_morpho_tag(self, token: str, pos_tag):
-        """Return morpho-form of token. Phrasal verbs should be linked with '_' symbol.
-        Args:
-            token: token that will be morpho-analysed
-            pos_tag: pos tag in nltk.pos_tag format
-        Return:
-            morpho_tags in format {'pos_tag', 'plur', 'tense', 'comp', 'supr'}
-        """
-        morpho_tag = {}
-        split = token.split('_')
-        if pos_tag.startswith('N'):
-            morpho_tag.update({'pos_tag': pos_tag, 'plur': self._is_plur(split[-1], pos_tag)})
-        elif pos_tag.startswith('V'):
-            morpho_tag.update({'pos_tag': pos_tag, 'tense': self._get_verb_tense(split[0])})
-        elif pos_tag.startswith('J'):
-            morpho_tag.update({'pos_tag': pos_tag, 'comp': self._is_comp(token, pos_tag), 'supr': self._is_supr(token, pos_tag)})
-        elif pos_tag.startswith('R'):
-            morpho_tag.update({'pos_tag': pos_tag})
-        return morpho_tag
-    
-    def inflect_token(self, token, morpho_tag, force: bool=False):
-        """It inflects token in certain morpho-form. Phrasal verbs should be linked with '_' symbol.
-        Args:
-            token: token that will be inflected
-            morpho_tag: morpho_tags in {'pos_tag', 'plur', 'tense', 'comp', 'supr'} format
-        Return:
-            inflected token
-        """
-        split = token.split('_')
-        if morpho_tag.get('tense'):
-            return "_".join([en.conjugate(split[0], morpho_tag.get('tense'))] + split[1:])
-        if morpho_tag.get('plur'):
-            return "_".join(split[:-1] + [en.inflect.pluralize(split[-1],
-                                                               pos=self._nltk_postag_to_pattern_postag(morpho_tag.get('pos_tag')),
-                                                               classical=self.classical_pluralize)])
-        if morpho_tag.get('comp'):
-            return en.inflect.comparative(token)
-        if morpho_tag.get('supr'):
-            return en.inflect.superlative(token)
+    def _get_verb_number(self, morpho_tag):
+        return self.ud_to_en_number.get(morpho_tag['features'].get('number'), None)
+
+    def _get_verb_mood(self, morpho_tag):
+        return self.ud_to_en_mood.get(morpho_tag['features'].get('mood'), None)
+
+    def _get_verb_aspect(self, morpho_tag):
+        aspect = self.ud_to_en_aspect.get(morpho_tag['features'].get('aspect'), None)
+        if aspect is None:
+            if morpho_tag['features'].get('VerbForm') == 'Part':
+                aspect = 'progressive'
+            elif morpho_tag['features'].get('VerbForm') == 'Fin':
+                aspect = 'imperfective'
+        return aspect
+
+    def _transform_to_pattern_en_form(self, morpho_tag):
+        return (self._get_verb_tense(morpho_tag),
+                self._get_verb_person(morpho_tag),
+                self._get_verb_number(morpho_tag),
+                self._get_verb_mood(morpho_tag),
+                self._get_verb_aspect(morpho_tag))
+
+    def _tense_similarity(self, first_tense, second_tense):
+        if first_tense[0] != second_tense[0]:
+            return 0
+        if first_tense[-1] != second_tense[-1]:
+            return 0
+        return sum([int(x == y) for x, y in zip(first_tense, second_tense)])
+
+    def _sort_and_filter_candidates(self, source, candidates):
+        candidates = [(cand, self._tense_similarity(source, cand)) for cand in candidates]
+        candidates = list(filter(lambda x: x[1] > 0, candidates))
+        candidates.sort(key=lambda x: x[1], reverse=True)
+        candidates = map(lambda x: x[0], candidates)
+        return candidates
+
+    def _inflect_verb(self, token, morpho_tag):
+        candidate_tenses = en.tenses(morpho_tag['source_token']) #maybe all possible tenses?
+        morpho_tense = self._transform_to_pattern_en_form(morpho_tag)
+        candidate_tenses = list(self._sort_and_filter_candidates(morpho_tense, candidate_tenses))
+        tense_for_inflection = list(dropwhile(lambda cand: en.conjugate(token, cand) is None, candidate_tenses))
+        lemma = self.get_lemma_verb(token)
+        if tense_for_inflection is not []:
+            splited = lemma.split('_')
+            if len(splited) > 1:
+                return "_".join([en.conjugate(splited[0], tense_for_inflection[0])] + splited[1:])
+            else:
+                return en.conjugate(lemma, tense_for_inflection[0])
+        return None
+
+    def inflect_token(self, token, morpho_tag, force: bool = False):
+        if morpho_tag['pos_tag'] in ['NOUN', 'PROPN']:
+            if morpho_tag['features'].get('Number') == 'Sing':
+                token = self.singularize(token, morpho_tag)
+            if morpho_tag['features'].get('Number') == 'Plur':
+                token = self.pluralize(token, morpho_tag)
+        if morpho_tag['pos_tag'] in ['ADJ']:
+            if morpho_tag['features'].get('Degree') == 'Cmp':
+                token = en.inflect.comparative(token)
+            if morpho_tag['features'].get('Degree') == 'Sup':
+                token = en.inflect.superlative(token)
+            if morpho_tag['features'].get('Number') == 'Sing':
+                token = self.singularize(token, morpho_tag)
+            if morpho_tag['features'].get('Number') == 'Plur':
+                token = self.pluralize(token, morpho_tag)
+        if morpho_tag['pos_tag'] in ['VERB']:
+            token = self._inflect_verb(token, morpho_tag)
         return token
 
 
@@ -295,21 +400,16 @@ class EnThesaurus:
     def __init__(self, with_source_token: bool=False, without_phrase: bool=False):
         self.with_source_token = with_source_token
         self.without_phrase = without_phrase
+        self.to_wn_postags = {
+            'NOUN': wn.NOUN,
+            'VERB': wn.VERB,
+            'ADJ':  wn.ADJECTIVE,
+            'ADV':  wn.ADVERB
+        }
 
-    def _nltk_postag_to_wordnet_postag(self, pos_tag: str):
-        if pos_tag.startswith('N'):
-            return wn.NOUN
-        elif pos_tag.startswith('V'):
-            return wn.VERB
-        elif pos_tag.startswith('J'):
-            return wn.ADJECTIVE
-        elif pos_tag.startswith('R'):
-            return wn.ADVERB
-
-    def _find_synonyms(self, lemma, pos_tag):
-        pos_tag = self._nltk_postag_to_wordnet_postag(pos_tag)
-        wn_synonyms = wn.synsets(lemma, pos=pos_tag)
-        if pos_tag == wn.ADJ:
+    def _find_synonyms(self, lemma, morpho_tag):
+        wn_synonyms = wn.synsets(lemma, pos=self.to_wn_postags(morpho_tag['pos_tag']))
+        if morpho_tag['pos_tag'] == 'ADJ':
             wn_synonyms = wn_synonyms.extend(wn.synsets(lemma, pos='s'))
         lemmas = sum((map(lambda x: x.lemmas(), wn_synonyms)), [])
         synonyms = set(map(lambda x: x.name(), lemmas))
@@ -323,7 +423,7 @@ class EnThesaurus:
         else:
             return list(filtered_syn)
 
-    def get_syn(self, lemma: str, pos_tag: str=None) -> List[str]:
+    def get_syn(self, lemma: str, morpho_tag) -> List[str]:
         """It returns synonyms for certain word
         Args:
             lemma: word for that it will search synonyms
@@ -331,7 +431,7 @@ class EnThesaurus:
         Return:
              List of synonyms, if with_source_token == True then source_token will be placed in the begin of list
         """
-        synonyms = self._find_synonyms(lemma, pos_tag)
+        synonyms = self._find_synonyms(lemma, morpho_tag)
         synonyms = self._filter(synonyms, lemma)
         return synonyms
 
@@ -399,14 +499,16 @@ class EnWordFilter(WordFilter):
         replace_freq: [0, 1] propability of token that passed thought other filters to be replaced
         isalpha_only: filter based on string method 'isalpha'
         not_replaced_tokens: List of tokens that shouldn't be replaced
-        replaced_pos_tags: List of pos_tags that can be replaced, e.g. 'n' for Noun, 'v' for Verb, 'a' for Adjective, 'r' for Adverb
+        replaced_pos_tags: List of pos_tags that can be replaced,
+                           e.g. 'n' for Noun, 'v' for Verb, 'a' for Adjective, 'r' for Adverb
         is_replace_proper_noun: to replace proper noun or not, based on pos_tag
         is_replace_modal_verb: to replace modal verb or not, based on pos_tag
     Attributes:
         replace_freq: [0, 1] propability of token that passed thought other filters to be replaced
         isalpha_only: filter based on string method 'isalpha'
         not_replaced_tokens: List of tokens that shouldn't be replaced
-        replaced_pos_tags: List of pos_tags that can be replaced, e.g. 'n' for Noun, 'v' for Verb, 'a' for Adjective, 'r' for Adverb
+        replaced_pos_tags: List of pos_tags that can be replaced,
+                           e.g. 'n' for Noun, 'v' for Verb, 'a' for Adjective, 'r' for Adverb
         is_replace_proper_noun: to replace proper noun or not, based on pos_tag
         is_replace_modal_verb: to replace modal verb or not, based on pos_tag
     """
@@ -414,33 +516,19 @@ class EnWordFilter(WordFilter):
     def __init__(self,
                  replace_freq: float,
                  isalpha_only: bool,
-                 not_replaced_tokens: List[str]=None,
-                 replaced_pos_tags: List[str]=None,
-                 is_replace_proper_noun: bool=True,
-                 is_replace_modal_verb: bool=True):
+                 not_replaced_tokens: List[str] = None,
+                 replaced_pos_tags: List[str] = None):
         super(EnWordFilter, self).__init__(replace_freq, isalpha_only, not_replaced_tokens)
         if not_replaced_tokens is None:
-            self.not_replaced_tokens = ["n't", "have", "has", "had", "be", "was", "is", "are", "am", "'m", "been", "will"]
-        else:
-            self.not_replaced_tokens = not_replaced_tokens
+            self.not_replaced_tokens = []
+        self.not_replaced_tokens = not_replaced_tokens
         if replaced_pos_tags is None:
-            replaced_pos_tags = ['n', 'v', 'a', 'r']
+            replaced_pos_tags = ['ADJ', 'ADV', 'NOUN', 'VERB']
         self.replaced_pos_tags = replaced_pos_tags
-        self.postag_to_nltk_postag = {
-            'n': ['NN', 'NNS'],
-            'v': ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ'],
-            'a': ['JJ', 'JJR', 'JJS'],
-            'r': ['RB', 'RBR', 'RBS', 'PDT']
-        }
-        if is_replace_proper_noun:
-            self.postag_to_nltk_postag['n'].extend(['NNP', 'NNPS'])
-        if is_replace_modal_verb:
-            self.postag_to_nltk_postag['v'].extend(['MD'])
 
-    def get_nltk_replaced_postags(self, tag_list):
-        return sum(map(lambda x: self.postag_to_nltk_postag[x], tag_list),[])
 
-    def filter_based_on_pos_tag(self, tokens, pos_tags):
+
+    def filter_based_on_pos_tag(self, morpho_tags):
         """Function that filters tokens with pos_tags and rules
         Args:
             tokens: tokens that will be filtered
@@ -450,18 +538,16 @@ class EnWordFilter(WordFilter):
             'False' for tokens that should not be replaced,
             'True' for tokens that can be replaced
         """
-        replaced_nltk_postags = self.get_nltk_replaced_postags(self.replaced_pos_tags)
-        result = []
-        prev_postag_is_EX = False
-        for token, pos_tag in zip(tokens, pos_tags):
-            if pos_tag == 'EX':
-                prev_postag_is_EX = True
+        prev_is_there, result = False, []
+        for morpho_tag in morpho_tags:
+            if morpho_tag['pos_tag'] == 'PRON' and morpho_tag['source_token'] == 'there':
+                prev_is_there = True
                 result.append(False)
-            elif prev_postag_is_EX and pos_tag.startswith('V'):
-                prev_postag_is_EX = False
+            elif prev_is_there and morpho_tag['pos_tag'] == 'VERB':
+                prev_is_there = False
                 result.append(False)
             else:
-                result.append(pos_tag in replaced_nltk_postags)
+                result.append(morpho_tag['pos_tag'] in self.replaced_pos_tags)
         return result
 
 
@@ -471,13 +557,15 @@ class RuWordFilter(WordFilter):
         replace_freq: [0, 1] propability of token that passed thought other filters to be replaced
         isalpha_only: filter based on string method 'isalpha'
         not_replaced_tokens: List of tokens that shouldn't be replaced
-        replaced_pos_tags: List of pos_tags that can be replaced, e.g. 's' for Noun, 'v' for Verb, 'a' for Adjective, 'r' for Adverb, 'num' for Numerical
+        replaced_pos_tags: List of pos_tags that can be replaced,
+                           e.g. 's' for Noun, 'v' for Verb, 'a' for Adjective, 'r' for Adverb, 'num' for Numerical
         is_replace_numeral_adjective: to replace numeral adjective or not, based on pos_tag
     Attributes:
         replace_freq: [0, 1] propability of token that passed thought other filters to be replaced
         isalpha_only: filter based on string method 'isalpha'
         not_replaced_tokens: List of tokens that shouldn't be replaced
-        replaced_pos_tags: List of pos_tags that can be replaced, e.g. 's' for Noun, 'v' for Verb, 'a' for Adjective, 'r' for Adverb, 'num' for Numerical
+        replaced_pos_tags: List of pos_tags that can be replaced,
+                           e.g. 's' for Noun, 'v' for Verb, 'a' for Adjective, 'r' for Adverb, 'num' for Numerical
         is_replace_numeral_adjective: to replace numeral adjective or not, based on pos_tag
     """
 
@@ -485,28 +573,15 @@ class RuWordFilter(WordFilter):
                  replace_freq: float,
                  isalpha_only: bool,
                  not_replaced_tokens: List[str]=None,
-                 replaced_pos_tags: List[str]=None,
-                 is_replace_numeral_adjective: bool=True):
+                 replaced_pos_tags: List[str]=None):
         super(RuWordFilter, self).__init__(replace_freq, isalpha_only, not_replaced_tokens)
         if not_replaced_tokens is None:
-            not_replaced_tokens = []
+            self.not_replaced_tokens = ['блин', 'люблю', 'заебись']
         if replaced_pos_tags is None:
-            replaced_pos_tags = ['s', 'num', 'v', 'a', 'r']
+            replaced_pos_tags = ['ADJ', 'ADV', 'NOUN', 'VERB', 'NUM']
         self.replaced_pos_tags = replaced_pos_tags
-        self.postag_to_nltk_postag = {
-            's': ['S'],
-            'num': ['NUM'],
-            'v': ['V'],
-            'a': ['A'],
-            'r': ['ADV']
-        }
-        if is_replace_numeral_adjective:
-            self.postag_to_nltk_postag['a'].append('ANUM')
 
-    def get_nltk_replaced_postags(self, tag_list):
-        return sum(map(lambda x: self.postag_to_nltk_postag[x], tag_list), [])
-
-    def filter_based_on_pos_tag(self, tokens, pos_tags):
+    def filter_based_on_pos_tag(self, tokens, morpho_tags):
         """Function that filters tokens with pos_tags and rules
         Args:
             tokens: tokens that will be filtered
@@ -516,6 +591,5 @@ class RuWordFilter(WordFilter):
             'False' for tokens that should not be replaced,
             'True' for tokens that can be replaced
         """
-        replaced_nltk_postags = self.get_nltk_replaced_postags(self.replaced_pos_tags)
-        return list(map(lambda x: x in replaced_nltk_postags, pos_tags))
+        return list(map(lambda x: x in self.replaced_pos_tags, morpho_tags))
 

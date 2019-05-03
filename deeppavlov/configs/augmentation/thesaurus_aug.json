@@ -8,7 +8,7 @@
         "in": "x",
         "out": "x_tok",
         "id": "my_tokenizer",
-        "class_name": "nltk_moses_tokenizer"
+        "class_name": "ru_tokenizer"
       },
       {
         "in": [
@@ -20,15 +20,16 @@
         "class_name": "thesaurus_aug",
         "lang": "rus",
         "penalty_for_source_token": 0.01,
-        "kenlm_model_path": "{KENLM_MODELS_PATH}",
-        "ru_thes_dirpath": "/Users/sultanovar/.deeppavlov/downloads/ruthes_lite2",
+        "kenlm_model_path": "{MODELS_PATH}/lms/ru_wiyalen_no_punkt.arpa.binary",
+        "ru_thes_dirpath": "{DOWNLOADS_PATH}/ruthes_lite2/",
         "replace_freq": 1.0,
-        "with_source_token": true
+        "with_source_token": true,
+        "force_inflect": false
       },
       {
         "in": "aug_x_tok",
         "out": "aug_x",
-        "class_name": "nltk_moses_tokenizer"
+        "class_name": "ru_tokenizer"
       }
     ],
     "out": [
@@ -37,9 +38,9 @@
   },
   "metadata": {
     "variables": {
-      "ROOT_PATH": "~/.deeppavlov",
+      "ROOT_PATH": "/home/azat/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "KENLM_MODELS_PATH": "{ROOT_PATH}/models/lms/ru_wiyalen_no_punkt.arpa.binary"
+      "MODELS_PATH": "{ROOT_PATH}/models"
     }
   }
 }
