@@ -52,6 +52,9 @@ To tag each word representations of the first sub-word elements are extracted. S
 These representations are passed to a dense layer or Bi-RNN layer to produce distribution over tags. There is
 also an optional CRF layer on the top.
 
+Multilingual BERT models allows to perform zero-shot transfer across languages. To use our 19 tags NER for over a
+hundred languages see :ref:`ner_multi_bert`.
+
 
 BERT for Context Question Answering (SQuAD)
 -------------------------------------------
