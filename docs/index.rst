@@ -12,7 +12,6 @@ Welcome to DeepPavlov's documentation!
    Configuration files <intro/config_description>
    Pre-trained embeddings <intro/pretrained_vectors>
    AutoML <intro/hypersearch>
-   Tutorials <intro/tutorials>
 
 
 .. toctree::
@@ -21,6 +20,7 @@ Welcome to DeepPavlov's documentation!
    :caption: Components
 
    Data Processors <components/data_processors>
+   BERT-based models <components/bert>
    Context Question Answering <components/squad>
    Classification <components/classifiers>
    Morphological Tagger <components/morphotagger>
@@ -44,6 +44,7 @@ Welcome to DeepPavlov's documentation!
    Sequence-To-Sequence Dialogue Bot <skills/seq2seq_go_bot>
    Frequently Asked Questions Answering <skills/faq>
    eCommerce Bot <skills/ecommerce>
+   AIML <skills/aiml_skill>
 
 
 .. toctree::

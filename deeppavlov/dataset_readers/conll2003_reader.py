@@ -9,15 +9,22 @@ from deeppavlov.core.data.utils import download_decompress
 class Conll2003DatasetReader(DatasetReader):
     """Class to read training datasets in CoNLL-2003 format"""
 
-    def read(self, data_path: str, dataset_name=None, provide_pos=False):
+    def read(self,
+             data_path: str,
+             dataset_name: str = None,
+             provide_pos: bool = False,
+             provide_doc_ids: bool = False):
         self.provide_pos = provide_pos
+        self.provide_doc_ids = provide_doc_ids
+        self.num_docs = 0
+        self.x_is_tuple = self.provide_pos or self.provide_doc_ids
         data_path = Path(data_path)
         files = list(data_path.glob('*.txt'))
         if 'train.txt' not in {file_path.name for file_path in files}:
             if dataset_name == 'conll2003':
                 url = 'http://files.deeppavlov.ai/deeppavlov_data/conll2003_v2.tar.gz'
             elif dataset_name == 'collection_rus':
-                url = 'http://files.deeppavlov.ai/deeppavlov_data/collection5.tar.gz'
+                url = 'http://files.deeppavlov.ai/deeppavlov_data/collection3_v2.tar.gz'
             elif dataset_name == 'ontonotes':
                 url = 'http://files.deeppavlov.ai/deeppavlov_data/ontonotes_ner.tar.gz'
             else:
@@ -35,26 +42,31 @@ class Conll2003DatasetReader(DatasetReader):
     def parse_ner_file(self, file_name: Path):
         samples = []
         with file_name.open(encoding='utf8') as f:
-            tokens = ['<DOCSTART>']
-            pos_tags = ['O']
-            tags = ['O']
+            tokens = []
+            pos_tags = []
+            tags = []
             for line in f:
                 # Check end of the document
                 if 'DOCSTART' in line:
                     if len(tokens) > 1:
+                        x = tokens if not self.x_is_tuple else (tokens,)
                         if self.provide_pos:
-                            samples.append(((tokens, pos_tags), tags, ))
-                        else:
-                            samples.append((tokens, tags,))
+                            x = x + (pos_tags,)
+                        if self.provide_doc_ids:
+                            x = x + (self.num_docs,)
+                        samples.append((x, tags))
                         tokens = []
                         pos_tags = []
                         tags = []
+                    self.num_docs += 1
                 elif len(line) < 2:
                     if len(tokens) > 0:
+                        x = tokens if not self.x_is_tuple else (tokens,)
                         if self.provide_pos:
-                            samples.append(((tokens, pos_tags), tags, ))
-                        else:
-                            samples.append((tokens, tags,))
+                            x = x + (pos_tags,)
+                        if self.provide_doc_ids:
+                            x = x + (self.num_docs,)
+                        samples.append((x, tags))
                         tokens = []
                         pos_tags = []
                         tags = []
@@ -66,5 +78,14 @@ class Conll2003DatasetReader(DatasetReader):
                         token, *_, tag = line.split()
                     tags.append(tag)
                     tokens.append(token)
+
+            if tokens:
+                x = tokens if not self.x_is_tuple else (tokens,)
+                if self.provide_pos:
+                    x = x + (pos_tags,)
+                if self.provide_doc_ids:
+                    x = x + (self.num_docs,)
+                samples.append((x, tags))
+                self.num_docs += 1
 
         return samples

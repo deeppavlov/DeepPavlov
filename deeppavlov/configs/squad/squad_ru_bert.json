@@ -17,18 +17,20 @@
       {
         "class_name": "bert_preprocessor",
         "vocab_file": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12/vocab.txt",
-        "do_lower_case": false,
+        "do_lower_case": "{lowercase}",
         "max_seq_length": 384,
         "in": ["question_raw", "context_raw"],
         "out": ["bert_features"]
       },
       {
         "class_name": "squad_bert_mapping",
+        "do_lower_case": "{lowercase}",
         "in": ["context_raw", "bert_features"],
         "out": ["subtok2chars", "char2subtoks"]
       },
       {
         "class_name": "squad_bert_ans_preprocessor",
+        "do_lower_case": "{lowercase}",
         "in": ["ans_raw", "ans_raw_start","char2subtoks"],
         "out": ["ans", "ans_start", "ans_end"]
       },
@@ -86,6 +88,7 @@
   },
   "metadata": {
     "variables": {
+      "lowercase": false,
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models"
