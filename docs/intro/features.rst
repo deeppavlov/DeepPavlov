@@ -135,6 +135,7 @@ trained on Reddit dataset.
 | Shallow-and-wide CNN   | **0.9956**      | **0.9973**       | **0.9968**    | **0.9871**   | **0.9998**   | **0.9752**           | **0.9854**             |
 +------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+
 
+.. [3] https://www.slideshare.net/KonstantinSavenkov/nlu-intent-detection-benchmark-by-intento-august-2017
 
 
 :doc:`Goal-oriented bot </skills/go_bot>`
