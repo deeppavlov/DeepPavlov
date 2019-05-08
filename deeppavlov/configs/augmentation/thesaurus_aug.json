@@ -8,28 +8,34 @@
         "in": "x",
         "out": "x_tok",
         "id": "my_tokenizer",
-        "class_name": "ru_tokenizer"
+        "class_name": "nltk_moses_tokenizer"
       },
       {
         "in": [
           "x_tok"
         ],
         "out": [
-          "aug_x_tok"
+          "variants"
         ],
         "class_name": "thesaurus_aug",
         "lang": "rus",
         "penalty_for_source_token": 0.01,
-        "kenlm_model_path": "{MODELS_PATH}/lms/ru_wiyalen_no_punkt.arpa.binary",
+        "isalpha_only": true,
         "ru_thes_dirpath": "{DOWNLOADS_PATH}/ruthes_lite2/",
         "replace_freq": 1.0,
         "with_source_token": true,
-        "force_inflect": false
+        "force_inflect": true
+      },
+      {
+        "in": "variants",
+        "out": "aug_x_tok",
+        "class_name": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
+        "load_path": "{MODELS_PATH}/lms/ru_wiyalen_no_punkt.arpa.binary"
       },
       {
         "in": "aug_x_tok",
         "out": "aug_x",
-        "class_name": "ru_tokenizer"
+        "class_name": "nltk_moses_tokenizer"
       }
     ],
     "out": [

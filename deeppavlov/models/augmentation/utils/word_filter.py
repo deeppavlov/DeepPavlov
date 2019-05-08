@@ -4,7 +4,7 @@ from itertools import repeat
 from deeppavlov.models.augmentation.utils.inflector import EnInflector
 
 
-class WordFilter:
+class WordFilter(object):
     """Class that decides which tokens should not be replaced
     Args:
         replace_freq: [0, 1] propability of token that passed thought other filters to be replaced
@@ -42,14 +42,14 @@ class WordFilter:
     def filter_frequence(self, prev_decision):
         return map(lambda x: sample() < self.replace_freq if x else x, prev_decision)
 
-    def filter_united(self, tokens, pos_tags):
+    def filter_united(self, tokens, morpho_tags):
         return list(map(lambda x, y, z: all([x,y,z]),
-                        self.filter_based_on_pos_tag(tokens, pos_tags),
+                        self.filter_based_on_pos_tag(morpho_tags),
                         self.filter_not_replaced_token(tokens),
                         self.filter_isalpha_only(tokens)))
 
-    def filter_words(self, tokens, pos_tags):
-        """It filters tokens based on replace_freq, isalpha_only, not_replaced_token and pos_tags of tokens
+    def filter_words(self, tokens, moprho_tags):
+        """It filters tokens bases on replace_freq, isalpha_only, not_replaced_token and pos_tags of tokens
         Args:
             tokens: tokens that will be filtered
         Return:
@@ -57,28 +57,24 @@ class WordFilter:
             'False' for tokens that should not be replaced,
             'True' for tokens that can be replaced
         """
-        filtered = self.filter_united(tokens, pos_tags)
+        filtered = self.filter_united(tokens, moprho_tags)
         return list(self.filter_frequence(filtered))
 
 
 class EnWordFilter(WordFilter):
     """Class that decides which tokens should not be replaced, for english language
     Args:
-        replace_freq: [0, 1] propability of token that passed thought other filters to be replaced
+        replace_freq: [0, 1] propability of token that have been passed thought other filters to be replaced
         isalpha_only: filter based on string method 'isalpha'
         not_replaced_tokens: List of tokens that shouldn't be replaced
         replaced_pos_tags: List of pos_tags that can be replaced,
-                           e.g. 'n' for Noun, 'v' for Verb, 'a' for Adjective, 'r' for Adverb
-        is_replace_proper_noun: to replace proper noun or not, based on pos_tag
-        is_replace_modal_verb: to replace modal verb or not, based on pos_tag
+                           e.g. 'NOUN' for Noun, 'VERB' for Verb, 'ADJ' for Adjective, 'ADV' for Adverb
     Attributes:
-        replace_freq: [0, 1] propability of token that passed thought other filters to be replaced
+        replace_freq: [0, 1] propability of token that have been passed thought other filters to be replaced
         isalpha_only: filter based on string method 'isalpha'
         not_replaced_tokens: List of tokens that shouldn't be replaced
         replaced_pos_tags: List of pos_tags that can be replaced,
-                           e.g. 'n' for Noun, 'v' for Verb, 'a' for Adjective, 'r' for Adverb
-        is_replace_proper_noun: to replace proper noun or not, based on pos_tag
-        is_replace_modal_verb: to replace modal verb or not, based on pos_tag
+                           e.g. 'NOUN' for Noun, 'VERB' for Verb, 'ADJ' for Adjective, 'ADV' for Adverb
     """
 
     def __init__(self,
@@ -94,8 +90,8 @@ class EnWordFilter(WordFilter):
     def filter_based_on_pos_tag(self, morpho_tags):
         """Function that filters tokens with pos_tags and rules
         Args:
-            tokens: tokens that will be filtered
-            pos_tags: pos_tags for 'tokens', in nltk.pos_tag format
+            morpho_tags: morpho tags in UD2.0 format of filtered tokens
+                         e.g. {'source_token': 'luck', 'pos_tag': 'NOUN', 'features' {'Number': 'Sing'}}
         Return:
             List of boolean values,
             'False' for tokens that should not be replaced,
@@ -117,18 +113,19 @@ class EnWordFilter(WordFilter):
 class RuWordFilter(WordFilter):
     """Class that decides which tokens should not be replaced, for russian language
     Args:
-        replace_freq: [0, 1] propability of token that passed thought other filters to be replaced
+        replace_freq: [0, 1] propability of token that have been passed thought other filters to be replaced
         isalpha_only: filter based on string method 'isalpha'
         not_replaced_tokens: List of tokens that shouldn't be replaced
         replaced_pos_tags: List of pos_tags that can be replaced,
-                           e.g. 's' for Noun, 'v' for Verb, 'a' for Adjective, 'r' for Adverb, 'num' for Numerical
-        is_replace_numeral_adjective: to replace numeral adjective or not, based on pos_tag
+                           e.g. 'NOUN' for Noun, 'VERB' for Verb,
+                           'ADJ' for Adjective, 'ADV' for Adverb, 'NUM' for Numerical
     Attributes:
-        replace_freq: [0, 1] propability of token that passed thought other filters to be replaced
+        replace_freq: [0, 1] propability of token that have been passed thought other filters to be replaced
         isalpha_only: filter based on string method 'isalpha'
         not_replaced_tokens: List of tokens that shouldn't be replaced
         replaced_pos_tags: List of pos_tags that can be replaced,
-                           e.g. 's' for Noun, 'v' for Verb, 'a' for Adjective, 'r' for Adverb, 'num' for Numerical
+                           e.g. 'NOUN' for Noun, 'VERB' for Verb,
+                           'ADJ' for Adjective, 'ADV' for Adverb, 'NUM' for Numerical
         is_replace_numeral_adjective: to replace numeral adjective or not, based on pos_tag
     """
 
@@ -144,11 +141,13 @@ class RuWordFilter(WordFilter):
             self.not_replaced_tokens = ['имел', 'обладал']
         self.replaced_pos_tags = replaced_pos_tags
 
-    def filter_based_on_pos_tag(self, tokens, morpho_tags):
+    def filter_based_on_pos_tag(self, morpho_tags):
         """Function that filters tokens with pos_tags and rules
         Args:
-            tokens: tokens that will be filtered
-            pos_tags: pos_tags for 'tokens', in nltk.pos_tag format
+            morpho_tags: morpho tags in UD2.0 format of filtered tokens
+                         e.g. {'source_token': 'удачи',
+                               'pos_tag': 'NOUN'
+                               'features': {'Animacy':'Inan', 'Case':'Acc', 'Gender':'Fem', 'Number': 'Plur'}}
         Return:
             List of boolean values,
             'False' for tokens that should not be replaced,

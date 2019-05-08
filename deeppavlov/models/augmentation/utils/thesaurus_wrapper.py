@@ -4,16 +4,16 @@ from nltk.corpus import wordnet as wn
 import pandas as pd
 
 
-class RuThesaurus:
-    """Class that finds synonyms, for russian language.
+class RuThesaurus(object):
+    """Class that finds synonyms, for russian language, based on Ruthes-lite2 thesaurus.
     Args:
         with_source_token: wheither source symbol is considered as synonyms to itself
-        dir_path: path to ruthes_lite2 thesaurus
+        dir_path: path which contains ruthes_lite2 thesaurus, in csv format
     Attributes:
         with_source_token: wheither source symbol is considered as synonyms to itself
         dir_path: path to ruthes_lite2 thesaurus
-        synonyms_data: pd.DataFrame that contains synonyms relations
-        text_entry_data: pd.DataFrame that contains lemma and entry_id
+        synonyms_data: pd.DataFrame object that contains synonyms relations
+        text_entry_data: pd.DataFrame object that contains lemma, entry_id ans pos_tag
     """
 
     def __init__(self, dir_path, with_source_token: bool = False):
@@ -59,10 +59,13 @@ class RuThesaurus:
         return list(filtered_syn)
 
     def get_syn(self, lemma: str, morpho_tag) -> List[str]:
-        """It returns synonyms for certain word
+        """It returns synonyms for certain lemma
         Args:
             lemma: word for that it will search synonyms
-            pos_tag: pos_tag in nltk.pos_tag format of 'lemma'
+            morpho_tags: morpho tags in UD2.0 format of filtered tokens
+                         e.g. {'source_token': 'удачи',
+                               'pos_tag': 'NOUN'
+                               'features': {'Animacy':'Inan', 'Case':'Acc', 'Gender':'Fem', 'Number': 'Plur'}}
         Return:
              List of synonyms
         """
@@ -72,12 +75,14 @@ class RuThesaurus:
         return synonyms
 
 
-class EnThesaurus:
+class EnThesaurus(object):
     """Class that finds synonyms, for english language.
     Args:
         with_source_token: wheither source symbol is considered as synonyms to itself
+        without_phrase: include in result synonyms that includes several words, e.g. 'give_up'
     Attributes:
         with_source_token: wheither source symbol is considered as synonyms to itself
+        without_phrase: include in result synonyms that includes several words, e.g. 'give_up'
     """
 
     def __init__(self, with_source_token: bool=False, without_phrase: bool=False):
@@ -111,9 +116,10 @@ class EnThesaurus:
         """It returns synonyms for certain word
         Args:
             lemma: word for that it will search synonyms
-            pos_tag: pos_tag in nltk.pos_tag format of 'lemma'
+            morpho_tags: morpho tags in UD2.0 format of filtered tokens
+                         e.g. {'source_token': 'luck', 'pos_tag': 'NOUN', 'features' {'Number': 'Sing'}}
         Return:
-             List of synonyms, if with_source_token == True then source_token will be placed in the begin of list
+             List of synonyms
         """
         synonyms = self._find_synonyms(lemma, morpho_tag)
         synonyms = self._filter(synonyms, lemma)

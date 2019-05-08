@@ -6,10 +6,18 @@ from itertools import dropwhile
 from russian_tagsets import converters
 
 class RuInflector:
-    """Works only with noun verb adjective and adverb
+    """Class that inflects and defines lemma form words (nouns, adjectives, verbs, numbers, adverbs) according with
+    morpho tag in UD2.0 format. Inflection bases on pymorphy2 library.
+    Phrasal verbs should be linked with '_' symbol.
+    Args:
+        force_inflect: if it is True, it will be more probability that token will be inflected
+    Args:
+        force_inflect: if it is True, it will be more probability that token will be inflected
+        convetor: it converts morpho_tags from opencorpora format into UD2.0 format
+        moprh: MorphAnalyzer object
     """
 
-    def __init__(self, force_inflect=False):
+    def __init__(self, force_inflect=True):
         self.morph = pymorphy2.MorphAnalyzer()
         self.convertor = converters.converter('opencorpora-int', 'ud20')
         self.force_inflect = force_inflect
@@ -20,13 +28,13 @@ class RuInflector:
         parses = self.morph.parse(token)
         if morpho_tag is None:
             return parses[0].normal_form
-        parses = [self._tranform_ud20_form(parse) for parse in parses]
-        parses = self._filter_and_sort_parses(parses, morpho_tag)
-        if len(parses) > 0:
-            return parses[0]['pymorphy'].normal_form
-        return self.morph.parse(token)[0].normal_form
+        parses_in_ud2 = [self._transform_ud20_form(parse) for parse in parses]
+        parses_in_ud2 = self._filter_and_sort_parses(parses_in_ud2, morpho_tag)
+        if len(parses_in_ud2) > 0:
+            return parses_in_ud2[0]['pymorphy'].normal_form
+        return parses[0].normal_form
 
-    def _tranform_ud20_form(self, parse):
+    def _transform_ud20_form(self, parse):
         ud20 = self.convertor(str(parse.tag)).split()
         ud20 = {'source_token': parse.word, 'pos_tag': ud20[0], 'features': self.__get_morpho_features(ud20[1])}
         return {'pymorphy': parse, 'ud20': ud20}
@@ -58,11 +66,14 @@ class RuInflector:
         elif morpho_tag['pos_tag'] in ["ADV"]:
             keys = ["Degree"]
         elif morpho_tag['pos_tag'] == "VERB":
-            keys = ["Mood", "Tense", "Aspect", "Person", "Voice", "Gender", "Number", "Verbform"]
+            if morpho_tag['features'].get('Voice') == 'Act':
+                keys = ["Mood", "Tense", "Aspect", "Person", "Gender", "Number", "VerbForm"]
+            else:
+                keys = ["Mood", "Tense", "Aspect", "Person", "Voice", "Gender", "Number", "VerbForm"]
         else:
             keys = []
         values = [morpho_tag['features'].get(key) for key in keys]
-        morpho_tag['features'] = dict(zip(keys, values))
+        morpho_tag['features'] = dict(filter(lambda x: bool(x[1]), zip(keys, values)))
         return morpho_tag
 
     def _filter_and_sort_parses(self, parses, morpho_tag, identicaly=False):
@@ -80,32 +91,36 @@ class RuInflector:
 
     def inflect_token(self, token: str, morpho_tag) -> Union[str, None]:
         parses = self.morph.parse(token)
-        parses = [self._tranform_ud20_form(parse) for parse in parses]
+        parses = [self._transform_ud20_form(parse) for parse in parses]
         parses = self._filter_and_sort_parses(parses, morpho_tag)
         if not parses:
             return None
         lexemes = parses[0]['pymorphy'].lexeme
-        lexemes = [self._tranform_ud20_form(lexeme) for lexeme in lexemes]
+        lexemes = [self._transform_ud20_form(lexeme) for lexeme in lexemes]
         lexemes = self._filter_and_sort_parses(lexemes, morpho_tag, True)
         if not lexemes:
             return None
         return lexemes[0]['pymorphy'].word
 
 
-class EnInflector:
-    """Class that morpho-analyses given token and inflects
-    random token into certain morpho-form, for english language.
-    It is based on pattern.en library. Phrasal verbs should be linked with '_' symbol.
+class EnInflector(object):
+    """Class that inflects and defines lemma form words (nouns, adjectives, verbs) according with
+    morpho tag in UD2.0 format. Inflection bases on pattern.en library.
+    Phrasal verbs should be linked with '_' symbol.
+    Lemmatization bases on nltk.WordLemmatizer
     Args:
         classical_pluralize: arg from pattern.en.inflect.pluralize function
     Attribute:
         classical_pluralize: arg from pattern.en.inflect.pluralize function
+        lemmatizer: nltk.WordLemmatizer object
+        verb_convertor_ud20_pattern: VerbConvertorUD20Patternen object,
+                                     it converts morpho tags of verb between UD2.0 and pattern.en formats
     """
 
     def __init__(self, classical_pluralize: bool=True):
         self.classical_pluralize = classical_pluralize
         self.lemmatizer = WordNetLemmatizer()
-        self.convertor_ud20_pattern = Convertor_UD20_pattern()
+        self.verb_convertor_ud20_pattern = VerbConvertorUD20Patternen()
 
     def get_lemma_form(self, token: str, morpho_tag):
         if morpho_tag['pos_tag'] == 'VERB':
@@ -113,14 +128,12 @@ class EnInflector:
         return self.lemmatizer.lemmatize(token)
 
     def get_lemma_verb(self, token: str):
-        """"""
         splited = token.split('_')
         if len(splited) > 1:
             return "_".join([en.lemma(splited[0])] + splited[1:])
         return en.lemma(token)
 
     def pluralize(self, token, morpho_tag):
-        """"""
         splited = token.split('_')
         if len(splited) > 1:
             return "_".join(splited[:-1] + en.pluralize(splited[-1],
@@ -129,7 +142,6 @@ class EnInflector:
         return en.pluralize(token, self.to_en_pos(morpho_tag['pos_tag']), self.classical_pluralize)
 
     def singularize(self, token, morpho_tag):
-        """"""
         splited = token.split('_')
         if len(splited) > 1:
             return "_".join(splited[:-1] + en.singularize(splited[-1], self.to_en_pos(morpho_tag['pos_tag'])))
@@ -149,7 +161,7 @@ class EnInflector:
 
     def _inflect_verb(self, token, morpho_tag):
         candidate_tenses = en.tenses(morpho_tag['source_token'])
-        morpho_tense = self.convertor_ud20_pattern.verb(morpho_tag)
+        morpho_tense = self.verb_convertor_ud20_pattern.convert(morpho_tag)
         candidate_tenses = self._sort_and_filter_candidates(morpho_tense, candidate_tenses)
         tense_for_inflection = list(dropwhile(lambda cand: en.conjugate(token, cand) is None, candidate_tenses))
         lemma = self.get_lemma_verb(token)
@@ -181,7 +193,7 @@ class EnInflector:
         return token
 
 
-class Convertor_UD20_pattern:
+class VerbConvertorUD20Patternen(object):
 
     def __init__(self):
         self.ud_to_en_tense = {
@@ -231,20 +243,9 @@ class Convertor_UD20_pattern:
                 aspect = 'imperfective'
         return aspect
 
-    def verb(self, morpho_tag):
+    def convert(self, morpho_tag):
         return (self._get_verb_tense(morpho_tag),
                 self._get_verb_person(morpho_tag),
                 self._get_verb_number(morpho_tag),
                 self._get_verb_mood(morpho_tag),
                 self._get_verb_aspect(morpho_tag))
-
-if __name__ == '__main__':
-    r = RuInflector()
-    print(r.inflect_token('коричневый', {'source_token': 'синего',
-                                         'pos_tag': 'ADJ',
-                                         'features': {'Case': 'Gen', 'Degree': 'Pos', 'Gender': 'Masc', 'Number':'Sing'}}))
-    print(r.inflect_token('скейтер', {'source_token': 'анимешник',
-                                      'pos_tag': 'NOUN',
-                                      'features': {'Animacy':'Inan','Case':'Nom','Gender':'Masc','Number':'Sing'}}))
-    print(r.get_lemma_form('рыло', {'pos_tag': 'NOUN', 'features': {}}))
-    print(r.get_lemma_form('рыло', {'pos_tag': 'VERB', 'features': {}}))

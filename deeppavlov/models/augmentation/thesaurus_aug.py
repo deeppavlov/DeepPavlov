@@ -11,7 +11,6 @@ from logging import getLogger
 from itertools import zip_longest
 from typing import List
 from math import log as ln
-from math import exp
 
 
 from deeppavlov.models.spelling_correction.electors.kenlm_elector import KenlmElector
@@ -25,8 +24,6 @@ class ThesaurusAug(Component):
     Args:
         lang: lang of text, 'eng' for english, 'rus' for russian
         penalty_for_source_token: [0, 1] penalty for using source token for language model
-        kenlm_model_path: path to kenlm model file
-        kenlm_beam_size: beam size of kenlm_elector
         replace_freq: [0,1] frequence of replacing tokens, it calculates respecting to tokens that passed other filters
         isalpha_only: replace only isalpha tokens
         not_replaced_tokens: list of tokens that should not be replaced
@@ -34,21 +31,15 @@ class ThesaurusAug(Component):
         cases: Lettercaser arg
         default_case: Lettercaser arg
         replaced_pos_tags: WordFilter arg
-        ru_thes_dirpath: path to russian thesaurus 'RuThes-Lite2'
-        ru_is_replace_numeral_adjective: RuWordFilter arg
+        ru_thes_dirpath: path which contains russian thesaurus 'RuThes-Lite2' in csv format
         en_classical_pluralize: EnInflector arg
-        en_is_replace_proper_noun: EnWordFilter arg
-        en_is_replace_modal_verb: EnWordFilter arg
-        force_inflect: RuInflector arg
     Attributes:
-        inflector: it inflects tokens, defines lemma form and morpho tags
-        thesaurus: interface for thesaurus
+        inflector: it inflects tokens and defines lemma form
+        thesaurus: interface for thesaurus, e.g. ruthes-lite2 for russian, wordnet for english
         word_filter: it decides which token can be replaced
-        kenlm_elector: Kenlm object
         lettercaser: it defines lettercases and restore them
         penalty_for_source_token: [0, 1] penalty for using source token for language model
         with_source_token: source tokens is synonyms for itself or not
-        force_inflect: RuInflector arg
         lang: lang of text, 'eng' for english, 'rus' for russian
     """
 
@@ -64,8 +55,16 @@ class ThesaurusAug(Component):
                  replaced_pos_tags: List[str]=None,
                  ru_thes_dirpath = None,
                  en_classical_pluralize: bool=True, *args, **kwargs):
-        assert lang in ['rus', 'eng'], """it supports only russian and english languages,
-                                          e.g. 'rus' for russian, 'eng' for english"""
+        if lang not in ['rus', 'eng']:
+            raise ValueError(f"""Argument of {type(self).__name__}: 'lang'
+                                should be chosen from set ['rus', 'eng'],
+                                'rus' for russian, 'eng' for english""")
+        if not 0 <= penalty_for_source_token < 1:
+            raise ValueError(f"""Argument of {type(self).__name__}: 'penalty_for_source_token'
+                                should be defined in half-interval [0,1)""")
+        if not 0 <= replace_freq <= 1:
+            raise ValueError(f"""Argument of {type(self).__name__}: 'replace_freq'
+                                should be defined in closed-interval [0,1]""")
         if lang == 'rus':
             self.inflector = RuInflector()
             self.thesaurus = RuThesaurus(dir_path=ru_thes_dirpath, with_source_token=False)
@@ -84,6 +83,10 @@ class ThesaurusAug(Component):
         self.penalty_for_source_token = penalty_for_source_token
         self.with_source_token = with_source_token
         self.lang = lang
+        if self.lang == 'rus':
+            self.morpho_tagger = build_model(configs.morpho_tagger.UD2_0.morpho_ru_syntagrus, download=True)
+        if self.lang == 'eng':
+            self.morpho_tagger = build_model(configs.morpho_tagger.UD2_0.morpho_en, download=True)
 
     def _unite_phrasal_verbs(self, tokens, morpho_tags):
         res_tokens, res_morpho_tags, is_pass_next_token = [], [], False
@@ -152,7 +155,7 @@ class ThesaurusAug(Component):
         ziped = zip(synonyms, filter_res)
         [list(map(lambda x: x.replace("_", " "), syns)) if not_filtered else None for syns, not_filtered in ziped]
 
-    def __get_morpho_features(self, features: str):
+    def __get_morpho_features_from_morpho_tag(self, features: str):
         if features == '_':
             return {}
         features = features.split('|')
@@ -166,7 +169,7 @@ class ThesaurusAug(Component):
             token_morpho_dict = {}
             token_morpho_dict.update({'source_token': token_morpho[1]})
             token_morpho_dict.update({'pos_tag': token_morpho[2]})
-            token_morpho_dict.update({'features': self.__get_morpho_features(token_morpho[3])})
+            token_morpho_dict.update({'features': self.__get_morpho_features_from_morpho_tag(token_morpho[3])})
             res.append(token_morpho_dict)
         return res
 
@@ -174,26 +177,24 @@ class ThesaurusAug(Component):
         return [list(filter(lambda x: x is not None, syns)) if syns is not None else None for syns in synonyms]
 
     def transform_sentence(self, tokens: List[str], morpho_tags: str) -> List[str]:
-        morpho_tags = self._transform_morpho_tags(morpho_tags) #
-        if self.lang == 'eng': #
-            self._unite_phrasal_verbs(tokens, morpho_tags) #
-        filter_res = self.word_filter.filter_words(tokens, morpho_tags) #
-        cases = self._get_cases(tokens, filter_res) #
-        lemmas = self._get_lemmas(tokens, morpho_tags, filter_res) #
-        synonyms = self._get_synonyms(lemmas, morpho_tags, filter_res) #
-        synonyms = self._inflect_synonyms(synonyms, morpho_tags, filter_res) #
-        synonyms = self._filter_none_value(synonyms) #
-        synonyms = self._rest_cases(synonyms, cases, filter_res) #
-        if self.lang == 'eng': #
-            self._disunit_pharasal_verbs(synonyms, filter_res) #
-        candidates = self._insert_source_tokens(synonyms, tokens, filter_res) #
-        candidates = self._transform_for_kenlm_elector(candidates, filter_res) #
+        morpho_tags = self._transform_morpho_tags(morpho_tags)
+        if self.lang == 'eng':
+            self._unite_phrasal_verbs(tokens, morpho_tags)
+        filter_res = self.word_filter.filter_words(tokens, morpho_tags)
+        cases = self._get_cases(tokens, filter_res)
+        lemmas = self._get_lemmas(tokens, morpho_tags, filter_res)
+        synonyms = self._get_synonyms(lemmas, morpho_tags, filter_res)
+        synonyms = self._inflect_synonyms(synonyms, morpho_tags, filter_res)
+        synonyms = self._filter_none_value(synonyms)
+        synonyms = self._rest_cases(synonyms, cases, filter_res)
+        if self.lang == 'eng':
+            self._disunit_pharasal_verbs(synonyms, filter_res)
+        candidates = self._insert_source_tokens(synonyms, tokens, filter_res)
+        candidates = self._transform_for_kenlm_elector(candidates, filter_res)
         return candidates
 
     def __call__(self, batch_tokens: List[List[str]]):
-        if self.lang == 'rus':
-            morpho_tagger = build_model(configs.morpho_tagger.UD2_0.morpho_ru_syntagrus, download=True)
-        batch_morpho_tags = morpho_tagger(batch_tokens)
+        batch_morpho_tags = self.morpho_tagger(batch_tokens)
         transformed = [self.transform_sentence(tokens, morpho_tags) for tokens, morpho_tags in zip(batch_tokens, batch_morpho_tags)]
         return transformed
 
@@ -206,8 +207,8 @@ if __name__ == '__main__':
     #test = word_tokenize("""Одно из наиболее значительных произведений в творчестве Андрея Тарковского, который говорил, что в нём он «легально коснулся трансцендентного». Производство фильма сопровождалось множеством проблем и заняло около трёх лет. При проявке плёнки практически полностью испорчен по техническим причинам первый вариант, и картину переснимали трижды, с тремя разными операторами и художниками- постановщиками.""".lower())
     #test = word_tokenize("""В Москве 15-летний подросток, который несколько дней назад был госпитализирован с ожогами 98% тела, умер в больнице.""".lower())
     #test = word_tokenize("""Способности он имел совершенно исключительные, обладал огромной памятью, отличался ненасытной научной любознательностью и необычайной работоспособностью... Воистину, это была ходячая энциклопедия...""".lower())
-    t = ThesaurusAug(lang='rus', ru_thes_dirpath='/Users/sultanovar/.deeppavlov/downloads/ruthes_lite2', penalty_for_source_token=0.95)
-    kenlm = KenlmElector('/Users/sultanovar/.deeppavlov/models/lms/ru_wiyalen_no_punkt.arpa.binary')
+    t = ThesaurusAug(lang='rus', ru_thes_dirpath='/home/azat/.deeppavlov/downloads/ruthes_lite2', penalty_for_source_token=0.95)
+    kenlm = KenlmElector('/home/azat/.deeppavlov/models/lms/ru_wiyalen_no_punkt.arpa.binary')
     res = t([test])
     print(res)
     print(kenlm(res))
