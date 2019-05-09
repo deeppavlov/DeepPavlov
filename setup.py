@@ -65,7 +65,9 @@ setup(
                 'sphinx>=1.7.9',
                 'sphinx_rtd_theme>=0.4.0',
                 'nbsphinx>=0.3.4',
-                'ipykernel>=4.8.0'
+                'ipykernel>=4.8.0',
+                'git+https://github.com/deepmipt/bert.git@feat/multi_gpu',
+                'python-aiml==0.9.1'
             ]},
     **read_requirements()
 )

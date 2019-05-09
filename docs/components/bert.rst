@@ -13,7 +13,7 @@ There are several pre-trained BERT models released by Google Research, more deta
 -  BERT-base, English, uncased, 12-layer, 768-hidden, 12-heads, 110M parameters: download from `[google] <https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-12_H-768_A-12.zip>`__, `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/uncased_L-12_H-768_A-12.zip>`__
 -  BERT-large, English, cased, 24-layer, 1024-hidden, 16-heads, 340M parameters: download from `[google] <https://storage.googleapis.com/bert_models/2018_10_18/cased_L-24_H-1024_A-16.zip>`__
 -  BERT-base, multilingual, cased, 12-layer, 768-hidden, 12-heads, 110M parameters: download from `[google] <https://storage.googleapis.com/bert_models/2018_11_23/multi_cased_L-12_H-768_A-12.zip>`__, `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/multi_cased_L-12_H-768_A-12.zip>`__
--  BERT-base, Chinese, cased, 12-layer, 768-hidden, 12-heads, 110M parameters: download from `[google] <https://storage.googleapis.com/bert_models/2018_11_23/multi_cased_L-12_H-768_A-12.zip>`__
+-  BERT-base, Chinese, cased, 12-layer, 768-hidden, 12-heads, 110M parameters: download from `[google] <https://storage.googleapis.com/bert_models/2018_11_03/chinese_L-12_H-768_A-12.zip>`__
 
 We have trained BERT-base for Russian Language:
 
@@ -28,13 +28,13 @@ ranking. We provide pre-trained models and examples on how to use BERT with Deep
 BERT for Classification
 -----------------------
 
-**deeppavlov.models.bert.BertClassifierModel** (see :doc:`here </apiref/models/bert>`) provides easy to use
-solution for classification problem using pre-trained BERT.
-One can use several pre-trained English, multi-lingual and Russian BERT models that are listed above.
+:class:`~deeppavlov.models.bert.bert_classifier.BertClassifierModel` provides easy to use solution for classification problem
+using pre-trained BERT. One can use several pre-trained English, multi-lingual and Russian BERT models that are
+listed above.
 
 Two main components of BERT classifier pipeline in DeepPavlov are
-``deeppavlov.models.preprocessors.BertPreprocessor`` (see :doc:`here </apiref/models/bert>`)
-and ``deeppavlov.models.bert.BertClassifierModel`` (see :doc:`here </apiref/models/bert>`).
+:class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertPreprocessor` and
+:class:`~deeppavlov.models.bert.bert_classifier.BertClassifierModel`.
 Non-processed texts should be given to ``bert_preprocessor`` for tokenization on subtokens,
 encoding subtokens with their indices and creating tokens and segment masks.
 If one processed classes to one-hot labels in pipeline, ``one_hot_labels`` should be set to ``true``.
@@ -52,7 +52,7 @@ To tag each word representations of the first sub-word elements are extracted. S
 These representations are passed to a dense layer or Bi-RNN layer to produce distribution over tags. There is
 also an optional CRF layer on the top.
 
-Multilingual BERT models allows to perform zero-shot transfer across languages. To use our 19 tags NER for over a
+Multilingual BERT model allows to perform zero-shot transfer across languages. To use our 19 tags NER for over a
 hundred languages see :ref:`ner_multi_bert`.
 
 
@@ -61,7 +61,7 @@ BERT for Context Question Answering (SQuAD)
 Context Question Answering on `SQuAD <https://rajpurkar.github.io/SQuAD-explorer/>`__ dataset is a task
 of looking for an answer on a question in a given context. This task could be formalized as predicting answer start
 and end position in a given context. :class:`~deeppavlov.models.bert.bert_squad.BertSQuADModel` uses two linear
-transformations to predict probability that currents subtoken is start/end position of an answer. For details check
+transformations to predict probability that current subtoken is start/end position of an answer. For details check
 :doc:`Context Question Answering documentation page </components/squad>`.
 
 BERT for Ranking
