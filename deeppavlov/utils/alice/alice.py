@@ -59,7 +59,7 @@ def interact_alice(agent: Agent):
 
     response = {
         'response': {
-            'end_session': True,
+            'end_session': False,
             'text': ''
         },
         "session": {
