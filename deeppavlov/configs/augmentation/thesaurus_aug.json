@@ -19,7 +19,7 @@
         ],
         "class_name": "thesaurus_aug",
         "lang": "rus",
-        "penalty_for_source_token": 0.01,
+        "penalty_for_source_token": 0.95,
         "isalpha_only": true,
         "ru_thes_dirpath": "{DOWNLOADS_PATH}/ruthes_lite2/",
         "replace_freq": 1.0,
@@ -44,7 +44,7 @@
   },
   "metadata": {
     "variables": {
-      "ROOT_PATH": "/home/azat/.deeppavlov",
+      "ROOT_PATH": "/Users/sultanovar/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models"
     }

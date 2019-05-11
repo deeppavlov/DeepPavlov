@@ -2,6 +2,7 @@ from typing import List
 from numpy.random import sample
 from itertools import repeat
 from deeppavlov.models.augmentation.utils.inflector import EnInflector
+from deeppavlov.models.augmentation.utils.inflector import RuInflector
 
 
 class WordFilter(object):
@@ -25,7 +26,6 @@ class WordFilter(object):
         if not_replaced_tokens is None:
             not_replaced_tokens = []
         self.not_replaced_tokens = not_replaced_tokens
-        self.inflector = EnInflector()
 
     def filter_isalpha_only(self, tokens):
         if self.isalpha_only:
@@ -34,7 +34,7 @@ class WordFilter(object):
             return repeat(True, len(tokens))
 
     def filter_not_replaced_token(self, tokens):
-        return map(lambda x: x not in self.not_replaced_tokens, tokens)
+        pass
 
     def filter_based_on_pos_tag(self, tokens, pos_tags):
         pass
@@ -86,6 +86,11 @@ class EnWordFilter(WordFilter):
         if replaced_pos_tags is None:
             replaced_pos_tags = ['ADJ', 'ADV', 'NOUN', 'VERB']
         self.replaced_pos_tags = replaced_pos_tags
+        self.inflector = EnInflector()
+
+    def filter_not_replaced_token(self, tokens, morpho_tags):
+        return map(lambda x, y: self.inflector.get_lemma_form(x, y) not in self.not_replaced_tokens,
+                   tokens, morpho_tags)
 
     def filter_based_on_pos_tag(self, morpho_tags):
         """Function that filters tokens with pos_tags and rules
@@ -99,7 +104,7 @@ class EnWordFilter(WordFilter):
         """
         prev_is_there, result = False, []
         for morpho_tag in morpho_tags:
-            if morpho_tag['pos_tag'] == 'PRON' and morpho_tag['source_token'] == 'there':
+            if morpho_tag['pos_tag'] == 'PRON' and morpho_tag['source_token'].lower() == 'there':
                 prev_is_there = True
                 result.append(False)
             elif prev_is_there and (self.inflector.get_lemma_form(morpho_tag['source_token']) == 'be'):
@@ -138,8 +143,13 @@ class RuWordFilter(WordFilter):
         if replaced_pos_tags is None:
             replaced_pos_tags = ['ADJ', 'ADV', 'NOUN', 'VERB', 'NUM']
         if not_replaced_tokens is None:
-            self.not_replaced_tokens = ['имел', 'обладал']
+            self.not_replaced_tokens = ['иметь', 'обладать', 'любить', 'нравиться']
         self.replaced_pos_tags = replaced_pos_tags
+        self.inflector = RuInflector()
+
+    def filter_not_replaced_token(self, tokens, morpho_tags):
+        return map(lambda x, y: self.inflector.get_lemma_form(x,y) not in self.not_replaced_tokens,
+                   tokens, morpho_tags)
 
     def filter_based_on_pos_tag(self, morpho_tags):
         """Function that filters tokens with pos_tags and rules

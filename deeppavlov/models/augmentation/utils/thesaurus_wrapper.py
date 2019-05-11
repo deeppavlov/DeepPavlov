@@ -34,7 +34,6 @@ class RuThesaurus(object):
         }
 
     def _find_synonyms(self, lemma: str, morpho_tag) -> List[str]:
-        lemma = lemma.upper()
         entry_id_set = set(self.text_entry_data[self.text_entry_data['lemma'] == lemma]['entry_id'])
         concept_id_set = set()
         for entry_id in entry_id_set:
@@ -88,15 +87,13 @@ class EnThesaurus(object):
     def __init__(self, with_source_token: bool=False, without_phrase: bool=False):
         self.with_source_token = with_source_token
         self.without_phrase = without_phrase
-        self.to_wn_postags = {
-            'NOUN': wn.NOUN,
-            'VERB': wn.VERB,
-            'ADJ':  wn.ADJECTIVE,
-            'ADV':  wn.ADVERB
-        }
+        self.to_wn_postags = {'NOUN': wn.NOUN,
+                              'VERB': wn.VERB,
+                              'ADJ':  wn.ADJ,
+                              'ADV':  wn.ADV}
 
     def _find_synonyms(self, lemma, morpho_tag):
-        wn_synonyms = wn.synsets(lemma, pos=self.to_wn_postags(morpho_tag['pos_tag']))
+        wn_synonyms = wn.synsets(lemma, pos=self.to_wn_postags[morpho_tag['pos_tag']])
         if morpho_tag['pos_tag'] == 'ADJ':
             wn_synonyms = wn_synonyms.extend(wn.synsets(lemma, pos='s'))
         lemmas = sum((map(lambda x: x.lemmas(), wn_synonyms)), [])
