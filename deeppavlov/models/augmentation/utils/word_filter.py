@@ -45,7 +45,7 @@ class WordFilter(object):
     def filter_united(self, tokens, morpho_tags):
         return list(map(lambda x, y, z: all([x,y,z]),
                         self.filter_based_on_pos_tag(morpho_tags),
-                        self.filter_not_replaced_token(tokens),
+                        self.filter_not_replaced_token(tokens, morpho_tags),
                         self.filter_isalpha_only(tokens)))
 
     def filter_words(self, tokens, moprho_tags):
