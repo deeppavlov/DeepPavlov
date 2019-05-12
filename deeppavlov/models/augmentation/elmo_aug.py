@@ -66,48 +66,48 @@ class ElmoAug(Component):
 #                                            replaced_pos_tags=replaced_pos_tags)
 #            self.morpho_tagger = build_model(configs.models.morpho_tagger.UD2_0.morpho_en, download=True)
             pass
-        def _softmax(self, a, axis):
-            numerator = np.exp(a - np.max(a))
-            denominator = np.expand_dims(np.sum(numerator, axis=axis), 2)
-            return numerator / denominator
+    def _softmax(self, a, axis):
+        numerator = np.exp(a - np.max(a))
+        denominator = np.expand_dims(np.sum(numerator, axis=axis), 2)
+        return numerator / denominator
 
-        def _unite_distr(self, elmo_distr):
-            elmo_distr = np.log(elmo_distr)
-            elmo_distr = np.sum(elmo_distr, axis=1)
-            elmo_distr = elmo_distr - self.scores_of_elmo_vocab_by_kenlm
-            return self._softmax(elmo_distr, axis=1)
+    def _unite_distr(self, elmo_distr):
+        elmo_distr = np.log(elmo_distr)
+        elmo_distr = np.sum(elmo_distr, axis=1)
+        elmo_distr = elmo_distr - self.scores_of_elmo_vocab_by_kenlm
+        return self._softmax(elmo_distr, axis=1)
 
-        def _multi_argmax(self, values: np.ndarray, n_instances: int = 1) -> np.ndarray:
-            """
-            Selects the indices of the n_instances highest values.
-            Args:
-                values: Contains the values to be selected from.
-                n_instances: Specifies how many indices to return.
-            Returns:
-                Contains the indices of the n_instances largest values.
-            """
-            assert n_instances <= values.shape[0], 'n_instances must be less or equal than the size of utility'
+    def _multi_argmax(self, values: np.ndarray, n_instances: int = 1) -> np.ndarray:
+        """
+        Selects the indices of the n_instances highest values.
+        Args:
+            values: Contains the values to be selected from.
+            n_instances: Specifies how many indices to return.
+        Returns:
+            Contains the indices of the n_instances largest values.
+        """
+        assert n_instances <= values.shape[0], 'n_instances must be less or equal than the size of utility'
 
-            max_idx = np.argpartition(-values, n_instances - 1, axis=0)[:n_instances]
-            return max_idx
+        max_idx = np.argpartition(-values, n_instances - 1, axis=0)[:n_instances]
+        return max_idx
 
-        def _sample_token_from_distr(self, distr):
-            idxs = _multi_argmax(self, distr, self.num_top_tokens)
-            token_idx = np.random.choice(idxs, 1, False, distr[idxs])
-            return self.elmo_lm.get_vocab()[token_idx]
+    def _sample_token_from_distr(self, distr):
+        idxs = _multi_argmax(self, distr, self.num_top_tokens)
+        token_idx = np.random.choice(idxs, 1, False, distr[idxs])
+        return self.elmo_lm.get_vocab()[token_idx]
 
-        def _transform_sentence(self, elmo_distr, morpho_tags, tokens):
-            filter_res = self.word_filter.filter_words(tokens, morpho_tags)
-            transformed_sentence = [self._sample_token_from_distr(vocab_distr) if not_filtered else token
-                                    for token, not_filtered, vocab_distr in zip(tokens, filter_res, elmo_distr)]
-            return transformed_sentence
+    def _transform_sentence(self, elmo_distr, morpho_tags, tokens):
+        filter_res = self.word_filter.filter_words(tokens, morpho_tags)
+        transformed_sentence = [self._sample_token_from_distr(vocab_distr) if not_filtered else token
+                                for token, not_filtered, vocab_distr in zip(tokens, filter_res, elmo_distr)]
+        return transformed_sentence
 
-        def __call__(self, batch_tokens: List[List[str]]) -> List[List[str]]:
-            batch_morpho_tags = self.morpho_tagger(batch_tokens)
-            batch_elmo_distr = self.elmo_lm(batch_tokens)
-            batch_elmo_distr = [self._unite_distr(elmo_distr) for elmo_distr in batch_elmo_distr]
-            ziped = zip(batch_elmo_distr, batch_morpho_tags, batch_tokens)
-            transformed_batch = [self._transform_sentence(elmo_distr, morpho_tags, tokens)
-                                 for elmo_distr, morpho_tags, tokens in ziped]
-            return transformed_batch
+    def __call__(self, batch_tokens: List[List[str]]) -> List[List[str]]:
+        batch_morpho_tags = self.morpho_tagger(batch_tokens)
+        batch_elmo_distr = self.elmo_lm(batch_tokens)
+        batch_elmo_distr = [self._unite_distr(elmo_distr) for elmo_distr in batch_elmo_distr]
+        ziped = zip(batch_elmo_distr, batch_morpho_tags, batch_tokens)
+        transformed_batch = [self._transform_sentence(elmo_distr, morpho_tags, tokens)
+                             for elmo_distr, morpho_tags, tokens in ziped]
+        return transformed_batch
 
