@@ -92,7 +92,7 @@ class ElmoAug(Component):
         return max_idx
 
     def _sample_token_from_distr(self, distr):
-        idxs = self._multi_argmax(self, distr, self.num_top_tokens)
+        idxs = self._multi_argmax(distr, self.num_top_tokens)
         token_idx = np.random.choice(idxs, 1, False, distr[idxs])
         return self.elmo_lm.get_vocab()[token_idx]
 
