@@ -28,8 +28,8 @@ class ElmoAug(Component):
                  replaced_pos_tags,
                  with_source_token,
                  num_top_tokens,
-                 model_dir="/cephfs/home/sultanov/elmo_lm/lib/python3.6/site-packages/download/bidirectional_lms/elmo_en_news",
-                 scores_of_elmo_vocab_by_kenlm="./"):
+                 model_dir,
+                 scores_of_elmo_vocab_by_kenlm):
         if lang not in ['rus', 'eng']:
             raise ValueError(f"""Argument of {type(self).__name__}: 'lang'
                                 should be chosen from set ['rus', 'eng'],
@@ -99,7 +99,7 @@ class ElmoAug(Component):
         def _transform_sentence(self, elmo_distr, morpho_tags, tokens):
             filter_res = self.word_filter.filter_words(tokens, morpho_tags)
             transformed_sentence = [self._sample_token_from_distr(vocab_distr) if not_filtered else token
-                for token, not_filtered, vocab_distr in zip(tokens, filter_res, elmo_distr)]
+                                    for token, not_filtered, vocab_distr in zip(tokens, filter_res, elmo_distr)]
             return transformed_sentence
 
         def __call__(self, batch_tokens: List[List[str]]) -> List[List[str]]:
@@ -107,6 +107,7 @@ class ElmoAug(Component):
             batch_elmo_distr = self.elmo_lm(batch_tokens)
             batch_elmo_distr = [self._unite_distr(elmo_distr) for elmo_distr in batch_elmo_distr]
             ziped = zip(batch_elmo_distr, batch_morpho_tags, batch_tokens)
-            transformed_batch = [self._transform_sentence(elmo_distr, morpho_tags, tokens) for elmo_distr, morpho_tags, tokens in ziped]
+            transformed_batch = [self._transform_sentence(elmo_distr, morpho_tags, tokens)
+                                 for elmo_distr, morpho_tags, tokens in ziped]
             return transformed_batch
 
