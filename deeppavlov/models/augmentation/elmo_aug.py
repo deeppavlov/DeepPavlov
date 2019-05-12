@@ -92,11 +92,30 @@ class ElmoAug(Component):
         return max_idx
 
     def _sample_token_from_distr(self, distr):
-        idxs = _multi_argmax(self, distr, self.num_top_tokens)
+        idxs = self._multi_argmax(self, distr, self.num_top_tokens)
         token_idx = np.random.choice(idxs, 1, False, distr[idxs])
         return self.elmo_lm.get_vocab()[token_idx]
 
+    def __get_morpho_features_from_morpho_tag(self, features: str):
+        if features == '_':
+            return {}
+        features = features.split('|')
+        features = list(map(lambda x: tuple(x.split('=')), features))
+        return dict(features)
+
+    def _transform_morpho_tags(self, morpho_tags):
+        splited, res = morpho_tags.split('\n'), []
+        for token_morpho in splited[:-1]:
+            token_morpho = token_morpho.split('\t')
+            token_morpho_dict = {}
+            token_morpho_dict.update({'source_token': token_morpho[1]})
+            token_morpho_dict.update({'pos_tag': token_morpho[2]})
+            token_morpho_dict.update({'features': self.__get_morpho_features_from_morpho_tag(token_morpho[3])})
+            res.append(token_morpho_dict)
+        return res
+
     def _transform_sentence(self, elmo_distr, morpho_tags, tokens):
+        morpho_tags = self._transform_morpho_tags(morpho_tags)
         filter_res = self.word_filter.filter_words(tokens, morpho_tags)
         transformed_sentence = [self._sample_token_from_distr(vocab_distr) if not_filtered else token
                                 for token, not_filtered, vocab_distr in zip(tokens, filter_res, elmo_distr)]
