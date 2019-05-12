@@ -22,7 +22,6 @@ import tensorflow as tf
 from overrides import overrides
 
 from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import zero_pad
 from deeppavlov.core.models.component import Component
@@ -30,8 +29,9 @@ from deeppavlov.core.models.tf_backend import TfModelMeta
 
 from deeppavlov.models.bidirectional_lms.elmo.utils import load_model, load_options_latest_checkpoint
 from deeppavlov.models.bidirectional_lms.elmo.data import InferBatcher
+from logging import getLogger
 
-log = get_logger(__name__)
+logger = getLogger(__name__)
 
 @register('elmo_bilm')
 class ELMoEmbedder(Component, metaclass=TfModelMeta):
