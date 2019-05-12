@@ -1,6 +1,6 @@
 from deeppavlov.models.bidirectional_lms import elmo_bilm
 from deeppavlov.models.augmentation.utils.word_filter import RuWordFilter
-from deeppavlov.models.augmentation.utils.word_filter import EnWordFilter
+#from deeppavlov.models.augmentation.utils.word_filter import EnWordFilter
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from logging import getLogger
@@ -60,12 +60,12 @@ class ElmoAug(Component):
                                             replaced_pos_tags=replaced_pos_tags)
             self.morpho_tagger = build_model(configs.models.morpho_tagger.UD2_0.morpho_ru_syntag, download=True)
         elif self.lang == 'eng':
-            self.word_filter = EnWordFilter(replace_freq=replace_freq,
-                                            isalpha_only=isalpha_only,
-                                            not_replaced_tokens=not_replaced_tokens,
-                                            replaced_pos_tags=replaced_pos_tags)
-            self.morpho_tagger = build_model(configs.models.morpho_tagger.UD2_0.morpho_en, download=True)
-
+#            self.word_filter = EnWordFilter(replace_freq=replace_freq,
+#                                            isalpha_only=isalpha_only,
+#                                            not_replaced_tokens=not_replaced_tokens,
+#                                            replaced_pos_tags=replaced_pos_tags)
+#            self.morpho_tagger = build_model(configs.models.morpho_tagger.UD2_0.morpho_en, download=True)
+            pass
         def _softmax(self, a, axis):
             numerator = np.exp(a - np.max(a))
             denominator = np.expand_dims(np.sum(numerator, axis=axis), 2)
