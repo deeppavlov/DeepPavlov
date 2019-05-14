@@ -116,7 +116,7 @@ and is built by the following steps:
    `enwiki dump <https://dumps.wikimedia.org/enwiki/20180201>`__
    (from 2018-02-11)
 #. Unpack and extract the articles with `WikiExtractor`_
-   (with ``--json``, ``--no-templates``, ``--filter_disambig_pages``
+   (with ``--json``, ``--no_templates``, ``--filter_disambig_pages``
    options)
 #. Build a database during :ref:`ranker_training`.
 
@@ -140,7 +140,7 @@ and is built by the following steps:
    (from 2018-04-01)
 #. Unpack and extract the articles with
    `WikiExtractor <https://github.com/attardi/wikiextractor>`__
-   (with ``--json``, ``--no-templates``, ``--filter_disambig_pages``
+   (with ``--json``, ``--no_templates``, ``--filter_disambig_pages``
    options)
 #. Build a database during :ref:`ranker_training`.
 
