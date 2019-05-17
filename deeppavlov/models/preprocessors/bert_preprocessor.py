@@ -100,7 +100,7 @@ class BertNerPreprocessor(Component):
 
     def __init__(self,
                  vocab_file: str,
-                 do_lower_case: bool = True,
+                 do_lower_case: bool = False,
                  max_seq_length: int = 512,
                  max_subword_length: int = None,
                  token_maksing_prob: float = 0.0,
