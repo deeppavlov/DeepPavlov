@@ -136,14 +136,14 @@ class BertNerModel(LRScheduledTFModel):
         if pretrained_bert is not None:
             pretrained_bert = str(expand_path(pretrained_bert))
 
-        if tf.train.checkpoint_exists(pretrained_bert) \
-                and not tf.train.checkpoint_exists(str(self.load_path.resolve())):
-            log.info('[initializing model with Bert from {}]'.format(pretrained_bert))
-            # Exclude optimizer and classification variables from saved variables
-            var_list = self._get_saveable_variables(
-                exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'ner', 'EMA'))
-            saver = tf.train.Saver(var_list)
-            saver.restore(self.sess, pretrained_bert)
+            if tf.train.checkpoint_exists(pretrained_bert) \
+                    and not tf.train.checkpoint_exists(str(self.load_path.resolve())):
+                log.info('[initializing model with Bert from {}]'.format(pretrained_bert))
+                # Exclude optimizer and classification variables from saved variables
+                var_list = self._get_saveable_variables(
+                    exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'ner', 'EMA'))
+                saver = tf.train.Saver(var_list)
+                saver.restore(self.sess, pretrained_bert)
 
         if self.load_path is not None:
             self.load()
