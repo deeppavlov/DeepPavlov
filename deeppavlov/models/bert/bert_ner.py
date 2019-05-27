@@ -434,6 +434,20 @@ class BertNerModel(LRScheduledTFModel):
 
         return tensor
 
+    def _decode_crf(self, feed_dict: Dict[tf.Tensor, np.ndarray]) -> List[np.ndarray]:
+        logits, trans_params, mask, seq_lengths = self.sess.run([self.logits,
+                                                                 self._transition_params,
+                                                                 self.y_masks_ph,
+                                                                 self.seq_lengths],
+                                                                feed_dict=feed_dict)
+        # iterate over the sentences because no batching in viterbi_decode
+        y_pred = []
+        for logit, sequence_length in zip(logits, seq_lengths):
+            logit = logit[:int(sequence_length)]  # keep only the valid steps
+            viterbi_seq, viterbi_score = tf.contrib.crf.viterbi_decode(logit, trans_params)
+            y_pred += [viterbi_seq]
+        return y_pred
+
     def _build_feed_dict(self, input_ids, input_masks, y_masks, token_types=None, y=None):
         feed_dict = {
             self.input_ids_ph: input_ids,
@@ -506,19 +520,18 @@ class BertNerModel(LRScheduledTFModel):
             pred = self.sess.run(self.y_probas, feed_dict=feed_dict)
         return pred
 
-    def _decode_crf(self, feed_dict: Dict[tf.Tensor, np.ndarray]) -> List[np.ndarray]:
-        logits, trans_params, mask, seq_lengths = self.sess.run([self.logits,
-                                                                 self._transition_params,
-                                                                 self.y_masks_ph,
-                                                                 self.seq_lengths],
-                                                                feed_dict=feed_dict)
-        # iterate over the sentences because no batching in viterbi_decode
-        y_pred = []
-        for logit, sequence_length in zip(logits, seq_lengths):
-            logit = logit[:int(sequence_length)]  # keep only the valid steps
-            viterbi_seq, viterbi_score = tf.contrib.crf.viterbi_decode(logit, trans_params)
-            y_pred += [viterbi_seq]
-        return y_pred
+    def save(self, exclude_scopes=('Optimizer', 'EMA/BackupVariables')) -> None:
+        if self.ema:
+            self.sess.run(self.ema.switch_to_train_op)
+        return super().save(exclude_scopes=exclude_scopes)
+
+    def load(self,
+             exclude_scopes=('Optimizer',
+                             'learning_rate',
+                             'momentum',
+                             'EMA/BackupVariables'),
+             **kwargs) -> None:
+        return super().load(exclude_scopes=exclude_scopes, **kwargs)
 
 
 class ExponentialMovingAverage:
