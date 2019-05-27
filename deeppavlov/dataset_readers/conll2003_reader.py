@@ -13,9 +13,11 @@ class Conll2003DatasetReader(DatasetReader):
              data_path: str,
              dataset_name: str = None,
              provide_pos: bool = False,
+             iob: bool = False,
              provide_doc_ids: bool = False):
         self.provide_pos = provide_pos
         self.provide_doc_ids = provide_doc_ids
+        self.iob = iob
         self.num_docs = 0
         self.x_is_tuple = self.provide_pos or self.provide_doc_ids
         data_path = Path(data_path)
@@ -87,5 +89,20 @@ class Conll2003DatasetReader(DatasetReader):
                     x = x + (self.num_docs,)
                 samples.append((x, tags))
                 self.num_docs += 1
+            
+            if self.iob:
+                return [(x, self._iob2_to_iob(tags)) for x, tags in samples]
 
         return samples
+
+    @staticmethod
+    def _iob2_to_iob(tags):
+        iob_tags = []
+
+        for n, tag in enumerate(tags):
+            if tag.startswith('B-') and (not n or (tags[n - 1][2:] != tag[2:])):
+                tag = tag.replace("B-", "I-")
+            iob_tags.append(tag)
+
+        return iob_tags
+            
