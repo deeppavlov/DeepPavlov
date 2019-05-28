@@ -15,7 +15,16 @@
 from logging import getLogger
 from typing import Iterator
 
-import fastText
+try:
+    import fastText
+except ModuleNotFoundError as e:
+    import sys
+    raise ModuleNotFoundError(f'{e}\n\nYou can install fastText by running\n'
+                              f'{sys.executable} -m pip install '
+                              'git+https://github.com/deepmipt/fastText.git#egg=fastText==0.8.22\n'
+                              'or for your deeppavlov pipeline configuration\n'
+                              f'{sys.executable} -m deeppavlov install <config_path>')
+
 import numpy as np
 from overrides import overrides
 
