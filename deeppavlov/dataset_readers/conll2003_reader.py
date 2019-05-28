@@ -13,11 +13,13 @@ class Conll2003DatasetReader(DatasetReader):
              data_path: str,
              dataset_name: str = None,
              provide_pos: bool = False,
+             provide_doc_ids: bool = False,
              iob: bool = False,
-             provide_doc_ids: bool = False):
+             docstart_token: str = None):
         self.provide_pos = provide_pos
         self.provide_doc_ids = provide_doc_ids
         self.iob = iob
+        self.docstart_token = docstart_token
         self.num_docs = 0
         self.x_is_tuple = self.provide_pos or self.provide_doc_ids
         data_path = Path(data_path)
@@ -61,8 +63,12 @@ class Conll2003DatasetReader(DatasetReader):
                         pos_tags = []
                         tags = []
                     self.num_docs += 1
+                    if self.docstart_token is not None:
+                        tokens = [self.docstart_token]
+                        pos_tags = ['O']
+                        tags = ['O']
                 elif len(line) < 2:
-                    if len(tokens) > 0:
+                    if (len(tokens) > 0) and (tokens != [self.docstart_token]):
                         x = tokens if not self.x_is_tuple else (tokens,)
                         if self.provide_pos:
                             x = x + (pos_tags,)
