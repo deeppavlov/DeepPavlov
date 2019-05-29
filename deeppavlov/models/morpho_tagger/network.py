@@ -13,16 +13,19 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import List, Union, Tuple, Iterable
+from typing import List, Union, Tuple, Iterable, Optional
+from copy import deepcopy
+import inspect
 
 import keras.layers as kl
 import keras.optimizers as ko
 import keras.regularizers as kreg
+from keras import backend as K
 from keras import Model
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.vocab import DefaultVocabulary
-from deeppavlov.core.models.keras_model import KerasWrapper
+from deeppavlov.core.models.keras_model import KerasModel
 from .cells import Highway
 from .common_tagger import *
 
@@ -321,11 +324,74 @@ class CharacterTagger:
 
 
 @register("morpho_tagger")
-class MorphoTagger(KerasWrapper):
+class MorphoTagger(KerasModel):
     """
     A wrapper over :class:`CharacterTagger`.
     It is inherited from :class:`~deeppavlov.core.keras_model.KerasWrapper`.
     It accepts initialization parameters of :class:`CharacterTagger`
     """
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(CharacterTagger, *args, **kwargs)
+    def __init__(self, save_path: Optional[str] = None,
+                 load_path: Optional[str] = None, mode: str = None,
+                 **kwargs) -> None:
+        # Calls parent constructor. Results in creation of save_folder if it doesn't exist
+        super().__init__(save_path=save_path, load_path=load_path, mode=mode)
+
+        # Dicts are mutable! To prevent changes in config dict outside this class
+        # we use deepcopy
+        opt = deepcopy(kwargs)
+
+        # Finds all input parameters of the network __init__ to pass them into network later
+        network_parameter_names = list(inspect.signature(CharacterTagger.__init__).parameters)
+        # Fills all provided parameters from opt (opt is a dictionary formed from the model
+        # json config file, except the "name" field)
+        network_parameters = {par: opt[par] for par in network_parameter_names if par in opt}
+        self._net = CharacterTagger(**network_parameters)
+
+        # Finds all parameters for network train to pass them into train method later
+        train_parameters_names = list(inspect.signature(self._net.train_on_batch).parameters)
+
+        # Fills all provided parameters from opt
+        train_parameters = {par: opt[par] for par in train_parameters_names if par in opt}
+        self.train_parameters = train_parameters
+        self.opt = opt
+
+        # Tries to load the model from model `load_path`, if it is available
+        self.load()
+    
+    def load(self) -> None:
+        """Checks existence of the model file, loads the model if the file exists"""
+
+        # Checks presence of the model files
+        if self.load_path.exists():
+            path = str(self.load_path.resolve())
+            log.info('[loading model from {}]'.format(path))
+            self._net.load(path)
+
+    def save(self) -> None:
+        """Saves model to the save_path, provided in config. The directory is
+        already created by super().__init__, which is called in __init__ of this class"""
+        path = str(self.save_path.absolute())
+        log.info('[saving model to {}]'.format(path))
+        self._net.save(path)
+
+    def train_on_batch(self, *args) -> None:
+        """Trains the model on a single batch.
+
+        Args:
+            *args: the list of network inputs.
+            Last element of `args` is the batch of targets,
+            all previous elements are training data batches
+        """
+        *data, labels = args
+        self._net.train_on_batch(data, labels)
+
+    def __call__(self, *x_batch, **kwargs) -> Union[List, np.ndarray]:
+        """
+        Predicts answers on batch elements.
+
+        Args:
+            instance: a batch to predict answers on
+        """
+        with self.graph.as_default():
+            K.set_session(self.sess)
+            return self._net.predict_on_batch(x_batch, **kwargs)
