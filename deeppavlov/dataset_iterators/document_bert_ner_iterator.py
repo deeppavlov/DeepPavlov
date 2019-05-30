@@ -101,40 +101,26 @@ class DocumentBertNerIterator(DataLearningIterator):
         if num_docs == 0:
             return
 
-        if False:# data_type == 'train':
-            # one sample per document
-            order = list(range(num_docs))
-            if shuffle:
-                self.random.shuffle(order)
-
-            if batch_size < 0:
-                batch_size = num_docs
-
-            for i in range((num_docs - 1) // batch_size + 1):
-                doc_batch = [doc_data[o][1]
-                             for o in order[i * batch_size: (i + 1) * batch_size]]
-                yield tuple(zip(*[self.sample_from_doc(doc) for doc in doc_batch]))
+        # get all sentences from document
+        doc_chunks = [self.chunks_from_doc(doc) for doc_id, doc in doc_data]
+        if self.one_sample_per_doc:
+            samples = [next(chunk) for chunk in doc_chunks]
         else:
-            # get all sentences from document
-            doc_chunks = [self.chunks_from_doc(doc) for doc_id, doc in doc_data]
-            if self.one_sample_per_doc:
-                samples = [next(chunk) for chunk in doc_chunks]
-            else:
-                samples = [s for chunk in doc_chunks for s in chunk]
-            print(f"{len(samples)} samples from {len(doc_data)} docs")
-            num_samples = len(samples)
+            samples = [s for chunk in doc_chunks for s in chunk]
+        print(f"{len(samples)} samples from {len(doc_data)} docs")
+        num_samples = len(samples)
 
-            order = list(range(num_samples))
+        order = list(range(num_samples))
 
-            if shuffle:
-                self.random.shuffle(order)
+        if shuffle:
+            self.random.shuffle(order)
 
-            if batch_size < 0:
-                batch_size = num_samples
+        if batch_size < 0:
+            batch_size = num_samples
 
-            for i in range((num_samples - 1) // batch_size + 1):
-                yield tuple(zip(*[samples[o]
-                                  for o in order[i * batch_size: (i + 1) * batch_size]]))
+        for i in range((num_samples - 1) // batch_size + 1):
+            yield tuple(zip(*[samples[o]
+                              for o in order[i * batch_size: (i + 1) * batch_size]]))
 
     def get_instances(self, data_type: str = 'train') -> Tuple[tuple, tuple]:
         data = self.data[data_type]
