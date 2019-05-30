@@ -21,17 +21,17 @@ which is inspired by Bi-LSTM+CRF architecture from https://arxiv.org/pdf/1603.01
 +---------------------------------------------------------+------+---------------------------------------------------------------------------+-------------+
 | Dataset                                                 | Lang | Model                                                                     |   Test F1   |
 +=========================================================+======+===========================================================================+=============+
-| Persons-1000 dataset with additional LOC and ORG markup | Ru   | :config:`ner_rus_bert.json <ner/ner_rus_bert.json>`                       |    97.7     |
+| Persons-1000 dataset with additional LOC and ORG markup | Ru   | :config:`ner_rus_bert.json <ner/ner_rus_bert.json>`                       |    98.1     |
 +                                                         +      +---------------------------------------------------------------------------+-------------+
 | (Collection 3)                                          |      | :config:`ner_rus.json <ner/ner_rus.json>`                                 |    95.1     |
 +---------------------------------------------------------+------+---------------------------------------------------------------------------+-------------+
-| ConLL-2003                                              | En   | :config:`ner_conll2003_bert.json <ner/ner_conll2003_bert.json>`           |    91.5     |
+| ConLL-2003                                              | En   | :config:`ner_conll2003_bert.json <ner/ner_conll2003_bert.json>`           |    91.7     |
 +                                                         +      +---------------------------------------------------------------------------+-------------+
 |                                                         |      | :config:`ner_conll2003.json <ner/ner_conll2003.json>`                     |    89.9     |
 +---------------------------------------------------------+      +---------------------------------------------------------------------------+-------------+
-|                                                         |      | :config:`ner_ontonotes_bert_mult.json <ner/ner_ontonotes_bert_mult.json>` |    88.9     |
+|                                                         |      | :config:`ner_ontonotes_bert_mult.json <ner/ner_ontonotes_bert_mult.json>` |    88.8     |
 +                                                         +      +---------------------------------------------------------------------------+-------------+
-| OntoNotes                                               |      | :config:`ner_ontonotes_bert.json <ner/ner_ontonotes_bert.json>`           |    88.4     |
+| OntoNotes                                               |      | :config:`ner_ontonotes_bert.json <ner/ner_ontonotes_bert.json>`           |    88.6     |
 +                                                         +      +---------------------------------------------------------------------------+-------------+
 |                                                         |      | :config:`ner_ontonotes.json <ner/ner_ontonotes.json>`                     |    87.1     |
 +---------------------------------------------------------+      +---------------------------------------------------------------------------+-------------+
