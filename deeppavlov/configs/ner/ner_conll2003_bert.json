@@ -113,7 +113,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_conll2003_bert.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_conll2003_bert_v1.tar.gz",
         "subdir": "{MODELS_PATH}"
       },
       {
