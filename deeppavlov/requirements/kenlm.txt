@@ -1,0 +1,2 @@
+
+git+https://github.com/kpu/kenlm.git@2ad7cb56924cd3c6811c604973f592cb5ef604eb#egg=kenlm

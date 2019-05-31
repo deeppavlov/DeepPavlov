@@ -1,4 +1,3 @@
 lxml==4.1.1
 python-Levenshtein==0.12.0
-git+https://github.com/kpu/kenlm.git@328cc2995202e84d29e3773203d29cdd6cc07132#egg=kenlm
 sortedcontainers==2.0.2
