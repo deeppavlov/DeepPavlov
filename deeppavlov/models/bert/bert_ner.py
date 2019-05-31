@@ -136,14 +136,14 @@ class BertNerModel(LRScheduledTFModel):
         if pretrained_bert is not None:
             pretrained_bert = str(expand_path(pretrained_bert))
 
-        if tf.train.checkpoint_exists(pretrained_bert) \
-                and not tf.train.checkpoint_exists(str(self.load_path.resolve())):
-            log.info('[initializing model with Bert from {}]'.format(pretrained_bert))
-            # Exclude optimizer and classification variables from saved variables
-            var_list = self._get_saveable_variables(
-                exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'ner', 'EMA'))
-            saver = tf.train.Saver(var_list)
-            saver.restore(self.sess, pretrained_bert)
+            if tf.train.checkpoint_exists(pretrained_bert) \
+                    and not tf.train.checkpoint_exists(str(self.load_path.resolve())):
+                log.info('[initializing model with Bert from {}]'.format(pretrained_bert))
+                # Exclude optimizer and classification variables from saved variables
+                var_list = self._get_saveable_variables(
+                    exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'ner', 'EMA'))
+                saver = tf.train.Saver(var_list)
+                saver.restore(self.sess, pretrained_bert)
 
         if self.load_path is not None:
             self.load()
@@ -434,6 +434,20 @@ class BertNerModel(LRScheduledTFModel):
 
         return tensor
 
+    def _decode_crf(self, feed_dict: Dict[tf.Tensor, np.ndarray]) -> List[np.ndarray]:
+        logits, trans_params, mask, seq_lengths = self.sess.run([self.logits,
+                                                                 self._transition_params,
+                                                                 self.y_masks_ph,
+                                                                 self.seq_lengths],
+                                                                feed_dict=feed_dict)
+        # iterate over the sentences because no batching in viterbi_decode
+        y_pred = []
+        for logit, sequence_length in zip(logits, seq_lengths):
+            logit = logit[:int(sequence_length)]  # keep only the valid steps
+            viterbi_seq, viterbi_score = tf.contrib.crf.viterbi_decode(logit, trans_params)
+            y_pred += [viterbi_seq]
+        return y_pred
+
     def _build_feed_dict(self, input_ids, input_masks, y_masks, token_types=None, y=None):
         feed_dict = {
             self.input_ids_ph: input_ids,
@@ -506,19 +520,18 @@ class BertNerModel(LRScheduledTFModel):
             pred = self.sess.run(self.y_probas, feed_dict=feed_dict)
         return pred
 
-    def _decode_crf(self, feed_dict: Dict[tf.Tensor, np.ndarray]) -> List[np.ndarray]:
-        logits, trans_params, mask, seq_lengths = self.sess.run([self.logits,
-                                                                 self._transition_params,
-                                                                 self.y_masks_ph,
-                                                                 self.seq_lengths],
-                                                                feed_dict=feed_dict)
-        # iterate over the sentences because no batching in viterbi_decode
-        y_pred = []
-        for logit, sequence_length in zip(logits, seq_lengths):
-            logit = logit[:int(sequence_length)]  # keep only the valid steps
-            viterbi_seq, viterbi_score = tf.contrib.crf.viterbi_decode(logit, trans_params)
-            y_pred += [viterbi_seq]
-        return y_pred
+    def save(self, exclude_scopes=('Optimizer', 'EMA/BackupVariables')) -> None:
+        if self.ema:
+            self.sess.run(self.ema.switch_to_train_op)
+        return super().save(exclude_scopes=exclude_scopes)
+
+    def load(self,
+             exclude_scopes=('Optimizer',
+                             'learning_rate',
+                             'momentum',
+                             'EMA/BackupVariables'),
+             **kwargs) -> None:
+        return super().load(exclude_scopes=exclude_scopes, **kwargs)
 
 
 class ExponentialMovingAverage:
