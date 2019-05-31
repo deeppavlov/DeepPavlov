@@ -107,7 +107,6 @@ class DocumentBertNerIterator(DataLearningIterator):
             samples = [next(chunk) for chunk in doc_chunks]
         else:
             samples = [s for chunk in doc_chunks for s in chunk]
-        print(f"{len(samples)} samples from {len(doc_data)} docs")
         num_samples = len(samples)
 
         order = list(range(num_samples))
