@@ -57,12 +57,13 @@ class HybridRankerPredictor(Component):
             # filtered_score_ids = np.where(np.array(sorted_scores) >= 0.5)  # array([0, 1, 2, 3]),)
 
             if not self.return_topn:
-                i = np.arange(self.sample_size)
+                sample_size = min(self.sample_size, len(sorted_ids))
+                i = np.arange(sample_size)
                 w = np.exp(-i / self.lambda_coeff)
                 w = w / w.sum()
                 # print("distribution:", w)  # DEBUG
 
-                chosen_index = np.random.choice(sorted_ids[:self.sample_size], p=w)
+                chosen_index = np.random.choice(sorted_ids[:sample_size], p=w)
 
                 # logger.debug('candidates: ' + str([candidates_list[i] for i in sorted_ids[:self.sample_size]]) + 'scores: ' +
                 #              str([sorted_scores[i] for i in range(self.sample_size)]))  # DEBUG
