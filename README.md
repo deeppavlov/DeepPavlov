@@ -7,6 +7,9 @@ DeepPavlov is an open-source conversational AI library built on [TensorFlow](htt
  * NLP and dialog systems research.
 
 
+### Breaking changes in version 0.3.0!
+- component option `fit_on_batch` in configuration files was removed and replaced with adaptive usage of the `fit_on` parameter.
+
 ### Breaking changes in version 0.2.0!
 - `utils` module was moved from repository root in to `deeppavlov` module
 - `ms_bot_framework_utils`,`server_utils`, `telegram utils` modules was renamed to `ms_bot_framework`, `server` and `telegram` correspondingly
