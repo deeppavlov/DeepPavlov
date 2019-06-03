@@ -180,7 +180,7 @@ Here is our [DockerHub repository](https://hub.docker.com/u/deeppavlov/) with im
 
 # Tutorials
 
-Jupyter notebooks and videos explaining how to use DeepPalov for different tasks can be found in [/examples/](examples)
+Jupyter notebooks explaining how to use DeepPalov for different tasks can be found in [/examples/](https://github.com/deepmipt/DeepPavlov/tree/master/examples)
 
 # License
 
