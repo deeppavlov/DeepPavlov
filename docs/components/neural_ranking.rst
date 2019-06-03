@@ -217,7 +217,7 @@ inference, one can use the following code in python:
 
     from deeppavlov import build_model, configs
 
-    para_model = build_model(configs.ranking.deeppavlov/configs/ranking/paraphrase_ident_tune_interact, download=True)
+    para_model = build_model(configs.ranking.paraphrase_ident_tune_interact, download=True)
     para_model(['9 мая метрополитен Петербурга будет работать круглосуточно&Петербургское метро в ночь на 10 мая будет работать круглосуточно'])
     >>> 'This is a paraphrase.'
 

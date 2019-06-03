@@ -49,19 +49,21 @@ class DocumentBertNerIterator(DataLearningIterator):
     def __init__(self,
                  data: Dict[str, List[Tuple[Any, Any]]],
                  bert_tokenizer_vocab_file: str,
+                 do_lower_case: bool = False,
                  left_context_rate: float = 0.5,
                  max_seq_length: int = None,
-                 max_num_sentences: int = None,
+                 one_sample_per_doc: bool = False,
                  seed: int = None,
                  shuffle: bool = True,
                  *args, **kwargs) -> None:
         self.max_seq_length = max_seq_length or float('inf')
+        self.one_sample_per_doc = one_sample_per_doc
         self.left_context_rate = left_context_rate
         self.shuffle = shuffle
 
         vocab_file = str(expand_path(bert_tokenizer_vocab_file))
         self.tokenizer = FullTokenizer(vocab_file=vocab_file,
-                                       do_lower_case=False)
+                                       do_lower_case=do_lower_case)
         self.random = Random(seed)
 
         self.train = data.get('train', [])
@@ -99,35 +101,25 @@ class DocumentBertNerIterator(DataLearningIterator):
         if num_docs == 0:
             return
 
-        if data_type == 'train':
-            # one sample per document
-            order = list(range(num_docs))
-            if shuffle:
-                self.random.shuffle(order)
-
-            if batch_size < 0:
-                batch_size = num_docs
-
-            for i in range((num_docs - 1) // batch_size + 1):
-                doc_batch = [doc_data[o][1]
-                             for o in order[i * batch_size: (i + 1) * batch_size]]
-                yield tuple(zip(*[self.sample_from_doc(doc) for doc in doc_batch]))
+        # get all sentences from document
+        doc_chunks = [self.chunks_from_doc(doc) for doc_id, doc in doc_data]
+        if self.one_sample_per_doc:
+            samples = [next(chunk) for chunk in doc_chunks]
         else:
-            # get all sentences from document
-            samples = [s for doc_id, doc in doc_data for s in self.chunks_from_doc(doc)]
-            num_samples = len(samples)
+            samples = [s for chunk in doc_chunks for s in chunk]
+        num_samples = len(samples)
 
-            order = list(range(num_samples))
+        order = list(range(num_samples))
 
-            if shuffle:
-                self.random.shuffle(order)
+        if shuffle:
+            self.random.shuffle(order)
 
-            if batch_size < 0:
-                batch_size = num_samples
+        if batch_size < 0:
+            batch_size = num_samples
 
-            for i in range((num_samples - 1) // batch_size + 1):
-                yield tuple(zip(*[samples[o]
-                                  for o in order[i * batch_size: (i + 1) * batch_size]]))
+        for i in range((num_samples - 1) // batch_size + 1):
+            yield tuple(zip(*[samples[o]
+                              for o in order[i * batch_size: (i + 1) * batch_size]]))
 
     def get_instances(self, data_type: str = 'train') -> Tuple[tuple, tuple]:
         data = self.data[data_type]
@@ -193,7 +185,7 @@ class DocumentBertNerIterator(DataLearningIterator):
             if len(rich_sample_ids) != max(rich_sample_ids) + 1:
                 raise RuntimeError("can't split doc {doc} into chunks")
 
-    @staticmethod 
+    @staticmethod
     def get_context_indices(samples: List[List[str]],
                             sample_id: int,
                             subtokenizer: FullTokenizer,
@@ -206,7 +198,7 @@ class DocumentBertNerIterator(DataLearningIterator):
         l_ctx = samples[:sample_id]
         r_ctx = samples[sample_id + 1:]
 
-        subtoks_len = len([st for t in toks 
+        subtoks_len = len([st for t in toks
                            for st in subtokenizer.tokenize(t)])
         l_i, r_i = 0, 0
         while (l_i < len(l_ctx)) or (r_i < len(r_ctx)):
@@ -216,7 +208,7 @@ class DocumentBertNerIterator(DataLearningIterator):
                 subtoks = [st for t in l_ctx[-l_i-1]
                            for st in subtokenizer.tokenize(t)]
                 if subtoks_len + len(subtoks) > max_subtokens_length:
-                    break 
+                    break
                 subtoks_len += len(subtoks)
                 rich_sample_indices = [sample_id - l_i - 1] + rich_sample_indices 
                 l_i += 1
@@ -224,10 +216,9 @@ class DocumentBertNerIterator(DataLearningIterator):
                 # add one sentence from right_context
                 subtoks = [st for t in r_ctx[r_i] for st in subtokenizer.tokenize(t)]
                 if subtoks_len + len(subtoks) > max_subtokens_length:
-                    break 
+                    break
                 subtoks_len += len(subtoks)
                 rich_sample_indices.append(sample_id + r_i + 1)
                 r_i += 1
         return rich_sample_indices
-
 

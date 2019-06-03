@@ -30,26 +30,25 @@ Here is the list of all available configs:
 .. table::
     :widths: auto
 
-    +----------------------------------------------------------------------+--------------------+-----------------+------------+------------+
-    | Model                                                                | Dataset            | Embeddings Size | Model Size |  F1 score  |
-    +======================================================================+====================+=================+============+============+
-    | :config:`ner_rus_bert <ner/ner_rus_bert.json>`                       | Collection3 [1]_   | ---             |   2.1 GB   | **97.7**   |
-    +----------------------------------------------------------------------+                    +-----------------+------------+------------+
-    | :config:`ner_rus <ner/ner_rus.json>`                                 |                    | 1.0 GB          |   5.6 MB   |   95.1     |
-    +----------------------------------------------------------------------+--------------------+-----------------+------------+------------+
-    | :config:`ner_conll2003_bert <ner/ner_conll2003_bert.json>`           | CoNLL-2003         | ---             |   2.1 GB   | **91.5**   |
-    +----------------------------------------------------------------------+                    +-----------------+------------+------------+
-    | :config:`ner_conll2003 <ner/ner_conll2003.json>`                     |                    | 331 MB          |   3.1 MB   |   89.9     |
-    +----------------------------------------------------------------------+--------------------+-----------------+------------+------------+
-    | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>` | OntoNotes          | ---             |   2.1 GB   | **88.9**   |
-    +----------------------------------------------------------------------+                    +-----------------+------------+------------+
-    | :config:`ner_ontonotes_bert <ner/ner_ontonotes_bert.json>`           |                    | ---             |   2.1 GB   |   88.4     |
-    +----------------------------------------------------------------------+                    +-----------------+------------+------------+
-    | :config:`ner_ontonotes <ner/ner_ontonotes.json>`                     |                    | 331 MB          |   7.8 MB   |   86.4     |
-    +----------------------------------------------------------------------+--------------------+-----------------+------------+------------+
-    | :config:`ner_dstc <ner/ner_dstc.json>`                               | DSTC2              | ---             |   626 KB   |   97.1     |
-    +----------------------------------------------------------------------+--------------------+-----------------+------------+------------+
-
+    +----------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    | Model                                                                | Dataset            | Language | Embeddings Size | Model Size |  F1 score  |
+    +======================================================================+====================+==========+=================+============+============+
+    | :config:`ner_rus_bert <ner/ner_rus_bert.json>`                       | Collection3 [1]_   | Ru       | 700 MB          |   1.4 GB   | **98.1**   |
+    +----------------------------------------------------------------------+                    +          +-----------------+------------+------------+
+    | :config:`ner_rus <ner/ner_rus.json>`                                 |                    |          | 1.0 GB          |   5.6 MB   |   95.1     |
+    +----------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>` | Ontonotes          | Multi    | 700 MB          |   1.4 GB   | **88.8**   |
+    +----------------------------------------------------------------------+                    +----------+-----------------+------------+------------+
+    | :config:`ner_ontonotes_bert <ner/ner_ontonotes_bert.json>`           |                    | En       | 400 MB          |   800 MB   |   88.6     |
+    +----------------------------------------------------------------------+                    +          +-----------------+------------+------------+
+    | :config:`ner_ontonotes <ner/ner_ontonotes.json>`                     |                    |          | 331 MB          |   7.8 MB   |   86.4     |
+    +----------------------------------------------------------------------+--------------------+          +-----------------+------------+------------+
+    | :config:`ner_conll2003_bert <ner/ner_conll2003_bert.json>`           | CoNLL-2003         |          | 400 MB          |   850 MB   | **91.7**   |
+    +----------------------------------------------------------------------+                    +          +-----------------+------------+------------+
+    | :config:`ner_conll2003 <ner/ner_conll2003.json>`                     |                    |          | 331 MB          |   3.1 MB   |   89.9     |
+    +----------------------------------------------------------------------+--------------------+          +-----------------+------------+------------+
+    | :config:`ner_dstc2 <ner/ner_dstc2.json>`                             | DSTC2              |          | ---             |   626 KB   |   97.1     |
+    +----------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
 
 Models can be used from Python using the following code:
 
@@ -58,6 +57,7 @@ Models can be used from Python using the following code:
     from deeppavlov import configs, build_model
 
     ner_model = build_model(configs.ner.ner_ontonotes_bert, download=True)
+
     ner_model(['Bob Ross lived in Florida'])
     >>> [[['Bob', 'Ross', 'lived', 'in', 'Florida']], [['B-PERSON', 'I-PERSON', 'O', 'O', 'B-GPE']]]
 
@@ -66,6 +66,7 @@ The model also can be trained from the Python:
 .. code:: python
 
     from deeppavlov import configs, train_model
+
     ner_model = train_model(configs.ner.ner_ontonotes_bert)
 
 The data for training should be placed in the folder provided in the config:
@@ -74,7 +75,9 @@ The data for training should be placed in the folder provided in the config:
 
     from deeppavlov import configs, train_model
     from deeppavlov.core.commands.utils import parse_config
+    
     config_dict = parse_config(configs.ner.ner_ontonotes_bert)
+
     print(config_dict['dataset_reader']['data_path'])
     >>> '~/.deeppavlov/downloads/ontonotes'
 
@@ -103,17 +106,27 @@ transfer are presented in the table below.
 +---------+-------+
 
 
-The following Python code can be used to infer this model:
+The following Python code can be used to infer the model:
 
 .. code:: python
 
     from deeppavlov import configs, build_model
 
     ner_model = build_model(configs.ner.ner_ontonotes_bert_mult, download=True)
-    ner_model(['Чемпионат мира по кёрлингу пройдёт в Антананариву'])
-    >>> (['Чемпионат', 'мира', 'по', 'кёрлингу', 'пройдёт', 'в', 'Антананариву'], ['B-EVENT', 'I-EVENT', 'I-EVENT', 'I-EVENT', 'O', 'O', 'B-GPE'])
 
-The list of tags is and their description is in the table below.
+    ner_model(['Curling World Championship will be held in Antananarivo'])
+    >>> (['Curling', 'World', 'Championship', 'will', 'be', 'held', 'in', 'Antananarivo']],
+    [['B-EVENT', 'I-EVENT', 'I-EVENT', 'O', 'O', 'O', 'O', 'B-GPE'])
+
+    ner_model(['Mistrzostwa Świata w Curlingu odbędą się w Antananarivo'])
+    >>> (['Mistrzostwa', 'Świata', 'w', 'Curlingu', 'odbędą', 'się', 'w', 'Antananarivo']],
+    [['B-EVENT', 'I-EVENT', 'I-EVENT', 'I-EVENT', 'O', 'O', 'O', 'B-GPE'])
+
+    ner_model(['Чемпионат мира по кёрлингу пройдёт в Антананариву'])
+    >>> (['Чемпионат', 'мира', 'по', 'кёрлингу', 'пройдёт', 'в', 'Антананариву'], 
+    ['B-EVENT', 'I-EVENT', 'I-EVENT', 'I-EVENT', 'O', 'O', 'B-GPE'])
+
+The list of available tags and their descriptions are presented below.
 
 +--------------+--------------------------------------------------------+
 | PERSON       | People including fictional                             |
@@ -245,11 +258,11 @@ are 80%, 10%, 10%, respectively.
 Few-shot Language-Model based
 -----------------------------
 
-It is possible to get a clod-start baseline from just a few samples of labeled data in a couple of seconds. The solution
+It is possible to get a cold-start baseline from just a few samples of labeled data in a couple of seconds. The solution
 is based on a Language Model trained on open domain corpus. On top of the LM a SVM classification layer is placed. It is
 possible to start from as few as 10 sentences containing entities of interest.
 
-The data for training this model should be collected the following way. Given a collection of `N` sentences without
+The data for training this model should be collected in the following way. Given a collection of `N` sentences without
 markup, sequentially markup sentences until the total number of sentences with entity of interest become equal
 `K`. During the training both sentences with and without markup are used.
 
@@ -283,6 +296,7 @@ To train and use the model from python code the following snippet can be used:
     from deeppavlov import configs, train_model
 
     ner_model = train_model(configs.ner.ner_few_shot_ru, download=True)
+
     ner_model(['Example sentence'])
 
 Warning! This model can take a lot of time and memory if the number of sentences is greater than 1000!
@@ -307,7 +321,9 @@ To use existing few-shot model use the following python interface can be used:
 .. code:: python
 
     from deeppavlov import configs, build_model
+
     ner_model = build_model(configs.ner.ner_few_shot_ru)
+
     ner_model([['Example', 'sentence']])
     ner_model(['Example sentence'])
 

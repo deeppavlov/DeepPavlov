@@ -89,6 +89,8 @@
 
     "log_every_n_batches": 20,
     "tensorboard_log_dir": "{NER_PATH}/logs",
+    "pytest_max_batches": 2,
+    "pytest_batch_size": 8,
     "show_examples": false,
     "evaluation_targets": ["valid", "test"],
     "class_name": "nn_trainer"
@@ -112,7 +114,7 @@
     "download": [
 
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_ontonotes_bert_mult.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_ontonotes_bert_mult_v1.tar.gz",
         "subdir": "{MODELS_PATH}"
       },
       {
