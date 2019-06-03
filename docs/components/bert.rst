@@ -21,10 +21,10 @@ We have trained BERT-base model for other languages:
 -  SlavicBERT, Slavic (bg, cs, pl, ru), cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/bg_cs_pl_ru_cased_L-12_H-768_A-12.tar.gz>`__
 
 RuBERT was trained on the Russian part of Wikipedia and news data. We used this training data to build vocabulary of Russian subtokens and took
-multilingual version of BERT-base as initialization for RuBERT [1]_. SlavicBERT training was done the same manner as RuBERT.
+multilingual version of BERT-base as initialization for RuBERT [1]_. SlavicBERT training was done in the same manner as RuBERT.
 
 Here, in DeepPavlov, we made it easy to use pre-trained BERT for downstream tasks like classification, tagging, question answering and
-ranking. We provide pre-trained models and examples on how to use BERT with DeepPavlov.
+ranking. We also provide pre-trained models and examples on how to use BERT with DeepPavlov.
 
 BERT for Classification
 -----------------------
@@ -38,7 +38,7 @@ Two main components of BERT classifier pipeline in DeepPavlov are
 :class:`~deeppavlov.models.bert.bert_classifier.BertClassifierModel`.
 Non-processed texts should be given to ``bert_preprocessor`` for tokenization on subtokens,
 encoding subtokens with their indices and creating tokens and segment masks.
-If one processed classes to one-hot labels in pipeline, ``one_hot_labels`` should be set to ``true``.
+In case of using one-hot encoded classes in the pipeline, set ``one_hot_labels`` to ``true``.
 
 ``bert_classifier`` has a dense layer of number of classes size upon pooled outputs of Transformer encoder,
 it is followed by ``softmax`` activation (``sigmoid`` if ``multilabel`` parameter is set to ``true`` in config).
