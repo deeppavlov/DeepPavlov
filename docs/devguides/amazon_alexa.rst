@@ -179,20 +179,30 @@ with valid certificate from CA. `Here is the guide <https://developer.amazon.com
 for running custom skill service with self-signed certificates in test mode.
 
 Your intent and slot names defined in Alexa Development Console should be the same with values defined in
-DeepPavlov settings file ``utils/settings/server_config.json``. JSON examples from this guide use default values from
+DeepPavlov settings file ``deeppavlov/utils/settings/server_config.json``. JSON examples from this guide use default values from
 the settings file.
 
 DeepPavlov skill/component can be made available for Amazon Alexa as a REST service by:
 
 .. code:: bash
 
-    python -m deeppavlov alexa <config_path> -p <port> --https --key <SSL key file path> --cert <SSL certificate file path> [-d]
+    python -m deeppavlov alexa <config_path> --https --key <SSL key file path> --cert <SSL certificate file path> [-d] [-p <port_number>] [--stateful] [--multi-instance] [--no-default-skill]
 
 If you redirect requests to your skills service from some https endpoint, you may want to run it in http mode by
-omitting ``https``, ``key``, ``cert`` keys.
+omitting ``--https``, ``--key``, ``--cert`` keys.
 
 Optional ``-d`` key can be provided for dependencies download
 before service start.
 
-REST service properties (host, port, https options) are provided in ``utils/settings/server_config.json``. Please note,
+Optional ``-p`` key can be provided to override the port value from a settings file.
+
+Optional ``--stateful`` flag should be provided for stateful skills/components.
+
+Optional ``--multi-instance`` can be provided if you wish to raise separate skill/component instance
+for **each** conversation.
+
+You should use ``--no-default-skill`` optional flag if your component implements an interface of DeepPavlov *Skill*
+to skip its wrapping with DeepPavlov *DefaultStatelessSkill*.
+
+REST service properties (host, port, https options) are provided in ``deeppavlov/utils/settings/server_config.json``. Please note,
 that all command line parameters override corresponding config ones.

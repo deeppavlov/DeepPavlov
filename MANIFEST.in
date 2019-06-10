@@ -4,4 +4,3 @@ include requirements.txt
 include deeppavlov/requirements/*.txt
 recursive-include deeppavlov *.json
 recursive-include deeppavlov *.md
-recursive-include utils *.json

@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import getLogger
 from typing import List, Generator, Any, Optional, Union, Tuple
 
-from nltk.tokenize.toktok import ToktokTokenizer
 # from nltk.corpus import stopwords
 # STOPWORDS = stopwords.words('russian')
 import pymorphy2
+from nltk.tokenize.toktok import ToktokTokenizer
 
-from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.component import Component
 from deeppavlov.models.tokenizers.utils import detokenize, ngramize
-from deeppavlov.core.common.log import get_logger
 
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 
 @register('ru_tokenizer')

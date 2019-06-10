@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import tensorflow as tf
-import numpy as np
+from logging import getLogger
 from typing import List
 
+import numpy as np
+import tensorflow as tf
+
 from deeppavlov.core.common.check_gpu import check_gpu_existence
-from deeppavlov.core.common.log import get_logger
 
-
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 INITIALIZER = tf.orthogonal_initializer

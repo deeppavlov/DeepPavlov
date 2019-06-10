@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import json
 from typing import Dict, Any, List, Tuple, Generator, Optional
 
 import numpy as np
@@ -146,4 +147,127 @@ class MultiSquadIterator(DataLearningIterator):
                 answer_text = [x['text'] for x in context['answer']]
                 answer_start = [x['answer_start'] for x in context['answer']]
                 data_examples.append(((context['context'], question), (answer_text, answer_start)))
+        return tuple(zip(*data_examples))
+
+
+@register('multi_squad_retr_iterator')
+class MultiSquadRetrIterator(DataLearningIterator):
+    """Dataset iterator for multiparagraph-SQuAD dataset.
+
+    reads data from jsonl files
+
+    With ``with_answer_rate`` rate samples context with answer and with ``1 - with_answer_rate`` samples context
+    from the same article, but without an answer. Contexts without an answer are sampled from uniform distribution.
+    If ``with_answer_rate`` is None than we compute actual ratio for each data example.
+
+    It extracts ``context``, ``question``, ``answer_text`` and ``answer_start`` position from dataset.
+    Example from a dataset is a tuple of ``(context, question)`` and ``(answer_text, answer_start)``. If there is
+    no answer in context, then ``answer_text`` is empty string and `answer_start` is equal to -1.
+
+    Args:
+        data: dict with keys ``'train'``, ``'valid'`` and ``'test'`` and values
+        seed: random seed for data shuffling
+        shuffle: whether to shuffle data during batching
+        with_answer_rate: sampling rate of contexts with answer
+        squad_rate: sampling rate of context from squad dataset (actual rate would be with_answer_rate * squad_rate)
+
+    Attributes:
+        shuffle: whether to shuffle data during batching
+        random: instance of ``Random`` initialized with a seed
+    """
+
+    def __init__(self, data, seed: Optional[int] = None, shuffle: bool = False,
+                 with_answer_rate: Optional[float] = None,
+                 squad_rate: Optional[float] = None, *args, **kwargs) -> None:
+        self.with_answer_rate = with_answer_rate
+        self.squad_rate = squad_rate
+        self.seed = seed
+        self.np_random = np.random.RandomState(seed)
+        self.shuffle = shuffle
+
+        self.train = data.get('train', [])
+        self.valid = data.get('valid', [])
+        self.test = data.get('test', [])
+
+        self.data = {
+            'train': self.train,
+            'valid': self.valid,
+            'test': self.test,
+        }
+
+        if self.shuffle:
+            raise RuntimeError('MultiSquadIterator doesn\'t support shuffling.')
+
+    def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: bool = None)\
+            -> Generator[Tuple[Tuple[Tuple[str, str]], Tuple[List[str], List[int]]], None, None]:
+
+        if shuffle is None:
+            shuffle = self.shuffle
+
+        if data_type == 'train':
+            random = self.np_random
+        else:
+            random = np.random.RandomState(self.seed)
+
+        if shuffle:
+            raise RuntimeError('MultiSquadIterator doesn\'t support shuffling.')
+
+        datafile = self.data[data_type]
+        with datafile.open('r', encoding='utf8') as fin:
+            end_of_file = False
+            while not end_of_file:
+                batch = []
+                for i in range(batch_size):
+                    line = fin.readline()
+                    if len(line) == 0:
+                        end_of_file = True
+                        break
+
+                    qcas = json.loads(line)
+                    q = qcas['question']
+                    contexts = qcas['contexts']
+                    ans_contexts = [c for c in contexts if len(c['answer']) > 0]
+                    noans_contexts = [c for c in contexts if len(c['answer']) == 0]
+                    ans_clen = len(ans_contexts)
+                    noans_clen = len(noans_contexts)
+                    # sample context with answer or without answer
+                    with_answer_rate = self.with_answer_rate
+                    if with_answer_rate is None:
+                        with_answer_rate = 1.0 if noans_clen == 0 else ans_clen / (ans_clen + noans_clen)
+
+                    if random.rand() < with_answer_rate or noans_clen == 0:
+                        # select random context with answer
+                        if self.squad_rate is not None:
+                            if random.rand() < self.squad_rate or len(ans_contexts) == 1:
+                                # first context is always from squad dataset
+                                context = ans_contexts[0]
+                            else:
+                                context = random.choice(ans_contexts[1:])
+                        else:
+                            context = random.choice(ans_contexts)
+                    else:
+                        # select random context without answer
+                        # prob ~ context tfidf score
+                        # noans_scores = np.array([x['score'] for x in noans_contexts])
+                        # noans_scores = noans_scores / np.sum(noans_scores)
+                        # context = noans_contexts[np.argmax(random.multinomial(1, noans_scores))]
+                        context = random.choice(noans_contexts)
+
+                    answer_text = [ans['text'] for ans in context['answer']] if len(context['answer']) > 0 else ['']
+                    answer_start = [ans['answer_start']
+                                    for ans in context['answer']] if len(context['answer']) > 0 else [-1]
+                    batch.append(((context['context'], q), (answer_text, answer_start)))
+                if batch:
+                    yield tuple(zip(*batch))
+
+    def get_instances(self, data_type: str = 'train') -> Tuple[Tuple[Tuple[str, str]], Tuple[List[str], List[int]]]:
+        data_examples = []
+        for f in self.data[data_type]:  # question, contexts, answers
+            for line in f.open('r', encoding='utf8'):
+                qcas = json.loads(line)
+                question = qcas['question']
+                for context in qcas['contexts']:
+                    answer_text = [x['text'] for x in context['answer']]
+                    answer_start = [x['answer_start'] for x in context['answer']]
+                    data_examples.append(((context['context'], question), (answer_text, answer_start)))
         return tuple(zip(*data_examples))

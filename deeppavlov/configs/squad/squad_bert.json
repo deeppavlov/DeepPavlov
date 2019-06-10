@@ -1,0 +1,113 @@
+{
+  "dataset_reader": {
+    "class_name": "squad_dataset_reader",
+    "data_path": "{DOWNLOADS_PATH}/squad/"
+  },
+  "dataset_iterator": {
+    "class_name": "squad_iterator",
+    "seed": 1337,
+    "shuffle": true
+  },
+  "chainer": {
+    "in": ["context_raw", "question_raw"],
+    "in_y": ["ans_raw", "ans_raw_start"],
+    "pipe": [
+      {
+        "class_name": "bert_preprocessor",
+        "vocab_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/vocab.txt",
+        "do_lower_case": false,
+        "max_seq_length": 384,
+        "in": ["question_raw", "context_raw"],
+        "out": ["bert_features"]
+      },
+      {
+        "class_name": "squad_bert_mapping",
+        "do_lower_case": false,
+        "in": ["context_raw", "bert_features"],
+        "out": ["subtok2chars", "char2subtoks"]
+      },
+      {
+        "class_name": "squad_bert_ans_preprocessor",
+        "do_lower_case": false,
+        "in": ["ans_raw", "ans_raw_start","char2subtoks"],
+        "out": ["ans", "ans_start", "ans_end"]
+      },
+      {
+        "class_name": "squad_bert_model",
+        "bert_config_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/bert_config.json",
+        "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/bert_model.ckpt",
+        "save_path": "{MODELS_PATH}/squad_bert/model",
+        "load_path": "{MODELS_PATH}/squad_bert/model",
+        "keep_prob": 0.5,
+        "learning_rate": 2e-05,
+        "learning_rate_drop_patience": 2,
+        "learning_rate_drop_div": 2.0,
+        "in": ["bert_features"],
+        "in_y": ["ans_start", "ans_end"],
+        "out": ["ans_start_predicted", "ans_end_predicted", "logits"]
+      },
+      {
+        "class_name": "squad_bert_ans_postprocessor",
+        "in": ["ans_start_predicted", "ans_end_predicted", "context_raw", "bert_features", "subtok2chars"],
+        "out": ["ans_predicted", "ans_start_predicted", "ans_end_predicted"]
+      }
+    ],
+    "out": ["ans_predicted", "ans_start_predicted", "logits"]
+  },
+  "train": {
+    "show_examples": false,
+    "test_best": false,
+    "validate_best": true,
+    "log_every_n_batches": 250,
+    "val_every_n_batches": 500,
+    "batch_size": 10,
+    "pytest_max_batches": 2,
+    "pytest_batch_size": 5,
+    "validation_patience": 10,
+    "metrics": [
+      {
+        "name": "squad_v1_f1",
+        "inputs": ["ans", "ans_predicted"]
+      },
+      {
+        "name": "squad_v1_em",
+        "inputs": ["ans", "ans_predicted"]
+      },
+      {
+        "name": "squad_v2_f1",
+        "inputs": ["ans", "ans_predicted"]
+      },
+      {
+        "name": "squad_v2_em",
+        "inputs": ["ans", "ans_predicted"]
+      }
+    ],
+    "tensorboard_log_dir": "{MODELS_PATH}/squad_bert/logs"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+    ],
+    "labels": {
+      "telegram_utils": "SquadModel",
+      "server_utils": "SquadModel"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
+        "subdir": "{DOWNLOADS_PATH}/bert_models"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/squad_bert.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      }
+      ]
+  }
+}
+

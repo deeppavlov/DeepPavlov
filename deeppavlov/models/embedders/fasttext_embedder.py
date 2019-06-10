@@ -12,17 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from overrides import overrides
+from logging import getLogger
 from typing import Iterator
 
+try:
+    import fastText
+except ModuleNotFoundError as e:
+    import re
+    import sys
+    from pathlib import Path
+
+    ft_req_path = Path(__file__).resolve().parents[2].joinpath('requirements', 'fasttext.txt')
+    packages = ft_req_path.read_text(encoding='utf8').strip()
+    packages = re.sub(r'\s+', ' ', packages)
+
+    raise ModuleNotFoundError(f'{e}\n\nYou can install fastText by running\n'
+                              f'{sys.executable} -m pip install {packages}\n'
+                              'or for your deeppavlov pipeline configuration\n'
+                              f'{sys.executable} -m deeppavlov install <config_path>')
+
 import numpy as np
-import fastText
+from overrides import overrides
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.models.embedders.abstract_embedder import Embedder
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 
 @register('fasttext')

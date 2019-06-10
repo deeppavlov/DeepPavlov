@@ -1,0 +1,77 @@
+{
+  "chainer": {
+    "in": [
+      "question_raw"
+    ],
+    "out": [
+      "best_answer"
+    ],
+    "pipe": [
+      {
+        "config_path": "{CONFIGS_PATH}/doc_retrieval/ru_ranker_tfidf_wiki.json",
+        "in": [
+          "question_raw"
+        ],
+        "out": [
+          "tfidf_doc_ids"
+        ]
+      },
+      {
+        "class_name": "wiki_sqlite_vocab",
+        "in": [
+          "tfidf_doc_ids"
+        ],
+        "out": [
+          "tfidf_doc_text"
+        ],
+        "join_docs": false,
+        "shuffle": false,
+        "load_path": "{DOWNLOADS_PATH}/odqa/ruwiki.db"
+      },
+      {
+        "class_name": "document_chunker",
+        "in": ["tfidf_doc_text"],
+        "out": ["chunks"],
+        "flatten_result": true,
+        "paragraphs": true,
+        "tokens_limit": 100000
+      },
+      {
+        "class_name": "string_multiplier",
+        "in": ["question_raw", "chunks"],
+        "out":["questions"]
+      },
+      {
+        "class_name": "logit_ranker",
+        "batch_size": 10000,
+        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/squad_ru_rubert_infer.json"},
+        "sort_noans": true,
+        "in": [
+          "chunks",
+          "questions"
+        ],
+        "out": [
+          "best_answer",
+          "best_answer_score"
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+    ],
+    "labels": {
+      "server_utils": "ODQA"
+    },
+    "download": [
+    ]
+  }
+}

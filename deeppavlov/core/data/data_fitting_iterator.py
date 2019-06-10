@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import getLogger
 from random import Random
 from typing import List, Generator, Tuple, Any, Optional
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.log import get_logger
 
-logger = get_logger(__name__)
+logger = getLogger(__name__)
 
 
 @register('data_fitting_iterator')
@@ -90,8 +90,11 @@ class DataFittingIterator:
         else:
             _doc_ids = self.doc_ids
 
-        batches = [_doc_ids[i:i + batch_size] for i in
-                   range(0, len(_doc_ids), batch_size)]
+        if batch_size > 0:
+            batches = [_doc_ids[i:i + batch_size] for i in
+                       range(0, len(_doc_ids), batch_size)]
+        else:
+            batches = [_doc_ids]
 
         # DEBUG
         # len_batches = len(batches)
@@ -102,3 +105,9 @@ class DataFittingIterator:
             #     "Processing batch # {} of {} ({} documents)".format(i, len_batches, len(doc_index)))
             docs = [self.get_doc_content(doc_id) for doc_id in doc_ids]
             yield docs, doc_ids
+
+    def get_instances(self):
+        """Get all data"""
+        doc_ids = list(self.doc_ids)
+        docs = [self.get_doc_content(doc_id) for doc_id in doc_ids]
+        return docs, doc_ids

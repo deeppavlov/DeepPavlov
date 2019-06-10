@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Dict, Tuple, Union
-from pathlib import Path
 import csv
+from pathlib import Path
+from typing import List, Dict, Tuple, Union
 
-from deeppavlov.core.data.dataset_reader import DatasetReader
-from deeppavlov.core.common.registry import register
 from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.dataset_reader import DatasetReader
+
 
 @register('ubuntu_v2_reader')
 class UbuntuV2Reader(DatasetReader):
@@ -28,11 +29,13 @@ class UbuntuV2Reader(DatasetReader):
     """
 
     def read(self, data_path: str,
+             positive_samples=False,
              *args, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
         """Read the Ubuntu V2 dataset from csv files.
 
         Args:
             data_path: A path to a folder with dataset csv files.
+            positive_samples: if `True`, only positive context-response pairs will be taken for train
         """
 
         data_path = expand_path(data_path)
@@ -40,6 +43,7 @@ class UbuntuV2Reader(DatasetReader):
         train_fname = Path(data_path) / 'train.csv'
         valid_fname = Path(data_path) / 'valid.csv'
         test_fname = Path(data_path) / 'test.csv'
+        self.positive_samples = positive_samples
         self.sen2int_vocab = {}
         self.classes_vocab_train = {}
         self.classes_vocab_valid = {}
@@ -60,8 +64,11 @@ class UbuntuV2Reader(DatasetReader):
                 contexts.append(el[0])
                 responses.append(el[1])
                 labels.append(int(el[2]))
-        data = list(zip(contexts, responses))
-        data = list(zip(data, labels))
+            data = list(zip(contexts, responses))
+            data = list(zip(data, labels))
+            if self.positive_samples:
+                data = [el[0] for el in data if el[1] == 1]
+                data = list(zip(data, range(len(data))))
         return data
 
     def preprocess_data_validation(self, fname: Union[Path, str]) -> List[Tuple[List[str], int]]:

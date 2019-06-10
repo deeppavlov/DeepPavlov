@@ -1,0 +1,138 @@
+{
+  "info": "The config is for training or evaluation of DAM on Ubuntu Dialogue Corpus v2 using prepared Word2vec embeddings",
+  "dataset_reader": {
+    "class_name": "ubuntu_v2_mt_reader",
+    "data_path": "{DOWNLOADS_PATH}/ubuntu_v2_data_clean",
+    "num_context_turns": 10,
+    "padding": "pre"
+  },
+  "dataset_iterator": {
+    "class_name": "siamese_iterator",
+    "shuffle": true,
+    "seed": 243
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "class_name": "split_tokenizer",
+        "id": "tok_1"
+      },
+      {
+        "class_name": "simple_vocab",
+        "special_tokens": ["", "<UNK>"],
+        "unk_token": "<UNK>",
+        "fit_on": ["x"],
+        "id": "vocab_1",
+        "save_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam/vocabs/int_tok.dict",
+        "load_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam/vocabs/int_tok.dict"
+      },
+      {
+        "id": "word2vec_embedder",
+        "class_name": "glove",
+        "dim": 200,
+        "load_path": "{DOWNLOADS_PATH}/embeddings/v2_ubuntu_w2v_vectors.txt"
+      },
+      {
+        "id": "preproc",
+        "class_name": "siamese_preprocessor",
+        "save_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam/preproc/tok.dict",
+        "load_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam/preproc/tok.dict",
+        "num_ranking_samples": 10,
+        "num_context_turns": 10,
+        "max_sequence_length": 50,
+        "embedding_dim": 200,
+        "fit_on": ["x"],
+        "in": ["x"],
+        "out": ["x_proc"],
+        "tokenizer": {
+          "ref": "tok_1",
+          "notes": "use defined tokenizer"
+        },
+        "vocab": {
+          "ref": "vocab_1",
+          "notes": "use vocab built for tokenized data"
+        }
+      },
+      {
+        "id": "embeddings",
+        "class_name": "emb_mat_assembler",
+        "embedder": "#word2vec_embedder",
+        "vocab": "#vocab_1"
+      },
+      {
+        "in": ["x_proc"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "class_name": "dam_nn",
+        "stack_num": 5,
+        "filters2_conv3d": 32,
+        "num_context_turns": "#preproc.num_context_turns",
+        "max_sequence_length": "#preproc.max_sequence_length",
+        "embedding_dim": "#word2vec_embedder.dim",
+        "emb_matrix": "#embeddings.emb_mat",
+        "learning_rate": 1e-3,
+        "batch_size": 100,
+        "seed": 65,
+        "decay_steps": 2000,
+        "save_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam/model_dam/model",
+        "load_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam/model_dam/model"
+      }
+    ],
+    "out": [
+      "y_predicted"
+    ]
+  },
+  "train": {
+    "class_name": "nn_trainer",
+    "epochs": 8,
+    "batch_size": 100,
+    "shuffle": true,
+    "pytest_max_batches": 2,
+    "train_metrics": [],
+    "metrics": [
+      "r@1",
+      "r@2",
+      "r@5",
+      "rank_response"
+    ],
+    "validation_patience": 1,
+    "val_every_n_epochs": 1,
+    "log_every_n_batches": 100,
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ],
+    "tensorboard_log_dir": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam/logs_dam/"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
+    ],
+    "labels": {
+      "telegram_utils": "SiameseModel",
+      "server_utils": "Ranker"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v2_mt_word2vec_dam.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/datasets/ubuntu_v2_data_clean.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/ubuntu_v2_data_clean"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/v2_ubuntu_w2v_vectors.txt.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
+      }
+    ]
+  }
+}

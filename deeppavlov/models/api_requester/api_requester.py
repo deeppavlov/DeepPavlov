@@ -1,7 +1,7 @@
+import asyncio
 from typing import Any, List, Dict, AsyncIterable
 
 import requests
-import asyncio
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component

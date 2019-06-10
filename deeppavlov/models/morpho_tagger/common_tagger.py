@@ -2,9 +2,8 @@
 File containing common operation with keras.backend objects
 """
 
-import numpy as np
-
 import keras.backend as kb
+import numpy as np
 
 EPS = 1e-15
 

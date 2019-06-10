@@ -15,20 +15,21 @@ limitations under the License.
 """
 
 import argparse
-import sys
-import os
 import json
+import os
+import sys
+from collections import defaultdict
+from logging import getLogger
 from subprocess import Popen
 
 import pandas as pd
 
-from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.models.evolution.evolution_param_generator import ParamsEvolution
-from deeppavlov.core.common.file import read_json, save_json, find_config
-from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.commands.utils import expand_path, parse_config
+from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.file import read_json, save_json, find_config
+from deeppavlov.models.evolution.evolution_param_generator import ParamsEvolution
 
-log = get_logger(__name__)
+log = getLogger(__name__)
 
 parser = argparse.ArgumentParser()
 
@@ -219,70 +220,52 @@ def run_population(population, evolution, gpus):
 
 def results_to_table(population, evolution, considered_metrics, result_file, result_table_columns):
     population_size = len(population)
-    validate_best = evolution.get_value_from_config(evolution.basic_config,
-                                                    list(evolution.find_model_path(
-                                                        evolution.basic_config, "validate_best"))[0]
-                                                    + ["validate_best"])
-    test_best = evolution.get_value_from_config(evolution.basic_config,
-                                                list(evolution.find_model_path(
-                                                    evolution.basic_config, "test_best"))[0]
-                                                + ["test_best"])
-    if (not validate_best) and test_best:
-        log.info("Validate_best is set to False. Tuning parameters on test")
-    elif (not validate_best) and (not test_best):
-        raise ConfigError("Validate_best and test_best are set to False. Can not evolve.")
+    train_config = evolution.basic_config.get('train', {})
+
+    if 'evaluation_targets' in train_config:
+        evaluation_targets = train_config['evaluation_targets']
+    else:
+        evaluation_targets = []
+        if train_config.get('validate_best', True):
+            evaluation_targets.append('valid')
+        elif train_config.get('test_best', True):
+            evaluation_targets.append('test')
+
+    if 'valid' in evaluation_targets:
+        target = 'valid'
+    elif 'test' in evaluation_targets:
+        target = 'test'
+    elif 'train' in evaluation_targets:
+        target = 'train'
+    else:
+        raise ConfigError('evaluation_targets are empty. Can not evolve')
+
+    if target != 'valid':
+        log.info(f"Tuning parameters on {target}")
 
     population_metrics = {}
     for m in considered_metrics:
         population_metrics[m] = []
     for i in range(population_size):
-        logpath = expand_path(evolution.get_value_from_config(parse_config(population[i]),
-                                                              evolution.path_to_models_save_path)
-                              ) / "out.txt"
-        reports_data = logpath.read_text(encoding='utf8').splitlines()[-2:]
-        reports = []
-        for j in range(2):
-            try:
-                reports.append(json.loads(reports_data[j]))
-            except:
-                pass
+        log_path = expand_path(evolution.get_value_from_config(parse_config(population[i]),
+                                                               evolution.path_to_models_save_path)
+                               ) / "out.txt"
 
-        val_results = {}
-        test_results = {}
-        for m in considered_metrics:
-            val_results[m] = None
-            test_results[m] = None
-        if len(reports) == 2 and "valid" in reports[0].keys() and "test" in reports[1].keys():
-            val_results = reports[0]["valid"]["metrics"]
-            test_results = reports[1]["test"]["metrics"]
-        elif len(reports) == 2 and "valid" in reports[0].keys() and "valid" in reports[1].keys():
-            val_results = reports[1]["valid"]["metrics"]
-        elif len(reports) == 2 and "test" in reports[0].keys() and "test" in reports[1].keys():
-            val_results = reports[1]["test"]["metrics"]
-        elif len(reports) == 2 and "train" in reports[0].keys() and "valid" in reports[1].keys():
-            val_results = reports[1]["valid"]["metrics"]
-        elif len(reports) == 2 and "train" in reports[0].keys() and "test" in reports[1].keys():
-            val_results = reports[1]["test"]["metrics"]
-        elif len(reports) == 2 and "train" in reports[0].keys() and "train" in reports[1].keys():
-            val_results = reports[1]["train"]["metrics"]
-        elif len(reports) == 1 and "valid" in reports[0].keys():
-            val_results = reports[0]["valid"]["metrics"]
-        elif len(reports) == 1 and "test" in reports[0].keys():
-            test_results = reports[0]["test"]["metrics"]
-        else:
-            raise ConfigError("Can not proceed output files: didn't find valid and/or test results")
+        report = {}
+        with log_path.open(encoding='utf8') as f:
+            for line in f:
+                try:
+                    report.update(json.loads(line))
+                except:
+                    pass
 
-        result_table_dict = {}
-        for el in result_table_columns:
-            result_table_dict[el] = []
+        result_table_dict = defaultdict(list)
 
         for m in considered_metrics:
-            result_table_dict[m + "_valid"].append(val_results[m])
-            result_table_dict[m + "_test"].append(test_results[m])
-            if validate_best:
-                population_metrics[m].append(val_results[m])
-            elif test_best:
-                population_metrics[m].append(test_results[m])
+            for data_type in evaluation_targets:
+                result_table_dict[f'{m}_{data_type}'].append(report[data_type]['metrics'][m])
+                if data_type == target:
+                    population_metrics[m].append(report[data_type]['metrics'][m])
 
         result_table_dict[result_table_columns[-1]] = [json.dumps(population[i])]
         result_table = pd.DataFrame(result_table_dict)

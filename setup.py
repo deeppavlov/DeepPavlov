@@ -9,9 +9,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from setuptools import setup, find_packages
 import os
 import re
+
+from setuptools import setup, find_packages
 
 import deeppavlov
 
@@ -44,7 +45,7 @@ def readme():
 
 setup(
     name='deeppavlov',
-    packages=find_packages(exclude=('tests', 'docs')),
+    packages=find_packages(exclude=('tests', 'docs', 'utils')),
     version=deeppavlov.__version__,
     description=deeppavlov.__description__,
     long_description=readme(),

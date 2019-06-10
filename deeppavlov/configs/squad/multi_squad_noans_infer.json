@@ -105,8 +105,6 @@
   },
   "train": {
     "show_examples": false,
-    "test_best": false,
-    "validate_best": true,
     "log_every_n_batches": 250,
     "val_every_n_epochs": 1,
     "batch_size": 64,
@@ -114,15 +112,17 @@
     "validation_patience": 10,
     "metrics": [
       {
-        "name": "squad_f1",
+        "name": "squad_v2_f1",
         "inputs": ["ans_raw", "ans_predicted"]
       },
       {
-        "name": "exact_match",
+        "name": "squad_v2_em",
         "inputs": ["ans_raw", "ans_predicted"]
       }
     ],
-    "tensorboard_log_dir": "{MODELS_PATH}/multi_squad_model_noans/logs"
+    "tensorboard_log_dir": "{MODELS_PATH}/multi_squad_model_noans/logs",
+    "evaluation_targets": ["valid"],
+    "class_name": "nn_trainer"
   },
   "metadata": {
     "variables": {

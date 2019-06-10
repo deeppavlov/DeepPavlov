@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import getLogger
 from typing import Dict, List, Tuple
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
-from deeppavlov.core.common.log import get_logger
 
-log = get_logger(__name__)
+log = getLogger(__name__)
+
 
 @register('siamese_iterator')
 class SiameseIterator(DataLearningIterator):
@@ -55,14 +56,14 @@ class SiameseIterator(DataLearningIterator):
         self.data["all"] = self.train + self.valid + self.test
 
     def split(self, *args, **kwargs) -> None:
-        if len(self.valid) == 0:
+        if len(self.valid) == 0 and self.len_valid != 0:
             self.random.shuffle(self.train)
-            self.valid = self.train[-1000:]
-            self.train = self.train[:-1000]
+            self.valid = self.train[-self.len_valid:]
+            self.train = self.train[:-self.len_valid]
         if len(self.test) == 0:
             self.random.shuffle(self.train)
-            self.test = self.train[-1000:]
-            self.train = self.train[:-1000]
+            self.test = self.train[-self.len_test:]
+            self.train = self.train[:-self.len_test]
 
     def gen_batches(self, batch_size: int, data_type: str = "train", shuffle: bool = True)->\
             Tuple[List[List[Tuple[int, int]]], List[int]]:

@@ -13,12 +13,11 @@
 # limitations under the License.
 
 import pathlib
-from collections import defaultdict
-import re
-from typing import List, Dict, Generator, Tuple, Any, AnyStr, Union
 from abc import abstractmethod
-import numpy as np
+from collections import defaultdict
+from typing import List, Dict, AnyStr, Union
 
+import numpy as np
 from pymorphy2 import MorphAnalyzer
 from russian_tagsets import converters
 

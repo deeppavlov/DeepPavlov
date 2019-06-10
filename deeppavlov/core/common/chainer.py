@@ -13,12 +13,15 @@
 # limitations under the License.
 
 import pickle
-from typing import Union, Tuple, List
+from logging import getLogger
+from typing import Union, Tuple, List, Optional, Hashable
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.models.serializable import Serializable
+
+log = getLogger(__name__)
 
 
 class Chainer(Component):
@@ -58,10 +61,68 @@ class Chainer(Component):
         self.forward_map = set(self.in_x)
         self.train_map = self.forward_map.union(self.in_y)
 
+        self._components_dict = {}
+
         self.main = None
 
-    def append(self, component: Component, in_x: [str, list, dict]=None, out_params: [str, list]=None,
-               in_y: [str, list, dict]=None, main=False):
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            in_params, out_params, component = self.train_pipe[item]
+            return component
+        return self._components_dict[item]
+
+    def _ipython_key_completions_(self):
+        return self._components_dict.keys()
+
+    def __repr__(self):
+        reversed_components_dict = {v: f'{repr(k)}: ' for k, v in self._components_dict.items()
+                                    if isinstance(v, Hashable)}
+
+        components_list = []
+        for in_params, out_params, component in self.train_pipe:
+            component_repr = repr(component)
+            if isinstance(component, Hashable) and component in reversed_components_dict:
+                component_repr = reversed_components_dict[component] + component_repr
+            else:
+                for k, v in self._components_dict.items():
+                    if v is component:
+                        component_repr = f'{k}: {component_repr}'
+                        break
+            components_list.append(component_repr)
+
+        return f'Chainer[{", ".join(components_list)}]'
+
+    def _repr_pretty_(self, p, cycle):
+        """method that defines ``Struct``'s pretty printing rules for iPython
+
+        Args:
+            p (IPython.lib.pretty.RepresentationPrinter): pretty printer object
+            cycle (bool): is ``True`` if pretty detected a cycle
+        """
+        if cycle:
+            p.text('Chainer(...)')
+        else:
+            with p.group(8, 'Chainer[', ']'):
+                reversed_components_dict = {v: k for k, v in self._components_dict.items()
+                                            if isinstance(v, Hashable)}
+                # p.pretty(self.__prepare_repr())
+                for i, (in_params, out_params, component) in enumerate(self.train_pipe):
+                    if i > 0:
+                        p.text(',')
+                        p.breakable()
+                    if isinstance(component, Hashable) and component in reversed_components_dict:
+                        p.pretty(reversed_components_dict[component])
+                        p.text(': ')
+                    else:
+                        for k, v in self._components_dict.items():
+                            if v is component:
+                                p.pretty(k)
+                                p.text(': ')
+                                break
+                    p.pretty(component)
+
+    def append(self, component: Component, in_x: [str, list, dict] = None, out_params: [str, list] = None,
+               in_y: [str, list, dict] = None, main: bool = False):
         if isinstance(in_x, str):
             in_x = [in_x]
         if isinstance(in_y, str):
@@ -174,11 +235,17 @@ class Chainer(Component):
             res = res[0]
         return res
 
-    def get_main_component(self) -> Serializable:
-        return self.main or self.pipe[-1][-1]
+    def get_main_component(self) -> Optional[Serializable]:
+        try:
+            return self.main or self.pipe[-1][-1]
+        except IndexError:
+            log.warning('Cannot get a main component for an empty chainer')
+            return None
 
     def save(self) -> None:
-        self.get_main_component().save()
+        main_component = self.get_main_component()
+        if isinstance(main_component, Serializable):
+            main_component.save()
 
     def load(self) -> None:
         for in_params, out_params, component in self.train_pipe:
@@ -191,17 +258,20 @@ class Chainer(Component):
                 component.reset()
 
     def destroy(self):
-        for in_params, out_params, component in self.train_pipe:
-            if callable(getattr(component, 'destroy', None)):
-                component.destroy()
-        self.pipe.clear()
-        self.train_pipe.clear()
+        if hasattr(self, 'train_pipe'):
+            for in_params, out_params, component in self.train_pipe:
+                if callable(getattr(component, 'destroy', None)):
+                    component.destroy()
+            self.train_pipe.clear()
+        if hasattr(self, 'pipe'):
+            self.pipe.clear()
+        super().destroy()
 
     def serialize(self) -> bytes:
         data = []
         for in_params, out_params, component in self.train_pipe:
             data.append(component.serialize())
-        return pickle.dumps(data)
+        return pickle.dumps(data, protocol=4)
 
     def deserialize(self, data: bytes) -> None:
         data = pickle.loads(data)

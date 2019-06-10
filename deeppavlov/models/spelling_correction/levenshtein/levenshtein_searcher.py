@@ -1,7 +1,7 @@
-import itertools
 import copy
-import numpy as np
+import itertools
 
+import numpy as np
 from sortedcontainers import SortedListWithKey
 
 from .tabled_trie import Trie, make_trie

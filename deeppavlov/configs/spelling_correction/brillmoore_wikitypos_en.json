@@ -56,8 +56,8 @@
     "out": ["y_predicted"]
   },
   "train": {
-    "validate_best": false,
-    "test_best": true
+    "evaluation_targets": ["test"],
+    "class_name": "fit_trainer"
   },
   "metadata": {
     "variables": {

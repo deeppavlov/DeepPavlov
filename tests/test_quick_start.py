@@ -3,27 +3,26 @@ import json
 import logging
 import os
 import pickle
-import signal
 import shutil
+import signal
 import sys
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import Union
+from urllib.parse import urljoin
 
-import pytest
 import pexpect
 import pexpect.popen_spawn
+import pytest
 import requests
-from urllib.parse import urljoin
 
 import deeppavlov
 from deeppavlov import build_model
 from deeppavlov.core.commands.utils import parse_config
-from deeppavlov.download import deep_download
-from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.core.common.paths import get_settings_path
-from utils.server_utils.server import get_server_params, SERVER_CONFIG_FILENAME
-
+from deeppavlov.core.data.utils import get_all_elems_from_json
+from deeppavlov.download import deep_download
+from deeppavlov.utils.server.server import get_server_params, SERVER_CONFIG_FILENAME
 
 tests_dir = Path(__file__).parent
 test_configs_path = tests_dir / "deeppavlov" / "configs"
@@ -39,9 +38,10 @@ api_port = os.getenv('DP_PYTEST_API_PORT')
 
 TEST_MODES = ['IP',  # test_interacting_pretrained_model
               'TI',  # test_consecutive_training_and_interacting
+              'SR',  # test_serialization
               ]
 
-ALL_MODES = ('IP', 'TI')
+ALL_MODES = ('IP', 'TI', 'SR')
 
 ONE_ARGUMENT_INFER_CHECK = ('Dummy text', None)
 TWO_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', None)
@@ -83,14 +83,20 @@ PARAMS = {
         ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "classifiers": {
+        ("classifiers/paraphraser_bert.json", "classifiers", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/paraphraser_rubert.json", "classifiers", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/insults_kaggle_bert.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/rusentiment_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_dstc2_bert.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_dstc2.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_dstc2_big.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/insults_kaggle.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_twitter.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_twitter_preproc.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/topic_ag_news.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/rusentiment_cnn.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/rusentiment_elmo.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/rusentiment_cnn.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/rusentiment_elmo_twitter_cnn.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/rusentiment_bigru_superconv.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/yahoo_convers_vs_info.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "snips": {
@@ -114,6 +120,10 @@ PARAMS = {
         ("classifiers/intents_sample_json.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "ner": {
+        ("ner/ner_conll2003_bert.json", "ner_conll2003_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_ontonotes_bert.json", "ner_ontonotes_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_ontonotes_bert_mult.json", "ner_ontonotes_bert_mult", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_rus_bert.json", "ner_rus_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_ontonotes.json", "ner_ontonotes", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
@@ -126,13 +136,15 @@ PARAMS = {
                 ("moderate price range", "{'pricerange': 'moderate'}")
             ]
     },
+    "kbqa": {
+        ("kbqa/kbqa_rus.json", "kbqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+    },
     "elmo_embedder": {
-        ("elmo_embedder/elmo_ru-news.json", "elmo_embedder_ru-news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("elmo_embedder/elmo_ru_news.json", "elmo_embedder_ru_news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
     },
     "elmo_model": {
-        ("elmo/elmo-1b-benchmark_test.json", "elmo-1b-benchmark_test", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("elmo/elmo_1b_benchmark_test.json", "elmo_1b_benchmark_test", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
     },
-
     "ranking": {
         ("ranking/ranking_insurance_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_insurance_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -154,7 +166,20 @@ PARAMS = {
         ("ranking/paraphrase_ident_qqp_bilstm_interact_test.json", "ranking",
          ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/paraphrase_ident_qqp_bilstm_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/paraphrase_ident_qqp_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("ranking/paraphrase_ident_qqp_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_bert_uncased_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_bert_sep_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_bert_sep_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v1_mt_word2vec_smn.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v1_mt_word2vec_dam.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v1_mt_word2vec_dam_transformer.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_mt_word2vec_smn.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_mt_word2vec_dam.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json", "ranking", ('IP',)):
+            [(' & & & & & & & & bonhoeffer  whar drives do you want to mount what &  i have an ext3 usb drive  '
+              '& look with fdisk -l & hello there & fdisk is all you need',
+              None)]
     },
     "doc_retrieval": {
         ("doc_retrieval/en_ranker_tfidf_wiki_test.json", "doc_retrieval", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -163,6 +188,12 @@ PARAMS = {
             ONE_ARGUMENT_INFER_CHECK]
     },
     "squad": {
+        ("squad/squad_ru_bert.json", "squad_ru_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_ru_bert_infer.json", "squad_ru_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_ru_rubert.json", "squad_ru_rubert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_ru_rubert_infer.json", "squad_ru_rubert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_bert.json", "squad_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_bert_infer.json", "squad_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/multi_squad_noans.json", "multi_squad_noans", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK]
@@ -246,6 +277,8 @@ def download_config(config_path):
 
     # Update config for testing
     config.setdefault('train', {}).setdefault('pytest_epochs', 1)
+    config['train'].setdefault('pytest_max_batches', 2)
+    config['train'].setdefault('pytest_max_test_batches', 2)
     _override_with_test_values(config)
 
     config_path = test_configs_path / config_path
@@ -393,7 +426,7 @@ class TestQuickStart(object):
             pytest.skip("Unsupported mode: {}".format(mode))
 
     def test_serialization(self, model, conf_file, model_dir, mode):
-        if 'IP' not in mode:
+        if 'SR' not in mode:
             return pytest.skip("Unsupported mode: {}".format(mode))
 
         config_file_path = test_configs_path / conf_file

@@ -10,6 +10,7 @@
   },
   "chainer": {
     "in": "q",
+    "in_y": "y",
     "pipe": [
       {
         "class_name": "stream_spacy_tokenizer",
@@ -35,37 +36,60 @@
         ],
         "id": "tfidf_vec",
         "class_name": "sklearn_component",
-        "save_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v2/tfidf.pkl",
-        "load_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v2/tfidf.pkl",
+        "save_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v3/tfidf.pkl",
+        "load_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v3/tfidf.pkl",
         "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
         "infer_method": "transform"
+      },
+      {
+        "id": "answers_vocab",
+        "class_name": "simple_vocab",
+        "fit_on": [
+          "y"
+        ],
+        "save_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v3/en_mipt_answers.dict",
+        "load_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v3/en_mipt_answers.dict",
+        "in": "y",
+        "out": "y_ids"
       },
       {
         "in": "q_vect",
         "fit_on": [
           "q_vect",
-          "y"
+          "y_ids"
         ],
         "out": [
-          "answer"
+          "y_pred_proba"
         ],
         "class_name": "sklearn_component",
         "main": true,
-        "save_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v2/logreg.pkl",
-        "load_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v2/logreg.pkl",
+        "save_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v3/logreg.pkl",
+        "load_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v3/logreg.pkl",
         "model_class": "sklearn.linear_model:LogisticRegression",
-        "infer_method": "predict",
+        "infer_method": "predict_proba",
         "C": 1000,
         "penalty": "l2"
+      },
+      {
+        "in": "y_pred_proba",
+        "out": "y_pred_ids",
+        "class_name": "proba2labels",
+        "max_proba": true
+      },
+      {
+        "in": "y_pred_ids",
+        "out": "y_pred_answers",
+        "ref": "answers_vocab"
       }
     ],
     "out": [
-      "answer"
+      "y_pred_answers",
+      "y_pred_proba"
     ]
   },
   "train": {
-    "validate_best": false,
-    "test_best": false
+    "evaluation_targets": [],
+    "class_name": "fit_trainer"
   },
   "metadata": {
     "variables": {
@@ -79,7 +103,7 @@
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/faq/mipt/en_mipt_faq_v2.tar.gz",
+        "url": "http://files.deeppavlov.ai/faq/mipt/en_mipt_faq_v3.tar.gz",
         "subdir": "{MODELS_PATH}/faq/mipt"
       }
     ]

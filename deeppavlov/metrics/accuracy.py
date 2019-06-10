@@ -14,7 +14,7 @@
 
 
 import itertools
-from typing import List, Tuple
+
 import numpy as np
 
 from deeppavlov.core.common.metrics_registry import register_metric
@@ -106,3 +106,13 @@ def round_accuracy(y_true, y_predicted):
     examples_len = len(y_true)
     correct = sum([y1 == y2 for y1, y2 in zip(y_true, predictions)])
     return correct / examples_len if examples_len else 0
+
+
+@register_metric('kbqa_accuracy')
+def kbqa_accuracy(y_true, y_predicted):
+    total_correct = 0
+    for answer_true, answer_predicted in zip(y_true, y_predicted):
+        if answer_predicted in answer_true:
+            total_correct += 1
+
+    return total_correct / len(y_true) if len(y_true) else 0
