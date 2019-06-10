@@ -25,6 +25,7 @@
           "x"
         ],
         "class_name": "lazy_tokenizer",
+        "language": "russian",
         "out": [
           "x_tokens"
         ]

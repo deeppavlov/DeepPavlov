@@ -224,6 +224,8 @@ PARAMS = {
         ("morpho_tagger/UD2.0/morpho_en.json", "morpho_tagger_en", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json", "morpho_tagger_pymorphy", ALL_MODES):
             [ONE_ARGUMENT_INFER_CHECK],
+        ("morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy_lemmatize.json", "morpho_tagger_pymorphy", ALL_MODES):
+            [ONE_ARGUMENT_INFER_CHECK],
         ("morpho_tagger/UD2.0/morpho_ru_syntagrus.json", "morpho_tagger_pymorphy", ALL_MODES):
             [ONE_ARGUMENT_INFER_CHECK]
     }

@@ -15,7 +15,9 @@ from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag, get_
 
 class BasicLemmatizer(Serializable):
     """
-    A basic class for lemmatizers.
+    A basic class for lemmatizers. It must implement two abstract methods:
+    * :meth: `_lemmatize` for single word lemmatization,
+    * :meth: `__call__` for lemmatizing a batch of sentences.
     """
 
     def __init__(self, save_path: Optional[str] = None,
@@ -28,7 +30,7 @@ class BasicLemmatizer(Serializable):
         Lemmatizes a separate word given its tag.
 
         Args:
-            word: the inpurt word.
+            word: the input word.
             tag: optional morphological tag.
 
         Returns:
@@ -80,7 +82,7 @@ class UDPymorphyLemmatizer(BasicLemmatizer):
     def _reset(self):
         self.memo = dict()
 
-    def _lemmatize(self, word: str, tag: Optional[str] = None):
+    def _lemmatize(self, word: str, tag: Optional[str] = None) -> str:
         lemma = self.memo.get((word, tag))
         if lemma is not None:
             return lemma

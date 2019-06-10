@@ -89,9 +89,34 @@ separate you list of sentences into small batches.
 .. code:: python
 
     from deeppavlov.models.morpho_tagger.common import call_model
+    from deeppavlov import build_model, configs
+    model = build_model(configs.morpho_tagger.UD2_0.morpho_ru_syntagrus_pymorphy, download=True)
     sentences = ["Я шёл домой по незнакомой улице.", "Девушка пела в церковном хоре о всех уставших в чужом краю."]
-    for parse in call_model(sentences):
+    for parse in call_model(model, sentences):
         print(parse)
+
+::
+
+    1	Я	PRON,Case=Nom|Number=Sing|Person=1	_
+    2	шёл	VERB,Aspect=Imp|Gender=Masc|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|Voice=Act	_
+    3	домой	ADV,Degree=Pos	_
+    4	по	ADP	_
+    5	незнакомой	ADJ,Case=Dat|Degree=Pos|Gender=Fem|Number=Sing	_
+    6	улице	NOUN,Animacy=Inan|Case=Dat|Gender=Fem|Number=Sing	_
+    7	.	PUNCT	_
+
+    1	Девушка	NOUN,Animacy=Anim|Case=Nom|Gender=Fem|Number=Sing	_
+    2	пела	VERB,Aspect=Imp|Gender=Fem|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|Voice=Act	_
+    3	в	ADP	_
+    4	церковном	ADJ,Case=Loc|Degree=Pos|Gender=Masc|Number=Sing	_
+    5	хоре	NOUN,Animacy=Inan|Case=Loc|Gender=Masc|Number=Sing	_
+    6	о	ADP	_
+    7	всех	PRON,Animacy=Anim|Case=Loc|Number=Plur	_
+    8	уставших	VERB,Aspect=Perf|Case=Loc|Number=Plur|Tense=Past|VerbForm=Part|Voice=Act	_
+    9	в	ADP	_
+    10	чужом	ADJ,Case=Loc|Degree=Pos|Gender=Masc|Number=Sing	_
+    11	краю	NOUN,Animacy=Inan|Case=Loc|Gender=Masc|Number=Sing	_
+    12	.	PUNCT	_
 
 If you want the output in UD format, try setting ``"data_format": ud`` in the ``tag_output_prettifier`` section
 of :morpho_config:`configuration file <morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json>`
@@ -109,10 +134,28 @@ of Pymorphy model.
     for parse in model(sentences):
         print(parse)
 
-Since our model is character-based, we are able to train on several languages simultaneously, as provided in
-:morpho_config:`multilingual configuration file <morpho_tagger/UD2.3/morpho_be_transformed_multilingual.json>`.
-The detailed description of modifications in the configuration file is provided in
-`Multilingual dataset <#multilingual-dataset>`__ section.
+::
+
+    1	Я	я	PRON	_	Case=Nom|Number=Sing|Person=1	_	_	_	_
+    2	шёл	идти	VERB	_	Aspect=Imp|Gender=Masc|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|Voice=Act	_	_	_	_
+    3	домой	домой	ADV	_	Degree=Pos	_	_	_	_
+    4	по	по	ADP	_	_	_	_	_	_
+    5	незнакомой	незнакомый	ADJ	_	Case=Dat|Degree=Pos|Gender=Fem|Number=Sing	_	_	_	_
+    6	улице	улица	NOUN	_	Animacy=Inan|Case=Dat|Gender=Fem|Number=Sing	_	_	_	_
+    7	.	.	PUNCT	_	_	_	_	_	_
+
+    1	Девушка	девушка	NOUN	_	Animacy=Anim|Case=Nom|Gender=Fem|Number=Sing	_	_	_	_
+    2	пела	петь	VERB	_	Aspect=Imp|Gender=Fem|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|Voice=Act	_	_	_	_
+    3	в	в	ADP	_	_	_	_	_	_
+    4	церковном	церковный	ADJ	_	Case=Loc|Degree=Pos|Gender=Masc|Number=Sing	_	_	_	_
+    5	хоре	хор	NOUN	_	Animacy=Inan|Case=Loc|Gender=Masc|Number=Sing	_	_	_	_
+    6	о	о	ADP	_	_	_	_	_	_
+    7	всех	весь	PRON	_	Animacy=Anim|Case=Loc|Number=Plur	_	_	_	_
+    8	уставших	устать	VERB	_	Aspect=Perf|Case=Loc|Number=Plur|Tense=Past|VerbForm=Part|Voice=Act	_	_	_	_
+    9	в	в	ADP	_	_	_	_	_	_
+    10	чужом	чужой	ADJ	_	Case=Loc|Degree=Pos|Gender=Masc|Number=Sing	_	_	_	_
+    11	краю	край	NOUN	_	Animacy=Inan|Case=Loc|Gender=Masc|Number=Sing	_	_	_	_
+    12	.	.	PUNCT	_	_	_	_	_	_
 
 Command line:
 ----------------
@@ -244,13 +287,14 @@ Test data
 ~~~~~~~~~
 
 When annotating unlabeled text, our model expects the data in
-10-column UD format as well. However, it does not pat attention to any column except the first one,
+10-column UD format as well. However, it does not pay attention to any column except the first one,
 which should be a number, and the second, which must contain a word.
 You can also pass only the words with exactly one word on each line
 by adding ``"from_words": True`` to ``dataset_reader`` section.
 Sentences are separated with blank lines.
 
-
+You can also pass the unlemmatized text as input. In this case it is preliminarly lemmatized using the
+NLTK ``word_tokenize`` function.
 
 Algorithm description
 ---------------------
@@ -302,8 +346,7 @@ Training configuration
 
 We distribute pre-trained models for 11 languages trained on Universal Dependencies data.
 Configuration files for reproducible training are also available in
-:config:`deeppavlov/configs/morpho_tagger/UD2.0 <morpho_tagger/UD2.0>` and
-:morpho_config:`deeppavlov/configs/morpho_tagger/UD2.3 <morpho_tagger/UD2.3>`, for
+:config:`deeppavlov/configs/morpho_tagger/UD2.0 <morpho_tagger/UD2.0>`, for
 example
 :config:`deeppavlov/configs/morpho_tagger/UD2.0/morpho_en.json <morpho_tagger/UD2.0/morpho_en.json>`.
 The configuration file consists of several parts:
@@ -546,28 +589,3 @@ and produces the output of the format
     8 . PUNCT _
 
 To generate output in 10 column CONLL-U format add ``"format_mode": "ud"`` to the described section.
-
-Multilingual dataset
-^^^^^^^^^^^^^^^^^^^^
-
-The ``dataset_reader`` section of the configuration file now looks like
-
-::
-
-    {
-        "class_name": "morphotagger_multidataset_reader",
-        "data_path": "{DOWNLOADS_PATH}/UD2.3_source/UD_Belarusian-HSE",
-        "additional_data_path": ["{DOWNLOADS_PATH}/downloads/UD2.3_source/UD_Russian-SynTagRus/ru_syntagrus-ud-train.conllu",
-                                 "{DOWNLOADS_PATH}/downloads/UD2.3_source/UD_Ukrainian-IU/uk_iu-ud-train.conllu"],
-        "language": "be_hse",
-        "data_types": [
-          "train",
-          "dev",
-          "test"
-        ],
-        "additional_read_params": {"max_sents": 1000}
-    }
-
-It tells that we provide additional data files in related (Russian and Ukrainian) languages.
-We read only 1000 sentences from auxiliary datasets in order to restrict their influence. For other modifications
-see the :morpho_config:`example configuration file <morpho_tagger/UD2.3/morpho_be_transformed_multilingual.json>`
