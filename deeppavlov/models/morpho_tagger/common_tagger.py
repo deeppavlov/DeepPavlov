@@ -3,6 +3,7 @@ File containing common operation with keras.backend objects
 """
 
 from typing import Union, Optional, Tuple
+
 import keras.backend as kb
 import numpy as np
 
@@ -26,13 +27,13 @@ def repeat_(x, k):
     return kb.tile(x[:, None, :], tile_factor)
 
 
-def make_pos_and_tag(tag: str, sep: str = " ",
+def make_pos_and_tag(tag: str, sep: str = ",",
                      return_mode: Optional[str] = None) -> Tuple[str, Union[str, list, dict, tuple]]:
     """
     Args:
         tag: the part-of-speech tag
         sep: the separator between part-of-speech tag and grammatical features
-        return_mode: the type of return value, can be None, list, dict or sorted_dict
+        return_mode: the type of return value, can be None, list, dict or sorted_items
 
     Returns:
         the part-of-speech label and grammatical features in required format
@@ -43,11 +44,11 @@ def make_pos_and_tag(tag: str, sep: str = " ",
         pos, tag = tag.split(sep, maxsplit=1)
     else:
         pos, tag = tag, ("_" if return_mode is None else "")
-    if return_mode in ["dict", "list", "sorted_dict"]:
+    if return_mode in ["dict", "list", "sorted_items"]:
         tag = tag.split("|") if tag != "" else []
         if "dict" in return_mode:
             tag = dict(tuple(elem.split("=")) for elem in tag)
-            if return_mode == "sorted_dict":
+            if return_mode == "sorted_items":
                 tag = tuple(sorted(tag.items()))
     return pos, tag
 
@@ -59,7 +60,7 @@ def make_full_UD_tag(pos: str, tag: Union[str, list, dict, tuple],
         pos: the part-of-speech label
         tag: grammatical features in the format, specified by 'mode'
         sep: the separator between part of speech and features in output tag
-        mode: the input format of tag, can be None, list, dict or sorted_dict
+        mode: the input format of tag, can be None, list, dict or sorted_items
 
     Returns:
         the string representation of morphological tag
@@ -67,8 +68,8 @@ def make_full_UD_tag(pos: str, tag: Union[str, list, dict, tuple],
     if tag == "_" or len(tag) == 0:
         return pos
     if mode == "dict":
-        tag, mode = sorted(tag.items()), "sorted_dict"
-    if mode == "sorted_dict":
+        tag, mode = sorted(tag.items()), "sorted_items"
+    if mode == "sorted_items":
         tag, mode = ["{}={}".format(*elem) for elem in tag], "list"
     if mode == "list":
         tag = "|".join(tag)
@@ -81,7 +82,7 @@ def _are_equal_pos(first, second):
                                    for parts in [NOUNS, VERBS, CONJ]))
 
 
-IDLE_FEATURES = ["Voice", "Animacy", "Degree", "Mood", "VerbForm"]
+IDLE_FEATURES = {"Voice", "Animacy", "Degree", "Mood", "VerbForm"}
 
 def get_tag_distance(first, second, first_sep=",", second_sep=" "):
     """

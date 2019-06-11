@@ -1,8 +1,6 @@
-import pathlib
-from collections import defaultdict
-import re
-from typing import List, Dict, Generator, Tuple, Any, AnyStr, Union, Optional
 from abc import abstractmethod
+from typing import List, Optional
+
 import numpy as np
 
 from pymorphy2 import MorphAnalyzer
@@ -15,8 +13,8 @@ from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag, get_
 
 class BasicLemmatizer(Serializable):
     """
-    A basic class for lemmatizers. It must implement two abstract methods:
-    * :meth: `_lemmatize` for single word lemmatization,
+    A basic class for lemmatizers. It must contain two methods:
+    * :meth: `_lemmatize` for single word lemmatization. It is an abstract method and should be reimplemented.
     * :meth: `__call__` for lemmatizing a batch of sentences.
     """
 

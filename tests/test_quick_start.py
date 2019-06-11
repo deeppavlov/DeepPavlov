@@ -464,7 +464,7 @@ class TestQuickStart(object):
             logfile = io.BytesIO(b'')
             p = pexpect.popen_spawn.PopenSpawn(sys.executable + " -m deeppavlov train " + str(c), timeout=None,
                                                logfile=logfile)
-            s = p.readlines()
+            p.readlines()
             if p.wait() != 0:
                 raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
                                    .format(model_dir, logfile.getvalue().decode()))

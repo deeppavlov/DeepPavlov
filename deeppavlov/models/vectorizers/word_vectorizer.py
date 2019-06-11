@@ -193,7 +193,7 @@ class PymorphyVectorizer(WordIndexVectorizer):
         self._start_nodes_for_pos = dict()
         self._data = [None]
         for tag, code in self._t2i.items():
-            pos, tag = make_pos_and_tag(tag, sep=",", return_mode="sorted_dict")
+            pos, tag = make_pos_and_tag(tag, sep=",", return_mode="sorted_items")
             start = self._start_nodes_for_pos.get(pos)
             if start is None:
                 start = self._start_nodes_for_pos[pos] = len(self._nodes)
