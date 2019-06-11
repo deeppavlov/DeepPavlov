@@ -1,6 +1,6 @@
 import pymorphy2
 from typing import Union, Optional
-#import pattern.en as en
+import pattern.en as en
 from nltk.stem import WordNetLemmatizer
 from itertools import dropwhile
 from russian_tagsets import converters

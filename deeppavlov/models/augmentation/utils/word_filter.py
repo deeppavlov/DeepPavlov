@@ -107,7 +107,7 @@ class EnWordFilter(WordFilter):
             if morpho_tag['pos_tag'] == 'PRON' and morpho_tag['source_token'].lower() == 'there':
                 prev_is_there = True
                 result.append(False)
-            elif prev_is_there and (self.inflector.get_lemma_form(morpho_tag['source_token']) == 'be'):
+            elif prev_is_there and (self.inflector.get_lemma_form(morpho_tag['source_token'], morpho_tag) == 'be'):
                 prev_is_there = False
                 result.append(False)
             else:

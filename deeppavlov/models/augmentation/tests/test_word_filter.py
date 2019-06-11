@@ -48,4 +48,4 @@ def test_en_pos_filter(resource_en_filter):
                                            {'pos_tag': 'VERB', 'source_token': 'was'},
                                            {'pos_tag': 'NOUN', 'source_token': ''},
                                            {'pos_tag': 'VERB', 'source_token': ''},
-                                           {'pos_tag': 'ADJ', 'source_token': ''}]))
+                                           {'pos_tag': 'ADJ', 'source_token': ''}])) == [False, False, True, True, False]

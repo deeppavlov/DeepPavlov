@@ -122,15 +122,21 @@ def test_get_similarity_morpho_tag_binary(resource_ru_inflector, morphos_score):
                                                                      'Case': 'Gen',
                                                                      'Degree': 'Pos'
                                                                  }}),
-                                   ('стать', 'стало', {'source_token': '',
-                                                     'pos_tag': 'VERB',
-                                                     'features': {'VerbForm': 'Fin',
-                                                                  'Tense': 'Past',
-                                                                  'Number': 'Sing',
-                                                                  'Mood': 'Ind',
-                                                                  'Gender': 'Neut',
-                                                                  'Aspect': 'Perf',
-                                                                  'Voice': 'Mid'}}),
+                                   ('стать', 'стало',
+                                    {
+                                        'source_token': '',
+                                        'pos_tag': 'VERB',
+                                        'features':
+                                            {
+                                                'VerbForm': 'Fin',
+                                                'Tense': 'Past',
+                                                'Number': 'Sing',
+                                                'Mood': 'Ind',
+                                                'Gender': 'Neut',
+                                                'Aspect': 'Perf',
+                                                'Voice': 'Mid'
+                                            }
+                                    }),
                                    ('порассказывать', 'порассказывайте', {'source_token': '',
                                                                           'pos_tag': 'VERB',
                                                                           'features': {'VerbForm': 'Fin',
