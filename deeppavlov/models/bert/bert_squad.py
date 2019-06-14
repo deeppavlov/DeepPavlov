@@ -63,13 +63,18 @@ class BertSQuADModel(LRScheduledTFModel):
                  optimizer: Optional[str] = None,
                  weight_decay_rate: Optional[float] = 0.01,
                  pretrained_bert: Optional[str] = None,
-                 min_learning_rate: float = 1e-06, **kwargs) -> None:
+                 min_learning_rate: float = 1e-06,
+                 freeze_embeddings: bool = False,
+                 label_smoothing: float = 0.0,
+                 **kwargs) -> None:
         super().__init__(**kwargs)
 
         self.min_learning_rate = min_learning_rate
         self.keep_prob = keep_prob
         self.optimizer = optimizer
         self.weight_decay_rate = weight_decay_rate
+        self.freeze_embeddings = freeze_embeddings
+        self.label_smoothing = label_smoothing
 
         self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
 
@@ -163,6 +168,10 @@ class BertSQuADModel(LRScheduledTFModel):
             self.yp_logits = tf.reduce_max(tf.reduce_max(outer_logits, axis=2), axis=1)
 
         with tf.variable_scope("loss"):
+            if self.label_smoothing > 0:
+                K = tf.cast(tf.reduce_sum(logit_mask, axis=-1), tf.float32)
+                self.y_st_smoothed = self.y_st * (1-self.label_smoothing) + tf.expand_dims(self.label_smoothing / K, axis=-1)
+                self.y_end_smoothed = self.y_end * (1 - self.label_smoothing) + tf.expand_dims(self.label_smoothing / K, axis=-1)
             loss_st = tf.nn.softmax_cross_entropy_with_logits(logits=logits_st, labels=self.y_st)
             loss_end = tf.nn.softmax_cross_entropy_with_logits(logits=logits_end, labels=self.y_end)
             self.loss = tf.reduce_mean(loss_st + loss_end)
@@ -183,16 +192,22 @@ class BertSQuADModel(LRScheduledTFModel):
         with tf.variable_scope('Optimizer'):
             self.global_step = tf.get_variable('global_step', shape=[], dtype=tf.int32,
                                                initializer=tf.constant_initializer(0), trainable=False)
+
+            if self.freeze_embeddings:
+                learnable_scopes = ['squad', 'bert/encoder', 'bert/pooler']
+            else:
+                learnable_scopes = None
+
             # default optimizer for Bert is Adam with fixed L2 regularization
             if self.optimizer is None:
-
                 self.train_op = self.get_train_op(self.loss, learning_rate=self.learning_rate_ph,
                                                   optimizer=AdamWeightDecayOptimizer,
                                                   weight_decay_rate=self.weight_decay_rate,
                                                   beta_1=0.9,
                                                   beta_2=0.999,
                                                   epsilon=1e-6,
-                                                  exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"]
+                                                  exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"],
+                                                  learnable_scopes=learnable_scopes
                                                   )
             else:
                 self.train_op = self.get_train_op(self.loss, learning_rate=self.learning_rate_ph)
