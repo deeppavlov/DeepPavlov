@@ -143,7 +143,7 @@ class BertSQuADModel(LRScheduledTFModel):
             logit_mask = self.token_types_ph
             # [CLS] token is used as no answer
             mask = tf.concat([tf.ones((bs, 1), dtype=tf.int32), tf.zeros((bs, seq_len-1), dtype=tf.int32)], axis=-1)
-            logit_mask = logit_mask + mask
+            logit_mask = tf.cast(logit_mask + mask, tf.float32)
 
             logits_st = softmax_mask(logits_st, logit_mask)
             logits_end = softmax_mask(logits_end, logit_mask)
@@ -169,16 +169,17 @@ class BertSQuADModel(LRScheduledTFModel):
 
         with tf.variable_scope("loss"):
             if self.label_smoothing > 0:
-                K = tf.cast(tf.reduce_sum(logit_mask, axis=-1), tf.float32)
+                K = tf.reduce_sum(logit_mask, axis=-1)
                 self.y_st_smoothed = self.y_st * (1-self.label_smoothing) + tf.expand_dims(self.label_smoothing / K, axis=-1)
                 self.y_end_smoothed = self.y_end * (1 - self.label_smoothing) + tf.expand_dims(self.label_smoothing / K, axis=-1)
-                y_st = self.y_st_smoothed
-                y_end = self.y_end_smoothed
+                self.y_st_smoothed = self.y_st_smoothed * logit_mask
+                self.y_end_smoothed = self.y_end_smoothed * logit_mask
+                loss_st = tf.nn.softmax_cross_entropy_with_logits(logits=logits_st, labels=self.y_st_smoothed)
+                loss_end = tf.nn.softmax_cross_entropy_with_logits(logits=logits_end, labels=self.y_end_smoothed)
             else:
-                y_st = self.y_st
-                y_end = self.y_end
-            loss_st = tf.nn.softmax_cross_entropy_with_logits(logits=logits_st, labels=y_st)
-            loss_end = tf.nn.softmax_cross_entropy_with_logits(logits=logits_end, labels=y_end)
+                loss_st = tf.nn.softmax_cross_entropy_with_logits(logits=logits_st, labels=self.y_st)
+                loss_end = tf.nn.softmax_cross_entropy_with_logits(logits=logits_end, labels=self.y_end)
+
             self.loss = tf.reduce_mean(loss_st + loss_end)
 
     def _init_placeholders(self):
