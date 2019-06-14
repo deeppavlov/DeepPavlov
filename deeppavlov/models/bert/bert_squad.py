@@ -172,8 +172,13 @@ class BertSQuADModel(LRScheduledTFModel):
                 K = tf.cast(tf.reduce_sum(logit_mask, axis=-1), tf.float32)
                 self.y_st_smoothed = self.y_st * (1-self.label_smoothing) + tf.expand_dims(self.label_smoothing / K, axis=-1)
                 self.y_end_smoothed = self.y_end * (1 - self.label_smoothing) + tf.expand_dims(self.label_smoothing / K, axis=-1)
-            loss_st = tf.nn.softmax_cross_entropy_with_logits(logits=logits_st, labels=self.y_st)
-            loss_end = tf.nn.softmax_cross_entropy_with_logits(logits=logits_end, labels=self.y_end)
+                y_st = self.y_st_smoothed
+                y_end = self.y_end_smoothed
+            else:
+                y_st = self.y_st
+                y_end = self.y_end
+            loss_st = tf.nn.softmax_cross_entropy_with_logits(logits=logits_st, labels=y_st)
+            loss_end = tf.nn.softmax_cross_entropy_with_logits(logits=logits_end, labels=y_end)
             self.loss = tf.reduce_mean(loss_st + loss_end)
 
     def _init_placeholders(self):
