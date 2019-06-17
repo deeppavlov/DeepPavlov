@@ -13,34 +13,39 @@ from typing import List
 from math import log as ln
 
 
-from deeppavlov.models.spelling_correction.electors.kenlm_elector import KenlmElector
-from deeppavlov import build_model, configs
-
 logger = getLogger(__name__)
+
 
 @register("thesaurus_augmentation")
 class ThesaurusAug(Component):
     """Component for augmentation, based on replacing words with synonyms from thesaurus
+
     Args:
-        lang: lang of text, 'eng' for english, 'rus' for russian
-        penalty_for_source_token: [0, 1] penalty for using source token for language model
-        replace_freq: [0,1] frequence of replacing tokens, it calculates respecting to tokens that passed other filters
-        isalpha_only: replace only isalpha tokens
+        lang: language of text, that will be augmented, 'eng' for english, 'rus' for russian
+        penalty_for_source_token: [0, 1] penalty for using source token
+        replace_freq: [0,1] frequence of replacing tokens,
+                      it calculates respecting to tokens that passed other filters
+        isalpha_only: flag that activate filter based on method str.isalpha()
         not_replaced_tokens: list of tokens that should not be replaced
-        with_source_token: source tokens is synonyms for itself or not
-        cases: Lettercaser arg
-        default_case: Lettercaser arg
-        replaced_pos_tags: WordFilter arg
+        with_source_token: flag that decides source tokens is synonyms for itself or not
+        cases: dictionary that describes map:
+               name of lettercase -> func that takes str and convert it in certain lettercase
+        default_case: func: str->str that define transformation of string,
+                      when lettercase was not be detected in 'put_in_case' func
+        replaced_pos_tags: List of pos_tags that can be replaced,
+                           e.g. 'NOUN' for Noun, 'VERB' for Verb, 'ADJ' for Adjective, 'ADV' for Adverb
         ru_thes_dirpath: path which contains russian thesaurus 'RuThes-Lite2' in csv format
-        en_classical_pluralize: EnInflector arg
+        en_classical_pluralize: arg from pattern.en.inflect.pluralize function
+
     Attributes:
-        inflector: it inflects tokens and defines lemma form
-        thesaurus: interface for thesaurus, e.g. ruthes-lite2 for russian, wordnet for english
-        word_filter: it decides which token can be replaced
-        lettercaser: it defines lettercases and restore them
-        penalty_for_source_token: [0, 1] penalty for using source token for language model
-        with_source_token: source tokens is synonyms for itself or not
-        lang: lang of text, 'eng' for english, 'rus' for russian
+        inflector: object of {RuInflector, EnInflector} class, it inflects tokens and defines lemma form
+        thesaurus: object of {RuThesaurus, EnThesaurus} class,
+                   wrap for thesaurus, e.g. ruthes-lite2 for russian, wordnet for english
+        word_filter: object of {RuWordFilter, EnWordFilter} class, it decides which token can be replaced
+        lettercaser: object of Lettercaser class, it defines lettercases and restores them
+        penalty_for_source_token: [0, 1] penalty for using source token
+        with_source_token: flag that decides source tokens is synonyms for itself or not
+        lang: language of text, that will be augmented, 'eng' for english, 'rus' for russian
     """
 
     def __init__(self,
@@ -106,7 +111,8 @@ class ThesaurusAug(Component):
 
     def _get_cases(self, tokens, filter_res):
         ziped = zip(tokens, filter_res)
-        return [self.lettercaser.get_case(token) if not_filtered else None for token, not_filtered in ziped]
+        return [self.lettercaser.determine_lettercase(token)
+                if not_filtered else None for token, not_filtered in ziped]
 
     def _get_lemmas(self, tokens, morpho_tags, filter_res):
         ziped = zip(tokens, morpho_tags, filter_res)
@@ -125,15 +131,16 @@ class ThesaurusAug(Component):
 
     def _rest_cases(self, synonyms, cases, filter_res):
         ziped = zip(synonyms, cases, filter_res)
-        return [list(map(lambda syn: self.lettercaser.put_in_case(syn, case), syns))
+        return [list(map(lambda syn: self.lettercaser.put_in_lettercase(syn, case), syns))
                 if not_filtered else None for syns, case, not_filtered in ziped]
 
     def _insert_source_tokens(self, synonyms, source_tokens, filter_res):
         ziped = zip(synonyms, source_tokens, filter_res)
         if self.with_source_token:
-            return [[source_token] + syns if (not_filtered and syns) else [source_token] for syns, source_token, not_filtered in ziped]
-        else:
-            return [syns if (not_filtered and syns) else [source_token] for syns, source_token, not_filtered in ziped]
+            return [[source_token] + syns
+                    if (not_filtered and syns) else [source_token] for syns, source_token, not_filtered in ziped]
+        return [syns
+                if (not_filtered and syns) else [source_token] for syns, source_token, not_filtered in ziped]
 
     def __insert_prior_prob(self, syns):
         return [(0, syn) for syn in syns]
@@ -198,23 +205,5 @@ class ThesaurusAug(Component):
         transformed = [self.transform_sentence(tokens, morpho_tags) for tokens, morpho_tags in zip(batch_tokens, batch_morpho_tags)]
         return transformed
 
-if __name__ == '__main__':
-    from nltk import word_tokenize
-    #test = word_tokenize("""Широко распространён и довольно обычен в Европе и на юге Сибири, завезён в Северную Америку, где активно осваивает новые пространства.""")
-    #test = word_tokenize("""смотри там случайно в аспирантуру не попади наука никого до добра не доводила""")
-    #test = word_tokenize("""зря вы с этой хуйней шутите я много историй наблюдал в режиме рил времени по работе с русскими которые разбивались на них""")
-    #test = word_tokenize("""Размер, цвет и форма могут значительно различаться в зависимости от вида или сорта, но чаще всего они имеют продолговатую цилиндрическую или трёхгранную форму, выпрямленную либо закруглённую. Длина плода варьирует в пределах от 3 до 40 см, толщина — от 2 до 8 см. Цвет кожицы может быть жёлтым, зелёным, красным или даже серебристым. Мякоть белая, кремовая, жёлтая или оранжевая.""".lower())
-    #test = word_tokenize("""Одно из наиболее значительных произведений в творчестве Андрея Тарковского, который говорил, что в нём он «легально коснулся трансцендентного». Производство фильма сопровождалось множеством проблем и заняло около трёх лет. При проявке плёнки практически полностью испорчен по техническим причинам первый вариант, и картину переснимали трижды, с тремя разными операторами и художниками- постановщиками.""".lower())
-    #test = word_tokenize("""В Москве 15-летний подросток, который несколько дней назад был госпитализирован с ожогами 98% тела, умер в больнице.""")
-    test = word_tokenize("""Способности он имел совершенно исключительные, обладал огромной памятью, отличался ненасытной научной любознательностью и необычайной работоспособностью... Воистину, это была ходячая энциклопедия...""")
-    print(test)
-    ['Способности', 'он', 'имел', 'совершенно', 'исключительные', ',', 'обладал', 'огромной', 'памятью', ',',
-     'отличался', 'ненасытной', 'научной', 'любознательностью', 'и', 'необычайной', 'работоспособностью', '...',
-     'Воистину', ',', 'это', 'была', 'ходячая', 'энциклопедия', '...']
-    t = ThesaurusAug(lang='rus', ru_thes_dirpath='/Users/sultanovar/.deeppavlov/downloads/ruthes_lite2', penalty_for_source_token=1.0)
-    kenlm = KenlmElector('/Users/sultanovar/.deeppavlov/models/lms/ru_wiyalen_no_punkt.arpa.binary')
-    res = t([test])
-    print(res)
-    print(kenlm(res))
 
 

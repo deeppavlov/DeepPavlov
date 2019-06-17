@@ -24,7 +24,7 @@ def resource_lettercaser_notdefault():
                                               [None, 'lower', None])])
 def test_get_cases(resource_lettercaser, tokens, res):
     lett = resource_lettercaser
-    assert [lett.get_case(i) for i in tokens] == res
+    assert [lett.determine_lettercase(i) for i in tokens] == res
 
 
 @pytest.mark.parametrize(('tokens', 'cases', 'res'), [(['abs', 'BSD', 'VvV', 'vvVv', 'cCc', 'cccc'],
@@ -32,7 +32,7 @@ def test_get_cases(resource_lettercaser, tokens, res):
                                                        ['Abs', 'bsd', 'VVV', 'vvvv', 'ccc', 'cccc'])])
 def test_rest_cases(resource_lettercaser, tokens, cases, res):
     lett = resource_lettercaser
-    assert [lett.put_in_case(t, c) for t, c in zip(tokens, cases)] == res
+    assert [lett.put_in_lettercase(t, c) for t, c in zip(tokens, cases)] == res
 
 
 @pytest.mark.parametrize(('tokens', 'res'), [(['Abs', 'bsd', 'VVV', 'vVVv', 'ccC', 'CccC'],
@@ -40,7 +40,7 @@ def test_rest_cases(resource_lettercaser, tokens, cases, res):
                                              ])
 def test_get_cases_extra(resource_lettercaser_notdefault, tokens, res):
     lett = resource_lettercaser_notdefault
-    assert [lett.get_case(i) for i in tokens] == res
+    assert [lett.determine_lettercase(i) for i in tokens] == res
 
 
 @pytest.mark.parametrize(('tokens', 'cases', 'res'), [(['abs', 'BSD', 'VvV', 'vvVv', 'cCc', 'cccc'],
@@ -48,4 +48,4 @@ def test_get_cases_extra(resource_lettercaser_notdefault, tokens, res):
                                                        ['Abs', 'bsd', 'VVV', 'VVVV', 'ccC', 'CCCC'])])
 def test_rest_cases_extra(resource_lettercaser_notdefault, tokens, cases, res):
     lett = resource_lettercaser_notdefault
-    assert [lett.put_in_case(t, c) for t, c in zip(tokens, cases)] == res
+    assert [lett.put_in_lettercase(t, c) for t, c in zip(tokens, cases)] == res

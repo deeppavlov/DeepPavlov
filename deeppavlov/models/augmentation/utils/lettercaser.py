@@ -29,8 +29,8 @@ class Lettercaser(object):
         else:
             self.cases = cases
 
-    def get_case(self, token):
-        """It detects case of token with 'cases' attribute
+    def determine_lettercase(self, token):
+        """It detemines case of token with 'cases' attribute
         Args:
             token: token lettercases of that have been detected
         """
@@ -39,7 +39,7 @@ class Lettercaser(object):
                 return case
         return None
 
-    def put_in_case(self, token: str, case: str):
+    def put_in_lettercase(self, token: str, case: str):
         """It restore lettercases of tokens according to 'case' arg,
         if lettercase is not detected (case==None), 'default_case' func will be used
         Args:

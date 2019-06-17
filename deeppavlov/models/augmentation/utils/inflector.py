@@ -29,27 +29,15 @@ class RuInflector:
         features = list(map(lambda x: tuple(x.split('=')), features))
         return dict(features)
 
-    def _pymorphy_to_ud20(self, parse, force: bool=True):
-        ud20 = self.convertor(str(parse.tag)).split()
-        ud20 = {'source_token': parse.word, 'pos_tag': ud20[0], 'features': self.__get_morpho_features(ud20[1])}
-        if force:
-            ud20 = self.extract_requirement_morpho_tags(ud20)
-        return {'pymorphy': parse, 'ud20': ud20}
+    def _pymorphy_to_ud20(self, parse):
+        UD20_morpho_tags = self.convertor(str(parse.tag)).split()
+        convertered = {'source_token': parse.word,
+                       'pos_tag': UD20_morpho_tags[0],
+                       'features': self.__get_morpho_features(UD20_morpho_tags[1])}
+        convertered = self.extract_requirement_morpho_tags(convertered)
+        return {'pymorphy': parse, 'ud20': convertered}
 
-    def get_lemma_form(self, token: str, morpho_tag: Optional[dict]=None) -> str:
-        """It returns lemma-form of given token
-        Args:
-            token: token that will be lemmatized
-            morpho_tag: morpho tag of token in UD2.0 format e.g. {'source_token': '', 'pos_tag': 'VERB', 'features': {}}
-        """
-        parses = self.morph.parse(token)
-        if morpho_tag is None:
-            return parses[0].normal_form
-        parses_in_ud2 = [self._pymorphy_to_ud20(parse) for parse in parses]
-        parses_in_ud2 = self._filter_and_sort_parses(parses_in_ud2, morpho_tag)
-        if len(parses_in_ud2) > 0:
-            return parses_in_ud2[0]['pymorphy'].normal_form
-        return parses[0].normal_form
+
 
     def _get_similarity_morpho_tag(self, first_morpho, second_morpho):
         if first_morpho['pos_tag'] == second_morpho['pos_tag'] or\
@@ -116,6 +104,21 @@ class RuInflector:
         if not lexemes:
             return None
         return lexemes[0]['pymorphy'].word
+
+    def get_lemma_form(self, token: str, morpho_tag: Optional[dict]=None) -> str:
+        """It returns lemma-form of given token
+        Args:
+            token: token that will be lemmatized
+            morpho_tag: morpho tag of token in UD2.0 format e.g. {'source_token': '', 'pos_tag': 'VERB', 'features': {}}
+        """
+        parses = self.morph.parse(token)
+        if morpho_tag is None:
+            return parses[0].normal_form
+        parses_in_ud2 = [self._pymorphy_to_ud20(parse) for parse in parses]
+        parses_in_ud2 = self._filter_and_sort_parses(parses_in_ud2, morpho_tag)
+        if len(parses_in_ud2) > 0:
+            return parses_in_ud2[0]['pymorphy'].normal_form
+        return parses[0].normal_form
 
 
 class EnInflector(object):

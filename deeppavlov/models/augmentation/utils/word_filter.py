@@ -1,16 +1,19 @@
+from abc import abstractmethod
 from typing import List
 from numpy.random import sample
 from itertools import repeat
-from deeppavlov.models.augmentation.utils.inflector import EnInflector
+from nltk.stem import WordNetLemmatizer
 from deeppavlov.models.augmentation.utils.inflector import RuInflector
 
 
 class WordFilter(object):
     """Class that decides which tokens should not be replaced
+
     Args:
         replace_freq: [0, 1] propability of token that passed thought other filters to be replaced
         isalpha_only: filter based on string method 'isalpha'
         not_replaced_tokens: List of tokens that shouldn't be replaced
+
     Attributes:
         replace_freq: [0, 1] propability of token that passed thought other filters to be replaced
         isalpha_only: filter based on string method 'isalpha'
@@ -20,11 +23,9 @@ class WordFilter(object):
     def __init__(self,
                  replace_freq: float,
                  isalpha_only: bool,
-                 not_replaced_tokens: List[str]):
+                 not_replaced_tokens: List[str] = []):
         self.replace_freq = replace_freq
         self.isalpha_only = isalpha_only
-        if not_replaced_tokens is None:
-            not_replaced_tokens = []
         self.not_replaced_tokens = not_replaced_tokens
 
     def filter_isalpha_only(self, tokens):
@@ -33,20 +34,37 @@ class WordFilter(object):
         else:
             return repeat(True, len(tokens))
 
-    def filter_not_replaced_token(self, tokens):
-        pass
+    @abstractmethod
+    def filter_not_replaced_token(self, tokens: List[str]):
+        """
+        It filters tokens based on self.not_replaced_tokens attribute
+        Args:
+            tokens: tokens that will be filtered
+        Returns:
+            filter's decides
+        """
+        raise NotImplementedError("Your wordfilter must implement the abstract method filter_not_replaced_token.")
 
+    @abstractmethod
     def filter_based_on_pos_tag(self, tokens, pos_tags):
-        pass
+        """
+        It filters tokens based on self.not_replaced_tokens attribute
+        Args:
+            tokens: tokens that will be filtered
+            pos_tags: pos tags of tokens
+        Returns:
+            filter's decides
+        """
+        raise NotImplementedError("Your wordfilter must implement the abstract method filter_based_on_pos_tag.")
 
-    def filter_frequence(self, prev_decision):
-        return map(lambda x: sample() < self.replace_freq if x else x, prev_decision)
-
-    def filter_united(self, tokens, morpho_tags):
-        return list(map(lambda x, y, z: all([x,y,z]),
+    def filter_united(self, tokens, morpho_tags) -> List[bool]:
+        return list(map(lambda x, y, z: all([x, y, z]),
                         self.filter_based_on_pos_tag(morpho_tags),
                         self.filter_not_replaced_token(tokens, morpho_tags),
                         self.filter_isalpha_only(tokens)))
+
+    def filter_frequence(self, prev_decision: List[bool]) -> List[bool]:
+        return map(lambda x: sample() < self.replace_freq if x else x, prev_decision)
 
     def filter_words(self, tokens, moprho_tags):
         """It filters tokens bases on replace_freq, isalpha_only, not_replaced_token and pos_tags of tokens
@@ -63,12 +81,14 @@ class WordFilter(object):
 
 class EnWordFilter(WordFilter):
     """Class that decides which tokens should not be replaced, for english language
+
     Args:
         replace_freq: [0, 1] propability of token that have been passed thought other filters to be replaced
         isalpha_only: filter based on string method 'isalpha'
         not_replaced_tokens: List of tokens that shouldn't be replaced
         replaced_pos_tags: List of pos_tags that can be replaced,
                            e.g. 'NOUN' for Noun, 'VERB' for Verb, 'ADJ' for Adjective, 'ADV' for Adverb
+
     Attributes:
         replace_freq: [0, 1] propability of token that have been passed thought other filters to be replaced
         isalpha_only: filter based on string method 'isalpha'
@@ -80,17 +100,17 @@ class EnWordFilter(WordFilter):
     def __init__(self,
                  replace_freq: float,
                  isalpha_only: bool,
-                 not_replaced_tokens: List[str] = None,
-                 replaced_pos_tags: List[str] = None):
+                 not_replaced_tokens: List[str] = [],
+                 replaced_pos_tags: List[str] = ['ADJ', 'ADV', 'NOUN', 'VERB']):
         super(EnWordFilter, self).__init__(replace_freq, isalpha_only, not_replaced_tokens)
-        if replaced_pos_tags is None:
-            replaced_pos_tags = ['ADJ', 'ADV', 'NOUN', 'VERB']
         self.replaced_pos_tags = replaced_pos_tags
-        self.inflector = EnInflector()
+        self.lemmatizer = WordNetLemmatizer()
 
     def filter_not_replaced_token(self, tokens, morpho_tags):
-        return map(lambda x, y: self.inflector.get_lemma_form(x, y) not in self.not_replaced_tokens,
-                   tokens, morpho_tags)
+        return map(lambda token, morpho_tag:
+                   self.lemmatizer.lemmatize(token, morpho_tags['pos_tag']) not in self.not_replaced_tokens,
+                   tokens,
+                   morpho_tags)
 
     def filter_based_on_pos_tag(self, morpho_tags):
         """Function that filters tokens with pos_tags and rules
@@ -102,21 +122,24 @@ class EnWordFilter(WordFilter):
             'False' for tokens that should not be replaced,
             'True' for tokens that can be replaced
         """
-        prev_is_there, result = False, []
+        prev_morpho_tag = None
+        result = []
         for morpho_tag in morpho_tags:
-            if morpho_tag['pos_tag'] == 'PRON' and morpho_tag['source_token'].lower() == 'there':
-                prev_is_there = True
+            if prev_morpho_tag and\
+                    prev_morpho_tag['pos_tag'] == 'PRON' and\
+                    prev_morpho_tag['source_token'].lower() == 'there' and\
+                    self.lemmatizer.lemmatize(morpho_tag['source_token'], morpho_tag) == 'be':
                 result.append(False)
-            elif prev_is_there and (self.inflector.get_lemma_form(morpho_tag['source_token'], morpho_tag) == 'be'):
-                prev_is_there = False
-                result.append(False)
+                prev_morpho_tag = morpho_tag
             else:
                 result.append(morpho_tag['pos_tag'] in self.replaced_pos_tags)
+                prev_morpho_tag = morpho_tag
         return result
 
 
 class RuWordFilter(WordFilter):
     """Class that decides which tokens should not be replaced, for russian language
+
     Args:
         replace_freq: [0, 1] propability of token that have been passed thought other filters to be replaced
         isalpha_only: filter based on string method 'isalpha'
@@ -124,6 +147,7 @@ class RuWordFilter(WordFilter):
         replaced_pos_tags: List of pos_tags that can be replaced,
                            e.g. 'NOUN' for Noun, 'VERB' for Verb,
                            'ADJ' for Adjective, 'ADV' for Adverb, 'NUM' for Numerical
+
     Attributes:
         replace_freq: [0, 1] propability of token that have been passed thought other filters to be replaced
         isalpha_only: filter based on string method 'isalpha'
@@ -137,19 +161,17 @@ class RuWordFilter(WordFilter):
     def __init__(self,
                  replace_freq: float,
                  isalpha_only: bool,
-                 not_replaced_tokens: List[str]=None,
-                 replaced_pos_tags: List[str]=None):
+                 not_replaced_tokens: List[str] = ['иметь', 'обладать', 'любить', 'нравиться'],
+                 replaced_pos_tags: List[str] = ['ADJ', 'ADV', 'NOUN', 'VERB', 'NUM']):
         super(RuWordFilter, self).__init__(replace_freq, isalpha_only, not_replaced_tokens)
-        if replaced_pos_tags is None:
-            replaced_pos_tags = ['ADJ', 'ADV', 'NOUN', 'VERB', 'NUM']
-        if not_replaced_tokens is None:
-            self.not_replaced_tokens = ['иметь', 'обладать', 'любить', 'нравиться']
         self.replaced_pos_tags = replaced_pos_tags
         self.inflector = RuInflector()
 
     def filter_not_replaced_token(self, tokens, morpho_tags):
-        return map(lambda x, y: self.inflector.get_lemma_form(x,y) not in self.not_replaced_tokens,
-                   tokens, morpho_tags)
+        return map(lambda x, y:
+                   self.inflector.get_lemma_form(x, y) not in self.not_replaced_tokens,
+                   tokens,
+                   morpho_tags)
 
     def filter_based_on_pos_tag(self, morpho_tags):
         """Function that filters tokens with pos_tags and rules
@@ -164,4 +186,3 @@ class RuWordFilter(WordFilter):
             'True' for tokens that can be replaced
         """
         return list(map(lambda x: x['pos_tag'] in self.replaced_pos_tags, morpho_tags))
-
