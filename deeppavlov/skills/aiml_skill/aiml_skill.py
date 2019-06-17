@@ -87,7 +87,7 @@ class AIMLSkill(Skill):
         """
         return uuid.uuid1().hex
 
-    def __call__(self, utterances_batch: Iterable,
+    def __call__(self, utterances_batch: List[str],
                  history_batch: Optional[List]=None,
                  states_batch: Optional[List]=None) -> Tuple[List, ...]:
         """Returns skill inference result.
