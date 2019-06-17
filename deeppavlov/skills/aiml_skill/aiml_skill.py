@@ -119,7 +119,7 @@ class AIMLSkill(Skill):
         # In this implementation we use current datetime for generating uniqe ids
         output_states_batch = []
         user_ids = []
-        if not states_batch:
+        if states_batch is None:
             # generate states batch matching batch of utterances:
             states_batch = [None] * len(utterances_batch)
 
