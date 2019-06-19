@@ -14,7 +14,7 @@ class KBQAReader(DatasetReader):
         files = list(data_path.glob('*.txt'))
         test_set_filename = "test_set_with_answers.txt"
         if test_set_filename not in {file_path.name for file_path in files}:
-            url = 'http://files.deeppavlov.ai/kbqa/test_set_with_answers.txt'
+            url = 'http://files.deeppavlov.ai/kbqa/test_set_with_answers.zip'
             data_path.mkdir(exist_ok=True, parents=True)
             download_decompress(url, data_path)
         dataset = {}
