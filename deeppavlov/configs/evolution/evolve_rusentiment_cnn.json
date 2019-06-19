@@ -193,7 +193,7 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH/classifiers/rusentiment_evolution"
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/rusentiment_evolution"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
