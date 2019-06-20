@@ -22,6 +22,7 @@ Example:
 import re
 import pandas as pd
 
+
 def split(quote):
     total_list = []
     for chara in quote:
@@ -31,11 +32,13 @@ def split(quote):
         total_list.append(sub_list)
     return total_list
 
+
 def label(total_list, span, label):
     for i in range(span[0],span[1]):
         total_list[i][1] = 'I-' + label
     total_list[span[0]][1] = 'B-' + label
     return total_list
+
 
 def concat_digit(total_list):
     new_list = []
@@ -59,6 +62,7 @@ def concat_digit(total_list):
     new_list.append(['。', 0])
     return new_list
 
+
 def clean(total_list):
     out_list = []
     for line in total_list:
@@ -66,40 +70,18 @@ def clean(total_list):
             out_list.append(line)
     return out_list
 
+
 def tag(line):
-    i,j,k = 2, 3, 1
-    brand_pattern = line[i]
-    type_pattern = line[j]
-    quote = line[k]
-    span1 = (quote.index(brand_pattern), quote.index(brand_pattern) + len(brand_pattern))
-    span2 = (quote.index(type_pattern), quote.index(type_pattern) + len(type_pattern))
+    brand_pattern = line[2]
+    type_pattern = line[3]
+    quote = line[0]
+    start_b = quote.index(brand_pattern)
+    start_t = quote.index(type_pattern)
+    span1 = (start_b, start_b + len(brand_pattern))
+    span2 = (start_t, start_t + len(type_pattern))
     total_list = split(quote)
-    total_list = label(total_list, span1, 'Brand') # B: Brand
-    total_list = label(total_list, span2, 'Type') # T: Type
+    total_list = label(total_list, span1, 'Brand')  # B: Brand
+    total_list = label(total_list, span2, 'Type')  # T: Type
     total_list = concat_digit(total_list)
     total_list = clean(total_list)
     return  total_list
-
-# string = ['彩电','松下液晶电视TH-50FX700C','松下','TH-50FX700C']
-# string = ['彩电','Haier/海尔彩电 LQ55S31N','海尔','LQ55S31N']
-# string = ['电饭煲','飞利浦智能电饭煲HD4531/00','飞利浦','HD4531/00']
-#
-# # string = '松下（Panasonic） TH-32E380C 32英寸 窄边框 高清LED 卧室客厅 液晶平板电视'
-# out = tag(string)
-# for line in out:
-#     print(line)
-
-# while True:
-#     string = input('type quote: ')
-#     out = tag(string)
-#     for line in out:
-#         print(line)
-
-# out = split('松下液晶电视TH-50FX700C')
-# span = (0,1)
-# out = label(out, span, 'Brand')
-# span = (6,16)
-# out = label(out, span, 'Type')
-# out = concat_digit(out)
-# print(out)
-# 松下 (Panasonic)TH-55FX680C 55英寸4k超高清智能wifi网络电视机 辉耀HDR 运动补偿技术
