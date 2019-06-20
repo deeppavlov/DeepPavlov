@@ -2,7 +2,7 @@
 
   test_data.csv: quote原始文件
 
-  brand.txt: 生成brand正则表达式
+  brand.txt: 生成品牌正则表达式
 
   type_code.txt: 生成型号正则表达式
 
