@@ -10,6 +10,7 @@
   "google_bleu": "deeppavlov.metrics.bleu:google_bleu",
   "kbqa_accuracy": "deeppavlov.metrics.accuracy:kbqa_accuracy",
   "log_loss": "deeppavlov.metrics.log_loss:sk_log_loss",
+  "ndcg": "deeppavlov.metrics.ndcg:ndcg",
   "ner_f1": "deeppavlov.metrics.fmeasure:ner_f1",
   "ner_token_f1": "deeppavlov.metrics.fmeasure:ner_token_f1",
   "per_item_accuracy": "deeppavlov.metrics.accuracy:per_item_accuracy",
