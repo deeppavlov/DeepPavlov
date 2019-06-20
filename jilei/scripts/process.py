@@ -1,6 +1,8 @@
 from ner_label import *
 import pandas as pd
 import pysnooper
+import tqdm
+from tqdm._tqdm import trange
 
 # @pysnooper.snoop()
 def devide(length, scale):
@@ -21,7 +23,7 @@ def data_devide(df,scale):
 def process(df, name):
     name = './' + name + '.txt'
     with open(name, 'w+') as f:
-        for index in range(len(df)):
+        for index in trange(len(df)):
             line = df.iloc[index]
             out = tag(line)
             for element in out:
