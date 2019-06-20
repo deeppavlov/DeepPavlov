@@ -114,7 +114,7 @@ class ParamsEvolution(ParamsSearch):
             for ppath in occured_mpaths:
                 new_path = self.get_value_from_config(
                     self.basic_config,
-                    ppath + [path_name]).replace(models_path_variable, "MODELS_" + path_name.upper())
+                    ppath + [path_name]).replace(models_path_variable, "MODEL_" + path_name.upper())
                 self.insert_value_or_dict_into_config(self.basic_config, ppath + [path_name], new_path)
 
         self.path_to_models_save_path = ["metadata", "variables", "MODEL_SAVE_PATH"]
