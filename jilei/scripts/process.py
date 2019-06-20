@@ -10,24 +10,22 @@ def devide(length, scale):
     range2 = int(per[1] * length) + range1
     return range1,range2
 
-def data_devide(origin_df,scale):
-    df = origin_df['商品描述']
+def data_devide(df,scale):
     length = len(df)
     range1, range2 = devide(length, scale)
-    print(range1,range2)
     train = df[0:range1]
-    test = df[range1+1:range2]
-    validation = df[range2+1:length]
+    test = df[range1:range2]
+    validation = df[range2:length]
     return train, test, validation
 
 def process(df, name):
-    list = df.tolist()
     name = './' + name + '.txt'
-    with open(name, 'a') as f:
-        for line in list:
+    with open(name, 'w+') as f:
+        for index in range(len(df)):
+            line = df.iloc[index]
             out = tag(line)
             for element in out:
-                print(element[0],element[1],element[2], file =f)
+                print(element[0],element[1], file = f)
             print('', file = f)
 
 
@@ -37,10 +35,10 @@ scale = (8, 1, 1)
 
 train, test, validation = data_devide(df,scale)
 
-print(train.head())
-print(test.head())
-print(validation.head())
-print(len(train), len(test), len(validation))
+# print(train.head())
+# print(test.head())
+# print(validation.head())
+# print(len(train), len(test), len(validation))
 
 process(train, 'train')
 process(test, 'test')
