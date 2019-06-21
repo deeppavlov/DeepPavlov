@@ -27,6 +27,10 @@ class MLtrackReader(DatasetReader):
     """The class to read the MLtrack dataset from files.
 
     Please, see https://contest.yandex.ru/algorithm2018/contest/7914/problems/
+
+    For training data this class allows to get contexts, replies and relevances for training
+    a classification model. For validation and test data the class allows to get contexts and to group
+    their replies and relevances for subsequent ranking.
     """
 
     def read(self,
@@ -37,6 +41,9 @@ class MLtrackReader(DatasetReader):
         Args:
             data_path: A path to a folder with dataset files.
             seed: Random seed.
+
+        Returns:
+            Dictionary with keys "train", "valid", "test" and parts of the dataset as their values
         """
 
         data_path = expand_path(data_path)
