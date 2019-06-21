@@ -49,7 +49,7 @@ class MLtrackReader(DatasetReader):
 
     def build_validation_data(self, name, data_type):
         lines = []
-        with open(name, "r") as f:
+        with open(name, "r", encoding="utf8") as f:
             reader = csv.reader(f, delimiter="\t", quotechar=None)
             for line in reader:
                 lines.append(line)
