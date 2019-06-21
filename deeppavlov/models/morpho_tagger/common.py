@@ -12,31 +12,6 @@ from deeppavlov.dataset_iterators.morphotagger_iterator import MorphoTaggerDatas
 from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag
 
 
-def call_model(model: Chainer, data: List, batch_size: int = 16) -> List[Optional[List[str]]]:
-    """
-    Calls a morphological tagger on a list of sentences, separating it to batches.
-
-    Args:
-        model: the `~deeppavlov.core.common.chainer.Chainer` instance,
-        output of `~deeppavlov.core.commands.infer.build_model` function.
-        data: the input list of sentences.
-        batch_size: the size of the batch.
-
-    Returns:
-        a list of analyzed sentences.
-    """
-    data_for_iterator = [(sent, None) for sent in data]
-    iterator: MorphoTaggerDatasetIterator = MorphoTaggerDatasetIterator({"test": data_for_iterator})
-    answer = [None] * len(data)
-
-    for indexes, (x, _) in iterator.gen_batches(
-            batch_size=batch_size, data_type="test", shuffle=False, return_indexes=True):
-        y = model(x)
-        for i, elem in zip(indexes, y):
-            answer[i] = elem
-    return answer
-
-
 def predict_with_model(config_path: [Path, str]) -> List[Optional[List[str]]]:
     """Returns predictions of morphotagging model given in config :config_path:.
 
@@ -125,7 +100,7 @@ class TagOutputPrettifier(Component):
     def _make_format_string(self) -> None:
         if self.format_mode == "basic":
             self.format_string =  "{}\t{}\t{}\t{}"
-        elif self.format_mode in ["conllu", "ud"]:
+        elif self.format_mode.lower() in ["conllu", "ud"]:
             self.format_string = "{}\t{}\t_\t{}\t_\t{}\t_\t_\t_\t_"
         else:
             raise ValueError("Wrong mode for TagOutputPrettifier: {}, "

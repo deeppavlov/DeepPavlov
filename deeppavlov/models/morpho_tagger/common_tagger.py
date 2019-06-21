@@ -46,7 +46,7 @@ def make_pos_and_tag(tag: str, sep: str = ",",
         pos, tag = tag, ("_" if return_mode is None else "")
     if return_mode in ["dict", "list", "sorted_items"]:
         tag = tag.split("|") if tag != "" else []
-        if "dict" in return_mode:
+        if return_mode in ["dict", "sorted_items"]:
             tag = dict(tuple(elem.split("=")) for elem in tag)
             if return_mode == "sorted_items":
                 tag = tuple(sorted(tag.items()))

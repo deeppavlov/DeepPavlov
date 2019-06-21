@@ -235,6 +235,28 @@ class Chainer(Component):
             res = res[0]
         return res
 
+    def batch_call(self, *args, batch_size: int = 16):
+        """
+        Partitions data to batches and applies __call__ to each batch.
+
+        Args:
+            args: input data, each element of data correponds to a single model input.
+            batch_size: the size of the batch.
+
+        Returns:
+            the model output. If the model has multiple outputs, each item of the output is a tuple.
+        """
+        L = len(args[0])
+        answer = [None] * L
+        for start in range(0, L, batch_size):
+            curr_batch = [elem[start: start+batch_size] for elem in args]
+            curr_answer = self.__call__(*curr_batch)
+            if len(self.out_params) > 1:
+                curr_answer = zip(*curr_answer)
+            for i, elem in enumerate(curr_answer):
+                answer[start+i] = elem
+        return answer
+
     def get_main_component(self) -> Optional[Serializable]:
         try:
             return self.main or self.pipe[-1][-1]
