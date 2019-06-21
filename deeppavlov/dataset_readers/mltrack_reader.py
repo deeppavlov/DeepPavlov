@@ -14,7 +14,8 @@
 
 import csv
 import re
-from typing import Dict, List, Tuple
+from pathlib import Path
+from typing import Dict, List, Tuple, Union
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
@@ -47,7 +48,9 @@ class MLtrackReader(DatasetReader):
         dataset = {"train": train_data, "valid": valid_data, "test": test_data}
         return dataset
 
-    def build_validation_data(self, name, data_type):
+    def build_validation_data(self,
+                              name: Union[Path, str],
+                              data_type: str) -> List[Tuple[List[str], int]]:
         lines = []
         with open(name, "r", encoding="utf8") as f:
             reader = csv.reader(f, delimiter="\t", quotechar=None)
@@ -87,7 +90,8 @@ class MLtrackReader(DatasetReader):
         labels.append(label)
         return list(zip(samples, labels))
 
-    def build_train_data(self, name):
+    def build_train_data(self,
+                         name: Union[Path, str]) -> List[Tuple[List[str], int]]:
         lines = []
         with open(name, "r", encoding="utf8") as f:
             reader = csv.reader(f, delimiter="\t", quotechar=None)
@@ -102,7 +106,7 @@ class MLtrackReader(DatasetReader):
             labels.append(y_voc[line[-2]])
         return list(zip(samples, labels))
 
-    def clean_data(self, text):
+    def clean_data(self, text: str) -> str:
         """Clean or fix invalid symbols in a given text"""
 
         def clean(string):
