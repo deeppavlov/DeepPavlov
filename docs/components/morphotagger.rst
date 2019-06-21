@@ -83,16 +83,15 @@ You may also pass the tokenized sentences instead of raw ones:
         print(parse)
 
 If your data is large, you can call
-:func:`~deeppavlov.models.morpho_tagger.common.call_model` function, which will additionally
+:meth:`~deeppavlov.core.common.chainer.Chainer.batch_call` function, which will additionally
 separate you list of sentences into small batches.
 
 .. code:: python
 
-    from deeppavlov.models.morpho_tagger.common import call_model
     from deeppavlov import build_model, configs
     model = build_model(configs.morpho_tagger.UD2_0.morpho_ru_syntagrus_pymorphy, download=True)
     sentences = ["Я шёл домой по незнакомой улице.", "Девушка пела в церковном хоре о всех уставших в чужом краю."]
-    for parse in call_model(model, sentences):
+    for parse in model.batch_call(sentences):
         print(parse)
 
 ::
@@ -119,11 +118,11 @@ separate you list of sentences into small batches.
     12	.	PUNCT	_
 
 If you want the output in UD format, try setting ``"data_format": ud`` in the ``tag_output_prettifier`` section
-of :morpho_config:`configuration file <morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json>`
+of :config:`configuration file <morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json>`
 you import.
 
 Exclusively for Russian language you can obtain lemmatized UD output by using
-:morpho_config:`augmented version <morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy_lemmatize.json>`
+:config:`augmented version <morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy_lemmatize.json>`
 of Pymorphy model.
 
 .. code:: python

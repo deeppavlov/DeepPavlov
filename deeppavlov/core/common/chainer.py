@@ -237,7 +237,7 @@ class Chainer(Component):
 
     def batch_call(self, *args, batch_size: int = 16):
         """
-        Partitions data to batches and applies __call__ to each batch.
+        Partitions data to batches and applies :meth:`__call__` to each batch.
 
         Args:
             args: input data, each element of data correponds to a single model input.
