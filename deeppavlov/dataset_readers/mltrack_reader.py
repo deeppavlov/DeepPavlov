@@ -103,7 +103,7 @@ class MLtrackReader(DatasetReader):
         return list(zip(samples, labels))
 
     def clean_data(self, text):
-        """Clean or fix invalid symbols in given text"""
+        """Clean or fix invalid symbols in a given text"""
 
         def clean(string):
             string = re.sub(
