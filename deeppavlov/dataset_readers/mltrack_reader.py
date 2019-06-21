@@ -51,11 +51,9 @@ class MLtrackReader(DatasetReader):
     def build_validation_data(self,
                               name: Union[Path, str],
                               data_type: str) -> List[Tuple[List[str], int]]:
-        lines = []
         with open(name, "r", encoding="utf8") as f:
             reader = csv.reader(f, delimiter="\t", quotechar=None)
-            for line in reader:
-                lines.append(line)
+            lines = list(reader)
         if data_type == "test":
             for line in lines:
                 line.extend(["bad", 1])
@@ -92,11 +90,9 @@ class MLtrackReader(DatasetReader):
 
     def build_train_data(self,
                          name: Union[Path, str]) -> List[Tuple[List[str], int]]:
-        lines = []
         with open(name, "r", encoding="utf8") as f:
             reader = csv.reader(f, delimiter="\t", quotechar=None)
-            for line in reader:
-                lines.append(line)
+            lines = list(reader)
         samples, labels = [], []
         y_voc = {"good": 2, "neutral": 1, "bad": 0}
         for line in lines:
