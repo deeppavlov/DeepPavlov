@@ -26,7 +26,7 @@ from deeppavlov.core.data.dataset_reader import DatasetReader
 class MLtrackReader(DatasetReader):
     """The class to read the MLtrack dataset from files.
 
-    Please, see https://contest.yandex.ru/algorithm2018
+    Please, see https://contest.yandex.ru/algorithm2018/contest/7914/problems/
     """
 
     def read(self,
