@@ -89,7 +89,7 @@ class AIMLSkill(Skill):
 
     def __call__(self, utterances_batch: List[str],
                  history_batch: Optional[List]=None,
-                 states_batch: Optional[List]=None) -> Tuple[List, ...]:
+                 states_batch: Optional[List]=None) -> Tuple[List[str], List[float], list]:
         """Returns skill inference result.
 
         Returns batches of skill inference results, estimated confidence
