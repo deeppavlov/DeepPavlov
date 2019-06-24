@@ -84,6 +84,7 @@ def _are_equal_pos(first, second):
 
 IDLE_FEATURES = {"Voice", "Animacy", "Degree", "Mood", "VerbForm"}
 
+
 def get_tag_distance(first, second, first_sep=",", second_sep=" "):
     """
     Measures the distance between two (Russian) morphological tags in UD Format.

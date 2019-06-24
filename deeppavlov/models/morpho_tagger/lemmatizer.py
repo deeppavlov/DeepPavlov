@@ -2,13 +2,12 @@ from abc import abstractmethod
 from typing import List, Optional
 
 import numpy as np
-
 from pymorphy2 import MorphAnalyzer
 from russian_tagsets import converters
 
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag, get_tag_distance
+from deeppavlov.models.morpho_tagger.common_tagger import get_tag_distance
 
 
 class BasicLemmatizer(Serializable):
@@ -56,6 +55,7 @@ class BasicLemmatizer(Serializable):
         answer = [[self._lemmatize(word, tag) for word, tag in zip(*elem)] for elem in zip(data, tags)]
         return answer
 
+
 @register("UD_pymorphy_lemmatizer")
 class UDPymorphyLemmatizer(BasicLemmatizer):
     """
@@ -95,6 +95,3 @@ class UDPymorphyLemmatizer(BasicLemmatizer):
                     break
         self.memo[(word, tag)] = best_lemma
         return best_lemma
-
-
-

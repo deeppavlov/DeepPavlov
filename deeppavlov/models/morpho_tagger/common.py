@@ -7,7 +7,6 @@ from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
-from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.dataset_iterators.morphotagger_iterator import MorphoTaggerDatasetIterator
 from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag
 
