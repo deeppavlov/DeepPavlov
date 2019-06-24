@@ -24,9 +24,8 @@ from deeppavlov.core.common.registry import register
 class OntonotesReader(DatasetReader):
     """Class to read training datasets in OntoNotes format"""
 
-    def read(self, data_path, file_name: str='SQ_rus_dataset_zs.pckl'):
-        path = Path(data_path).resolve() / file_name
-        with open(path, 'rb') as f:
+    def read(self, data_path: str):
+        with open(data_path, 'rb') as f:
             dataset = pickle.load(f)
 
         dataset_filtered = {}
