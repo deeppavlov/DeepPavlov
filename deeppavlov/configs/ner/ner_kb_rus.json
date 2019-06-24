@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "class_name": "sq_reader",
-    "data_path": "{DOWNLOADS_PATH}/ner_sq"
+    "data_path": "{DOWNLOADS_PATH}/ner_sq/SQ_rus_dataset_zs.pckl"
   },
   "dataset_iterator": {
     "class_name": "data_learning_iterator"
