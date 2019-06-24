@@ -28,10 +28,4 @@ class OntonotesReader(DatasetReader):
         with open(data_path, 'rb') as f:
             dataset = pickle.load(f)
 
-        dataset_filtered = {}
-        for key, data in dataset.items():
-            dataset_filtered[key] = []
-            for toks, tags in data:
-                dataset_filtered[key].append((toks, tags))
-
-        return dataset_filtered
+        return dataset
