@@ -13,8 +13,9 @@
 # limitations under the License.
 
 import pickle
+from itertools import islice
 from logging import getLogger
-from typing import Union, Tuple, List, Optional, Hashable
+from typing import Union, Tuple, List, Optional, Hashable, Reversible
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.component import Component
@@ -235,26 +236,34 @@ class Chainer(Component):
             res = res[0]
         return res
 
-    def batch_call(self, *args, batch_size: int = 16):
+    def batched_call(self, *args: Reversible, batch_size: int = 16) -> Union[list, Tuple[list, ...]]:
         """
-        Partitions data to batches and applies :meth:`__call__` to each batch.
+        Partitions data into mini-batches and applies :meth:`__call__` to each batch.
 
         Args:
-            args: input data, each element of data correponds to a single model input.
-            batch_size: the size of the batch.
+            args: input data, each element of the data corresponds to a single model inputs sequence.
+            batch_size: the size of a batch.
 
         Returns:
-            the model output. If the model has multiple outputs, each item of the output is a tuple.
+            the model output as if the data was passed to the :meth:`__call__` method.
         """
-        L = len(args[0])
-        answer = [None] * L
-        for start in range(0, L, batch_size):
-            curr_batch = [elem[start: start+batch_size] for elem in args]
-            curr_answer = self.__call__(*curr_batch)
-            if len(self.out_params) > 1:
-                curr_answer = zip(*curr_answer)
-            for i, elem in enumerate(curr_answer):
-                answer[start+i] = elem
+        args = [iter(arg) for arg in args]
+        answer = [[] for _ in self.out_params]
+
+        while True:
+            batch = [list(islice(arg, batch_size)) for arg in args]
+            if not any(batch):  # empty batch, reached the end
+                break
+
+            curr_answer = self.__call__(*batch)
+            if len(self.out_params) == 1:
+                curr_answer = [curr_answer]
+
+            for y, curr_y in zip(answer, curr_answer):
+                y.extend(curr_y)
+
+        if len(self.out_params) == 1:
+            answer = answer[0]
         return answer
 
     def get_main_component(self) -> Optional[Serializable]:
