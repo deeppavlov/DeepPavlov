@@ -83,7 +83,7 @@ You may also pass the tokenized sentences instead of raw ones:
         print(parse)
 
 If your data is large, you can call
-:meth:`~deeppavlov.core.common.chainer.Chainer.batch_call` function, which will additionally
+:meth:`~deeppavlov.core.common.chainer.Chainer.batched_call` method of the model, which will additionally
 separate you list of sentences into small batches.
 
 .. code:: python
@@ -91,7 +91,7 @@ separate you list of sentences into small batches.
     from deeppavlov import build_model, configs
     model = build_model(configs.morpho_tagger.UD2_0.morpho_ru_syntagrus_pymorphy, download=True)
     sentences = ["Я шёл домой по незнакомой улице.", "Девушка пела в церковном хоре о всех уставших в чужом краю."]
-    for parse in model.batch_call(sentences):
+    for parse in model.batched_call(sentences):
         print(parse)
 
 ::
