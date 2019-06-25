@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 from typing import List, Dict, Union, Optional
 
@@ -8,10 +9,13 @@ from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.dataset_iterators.morphotagger_iterator import MorphoTaggerDatasetIterator
+from deeppavlov.dataset_readers.morphotagging_dataset_reader import read_infile
 from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag
 
 
-def predict_with_model(config_path: [Path, str]) -> List[Optional[List[str]]]:
+def predict_with_model(config_path: [Path, str], infile: Optional[Union[Path, str]] = None,
+                       input_format: str = "ud", batch_size: [int] = 16,
+                       output_format: str = "basic") -> List[Optional[List[str]]]:
     """Returns predictions of morphotagging model given in config :config_path:.
 
     Args:
@@ -23,32 +27,26 @@ def predict_with_model(config_path: [Path, str]) -> List[Optional[List[str]]]:
 
     """
     config = parse_config(config_path)
-
-    reader_config = config['dataset_reader']
-    reader = get_model(reader_config['class_name'])()
-    data_path = expand_path(reader_config.get('data_path', ''))
-    read_params = {k: v for k, v in reader_config.items() if k not in ['class_name', 'data_path']}
-    data: Dict = reader.read(data_path, **read_params)
-
-    iterator_config = config['dataset_iterator']
-    iterator: MorphoTaggerDatasetIterator = from_params(iterator_config, data=data)
-
+    if infile is None:
+        if sys.stdin.isatty():
+            raise RuntimeError('To process data from terminal please use interact mode')
+        infile = sys.stdin
+    if input_format in ["ud", "conllu", "vertical"]:
+        from_words = (input_format == "vertical")
+        data: List[tuple] = read_infile(infile, from_words=from_words)
+        # keeping only sentences
+        data = [elem[0] for elem in data]
+    else:
+        if infile is not sys.stdin:
+            with open(infile, "r", encoding="utf8") as fin:
+                data = fin.readlines()
+        else:
+            data = sys.stdin.readlines()
     model = build_model(config, load_trained=True)
-    answers = [None] * len(iterator.test)
-    batch_size = config['predict'].get("batch_size", -1)
-    for indexes, (x, _) in iterator.gen_batches(
-            batch_size=batch_size, data_type="test", shuffle=False, return_indexes=True):
-        y = model(x)
-        for i, elem in zip(indexes, y):
-            answers[i] = elem
-    outfile = config['predict'].get("outfile")
-    if outfile is not None:
-        outfile = Path(outfile)
-        if not outfile.exists():
-            outfile.parent.mkdir(parents=True, exist_ok=True)
-        with open(outfile, "w", encoding="utf8") as fout:
-            for elem in answers:
-                fout.write(elem + "\n")
+    model.pipe[-1][-1].set_format_mode(output_format)
+    answers = model.batched_call(data, batch_size=batch_size)
+    for elem in answers[:2]:
+        print(elem)
     return answers
 
 
