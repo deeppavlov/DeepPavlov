@@ -160,23 +160,23 @@ Command line:
 ----------------
 
 If you want to use our models from scratch, do the following
-(all the examples are for ru\_syntagrus corpus, change the filenames accordingly to invoke models for other languages):
+(all the examples are for ru\_syntagrus\_pymorphy model, change the filenames accordingly to invoke models for other languages):
 
 #. Download data
 
-    .. code:: bash
+    .. code:: bash../
 
-       python -m deeppavlov download morpho_ru_syntagrus_train
+       python -m deeppavlov download morpho_ru_syntagrus_pymorphy
 
    To perform all downloads in runtime you can also run all subsequent
    commands with ``-d`` key,
 
-#. To apply a pre-trained ru\_syntagrus model to ru\_syntagrus test
+#. To apply a pre-trained ru\_syntagrus\_pymorphy model to ru\_syntagrus test
    data, run
 
     .. code:: bash
 
-       python -m deeppavlov.models.morpho_tagger morpho_ru_syntagrus_predict
+       python -m deeppavlov.models.morpho_tagger predict ~/.deeppavlov/downloads/UD2.3_source/UD_Russian-SynTagRus/ru_syntagrus-ud-test.conllu
 
    to use a basic model, or
 
