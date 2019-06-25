@@ -47,13 +47,6 @@ def predict_with_model(config_path: [Path, str], infile: Optional[Union[Path, st
     answers = model.batched_call(data, batch_size=batch_size)
     for elem in answers[:2]:
         print(elem)
-    # outfile = expand_path(config['predict'].get("outfile"))
-    # if outfile is not None:
-    #     if not outfile.exists():
-    #         outfile.parent.mkdir(parents=True, exist_ok=True)
-    #     with open(outfile, "w", encoding="utf8") as fout:
-    #         for elem in answers:
-    #             fout.write(elem + "\n")
     return answers
 
 
