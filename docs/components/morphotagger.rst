@@ -160,58 +160,123 @@ Command line:
 ----------------
 
 If you want to use our models from scratch, do the following
-(all the examples are for ru\_syntagrus corpus, change the filenames accordingly to invoke models for other languages):
+(all the examples are for ru\_syntagrus\_pymorphy model,
+change the filenames accordingly to invoke models for other languages):
 
 #. Download data
 
     .. code:: bash
 
-       python -m deeppavlov download morpho_ru_syntagrus_train
+       python -m deeppavlov download morpho_ru_syntagrus_pymorphy
 
    To perform all downloads in runtime you can also run all subsequent
    commands with ``-d`` key,
 
-#. To apply a pre-trained ru\_syntagrus model to ru\_syntagrus test
-   data, run
+#. To apply a pre-trained ru\_syntagrus\_pymorphy model to ru\_syntagrus test
+   data provided it was downloaded using the previous command, run
+
+   .. code:: bash
+
+     python -m deeppavlov.models.morpho_tagger morpho_ru_syntagrus_pymorphy \
+     > -f /.deeppavlov/downloads/UD2.0_source/ru_syntagrus/ru_syntagrus-ud-test.conllu
+
+   `-f` argument points to the path to the test data. If you do not pass it the model expects data from stdin.
+   This command writes the output to stdout, you can redirect it using standard ``>`` notation.
+
+   -  By default the ``deeppavlov.models.morpho_tagger`` script expects the data to be in CoNLL-U format,
+      however, you can specify input format by using the `-i` key. For example, your input can be in one word per line
+      format, in this case you set this key to ``"vertical"``. Note also that you can pass the data from
 
     .. code:: bash
 
-       python -m deeppavlov.models.morpho_tagger morpho_ru_syntagrus_predict
+        echo -e "Мама\nмыла\nраму\n.\n\nВаркалось\n,\nхливкие\nшорьки\nпырялись\nпо\nнаве\n." \
+        > | python -m deeppavlov.models.morpho_tagger morpho_ru_syntagrus_pymorphy -i "vertical"
 
-   to use a basic model, or
+    ::
+
+        1       Мама    NOUN    Animacy=Anim|Case=Nom|Gender=Fem|Number=Sing
+        2       мыла    VERB    Aspect=Imp|Gender=Fem|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|Voice=Act
+        3       раму    NOUN    Animacy=Inan|Case=Acc|Gender=Fem|Number=Sing
+        4       .       PUNCT   _
+
+        1       Варкалось       NOUN    Animacy=Anim|Case=Nom|Gender=Masc|Number=Sing
+        2       ,       PUNCT   _
+        3       хливкие ADJ     Case=Nom|Degree=Pos|Number=Plur
+        4       шорьки  NOUN    Animacy=Inan|Case=Nom|Gender=Masc|Number=Plur
+        5       пырялись        VERB    Aspect=Imp|Mood=Ind|Number=Plur|Tense=Past|VerbForm=Fin|Voice=Mid
+        6       по      ADP     _
+        7       наве    NOUN    Animacy=Inan|Case=Dat|Gender=Masc|Number=Sing
+        8       .       PUNCT   _
+
+
+   -   Untokenized sentences (one sentence per line) can be tagged as well, in this case input format should be ``"text"``
 
     .. code:: bash
 
-       python -m deeppavlov.models.morpho_tagger morpho_ru_syntagrus_predict_pymorphy
+        echo -e "Мама мыла раму.\nВаркалось, хливкие шорьки пырялись по наве." \
+        > | python -m deeppavlov.models.morpho_tagger morpho_ru_syntagrus_pymorphy -i "text"
 
-   to apply a model which additionally utilizes information from
-   `Pymorphy2 <http://pymorphy2.readthedocs.io>`__ library.
+    ::
 
-A subdirectory ``results`` will be created in the working directory of ``deeppavlov`` module,
-which is ``~/.deeppavlov`` by default, and predictions will be written to the file ``ud_ru_syntagrus_test.res`` in it.
-You can change the paths in corresponding sections of configuration file.
+        1       Мама    NOUN    Animacy=Anim|Case=Nom|Gender=Fem|Number=Sing
+        2       мыла    VERB    Aspect=Imp|Gender=Fem|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|Voice=Act
+        3       раму    NOUN    Animacy=Inan|Case=Acc|Gender=Fem|Number=Sing
+        4       .       PUNCT   _
+
+        1       Варкалось       NOUN    Animacy=Anim|Case=Nom|Gender=Masc|Number=Sing
+        2       ,       PUNCT   _
+        3       хливкие ADJ     Case=Nom|Degree=Pos|Number=Plur
+        4       шорьки  NOUN    Animacy=Inan|Case=Nom|Gender=Masc|Number=Plur
+        5       пырялись        VERB    Aspect=Imp|Mood=Ind|Number=Plur|Tense=Past|VerbForm=Fin|Voice=Mid
+        6       по      ADP     _
+        7       наве    NOUN    Animacy=Inan|Case=Dat|Gender=Masc|Number=Sing
+        8       .       PUNCT   _
+
+   - You can also obtain the output in CoNLL-U format by passing the ``-o ud`` argument:
+
+    .. code:: bash
+
+        echo -e "Мама мыла раму.\nВаркалось, хливкие шорьки пырялись по наве." \
+        > | python -m deeppavlov.models.morpho_tagger morpho_ru_syntagrus_pymorphy -i "text" -o "ud"
+
+    ::
+
+        1       Мама    _       NOUN    _       Animacy=Anim|Case=Nom|Gender=Fem|Number=Sing    _       _       _       _
+        2       мыла    _       VERB    _       Aspect=Imp|Gender=Fem|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|Voice=Act    _       _       _       _
+        3       раму    _       NOUN    _       Animacy=Inan|Case=Acc|Gender=Fem|Number=Sing    _       _       _       _
+        4       .       _       PUNCT   _       _       _       _       _       _
+
+        1       Варкалось       _       NOUN    _       Animacy=Anim|Case=Nom|Gender=Masc|Number=Sing   _       _       _       _
+        2       ,       _       PUNCT   _       _       _       _       _       _
+        3       хливкие _       ADJ     _       Case=Nom|Degree=Pos|Number=Plur _       _       _       _
+        4       шорьки  _       NOUN    _       Animacy=Inan|Case=Nom|Gender=Masc|Number=Plur   _       _       _       _
+        5       пырялись        _       VERB    _       Aspect=Imp|Mood=Ind|Number=Plur|Tense=Past|VerbForm=Fin|Voice=Mid       _       _       _       _
+        6       по      _       ADP     _       _       _       _       _       _
+        7       наве    _       NOUN    _       Animacy=Inan|Case=Dat|Gender=Masc|Number=Sing   _       _       _       _
+        8       .       _       PUNCT   _       _       _       _       _       _
+
 
 #. To evaluate ru\_syntagrus model on ru\_syntagrus test subset, run
 
    .. code:: bash
 
-       python -m deeppavlov evaluate morpho_ru_syntagrus_train
+       python -m deeppavlov evaluate morpho_ru_syntagrus_pymorphy
 
 #. To retrain model on ru\_syntagrus dataset, run one of the following
    (the first is for Pymorphy-enriched model)
 
    .. code:: bash
 
-       python -m deeppavlov train morpho_ru_syntagrus_train_pymorphy
-       python -m deeppavlov train morpho_ru_syntagrus_train
+       python -m deeppavlov train morpho_ru_syntagrus_pymorphy
+       python -m deeppavlov train morpho_ru_syntagrus
 
-   Be careful, one epoch takes 8-60 minutes depending on your GPU.
+   Be careful, one epoch takes 2-60 minutes depending on your GPU.
 
 #. To tag Russian sentences from stdin, run
 
    .. code:: bash
 
-       python -m deeppavlov interact morpho_ru_syntagrus_predict_pymorphy
+       python -m deeppavlov interact morpho_ru_syntagrus_pymorphy
 
 Read the detailed readme below.
 
