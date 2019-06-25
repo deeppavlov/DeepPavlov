@@ -45,7 +45,7 @@ def predict_with_model(config_path: [Path, str], infile: Optional[Union[Path, st
     model = build_model(config, load_trained=True)
     model.pipe[-1][-1].set_format_mode(output_format)
     answers = model.batched_call(data, batch_size=batch_size)
-    for elem in answers[:2]:
+    for elem in answers:
         print(elem)
     return answers
 
