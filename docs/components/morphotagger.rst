@@ -91,7 +91,7 @@ separate you list of sentences into small batches.
     from deeppavlov import build_model, configs
     model = build_model(configs.morpho_tagger.UD2_0.morpho_ru_syntagrus_pymorphy, download=True)
     sentences = ["Я шёл домой по незнакомой улице.", "Девушка пела в церковном хоре о всех уставших в чужом краю."]
-    for parse in model.batched_call(sentences):
+    for parse in model.batched_call(sentences, batch_size=16):
         print(parse)
 
 ::
