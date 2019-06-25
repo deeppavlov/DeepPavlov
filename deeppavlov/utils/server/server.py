@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import ssl
-from logging import getLogger
+from logging import getLogger, Filter
 from pathlib import Path
 from typing import List, Tuple
 
@@ -31,7 +31,15 @@ from deeppavlov.core.data.utils import check_nested_dict_keys, jsonify_data
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 
+
+class PollerFilter(Filter):
+    def filter(self, record):
+        return ' /poller ' not in record.getMessage()
+
+
 log = getLogger(__name__)
+werklog = getLogger('werkzeug')
+werklog.addFilter(PollerFilter())
 
 app = Flask(__name__)
 Swagger(app)
@@ -57,7 +65,7 @@ def get_server_params(server_config_path, model_config):
     return server_params
 
 
-def interact(model: Chainer, params_names: List[str]) -> Tuple[Response, int]:
+def interact(model: Chainer, params_names: List[str], log_on: bool = True) -> Tuple[Response, int]:
     if not request.is_json:
         log.error("request Content-Type header is not application/json")
         return jsonify({
@@ -67,7 +75,8 @@ def interact(model: Chainer, params_names: List[str]) -> Tuple[Response, int]:
     model_args = []
 
     data = request.get_json()
-    dialog_logger.log_in(data)
+    if log_on:
+        dialog_logger.log_in(data)
     for param_name in params_names:
         param_value = data.get(param_name)
         if param_value is None or (isinstance(param_value, list) and len(param_value) > 0):
@@ -96,7 +105,8 @@ def interact(model: Chainer, params_names: List[str]) -> Tuple[Response, int]:
         prediction = [prediction]
     prediction = list(zip(*prediction))
     result = jsonify_data(prediction)
-    dialog_logger.log_out(result)
+    if log_on:
+        dialog_logger.log_out(result)
     return jsonify(result), 200
 
 
@@ -158,5 +168,9 @@ def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, p
     @swag_from(endpoint_description)
     def answer():
         return interact(model, model_args_names)
+
+    @app.route('/poller', methods=['POST'])
+    def poller():
+        return interact(model, model_args_names, log_on=False)
 
     app.run(host=host, port=port, threaded=False, ssl_context=ssl_context)
