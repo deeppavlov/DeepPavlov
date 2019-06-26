@@ -34,7 +34,7 @@ SERVER_CONFIG_FILENAME = 'server_config.json'
 
 class PollerFilter(Filter):
     def filter(self, record):
-        return ' /poller ' not in record.getMessage()
+        return 'GET /' not in record.getMessage()
 
 
 log = getLogger(__name__)
@@ -65,7 +65,7 @@ def get_server_params(server_config_path, model_config):
     return server_params
 
 
-def interact(model: Chainer, params_names: List[str], log_on: bool = True) -> Tuple[Response, int]:
+def interact(model: Chainer, params_names: List[str]) -> Tuple[Response, int]:
     if not request.is_json:
         log.error("request Content-Type header is not application/json")
         return jsonify({
@@ -75,8 +75,7 @@ def interact(model: Chainer, params_names: List[str], log_on: bool = True) -> Tu
     model_args = []
 
     data = request.get_json()
-    if log_on:
-        dialog_logger.log_in(data)
+    dialog_logger.log_in(data)
     for param_name in params_names:
         param_value = data.get(param_name)
         if param_value is None or (isinstance(param_value, list) and len(param_value) > 0):
@@ -105,9 +104,17 @@ def interact(model: Chainer, params_names: List[str], log_on: bool = True) -> Tu
         prediction = [prediction]
     prediction = list(zip(*prediction))
     result = jsonify_data(prediction)
-    if log_on:
-        dialog_logger.log_out(result)
+    dialog_logger.log_out(result)
     return jsonify(result), 200
+
+
+def test_interact(model: Chainer, params_names: List[str]) -> Tuple[Response, int]:
+    model_args = ["Test string." for _ in params_names]
+    try:
+        _ = model(*model_args)
+        return Response('["Test passed"]\n'), 200
+    except Exception:
+        return Response('["Test failed"]\n'), 400
 
 
 def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, port=None):
@@ -164,13 +171,12 @@ def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, p
         }
     }
 
-    @app.route(model_endpoint, methods=['POST'])
+    @app.route(model_endpoint, methods=['POST', 'GET'])
     @swag_from(endpoint_description)
     def answer():
-        return interact(model, model_args_names)
-
-    @app.route('/poller', methods=['POST'])
-    def poller():
-        return interact(model, model_args_names, log_on=False)
+        if request.method == 'POST':
+            return interact(model, model_args_names)
+        elif request.method == 'GET':
+            return test_interact(model, model_args_names)
 
     app.run(host=host, port=port, threaded=False, ssl_context=ssl_context)
