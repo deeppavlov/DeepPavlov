@@ -12,6 +12,8 @@ from itertools import zip_longest
 from typing import List
 from math import log as ln
 
+from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag
+
 
 logger = getLogger(__name__)
 
@@ -169,22 +171,25 @@ class ThesaurusAug(Component):
         features = list(map(lambda x: tuple(x.split('=')), features))
         return dict(features)
 
-    def _transform_morpho_tags(self, morpho_tags):
-        splited, res = morpho_tags.split('\n'), []
-        for token_morpho in splited[:-1]:
-            token_morpho = token_morpho.split('\t')
-            token_morpho_dict = {}
-            token_morpho_dict.update({'source_token': token_morpho[1]})
-            token_morpho_dict.update({'pos_tag': token_morpho[2]})
-            token_morpho_dict.update({'features': self.__get_morpho_features_from_morpho_tag(token_morpho[3])})
-            res.append(token_morpho_dict)
-        return res
+###>>>
+    def _transform_morpho_tags_in_dict(self, morpho_tags: str) -> List[dict]:
+        morpho_tags, result = morpho_tags.split('\n'), []
+        for morpho_tag in morpho_tags[:-1]:
+            morpho_tag = morpho_tag.split('\t', maxsplit=2)
+            pos, morpho_features = make_pos_and_tag(morpho_tag[-1], sep='\t', return_mode='dict')
+            result.append({
+                'source_token': morpho_tag[1],
+                'pos_tag': pos,
+                'features': morpho_features
+            })
+        return result
+###>>>
 
-    def _filter_none_value(self, synonyms):
+    def _filter_none_value(self, synonyms: List[Union[]]):
         return [list(filter(lambda x: x is not None, syns)) if syns is not None else None for syns in synonyms]
 
     def transform_sentence(self, tokens: List[str], morpho_tags: str) -> List[str]:
-        morpho_tags = self._transform_morpho_tags(morpho_tags)
+        morpho_tags = self._transform_morpho_tags_in_dict(morpho_tags)
         if self.lang == 'eng':
             self._unite_phrasal_verbs(tokens, morpho_tags)
         filter_res = self.word_filter.filter_words(tokens, morpho_tags)
