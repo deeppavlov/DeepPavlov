@@ -262,7 +262,7 @@ class HashingTfIdfVectorizer(Estimator):
             raise FileNotFoundError("HashingTfIdfVectorizer path doesn't exist!")
 
         logger.info("Loading tfidf matrix from {}".format(self.load_path))
-        loader = np.load(self.load_path)
+        loader = np.load(self.load_path, allow_pickle=True)
         matrix = Sparse((loader['data'], loader['indices'],
                          loader['indptr']), shape=loader['shape'])
         return matrix, loader['opts'].item(0)

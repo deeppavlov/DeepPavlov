@@ -1,0 +1,85 @@
+{
+  "dataset_reader": {
+    "class_name": "paraphraser_reader",
+    "data_path": "{DOWNLOADS_PATH}/paraphraser_data",
+    "do_lower_case": false
+  },
+  "dataset_iterator": {
+    "class_name": "siamese_iterator",
+    "seed": 243,
+    "len_valid": 500
+  },
+  "chainer": {
+    "in": ["text_a", "text_b"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "class_name": "bert_preprocessor",
+        "vocab_file": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1/vocab.txt",
+        "do_lower_case": false,
+        "max_seq_length": 64,
+        "in": ["text_a", "text_b"],
+        "out": ["bert_features"]
+      },
+      {
+        "class_name": "bert_classifier",
+        "n_classes": 2,
+        "one_hot_labels": false,
+        "bert_config_file": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1/bert_config.json",
+        "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1/bert_model.ckpt",
+        "save_path": "{MODELS_PATH}/paraphraser_rubert/model_rubert",
+        "load_path": "{MODELS_PATH}/paraphraser_rubert/model_rubert",
+        "keep_prob": 0.5,
+        "optimizer": "tf.train:AdamOptimizer",
+        "learning_rate": 2e-05,
+        "learning_rate_drop_patience": 3,
+        "learning_rate_drop_div": 2.0,
+        "in": ["bert_features"],
+        "in_y": ["y"],
+        "out": ["predictions"]
+      }
+    ],
+    "out": ["predictions"]
+  },
+  "train": {
+    "batch_size": 64,
+    "pytest_max_batches": 2,
+    "train_metrics": ["f1", "acc"],
+    "metrics": ["f1", "acc"],
+    "validation_patience": 7,
+    "val_every_n_batches": 50,
+    "log_every_n_batches": 50,
+    "validate_best": true,
+    "test_best": true,
+    "tensorboard_log_dir": "{MODELS_PATH}/paraphraser_rubert/logs"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/datasets/paraphraser.zip",
+        "subdir": "{DOWNLOADS_PATH}/paraphraser_data"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/datasets/paraphraser_gold.zip",
+        "subdir": "{DOWNLOADS_PATH}/paraphraser_data"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v1.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/bert_models"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/paraphraser_rubert_v0.tar.gz",
+        "subdir": "{ROOT_PATH}/models"
+      }
+    ]
+  }
+}

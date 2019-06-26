@@ -7,20 +7,36 @@ Components
 :doc:`NER component </components/ner>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Based on neural Named Entity Recognition network. The NER component reproduces architecture from the paper `Application
+There are two models for Named Entity Recognition task in DeepPavlov:
+BERT-based and Bi-LSTM+CRF. The models predict tags (in BIO format) for tokens
+in input.
+
+BERT-based model is described in  `BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding
+<https://arxiv.org/abs/1810.04805>`__.
+
+The second model reproduces architecture from the paper `Application
 of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition <https://arxiv.org/pdf/1709.09686.pdf>`__
 which is inspired by Bi-LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf.
 
-+---------------------------------------------------------------------------------------------------------------------------+------------------+
-| Dataset                                                                                                                   |     Test F1      |
-+===========================================================================================================================+==================+
-| :config:`Persons-1000 dataset with additional LOC and ORG markup <ner/ner_rus.json>`                                      |       95.25      |
-+---------------------------------------------------------------------------------------------------------------------------+------------------+
-| :config:`DSTC 2 <ner/ner_dstc2.json>`                                                                                     |       98.40      |
-+---------------------------------------------------------------------------------------------------------------------------+------------------+
-| :config:`OntoNotes  <ner/ner_ontonotes.json>`                                                                             |       87.07      |
-+---------------------------------------------------------------------------------------------------------------------------+------------------+
-
++---------------------------------------------------------+-------+---------------------------------------------------------------------------+-------------+
+| Dataset                                                 | Lang  | Model                                                                     |   Test F1   |
++=========================================================+=======+===========================================================================+=============+
+| Persons-1000 dataset with additional LOC and ORG markup | Ru    | :config:`ner_rus_bert.json <ner/ner_rus_bert.json>`                       |    98.1     |
++                                                         +       +---------------------------------------------------------------------------+-------------+
+| (Collection 3)                                          |       | :config:`ner_rus.json <ner/ner_rus.json>`                                 |    95.1     |
++---------------------------------------------------------+-------+---------------------------------------------------------------------------+-------------+
+| Ontonotes                                               | Multi | :config:`ner_ontonotes_bert_mult.json <ner/ner_ontonotes_bert_mult.json>` |    88.8     |
++                                                         +-------+---------------------------------------------------------------------------+-------------+
+|                                                         | En    | :config:`ner_ontonotes_bert.json <ner/ner_ontonotes_bert.json>`           |    88.6     |
++                                                         +       +---------------------------------------------------------------------------+-------------+
+|                                                         |       | :config:`ner_ontonotes.json <ner/ner_ontonotes.json>`                     |    87.1     |
++---------------------------------------------------------+       +---------------------------------------------------------------------------+-------------+
+| ConLL-2003                                              |       | :config:`ner_conll2003_bert.json <ner/ner_conll2003_bert.json>`           |    91.7     |
++                                                         +       +---------------------------------------------------------------------------+-------------+
+|                                                         |       | :config:`ner_conll2003.json <ner/ner_conll2003.json>`                     |    89.9     |
++---------------------------------------------------------+       +---------------------------------------------------------------------------+-------------+
+| DSTC2                                                   |       | :config:`ner_dstc2.json <ner/ner_dstc2.json>`                             |    97.1     |
++---------------------------------------------------------+-------+---------------------------------------------------------------------------+-------------+
 
 :doc:`Slot filling components </components/slot_filling>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -52,7 +68,7 @@ Several pre-trained models are available and presented in Table below.
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
 |                  |                    |      | :config:`BERT <classifiers/intents_dstc2_bert.json>`                                            |             | 0.9673 | 0.9636 |  800 Mb   |
 +------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
-| 7 intents        | `SNIPS-2017`_ [7]_ |      | :config:`DSTC 2 emb <classifiers/intents_snips.json>`                                           | F1-macro    | 0.8591 |    --  |  800 Mb   |
+| 7 intents        | `SNIPS-2017`_ [1]_ |      | :config:`DSTC 2 emb <classifiers/intents_snips.json>`                                           | F1-macro    | 0.8591 |    --  |  800 Mb   |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
 |                  |                    |      | :config:`Wiki emb <classifiers/intents_snips_big.json>`                                         |             | 0.9820 |    --  |  8.5 Gb   |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
@@ -72,17 +88,17 @@ Several pre-trained models are available and presented in Table below.
 +                  +--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 |                  |`RuSentiment`_      |      | :config:`RuWiki+Lenta emb <classifiers/rusentiment_cnn.json>`                                   | F1-weighted | 0.6541 | 0.7016 |  6.2 Gb   |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
-|                  |                    |      | :config:`Twitter emb super-convergence <classifiers/rusentiment_bigru_superconv.json>` [6]_     |             | 0.7301 | 0.7576 |  3.4 Gb   |
+|                  |                    |      | :config:`Twitter emb super-convergence <classifiers/rusentiment_bigru_superconv.json>` [2]_     |             | 0.7301 | 0.7576 |  3.4 Gb   |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
-|                  |                    |      | :config:`ELMo <classifiers/rusentiment_elmo.json>`                                              |             | 0.7293 | 0.7648 |  700 Mb   |
+|                  |                    |      | :config:`ELMo <classifiers/rusentiment_elmo_twitter_cnn.json>`                                  |             | 0.7519 | 0.7875 |  700 Mb   |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
 |                  |                    |      | :config:`Multi-language BERT <classifiers/rusentiment_bert.json>`                               |             | 0.6809 | 0.7193 |  1900 Mb  |
 +------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | Intent           |`Yahoo-L31`_        |      | :config:`Yahoo-L31 on ELMo <classifiers/yahoo_convers_vs_info.json>` pre-trained on `Yahoo-L6`_ | ROC-AUC     | 0.9412 |   --   |  700 Mb   |
 +------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 
-.. [6] Smith L. N., Topin N. Super-convergence: Very fast training of residual networks using large learning rates. – 2018.
-.. [7] Coucke A. et al. Snips voice platform: an embedded spoken language understanding system for private-by-design voice interfaces //arXiv preprint arXiv:1805.10190. – 2018.
+.. [1] Coucke A. et al. Snips voice platform: an embedded spoken language understanding system for private-by-design voice interfaces //arXiv preprint arXiv:1805.10190. – 2018.
+.. [2] Smith L. N., Topin N. Super-convergence: Very fast training of residual networks using large learning rates. – 2018.
 
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
 .. _`SNIPS-2017`: https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines
@@ -95,7 +111,7 @@ Several pre-trained models are available and presented in Table below.
 
 As no one had published intent recognition for DSTC-2 data, the
 comparison of the presented model is given on **SNIPS** dataset. The
-evaluation of model scores was conducted in the same way as in [3] to
+evaluation of model scores was conducted in the same way as in [3]_ to
 compare with the results from the report of the authors of the dataset.
 The results were achieved with tuning of parameters and embeddings
 trained on Reddit dataset.
@@ -121,6 +137,7 @@ trained on Reddit dataset.
 | Shallow-and-wide CNN   | **0.9956**      | **0.9973**       | **0.9968**    | **0.9871**   | **0.9998**   | **0.9752**           | **0.9854**             |
 +------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+
 
+.. [3] https://www.slideshare.net/KonstantinSavenkov/nlu-intent-detection-benchmark-by-intento-august-2017
 
 
 :doc:`Goal-oriented bot </skills/go_bot>`
@@ -217,47 +234,82 @@ on Automatic Spelling Correction for Russian:
 :doc:`Ranking component </components/neural_ranking>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Based on `LSTM-based deep learning models for non-factoid answer selection <https://arxiv.org/abs/1511.04108>`__. The
-model performs ranking of responses or contexts from some database by their relevance for the given context.
+The main neural ranking model based on `LSTM-based deep learning models for non-factoid answer selection
+<https://arxiv.org/abs/1511.04108>`__. The model performs ranking of responses or contexts from some database by their
+relevance for the given context.
+
+There are 3 alternative neural architectures available as well:
+
+Sequential Matching Network (SMN)
+   Based on the work `Wu, Yu, et al. "Sequential Matching Network: A New Architecture for Multi-turn Response Selection in Retrieval-based Chatbots". ACL. 2017. <https://arxiv.org/abs/1612.01627>`__
+
+Deep Attention Matching Network (DAM)
+   Based on the work `Xiangyang Zhou, et al. "Multi-Turn Response Selection for Chatbots with Deep Attention Matching Network". Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers). 2018 <http://aclweb.org/anthology/P18-1103>`__
+
+Deep Attention Matching Network + Universal Sentence Encoder v3 (DAM-USE-T)
+   Our new proposed architecture based on the works: `Xiangyang Zhou, et al. "Multi-Turn Response Selection for Chatbots with Deep Attention Matching Network". Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers). 2018 <http://aclweb.org/anthology/P18-1103>`__
+   and `Daniel Cer, Yinfei Yang, Sheng-yi Kong, Nan Hua, Nicole Limtiaco, Rhomni St. John, Noah Constant, Mario Guajardo-Cespedes, Steve Yuan, Chris Tar, Brian Strope, Ray Kurzweil. 2018a. Universal Sentence Encoder for English. <https://arxiv.org/abs/1803.11175>`__
+
 
 Available pre-trained models for ranking:
 
 .. table::
    :widths: auto
 
-   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+----------+
-   |    Dataset        | Model config                                                                        | Validation (Recall@1) | Test1 (Recall@1) |Downloads |
-   +===================+=====================================================================================+=======================+==================+==========+
-   | `InsuranceQA V1`_ | :config:`ranking_insurance_interact <ranking/ranking_insurance_interact.json>`      |   72.0                |   72.2           |8374M     |
-   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+----------+
-   | `Ubuntu V2`_      |:config:`ranking_ubuntu_v2_interact <ranking/ranking_ubuntu_v2_interact.json>`       |   52.9                |   52.4           |8913M     |
-   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+----------+
-   | `Ubuntu V2`_      |:config:`ranking_ubuntu_v2_mt_interact <ranking/ranking_ubuntu_v2_mt_interact.json>` |   59.2                |   58.7           |8906M     |
-   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+----------+
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-----------------------------------+
+   |    Dataset        |   Model config                                                                                                       |    Val    |   Test                            |
+   |                   |                                                                                                                      +-----------+-------+-------+-------+-----------+
+   |                   |                                                                                                                      |   R10@1   | R10@1 | R10@2 | R10@5 | Downloads |
+   +===================+======================================================================================================================+===========+=======+=======+=======+===========+
+   | `InsuranceQA v1`_ | :config:`ranking_insurance_interact <ranking/ranking_insurance_interact.json>`                                       |   72.0    | 72.2  | --    | --    |  8374 MB  |
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
+   | `Ubuntu V2`_      | :config:`ranking_ubuntu_v2_mt_word2vec_dam_transformer <ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json>` |   74.32   | 74.46 | 86.77 | 97.38 |  2457 MB  |
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
+   | `Ubuntu V2`_      | :config:`ranking_ubuntu_v2_mt_word2vec_dam <ranking/ranking_ubuntu_v2_mt_word2vec_dam.json>`                         |   71.20   | 71.54 | 83.66 | 96.33 |  1645 MB  |
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
+   | `Ubuntu V2`_      | :config:`ranking_ubuntu_v2_mt_word2vec_smn <ranking/ranking_ubuntu_v2_mt_word2vec_smn.json>`                         |   68.56   | 67.91 | 81.49 | 95.63 |  1609 MB  |
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
+   | `Ubuntu V2`_      |:config:`ranking_ubuntu_v2_bert_uncased <ranking/ranking_ubuntu_v2_bert_uncased.json>`                                |   66.5    | 66.6  | --    | --    |  396 MB   |
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
+   | `Ubuntu V2`_      |:config:`ranking_ubuntu_v2_bert_sep <ranking/ranking_ubuntu_v2_bert_sep.json>`                                        |   66.5    | 66.5  | --    | --    |  396 MB   |
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
+   | `Ubuntu V2`_      | :config:`ranking_ubuntu_v2_interact <ranking/ranking_ubuntu_v2_interact.json>`                                       |   52.9    | 52.4  | --    | --    |  8913 MB  |
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
+   | `Ubuntu V2`_      | :config:`ranking_ubuntu_v2_mt_interact <ranking/ranking_ubuntu_v2_mt_interact.json>`                                 |   59.2    | 58.7  | --    | --    |  8906 MB  |
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
+   | `Ubuntu V1`_      | :config:`ranking_ubuntu_v1_mt_word2vec_dam_transformer <ranking/ranking_ubuntu_v1_mt_word2vec_dam_transformer.json>` |   --      | 79.57 | 89.32 | 97.34 |  2439 MB  |
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
+   | `Ubuntu V1`_      | :config:`ranking_ubuntu_v1_mt_word2vec_dam <ranking/ranking_ubuntu_v1_mt_word2vec_dam.json>`                         |   --      | 77.95 | 88.07 | 97.06 |  1645 MB  |
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
+   | `Ubuntu V1`_      | :config:`ranking_ubuntu_v1_mt_word2vec_smn <ranking/ranking_ubuntu_v1_mt_word2vec_smn.json>`                         |   --      | 75.90 | 87.16 | 96.80 |  1591 MB  |
+   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
 
 .. _`InsuranceQA V1`: https://github.com/shuzi/insuranceQA
 .. _`Ubuntu V2`: https://github.com/rkadlec/ubuntu-ranking-dataset-creator
+.. _`Ubuntu V1`: https://arxiv.org/abs/1506.08909
 
 Available pre-trained models for paraphrase identification:
 
 .. table::
    :widths: auto
 
-   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+----------+
-   |    Dataset             |Model config                                                                                 | Val (accuracy)| Test (accuracy)| Val (F1)| Test (F1)| Val (log_loss)| Test (log_loss)|Downloads |
-   +========================+=============================================================================================+===============+================+=========+==========+===============+================+==========+
-   |`paraphraser.ru`_       |:config:`paraphrase_ident_paraphraser <ranking/paraphrase_ident_paraphraser_interact.json>`  |   83.8        |   75.4         |   87.9  |  80.9    |   0.468       |   0.616        |5938M     |
-   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+----------+
-   |`paraphraser.ru`_       |:config:`paraphrase_ident_paraphraser <ranking/paraphrase_ident_elmo_interact.json>`         |   82.7        |   76.0         |   87.3  |  81.4    |   0.391       |   0.510        |5938M     |
-   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+----------+
-   |`paraphraser.ru`_       |:config:`paraphrase_ident_paraphraser_tune <ranking/paraphrase_ident_tune_interact.json>`    |   82.9        |   76.7         |   87.3  |  82.0    |   0.392       |   0.479        |5938M     |
-   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+----------+
-   |`paraphraser.ru`_       |:config:`paraphrase_bert <classifiers/paraphraser_bert.json>`                                |   87.4        |   79.3         |   90.2  |  83.4    |   --          |   --           |1330M     |
-   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+----------+
-   |`Quora Question Pairs`_ |:config:`paraphrase_ident_qqp <ranking/paraphrase_ident_qqp_bilstm_interact.json>`           |   87.1        |   87.0         |   83.0  |  82.6    |   0.300       |   0.305        |8134M     |
-   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+----------+
-   |`Quora Question Pairs`_ |:config:`paraphrase_ident_qqp <ranking/paraphrase_ident_qqp_interact.json>`                  |   87.7        |   87.5         |   84.0  |  83.8    |   0.287       |   0.298        |8136M     |
-   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+----------+
+   +------------------------+-----------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+----------+
+   |    Dataset             |Model config                                                                                   | Val (accuracy)| Test (accuracy)| Val (F1)| Test (F1)| Val (log_loss)| Test (log_loss)|Downloads |
+   +========================+===============================================================================================+===============+================+=========+==========+===============+================+==========+
+   |`paraphraser.ru`_       |:config:`paraphrase_ident_paraphraser_ft <ranking/paraphrase_ident_paraphraser_interact.json>` |   83.8        |   75.4         |   87.9  |  80.9    |   0.468       |   0.616        |5938M     |
+   +------------------------+-----------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+----------+
+   |`paraphraser.ru`_       |:config:`paraphrase_ident_paraphraser_elmo <ranking/paraphrase_ident_elmo_interact.json>`      |   82.7        |   76.0         |   87.3  |  81.4    |   0.391       |   0.510        |5938M     |
+   +------------------------+-----------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+----------+
+   |`paraphraser.ru`_       |:config:`paraphrase_ident_paraphraser_tune <ranking/paraphrase_ident_tune_interact.json>`      |   82.9        |   76.7         |   87.3  |  82.0    |   0.392       |   0.479        |5938M     |
+   +------------------------+-----------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+----------+
+   |`paraphraser.ru`_       |:config:`paraphrase_bert_multilingual <classifiers/paraphraser_bert.json>`                     |   87.4        |   79.3         |   90.2  |  83.4    |   --          |   --           |1330M     |
+   +------------------------+-----------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+----------+
+   |`paraphraser.ru`_       |:config:`paraphrase_rubert <classifiers/paraphraser_rubert.json>`                              |   90.2        |   84.9         |   92.3  |  87.9    |   --          |   --           |1325M     |
+   +------------------------+-----------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+----------+
+   |`Quora Question Pairs`_ |:config:`paraphrase_ident_qqp_bilstm <ranking/paraphrase_ident_qqp_bilstm_interact.json>`      |   87.1        |   87.0         |   83.0  |  82.6    |   0.300       |   0.305        |8134M     |
+   +------------------------+-----------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+----------+
+   |`Quora Question Pairs`_ |:config:`paraphrase_ident_qqp <ranking/paraphrase_ident_qqp_interact.json>`                    |   87.7        |   87.5         |   84.0  |  83.8    |   0.287       |   0.298        |8136M     |
+   +------------------------+-----------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+----------+
 
 .. _`paraphraser.ru`: https://paraphraser.ru/
 .. _`Quora Question Pairs`: https://www.kaggle.com/c/quora-question-pairs/data
@@ -277,6 +329,64 @@ Comparison with other models on the `InsuranceQA V1 <https://github.com/shuzi/in
 .. _`Architecture II (HLQA(200) CNNQA(4000) 1-MaxPooling Tanh)`: https://arxiv.org/pdf/1508.01585.pdf
 .. _`QA-LSTM basic-model(max pooling)`: https://arxiv.org/pdf/1511.04108.pdf
 
+Comparison with other models on the `Ubuntu Dialogue Corpus v1 <https://arxiv.org/abs/1506.08909>`__ (test):
+
++---------------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+
+| Model                                                                                                                                       | R@1        | R@2        | R@5        |
++=============================================================================================================================================+============+============+============+
+| SMN last [`Wu et al., 2017 <https://www.aclweb.org/anthology/P17-1046>`_]                                                                   | 0.723      | 0.842      | 0.956      |
++---------------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+
+| SMN last [DeepPavlov :config:`ranking_ubuntu_v1_mt_word2vec_smn <ranking/ranking_ubuntu_v1_mt_word2vec_smn.json>`]                          | 0.754      | 0.869      | 0.967      |
++---------------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+
+| DAM [`Zhou et al., 2018 <http://aclweb.org/anthology/P18-1103>`_]                                                                           | 0.767      | 0.874      | 0.969      |
++---------------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+
+| DAM [DeepPavlov :config:`ranking_ubuntu_v1_mt_word2vec_dam <ranking/ranking_ubuntu_v1_mt_word2vec_dam.json>`]                               | 0.779      | 0.880      | 0.970      |
++---------------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+
+| MRFN-FLS [`Tao et al., 2019 <https://dl.acm.org/citation.cfm?id=3290985>`_]                                                                 | 0.786      | 0.886      | 0.976      |
++---------------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+
+| IMN [`Gu et al., 2019 <https://arxiv.org/abs/1901.01824>`_]                                                                                 | 0.777      | 0.880      | 0.974      |
++---------------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+
+| IMN Ensemble [`Gu et al., 2019 <https://arxiv.org/abs/1901.01824>`_]                                                                        | 0.794      | 0.893      | **0.978**  |
++---------------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+
+| DAM-USE-T [DeepPavlov :config:`ranking_ubuntu_v1_mt_word2vec_dam_transformer <ranking/ranking_ubuntu_v1_mt_word2vec_dam_transformer.json>`] | **0.7957** | **0.8932** | 0.9734     |
++---------------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+
+
+
+Comparison with other models on the `Ubuntu Dialogue Corpus v2 <http://www.cs.toronto.edu/~lcharlin/papers/ubuntu_dialogue_dd17.pdf>`__ (test):
+
++---------------------------------------------------------------------------------------------------------------------------------------------+-----------+-----------+-----------+
+| Model                                                                                                                                       | R@1       | R@2       | R@5       |
++=============================================================================================================================================+===========+===========+===========+
+| SMN last [`Wu et al., 2017 <https://www.aclweb.org/anthology/P17-1046>`_]                                                                   | --        | --        | --        |
++---------------------------------------------------------------------------------------------------------------------------------------------+-----------+-----------+-----------+
+| SMN last [DeepPavlov :config:`ranking_ubuntu_v2_mt_word2vec_smn <ranking/ranking_ubuntu_v2_mt_word2vec_smn.json>`]                          | 0.6791    | 0.8149    | 0.9563    |
++---------------------------------------------------------------------------------------------------------------------------------------------+-----------+-----------+-----------+
+| DAM [`Zhou et al., 2018 <http://aclweb.org/anthology/P18-1103>`_]                                                                           | --        | --        | --        |
++---------------------------------------------------------------------------------------------------------------------------------------------+-----------+-----------+-----------+
+| DAM [DeepPavlov :config:`ranking_ubuntu_v2_mt_word2vec_dam <ranking/ranking_ubuntu_v2_mt_word2vec_dam.json>`]                               | 0.7154    | 0.8366    | 0.9633    |
++---------------------------------------------------------------------------------------------------------------------------------------------+-----------+-----------+-----------+
+| MRFN-FLS [`Tao et al., 2019 <https://dl.acm.org/citation.cfm?id=3290985>`_]                                                                 | --        | --        | --        |
++---------------------------------------------------------------------------------------------------------------------------------------------+-----------+-----------+-----------+
+| IMN [`Gu et al., 2019 <https://arxiv.org/abs/1901.01824>`_]                                                                                 | 0.771     | 0.886     | 0.979     |
++---------------------------------------------------------------------------------------------------------------------------------------------+-----------+-----------+-----------+
+| IMN Ensemble [`Gu et al., 2019 <https://arxiv.org/abs/1901.01824>`_]                                                                        | **0.791** | **0.899** | **0.982** |
++---------------------------------------------------------------------------------------------------------------------------------------------+-----------+-----------+-----------+
+| DAM-USE-T [DeepPavlov :config:`ranking_ubuntu_v2_mt_word2vec_dam_transformer <ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json>`] | 0.7446    | 0.8677    | 0.9738    |
++---------------------------------------------------------------------------------------------------------------------------------------------+-----------+-----------+-----------+
+
+
+References:
+
+* Yu Wu, Wei Wu, Ming Zhou, and Zhoujun Li. 2017. Sequential match network: A new architecture for multi-turn response selection in retrieval-based chatbots. In ACL, pages 372–381. https://www.aclweb.org/anthology/P17-1046
+
+* Xiangyang Zhou, Lu Li, Daxiang Dong, Yi Liu, Ying Chen, Wayne Xin Zhao, Dianhai Yu and Hua Wu. 2018. Multi-Turn Response Selection for Chatbots with Deep Attention Matching Network. Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages 1118-1127, ACL. http://aclweb.org/anthology/P18-1103
+
+* Chongyang Tao, Wei Wu, Can Xu, Wenpeng Hu, Dongyan Zhao, and Rui Yan. Multi-Representation Fusion Network for Multi-turn Response Selection in Retrieval-based Chatbots. In WSDM'19. https://dl.acm.org/citation.cfm?id=3290985
+
+* Gu, Jia-Chen & Ling, Zhen-Hua & Liu, Quan. (2019). Interactive Matching Network for Multi-Turn Response Selection in Retrieval-Based Chatbots. https://arxiv.org/abs/1901.01824
+
+
+
 :doc:`TF-IDF Ranker component </components/tfidf_ranking>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -291,26 +401,30 @@ Based on `Reading Wikipedia to Answer Open-Domain Questions <https://github.com/
 
 :doc:`Question Answering component </components/squad>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Based on `R-NET: Machine Reading Comprehension with Self-matching Networks
-<https://www.microsoft.com/en-us/research/publication/mcr/>`__. The model solves the task of looking for an answer on a
+Models in this section solve the task of looking for an answer on a
 question in a given context (`SQuAD <https://rajpurkar.github.io/SQuAD-explorer/>`__ task format).
+There are two models for this task in DeepPavlov: BERT-based and R-Net. Both models predict answer start and end
+position in a given context.
 
-.. note::
+BERT-based model is described in  `BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding
+<https://arxiv.org/abs/1810.04805>`__.
 
-    All pre-trained models could be downloaded. Model for English language will download about 2.5 Gb and model for Russian about 5 Gb.
+R-Net model is based on `R-NET: Machine Reading Comprehension with Self-matching Networks
+<https://www.microsoft.com/en-us/research/publication/mcr/>`__.
 
-+---------------+----------------------------------------------------------+-------+----------------+-----------------+
-|    Dataset    | Model config                                             | lang  |    EM (dev)    |    F-1 (dev)    |
-+===============+==========================================================+=======+================+=================+
-| `SQuAD-v1.1`_ | :config:`squad_bert <squad/squad_bert.json>`             |  en   |     80.88      |     88.49       |
-+---------------+----------------------------------------------------------+-------+----------------+-----------------+
-| `SQuAD-v1.1`_ | :config:`squad <squad/squad.json>`                       |  en   |     71.49      |     80.34       |
-+---------------+----------------------------------------------------------+-------+----------------+-----------------+
-|  SDSJ Task B  | :config:`squad_ru <squad/squad_ru.json>`                 |  ru   |     60.62      |     80.04       |
-+---------------+----------------------------------------------------------+-------+----------------+-----------------+
-|  SDSJ Task B  | :config:`squad_ru_bert <squad/squad_ru_bert_infer.json>` |  ru   |  64.35+-0.39   |   83.39+-0.08   |
-+---------------+----------------------------------------------------------+-------+----------------+-----------------+
++---------------+------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
+|    Dataset    | Model config                                                           | lang  |    EM (dev)    |    F-1 (dev)    |    Downloads    |
++===============+========================================================================+=======+================+=================+=================+
+| `SQuAD-v1.1`_ | :config:`DeepPavlov BERT <squad/squad_bert.json>`                      |  en   |     80.88      |     88.49       |     806Mb       |
++---------------+------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
+| `SQuAD-v1.1`_ | :config:`DeepPavlov R-Net <squad/squad.json>`                          |  en   |     71.49      |     80.34       |     ~2.5Gb      |
++---------------+------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
+|  SDSJ Task B  | :config:`DeepPavlov RuBERT <squad/squad_ru_bert_infer.json>`           |  ru   |  66.30+-0.24   |   84.60+-0.11   |   1325Mb        |
++---------------+------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
+|  SDSJ Task B  | :config:`DeepPavlov multilingual BERT <squad/squad_ru_bert_infer.json>`|  ru   |  64.35+-0.39   |   83.39+-0.08   |   1323Mb        |
++---------------+------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
+|  SDSJ Task B  | :config:`DeepPavlov R-Net <squad/squad_ru.json>`                       |  ru   |     60.62      |     80.04       |     ~5Gb        |
++---------------+------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
 
 In the case when answer is not necessary present in given context we have :config:`squad_noans <squad/multi_squad_noans.json>`
 model. This model outputs empty string in case if there is no answer in context.
@@ -384,11 +498,17 @@ An open domain question answering skill. The skill accepts free-form questions a
 based on its Wikipedia knowledge.
 
 
-+----------------+----------------------------------------------+-----------------------+--------+-----------+
-| Dataset        | Model config                                 |  Wiki dump            |   F1   | Downloads |
-+================+==============================================+=======================+========+===========+
-| `SQuAD-v1.1`_  |:config:`ODQA <odqa/en_odqa_infer_wiki.json>` | enwiki (2018-02-11)   |  28.0  | 42 GB     |
-+----------------+----------------------------------------------+-----------------------+--------+-----------+
++----------------+--------------------------------------------------------------------+-----------------------+--------+-----------+
+| Dataset        | Model config                                                       |  Wiki dump            |   F1   | Downloads |
++================+====================================================================+=======================+========+===========+
+| `SQuAD-v1.1`_  |:config:`ODQA <odqa/en_odqa_infer_wiki.json>`                       | enwiki (2018-02-11)   |  35.89 | 9.7Gb     |
++----------------+--------------------------------------------------------------------+-----------------------+--------+-----------+
+| `SQuAD-v1.1`_  |:config:`ODQA <odqa/en_odqa_infer_enwiki20161221.json>`             | enwiki (2016-12-21)   |  37.83 | 9.3Gb     |
++----------------+--------------------------------------------------------------------+-----------------------+--------+-----------+
+| `SDSJ Task B`_ |:config:`ODQA <odqa/ru_odqa_infer_wiki.json>`                       | ruwiki (2018-04-01)   |  28.56 | 7.7Gb     |
++----------------+--------------------------------------------------------------------+-----------------------+--------+-----------+
+| `SDSJ Task B`_ |:config:`ODQA with RuBERT <odqa/ru_odqa_infer_wiki_rubert.json>`    | ruwiki (2018-04-01)   |  37.83 | 4.3Gb     |
++----------------+--------------------------------------------------------------------+-----------------------+--------+-----------+
 
 
 AutoML
@@ -442,4 +562,4 @@ goal-oriented bot and a slot-filling model with Telegram UI.
 
 
 .. _`SQuAD-v1.1`: https://arxiv.org/abs/1606.05250
-
+.. _`SDSJ Task B`: https://sdsj.sberbank.ai/2017/ru/contest.html

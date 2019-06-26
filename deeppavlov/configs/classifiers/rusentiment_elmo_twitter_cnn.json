@@ -1,0 +1,177 @@
+{
+  "dataset_reader": {
+    "class_name": "basic_classification_reader",
+    "x": "text",
+    "y": "label",
+    "data_path": "{DOWNLOADS_PATH}/rusentiment/",
+    "train": "rusentiment_random_posts.csv",
+    "test": "rusentiment_test.csv"
+  },
+  "dataset_iterator": {
+    "class_name": "basic_classification_iterator",
+    "seed": 42,
+    "field_to_split": "train",
+    "split_seed": 23,
+    "split_fields": [
+      "train",
+      "valid"
+    ],
+    "split_proportions": [
+      0.9,
+      0.1
+    ]
+  },
+  "chainer": {
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
+    "pipe": [
+      {
+        "id": "classes_vocab",
+        "class_name": "simple_vocab",
+        "fit_on": [
+          "y"
+        ],
+        "save_path": "{MODELS_PATH}/classes.dict",
+        "load_path": "{MODELS_PATH}/classes.dict",
+        "in": "y",
+        "out": "y_ids"
+      },
+      {
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_prep"
+        ],
+        "class_name": "dirty_comments_preprocessor",
+        "remove_punctuation": false
+      },
+      {
+        "in": "x_prep",
+        "out": "x_tok",
+        "id": "my_tokenizer",
+        "class_name": "nltk_tokenizer",
+        "tokenizer": "wordpunct_tokenize"
+      },
+      {
+        "in": [
+          "x_tok"
+        ],
+        "out": [
+          "x_emb"
+        ],
+        "id": "my_embedder",
+        "class_name": "elmo_embedder",
+        "elmo_output_names": [
+          "elmo"
+        ],
+        "mini_batch_size": 32,
+        "spec": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-twitter_2013-01_2018-04_600k_steps.tar.gz",
+        "pad_zero": true
+      },
+      {
+        "in": "y_ids",
+        "out": "y_onehot",
+        "class_name": "one_hotter",
+        "depth": "#classes_vocab.len",
+        "single_vector": true
+      },
+      {
+        "in": [
+          "x_emb"
+        ],
+        "in_y": [
+          "y_onehot"
+        ],
+        "out": [
+          "y_pred_probas"
+        ],
+        "main": true,
+        "class_name": "keras_classification_model",
+        "save_path": "{MODELS_PATH}/model",
+        "load_path": "{MODELS_PATH}/model",
+        "embedding_size": "#my_embedder.dim",
+        "n_classes": "#classes_vocab.len",
+        "kernel_sizes_cnn": [
+          3,
+          5,
+          7
+        ],
+        "filters_cnn": 256,
+        "optimizer": "Adam",
+        "learning_rate": 0.01,
+        "learning_rate_decay": 0.1,
+        "loss": "categorical_crossentropy",
+        "last_layer_activation": "softmax",
+        "coef_reg_cnn": 1e-3,
+        "coef_reg_den": 1e-2,
+        "dropout_rate": 0.5,
+        "dense_size": 100,
+        "model_name": "cnn_model"
+      },
+      {
+        "in": "y_pred_probas",
+        "out": "y_pred_ids",
+        "class_name": "proba2labels",
+        "max_proba": true
+      },
+      {
+        "in": "y_pred_ids",
+        "out": "y_pred_labels",
+        "ref": "classes_vocab"
+      }
+    ],
+    "out": [
+      "y_pred_labels"
+    ]
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 128,
+    "metrics": [
+      "f1_weighted",
+      "f1_macro",
+      "sets_accuracy",
+      {
+        "name": "roc_auc",
+        "inputs": ["y_onehot", "y_pred_probas"]
+      }
+    ],
+    "validation_patience": 5,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
+    "show_examples": false,
+    "evaluation_targets": [
+      "train",
+      "valid",
+      "test"
+    ],
+    "tensorboard_log_dir": "{MODELS_PATH}/logs",
+    "class_name": "nn_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/rusentiment_v10"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
+    ],
+    "labels": {
+      "telegram_utils": "IntentModel",
+      "server_utils": "KerasIntentModel"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/rusentiment_v10.tar.gz",
+        "subdir": "{ROOT_PATH}/models/classifiers"
+      }
+    ]
+  }
+}

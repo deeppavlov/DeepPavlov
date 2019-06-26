@@ -60,6 +60,9 @@ def build_model(config: Union[str, Path, dict], mode: str = 'infer',
 
         component = from_params(component_config, mode=mode, serialized=component_serialized)
 
+        if 'id' in component_config:
+            model._components_dict[component_config['id']] = component
+
         if 'in' in component_config:
             c_in = component_config['in']
             c_out = component_config['out']

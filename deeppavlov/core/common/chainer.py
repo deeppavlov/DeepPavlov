@@ -13,8 +13,9 @@
 # limitations under the License.
 
 import pickle
+from itertools import islice
 from logging import getLogger
-from typing import Union, Tuple, List, Optional
+from typing import Union, Tuple, List, Optional, Hashable, Reversible
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.component import Component
@@ -61,10 +62,68 @@ class Chainer(Component):
         self.forward_map = set(self.in_x)
         self.train_map = self.forward_map.union(self.in_y)
 
+        self._components_dict = {}
+
         self.main = None
 
-    def append(self, component: Component, in_x: [str, list, dict]=None, out_params: [str, list]=None,
-               in_y: [str, list, dict]=None, main=False):
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            in_params, out_params, component = self.train_pipe[item]
+            return component
+        return self._components_dict[item]
+
+    def _ipython_key_completions_(self):
+        return self._components_dict.keys()
+
+    def __repr__(self):
+        reversed_components_dict = {v: f'{repr(k)}: ' for k, v in self._components_dict.items()
+                                    if isinstance(v, Hashable)}
+
+        components_list = []
+        for in_params, out_params, component in self.train_pipe:
+            component_repr = repr(component)
+            if isinstance(component, Hashable) and component in reversed_components_dict:
+                component_repr = reversed_components_dict[component] + component_repr
+            else:
+                for k, v in self._components_dict.items():
+                    if v is component:
+                        component_repr = f'{k}: {component_repr}'
+                        break
+            components_list.append(component_repr)
+
+        return f'Chainer[{", ".join(components_list)}]'
+
+    def _repr_pretty_(self, p, cycle):
+        """method that defines ``Struct``'s pretty printing rules for iPython
+
+        Args:
+            p (IPython.lib.pretty.RepresentationPrinter): pretty printer object
+            cycle (bool): is ``True`` if pretty detected a cycle
+        """
+        if cycle:
+            p.text('Chainer(...)')
+        else:
+            with p.group(8, 'Chainer[', ']'):
+                reversed_components_dict = {v: k for k, v in self._components_dict.items()
+                                            if isinstance(v, Hashable)}
+                # p.pretty(self.__prepare_repr())
+                for i, (in_params, out_params, component) in enumerate(self.train_pipe):
+                    if i > 0:
+                        p.text(',')
+                        p.breakable()
+                    if isinstance(component, Hashable) and component in reversed_components_dict:
+                        p.pretty(reversed_components_dict[component])
+                        p.text(': ')
+                    else:
+                        for k, v in self._components_dict.items():
+                            if v is component:
+                                p.pretty(k)
+                                p.text(': ')
+                                break
+                    p.pretty(component)
+
+    def append(self, component: Component, in_x: [str, list, dict] = None, out_params: [str, list] = None,
+               in_y: [str, list, dict] = None, main: bool = False):
         if isinstance(in_x, str):
             in_x = [in_x]
         if isinstance(in_y, str):
@@ -176,6 +235,36 @@ class Chainer(Component):
         if len(res) == 1:
             res = res[0]
         return res
+
+    def batched_call(self, *args: Reversible, batch_size: int = 16) -> Union[list, Tuple[list, ...]]:
+        """
+        Partitions data into mini-batches and applies :meth:`__call__` to each batch.
+
+        Args:
+            args: input data, each element of the data corresponds to a single model inputs sequence.
+            batch_size: the size of a batch.
+
+        Returns:
+            the model output as if the data was passed to the :meth:`__call__` method.
+        """
+        args = [iter(arg) for arg in args]
+        answer = [[] for _ in self.out_params]
+
+        while True:
+            batch = [list(islice(arg, batch_size)) for arg in args]
+            if not any(batch):  # empty batch, reached the end
+                break
+
+            curr_answer = self.__call__(*batch)
+            if len(self.out_params) == 1:
+                curr_answer = [curr_answer]
+
+            for y, curr_y in zip(answer, curr_answer):
+                y.extend(curr_y)
+
+        if len(self.out_params) == 1:
+            answer = answer[0]
+        return answer
 
     def get_main_component(self) -> Optional[Serializable]:
         try:

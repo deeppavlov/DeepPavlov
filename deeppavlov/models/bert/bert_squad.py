@@ -91,13 +91,13 @@ class BertSQuADModel(LRScheduledTFModel):
         if pretrained_bert is not None:
             pretrained_bert = str(expand_path(pretrained_bert))
 
-        if tf.train.checkpoint_exists(pretrained_bert) \
-                and not tf.train.checkpoint_exists(str(self.load_path.resolve())):
-            logger.info('[initializing model with Bert from {}]'.format(pretrained_bert))
-            var_list = self._get_saveable_variables(
-                exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'squad'))
-            saver = tf.train.Saver(var_list)
-            saver.restore(self.sess, pretrained_bert)
+            if tf.train.checkpoint_exists(pretrained_bert) \
+                    and not tf.train.checkpoint_exists(str(self.load_path.resolve())):
+                logger.info('[initializing model with Bert from {}]'.format(pretrained_bert))
+                var_list = self._get_saveable_variables(
+                    exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'squad'))
+                saver = tf.train.Saver(var_list)
+                saver.restore(self.sess, pretrained_bert)
 
         if self.load_path is not None:
             self.load()
@@ -330,7 +330,7 @@ class BertSQuADInferModel(Component):
             context_subtokens = self.tokenizer.tokenize(context)
             question_subtokens = self.tokenizer.tokenize(question)
             max_chunk_len = self.max_seq_length - len(question_subtokens) - 3
-            if max_chunk_len > 0 and len(context_subtokens) < max_chunk_len:
+            if 0 < max_chunk_len < len(context_subtokens):
                 number_of_chunks = math.ceil(len(context_subtokens) / max_chunk_len)
                 sentences = self.sent_tokenizer(context)
                 for chunk in np.array_split(sentences, number_of_chunks):

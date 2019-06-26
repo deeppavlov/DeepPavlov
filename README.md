@@ -6,6 +6,13 @@ DeepPavlov is an open-source conversational AI library built on [TensorFlow](htt
  * development of production ready chat-bots and complex conversational systems,
  * NLP and dialog systems research.
 
+### Demo 
+
+Demo of selected features is available at [demo.ipavlov.ai](https://demo.ipavlov.ai/)
+
+
+### Breaking changes in version 0.3.0!
+- component option `fit_on_batch` in configuration files was removed and replaced with adaptive usage of the `fit_on` parameter.
 
 ### Breaking changes in version 0.2.0!
 - `utils` module was moved from repository root in to `deeppavlov` module
@@ -115,10 +122,6 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
     pip install deeppavlov
     ```
 
-# Demo 
-
-Demo of selected features is available at [demo.ipavlov.ai](https://demo.ipavlov.ai/)
-
 # Quick start
 
 To use our pre-trained models, you should first install their requirements:
@@ -177,7 +180,7 @@ Here is our [DockerHub repository](https://hub.docker.com/u/deeppavlov/) with im
 
 # Tutorials
 
-Jupyter notebooks and videos explaining how to use DeepPalov for different tasks can be found in [/examples/tutorials/](examples/tutorials)
+Jupyter notebooks explaining how to use DeepPalov for different tasks can be found in [/examples/](https://github.com/deepmipt/DeepPavlov/tree/master/examples)
 
 # License
 

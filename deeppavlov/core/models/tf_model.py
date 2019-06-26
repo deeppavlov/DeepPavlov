@@ -15,6 +15,7 @@
 from typing import Iterable, Union, Tuple, Optional
 from collections import defaultdict
 from logging import getLogger
+from pathlib import Path
 
 import numpy as np
 import tensorflow as tf
@@ -39,12 +40,13 @@ class TFModel(NNModel, metaclass=TfModelMeta):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    def load(self, exclude_scopes: tuple = ('Optimizer',)) -> None:
+    def load(self, exclude_scopes: tuple = ('Optimizer',), path: Union[Path, str] = None) -> None:
         """Load model parameters from self.load_path"""
         if not hasattr(self, 'sess'):
             raise RuntimeError('Your TensorFlow model {} must'
                                ' have sess attribute!'.format(self.__class__.__name__))
-        path = str(self.load_path.resolve())
+        path = path or self.load_path
+        path = str(Path(path).resolve())
         # Check presence of the model files
         if tf.train.checkpoint_exists(path):
             log.info('[loading model from {}]'.format(path))
@@ -194,16 +196,7 @@ class LRScheduledTFModel(TFModel, LRScheduledModel):
             raise ConfigError("`optimizer` should be tensorflow.train.Optimizer subclass")
         self._clip_norm = clip_norm
 
-        if (momentum is None) and\
-                self._optimizer not in (tf.train.AdagradOptimizer,
-                                        tf.train.AdagradOptimizer,
-                                        tf.train.GradientDescentOptimizer,
-                                        tf.train.ProximalGradientDescentOptimizer,
-                                        tf.train.ProximalAdagradOptimizer):
-            momentum = 0.9
-        kwargs['momentum'] = momentum
-
-        LRScheduledModel.__init__(self, **kwargs)
+        LRScheduledModel.__init__(self, momentum=momentum, **kwargs)
 
     @overrides
     def _init_learning_rate_variable(self):
@@ -223,14 +216,13 @@ class LRScheduledTFModel(TFModel, LRScheduledModel):
             # log.info(f"Momentum      = {momentum}")
 
     def get_train_op(self,
-                     *args,
+                     loss,
                      learning_rate: Union[float, tf.placeholder] = None,
                      optimizer: tf.train.Optimizer = None,
                      momentum: Union[float, tf.placeholder] = None,
                      clip_norm: float = None,
                      **kwargs):
         if learning_rate is not None:
-            self._external_lr = True
             kwargs['learning_rate'] = learning_rate
         else:
             kwargs['learning_rate'] = self._lr_var
@@ -244,17 +236,21 @@ class LRScheduledTFModel(TFModel, LRScheduledModel):
             momentum_param = 'rho'
 
         if momentum is not None:
-            self._external_mom = True
             kwargs[momentum_param] = momentum
         elif self.get_momentum() is not None:
             kwargs[momentum_param] = self._mom_var
-        return TFModel.get_train_op(self, *args, **kwargs)
+        return TFModel.get_train_op(self, loss, **kwargs)
 
     def get_optimizer(self):
         return self._optimizer
 
-    def load(self, exclude_scopes: Optional[Iterable] = ('Optimizer',
-                                                         'learning_rate',
-                                                         'momentum')):
-        return super().load(exclude_scopes=exclude_scopes)
+    def load(self, 
+             exclude_scopes: Optional[Iterable] = ('Optimizer',
+                                                   'learning_rate',
+                                                   'momentum'),
+             **kwargs):
+        return super().load(exclude_scopes=exclude_scopes, **kwargs)
+
+    def process_event(self, *args, **kwargs):
+        LRScheduledModel.process_event(self, *args, **kwargs)
 
