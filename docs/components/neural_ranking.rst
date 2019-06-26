@@ -45,8 +45,8 @@ Building the own response base for bert ranking
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For the BERT-based models we have the following mechanism of building the own response base.
-If you type ``python -m deeppavlov interact ranking_ubuntu_v2_bert_sep_interact.json -d`` in console
-the model with the existing base will be downloaded and loaded.
+If you run ``python -m deeppavlov download ranking_ubuntu_v2_bert_sep_interact`` in console
+the model with the existing base will be downloaded.
 If you look in the folder where the model with the base is located you will find four files:
 ``contexts.csv``, ``responses.csv``, ``cont_vecs.npy``, ``resp_vecs.npy``.
 These are possible responses with their corresponding contexts (``.csv`` files) and their vector representations (``.npy`` files)
