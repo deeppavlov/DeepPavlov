@@ -78,15 +78,6 @@ class RuObscenityClassifier(Component):
         log.info(f"Initializing `{self.__class__.__name__}`")
 
         data_path = expand_path(data_path)
-        required_files = ['obscenity_words.json',
-                          'obscenity_words_exception.json',
-                          'obscenity_words_extended.json']
-        for required_file in required_files:
-            if not (data_path / required_file).exists():
-                raise FileNotFoundError(errno.ENOENT,
-                                        os.strerror(errno.ENOENT),
-                                        str(data_path / required_file))
-
         with open(data_path / 'obscenity_words.json', encoding="utf-8") as f:
             self.obscenity_words = set(json.load(f))
         with open(data_path / 'obscenity_words_extended.json', encoding="utf-8") as f:
