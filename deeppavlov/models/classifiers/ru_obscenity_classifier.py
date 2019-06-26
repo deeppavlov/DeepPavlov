@@ -4,6 +4,8 @@ import json
 import pymorphy2
 import re
 from logging import getLogger
+import os
+import errno
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Component
