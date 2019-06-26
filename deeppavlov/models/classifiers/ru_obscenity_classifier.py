@@ -1,11 +1,12 @@
 from typing import List, Union
 from pathlib import Path
-import json
-import pymorphy2
-import re
 from logging import getLogger
-import os
 import errno
+import json
+import re
+import os
+
+import pymorphy2
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Component
@@ -17,10 +18,10 @@ log = getLogger(__name__)
 @register("ru_obscenity_classifier")
 class RuObscenityClassifier(Component):
     """Rule-Based model that decides whether the sentence is obscene or not,
-    for russian language
+    for Russian language
 
     Args:
-        data_path: a directory where required files are storing
+        data_path: a directory where required files are stored
     Attributes:
         obscenity_words: list of russian obscenity words
         obscenity_words_extended: list of russian obscenity words
@@ -73,24 +74,25 @@ class RuObscenityClassifier(Component):
 
         return PATTERN_1, PATTERN_2
 
-    def __init__(self, data_path: Union[Path, str], *args, **kwargs):
+    def __init__(self, data_path: Union[Path, str], *args, **kwargs) -> None:
         log.info(f"Initializing `{self.__class__.__name__}`")
-        data_path = Path(expand_path(data_path))
+
+        data_path = expand_path(data_path)
         required_files = ['obscenity_words.json',
                           'obscenity_words_exception.json',
                           'obscenity_words_extended.json']
-        for file in required_files:
-            if not (data_path/file).exists():
+        for required_file in required_files:
+            if not (data_path / required_file).exists():
                 raise FileNotFoundError(errno.ENOENT,
                                         os.strerror(errno.ENOENT),
-                                        str(data_path/file))
+                                        str(data_path / required_file))
 
-        self.obscenity_words = set(json.load(
-            open(data_path/'obscenity_words.json', encoding="utf-8")))
-        self.obscenity_words_extended = set(json.load(
-            open(data_path/'obscenity_words_extended.json', encoding="utf-8")))
-        self.obscenity_words_exception = set(json.load(
-            open(data_path/'obscenity_words_exception.json', encoding="utf-8")))
+        with open(data_path / 'obscenity_words.json', encoding="utf-8") as f:
+            self.obscenity_words = set(json.load(f))
+        with open(data_path / 'obscenity_words_extended.json', encoding="utf-8") as f:
+            self.obscenity_words_extended = set(json.load(f))
+        with open(data_path / 'obscenity_words_exception.json', encoding="utf-8") as f:
+            self.obscenity_words_exception = set(json.load(f))
         self.obscenity_words.update(self.obscenity_words_extended)
 
         PATTERN_1, PATTERN_2 = self._get_patterns()
@@ -99,7 +101,7 @@ class RuObscenityClassifier(Component):
         self.morph = pymorphy2.MorphAnalyzer()
         self.word_pattern = re.compile(r'[А-яЁё]+')
 
-    def _check_obscenity(self, text):
+    def _check_obscenity(self, text: str) -> bool:
         for word in self.word_pattern.findall(text):
             if len(word) < 3:
                 continue
@@ -115,17 +117,17 @@ class RuObscenityClassifier(Component):
                     or bool(self.regexp.findall(word))\
                     or bool(self.regexp2.findall(normal_word))\
                     or bool(self.regexp2.findall(word)):
-                return 'obscene'
-        return 'not_obscene'
+                return True
+        return False
 
-    def __call__(self, texts: List[str]) -> List[str]:
-        """it decides whether text is obscene or not
+    def __call__(self, texts: List[str]) -> List[bool]:
+        """It decides whether text is obscene or not
 
         Args:
             texts: list of texts, for which it needs to decide they are obscene or not
 
         Returns:
-            list of strings: 'obscene' or 'not_obscene'
+            list of bool:  True is for obscene text, False is for not obscene text
         """
         decisions = list(map(self._check_obscenity, texts))
         return decisions

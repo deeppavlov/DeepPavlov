@@ -100,8 +100,8 @@ PARAMS = {
         ("classifiers/yahoo_convers_vs_info.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/ru_obscenity_classifier.json", "classifiers", ('IP')):
             [
-                ("Ну и сука же она", "obscene"),
-                ("я два года жду эту игру", "not_obscene")
+                ("Ну и сука же она", True),
+                ("я два года жду эту игру", False)
             ]
     },
     "snips": {
