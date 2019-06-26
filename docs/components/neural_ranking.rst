@@ -41,6 +41,30 @@ Further the trained representation-based model can be run for inference over the
 
 Statistics on the models quality are available :doc:`here </intro/features>`.
 
+Building the own response base for bert ranking
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For the BERT-based models we have the following mechanism of building the own response base.
+If you type `python -m deeppavlov interact ranking_ubuntu_v2_bert_sep_interact.json -d` in console
+the model with the existing base will be downloaded and loaded.
+If you look in the folder where the model with the base is located you will find four files:
+`contexts.csv`, `responses.csv`, `cont_vecs.npy`, `resp_vecs.npy`.
+These are possible responses with their corresponding contexts (`.csv` files) and their vector representations (`.npy` files)
+indexed using the model. Contexts for responses are used as additional features in some modes of the model operation
+(see the attribute `interact_mode` in the class :class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertSepRankerPredictorPreprocessor`).
+If you would like to use your own response base you should remove all four files indicated above
+and place your own `responses.csv` file in the folder,
+and probably `contexts.csv` file depending on the value of the `interact_mode` you are planning to use.
+The format of these files is very simple, namely each line should represent single response (or context).
+You can use existing files as an example. Numbers of lines in `responses.csv` and `contexts.csv` must match exactly.
+Once you have provided these files, you can run the above command in console.
+As the system will not find vector representations, it will build them first.
+You will see the message `Building BERT features for the response base...`
+(and probably `Building BERT features for the context base...`) and then
+`Building BERT vector representations for the response base...`
+(and probably `Building BERT vector representations for the context base...`).
+After this is done, you will be able to interact with the system.
+Next time you will use the model, built vector representations will be loaded.
 
 Ranking
 ~~~~~~~
