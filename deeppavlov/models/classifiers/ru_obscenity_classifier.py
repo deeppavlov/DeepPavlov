@@ -21,7 +21,14 @@ class RuObscenityClassifier(Component):
     for Russian language
 
     Args:
-        data_path: a directory where the required files are stored
+        data_path: a directory where the required files are stored.
+                   next files are required:
+                   -'obscenity_words.json' — file that stores list of obscenity words
+                   -'obscenity_words_exception.json' — file that stores list of not obscenity words,
+                     but which are detects by algorithm as obscenity(for fixing this situation)
+                   -'obscenity_words_extended.json' — file that stores list of obscenity words,
+                     in which user can add additional obscenity words
+
     Attributes:
         obscenity_words: list of russian obscenity words
         obscenity_words_extended: list of russian obscenity words
@@ -80,11 +87,12 @@ class RuObscenityClassifier(Component):
         data_path = expand_path(data_path)
         with open(data_path / 'obscenity_words.json', encoding="utf-8") as f:
             self.obscenity_words = set(json.load(f))
-        with open(data_path / 'obscenity_words_extended.json', encoding="utf-8") as f:
-            self.obscenity_words_extended = set(json.load(f))
         with open(data_path / 'obscenity_words_exception.json', encoding="utf-8") as f:
             self.obscenity_words_exception = set(json.load(f))
-        self.obscenity_words.update(self.obscenity_words_extended)
+        if (data_path / 'obscenity_words_extended.json').exists():
+            with open(data_path / 'obscenity_words_extended.json', encoding="utf-8") as f:
+                self.obscenity_words_extended = set(json.load(f))
+            self.obscenity_words.update(self.obscenity_words_extended)
 
         PATTERN_1, PATTERN_2 = self._get_patterns()
         self.regexp = re.compile(PATTERN_1, re.U | re.I)
