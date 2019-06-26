@@ -21,7 +21,7 @@ class RuObscenityClassifier(Component):
     for Russian language
 
     Args:
-        data_path: a directory where required files are stored
+        data_path: a directory where the required files are stored
     Attributes:
         obscenity_words: list of russian obscenity words
         obscenity_words_extended: list of russian obscenity words
