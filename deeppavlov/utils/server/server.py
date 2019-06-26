@@ -171,12 +171,13 @@ def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, p
         }
     }
 
-    @app.route(model_endpoint, methods=['POST', 'GET'])
+    @app.route(model_endpoint, methods=['POST'])
     @swag_from(endpoint_description)
     def answer():
-        if request.method == 'POST':
-            return interact(model, model_args_names)
-        elif request.method == 'GET':
-            return test_interact(model, model_args_names)
+        return interact(model, model_args_names)
+
+    @app.route(model_endpoint+'/poller', methods=['GET'])
+    def polling():
+        return test_interact(model, model_args_names)
 
     app.run(host=host, port=port, threaded=False, ssl_context=ssl_context)
