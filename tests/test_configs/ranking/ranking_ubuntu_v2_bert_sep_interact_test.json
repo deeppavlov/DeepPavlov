@@ -15,8 +15,8 @@
       {
         "class_name": "response_base_loader",
         "id": "loader",
-        "save_path": "{MODELS_PATH}",
-        "load_path": "{MODELS_PATH}"
+        "save_path": "{MODEL_PATH}",
+        "load_path": "{MODEL_PATH}"
       },
       {
         "class_name": "bert_sep_ranker_predictor_preprocessor",
@@ -42,8 +42,8 @@
         "interact_mode": 3,
         "bert_config_file": "{DOWNLOADS_PATH}/bert_models/uncased_L-12_H-768_A-12/bert_config.json",
         "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/uncased_L-12_H-768_A-12/bert_model.ckpt",
-        "save_path": "{MODELS_PATH}",
-        "load_path": "{MODELS_PATH}/model",
+        "save_path": "{MODEL_PATH}",
+        "load_path": "{MODEL_PATH}/model",
         "learning_rate": 2e-05,
         "in": ["bert_features"],
         "in_y": ["y"],
@@ -63,13 +63,14 @@
     "log_every_n_batches": -1,
     "validate_best": true,
     "test_best": true,
-    "tensorboard_log_dir": "{MODELS_PATH}/"
+    "tensorboard_log_dir": "{MODEL_PATH}/"
   },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/ubuntu_v2_uncased_bert_sep_predictor_model"
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/ubuntu_v2_uncased_bert_sep_predictor_model"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -86,7 +87,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v2_uncased_bert_sep_predictor_model.tar.gz",
-        "subdir": "{ROOT_PATH}/models"
+        "subdir": "{MODELS_PATH}"
       }
 
     ]
