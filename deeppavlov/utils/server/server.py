@@ -109,7 +109,7 @@ def interact(model: Chainer, params_names: List[str]) -> Tuple[Response, int]:
 
 
 def test_interact(model: Chainer, params_names: List[str]) -> Tuple[Response, int]:
-    model_args = ["Test string." for _ in params_names]
+    model_args = [["Test string."] for _ in params_names]
     try:
         _ = model(*model_args)
         return Response('["Test passed"]\n'), 200
