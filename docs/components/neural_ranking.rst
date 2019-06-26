@@ -41,10 +41,10 @@ Further the trained representation-based model can be run for inference over the
 
 Statistics on the models quality are available :doc:`here </intro/features>`.
 
-Building the own response base for bert ranking
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Building your own response base for bert ranking
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For the BERT-based models we have the following mechanism of building the own response base.
+For the BERT-based models we have the following mechanism of building your own response base.
 If you run ``python -m deeppavlov download ranking_ubuntu_v2_bert_sep_interact`` in console
 the model with the existing base will be downloaded.
 If you look in the folder where the model with the base is located you will find four files:
