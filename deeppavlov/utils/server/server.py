@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 import ssl
 from logging import getLogger, Filter
 from pathlib import Path
@@ -33,8 +34,11 @@ SERVER_CONFIG_FILENAME = 'server_config.json'
 
 
 class PollerFilter(Filter):
+    pat = re.compile(r'POST\s/\S*poller\s')
     def filter(self, record):
-        return 'GET /' not in record.getMessage()
+        if PollerFilter.pat.search(record.getMessage()):
+            return False
+        return True
 
 
 log = getLogger(__name__)
@@ -109,7 +113,11 @@ def interact(model: Chainer, params_names: List[str]) -> Tuple[Response, int]:
 
 
 def test_interact(model: Chainer, params_names: List[str]) -> Tuple[Response, int]:
-    model_args = [["Test string."] for _ in params_names]
+    data = request.get_json()
+    if not data:
+        model_args = [["Test string."] for _ in params_names]
+    else:
+        model_args = [data.get(param_name) for param_name in params_names]
     try:
         _ = model(*model_args)
         return Response('["Test passed"]\n'), 200
@@ -125,6 +133,12 @@ def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, p
     port = port or server_params['port']
     model_endpoint = server_params['model_endpoint']
     model_args_names = server_params['model_args_names']
+
+    if model_endpoint == '/':
+        e = ValueError('"/" endpoint is reserved for Swagger: please provide correct endpoint in model_endpoint'
+                       'param in server configuration file')
+        log.error(e)
+        raise e
 
     https = https or server_params['https']
 
@@ -176,7 +190,7 @@ def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, p
     def answer():
         return interact(model, model_args_names)
 
-    @app.route(model_endpoint+'/poller', methods=['GET'])
+    @app.route(model_endpoint+'/poller', methods=['POST'])
     def polling():
         return test_interact(model, model_args_names)
 
