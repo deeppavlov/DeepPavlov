@@ -34,7 +34,7 @@ SERVER_CONFIG_FILENAME = 'server_config.json'
 
 
 class PollerFilter(Filter):
-    pat = re.compile(r'POST\s/\S*poller\s')
+    pat = re.compile(r'POST\s/\S*/poller\s')
     def filter(self, record):
         if PollerFilter.pat.search(record.getMessage()):
             return False
