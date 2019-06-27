@@ -11,6 +11,10 @@ DeepPavlov is an open-source conversational AI library built on [TensorFlow](htt
 Demo of selected features is available at [demo.ipavlov.ai](https://demo.ipavlov.ai/)
 
 
+### Breaking changes in version 0.4.0!
+- default target variable name for [neural evolution](https://docs.deeppavlov.ai/en/0.4.0/intro/hypersearch.html#parameters-evolution-for-deeppavlov-models)
+was changed from `MODELS_PATH` to `MODEL_PATH`.
+
 ### Breaking changes in version 0.3.0!
 - component option `fit_on_batch` in configuration files was removed and replaced with adaptive usage of the `fit_on` parameter.
 
