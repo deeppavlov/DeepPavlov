@@ -178,9 +178,9 @@ change the filenames accordingly to invoke models for other languages):
    .. code:: bash
 
      python -m deeppavlov.models.morpho_tagger morpho_ru_syntagrus_pymorphy \
-     > -f /.deeppavlov/downloads/UD2.0_source/ru_syntagrus/ru_syntagrus-ud-test.conllu
+     > -f ~/.deeppavlov/downloads/UD2.0_source/ru_syntagrus/ru_syntagrus-ud-test.conllu
 
-   `-f` argument points to the path to the test data. If you do not pass it the model expects data from stdin.
+   ``-f`` argument points to the path to the test data. If you do not pass it the model expects data from ``stdin``.
    This command writes the output to stdout, you can redirect it using standard ``>`` notation.
 
    -  By default the ``deeppavlov.models.morpho_tagger`` script expects the data to be in CoNLL-U format,

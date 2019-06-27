@@ -31,6 +31,8 @@ def predict_with_model(config_path: [Path, str], infile: Optional[Union[Path, st
         if sys.stdin.isatty():
             raise RuntimeError('To process data from terminal please use interact mode')
         infile = sys.stdin
+    else:
+        infile = expand_path(infile)
     if input_format in ["ud", "conllu", "vertical"]:
         from_words = (input_format == "vertical")
         data: List[tuple] = read_infile(infile, from_words=from_words)
