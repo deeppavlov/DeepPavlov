@@ -1,7 +1,6 @@
 import uuid
 from pathlib import Path
-from typing import Union
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional, List, Iterable
 from logging import getLogger
 
 import aiml
@@ -88,7 +87,9 @@ class AIMLSkill(Skill):
         """
         return uuid.uuid1().hex
 
-    def __call__(self, utterances_batch: List, history_batch: List, states_batch: List) -> Tuple[List, ...]:
+    def __call__(self, utterances_batch: List[str],
+                 history_batch: Optional[List]=None,
+                 states_batch: Optional[List]=None) -> Tuple[List[str], List[float], list]:
         """Returns skill inference result.
 
         Returns batches of skill inference results, estimated confidence
@@ -118,6 +119,10 @@ class AIMLSkill(Skill):
         # In this implementation we use current datetime for generating uniqe ids
         output_states_batch = []
         user_ids = []
+        if states_batch is None:
+            # generate states batch matching batch of utterances:
+            states_batch = [None] * len(utterances_batch)
+
         for state in states_batch:
             if not state:
                 user_id = self._generate_user_id()
