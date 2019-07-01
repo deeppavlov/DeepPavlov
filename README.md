@@ -6,7 +6,7 @@ DeepPavlov is an open-source conversational AI library built on [TensorFlow](htt
  * development of production ready chat-bots and complex conversational systems,
  * NLP and dialog systems research.
 
-## Demo 
+# Demo 
 
 Demo of selected features is available at [demo.ipavlov.ai](https://demo.ipavlov.ai/)
 
@@ -142,20 +142,20 @@ You can also specify batch size with `-b` or `--batch-size` parameter.
 
 # Breaking changes
 
-## Breaking changes in version 0.4.0!
+**Breaking changes in version 0.4.0!**
 - default target variable name for [neural evolution](https://docs.deeppavlov.ai/en/0.4.0/intro/hypersearch.html#parameters-evolution-for-deeppavlov-models)
 was changed from `MODELS_PATH` to `MODEL_PATH`.
 
-## Breaking changes in version 0.3.0!
+**Breaking changes in version 0.3.0!**
 - component option `fit_on_batch` in configuration files was removed and replaced with adaptive usage of the `fit_on` parameter.
 
-## Breaking changes in version 0.2.0!
+**Breaking changes in version 0.2.0!**
 - `utils` module was moved from repository root in to `deeppavlov` module
 - `ms_bot_framework_utils`,`server_utils`, `telegram utils` modules was renamed to `ms_bot_framework`, `server` and `telegram` correspondingly
 - rename metric functions `exact_match` to `squad_v2_em` and  `squad_f1` to `squad_v2_f1`
 - replace dashes in configs name with underscores
 
-## Breaking changes in version 0.1.0!
+**Breaking changes in version 0.1.0!**
 - As of `version 0.1.0` all models, embeddings and other downloaded data for provided configurations are
  by default downloaded to the `.deeppavlov` directory in current user's home directory.
  This can be changed on per-model basis by modifying
