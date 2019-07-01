@@ -13,7 +13,6 @@ from .handlers.handler import Handler
 
 
 class DSLMeta(ABCMeta):
-
     skill_collection: Dict[str, 'DSLMeta'] = {}
 
     def __init__(cls, name: str, bases, namespace, **kwargs):
@@ -24,9 +23,6 @@ class DSLMeta(ABCMeta):
         cls.handlers = {}
         # List of Handler objects. These handlers can be activated from any state.
         cls.universal_state = []
-
-        # message to be sent on message with no associated handler
-        cls.on_invalid_command = "Простите, я вас не понял"
 
         handlers = [attribute for attribute in namespace.values() if isinstance(attribute, Handler)]
 
@@ -44,8 +40,9 @@ class DSLMeta(ABCMeta):
         register()(cls)
         DSLMeta.__add_to_collection(cls)
 
-    def __initialize_class(cls, *args, **kwargs):
-        pass
+    def __initialize_class(cls, on_invalid_command: str = "Простите, я вас не понял", *args, **kwargs):
+        # message to be sent on message with no associated handler
+        cls.on_invalid_command = on_invalid_command
 
     def __handle_batch(cls: 'DSLMeta', utterances_batch: List, history_batch: List, states_batch: List = None) \
             -> Tuple[List, ...]:
