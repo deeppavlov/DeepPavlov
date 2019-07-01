@@ -6,39 +6,9 @@ DeepPavlov is an open-source conversational AI library built on [TensorFlow](htt
  * development of production ready chat-bots and complex conversational systems,
  * NLP and dialog systems research.
 
-### Demo 
+## Demo 
 
 Demo of selected features is available at [demo.ipavlov.ai](https://demo.ipavlov.ai/)
-
-
-### Breaking changes in version 0.4.0!
-- default target variable name for [neural evolution](https://docs.deeppavlov.ai/en/0.4.0/intro/hypersearch.html#parameters-evolution-for-deeppavlov-models)
-was changed from `MODELS_PATH` to `MODEL_PATH`.
-
-### Breaking changes in version 0.3.0!
-- component option `fit_on_batch` in configuration files was removed and replaced with adaptive usage of the `fit_on` parameter.
-
-### Breaking changes in version 0.2.0!
-- `utils` module was moved from repository root in to `deeppavlov` module
-- `ms_bot_framework_utils`,`server_utils`, `telegram utils` modules was renamed to `ms_bot_framework`, `server` and `telegram` correspondingly
-- rename metric functions `exact_match` to `squad_v2_em` and  `squad_f1` to `squad_v2_f1`
-- replace dashes in configs name with underscores
-
-### Breaking changes in version 0.1.0!
-- As of `version 0.1.0` all models, embeddings and other downloaded data for provided configurations are
- by default downloaded to the `.deeppavlov` directory in current user's home directory.
- This can be changed on per-model basis by modifying
- a `ROOT_PATH` [variable](http://docs.deeppavlov.ai/en/latest/intro/config_description.html#variables)
- or related fields one by one in model's configuration file.
- 
-- In configuration files, for all components, dataset readers and iterators `"name"` and `"class"` fields are combined
-into the `"class_name"` field.
-
-- `deeppavlov.core.commands.infer.build_model_from_config()` was renamed to `build_model` and can be imported from the
- `deeppavlov` module directly.
-
-- The way arguments are passed to metrics functions during training and evaluation was changed and
- [documented](http://docs.deeppavlov.ai/en/latest/intro/config_description.html#metrics).
 
 # Hello Bot in DeepPavlov
 
@@ -169,6 +139,38 @@ from stdin.
 Every line of input text will be used as a pipeline input parameter, so one example will consist of as many lines,
 as many input parameters your pipeline expects.  
 You can also specify batch size with `-b` or `--batch-size` parameter.
+
+# Breaking changes
+
+## Breaking changes in version 0.4.0!
+- default target variable name for [neural evolution](https://docs.deeppavlov.ai/en/0.4.0/intro/hypersearch.html#parameters-evolution-for-deeppavlov-models)
+was changed from `MODELS_PATH` to `MODEL_PATH`.
+
+## Breaking changes in version 0.3.0!
+- component option `fit_on_batch` in configuration files was removed and replaced with adaptive usage of the `fit_on` parameter.
+
+## Breaking changes in version 0.2.0!
+- `utils` module was moved from repository root in to `deeppavlov` module
+- `ms_bot_framework_utils`,`server_utils`, `telegram utils` modules was renamed to `ms_bot_framework`, `server` and `telegram` correspondingly
+- rename metric functions `exact_match` to `squad_v2_em` and  `squad_f1` to `squad_v2_f1`
+- replace dashes in configs name with underscores
+
+## Breaking changes in version 0.1.0!
+- As of `version 0.1.0` all models, embeddings and other downloaded data for provided configurations are
+ by default downloaded to the `.deeppavlov` directory in current user's home directory.
+ This can be changed on per-model basis by modifying
+ a `ROOT_PATH` [variable](http://docs.deeppavlov.ai/en/latest/intro/config_description.html#variables)
+ or related fields one by one in model's configuration file.
+ 
+- In configuration files, for all components, dataset readers and iterators `"name"` and `"class"` fields are combined
+into the `"class_name"` field.
+
+- `deeppavlov.core.commands.infer.build_model_from_config()` was renamed to `build_model` and can be imported from the
+ `deeppavlov` module directly.
+
+- The way arguments are passed to metrics functions during training and evaluation was changed and
+ [documented](http://docs.deeppavlov.ai/en/latest/intro/config_description.html#metrics).
+
 
 # Documentation
 
