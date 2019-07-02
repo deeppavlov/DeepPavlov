@@ -135,7 +135,7 @@ def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, p
     model_args_names = server_params['model_args_names']
 
     if model_endpoint == '/':
-        e = ValueError('"/" endpoint is reserved for Swagger: please provide correct endpoint in model_endpoint'
+        e = ValueError('"/" endpoint is reserved, please provide correct endpoint in model_endpoint'
                        'param in server configuration file')
         log.error(e)
         raise e
