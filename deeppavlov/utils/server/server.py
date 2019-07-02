@@ -34,11 +34,13 @@ SERVER_CONFIG_FILENAME = 'server_config.json'
 
 
 class PollerFilter(Filter):
+    """
+    PollerFilter class is used to filter POST requests log records to
+    <model_endpoint>/poller endpoints.
+    """
     pat = re.compile(r'POST\s/\S*/poller\s')
     def filter(self, record):
-        if PollerFilter.pat.search(record.getMessage()):
-            return False
-        return True
+        return not PollerFilter.pat.search(record.getMessage())
 
 
 log = getLogger(__name__)
