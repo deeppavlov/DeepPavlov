@@ -44,15 +44,15 @@ class DSLMeta(ABCMeta):
         # message to be sent on message with no associated handler
         cls.on_invalid_command = on_invalid_command
 
-    def __handle_batch(cls: 'DSLMeta', utterances_batch: List, history_batch: List, states_batch: List = None) \
+    def __handle_batch(cls: 'DSLMeta', utterances_batch: List, history_batch: List = [], states_batch: List = []) \
             -> Tuple[List, ...]:
-        responses_batch, confidences_batch, new_states_batchs = [], [], []
+        responses_batch, confidences_batch, new_states_batch = [], [], []
         for utterance, history, state in zip_longest(utterances_batch, history_batch, states_batch):
             response, confidence, new_state = cls.__handle(cls, utterance, history, state)
             responses_batch.append(response)
             confidences_batch.append(confidence)
-            new_states_batchs.append(new_state)
-        return responses_batch, confidences_batch, new_states_batchs
+            new_states_batch.append(new_state)
+        return responses_batch, confidences_batch, new_states_batch
 
     @staticmethod
     def __add_to_collection(cls: 'DSLMeta'):
