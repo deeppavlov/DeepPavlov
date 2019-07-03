@@ -89,12 +89,12 @@ class UbuntuDSTC7MTReader(DatasetReader):
                     utterances.append(msg['utterance'])
 
                 true_response = ""  # true response sentence
-                if mode is not "test":
+                if mode != "test":
                     true_response = dialog['options-for-correct-answers'][0]['utterance']
 
                 fake_responses = []   # rest (wrong) responses
                 target_id = ""
-                if mode is not "test":
+                if mode != "test":
                     correct_answer = dialog['options-for-correct-answers'][0]
                     target_id = correct_answer['candidate-id']
                 for i, utterance in enumerate(dialog['options-for-next']):
