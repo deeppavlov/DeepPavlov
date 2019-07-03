@@ -1,0 +1,33 @@
+{
+  "chainer": {
+    "in": [
+      "utterances_batch",
+      "history_batch",
+      "states_batch"
+    ],
+    "out": [
+      "responses_batch",
+      "confidences_batch"
+    ],
+    "pipe": [
+      {
+        "on_invalid_command": "Sorry, I do not understand you",
+        "in": [
+          "utterances_batch"
+        ],
+        "out": [
+          "responses_batch",
+          "confidences_batch"
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    }
+  }
+}
