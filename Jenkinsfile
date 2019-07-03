@@ -21,6 +21,7 @@ node('gpu') {
             stage('Tests') {
                 sh """
                     . .venv-$BUILD_NUMBER/bin/activate
+                    flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
                     pytest -v --disable-warnings
                     cd docs
                     make clean
