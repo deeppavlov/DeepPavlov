@@ -14,12 +14,12 @@
         "class_name": "ru_tokenizer",
         "in": "utterances_batch",
         "lowercase": true,
-        "out": "utterances_batch"
+        "out": "utterance_tokens_batch"
       },
       {
         "on_invalid_command": "Sorry, I do not understand you",
         "in": [
-          "utterances_batch"
+          "utterance_tokens_batch"
         ],
         "out": [
           "responses_batch",
