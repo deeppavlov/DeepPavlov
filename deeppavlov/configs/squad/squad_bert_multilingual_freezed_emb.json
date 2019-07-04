@@ -6,6 +6,7 @@
   "dataset_iterator": {
     "class_name": "squad_iterator",
     "seed": 1337,
+    "port": -1,
     "shuffle": true
   },
   "chainer": {
