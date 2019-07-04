@@ -1,11 +1,12 @@
 # encoding: utf-8
 
-import re
 from abc import ABCMeta
 from collections import defaultdict
 from functools import partial
-from itertools import zip_longest
+from itertools import zip_longest, starmap
 from typing import List, Optional, Union, Dict, Callable, Tuple
+
+from more_itertools import unzip
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.skills.dsl_skill.handlers import Handler, RegexHandler
@@ -46,23 +47,21 @@ class DSLMeta(ABCMeta):
 
         cls.handle = partial(DSLMeta.__handle, cls)
         cls.__call__ = partial(DSLMeta.__handle_batch, cls)
-        cls.__init__ = partial(DSLMeta.__initialize_class, cls)
+        cls.__init__ = partial(DSLMeta.__init__class, cls)
         register()(cls)
         DSLMeta.__add_to_collection(cls)
 
-    def __initialize_class(cls, on_invalid_command: str = "Простите, я вас не понял", *args, **kwargs):
+    def __init__class(cls, on_invalid_command: str = "Простите, я вас не понял", *args, **kwargs):
         # message to be sent on message with no associated handler
         cls.on_invalid_command = on_invalid_command
 
-    def __handle_batch(cls: 'DSLMeta', utterances_batch: List, history_batch: List = [], states_batch: List = []) \
-            -> Tuple[List, ...]:
-        responses_batch, confidences_batch, new_states_batch = [], [], []
-        for utterance, history, state in zip_longest(utterances_batch, history_batch, states_batch):
-            response, confidence, new_state = cls.__handle(cls, utterance, history, state)
-            responses_batch.append(response)
-            confidences_batch.append(confidence)
-            new_states_batch.append(new_state)
-        return responses_batch, confidences_batch, new_states_batch
+    def __handle_batch(cls: 'DSLMeta',
+                       utterances_batch: List,
+                       history_batch: List = None,
+                       states_batch: List = None) -> Tuple[List, ...]:
+        history_batch = history_batch or []
+        states_batch = states_batch or []
+        return unzip(starmap(cls.handle, zip_longest(utterances_batch, history_batch, states_batch)))
 
     @staticmethod
     def __add_to_collection(cls: 'DSLMeta'):
@@ -91,7 +90,7 @@ class DSLMeta(ABCMeta):
                          history: str,
                          state: str) -> Optional[Callable]:
         """
-        Selects handler that will process request
+        Selects handler with the highest priority that could be triggered from the passed state and message.
         :return: handler function that is selected and None if no handler fits request
         """
         available_handlers = cls.state_to_handler[state]
