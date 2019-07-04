@@ -38,8 +38,22 @@ class SquadIterator(DataLearningIterator):
     """
 
     def split(self, *args, **kwargs) -> None:
+        print("LOADING......")
+        if 'port' in kwargs:
+            port = kwargs['port']
+            print(port)
+        else:
+            port = -1
         for dt in ['train', 'valid', 'test']:
             setattr(self, dt, SquadIterator._extract_cqas(getattr(self, dt)))
+
+        le = len(self.train)
+        print("previous len", le)
+
+        if port != -1:
+            self.train = self.train[:port]
+
+        print("new len", len(self.train))
 
     @staticmethod
     def _extract_cqas(data: Dict[str, Any]) -> List[Tuple[Tuple[str, str], Tuple[List[str], List[int]]]]:
