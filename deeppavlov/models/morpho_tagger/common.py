@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 from typing import List, Dict, Union, Optional
 
@@ -8,10 +9,13 @@ from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.dataset_iterators.morphotagger_iterator import MorphoTaggerDatasetIterator
+from deeppavlov.dataset_readers.morphotagging_dataset_reader import read_infile
 from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag
 
 
-def predict_with_model(config_path: [Path, str]) -> List[Optional[List[str]]]:
+def predict_with_model(config_path: [Path, str], infile: Optional[Union[Path, str]] = None,
+                       input_format: str = "ud", batch_size: [int] = 16,
+                       output_format: str = "basic") -> List[Optional[List[str]]]:
     """Returns predictions of morphotagging model given in config :config_path:.
 
     Args:
@@ -23,32 +27,28 @@ def predict_with_model(config_path: [Path, str]) -> List[Optional[List[str]]]:
 
     """
     config = parse_config(config_path)
-
-    reader_config = config['dataset_reader']
-    reader = get_model(reader_config['class_name'])()
-    data_path = expand_path(reader_config.get('data_path', ''))
-    read_params = {k: v for k, v in reader_config.items() if k not in ['class_name', 'data_path']}
-    data: Dict = reader.read(data_path, **read_params)
-
-    iterator_config = config['dataset_iterator']
-    iterator: MorphoTaggerDatasetIterator = from_params(iterator_config, data=data)
-
+    if infile is None:
+        if sys.stdin.isatty():
+            raise RuntimeError('To process data from terminal please use interact mode')
+        infile = sys.stdin
+    else:
+        infile = expand_path(infile)
+    if input_format in ["ud", "conllu", "vertical"]:
+        from_words = (input_format == "vertical")
+        data: List[tuple] = read_infile(infile, from_words=from_words)
+        # keeping only sentences
+        data = [elem[0] for elem in data]
+    else:
+        if infile is not sys.stdin:
+            with open(infile, "r", encoding="utf8") as fin:
+                data = fin.readlines()
+        else:
+            data = sys.stdin.readlines()
     model = build_model(config, load_trained=True)
-    answers = [None] * len(iterator.test)
-    batch_size = config['predict'].get("batch_size", -1)
-    for indexes, (x, _) in iterator.gen_batches(
-            batch_size=batch_size, data_type="test", shuffle=False, return_indexes=True):
-        y = model(x)
-        for i, elem in zip(indexes, y):
-            answers[i] = elem
-    outfile = config['predict'].get("outfile")
-    if outfile is not None:
-        outfile = Path(outfile)
-        if not outfile.exists():
-            outfile.parent.mkdir(parents=True, exist_ok=True)
-        with open(outfile, "w", encoding="utf8") as fout:
-            for elem in answers:
-                fout.write(elem + "\n")
+    model.pipe[-1][-1].set_format_mode(output_format)
+    answers = model.batched_call(data, batch_size=batch_size)
+    for elem in answers:
+        print(elem)
     return answers
 
 
@@ -99,7 +99,7 @@ class TagOutputPrettifier(Component):
     def _make_format_string(self) -> None:
         if self.format_mode == "basic":
             self.format_string =  "{}\t{}\t{}\t{}"
-        elif self.format_mode in ["conllu", "ud"]:
+        elif self.format_mode.lower() in ["conllu", "ud"]:
             self.format_string = "{}\t{}\t_\t{}\t_\t{}\t_\t_\t_\t_"
         else:
             raise ValueError("Wrong mode for TagOutputPrettifier: {}, "
@@ -150,6 +150,80 @@ class TagOutputPrettifier(Component):
         answer = []
         for i, (word, tag) in enumerate(zip(tokens, tags)):
             answer.append(self.format_string.format(i + 1, word, *make_pos_and_tag(tag)))
+        if self.return_string:
+            answer = self.begin + self.sep.join(answer) + self.end
+        return answer
+
+
+@register('lemmatized_output_prettifier')
+class LemmatizedOutputPrettifier(Component):
+    """Class which prettifies morphological tagger output to 4-column
+    or 10-column (Universal Dependencies) format.
+
+    Args:
+        format_mode: output format,
+            in `basic` mode output data contains 4 columns (id, word, pos, features),
+            in `conllu` or `ud` mode it contains 10 columns:
+            id, word, lemma, pos, xpos, feats, head, deprel, deps, misc
+            (see http://universaldependencies.org/format.html for details)
+            Only id, word, tag and pos values are a in current version,
+            other columns are filled by `_` value.
+        return_string: whether to return a list of strings or a single string
+        begin: a string to append in the beginning
+        end: a string to append in the end
+        sep: separator between word analyses
+    """
+
+    def __init__(self, return_string: bool = True,
+                 begin: str = "", end: str = "", sep: str = "\n", **kwargs) -> None:
+        self.return_string = return_string
+        self.begin = begin
+        self.end = end
+        self.sep = sep
+        self.format_string = "{0}\t{1}\t{4}\t{2}\t_\t{3}\t_\t_\t_\t_"
+
+    def __call__(self, X: List[List[str]], Y: List[List[str]], Z: List[List[str]]) -> List[Union[List[str], str]]:
+        """Calls the ``prettify`` function for each input sentence.
+
+        Args:
+            X: a list of input sentences
+            Y: a list of list of tags for sentence words
+            Z: a list of lemmatized sentences
+
+        Returns:
+            a list of prettified morphological analyses
+        """
+        return [self.prettify(*elem) for elem in zip(X, Y, Z)]
+
+    def prettify(self, tokens: List[str], tags: List[str], lemmas: List[str]) -> Union[List[str], str]:
+        """Prettifies output of morphological tagger.
+
+        Args:
+            tokens: tokenized source sentence
+            tags: list of tags, the output of a tagger
+            lemmas: list of lemmas, the output of a lemmatizer
+
+        Returns:
+            the prettified output of the tagger.
+
+        Examples:
+            >>> sent = "John really likes pizza .".split()
+            >>> tags = ["PROPN,Number=Sing", "ADV",
+            >>>         "VERB,Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin",
+            >>>         "NOUN,Number=Sing", "PUNCT"]
+            >>> lemmas = "John really like pizza .".split()
+            >>> prettifier = LemmatizedOutputPrettifier()
+            >>> self.prettify(sent, tags, lemmas)
+                1	John	John	PROPN	_	Number=Sing	_	_	_	_
+                2	really	really	ADV	_	_	_	_	_	_
+                3	likes	like	VERB	_	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	_	_	_	_
+                4	pizza	pizza	NOUN	_	Number=Sing	_	_	_	_
+                5	.	.	PUNCT	_	_	_	_	_	_
+        """
+        answer = []
+        for i, (word, tag, lemma) in enumerate(zip(tokens, tags, lemmas)):
+            pos, tag = make_pos_and_tag(tag, sep=",")
+            answer.append(self.format_string.format(i + 1, word, pos, tag, lemma))
         if self.return_string:
             answer = self.begin + self.sep.join(answer) + self.end
         return answer
