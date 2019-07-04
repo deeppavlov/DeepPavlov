@@ -2,37 +2,47 @@
 
 import re
 from abc import ABCMeta
+from collections import defaultdict
 from functools import partial
 from itertools import zip_longest
 from typing import List, Optional, Union, Dict, Callable, Tuple
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.skills.dsl_skill.handlers.regex_handler import RegexHandler
+from deeppavlov.skills.dsl_skill.handlers import Handler, RegexHandler
 from deeppavlov.skills.dsl_skill.utils import expand_arguments, ResponseType
-from .handlers.handler import Handler
 
 
 class DSLMeta(ABCMeta):
+    """
+    This metaclass is used for create a skill.
+
+    Example:
+
+    .. code:: python
+
+            class ExampleSkill(metaclass=ZDialog):
+                @ZDialog.handler(commands=["hello", "hey"], state="greeting")
+                def __greeting(message: str):
+                    ...
+    """
     skill_collection: Dict[str, 'DSLMeta'] = {}
 
     def __init__(cls, name: str, bases, namespace, **kwargs):
         super(DSLMeta, cls).__init__(name, bases, namespace, **kwargs)
         cls.name = name
 
-        # Attribute cls.handlers is dict with states as keys and lists of Handler objects as values
-        cls.handlers = {}
-        # List of Handler objects. These handlers can be activated from any state.
-        cls.universal_state = []
+        # Attribute cls.state_to_handler is dict with states as keys and lists of Handler objects as values
+        cls.state_to_handler = defaultdict(list)
+        # Handlers that can be activated from any state
+        cls.universal_handlers = []
 
         handlers = [attribute for attribute in namespace.values() if isinstance(attribute, Handler)]
 
         for handler in handlers:
             if handler.state is None:
-                cls.universal_state.append(handler)
-                continue
-            if handler.state not in cls.handlers:
-                cls.handlers[handler.state] = []
-            cls.handlers[handler.state].append(handler)
+                cls.universal_handlers.append(handler)
+            else:
+                cls.state_to_handler[handler.state].append(handler)
 
         cls.handle = partial(DSLMeta.__handle, cls)
         cls.__call__ = partial(DSLMeta.__handle_batch, cls)
@@ -70,15 +80,12 @@ class DSLMeta(ABCMeta):
 
         :param cls: instance of callee's class
         :param utterance: a message to be handled
-        :param history:
+        :param history: history of dialog
         :param state: state
         :return: handler function's result if succeeded
         """
-
-        message = re.sub(r'[\"\']', '', utterance.lower())
-
-        current_handler = cls.__select_handler(message, history, state)
-        return cls.__run_handler(current_handler, message, history, state)
+        current_handler = cls.__select_handler(utterance, history, state)
+        return cls.__run_handler(current_handler, utterance, history, state)
 
     def __select_handler(cls, message: str,
                          history: str,
@@ -87,11 +94,8 @@ class DSLMeta(ABCMeta):
         Selects handler that will process request
         :return: handler function that is selected and None if no handler fits request
         """
-        if state:
-            available_handlers = cls.handlers.get(state)
-        else:
-            available_handlers = []
-        available_handlers.extend(cls.universal_state)
+        available_handlers = cls.state_to_handler[state]
+        available_handlers.extend(cls.universal_handlers)
         available_handlers.sort(key=lambda h: h.priority, reverse=True)
         for handler in available_handlers:
             if handler.check(message, history):
@@ -104,15 +108,14 @@ class DSLMeta(ABCMeta):
         """
         Runs specified handler for current message and context
         :param handler: handler to be run. If None, on_invalid_command is returned
-        :return: response dict
+        :return: ResponseType
         """
         if handler is None:
-            return cls.on_invalid_command, 0.0, None
+            return ResponseType(cls.on_invalid_command, 0.0, None)
         try:
-            response, confidence, new_state = handler(message, history, state)
-            return response, 1, new_state
+            return ResponseType(*handler(message, history, state))
         except Exception as exc:
-            return str(exc), 1.0, None
+            return ResponseType(str(exc), 1.0, None)
 
     @staticmethod
     def handler(commands: List[str] = None,

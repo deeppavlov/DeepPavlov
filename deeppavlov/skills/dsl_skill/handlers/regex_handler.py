@@ -27,7 +27,7 @@ class RegexHandler(Handler):
             return False, previous_context
 
         for regexp in self.commands:
-            match = re.search(regexp, message)
+            match = re.search(regexp, ' '.join(message))
             if match is not None:
                 regex_groups = dict()
                 for group_ind, span in enumerate(match.regs):

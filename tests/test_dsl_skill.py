@@ -9,11 +9,10 @@ log = getLogger(__name__)
 
 
 class SimpleSkill(metaclass=DSLMeta):
-
     @DSLMeta.handler(commands=["hello", "hi", "sup", "greetings"])
     def greeting(utterance, history, state):
         response = "Hello, my friend!"
-        confidence = 1.
+        confidence = 1.0
         state = None
         return response, confidence, state
 
@@ -24,16 +23,17 @@ class TestDSLSkill:
         install_from_config(self.skill_config)
 
     def test_simple_skill(self):
-        user_messages_sequence = ["Hello",
-                                  "Hi",
-                                  "Tell me a joke",
-                                  "Sup",
-                                  "Ok, goodbye"
-                                  ]
+        user_messages_sequence = [
+            "Hello",
+            "Hi",
+            "Tell me a joke",
+            "Sup",
+            "Ok, goodbye"
+        ]
         on_invalid_command = "Sorry, I do not understand you"
 
-        self.skill_config["chainer"]["pipe"][0]["class_name"] = "SimpleSkill"
-        self.skill_config["chainer"]["pipe"][0]["on_invalid_command"] = on_invalid_command
+        self.skill_config["chainer"]["pipe"][1]["class_name"] = "SimpleSkill"
+        self.skill_config["chainer"]["pipe"][1]["on_invalid_command"] = on_invalid_command
         skill = build_model(self.skill_config, download=True)
         history_of_responses = []
         for each_utt in user_messages_sequence:

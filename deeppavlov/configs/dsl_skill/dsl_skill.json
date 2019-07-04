@@ -11,6 +11,12 @@
     ],
     "pipe": [
       {
+        "class_name": "ru_tokenizer",
+        "in": "utterances_batch",
+        "lowercase": true,
+        "out": "utterances_batch"
+      },
+      {
         "on_invalid_command": "Sorry, I do not understand you",
         "in": [
           "utterances_batch"

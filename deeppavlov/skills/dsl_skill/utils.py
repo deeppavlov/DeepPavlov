@@ -1,7 +1,12 @@
-from typing import Callable, Union, Tuple, Optional
+from typing import Callable, Union, Optional, NamedTuple
 
 UserId = Union[str, int]
-ResponseType = Tuple[str, float, Optional[str]]
+
+
+class ResponseType(NamedTuple):
+    response: str
+    confidence: float
+    state: Optional[str]
 
 
 def expand_arguments(func: Callable):
