@@ -71,7 +71,7 @@
   "logit_ranker": "deeppavlov.models.doc_retrieval.logit_ranker:LogitRanker",
   "lowercase_preprocessor": "deeppavlov.models.preprocessors.capitalization:LowercasePreprocessor",
   "mask": "deeppavlov.models.preprocessors.mask:Mask",
-  "morpho_tagger": "deeppavlov.models.morpho_tagger.network:MorphoTagger",
+  "morpho_tagger": "deeppavlov.models.morpho_tagger.morphotagger:MorphoTagger",
   "morphotagger_dataset": "deeppavlov.dataset_iterators.morphotagger_iterator:MorphoTaggerDatasetIterator",
   "morphotagger_dataset_reader": "deeppavlov.dataset_readers.morphotagging_dataset_reader:MorphotaggerDatasetReader",
   "morphotagger_multidataset": "deeppavlov.dataset_iterators.morphotagger_iterator:MorphoTaggerMultiDatasetIterator",
