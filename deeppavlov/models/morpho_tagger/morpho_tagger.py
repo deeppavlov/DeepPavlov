@@ -22,7 +22,6 @@ import keras.optimizers as ko
 import keras.regularizers as kreg
 import keras.backend as kb
 from keras import Model
-from keras import backend as K
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.vocab import DefaultVocabulary
@@ -304,7 +303,7 @@ class MorphoTagger(KerasModel):
             instance: a batch to predict answers on
         """
         with self.graph.as_default():
-            K.set_session(self.sess)
+            kb.set_session(self.sess)
             return self.predict_on_batch(x_batch, **kwargs)
 
     def _make_sent_vector(self, sent: List, bucket_length: int =None) -> np.ndarray:
