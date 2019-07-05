@@ -14,11 +14,13 @@
 
 from logging import getLogger
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Tuple
 
+import numpy as np
 import keras.layers as kl
 import keras.optimizers as ko
 import keras.regularizers as kreg
+import keras.backend as kb
 from keras import Model
 from keras import backend as K
 
@@ -26,7 +28,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.vocab import DefaultVocabulary
 from deeppavlov.core.models.keras_model import KerasModel
 from .cells import Highway
-from .common_tagger import *
+from .common_tagger import to_one_hot
 
 log = getLogger(__name__)
 
