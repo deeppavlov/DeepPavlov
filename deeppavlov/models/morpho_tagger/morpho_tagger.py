@@ -13,7 +13,9 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import List
+from pathlib import Path
+from typing import List, Optional, Union
+
 import keras.layers as kl
 import keras.optimizers as ko
 import keras.regularizers as kreg
@@ -76,8 +78,8 @@ class MorphoTagger(KerasModel):
                  symbols: DefaultVocabulary,
                  tags: DefaultVocabulary,
                  save_path: Optional[str] = None,
-                 load_path: Optional[str] = None,
-                 mode: str = None,
+                 load_path: Optional[Union[str, Path]] = None,
+                 mode: str = 'infer',
                  word_rnn: str = "cnn",
                  char_embeddings_size: int = 16,
                  char_conv_layers: int = 1,
