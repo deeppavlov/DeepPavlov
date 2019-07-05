@@ -63,7 +63,7 @@ class MorphoTagger(KerasModel):
                  tags: DefaultVocabulary,
                  save_path: Optional[str] = None,
                  load_path: Optional[str] = None,
-                 mode: str = None,
+                 mode: str = 'infer',
                  word_rnn: str = "cnn",
                  char_embeddings_size: int = 16,
                  char_conv_layers: int = 1,
