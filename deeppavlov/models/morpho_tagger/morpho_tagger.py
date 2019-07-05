@@ -1,12 +1,5 @@
-"""
-Refactored morphotagger which combines functionality of KerasWrapper, MorphoTagger
-and CharacterTagger in the same class
-"""
-import inspect
 from logging import getLogger
-from typing import List, Union, Tuple, Iterable
-from copy import deepcopy
-
+from typing import List
 import keras.layers as kl
 import keras.optimizers as ko
 import keras.regularizers as kreg
