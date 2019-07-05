@@ -77,7 +77,7 @@ class MorphoTagger(KerasModel):
     def __init__(self,
                  symbols: DefaultVocabulary,
                  tags: DefaultVocabulary,
-                 save_path: Optional[str] = None,
+                 save_path: Optional[Union[str, Path]] = None,
                  load_path: Optional[Union[str, Path]] = None,
                  mode: str = 'infer',
                  word_rnn: str = "cnn",
