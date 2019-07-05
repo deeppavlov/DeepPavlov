@@ -160,17 +160,7 @@ class MorphoTagger(KerasModel):
         if self.regularizer is not None:
             self.regularizer = kreg.l2(self.regularizer)
         if self.verbose > 0:
-            log.info("{} symbols, {} tags in CharacterTagger".format(self.symbols_number_(), self.tags_number_()))
-
-    def symbols_number_(self) -> int:
-        """Character vocabulary size
-        """
-        return len(self.symbols)
-
-    def tags_number_(self) -> int:
-        """Tag vocabulary size
-        """
-        return len(self.tags)
+            log.info("{} symbols, {} tags in CharacterTagger".format(len(self.symbols), len(self.tags)))
 
     def build(self):
         """Builds the network using Keras.
@@ -197,8 +187,8 @@ class MorphoTagger(KerasModel):
     def _build_word_cnn(self, inputs):
         """Builds word-level network
         """
-        inputs = kl.Lambda(kb.one_hot, arguments={"num_classes": self.symbols_number_()},
-                           output_shape=lambda x: tuple(x) + (self.symbols_number_(),))(inputs)
+        inputs = kl.Lambda(kb.one_hot, arguments={"num_classes": len(self.symbols)},
+                           output_shape=lambda x: tuple(x) + (len(self.symbols),))(inputs)
         char_embeddings = kl.Dense(self.char_embeddings_size, use_bias=False)(inputs)
         conv_outputs = []
         self.char_output_dim_ = 0
@@ -248,7 +238,7 @@ class MorphoTagger(KerasModel):
                 kl.LSTM(self.word_lstm_units[-1], return_sequences=True,
                         dropout=self.lstm_dropout))(lstm_outputs)
         pre_outputs = kl.TimeDistributed(
-                kl.Dense(self.tags_number_(), activation="softmax",
+                kl.Dense(len(self.tags), activation="softmax",
                          activity_regularizer=self.regularizer),
                 name="p")(lstm_outputs)
         return pre_outputs, lstm_outputs
