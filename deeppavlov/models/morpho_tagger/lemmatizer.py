@@ -85,6 +85,8 @@ class UDPymorphyLemmatizer(BasicLemmatizer):
         if lemma is not None:
             return lemma
         parses = self.analyzer.parse(word)
+        if not tag:
+            return parses[0].normal_form
         best_lemma, best_distance = word, np.inf
         for i, parse in enumerate(parses):
             curr_tag, curr_lemma = self.converter(str(parse.tag)), parse.normal_form

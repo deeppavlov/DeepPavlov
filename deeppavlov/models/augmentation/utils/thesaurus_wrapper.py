@@ -18,10 +18,6 @@ class RuThesaurus(object):
 
     def __init__(self, dir_path, with_source_token: bool = False):
         self.dir_path = Path(dir_path)
-        required_files = (f"{dt}.csv" for dt in ('synonyms', 'text_entry'))
-        if not all(Path(dir_path, f).exists() for f in required_files):
-            raise FileNotFoundError(f"""Files: synonyms.csv, text_entry.csv was not found,
-                                        in specified path - {self.dir_path}""")
         self.with_source_token = with_source_token
         self.synonyms_data = pd.read_csv(self.dir_path / "synonyms.csv", index_col=0)
         self.text_entry_data = pd.read_csv(self.dir_path / "text_entry.csv", index_col=0)
@@ -32,6 +28,10 @@ class RuThesaurus(object):
             'ADV':  ['Adv', 'Prdc', 'PrepG'],
             'NUM':  ['Num', 'NumG']
         }
+        self._reset_memo()
+
+    def _reset_memo(self):
+        self.memo = dict()
 
     def _find_synonyms(self, lemma: str, morpho_tag) -> List[str]:
         entry_id_set = set(self.text_entry_data[self.text_entry_data['lemma'] == lemma]['entry_id'])
@@ -68,9 +68,12 @@ class RuThesaurus(object):
         Return:
              List of synonyms
         """
+        if (lemma, morpho_tag['pos_tag']) in self.memo:
+            return self.memo.get((lemma, morpho_tag['pos_tag']))
         lemma = lemma.upper()
         synonyms = self._find_synonyms(lemma, morpho_tag)
         synonyms = self._filter(synonyms, lemma)
+        self.memo[(lemma, morpho_tag['pos_tag'])] = synonyms
         return synonyms
 
 

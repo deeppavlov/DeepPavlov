@@ -5,14 +5,27 @@
     ],
     "pipe": [
       {
-        "in": "x",
-        "out": "x_tok",
-        "id": "my_tokenizer",
-        "class_name": "nltk_moses_tokenizer"
+        "config_path": "{CONFIGS_PATH}/morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json",
+        "in": [
+          "x"
+        ],
+        "out": [
+          "morpho_tags"
+        ]
       },
       {
         "in": [
-          "x_tok"
+          "x"
+        ],
+        "class_name": "lazy_tokenizer",
+        "out": [
+          "x_tokens"
+        ]
+      },
+      {
+        "in": [
+          "x_tokens",
+          "morpho_tags"
         ],
         "out": [
           "variants"
@@ -24,7 +37,9 @@
         "ru_thes_dirpath": "{DOWNLOADS_PATH}/ruthes_lite2/",
         "replace_freq": 1.0,
         "with_source_token": true,
-        "force_inflect": true
+        "force_inflect": true,
+        "not_replaced_tokens": ["нравится", "любить", "блин", "быть"],
+        "replaced_pos_tags": ["NOUN", "VERB", "ADV", "ADJ"]
       },
       {
         "in": "variants",
@@ -35,7 +50,7 @@
       {
         "in": "aug_x_tok",
         "out": "aug_x",
-        "class_name": "nltk_moses_tokenizer"
+        "class_name": "ru_tokenizer"
       }
     ],
     "out": [
@@ -44,9 +59,10 @@
   },
   "metadata": {
     "variables": {
-      "ROOT_PATH": "/Users/sultanovar/.deeppavlov",
+      "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models"
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     }
   }
 }

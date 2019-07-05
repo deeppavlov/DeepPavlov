@@ -3,12 +3,12 @@ from deeppavlov.models.augmentation.utils.thesaurus_wrapper import *
 
 @pytest.fixture()
 def resourse_ru_thes_with_syns():
-    thes = RuThesaurus('/Users/sultanovar/.deeppavlov/downloads/ruthes_lite2', True)
+    thes = RuThesaurus('/home/azat/.deeppavlov/downloads/ruthes_lite2', True)
     return thes
 
 @pytest.fixture()
 def resource_ru_thes():
-    thes = RuThesaurus('/Users/sultanovar/.deeppavlov/downloads/ruthes_lite2', False)
+    thes = RuThesaurus('/home/azat/.deeppavlov/downloads/ruthes_lite2', False)
     return thes
 
 def test_ru_not_found():
@@ -18,6 +18,10 @@ def test_ru_not_found():
 def test_ru_find_syn(resourse_ru_thes_with_syns):
     thes = resourse_ru_thes_with_syns
     assert set(thes._find_synonyms('РАБ', {'pos_tag': 'NOUN'})) == set(['НЕВОЛЬНИК', 'НЕВОЛЬНИЦА', 'РАБ', 'РАБЫНЯ'])
+
+def test_ru_getsyn(resource_ru_thes):
+    thes = resource_ru_thes
+    assert set(thes.get_syn('РАБ', {'pos_tag': 'NOUN'})) == set(['НЕВОЛЬНИК', 'НЕВОЛЬНИЦА', 'РАБЫНЯ'])
 
 def test_ru_filter(resourse_ru_thes_with_syns):
     thes = resourse_ru_thes_with_syns

@@ -2,8 +2,8 @@ from abc import abstractmethod
 from typing import List
 from numpy.random import sample
 from itertools import repeat
-from nltk.stem import WordNetLemmatizer
-from deeppavlov.models.augmentation.utils.inflector import RuInflector
+from deeppavlov.models.augmentation.utils.inflection import RuInflector
+from deeppavlov.models.augmentation.utils.inflection import EnInflector
 
 
 class WordFilter(object):
@@ -104,11 +104,11 @@ class EnWordFilter(WordFilter):
                  replaced_pos_tags: List[str] = ['ADJ', 'ADV', 'NOUN', 'VERB']):
         super(EnWordFilter, self).__init__(replace_freq, isalpha_only, not_replaced_tokens)
         self.replaced_pos_tags = replaced_pos_tags
-        self.lemmatizer = WordNetLemmatizer()
+        self.inflector = EnInflector()
 
     def filter_not_replaced_token(self, tokens, morpho_tags):
         return map(lambda token, morpho_tag:
-                   self.lemmatizer.lemmatize(token, morpho_tags['pos_tag']) not in self.not_replaced_tokens,
+                   self.inflector.lemmatize(token, morpho_tag) not in self.not_replaced_tokens,
                    tokens,
                    morpho_tags)
 
@@ -128,7 +128,7 @@ class EnWordFilter(WordFilter):
             if prev_morpho_tag and\
                     prev_morpho_tag['pos_tag'] == 'PRON' and\
                     prev_morpho_tag['source_token'].lower() == 'there' and\
-                    self.lemmatizer.lemmatize(morpho_tag['source_token'], morpho_tag) == 'be':
+                    self.inflector.lemmatize(morpho_tag['source_token'], morpho_tag) == 'be':
                 result.append(False)
                 prev_morpho_tag = morpho_tag
             else:
@@ -169,7 +169,7 @@ class RuWordFilter(WordFilter):
 
     def filter_not_replaced_token(self, tokens, morpho_tags):
         return map(lambda x, y:
-                   self.inflector.get_lemma_form(x, y) not in self.not_replaced_tokens,
+                   self.inflector.lemmatize(x, y) not in self.not_replaced_tokens,
                    tokens,
                    morpho_tags)
 

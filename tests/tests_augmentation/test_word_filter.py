@@ -40,7 +40,8 @@ def resource_en_filter():
 
 def test_en_not_replace_filter(resource_en_filter):
     w = resource_en_filter
-    assert list(w.filter_not_replaced_token(['apples', 'fine', 'orange'], [{'pos_tag': 'NOUN'}, {'pos_tag': 'ADJ'}, {'pos_tag': 'NOUN'}])) == [False, False, True]
+    result = list(w.filter_not_replaced_token(['apples', 'fine', 'orange'], [{'pos_tag': 'NOUN'}, {'pos_tag': 'ADJ'}, {'pos_tag': 'NOUN'}]))
+    assert result == [False, False, True]
 
 def test_en_pos_filter(resource_en_filter):
     w = resource_en_filter

@@ -17,7 +17,7 @@ def resource_en_inflector():
 def test_en_get_lemma_verb(resource_en_inflector, source_lemma):
     infl = resource_en_inflector
     source, lemma = source_lemma
-    my_lemma = infl._lemmatize(source, {'pos_tag':'VERB', 'features': {}})
+    my_lemma = infl.lemmatize(source, {'pos_tag': 'VERB', 'features': {}})
     assert my_lemma == lemma
 
 @pytest.mark.parametrize('source_lemma_morph', [('apples', 'apple', {'pos_tag': 'NOUN', 'features': {}}),
@@ -29,7 +29,7 @@ def test_en_get_lemma_verb(resource_en_inflector, source_lemma):
 def test_en_get_lemma_form(resource_en_inflector, source_lemma_morph):
     infl = resource_en_inflector
     source, lemma, morph = source_lemma_morph
-    assert infl._lemmatize(source, morph) == lemma
+    assert infl.lemmatize(source, morph) == lemma
 
 @pytest.mark.parametrize('source_plur_morph', [('apple', 'apples', {'pos_tag': 'NOUN', 'features': {'Number': 'Sing'}}),
                                          ('phenomenon', 'phenomena', {'pos_tag': 'NOUN', 'features': {'Number': 'Sing'}}),

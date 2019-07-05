@@ -1,5 +1,12 @@
-from deeppavlov.models.augmentation.utils.inflector import RuInflector
-from deeppavlov.models.augmentation.utils.inflector import EnInflector
+from logging import getLogger
+from itertools import zip_longest
+from typing import List, Union, Optional
+from math import log as ln
+import re
+
+from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag
+from deeppavlov.models.augmentation.utils.inflection import RuInflector
+from deeppavlov.models.augmentation.utils.inflection import EnInflector
 from deeppavlov.models.augmentation.utils.lettercaser import Lettercaser
 from deeppavlov.models.augmentation.utils.thesaurus_wrapper import RuThesaurus
 from deeppavlov.models.augmentation.utils.thesaurus_wrapper import EnThesaurus
@@ -7,13 +14,6 @@ from deeppavlov.models.augmentation.utils.word_filter import RuWordFilter
 from deeppavlov.models.augmentation.utils.word_filter import EnWordFilter
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
-from logging import getLogger
-from itertools import zip_longest
-from typing import List
-from math import log as ln
-
-from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag
-
 
 logger = getLogger(__name__)
 
@@ -79,6 +79,7 @@ class ThesaurusAug(Component):
                                             isalpha_only=isalpha_only,
                                             not_replaced_tokens=not_replaced_tokens,
                                             replaced_pos_tags=replaced_pos_tags)
+            self.reflexive_exp = re.compile(r'.*ся\b|.*сь\b')
         elif lang == 'eng':
             self.inflector = EnInflector(classical_pluralize=en_classical_pluralize)
             self.thesaurus = EnThesaurus(with_source_token=False)
@@ -90,10 +91,6 @@ class ThesaurusAug(Component):
         self.penalty_for_source_token = penalty_for_source_token
         self.with_source_token = with_source_token
         self.lang = lang
-        if self.lang == 'rus':
-            self.morpho_tagger = build_model(configs.morpho_tagger.UD2_0.morpho_ru_syntagrus, download=True)
-        if self.lang == 'eng':
-            self.morpho_tagger = build_model(configs.morpho_tagger.UD2_0.morpho_en, download=True)
 
     def _unite_phrasal_verbs(self, tokens, morpho_tags):
         res_tokens, res_morpho_tags, is_pass_next_token = [], [], False
@@ -111,6 +108,10 @@ class ThesaurusAug(Component):
                 res_morpho_tags.append(cur_morpho_tag)
         return res_tokens, res_morpho_tags
 
+    def _disunit_phrasal_verbs(self, synonyms, filter_res):
+        ziped = zip(synonyms, filter_res)
+        [list(map(lambda x: x.replace("_", " "), syns)) if not_filtered else None for syns, not_filtered in ziped]
+
     def _get_cases(self, tokens, filter_res):
         ziped = zip(tokens, filter_res)
         return [self.lettercaser.determine_lettercase(token)
@@ -118,7 +119,7 @@ class ThesaurusAug(Component):
 
     def _get_lemmas(self, tokens, morpho_tags, filter_res):
         ziped = zip(tokens, morpho_tags, filter_res)
-        return [self.inflector.get_lemma_form(token, morpho_tag)
+        return [self.inflector.lemmatize(token, morpho_tag)
                 if not_filtered else None for token, morpho_tag, not_filtered in ziped]
 
     def _get_synonyms(self, lemmas, morpho_tags, filter_res):
@@ -144,6 +145,9 @@ class ThesaurusAug(Component):
         return [syns
                 if (not_filtered and syns) else [source_token] for syns, source_token, not_filtered in ziped]
 
+    def _filter_none_value(self, synonyms: List[List[Union[str, None]]]):
+        return [list(filter(lambda x: x is not None, syns)) if syns is not None else None for syns in synonyms]
+
     def __insert_prior_prob(self, syns):
         return [(0, syn) for syn in syns]
 
@@ -160,33 +164,31 @@ class ThesaurusAug(Component):
                     if not_filtered else candidate for candidate, not_filtered in zip(with_prob, filter_res)]
         return with_prob
 
-    def _disunit_phrasal_verbs(self, synonyms, filter_res):
-        ziped = zip(synonyms, filter_res)
-        [list(map(lambda x: x.replace("_", " "), syns)) if not_filtered else None for syns, not_filtered in ziped]
-
-    def __get_morpho_features_from_morpho_tag(self, features: str):
-        if features == '_':
-            return {}
-        features = features.split('|')
-        features = list(map(lambda x: tuple(x.split('=')), features))
-        return dict(features)
-
-###>>>
     def _transform_morpho_tags_in_dict(self, morpho_tags: str) -> List[dict]:
         morpho_tags, result = morpho_tags.split('\n'), []
         for morpho_tag in morpho_tags[:-1]:
             morpho_tag = morpho_tag.split('\t', maxsplit=2)
-            pos, morpho_features = make_pos_and_tag(morpho_tag[-1], sep='\t', return_mode='dict')
+            pos, morpho_features = make_pos_and_tag(morpho_tag[-1].replace('\t', ' '), sep=' ', return_mode='dict')
             result.append({
                 'source_token': morpho_tag[1],
                 'pos_tag': pos,
                 'features': morpho_features
             })
         return result
-###>>>
 
-    def _filter_none_value(self, synonyms: List[Union[]]):
-        return [list(filter(lambda x: x is not None, syns)) if syns is not None else None for syns in synonyms]
+    def _filter_based_on_reflexive_feature(self, synonyms, tokens, morpho_tags):
+        ziped = zip(synonyms, tokens, morpho_tags)
+        #res = []
+        #for syns, token, morpho_tag in ziped:
+        #    if syns and morpho_tag['pos_tag'] == 'VERB':
+        #        filtered = list(filter(lambda x: self.reflexive_exp.fullmatch(x) == self.reflexive_exp.fullmatch(token), syns))
+        #        res.append(filtered)
+        #    else:
+        #        res.append(syns)
+        #return res
+        return [list(filter(lambda x: self.reflexive_exp.fullmatch(x) == self.reflexive_exp.fullmatch(token), syns))
+                if syns and morpho_tag['pos_tag'] == 'VERB' else syns
+                for syns, token, morpho_tag in ziped]
 
     def transform_sentence(self, tokens: List[str], morpho_tags: str) -> List[str]:
         morpho_tags = self._transform_morpho_tags_in_dict(morpho_tags)
@@ -198,6 +200,8 @@ class ThesaurusAug(Component):
         synonyms = self._get_synonyms(lemmas, morpho_tags, filter_res)
         synonyms = self._inflect_synonyms(synonyms, morpho_tags, filter_res)
         synonyms = self._filter_none_value(synonyms)
+        if self.lang == 'rus':
+            synonyms = self._filter_based_on_reflexive_feature(synonyms, tokens, morpho_tags)
         synonyms = self._rest_cases(synonyms, cases, filter_res)
         if self.lang == 'eng':
             self._disunit_pharasal_verbs(synonyms, filter_res)
@@ -205,8 +209,7 @@ class ThesaurusAug(Component):
         candidates = self._transform_for_kenlm_elector(candidates, filter_res)
         return candidates
 
-    def __call__(self, batch_tokens: List[List[str]]):
-        batch_morpho_tags = self.morpho_tagger(batch_tokens)
+    def __call__(self, batch_tokens: List[List[str]], batch_morpho_tags: List[str]):
         transformed = [self.transform_sentence(tokens, morpho_tags) for tokens, morpho_tags in zip(batch_tokens, batch_morpho_tags)]
         return transformed
 
