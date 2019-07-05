@@ -90,7 +90,6 @@ class MorphoTagger(KerasModel):
                  verbose: int = 1, **kwargs):
         # Calls parent constructor. Results in creation of save_folder if it doesn't exist
         super().__init__(save_path=save_path, load_path=load_path, mode=mode)
-
         self.symbols = symbols
         self.tags = tags
         self.word_rnn = word_rnn
@@ -152,15 +151,13 @@ class MorphoTagger(KerasModel):
         if self.regularizer is not None:
             self.regularizer = kreg.l2(self.regularizer)
         if self.verbose > 0:
-            log.info("{} symbols, {} tags in CharacterTagger".format(self.symbols_number_, self.tags_number_))
+            log.info("{} symbols, {} tags in CharacterTagger".format(self.symbols_number_(), self.tags_number_()))
 
-    @property
     def symbols_number_(self) -> int:
         """Character vocabulary size
         """
         return len(self.symbols)
 
-    @property
     def tags_number_(self) -> int:
         """Tag vocabulary size
         """
@@ -191,8 +188,8 @@ class MorphoTagger(KerasModel):
     def _build_word_cnn(self, inputs):
         """Builds word-level network
         """
-        inputs = kl.Lambda(kb.one_hot, arguments={"num_classes": self.symbols_number_},
-                           output_shape=lambda x: tuple(x) + (self.symbols_number_,))(inputs)
+        inputs = kl.Lambda(kb.one_hot, arguments={"num_classes": self.symbols_number_()},
+                           output_shape=lambda x: tuple(x) + (self.symbols_number_(),))(inputs)
         char_embeddings = kl.Dense(self.char_embeddings_size, use_bias=False)(inputs)
         conv_outputs = []
         self.char_output_dim_ = 0
@@ -242,7 +239,7 @@ class MorphoTagger(KerasModel):
                 kl.LSTM(self.word_lstm_units[-1], return_sequences=True,
                         dropout=self.lstm_dropout))(lstm_outputs)
         pre_outputs = kl.TimeDistributed(
-                kl.Dense(self.tags_number_, activation="softmax",
+                kl.Dense(self.tags_number_(), activation="softmax",
                          activity_regularizer=self.regularizer),
                 name="p")(lstm_outputs)
         return pre_outputs, lstm_outputs
@@ -307,7 +304,7 @@ class MorphoTagger(KerasModel):
         """
         with self.graph.as_default():
             K.set_session(self.sess)
-            return self._net.predict_on_batch(x_batch, **kwargs)
+            return self.predict_on_batch(x_batch, **kwargs)
 
     def _make_sent_vector(self, sent: List, bucket_length: int =None) -> np.ndarray:
         """Transforms a sentence to Numpy array, which will be the network input.
