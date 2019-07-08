@@ -303,9 +303,9 @@ class MorphoTagger(KerasModel):
 
         Args:
             x_batch: a batch to predict answers on. It can be either a single array
-            for basic model or a sequence of arrays for a complex one
-            (:config:`configuration file <morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json>`
-            or its lemmatized version).
+                for basic model or a sequence of arrays for a complex one (
+                :config:`configuration file <morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json>`
+                or its lemmatized version).
         """
         return self.predict_on_batch(x_batch, **kwargs)
 
