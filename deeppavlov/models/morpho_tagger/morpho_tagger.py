@@ -273,14 +273,16 @@ class MorphoTagger(KerasModel):
         X, Y = self._transform_batch(data, labels)
         self.model_.train_on_batch(X, Y)
 
-    def predict_on_batch(self, data: Union[list, tuple],
+    def predict_on_batch(self, data: Union[List[np.ndarray], Tuple[np.ndarray]],
                          return_indexes: bool = False) -> List[List[str]]:
         """
         Makes predictions on a single batch
 
         Args:
-            data: a batch of word sequences together with additional inputs
-            return_indexes: whether to return tag indexes in vocabulary or tags themselves
+            data: model inputs for a single batch, data[0] contains input character encodings
+            and is the only element of data for mist models. Subsequent elements of data
+            include the output of additional vectorizers, e.g., dictionary-based one.
+            return_indexes: whether to return tag indexes in vocabulary or the tags themselves
 
         Returns:
             a batch of label sequences
@@ -300,7 +302,10 @@ class MorphoTagger(KerasModel):
         Predicts answers on batch elements.
 
         Args:
-            instance: a batch to predict answers on
+            x_batch: a batch to predict answers on. It can be either a single array
+            for basic model or a sequence of arrays for a complex one
+            (:config:`configuration file <morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json>`
+            or its lemmatized version).
         """
         return self.predict_on_batch(x_batch, **kwargs)
 

@@ -576,7 +576,7 @@ are listed in a separate distributed with the library. This part of the config l
       }
 
 The next part performs the tagging itself. Together with general parameters it describes
-the input parameters of :class:`~deeppavlov.models.morpho_tagger.network.CharacterTagger`) class.
+the input parameters of :class:`~deeppavlov.models.morpho_tagger.morpho_tagger.MorphoTagger`) class.
 
 ::
 
@@ -605,13 +605,13 @@ When an additional vectorizer is used, the first line is changed to
 
 Config includes general parameters of :class:`~deeppavlov.core.models.component.Component` class,
 described in the :doc:`config_description </intro/config_description>` and specific
-:class:`~deeppavlov.models.morpho_tagger.network.CharacterTagger`
+:class:`~deeppavlov.models.morpho_tagger.morpho_tagger.MorphoTagger`
 parameters. The latter include
 
 - ``tags`` - tag vocabulary. ``#tag_vocab`` refers to an already defined model with ``"id" = "tag_vocab"``.
 - ``symbols`` - character vocabulary. ``#char_vocab`` refers to an already defined model with ``"id" = "char_vocab"``.
 
-and other specific parameters of the network, available in :class:`~deeppavlov.models.morpho_tagger.network.CharacterTagger` documentation.
+and other specific parameters of the network, available in :class:`~deeppavlov.models.morpho_tagger.morpho_tagger.MorphoTagger` documentation.
 
 The ``"train"`` section of ``"chainer"`` contains training parameters, such as number of epochs,
 batch_size and logging frequency, see general readme for more details.

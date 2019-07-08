@@ -1,12 +1,10 @@
 deeppavlov.models.morpho_tagger
 ===============================
 
-.. autoclass:: deeppavlov.models.morpho_tagger.network.MorphoTagger
+.. autoclass:: deeppavlov.models.morpho_tagger.morpho_tagger.MorphoTagger
+    :members:
 
 .. autofunction:: deeppavlov.models.morpho_tagger.common.predict_with_model
-
-.. autoclass:: deeppavlov.models.morpho_tagger.network.CharacterTagger
-    :members:
 
 .. autoclass:: deeppavlov.models.morpho_tagger.lemmatizer.UDPymorphyLemmatizer
     :members:
