@@ -302,9 +302,7 @@ class MorphoTagger(KerasModel):
         Args:
             instance: a batch to predict answers on
         """
-        with self.graph.as_default():
-            kb.set_session(self.sess)
-            return self.predict_on_batch(x_batch, **kwargs)
+        return self.predict_on_batch(x_batch, **kwargs)
 
     def _make_sent_vector(self, sent: List, bucket_length: int =None) -> np.ndarray:
         """Transforms a sentence to Numpy array, which will be the network input.
