@@ -103,7 +103,7 @@ def get_tag_distance(first, second, first_sep=",", second_sep=" ", weight_pos_ta
     """
     first_pos, first_feats = make_pos_and_tag(first, sep=first_sep, return_mode="dict")
     second_pos, second_feats = make_pos_and_tag(second, sep=second_sep, return_mode="dict")
-    dist = weight_pos_tag*int(not _are_equal_pos(first_pos, second_pos))
+    dist = weight_pos_tag * int(not _are_equal_pos(first_pos, second_pos))
     for key, value in first_feats.items():
         other = second_feats.get(key)
         if other is None:

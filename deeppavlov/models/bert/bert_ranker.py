@@ -213,7 +213,11 @@ class BertSepRankerModel(LRScheduledTFModel):
         with tf.variable_scope("loss"):
             output_layer_a = tf.nn.dropout(output_layer_a, keep_prob=self.keep_prob_ph)
             output_layer_b = tf.nn.dropout(output_layer_b, keep_prob=self.keep_prob_ph)
-            self.loss = tf.contrib.losses.metric_learning.npairs_loss(self.y_ph, output_layer_a, output_layer_b)
+            output_layer_a = tf.nn.l2_normalize(output_layer_a, axis=1)
+            output_layer_b = tf.nn.l2_normalize(output_layer_b, axis=1)
+            embeddings = tf.concat([output_layer_a, output_layer_b], axis=0)
+            labels = tf.concat([self.y_ph, self.y_ph], axis=0)
+            self.loss = tf.contrib.losses.metric_learning.triplet_semihard_loss(labels, embeddings)
             logits = tf.multiply(output_layer_a, output_layer_b)
             self.y_probas = tf.reduce_sum(logits, 1)
             self.pooled_out = output_layer_a
