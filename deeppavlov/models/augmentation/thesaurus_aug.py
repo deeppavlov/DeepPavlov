@@ -178,14 +178,6 @@ class ThesaurusAug(Component):
 
     def _filter_based_on_reflexive_feature(self, synonyms, tokens, morpho_tags):
         ziped = zip(synonyms, tokens, morpho_tags)
-        #res = []
-        #for syns, token, morpho_tag in ziped:
-        #    if syns and morpho_tag['pos_tag'] == 'VERB':
-        #        filtered = list(filter(lambda x: self.reflexive_exp.fullmatch(x) == self.reflexive_exp.fullmatch(token), syns))
-        #        res.append(filtered)
-        #    else:
-        #        res.append(syns)
-        #return res
         return [list(filter(lambda x: self.reflexive_exp.fullmatch(x) == self.reflexive_exp.fullmatch(token), syns))
                 if syns and morpho_tag['pos_tag'] == 'VERB' else syns
                 for syns, token, morpho_tag in ziped]

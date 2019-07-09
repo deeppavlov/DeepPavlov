@@ -32,13 +32,12 @@
         ],
         "class_name": "thesaurus_aug",
         "lang": "rus",
-        "penalty_for_source_token": 0.95,
+        "penalty_for_source_token": 0.8,
         "isalpha_only": true,
         "ru_thes_dirpath": "{DOWNLOADS_PATH}/ruthes_lite2/",
-        "replace_freq": 1.0,
+        "replace_freq": 0.95,
         "with_source_token": true,
-        "force_inflect": true,
-        "not_replaced_tokens": ["нравится", "любить", "блин", "быть"],
+        "not_replaced_tokens": ["нравится", "любить", "блин", "быть", "работать", "класс"],
         "replaced_pos_tags": ["NOUN", "VERB", "ADV", "ADJ"]
       },
       {
