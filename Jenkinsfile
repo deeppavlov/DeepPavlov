@@ -20,14 +20,14 @@ node('cuda-module') {
             }
             stage('Tests') {
                 sh """
+                    . /etc/profile
+                    module add cuda/10.0
+                    . .venv-$BUILD_NUMBER/bin/activate
+
                     cd docs
                     make clean
                     make html
 
-                    . /etc/profile
-                    module add cuda/10.0
-
-                    . .venv-$BUILD_NUMBER/bin/activate
                     flake8 `python -c 'import deeppavlov; print(deeppavlov.__path__[0])'` --count --select=E9,F63,F7,F82 --show-source --statistics
                     pytest -v --disable-warnings
                 """
