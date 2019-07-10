@@ -28,7 +28,10 @@ class DSLMeta(ABCMeta):
     """
     skill_collection: Dict[str, 'DSLMeta'] = {}
 
-    def __init__(cls, name: str, bases, namespace, **kwargs):
+    def __init__(cls, name: str,
+                 bases,
+                 namespace,
+                 **kwargs):
         super(DSLMeta, cls).__init__(name, bases, namespace, **kwargs)
         cls.name = name
 
@@ -51,7 +54,9 @@ class DSLMeta(ABCMeta):
         register()(cls)
         DSLMeta.__add_to_collection(cls)
 
-    def __init__class(cls, on_invalid_command: str = "Простите, я вас не понял", *args, **kwargs):
+    def __init__class(cls, on_invalid_command: str = "Простите, я вас не понял",
+                      null_confidence: float = 0,
+                      *args, **kwargs):
         """
         Initialize Skill class
         Args:
@@ -59,6 +64,7 @@ class DSLMeta(ABCMeta):
         """
         # message to be sent on message with no associated handler
         cls.on_invalid_command = on_invalid_command
+        cls.null_confidence = null_confidence
 
     def __handle_batch(cls: 'DSLMeta',
                        utterances_batch: List,
@@ -74,8 +80,8 @@ class DSLMeta(ABCMeta):
             states_batch:  A batch of arbitrary typed states for
                 each utterance.
         Returns:
-            response: A batch of arbitrary typed skill inference results.
-            confidence: A batch of float typed confidence levels for each of
+            response_batch: A batch of arbitrary typed skill inference results.
+            confidence_batch: A batch of float typed confidence levels for each of
                 skill inference result.
             output_states_batch:  A batch of arbitrary typed states for
                 each utterance.
@@ -83,7 +89,7 @@ class DSLMeta(ABCMeta):
         """
         history_batch = history_batch or []
         states_batch = states_batch or []
-        return unzip(starmap(cls.handle, zip_longest(utterances_batch, history_batch, states_batch)))
+        return map(list, unzip(starmap(cls.handle, zip_longest(utterances_batch, history_batch, states_batch))))
 
     @staticmethod
     def __add_to_collection(cls: 'DSLMeta'):
@@ -142,7 +148,7 @@ class DSLMeta(ABCMeta):
              ResponseType
         """
         if handler is None:
-            return ResponseType(cls.on_invalid_command, 0.0, None)
+            return ResponseType(cls.on_invalid_command, cls.null_confidence, None)
         try:
             return ResponseType(*handler(message, history, state))
         except Exception as exc:
