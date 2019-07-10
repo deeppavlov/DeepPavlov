@@ -59,23 +59,10 @@ class DocumentBertNerIterator(DataLearningIterator):
         self.max_seq_length = max_seq_length or float('inf')
         self.one_sample_per_doc = one_sample_per_doc
         self.left_context_rate = left_context_rate
-        self.shuffle = shuffle
-
         vocab_file = str(expand_path(bert_tokenizer_vocab_file))
         self.tokenizer = FullTokenizer(vocab_file=vocab_file,
                                        do_lower_case=do_lower_case)
-        self.random = Random(seed)
-
-        self.train = data.get('train', [])
-        self.valid = data.get('valid', [])
-        self.test = data.get('test', [])
-        self.split(*args, **kwargs)
-        self.data = {
-            'train': self.train,
-            'valid': self.valid,
-            'test': self.test,
-            'all': self.train + self.test + self.valid
-        }
+        super().__init__(data, seed, shuffle, *args, **kwargs)
 
     def gen_batches(self, batch_size: int, data_type: str = 'train',
                     shuffle: bool = None) -> Iterator[Tuple[tuple, tuple]]:

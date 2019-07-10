@@ -23,15 +23,9 @@ from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 @register('snips_intents_iterator')
 class SnipsIntentIterator(DataLearningIterator):
     @overrides
-    def split(self, *args, **kwargs):
-        self.train = self._split(self.train)
-        self.valid = self._split(self.valid)
-        self.test = self._split(self.test)
-
-    @staticmethod
-    def _split(queries: List[Any]):
+    def preprocess(self, data, *args, **kwargs):
         result = []
-        for query in queries:
+        for query in data:
             text = ''.join(part['text'] for part in query['data'])
             intent = query['intent']
             result.append((text, [intent]))
