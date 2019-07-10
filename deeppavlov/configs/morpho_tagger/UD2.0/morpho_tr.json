@@ -154,10 +154,6 @@
       "test"
     ]
   },
-  "predict": {
-    "batch_size": 32,
-    "outfile": "{RESULTS_PATH}/ud_tr_test.res"
-  },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",

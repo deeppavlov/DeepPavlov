@@ -173,10 +173,6 @@
       "test"
     ]
   },
-  "predict": {
-    "batch_size": 32,
-    "outfile": "{RESULTS_PATH}/ud_ru_syntagrus_test.res"
-  },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",

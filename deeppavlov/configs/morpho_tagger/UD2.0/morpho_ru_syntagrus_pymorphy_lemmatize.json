@@ -2,7 +2,7 @@
   "dataset_reader": {
     "class_name": "morphotagger_dataset_reader",
     "data_path": "{DOWNLOADS_PATH}/UD2.0_source",
-    "language": "hu",
+    "language": "ru_syntagrus",
     "data_types": [
       "train",
       "dev",
@@ -25,6 +25,7 @@
           "x"
         ],
         "class_name": "lazy_tokenizer",
+        "language": "russian",
         "out": [
           "x_tokens"
         ]
@@ -51,8 +52,8 @@
           "BEGIN",
           "END"
         ],
-        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/hu/tag.dict",
-        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/hu/tag.dict"
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus/tag.dict",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus/tag.dict"
       },
       {
         "id": "char_vocab",
@@ -67,12 +68,26 @@
           "END"
         ],
         "level": "char",
-        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/hu/char.dict",
-        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/hu/char.dict"
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus/char.dict",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus/char.dict"
+      },
+      {
+        "id": "pymorphy_vectorizer",
+        "class_name": "pymorphy_vectorizer",
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus/tags_russian.txt",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus/tags_russian.txt",
+        "max_pymorphy_variants": 5,
+        "in": [
+          "x_tokens"
+        ],
+        "out": [
+          "x_possible_tags"
+        ]
       },
       {
         "in": [
-          "x_processed"
+          "x_processed",
+          "x_possible_tags"
         ],
         "in_y": [
           "y"
@@ -82,8 +97,8 @@
         ],
         "class_name": "morpho_tagger",
         "main": true,
-        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/hu/model.hdf5",
-        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/hu/model.hdf5",
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus/model_pymorphy.hdf5",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus/model_pymorphy.hdf5",
         "tags": "#tag_vocab",
         "symbols": "#char_vocab",
         "verbose": 1,
@@ -107,7 +122,13 @@
         "intermediate_dropout": 0.0,
         "word_dropout": 0.2,
         "lstm_dropout": 0.2,
-        "regularizer": 0.01
+        "regularizer": 0.01,
+        "word_vectorizers": [
+          [
+            "#pymorphy_vectorizer.dim",
+            128
+          ]
+        ]
       },
       {
         "in": [
@@ -115,9 +136,21 @@
           "y_predicted"
         ],
         "out": [
+          "y_lemmas"
+        ],
+        "class_name": "UD_pymorphy_lemmatizer",
+        "end": "\n"
+      },
+      {
+        "in": [
+          "x_tokens",
+          "y_predicted",
+          "y_lemmas"
+        ],
+        "out": [
           "y_prettified"
         ],
-        "class_name": "tag_output_prettifier",
+        "class_name": "lemmatized_output_prettifier",
         "end": "\n"
       }
     ],
@@ -146,12 +179,7 @@
     ],
     "validation_patience": 10,
     "val_every_n_epochs": 1,
-    "log_every_n_epochs": 1,
-    "class_name": "nn_trainer",
-    "evaluation_targets": [
-      "valid",
-      "test"
-    ]
+    "log_every_n_epochs": 1
   },
   "metadata": {
     "variables": {
@@ -161,20 +189,21 @@
       "RESULTS_PATH": "{ROOT_PATH}/results"
     },
     "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger/UD2.0/hu.tar.gz",
-        "subdir": "{MODELS_PATH}/morpho_tagger/UD2.0/hu"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger/UD2.0/ru_syntagrus.tar.gz",
+        "subdir": "{MODELS_PATH}/morpho_tagger/UD2.0/ru_syntagrus"
       },
       {
-        "url": "http://files.deeppavlov.ai/datasets/UD2.0_source/hu.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/UD2.0_source/hu"
+        "url": "http://files.deeppavlov.ai/datasets/UD2.0_source/ru_syntagrus.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/UD2.0_source/ru_syntagrus"
       }
     ],
     "labels": {
-      "telegram_utils": "MorphoTaggerModel"
+      "telegram_utils": "MorphoTaggerPymorphyLemmatizedModel"
     }
   }
 }
