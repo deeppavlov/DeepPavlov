@@ -162,3 +162,6 @@ class SimpleVocabulary(Estimator):
         self._t2i = defaultdict(lambda: unk_index)
         self._i2t = []
         self.count = 0
+
+    def idxs2toks(self, idxs):
+        return [self[idx] for idx in idxs]
