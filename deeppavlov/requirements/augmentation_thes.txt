@@ -1,0 +1,2 @@
+russian_tagsets==0.6
+git+https://github.com/SultanovAR/pattern.git#egg=pattern==3.6
