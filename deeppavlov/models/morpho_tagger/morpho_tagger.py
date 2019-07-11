@@ -24,7 +24,7 @@ import keras.backend as kb
 from keras import Model
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.vocab import DefaultVocabulary
+from deeppavlov.core.data.simple_vocab import SimpleVocabulary
 from deeppavlov.core.models.keras_model import KerasModel
 from .cells import Highway
 from .common_tagger import to_one_hot
@@ -76,8 +76,8 @@ class MorphoTagger(KerasModel):
     A subclass of :class:`~deeppavlov.core.models.keras_model.KerasModel`
     """
     def __init__(self,
-                 symbols: DefaultVocabulary,
-                 tags: DefaultVocabulary,
+                 symbols: SimpleVocabulary,
+                 tags: SimpleVocabulary,
                  save_path: Optional[Union[str, Path]] = None,
                  load_path: Optional[Union[str, Path]] = None,
                  mode: str = 'infer',
