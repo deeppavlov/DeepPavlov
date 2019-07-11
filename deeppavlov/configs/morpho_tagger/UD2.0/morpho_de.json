@@ -30,7 +30,7 @@
         ]
       },
       {
-        "id": "lowercase_preprocessor",
+        "id": "char_splitting_lowercase_preprocessor",
         "class_name": "char_splitting_lowercase_preprocessor",
         "in": [
           "x_tokens"
