@@ -36,7 +36,7 @@
           "x_tokens"
         ],
         "out": [
-          "x_processed"
+          "x_chars_lowered_marked"
         ]
       },
       {
@@ -59,7 +59,7 @@
         "class_name": "default_vocab",
         "min_freq": 3,
         "fit_on": [
-          "x_processed"
+          "x_chars_lowered_marked"
         ],
         "special_tokens": [
           "PAD",
@@ -85,7 +85,7 @@
       },
       {
         "in": [
-          "x_processed",
+          "x_chars_lowered_marked",
           "x_possible_tags"
         ],
         "in_y": [
