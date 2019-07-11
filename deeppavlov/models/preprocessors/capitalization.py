@@ -89,11 +89,8 @@ def process_word(word: str, to_lower: bool = False,
         a preprocessed word.
 
     Example:
-        Input params example:
-            word="Zaman",
-            to_lower=True,
-            append_case="first"
-        Output example:
+        .. code:: python
+            >>> process_word(word="Zaman", to_lower=True, append_case="first")
             ('<FIRST_UPPER>', 'z', 'a', 'm', 'a', 'n')
     """
     if all(x.isupper() for x in word) and len(word) > 1:
