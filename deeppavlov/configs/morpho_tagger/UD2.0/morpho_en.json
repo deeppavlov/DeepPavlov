@@ -31,7 +31,7 @@
       },
       {
         "id": "lowercase_preprocessor",
-        "class_name": "lowercase_preprocessor",
+        "class_name": "char_splitting_lowercase_preprocessor",
         "in": [
           "x_tokens"
         ],
