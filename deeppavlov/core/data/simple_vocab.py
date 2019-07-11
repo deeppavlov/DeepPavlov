@@ -29,7 +29,16 @@ log = getLogger(__name__)
 
 @register('simple_vocab')
 class SimpleVocabulary(Estimator):
-    """Implements simple vocabulary."""
+    """Implements simple vocabulary.
+
+    Parameters:
+        special_tokens: tuple of tokens that shouldn't be counted.
+        max_tokens: TODO
+        min_freq: minimal count of a token (except special tokens).
+        pad_with_zeros: TODO
+        unk_token: label assigned to unknown tokens.
+        freq_drop_load: TODO
+        """
     def __init__(self,
                  special_tokens: Tuple[str, ...] = tuple(),
                  max_tokens: int = 2**30,
@@ -51,7 +60,6 @@ class SimpleVocabulary(Estimator):
             self.load()
 
     def fit(self, *args):
-        # return None
         self.reset()
         tokens = chain(*args)
         # filter(None, <>) -- to filter empty tokens
