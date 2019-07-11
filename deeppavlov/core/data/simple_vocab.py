@@ -33,11 +33,12 @@ class SimpleVocabulary(Estimator):
 
     Parameters:
         special_tokens: tuple of tokens that shouldn't be counted.
-        max_tokens: TODO
+        max_tokens: upper bound for number of tokens in the vocabulary.
         min_freq: minimal count of a token (except special tokens).
-        pad_with_zeros: TODO
+        pad_with_zeros: if True, then batch of elements will be padded with zeros up to length of
+            the longest element in batch.
         unk_token: label assigned to unknown tokens.
-        freq_drop_load: TODO
+        freq_drop_load: if True, then frequencies of tokens are set to min_freq on the model load.
         """
     def __init__(self,
                  special_tokens: Tuple[str, ...] = tuple(),
