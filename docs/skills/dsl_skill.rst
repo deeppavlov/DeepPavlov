@@ -26,7 +26,7 @@ Usage
     from deeppavlov.skills.dsl_skill.dsl_skill import DSLMeta
 
 
-    class SimpleSkill(metaclass=DSLMeta):
+    class DSLSkill(metaclass=DSLMeta):
         @DSLMeta.handler(commands=["hello", "hi", "sup", "greetings"])
         def greeting(utterance, history, state):
             response = "Hello, my friend!"
@@ -36,10 +36,6 @@ Usage
 
 
     skill_config = read_json(configs.dsl_skill.dsl_skill)
-    on_invalid_command = "Sorry, I do not understand you"
-
-    skill_config["chainer"]["pipe"][1]["class_name"] = "SimpleSkill"
-    skill_config["chainer"]["pipe"][1]["on_invalid_command"] = on_invalid_command
 
     skill = build_model(skill_config, download=True)
     utterances_batch = ["Hello", "How are you?"]

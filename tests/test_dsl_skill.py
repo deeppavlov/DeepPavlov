@@ -8,7 +8,7 @@ from deeppavlov.utils.pip_wrapper.pip_wrapper import install_from_config
 log = getLogger(__name__)
 
 
-class SimpleSkill(metaclass=DSLMeta):
+class DSLSkill(metaclass=DSLMeta):
     @DSLMeta.handler(commands=["hello", "hi", "sup", "greetings"])
     def greeting(utterance, history, state):
         response = "Hello, my friend!"
@@ -32,7 +32,6 @@ class TestDSLSkill:
         ]
         on_invalid_command = "Sorry, I do not understand you"
 
-        self.skill_config["chainer"]["pipe"][1]["class_name"] = "SimpleSkill"
         self.skill_config["chainer"]["pipe"][1]["on_invalid_command"] = on_invalid_command
         skill = build_model(self.skill_config, download=True)
         history_of_responses = []

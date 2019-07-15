@@ -17,6 +17,7 @@
         "out": "utterance_tokens_batch"
       },
       {
+        "class_name": "DSLSkill",
         "on_invalid_command": "Sorry, I do not understand you",
         "null_confidence": 0.0,
         "in": [

@@ -6,8 +6,6 @@ from functools import partial
 from itertools import zip_longest, starmap
 from typing import List, Optional, Union, Dict, Callable, Tuple
 
-from more_itertools import unzip
-
 from deeppavlov.core.common.registry import register
 from deeppavlov.skills.dsl_skill.handlers import Handler, RegexHandler
 from deeppavlov.skills.dsl_skill.utils import expand_arguments, ResponseType
@@ -15,7 +13,7 @@ from deeppavlov.skills.dsl_skill.utils import expand_arguments, ResponseType
 
 class DSLMeta(ABCMeta):
     """
-    This metaclass is used for create a skill.
+    This metaclass is used for creating a skill. Skill is register by its class name in registry.
 
     Example:
 
@@ -89,7 +87,7 @@ class DSLMeta(ABCMeta):
         """
         history_batch = history_batch or []
         states_batch = states_batch or []
-        return map(list, unzip(starmap(cls.handle, zip_longest(utterances_batch, history_batch, states_batch))))
+        return (*list(map(list, zip(*starmap(cls.handle, zip_longest(utterances_batch, history_batch, states_batch))))),)
 
     @staticmethod
     def __add_to_collection(cls: 'DSLMeta'):
