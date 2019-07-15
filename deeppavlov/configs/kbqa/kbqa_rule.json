@@ -1,0 +1,84 @@
+{
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "id": "my_embedder",
+        "class_name": "fasttext",
+        "load_path": "{DOWNLOADS_PATH}/embeddings/lenta_lower_100.bin"
+      },
+      {
+        "class_name": "entity_linker",
+        "id": "linker",
+        "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
+        "wiki_filename": "wiki_rus.pickle",
+        "entities_filename": "wiki_rus_name_to_q_lowercase.pickle",
+        "inverted_index_filename": "inverted_index.pickle",
+        "id_to_name_file": "wiki_rus_q_to_name.pickle",
+        "use_inverted_index": false,
+        "rule_filter_entities": true,
+        "debug": false
+      },
+      {
+        "in": ["x"],
+        "out": ["answers"],
+        "load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_q_to_name.pickle",
+        "class_name": "kb_rule",
+        "relations_maping_filename": "wiki_properties_rus.pickle",
+        "udpipe_filename": "russian-syntagrus-ud-2.3-181115.udpipe",
+        "templates_filename": "templates.pickle",
+        "debug": false,
+        "use_templates": true,
+        "ft_embedder": "#my_embedder",
+        "linker": "#linker"
+      }
+    ],
+    "out": ["answers"]
+  },
+  "train":{
+    "metrics": [
+      {
+        "name": "kbqa_accuracy",
+        "inputs": ["y", "answers"]
+      }
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models/kbqa_mix_lowercase"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/wikidata_rus.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/inverted_index.pickle",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/templates.pickle",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/wiki_properties_id_to_name.pickle",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/russian-syntagrus-ud-2.3-181115.udpipe",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/lenta_lower_100.bin",
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
+      }
+    ]
+  }
+}
