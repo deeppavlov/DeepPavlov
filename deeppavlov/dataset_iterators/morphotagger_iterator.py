@@ -77,7 +77,7 @@ class MorphoTaggerDatasetIterator(DataLearningIterator):
             if self.shuffle:
                 random.shuffle(self.train)
             L = int(len(self.train) * (1.0 - self.validation_split))
-            self.train, self.valid = self.train[:L], self.valid[L:]
+            self.train, self.valid = self.train[:L], self.train[L:]
         elif self.min_train_fraction > 0.0:
             train_length = len(self.train)
             valid_length = len(self.valid)
