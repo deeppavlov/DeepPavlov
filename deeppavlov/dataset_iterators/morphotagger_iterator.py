@@ -67,7 +67,7 @@ class MorphoTaggerDatasetIterator(DataLearningIterator):
         self.min_train_fraction = min_train_fraction
         super().__init__(data, seed, shuffle)
 
-    def split(self) -> None:
+    def split(self, *args, **kwargs) -> None:
         """
         Splits the `train` part to `train` and `valid`, if no `valid` part is specified.
         Moves deficient data from `valid` to `train` if both parts are given,

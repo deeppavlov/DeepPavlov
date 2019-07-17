@@ -13,30 +13,38 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import List, Union, Tuple, Iterable
+from pathlib import Path
+from typing import List, Optional, Union, Tuple
 
+import numpy as np
 import keras.layers as kl
 import keras.optimizers as ko
 import keras.regularizers as kreg
+import keras.backend as kb
 from keras import Model
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.vocab import DefaultVocabulary
-from deeppavlov.core.models.keras_model import KerasWrapper
+from deeppavlov.core.models.keras_model import KerasModel
 from .cells import Highway
-from .common_tagger import *
+from .common_tagger import to_one_hot
 
 log = getLogger(__name__)
 
 MAX_WORD_LENGTH = 30
 
-class CharacterTagger:
 
+@register("morpho_tagger")
+class MorphoTagger(KerasModel):
     """A class for character-based neural morphological tagger
 
     Parameters:
         symbols: character vocabulary
         tags: morphological tags vocabulary
+        save_path: the path where model is saved
+        load_path: the path from where model is loaded
+        mode: usage mode
+
         word_rnn: the type of character-level network (only `cnn` implemented)
         char_embeddings_size: the size of character embeddings
         char_conv_layers: the number of convolutional layers on character level
@@ -64,10 +72,15 @@ class CharacterTagger:
         word_dropout: the ratio of dropout before word level (it is applied to word embeddings)
         regularizer: l2 regularization parameter
         verbose: the level of verbosity
+
+    A subclass of :class:`~deeppavlov.core.models.keras_model.KerasModel`
     """
     def __init__(self,
                  symbols: DefaultVocabulary,
                  tags: DefaultVocabulary,
+                 save_path: Optional[Union[str, Path]] = None,
+                 load_path: Optional[Union[str, Path]] = None,
+                 mode: str = 'infer',
                  word_rnn: str = "cnn",
                  char_embeddings_size: int = 16,
                  char_conv_layers: int = 1,
@@ -84,7 +97,9 @@ class CharacterTagger:
                  word_lstm_units: Union[int, List[int]] = 128,
                  word_dropout: float = 0.0,
                  regularizer: float = None,
-                 verbose: int = 1):
+                 verbose: int = 1, **kwargs):
+        # Calls parent constructor. Results in creation of save_folder if it doesn't exist
+        super().__init__(save_path=save_path, load_path=load_path, mode=mode)
         self.symbols = symbols
         self.tags = tags
         self.word_rnn = word_rnn
@@ -107,6 +122,29 @@ class CharacterTagger:
         self._initialize()
         self.build()
 
+        # Tries to load the model from model `load_path`, if it is available
+        self.load()
+
+    def load(self) -> None:
+        """
+        Checks existence of the model file, loads the model if the file exists
+        Loads model weights from a file
+        """
+
+        # Checks presence of the model files
+        if self.load_path.exists():
+            path = str(self.load_path.resolve())
+            log.info('[loading model from {}]'.format(path))
+            self.model_.load_weights(path)
+
+    def save(self) -> None:
+        """
+        Saves model weights to the save_path, provided in config. The directory is
+        already created by super().__init__, which is called in __init__ of this class"""
+        path = str(self.save_path.absolute())
+        log.info('[saving model to {}]'.format(path))
+        self.model_.save_weights(path)
+
     def _initialize(self):
         if isinstance(self.char_window_size, int):
             self.char_window_size = [self.char_window_size]
@@ -123,19 +161,7 @@ class CharacterTagger:
         if self.regularizer is not None:
             self.regularizer = kreg.l2(self.regularizer)
         if self.verbose > 0:
-            log.info("{} symbols, {} tags in CharacterTagger".format(self.symbols_number_, self.tags_number_))
-
-    @property
-    def symbols_number_(self) -> int:
-        """Character vocabulary size
-        """
-        return len(self.symbols)
-
-    @property
-    def tags_number_(self) -> int:
-        """Tag vocabulary size
-        """
-        return len(self.tags)
+            log.info("{} symbols, {} tags in CharacterTagger".format(len(self.symbols), len(self.tags)))
 
     def build(self):
         """Builds the network using Keras.
@@ -162,8 +188,8 @@ class CharacterTagger:
     def _build_word_cnn(self, inputs):
         """Builds word-level network
         """
-        inputs = kl.Lambda(kb.one_hot, arguments={"num_classes": self.symbols_number_},
-                           output_shape=lambda x: tuple(x) + (self.symbols_number_,))(inputs)
+        inputs = kl.Lambda(kb.one_hot, arguments={"num_classes": len(self.symbols)},
+                           output_shape=lambda x: tuple(x) + (len(self.symbols),))(inputs)
         char_embeddings = kl.Dense(self.char_embeddings_size, use_bias=False)(inputs)
         conv_outputs = []
         self.char_output_dim_ = 0
@@ -213,7 +239,7 @@ class CharacterTagger:
                 kl.LSTM(self.word_lstm_units[-1], return_sequences=True,
                         dropout=self.lstm_dropout))(lstm_outputs)
         pre_outputs = kl.TimeDistributed(
-                kl.Dense(self.tags_number_, activation="softmax",
+                kl.Dense(len(self.tags), activation="softmax",
                          activity_regularizer=self.regularizer),
                 name="p")(lstm_outputs)
         return pre_outputs, lstm_outputs
@@ -231,26 +257,32 @@ class CharacterTagger:
         else:
             return X
 
-    def train_on_batch(self, data: List[Iterable], labels: Iterable[list]) -> None:
-        """Trains model on a single batch
+    def train_on_batch(self, *args) -> None:
+        """Trains the model on a single batch.
 
         Args:
-            data: a batch of word sequences
-            labels: a batch of correct tag sequences
-        Returns:
-            the trained model
+            *args: the list of network inputs.
+            Last element of `args` is the batch of targets,
+            all previous elements are training data batches
         """
+        # data: List[Iterable], labels: Iterable[list]
+        # Args:
+        #   data: a batch of word sequences
+        #   labels: a batch of correct tag sequences
+        *data, labels = args
         X, Y = self._transform_batch(data, labels)
         self.model_.train_on_batch(X, Y)
 
-    def predict_on_batch(self, data: Union[list, tuple],
+    def predict_on_batch(self, data: Union[List[np.ndarray], Tuple[np.ndarray]],
                          return_indexes: bool = False) -> List[List[str]]:
         """
         Makes predictions on a single batch
 
         Args:
-            data: a batch of word sequences together with additional inputs
-            return_indexes: whether to return tag indexes in vocabulary or tags themselves
+            data: model inputs for a single batch, data[0] contains input character encodings
+            and is the only element of data for mist models. Subsequent elements of data
+            include the output of additional vectorizers, e.g., dictionary-based one.
+            return_indexes: whether to return tag indexes in vocabulary or the tags themselves
 
         Returns:
             a batch of label sequences
@@ -264,6 +296,18 @@ class CharacterTagger:
             elem = elem[:length]
             answer[i] = elem if return_indexes else self.tags.idxs2toks(elem)
         return answer
+
+    def __call__(self, *x_batch, **kwargs) -> Union[List, np.ndarray]:
+        """
+        Predicts answers on batch elements.
+
+        Args:
+            x_batch: a batch to predict answers on. It can be either a single array
+                for basic model or a sequence of arrays for a complex one (
+                :config:`configuration file <morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json>`
+                or its lemmatized version).
+        """
+        return self.predict_on_batch(x_batch, **kwargs)
 
     def _make_sent_vector(self, sent: List, bucket_length: int =None) -> np.ndarray:
         """Transforms a sentence to Numpy array, which will be the network input.
@@ -302,30 +346,3 @@ class CharacterTagger:
         for i, tag in enumerate(tags):
             answer[i] = self.tags.tok2idx(tag)
         return answer
-
-    def save(self, outfile) -> None:
-        """Saves model weights to a file
-
-        Args:
-            outfile: file with model weights (other model components should be given in config)
-        """
-        self.model_.save_weights(outfile)
-
-    def load(self, infile) -> None:
-        """Loads model weights from a file
-
-        Args:
-            infile: file to load model weights from
-        """
-        self.model_.load_weights(infile)
-
-
-@register("morpho_tagger")
-class MorphoTagger(KerasWrapper):
-    """
-    A wrapper over :class:`CharacterTagger`.
-    It is inherited from :class:`~deeppavlov.core.keras_model.KerasWrapper`.
-    It accepts initialization parameters of :class:`CharacterTagger`
-    """
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(CharacterTagger, *args, **kwargs)
