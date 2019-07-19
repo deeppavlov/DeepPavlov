@@ -67,3 +67,24 @@ def import_packages(packages: list) -> None:
     """Import packages from list to execute their code."""
     for package in packages:
         __import__(package)
+
+
+def parse_path_with_config(path: Union[str, Path], config: Union[str, Path, dict]) -> Path:
+    if isinstance(config, (str, Path)):
+        config = read_json(find_config(config))
+
+    variables = {
+        'DEEPPAVLOV_PATH': os.getenv(f'DP_DEEPPAVLOV_PATH', Path(__file__).parent.parent.parent)
+    }
+    variables_exact = {f'{{{k}}}': v for k, v in variables.items()}
+    for name, value in config.get('metadata', {}).get('variables', {}).items():
+        env_name = f'DP_{name}'
+        if env_name in os.environ:
+            value = os.getenv(env_name)
+        if value in variables_exact:
+            value = variables_exact[value]
+        elif isinstance(value, str):
+            value = value.format(**variables)
+        variables[name] = value
+        variables_exact[f'{{{name}}}'] = value
+    return _parse_config_property(str(path), variables, variables_exact)
