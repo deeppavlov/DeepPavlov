@@ -24,7 +24,7 @@ from subprocess import Popen
 
 import pandas as pd
 
-from deeppavlov.core.commands.utils import expand_path, parse_config
+from deeppavlov.core.commands.utils import expand_path, parse_config, parse_path_with_config
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json, save_json, find_config
 from deeppavlov.models.evolution.evolution_param_generator import ParamsEvolution
@@ -107,8 +107,8 @@ def main():
     evolve_metric = considered_metrics[0]
 
     # Create table variable for gathering results
-    abs_path_to_main_models = expand_path(str(evolution.models_path).format(
-        **evolution.basic_config['metadata']['variables']))
+    abs_path_to_main_models = expand_path(parse_path_with_config(evolution.models_path,
+                                                                 evolution.basic_config))
     abs_path_to_main_models.mkdir(parents=True, exist_ok=True)
 
     result_file = abs_path_to_main_models / "result_table.tsv"
