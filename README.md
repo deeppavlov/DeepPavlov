@@ -6,41 +6,12 @@
 DeepPavlov is an open-source conversational AI library built on [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/).
 
 DeepPavlov is designed for
- * **development of** production ready **chat-bots** and complex conversational systems,
- * **research** in the area of NLP and, particularly, of dialog systems.
+ * development of production ready chat-bots and complex conversational systems,
+ * research in the area of NLP and, particularly, of dialog systems.
 
-# Demo 
+# Demo
 
 Demonstation of selected features is available at [demo.ipavlov.ai](https://demo.ipavlov.ai/)
-
-# Hello Bot in DeepPavlov
-
-Import key components to build HelloBot. 
-```python
-from deeppavlov.skills.pattern_matching_skill import PatternMatchingSkill
-from deeppavlov.agents.default_agent.default_agent import DefaultAgent 
-from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
-```
-
-Create skills as pre-defined responses for a user's input containing specific keywords or matching regexps. Every skill returns response and confidence.
-```python
-hello = PatternMatchingSkill(responses=['Hello world!'], patterns=["hi", "hello", "good day"])
-bye = PatternMatchingSkill(['Goodbye world!', 'See you around'], patterns=["bye", "chao", "see you"])
-fallback = PatternMatchingSkill(["I don't understand, sorry", 'I can say "Hello world!"'])
-```
-
-Agent executes skills and then takes response from the skill with the highest confidence.
-```python
-HelloBot = DefaultAgent([hello, bye, fallback], skills_selector=HighestConfidenceSelector())
-```
-
-Give the floor to the HelloBot!
-```python
-print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
-```
-
-[Jupyter notebook with HelloBot example.](https://colab.research.google.com/github/deepmipt/DeepPavlov/blob/master/docs/intro/hello_bot.ipynb)
-
 
 # Features
 
