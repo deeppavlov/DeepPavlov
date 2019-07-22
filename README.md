@@ -80,7 +80,7 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 
 1. Create a virtual environment with `Python 3.6` or `Python 3.7`:
     ```
-    virtualenv env
+    python -m venv env
     ```
 2. Activate the environment:
     * `Linux`
