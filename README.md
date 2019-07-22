@@ -2,9 +2,14 @@
 ![Python 3.6 3.7](https://img.shields.io/badge/python-3.6%20%7C%203.7-blue.svg)
 [![Downloads](https://pepy.tech/badge/deeppavlov)](https://pepy.tech/project/deeppavlov)
 
-DeepPavlov is an open-source conversational AI library built on [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). It is designed for
- * development of production ready chat-bots and complex conversational systems,
- * NLP and dialog systems research.
+
+<img align="right" height="250" src="docs/_static/ipavlov_logo.png"/>
+
+DeepPavlov is an open-source conversational AI library built on [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/).
+
+DeepPavlov is designed for
+ * **development of** production ready **chat-bots** and complex conversational systems,
+ * **research** in the area of NLP and, particularly, of dialog systems.
 
 # Demo 
 
@@ -195,10 +200,6 @@ DeepPavlov is Apache 2.0 - licensed.
 If you have any questions, bug reports or feature requests, please feel free to post on our [Github Issues](https://github.com/deepmipt/DeepPavlov/issues) page. Please tag your issue with `bug`, `feature request`, or `question`.  Also we’ll be glad to see your pull requests to add new datasets, models, embeddings, etc. In addition, we would like to invite everyone to join our [community forum](https://forum.ipavlov.ai/), where you can ask the DeepPavlov community any questions, share ideas, and find like-minded people.
 
 # The Team
-
-<p align="center">
-<img src="docs/_static/ipavlov_logo.png" width="20%" height="20%"/>
-</p>
 
 DeepPavlov is built and maintained by [Neural Networks and Deep Learning Lab](https://mipt.ru/english/research/labs/neural-networks-and-deep-learning-lab) at [MIPT](https://mipt.ru/english/) within [iPavlov](http://ipavlov.ai/) project (part of [National Technology Initiative](https://asi.ru/eng/nti/)) and in partnership with [Sberbank](http://www.sberbank.com/).
 
