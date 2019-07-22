@@ -1,9 +1,7 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green.svg)](https://github.com/deepmipt/DeepPavlov/blob/master/LICENSE)
 ![Python 3.6 3.7](https://img.shields.io/badge/python-3.6%20%7C%203.7-blue.svg)
 [![Downloads](https://pepy.tech/badge/deeppavlov)](https://pepy.tech/project/deeppavlov)
-
-
-<img align="right" height="250" src="docs/_static/ipavlov_logo.png"/>
+<img align="right" height="27%" width="27%" src="docs/_static/ipavlov_logo.png"/>
 
 DeepPavlov is an open-source conversational AI library built on [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/).
 
@@ -13,7 +11,7 @@ DeepPavlov is designed for
 
 # Demo 
 
-Demo of selected features is available at [demo.ipavlov.ai](https://demo.ipavlov.ai/)
+Demonstation of selected features is available at [demo.ipavlov.ai](https://demo.ipavlov.ai/)
 
 # Hello Bot in DeepPavlov
 
