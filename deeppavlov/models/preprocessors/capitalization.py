@@ -74,7 +74,7 @@ class CapitalizationPreprocessor(Component):
 
 def process_word(word: str, to_lower: bool = False,
                  append_case: Optional[str] = None) -> Tuple[str]:
-    """The method implements folowing operations:
+    """The method implements the following operations:
         1. converts word to a tuple of symbols (character splitting),
         2. optionally converts it to lowercase and
         3. adds capitalization label.
@@ -89,9 +89,10 @@ def process_word(word: str, to_lower: bool = False,
         a preprocessed word.
 
     Example:
-        .. code:: python
-            >>> process_word(word="Zaman", to_lower=True, append_case="first")
-            ('<FIRST_UPPER>', 'z', 'a', 'm', 'a', 'n')
+        >>> process_word(word="Zaman", to_lower=True, append_case="first")
+        ('<FIRST_UPPER>', 'z', 'a', 'm', 'a', 'n')
+        >>> process_word(word="MSU", to_lower=True, append_case="last")
+        ('m', 's', 'u', '<ALL_UPPER>')
     """
     if all(x.isupper() for x in word) and len(word) > 1:
         uppercase = "<ALL_UPPER>"
