@@ -29,7 +29,7 @@ Optional ``-p`` key is used to override the port number.
 
 Now set up and test your dialog (https://dialogs.yandex.ru/developer/). Detailed documentation of the platform could be
 found on https://tech.yandex.ru/dialogs/alice/doc/about-docpage/, while other library options described in
-:doc:`REST API </devguides/rest_api>` section.
+:doc:`REST API </integrations/rest_api>` section.
 
 
 Agents

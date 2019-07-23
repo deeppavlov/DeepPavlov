@@ -5,7 +5,7 @@ Welcome to DeepPavlov's documentation!
    :glob:
    :maxdepth: 1
 
-   Hello bot! <intro/hello_bot>
+   Quick Start <intro/quick_start>
    Installation <intro/installation>
    Conceptual overview <intro/overview>
    Features <intro/features>
@@ -45,6 +45,20 @@ Welcome to DeepPavlov's documentation!
    Frequently Asked Questions Answering <skills/faq>
    eCommerce Bot <skills/ecommerce>
    AIML <skills/aiml_skill>
+
+
+.. toctree::
+   :glob:
+   :maxdepth: 3
+   :caption: Integrations
+
+   REST API <integrations/rest_api>
+   Telegram integration <integrations/telegram>
+   Yandex Alice integration <integrations/yandex_alice>
+   Amazon Alexa integration <integrations/amazon_alexa>
+   Microsoft Bot Framework integration <integrations/ms_bot>
+   Amazon AWS deployment <integrations/aws_ec2>
+   Deeppavlov settings <integrations/settings>
 
 
 .. toctree::
