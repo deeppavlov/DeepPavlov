@@ -1,53 +1,62 @@
 Yandex Alice integration
 ========================
 
+Any model specified by a DeepPavlov config can be launched as a skill for
+Yandex.Alice. You can do it using command line interface or using python.
 
-Pipelines
-~~~~~~~~~
+Command line interface
+~~~~~~~~~~~~~~~~~~~~~~
 
-
-Any DeepPavlov pipeline can be launched as a skill for Yandex.Alice.
-
-Configure host, port, model endpoint, GET request arguments in ``deeppavlov/utils/settings/server_config.json`` or see default values there.
-
-Use your own certificate for HTTPS if you have; otherwise, generate self-signed one like that:
+To interact with Alice you will require your own HTTPS certificate. To generate
+a new one -- run:
 
 ::
 
     openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/CN=MY_DOMAIN_OR_IP" -keyout my.key -out my.crt
 
-Then run
+Then run:
 
 ::
 
-    python -m deeppavlov riseapi --api-mode alice --https --key my.key --cert my.crt  <config_path> [-d] [-p <port_number>]
+    python -m deeppavlov riseapi --api-mode alice --https --key my.key --cert my.crt  <config_path> [-d] [-p <port>]
 
 
-Optional ``-d`` key is for dependencies download before service start.
+* ``-d``: download model specific data before starting the service.
+* ``-p <port>``: sets the port to ``<port>``. Overrides default
+  settings from ``deeppavlov/utils/settings/server_config.json``.
 
-Optional ``-p`` key is used to override the port number.
+Now set up and test your dialog (https://dialogs.yandex.ru/developer/).
+Detailed documentation of the platform could be found on 
+https://tech.yandex.ru/dialogs/alice/doc/about-docpage/. Advanced API
+configuration is described in :doc:`REST API </integrations/rest_api>` section.
 
-Now set up and test your dialog (https://dialogs.yandex.ru/developer/). Detailed documentation of the platform could be
-found on https://tech.yandex.ru/dialogs/alice/doc/about-docpage/, while other library options described in
-:doc:`REST API </integrations/rest_api>` section.
 
-
-Agents
+Python
 ~~~~~~
 
-You can also run :doc:`agents </apiref/agents>` as Alice skills:
+To run a model specified by a DeepPavlov config ``<config_path>`` as an Alice
+skill, firstly, you have to turn it to a :class:`~deeppavlov.core.skill.skill.Skill`
+and then make it an :class:`~deeppavlov.core.agent.agent.Agent`.
 
 .. code:: python
 
+    from deeppavlov import build_model
+    from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
     from deeppavlov.agents.default_agent.default_agent import DefaultAgent
     from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
-    from deeppavlov.skills.pattern_matching_skill import PatternMatchingSkill
     from deeppavlov.utils.alice import start_agent_server
 
-    skill_hello = PatternMatchingSkill(['Привет, мир!'], patterns=['привет', 'здравствуй', 'добрый день'])
-    skill_bye = PatternMatchingSkill(['Пока, мир', 'Ещё увидимся'], patterns=['пока', 'чао', 'увидимся', 'до свидания'])
-    skill_fallback = PatternMatchingSkill(['Извини, я не понимаю', 'Я умею здороваться )'])
+    model = build_model("<config_path>", download=True)
 
-    agent = DefaultAgent([skill_hello, skill_bye, skill_fallback], skills_processor=HighestConfidenceSelector())
-
+    # Step 1: make it a Skill 
+    skill = DefaultStatelessSkill(model)
+    # Step 2: make it an Agent
+    agent = DefaultAgent(skills=[skill])
+    # Step 3: run server
     start_agent_server(agent, host='0.0.0.0', port=7051, endpoint='/agent', ssl_key='my.key', ssl_cert='my.crt')
+
+If your model is already a subclass of :class:`~deeppavlov.core.skill.skill.Skill`
+or a subclass of :class:`~deeppavlov.core.agent.agent.Agent` (see
+:doc:`skills </apiref/skills>` and :doc:`agents </apiref/agents>`) you can skip
+corresponding steps.
+

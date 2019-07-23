@@ -6,11 +6,11 @@ inference as a REST web service. The general method is:
 
 .. code:: bash
 
-    python -m deeppavlov riseapi <config_path> [-d] [-p <port_number>]
+    python -m deeppavlov riseapi <config_path> [-d] [-p <port>]
 
 
-* ``-d``: download model specific data before starting the service.
-* ``-p <port_number>``: sets the port to ``<port_number>``. Overrides default
+* ``-d``: downloads model specific data before starting the service.
+* ``-p <port>``: sets the port to ``<port>``. Overrides default
   settings from ``deeppavlov/utils/settings/server_config.json``.
 
 The command will print the used host and port. Default web service properties
@@ -18,7 +18,7 @@ The command will print the used host and port. Default web service properties
 ``deeppavlov/utils/settings/server_config.json`` file.
 
 To interact with the REST API via graphical interface open
-``<host>:<port>/apidocs`` in a browser. The interface is performed with Flasgger UI.
+``<host>:<port>/apidocs`` in a browser (Flasgger UI).
 
 Advanced configuration
 ~~~~~~~~~~~~~~~~~~~~~~

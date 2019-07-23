@@ -91,12 +91,6 @@ python -m deeppavlov <mode> <path_to_config> [-d]
 * `<path_to_config>` should be a path to an NLP pipeline json config (e.g. `deeppavlov/configs/ner/slotfill_dstc2.json`)
 or a name without the `.json` extension of one of the config files [provided](deeppavlov/configs) in this repository (e.g. `slotfill_dstc2`)
 
-For the `interactbot` mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` environment variable.
-Also you should use `--no-default-skill` optional flag if your component implements an interface of DeepPavlov [*Skill*](deeppavlov/core/skill/skill.py) to skip its wrapping with DeepPavlov [*DefaultStatelessSkill*](deeppavlov/skills/default_skill/default_skill.py).
-If you want to get custom `/start` and `/help` Telegram messages for the running model you should:
-* Add section to [*deeppavlov/utils/settings/models_info.json*](deeppavlov/utils/settings/models_info.json) with your custom Telegram messages
-* In model config file specify `metadata.labels.telegram_utils` parameter with name which refers to the added section of [*deeppavlov/utils/settings/models_info.json*](deeppavlov/utils/settings/models_info.json)
-
 You can also serve DeepPavlov models for:
 * Microsoft Bot Framework ([see developer guide for the detailed instructions](http://docs.deeppavlov.ai/en/latest/devguides/ms_bot_integration.html)) 
 * Amazon Alexa ([see developer guide for the detailed instructions](http://docs.deeppavlov.ai/en/latest/devguides/amazon_alexa.html)) 
