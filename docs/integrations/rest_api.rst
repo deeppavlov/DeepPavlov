@@ -4,13 +4,29 @@ REST API
 Each library component or skill can be easily made available for
 inference as a REST web service. The general method is:
 
-``python -m deeppavlov riseapi <config_path> [-d] [-p <port_number>]``
+.. code:: bash
 
-(optional ``-d`` key is for dependencies download before service start)
+    python -m deeppavlov riseapi <config_path> [-d] [-p <port_number>]
 
-Web service properties (host, port, model endpoint, GET request
-arguments) are provided in ``deeppavlov/utils/settings/server_config.json``,
-but port can be overridden with the ``-p`` key in command line.
+
+* ``-d``: download model specific data before starting the service.
+* ``-p <port_number>``: sets the port to ``<port_number>``. Overrides default
+  settings from ``deeppavlov/utils/settings/server_config.json``.
+
+The command will print the used host and port. Default web service properties
+(host, port, model endpoint, GET request arguments) can be modified via changing
+``deeppavlov/utils/settings/server_config.json`` file.
+
+To interact with the REST API via graphical interface open
+``<host>:<port>/apidocs`` in a browser. The interface is performed with Flasgger UI.
+
+Advanced configuration
+~~~~~~~~~~~~~~~~~~~~~~
+
+By modifying ``deeppavlov/utils/settings/server_config.json`` you can change
+host, port, model endpoint, GET request arguments and other properties of the
+API service.
+
 Properties from ``common_defaults`` section are used by default unless
 they are overridden by component-specific properties, provided in
 ``model_defaults`` section of the ``server_config.json``.
@@ -46,7 +62,7 @@ Here are POST requests examples for some of the library components:
 +-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
 | Ranking component                       | {"context":["What is the average cost of life insurance services?"]}                                                                            |
 +-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-| (Seq2seq) Goal-oriented bot             | {"context":["Hello, can you help me to find and book a restaurant this evening?"]}                                                              |
+| Goal-oriented bot                       | {"context":["Hello, can you help me to find and book a restaurant this evening?"]}                                                              |
 +-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
 | **Multiple arguments components**                                                                                                                                                         |
 +-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -54,6 +70,3 @@ Here are POST requests examples for some of the library components:
 |                                         | |  "question":["What strained the relationship between Great Britain and its colonies?"]}                                                       |
 +-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
 
-
-Flasgger UI for API testing is provided on ``<host>:<port>/apidocs``
-when running a component in ``riseapi`` mode.
