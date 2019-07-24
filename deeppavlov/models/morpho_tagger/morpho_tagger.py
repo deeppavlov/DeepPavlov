@@ -24,7 +24,7 @@ import keras.backend as kb
 from keras import Model
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.vocab import DefaultVocabulary
+from deeppavlov.core.data.simple_vocab import SimpleVocabulary
 from deeppavlov.core.models.keras_model import KerasModel
 from .cells import Highway
 from .common_tagger import to_one_hot
@@ -76,8 +76,8 @@ class MorphoTagger(KerasModel):
     A subclass of :class:`~deeppavlov.core.models.keras_model.KerasModel`
     """
     def __init__(self,
-                 symbols: DefaultVocabulary,
-                 tags: DefaultVocabulary,
+                 symbols: SimpleVocabulary,
+                 tags: SimpleVocabulary,
                  save_path: Optional[Union[str, Path]] = None,
                  load_path: Optional[Union[str, Path]] = None,
                  mode: str = 'infer',
@@ -323,12 +323,12 @@ class MorphoTagger(KerasModel):
         bucket_length = bucket_length or len(sent)
         answer = np.zeros(shape=(bucket_length, MAX_WORD_LENGTH+2), dtype=np.int32)
         for i, word in enumerate(sent):
-            answer[i, 0] = self.tags.tok2idx("BEGIN")
+            answer[i, 0] = self.tags["BEGIN"]
             m = min(len(word), MAX_WORD_LENGTH)
             for j, x in enumerate(word[-m:]):
-                answer[i, j+1] = self.symbols.tok2idx(x)
-            answer[i, m+1] = self.tags.tok2idx("END")
-            answer[i, m+2:] = self.tags.tok2idx("PAD")
+                answer[i, j+1] = self.symbols[x]
+            answer[i, m+1] = self.tags["END"]
+            answer[i, m+2:] = self.tags["PAD"]
         return answer
 
     def _make_tags_vector(self, tags, bucket_length=None) -> np.ndarray:
@@ -344,5 +344,5 @@ class MorphoTagger(KerasModel):
         bucket_length = bucket_length or len(tags)
         answer = np.zeros(shape=(bucket_length,), dtype=np.int32)
         for i, tag in enumerate(tags):
-            answer[i] = self.tags.tok2idx(tag)
+            answer[i] = self.tags[tag]
         return answer

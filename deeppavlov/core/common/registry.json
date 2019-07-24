@@ -69,7 +69,7 @@
   "lemmatized_output_prettifier": "deeppavlov.models.morpho_tagger.common:LemmatizedOutputPrettifier",
   "line_reader": "deeppavlov.dataset_readers.line_reader:LineReader",
   "logit_ranker": "deeppavlov.models.doc_retrieval.logit_ranker:LogitRanker",
-  "lowercase_preprocessor": "deeppavlov.models.preprocessors.capitalization:LowercasePreprocessor",
+  "char_splitting_lowercase_preprocessor": "deeppavlov.models.preprocessors.capitalization:CharSplittingLowercasePreprocessor",
   "mask": "deeppavlov.models.preprocessors.mask:Mask",
   "morpho_tagger": "deeppavlov.models.morpho_tagger.morpho_tagger:MorphoTagger",
   "morphotagger_dataset": "deeppavlov.dataset_iterators.morphotagger_iterator:MorphoTaggerDatasetIterator",
