@@ -20,7 +20,7 @@ class Handler:
         self.context_condition = context_condition
         self.priority = priority
 
-    def __call__(self, message: str = None, context: UserContext = None) -> ResponseType:
+    def __call__(self, message: Optional[str] = None, context: Optional[UserContext] = None) -> ResponseType:
         return self.func(message, context)
 
     def check(self, context: Optional[UserContext] = None) -> bool:

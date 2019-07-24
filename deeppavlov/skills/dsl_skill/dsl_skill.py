@@ -57,7 +57,8 @@ class DSLMeta(ABCMeta):
         register()(cls)
         DSLMeta.__add_to_collection(cls)
 
-    def __init__class(cls, on_invalid_command: str = "Простите, я вас не понял",
+    def __init__class(cls,
+                      on_invalid_command: str = "Простите, я вас не понял",
                       null_confidence: float = 0,
                       *args, **kwargs):
         """
@@ -120,7 +121,9 @@ class DSLMeta(ABCMeta):
         current_handler = cls.__select_handler(utterance, context)
         return cls.__run_handler(current_handler, utterance, context)
 
-    def __select_handler(cls, message, context) -> Optional[Callable]:
+    def __select_handler(cls,
+                         message: str,
+                         context: UserContext) -> Optional[Callable]:
         """
         Selects handler with the highest priority that could be triggered from the passed message and context.
         Returns:
@@ -143,7 +146,6 @@ class DSLMeta(ABCMeta):
         Returns:
              ResponseType
         """
-
         if handler is None:
             return ResponseType(cls.on_invalid_command, cls.null_confidence)
         try:
@@ -158,13 +160,12 @@ class DSLMeta(ABCMeta):
                 priority: int = 0):
         """
         Decorator to be used in skills' classes.
-
         Sample usage:
 
         .. code:: python
 
-            class ExampleSkill(metaclass=ZDialog):
-                @ZDialog.handler(commands=["hello", "hey"], state="greeting")
+            class ExampleSkill(metaclass=DSLMeta):
+                @DSLMeta.handler(commands=["hello", "hey"], state="greeting")
                 def __greeting(message: str):
                     response = "Hello, my friend!"
                     confidence = 1.0
