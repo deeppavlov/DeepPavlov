@@ -17,20 +17,20 @@ Welcome to DeepPavlov's documentation!
 .. toctree::
    :glob:
    :maxdepth: 1
-   :caption: Components
+   :caption: Models
 
-   Data Processors <components/data_processors>
-   BERT-based models <components/bert>
-   Context Question Answering <components/squad>
-   Classification <components/classifiers>
-   Morphological Tagger <components/morphotagger>
-   Named Entity Recognition <components/ner>
-   Neural Ranking <components/neural_ranking>
-   Slot filling <components/slot_filling>
-   Spelling Correction <components/spelling_correction>
-   TF-IDF Ranking <components/tfidf_ranking>
-   Popularity Ranking <components/popularity_ranking>
-   Knowledge Base Question answering <components/kbqa>
+   Data Processors <models/data_processors>
+   BERT-based models <models/bert>
+   Context Question Answering <models/squad>
+   Classification <models/classifiers>
+   Morphological Tagger <models/morphotagger>
+   Named Entity Recognition <models/ner>
+   Neural Ranking <models/neural_ranking>
+   Slot filling <models/slot_filling>
+   Spelling Correction <models/spelling_correction>
+   TF-IDF Ranking <models/tfidf_ranking>
+   Popularity Ranking <models/popularity_ranking>
+   Knowledge Base Question answering <models/kbqa>
 
 
 .. toctree::

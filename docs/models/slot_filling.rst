@@ -1,9 +1,9 @@
 Neural Named Entity Recognition and Slot Filling
 ================================================
 
-This component solves Slot-Filling task using Levenshtein search and different neural network architectures for NER.
-To read about NER without slot filling please address  :doc:`NER documentation </components/ner>`.
-This component serves for solving DSTC 2 Slot-Filling task. In most of the cases, NER task can be formulated as:
+This model solves Slot-Filling task using Levenshtein search and different neural network architectures for NER.
+To read about NER without slot filling please address  :doc:`NER documentation </models/ner>`.
+This model serves for solving DSTC 2 Slot-Filling task. In most of the cases, NER task can be formulated as:
 
 *Given a sequence of tokens (words, and maybe punctuation symbols)
 provide a tag from a predefined set of tags for each token in the
@@ -47,7 +47,7 @@ Slot Filling is a typical step after the NER. It can be formulated as:
 *Given an entity of a certain type and a set of all possible values of
 this entity type provide a normalized form of the entity.*
 
-In this component, the Slot Filling task is solved by Levenshtein
+In this model, the Slot Filling task is solved by Levenshtein
 Distance search across all known entities of a given type.
 
 For example, there is an entity of "food" type:

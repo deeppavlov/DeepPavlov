@@ -126,7 +126,7 @@ English.
 **deeppavlov.models.bert.BertClassifierModel** (see :doc:`here </apiref/models/bert>`) provides easy to use
 solution for classification problem using pre-trained BERT.
 Several **pre-trained English, multi-lingual and Russian BERT** models are provided in
-:doc:`our BERT documentation </components/bert>`.
+:doc:`our BERT documentation </models/bert>`.
 
 Two main components of BERT classifier pipeline in DeepPavlov are
 ``deeppavlov.models.preprocessors.BertPreprocessor`` (see :doc:`here </apiref/models/bert>`)

@@ -1,10 +1,10 @@
 Features
 ========
 
-Components
+Models
 ----------
 
-:doc:`NER component </components/ner>`
+:doc:`NER model </models/ner>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are two models for Named Entity Recognition task in DeepPavlov:
@@ -38,10 +38,10 @@ which is inspired by Bi-LSTM+CRF architecture from https://arxiv.org/pdf/1603.01
 | DSTC2                                                   |       | :config:`ner_dstc2.json <ner/ner_dstc2.json>`                             |    97.1     |
 +---------------------------------------------------------+-------+---------------------------------------------------------------------------+-------------+
 
-:doc:`Slot filling components </components/slot_filling>`
+:doc:`Slot filling models </models/slot_filling>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Based on fuzzy Levenshtein search to extract normalized slot values from text. The components either rely on NER results
+Based on fuzzy Levenshtein search to extract normalized slot values from text. The models either rely on NER results
 or perform needle in haystack search.
 
 +---------------------------------------------------------------------------------------------------------------------------+------------------+
@@ -51,10 +51,10 @@ or perform needle in haystack search.
 +---------------------------------------------------------------------------------------------------------------------------+------------------+
 
 
-:doc:`Classification component </components/classifiers>`
+:doc:`Classification model </models/classifiers>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Component for classification tasks (intents, sentiment, etc) on word-level. Shallow-and-wide CNN, Deep CNN, BiLSTM,
+Model for classification tasks (intents, sentiment, etc) on word-level. Shallow-and-wide CNN, Deep CNN, BiLSTM,
 BiLSTM with self-attention and other models are presented. The model also allows multilabel classification of texts.
 Several pre-trained models are available and presented in Table below.
 
@@ -198,7 +198,7 @@ Comparison of deeppavlov pretrained model with others:
 
 .. _`Stanford Kvret`: https://nlp.stanford.edu/blog/a-new-multi-turn-multi-domain-task-oriented-dialogue-dataset/
 
-:doc:`Automatic spelling correction component </components/spelling_correction>`
+:doc:`Automatic spelling correction model </models/spelling_correction>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Pipelines that use candidates search in a static dictionary and an ARPA language model to correct spelling errors.
@@ -231,7 +231,7 @@ on Automatic Spelling Correction for Russian:
 
 
 
-:doc:`Ranking component </components/neural_ranking>`
+:doc:`Ranking model </models/neural_ranking>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The main neural ranking model based on `LSTM-based deep learning models for non-factoid answer selection
@@ -387,7 +387,7 @@ References:
 
 
 
-:doc:`TF-IDF Ranker component </components/tfidf_ranking>`
+:doc:`TF-IDF Ranker model </models/tfidf_ranking>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Based on `Reading Wikipedia to Answer Open-Domain Questions <https://github.com/facebookresearch/DrQA/>`__. The model solves the task of document retrieval for a given query.
@@ -399,7 +399,7 @@ Based on `Reading Wikipedia to Answer Open-Domain Questions <https://github.com/
 +---------------+-------------------------------------------------+-----------------+----------------------+-----------------+-----------+
 
 
-:doc:`Question Answering component </components/squad>`
+:doc:`Question Answering model </models/squad>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Models in this section solve the task of looking for an answer on a
 question in a given context (`SQuAD <https://rajpurkar.github.io/SQuAD-explorer/>`__ task format).
@@ -430,14 +430,14 @@ In the case when answer is not necessary present in given context we have :confi
 model. This model outputs empty string in case if there is no answer in context.
 
 
-:doc:`Morphological tagging component </components/morphotagger>`
+:doc:`Morphological tagging model </models/morphotagger>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Based on character-based approach to morphological tagging `Heigold et al., 2017. An extensive empirical evaluation of
 character-based morphological tagging for 14 languages <http://www.aclweb.org/anthology/E17-1048>`__. A state-of-the-art
 model for Russian and several other languages. Model takes as input tokenized sentences and outputs the corresponding
 sequence of morphological labels in `UD format <http://universaldependencies.org/format.html>`__. The table below
-contains word and sentence accuracy on UD2.0 datasets. For more scores see :doc:`full table </components/morphotagger>`.
+contains word and sentence accuracy on UD2.0 datasets. For more scores see :doc:`full table </models/morphotagger>`.
 
 .. table::
     :widths: auto
@@ -471,7 +471,7 @@ contains word and sentence accuracy on UD2.0 datasets. For more scores see :doc:
 .. _`UD2.0`: https://lindat.mff.cuni.cz/repository/xmlui/handle/11234/1-1983
 .. _`UD Pipe 1.2`: http://ufal.mff.cuni.cz/udpipe
 
-:doc:`Frequently Asked Questions (FAQ) component </skills/faq>`
+:doc:`Frequently Asked Questions (FAQ) model </skills/faq>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Set of pipelines for FAQ task: classifying incoming question into set of known questions and return prepared answer.
@@ -531,7 +531,7 @@ Word vectors for the Russian language trained on joint `Russian Wikipedia <https
 <https://lenta.ru/>`__ corpora.
 
 
-Examples of some components
+Examples of some models
 ---------------------------
 
 -  Run goal-oriented bot with Telegram interface:

@@ -1,7 +1,7 @@
 Ranking and paraphrase identification
 =====================================
 
-This library component solves the tasks of ranking and paraphrase identification based on semantic similarity
+This library model solves the tasks of ranking and paraphrase identification based on semantic similarity
 which is trained with siamese neural networks. The trained network can retrieve the response
 closest semantically to a given context from some database or answer whether two sentences are paraphrases or not.
 It is possible to build automatic semantic FAQ systems with such neural architectures.
