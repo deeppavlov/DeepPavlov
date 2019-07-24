@@ -1,5 +1,5 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/deepmipt/DeepPavlov/blob/master/LICENSE)
-![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
+![Python 3.6, 3.7](https://img.shields.io/badge/python-3.6%20%7C%203.7-green.svg)
 [![Downloads](https://pepy.tech/badge/deeppavlov)](https://pepy.tech/project/deeppavlov)
 
 DeepPavlov is an open-source conversational AI library built on [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). It is designed for
@@ -141,6 +141,11 @@ as many input parameters your pipeline expects.
 You can also specify batch size with `-b` or `--batch-size` parameter.
 
 # Breaking changes
+
+**Breaking changes in version 0.5.0**
+- dependencies have to be reinstalled for most pipeline configurations
+- models depending on `tensorflow` require `CUDA 10.0` to run on GPU instead of `CUDA 9.0`
+- scikit-learn models have to be redownloaded or retrained
 
 **Breaking changes in version 0.4.0!**
 - default target variable name for [neural evolution](https://docs.deeppavlov.ai/en/0.4.0/intro/hypersearch.html#parameters-evolution-for-deeppavlov-models)
