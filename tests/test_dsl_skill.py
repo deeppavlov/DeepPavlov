@@ -91,7 +91,7 @@ class TestDSLSkill:
         assert "Sorry, I do not understand you" in history_of_responses[1][0]
         assert "bb!" in history_of_responses[2][0]
 
-    def test_switch_state(self):
+    def test_context_condition(self):
         user_messages_sequence = [
             "Hello",
             "Hi"

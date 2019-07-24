@@ -9,10 +9,11 @@ class UserContext:
     """
     UserContext object stores information that the current skill currently knows about the user.
 
-    :param user_id: int, id of user
-    :param message: str, current message
-    :param current_state: str or None, current user state
-    :param payload: dict or str, custom payload dictionary, or a JSON-serialized string of such dictionary
+    Args:
+        user_id: int, id of user
+        message: str, current message
+        current_state: str or None, current user state
+        payload: dict or str, custom payload dictionary, or a JSON-serialized string of such dictionary
     """
 
     def __init__(
