@@ -1,7 +1,7 @@
 REST API
 ========
 
-Each library component or skill can be easily made available for
+Each DeepPavlov model can be easily made available for
 inference as a REST web service. The general method is:
 
 .. code:: bash
@@ -28,11 +28,11 @@ host, port, model endpoint, GET request arguments and other properties of the
 API service.
 
 Properties from ``common_defaults`` section are used by default unless
-they are overridden by component-specific properties, provided in
+they are overridden by model-specific properties, provided in
 ``model_defaults`` section of the ``server_config.json``.
-Component-specific properties are bound to the component by
-``server_utils`` label in ``metadata/labels`` section of the component
-config. Value of ``server_utils`` label from component config should
+Model-specific properties are bound to the model by
+``server_utils`` label in ``metadata/labels`` section of the model 
+config. Value of ``server_utils`` label from model config should
 match with properties key from ``model_defaults`` section of
 ``server_config.json``.
 
@@ -43,30 +43,30 @@ of ``server_config.json``. Therefore, ``model_endpoint`` parameter in
 from ``model_defaults/GoalOrientedBot``.
 
 Model argument names are provided as list in ``model_args_names``
-parameter, where arguments order corresponds to component API.
+parameter, where arguments order corresponds to model API.
 When inferencing model via REST api, JSON payload keys should match
-component arguments names from ``model_args_names``.
-Default argument name for one argument components is *"context"*.
-Here are POST requests examples for some of the library components:
+model arguments names from ``model_args_names``.
+Default argument name for one argument models is *"context"*.
+Here are POST requests examples for some of the library models:
 
 +-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-| Component                               | POST request JSON payload example                                                                                                               |
+| Model                                   | POST request JSON payload example                                                                                                               |
 +=========================================+=================================================================================================================================================+
-| **One argument components**                                                                                                                                                               |
+| **One argument models**                                                                                                                                                                   |
 +-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-| NER component                           | {"context":["Elon Musk launched his cherry Tesla roadster to the Mars orbit"]}                                                                  |
+| NER model                               | {"context":["Elon Musk launched his cherry Tesla roadster to the Mars orbit"]}                                                                  |
 +-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-| Intent classification component         | {"context":["I would like to go to a restaurant with Asian cuisine this evening"]}                                                              |
+| Intent classification model             | {"context":["I would like to go to a restaurant with Asian cuisine this evening"]}                                                              |
 +-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-| Automatic spelling correction component | {"context":["errror"]}                                                                                                                          |
+| Automatic spelling correction model     | {"context":["errror"]}                                                                                                                          |
 +-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-| Ranking component                       | {"context":["What is the average cost of life insurance services?"]}                                                                            |
+| Ranking model                           | {"context":["What is the average cost of life insurance services?"]}                                                                            |
 +-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
 | Goal-oriented bot                       | {"context":["Hello, can you help me to find and book a restaurant this evening?"]}                                                              |
 +-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-| **Multiple arguments components**                                                                                                                                                         |
+| **Multiple arguments models**                                                                                                                                                             |
 +-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-| Question Answering component            | | {"context":["After 1765, growing philosophical and political differences strained the relationship between Great Britain and its colonies."], |
+| Question Answering model                | | {"context":["After 1765, growing philosophical and political differences strained the relationship between Great Britain and its colonies."], |
 |                                         | |  "question":["What strained the relationship between Great Britain and its colonies?"]}                                                       |
 +-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
 

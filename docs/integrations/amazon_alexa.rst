@@ -1,8 +1,8 @@
 Amazon Alexa integration
 ========================
 
-DeepPavlov components or skills can be made available for inference via Amazon Alexa. Because of Alexa predominantly
-conversational nature (raw text in, raw text out), the best results can be achieved with components with raw text both
+DeepPavlov models can be made available for inference via Amazon Alexa. Because of Alexa predominantly
+conversational nature (raw text in, raw text out), the best results can be achieved with models with raw text both
 in input and output (ODQA, SQuAD, etc.).
 
 Also we **highly** recommend you to study `Alexa skills building basics <https://developer.amazon.com/docs/ask-overviews/build-skills-with-the-alexa-skills-kit.html>`__
@@ -14,7 +14,7 @@ Further instructions are given counting on the fact that you are already familia
 The whole integrations process takes two main steps:
 
 1. Skill setup in Amazon Alexa Developer console
-2. DeepPavlov skill/component REST service mounting
+2. DeepPavlov skill/model REST service mounting
 
 1. Skill setup
 --------------
@@ -167,12 +167,12 @@ console:
 
 Please note, that in both cases you should have only one intent with only one slot defined in Alexa Development Console.
 
-2. DeepPavlov skill/component REST service mounting
+2. DeepPavlov skill/model REST service mounting
 ---------------------------------------------------
 
 Alexa sends request to the https endpoint which was set in the **Endpoint** section of Alexa Development Console.
 
-You should deploy DeepPavlov skill/component REST service on this
+You should deploy DeepPavlov skill/model REST service on this
 endpoint or redirect it to your REST service. Full REST endpoint URL
 can be obtained by the swagger ``apidocs/`` endpoint. We remind you that Alexa requires https endpoint
 with valid certificate from CA. `Here is the guide <https://developer.amazon.com/docs/custom-skills/configure-web-service-self-signed-certificate.html>`__
@@ -182,7 +182,7 @@ Your intent and slot names defined in Alexa Development Console should be the sa
 DeepPavlov settings file ``deeppavlov/utils/settings/server_config.json``. JSON examples from this guide use default values from
 the settings file.
 
-DeepPavlov skill/component can be made available for Amazon Alexa as a REST service by:
+DeepPavlov skill/model can be made available for Amazon Alexa as a REST service by:
 
 .. code:: bash
 
@@ -196,12 +196,12 @@ before service start.
 
 Optional ``-p`` key can be provided to override the port value from a settings file.
 
-Optional ``--stateful`` flag should be provided for stateful skills/components.
+Optional ``--stateful`` flag should be provided for stateful skills/models.
 
-Optional ``--multi-instance`` can be provided if you wish to raise separate skill/component instance
+Optional ``--multi-instance`` can be provided if you wish to raise separate skill/model instance
 for **each** conversation.
 
-You should use ``--no-default-skill`` optional flag if your component implements an interface of DeepPavlov *Skill*
+You should use ``--no-default-skill`` optional flag if your model implements an interface of DeepPavlov *Skill*
 to skip its wrapping with DeepPavlov *DefaultStatelessSkill*.
 
 REST service properties (host, port, https options) are provided in ``deeppavlov/utils/settings/server_config.json``. Please note,

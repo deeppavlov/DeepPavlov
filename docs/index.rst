@@ -5,7 +5,7 @@ Welcome to DeepPavlov's documentation!
    :glob:
    :maxdepth: 1
 
-   Quick Start <intro/quick_start>
+   QuickStart <intro/quick_start>
    Installation <intro/installation>
    Conceptual overview <intro/overview>
    Features <intro/features>
@@ -64,18 +64,17 @@ Welcome to DeepPavlov's documentation!
 .. toctree::
    :glob:
    :maxdepth: 3
-   :caption: Package Reference
+   :caption: Developer Guides
 
-   apiref/*
+   devguides/*
 
 
 .. toctree::
    :glob:
    :maxdepth: 3
-   :caption: Developer Guides
+   :caption: Package Reference
 
-   devguides/*
-
+   apiref/*
 
 
 Indices and tables

@@ -8,8 +8,8 @@ You can do it using command line interface or using python.
 Command line interface
 ~~~~~~~~~~~~~~~~~~~~~~
 
-To run a pipeline specified by a ``<config_path>`` config file as a telegram bot
-with a ``<telegram_token>``.
+To run a model specified by the ``<config_path>`` config file as a telegram bot
+with a ``<telegram_token>``:
 
 .. code:: bash
 
