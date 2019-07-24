@@ -154,7 +154,7 @@
         "subdir": "{DOWNLOADS_PATH}/bert_models"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/sentiment_yelp_bert_v3.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/sentiment_yelp_bert_v2.tar.gz",
         "subdir": "{MODELS_PATH}/classifiers"
       }
     ]
