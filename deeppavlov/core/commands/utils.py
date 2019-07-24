@@ -80,8 +80,10 @@ def import_packages(packages: list) -> None:
         __import__(package)
 
 
-def parse_path_with_config(path: Union[str, Path], config: Union[str, Path, dict]) -> Path:
-    """Fill the variables in `path` with variables values from `config`"""
+def parse_value_with_config(value: Union[str, Path], config: Union[str, Path, dict]) -> Path:
+    """Fill the variables in `value` with variables values from `config`.
+    `value` should be a string. If `value` is a string of only variable, `value` will be replaced with
+    variable's value from config (the variable's value could be anything then)."""
     variables, variables_exact = _get_variables_from_config(config)
 
-    return _parse_config_property(str(path), variables, variables_exact)
+    return _parse_config_property(str(value), variables, variables_exact)
