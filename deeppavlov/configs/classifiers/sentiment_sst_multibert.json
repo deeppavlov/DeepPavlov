@@ -132,15 +132,15 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/datasets/insults_data.tar.gz",
+        "url": "http://files.deeppavlov.ai/datasets/stanfordSentimentTreebank.zip",
         "subdir": "{DOWNLOADS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/multi_cased_L-12_H-768_A-12.zip",
         "subdir": "{DOWNLOADS_PATH}/bert_models"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/insults_kaggle_v3.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/sentiment_sst_bert_v1.tar.gz",
         "subdir": "{MODELS_PATH}/classifiers"
       }
     ]
