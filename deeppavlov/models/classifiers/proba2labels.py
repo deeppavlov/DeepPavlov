@@ -27,7 +27,7 @@ log = getLogger(__name__)
 @register('proba2labels')
 class Proba2Labels(Component):
     """
-    Class implements probability to labels processing using two different ways: \
+    Class implements probability to labels processing using the following ways: \
      choosing one or top_n indices with maximal probability or choosing any number of indices \
       which probabilities to belong with are higher than given confident threshold
 
@@ -74,5 +74,6 @@ class Proba2Labels(Component):
         elif self.top_n:
             return [np.argsort(d)[::-1][:self.top_n] for d in data]
         else:
-            raise ConfigError("Proba2Labels requires one of two arguments: bool `max_proba` or "
-                              "float `confident_threshold` for multi-label classification")
+            raise ConfigError("Proba2Labels requires one of three arguments: bool `max_proba` or "
+                              "float `confident_threshold` for multi-label classification or"
+                              "integer `top_n` for choosing several labels with the highest probabilities")
