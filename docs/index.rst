@@ -7,17 +7,38 @@ Welcome to DeepPavlov's documentation!
 
    QuickStart <intro/quick_start>
    Installation <intro/installation>
-   Conceptual overview <intro/overview>
-   Features <intro/features>
-   Configuration files <intro/config_description>
-   Pre-trained embeddings <intro/pretrained_vectors>
-   AutoML <intro/hypersearch>
+   Conceptional Overview <intro/overview>
+   Configuration <intro/configuration>
 
 
 .. toctree::
    :glob:
    :maxdepth: 1
-   :caption: Models
+   :caption: Features
+
+   OVERVIEW <intro/features>
+
+
+.. toctree::
+   :glob:
+   :maxdepth: 2
+   :caption: ---
+
+   Pre-trained embeddings <intro/pretrained_vectors>
+
+
+.. toctree::
+   :glob:
+   :maxdepth: 2
+   :caption: ---
+
+   AutoML <intro/hypersearch>
+
+
+.. toctree::
+   :glob:
+   :maxdepth: 2
+   :caption: ---
 
    BERT-based models <models/bert>
    Context Question Answering <models/squad>
@@ -35,7 +56,7 @@ Welcome to DeepPavlov's documentation!
 .. toctree::
    :glob:
    :maxdepth: 1
-   :caption: Skills
+   :caption: ---
 
    Goal-Oriented Dialogue Bot <skills/go_bot>
    Open-Domain Question Answering <skills/odqa>

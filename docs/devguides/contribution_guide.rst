@@ -20,7 +20,7 @@ How to contribute:
 #. **Clone and/or update** your checked out **copy of DeepPavlov** to ensure
    you have the most recent commits from the master branch:
 
-    ::
+    .. code:: bash
 
         git clone 
         cd 
@@ -30,7 +30,7 @@ How to contribute:
 
 #. **Create a new branch and switch** to it. Give it a meaningful name:
 
-    ::
+    .. code:: bash
 
         git checkout -b what_my_code_does_branch
 
@@ -45,7 +45,7 @@ How to contribute:
    Squash your commits into a single commit with git's interactive rebase.
    Create a new branch if necessary.
 
-    ::
+    .. code:: bash
 
         git add my_files
         git commit -m "Issue 271"
@@ -55,7 +55,7 @@ How to contribute:
    for others to use. You’ll first need to ensure your feature branch contains
    the latest changes from master. 
 
-    ::
+    .. code:: bash
 
         # (external contribs): make a new pull request:
 
@@ -69,7 +69,7 @@ How to contribute:
 #. Once your change has been successfully merged, you can **remove the source
    branch** and ensure your local copy is up to date:
 
-    ::
+    .. code:: bash
 
         git fetch origin
         git checkout master

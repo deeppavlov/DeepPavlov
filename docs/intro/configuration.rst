@@ -1,4 +1,4 @@
-Configuration files
+Configuration
 ===================
 
 An NLP pipeline config is a JSON file that contains one required element ``chainer``:

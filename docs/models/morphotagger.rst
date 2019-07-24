@@ -488,7 +488,7 @@ Chainer
 The ``chainer`` part of the configuration file contains the
 specification of the neural network model and supplementary things such as vocabularies.
 Chainer refers to an instance of :class:`~deeppavlov.core.common.chainer.Chainer`, see
-:doc:`config_description </intro/config_description>` for a complete description.
+:doc:`configuration </intro/configuration>` for a complete description.
 
 The major part of ``chainer`` is ``pipe``. The ``pipe`` contains
 vocabularies and the network itself as well
@@ -604,7 +604,7 @@ When an additional vectorizer is used, the first line is changed to
 ``"word_vectorizers": [["#pymorphy_vectorizer.dim", 128]]`` is appended.
 
 Config includes general parameters of :class:`~deeppavlov.core.models.component.Component` class,
-described in the :doc:`config_description </intro/config_description>` and specific
+described in the :doc:`configuration </intro/configuration>` and specific
 :class:`~deeppavlov.models.morpho_tagger.morpho_tagger.MorphoTagger`
 parameters. The latter include
 
