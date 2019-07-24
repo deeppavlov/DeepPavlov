@@ -19,7 +19,6 @@ Welcome to DeepPavlov's documentation!
    :maxdepth: 1
    :caption: Models
 
-   Data Processors <models/data_processors>
    BERT-based models <models/bert>
    Context Question Answering <models/squad>
    Classification <models/classifiers>
@@ -66,7 +65,9 @@ Welcome to DeepPavlov's documentation!
    :maxdepth: 3
    :caption: Developer Guides
 
-   devguides/*
+   Contribution Guide <devguides/contribution_guide>
+   Extending The Library <devguides/extending>
+   Data Processors <devguides/data_processors>
 
 
 .. toctree::
