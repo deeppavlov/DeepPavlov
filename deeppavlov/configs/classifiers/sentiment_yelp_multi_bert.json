@@ -146,7 +146,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/datasets/stanfordSentimentTreebank.zip",
+        "url": "http://files.deeppavlov.ai/datasets/yelp_review_full_csv.tar.gz",
         "subdir": "{DOWNLOADS_PATH}"
       },
       {
