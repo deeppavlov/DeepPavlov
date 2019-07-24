@@ -45,6 +45,7 @@ Welcome to DeepPavlov's documentation!
    Frequently Asked Questions Answering <skills/faq>
    eCommerce Bot <skills/ecommerce>
    AIML <skills/aiml_skill>
+   DSL <skills/dsl_skill>
 
 
 .. toctree::

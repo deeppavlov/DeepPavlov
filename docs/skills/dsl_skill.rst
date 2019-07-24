@@ -10,6 +10,8 @@ value.
 For the case when no match occurred DSL skill returns the argument `on_invalid_command` ("Простите, я вас не понял" by delault)
  as utterance and sets confidence to `null_confidence` attribute (0 by default).
 
+`on_invalid_command` and `null_confidence` can be changed in model config
+
 
 Quick Start
 -----------
@@ -28,17 +30,16 @@ Usage
 
     class DSLSkill(metaclass=DSLMeta):
         @DSLMeta.handler(commands=["hello", "hi", "sup", "greetings"])
-        def greeting(utterance, history, state):
+        def greeting(utterance, context):
             response = "Hello, my friend!"
             confidence = 1.0
-            state = None
-            return response, confidence, state
+            return response, confidence
 
 
     skill_config = read_json(configs.dsl_skill.dsl_skill)
 
     skill = build_model(skill_config, download=True)
-    utterances_batch = ["Hello", "How are you?"]
-    responses = skill(utterances_batch)
-    print(responses)
-
+    utterance = "Hello"
+    user_id = 1
+    response = skill([utterance], [user_id])
+    print(response)

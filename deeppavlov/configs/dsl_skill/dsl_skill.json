@@ -2,8 +2,7 @@
   "chainer": {
     "in": [
       "utterances_batch",
-      "history_batch",
-      "states_batch"
+      "user_ids_batch"
     ],
     "out": [
       "responses_batch",
@@ -21,7 +20,8 @@
         "on_invalid_command": "Sorry, I do not understand you",
         "null_confidence": 0.0,
         "in": [
-          "utterance_tokens_batch"
+          "utterance_tokens_batch",
+          "user_ids_batch"
         ],
         "out": [
           "responses_batch",
