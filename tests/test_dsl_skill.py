@@ -1,4 +1,3 @@
-from itertools import zip_longest
 from logging import getLogger
 
 from deeppavlov import configs, build_model
@@ -11,7 +10,7 @@ log = getLogger(__name__)
 
 class DSLSkill(metaclass=DSLMeta):
     @DSLMeta.handler(commands=["hello", "hi", "sup", "greetings"])
-    def greeting(utterance, context):
+    def greeting(context):
         response = "Hello, my friend!"
         confidence = 1.0
         return response, confidence
@@ -19,7 +18,7 @@ class DSLSkill(metaclass=DSLMeta):
 
 class StateSkill(metaclass=DSLMeta):
     @DSLMeta.handler(commands=["hello", "hi", "sup", "greetings"])
-    def greeting(utterance, context):
+    def greeting(context):
         response = "Hello, my friend!"
         confidence = 1.0
         context.current_state = "state1"
@@ -27,7 +26,7 @@ class StateSkill(metaclass=DSLMeta):
 
     @DSLMeta.handler(commands=["bye"],
                      state="state1")
-    def bye(utterance, context):
+    def bye(context):
         response = "bb!"
         confidence = 1.0
         return response, confidence
@@ -36,7 +35,7 @@ class StateSkill(metaclass=DSLMeta):
 class ContextConditionSkill(metaclass=DSLMeta):
     @DSLMeta.handler(commands=["hello", "hi", "sup", "greetings"],
                      context_condition=lambda context: context.user_id != 1)
-    def greeting(utterance, context):
+    def greeting(context):
         response = "Hello, my friend!"
         confidence = 1.0
         return response, confidence

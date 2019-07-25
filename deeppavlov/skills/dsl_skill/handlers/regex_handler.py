@@ -22,18 +22,23 @@ class RegexHandler(Handler):
         super().__init__(func, state, context_condition, priority)
         self.commands = [re.compile(command) for command in commands]
 
-    def check(self, message: Optional[str] = None, context: Optional[UserContext] = None):
+    def check(self, context: UserContext) -> bool:
         is_previous_matches = super().check(context)
         if not is_previous_matches:
             return False
 
+        message = context.message
+        return any([re.search(regexp, ' '.join(message)) for regexp in self.commands])
+
+    def expand_context(self, context: UserContext):
+        context.handler_payload = {'regex_groups': {}}
+        message = context.message
         for regexp in self.commands:
             match = re.search(regexp, ' '.join(message))
             if match is not None:
-                regex_groups = {}
                 for group_ind, span in enumerate(match.regs):
-                    regex_groups[group_ind] = message[span[0]: span[1]]
+                    context.handler_payload['regex_groups'][group_ind] = message[span[0]: span[1]]
                 for group_name, group_ind in regexp.groupindex.items():
-                    regex_groups[group_name] = regex_groups[group_ind]
-                return True
-        return False
+                    context.handler_payload['regex_groups'][group_name] = \
+                        context.handler_payload['regex_groups'][group_ind]
+                return

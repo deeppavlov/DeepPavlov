@@ -26,6 +26,7 @@ class UserContext:
         self.user_id = user_id
         self.message = message
         self.current_state = current_state
+        self.handler_payload = {}
 
         # some custom data added by skill creator
         self.payload = payload

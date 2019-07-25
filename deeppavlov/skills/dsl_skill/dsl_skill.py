@@ -9,7 +9,7 @@ from typing import List, Optional, Dict, Callable, Tuple
 from deeppavlov.core.common.registry import register
 from deeppavlov.skills.dsl_skill.context import UserContext
 from deeppavlov.skills.dsl_skill.handlers import Handler, RegexHandler
-from deeppavlov.skills.dsl_skill.utils import expand_arguments, SkillResponse, UserId
+from deeppavlov.skills.dsl_skill.utils import SkillResponse, UserId
 
 
 class DSLMeta(ABCMeta):
@@ -22,7 +22,7 @@ class DSLMeta(ABCMeta):
 
             class ExampleSkill(metaclass=DSLMeta):
                 @DSLMeta.handler(commands=["hello", "hey"])
-                def __greeting(message: str):
+                def __greeting(context: UserContext):
                     response = "Hello, my friend!"
                     confidence = 1.0
                     return response, confidence
@@ -118,14 +118,13 @@ class DSLMeta(ABCMeta):
         context.user_id = user_id
         context.message = utterance
 
-        current_handler = cls.__select_handler(utterance, context)
-        return cls.__run_handler(current_handler, utterance, context)
+        current_handler = cls.__select_handler(context)
+        return cls.__run_handler(current_handler, context)
 
     def __select_handler(cls,
-                         message: str,
                          context: UserContext) -> Optional[Callable]:
         """
-        Selects handler with the highest priority that could be triggered from the passed message and context.
+        Selects handler with the highest priority that could be triggered from the passed context.
         Returns:
              handler function that is selected and None if no handler fits request
         """
@@ -133,23 +132,24 @@ class DSLMeta(ABCMeta):
         available_handlers.extend(cls.universal_handlers)
         available_handlers.sort(key=lambda h: h.priority, reverse=True)
         for handler in available_handlers:
-            if handler.check(message, context):
+            if handler.check(context):
+                handler.expand_context(context)
                 return handler.func
 
     def __run_handler(cls, handler: Optional[Callable],
-                      message: str,
                       context: UserContext) -> SkillResponse:
         """
-        Runs specified handler for current message and context
+        Runs specified handler for current context
         Args:
             handler: handler to be run. If None, on_invalid_command is returned
+            context: user context
         Returns:
              SkillResponse
         """
         if handler is None:
             return SkillResponse(cls.on_invalid_command, cls.null_confidence)
         try:
-            return SkillResponse(*handler(message, context))
+            return SkillResponse(*handler(context=context))
         except Exception as exc:
             return SkillResponse(str(exc), 1.0)
 
@@ -166,7 +166,7 @@ class DSLMeta(ABCMeta):
 
             class ExampleSkill(metaclass=DSLMeta):
                 @DSLMeta.handler(commands=["hello", "hey"], state="greeting")
-                def __greeting(message: str):
+                def __greeting(context: UserContext):
                     response = "Hello, my friend!"
                     confidence = 1.0
                     return response, confidence
@@ -187,7 +187,7 @@ class DSLMeta(ABCMeta):
             commands = [".*"]
 
         def decorator(func: Callable) -> Handler:
-            return RegexHandler(expand_arguments(func), commands,
+            return RegexHandler(func, commands,
                                 context_condition=context_condition,
                                 priority=priority, state=state)
 

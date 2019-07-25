@@ -30,7 +30,7 @@ Usage
 
     class DSLSkill(metaclass=DSLMeta):
         @DSLMeta.handler(commands=["hello", "hi", "sup", "greetings"])
-        def greeting(utterance, context):
+        def greeting(context):
             response = "Hello, my friend!"
             confidence = 1.0
             return response, confidence
