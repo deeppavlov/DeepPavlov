@@ -38,7 +38,7 @@
       {
         "id": "src_token_vocab",
         "class_name": "simple_vocab",
-        "default_token": "<UNK>",
+        "unk_token": "<UNK>",
         "special_tokens": ["<UNK>", "<SOS>"],
         "save_path": "{MODELS_PATH}/vocabs/kvret_src_tokens.dict",
         "load_path": "{MODELS_PATH}/vocabs/kvret_src_tokens.dict"
@@ -46,7 +46,7 @@
       {
         "id": "tgt_token_vocab",
         "class_name": "simple_vocab",
-        "default_token": "<UNK>",
+        "unk_token": "<UNK>",
         "special_tokens": ["<UNK>", "<SOS>", "<EOS>"],
         "save_path": "{MODELS_PATH}/vocabs/kvret_tgt_tokens.dict",
         "load_path": "{MODELS_PATH}/vocabs/kvret_tgt_tokens.dict"

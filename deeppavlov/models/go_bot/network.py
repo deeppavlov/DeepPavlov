@@ -83,7 +83,7 @@ class GoalOrientedBot(LRScheduledTFModel):
             for response generation.
         template_type: type of used response templates in string format.
         word_vocab: vocabulary of input word tokens
-            (:class:`~deeppavlov.core.data.vocab.DefaultVocabulary` recommended).
+            (:class:`~deeppavlov.core.data.simple_vocab.SimpleVocabulary` recommended).
         bow_embedder: instance of one-hot word encoder
             :class:`~deeppavlov.models.embedders.bow_embedder.BoWEmbedder`.
         embedder: one of embedders from

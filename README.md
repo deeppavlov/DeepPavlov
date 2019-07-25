@@ -87,6 +87,11 @@ DeepPavlov is designed for
 - models depending on `tensorflow` require `CUDA 10.0` to run on GPU instead of `CUDA 9.0`
 - scikit-learn models have to be redownloaded or retrained
 
+**Breaking changes in version 0.5.0**
+- dependencies have to be reinstalled for most pipeline configurations
+- models depending on `tensorflow` require `CUDA 10.0` to run on GPU instead of `CUDA 9.0`
+- scikit-learn models have to be redownloaded or retrained
+
 **Breaking changes in version 0.4.0!**
 - default target variable name for [neural evolution](https://docs.deeppavlov.ai/en/0.4.0/intro/hypersearch.html#parameters-evolution-for-deeppavlov-models)
 was changed from `MODELS_PATH` to `MODEL_PATH`.

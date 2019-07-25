@@ -512,9 +512,8 @@ model should predict to tag indexes.
 
     {
         "id": "tag_vocab",
-        "class_name": "default_vocab",
+        "class_name": "simple_vocab",
         "fit_on": ["y"],
-        "level": "token",
         "special_tokens": ["PAD", "BEGIN", "END"],
         "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/tag_en.dict",
         "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/tag_en.dict"
@@ -527,11 +526,10 @@ symbols which occur at least ``min_freq`` times in the training set are kept.
 
      {
         "id": "char_vocab",
-        "class_name": "default_vocab",
+        "class_name": "simple_vocab",
         "min_freq": 3,
         "fit_on": ["x_processed"],
         "special_tokens": ["PAD", "BEGIN", "END"],
-        "level": "char",
         "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/char_en.dict",
         "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/char_en.dict"
       },
