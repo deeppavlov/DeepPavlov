@@ -28,7 +28,7 @@ class RegexHandler(Handler):
             return False
 
         message = context.message
-        return any([re.search(regexp, ' '.join(message)) for regexp in self.commands])
+        return any(re.search(regexp, ' '.join(message)) for regexp in self.commands)
 
     def expand_context(self, context: UserContext):
         context.handler_payload = {'regex_groups': {}}

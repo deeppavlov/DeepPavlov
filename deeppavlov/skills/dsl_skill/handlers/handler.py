@@ -27,3 +27,6 @@ class Handler:
         if self.context_condition is not None:
             return self.context_condition(context)
         return True
+
+    def expand_context(self, context: UserContext):
+        context.handler_payload = {}
