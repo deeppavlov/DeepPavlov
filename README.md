@@ -13,13 +13,14 @@ DeepPavlov is designed for
 
 * Demo [*demo.ipavlov.ai*](https://demo.ipavlov.ai/)
 * Documentation [*docs.deeppavlov.ai*](http://docs.deeppavlov.ai/)
-    * Feature List [*features/*](http://docs.deeppavlov.ai/en/master/intro/features.html)
-    * Contribution Guide [*contribution_guide/*](http://docs.deeppavlov.ai/en/master/devguides/contribution_guide.html)
+    * Feature List [*docs:features/*](http://docs.deeppavlov.ai/en/master/intro/features.html)
+    * Contribution Guide [*docs:contribution_guide/*](http://docs.deeppavlov.ai/en/master/devguides/contribution_guide.html)
 * Issues [*github/issues/*](https://github.com/deepmipt/DeepPavlov/issues)
 * Forum [*forum.ipavlov.ai*](https://forum.ipavlov.ai/)
-* Medium [*medium.com/deeppavlov*](https://medium.com/deeppavlov)
+* Blogs [*ipavlov.ai/#rec108281800*](http://ipavlov.ai/#rec108281800)
 * Tutorials [*examples/*](https://github.com/deepmipt/DeepPavlov/tree/master/examples)
 * Docker Hub [*hub.docker.com/u/deeppavlov/*](https://hub.docker.com/u/deeppavlov/) 
+    * Docker Images Documentation [*docs:docker-images/*](http://docs.deeppavlov.ai/en/master/intro/installation.html#docker-images)
 
 # Features
 
@@ -149,14 +150,6 @@ into the `"class_name"` field.
 
 - The way arguments are passed to metrics functions during training and evaluation was changed and
  [documented](http://docs.deeppavlov.ai/en/latest/intro/config_description.html#metrics).
-
-# Docker images
-
-We have built several DeepPavlov based Docker images, which include:
-* DeepPavlov based Jupyter notebook Docker image;
-* Docker images which serve some of our models and allow to access them via REST API (`riseapi` mode).
-
-Here is our [DockerHub repository](https://hub.docker.com/u/deeppavlov/) with images and deployment instructions.   
 
 # License
 
