@@ -9,7 +9,7 @@ DeepPavlov is designed for
  * development of production ready chat-bots and complex conversational systems,
  * research in the area of NLP and, particularly, of dialog systems.
 
-# Quick Links
+## Quick Links
 
 * Demo [*demo.ipavlov.ai*](https://demo.ipavlov.ai/)
 * Documentation [*docs.deeppavlov.ai*](http://docs.deeppavlov.ai/)
@@ -22,7 +22,7 @@ DeepPavlov is designed for
 * Docker Hub [*hub.docker.com/u/deeppavlov/*](https://hub.docker.com/u/deeppavlov/) 
     * Docker Images Documentation [*docs:docker-images/*](http://docs.deeppavlov.ai/en/master/intro/installation.html#docker-images)
 
-# Features
+## Key Features
 
 **Models**
 
@@ -55,29 +55,7 @@ DeepPavlov is designed for
 
 [Tuning Models with Evolutionary Algorithm](http://docs.deeppavlov.ai/en/latest/intro/hypersearch.html)
 
-# Installation
-
-0. We support `Linux` and `Windows` platforms, `Python 3.6` and `Python 3.7`
-    * **`Python 3.5` is not supported!**
-    * **installation for `Windows` requires `Git`(for example, [git](https://git-scm.com/download/win)) and  `Visual Studio 2015/2017` with `C++` build tools installed!**
-
-1. Create and activate a virtual environment:
-    * `Linux`
-    ```
-    python -m venv env
-    source ./env/bin/activate
-    ```
-    * `Windows`
-    ```
-    python -m venv env
-    .\env\Scripts\activate.bat
-    ```
-2. Install the package inside the environment:
-    ```
-    pip install deeppavlov
-    ```
-
-# Quick start
+## QuickStart
 
 To use our pre-trained models, you should first install their requirements:
 ```
@@ -115,7 +93,28 @@ Every line of input text will be used as a pipeline input parameter, so one exam
 as many input parameters your pipeline expects.  
 You can also specify batch size with `-b` or `--batch-size` parameter.
 
-# Breaking changes
+## Installation
+
+0. We support `Linux` and `Windows` platforms, `Python 3.6` and `Python 3.7`
+    * **`Python 3.5` is not supported!**
+    * **installation for `Windows` requires `Git`(for example, [git](https://git-scm.com/download/win)) and  `Visual Studio 2015/2017` with `C++` build tools installed!**
+
+1. Create and activate a virtual environment:
+    * `Linux`
+    ```
+    python -m venv env
+    source ./env/bin/activate
+    ```
+    * `Windows`
+    ```
+    python -m venv env
+    .\env\Scripts\activate.bat
+    ```
+2. Install the package inside the environment:
+    ```
+    pip install deeppavlov
+    ```
+## Breaking Changes
 
 **Breaking changes in version 0.5.0**
 - dependencies have to be reinstalled for most pipeline configurations
@@ -151,11 +150,11 @@ into the `"class_name"` field.
 - The way arguments are passed to metrics functions during training and evaluation was changed and
  [documented](http://docs.deeppavlov.ai/en/latest/intro/config_description.html#metrics).
 
-# License
+## License
 
 DeepPavlov is Apache 2.0 - licensed.
 
-# The Team
+## The Team
 
 DeepPavlov is built and maintained by [Neural Networks and Deep Learning Lab](https://mipt.ru/english/research/labs/neural-networks-and-deep-learning-lab) at [MIPT](https://mipt.ru/english/) within [iPavlov](http://ipavlov.ai/) project (part of [National Technology Initiative](https://asi.ru/eng/nti/)) and in partnership with [Sberbank](http://www.sberbank.com/).
 
