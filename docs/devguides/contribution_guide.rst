@@ -14,8 +14,11 @@ How to contribute:
    you want to add. If our team or other contributors accept your offer
    or give a +1, assign the issue to yourself. Now proceed with coding : )
 
-#. **Add clear comments** to each line of your code to let other people understand
-   the flow of your mind.
+#. **Write docstrings** and keep them in the
+   `PEP 8 <http://google.github.io/styleguide/pyguide.html#381-docstrings>`_ style.
+   Pay attention that we support typing annotations in every function declaration.
+   **Add clear comments** to interpretable chunks of your code to let other people
+   understand the flow of your mind.
 
 #. **Clone and/or update** your checked out **copy of DeepPavlov** to ensure
    you have the most recent commits from the master branch:
@@ -36,6 +39,9 @@ How to contribute:
 
 #. We demand you to **add some unit tests**. This will help us maintain the
    framework, and this will help users to understand the feature you introduce.
+   Examples of implemented tests are available in `tests/
+   <https://github.com/deepmipt/DeepPavlov/tree/docs/quick-start/tests>`_
+   directory.
 
 #. Please, **update the documentation**, if you committed significant changes
    to our code. 
