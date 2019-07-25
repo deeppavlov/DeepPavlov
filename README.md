@@ -11,15 +11,15 @@ DeepPavlov is designed for
 
 # Quick Links
 
-* Demo [demo.ipavlov.ai](https://demo.ipavlov.ai/)
-* Documentation [docs.deeppavlov.ai](http://docs.deeppavlov.ai/)
-    * Feature List [features/](http://docs.deeppavlov.ai/en/master/intro/features.html)
-    * Contribution Guide [contribution_guide/](http://docs.deeppavlov.ai/en/master/devguides/contribution_guide.html)
-* Issues [github/issues/](https://github.com/deepmipt/DeepPavlov/issues)
-* Forum [forum.ipavlov.ai](https://forum.ipavlov.ai/)
-* Medium [medium.com/deeppavlov](https://medium.com/deeppavlov)
-* Tutorials [examples/](https://github.com/deepmipt/DeepPavlov/tree/master/examples)
-* Docker Hub [hub.docker.com/u/deeppavlov/](https://hub.docker.com/u/deeppavlov/) 
+* Demo [*demo.ipavlov.ai*](https://demo.ipavlov.ai/)
+* Documentation [*docs.deeppavlov.ai*](http://docs.deeppavlov.ai/)
+    * Feature List [*features/*](http://docs.deeppavlov.ai/en/master/intro/features.html)
+    * Contribution Guide [*contribution_guide/*](http://docs.deeppavlov.ai/en/master/devguides/contribution_guide.html)
+* Issues [*github/issues/*](https://github.com/deepmipt/DeepPavlov/issues)
+* Forum [*forum.ipavlov.ai*](https://forum.ipavlov.ai/)
+* Medium [*medium.com/deeppavlov*](https://medium.com/deeppavlov)
+* Tutorials [*examples/*](https://github.com/deepmipt/DeepPavlov/tree/master/examples)
+* Docker Hub [*hub.docker.com/u/deeppavlov/*](https://hub.docker.com/u/deeppavlov/) 
 
 # Features
 
