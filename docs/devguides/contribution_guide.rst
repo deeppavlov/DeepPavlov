@@ -37,7 +37,7 @@ How to contribute:
 
         git checkout -b what_my_code_does_branch
 
-#. We demand you to **add some unit tests**. This will help us maintain the
+#. We demand you to **add some tests**. This will help us maintain the
    framework, and this will help users to understand the feature you introduce.
    Examples of implemented tests are available in `tests/
    <https://github.com/deepmipt/DeepPavlov/tree/docs/quick-start/tests>`_
