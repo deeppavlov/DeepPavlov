@@ -13,7 +13,7 @@ Welcome to DeepPavlov's documentation!
 
 .. toctree::
    :glob:
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Features
 
    Overview <features/overview>
