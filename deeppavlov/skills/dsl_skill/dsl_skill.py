@@ -4,11 +4,12 @@ from abc import ABCMeta
 from collections import defaultdict
 from functools import partial
 from itertools import zip_longest, starmap
-from typing import List, Optional, Union, Dict, Callable, Tuple
+from typing import List, Optional, Dict, Callable, Tuple
 
 from deeppavlov.core.common.registry import register
+from deeppavlov.skills.dsl_skill.context import UserContext
 from deeppavlov.skills.dsl_skill.handlers import Handler, RegexHandler
-from deeppavlov.skills.dsl_skill.utils import expand_arguments, ResponseType
+from deeppavlov.skills.dsl_skill.utils import expand_arguments, SkillResponse, UserId
 
 
 class DSLMeta(ABCMeta):
@@ -19,10 +20,12 @@ class DSLMeta(ABCMeta):
 
     .. code:: python
 
-            class ExampleSkill(metaclass=ZDialog):
-                @ZDialog.handler(commands=["hello", "hey"], state="greeting")
+            class ExampleSkill(metaclass=DSLMeta):
+                @DSLMeta.handler(commands=["hello", "hey"])
                 def __greeting(message: str):
-                    ...
+                    response = "Hello, my friend!"
+                    confidence = 1.0
+                    return response, confidence
     """
     skill_collection: Dict[str, 'DSLMeta'] = {}
 
@@ -30,11 +33,13 @@ class DSLMeta(ABCMeta):
                  bases,
                  namespace,
                  **kwargs):
-        super(DSLMeta, cls).__init__(name, bases, namespace, **kwargs)
+        super().__init__(name, bases, namespace, **kwargs)
         cls.name = name
 
         # Attribute cls.state_to_handler is dict with states as keys and lists of Handler objects as values
         cls.state_to_handler = defaultdict(list)
+        # Attribute cls.user_to_context is dict with user ids as keys and UserContext objects as values
+        cls.user_to_context = defaultdict(UserContext)
         # Handlers that can be activated from any state
         cls.universal_handlers = []
 
@@ -52,7 +57,8 @@ class DSLMeta(ABCMeta):
         register()(cls)
         DSLMeta.__add_to_collection(cls)
 
-    def __init__class(cls, on_invalid_command: str = "Простите, я вас не понял",
+    def __init__class(cls,
+                      on_invalid_command: str = "Простите, я вас не понял",
                       null_confidence: float = 0,
                       *args, **kwargs):
         """
@@ -65,29 +71,22 @@ class DSLMeta(ABCMeta):
         cls.null_confidence = null_confidence
 
     def __handle_batch(cls: 'DSLMeta',
-                       utterances_batch: List,
-                       history_batch: List = None,
-                       states_batch: List = None) -> Tuple[List, ...]:
+                       utterances_batch: List[str],
+                       user_ids_batch: List[UserId]) -> Tuple[List, ...]:
         """Returns skill inference result.
         Returns batches of skill inference results, estimated confidence
         levels and up to date states corresponding to incoming utterance
         batch.
         Args:
             utterances_batch: A batch of utterances of str type.
-            history_batch: A batch of list typed histories for each utterance.
-            states_batch:  A batch of arbitrary typed states for
-                each utterance.
+            user_ids_batch: A batch of user ids.
         Returns:
             response_batch: A batch of arbitrary typed skill inference results.
             confidence_batch: A batch of float typed confidence levels for each of
                 skill inference result.
-            output_states_batch:  A batch of arbitrary typed states for
-                each utterance.
 
         """
-        history_batch = history_batch or []
-        states_batch = states_batch or []
-        return (*list(map(list, zip(*starmap(cls.handle, zip_longest(utterances_batch, history_batch, states_batch))))),)
+        return (*map(list, zip(*starmap(cls.handle, zip_longest(utterances_batch, user_ids_batch)))),)
 
     @staticmethod
     def __add_to_collection(cls: 'DSLMeta'):
@@ -101,69 +100,76 @@ class DSLMeta(ABCMeta):
     @staticmethod
     def __handle(cls: 'DSLMeta',
                  utterance: str,
-                 history: str,
-                 state: str) -> ResponseType:
+                 user_id: UserId) -> SkillResponse:
         """
         Handles what is going to be after a message from user arrived.
         Simple usage:
-        ExampleSkill.handle(Request(<message>, <user_id>))
+        skill([<message>], [<user_id>])
 
         Args:
             cls: instance of callee's class
             utterance: a message to be handled
-            history: history of dialog
-            state: state
+            user_id: id of a user
         Returns:
             result: handler function's result if succeeded
         """
-        current_handler = cls.__select_handler(utterance, history, state)
-        return cls.__run_handler(current_handler, utterance, history, state)
+        context = cls.user_to_context[user_id]
 
-    def __select_handler(cls, message: str,
-                         history: str,
-                         state: str) -> Optional[Callable]:
+        context.user_id = user_id
+        context.message = utterance
+
+        current_handler = cls.__select_handler(utterance, context)
+        return cls.__run_handler(current_handler, utterance, context)
+
+    def __select_handler(cls,
+                         message: str,
+                         context: UserContext) -> Optional[Callable]:
         """
-        Selects handler with the highest priority that could be triggered from the passed state and message.
+        Selects handler with the highest priority that could be triggered from the passed message and context.
         Returns:
              handler function that is selected and None if no handler fits request
         """
-        available_handlers = cls.state_to_handler[state]
+        available_handlers = cls.state_to_handler[context.current_state]
         available_handlers.extend(cls.universal_handlers)
         available_handlers.sort(key=lambda h: h.priority, reverse=True)
         for handler in available_handlers:
-            if handler.check(message, history):
+            if handler.check(message, context):
                 return handler.func
 
     def __run_handler(cls, handler: Optional[Callable],
                       message: str,
-                      history: str,
-                      state: str) -> ResponseType:
+                      context: UserContext) -> SkillResponse:
         """
         Runs specified handler for current message and context
         Args:
             handler: handler to be run. If None, on_invalid_command is returned
         Returns:
-             ResponseType
+             SkillResponse
         """
         if handler is None:
-            return ResponseType(cls.on_invalid_command, cls.null_confidence, None)
+            return SkillResponse(cls.on_invalid_command, cls.null_confidence)
         try:
-            return ResponseType(*handler(message, history, state))
+            return SkillResponse(*handler(message, context))
         except Exception as exc:
-            return ResponseType(str(exc), 1.0, None)
+            return SkillResponse(str(exc), 1.0)
 
     @staticmethod
-    def handler(commands: List[str] = None,
-                state: str = None,
-                context_condition=None,
+    def handler(commands: Optional[List[str]] = None,
+                state: Optional[str] = None,
+                context_condition: Optional[Callable] = None,
                 priority: int = 0):
         """
         Decorator to be used in skills' classes.
         Sample usage:
-        class ExampleSkill(metaclass=ZDialog):
-            @ZDialog.handler(commands=["hello", "hey"], state="greeting")
-            def __greeting(message: str):
-                ...
+
+        .. code:: python
+
+            class ExampleSkill(metaclass=DSLMeta):
+                @DSLMeta.handler(commands=["hello", "hey"], state="greeting")
+                def __greeting(message: str):
+                    response = "Hello, my friend!"
+                    confidence = 1.0
+                    return response, confidence
 
         Args:
             priority: integer value to indicate priority. If multiple handlers satisfy
@@ -180,7 +186,7 @@ class DSLMeta(ABCMeta):
         if commands is None:
             commands = [".*"]
 
-        def decorator(func: Union[Callable, Handler]) -> Handler:
+        def decorator(func: Callable) -> Handler:
             return RegexHandler(expand_arguments(func), commands,
                                 context_condition=context_condition,
                                 priority=priority, state=state)
