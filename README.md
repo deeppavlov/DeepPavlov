@@ -9,13 +9,21 @@ DeepPavlov is designed for
  * development of production ready chat-bots and complex conversational systems,
  * research in the area of NLP and, particularly, of dialog systems.
 
-# Demo
+# Quick Links
 
-Demonstation of selected features is available at [demo.ipavlov.ai](https://demo.ipavlov.ai/)
+* Demo [demo.ipavlov.ai](https://demo.ipavlov.ai/)
+* Documentation [docs.deeppavlov.ai](http://docs.deeppavlov.ai/)
+    * Feature List [features/](http://docs.deeppavlov.ai/en/master/intro/features.html)
+    * Contribution Guide [contribution_guide/](http://docs.deeppavlov.ai/en/master/devguides/contribution_guide.html)
+* Issues [github/issues/](https://github.com/deepmipt/DeepPavlov/issues)
+* Forum [forum.ipavlov.ai](https://forum.ipavlov.ai/)
+* Medium [medium.com/deeppavlov](https://medium.com/deeppavlov)
+* Tutorials [examples/](https://github.com/deepmipt/DeepPavlov/tree/master/examples)
+* Docker Hub [hub.docker.com/u/deeppavlov/](https://hub.docker.com/u/deeppavlov/) 
 
 # Features
 
-**Components**
+**Models**
 
 [Named Entity Recognition](http://docs.deeppavlov.ai/en/latest/components/ner.html) | [Slot filling](http://docs.deeppavlov.ai/en/latest/components/slot_filling.html)
 
@@ -142,11 +150,6 @@ into the `"class_name"` field.
 - The way arguments are passed to metrics functions during training and evaluation was changed and
  [documented](http://docs.deeppavlov.ai/en/latest/intro/config_description.html#metrics).
 
-
-# Documentation
-
-[docs.deeppavlov.ai](http://docs.deeppavlov.ai/)
-
 # Docker images
 
 We have built several DeepPavlov based Docker images, which include:
@@ -155,17 +158,9 @@ We have built several DeepPavlov based Docker images, which include:
 
 Here is our [DockerHub repository](https://hub.docker.com/u/deeppavlov/) with images and deployment instructions.   
 
-# Tutorials
-
-Jupyter notebooks explaining how to use DeepPalov for different tasks can be found in [/examples/](https://github.com/deepmipt/DeepPavlov/tree/master/examples)
-
 # License
 
 DeepPavlov is Apache 2.0 - licensed.
-
-# Support and collaboration
-
-If you have any questions, bug reports or feature requests, please feel free to post on our [Github Issues](https://github.com/deepmipt/DeepPavlov/issues) page. Please tag your issue with `bug`, `feature request`, or `question`.  Also we’ll be glad to see your pull requests to add new datasets, models, embeddings, etc. In addition, we would like to invite everyone to join our [community forum](https://forum.ipavlov.ai/), where you can ask the DeepPavlov community any questions, share ideas, and find like-minded people.
 
 # The Team
 
