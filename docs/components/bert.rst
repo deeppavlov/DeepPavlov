@@ -23,6 +23,13 @@ We have trained BERT-base model for other languages:
 RuBERT was trained on the Russian part of Wikipedia and news data. We used this training data to build vocabulary of Russian subtokens and took
 multilingual version of BERT-base as initialization for RuBERT [1]_. SlavicBERT training was done in the same manner as RuBERT.
 
+We have trained BERT-base model for conversational language style:
+-  Conversational BERT, English, cased, 12-layer, 768-hidden, 12-heads, 110M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12.tar.gz>`__
+
+Conversational BERT was trained on the English part of Twitter, Reddit, DailyDialogues [3]_, OpenSubtitles [4]_, Debates [5]_, Blogs [6]_, Facebook News Comments.
+We used this training data to build vocabulary of English subtokens and took
+English cased version of BERT-base as initialization for English Conversational BERT.
+
 Here, in DeepPavlov, we made it easy to use pre-trained BERT for downstream tasks like classification, tagging, question answering and
 ranking. We also provide pre-trained models and examples on how to use BERT with DeepPavlov.
 
@@ -84,3 +91,7 @@ Statistics are available :doc:`here </intro/features>`.
 
 .. [1] Kuratov, Y., Arkhipov, M. (2019). Adaptation of Deep Bidirectional Multilingual Transformers for Russian Language. arXiv preprint arXiv:1905.07213.
 .. [2] McDonald, R., Brokos, G. I., & Androutsopoulos, I. (2018). Deep relevance ranking using enhanced document-query interactions. arXiv preprint arXiv:1809.01682.
+.. [3] Yanran Li, Hui Su, Xiaoyu Shen, Wenjie Li, Ziqiang Cao, and Shuzi Niu. DailyDialog: A Manually Labelled Multi-turn Dialogue Dataset. IJCNLP 2017.
+.. [4] P. Lison and J. Tiedemann, 2016, OpenSubtitles2016: Extracting Large Parallel Corpora from Movie and TV Subtitles. In Proceedings of the 10th International Conference on Language Resources and Evaluation (LREC 2016)
+.. [5] Justine Zhang, Ravi Kumar, Sujith Ravi, Cristian Danescu-Niculescu-Mizil. Proceedings of NAACL, 2016.
+.. [6] J. Schler, M. Koppel, S. Argamon and J. Pennebaker (2006). Effects of Age and Gender on Blogging in Proceedings of 2006 AAAI Spring Symposium on Computational Approaches for Analyzing Weblogs.
