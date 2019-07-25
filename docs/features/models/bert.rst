@@ -90,6 +90,17 @@ where the task for ranking is to retrieve the best possible response from some p
 the trained model. Working examples with the trained models are given :doc:`here </features/models/neural_ranking>`.
 Statistics are available :doc:`here </features/overview>`.
 
+Using custom BERT in DeepPavlov
+-------------------------------
+
+The following sections describe the BERT based models implemented in DeepPavlov.
+To change the BERT model used for initialization for any downstream task mentioned below the following parameters of
+the config file must be changed to match new BERT path:
+
+* download URL in the ``metadata.download.url`` part of the config
+* ``bert_config_file``, ``pretrained_bert`` in the BERT based Component
+* ``vocab_file`` in the ``bert_preprocessor``
+
 .. [1] Kuratov, Y., Arkhipov, M. (2019). Adaptation of Deep Bidirectional Multilingual Transformers for Russian Language. arXiv preprint arXiv:1905.07213.
 .. [2] McDonald, R., Brokos, G. I., & Androutsopoulos, I. (2018). Deep relevance ranking using enhanced document-query interactions. arXiv preprint arXiv:1809.01682.
 .. [3] Yanran Li, Hui Su, Xiaoyu Shen, Wenjie Li, Ziqiang Cao, and Shuzi Niu. DailyDialog: A Manually Labelled Multi-turn Dialogue Dataset. IJCNLP 2017.
