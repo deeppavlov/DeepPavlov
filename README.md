@@ -57,41 +57,7 @@ DeepPavlov is designed for
 
 ## QuickStart
 
-To use our pre-trained models, you should first install their requirements:
-```
-python -m deeppavlov install <path_to_config>
-```
-  
-Then download the models and data for them:
-```
-python -m deeppavlov download <path_to_config>
-```
-or you can use additional key `-d` to automatically download all required models and data with any command like `interact`, `riseapi`, etc.
-
-Then you can interact with the models or train them with the following command:
-
-```
-python -m deeppavlov <mode> <path_to_config> [-d]
-```
-
-* `<mode>` can be `train`, `predict`, `interact`, `interactbot`, `interactmsbot` or `riseapi`
-* `<path_to_config>` should be a path to an NLP pipeline json config (e.g. `deeppavlov/configs/ner/slotfill_dstc2.json`)
-or a name without the `.json` extension of one of the config files [provided](deeppavlov/configs) in this repository (e.g. `slotfill_dstc2`)
-
-You can also serve DeepPavlov models for:
-* Microsoft Bot Framework ([see developer guide for the detailed instructions](http://docs.deeppavlov.ai/en/latest/devguides/ms_bot_integration.html)) 
-* Amazon Alexa ([see developer guide for the detailed instructions](http://docs.deeppavlov.ai/en/latest/devguides/amazon_alexa.html)) 
-
-For `riseapi` mode you should specify api settings (host, port, etc.) in [*deeppavlov/utils/settings/server_config.json*](deeppavlov/utils/settings/server_config.json) configuration file. If provided, values from *model_defaults* section override values for the same parameters from *common_defaults* section. Model names in *model_defaults* section should be similar to the class names of the models main component.
-Here is [detailed info on the DeepPavlov REST API](http://docs.deeppavlov.ai/en/latest/devguides/rest_api.html)
-
-All DeepPavlov settings files are stored in `deeppavlov/utils/settings` by default. You can get full path to it with `python -m deeppavlov.settings settings`. Also you can move it with with `python -m deeppavlov.settings settings -p <new/configs/dir/path>` (all your configuration settings will be preserved) or move it to default location with `python -m deeppavlov.settings settings -d` (all your configuration settings will be RESET to default ones).
-
-For `predict` you can specify path to input file with `-f` or `--input-file` parameter, otherwise, data will be taken
-from stdin.  
-Every line of input text will be used as a pipeline input parameter, so one example will consist of as many lines,
-as many input parameters your pipeline expects.  
-You can also specify batch size with `-b` or `--batch-size` parameter.
+# TODO:
 
 ## Installation
 

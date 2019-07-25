@@ -7,7 +7,7 @@ Welcome to DeepPavlov's documentation!
 
    QuickStart <intro/quick_start>
    Installation <intro/installation>
-   Conceptional Overview <intro/overview>
+   General concepts <intro/overview>
    Configuration <intro/configuration>
 
 
@@ -16,7 +16,7 @@ Welcome to DeepPavlov's documentation!
    :maxdepth: 1
    :caption: Features
 
-   OVERVIEW <intro/features>
+   Overview <intro/features>
    Models <models/index>
    Skills <skills/index>
    Pre-trained embeddings <intro/pretrained_vectors>
