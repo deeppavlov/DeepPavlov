@@ -9,7 +9,7 @@ from typing import List, Optional, Dict, Callable, Tuple
 from deeppavlov.core.common.registry import register
 from deeppavlov.skills.dsl_skill.context import UserContext
 from deeppavlov.skills.dsl_skill.handlers import Handler, RegexHandler
-from deeppavlov.skills.dsl_skill.utils import expand_arguments, ResponseType, UserId
+from deeppavlov.skills.dsl_skill.utils import expand_arguments, SkillResponse, UserId
 
 
 class DSLMeta(ABCMeta):
@@ -39,7 +39,7 @@ class DSLMeta(ABCMeta):
         # Attribute cls.state_to_handler is dict with states as keys and lists of Handler objects as values
         cls.state_to_handler = defaultdict(list)
         # Attribute cls.user_to_context is dict with user ids as keys and UserContext objects as values
-        cls.user_to_context = defaultdict(lambda: UserContext())
+        cls.user_to_context = defaultdict(UserContext)
         # Handlers that can be activated from any state
         cls.universal_handlers = []
 
@@ -100,7 +100,7 @@ class DSLMeta(ABCMeta):
     @staticmethod
     def __handle(cls: 'DSLMeta',
                  utterance: str,
-                 user_id: UserId) -> ResponseType:
+                 user_id: UserId) -> SkillResponse:
         """
         Handles what is going to be after a message from user arrived.
         Simple usage:
@@ -138,20 +138,20 @@ class DSLMeta(ABCMeta):
 
     def __run_handler(cls, handler: Optional[Callable],
                       message: str,
-                      context: UserContext) -> ResponseType:
+                      context: UserContext) -> SkillResponse:
         """
         Runs specified handler for current message and context
         Args:
             handler: handler to be run. If None, on_invalid_command is returned
         Returns:
-             ResponseType
+             SkillResponse
         """
         if handler is None:
-            return ResponseType(cls.on_invalid_command, cls.null_confidence)
+            return SkillResponse(cls.on_invalid_command, cls.null_confidence)
         try:
-            return ResponseType(*handler(message, context))
+            return SkillResponse(*handler(message, context))
         except Exception as exc:
-            return ResponseType(str(exc), 1.0)
+            return SkillResponse(str(exc), 1.0)
 
     @staticmethod
     def handler(commands: Optional[List[str]] = None,

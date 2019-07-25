@@ -1,7 +1,7 @@
 from typing import Callable, Optional, List, Tuple
 
 from deeppavlov.skills.dsl_skill.context import UserContext
-from deeppavlov.skills.dsl_skill.utils import ResponseType
+from deeppavlov.skills.dsl_skill.utils import SkillResponse
 
 
 class Handler:
@@ -20,7 +20,7 @@ class Handler:
         self.context_condition = context_condition
         self.priority = priority
 
-    def __call__(self, message: Optional[str] = None, context: Optional[UserContext] = None) -> ResponseType:
+    def __call__(self, message: Optional[str] = None, context: Optional[UserContext] = None) -> SkillResponse:
         return self.func(message, context)
 
     def check(self, context: Optional[UserContext] = None) -> bool:

@@ -3,7 +3,7 @@ from typing import Callable, Union, NamedTuple
 UserId = Union[str, int]
 
 
-class ResponseType(NamedTuple):
+class SkillResponse(NamedTuple):
     response: str
     confidence: float
 
