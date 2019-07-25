@@ -6,9 +6,9 @@ Description
 
 The Knowledge Base Question Answering model uses Wikidata to answer question. To find the answer the following
 models are used:
-:doc:`NER model </models/ner>` performs entity discovery. In a given question it finds a substring which
+:doc:`NER model </features/models/ner>` performs entity discovery. In a given question it finds a substring which
 is an entity, possible mentioned in a Knowledge Base.
-:doc:`Classification model </models/ner>` classifies the question into a set of predefined relations from
+:doc:`Classification model </features/models/ner>` classifies the question into a set of predefined relations from
 Wikidata.
 Substring extracted by the NER model is used for entity linking. Entity linking preforms matching the substring
 with one of the Wikidata entities. Matching is based on Levenshtein distance between the substring and an entity

@@ -55,7 +55,7 @@ BERT for Named Entity Recognition (Sequence Tagging)
 ----------------------------------------------------
 
 Pre-trained BERT model can be used for sequence tagging. Examples of usage of BERT for sequence tagging can be
-found :doc:`here </models/ner>`. The module used for tagging is :class:`~deeppavlov.models.bert.bert_ner.BertNerModel`.
+found :doc:`here </features/models/ner>`. The module used for tagging is :class:`~deeppavlov.models.bert.bert_ner.BertNerModel`.
 To tag each word representations of the first sub-word elements are extracted. So for each word there is only one vector produced.
 These representations are passed to a dense layer or Bi-RNN layer to produce distribution over tags. There is
 also an optional CRF layer on the top.
@@ -70,7 +70,7 @@ Context Question Answering on `SQuAD <https://rajpurkar.github.io/SQuAD-explorer
 of looking for an answer on a question in a given context. This task could be formalized as predicting answer start
 and end position in a given context. :class:`~deeppavlov.models.bert.bert_squad.BertSQuADModel` uses two linear
 transformations to predict probability that current subtoken is start/end position of an answer. For details check
-:doc:`Context Question Answering documentation page </models/squad>`.
+:doc:`Context Question Answering documentation page </features/models/squad>`.
 
 BERT for Ranking
 ----------------
@@ -86,8 +86,8 @@ Additional components
 :class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertSepRankerPredictorPreprocessor`
 and :class:`~deeppavlov.models.bert.bert_ranker.BertSepRankerPredictor` are for usage in the ``interact`` mode
 where the task for ranking is to retrieve the best possible response from some provided response base with the help of
-the trained model. Working examples with the trained models are given :doc:`here </models/neural_ranking>`.
-Statistics are available :doc:`here </intro/features>`.
+the trained model. Working examples with the trained models are given :doc:`here </features/models/neural_ranking>`.
+Statistics are available :doc:`here </features/overview>`.
 
 .. [1] Kuratov, Y., Arkhipov, M. (2019). Adaptation of Deep Bidirectional Multilingual Transformers for Russian Language. arXiv preprint arXiv:1905.07213.
 .. [2] McDonald, R., Brokos, G. I., & Androutsopoulos, I. (2018). Deep relevance ranking using enhanced document-query interactions. arXiv preprint arXiv:1809.01682.

@@ -366,4 +366,4 @@ References
     2016 <https://arxiv.org/abs/1610.04211>`_
 
 
-.. |alt text| image:: ../_static/gobot_diagram.png
+.. |alt text| image:: ../../_static/gobot_diagram.png

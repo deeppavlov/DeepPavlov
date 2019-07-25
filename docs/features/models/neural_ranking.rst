@@ -39,7 +39,7 @@ Further the trained representation-based model can be run for inference over the
 
     python -m deeppavlov interact ranking_ubuntu_v2_bert_sep_interact [-d]
 
-Statistics on the models quality are available :doc:`here </intro/features>`.
+Statistics on the models quality are available :doc:`here </features/overview>`.
 
 Building your own response base for bert ranking
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

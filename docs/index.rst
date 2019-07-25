@@ -16,11 +16,11 @@ Welcome to DeepPavlov's documentation!
    :maxdepth: 1
    :caption: Features
 
-   Overview <intro/features>
-   Models <models/index>
-   Skills <skills/index>
-   Pre-trained embeddings <intro/pretrained_vectors>
-   AutoML <intro/hypersearch>
+   Overview <features/overview>
+   Models <features/models/index>
+   Skills <features/skills/index>
+   Pre-trained embeddings <features/pretrained_vectors>
+   AutoML <features/hypersearch>
 
 
 .. toctree::
