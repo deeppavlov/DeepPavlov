@@ -20,8 +20,9 @@ from deeppavlov.skills.dsl_skill.utils import SkillResponse
 
 class Handler:
     """
-    _Handler instance helps DSLMeta class distinguish functions wrapped
+    Handler instance helps DSLMeta class distinguish functions wrapped
     by @DSLMeta.handler to add them to handlers storage.
+    It also checks if the handler function should be triggered based on the given context.
     """
 
     def __init__(self,

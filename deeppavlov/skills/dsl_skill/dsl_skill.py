@@ -40,8 +40,8 @@ class DSLMeta(ABCMeta):
                     return response, confidence
 
     Attributes:
-        state_to_handler: Dict with states as keys and lists of Handler objects as values
-        user_to_context: Dict with user ids as keys and UserContext objects as values
+        state_to_handler: dict with states as keys and lists of Handler objects as values
+        user_to_context: dict with user ids as keys and UserContext objects as values
 
     """
     skill_collection: Dict[str, 'DSLMeta'] = {}
@@ -77,6 +77,7 @@ class DSLMeta(ABCMeta):
                       *args, **kwargs) -> None:
         """
         Initialize Skill class
+
         Args:
             on_invalid_command:  message to be sent on message with no associated handler
         """
@@ -91,9 +92,11 @@ class DSLMeta(ABCMeta):
         Returns batches of skill inference results, estimated confidence
         levels and up to date states corresponding to incoming utterance
         batch.
+
         Args:
             utterances_batch: A batch of utterances of str type.
             user_ids_batch: A batch of user ids.
+
         Returns:
             response_batch: A batch of arbitrary typed skill inference results.
             confidence_batch: A batch of float typed confidence levels for each of
@@ -106,8 +109,10 @@ class DSLMeta(ABCMeta):
     def __add_to_collection(cls: 'DSLMeta') -> None:
         """
         Adds Skill class to Skill classes collection
+
         Args:
             cls: Skill class
+
         """
         DSLMeta.skill_collection[cls.name] = cls
 
@@ -124,8 +129,10 @@ class DSLMeta(ABCMeta):
             cls: instance of callee's class
             utterance: a message to be handled
             user_id: id of a user
+
         Returns:
             result: handler function's result if succeeded
+
         """
         context = cls.user_to_context[user_id]
 
@@ -140,8 +147,10 @@ class DSLMeta(ABCMeta):
                          context: UserContext) -> Optional[Callable]:
         """
         Selects handler with the highest priority that could be triggered from the passed context.
+
         Returns:
              handler function that is selected and None if no handler fits request
+
         """
         available_handlers = cls.state_to_handler[context.current_state]
         available_handlers.extend(cls.universal_handlers)
@@ -154,11 +163,14 @@ class DSLMeta(ABCMeta):
                       context: UserContext) -> SkillResponse:
         """
         Runs specified handler for current context
+
         Args:
             handler: handler to be run. If None, on_invalid_command is returned
             context: user context
+
         Returns:
              SkillResponse
+
         """
         if handler is None:
             return SkillResponse(cls.on_invalid_command, cls.null_confidence)
@@ -194,8 +206,10 @@ class DSLMeta(ABCMeta):
             commands: phrases/regexs on what the function wrapped
                          by this decorator will trigger
             state: state name
+
         Returns:
             function decorated into Handler class
+
         """
         if commands is None:
             commands = [".*"]

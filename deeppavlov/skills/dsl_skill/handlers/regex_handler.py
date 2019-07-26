@@ -24,8 +24,8 @@ class RegexHandler(Handler):
     """
     This handler checks whether the message that is passed to it is matched by a regex.
 
-    Adds the following field to `context`:
-        - context.regex_groups - groups parsed from regular expression in command, by name
+    Adds the following key to ```context.handler_payload```:
+        - 'regex_groups' - groups parsed from regular expression in command, by name
     """
 
     def __init__(self,
