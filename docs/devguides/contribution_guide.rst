@@ -16,12 +16,15 @@ How to contribute:
    features you want to add. If our team or other contributors accept your offer
    or give a +1, assign the issue to yourself. Now proceed with coding : )
 
-#. **Write docstrings** and keep them in the
-   `PEP 8 <http://google.github.io/styleguide/pyguide.html#381-docstrings>`_ style.
-   Pay attention that we support typing annotations in every function declaration.
+#. **Write readable code** and keep it 
+   `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_-ed, **add docstrings**
+   and keep them consistent with the
+   `Google Style <http://google.github.io/styleguide/pyguide.html#381-docstrings>`_.
+   Pay attention that we support typing annotations in every function
+   declaration.
 
-   **Add clear comments** to interpretable chunks of your code to let other people
-   understand the flow of your mind.
+   Accompany code with **clear comments** to let other people understand the
+   flow of your mind.
 
    If you create new models, refer to the :doc:`Registry your model
    </devguides/registry>` section to add it to the DeepPavlov registry of
