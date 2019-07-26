@@ -51,7 +51,7 @@ You can train it in the same simple way:
     not.
 
     To train on your own data you need to modify dataset reader path in the
-    :doc:`train config </intro/configuration#Train config>`. The data format is
+    `train section doc <configuration.html#Train-config>`__. The data format is
     specified in the corresponding model doc page. 
 
 There are even more actions you can perform with configs:
@@ -113,7 +113,7 @@ You can train it in the same simple way:
     not.
 
     To train on your own data you need to modify dataset reader path in the
-    :doc:`train config </intro/configuration#Train config>`. The data format is
+    `train section doc <configuration.html#Train-config>`__. The data format is
     specified in the corresponding model doc page. 
 
 You can also calculate metrics on the dataset specified in your config file:
