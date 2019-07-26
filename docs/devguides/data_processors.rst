@@ -1,7 +1,7 @@
 Data processors
 ===============
 
-Here is a list of useful :class:`~deeppavlov.core.models.component.Component`\ s aimed to preprocess, postprocess and vectorize your data.
+Here is a list of useful :class:`~deeppavlov.core.models.component.Component`' s aimed to preprocess, postprocess and vectorize your data.
 
 Preprocessors
 -------------
