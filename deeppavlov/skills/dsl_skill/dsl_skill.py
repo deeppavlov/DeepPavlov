@@ -140,7 +140,6 @@ class DSLMeta(ABCMeta):
         context.message = utterance
 
         current_handler = cls.__select_handler(context)
-        current_handler.expand_context(context)
         return cls.__run_handler(current_handler, context)
 
     def __select_handler(cls,
@@ -157,6 +156,7 @@ class DSLMeta(ABCMeta):
         available_handlers.sort(key=lambda h: h.priority, reverse=True)
         for handler in available_handlers:
             if handler.check(context):
+                handler.expand_context(context)
                 return handler.func
 
     def __run_handler(cls, handler: Optional[Callable],
