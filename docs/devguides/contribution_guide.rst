@@ -19,8 +19,13 @@ How to contribute:
 #. **Write docstrings** and keep them in the
    `PEP 8 <http://google.github.io/styleguide/pyguide.html#381-docstrings>`_ style.
    Pay attention that we support typing annotations in every function declaration.
+
    **Add clear comments** to interpretable chunks of your code to let other people
    understand the flow of your mind.
+
+   If you create new models, refer to the :doc:`Registry your model
+   </devguides/registry>` section to add it to the DeepPavlov registry of
+   models.
 
 #. **Clone and/or update** your checked out **copy of DeepPavlov** to ensure
    you have the most recent commits from the master branch:

@@ -8,7 +8,7 @@ Welcome to DeepPavlov's documentation!
    QuickStart <intro/quick_start>
    Installation <intro/installation>
    General concepts <intro/overview>
-   Configuration <intro/configuration>
+   Configuration file <intro/configuration>
 
 
 .. toctree::
@@ -42,9 +42,8 @@ Welcome to DeepPavlov's documentation!
    :maxdepth: 3
    :caption: Developer Guides
 
-   Contribution Guide <devguides/contribution_guide>
-   Extending The Library <devguides/extending>
-   Data Processors <devguides/data_processors>
+   Contribution guide <devguides/contribution_guide>
+   Registry your model <devguides/registry>
 
 
 .. toctree::

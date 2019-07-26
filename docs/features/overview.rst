@@ -530,8 +530,8 @@ that requires only some small changes in a config file.
 Embeddings
 ----------
 
-Pre-trained embeddings for the Russian language :doc:`[docs] </features/pretrained_vectors>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Pre-trained embeddings :doc:`[docs] </features/pretrained_vectors>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Word vectors for the Russian language trained on joint `Russian Wikipedia <https://ru.wikipedia.org/>`__ and `Lenta.ru
 <https://lenta.ru/>`__ corpora.
