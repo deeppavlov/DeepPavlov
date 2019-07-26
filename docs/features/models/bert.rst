@@ -93,8 +93,8 @@ Statistics are available :doc:`here </features/overview>`.
 Using custom BERT in DeepPavlov
 -------------------------------
 
-The following sections describe the BERT based models implemented in DeepPavlov.
-To change the BERT model used for initialization for any downstream task mentioned below the following parameters of
+The previous sections describe the BERT based models implemented in DeepPavlov.
+To change the BERT model used for initialization in any downstream task mentioned above the following parameters of
 the config file must be changed to match new BERT path:
 
 * download URL in the ``metadata.download.url`` part of the config
