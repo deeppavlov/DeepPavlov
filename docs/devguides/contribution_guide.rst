@@ -4,14 +4,16 @@ Contribution Guide
 
 We are happy when you share your research with us and when you improve our
 code! There is an easy way to contribute to our project, follow the steps
-below. Your commit will be reviewed and added to our master branch. Moreover,
-if you are a dedicated contributor, you have a chance to get our t-shirt,
-get invited to one of our events or even join our team ; )
+below. Your commit will be reviewed and added to our dev branch, and will be
+added to master branch with the nearest release. Moreover, if you are a
+dedicated contributor, you have a chance to get our t-shirt, get invited to
+one of our events or even join our team ; )
 
 How to contribute:
 
-#. Don't start the coding first. You should **post an issue** to discuss the features
-   you want to add. If our team or other contributors accept your offer
+#. Don't start the coding first. You should **post an**
+   `issue <https://github.com/deepmipt/DeepPavlov/issues>`_ to discuss the
+   features you want to add. If our team or other contributors accept your offer
    or give a +1, assign the issue to yourself. Now proceed with coding : )
 
 #. **Write docstrings** and keep them in the
@@ -25,8 +27,8 @@ How to contribute:
 
     .. code:: bash
 
-        git clone 
-        cd 
+        git clone git@github.com:deepmipt/DeepPavlov.git
+        cd DeepPavlov/
         git fetch origin
         git checkout dev
         git pull
@@ -57,20 +59,23 @@ How to contribute:
         git commit -m "Issue 271"
         git push origin my_branch
 
-#. **Create a new pull request** to get your feature branch merged into master
+    Follow the `semantic commit notation <https://seesparkbox.com/foundry/semantic_commit_messages>`_
+    for the name of the commit.
+
+#. **Create a new pull request** to get your feature branch merged into dev
    for others to use. You’ll first need to ensure your feature branch contains
-   the latest changes from master. 
+   the latest changes from dev. 
 
     .. code:: bash
 
         # (external contribs): make a new pull request:
 
-        # merge latest master changes into your feature branch
+        # merge latest dev changes into your feature branch
         git fetch origin
-        git checkout master
-        git pull origin master
+        git checkout dev
+        git pull origin dev 
         git checkout my_branch
-        git merge master  # you may need to manually resolve merge conflicts
+        git merge dev  # you may need to manually resolve merge conflicts
 
 #. Once your change has been successfully merged, you can **remove the source
    branch** and ensure your local copy is up to date:
@@ -78,7 +83,7 @@ How to contribute:
     .. code:: bash
 
         git fetch origin
-        git checkout master
+        git checkout dev
         git pull
         git branch -d my_branch
         git branch -d -r origin/my_branch
