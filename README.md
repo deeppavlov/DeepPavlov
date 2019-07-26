@@ -70,8 +70,8 @@ the `deeppavlov.configs` (Python):
 When you're decided on the model (+ config file), there are two ways to train,
 evaluate and infer it:
 
-* via [Command line interface (CLI)](#Command-line-interface-(CLI)) and
-* via [Python](#Python).
+* via [Command line interface (CLI)](#command-line-interface-cli) and
+* via [Python](#python).
 
 Before making choice of an interface, install model's package requirements
 (CLI):
@@ -93,8 +93,8 @@ To get predictions from a model interactively through CLI, run
     python -m deeppavlov interact <config_path> [-d]
 ```
 
-    * `-d` downloads required data -- pretrained model files and embeddings
-      (optional).
+* `-d` downloads required data -- pretrained model files and embeddings
+  (optional).
 
 You can train it in the same simple way:
 
@@ -120,18 +120,18 @@ There are even more actions you can perform with configs:
     * `evaluate` to calculate metrics on the same dataset,
     * `interact` to interact via CLI,
     * `riseapi` to run a REST API server (see
-    [doc](http://docs.deeppavlov.ai/en/master/devguides/rest_api.html)),
+    [doc](http://docs.deeppavlov.ai/en/master/integrations/rest_api.html)),
     * `interactbot` to run as a Telegram bot (see
-    [doc](http://docs.deeppavlov.ai/en/master/devguides/telegram.html)),
+    [doc](http://docs.deeppavlov.ai/en/master/integrations/telegram.html)),
     * `interactmsbot` to run a Miscrosoft Bot Framework server (see
-    [doc](http://docs.deeppavlov.ai/en/master/devguides/ms_bot.html)),
+    [doc](http://docs.deeppavlov.ai/en/master/integrations/ms_bot.html)),
     * `predict` to get prediction for samples from *stdin* or from
       *<file_path>* if `-f <file_path>` is specified.
 * `<config_path>` specifies path (or name) of model's config file
 * `-d` downloads required data
 
 
-###Python
+### Python
 
 To get predictions from a model interactively through Python, run
 
@@ -178,9 +178,8 @@ You can also calculate metrics on the dataset specified in your config file:
 ```
 
 There are also available integrations with various messengers, see
-[Telegram Bot doc
-page](http://docs.deeppavlov.ai/en/master/devguides/telegram.html) and
-others in the Integrations section for more info.
+[Telegram Bot doc page](http://docs.deeppavlov.ai/en/master/integrations/telegram.html)
+and others in the Integrations section for more info.
 
 
 ## Installation
