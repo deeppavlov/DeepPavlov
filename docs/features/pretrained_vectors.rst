@@ -1,5 +1,37 @@
 Pre-trained embeddings
-============================
+======================
+
+BERT
+----
+
+We are publishing several pre-trained BERT models:
+
+* RuBERT for Russian language
+* Slavic BERT for Bulgarian, Czech, Polish, and Russian
+* Conversational BERT for informal English
+
+Description of these models is available in the :doc:`BERT section </features/models/bert>` of the docs.
+
+License
+~~~~~~~
+
+The pre-trained models are distributed under the `License Apache
+2.0 <https://www.apache.org/licenses/LICENSE-2.0>`__.
+
+Downloads
+~~~~~~~~~
+
+The models can be run with the original `BERT repo <https://github.com/google-research/bert>`_ code. The download links are:
+
++----------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+| Description          | Model parameters                                   | Download link                                                                                                                              |
++======================+====================================================+============================================================================================================================================+
+| RuBERT               | vocab size = 120K, parameters = 180M, size = 700MB | `[rubert_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v1.tar.gz>`__                |
++----------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+| Slavic BERT          | vocab size = 120K, parameters = 180M, size = 700MB | `[bg_cs_pl_ru_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/bg_cs_pl_ru_cased_L-12_H-768_A-12.tar.gz>`__         |
++----------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+| Conversational BERT  | vocab size = 30K, parameters = 110M, size = 400MB  | `[conversational_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12.tar.gz>`__   |
++----------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
 
 ELMo
 ----
