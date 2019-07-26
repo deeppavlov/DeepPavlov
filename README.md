@@ -24,34 +24,36 @@ DeepPavlov is designed for
 
 **Models**
 
-[Named Entity Recognition](http://docs.deeppavlov.ai/en/latest/components/ner.html) | [Slot filling](http://docs.deeppavlov.ai/en/latest/components/slot_filling.html)
+[Named Entity Recognition](http://docs.deeppavlov.ai/en/master/features/models/ner.html) | [Slot filling](http://docs.deeppavlov.ai/en/master/features/models/slot_filling.html)
 
-[Intent/Sentence Classification](http://docs.deeppavlov.ai/en/latest/components/classifiers.html) |  [Question Answering over Text (SQuAD)](http://docs.deeppavlov.ai/en/latest/components/squad.html) 
+[Intent/Sentence Classification](http://docs.deeppavlov.ai/en/master/features/models/classifiers.html) |  [Question Answering over Text (SQuAD)](http://docs.deeppavlov.ai/en/master/features/models/squad.html) 
 
-[Sentence Similarity/Ranking](http://docs.deeppavlov.ai/en/latest/components/neural_ranking.html) | [TF-IDF Ranking](http://docs.deeppavlov.ai/en/latest/components/tfidf_ranking.html) 
+[Sentence Similarity/Ranking](http://docs.deeppavlov.ai/en/master/features/models/neural_ranking.html) | [TF-IDF Ranking](http://docs.deeppavlov.ai/en/master/features/models/tfidf_ranking.html) 
 
-[Morphological tagging](http://docs.deeppavlov.ai/en/latest/components/morphotagger.html) | [Automatic Spelling Correction](http://docs.deeppavlov.ai/en/latest/components/spelling_correction.html)
+[Morphological tagging](http://docs.deeppavlov.ai/en/master/features/models/morphotagger.html) | [Automatic Spelling Correction](http://docs.deeppavlov.ai/en/master/features/models/spelling_correction.html)
 
-[ELMo training and fine-tuning](http://docs.deeppavlov.ai/en/latest/apiref/models/elmo.html)
+[ELMo training and fine-tuning](http://docs.deeppavlov.ai/en/master/apiref/models/elmo.html)
 
 
 **Skills**
 
-[Goal(Task)-oriented Bot](http://docs.deeppavlov.ai/en/latest/skills/go_bot.html) | [Seq2seq Goal-Oriented bot](http://docs.deeppavlov.ai/en/latest/skills/seq2seq_go_bot.html)
+[Goal(Task)-oriented Bot](http://docs.deeppavlov.ai/en/master/features/skills/go_bot.html) | [Seq2seq Goal-Oriented bot](http://docs.deeppavlov.ai/en/master/features/skills/seq2seq_go_bot.html)
 
-[Open Domain Questions Answering](http://docs.deeppavlov.ai/en/latest/skills/odqa.html) | [eCommerce Bot](http://docs.deeppavlov.ai/en/master/skills/ecommerce.html) 
+[Open Domain Questions Answering](http://docs.deeppavlov.ai/en/master/features/skills/odqa.html) | [eCommerce Bot](http://docs.deeppavlov.ai/en/master/features/skills/ecommerce.html) 
 
-[Frequently Asked Questions Answering](http://docs.deeppavlov.ai/en/latest/skills/faq.html) | [Pattern Matching](http://docs.deeppavlov.ai/en/latest/skills/pattern_matching.html) 
+[Frequently Asked Questions Answering](http://docs.deeppavlov.ai/en/master/features/skills/faq.html) | [Pattern Matching](http://docs.deeppavlov.ai/en/master/features/skills/pattern_matching.html) 
 
 **Embeddings**
 
-[ELMo embeddings for the Russian language](http://docs.deeppavlov.ai/en/latest/apiref/models/embedders.html#deeppavlov.models.embedders.elmo_embedder.ELMoEmbedder)
+[BERT embeddings for the Russian, Polish, Bulgarian, Czech, and informal English](http://docs.deeppavlov.ai/en/master/features/pretrained_vectors.html#bert)
 
-[FastText embeddings for the Russian language](http://docs.deeppavlov.ai/en/latest/intro/pretrained_vectors.html)
+[ELMo embeddings for the Russian language](http://docs.deeppavlov.ai/en/master/features/pretrained_vectors.html#elmo)
+
+[FastText embeddings for the Russian language](http://docs.deeppavlov.ai/en/master/features/pretrained_vectors.html#fasttext)
 
 **Auto ML**
 
-[Tuning Models with Evolutionary Algorithm](http://docs.deeppavlov.ai/en/latest/intro/hypersearch.html)
+[Tuning Models with Evolutionary Algorithm](http://docs.deeppavlov.ai/en/master/features/hypersearch.html)
 
 ## QuickStart
 
@@ -107,17 +109,17 @@ was changed from `MODELS_PATH` to `MODEL_PATH`.
 - As of `version 0.1.0` all models, embeddings and other downloaded data for provided configurations are
  by default downloaded to the `.deeppavlov` directory in current user's home directory.
  This can be changed on per-model basis by modifying
- a `ROOT_PATH` [variable](http://docs.deeppavlov.ai/en/latest/intro/config_description.html#variables)
+ a `ROOT_PATH` [variable](http://docs.deeppavlov.ai/en/master/intro/configuration.html#variables)
  or related fields one by one in model's configuration file.
  
-- In configuration files, for all components, dataset readers and iterators `"name"` and `"class"` fields are combined
+- In configuration files, for all features/models, dataset readers and iterators `"name"` and `"class"` fields are combined
 into the `"class_name"` field.
 
 - `deeppavlov.core.commands.infer.build_model_from_config()` was renamed to `build_model` and can be imported from the
  `deeppavlov` module directly.
 
 - The way arguments are passed to metrics functions during training and evaluation was changed and
- [documented](http://docs.deeppavlov.ai/en/latest/intro/config_description.html#metrics).
+ [documented](http://docs.deeppavlov.ai/en/0.4.0/intro/config_description.html#metrics).
 
 ## License
 
