@@ -121,10 +121,6 @@ PARAMS = {
         ("classifiers/intents_snips_sklearn.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_snips_tfidf_weighted.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
-    "sample": {
-        ("classifiers/intents_sample_csv.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/intents_sample_json.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
-    },
     "ner": {
         ("ner/ner_conll2003_bert.json", "ner_conll2003_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_ontonotes_bert.json", "ner_ontonotes_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
