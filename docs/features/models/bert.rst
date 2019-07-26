@@ -95,7 +95,7 @@ Using custom BERT in DeepPavlov
 
 The previous sections describe the BERT based models implemented in DeepPavlov.
 To change the BERT model used for initialization in any downstream task mentioned above the following parameters of
-the config file must be changed to match new BERT path:
+the :doc:`config </intro/configuration>` file must be changed to match new BERT path:
 
 * download URL in the ``metadata.download.url`` part of the config
 * ``bert_config_file``, ``pretrained_bert`` in the BERT based Component
