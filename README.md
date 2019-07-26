@@ -54,6 +54,28 @@ DeepPavlov is designed for
 
 [Tuning Models with Evolutionary Algorithm](http://docs.deeppavlov.ai/en/master/features/hypersearch.html)
 
+## Installation
+
+0. We support `Linux` and `Windows` platforms, `Python 3.6` and `Python 3.7`
+    * **`Python 3.5` is not supported!**
+    * **installation for `Windows` requires `Git`(for example, [git](https://git-scm.com/download/win)) and  `Visual Studio 2015/2017` with `C++` build tools installed!**
+
+1. Create and activate a virtual environment:
+    * `Linux`
+    ```
+    python -m venv env
+    source ./env/bin/activate
+    ```
+    * `Windows`
+    ```
+    python -m venv env
+    .\env\Scripts\activate.bat
+    ```
+2. Install the package inside the environment:
+    ```
+    pip install deeppavlov
+    ```
+
 ## QuickStart
 
 There is a bunch of great pre-trained NLP models in DeepPavlov. Each model is
@@ -182,27 +204,6 @@ There are also available integrations with various messengers, see
 and others in the Integrations section for more info.
 
 
-## Installation
-
-0. We support `Linux` and `Windows` platforms, `Python 3.6` and `Python 3.7`
-    * **`Python 3.5` is not supported!**
-    * **installation for `Windows` requires `Git`(for example, [git](https://git-scm.com/download/win)) and  `Visual Studio 2015/2017` with `C++` build tools installed!**
-
-1. Create and activate a virtual environment:
-    * `Linux`
-    ```
-    python -m venv env
-    source ./env/bin/activate
-    ```
-    * `Windows`
-    ```
-    python -m venv env
-    .\env\Scripts\activate.bat
-    ```
-2. Install the package inside the environment:
-    ```
-    pip install deeppavlov
-    ```
 ## Breaking Changes
 
 **Breaking changes in version 0.5.0**
