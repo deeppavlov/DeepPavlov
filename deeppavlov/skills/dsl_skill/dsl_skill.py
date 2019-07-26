@@ -171,7 +171,7 @@ class DSLMeta(ABCMeta):
     def handler(commands: Optional[List[str]] = None,
                 state: Optional[str] = None,
                 context_condition: Optional[Callable] = None,
-                priority: int = 0) -> Handler:
+                priority: int = 0) -> Callable:
         """
         Decorator to be used in skills' classes.
         Sample usage:
