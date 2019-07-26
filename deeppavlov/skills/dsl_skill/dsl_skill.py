@@ -74,7 +74,7 @@ class DSLMeta(ABCMeta):
     def __init__class(cls,
                       on_invalid_command: str = "Простите, я вас не понял",
                       null_confidence: float = 0,
-                      *args, **kwargs):
+                      *args, **kwargs) -> None:
         """
         Initialize Skill class
         Args:
@@ -103,7 +103,7 @@ class DSLMeta(ABCMeta):
         return (*map(list, zip(*starmap(cls.handle, zip_longest(utterances_batch, user_ids_batch)))),)
 
     @staticmethod
-    def __add_to_collection(cls: 'DSLMeta'):
+    def __add_to_collection(cls: 'DSLMeta') -> None:
         """
         Adds Skill class to Skill classes collection
         Args:
@@ -171,7 +171,7 @@ class DSLMeta(ABCMeta):
     def handler(commands: Optional[List[str]] = None,
                 state: Optional[str] = None,
                 context_condition: Optional[Callable] = None,
-                priority: int = 0):
+                priority: int = 0) -> Handler:
         """
         Decorator to be used in skills' classes.
         Sample usage:
