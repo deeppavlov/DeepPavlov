@@ -38,7 +38,7 @@
         "class_name": "bert_preprocessor",
         "vocab_file": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12/vocab.txt",
         "do_lower_case": false,
-        "max_seq_length": 256,
+        "max_seq_length": 200,
         "in": [
           "x"
         ],
