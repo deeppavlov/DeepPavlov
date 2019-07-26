@@ -2,7 +2,7 @@ Installation
 ============
 
 
-We support ``Linux`` and ``Windows`` platforms, ``Python 3.6`` and ``Python  3.7``.
+We support ``Linux`` and ``Windows`` platforms, ``Python 3.6`` and ``Python 3.7``.
 
 .. note::
 

@@ -19,15 +19,16 @@ We have trained BERT-base model for other languages:
 
 -  RuBERT, Russian, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v1.tar.gz>`__
 -  SlavicBERT, Slavic (bg, cs, pl, ru), cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/bg_cs_pl_ru_cased_L-12_H-768_A-12.tar.gz>`__
-
-RuBERT was trained on the Russian part of Wikipedia and news data. We used this training data to build vocabulary of Russian subtokens and took
-multilingual version of BERT-base as initialization for RuBERT [1]_. SlavicBERT training was done in the same manner as RuBERT.
-
-We have trained BERT-base model for conversational language style:
 -  Conversational BERT, English, cased, 12-layer, 768-hidden, 12-heads, 110M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12.tar.gz>`__
 
+RuBERT was trained on the Russian part of Wikipedia and news data. We used this training data to build vocabulary of Russian subtokens and took
+multilingual version of BERT-base as initialization for RuBERT [1]_.
+
+SlavicBERT was trained on Russian News and four Wikipedias: Bulgarian, Czech, Polish, and Russian.
+Subtoken vocabulary was built using this data. Multilingual BERT was used as an initialization for SlavicBERT.
+
 Conversational BERT was trained on the English part of Twitter, Reddit, DailyDialogues [3]_, OpenSubtitles [4]_, Debates [5]_, Blogs [6]_, Facebook News Comments.
-We used this training data to build vocabulary of English subtokens and took
+We used this training data to build the vocabulary of English subtokens and took
 English cased version of BERT-base as initialization for English Conversational BERT.
 
 Here, in DeepPavlov, we made it easy to use pre-trained BERT for downstream tasks like classification, tagging, question answering and
@@ -88,6 +89,17 @@ and :class:`~deeppavlov.models.bert.bert_ranker.BertSepRankerPredictor` are for 
 where the task for ranking is to retrieve the best possible response from some provided response base with the help of
 the trained model. Working examples with the trained models are given :doc:`here </features/models/neural_ranking>`.
 Statistics are available :doc:`here </features/overview>`.
+
+Using custom BERT in DeepPavlov
+-------------------------------
+
+The following sections describe the BERT based models implemented in DeepPavlov.
+To change the BERT model used for initialization for any downstream task mentioned below the following parameters of
+the config file must be changed to match new BERT path:
+
+* download URL in the ``metadata.download.url`` part of the config
+* ``bert_config_file``, ``pretrained_bert`` in the BERT based Component
+* ``vocab_file`` in the ``bert_preprocessor``
 
 .. [1] Kuratov, Y., Arkhipov, M. (2019). Adaptation of Deep Bidirectional Multilingual Transformers for Russian Language. arXiv preprint arXiv:1905.07213.
 .. [2] McDonald, R., Brokos, G. I., & Androutsopoulos, I. (2018). Deep relevance ranking using enhanced document-query interactions. arXiv preprint arXiv:1809.01682.
