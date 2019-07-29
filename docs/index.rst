@@ -5,47 +5,45 @@ Welcome to DeepPavlov's documentation!
    :glob:
    :maxdepth: 1
 
-   Hello bot! <intro/hello_bot>
+   QuickStart <intro/quick_start>
    Installation <intro/installation>
-   Conceptual overview <intro/overview>
-   Features <intro/features>
-   Configuration files <intro/config_description>
-   Pre-trained embeddings <intro/pretrained_vectors>
-   AutoML <intro/hypersearch>
+   General concepts <intro/overview>
+   Configuration file <intro/configuration>
 
 
 .. toctree::
    :glob:
-   :maxdepth: 1
-   :caption: Components
+   :maxdepth: 2
+   :caption: Features
 
-   Data Processors <components/data_processors>
-   BERT-based models <components/bert>
-   Context Question Answering <components/squad>
-   Classification <components/classifiers>
-   Morphological Tagger <components/morphotagger>
-   Named Entity Recognition <components/ner>
-   Neural Ranking <components/neural_ranking>
-   Slot filling <components/slot_filling>
-   Spelling Correction <components/spelling_correction>
-   TF-IDF Ranking <components/tfidf_ranking>
-   Popularity Ranking <components/popularity_ranking>
-   Knowledge Base Question answering <components/kbqa>
+   Overview <features/overview>
+   Models <features/models/index>
+   Skills <features/skills/index>
+   Pre-trained embeddings <features/pretrained_vectors>
+   AutoML <features/hypersearch>
 
 
 .. toctree::
    :glob:
-   :maxdepth: 1
-   :caption: Skills
+   :maxdepth: 3
+   :caption: Integrations
 
-   Goal-Oriented Dialogue Bot <skills/go_bot>
-   Open-Domain Question Answering <skills/odqa>
-   Pattern Matching <skills/pattern_matching>
-   Sequence-To-Sequence Dialogue Bot <skills/seq2seq_go_bot>
-   Frequently Asked Questions Answering <skills/faq>
-   eCommerce Bot <skills/ecommerce>
-   AIML <skills/aiml_skill>
-   DSL <skills/dsl_skill>
+   REST API <integrations/rest_api>
+   Telegram integration <integrations/telegram>
+   Yandex Alice integration <integrations/yandex_alice>
+   Amazon Alexa integration <integrations/amazon_alexa>
+   Microsoft Bot Framework integration <integrations/ms_bot>
+   Amazon AWS deployment <integrations/aws_ec2>
+   Deeppavlov settings <integrations/settings>
+
+
+.. toctree::
+   :glob:
+   :maxdepth: 3
+   :caption: Developer Guides
+
+   Contribution guide <devguides/contribution_guide>
+   Registry your model <devguides/registry>
 
 
 .. toctree::
@@ -54,15 +52,6 @@ Welcome to DeepPavlov's documentation!
    :caption: Package Reference
 
    apiref/*
-
-
-.. toctree::
-   :glob:
-   :maxdepth: 3
-   :caption: Developer Guides
-
-   devguides/*
-
 
 
 Indices and tables

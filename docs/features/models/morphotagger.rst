@@ -488,7 +488,7 @@ Chainer
 The ``chainer`` part of the configuration file contains the
 specification of the neural network model and supplementary things such as vocabularies.
 Chainer refers to an instance of :class:`~deeppavlov.core.common.chainer.Chainer`, see
-:doc:`config_description </intro/config_description>` for a complete description.
+:doc:`configuration </intro/configuration>` for a complete description.
 
 The major part of ``chainer`` is ``pipe``. The ``pipe`` contains
 vocabularies and the network itself as well
@@ -512,9 +512,8 @@ model should predict to tag indexes.
 
     {
         "id": "tag_vocab",
-        "class_name": "default_vocab",
+        "class_name": "simple_vocab",
         "fit_on": ["y"],
-        "level": "token",
         "special_tokens": ["PAD", "BEGIN", "END"],
         "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/tag_en.dict",
         "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/tag_en.dict"
@@ -527,11 +526,10 @@ symbols which occur at least ``min_freq`` times in the training set are kept.
 
      {
         "id": "char_vocab",
-        "class_name": "default_vocab",
+        "class_name": "simple_vocab",
         "min_freq": 3,
         "fit_on": ["x_processed"],
         "special_tokens": ["PAD", "BEGIN", "END"],
-        "level": "char",
         "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/char_en.dict",
         "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/char_en.dict"
       },
@@ -576,7 +574,7 @@ are listed in a separate distributed with the library. This part of the config l
       }
 
 The next part performs the tagging itself. Together with general parameters it describes
-the input parameters of :class:`~deeppavlov.models.morpho_tagger.network.CharacterTagger`) class.
+the input parameters of :class:`~deeppavlov.models.morpho_tagger.morpho_tagger.MorphoTagger`) class.
 
 ::
 
@@ -604,14 +602,14 @@ When an additional vectorizer is used, the first line is changed to
 ``"word_vectorizers": [["#pymorphy_vectorizer.dim", 128]]`` is appended.
 
 Config includes general parameters of :class:`~deeppavlov.core.models.component.Component` class,
-described in the :doc:`config_description </intro/config_description>` and specific
-:class:`~deeppavlov.models.morpho_tagger.network.CharacterTagger`
+described in the :doc:`configuration </intro/configuration>` and specific
+:class:`~deeppavlov.models.morpho_tagger.morpho_tagger.MorphoTagger`
 parameters. The latter include
 
 - ``tags`` - tag vocabulary. ``#tag_vocab`` refers to an already defined model with ``"id" = "tag_vocab"``.
 - ``symbols`` - character vocabulary. ``#char_vocab`` refers to an already defined model with ``"id" = "char_vocab"``.
 
-and other specific parameters of the network, available in :class:`~deeppavlov.models.morpho_tagger.network.CharacterTagger` documentation.
+and other specific parameters of the network, available in :class:`~deeppavlov.models.morpho_tagger.morpho_tagger.MorphoTagger` documentation.
 
 The ``"train"`` section of ``"chainer"`` contains training parameters, such as number of epochs,
 batch_size and logging frequency, see general readme for more details.

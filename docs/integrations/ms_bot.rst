@@ -1,13 +1,13 @@
 Microsoft Bot Framework integration
 ===================================
 
-Each library component or skill can be made available for
+Each library model or skill can be made available for
 inference via Microsoft Bot Framework.
 
 The whole process takes two main steps:
 
 1. Web App Bot setup in Microsoft Azure
-2. DeepPavlov skill/component REST service mounting
+2. DeepPavlov skill/model REST service mounting
 
 1. Web App Bot setup
 --------------------
@@ -47,13 +47,13 @@ The whole process takes two main steps:
 
     3.1 Navigate to your bot *Settings* menu.
 
-    3.2 Input your DeepPavlov skill/component REST service URL
+    3.2 Input your DeepPavlov skill/model REST service URL
     to the *Messaging endpoint* pane. Note, that Microsoft Bot
     Framework requires https endpoint with valid certificate from CA.
 
     3.3 Save somewhere *Microsoft App ID* (*App ID*). To get *App Secret*
     you need to proceed to the *Manage* ling near the *Microsoft App ID* pane.
-    You will need both during your DeepPavlov skill/component REST service start.
+    You will need both during your DeepPavlov skill/model REST service start.
 
     .. image:: ../_static/ms_bot_framework/04_bot_settings.png
        :width: 1500
@@ -67,18 +67,18 @@ The whole process takes two main steps:
     .. image:: ../_static/ms_bot_framework/05_bot_channels.png
        :width: 1500
 
-2. DeepPavlov skill/component REST service mounting
+2. DeepPavlov skill/model REST service mounting
 ---------------------------------------------------
 
 MS Bot Framework sends messages from all channels to the https endpoint
 which was set in the **Web App Bot connection configuration** section.
 
-You should deploy DeepPavlov skill/component REST service on this
+You should deploy DeepPavlov skill/model REST service on this
 endpoint or terminate it to your REST service. Full REST endpoint URL
 can be obtained by the swagger ``apidocs/`` endpoint. We remind you that Microsoft Bot Framework requires https endpoint
 with valid certificate from CA.
 
-Each DeepPavlov skill/component can be made available for MS Bot Framework
+Each DeepPavlov skill/model can be made available for MS Bot Framework
 as a REST service by:
 
 .. code:: bash
@@ -96,12 +96,12 @@ before service start.
 
 Optional ``-p`` key can be provided to override the port value from a settings file.
 
-Optional ``--stateful`` flag should be provided for stateful skills/components.
+Optional ``--stateful`` flag should be provided for stateful skills/models.
 
-Optional ``--multi-instance`` can be provided if you wish to raise separate skill/component instance
+Optional ``--multi-instance`` can be provided if you wish to raise separate skill/model instance
 for **each** conversation.
 
-You should use ``--no-default-skill`` optional flag if your component implements an interface of DeepPavlov *Skill*
+You should use ``--no-default-skill`` optional flag if your model implements an interface of DeepPavlov *Skill*
 to skip its wrapping with DeepPavlov *DefaultStatelessSkill*.
 
 REST service properties (host, port) are provided in ``deeppavlov/utils/settings/server_config.json``. You can also store your

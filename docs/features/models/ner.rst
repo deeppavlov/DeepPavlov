@@ -5,7 +5,7 @@ Train and use the model
 -----------------------
 
 There are two main types of models available: standard RNN based and BERT based. To see details about BERT based
-models see :doc:`here </components/bert>`.
+models see :doc:`here </features/models/bert>`.
 Any pre-trained model can be used for inference from both Command Line Interface (CLI) and Python. Before using the
 model make sure that all required packages are installed using the command:
 

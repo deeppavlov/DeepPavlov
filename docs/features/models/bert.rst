@@ -19,9 +19,17 @@ We have trained BERT-base model for other languages:
 
 -  RuBERT, Russian, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v1.tar.gz>`__
 -  SlavicBERT, Slavic (bg, cs, pl, ru), cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/bg_cs_pl_ru_cased_L-12_H-768_A-12.tar.gz>`__
+-  Conversational BERT, English, cased, 12-layer, 768-hidden, 12-heads, 110M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12.tar.gz>`__
 
 RuBERT was trained on the Russian part of Wikipedia and news data. We used this training data to build vocabulary of Russian subtokens and took
-multilingual version of BERT-base as initialization for RuBERT [1]_. SlavicBERT training was done in the same manner as RuBERT.
+multilingual version of BERT-base as initialization for RuBERT [1]_.
+
+SlavicBERT was trained on Russian News and four Wikipedias: Bulgarian, Czech, Polish, and Russian.
+Subtoken vocabulary was built using this data. Multilingual BERT was used as an initialization for SlavicBERT.
+
+Conversational BERT was trained on the English part of Twitter, Reddit, DailyDialogues [3]_, OpenSubtitles [4]_, Debates [5]_, Blogs [6]_, Facebook News Comments.
+We used this training data to build the vocabulary of English subtokens and took
+English cased version of BERT-base as initialization for English Conversational BERT.
 
 Here, in DeepPavlov, we made it easy to use pre-trained BERT for downstream tasks like classification, tagging, question answering and
 ranking. We also provide pre-trained models and examples on how to use BERT with DeepPavlov.
@@ -48,7 +56,7 @@ BERT for Named Entity Recognition (Sequence Tagging)
 ----------------------------------------------------
 
 Pre-trained BERT model can be used for sequence tagging. Examples of usage of BERT for sequence tagging can be
-found :doc:`here </components/ner>`. The module used for tagging is :class:`~deeppavlov.models.bert.bert_ner.BertNerModel`.
+found :doc:`here </features/models/ner>`. The module used for tagging is :class:`~deeppavlov.models.bert.bert_ner.BertNerModel`.
 To tag each word representations of the first sub-word elements are extracted. So for each word there is only one vector produced.
 These representations are passed to a dense layer or Bi-RNN layer to produce distribution over tags. There is
 also an optional CRF layer on the top.
@@ -63,7 +71,7 @@ Context Question Answering on `SQuAD <https://rajpurkar.github.io/SQuAD-explorer
 of looking for an answer on a question in a given context. This task could be formalized as predicting answer start
 and end position in a given context. :class:`~deeppavlov.models.bert.bert_squad.BertSQuADModel` uses two linear
 transformations to predict probability that current subtoken is start/end position of an answer. For details check
-:doc:`Context Question Answering documentation page </components/squad>`.
+:doc:`Context Question Answering documentation page </features/models/squad>`.
 
 BERT for Ranking
 ----------------
@@ -79,8 +87,23 @@ Additional components
 :class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertSepRankerPredictorPreprocessor`
 and :class:`~deeppavlov.models.bert.bert_ranker.BertSepRankerPredictor` are for usage in the ``interact`` mode
 where the task for ranking is to retrieve the best possible response from some provided response base with the help of
-the trained model. Working examples with the trained models are given :doc:`here </components/neural_ranking>`.
-Statistics are available :doc:`here </intro/features>`.
+the trained model. Working examples with the trained models are given :doc:`here </features/models/neural_ranking>`.
+Statistics are available :doc:`here </features/overview>`.
+
+Using custom BERT in DeepPavlov
+-------------------------------
+
+The previous sections describe the BERT based models implemented in DeepPavlov.
+To change the BERT model used for initialization in any downstream task mentioned above the following parameters of
+the :doc:`config </intro/configuration>` file must be changed to match new BERT path:
+
+* download URL in the ``metadata.download.url`` part of the config
+* ``bert_config_file``, ``pretrained_bert`` in the BERT based Component
+* ``vocab_file`` in the ``bert_preprocessor``
 
 .. [1] Kuratov, Y., Arkhipov, M. (2019). Adaptation of Deep Bidirectional Multilingual Transformers for Russian Language. arXiv preprint arXiv:1905.07213.
 .. [2] McDonald, R., Brokos, G. I., & Androutsopoulos, I. (2018). Deep relevance ranking using enhanced document-query interactions. arXiv preprint arXiv:1809.01682.
+.. [3] Yanran Li, Hui Su, Xiaoyu Shen, Wenjie Li, Ziqiang Cao, and Shuzi Niu. DailyDialog: A Manually Labelled Multi-turn Dialogue Dataset. IJCNLP 2017.
+.. [4] P. Lison and J. Tiedemann, 2016, OpenSubtitles2016: Extracting Large Parallel Corpora from Movie and TV Subtitles. In Proceedings of the 10th International Conference on Language Resources and Evaluation (LREC 2016)
+.. [5] Justine Zhang, Ravi Kumar, Sujith Ravi, Cristian Danescu-Niculescu-Mizil. Proceedings of NAACL, 2016.
+.. [6] J. Schler, M. Koppel, S. Argamon and J. Pennebaker (2006). Effects of Age and Gender on Blogging in Proceedings of 2006 AAAI Spring Symposium on Computational Approaches for Analyzing Weblogs.

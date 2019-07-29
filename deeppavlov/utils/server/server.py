@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 import ssl
-from logging import getLogger
+from logging import getLogger, Filter
 from pathlib import Path
 from typing import List, Tuple
 
@@ -31,7 +32,20 @@ from deeppavlov.core.data.utils import check_nested_dict_keys, jsonify_data
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 
+
+class PollerFilter(Filter):
+    """
+    PollerFilter class is used to filter POST requests log records to
+    <model_endpoint>/poller endpoints.
+    """
+    pat = re.compile(r'POST\s/\S*/poller\s')
+    def filter(self, record):
+        return not PollerFilter.pat.search(record.getMessage())
+
+
 log = getLogger(__name__)
+werklog = getLogger('werkzeug')
+werklog.addFilter(PollerFilter())
 
 app = Flask(__name__)
 Swagger(app)
@@ -100,6 +114,19 @@ def interact(model: Chainer, params_names: List[str]) -> Tuple[Response, int]:
     return jsonify(result), 200
 
 
+def test_interact(model: Chainer, params_names: List[str]) -> Tuple[Response, int]:
+    data = request.get_json()
+    if not data:
+        model_args = [["Test string."] for _ in params_names]
+    else:
+        model_args = [data.get(param_name) for param_name in params_names]
+    try:
+        _ = model(*model_args)
+        return Response('["Test passed"]\n'), 200
+    except Exception:
+        return Response('["Test failed"]\n'), 400
+
+
 def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, port=None):
     server_config_path = get_settings_path() / SERVER_CONFIG_FILENAME
     server_params = get_server_params(server_config_path, model_config)
@@ -108,6 +135,12 @@ def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, p
     port = port or server_params['port']
     model_endpoint = server_params['model_endpoint']
     model_args_names = server_params['model_args_names']
+
+    if model_endpoint == '/':
+        e = ValueError('"/" endpoint is reserved, please provide correct endpoint in model_endpoint'
+                       'param in server configuration file')
+        log.error(e)
+        raise e
 
     https = https or server_params['https']
 
@@ -158,5 +191,9 @@ def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, p
     @swag_from(endpoint_description)
     def answer():
         return interact(model, model_args_names)
+
+    @app.route(model_endpoint+'/poller', methods=['POST'])
+    def polling():
+        return test_interact(model, model_args_names)
 
     app.run(host=host, port=port, threaded=False, ssl_context=ssl_context)

@@ -28,7 +28,7 @@ Deployment process consists of two main stages:
    :width: 800
 
 4.  Proceed to Step 4. Your instance storage size should be no less than 50 GiB to
-    store ODQA components.
+    store ODQA models.
 
 .. image:: ../_static/aws_ec2/04_add_storage.png
    :width: 800
@@ -113,7 +113,7 @@ Deployment process consists of two main stages:
 
     ``python -m deeppavlov install en_odqa_pop_infer_enwiki20180211``
 
-8.  Download ODQA components (it will take quite a time):
+8.  Download ODQA models (it will take quite a time):
 
     ``python -m deeppavlov download en_odqa_pop_infer_enwiki20180211``
 
