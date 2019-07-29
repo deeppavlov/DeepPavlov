@@ -5,15 +5,15 @@ Description
 -----------
 
 The Knowledge Base Question Answering model uses Wikidata to answer question. To find the answer the following
-components are used:
-:doc:`NER component </components/ner>` performs entity discovery. In a given question it finds a substring which
+models are used:
+:doc:`NER model </features/models/ner>` performs entity discovery. In a given question it finds a substring which
 is an entity, possible mentioned in a Knowledge Base.
-:doc:`Classification component </components/ner>` classifies the question into a set of predefined relations from
+:doc:`Classification model </features/models/ner>` classifies the question into a set of predefined relations from
 Wikidata.
 Substring extracted by the NER model is used for entity linking. Entity linking preforms matching the substring
 with one of the Wikidata entities. Matching is based on Levenshtein distance between the substring and an entity
 description. The result of the matching procedure is a set of candidate entities. The reset is search of the
-entity among this set with one of the top-k relations predicted by classification component.
+entity among this set with one of the top-k relations predicted by classification model.
 
 
 Use the model

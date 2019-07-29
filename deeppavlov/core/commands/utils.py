@@ -36,8 +36,8 @@ def _parse_config_property(item: _T, variables: Dict[str, Union[str, Path, float
         return item
 
 
-def parse_config(config: Union[str, Path, dict]) -> dict:
-    """Read config's variables and apply their values to all its properties"""
+def _get_variables_from_config(config: Union[str, Path, dict]):
+    """Read config's variables"""
     if isinstance(config, (str, Path)):
         config = read_json(find_config(config))
 
@@ -55,6 +55,17 @@ def parse_config(config: Union[str, Path, dict]) -> dict:
             value = value.format(**variables)
         variables[name] = value
         variables_exact[f'{{{name}}}'] = value
+
+    return variables, variables_exact
+
+
+def parse_config(config: Union[str, Path, dict]) -> dict:
+    """Apply variables' values to all its properties"""
+    if isinstance(config, (str, Path)):
+        config = read_json(find_config(config))
+
+    variables, variables_exact = _get_variables_from_config(config)
+
     return _parse_config_property(config, variables, variables_exact)
 
 
@@ -67,3 +78,12 @@ def import_packages(packages: list) -> None:
     """Import packages from list to execute their code."""
     for package in packages:
         __import__(package)
+
+
+def parse_value_with_config(value: Union[str, Path], config: Union[str, Path, dict]) -> Path:
+    """Fill the variables in `value` with variables values from `config`.
+    `value` should be a string. If `value` is a string of only variable, `value` will be replaced with
+    variable's value from config (the variable's value could be anything then)."""
+    variables, variables_exact = _get_variables_from_config(config)
+
+    return _parse_config_property(str(value), variables, variables_exact)

@@ -1,11 +1,13 @@
 Features
 ========
 
-Components
-----------
+.. contents:: :local:
 
-:doc:`NER component </components/ner>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Models
+------
+
+NER model :doc:`[docs] </features/models/ner>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are two models for Named Entity Recognition task in DeepPavlov:
 BERT-based and Bi-LSTM+CRF. The models predict tags (in BIO format) for tokens
@@ -38,10 +40,10 @@ which is inspired by Bi-LSTM+CRF architecture from https://arxiv.org/pdf/1603.01
 | DSTC2                                                   |       | :config:`ner_dstc2.json <ner/ner_dstc2.json>`                             |    97.1     |
 +---------------------------------------------------------+-------+---------------------------------------------------------------------------+-------------+
 
-:doc:`Slot filling components </components/slot_filling>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Slot filling models :doc:`[docs] </features/models/slot_filling>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Based on fuzzy Levenshtein search to extract normalized slot values from text. The components either rely on NER results
+Based on fuzzy Levenshtein search to extract normalized slot values from text. The models either rely on NER results
 or perform needle in haystack search.
 
 +---------------------------------------------------------------------------------------------------------------------------+------------------+
@@ -51,10 +53,10 @@ or perform needle in haystack search.
 +---------------------------------------------------------------------------------------------------------------------------+------------------+
 
 
-:doc:`Classification component </components/classifiers>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Classification model :doc:`[docs] </features/models/classifiers>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Component for classification tasks (intents, sentiment, etc) on word-level. Shallow-and-wide CNN, Deep CNN, BiLSTM,
+Model for classification tasks (intents, sentiment, etc) on word-level. Shallow-and-wide CNN, Deep CNN, BiLSTM,
 BiLSTM with self-attention and other models are presented. The model also allows multilabel classification of texts.
 Several pre-trained models are available and presented in Table below.
 
@@ -79,6 +81,8 @@ Several pre-trained models are available and presented in Table below.
 | Insult detection | `Insults`_         |      | :config:`Reddit emb <classifiers/insults_kaggle.json>`                                          | ROC-AUC     | 0.9263 | 0.8556 |  6.2 Gb   |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
 |                  |                    |      | :config:`English BERT <classifiers/insults_kaggle_bert.json>`                                   |             | 0.9255 | 0.8612 |  1200 Mb  |
++                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |                    |      | :config:`English Conversational BERT <classifiers/insults_kaggle_conv_bert.json>`               |             | 0.9389 | 0.8941 |  1200 Mb  |
 +------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | 5 topics         | `AG News`_         |      | :config:`Wiki emb <classifiers/topic_ag_news.json>`                                             | Accuracy    | 0.8922 | 0.9059 |  8.5 Gb   |
 +------------------+--------------------+------+-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
@@ -140,66 +144,8 @@ trained on Reddit dataset.
 .. [3] https://www.slideshare.net/KonstantinSavenkov/nlu-intent-detection-benchmark-by-intento-august-2017
 
 
-:doc:`Goal-oriented bot </skills/go_bot>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Based on Hybrid Code Networks (HCNs) architecture from `Jason D. Williams, Kavosh Asadi, 
-Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control 
-with supervised and reinforcement learning – 2017 <https://arxiv.org/abs/1702.03274>`__.
-It allows to predict responses in a goal-oriented dialog. The model is
-customizable: embeddings, slot filler and intent classifier can be switched on and off on demand.
-
-Available pre-trained models and their comparison with existing benchmarks:
-
-+----------------+------+-------------------------------------------------------------------------------------+---------------+---------+------------+------------------+
-| Dataset        | Lang | Model                                                                               | Metric        | Valid   | Test       | Downloads        |
-+================+======+=====================================================================================+===============+=========+============+==================+
-| `DSTC 2`_ [*]_ | En   | :config:`bot with slot filler <go_bot/gobot_dstc2.json>`                            | Turn Accuracy | 0.521   | 0.529      | 400 Mb           |
-+                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-|                |      | :config:`bot with slot filler & intents & attention <go_bot/gobot_dstc2_best.json>` |               | 0.555   | **0.561**  | 8.5 Gb           |
-+----------------+      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-| `DSTC 2`_      |      | Bordes and Weston (2016)                                                            |               | --      | 0.411      | --               |
-+                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-|                |      | Eric and Manning (2017)                                                             |               | --      | 0.480      | --               |
-+                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-|                |      | Perez and Liu (2016)                                                                |               | --      | 0.487      | --               |
-+                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-|                |      | Williams et al. (2017)                                                              |               | --      | **0.556**  | --               |
-+----------------+------+-------------------------------------------------------------------------------------+---------------+---------+------------+------------------+
-
-.. _`DSTC 2`: http://camdial.org/~mh521/dstc/
-
-.. [*] There were a few :ref:`modifications <dstc2_dataset>` to the original dataset. 
-
-
-:doc:`Seq2seq goal-oriented bot </skills/seq2seq_go_bot>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Dialogue agent predicts responses in a goal-oriented dialog and is able to handle
-multiple domains (pretrained bot allows calendar scheduling, weather information retrieval,
-and point-of-interest navigation). The model is end-to-end differentiable and
-does not need to explicitly model dialogue state or belief trackers.
-
-Comparison of deeppavlov pretrained model with others:
-
-+-------------------+------+----------------------------------------------------+------------------+-----------------+-----------+
-| Dataset           | Lang | Model                                              | Valid BLEU       | Test BLEU       | Downloads |
-+===================+======+====================================================+==================+=================+===========+
-| `Stanford Kvret`_ | En   | :config:`KvretNet <seq2seq_go_bot/bot_kvret.json>` | 0.131            | **0.132**       |  10 Gb    |
-+                   +      +----------------------------------------------------+------------------+-----------------+-----------+
-|                   |      | KvretNet, Mihail Eric et al. (2017)                | --               | **0.132**       |    --     +
-+                   +      +----------------------------------------------------+------------------+-----------------+-----------+
-|                   |      | CopyNet, Mihail Eric et al. (2017)                 | --               | 0.110           | --        +
-+                   +      +----------------------------------------------------+------------------+-----------------+-----------+
-|                   |      | Attn Seq2Seq, Mihail Eric et al. (2017)            | --               | 0.102           | --        +
-+                   +      +----------------------------------------------------+------------------+-----------------+-----------+
-|                   |      | Rule-based, Mihail Eric et al. (2017)              | --               | 0.066           | --        +
-+-------------------+------+----------------------------------------------------+------------------+-----------------+-----------+
-
-.. _`Stanford Kvret`: https://nlp.stanford.edu/blog/a-new-multi-turn-multi-domain-task-oriented-dialogue-dataset/
-
-:doc:`Automatic spelling correction component </components/spelling_correction>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Automatic spelling correction model :doc:`[docs] </features/models/spelling_correction>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Pipelines that use candidates search in a static dictionary and an ARPA language model to correct spelling errors.
 
@@ -231,8 +177,8 @@ on Automatic Spelling Correction for Russian:
 
 
 
-:doc:`Ranking component </components/neural_ranking>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Ranking model :doc:`[docs] </features/models/neural_ranking>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The main neural ranking model based on `LSTM-based deep learning models for non-factoid answer selection
 <https://arxiv.org/abs/1511.04108>`__. The model performs ranking of responses or contexts from some database by their
@@ -387,8 +333,8 @@ References:
 
 
 
-:doc:`TF-IDF Ranker component </components/tfidf_ranking>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+TF-IDF Ranker model :doc:`[docs] </features/models/tfidf_ranking>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Based on `Reading Wikipedia to Answer Open-Domain Questions <https://github.com/facebookresearch/DrQA/>`__. The model solves the task of document retrieval for a given query.
 
@@ -399,8 +345,9 @@ Based on `Reading Wikipedia to Answer Open-Domain Questions <https://github.com/
 +---------------+-------------------------------------------------+-----------------+----------------------+-----------------+-----------+
 
 
-:doc:`Question Answering component </components/squad>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Question Answering model :doc:`[docs] </features/models/squad>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Models in this section solve the task of looking for an answer on a
 question in a given context (`SQuAD <https://rajpurkar.github.io/SQuAD-explorer/>`__ task format).
 There are two models for this task in DeepPavlov: BERT-based and R-Net. Both models predict answer start and end
@@ -430,14 +377,14 @@ In the case when answer is not necessary present in given context we have :confi
 model. This model outputs empty string in case if there is no answer in context.
 
 
-:doc:`Morphological tagging component </components/morphotagger>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Morphological tagging model :doc:`[docs] </features/models/morphotagger>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Based on character-based approach to morphological tagging `Heigold et al., 2017. An extensive empirical evaluation of
 character-based morphological tagging for 14 languages <http://www.aclweb.org/anthology/E17-1048>`__. A state-of-the-art
 model for Russian and several other languages. Model takes as input tokenized sentences and outputs the corresponding
 sequence of morphological labels in `UD format <http://universaldependencies.org/format.html>`__. The table below
-contains word and sentence accuracy on UD2.0 datasets. For more scores see :doc:`full table </components/morphotagger>`.
+contains word and sentence accuracy on UD2.0 datasets. For more scores see :doc:`full table </features/models/morphotagger>`.
 
 .. table::
     :widths: auto
@@ -471,8 +418,8 @@ contains word and sentence accuracy on UD2.0 datasets. For more scores see :doc:
 .. _`UD2.0`: https://lindat.mff.cuni.cz/repository/xmlui/handle/11234/1-1983
 .. _`UD Pipe 1.2`: http://ufal.mff.cuni.cz/udpipe
 
-:doc:`Frequently Asked Questions (FAQ) component </skills/faq>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Frequently Asked Questions (FAQ) model :doc:`[docs] </features/skills/faq>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Set of pipelines for FAQ task: classifying incoming question into set of known questions and return prepared answer.
 You can build different pipelines based on: tf-idf, weighted fasttext, cosine similarity, logistic regression.
@@ -481,8 +428,67 @@ You can build different pipelines based on: tf-idf, weighted fasttext, cosine si
 Skills
 ------
 
-:doc:`eCommerce bot </skills/ecommerce>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Goal-oriented bot :doc:`[docs] </features/skills/go_bot>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Based on Hybrid Code Networks (HCNs) architecture from `Jason D. Williams, Kavosh Asadi, 
+Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control 
+with supervised and reinforcement learning – 2017 <https://arxiv.org/abs/1702.03274>`__.
+It allows to predict responses in a goal-oriented dialog. The model is
+customizable: embeddings, slot filler and intent classifier can be switched on and off on demand.
+
+Available pre-trained models and their comparison with existing benchmarks:
+
++----------------+------+-------------------------------------------------------------------------------------+---------------+---------+------------+------------------+
+| Dataset        | Lang | Model                                                                               | Metric        | Valid   | Test       | Downloads        |
++================+======+=====================================================================================+===============+=========+============+==================+
+| `DSTC 2`_ [*]_ | En   | :config:`bot with slot filler <go_bot/gobot_dstc2.json>`                            | Turn Accuracy | 0.521   | 0.529      | 400 Mb           |
++                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
+|                |      | :config:`bot with slot filler & intents & attention <go_bot/gobot_dstc2_best.json>` |               | 0.555   | **0.561**  | 8.5 Gb           |
++----------------+      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
+| `DSTC 2`_      |      | Bordes and Weston (2016)                                                            |               | --      | 0.411      | --               |
++                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
+|                |      | Eric and Manning (2017)                                                             |               | --      | 0.480      | --               |
++                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
+|                |      | Perez and Liu (2016)                                                                |               | --      | 0.487      | --               |
++                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
+|                |      | Williams et al. (2017)                                                              |               | --      | **0.556**  | --               |
++----------------+------+-------------------------------------------------------------------------------------+---------------+---------+------------+------------------+
+
+.. _`DSTC 2`: http://camdial.org/~mh521/dstc/
+
+.. [*] There were a few :ref:`modifications <dstc2_dataset>` to the original dataset. 
+
+
+Seq2seq goal-oriented bot :doc:`[docs] </features/skills/seq2seq_go_bot>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Dialogue agent predicts responses in a goal-oriented dialog and is able to handle
+multiple domains (pretrained bot allows calendar scheduling, weather information retrieval,
+and point-of-interest navigation). The model is end-to-end differentiable and
+does not need to explicitly model dialogue state or belief trackers.
+
+Comparison of deeppavlov pretrained model with others:
+
++-------------------+------+----------------------------------------------------+------------------+-----------------+-----------+
+| Dataset           | Lang | Model                                              | Valid BLEU       | Test BLEU       | Downloads |
++===================+======+====================================================+==================+=================+===========+
+| `Stanford Kvret`_ | En   | :config:`KvretNet <seq2seq_go_bot/bot_kvret.json>` | 0.131            | **0.132**       |  10 Gb    |
++                   +      +----------------------------------------------------+------------------+-----------------+-----------+
+|                   |      | KvretNet, Mihail Eric et al. (2017)                | --               | **0.132**       |    --     +
++                   +      +----------------------------------------------------+------------------+-----------------+-----------+
+|                   |      | CopyNet, Mihail Eric et al. (2017)                 | --               | 0.110           | --        +
++                   +      +----------------------------------------------------+------------------+-----------------+-----------+
+|                   |      | Attn Seq2Seq, Mihail Eric et al. (2017)            | --               | 0.102           | --        +
++                   +      +----------------------------------------------------+------------------+-----------------+-----------+
+|                   |      | Rule-based, Mihail Eric et al. (2017)              | --               | 0.066           | --        +
++-------------------+------+----------------------------------------------------+------------------+-----------------+-----------+
+
+.. _`Stanford Kvret`: https://nlp.stanford.edu/blog/a-new-multi-turn-multi-domain-task-oriented-dialogue-dataset/
+
+
+eCommerce bot :doc:`[docs] </features/skills/ecommerce>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The eCommerce bot intends to retrieve product items from catalog in sorted order. In addition, it asks an user to provide additional information to specify the search.
 
@@ -491,8 +497,8 @@ The eCommerce bot intends to retrieve product items from catalog in sorted order
     About **130 Mb** on disc required for eCommerce bot with TfIdf-based ranker and **500 Mb** for BLEU-based ranker.
 
 
-:doc:`ODQA </skills/odqa>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+ODQA :doc:`[docs] </features/skills/odqa>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An open domain question answering skill. The skill accepts free-form questions about the world and outputs an answer
 based on its Wikipedia knowledge.
@@ -514,8 +520,8 @@ based on its Wikipedia knowledge.
 AutoML
 --------------------
 
-:doc:`Hyperparameters optimization </intro/hypersearch>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Hyperparameters optimization :doc:`[docs] </features/hypersearch>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Hyperparameters optimization (either by cross-validation or neural evolution) for DeepPavlov models
 that requires only some small changes in a config file.
@@ -524,14 +530,14 @@ that requires only some small changes in a config file.
 Embeddings
 ----------
 
-:doc:`Pre-trained embeddings for the Russian language </intro/pretrained_vectors>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Pre-trained embeddings :doc:`[docs] </features/pretrained_vectors>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Word vectors for the Russian language trained on joint `Russian Wikipedia <https://ru.wikipedia.org/>`__ and `Lenta.ru
 <https://lenta.ru/>`__ corpora.
 
 
-Examples of some components
+Examples of some models
 ---------------------------
 
 -  Run goal-oriented bot with Telegram interface:

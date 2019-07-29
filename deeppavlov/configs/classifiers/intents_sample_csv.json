@@ -83,9 +83,9 @@
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
-          3,
-          5,
-          7
+          1,
+          2,
+          3
         ],
         "filters_cnn": 256,
         "optimizer": "Adam",
