@@ -2,7 +2,7 @@ QuickStart
 ------------
 
 There is a bunch of great pre-trained NLP models in DeepPavlov. Each model is
-determined by it's config file.
+determined by its config file.
 
 List of models is available on :doc:`the doc page </features/overview>` or in
 the ``deeppavlov.configs`` (Python):

@@ -264,7 +264,7 @@ separate JSON for inference.
 Model Configuration
 -------------------
 
-Each DeepPavlov model is determined by it's configuration file. You can use
+Each DeepPavlov model is determined by its configuration file. You can use
 existing config files or create yours. You can also choose a config file and 
 modify preprocessors/tokenizers/embedders/vectorizers there. The components
 below have the same interface and are responsible for the same functions,

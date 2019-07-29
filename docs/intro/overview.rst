@@ -45,7 +45,7 @@ rule-based system.
 ``Component``\ s can be joined into a ``Model`` or a ``Skill``. ``Model``
 solves a larger NLP task compared to ``Component``. However, in terms of
 implementation ``Models``\ s are not different from ``Component``\ s. The
-difference of a ``Skill`` from a ``Model`` is that it's input and output should
+difference of a ``Skill`` from a ``Model`` is that its input and output should
 both be strings. Therefore, ``Skill``\ s are usually associated with
 dialogue tasks.
 

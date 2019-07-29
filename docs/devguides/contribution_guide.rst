@@ -47,10 +47,10 @@ How to contribute:
 
         git checkout -b what_my_code_does_branch
 
-#. We demand you to **add some tests**. This will help us maintain the
+#. We ask you to **add some tests**. This will help us maintain the
    framework, and this will help users to understand the feature you introduce.
    Examples of implemented tests are available in `tests/
-   <https://github.com/deepmipt/DeepPavlov/tree/docs/quick-start/tests>`_
+   <https://github.com/deepmipt/DeepPavlov/tree/dev/tests>`_
    directory.
 
 #. Please, **update the documentation**, if you committed significant changes
@@ -64,7 +64,7 @@ How to contribute:
     .. code:: bash
 
         git add my_files
-        git commit -m "Issue 271"
+        git commit -m "fix: resolve issue #271"
         git push origin my_branch
 
     Follow the `semantic commit notation <https://seesparkbox.com/foundry/semantic_commit_messages>`_

@@ -79,7 +79,7 @@ DeepPavlov is designed for
 ## QuickStart
 
 There is a bunch of great pre-trained NLP models in DeepPavlov. Each model is
-determined by it's config file.
+determined by its config file.
 
 List of models is available on
 [the doc page](http://docs.deeppavlov.ai/en/master/features/overview.html) in
