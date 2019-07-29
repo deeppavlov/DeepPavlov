@@ -99,6 +99,8 @@ class EnThesaurus(object):
         wn_synonyms = wn.synsets(lemma, pos=self.to_wn_postags[morpho_tag['pos_tag']])
         if morpho_tag['pos_tag'] == 'ADJ':
             wn_synonyms = wn_synonyms.extend(wn.synsets(lemma, pos='s'))
+        if wn_synonyms is None:
+            return []
         lemmas = sum((map(lambda x: x.lemmas(), wn_synonyms)), [])
         synonyms = set(map(lambda x: x.name(), lemmas))
         return synonyms

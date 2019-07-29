@@ -99,7 +99,9 @@ class ThesaurusAug(Component):
             if is_pass_next_token:
                 is_pass_next_token = False
                 continue
-            elif cur_morpho_tag['pos_tag'] == 'VERB' and next_morpho_tag['pos_tag'] == 'ADP':
+            elif next_morpho_tag and\
+                    cur_morpho_tag['pos_tag'] == 'VERB' and\
+                    next_morpho_tag['pos_tag'] == 'ADP':
                 res_tokens.append("_".join((cur_token, next_token)))
                 res_morpho_tags.append(cur_morpho_tag)
                 is_pass_next_token = True
@@ -196,7 +198,7 @@ class ThesaurusAug(Component):
             synonyms = self._filter_based_on_reflexive_feature(synonyms, tokens, morpho_tags)
         synonyms = self._rest_cases(synonyms, cases, filter_res)
         if self.lang == 'eng':
-            self._disunit_pharasal_verbs(synonyms, filter_res)
+            self._disunit_phrasal_verbs(synonyms, filter_res)
         candidates = self._insert_source_tokens(synonyms, tokens, filter_res)
         candidates = self._transform_for_kenlm_elector(candidates, filter_res)
         return candidates

@@ -202,14 +202,14 @@ class EnInflector(Inflector):
         return sing
 
     def _tense_similarity(self, first_tense, second_tense):
-        if first_tense['tense'] == second_tense['tense'] and\
-                first_tense['aspect'] == second_tense['aspect']:
+        if first_tense.get('tense') == second_tense.get('tense') and\
+                first_tense.get('aspect') == second_tense.get('aspect'):
             return len(set(first_tense.items()) & set(second_tense.items()))
         return 0
 
     def lemmatize(self, token: str, morpho_tag: dict={}) -> str:
         pos_tag = morpho_tag.get('pos_tag')
-        wn_pos_tag = self.to_wn_postag[pos_tag] if pos_tag else self.to_wn_postag['NOUN']
+        wn_pos_tag = self.to_wn_postag[pos_tag] if pos_tag in self.to_wn_postag else self.to_wn_postag['NOUN']
         if pos_tag == 'NOUN' and\
                 morpho_tag.get('features', {}).get('Number') == 'Sing':
             return token

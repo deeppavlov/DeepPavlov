@@ -44,7 +44,7 @@
         "in": "variants",
         "out": "aug_x_tok",
         "class_name": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
-        "load_path": "{MODELS_PATH}/lms/ru_wiyalen_no_punkt.arpa.binary"
+        "load_path": "{DOWNLOADS_PATH}/language_models/ru_wiyalen_no_punkt.arpa.binary"
       },
       {
         "in": "aug_x_tok",
@@ -66,6 +66,16 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
-    }
+    },
+    "download": [
+      {
+        "url":"http://files.deeppavlov.ai/deeppavlov_data/syn_thes_ruthes_lite2.zip",
+        "subdir": "{DOWNLOADS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/lang_models/ru_wiyalen_no_punkt.arpa.binary.gz",
+        "subdir": "{DOWNLOADS_PATH}/language_models"
+      }
+    ]
   }
 }
