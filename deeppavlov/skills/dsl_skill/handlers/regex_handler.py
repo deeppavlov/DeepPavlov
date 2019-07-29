@@ -26,6 +26,17 @@ class RegexHandler(Handler):
 
     Adds the following key to ```context.handler_payload```:
         - 'regex_groups' - groups parsed from regular expression in command, by name
+
+    Attributes:
+        func: handler function
+        state: state in which handler can be activated
+        priority: priority of the function. If 2 or more handlers can be activated, function
+         with the highest priority is selected
+        context_condition: predicate that accepts user context and checks if the handler should be activated.
+         Example: ```lambda context: context.user_id != 1``` checks if user_id is not equal to 1.
+         That means a user with id 1 will be always ignored by the handler.
+        commands: handler is activated if regular expression from this list is matched with a user message
+
     """
 
     def __init__(self,
@@ -38,6 +49,17 @@ class RegexHandler(Handler):
         self.commands = [re.compile(command) for command in commands]
 
     def check(self, context: UserContext) -> bool:
+        """
+        Checks:
+         - if the handler function should be triggered based on the given context via context condition.
+         - if at least one of the commands is matched to the `context.message`.
+
+        Args:
+            context: user context
+
+        Returns:
+            True, if function satisfy conditions, False otherwise
+        """
         is_previous_matches = super().check(context)
         if not is_previous_matches:
             return False

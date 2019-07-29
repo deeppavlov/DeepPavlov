@@ -34,8 +34,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models",
-      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+      "MODELS_PATH": "{ROOT_PATH}/models"
     }
   }
 }
