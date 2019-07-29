@@ -27,10 +27,10 @@ class Handler:
     Attributes:
         func: handler function
         state: state in which handler can be activated
-        priority: priority of the function. If 2 or more handlers can be activated, function
+        priority: priority of the function. If 2 or more handlers can be activated, handler
          with the highest priority is selected
         context_condition: predicate that accepts user context and checks if the handler should be activated. Example:
-         ```lambda context: context.user_id != 1``` checks if user_id is not equal to 1.
+         `lambda context: context.user_id != 1` checks if user_id is not equal to 1.
          That means a user with id 1 will be always ignored by the handler.
 
     """
@@ -57,7 +57,7 @@ class Handler:
             context: user context
 
         Returns:
-            True, if function satisfy conditions, False otherwise
+            True, if handler should be activated, False otherwise
         """
         if self.context_condition is not None:
             return self.context_condition(context)

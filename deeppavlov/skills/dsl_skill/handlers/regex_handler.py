@@ -33,7 +33,7 @@ class RegexHandler(Handler):
         priority: priority of the function. If 2 or more handlers can be activated, function
          with the highest priority is selected
         context_condition: predicate that accepts user context and checks if the handler should be activated.
-         Example: ```lambda context: context.user_id != 1``` checks if user_id is not equal to 1.
+         Example: `lambda context: context.user_id != 1` checks if user_id is not equal to 1.
          That means a user with id 1 will be always ignored by the handler.
         commands: handler is activated if regular expression from this list is matched with a user message
 
@@ -58,7 +58,7 @@ class RegexHandler(Handler):
             context: user context
 
         Returns:
-            True, if function satisfy conditions, False otherwise
+            True, if handler should be activated, False otherwise
         """
         is_previous_matches = super().check(context)
         if not is_previous_matches:
