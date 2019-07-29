@@ -71,7 +71,8 @@
       "MODELS_PATH": "{ROOT_PATH}/models"
     },
     "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/spelling.txt"
+      "{DEEPPAVLOV_PATH}/requirements/spelling.txt",
+      "{DEEPPAVLOV_PATH}/requirements/kenlm.txt"
     ],
     "labels": {
       "telegram_utils": "ErrorModel",

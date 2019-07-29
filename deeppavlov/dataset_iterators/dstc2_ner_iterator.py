@@ -14,8 +14,7 @@
 
 import json
 import logging
-from random import Random
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
@@ -37,26 +36,15 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
         seed: value for random seed
         shuffle: whether to shuffle the data
     """
-    def __init__(self, data: List[Tuple], dataset_path: str, seed: int = None, shuffle: bool = False):
-        self.shuffle = shuffle
-        self.random = Random(seed)
+    def __init__(self, data: Dict[str, List[Tuple]], dataset_path: str, seed: int = None, shuffle: bool = False):
         # TODO: include slot vals to dstc2.tar.gz
         dataset_path = expand_path(dataset_path) / 'slot_vals.json'
         self._build_slot_vals(dataset_path)
         with open(dataset_path, encoding='utf8') as f:
             self._slot_vals = json.load(f)
-        for data_type in ['train', 'test', 'valid']:
-            bio_markup_data = self._preprocess(data.get(data_type, []))
-            setattr(self, data_type, bio_markup_data)
-        self.data = {
-            'train': self.train,
-            'valid': self.valid,
-            'test': self.test,
-            'all': self.train + self.test + self.valid
-        }
-        self.shuffle = shuffle
+        super().__init__(data, seed, shuffle)
 
-    def _preprocess(self, data_part):
+    def preprocess(self, data_part, *args, **kwargs):
         processed_data_part = list()
         processed_texts = dict()
         for sample in data_part:
