@@ -40,8 +40,10 @@ class DSLMeta(ABCMeta):
                     return response, confidence
 
     Attributes:
+        name: class name
         state_to_handler: dict with states as keys and lists of Handler objects as values
         user_to_context: dict with user ids as keys and UserContext objects as values
+        universal_handlers: list of handlers that can be activated from any state
 
     """
     skill_collection: Dict[str, 'DSLMeta'] = {}
@@ -54,7 +56,6 @@ class DSLMeta(ABCMeta):
         cls.name = name
         cls.state_to_handler = defaultdict(list)
         cls.user_to_context = defaultdict(UserContext)
-        # Handlers that can be activated from any state
         cls.universal_handlers = []
 
         handlers = [attribute for attribute in namespace.values() if isinstance(attribute, Handler)]
@@ -79,7 +80,8 @@ class DSLMeta(ABCMeta):
         Initialize Skill class
 
         Args:
-            on_invalid_command:  message to be sent on message with no associated handler
+            on_invalid_command: message to be sent on message with no associated handler
+            null_confidence: the confidence when DSL has no handler that fits request
         """
         # message to be sent on message with no associated handler
         cls.on_invalid_command = on_invalid_command

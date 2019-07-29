@@ -23,6 +23,16 @@ class Handler:
     Handler instance helps DSLMeta class distinguish functions wrapped
     by @DSLMeta.handler to add them to handlers storage.
     It also checks if the handler function should be triggered based on the given context.
+
+    Attributes:
+        func: handler function
+        state: state in which handler can be activated
+        priority: priority of the function. If 2 or more handlers can be activated, handler
+         with the highest priority is selected
+        context_condition: predicate that accepts user context and checks if the handler should be activated. Example:
+         `lambda context: context.user_id != 1` checks if user_id is not equal to 1.
+         That means a user with id 1 will be always ignored by the handler.
+
     """
 
     def __init__(self,
@@ -39,6 +49,16 @@ class Handler:
         return self.func(context)
 
     def check(self, context: UserContext) -> bool:
+        """
+        Checks:
+         - if the handler function should be triggered based on the given context via context condition.
+
+        Args:
+            context: user context
+
+        Returns:
+            True, if handler should be activated, False otherwise
+        """
         if self.context_condition is not None:
             return self.context_condition(context)
         return True
