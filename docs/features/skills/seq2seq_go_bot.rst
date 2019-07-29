@@ -209,4 +209,4 @@ References
 
 .. [2] `A New Multi-Turn, Multi-Domain, Task-Oriented Dialogue Dataset - 2017 <https://nlp.stanford.edu/blog/a-new-multi-turn-multi-domain-task-oriented-dialogue-dataset/>`_
 
-.. |alt text| image:: ../_static/kvret_diagram.png
+.. |alt text| image:: ../../_static/kvret_diagram.png
