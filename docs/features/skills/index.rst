@@ -12,4 +12,5 @@ Skills
    Frequently Asked Questions Answering <faq>
    eCommerce Bot <ecommerce>
    AIML <aiml_skill>
+   DSL <dsl_skill>
 
