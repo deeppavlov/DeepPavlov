@@ -1,7 +1,7 @@
 DSL Skill
 ======================
 
-An :doc:`DSL implementation</apiref/skills/dsl_skill>`. DSL helps to easily create user-defined skills for dialog systems.
+A :doc:`DSL implementation</apiref/skills/dsl_skill>`. DSL helps to easily create user-defined skills for dialog systems.
 
 For the case when DSL skill matched utterance and found response it outputs response with confidence value.
 
