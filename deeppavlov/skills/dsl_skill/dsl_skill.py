@@ -193,7 +193,7 @@ class DSLMeta(ABCMeta):
         .. code:: python
 
             class ExampleSkill(metaclass=DSLMeta):
-                @DSLMeta.handler(commands=["hello", "hey"], state="greeting")
+                @DSLMeta.handler(commands=["hello", "hi", "sup", "greetings"])
                 def __greeting(context: UserContext):
                     response = "Hello, my friend!"
                     confidence = 1.0
