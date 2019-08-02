@@ -5,10 +5,11 @@ import os
 import pickle
 import shutil
 import signal
+import socket
 import sys
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 from urllib.parse import urljoin
 
 import pexpect
@@ -23,6 +24,7 @@ from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
 from deeppavlov.utils.server.server import get_server_params, SERVER_CONFIG_FILENAME
+from deeppavlov.utils.socket.socket import get_socket_params
 
 tests_dir = Path(__file__).parent
 test_configs_path = tests_dir / "deeppavlov" / "configs"
@@ -30,7 +32,7 @@ src_dir = Path(deeppavlov.__path__[0]) / "configs"
 test_src_dir = tests_dir / "test_configs"
 download_path = tests_dir / "download"
 
-cache_dir: Path = None
+cache_dir: Optional[Path] = None
 if not os.getenv('DP_PYTEST_NO_CACHE'):
     cache_dir = tests_dir / 'download_cache'
 
@@ -99,7 +101,7 @@ PARAMS = {
         ("classifiers/rusentiment_elmo_twitter_cnn.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/rusentiment_bigru_superconv.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/yahoo_convers_vs_info.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/ru_obscenity_classifier.json", "classifiers", ('IP')):
+        ("classifiers/ru_obscenity_classifier.json", "classifiers", ('IP',)):
             [
                 ("Ну и сука же она", 'True'),
                 ("я два года жду эту игру", 'False')
@@ -414,6 +416,34 @@ class TestQuickStart(object):
             # if p.wait() != 0:
             #     raise RuntimeError('Error in shutting down API server: \n{}'.format(logfile.getvalue().decode()))
 
+    @staticmethod
+    def interact_socket(config_path):
+        logfile = io.BytesIO(b'')
+        socket_params = get_socket_params()
+        host = socket_params['host']
+        port = api_port or socket_params['port']
+        socket_url = f'http://{host}:{port}'
+        args = [sys.executable, "-m", "deeppavlov", "risesocket", str(config_path)]
+        if api_port:
+            args += ['-p', str(api_port)]
+        p = pexpect.popen_spawn.PopenSpawn(' '.join(args),
+                                           timeout=None, logfile=logfile)
+        try:
+            p.expect(socket_url)
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.connect((host, port))
+                di = {"context": ["This is DeepPavlov API python test."]}
+                di = json.dumps(di)
+                s.sendall(di.encode('utf-8'))
+                data = s.recv(1024)
+                print(data)
+            assert 1 == 1
+        except pexpect.exceptions.EOF:
+            raise RuntimeError('Got unexpected EOF: \n{}'.format(logfile.getvalue().decode()))
+        finally:
+            p.kill(signal.SIGTERM)
+            p.wait()
+
     def test_interacting_pretrained_model(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
             config_file_path = str(test_configs_path.joinpath(conf_file))
@@ -432,6 +462,15 @@ class TestQuickStart(object):
                 shutil.rmtree(str(download_path), ignore_errors=True)
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
+
+    def test_interacting_pretrained_model_socket(self, model, conf_file, model_dir, mode):
+        if 'IP' in mode and conf_file == "ner/ner_ontonotes.json":
+            config_file_path = str(test_configs_path.joinpath(conf_file))
+            install_config(config_file_path)
+            deep_download(config_file_path)
+            self.interact_socket(test_configs_path / conf_file)
+        else:
+            pytest.skip(f"Unsupported mode: {mode}")
 
     def test_serialization(self, model, conf_file, model_dir, mode):
         if 'SR' not in mode:

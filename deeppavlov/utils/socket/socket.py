@@ -18,10 +18,10 @@ loop = asyncio.get_event_loop()
 dialog_logger = DialogLogger(agent_name='dp_api')
 
 
-async def handle_connection(conn: socket.socket, addr, model: Chainer, params_names: List[str]):
+async def handle_connection(conn: socket.socket, addr, model: Chainer, params_names: List[str], bufsize: int):
     conn.setblocking(False)
     incoming_data = b''
-    recv_data = conn.recv(1024)
+    recv_data = conn.recv(bufsize)
     incoming_data += recv_data
     try:
         data = json.loads(incoming_data)
@@ -64,23 +64,28 @@ async def handle_connection(conn: socket.socket, addr, model: Chainer, params_na
     conn.sendall(result.encode('utf-8'))
 
 
-async def process_connections(server: socket.socket, model: Chainer, params_names: List[str]) -> None:
+async def process_connections(server: socket.socket, model: Chainer, params_names: List[str], bufsize: int) -> None:
     while True:
         conn, addr = await loop.run_in_executor(None, server.accept)
-        loop.create_task(handle_connection(conn, addr, model, params_names))
+        loop.create_task(handle_connection(conn, addr, model, params_names, bufsize))
 
-
-def start_model_socket(model_config: Path, port: Optional[int] = None) -> None:
+def get_socket_params():
     socket_config_path = get_settings_path() / SOCKET_CONFIG_FILENAME
     socket_params = read_json(socket_config_path)
-    model_args_names = socket_params['model_args_names']
+    return socket_params
 
+def start_model_socket(model_config: Path, port: Optional[int] = None) -> None:
+    socket_params = get_socket_params()
+
+    model_args_names = socket_params['model_args_names']
     host = socket_params['host']
     port = port or socket_params['port']
+    bufsize = socket_params['bufsize']
 
     model = build_model(model_config)
 
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((host, port))
     server.listen()
-    loop.run_until_complete(process_connections(server, model, model_args_names))
+    log.info(f'socket http://{host}:{port} has successfully launched')
+    loop.run_until_complete(process_connections(server, model, model_args_names, bufsize))
