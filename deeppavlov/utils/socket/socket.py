@@ -19,15 +19,14 @@ dialog_logger = DialogLogger(agent_name='dp_api')
 
 
 async def handle_connection(conn: socket.socket, addr, model: Chainer, params_names: List[str], bufsize: int):
+    log.info(f'handling connection from {addr}')
     conn.setblocking(False)
-    incoming_data = b''
-    recv_data = conn.recv(bufsize)
-    incoming_data += recv_data
+    recv_data = await loop.sock_recv(conn, bufsize)
     try:
-        data = json.loads(incoming_data)
+        data = json.loads(recv_data)
     except ValueError:
         log.error('request type is not json')
-        conn.sendall(b'[]')
+        await loop.sock_sendall(conn, b'[]')
         return
     dialog_logger.log_in(data)
     model_args = []
@@ -37,17 +36,17 @@ async def handle_connection(conn: socket.socket, addr, model: Chainer, params_na
             model_args.append(param_value)
         else:
             log.error(f"nonempty array expected but got '{param_name}'={repr(param_value)}")
-            conn.sendall(b'[]')
+            await loop.sock_sendall(conn, b'[]')
             return
     lengths = {len(i) for i in model_args if i is not None}
 
     if not lengths:
         log.error('got empty request')
-        conn.sendall(b'[]')
+        await loop.sock_sendall(conn, b'[]')
         return
     elif len(lengths) > 1:
         log.error('got several different batch sizes')
-        conn.sendall(b'[]')
+        await loop.sock_sendall(conn, b'[]')
         return
     batch_size = list(lengths)[0]
     model_args = [arg or [None] * batch_size for arg in model_args]
@@ -59,20 +58,22 @@ async def handle_connection(conn: socket.socket, addr, model: Chainer, params_na
     if len(model.out_params) == 1:
         prediction = [prediction]
     prediction = list(zip(*prediction))
-    result = json.dumps(prediction)
+    result = json.dumps({'status': 'OK', 'payload': prediction})
     dialog_logger.log_out(result)
-    conn.sendall(result.encode('utf-8'))
+    await loop.sock_sendall(conn, result.encode('utf-8'))
 
 
-async def process_connections(server: socket.socket, model: Chainer, params_names: List[str], bufsize: int) -> None:
+async def server(sock: socket.socket, model: Chainer, params_names: List[str], bufsize: int) -> None:
     while True:
-        conn, addr = await loop.run_in_executor(None, server.accept)
+        conn, addr = await loop.sock_accept(sock)
         loop.create_task(handle_connection(conn, addr, model, params_names, bufsize))
 
-def get_socket_params():
+
+def get_socket_params() -> dict:
     socket_config_path = get_settings_path() / SOCKET_CONFIG_FILENAME
     socket_params = read_json(socket_config_path)
     return socket_params
+
 
 def start_model_socket(model_config: Path, port: Optional[int] = None) -> None:
     socket_params = get_socket_params()
@@ -84,8 +85,16 @@ def start_model_socket(model_config: Path, port: Optional[int] = None) -> None:
 
     model = build_model(model_config)
 
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((host, port))
-    server.listen()
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.setblocking(False)
+    s.bind((host, port))
+    s.listen()
     log.info(f'socket http://{host}:{port} has successfully launched')
-    loop.run_until_complete(process_connections(server, model, model_args_names, bufsize))
+    try:
+        loop.run_until_complete(server(s, model, model_args_names, bufsize))
+    except:
+        pass
+    finally:
+        loop.close()
+        s.close()
