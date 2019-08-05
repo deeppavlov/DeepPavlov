@@ -12,40 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pickle
-from io import StringIO
 from logging import getLogger
-from string import punctuation
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple
 
 import nltk
 import numpy as np
-from udapi.block.read.conllu import Conllu
-from udapi.core.node import Node
-from ufal_udpipe import Model as udModel, Pipeline
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.component import Component
-from deeppavlov.core.models.serializable import Serializable
-from deeppavlov.models.kbqa.entity_linking import EntityLinker
 from deeppavlov.models.kbqa.tree_parser import TreeParser
-from deeppavlov.models.kbqa.template_matcher import TemplateMatcher
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
+from deeppavlov.models.kbqa.kb_answer_parser_base import KBBase
 
 log = getLogger(__name__)
 
 
-def descendents(node, desc_list):
-    if len(node.children) > 0:
-        for child in node.children:
-            desc_list = descendents(child, desc_list)
-    desc_list.append(node.form)
-
-    return desc_list
-
-
 @register('kb_tree')
-class KBTree(Component, Serializable):
+class KBTree(KBBase):
     """
         This class generates an answer for a given question using Wikidata.
         It searches for matching triplet from the Wikidata with entity and
@@ -55,56 +37,28 @@ class KBTree(Component, Serializable):
         and relation extraction.
     """
 
-    def __init__(self, load_path: str, linker: EntityLinker, tree_parser: TreeParser,
-                 template_matcher: TemplateMatcher, ft_embedder: FasttextEmbedder,
+    def __init__(self, tree_parser: TreeParser, ft_embedder: FasttextEmbedder,
                  debug: bool = False, use_templates: bool = True, return_confidences: bool = True,
-                 relations_maping_filename: str = None, templates_filename: str = None,
                      *args, **kwargs) -> None:
 
         """
 
         Args:
-            load_path: path to folder with wikidata files
-            udpipe_path: path to file with udpipe model
-            linker: component `deeppavlov.models.kbqa.entity_linking`
+            tree_parser: component `deeppavlov.models.kbqa.tree_parser`
+            ft_embedder: component `deeppavlov.models.embedders.fasttext`
             debug: whether to print entities and relations extracted from the question
             use_templates: whether to use templates for entity and relation extraction
-            relations_maping_filename: file with the dictionary of ids(keys) and titles(values) of relations
-            from Wikidata
-            fasstext_load_path: path to file with fasttext embeddings
-            templates_filename: file with the dictionary of question templates(keys) and relations for these templates
-            (values)
             return_confidences: whether to return confidences of answers
             *args:
             **kwargs:
         """
         
-        super().__init__(save_path=None, load_path=load_path)
+        super().__init__(*args, **kwargs)
         self._debug = debug
         self.use_templates = use_templates
         self.return_confidences = return_confidences
-        self._relations_filename = relations_maping_filename
-        self.q_to_name: Optional[Dict[str, Dict[str, str]]] = None
-        self._relations_mapping: Optional[Dict[str, str]] = None
-        self._templates_filename = templates_filename
-        self.linker = linker
         self.tree_parser = tree_parser
-        self.template_matcher = template_matcher
         self.ft_embedder = ft_embedder
-        self.load()
-
-    def load(self) -> None:
-        with open(self.load_path, 'rb') as fl:
-            self.q_to_name = pickle.load(fl)
-        if self._relations_filename is not None:
-            with open(self.load_path.parent / self._relations_filename, 'rb') as f:
-                self._relations_mapping = pickle.load(f)
-        if self._templates_filename is not None:
-            with open(self.load_path.parent / self._templates_filename, 'rb') as t:
-                self.templates = pickle.load(t)
-
-    def save(self) -> None:
-        pass
 
     def __call__(self, sentences: List[str],
                  *args, **kwargs) -> List[str]:
@@ -125,8 +79,8 @@ class KBTree(Component, Serializable):
                     rel_prob = 1.0
                     obj, confidence = self.match_triplet(entity_triplets,
                                              entity_linking_confidences,
-                                             relation_from_template,
-                                             rel_prob)
+                                             [relation_from_template],
+                                             [rel_prob])
                     objects_batch.append(obj)
                     confidences_batch.append(confidence)
                 else:
@@ -244,67 +198,4 @@ class KBTree(Component, Serializable):
             emb.append(self.ft_embedder._get_word_vector(tok))
         av_emb = np.asarray(emb).mean(axis=0)
         return av_emb
-
-    def is_kbqa_question(self, question_init: str) -> bool:
-        not_kbqa_question_templates = ["почему", "когда будет", "что будет", "что если", "для чего ", "как ",
-                                       "что делать", "зачем", "что может"]
-        kbqa_question_templates = ["как зовут", "как называется", "как звали", "как ты думаешь", "как твое мнение",
-                                   "как ты считаешь"]
-
-        question = ''.join([ch for ch in question_init if ch not in punctuation]).lower()
-        is_kbqa = (all(template not in question for template in not_kbqa_question_templates) or
-                   any(template in question for template in kbqa_question_templates))
-        return is_kbqa
-
-    def parse_wikidata_object(self,
-                              objects_batch: List[str],
-                              confidences_batch: List[float]) -> Tuple[List[str], List[float]]:
-        parsed_objects = []
-        for n, obj in enumerate(objects_batch):
-            if len(obj) > 0:
-                if obj.startswith('Q'):
-                    if obj in self.q_to_name:
-                        parsed_object = self.q_to_name[obj]["name"]
-                        parsed_objects.append(parsed_object)
-                    else:
-                        parsed_objects.append('Not Found')
-                        confidences_batch[n] = 0.0
-                else:
-                    parsed_objects.append(obj)
-            else:
-                parsed_objects.append('Not Found')
-                confidences_batch[n] = 0.0
-        return parsed_objects, confidences_batch
-
-    def entities_and_rels_from_templates(self, tokens: List[str]) -> Tuple[str, str]:
-        s_sanitized = ' '.join([ch for ch in tokens if ch not in punctuation]).lower()
-        s_sanitized = s_sanitized.replace("'", '').replace("`", '')
-        ent = ''
-        relation = ''
-        for template in self.templates:
-            template_start, template_end = template.lower().split('xxx')
-            if template_start in s_sanitized and template_end in s_sanitized:
-                template_start_pos = s_sanitized.find(template_start)
-                template_end_pos = s_sanitized.find(template_end)
-                ent_cand = s_sanitized[template_start_pos+len(template_start): template_end_pos or len(s_sanitized)]
-                if len(ent_cand) < len(ent) or len(ent) == 0:
-                    ent = ent_cand
-                    relation = self.templates[template]
-        return ent, relation
-
-    def match_triplet(self,
-                      entity_triplets: List[List[List[str]]],
-                      entity_linking_confidences: List[float],
-                      relation: str,
-                      rel_prob: float) -> Tuple[str, float]:
-        obj = ''
-        confidence = 0.0
-        for entities, linking_confidence in zip(entity_triplets, entity_linking_confidences):
-            for rel_triplets in entities:
-                relation_from_wiki = rel_triplets[0]
-                if relation == relation_from_wiki:
-                    obj = rel_triplets[1]
-                    confidence = linking_confidence * rel_prob
-                    return obj, confidence
-        return obj, confidence
 

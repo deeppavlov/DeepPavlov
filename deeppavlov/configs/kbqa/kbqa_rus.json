@@ -193,6 +193,12 @@
         "debug": false
       },
       {
+        "class_name": "template_matcher",
+        "id": "template_m",
+        "load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_q_to_name.pickle",
+        "templates_filename": "templates.pickle"
+      },
+      {
         "in": ["x_tokens", "y_predicted", "y_pred_probas"],
         "out": ["answers"],
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_q_to_name.pickle",
@@ -204,6 +210,7 @@
         "debug": false,
         "return_confidences": false,
         "lemmatize": true,
+        "template_matcher": "#template_m",
         "linker": "#linker"
       }
     ],

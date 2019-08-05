@@ -14,7 +14,7 @@
 
 import pickle
 from string import punctuation
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
@@ -36,7 +36,7 @@ class TemplateMatcher(Component, Serializable):
     def save(self) -> None:
         pass
 
-    def call(self, tokens: List[str], *args, **kwargs) -> Tuple[str, str]:
+    def __call__(self, tokens: List[str], *args, **kwargs) -> Tuple[str, str]:
         s_sanitized = ' '.join([ch for ch in tokens if ch not in punctuation]).lower()
         s_sanitized = s_sanitized.replace("'", '').replace("`", '')
         ent = ''
@@ -51,3 +51,4 @@ class TemplateMatcher(Component, Serializable):
                     ent = ent_cand
                     relation = self.templates[template]
         return ent, relation
+

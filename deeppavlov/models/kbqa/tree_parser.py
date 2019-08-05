@@ -42,6 +42,12 @@ class TreeParser(Component, Serializable):
         self.ud_model = udModel.load(str(self.udpipe_load_path))
         self.full_ud_model = Pipeline(self.ud_model, "vertical", Pipeline.DEFAULT, Pipeline.DEFAULT, "conllu")
 
+    def load(self) -> None:
+        pass
+
+    def save(self) -> None:
+        pass
+
     def __call__(self, q_tokens: List[str],
                  *args, **kwargs) -> Tuple[str, str]:
 
@@ -97,4 +103,3 @@ class TreeParser(Component, Serializable):
                 return True, detected_entity, detected_rel
         
         return False, detected_entity, detected_rel
-
