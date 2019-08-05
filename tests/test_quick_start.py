@@ -477,10 +477,7 @@ class TestQuickStart(object):
             pytest.skip("Unsupported mode: {}".format(mode))
 
     def test_interacting_pretrained_model_socket(self, model, conf_file, model_dir, mode):
-        if 'IP' in mode and conf_file == "ner/ner_ontonotes.json":
-            config_file_path = str(test_configs_path.joinpath(conf_file))
-            install_config(config_file_path)
-            deep_download(config_file_path)
+        if 'IP' in mode:
             for socket_type in ['TCP', 'UNIX']:
                 self.interact_socket(test_configs_path / conf_file, socket_type)
 
