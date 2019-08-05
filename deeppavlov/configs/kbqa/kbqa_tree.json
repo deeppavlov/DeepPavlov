@@ -21,16 +21,28 @@
         "debug": false
       },
       {
+        "class_name": "tree_parser",
+        "id": "tree_p",
+        "load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_q_to_name.pickle",
+        "udpipe_filename": "russian-syntagrus-ud-2.3-181115.udpipe"
+      },
+      {
+        "class_name": "template_matcher",
+        "id": "template_m",
+        "load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_q_to_name.pickle",
+        "templates_filename": "templates.pickle"
+      },
+      {
         "in": ["x"],
         "out": ["answers"],
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_q_to_name.pickle",
         "class_name": "kb_tree",
         "relations_maping_filename": "wiki_properties_rus.pickle",
-        "udpipe_filename": "russian-syntagrus-ud-2.3-181115.udpipe",
-        "templates_filename": "templates.pickle",
         "debug": true,
         "use_templates": true,
         "ft_embedder": "#my_embedder",
+        "tree_parser": "#tree_p",
+        "template_matcher": "#template_m",
         "linker": "#linker"
       }
     ],

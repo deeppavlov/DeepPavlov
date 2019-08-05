@@ -28,6 +28,8 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.models.kbqa.entity_linking import EntityLinker
+from deeppavlov.models.kbqa.tree_parser import TreeParser
+from deeppavlov.models.kbqa.template_matcher import TemplateMatcher
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 
 log = getLogger(__name__)
@@ -53,9 +55,11 @@ class KBTree(Component, Serializable):
         and relation extraction.
     """
 
-    def __init__(self, load_path: str, udpipe_filename: str, linker: EntityLinker, ft_embedder: FasttextEmbedder,
+    def __init__(self, load_path: str, linker: EntityLinker, tree_parser: TreeParser,
+                 template_matcher: TemplateMatcher, ft_embedder: FasttextEmbedder,
                  debug: bool = False, use_templates: bool = True, return_confidences: bool = True,
-                 relations_maping_filename: str = None, templates_filename: str = None, *args, **kwargs) -> None:
+                 relations_maping_filename: str = None, templates_filename: str = None,
+                     *args, **kwargs) -> None:
 
         """
 
@@ -77,7 +81,6 @@ class KBTree(Component, Serializable):
         
         super().__init__(save_path=None, load_path=load_path)
         self._debug = debug
-        self.udpipe_filename = udpipe_filename
         self.use_templates = use_templates
         self.return_confidences = return_confidences
         self._relations_filename = relations_maping_filename
@@ -85,10 +88,9 @@ class KBTree(Component, Serializable):
         self._relations_mapping: Optional[Dict[str, str]] = None
         self._templates_filename = templates_filename
         self.linker = linker
+        self.tree_parser = tree_parser
+        self.template_matcher = template_matcher
         self.ft_embedder = ft_embedder
-        self.udpipe_load_path = self.load_path.parent / self.udpipe_filename
-        self.ud_model = udModel.load(str(self.udpipe_load_path))
-        self.full_ud_model = Pipeline(self.ud_model, "vertical", Pipeline.DEFAULT, Pipeline.DEFAULT, "conllu")
         self.load()
 
     def load(self) -> None:
@@ -113,7 +115,7 @@ class KBTree(Component, Serializable):
             is_kbqa = self.is_kbqa_question(sentence)
             if is_kbqa:
                 q_tokens = nltk.word_tokenize(sentence)
-                entity_from_template, relation_from_template = self.entities_and_rels_from_templates(q_tokens)
+                entity_from_template, relation_from_template = self.template_matcher(q_tokens)
                 if entity_from_template and self.use_templates:
                     if self._debug:
                         relation_title = self._relations_mapping[relation_from_template]["name"]
@@ -128,7 +130,7 @@ class KBTree(Component, Serializable):
                     objects_batch.append(obj)
                     confidences_batch.append(confidence)
                 else:
-                    detected_entity, detected_rel = self.entities_and_rels_from_tree(q_tokens)
+                    detected_entity, detected_rel = self.tree_parser(q_tokens)
                     if detected_entity:
                         if self._debug:
                             log.debug("using syntactic tree, entity {}, relation {}".format(detected_entity,
@@ -151,50 +153,6 @@ class KBTree(Component, Serializable):
             return parsed_objects_batch, confidences_batch
         else:
             return parsed_objects_batch
-        
-    def find_entity(self, tree, 
-                          q_tokens: List[str]) -> Tuple[bool, str, str]:
-        detected_entity = ""
-        detected_rel = ""
-        min_tree = 10
-        leaf_node = None
-        for node in tree.descendants:
-            if len(node.children) < min_tree and node.upos in ["NOUN", "PROPN"]:
-                leaf_node = node
-
-        if leaf_node is not None:
-            node = leaf_node
-            desc_list = []
-            entity_tokens = []
-            while node.parent.upos in ["NOUN", "PROPN"] and node.parent.deprel!="root"\
-                    and not node.parent.parent.form.startswith("Как"):
-                node = node.parent
-            detected_rel = node.parent.form
-            desc_list.append(node.form)
-            desc_list = descendents(node, desc_list)
-            num_tok = 0
-            for n, tok in enumerate(q_tokens):
-                if tok in desc_list:
-                    entity_tokens.append(tok)
-                    num_tok = n
-            if (num_tok+1) < len(q_tokens):
-                if q_tokens[(num_tok+1)].isdigit():
-                    entity_tokens.append(q_tokens[(num_tok+1)])
-            detected_entity = ' '.join(entity_tokens)
-            return True, detected_entity, detected_rel
-
-        return False, detected_entity, detected_rel
-
-    def find_entity_adj(self, tree: Node) -> Tuple[bool, str, str]:
-        detected_rel = ""
-        detected_entity = ""
-        for node in tree.descendants:
-            if len(node.children) <= 1 and node.upos == "ADJ":
-                detected_rel = node.parent.form
-                detected_entity = node.form
-                return True, detected_entity, detected_rel
-        
-        return False, detected_entity, detected_rel
 
     def filter_triplets(self, triplets: List[List[str]],
                               sentence: str) -> List[List[str]]:
@@ -333,16 +291,6 @@ class KBTree(Component, Serializable):
                     ent = ent_cand
                     relation = self.templates[template]
         return ent, relation
-
-    def entities_and_rels_from_tree(self, q_tokens: List[str]) -> Tuple[str, str]:
-        q_str = '\n'.join(q_tokens)
-        s = self.full_ud_model.process(q_str)
-        tree = Conllu(filehandle=StringIO(s)).read_tree()
-        fnd, detected_entity, detected_rel = self.find_entity(tree, q_tokens)
-        if fnd == False:
-            fnd, detected_entity, detected_rel = self.find_entity_adj(tree)
-        detected_entity = detected_entity.replace("первый ", '')
-        return detected_entity, detected_rel
 
     def match_triplet(self,
                       entity_triplets: List[List[List[str]]],
