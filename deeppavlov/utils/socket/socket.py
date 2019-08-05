@@ -19,14 +19,31 @@ dialog_logger = DialogLogger(agent_name='dp_api')
 
 
 async def handle_connection(conn: socket.socket, addr, model: Chainer, params_names: List[str], bufsize: int):
+    async def response(status, payload):
+        resp_dict = {'status': status, 'payload': payload}
+        resp_str = json.dumps(resp_dict)
+        return resp_str.encode('utf-8')
+
+    async def wrap_error(conn, error):
+        log.error(error)
+        await loop.sock_sendall(conn, await response(error, ''))
+
     log.info(f'handling connection from {addr}')
     conn.setblocking(False)
-    recv_data = await loop.sock_recv(conn, bufsize)
+    recv_data = b''
+    try:
+        while True:
+            chunk = await loop.run_in_executor(None, conn.recv, bufsize)
+            if chunk:
+                recv_data += chunk
+            else:
+                break
+    except BlockingIOError:
+        pass
     try:
         data = json.loads(recv_data)
     except ValueError:
-        log.error('request type is not json')
-        await loop.sock_sendall(conn, b'[]')
+        await wrap_error(conn, 'request type is not json')
         return
     dialog_logger.log_in(data)
     model_args = []
@@ -35,18 +52,15 @@ async def handle_connection(conn: socket.socket, addr, model: Chainer, params_na
         if param_value is None or (isinstance(param_value, list) and len(param_value) > 0):
             model_args.append(param_value)
         else:
-            log.error(f"nonempty array expected but got '{param_name}'={repr(param_value)}")
-            await loop.sock_sendall(conn, b'[]')
+            await wrap_error(conn, f"nonempty array expected but got '{param_name}'={repr(param_value)}")
             return
     lengths = {len(i) for i in model_args if i is not None}
 
     if not lengths:
-        log.error('got empty request')
-        await loop.sock_sendall(conn, b'[]')
+        await wrap_error(conn, 'got empty request')
         return
     elif len(lengths) > 1:
-        log.error('got several different batch sizes')
-        await loop.sock_sendall(conn, b'[]')
+        await wrap_error(conn, 'got several different batch sizes')
         return
     batch_size = list(lengths)[0]
     model_args = [arg or [None] * batch_size for arg in model_args]
@@ -58,9 +72,9 @@ async def handle_connection(conn: socket.socket, addr, model: Chainer, params_na
     if len(model.out_params) == 1:
         prediction = [prediction]
     prediction = list(zip(*prediction))
-    result = json.dumps({'status': 'OK', 'payload': prediction})
+    result = await response('OK', prediction)
     dialog_logger.log_out(result)
-    await loop.sock_sendall(conn, result.encode('utf-8'))
+    await loop.sock_sendall(conn, result)
 
 
 async def server(sock: socket.socket, model: Chainer, params_names: List[str], bufsize: int) -> None:
@@ -93,8 +107,8 @@ def start_model_socket(model_config: Path, port: Optional[int] = None) -> None:
     log.info(f'socket http://{host}:{port} has successfully launched')
     try:
         loop.run_until_complete(server(s, model, model_args_names, bufsize))
-    except:
-        pass
+    except Exception as e:
+        log.error(f'got exception {e} while running server')
     finally:
         loop.close()
         s.close()

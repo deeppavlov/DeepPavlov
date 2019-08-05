@@ -417,7 +417,7 @@ class TestQuickStart(object):
             #     raise RuntimeError('Error in shutting down API server: \n{}'.format(logfile.getvalue().decode()))
 
     @staticmethod
-    def interact_socket(config_path):
+    def interact_socket(text, config_path):
         logfile = io.BytesIO(b'')
         socket_params = get_socket_params()
         host = socket_params['host']
@@ -432,13 +432,12 @@ class TestQuickStart(object):
             p.expect(socket_url)
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.connect((host, port))
-                di = {"context": ["This is DeepPavlov API python test."]}
+                di = {"context": [text]}
                 di = json.dumps(di)
                 s.sendall(di.encode('utf-8'))
                 data = s.recv(1024)
             resp = json.loads(data)
-            assert resp['status'] == 'OK', f"Socket returned {resp['status']} with {config_path}"
-            assert 1 == 1
+            return resp
         except pexpect.exceptions.EOF:
             raise RuntimeError('Got unexpected EOF: \n{}'.format(logfile.getvalue().decode()))
         finally:
@@ -469,7 +468,8 @@ class TestQuickStart(object):
             config_file_path = str(test_configs_path.joinpath(conf_file))
             install_config(config_file_path)
             deep_download(config_file_path)
-            self.interact_socket(test_configs_path / conf_file)
+            resp = self.interact_socket("This is DeepPavlov API python test.", test_configs_path / conf_file)
+            assert resp['status'] == 'OK', f"Socket returned {resp['status']}"
         else:
             pytest.skip(f"Unsupported mode: {mode}")
 
