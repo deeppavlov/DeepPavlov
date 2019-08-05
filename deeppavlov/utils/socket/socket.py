@@ -39,8 +39,8 @@ def get_socket_params(socket_config_path: Path, model_config: Path) -> Dict:
 
 class SocketServer:
     """
-    Class launches socket server. The data received by the socket is processed in the deeppavlov model. Sends model
-    response back as dictionary with two keys:
+    Class with socket server. The data received by the socket is processed in the deeppavlov model. Sends model
+    response back as dictionary with two keys - 'status' and 'payload':
     response['status']: str - 'OK' if data processed successfully, else - error message.
     response['payload']: str - model response dumped with json.dumps. Empty if an error occured.
     """
