@@ -1,6 +1,17 @@
 {
-  "host": "0.0.0.0",
-  "port": 5001,
-  "model_args_names": ["context"],
-  "bufsize": 1024
+  "common_defaults":{
+    "host": "0.0.0.0",
+    "port": 5001,
+    "socket_type": "TCP",
+    "model_args_names": ["context"],
+    "bufsize": 1024
+  },
+  "model_defaults": {
+    "EcommerceSkill": {
+      "model_args_names": ["query", "history", "state"]
+    },
+    "SquadModel": {
+      "model_args_names": ["context", "question"]
+    }
+  }
 }

@@ -21,19 +21,26 @@ from typing import Dict, Optional, Tuple
 
 from deeppavlov.core.agent.dialog_logger import DialogLogger
 from deeppavlov.core.commands.infer import build_model
+from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
-from deeppavlov.utils.server.server import get_server_params, SERVER_CONFIG_FILENAME
+from deeppavlov.core.data.utils import check_nested_dict_keys
 
 SOCKET_CONFIG_FILENAME = 'socket_config.json'
 
 
 def get_socket_params(socket_config_path: Path, model_config: Path) -> Dict:
-    server_config_path = get_settings_path() / SERVER_CONFIG_FILENAME
-    server_params = get_server_params(server_config_path, model_config)
-    socket_params = read_json(socket_config_path)
-    socket_params['model_args_names'] = server_params['model_args_names']
+    socket_config = read_json(socket_config_path)
+    model_config = parse_config(model_config)
+
+    socket_params = socket_config['common_defaults']
+
+    if check_nested_dict_keys(model_config, ['metadata', 'labels', 'server_utils']):
+        model_tag = model_config['metadata']['labels']['server_utils']
+        if model_tag in socket_config['model_defaults']:
+            model_defaults = socket_config['model_defaults'][model_tag]
+            socket_params.update(model_defaults)
     return socket_params
 
 
