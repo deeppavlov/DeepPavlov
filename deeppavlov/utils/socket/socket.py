@@ -64,16 +64,25 @@ class SocketServer:
         socket_config_path = get_settings_path() / SOCKET_CONFIG_FILENAME
         self._params = get_socket_params(socket_config_path, model_config)
         self._socket_type = socket_type or self._params['socket_type']
+
         if self._socket_type == 'TCP':
             host = self._params['host']
             port = port or self._params['port']
-            self._launch_msg = f'launching socket at http://{host}:{port}'
+            self._address_family = socket.AF_INET
+            self._launch_msg = f'{self._params["binding_message"]} http://{host}:{port}'
             self._bind_address = (host, port)
+        elif self._socket_type == 'UNIX':
+            self._address_family = socket.AF_UNIX
+            self._bind_address = socket_file or self._params['unix_socket_file']
+            if os.path.exists(self._bind_address):
+                os.remove(self._bind_address)
+            self._launch_msg = f'{self._params["binding_message"]} {self._bind_address}'
+
         self._dialog_logger = DialogLogger(agent_name='dp_api')
         self._log = getLogger(__name__)
         self._loop = asyncio.get_event_loop()
         self._model = build_model(model_config)
-        self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._socket = socket.socket(self._address_family, socket.SOCK_STREAM)
 
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self._socket.setblocking(False)

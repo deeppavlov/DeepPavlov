@@ -417,7 +417,7 @@ class TestQuickStart(object):
             #     raise RuntimeError('Error in shutting down API server: \n{}'.format(logfile.getvalue().decode()))
 
     @staticmethod
-    def interact_socket(config_path):
+    def interact_socket(config_path, socket_type):
         socket_conf_file = get_settings_path() / SOCKET_CONFIG_FILENAME
 
         socket_params = get_socket_params(socket_conf_file, config_path)
@@ -425,7 +425,6 @@ class TestQuickStart(object):
 
         host = socket_params['host']
         port = api_port or socket_params['port']
-        socket_url = f'http://{host}:{port}'
 
         socket_payload = {}
         for arg_name in model_args_names:
@@ -434,19 +433,24 @@ class TestQuickStart(object):
         dumped_socket_payload = json.dumps(socket_payload)
 
         logfile = io.BytesIO(b'')
-        args = [sys.executable, "-m", "deeppavlov", "risesocket", str(config_path)]
-        if api_port:
-            args += ['-p', str(api_port)]
+        args = [sys.executable, "-m", "deeppavlov", "risesocket", str(config_path), '--socket-type', socket_type]
+        if socket_type == 'TCP':
+            if api_port:
+                args += ['-p', str(api_port)]
+            address_family = socket.AF_INET
+            connect_arg = (host, port)
+        else:
+            address_family = socket.AF_UNIX
+            connect_arg = socket_params['unix_socket_file']
         p = pexpect.popen_spawn.PopenSpawn(' '.join(args),
                                            timeout=None, logfile=logfile)
         try:
-            p.expect(socket_url)
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.connect((host, port))
+            p.expect(socket_params['binding_message'])
+            with socket.socket(address_family, socket.SOCK_STREAM) as s:
+                s.connect(connect_arg)
                 s.sendall(dumped_socket_payload.encode('utf-8'))
                 data = s.recv(1024)
             resp = json.loads(data)
-            print(resp)
             assert resp['status'] == 'OK', f"socket request returned status: {resp['status']} with {config_path}"
 
         except pexpect.exceptions.EOF:
@@ -473,8 +477,12 @@ class TestQuickStart(object):
             pytest.skip("Unsupported mode: {}".format(mode))
 
     def test_interacting_pretrained_model_socket(self, model, conf_file, model_dir, mode):
-        if 'IP' in mode:
-            self.interact_socket(test_configs_path / conf_file)
+        if 'IP' in mode and conf_file == "ner/ner_ontonotes.json":
+            config_file_path = str(test_configs_path.joinpath(conf_file))
+            install_config(config_file_path)
+            deep_download(config_file_path)
+            for socket_type in ['TCP', 'UNIX']:
+                self.interact_socket(test_configs_path / conf_file, socket_type)
 
             if 'TI' not in mode:
                 shutil.rmtree(str(download_path), ignore_errors=True)

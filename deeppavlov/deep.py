@@ -62,7 +62,7 @@ parser.add_argument("--key", default=None, help="ssl key", type=str)
 parser.add_argument("--cert", default=None, help="ssl certificate", type=str)
 
 parser.add_argument("-p", "--port", default=None, help="api port", type=int)
-parser.add_argument("--socket-type", default=None, type=str, choices={"TCP", "UNIX"})
+parser.add_argument("--socket-type", default='TCP', type=str, choices={"TCP", "UNIX"})
 parser.add_argument("--socket-file", default="/tmp/deeppavlov_socket.s", type=str)
 
 parser.add_argument("--api-mode", help="rest api mode: 'basic' with batches or 'alice' for  Yandex.Dialogs format",
