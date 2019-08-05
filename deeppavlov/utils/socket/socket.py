@@ -1,3 +1,17 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import asyncio
 import json
 import socket
@@ -10,11 +24,26 @@ from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
+from deeppavlov.utils.server.server import get_server_params, SERVER_CONFIG_FILENAME
 
 SOCKET_CONFIG_FILENAME = 'socket_config.json'
 
 
+def get_socket_params(socket_config_path: Path, model_config: Path) -> Dict:
+    server_config_path = get_settings_path() / SERVER_CONFIG_FILENAME
+    server_params = get_server_params(server_config_path, model_config)
+    socket_params = read_json(socket_config_path)
+    socket_params['model_args_names'] = server_params['model_args_names']
+    return socket_params
+
+
 class SocketServer:
+    """
+    Class launches socket server. The data received by the socket is processed in the deeppavlov model. Sends model
+    response back as dictionary with two keys:
+    response['status']: str - 'OK' if data processed successfully, else - error message.
+    response['payload']: str - model response dumped with json.dumps. Empty if an error occured.
+    """
     _host: str
     _loop: asyncio.AbstractEventLoop
     _model: Chainer
@@ -23,7 +52,8 @@ class SocketServer:
     _socket: socket.socket
 
     def __init__(self, model_config: Path, port: Optional[int] = None):
-        self._params = get_socket_params()
+        socket_config_path = get_settings_path() / SOCKET_CONFIG_FILENAME
+        self._params = get_socket_params(socket_config_path, model_config)
         self._dialog_logger = DialogLogger(agent_name='dp_api')
         self._host = self._params['host']
         self._log = getLogger(__name__)
@@ -107,15 +137,14 @@ class SocketServer:
 
     @staticmethod
     async def _response(status: str, payload) -> bytes:
+        """
+        :param status: response status. 'OK' if no error occurred
+        :param payload: Deeppavlov model result
+        :return bytes: {'status': status, 'payload': payload} dumped as bytes array
+        """
         resp_dict = {'status': status, 'payload': payload}
         resp_str = json.dumps(resp_dict)
         return resp_str.encode('utf-8')
-
-
-def get_socket_params() -> Dict:
-    socket_config_path = get_settings_path() / SOCKET_CONFIG_FILENAME
-    socket_params = read_json(socket_config_path)
-    return socket_params
 
 
 def start_socket_server(model_config: Path, port: Optional[int] = None) -> None:

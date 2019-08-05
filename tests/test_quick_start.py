@@ -24,7 +24,7 @@ from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
 from deeppavlov.utils.server.server import get_server_params, SERVER_CONFIG_FILENAME
-from deeppavlov.utils.socket.socket import get_socket_params
+from deeppavlov.utils.socket.socket import get_socket_params, SOCKET_CONFIG_FILENAME
 
 tests_dir = Path(__file__).parent
 test_configs_path = tests_dir / "deeppavlov" / "configs"
@@ -392,7 +392,7 @@ class TestQuickStart(object):
 
         post_payload = {}
         for arg_name in model_args_names:
-            arg_value = str(' '.join(['qwerty'] * 10))
+            arg_value = ' '.join(['qwerty'] * 10)
             post_payload[arg_name] = [arg_value]
 
         logfile = io.BytesIO(b'')
@@ -417,12 +417,23 @@ class TestQuickStart(object):
             #     raise RuntimeError('Error in shutting down API server: \n{}'.format(logfile.getvalue().decode()))
 
     @staticmethod
-    def interact_socket(text, config_path):
-        logfile = io.BytesIO(b'')
-        socket_params = get_socket_params()
+    def interact_socket(config_path):
+        socket_conf_file = get_settings_path() / SOCKET_CONFIG_FILENAME
+
+        socket_params = get_socket_params(socket_conf_file, config_path)
+        model_args_names = socket_params['model_args_names']
+
         host = socket_params['host']
         port = api_port or socket_params['port']
         socket_url = f'http://{host}:{port}'
+
+        socket_payload = {}
+        for arg_name in model_args_names:
+            arg_value = ' '.join(['qwerty'] * 10)
+            socket_payload[arg_name] = [arg_value]
+        dumped_socket_payload = json.dumps(socket_payload)
+
+        logfile = io.BytesIO(b'')
         args = [sys.executable, "-m", "deeppavlov", "risesocket", str(config_path)]
         if api_port:
             args += ['-p', str(api_port)]
@@ -432,14 +443,15 @@ class TestQuickStart(object):
             p.expect(socket_url)
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.connect((host, port))
-                di = {"context": [text]}
-                di = json.dumps(di)
-                s.sendall(di.encode('utf-8'))
+                s.sendall(dumped_socket_payload.encode('utf-8'))
                 data = s.recv(1024)
             resp = json.loads(data)
-            return resp
+            print(resp)
+            assert resp['status'] == 'OK', f"socket request returned status: {resp['status']} with {config_path}"
+
         except pexpect.exceptions.EOF:
             raise RuntimeError('Got unexpected EOF: \n{}'.format(logfile.getvalue().decode()))
+
         finally:
             p.kill(signal.SIGTERM)
             p.wait()
@@ -457,19 +469,15 @@ class TestQuickStart(object):
     def test_interacting_pretrained_model_api(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
             self.interact_api(test_configs_path / conf_file)
-
-            if 'TI' not in mode:
-                shutil.rmtree(str(download_path), ignore_errors=True)
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
 
     def test_interacting_pretrained_model_socket(self, model, conf_file, model_dir, mode):
-        if 'IP' in mode and conf_file == "ner/ner_ontonotes.json":
-            config_file_path = str(test_configs_path.joinpath(conf_file))
-            install_config(config_file_path)
-            deep_download(config_file_path)
-            resp = self.interact_socket("This is DeepPavlov API python test.", test_configs_path / conf_file)
-            assert resp['status'] == 'OK', f"Socket returned {resp['status']}"
+        if 'IP' in mode:
+            self.interact_socket(test_configs_path / conf_file)
+
+            if 'TI' not in mode:
+                shutil.rmtree(str(download_path), ignore_errors=True)
         else:
             pytest.skip(f"Unsupported mode: {mode}")
 
