@@ -14,10 +14,11 @@
 
 import asyncio
 import json
+import os
 import socket
 from logging import getLogger
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Union
 
 from deeppavlov.core.agent.dialog_logger import DialogLogger
 from deeppavlov.core.commands.infer import build_model
@@ -51,31 +52,36 @@ class SocketServer:
     response['status']: str - 'OK' if data processed successfully, else - error message.
     response['payload']: str - model response dumped with json.dumps. Empty if an error occured.
     """
-    _host: str
+    _bind_address: Union[Tuple, str]
+    _launch_msg: str
     _loop: asyncio.AbstractEventLoop
     _model: Chainer
     _params: Dict
-    _port: int
     _socket: socket.socket
+    _socket_type: str
 
-    def __init__(self, model_config: Path, port: Optional[int] = None):
+    def __init__(self, model_config: Path, socket_type: str, port: Optional[int] = None, socket_file: Optional[str] = None):
         socket_config_path = get_settings_path() / SOCKET_CONFIG_FILENAME
         self._params = get_socket_params(socket_config_path, model_config)
+        self._socket_type = socket_type or self._params['socket_type']
+        if self._socket_type == 'TCP':
+            host = self._params['host']
+            port = port or self._params['port']
+            self._launch_msg = f'launching socket at http://{host}:{port}'
+            self._bind_address = (host, port)
         self._dialog_logger = DialogLogger(agent_name='dp_api')
-        self._host = self._params['host']
         self._log = getLogger(__name__)
         self._loop = asyncio.get_event_loop()
         self._model = build_model(model_config)
-        self._port = port or self._params['port']
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self._socket.setblocking(False)
 
     def start(self) -> None:
-        self._socket.bind((self._host, self._port))
+        self._socket.bind(self._bind_address)
         self._socket.listen()
-        self._log.info(f'launching socket at http://{self._host}:{self._port}')
+        self._log.info(self._launch_msg)
         try:
             self._loop.run_until_complete(self._server())
         except Exception as e:
@@ -154,6 +160,6 @@ class SocketServer:
         return resp_str.encode('utf-8')
 
 
-def start_socket_server(model_config: Path, port: Optional[int] = None) -> None:
-    server = SocketServer(model_config, port)
+def start_socket_server(model_config: Path, socket_type: str, port: Optional[int], file: Optional[str]) -> None:
+    server = SocketServer(model_config, socket_type, port, file)
     server.start()

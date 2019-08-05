@@ -62,6 +62,8 @@ parser.add_argument("--key", default=None, help="ssl key", type=str)
 parser.add_argument("--cert", default=None, help="ssl certificate", type=str)
 
 parser.add_argument("-p", "--port", default=None, help="api port", type=int)
+parser.add_argument("--socket-type", default=None, type=str, choices={"TCP", "UNIX"})
+parser.add_argument("--socket-file", default="/tmp/deeppavlov_socket.s", type=str)
 
 parser.add_argument("--api-mode", help="rest api mode: 'basic' with batches or 'alice' for  Yandex.Dialogs format",
                     type=str, default='basic', choices={'basic', 'alice'})
@@ -122,7 +124,7 @@ def main():
         else:
             start_model_server(pipeline_config_path, https, ssl_key, ssl_cert, port=args.port)
     elif args.mode == 'risesocket':
-        start_socket_server(pipeline_config_path, port=args.port)
+        start_socket_server(pipeline_config_path, args.socket_type, port=args.port, file=args.socket_file)
     elif args.mode == 'predict':
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
     elif args.mode == 'install':
