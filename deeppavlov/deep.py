@@ -27,7 +27,7 @@ from deeppavlov.utils.alice import start_alice_server
 from deeppavlov.utils.ms_bot_framework.server import run_ms_bf_default_agent
 from deeppavlov.utils.pip_wrapper import install_from_config
 from deeppavlov.utils.server.server import start_model_server
-from deeppavlov.utils.socket.socket import start_model_socket
+from deeppavlov.utils.socket.socket import start_socket_server
 from deeppavlov.utils.telegram.telegram_ui import interact_model_by_telegram
 
 log = getLogger(__name__)
@@ -122,7 +122,7 @@ def main():
         else:
             start_model_server(pipeline_config_path, https, ssl_key, ssl_cert, port=args.port)
     elif args.mode == 'risesocket':
-        start_model_socket(pipeline_config_path, port=args.port)
+        start_socket_server(pipeline_config_path, port=args.port)
     elif args.mode == 'predict':
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
     elif args.mode == 'install':
