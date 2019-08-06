@@ -449,7 +449,17 @@ class TestQuickStart(object):
             with socket.socket(address_family, socket.SOCK_STREAM) as s:
                 s.connect(connect_arg)
                 s.sendall(dumped_socket_payload.encode('utf-8'))
-                data = s.recv(1024)
+                data = b''
+                try:
+                    while True:
+                        buf = s.recv(1024)
+                        s.setblocking(False)
+                        if buf:
+                            data += buf
+                        else:
+                            break
+                except BlockingIOError:
+                    pass
             resp = json.loads(data)
             assert resp['status'] == 'OK', f"socket request returned status: {resp['status']} with {config_path}"
 
