@@ -49,12 +49,12 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
     def __init__(self, data: dict,
                  fields_to_merge: List[str] = None, merged_field: str = None,
                  field_to_split: str = None, split_fields: List[str] = None, split_proportions: List[float] = None,
-                 seed: int = None, shuffle: bool = True, split_seed: int=None,
+                 seed: int = None, shuffle: bool = True, split_seed: int = None,
                  stratify: bool = None,
                  *args, **kwargs):
         """
         Initialize dataset using data from DatasetReader,
-        merges and splits fields according to the given parameters
+        merges and splits fields according to the given parameters.
         """
         super().__init__(data, seed=seed, shuffle=shuffle)
 

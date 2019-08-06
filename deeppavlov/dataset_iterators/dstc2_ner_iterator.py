@@ -40,13 +40,12 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
     """
     def __init__(self,
                  data: Dict[str, List[Tuple]],
-                 dataset_path: str,
-                 download: bool = True,
+                 slot_values_path: str,
                  seed: int = None,
                  shuffle: bool = False):
         # TODO: include slot vals to dstc2.tar.gz
-        dataset_path = expand_path(dataset_path) / 'slot_vals.json'
-        self._slot_vals = self._build_slot_vals(dataset_path, download)
+        with open(expand_path(slot_values_path), encoding='utf8') as f:
+            self._slot_vals = json.load(f)
         super().__init__(data, seed, shuffle)
 
     @overrides
@@ -98,14 +97,3 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
     def _is_equal_sequences(seq1, seq2):
         equality_list = [tok1 == tok2 for tok1, tok2 in zip(seq1, seq2)]
         return all(equality_list)
-
-    @staticmethod
-    def _build_slot_vals(slot_vals_json_path: str = 'data/',
-                         download: bool = False) -> None:
-        if download:
-            url = 'http://files.deeppavlov.ai/datasets/dstc_slot_vals.json'
-            download(slot_vals_json_path, url)
-            with open(dataset_path, encoding='utf8') as f:
-                return json.load(f)
-        return defaultdict(dict)
-
