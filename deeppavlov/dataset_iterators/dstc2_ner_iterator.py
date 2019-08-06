@@ -14,7 +14,9 @@
 
 import json
 import logging
-from typing import List, Tuple, Dict
+from overrides import overrides
+from collections import defaultdict
+from typing import List, Tuple, Dict, Any
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
@@ -36,18 +38,22 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
         seed: value for random seed
         shuffle: whether to shuffle the data
     """
-    def __init__(self, data: Dict[str, List[Tuple]], dataset_path: str, seed: int = None, shuffle: bool = False):
+    def __init__(self,
+                 data: Dict[str, List[Tuple]],
+                 dataset_path: str,
+                 download: bool = True,
+                 seed: int = None,
+                 shuffle: bool = False):
         # TODO: include slot vals to dstc2.tar.gz
         dataset_path = expand_path(dataset_path) / 'slot_vals.json'
-        self._build_slot_vals(dataset_path)
-        with open(dataset_path, encoding='utf8') as f:
-            self._slot_vals = json.load(f)
+        self._slot_vals = self._build_slot_vals(dataset_path, download)
         super().__init__(data, seed, shuffle)
 
-    def preprocess(self, data_part, *args, **kwargs):
-        processed_data_part = list()
+    @overrides
+    def preprocess(self, data: List[Tuple[Any, Any]], *args, **kwargs) -> List[Tuple[Any, Any]]:
+        processed_data = list()
         processed_texts = dict()
-        for sample in data_part:
+        for sample in data:
             for utterance in sample:
                 if 'intents' not in utterance or len(utterance['text']) < 1:
                     continue
@@ -58,7 +64,7 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
 
                     current_slots = intent.get('slots', [])
                     for slot_type, slot_val in current_slots:
-                        if slot_type in self._slot_vals:
+                        if not self._slot_vals or (slot_type in self._slot_vals):
                             slots.append((slot_type, slot_val,))
 
                 # remove duplicate pairs (text, slots)
@@ -66,8 +72,8 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
                     continue
                 processed_texts[text] = processed_texts.get(text, []) + [slots]
 
-                processed_data_part.append(self._add_bio_markup(text, slots))
-        return processed_data_part
+                processed_data.append(self._add_bio_markup(text, slots))
+        return processed_data
 
     def _add_bio_markup(self, utterance, slots):
         tokens = utterance.split()
@@ -75,11 +81,13 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
         tags = ['O' for _ in range(n_toks)]
         for n in range(n_toks):
             for slot_type, slot_val in slots:
-                for entity in self._slot_vals[slot_type][slot_val]:
+                for entity in self._slot_vals[slot_type].get(slot_val,
+                                                             [slot_val]):
                     slot_tokens = entity.split()
                     slot_len = len(slot_tokens)
-                    if n + slot_len <= n_toks and self._is_equal_sequences(tokens[n: n + slot_len],
-                                                                           slot_tokens):
+                    if n + slot_len <= n_toks and \
+                       self._is_equal_sequences(tokens[n: n + slot_len],
+                                                slot_tokens):
                         tags[n] = 'B-' + slot_type
                         for k in range(1, slot_len):
                             tags[n + k] = 'I-' + slot_type
@@ -92,6 +100,12 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
         return all(equality_list)
 
     @staticmethod
-    def _build_slot_vals(slot_vals_json_path='data/'):
-        url = 'http://files.deeppavlov.ai/datasets/dstc_slot_vals.json'
-        download(slot_vals_json_path, url)
+    def _build_slot_vals(slot_vals_json_path: str = 'data/',
+                         download: bool = False) -> None:
+        if download:
+            url = 'http://files.deeppavlov.ai/datasets/dstc_slot_vals.json'
+            download(slot_vals_json_path, url)
+            with open(dataset_path, encoding='utf8') as f:
+                return json.load(f)
+        return defaultdict(dict)
+
