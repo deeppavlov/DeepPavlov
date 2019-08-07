@@ -26,7 +26,7 @@ from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
-from deeppavlov.core.data.utils import check_nested_dict_keys
+from deeppavlov.core.data.utils import check_nested_dict_keys, jsonify_data
 
 SOCKET_CONFIG_FILENAME = 'socket_config.json'
 
@@ -50,7 +50,7 @@ class SocketServer:
     Class with socket server. The data received by the socket is processed in the deeppavlov model. Sends model
     response back as dictionary with two keys - 'status' and 'payload':
     response['status']: str - 'OK' if data processed successfully, else - error message.
-    response['payload']: str - model response dumped with json.dumps. Empty if an error occured.
+    response['payload']: str - model response dumped to bytes. Empty if an error occured.
     """
     _bind_address: Union[Tuple, str]
     _launch_msg: str
@@ -165,7 +165,7 @@ class SocketServer:
         :param payload: Deeppavlov model result
         :return bytes: {'status': status, 'payload': payload} dumped as bytes array
         """
-        resp_dict = {'status': status, 'payload': payload}
+        resp_dict = jsonify_data({'status': status, 'payload': payload})
         resp_str = json.dumps(resp_dict)
         return resp_str.encode('utf-8')
 
