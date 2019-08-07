@@ -435,8 +435,7 @@ class TestQuickStart(object):
         logfile = io.BytesIO(b'')
         args = [sys.executable, "-m", "deeppavlov", "risesocket", str(config_path), '--socket-type', socket_type]
         if socket_type == 'TCP':
-            if api_port:
-                args += ['-p', str(api_port)]
+            args += ['-p', str(port)]
             address_family = socket.AF_INET
             connect_arg = (host, port)
         else:

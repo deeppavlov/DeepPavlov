@@ -60,7 +60,8 @@ class SocketServer:
     _socket: socket.socket
     _socket_type: str
 
-    def __init__(self, model_config: Path, socket_type: str, port: Optional[int] = None, socket_file: Optional[str] = None):
+    def __init__(self, model_config: Path, socket_type: str, port: Optional[int] = None,
+                 socket_file: Optional[str] = None):
         socket_config_path = get_settings_path() / SOCKET_CONFIG_FILENAME
         self._params = get_socket_params(socket_config_path, model_config)
         self._socket_type = socket_type or self._params['socket_type']
