@@ -36,7 +36,9 @@ cache_dir: Optional[Path] = None
 if not os.getenv('DP_PYTEST_NO_CACHE'):
     cache_dir = tests_dir / 'download_cache'
 
-api_port = int(os.getenv('DP_PYTEST_API_PORT'))
+api_port = os.getenv('DP_PYTEST_API_PORT')
+if api_port is not None:
+    api_port = int(api_port)
 
 TEST_MODES = ['IP',  # test_interacting_pretrained_model
               'TI',  # test_consecutive_training_and_interacting
