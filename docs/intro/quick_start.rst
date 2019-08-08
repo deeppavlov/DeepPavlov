@@ -67,6 +67,8 @@ There are even more actions you can perform with configs:
         * ``interact`` to interact via CLI,
         * ``riseapi`` to run a REST API server (see :doc:`docs
           </integrations/rest_api>`),
+        * ``risesocket`` to run a socket API server (see :doc:`docs
+          </integrations/socket_api>`),
         * ``interactbot`` to run as a Telegram bot (see :doc:`docs
           </integrations/telegram>`),
         * ``interactmsbot`` to run a Miscrosoft Bot Framework server (see
