@@ -14,11 +14,10 @@
 
 import asyncio
 import json
-import os
 import socket
 from logging import getLogger
 from pathlib import Path
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from deeppavlov.core.agent.dialog_logger import DialogLogger
 from deeppavlov.core.commands.infer import build_model
@@ -46,13 +45,22 @@ def get_socket_params(socket_config_path: Path, model_config: Path) -> Dict:
 
 
 class SocketServer:
+    """Creates socket server that sends the received data to the Deeppavlov model and returns model response.
+
+    The server receives dictionary serialized to JSON formatted bytes array and sends it to the model. The dictionary
+    keys should match model arguments names, the values should be lists or tuples of inferenced values.
+
+    Example:
+        {“context”:[“Elon Musk launched his cherry Tesla roadster to the Mars orbit”]}
+
+    Socket server returns dictionary {'status': status, 'payload': payload} serialized to a JSON formatted byte array,
+    where:
+        status (str): 'OK' if the model successfully processed the data, else - error message.
+        payload: (Optional[List[Tuple]]): The model result if no error has occurred, otherwise None
+
     """
-    Class with socket server. The data received by the socket is processed in the deeppavlov model. Sends model
-    response back as dictionary with two keys - 'status' and 'payload':
-    response['status']: str - 'OK' if data processed successfully, else - error message.
-    response['payload']: str - model response dumped to bytes. Empty if an error occured.
-    """
-    _bind_address: Union[Tuple, str]
+    _address_family: socket.AddressFamily
+    _bind_address: Union[Tuple[str, int], str]
     _launch_msg: str
     _loop: asyncio.AbstractEventLoop
     _model: Chainer
@@ -61,7 +69,18 @@ class SocketServer:
     _socket_type: str
 
     def __init__(self, model_config: Path, socket_type: str, port: Optional[int] = None,
-                 socket_file: Optional[str] = None):
+                 socket_file: Optional[Union[str, Path]] = None) -> None:
+        """Initialize socket server.
+
+        Args:
+            model_config: Path to the config file.
+            socket_type: Socket family. "TCP" for the AF_INET socket, "UNIX" for the AF_UNIX.
+            port: Port number for the AF_INET address family. If parameter is not defined, the port number from the
+                model_config is used.
+            socket_file: Path to the file to which server of the AF_UNIX address family connects. If parameter
+                is not defined, the path from the model_config is used.
+
+        """
         socket_config_path = get_settings_path() / SOCKET_CONFIG_FILENAME
         self._params = get_socket_params(socket_config_path, model_config)
         self._socket_type = socket_type or self._params['socket_type']
@@ -74,10 +93,14 @@ class SocketServer:
             self._bind_address = (host, port)
         elif self._socket_type == 'UNIX':
             self._address_family = socket.AF_UNIX
-            self._bind_address = socket_file or self._params['unix_socket_file']
-            if os.path.exists(self._bind_address):
-                os.remove(self._bind_address)
+            bind_address = socket_file or self._params['unix_socket_file']
+            bind_address = Path(bind_address).resolve()
+            if bind_address.exists():
+                bind_address.unlink()
+            self._bind_address = str(bind_address)
             self._launch_msg = f'{self._params["binding_message"]} {self._bind_address}'
+        else:
+            raise ValueError(f'socket type "{self._socket_type}" is not supported')
 
         self._dialog_logger = DialogLogger(agent_name='dp_api')
         self._log = getLogger(__name__)
@@ -89,6 +112,7 @@ class SocketServer:
         self._socket.setblocking(False)
 
     def start(self) -> None:
+        """Binds the socket to the address and enables the server to accept connections"""
         self._socket.bind(self._bind_address)
         self._socket.listen()
         self._log.info(self._launch_msg)
@@ -156,20 +180,26 @@ class SocketServer:
 
     async def _wrap_error(self, conn: socket.socket, error: str) -> None:
         self._log.error(error)
-        await self._loop.sock_sendall(conn, await self._response(error, ''))
+        await self._loop.sock_sendall(conn, await self._response(error, None))
 
     @staticmethod
-    async def _response(status: str, payload) -> bytes:
-        """
-        :param status: response status. 'OK' if no error occurred
-        :param payload: Deeppavlov model result
-        :return bytes: {'status': status, 'payload': payload} dumped as bytes array
+    async def _response(status: str, payload: Optional[List[Tuple]]) -> bytes:
+        """Puts arguments into dict and serialize it to JSON formatted byte array.
+
+        Args:
+            status: Response status. 'OK' if no error has occurred, otherwise error message.
+            payload: Deeppavlov model result if no error has occurred, otherwise None.
+
+        Returns:
+            dict({'status': status, 'payload': payload}) serialized to a JSON formatted byte array.
+
         """
         resp_dict = jsonify_data({'status': status, 'payload': payload})
         resp_str = json.dumps(resp_dict)
         return resp_str.encode('utf-8')
 
 
-def start_socket_server(model_config: Path, socket_type: str, port: Optional[int], file: Optional[str]) -> None:
-    server = SocketServer(model_config, socket_type, port, file)
+def start_socket_server(model_config: Path, socket_type: str, port: Optional[int],
+                        socket_file: Optional[Union[str, Path]]) -> None:
+    server = SocketServer(model_config, socket_type, port, socket_file)
     server.start()

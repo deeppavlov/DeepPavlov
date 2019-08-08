@@ -124,7 +124,7 @@ def main():
         else:
             start_model_server(pipeline_config_path, https, ssl_key, ssl_cert, port=args.port)
     elif args.mode == 'risesocket':
-        start_socket_server(pipeline_config_path, args.socket_type, port=args.port, file=args.socket_file)
+        start_socket_server(pipeline_config_path, args.socket_type, port=args.port, socket_file=args.socket_file)
     elif args.mode == 'predict':
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
     elif args.mode == 'install':
