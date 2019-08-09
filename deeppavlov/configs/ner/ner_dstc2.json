@@ -108,7 +108,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DATA_PATH": "{ROOT_PATH}/downloads/dstc2",
-      "SLOT_VALS_PATH": "{DATA_PATH}/slot_vals.json",
+      "SLOT_VALS_PATH": "{DATA_PATH}/dstc_slot_vals.json",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/slotfill_dstc2"
     },
@@ -120,6 +120,10 @@
       "server_utils": "NER"
     },
     "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/dstc_slot_vals.tar.gz",
+        "subdir": "{DATA_PATH}"
+      },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/slotfill_dstc2.tar.gz",
         "subdir": "{MODELS_PATH}"

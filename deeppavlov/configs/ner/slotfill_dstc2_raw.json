@@ -9,6 +9,7 @@
   },
   "chainer": {
     "in": ["x"],
+    "in_y": ["y"],
     "pipe": [
       {
         "in": ["x"],
@@ -30,12 +31,18 @@
     ],
     "out": ["slots"]
   },
+  "train": {
+    "metrics": ["slots_accuracy"],
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ]
+  },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DATA_PATH": "{ROOT_PATH}/downloads/dstc2",
-      "MODEL_PATH": "{ROOT_PATH}/models/slotfill_dstc2_raw",
-      "SLOT_VALS_PATH": "{MODEL_PATH}/dstc_slot_vals.json"
+      "SLOT_VALS_PATH": "{DATA_PATH}/dstc_slot_vals.json"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt"
@@ -46,7 +53,7 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/dstc_slot_vals.tar.gz",
-        "subdir": "{MODEL_PATH}"
+        "subdir": "{DATA_PATH}"
       }
     ]
   }
