@@ -55,7 +55,7 @@ def simple_download(url: str, destination: [Path, str]):
 
     destination = Path(destination)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    temporary = destination.with_suffix(".part")
+    temporary = destination.with_suffix(destination.suffix + '.part')
 
     headers = {'dp-token': get_download_token()}
     r = requests.get(url, stream=True, headers=headers)
