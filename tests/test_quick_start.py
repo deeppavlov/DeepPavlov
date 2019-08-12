@@ -462,7 +462,8 @@ class TestQuickStart(object):
                 except BlockingIOError:
                     pass
             resp = json.loads(data)
-            assert resp['status'] == 'OK', f"socket request returned status: {resp['status']} with {config_path}"
+            assert resp['status'] == 'OK', f"{socket_type} socket request returned status: {resp['status']}"\
+                                           " with {config_path}"
 
         except pexpect.exceptions.EOF:
             raise RuntimeError('Got unexpected EOF: \n{}'.format(logfile.getvalue().decode()))
@@ -489,7 +490,7 @@ class TestQuickStart(object):
 
     def test_interacting_pretrained_model_socket(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
-            for socket_type in ['TCP', 'UNIX']:
+            for socket_type in ['TCP']:
                 self.interact_socket(test_configs_path / conf_file, socket_type)
 
             if 'TI' not in mode:

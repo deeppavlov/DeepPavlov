@@ -45,7 +45,7 @@ def get_socket_params(socket_config_path: Path, model_config: Path) -> Dict:
 
 
 class SocketServer:
-    """Creates socket server that sends the received data to the Deeppavlov model and returns model response.
+    """Creates socket server that sends the received data to the DeepPavlov model and returns model response.
 
     The server receives dictionary serialized to JSON formatted bytes array and sends it to the model. The dictionary
     keys should match model arguments names, the values should be lists or tuples of inferenced values.
@@ -188,7 +188,7 @@ class SocketServer:
 
         Args:
             status: Response status. 'OK' if no error has occurred, otherwise error message.
-            payload: Deeppavlov model result if no error has occurred, otherwise None.
+            payload: DeepPavlov model result if no error has occurred, otherwise None.
 
         Returns:
             dict({'status': status, 'payload': payload}) serialized to a JSON formatted byte array.
