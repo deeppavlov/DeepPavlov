@@ -1,28 +1,19 @@
 {
   "dataset_reader": {
-    "class_name": "basic_classification_reader",
+    "class_name": "snips_reader",
     "x": "text",
     "y": "intents",
     "data_path": "{DOWNLOADS_PATH}/snips"
   },
   "dataset_iterator": {
-    "class_name": "basic_classification_iterator",
+    "class_name": "snips_intents_iterator",
     "seed": {
       "evolve_range": [
         50,
         500
       ],
       "discrete": true
-    },
-    "field_to_split": "train",
-    "split_fields": [
-      "train",
-      "valid"
-    ],
-    "split_proportions": [
-      0.9,
-      0.1
-    ]
+    }
   },
   "chainer": {
     "in": [
@@ -38,8 +29,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "{MODELS_PATH}/classes.dict",
-        "load_path": "{MODELS_PATH}/classes.dict",
+        "save_path": "{MODEL_PATH}/classes.dict",
+        "load_path": "{MODEL_PATH}/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -83,8 +74,8 @@
         ],
         "main": true,
         "class_name": "keras_classification_model",
-        "save_path": "{MODELS_PATH}/model",
-        "load_path": "{MODELS_PATH}/model",
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -200,17 +191,14 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/intents_snips_evolution"
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/intents_snips_evolution"
     },
     "labels": {
       "telegram_utils": "IntentModel",
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      {
-        "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
-        "subdir": "{DOWNLOADS_PATH}/snips"
-      },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
         "subdir": "{DOWNLOADS_PATH}/embeddings"

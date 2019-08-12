@@ -147,7 +147,7 @@ class DPGRUModel:
 
 class TestTFLayers:
 
-    allowed_error_lvl = 0.01
+    allowed_error_lvl = 0.01 * 2 ** 0.5
 
     @staticmethod
     def equal_values(a, b, round=5):

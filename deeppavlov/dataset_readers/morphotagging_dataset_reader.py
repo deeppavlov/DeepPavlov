@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 from logging import getLogger
 from pathlib import Path
 from typing import Dict, List, Union, Tuple, Optional
@@ -51,33 +52,38 @@ def read_infile(infile: Union[Path, str], from_words=False,
     answer, curr_word_sent, curr_tag_sent = [], [], []
     if from_words:
         word_column, read_only_words = 0, True
-    with open(infile, "r", encoding="utf8") as fin:
-        for line in fin:
-            line = line.strip()
-            if line.startswith("#"):
-                continue
-            if line == "":
-                if len(curr_word_sent) > 0:
-                    if read_only_words:
-                        curr_tag_sent = None
-                    answer.append((curr_word_sent, curr_tag_sent))
-                curr_tag_sent, curr_word_sent = [], []
-                if len(answer) == max_sents:
-                    break
-                continue
-            splitted = line.split("\t")
-            index = splitted[0]
-            if not from_words and not index.isdigit():
-                continue
-            curr_word_sent.append(splitted[word_column])
-            if not read_only_words:
-                pos, tag = splitted[pos_column], splitted[tag_column]
-                tag = pos if tag == "_" else "{},{}".format(pos, tag)
-                curr_tag_sent.append(tag)
-        if len(curr_word_sent) > 0:
-            if read_only_words:
-                curr_tag_sent = None
-            answer.append((curr_word_sent, curr_tag_sent))
+    if infile is not sys.stdin:
+        fin = open(infile, "r", encoding="utf8")
+    else:
+        fin = sys.stdin
+    for line in fin:
+        line = line.strip()
+        if line.startswith("#"):
+            continue
+        if line == "":
+            if len(curr_word_sent) > 0:
+                if read_only_words:
+                    curr_tag_sent = None
+                answer.append((curr_word_sent, curr_tag_sent))
+            curr_tag_sent, curr_word_sent = [], []
+            if len(answer) == max_sents:
+                break
+            continue
+        splitted = line.split("\t")
+        index = splitted[0]
+        if not from_words and not index.isdigit():
+            continue
+        curr_word_sent.append(splitted[word_column])
+        if not read_only_words:
+            pos, tag = splitted[pos_column], splitted[tag_column]
+            tag = pos if tag == "_" else "{},{}".format(pos, tag)
+            curr_tag_sent.append(tag)
+    if len(curr_word_sent) > 0:
+        if read_only_words:
+            curr_tag_sent = None
+        answer.append((curr_word_sent, curr_tag_sent))
+    if infile is not sys.stdin:
+        fin.close()
     return answer
 
 
