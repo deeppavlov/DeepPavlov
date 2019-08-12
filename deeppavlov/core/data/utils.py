@@ -62,6 +62,10 @@ def simple_download(url: str, destination: [Path, str]):
     total_length = int(r.headers.get('content-length', 0))
 
     log.info('Downloading from {} to {}'.format(url, destination))
+
+    if temporary.exists() and temporary.stat().st_size > total_length:
+        temporary.write_bytes(b'')  # clearing temporary file when total_length is inconsistent
+
     with temporary.open('ab') as f:
         done = False
         downloaded = f.tell()
@@ -77,7 +81,7 @@ def simple_download(url: str, destination: [Path, str]):
                     if 'content-length' not in r.headers or \
                             total_length - downloaded != int(r.headers['content-length']):
                         raise RuntimeError(f'It looks like the server does not support resuming '
-                                           f'downloads. Please remove {temporary} and try again')
+                                           f'downloads.')
                 for chunk in r.iter_content(chunk_size=CHUNK):
                     if chunk:  # filter out keep-alive new chunks
                         downloaded += len(chunk)
