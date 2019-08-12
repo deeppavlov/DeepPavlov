@@ -490,8 +490,7 @@ class TestQuickStart(object):
 
     def test_interacting_pretrained_model_socket(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
-            for socket_type in ['TCP']:
-                self.interact_socket(test_configs_path / conf_file, socket_type)
+            self.interact_socket(test_configs_path / conf_file, 'TCP')
 
             if 'TI' not in mode:
                 shutil.rmtree(str(download_path), ignore_errors=True)
