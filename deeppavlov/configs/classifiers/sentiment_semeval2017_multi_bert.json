@@ -132,7 +132,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/datasets/stanfordSentimentTreebank.zip",
+        "url": "http://files.deeppavlov.ai/datasets/semeval2017_sentiment_data.tar.gz",
         "subdir": "{DOWNLOADS_PATH}"
       },
       {
