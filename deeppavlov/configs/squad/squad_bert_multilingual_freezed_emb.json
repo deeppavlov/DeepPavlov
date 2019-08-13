@@ -1,13 +1,4 @@
 {
-  "dataset_reader": {
-    "class_name": "squad_dataset_reader",
-    "data_path": "{DOWNLOADS_PATH}/squad/"
-  },
-  "dataset_iterator": {
-    "class_name": "squad_iterator",
-    "seed": 1337,
-    "shuffle": true
-  },
   "chainer": {
     "in": ["context_raw", "question_raw"],
     "in_y": ["ans_raw", "ans_raw_start"],
@@ -53,36 +44,6 @@
       }
     ],
     "out": ["ans_predicted", "ans_start_predicted", "logits"]
-  },
-  "train": {
-    "show_examples": false,
-    "test_best": false,
-    "validate_best": true,
-    "log_every_n_batches": 250,
-    "val_every_n_batches": 500,
-    "batch_size": 8,
-    "pytest_max_batches": 2,
-    "pytest_batch_size": 5,
-    "validation_patience": 10,
-    "metrics": [
-      {
-        "name": "squad_v1_f1",
-        "inputs": ["ans", "ans_predicted"]
-      },
-      {
-        "name": "squad_v1_em",
-        "inputs": ["ans", "ans_predicted"]
-      },
-      {
-        "name": "squad_v2_f1",
-        "inputs": ["ans", "ans_predicted"]
-      },
-      {
-        "name": "squad_v2_em",
-        "inputs": ["ans", "ans_predicted"]
-      }
-    ],
-    "tensorboard_log_dir": "{MODELS_PATH}/squad_bert/logs_multi_freezed"
   },
   "metadata": {
     "variables": {
