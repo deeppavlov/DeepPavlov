@@ -67,7 +67,7 @@ class ImdbReader(DatasetReader):
                 for filename in labelpath.glob("*.txt"):
                     with filename.open() as f:
                         text = f.read()
-                    data[data_type].append((text, label))
+                    data[data_type].append((text, [label]))
 
             if not data[data_type]:
                 raise RuntimeError(f"Could not load the '{data_type}' dataset, "

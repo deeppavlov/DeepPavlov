@@ -101,7 +101,7 @@
     "metrics": [
       "f1_weighted",
       "f1_macro",
-      "accuracy",
+      "sets_accuracy",
       {
         "name": "roc_auc",
         "inputs": [
