@@ -65,7 +65,7 @@ class ImdbReader(DatasetReader):
                 if not labelpath.exists():
                     raise RuntimeError(f"Cannot load data: {labelpath} does not exist")
                 for filename in labelpath.glob("*.txt"):
-                    with filename.open() as f:
+                    with filename.open(encoding='utf-8') as f:
                         text = f.read()
                     data[data_type].append((text, [label]))
 
