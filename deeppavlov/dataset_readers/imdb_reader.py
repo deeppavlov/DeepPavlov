@@ -61,7 +61,7 @@ class ImdbReader(DatasetReader):
                 "test": []}
         for data_type in data.keys():
             for label in ["neg", "pos"]:
-                labelpath = Path(data_path) / data_type / label
+                labelpath = data_path / data_type / label
                 if not labelpath.exists():
                     raise RuntimeError(f"Cannot load data: {labelpath} does not exist")
                 for filename in labelpath.glob("*.txt"):
