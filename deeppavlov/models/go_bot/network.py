@@ -15,8 +15,9 @@
 import collections
 import json
 import re
+import copy
 from logging import getLogger
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional, Union, Tuple
 
 import numpy as np
 import tensorflow as tf
@@ -38,9 +39,9 @@ log = getLogger(__name__)
 @register("go_bot")
 class GoalOrientedBot(LRScheduledTFModel):
     """
-    The dialogue bot is based on  https://arxiv.org/abs/1702.03274, which introduces
-    Hybrid Code Networks that combine an RNN with domain-specific knowledge
-    and system action templates.
+    The dialogue bot is based on  https://arxiv.org/abs/1702.03274, which
+    introduces Hybrid Code Networks that combine an RNN with domain-specific
+    knowledge and system action templates.
 
     The network handles dialogue policy management.
     Inputs features of an utterance and predicts label of a bot action
@@ -91,8 +92,8 @@ class GoalOrientedBot(LRScheduledTFModel):
         slot_filler: component that outputs slot values for a given utterance
             (:class:`~deeppavlov.models.slotfill.slotfill.DstcSlotFillingNetwork`
             recommended).
-        intent_classifier: component that outputs intents probability distribution
-            for a given utterance (
+        intent_classifier: component that outputs intents probability
+            distribution for a given utterance (
             :class:`~deeppavlov.models.classifiers.keras_classification_model.KerasClassificationModel`
             recommended).
         database: database that will be used during inference to perform
@@ -135,18 +136,18 @@ class GoalOrientedBot(LRScheduledTFModel):
                  api_call_action: str = None,  # TODO: make it unrequired
                  use_action_mask: bool = False,
                  debug: bool = False,
-                 **kwargs):
+                 **kwargs) -> None:
         if any(p in network_parameters for p in self.DEPRECATED):
             log.warning(f"parameters {self.DEPRECATED} are deprecated,"
-                              " for learning rate schedule documentation see"
-                              " deeppavlov.core.models.lr_scheduled_tf_model"
-                              " or read gitub tutorial on super convergence.")
+                        f" for learning rate schedule documentation see"
+                        f" deeppavlov.core.models.lr_scheduled_tf_model"
+                        f" or read gitub tutorial on super convergence.")
         if 'learning_rate' in network_parameters:
             kwargs['learning_rate'] = network_parameters.pop('learning_rate')
         super().__init__(load_path=load_path, save_path=save_path, **kwargs)
 
         self.tokenizer = tokenizer
-        self.tracker = tracker
+        self.default_tracker = tracker
         self.bow_embedder = bow_embedder
         self.embedder = embedder
         self.slot_filler = slot_filler
@@ -157,10 +158,10 @@ class GoalOrientedBot(LRScheduledTFModel):
 
         template_path = expand_path(template_path)
         template_type = getattr(templ, template_type)
-        log.info("[loading templates from {}]".format(template_path))
+        log.info(f"[loading templates from {template_path}]")
         self.templates = templ.Templates(template_type).load(template_path)
         self.n_actions = len(self.templates)
-        log.info("{} templates loaded".format(self.n_actions))
+        log.info(f"{self.n_actions} templates loaded.")
 
         self.database = database
         self.api_call_id = None
@@ -185,14 +186,21 @@ class GoalOrientedBot(LRScheduledTFModel):
         new_network_parameters.update(network_parameters)
         self._init_network(**new_network_parameters)
 
+        self.states = {}
         self.reset()
 
-    def _init_network(self, hidden_size, action_size, obs_size, dropout_rate,
-                      l2_reg_coef, dense_size, attn):
+    def _init_network(self,
+                      hidden_size: int,
+                      action_size: int,
+                      obs_size: int,
+                      dropout_rate: float,
+                      l2_reg_coef: float,
+                      dense_size: int,
+                      attn: dict) -> None:
         # initialize network
         dense_size = dense_size or hidden_size
         if obs_size is None:
-            obs_size = 6 + self.tracker.num_features + self.n_actions
+            obs_size = 6 + self.default_tracker.num_features + self.n_actions
             if callable(self.bow_embedder):
                 obs_size += len(self.word_vocab)
             if callable(self.embedder):
@@ -237,17 +245,15 @@ class GoalOrientedBot(LRScheduledTFModel):
         self.sess.run(tf.global_variables_initializer())
 
         if tf.train.checkpoint_exists(str(self.load_path.resolve())):
-            log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
+            log.info(f"[initializing `{self.__class__.__name__}` from saved]")
             self.load()
         else:
-            log.info("[initializing `{}` from scratch]".format(self.__class__.__name__))
+            log.info(f"[initializing `{self.__class__.__name__}` from scratch]")
 
-    def _encode_context(self, context, db_result=None):
-        # tokenize input
-        tokens = self.tokenizer([context.lower().strip()])[0]
-        if self.debug:
-            log.debug("Tokenized text= `{}`".format(' '.join(tokens)))
-
+    def _encode_context(self,
+                        tokens: List[str],
+                        db_result: dict,
+                        state: dict) -> List[np.ndarray]:
         # Bag of words features
         bow_features = []
         if callable(self.bow_embedder):
@@ -282,70 +288,66 @@ class GoalOrientedBot(LRScheduledTFModel):
         # Intent features
         intent_features = []
         if callable(self.intent_classifier):
-            intent_features = self.intent_classifier([context])[1][0]
+            intent_features = self.intent_classifier([tokens])[1][0]
 
             if self.debug:
                 intent = self.intents[np.argmax(intent_features[0])]
-                log.debug("Predicted intent = `{}`".format(intent))
+                log.debug(f"Predicted intent = `{intent}`")
 
         attn_key = np.array([], dtype=np.float32)
         if self.attn:
             if self.attn.action_as_key:
-                attn_key = np.hstack((attn_key, self.prev_action))
+                attn_key = np.hstack((attn_key, state['prev_action']))
             if self.attn.intent_as_key:
                 attn_key = np.hstack((attn_key, intent_features))
             if len(attn_key) == 0:
                 attn_key = np.array([1], dtype=np.float32)
 
-        # Text entity features
-        if callable(self.slot_filler):
-            self.tracker.update_state(self.slot_filler([tokens])[0])
-            if self.debug:
-                log.debug("Slot vals: {}".format(self.slot_filler([tokens])))
-
-        state_features = self.tracker.get_features()
+        state_features = state['tracker'].get_features()
 
         # Other features
         result_matches_state = 0.
-        if self.db_result is not None:
-            result_matches_state = all(v == self.db_result.get(s)
-                                       for s, v in self.tracker.get_state().items()
+        if state['db_result'] is not None:
+            matching_items = state['tracker'].get_state().items()
+            result_matches_state = all(v == state['db_result'].get(s)
+                                       for s, v in matching_items
                                        if v != 'dontcare') * 1.
         context_features = np.array([bool(db_result) * 1.,
                                      (db_result == {}) * 1.,
-                                     (self.db_result is None) * 1.,
-                                     bool(self.db_result) * 1.,
-                                     (self.db_result == {}) * 1.,
+                                     (state['db_result'] is None) * 1.,
+                                     bool(state['db_result']) * 1.,
+                                     (state['db_result'] == {}) * 1.,
                                      result_matches_state],
                                     dtype=np.float32)
 
         if self.debug:
-            log.debug("Context features = {}".format(context_features))
-            debug_msg = "num bow features = {}, ".format(len(bow_features)) +\
-                        "num emb features = {}, ".format(len(emb_features)) +\
-                        "num intent features = {}, ".format(len(intent_features)) +\
-                        "num state features = {}, ".format(len(state_features)) +\
-                        "num context features = {}, ".format(len(context_features)) +\
-                        "prev_action shape = {}".format(len(self.prev_action))
+            log.debug(f"Context features = {context_features}")
+            debug_msg = f"num bow features = {bow_features}" +\
+                        f", num emb features = {emb_features}" +\
+                        f", num intent features = {intent_features}" +\
+                        f", num state features = {len(state_features)}" +\
+                        f", num context features = {len(context_features)}" +\
+                        f", prev_action shape = {len(state['prev_action'])}"
             log.debug(debug_msg)
 
         concat_feats = np.hstack((bow_features, emb_features, intent_features,
-                                  state_features, context_features, self.prev_action))
+                                  state_features, context_features,
+                                  state['prev_action']))
         return concat_feats, emb_context, attn_key
 
-    def _encode_response(self, act):
+    def _encode_response(self, act: str) -> int:
         return self.templates.actions.index(act)
 
-    def _decode_response(self, action_id):
+    def _decode_response(self, action_id: int, state: dict) -> str:
         """
         Convert action template id and entities from tracker
         to final response.
         """
         template = self.templates.templates[int(action_id)]
 
-        slots = self.tracker.get_state()
-        if self.db_result is not None:
-            for k, v in self.db_result.items():
+        slots = state['tracker'].get_state()
+        if state['db_result'] is not None:
+            for k, v in state['db_result'].items():
                 slots[k] = str(v)
 
         resp = template.generate_text(slots)
@@ -354,55 +356,66 @@ class GoalOrientedBot(LRScheduledTFModel):
                 (action_id == self.api_call_id):
             resp = re.sub("#([A-Za-z]+)", "dontcare", resp).lower()
         if self.debug:
-            log.debug("Pred response = {}".format(resp))
+            log.debug(f"Pred response = {resp}.")
         return resp
 
-    def calc_action_mask(self, previous_action):
+    def calc_action_mask(self, state: dict) -> np.ndarray:
         mask = np.ones(self.n_actions, dtype=np.float32)
         if self.use_action_mask:
-            known_entities = {**self.tracker.get_state(), **(self.db_result or {})}
+            known_entities = {**state['tracker'].get_state(),
+                              **(state['db_result'] or {})}
             for a_id in range(self.n_actions):
                 tmpl = str(self.templates.templates[a_id])
                 for entity in set(re.findall('#([A-Za-z]+)', tmpl)):
                     if entity not in known_entities:
                         mask[a_id] = 0.
         # forbid two api calls in a row
-        if np.any(previous_action):
-            prev_act_id = np.argmax(previous_action)
+        if np.any(state['prev_action']):
+            prev_act_id = np.argmax(state['prev_action'])
             if prev_act_id == self.api_call_id:
                 mask[prev_act_id] = 0.
         return mask
 
-    def prepare_data(self, x, y):
+    def prepare_data(self, x: List[dict], y: List[dict]) -> List[np.ndarray]:
         b_features, b_u_masks, b_a_masks, b_actions = [], [], [], []
         b_emb_context, b_keys = [], []  # for attention
         max_num_utter = max(len(d_contexts) for d_contexts in x)
         for d_contexts, d_responses in zip(x, y):
-            self.reset()
+            state = self._zero_state()
             if self.debug:
                 preds = self._infer_dialog(d_contexts)
             d_features, d_a_masks, d_actions = [], [], []
             d_emb_context, d_key = [], []  # for attention
             for context, response in zip(d_contexts, d_responses):
+                tokens = self.tokenizer([context['text'].lower().strip()])[0]
+
+                # update state
                 if context.get('db_result') is not None:
-                    self.db_result = context['db_result']
+                    state['db_result'] = context['db_result']
+                if callable(self.slot_filler):
+                    context_slots = self.slot_filler([tokens])[0]
+                    state['tracker'].update_state(context_slots)
+
                 features, emb_context, key = \
-                    self._encode_context(context['text'], context.get('db_result'))
+                    self._encode_context(tokens,
+                                         db_result=context.get('db_result'),
+                                         state=state)
                 d_features.append(features)
                 d_emb_context.append(emb_context)
                 d_key.append(key)
-                d_a_masks.append(self.calc_action_mask(self.prev_action))
+                d_a_masks.append(self.calc_action_mask(state))
 
                 action_id = self._encode_response(response['act'])
                 d_actions.append(action_id)
-                # previous action is teacher-forced here
-                self.prev_action *= 0.
-                self.prev_action[action_id] = 1.
+                # update state
+                # - previous action is teacher-forced here
+                state['prev_action'] *= 0.
+                state['prev_action'][action_id] = 1.
 
                 if self.debug:
-                    log.debug("True response = `{}`".format(response['text']))
+                    log.debug(f"True response = '{response['text']}'.")
                     if preds[0].lower() != response['text'].lower():
-                        log.debug("Pred response = `{}`".format(preds[0]))
+                        log.debug(f"Pred response = '{preds[0]}'.")
                     preds = preds[1:]
                     if d_a_masks[-1][action_id] != 1.:
                         log.warn("True action forbidden by action mask.")
@@ -424,41 +437,61 @@ class GoalOrientedBot(LRScheduledTFModel):
             b_actions.append(d_actions)
         return b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions
 
-    def train_on_batch(self, x, y):
+    def train_on_batch(self, x: List[dict], y: List[dict]) -> dict:
         return self.network_train_on_batch(*self.prepare_data(x, y))
 
-    def _infer(self, context, db_result=None, prob=False):
+    def _infer(self,
+               utterance: str,
+               db_result: dict,
+               state: dict,
+               prob: bool = False) -> Tuple[str, dict]:
+        tokens = self.tokenizer([utterance.lower().strip()])[0]
+        # update state
         if db_result is not None:
-            self.db_result = db_result
-        features, emb_context, key = self._encode_context(context, db_result)
-        action_mask = self.calc_action_mask(self.prev_action)
-        probs = self.network_call([[features]], [[emb_context]], [[key]],
-                                  [[action_mask]], prob=True)
+            state['db_result'] = db_result
+        if callable(self.slot_filler):
+            utter_slots = self.slot_filler([tokens])[0]
+            state['tracker'].update_state(utter_slots)
+
+        features, emb_context, key = \
+            self._encode_context(tokens, db_result, state=state)
+        action_mask = self.calc_action_mask(state)
+        probs, state['state_c'], state['state_h'] = \
+            self.network_call([[features]], [[emb_context]], [[key]],
+                              [[action_mask]], [[state['state_c']]],
+                              [[state['state_h']]],
+                              prob=True)
+
         pred_id = np.argmax(probs)
 
-        # one-hot encoding seems to work better then probabilities
+        # update state
+        # - one-hot encoding seems to work better then probabilities
         if prob:
-            self.prev_action = probs
+            state['prev_action'] = probs
         else:
-            self.prev_action *= 0
-            self.prev_action[pred_id] = 1
+            state['prev_action'] *= 0.
+            state['prev_action'][pred_id] = 1.
 
-        return self._decode_response(pred_id)
+        return self._decode_response(pred_id, state), state
 
-    def _infer_dialog(self, contexts):
-        self.reset()
+    def _infer_dialog(self, contexts: List[dict]) -> List[str]:
         res = []
+        state = self._zero_state()
         for context in contexts:
             if context.get('prev_resp_act') is not None:
                 action_id = self._encode_response(context.get('prev_resp_act'))
                 # previous action is teacher-forced
-                self.prev_action *= 0.
-                self.prev_action[action_id] = 1.
+                state['prev_action'] *= 0.
+                state['prev_action'][action_id] = 1.
 
-            res.append(self._infer(context['text'], db_result=context.get('db_result')))
+            pred, state = self._infer(context['text'],
+                                      db_result=context.get('db_result'),
+                                      state=state)
+            res.append(pred)
         return res
 
-    def make_api_call(self, slots):
+    def make_api_call(self, state: dict) -> dict:
+        slots = state['tracker'].get_state()
         db_results = []
         if self.database is not None:
             # filter slot keys with value equal to 'dontcare' as
@@ -469,41 +502,65 @@ class GoalOrientedBot(LRScheduledTFModel):
             db_results = self.database([db_slots])[0]
         else:
             log.warn("No database specified.")
-        log.info("Made api_call with {}, got {} results.".format(slots, len(db_results)))
+        log.info(f"Made api_call with {slots}, got {len(db_results)} results.")
         # filter api results if there are more than one
         if len(db_results) > 1:
-            db_results = [r for r in db_results if r != self.db_result]
+            db_results = [r for r in db_results if r != state['db_result']]
         return db_results[0] if db_results else {}
 
-    def __call__(self, batch):
+    def __call__(self,
+                 batch: List[dict],
+                 user_ids: Optional[List] = None) -> List[str]:
+        # batch is a list of utterances
         if isinstance(batch[0], str):
             res = []
-            for x in batch:
-                pred = self._infer(x)
+            if not user_ids:
+                user_ids = ['finn' for i in range(len(batch))]
+            for user_id, x in zip(user_ids, batch):
+                pred, self.states[user_id] = \
+                    self._infer(x,
+                                db_result=None,
+                                state=self.states[user_id])
                 # if made api_call, then respond with next prediction
-                prev_act_id = np.argmax(self.prev_action)
+                prev_act_id = np.argmax(self.states[user_id]['prev_action'])
                 if prev_act_id == self.api_call_id:
-                    db_result = self.make_api_call(self.tracker.get_state())
-                    res.append(self._infer(x, db_result=db_result))
-                else:
-                    res.append(pred)
+                    db_result = self.make_api_call(self.states[user_id])
+                    pred, self.states[user_id] = \
+                        self._infer(x,
+                                    db_result=db_result,
+                                    state=self.states[user_id])
+                res.append(pred)
             return res
+        # batch is a list of dialogs, user_ids ignored
         return [self._infer_dialog(x) for x in batch]
 
-    def reset(self):
-        self.tracker.reset_state()
-        self.db_result = None
-        self.prev_action = np.zeros(self.n_actions, dtype=np.float32)
-        self.reset_network_state()
+    def _zero_state(self) -> dict:
+        return {
+            'tracker': copy.deepcopy(self.default_tracker),
+            'db_result': None,
+            'prev_action': np.zeros(self.n_actions, dtype=np.float32),
+            'state_c': np.zeros([1, self.hidden_size], dtype=np.float32),
+            'state_h': np.zeros([1, self.hidden_size], dtype=np.float32)
+        }
+
+    def reset(self, user_id: Union[str, int] = 'finn') -> None:  
+        self.states[user_id] = self._zero_state()
         if self.debug:
             log.debug("Bot reset.")
 
-    def network_call(self, features, emb_context, key, action_mask, prob=False):
+    def network_call(self,
+                     features: np.ndarray,
+                     emb_context: np.ndarray,
+                     key: np.ndarray,
+                     action_mask: np.ndarray,
+                     states_c: np.ndarray,
+                     states_h: np.ndarray,
+                     prob: bool = False) -> List[np.ndarray]:
         feed_dict = {
             self._features: features,
             self._dropout_keep_prob: 1.,
             self._utterance_mask: [[1.]],
-            self._initial_state: (self.state_c, self.state_h),
+            self._initial_state: (states_c, states_h),
             self._action_mask: action_mask
         }
         if self.attn:
@@ -514,13 +571,17 @@ class GoalOrientedBot(LRScheduledTFModel):
             self.sess.run([self._probs, self._prediction, self._state],
                           feed_dict=feed_dict)
 
-        self.state_c, self._state_h = state
         if prob:
-            return probs
-        return prediction
+            return probs, state[0], state[1]
+        return prediction, state[0], state[1]
 
-    def network_train_on_batch(self, features, emb_context, key, utter_mask,
-                               action_mask, action):
+    def network_train_on_batch(self,
+                               features: np.ndarray,
+                               emb_context: np.ndarray,
+                               key: np.ndarray,
+                               utter_mask: np.ndarray,
+                               action_mask: np.ndarray,
+                               action: np.ndarray) -> dict:
         feed_dict = {
             self._dropout_keep_prob: 1.,
             self._utterance_mask: utter_mask,
@@ -539,7 +600,7 @@ class GoalOrientedBot(LRScheduledTFModel):
                 'learning_rate': self.get_learning_rate(),
                 'momentum': self.get_momentum()}
 
-    def _init_network_params(self):
+    def _init_network_params(self) -> None:
         self.dropout_rate = self.opt['dropout_rate']
         self.hidden_size = self.opt['hidden_size']
         self.action_size = self.opt['action_size']
@@ -557,7 +618,7 @@ class GoalOrientedBot(LRScheduledTFModel):
         else:
             self.attn = None
 
-    def _build_graph(self):
+    def _build_graph(self) -> None:
 
         self._add_placeholders()
 
@@ -584,7 +645,7 @@ class GoalOrientedBot(LRScheduledTFModel):
         self._loss += self.l2_reg * tf.losses.get_regularization_loss()
         self._train_op = self.get_train_op(self._loss)
 
-    def _add_placeholders(self):
+    def _add_placeholders(self) -> None:
         self._dropout_keep_prob = tf.placeholder_with_default(1.0,
                                                               shape=[],
                                                               name='dropout_prob')
@@ -618,13 +679,13 @@ class GoalOrientedBot(LRScheduledTFModel):
                                        [None, None, self.attn.key_size],
                                        name='key')
 
-    def _build_body(self):
+    def _build_body(self) -> Tuple[tf.Tensor, tf.Tensor]:
         # input projection
         _units = tf.layers.dense(self._features, self.dense_size,
                                  kernel_regularizer=tf.nn.l2_loss,
                                  kernel_initializer=xav())
         if self.attn:
-            attn_scope = "attention_mechanism/{}".format(self.attn.type)
+            attn_scope = f"attention_mechanism/{self.attn.type}"
             with tf.variable_scope(attn_scope):
                 if self.attn.type == 'general':
                     _attn_output = am.general_attention(
@@ -674,6 +735,8 @@ class GoalOrientedBot(LRScheduledTFModel):
         # recurrent network unit
         _lstm_cell = tf.nn.rnn_cell.LSTMCell(self.hidden_size)
         _utter_lengths = tf.to_int32(tf.reduce_sum(self._utterance_mask, axis=-1))
+        # _output: [batch_size, max_time, hidden_size]
+        # _state: tuple of two [batch_size, hidden_size]
         _output, _state = tf.nn.dynamic_rnn(_lstm_cell,
                                             _units,
                                             time_major=False,
@@ -688,35 +751,30 @@ class GoalOrientedBot(LRScheduledTFModel):
                                   kernel_initializer=xav(), name='logits')
         return _logits, _state
 
-    def load(self, *args, **kwargs):
+    def load(self, *args, **kwargs) -> None:
         self.load_params()
         super().load(*args, **kwargs)
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         super().save(*args, **kwargs)
         self.save_params()
 
-    def save_params(self):
+    def save_params(self) -> None:
         path = str(self.save_path.with_suffix('.json').resolve())
-        log.info('[saving parameters to {}]'.format(path))
+        log.info(f"[saving parameters to {path}]")
         with open(path, 'w', encoding='utf8') as fp:
             json.dump(self.opt, fp)
 
-    def load_params(self):
+    def load_params(self) -> None:
         path = str(self.load_path.with_suffix('.json').resolve())
-        log.info('[loading parameters from {}]'.format(path))
+        log.info(f"[loading parameters from {path}]")
         with open(path, 'r', encoding='utf8') as fp:
             params = json.load(fp)
         for p in self.GRAPH_PARAMS:
             if self.opt.get(p) != params.get(p):
-                raise ConfigError("`{}` parameter must be equal to saved model "
-                                  "parameter value `{}`, but is equal to `{}`"
-                                  .format(p, params.get(p), self.opt.get(p)))
+                raise ConfigError(f"`{p}` parameter must be equal to saved"
+                                  f" model parameter value `{params.get(p)}`,"
+                                  f" but is equal to `{self.opt.get(p)}`")
 
-    def process_event(self, event_name, data):
+    def process_event(self, event_name, data) -> None:
         super().process_event(event_name, data)
-
-    def reset_network_state(self):
-        # set zero state
-        self.state_c = np.zeros([1, self.hidden_size], dtype=np.float32)
-        self.state_h = np.zeros([1, self.hidden_size], dtype=np.float32)
