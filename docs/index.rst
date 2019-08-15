@@ -60,6 +60,7 @@ Welcome to DeepPavlov's documentation!
    :caption: Integrations
 
    REST API <integrations/rest_api>
+   Socket API <integrations/socket_api>
    Telegram integration <integrations/telegram>
    Yandex Alice integration <integrations/yandex_alice>
    Amazon Alexa integration <integrations/amazon_alexa>
