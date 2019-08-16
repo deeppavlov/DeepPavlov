@@ -1,9 +1,14 @@
 {% extends '!footer.html' %}
 
 {% block extrafooter %}
-    <div><p style="margin-top: 12px;">Connect: <a href="https://twitter.com/deeppavlov">Twitter</a>,
-        <a href="https://forum.ipavlov.ai/">Community Forum</a>,
-        <a href="https://github.com/deepmipt/DeepPavlov">GitHub</a>
-    </p></div>
+    <div>
+        <p style="margin-top: 12px;">Problem? <a href="https://forum.ipavlov.ai">Ask a Question</a> or <a href="https://demo.ipavlov.ai/#/en/textqa">try our Demo</a></p>
+        <p>
+            <a href="https://twitter.com/deeppavlov"><img style="width: 30px; height: 30px;" src="{{ pathto('_static/social/Twitter_Social_Icon_Circle_Color.svg', 1) }}" alt="twitter"></a>
+            <a href="https://www.facebook.com/deepmipt/"><img style="width: 30px; height: 30px;" src="{{ pathto('_static/social/f_logo_RGB-Blue_58.png', 1) }}" alt="facebook"></a>
+            <a href="https://www.youtube.com/channel/UCJ-6K2HGA0hpQytlSM7FBVQ"><img style="width: 30px; height: 30px;" src="{{ pathto('_static/social/youtube_social_circle_red.png', 1) }}" alt="youtube"></a>
+            <a href="https://medium.com/deeppavlov"><img style="width: 30px; height: 30px;" src="{{ pathto('_static/social/Medium_Monogram.svg', 1) }}" alt="medium"></a>
+        </p>
+    </div>
     {{ super() }}
 {% endblock %}
