@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
 import ssl
 from logging import getLogger, Filter, LogRecord
 from pathlib import Path
