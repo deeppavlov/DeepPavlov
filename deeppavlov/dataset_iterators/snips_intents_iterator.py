@@ -28,5 +28,5 @@ class SnipsIntentIterator(DataLearningIterator):
         for query in data:
             text = ''.join(part['text'] for part in query['data'])
             intent = query['intent']
-            result.append((text, [intent]))
+            result.append((text, intent))
         return result
