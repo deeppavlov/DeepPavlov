@@ -3,7 +3,7 @@
     "host": "0.0.0.0",
     "port": 5000,
     "docs_endpoint": "/docs/",
-    "model_args_names": ["context"],
+    "model_args_names": "",
     "https": false,
     "https_cert_path": "",
     "https_key_path": "",
@@ -35,7 +35,7 @@
     "EcommerceSkill": {
       "host": "",
       "port": "",
-      "model_args_names": ["query", "history", "state"]
+      "model_args_names": ""
     },
     "ErrorModel": {
       "host": "",
@@ -60,7 +60,7 @@
     "SquadModel": {
       "host": "",
       "port": "",
-      "model_args_names": ["context", "question"]
+      "model_args_names": ""
     },
     "ODQA": {
       "host": "",

@@ -65,6 +65,7 @@ def get_server_params(server_config_path, model_config):
                     server_params[param_name] = model_defaults[param_name]
 
     server_params['model_endpoint'] = server_params.get('model_endpoint', '/model')
+    server_params['model_args_names'] = server_params['model_args_names'] or model_config['chainer']['in']
 
     return server_params
 
