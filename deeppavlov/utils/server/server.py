@@ -64,6 +64,8 @@ def get_server_params(server_config_path, model_config):
                 if model_defaults[param_name]:
                     server_params[param_name] = model_defaults[param_name]
 
+    server_params['model_endpoint'] = server_params.get('model_endpoint', '/model')
+
     return server_params
 
 
@@ -135,12 +137,6 @@ def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, p
 
     Swagger.DEFAULT_CONFIG['specs_route'] = docs_endpoint
     Swagger(app)
-
-    if model_endpoint == '/':
-        e = ValueError('"/" endpoint is reserved, please provide correct endpoint in model_endpoint'
-                       'param in server configuration file')
-        log.error(e)
-        raise e
 
     https = https or server_params['https']
 

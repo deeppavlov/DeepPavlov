@@ -38,9 +38,9 @@ match with properties key from ``model_defaults`` section of
 
 For example, ``metadata/labels/server_utils`` tag from
 ``go_bot/gobot_dstc2.json`` references to the *GoalOrientedBot* section
-of ``server_config.json``. Therefore, ``model_endpoint`` parameter in
-``common_defaults`` will be will be overridden with the same parameter
-from ``model_defaults/GoalOrientedBot``.
+of ``server_config.json``. Therefore, all parameters with non empty values from
+``model_defaults/GoalOrientedBot`` will overwrite the parameter values in
+``common_defaults``.
 
 Model argument names are provided as list in ``model_args_names``
 parameter, where arguments order corresponds to model API.
