@@ -21,27 +21,12 @@ from typing import Dict, List, Optional, Tuple, Union
 
 from deeppavlov.core.agent.dialog_logger import DialogLogger
 from deeppavlov.core.commands.infer import build_model
-from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.common.chainer import Chainer
-from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
-from deeppavlov.core.data.utils import check_nested_dict_keys, jsonify_data
+from deeppavlov.core.data.utils import jsonify_data
+from deeppavlov.utils.server.server import get_server_params
 
 SOCKET_CONFIG_FILENAME = 'socket_config.json'
-
-
-def get_socket_params(socket_config_path: Path, model_config: Path) -> Dict:
-    socket_config = read_json(socket_config_path)
-    model_config = parse_config(model_config)
-
-    socket_params = socket_config['common_defaults']
-
-    if check_nested_dict_keys(model_config, ['metadata', 'labels', 'server_utils']):
-        model_tag = model_config['metadata']['labels']['server_utils']
-        if model_tag in socket_config['model_defaults']:
-            model_defaults = socket_config['model_defaults'][model_tag]
-            socket_params.update(model_defaults)
-    return socket_params
 
 
 class SocketServer:
@@ -82,7 +67,7 @@ class SocketServer:
 
         """
         socket_config_path = get_settings_path() / SOCKET_CONFIG_FILENAME
-        self._params = get_socket_params(socket_config_path, model_config)
+        self._params = get_server_params(socket_config_path, model_config)
         self._socket_type = socket_type or self._params['socket_type']
 
         if self._socket_type == 'TCP':

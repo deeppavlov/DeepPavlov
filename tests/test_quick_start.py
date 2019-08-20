@@ -24,7 +24,7 @@ from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
 from deeppavlov.utils.server.server import get_server_params, SERVER_CONFIG_FILENAME
-from deeppavlov.utils.socket.socket import get_socket_params, SOCKET_CONFIG_FILENAME
+from deeppavlov.utils.socket.socket import SOCKET_CONFIG_FILENAME
 
 tests_dir = Path(__file__).parent
 test_configs_path = tests_dir / "deeppavlov" / "configs"
@@ -422,7 +422,7 @@ class TestQuickStart(object):
     def interact_socket(config_path, socket_type):
         socket_conf_file = get_settings_path() / SOCKET_CONFIG_FILENAME
 
-        socket_params = get_socket_params(socket_conf_file, config_path)
+        socket_params = get_server_params(socket_conf_file, config_path)
         model_args_names = socket_params['model_args_names']
 
         host = socket_params['host']
