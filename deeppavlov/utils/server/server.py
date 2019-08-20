@@ -192,4 +192,8 @@ def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, p
     def probe():
         return test_interact(model, model_args_names)
 
+    @app.route('/api', methods=['GET'])
+    def api():
+        return jsonify(model_args_names), 200
+
     app.run(host=host, port=port, threaded=False, ssl_context=ssl_context)
