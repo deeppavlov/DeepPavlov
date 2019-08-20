@@ -18,7 +18,7 @@ The command will print the used host and port. Default web service properties
 ``deeppavlov/utils/settings/server_config.json`` file.
 
 To interact with the REST API via graphical interface open
-``<host>:<port>/apidocs`` in a browser (Flasgger UI).
+``<host>:<port>/docs`` in a browser (Flasgger UI).
 
 Advanced configuration
 ~~~~~~~~~~~~~~~~~~~~~~

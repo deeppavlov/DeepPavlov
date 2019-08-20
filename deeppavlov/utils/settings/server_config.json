@@ -3,6 +3,7 @@
     "host": "0.0.0.0",
     "port": 5000,
     "model_endpoint": "/model",
+    "docs_endpoint": "/docs/",
     "model_args_names": ["context"],
     "https": false,
     "https_cert_path": "",

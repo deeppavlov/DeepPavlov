@@ -14,7 +14,7 @@
 
 import re
 import ssl
-from logging import getLogger, Filter
+from logging import getLogger, Filter, LogRecord
 from pathlib import Path
 from typing import List, Tuple
 
@@ -34,13 +34,10 @@ SERVER_CONFIG_FILENAME = 'server_config.json'
 
 
 class PollerFilter(Filter):
-    """
-    PollerFilter class is used to filter POST requests log records to
-    <model_endpoint>/poller endpoints.
-    """
-    pat = re.compile(r'POST\s/\S*/poller\s')
-    def filter(self, record):
-        return not PollerFilter.pat.search(record.getMessage())
+    """PollerFilter class is used to filter POST requests to /probe endpoint from logs."""
+    def filter(self, record: LogRecord) -> bool:
+        """To log the record method should return True."""
+        return 'POST /probe HTTP' not in record.getMessage()
 
 
 log = getLogger(__name__)
@@ -48,7 +45,6 @@ werklog = getLogger('werkzeug')
 werklog.addFilter(PollerFilter())
 
 app = Flask(__name__)
-Swagger(app)
 CORS(app)
 
 dialog_logger = DialogLogger(agent_name='dp_api')
@@ -134,7 +130,11 @@ def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, p
     host = server_params['host']
     port = port or server_params['port']
     model_endpoint = server_params['model_endpoint']
+    docs_endpoint = server_params['docs_endpoint']
     model_args_names = server_params['model_args_names']
+
+    Swagger.DEFAULT_CONFIG['specs_route'] = docs_endpoint
+    Swagger(app)
 
     if model_endpoint == '/':
         e = ValueError('"/" endpoint is reserved, please provide correct endpoint in model_endpoint'
@@ -168,7 +168,7 @@ def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, p
 
     @app.route('/')
     def index():
-        return redirect('/apidocs/')
+        return redirect(docs_endpoint)
 
     endpoint_description = {
         'description': 'A model endpoint',
@@ -192,8 +192,8 @@ def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, p
     def answer():
         return interact(model, model_args_names)
 
-    @app.route(model_endpoint+'/poller', methods=['POST'])
-    def polling():
+    @app.route('/probe', methods=['POST'])
+    def probe():
         return test_interact(model, model_args_names)
 
     app.run(host=host, port=port, threaded=False, ssl_context=ssl_context)
