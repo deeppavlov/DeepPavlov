@@ -75,7 +75,7 @@ Welcome to DeepPavlov's documentation!
    :caption: Developer Guides
 
    Contribution guide <devguides/contribution_guide>
-   Registry your model <devguides/registry>
+   Register your model <devguides/registry>
 
 
 .. toctree::
