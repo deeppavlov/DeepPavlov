@@ -54,7 +54,7 @@ class Proba2Labels(Component):
         self.top_n = top_n
 
     def __call__(self, data: Union[np.ndarray, List[List[float]], List[List[int]]],
-                 *args, **kwargs) -> Union[List[List[str]], List[str]]:
+                 *args, **kwargs) -> Union[List[List[int]], List[int]]:
         """
         Process probabilities to labels
 
