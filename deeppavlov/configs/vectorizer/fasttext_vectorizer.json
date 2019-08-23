@@ -1,0 +1,39 @@
+{
+  "chainer": {
+    "in": ["sentence"],
+    "pipe": [
+      {
+        "class_name": "ru_tokenizer",
+        "in": "sentence",
+        "lemmas": true,
+        "out": "sent_token_lemmas"
+      },
+      {
+        "class_name": "fasttext",
+        "in": "sent_token_lemmas",
+        "load_path": "{DOWNLOADS_PATH}/embeddings/lenta_lower_100.bin",
+        "mean": true,
+        "out": "sent_vector"
+      }
+    ],
+    "out": [
+      "sent_vector"
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/lenta_lower_100.bin",
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
+      }
+    ]
+  }
+}

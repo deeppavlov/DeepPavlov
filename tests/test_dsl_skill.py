@@ -66,6 +66,20 @@ class FaqSkill(metaclass=DSLMeta):
         return response, confidence
 
 
+class ParaphraseSkill(metaclass=DSLMeta):
+    @DSLMeta.paraphrase_handler(phrases=["ты плохой", "я тебя недолюбливаю"], similarity_threshold=0.85)
+    def rude(context: UserContext):
+        response = "сам такой"
+        confidence = 1.0
+        return response, confidence
+
+    @DSLMeta.paraphrase_handler(phrases=["ты красавчик", "я тебя обожаю"], similarity_threshold=0.8)
+    def kind(context: UserContext):
+        response = "спасибо"
+        confidence = 1.0
+        return response, confidence
+
+
 class TestDSLSkill:
     def setup(self):
         self.skill_config = read_json(configs.dsl_skill.dsl_skill)
@@ -152,3 +166,22 @@ class TestDSLSkill:
         assert "спасибо" in history_of_responses[0][0]
         assert "-30, одевайся потеплее" in history_of_responses[1][0]
         assert "Sorry, I do not understand you" in history_of_responses[2][0]
+
+    def test_paraphrase_handler(self):
+        user_messages_sequence = [
+            "я тебя ненавижу",
+            "ты молодец"
+        ]
+
+        self.skill_config["chainer"]["pipe"][1]["class_name"] = "ParaphraseSkill"
+        skill = build_model(self.skill_config, download=True)
+
+        history_of_responses = []
+        for user_id, each_utt in enumerate(user_messages_sequence):
+            log.info(f"User says: {each_utt}")
+            responses_batch = skill([each_utt], [user_id])
+            log.info(f"Bot says: {responses_batch[0]}")
+            history_of_responses.append(responses_batch)
+        assert "сам такой" in history_of_responses[0][0]
+        assert "спасибо" in history_of_responses[1][0]
+

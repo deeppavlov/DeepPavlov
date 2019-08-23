@@ -26,6 +26,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.skills.dsl_skill.context import UserContext
 from deeppavlov.skills.dsl_skill.handlers import Handler, RegexHandler
 from deeppavlov.skills.dsl_skill.handlers.faq_handler import FAQHandler
+from deeppavlov.skills.dsl_skill.handlers.paraphrase_handler import ParaphraseHandler
 from deeppavlov.skills.dsl_skill.utils import SkillResponse, UserId
 from deeppavlov.utils.pip_wrapper import install_from_config
 from deeppavlov.skills.dsl_skill.faq.faq_reader import FaqDatasetReader  # do not remove, needed for using the model from DP config
@@ -67,7 +68,8 @@ class DSLMeta(ABCMeta):
 
         handlers = [attribute for attribute in namespace.values()
                     if isinstance(attribute, Handler)
-                    and not isinstance(attribute, FAQHandler)]
+                    and not isinstance(attribute, FAQHandler)
+                    and not isinstance(attribute, ParaphraseHandler)]
 
         # FAQ handlers
         for attribute in namespace.values():
@@ -76,6 +78,12 @@ class DSLMeta(ABCMeta):
 
         for attribute in namespace.values():
             if isinstance(attribute, FAQHandler):
+                attribute.train()
+                handlers.append(attribute)
+
+        # Paraphrase handlers
+        for attribute in namespace.values():
+            if isinstance(attribute, ParaphraseHandler):
                 attribute.train()
                 handlers.append(attribute)
 
@@ -307,5 +315,43 @@ class DSLMeta(ABCMeta):
                     pipe_step['top_n'] = top_n
 
             return FAQHandler(func, model_config, score_threshold, state, context_condition, priority)
+
+        return decorator
+
+    @staticmethod
+    def paraphrase_handler(phrases: List[str],
+                           similarity_threshold: float = 0.8,
+                           state: Optional[str] = None,
+                           context_condition: Optional[Callable] = None,
+                           priority: int = 0):
+        """
+        Decorator to be used in skills' classes.
+        Sample usage:
+
+        .. code:: python
+
+            class ExampleSkill(metaclass=DSLMeta):
+                @DSLMeta.paraphrase_handler(phrases=["hello", "hey"], similarity_threshold=0.5)
+                def greeting(context: UserContext):
+                    ...
+
+        Args:
+            phrases: phrases, on which handler should trigger
+            similarity_threshold: float, [0..1], minimal required similarity between user message and phrases
+             of this handler
+            priority: integer value to indicate priority. If multiple handlers satisfy
+             all the requirements, the handler with the greatest priority value will be used
+            context_condition: function that takes context and
+             returns True if this handler should be enabled
+             and False otherwise. If None, no condition is checked
+            state: state name
+            function decorated into Handler class
+
+        """
+
+        def decorator(func: Callable) -> Handler:
+            return ParaphraseHandler(func, phrases, similarity_threshold,
+                                     context_condition=context_condition,
+                                     priority=priority, state=state)
 
         return decorator
