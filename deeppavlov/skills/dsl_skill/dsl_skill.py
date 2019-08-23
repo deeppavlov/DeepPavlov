@@ -16,12 +16,19 @@ from abc import ABCMeta
 from collections import defaultdict
 from functools import partial
 from itertools import zip_longest, starmap
+from pathlib import Path
 from typing import List, Optional, Dict, Callable, Tuple
 
+import deeppavlov
+
+from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.registry import register
 from deeppavlov.skills.dsl_skill.context import UserContext
 from deeppavlov.skills.dsl_skill.handlers import Handler, RegexHandler
+from deeppavlov.skills.dsl_skill.handlers.faq_handler import FAQHandler
 from deeppavlov.skills.dsl_skill.utils import SkillResponse, UserId
+from deeppavlov.utils.pip_wrapper import install_from_config
+from deeppavlov.skills.dsl_skill.faq.faq_reader import FaqDatasetReader  # do not remove, needed for using the model from DP config
 
 
 class DSLMeta(ABCMeta):
@@ -58,7 +65,19 @@ class DSLMeta(ABCMeta):
         cls.user_to_context = defaultdict(UserContext)
         cls.universal_handlers = []
 
-        handlers = [attribute for attribute in namespace.values() if isinstance(attribute, Handler)]
+        handlers = [attribute for attribute in namespace.values()
+                    if isinstance(attribute, Handler)
+                    and not isinstance(attribute, FAQHandler)]
+
+        # FAQ handlers
+        for attribute in namespace.values():
+            if isinstance(attribute, FAQHandler):
+                attribute.add_faq_dict(attribute.model_config['dataset_reader']['data'])
+
+        for attribute in namespace.values():
+            if isinstance(attribute, FAQHandler):
+                attribute.train()
+                handlers.append(attribute)
 
         for handler in handlers:
             if handler.state is None:
@@ -194,7 +213,7 @@ class DSLMeta(ABCMeta):
 
             class ExampleSkill(metaclass=DSLMeta):
                 @DSLMeta.handler(commands=["hello", "hi", "sup", "greetings"])
-                def __greeting(context: UserContext):
+                def greeting(context: UserContext):
                     response = "Hello, my friend!"
                     confidence = 1.0
                     return response, confidence
@@ -220,5 +239,73 @@ class DSLMeta(ABCMeta):
             return RegexHandler(func, commands,
                                 context_condition=context_condition,
                                 priority=priority, state=state)
+
+        return decorator
+
+    @staticmethod
+    def faq_handler(faq_dict: dict,
+                    faq_model_config_path: str = Path(deeppavlov.__path__[0]) / "configs/faq/fasttext_tfidf_autofaq.json",
+                    score_threshold: float = 0.5,
+                    top_n: int = 3,
+                    state: Optional[str] = None,
+                    context_condition: Optional[Callable] = None,
+                    priority: int = 0):
+        """
+        Decorator to be used in skills' classes.
+        Sample usage:
+
+        .. code:: python
+
+            faq_dict = {
+                "rude": {
+                    "phrases": ["ты плохой", "я тебя недолюбливаю"],
+                    "answer": "ну нет",
+                    "metadata": {}
+                },
+                "kind": {
+                    "phrases": ["ты красавчик", "я тебя обожаю"],
+                    "answer": "спасибо",
+                    "metadata": {}
+                },
+                "whatever": {
+                    "phrases": ["какая сегодня погода?"],
+                    "answer": "-30, одевайся потеплее",
+                    "metadata": {}
+                }
+            }
+
+            class DSLSkill(metaclass=DSLMeta):
+                @DSLMeta.faq_handler(faq_dict=faq_dict, score_threshold=0.3, top_n=3)
+                def faq(context: UserContext):
+                    response = context.handler_payload['faq_options'][0][1]["answer"]
+                    confidence = 1.0
+                    return response, confidence
+
+        Args:
+            faq_dict: FAQ data dictionary
+            faq_model_config_path: Path to FAQ model json file
+            top_n: top n results to return
+            score_threshold: faq options with less than score_threshold will be ignored
+            priority: integer value to indicate priority. If multiple handlers satisfy
+                          all the requirements, the handler with the greatest priority value will be used
+            context_condition: function that takes context and
+                                  returns True if this handler should be enabled
+                                  and False otherwise. If None, no condition is checked
+            state: state name
+
+        Returns:
+             function decorated into Handler class
+        """
+
+        def decorator(func: Callable) -> Handler:
+            model_config = read_json(faq_model_config_path)
+            install_from_config(model_config)
+            model_config['dataset_reader']['data'] = faq_dict
+
+            for pipe_step in model_config['chainer']['pipe']:
+                if 'class_name' in pipe_step and pipe_step['class_name'] == 'cos_sim_classifier':
+                    pipe_step['top_n'] = top_n
+
+            return FAQHandler(func, model_config, score_threshold, state, context_condition, priority)
 
         return decorator
