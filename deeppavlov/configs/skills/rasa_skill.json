@@ -30,7 +30,8 @@
       "PROJECT_ROOT": "{DOWNLOADS_PATH}/rasa_tutorial_project"
     },
     "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/rasa_skill.txt"
+      "{DEEPPAVLOV_PATH}/requirements/rasa_skill.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
     "download": [
       {
