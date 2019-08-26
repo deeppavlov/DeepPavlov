@@ -54,7 +54,7 @@ class Proba2Labels(Component):
         self.top_n = top_n
 
     def __call__(self, data: Union[np.ndarray, List[List[float]], List[List[int]]],
-                 *args, **kwargs) -> Union[List[List[str]], List[str]]:
+                 *args, **kwargs) -> Union[List[List[int]], List[int]]:
         """
         Process probabilities to labels
 
@@ -70,7 +70,7 @@ class Proba2Labels(Component):
             return [list(np.where(np.array(d) > self.confident_threshold)[0])
                     for d in data]
         elif self.max_proba:
-            return [[np.argmax(d)] for d in data]
+            return [np.argmax(d) for d in data]
         elif self.top_n:
             return [np.argsort(d)[::-1][:self.top_n] for d in data]
         else:

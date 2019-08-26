@@ -113,7 +113,7 @@
     "epochs": 100,
     "batch_size": 64,
     "metrics": [
-      "sets_accuracy",
+      "accuracy",
       "f1_macro",
       {
         "name": "roc_auc",
