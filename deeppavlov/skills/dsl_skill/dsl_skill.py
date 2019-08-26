@@ -24,12 +24,9 @@ import deeppavlov
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.registry import register
 from deeppavlov.skills.dsl_skill.context import UserContext
-from deeppavlov.skills.dsl_skill.handlers import Handler, RegexHandler
-from deeppavlov.skills.dsl_skill.handlers.faq_handler import FAQHandler
-from deeppavlov.skills.dsl_skill.handlers.paraphrase_handler import ParaphraseHandler
+from deeppavlov.skills.dsl_skill.handlers import Handler, RegexHandler, FAQHandler, ParaphraseHandler
 from deeppavlov.skills.dsl_skill.utils import SkillResponse, UserId
 from deeppavlov.utils.pip_wrapper import install_from_config
-from deeppavlov.skills.dsl_skill.faq.faq_reader import FaqDatasetReader  # do not remove, needed for using the model from DP config
 
 
 class DSLMeta(ABCMeta):
