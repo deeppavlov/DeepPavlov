@@ -121,7 +121,7 @@
         ]
       },
       {
-        "name": "sets_accuracy",
+        "name": "accuracy",
         "inputs": [
           "y",
           "y_pred_labels"

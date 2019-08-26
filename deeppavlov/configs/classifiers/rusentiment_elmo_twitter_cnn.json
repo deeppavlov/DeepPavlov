@@ -135,7 +135,7 @@
     "metrics": [
       "f1_weighted",
       "f1_macro",
-      "sets_accuracy",
+      "accuracy",
       {
         "name": "roc_auc",
         "inputs": ["y_onehot", "y_pred_probas"]

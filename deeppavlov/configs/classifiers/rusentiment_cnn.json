@@ -127,7 +127,7 @@
     "batch_size": 64,
     "metrics": [
       "f1_weighted",
-      "sets_accuracy",
+      "accuracy",
       "f1_macro",
       {
         "name": "roc_auc",

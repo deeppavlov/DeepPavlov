@@ -1,22 +1,13 @@
 {
   "dataset_reader": {
-    "class_name": "basic_classification_reader",
+    "class_name": "snips_reader",
     "x": "text",
     "y": "intents",
     "data_path": "{DOWNLOADS_PATH}/snips"
   },
   "dataset_iterator": {
-    "class_name": "basic_classification_iterator",
-    "seed": 42,
-    "field_to_split": "train",
-    "split_fields": [
-      "train",
-      "valid"
-    ],
-    "split_proportions": [
-      0.9,
-      0.1
-    ]
+    "class_name": "snips_intents_iterator",
+    "seed": 42
   },
   "chainer": {
     "in": [
@@ -110,7 +101,7 @@
     "epochs": 1,
     "batch_size": 64,
     "metrics": [
-      "sets_accuracy",
+      "accuracy",
       "f1_macro",
       {
         "name": "roc_auc",
@@ -146,10 +137,6 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
         "subdir": "{MODELS_PATH}"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
-        "subdir": "{DOWNLOADS_PATH}/snips"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/dstc2_fastText_model.bin",
