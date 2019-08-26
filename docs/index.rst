@@ -51,6 +51,7 @@ Welcome to DeepPavlov's documentation!
    Frequently Asked Questions Answering <features/skills/faq>
    eCommerce Bot <features/skills/ecommerce>
    AIML <features/skills/aiml_skill>
+   Rasa <features/skills/rasa_skill>
    DSL <features/skills/dsl_skill>
 
 

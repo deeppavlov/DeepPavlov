@@ -15,7 +15,7 @@ models (usually it is a folder with name `models` inside the project path) at in
 by providing `path_to_models` attribute.
 
 Dummy RASA project
------------
+------------------
 DeepPavlov library has a template config for RASASkill here: :config:`configs/skills/rasa_skill.json <skills/rasa_skill.json>`.
 This config uses a RASA project hosted at
 `DeepPavlov fileshare <http://files.deeppavlov.ai/rasa_skill/rasa_tutorial_project.tar.gz>`_ (it is packed). This
@@ -36,7 +36,7 @@ See `RASA's documentation <https://rasa.com/docs/rasa/1.0.6/user-guide/rasa-tuto
 to create project.
 
 Usage without DeepPavlov configuration files
-^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code:: python
 
