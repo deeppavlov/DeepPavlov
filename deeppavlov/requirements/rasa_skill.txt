@@ -1,1 +1,1 @@
-git+https://github.com/deepmipt/rasa.git@f0cc0ff6e515df2249998ff4e788009cccaecc02#egg=rasa
+git+https://github.com/deepmipt/rasa.git@a81fdb9f5ad7ab2ea5f3fd4bad3b3ac1925f9e60#egg=rasa==1.2.5
