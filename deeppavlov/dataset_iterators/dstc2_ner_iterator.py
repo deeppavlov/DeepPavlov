@@ -15,13 +15,11 @@
 import json
 import logging
 from overrides import overrides
-from collections import defaultdict
 from typing import List, Tuple, Dict, Any
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
-from deeppavlov.core.data.utils import download
 
 logger = logging.getLogger(__name__)
 
@@ -49,32 +47,38 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
         super().__init__(data, seed, shuffle)
 
     @overrides
-    def preprocess(self, data: List[Tuple[Any, Any]], *args, **kwargs) -> List[Tuple[Any, Any]]:
+    def preprocess(self,
+                   data: List[Tuple[Any, Any]],
+                   *args, **kwargs) -> List[Tuple[Any, Any]]:
         processed_data = list()
         processed_texts = dict()
-        for sample in data:
-            for utterance in sample:
-                if 'intents' not in utterance or len(utterance['text']) < 1:
-                    continue
-                text = utterance['text']
-                intents = utterance.get('intents', dict())
-                slots = list()
-                for intent in intents:
+        for x, y in data:
+            text = x['text']
+            intents = []
+            if 'intents' in x:
+                intents = x['intents']
+            elif 'slots' in x:
+                intents = [x]
+            if not intents or (len(text) < 1):
+                continue
+            # aggregate slots from different intents
+            slots = list()
+            for intent in intents:
+                current_slots = intent.get('slots', [])
+                for slot_type, slot_val in current_slots:
+                    if not self._slot_vals or (slot_type in self._slot_vals):
+                        slots.append((slot_type, slot_val,))
+            # remove duplicate pairs (text, slots)
+            if (text in processed_texts) and (slots in processed_texts[text]):
+                continue
+            processed_texts[text] = processed_texts.get(text, []) + [slots]
 
-                    current_slots = intent.get('slots', [])
-                    for slot_type, slot_val in current_slots:
-                        if not self._slot_vals or (slot_type in self._slot_vals):
-                            slots.append((slot_type, slot_val,))
-
-                # remove duplicate pairs (text, slots)
-                if (text in processed_texts) and (slots in processed_texts[text]):
-                    continue
-                processed_texts[text] = processed_texts.get(text, []) + [slots]
-
-                processed_data.append(self._add_bio_markup(text, slots))
+            processed_data.append(self._add_bio_markup(text, slots))
         return processed_data
 
-    def _add_bio_markup(self, utterance, slots):
+    def _add_bio_markup(self,
+                        utterance: str,
+                        slots: List[Tuple[str, str]]) -> List[Tuple[List, List]]:
         tokens = utterance.split()
         n_toks = len(tokens)
         tags = ['O' for _ in range(n_toks)]

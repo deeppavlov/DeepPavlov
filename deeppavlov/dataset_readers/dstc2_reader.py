@@ -70,7 +70,7 @@ class DSTC2DatasetReader(DatasetReader):
     @staticmethod
     def _data_fname(datatype):
         assert datatype in ('trn', 'val', 'tst'), "wrong datatype name"
-        return 'dstc2-{}.jsonlist'.format(datatype)
+        return f"dstc2-{datatype}.jsonlist"
 
     @classmethod
     @overrides
@@ -92,7 +92,7 @@ class DSTC2DatasetReader(DatasetReader):
         """
         required_files = (self._data_fname(dt) for dt in ('trn', 'val', 'tst'))
         if not all(Path(data_path, f).exists() for f in required_files):
-            log.info('[downloading data from {} to {}]'.format(self.url, data_path))
+            log.info(f"[downloading data from {self.url} to {data_path}]")
             download_decompress(self.url, data_path)
             mark_done(data_path)
 
@@ -109,7 +109,7 @@ class DSTC2DatasetReader(DatasetReader):
     @classmethod
     def _read_from_file(cls, file_path, dialogs=False):
         """Returns data from single file"""
-        log.info("[loading dialogs from {}]".format(file_path))
+        log.info(f"[loading dialogs from {file_path}]")
 
         utterances, responses, dialog_indices =\
             cls._get_turns(cls._iter_file(file_path), with_indices=True)
@@ -181,9 +181,9 @@ class DSTC2DatasetReader(DatasetReader):
                         else:
                             new_turn = copy.deepcopy(utterances[-1])
                             if 'db_result' not in responses[-1]:
-                                raise RuntimeError("Every api_call action should have"
-                                                   " db_result, turn = {}"
-                                                   .format(responses[-1]))
+                                raise RuntimeError(f"Every api_call action"
+                                                   f" should have db_result,"
+                                                   f" turn = {responses[-1]}")
                             new_turn['db_result'] = responses[-1].pop('db_result')
                             utterances.append(new_turn)
                             responses.append(turn)
@@ -243,7 +243,7 @@ class SimpleDSTC2DatasetReader(DatasetReader):
     @staticmethod
     def _data_fname(datatype):
         assert datatype in ('trn', 'val', 'tst'), "wrong datatype name"
-        return 'simple-dstc2-{}.json'.format(datatype)
+        return f"simple-dstc2-{datatype}.json"
 
     @classmethod
     @overrides
@@ -266,7 +266,8 @@ class SimpleDSTC2DatasetReader(DatasetReader):
         """
         required_files = (self._data_fname(dt) for dt in ('trn', 'val', 'tst'))
         if not all(Path(data_path, f).exists() for f in required_files):
-            log.info('[downloading data from {} to {}]'.format(self.url, data_path))
+            log.info(f"{[Path(data_path, f) for f in required_files]}]")
+            log.info(f"[downloading data from {self.url} to {data_path}]")
             download_decompress(self.url, data_path)
             mark_done(data_path)
 
@@ -286,7 +287,7 @@ class SimpleDSTC2DatasetReader(DatasetReader):
     @classmethod
     def _read_from_file(cls, file_path: str, dialogs: bool = False):
         """Returns data from single file"""
-        log.info("[loading dialogs from {}]".format(file_path))
+        log.info(f"[loading dialogs from {file_path}]")
 
         utterances, responses, dialog_indices =\
             cls._get_turns(json.load(open(file_path, 'rt')), with_indices=True)
@@ -309,6 +310,10 @@ class SimpleDSTC2DatasetReader(DatasetReader):
             x['episode_done'] = turn_x['episode_done']
         if turn_x.get('db_result') is not None:
             x['db_result'] = turn_x['db_result']
+        if turn_x.get('slots'):
+            x['slots'] = turn_x['slots']
+        if turn_y.get('slots'):
+            y['slots'] = turn_y['slots']
         return (x, y)
 
     @staticmethod
