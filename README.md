@@ -22,6 +22,8 @@ DeepPavlov is designed for
 * Docker Hub [*hub.docker.com/u/deeppavlov/*](https://hub.docker.com/u/deeppavlov/) 
     * Docker Images Documentation [*docs:docker-images/*](http://docs.deeppavlov.ai/en/master/intro/installation.html#docker-images)
 
+Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we can improve the DeepPavlov framework.
+
 **Models**
 
 [Named Entity Recognition](http://docs.deeppavlov.ai/en/master/features/models/ner.html) | [Slot filling](http://docs.deeppavlov.ai/en/master/features/models/slot_filling.html)
@@ -85,8 +87,8 @@ List of models is available on
 [the doc page](http://docs.deeppavlov.ai/en/master/features/overview.html) in
 the `deeppavlov.configs` (Python):
 
-```python 
-    from deeppavlov import configs
+```python
+from deeppavlov import configs
 ```
 
 When you're decided on the model (+ config file), there are two ways to train,
@@ -98,8 +100,8 @@ evaluate and infer it:
 Before making choice of an interface, install model's package requirements
 (CLI):
 
-```bash 
-    python -m deeppavlov install <config_path>
+```bash
+python -m deeppavlov install <config_path>
 ```
 
 * where `<config_path>` is path to the chosen model's config file (e.g.
@@ -111,8 +113,8 @@ Before making choice of an interface, install model's package requirements
 
 To get predictions from a model interactively through CLI, run
 
-```bash 
-    python -m deeppavlov interact <config_path> [-d]
+```bash
+python -m deeppavlov interact <config_path> [-d]
 ```
 
 * `-d` downloads required data -- pretrained model files and embeddings
@@ -121,7 +123,7 @@ To get predictions from a model interactively through CLI, run
 You can train it in the same simple way:
 
 ```bash
-    python -m deeppavlov train <config_path> [-d]
+python -m deeppavlov train <config_path> [-d]
 ```
 
 Dataset will be downloaded regardless of whether there was `-d` flag or not.
@@ -132,8 +134,8 @@ The data format is specified in the corresponding model doc page.
 
 There are even more actions you can perform with configs:
 
-```bash 
-    python -m deeppavlov <action> <config_path> [-d]
+```bash
+python -m deeppavlov <action> <config_path> [-d]
 ```
 
 * `<action>` can be
@@ -157,13 +159,13 @@ There are even more actions you can perform with configs:
 
 To get predictions from a model interactively through Python, run
 
-```python 
-    from deeppavlov import build_model
+```python
+from deeppavlov import build_model
 
-    model = build_model(<config_path>, download=True)
+model = build_model(<config_path>, download=True)
 
-    # get predictions for 'input_text1', 'input_text2'
-    model(['input_text1', 'input_text2'])
+# get predictions for 'input_text1', 'input_text2'
+model(['input_text1', 'input_text2'])
 ```
 
 * where `download=True` downloads required data from web -- pretrained model
@@ -175,10 +177,10 @@ To get predictions from a model interactively through Python, run
 
 You can train it in the same simple way:
 
-```python 
-    from deeppavlov import train_model 
+```python
+from deeppavlov import train_model 
 
-    model = train_model(<config_path>, download=True)
+model = train_model(<config_path>, download=True)
 ```
 
 * `download=True` downloads pretrained model, therefore the pretrained
@@ -194,9 +196,9 @@ The data format is specified in the corresponding model doc page.
 You can also calculate metrics on the dataset specified in your config file:
 
 ```python
-    from deeppavlov import evaluate_model 
+from deeppavlov import evaluate_model 
 
-    model = evaluate_model(<config_path>, download=True)
+model = evaluate_model(<config_path>, download=True)
 ```
 
 There are also available integrations with various messengers, see
