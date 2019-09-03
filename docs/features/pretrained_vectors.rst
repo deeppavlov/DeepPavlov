@@ -27,13 +27,13 @@ The models can be run with the original `BERT repo <https://github.com/google-re
 +------------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
 | Description            | Model parameters                                   | Download link                                                                                                                                    |
 +========================+====================================================+==================================================================================================================================================+
-| RuBERT                 | vocab size = 120K, parameters = 180M, size = 1300MB| `[rubert_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v2.tar.gz>`__                      |
+| RuBERT                 | vocab size = 120K, parameters = 180M, size = 632MB | `[rubert_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v2.tar.gz>`__                      |
 +------------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| Slavic BERT            | vocab size = 120K, parameters = 180M, size = 700MB | `[bg_cs_pl_ru_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/bg_cs_pl_ru_cased_L-12_H-768_A-12_v1.tar.gz>`__            |
+| Slavic BERT            | vocab size = 120K, parameters = 180M, size = 632MB | `[bg_cs_pl_ru_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/bg_cs_pl_ru_cased_L-12_H-768_A-12_v1.tar.gz>`__            |
 +------------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| Conversational BERT    | vocab size = 30K, parameters = 110M, size = 800MB  | `[conversational_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12_v1.tar.gz>`__      |
+| Conversational BERT    | vocab size = 30K, parameters = 110M, size = 385MB  | `[conversational_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12_v1.tar.gz>`__      |
 +------------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| Conversational RuBERT  | vocab size = 120K, parameters = 180M, size = 1300MB| `[conversational_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/ru_conversational_cased_L-12_H-768_A-12.tar.gz>`__      |
+| Conversational RuBERT  | vocab size = 120K, parameters = 180M, size = 630MB | `[conversational_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/ru_conversational_cased_L-12_H-768_A-12.tar.gz>`__      |
 +------------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
 
 ELMo
