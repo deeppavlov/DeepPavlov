@@ -463,7 +463,7 @@ class TestQuickStart(object):
                     pass
             resp = json.loads(data)
             assert resp['status'] == 'OK', f"{socket_type} socket request returned status: {resp['status']}"\
-                                           " with {config_path}"
+                                           f" with {config_path}\n{logfile.getvalue().decode()}"
 
         except pexpect.exceptions.EOF:
             raise RuntimeError('Got unexpected EOF: \n{}'.format(logfile.getvalue().decode()))
