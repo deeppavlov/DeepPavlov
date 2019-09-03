@@ -466,7 +466,10 @@ class TestQuickStart(object):
                                            f" with {config_path}\n{logfile.getvalue().decode()}"
 
         except pexpect.exceptions.EOF:
-            raise RuntimeError('Got unexpected EOF: \n{}'.format(logfile.getvalue().decode()))
+            raise RuntimeError(f'Got unexpected EOF: \n{logfile.getvalue().decode()}')
+
+        except json.JSONDecodeError:
+            raise ValueError(f'Got JSON not serializable response from model.\n{logfile.getvalue().decode()}')
 
         finally:
             p.kill(signal.SIGTERM)
