@@ -145,7 +145,7 @@ class SocketServer:
         try:
             data = json.loads(recv_data)
         except ValueError:
-            await self._wrap_error(conn, 'request type is not json')
+            await self._wrap_error(conn, f'request "{recv_data}" type is not json')
             return
         self._dialog_logger.log_in(data)
         model_args = []
@@ -162,7 +162,7 @@ class SocketServer:
             await self._wrap_error(conn, 'got empty request')
             return
         elif len(lengths) > 1:
-            await self._wrap_error(conn, 'got several different batch sizes')
+            await self._wrap_error(conn, f'got several different batch sizes: {lengths}')
             return
         batch_size = list(lengths)[0]
         model_args = [arg or [None] * batch_size for arg in model_args]
