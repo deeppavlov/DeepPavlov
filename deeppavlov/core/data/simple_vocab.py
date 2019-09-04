@@ -89,7 +89,7 @@ class SimpleVocabulary(Estimator):
             looked_up_batch = [self(sample, is_top=False) for sample in batch]
         else:
             return self[batch]
-        if is_top and self._pad_with_zeros and not is_str_batch(looked_up_batch):
+        if self._pad_with_zeros and is_top and not is_str_batch(looked_up_batch):
             looked_up_batch = zero_pad(looked_up_batch)
 
         return looked_up_batch

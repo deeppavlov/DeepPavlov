@@ -252,7 +252,6 @@ class GoalOrientedBot(LRScheduledTFModel):
 
     def _encode_context(self,
                         tokens: List[str],
-                        db_result: dict,
                         state: dict) -> List[np.ndarray]:
         # Bag of words features
         bow_features = []
@@ -288,7 +287,7 @@ class GoalOrientedBot(LRScheduledTFModel):
         # Intent features
         intent_features = []
         if callable(self.intent_classifier):
-            intent_features = self.intent_classifier([tokens])[1][0]
+            intent_features = self.intent_classifier([' '.join(tokens)])[1][0]
 
             if self.debug:
                 intent = self.intents[np.argmax(intent_features[0])]
@@ -312,8 +311,8 @@ class GoalOrientedBot(LRScheduledTFModel):
             result_matches_state = all(v == state['db_result'].get(s)
                                        for s, v in matching_items
                                        if v != 'dontcare') * 1.
-        context_features = np.array([bool(db_result) * 1.,
-                                     (db_result == {}) * 1.,
+        context_features = np.array([bool(state['current_db_result']) * 1.,
+                                     (state['current_db_result'] == {}) * 1.,
                                      (state['db_result'] is None) * 1.,
                                      bool(state['db_result']) * 1.,
                                      (state['db_result'] == {}) * 1.,
@@ -382,24 +381,21 @@ class GoalOrientedBot(LRScheduledTFModel):
         max_num_utter = max(len(d_contexts) for d_contexts in x)
         for d_contexts, d_responses in zip(x, y):
             state = self._zero_state()
-            if self.debug:
-                preds = self._infer_dialog(d_contexts)
             d_features, d_a_masks, d_actions = [], [], []
             d_emb_context, d_key = [], []  # for attention
             for context, response in zip(d_contexts, d_responses):
                 tokens = self.tokenizer([context['text'].lower().strip()])[0]
 
                 # update state
-                if context.get('db_result') is not None:
-                    state['db_result'] = context['db_result']
+                state['current_db_result'] = context.get('db_result', None)
+                if state['current_db_result'] is not None:
+                    state['db_result'] = state['current_db_result']
                 if callable(self.slot_filler):
                     context_slots = self.slot_filler([tokens])[0]
                     state['tracker'].update_state(context_slots)
 
-                features, emb_context, key = \
-                    self._encode_context(tokens,
-                                         db_result=context.get('db_result'),
-                                         state=state)
+                features, emb_context, key = self._encode_context(tokens,
+                                                                  state=state)
                 d_features.append(features)
                 d_emb_context.append(emb_context)
                 d_key.append(key)
@@ -440,54 +436,41 @@ class GoalOrientedBot(LRScheduledTFModel):
     def train_on_batch(self, x: List[dict], y: List[dict]) -> dict:
         return self.network_train_on_batch(*self.prepare_data(x, y))
 
-    def _infer(self,
-               utterance: str,
-               db_result: dict,
-               state: dict,
-               prob: bool = False) -> Tuple[str, dict]:
-        tokens = self.tokenizer([utterance.lower().strip()])[0]
-        # update state
-        if db_result is not None:
-            state['db_result'] = db_result
-        if callable(self.slot_filler):
-            utter_slots = self.slot_filler([tokens])[0]
-            state['tracker'].update_state(utter_slots)
-
-        features, emb_context, key = \
-            self._encode_context(tokens, db_result, state=state)
+    def _infer(self, tokens: List[str], state: dict) -> List:
+        features, emb_context, key = self._encode_context(tokens, state=state)
         action_mask = self.calc_action_mask(state)
-        probs, state['state_c'], state['state_h'] = \
+        probs, state_c, state_h = \
             self.network_call([[features]], [[emb_context]], [[key]],
-                              [[action_mask]], [[state['state_c']]],
-                              [[state['state_h']]],
+                              [[action_mask]], [[state['network_state'][0]]],
+                              [[state['network_state'][1]]],
                               prob=True)
-
-        pred_id = np.argmax(probs)
-
-        # update state
-        # - one-hot encoding seems to work better then probabilities
-        if prob:
-            state['prev_action'] = probs
-        else:
-            state['prev_action'] *= 0.
-            state['prev_action'][pred_id] = 1.
-
-        return self._decode_response(pred_id, state), state
+        return probs, np.argmax(probs), (state_c, state_h)
 
     def _infer_dialog(self, contexts: List[dict]) -> List[str]:
         res = []
         state = self._zero_state()
         for context in contexts:
             if context.get('prev_resp_act') is not None:
-                action_id = self._encode_response(context.get('prev_resp_act'))
+                prev_act_id = self._encode_response(context['prev_resp_act'])
                 # previous action is teacher-forced
                 state['prev_action'] *= 0.
-                state['prev_action'][action_id] = 1.
+                state['prev_action'][prev_act_id] = 1.
 
-            pred, state = self._infer(context['text'],
-                                      db_result=context.get('db_result'),
-                                      state=state)
-            res.append(pred)
+            state['current_db_result'] = context.get('db_result')
+            if state['current_db_result'] is not None:
+                state['db_result'] = state['current_db_result']
+
+            tokens = self.tokenizer([context['text'].lower().strip()])[0]
+            if callable(self.slot_filler):
+                utter_slots = self.slot_filler([tokens])[0]
+                state['tracker'].update_state(utter_slots)
+            _, pred_act_id, state['network_state'] = \
+                self._infer(tokens, state=state)
+            state['prev_action'] *= 0.
+            state['prev_action'][pred_act_id] = 1.
+
+            resp = self._decode_response(pred_act_id, state)
+            res.append(resp)
         return res
 
     def make_api_call(self, state: dict) -> dict:
@@ -517,19 +500,31 @@ class GoalOrientedBot(LRScheduledTFModel):
             if not user_ids:
                 user_ids = ['finn' for i in range(len(batch))]
             for user_id, x in zip(user_ids, batch):
-                pred, self.states[user_id] = \
-                    self._infer(x,
-                                db_result=None,
-                                state=self.states[user_id])
+                state = self.states[user_id]
+                state['current_db_result'] = None
+
+                tokens = self.tokenizer([x.lower().strip()])[0]
+                if callable(self.slot_filler):
+                    utter_slots = self.slot_filler([tokens])[0]
+                    state['tracker'].update_state(utter_slots)
+                _, pred_act_id, state['network_state'] = \
+                    self._infer(tokens, state=state)
+                state['prev_action'] *= 0.
+                state['prev_action'][pred_act_id] = 1.
+
                 # if made api_call, then respond with next prediction
-                prev_act_id = np.argmax(self.states[user_id]['prev_action'])
-                if prev_act_id == self.api_call_id:
-                    db_result = self.make_api_call(self.states[user_id])
-                    pred, self.states[user_id] = \
-                        self._infer(x,
-                                    db_result=db_result,
-                                    state=self.states[user_id])
-                res.append(pred)
+                if pred_act_id == self.api_call_id:
+                    state['current_db_result'] = self.make_api_call(state)
+                    if state['current_db_result'] is not None:
+                        state['db_result'] = state['current_db_result']
+                    _, pred_act_id, state['network_state'] = \
+                        self._infer(tokens, state=state)
+                    state['prev_action'] *= 0.
+                    state['prev_action'][pred_act_id] = 1.
+
+                resp = self._decode_response(pred_act_id, state)
+                res.append(resp)
+                self.states[user_id] = state
             return res
         # batch is a list of dialogs, user_ids ignored
         return [self._infer_dialog(x) for x in batch]
@@ -538,12 +533,15 @@ class GoalOrientedBot(LRScheduledTFModel):
         return {
             'tracker': copy.deepcopy(self.default_tracker),
             'db_result': None,
+            'current_db_result': None,
             'prev_action': np.zeros(self.n_actions, dtype=np.float32),
-            'state_c': np.zeros([1, self.hidden_size], dtype=np.float32),
-            'state_h': np.zeros([1, self.hidden_size], dtype=np.float32)
+            'network_state': (
+                np.zeros([1, self.hidden_size], dtype=np.float32),
+                np.zeros([1, self.hidden_size], dtype=np.float32)
+            )
         }
 
-    def reset(self, user_id: Union[str, int] = 'finn') -> None:  
+    def reset(self, user_id: Union[str, int] = 'finn') -> None:
         self.states[user_id] = self._zero_state()
         if self.debug:
             log.debug("Bot reset.")
