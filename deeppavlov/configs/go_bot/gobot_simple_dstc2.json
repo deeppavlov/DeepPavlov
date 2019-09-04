@@ -115,7 +115,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_v7.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_v9.tar.gz",
         "subdir": "{MODELS_PATH}"
       },
       {
