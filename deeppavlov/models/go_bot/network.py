@@ -351,11 +351,8 @@ class GoalOrientedBot(LRScheduledTFModel):
 
         resp = template.generate_text(slots)
         # in api calls replace unknown slots to "dontcare"
-        if (self.templates.ttype is templ.DualTemplate) and\
-                (action_id == self.api_call_id):
+        if action_id == self.api_call_id:
             resp = re.sub("#([A-Za-z]+)", "dontcare", resp).lower()
-        if self.debug:
-            log.debug(f"Pred response = {resp}.")
         return resp
 
     def calc_action_mask(self, state: dict) -> np.ndarray:

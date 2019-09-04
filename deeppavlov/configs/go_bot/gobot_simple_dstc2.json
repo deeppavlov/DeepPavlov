@@ -44,13 +44,13 @@
         "hidden_size": 128,
         "dense_size": 160,
         "word_vocab": "#word_vocab",
-        "template_path": "{DOWNLOADS_PATH}/dstc2/dstc2-templates.txt",
-        "template_type": "DualTemplate",
+        "template_path": "{DATA_PATH}/simple-dstc2-templates.txt",
+        "template_type": "DefaultTemplate",
         "database": {
           "class_name": "sqlite_database",
           "table_name": "mytable",
           "primary_keys": ["name"],
-          "save_path": "{DOWNLOADS_PATH}/dstc2/resto.sqlite"
+          "save_path": "{DATA_PATH}/resto.sqlite"
         },
         "api_call_action": "api_call",
         "use_action_mask": false,
