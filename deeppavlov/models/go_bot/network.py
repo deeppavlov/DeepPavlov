@@ -500,16 +500,16 @@ class GoalOrientedBot(LRScheduledTFModel):
             db_slots = {s: v for s, v in slots.items()
                         if (v != 'dontcare') and (s in self.database.keys)}
             db_results = self.database([db_slots])[0]
+            # filter api results if there are more than one
+            if len(db_results) > 1:
+                db_results = [r for r in db_results if r != state['db_result']]
         else:
             log.warn("No database specified.")
         log.info(f"Made api_call with {slots}, got {len(db_results)} results.")
-        # filter api results if there are more than one
-        if len(db_results) > 1:
-            db_results = [r for r in db_results if r != state['db_result']]
-        return db_results[0] if db_results else {}
+        return {} if not db_results else db_results[0]
 
     def __call__(self,
-                 batch: List[dict],
+                 batch: Union[List[dict], List[str]],
                  user_ids: Optional[List] = None) -> List[str]:
         # batch is a list of utterances
         if isinstance(batch[0], str):
@@ -734,7 +734,8 @@ class GoalOrientedBot(LRScheduledTFModel):
 
         # recurrent network unit
         _lstm_cell = tf.nn.rnn_cell.LSTMCell(self.hidden_size)
-        _utter_lengths = tf.to_int32(tf.reduce_sum(self._utterance_mask, axis=-1))
+        _utter_lengths = tf.cast(tf.reduce_sum(self._utterance_mask, axis=-1),
+                                 tf.int32)
         # _output: [batch_size, max_time, hidden_size]
         # _state: tuple of two [batch_size, hidden_size]
         _output, _state = tf.nn.dynamic_rnn(_lstm_cell,
