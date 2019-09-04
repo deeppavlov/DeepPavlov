@@ -469,7 +469,7 @@ class TestQuickStart(object):
             raise RuntimeError(f'Got unexpected EOF: \n{logfile.getvalue().decode()}')
 
         except json.JSONDecodeError:
-            raise ValueError(f'Got JSON not serializable response from model.\n{logfile.getvalue().decode()}')
+            raise ValueError(f'Got JSON not serializable response from model: "{data}"\n{logfile.getvalue().decode()}')
 
         finally:
             p.kill(signal.SIGTERM)
