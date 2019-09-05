@@ -56,6 +56,22 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 [Tuning Models with Evolutionary Algorithm](http://docs.deeppavlov.ai/en/master/features/hypersearch.html)
 
+**Integrations**
+
+[REST API](http://docs.deeppavlov.ai/en/master/integrations/rest_api.html)
+
+[Socket API](http://docs.deeppavlov.ai/en/master/integrations/socket_api.html)
+
+[Telegram](http://docs.deeppavlov.ai/en/master/integrations/telegram.html)
+
+[Yandex Alice](http://docs.deeppavlov.ai/en/master/integrations/yandex_alice.html)
+
+[Amazon Alexa](http://docs.deeppavlov.ai/en/master/integrations/amazon_alexa.html)
+
+[Microsoft Bot Framework](http://docs.deeppavlov.ai/en/master/integrations/ms_bot.html)
+
+[Amazon AWS](http://docs.deeppavlov.ai/en/master/integrations/aws_ec2.html)
+
 ## Installation
 
 0. We support `Linux` and `Windows` platforms, `Python 3.6` and `Python 3.7`
