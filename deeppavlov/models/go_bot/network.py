@@ -407,9 +407,6 @@ class GoalOrientedBot(LRScheduledTFModel):
 
                 if self.debug:
                     log.debug(f"True response = '{response['text']}'.")
-                    if preds[0].lower() != response['text'].lower():
-                        log.debug(f"Pred response = '{preds[0]}'.")
-                    preds = preds[1:]
                     if d_a_masks[-1][action_id] != 1.:
                         log.warn("True action forbidden by action mask.")
 
