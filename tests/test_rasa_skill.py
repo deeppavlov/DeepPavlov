@@ -1,7 +1,4 @@
-from pathlib import Path
 from logging import getLogger
-
-import pytest
 
 from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
@@ -33,7 +30,7 @@ class TestRASASkill:
                                   "Comedy movies are nice to watch",
                                   "I LIKE WATCHING COMEDY!",
                                   "Ok, goodbye"
-        ]
+                                  ]
 
         history_of_responses = []
         for each_utt in user_messages_sequence:
@@ -41,7 +38,6 @@ class TestRASASkill:
             responses_batch = self.agent([each_utt])
             log.info(f" Bot says: {responses_batch[0]}")
             history_of_responses.append(responses_batch)
-
 
         print("history_of_responses:")
         print(history_of_responses)
