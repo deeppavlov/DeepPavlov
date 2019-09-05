@@ -54,13 +54,13 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
         processed_texts = dict()
         for x, y in data:
             text = x['text']
+            if len(text.strip()) < 1:
+                continue
             intents = []
             if 'intents' in x:
                 intents = x['intents']
             elif 'slots' in x:
                 intents = [x]
-            if not intents or (len(text) < 1):
-                continue
             # aggregate slots from different intents
             slots = list()
             for intent in intents:
