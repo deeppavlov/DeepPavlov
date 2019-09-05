@@ -133,7 +133,7 @@ class GoalOrientedBot(LRScheduledTFModel):
                  slot_filler: Component = None,
                  intent_classifier: Component = None,
                  database: Component = None,
-                 api_call_action: str = None,  # TODO: make it unrequired
+                 api_call_action: str = None,
                  use_action_mask: bool = False,
                  debug: bool = False,
                  **kwargs) -> None:
@@ -164,7 +164,7 @@ class GoalOrientedBot(LRScheduledTFModel):
         log.info(f"{self.n_actions} templates loaded.")
 
         self.database = database
-        self.api_call_id = None
+        self.api_call_id = -1
         if api_call_action is not None:
             self.api_call_id = self.templates.actions.index(api_call_action)
 
