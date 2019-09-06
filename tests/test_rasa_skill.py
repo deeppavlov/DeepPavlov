@@ -1,7 +1,4 @@
-from pathlib import Path
 from logging import getLogger
-
-import pytest
 
 from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
@@ -11,23 +8,29 @@ from deeppavlov.utils.pip_wrapper.pip_wrapper import install_from_config
 log = getLogger(__name__)
 
 
-class TestAIMLSkill:
+class TestRASASkill:
     def setup(self):
-        config_ref = configs.skills.aiml_skill
+        # print(configs.aiml_skill)
+        config_ref = configs.skills.rasa_skill
         install_from_config(config_ref)
-        aiml_skill = build_model(config_ref, download=True)
-        self.agent = DefaultAgent([aiml_skill], skills_selector=HighestConfidenceSelector())
+        # rasa_skill = build_model(
+        #     "/home/alx/Workspace/DeepPavlov/deeppavlov/configs/aiml_skill/rasa_skill.json",
+        #     download=True)
+        rasa_skill = build_model(
+            config_ref,
+            download=True)
+        self.agent = DefaultAgent([rasa_skill], skills_selector=HighestConfidenceSelector())
 
     def test_simple_reaction(self):
         user_messages_sequence = ["Hello",
-                                  "What s up?",
+                                  "What can you do?",
                                   "Tell me a joke",
                                   "Learn my pants are Red",
                                   "LET DISCUSS MOVIES",
                                   "Comedy movies are nice to watch",
                                   "I LIKE WATCHING COMEDY!",
                                   "Ok, goodbye"
-        ]
+                                  ]
 
         history_of_responses = []
         for each_utt in user_messages_sequence:
@@ -36,7 +39,9 @@ class TestAIMLSkill:
             log.info(f" Bot says: {responses_batch[0]}")
             history_of_responses.append(responses_batch)
 
-        # check the first greeting message in 0th batch
-        assert "Well, hello!" in history_of_responses[0][0]
-        # check fifth message in 0th batch
-        assert "Yes movies" in history_of_responses[4][0]
+        print("history_of_responses:")
+        print(history_of_responses)
+        # # check the first greeting message in 0th batch
+        assert "Hey! How are you?" in history_of_responses[0][0]
+        # # check second response message in 0th batch
+        assert "I can chat with you. You can greet me" in history_of_responses[1][0]
