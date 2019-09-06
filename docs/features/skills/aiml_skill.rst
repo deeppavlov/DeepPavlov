@@ -20,7 +20,7 @@ parameter `path_to_aiml_scripts`.
 You can download bunch of free and ready for use AIML scripts from pandorabots repo:
 https://github.com/pandorabots/Free-AIML
 
-DeepPavlov library has default config for AIMLSkill here: :config:`configs/aiml_skill/aiml_skill.json <aiml_skill/aiml_skill.json>`
+DeepPavlov library has default config for AIMLSkill here: :config:`configs/skills/aiml_skill.json <skills/aiml_skill.json>`
 
 Usage
 ^^^^^^^^

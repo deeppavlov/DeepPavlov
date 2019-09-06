@@ -97,7 +97,7 @@
           "y_pred_probas"
         ]
       },
-      "sets_accuracy",
+      "accuracy",
       "f1_macro"
     ],
     "validation_patience": 5,

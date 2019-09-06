@@ -190,7 +190,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
         """
         features = self.check_input(texts)
 
-        metrics_values = self.model.train_on_batch(features, np.squeeze(np.array(labels)))
+        metrics_values = self.model.train_on_batch(features, np.array(labels))
         return metrics_values
 
     def infer_on_batch(self, texts: List[List[np.ndarray]], labels: list = None) -> \
@@ -209,7 +209,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
         features = self.check_input(texts)
 
         if labels:
-            metrics_values = self.model.test_on_batch(features, np.squeeze(np.array(labels)))
+            metrics_values = self.model.test_on_batch(features, np.array(labels))
             return metrics_values
         else:
             predictions = self.model.predict(features)

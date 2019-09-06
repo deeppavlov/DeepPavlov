@@ -174,7 +174,7 @@ Alexa sends request to the https endpoint which was set in the **Endpoint** sect
 
 You should deploy DeepPavlov skill/model REST service on this
 endpoint or redirect it to your REST service. Full REST endpoint URL
-can be obtained by the swagger ``apidocs/`` endpoint. We remind you that Alexa requires https endpoint
+can be obtained by the swagger ``docs/`` endpoint. We remind you that Alexa requires https endpoint
 with valid certificate from CA. `Here is the guide <https://developer.amazon.com/docs/custom-skills/configure-web-service-self-signed-certificate.html>`__
 for running custom skill service with self-signed certificates in test mode.
 

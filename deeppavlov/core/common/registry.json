@@ -102,6 +102,7 @@
   "ru_sent_tokenizer": "deeppavlov.models.tokenizers.ru_sent_tokenizer:RuSentTokenizer",
   "ru_tokenizer": "deeppavlov.models.tokenizers.ru_tokenizer:RussianTokenizer",
   "russian_words_vocab": "deeppavlov.vocabs.typos:RussianWordsVocab",
+  "rasa_skill": "deeppavlov.skills.rasa_skill.rasa_skill:RASASkill",
   "sanitizer": "deeppavlov.models.preprocessors.sanitizer:Sanitizer",
   "seq2seq_go_bot": "deeppavlov.models.seq2seq_go_bot.bot:Seq2SeqGoalOrientedBot",
   "seq2seq_go_bot_nn": "deeppavlov.models.seq2seq_go_bot.network:Seq2SeqGoalOrientedBotNetwork",

@@ -26,7 +26,7 @@ How to contribute:
    Accompany code with **clear comments** to let other people understand the
    flow of your mind.
 
-   If you create new models, refer to the :doc:`Registry your model
+   If you create new models, refer to the :doc:`Register your model
    </devguides/registry>` section to add it to the DeepPavlov registry of
    models.
 

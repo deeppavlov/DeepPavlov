@@ -42,11 +42,10 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
                  seed: int = None,
                  shuffle: bool = False):
         # TODO: include slot vals to dstc2.tar.gz
-        with open(expand_path(slot_values_path), encoding='utf8') as f:
+        with expand_path(slot_values_path).open(encoding='utf8') as f:
             self._slot_vals = json.load(f)
         super().__init__(data, seed, shuffle)
 
-    @overrides
     def preprocess(self,
                    data: List[Tuple[Any, Any]],
                    *args, **kwargs) -> List[Tuple[Any, Any]]:
@@ -54,7 +53,7 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
         processed_texts = dict()
         for x, y in data:
             text = x['text']
-            if len(text.strip()) < 1:
+            if not text.strip():
                 continue
             intents = []
             if 'intents' in x:
@@ -78,7 +77,7 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
 
     def _add_bio_markup(self,
                         utterance: str,
-                        slots: List[Tuple[str, str]]) -> List[Tuple[List, List]]:
+                        slots: List[Tuple[str, str]]) -> Tuple[List, List]:
         tokens = utterance.split()
         n_toks = len(tokens)
         tags = ['O' for _ in range(n_toks)]
