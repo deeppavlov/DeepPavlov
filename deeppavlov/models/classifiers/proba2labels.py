@@ -33,12 +33,12 @@ class Proba2Labels(Component):
 
     Args:
         max_proba: whether to choose label with maximal probability
-        confident_threshold: boundary probability value for smaple to belong with the class (best use for multi-label)
+        confident_threshold: boundary probability value for sample to belong with the class (best use for multi-label)
         top_n: how many top labels with the highest probabilities to return
 
     Attributes:
         max_proba: whether to choose label with maximal probability
-        confident_threshold: boundary probability value for smaple to belong with the class (best use for multi-label)
+        confident_threshold: boundary probability value for sample to belong with the class (best use for multi-label)
         top_n: how many top labels with the highest probabilities to return
     """
 
@@ -60,8 +60,6 @@ class Proba2Labels(Component):
 
         Args:
             data: list of vectors with probability distribution
-            *args:
-            **kwargs:
 
         Returns:
             list of labels (only label classification) or list of lists of labels (multi-label classification)
