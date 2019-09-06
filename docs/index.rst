@@ -51,6 +51,7 @@ Welcome to DeepPavlov's documentation!
    Frequently Asked Questions Answering <features/skills/faq>
    eCommerce Bot <features/skills/ecommerce>
    AIML <features/skills/aiml_skill>
+   Rasa <features/skills/rasa_skill>
    DSL <features/skills/dsl_skill>
 
 
@@ -60,6 +61,7 @@ Welcome to DeepPavlov's documentation!
    :caption: Integrations
 
    REST API <integrations/rest_api>
+   Socket API <integrations/socket_api>
    Telegram integration <integrations/telegram>
    Yandex Alice integration <integrations/yandex_alice>
    Amazon Alexa integration <integrations/amazon_alexa>
@@ -74,7 +76,7 @@ Welcome to DeepPavlov's documentation!
    :caption: Developer Guides
 
    Contribution guide <devguides/contribution_guide>
-   Registry your model <devguides/registry>
+   Register your model <devguides/registry>
 
 
 .. toctree::

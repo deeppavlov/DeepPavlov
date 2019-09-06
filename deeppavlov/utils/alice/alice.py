@@ -36,7 +36,6 @@ SERVER_CONFIG_FILENAME = 'server_config.json'
 log = getLogger(__name__)
 
 app = Flask(__name__)
-Swagger(app)
 CORS(app)
 
 DialogID = namedtuple('DialogID', ['user_id', 'session_id'])
@@ -86,6 +85,10 @@ def start_alice_server(model_config, https=False, ssl_key=None, ssl_cert=None, p
     server_params = get_server_params(server_config_path, model_config)
 
     https = https or server_params['https']
+    docs_endpoint = server_params['docs_endpoint']
+
+    Swagger.DEFAULT_CONFIG['specs_route'] = docs_endpoint
+    Swagger(app)
 
     if not https:
         ssl_key = ssl_cert = None
@@ -112,6 +115,10 @@ def start_alice_server(model_config, https=False, ssl_key=None, ssl_cert=None, p
     skill = DefaultStatelessSkill(model, lang='ru')
     agent = DefaultAgent([skill], skills_processor=DefaultRichContentWrapper())
 
+    @app.route('/')
+    def index():
+        return redirect(docs_endpoint)
+
     start_agent_server(agent, host, port, model_endpoint, ssl_key, ssl_cert)
 
 
@@ -125,10 +132,6 @@ def start_agent_server(agent: Agent, host: str, port: int, endpoint: str,
         ssl_context.load_cert_chain(ssh_cert_path, ssh_key_path)
     else:
         ssl_context = None
-
-    @app.route('/')
-    def index():
-        return redirect('/apidocs/')
 
     endpoint_description = {
         'description': 'A model endpoint',

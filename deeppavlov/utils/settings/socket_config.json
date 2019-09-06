@@ -1,0 +1,14 @@
+{
+  "common_defaults":{
+    "host": "0.0.0.0",
+    "port": 5001,
+    "unix_socket_file": "/tmp/deeppavlov_socket.s",
+    "socket_type": "TCP",
+    "model_args_names": "",
+    "bufsize": 1024,
+    "binding_message": "binding socket to"
+  },
+  "model_defaults": {
+    "SquadModel": {}
+  }
+}

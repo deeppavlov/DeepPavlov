@@ -27,6 +27,7 @@ from deeppavlov.utils.alice import start_alice_server
 from deeppavlov.utils.ms_bot_framework.server import run_ms_bf_default_agent
 from deeppavlov.utils.pip_wrapper import install_from_config
 from deeppavlov.utils.server.server import start_model_server
+from deeppavlov.utils.socket.socket import start_socket_server
 from deeppavlov.utils.telegram.telegram_ui import interact_model_by_telegram
 
 log = getLogger(__name__)
@@ -35,7 +36,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
                     choices={'train', 'evaluate', 'interact', 'predict', 'interactbot', 'interactmsbot',
-                             'alexa', 'riseapi', 'download', 'install', 'crossval'})
+                             'alexa', 'riseapi', 'risesocket', 'download', 'install', 'crossval'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 
 parser.add_argument("-e", "--start-epoch-num", dest="start_epoch_num", default=None,
@@ -60,7 +61,9 @@ parser.add_argument("--https", action="store_true", help="run model in https mod
 parser.add_argument("--key", default=None, help="ssl key", type=str)
 parser.add_argument("--cert", default=None, help="ssl certificate", type=str)
 
-parser.add_argument("-p", "--port", default=None, help="api port", type=str)
+parser.add_argument("-p", "--port", default=None, help="api port", type=int)
+parser.add_argument("--socket-type", default='TCP', type=str, choices={"TCP", "UNIX"})
+parser.add_argument("--socket-file", default="/tmp/deeppavlov_socket.s", type=str)
 
 parser.add_argument("--api-mode", help="rest api mode: 'basic' with batches or 'alice' for  Yandex.Dialogs format",
                     type=str, default='basic', choices={'basic', 'alice'})
@@ -120,6 +123,8 @@ def main():
             start_alice_server(pipeline_config_path, https, ssl_key, ssl_cert, port=args.port)
         else:
             start_model_server(pipeline_config_path, https, ssl_key, ssl_cert, port=args.port)
+    elif args.mode == 'risesocket':
+        start_socket_server(pipeline_config_path, args.socket_type, port=args.port, socket_file=args.socket_file)
     elif args.mode == 'predict':
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
     elif args.mode == 'install':

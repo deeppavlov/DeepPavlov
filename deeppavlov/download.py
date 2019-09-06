@@ -109,8 +109,9 @@ def check_md5(url: str, dest_paths: List[Path]) -> bool:
     return True
 
 
-def download_resource(url: str, dest_paths: Iterable[Path]) -> None:
-    dest_paths = list(dest_paths)
+def download_resource(url: str, dest_paths: Iterable[Union[Path, str]]) \
+        -> None:
+    dest_paths = [Path(dest) for dest in dest_paths]
 
     if check_md5(url, dest_paths):
         log.info(f'Skipped {url} download because of matching hashes')

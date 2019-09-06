@@ -1,0 +1,43 @@
+{
+  "chainer": {
+    "in": [
+      "utterances"
+    ],
+    "out": [
+      "responses_batch",
+      "confidences_batch"
+    ],
+    "pipe": [
+      {
+        "class_name": "rasa_skill",
+        "path_to_models": "{PROJECT_ROOT}/models",
+        "in": [
+          "utterances"
+        ],
+        "out": [
+          "responses_batch",
+          "confidences_batch",
+          "output_states_batch"
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "PROJECT_ROOT": "{DOWNLOADS_PATH}/rasa_tutorial_project"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/rasa_skill.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/rasa_skill/rasa_tutorial_project.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      }
+    ]
+  }
+}
