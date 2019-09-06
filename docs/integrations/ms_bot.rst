@@ -75,7 +75,7 @@ which was set in the **Web App Bot connection configuration** section.
 
 You should deploy DeepPavlov skill/model REST service on this
 endpoint or terminate it to your REST service. Full REST endpoint URL
-can be obtained by the swagger ``apidocs/`` endpoint. We remind you that Microsoft Bot Framework requires https endpoint
+can be obtained by the swagger ``docs/`` endpoint. We remind you that Microsoft Bot Framework requires https endpoint
 with valid certificate from CA.
 
 Each DeepPavlov skill/model can be made available for MS Bot Framework

@@ -4,16 +4,11 @@
     "port": 5001,
     "unix_socket_file": "/tmp/deeppavlov_socket.s",
     "socket_type": "TCP",
-    "model_args_names": ["context"],
+    "model_args_names": "",
     "bufsize": 1024,
     "binding_message": "binding socket to"
   },
   "model_defaults": {
-    "EcommerceSkill": {
-      "model_args_names": ["query", "history", "state"]
-    },
-    "SquadModel": {
-      "model_args_names": ["context", "question"]
-    }
+    "SquadModel": {}
   }
 }

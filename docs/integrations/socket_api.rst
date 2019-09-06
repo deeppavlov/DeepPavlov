@@ -44,36 +44,39 @@ key from ``model_defaults`` section of ``socket_config.json``.
 
 For example, ``metadata/labels/server_utils`` tag from
 ``deeppavlov/configs/squad/squad.json`` references to the *SquadModel* section
-of ``socket_config.json``. Therefore, ``model_args_names`` (see details below)
-parameter in ``common_defaults`` will be overridden with the same parameter
-from ``model_defaults/SquadModel``.
+of ``socket_config.json``. Therefore, all parameters with non empty (i.e. not
+``""``, not ``[]`` etc.) values from ``model_defaults/SquadModel`` will
+overwrite the parameter values in ``common_defaults``.
 
-Model argument names are provided as list in ``model_args_names`` parameter,
-where arguments order corresponds to model API. When inferencing model via
-socket API, serialized JSON payload keys should match model arguments names from
-``model_args_names``. Default argument name for one argument models is
-*"context"*. Here are server request examples for some of the library models:
+If ``model_args_names`` parameter of ``server_config.json`` is empty string,
+then model argument names are provided as list from ``chainer/in`` section of
+the model config file, where arguments order corresponds to model API.
+When inferencing model via socket API, serialized JSON payload keys should match
+model arguments names from ``chainer/in`` section.
+If ``model_args_names`` parameter of ``server_config.json`` is list, its values
+are used as model argument names instead of the list from model config's
+``chainer/in`` section.
 
-+-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-| Model                                   | POST request JSON payload example                                                                                                               |
-+=========================================+=================================================================================================================================================+
-| **One argument models**                                                                                                                                                                   |
-+-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-| NER model                               | {"context":["Elon Musk launched his cherry Tesla roadster to the Mars orbit"]}                                                                  |
-+-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-| Intent classification model             | {"context":["I would like to go to a restaurant with Asian cuisine this evening"]}                                                              |
-+-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-| Automatic spelling correction model     | {"context":["errror"]}                                                                                                                          |
-+-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-| Ranking model                           | {"context":["What is the average cost of life insurance services?"]}                                                                            |
-+-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-| Goal-oriented bot                       | {"context":["Hello, can you help me to find and book a restaurant this evening?"]}                                                              |
-+-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-| **Multiple arguments models**                                                                                                                                                             |
-+-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
-| Question Answering model                | | {"context":["After 1765, growing philosophical and political differences strained the relationship between Great Britain and its colonies."], |
-|                                         | |  "question":["What strained the relationship between Great Britain and its colonies?"]}                                                       |
-+-----------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
+| Model                                   | POST request JSON payload example                                                                                                                   |
++=========================================+=====================================================================================================================================================+
+| **One argument models**                                                                                                                                                                       |
++-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
+| NER model                               | {"x":["Elon Musk launched his cherry Tesla roadster to the Mars orbit"]}                                                                            |
++-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
+| Intent classification model             | {"x":["I would like to go to a restaurant with Asian cuisine this evening"]}                                                                        |
++-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
+| Automatic spelling correction model     | {"x":["errror"]}                                                                                                                                    |
++-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
+| Ranking model                           | {"x":["What is the average cost of life insurance services?"]}                                                                                      |
++-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
+| Goal-oriented bot                       | {"x":["Hello, can you help me to find and book a restaurant this evening?"]}                                                                        |
++-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Multiple arguments models**                                                                                                                                                                 |
++-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
+| Question Answering model                | | {"context_raw":["After 1765, growing philosophical and political differences strained the relationship between Great Britain and its colonies."], |
+|                                         | |  "question_raw":["What strained the relationship between Great Britain and its colonies?"]}                                                       |
++-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
 
 Socket client example (Python)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -89,11 +92,11 @@ two elements:
     import socket
 
     socket_payload = {
-        "context": [
+        "context_raw": [
             "All work and no play makes Jack a dull boy",
-            "I used to be an adventurer like you, then I took an arrow in the knee."
+            "I used to be an adventurer like you, then I took an arrow in the knee"
         ],
-        "question": [
+        "question_raw": [
             "What makes Jack a dull boy?",
             "Who I used to be?"
         ]
