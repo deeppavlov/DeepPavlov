@@ -89,7 +89,7 @@ class Sqlite3Database(Estimator):
         if kv:
             keys, values = zip(*kv.items())
             where_expr = " AND ".join(f"{k}=?" for k in keys)
-            self.cursor.execute(f"SELECT * FROM {self.tname} {where_expr}" + order_expr, values)
+            self.cursor.execute(f"SELECT * FROM {self.tname} WHERE {where_expr}" + order_expr, values)
         else:
             self.cursor.execute(f"SELECT * FROM {self.tname}" + order_expr)
         return [self._wrap_selection(s) for s in self.cursor.fetchall()]
