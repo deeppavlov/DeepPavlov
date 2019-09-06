@@ -84,27 +84,14 @@ class Sqlite3Database(Estimator):
                             f" AND name='{self.tname}';")
         return bool(self.cursor.fetchall())
 
-    def _search(self, kv, order_by, order):
-        if not kv:
-            # get all table content
-            if order_by is not None:
-                self.cursor.execute(f"SELECT * FROM {self.tname}" +
-                                    f" ORDER BY {order_by} {order}")
-            else:
-                self.cursor.execute(f"SELECT * FROM {self.tname}")
-        else:
-            keys = list(kv.keys())
-            values = [kv[k] for k in keys]
+    def _search(self, kv=None, order_by=None, order=''):
+        order_expr = f" ORDER BY {order_by} {order}" if order_by else ''
+        if kv:
+            keys, values = zip(*kv.items())
             where_expr = " AND ".join(f"{k}=?" for k in keys)
-            if order_by is not None:
-                self.cursor.execute(f"SELECT * FROM {self.tname}" +
-                                    f" WHERE {where_expr}" +
-                                    f" ORDER BY {order_by} {order}",
-                                    values)
-            else:
-                self.cursor.execute(f"SELECT * FROM {self.tname}" +
-                                    f" WHERE {where_expr}",
-                                    values)
+            self.cursor.execute(f"SELECT * FROM {self.tname} {where_expr}" + order_expr, values)
+        else:
+            self.cursor.execute(f"SELECT * FROM {self.tname}" + order_expr)
         return [self._wrap_selection(s) for s in self.cursor.fetchall()]
 
     def _wrap_selection(self, selection):
@@ -122,11 +109,9 @@ class Sqlite3Database(Estimator):
 
     def fit(self, data: List[Dict]) -> None:
         if not self._check_if_table_exists():
-            self.keys = self.keys or list(set(k for d in data
-                                              for k in d.keys()))
-            types = ('integer'
-                     if type(data[0][k]) == int else 'text'
-                     for k in self.keys)
+            self.keys = self.keys or [key for key in data[0]]
+            # because in the next line we assume that in the first dict there are all (!) necessary keys:
+            types = ('integer' if isinstance(data[0][k], int) else 'text' for k in self.keys)
             self._create_table(self.keys, types)
         elif not self.keys:
             self.keys = self._get_keys()
