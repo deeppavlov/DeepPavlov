@@ -86,18 +86,12 @@ class Sqlite3Database(Estimator):
 
     def _search(self, kv=None, order_by=None, order=''):
         order_expr = f" ORDER BY {order_by} {order}" if order_by else ''
-        try:
-            if kv:
-                keys, values = zip(*kv.items())
-                where_expr = " AND ".join(f"{k}=?" for k in keys)
-                sql = f"SELECT * FROM {self.tname} WHERE {where_expr}" + order_expr
-                self.cursor.execute(sql, values)
-            else:
-                sql = f"SELECT * FROM {self.tname}" + order_expr
-                self.cursor.execute(sql)
-        except:
-            print(sql)
-            raise
+        if kv:
+            keys, values = zip(*kv.items())
+            where_expr = " AND ".join(f"{k}=?" for k in keys)
+            self.cursor.execute(f"SELECT * FROM {self.tname} WHERE {where_expr}" + order_expr, values)
+        else:
+            self.cursor.execute(f"SELECT * FROM {self.tname}" + order_expr)
         return [self._wrap_selection(s) for s in self.cursor.fetchall()]
 
     def _wrap_selection(self, selection):
