@@ -216,6 +216,11 @@ and others in the Integrations section for more info.
 
 ## Breaking Changes
 
+**Breaking changes in version 0.6.0**
+- all models endpoints at [REST API](http://docs.deeppavlov.ai/en/0.6.0/integrations/rest_api.html) mode were renamed
+  to `/model`, a list of model argument names has been changed and is now available at `/api`, REST API graphical
+  interface is available at `/docs` endpoint
+
 **Breaking changes in version 0.5.0**
 - dependencies have to be reinstalled for most pipeline configurations
 - models depending on `tensorflow` require `CUDA 10.0` to run on GPU instead of `CUDA 9.0`
