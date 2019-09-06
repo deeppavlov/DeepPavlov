@@ -217,9 +217,12 @@ and others in the Integrations section for more info.
 ## Breaking Changes
 
 **Breaking changes in version 0.6.0**
-- all models endpoints at [REST API](http://docs.deeppavlov.ai/en/0.6.0/integrations/rest_api.html) mode were renamed
-  to `/model`, a list of model argument names has been changed and is now available at `/api`, REST API graphical
-  interface is available at `/docs` endpoint
+- [REST API](http://docs.deeppavlov.ai/en/0.6.0/integrations/rest_api.html):
+  - all models default endpoints were renamed to `/model`
+  - by default model arguments names are taken from `chainer.in`
+    [configuration parameter](http://docs.deeppavlov.ai/en/0.6.0/intro/configuration.html) instead of pre-set names
+    from a [settings file](http://docs.deeppavlov.ai/en/0.6.0/integrations/settings.html)
+  - swagger api endpoint moved from `/apidocs` to `/docs`
 
 **Breaking changes in version 0.5.0**
 - dependencies have to be reinstalled for most pipeline configurations
