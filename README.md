@@ -58,19 +58,11 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 **Integrations**
 
-[REST API](http://docs.deeppavlov.ai/en/master/integrations/rest_api.html)
+[REST API](http://docs.deeppavlov.ai/en/master/integrations/rest_api.html) | [Socket API](http://docs.deeppavlov.ai/en/master/integrations/socket_api.html) | [Yandex Alice](http://docs.deeppavlov.ai/en/master/integrations/yandex_alice.html)
 
-[Socket API](http://docs.deeppavlov.ai/en/master/integrations/socket_api.html)
+[Telegram](http://docs.deeppavlov.ai/en/master/integrations/telegram.html) | [Microsoft Bot Framework](http://docs.deeppavlov.ai/en/master/integrations/ms_bot.html)
 
-[Telegram](http://docs.deeppavlov.ai/en/master/integrations/telegram.html)
-
-[Yandex Alice](http://docs.deeppavlov.ai/en/master/integrations/yandex_alice.html)
-
-[Amazon Alexa](http://docs.deeppavlov.ai/en/master/integrations/amazon_alexa.html)
-
-[Microsoft Bot Framework](http://docs.deeppavlov.ai/en/master/integrations/ms_bot.html)
-
-[Amazon AWS](http://docs.deeppavlov.ai/en/master/integrations/aws_ec2.html)
+[Amazon Alexa](http://docs.deeppavlov.ai/en/master/integrations/amazon_alexa.html) | [Amazon AWS](http://docs.deeppavlov.ai/en/master/integrations/aws_ec2.html)
 
 ## Installation
 
