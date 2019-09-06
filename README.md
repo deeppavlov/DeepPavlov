@@ -223,6 +223,10 @@ and others in the Integrations section for more info.
     [configuration parameter](http://docs.deeppavlov.ai/en/0.6.0/intro/configuration.html) instead of pre-set names
     from a [settings file](http://docs.deeppavlov.ai/en/0.6.0/integrations/settings.html)
   - swagger api endpoint moved from `/apidocs` to `/docs`
+- when using `"max_proba": true` in
+  a [`proba2labels` component](http://docs.deeppavlov.ai/en/0.6.0/apiref/models/classifiers.html) for classification,
+  it will return single label for every batch element instead of a list. One can set `"top_n": 1`
+  to get batches of single item lists as before
 
 **Breaking changes in version 0.5.0**
 - dependencies have to be reinstalled for most pipeline configurations
