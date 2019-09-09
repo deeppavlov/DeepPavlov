@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import json
-import sqlite3
 from collections import defaultdict
 from typing import Callable, Optional, DefaultDict, Any
 
@@ -35,7 +34,6 @@ class FAQStorage:
     def __init__(self, handler_name: str, db_name: str = "faq.db"):
         self.handler_name = handler_name
         self.connection_string = db_name
-        self.__connect()
         execute_query(self.connection_string, "CREATE TABLE IF NOT EXISTS handler_intent("
                                               "handler_name VARCHAR(100) NOT NULL,"
                                               " intent_name VARCHAR(100) NOT NULL,"
@@ -50,13 +48,6 @@ class FAQStorage:
         execute_query(self.connection_string, "CREATE TABLE IF NOT EXISTS intent_metadata("
                                               "intent_name VARCHAR(100) PRIMARY KEY,"
                                               " metadata VARCHAR(500) NOT NULL)")
-
-    def __connect(self):
-        """
-        Sets up a connection with the database.
-
-        """
-        self.connection = sqlite3.connect(self.connection_string)
 
     def get_handler_intents(self):
         """

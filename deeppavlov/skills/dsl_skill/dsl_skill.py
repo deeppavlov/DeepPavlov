@@ -65,16 +65,12 @@ class DSLMeta(ABCMeta):
 
         handlers = [attribute for attribute in namespace.values()
                     if isinstance(attribute, Handler)
-                    and not isinstance(attribute, FAQHandler)
-                    and not isinstance(attribute, ParaphraseHandler)]
+                    and not isinstance(attribute, (FAQHandler, ParaphraseHandler))]
 
         # FAQ handlers
         for attribute in namespace.values():
             if isinstance(attribute, FAQHandler):
                 attribute.add_faq_dict(attribute.model_config['dataset_reader']['data'])
-
-        for attribute in namespace.values():
-            if isinstance(attribute, FAQHandler):
                 attribute.train()
                 handlers.append(attribute)
 

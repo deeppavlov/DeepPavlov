@@ -49,12 +49,14 @@ def execute_query(connection_string: str,
             return cursor
         except sqlite3.OperationalError:
             connected = False
-            while not connected:
+            retries = 0
+            while not connected and retries <= 12:  # try to establish a connection for no more than 1 min
                 try:
                     sqlite3.connect(connection_string, timeout=5)
                     connected = True
                 except:
                     logger.error("Reconnecting...")
+                    retries = retries + 1
             return execute_query(connection_string, sql_query, params, logger)
         except Exception as e:
             logger.error(e)
