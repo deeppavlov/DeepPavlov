@@ -41,10 +41,7 @@ def execute_query(connection_string: str,
         connection = sqlite3.connect(connection_string)
         try:
             cursor = connection.cursor()
-            if params:
-                cursor.execute(sql_query, params)
-            else:
-                cursor.execute(sql_query)
+            cursor.execute(sql_query, params or ())
             connection.commit()
             return cursor
         except sqlite3.OperationalError:
