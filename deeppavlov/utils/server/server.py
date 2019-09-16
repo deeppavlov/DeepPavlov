@@ -65,11 +65,10 @@ def get_server_params(server_config_path, model_config):
 
     server_params['model_endpoint'] = server_params.get('model_endpoint', '/model')
 
-    chainer_in = model_config['chainer']['in']
-    if isinstance(chainer_in, str):
-        chainer_in = [chainer_in]
-
-    server_params['model_args_names'] = server_params['model_args_names'] or chainer_in
+    arg_names = server_params['model_args_names'] or model_config['chainer']['in']
+    if isinstance(arg_names, str):
+        arg_names = [arg_names]
+    server_params['model_args_names'] = arg_names
 
     return server_params
 
