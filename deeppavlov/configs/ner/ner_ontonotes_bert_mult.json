@@ -39,7 +39,7 @@
         "out": ["y_ind"]
       },
       {
-        "class_name": "bert_ner",
+        "class_name": "bert_sequence_tagger",
         "n_tags": "#tag_vocab.len",
         "keep_prob": 0.1,
         "bert_config_file": "{BERT_PATH}/bert_config.json",
