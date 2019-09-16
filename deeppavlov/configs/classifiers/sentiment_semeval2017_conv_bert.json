@@ -94,7 +94,7 @@
     "batch_size": 64,
     "metrics": [
       "f1_weighted",
-      "macro",
+      "f1_macro",
       {
         "name": "roc_auc",
         "inputs": [
