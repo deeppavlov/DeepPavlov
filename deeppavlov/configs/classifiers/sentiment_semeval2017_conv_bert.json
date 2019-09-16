@@ -102,7 +102,7 @@
           "y_pred_probas"
         ]
       },
-      "sets_accuracy"
+      "accuracy"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 1,
