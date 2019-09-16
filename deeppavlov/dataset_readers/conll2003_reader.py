@@ -80,10 +80,16 @@ class Conll2003DatasetReader(DatasetReader):
                         tags = []
                 else:
                     if self.provide_pos:
-                        token, pos, *_, tag = line.split()
-                        pos_tags.append(pos)
+                        try:
+                            token, pos, *_, tag = line.split()
+                            pos_tags.append(pos)
+                        except:
+                            print('Skip {}'.format(line.split()))
                     else:
-                        token, *_, tag = line.split()
+                        try:
+                            token, *_, tag = line.split()
+                        except:
+                            print('Skip {}'.format(line.split()))
                     tags.append(tag)
                     tokens.append(token)
 
