@@ -43,15 +43,9 @@ class ProbeFilter(logging.Filter):
         return 'POST /probe HTTP' not in record.getMessage()
 
 
-uvicorn_log = logging.getLogger('uvicorn')
-uvicorn_log.setLevel(logging.INFO)
-uvicorn_handler = logging.StreamHandler()
-uvicorn_formatter = logging.Formatter('%(asctime)s %(message)s')
-uvicorn_handler.setFormatter(uvicorn_formatter)
-uvicorn_log.addHandler(uvicorn_handler)
-uvicorn_log.addFilter(ProbeFilter())
-
 log = logging.getLogger(__name__)
+uvicorn_log = logging.getLogger('uvicorn')
+uvicorn_log.addFilter(ProbeFilter())
 app = FastAPI(__file__)
 
 dialog_logger = DialogLogger(agent_name='dp_api')
