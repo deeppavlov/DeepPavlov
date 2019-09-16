@@ -14,12 +14,12 @@
 
 import json
 import logging
-from typing import List, Tuple, Dict
+from overrides import overrides
+from typing import List, Tuple, Dict, Any
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
-from deeppavlov.core.data.utils import download
 
 logger = logging.getLogger(__name__)
 
@@ -36,50 +36,60 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
         seed: value for random seed
         shuffle: whether to shuffle the data
     """
-    def __init__(self, data: Dict[str, List[Tuple]], dataset_path: str, seed: int = None, shuffle: bool = False):
+    def __init__(self,
+                 data: Dict[str, List[Tuple]],
+                 slot_values_path: str,
+                 seed: int = None,
+                 shuffle: bool = False):
         # TODO: include slot vals to dstc2.tar.gz
-        dataset_path = expand_path(dataset_path) / 'slot_vals.json'
-        self._build_slot_vals(dataset_path)
-        with open(dataset_path, encoding='utf8') as f:
+        with expand_path(slot_values_path).open(encoding='utf8') as f:
             self._slot_vals = json.load(f)
         super().__init__(data, seed, shuffle)
 
-    def preprocess(self, data_part, *args, **kwargs):
-        processed_data_part = list()
+    def preprocess(self,
+                   data: List[Tuple[Any, Any]],
+                   *args, **kwargs) -> List[Tuple[Any, Any]]:
+        processed_data = list()
         processed_texts = dict()
-        for sample in data_part:
-            for utterance in sample:
-                if 'intents' not in utterance or len(utterance['text']) < 1:
-                    continue
-                text = utterance['text']
-                intents = utterance.get('intents', dict())
-                slots = list()
-                for intent in intents:
+        for x, y in data:
+            text = x['text']
+            if not text.strip():
+                continue
+            intents = []
+            if 'intents' in x:
+                intents = x['intents']
+            elif 'slots' in x:
+                intents = [x]
+            # aggregate slots from different intents
+            slots = list()
+            for intent in intents:
+                current_slots = intent.get('slots', [])
+                for slot_type, slot_val in current_slots:
+                    if not self._slot_vals or (slot_type in self._slot_vals):
+                        slots.append((slot_type, slot_val,))
+            # remove duplicate pairs (text, slots)
+            if (text in processed_texts) and (slots in processed_texts[text]):
+                continue
+            processed_texts[text] = processed_texts.get(text, []) + [slots]
 
-                    current_slots = intent.get('slots', [])
-                    for slot_type, slot_val in current_slots:
-                        if slot_type in self._slot_vals:
-                            slots.append((slot_type, slot_val,))
+            processed_data.append(self._add_bio_markup(text, slots))
+        return processed_data
 
-                # remove duplicate pairs (text, slots)
-                if (text in processed_texts) and (slots in processed_texts[text]):
-                    continue
-                processed_texts[text] = processed_texts.get(text, []) + [slots]
-
-                processed_data_part.append(self._add_bio_markup(text, slots))
-        return processed_data_part
-
-    def _add_bio_markup(self, utterance, slots):
+    def _add_bio_markup(self,
+                        utterance: str,
+                        slots: List[Tuple[str, str]]) -> Tuple[List, List]:
         tokens = utterance.split()
         n_toks = len(tokens)
         tags = ['O' for _ in range(n_toks)]
         for n in range(n_toks):
             for slot_type, slot_val in slots:
-                for entity in self._slot_vals[slot_type][slot_val]:
+                for entity in self._slot_vals[slot_type].get(slot_val,
+                                                             [slot_val]):
                     slot_tokens = entity.split()
                     slot_len = len(slot_tokens)
-                    if n + slot_len <= n_toks and self._is_equal_sequences(tokens[n: n + slot_len],
-                                                                           slot_tokens):
+                    if n + slot_len <= n_toks and \
+                       self._is_equal_sequences(tokens[n: n + slot_len],
+                                                slot_tokens):
                         tags[n] = 'B-' + slot_type
                         for k in range(1, slot_len):
                             tags[n + k] = 'I-' + slot_type
@@ -90,8 +100,3 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
     def _is_equal_sequences(seq1, seq2):
         equality_list = [tok1 == tok2 for tok1, tok2 in zip(seq1, seq2)]
         return all(equality_list)
-
-    @staticmethod
-    def _build_slot_vals(slot_vals_json_path='data/'):
-        url = 'http://files.deeppavlov.ai/datasets/dstc_slot_vals.json'
-        download(slot_vals_json_path, url)

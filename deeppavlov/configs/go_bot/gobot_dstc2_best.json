@@ -40,7 +40,7 @@
         "out": ["y_predicted"],
         "main": true,
         "debug": false,
-        "learning_rate": 3e-4,
+        "learning_rate": 3e-3,
         "learning_rate_drop_patience": 10,
         "learning_rate_drop_div": 4.0,
         "momentum": 0.95,
@@ -51,13 +51,12 @@
         "hidden_size": 128,
         "dense_size": 128,
         "attention_mechanism": {
-          "type": "cs_bahdanau",
+          "type": "general",
           "hidden_size": 32,
-          "depth": 3,
           "action_as_key": true,
           "intent_as_key": true,
           "max_num_tokens": 100,
-          "projected_align": false
+          "projected_align": false 
         },
         "word_vocab": "#token_vocab",
         "template_path": "{DOWNLOADS_PATH}/dstc2/dstc2-templates.txt",
@@ -124,7 +123,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_best_v3.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_best_v4.tar.gz",
         "subdir": "{MODELS_PATH}"
       },
       {

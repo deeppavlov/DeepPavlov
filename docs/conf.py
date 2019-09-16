@@ -191,7 +191,7 @@ texinfo_documents = [
 # -- Extension configuration -------------------------------------------------
 
 autodoc_mock_imports = ['tensorflow', 'tensorflow_hub', 'fastText', 'nltk', 'gensim', 'kenlm', 'spacy', 'lxml',
-                        'sortedcontainers', 'russian_tagsets', 'bert_dp', 'aiml']
+                        'sortedcontainers', 'russian_tagsets', 'bert_dp', 'aiml', 'rasa']
 
 extlinks = {
     'config': (f'https://github.com/deepmipt/DeepPavlov/blob/{release}/deeppavlov/configs/%s', None)

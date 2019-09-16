@@ -5,46 +5,78 @@ Welcome to DeepPavlov's documentation!
    :glob:
    :maxdepth: 1
 
-   Hello bot! <intro/hello_bot>
+   QuickStart <intro/quick_start>
    Installation <intro/installation>
-   Conceptual overview <intro/overview>
-   Features <intro/features>
-   Configuration files <intro/config_description>
-   Pre-trained embeddings <intro/pretrained_vectors>
-   AutoML <intro/hypersearch>
+   General concepts <intro/overview>
+   Configuration file <intro/configuration>
+   Models/Skills overview <features/overview>
+
+
+.. toctree::
+   :glob:
+   :maxdepth: 2
+   :caption: Features
+
+   Pre-trained embeddings <features/pretrained_vectors>
+   AutoML <features/hypersearch>
 
 
 .. toctree::
    :glob:
    :maxdepth: 1
-   :caption: Components
-
-   Data Processors <components/data_processors>
-   BERT-based models <components/bert>
-   Context Question Answering <components/squad>
-   Classification <components/classifiers>
-   Morphological Tagger <components/morphotagger>
-   Named Entity Recognition <components/ner>
-   Neural Ranking <components/neural_ranking>
-   Slot filling <components/slot_filling>
-   Spelling Correction <components/spelling_correction>
-   TF-IDF Ranking <components/tfidf_ranking>
-   Popularity Ranking <components/popularity_ranking>
-   Knowledge Base Question answering <components/kbqa>
+   :caption: Models
+   
+   BERT-based models <features/models/bert>
+   Context Question Answering <features/models/squad>
+   Classification <features/models/classifiers>
+   Morphological Tagger <features/models/morphotagger>
+   Named Entity Recognition <features/models/ner>
+   Neural Ranking <features/models/neural_ranking>
+   Slot filling <features/models/slot_filling>
+   Spelling Correction <features/models/spelling_correction>
+   TF-IDF Ranking <features/models/tfidf_ranking>
+   Popularity Ranking <features/models/popularity_ranking>
+   Knowledge Base Question answering <features/models/kbqa>
 
 
 .. toctree::
    :glob:
    :maxdepth: 1
    :caption: Skills
+   
+   Goal-Oriented Dialogue Bot <features/skills/go_bot>
+   Open-Domain Question Answering <features/skills/odqa>
+   Pattern Matching <features/skills/pattern_matching>
+   Sequence-To-Sequence Dialogue Bot <features/skills/seq2seq_go_bot>
+   Frequently Asked Questions Answering <features/skills/faq>
+   eCommerce Bot <features/skills/ecommerce>
+   AIML <features/skills/aiml_skill>
+   Rasa <features/skills/rasa_skill>
+   DSL <features/skills/dsl_skill>
 
-   Goal-Oriented Dialogue Bot <skills/go_bot>
-   Open-Domain Question Answering <skills/odqa>
-   Pattern Matching <skills/pattern_matching>
-   Sequence-To-Sequence Dialogue Bot <skills/seq2seq_go_bot>
-   Frequently Asked Questions Answering <skills/faq>
-   eCommerce Bot <skills/ecommerce>
-   AIML <skills/aiml_skill>
+
+.. toctree::
+   :glob:
+   :maxdepth: 3
+   :caption: Integrations
+
+   REST API <integrations/rest_api>
+   Socket API <integrations/socket_api>
+   Telegram integration <integrations/telegram>
+   Yandex Alice integration <integrations/yandex_alice>
+   Amazon Alexa integration <integrations/amazon_alexa>
+   Microsoft Bot Framework integration <integrations/ms_bot>
+   Amazon AWS deployment <integrations/aws_ec2>
+   Deeppavlov settings <integrations/settings>
+
+
+.. toctree::
+   :glob:
+   :maxdepth: 3
+   :caption: Developer Guides
+
+   Contribution guide <devguides/contribution_guide>
+   Register your model <devguides/registry>
 
 
 .. toctree::
@@ -53,15 +85,6 @@ Welcome to DeepPavlov's documentation!
    :caption: Package Reference
 
    apiref/*
-
-
-.. toctree::
-   :glob:
-   :maxdepth: 3
-   :caption: Developer Guides
-
-   devguides/*
-
 
 
 Indices and tables
