@@ -93,6 +93,8 @@
     "epochs": 100,
     "batch_size": 64,
     "metrics": [
+      "f1_weighted",
+      "macro",
       {
         "name": "roc_auc",
         "inputs": [
@@ -100,8 +102,7 @@
           "y_pred_probas"
         ]
       },
-      "sets_accuracy",
-      "f1_macro"
+      "sets_accuracy"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 1,
