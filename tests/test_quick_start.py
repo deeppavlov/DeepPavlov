@@ -387,7 +387,7 @@ class TestQuickStart(object):
         server_params = get_server_params(server_conf_file, config_path)
         model_args_names = server_params['model_args_names']
 
-        url_base = 'http://{}:{}/'.format(server_params['host'], api_port or server_params['port'])
+        url_base = 'http://{}:{}'.format(server_params['host'], api_port or server_params['port'])
         url = urljoin(url_base.replace('http://0.0.0.0:', 'http://127.0.0.1:'), server_params['model_endpoint'])
 
         post_headers = {'Accept': 'application/json'}
