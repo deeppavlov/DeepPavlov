@@ -37,7 +37,6 @@ SERVER_CONFIG_FILENAME = 'server_config.json'
 
 class ProbeFilter(logging.Filter):
     """ProbeFilter class is used to filter POST requests to /probe endpoint from logs."""
-
     def filter(self, record: logging.LogRecord) -> bool:
         """To log the record method should return True."""
         return 'POST /probe HTTP' not in record.getMessage()
@@ -113,7 +112,8 @@ def test_interact(model: Chainer, payload: Dict[str, Optional[List]]) -> JSONRes
         raise HTTPException(status_code=400, detail=e)
 
 
-def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, port=None) -> None:
+def start_model_server(model_config: Path, https: bool = False, ssl_key: Optional[str] = None,
+                       ssl_cert: Optional[str] = None, port: Optional[int] = None) -> None:
     server_config_path = get_settings_path() / SERVER_CONFIG_FILENAME
     server_params = get_server_params(server_config_path, model_config)
 
@@ -162,20 +162,20 @@ def start_model_server(model_config, https=False, ssl_key=None, ssl_cert=None, p
         pass
 
     @app.get('/', include_in_schema=False)
-    async def redirect_to_docs():
+    async def redirect_to_docs() -> RedirectResponse:
         response = RedirectResponse(url=f'{docs_endpoint}#/default/answer_model_post')
         return response
 
     @app.post(model_endpoint, status_code=200, summary='A model endpoint')
-    async def answer(item: Batch):
+    async def answer(item: Batch) -> JSONResponse:
         return interact(model, item.dict())
 
     @app.post('/probe', status_code=200, include_in_schema=False)
-    async def probe(item: Batch):
+    async def probe(item: Batch) -> JSONResponse:
         return test_interact(model, item.dict())
 
     @app.get('/api', status_code=200, summary='Model argument names')
-    async def api():
+    async def api() -> JSONResponse:
         return JSONResponse(model_args_names)
 
     uvicorn.run(app, host=host, port=port, logger=uvicorn_log,
