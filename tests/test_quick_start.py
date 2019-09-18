@@ -385,17 +385,11 @@ class TestQuickStart(object):
         server_conf_file = get_settings_path() / SERVER_CONFIG_FILENAME
 
         server_params = get_server_params(server_conf_file, config_path)
-        model_args_names = server_params['model_args_names']
 
         url_base = 'http://{}:{}'.format(server_params['host'], api_port or server_params['port'])
         url = urljoin(url_base.replace('http://0.0.0.0:', 'http://127.0.0.1:'), server_params['model_endpoint'])
 
         post_headers = {'Accept': 'application/json'}
-
-        post_payload = {}
-        for arg_name in model_args_names:
-            arg_value = ' '.join(['qwerty'] * 10)
-            post_payload[arg_name] = [arg_value]
 
         logfile = io.BytesIO(b'')
         args = [sys.executable, "-m", "deeppavlov", "riseapi", str(config_path)]
@@ -405,6 +399,18 @@ class TestQuickStart(object):
                                            timeout=None, logfile=logfile)
         try:
             p.expect(url_base)
+
+            get_url = urljoin(url_base.replace('http://0.0.0.0:', 'http://127.0.0.1:'), '/api')
+            get_response = requests.get(get_url)
+            response_code = get_response.status_code
+            assert response_code == 200, f"GET /api request returned error code {response_code} with {config_path}"
+
+            model_args_names = get_response.json()
+            post_payload = dict()
+            for arg_name in model_args_names:
+                arg_value = ' '.join(['qwerty'] * 10)
+                post_payload[arg_name] = [arg_value]
+
             post_response = requests.post(url, json=post_payload, headers=post_headers)
             response_code = post_response.status_code
             assert response_code == 200, f"POST request returned error code {response_code} with {config_path}"
