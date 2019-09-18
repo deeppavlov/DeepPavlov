@@ -11,7 +11,7 @@ DeepPavlov is designed for
 
 ## Quick Links
 
-* Demo [*demo.ipavlov.ai*](https://demo.ipavlov.ai/)
+* Demo [*demo.deeppavlov.ai*](https://demo.deeppavlov.ai/)
 * Documentation [*docs.deeppavlov.ai*](http://docs.deeppavlov.ai/)
     * Model List [*docs:features/*](http://docs.deeppavlov.ai/en/master/features/overview.html)
     * Contribution Guide [*docs:contribution_guide/*](http://docs.deeppavlov.ai/en/master/devguides/contribution_guide.html)
