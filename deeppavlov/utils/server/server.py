@@ -19,6 +19,7 @@ from typing import Dict, List, Optional
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
+from fastapi.utils import generate_operation_id_for_path
 from pydantic import BaseConfig, BaseModel, Schema
 from pydantic.fields import Field
 from pydantic.main import MetaModel
@@ -163,7 +164,8 @@ def start_model_server(model_config: Path, https: bool = False, ssl_key: Optiona
 
     @app.get('/', include_in_schema=False)
     async def redirect_to_docs() -> RedirectResponse:
-        response = RedirectResponse(url=f'{docs_endpoint}#/default/answer_model_post')
+        operation_id = generate_operation_id_for_path(name='answer', path=model_endpoint, method='post')
+        response = RedirectResponse(url=f'{docs_endpoint}#/default/{operation_id}')
         return response
 
     @app.post(model_endpoint, status_code=200, summary='A model endpoint')
