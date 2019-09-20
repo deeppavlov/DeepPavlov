@@ -1,10 +1,11 @@
 from pathlib import Path
 from logging import getLogger
-log = getLogger(__name__)
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.data.utils import download_decompress
+
+log = getLogger(__name__)
 
 @register('conll2003_reader')
 class Conll2003DatasetReader(DatasetReader):
@@ -86,15 +87,16 @@ class Conll2003DatasetReader(DatasetReader):
                             pos_tags.append(pos)
                         except:
                             log.warning('Skip {}, splitted as {}'.format(repr(line), repr(line.split())))
+                            continue
                     else:
                         try:
                             token, *_, tag = line.split()
                         except:
                             log.warning('Skip {}, splitted as {}'.format(repr(line), repr(line.split())))
-                    if len(tag) > 0:
-                        tags.append(tag)
-                    if len(token) > 0:
-                        tokens.append(token)
+                            continue
+                
+                    tags.append(tag)
+                    tokens.append(token)
 
             if tokens:
                 x = tokens if not self.x_is_tuple else (tokens,)
