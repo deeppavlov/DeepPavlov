@@ -11,12 +11,12 @@ DeepPavlov is designed for
 
 ## Quick Links
 
-* Demo [*demo.ipavlov.ai*](https://demo.ipavlov.ai/)
+* Demo [*demo.deeppavlov.ai*](https://demo.deeppavlov.ai/)
 * Documentation [*docs.deeppavlov.ai*](http://docs.deeppavlov.ai/)
     * Model List [*docs:features/*](http://docs.deeppavlov.ai/en/master/features/overview.html)
     * Contribution Guide [*docs:contribution_guide/*](http://docs.deeppavlov.ai/en/master/devguides/contribution_guide.html)
 * Issues [*github/issues/*](https://github.com/deepmipt/DeepPavlov/issues)
-* Forum [*forum.ipavlov.ai*](https://forum.ipavlov.ai/)
+* Forum [*forum.deeppavlov.ai*](https://forum.deeppavlov.ai/)
 * Blogs [*medium.com/deeppavlov*](https://medium.com/deeppavlov)
 * Tutorials [*examples/*](https://github.com/deepmipt/DeepPavlov/tree/master/examples) and [extended colab tutorials](https://github.com/deepmipt/dp_tutorials)
 * Docker Hub [*hub.docker.com/u/deeppavlov/*](https://hub.docker.com/u/deeppavlov/) 
