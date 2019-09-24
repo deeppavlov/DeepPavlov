@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import asyncio
 import logging
 from collections import namedtuple
 from pathlib import Path
@@ -183,11 +184,13 @@ def start_model_server(model_config: Path,
 
     @app.post(model_endpoint, summary='A model endpoint')
     async def answer(item: Batch) -> JSONResponse:
-        return interact(model, item.dict())
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, interact, model, item.dict())
 
     @app.post('/probe', include_in_schema=False)
     async def probe(item: Batch) -> JSONResponse:
-        return test_interact(model, item.dict())
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, test_interact, model, item.dict())
 
     @app.get('/api', summary='Model argument names')
     async def api() -> JSONResponse:
