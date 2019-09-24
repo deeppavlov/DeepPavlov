@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import asyncio
 from collections import namedtuple
 from logging import getLogger
 from pathlib import Path
@@ -114,8 +115,9 @@ def start_agent_server(agent: Agent,
     redirect_root_do_docs(app, 'answer', endpoint, 'post')
 
     @app.post(endpoint, summary='A model endpoint', response_description='A model response')
-    def answer(data: Data) -> JSONResponse:
-        return interact_alice(agent, data.dict())
+    async def answer(data: Data) -> JSONResponse:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, interact_alice, agent, data.dict())
 
     uvicorn.run(app, host=host, port=port, logger=uvicorn_log, ssl_version=ssl_config.version,
                 ssl_keyfile=ssl_config.keyfile, ssl_certfile=ssl_config.certfile)
