@@ -1,3 +1,33 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Data models for the DeepPavlov model launched as a skill for Amazon Alexa.
+
+Data models from this module are used to declare the body of the request
+to the DeepPavlov model launched as a skill for Amazon Alexa. Data models
+are declared as a classes that inherits from Pydantic Base Model. FastAPI uses
+this models to:
+
+    * read the body of the request as JSON
+    * convert the corresponding types (if needed)
+    * validate the data
+    * generate JSON schemas used by automatic documentation UIs
+
+See details at https://fastapi.tiangolo.com/tutorial/body/,
+               https://fastapi.tiangolo.com/tutorial/body-nested-models/
+
+"""
 from typing import Dict
 
 from fastapi import Body, Header
