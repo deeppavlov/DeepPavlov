@@ -130,3 +130,34 @@ There are also available integrations with various messengers, see
 :doc:`Telegram Bot doc page </integrations/telegram>` and others in the
 Integrations section for more info.
 
+
+Out-of-the-box pretrained models
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+While the best way to solve most of the NLP tasks lies through collecting dataset
+and training model according to the domain and actually task itself, DeepPavlov can
+offer several pretrained models, which can give an acceptable quality for a range
+of tasks in some common cases:
+
+
+.. table::
+    :widths: auto
+    +--------------------------------------------------------------------------------------------------+----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Task                                                                                             | Language | DeepPavlov config                                                                              | Demo                                      |
+    +==================================================================================================+==========+================================================================================================+===========================================+
+    | Text Question Answering: answer the question to the text with a segment of this text.            | Multi    | :config:`squad_bert_multilingual_freezed_emb <squad/squad_bert_multilingual_freezed_emb.json>` | https://demo.deeppavlov.ai/#/mu/textqa    |
+    |                                                                                                  +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    |                                                                                                  | En       | :config:`squad_bert_infer <squad/squad_bert_infer.json>`                                       | https://demo.deeppavlov.ai/#/en/textqa    |
+    |                                                                                                  +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    |                                                                                                  | Ru       | :config:`squad_ru_bert_infer <squad/squad_ru_bert_infer.json>`                                 | https://demo.deeppavlov.ai/#/ru/textqa    |
+    +--------------------------------------------------------------------------------------------------+----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Name Entity Recognition: find in the text words which can be attributed to one of the predefined | Multi    | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>`                           | https://demo.deeppavlov.ai/#/mu/ner       |
+    | categories (such as person names, organisations, time, locations).                               +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    |                                                                                                  | En       | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>`                           | https://demo.deeppavlov.ai/#/en/ner       |
+    |                                                                                                  +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    |                                                                                                  | Ru       | :config:`ner_rus_bert <ner/ner_rus_bert.json>`                                                 | https://demo.deeppavlov.ai/#/ru/ner       |
+    +--------------------------------------------------------------------------------------------------+----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Insult detection: predict whether a speech is considered insulting to the person it is addressed.| En       | :config:`ner_conll2003 <ner/ner_conll2003.json>`                                               | https://demo.deeppavlov.ai/#/en/insult    |
+    +--------------------------------------------------------------------------------------------------+----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Sentiment analysis: classify text according prevailing emotion (positive, negative) in it.       | Ru       | :config:`ner_dstc2 <ner/ner_dstc2.json>`                                                       | https://demo.deeppavlov.ai/#/ru/sentiment |
+    +--------------------------------------------------------------------------------------------------+----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
