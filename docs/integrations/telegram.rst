@@ -19,9 +19,9 @@ with a ``<telegram_token>``:
 * ``-t <telegram_token>``: specifies telegram token as ``<telegram_token>``.
 * ``-d``: downloads model specific data before starting the service.
 * ``-no-default-skill``: states that your model is already implements an
-  interface of a :class:`~deeppavlov.core.skill.skill.Skill` and doesn't
+  interface of a :class:`~deeppavlov.utils.deprecated.skill.skill.Skill` and doesn't
   need additional wrapping into a stateless skill
-  :class:`~deeppavlov.skills.default_skill.default_skill.DefaultStatelessSkill` (models from
+  :class:`~deeppavlov.utils.deprecated.skills.default_skill.default_skill.DefaultStatelessSkill` (models from
   Skills section require the flag).
 
 The command will print the used host and port. Default web service properties
@@ -39,15 +39,15 @@ Python
 ~~~~~~
 
 To run a model specified by a DeepPavlov config ``<config_path>`` as as
-Telegram bot, you have to turn it to a :class:`~deeppavlov.core.skill.skill.Skill`
-and then make it an :class:`~deeppavlov.core.agent.agent.Agent`.
+Telegram bot, you have to turn it to a :class:`~deeppavlov.utils.deprecated.skill.skill.Skill`
+and then make it an :class:`~deeppavlov.utils.deprecated.agent.agent.Agent`.
 
 .. code:: python
 
     from deeppavlov import build_model
-    from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
-    from deeppavlov.agents.default_agent.default_agent import DefaultAgent
-    from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
+    from deeppavlov.utils.deprecated.skills.default_skill import DefaultStatelessSkill
+    from deeppavlov.utils.deprecated.agents.default_agent import DefaultAgent
+    from deeppavlov.utils.deprecated.agents.processors import HighestConfidenceSelector
     from deeppavlov.utils.telegram.telegram_ui import init_bot_for_model
 
     model = build_model("<config_path>", download=True)
@@ -59,8 +59,8 @@ and then make it an :class:`~deeppavlov.core.agent.agent.Agent`.
     # Step 3: run server
     init_bot_for_model(agent, token="<telegram_token>", name="my_model_name")
 
-If your model is already a subclass of :class:`~deeppavlov.core.skill.skill.Skill`
-or a subclass of :class:`~deeppavlov.core.agent.agent.Agent` (see
+If your model is already a subclass of :class:`~deeppavlov.utils.deprecated.skill.skill.Skill`
+or a subclass of :class:`~deeppavlov.utils.deprecated.agent.agent.Agent` (see
 :doc:`skills </apiref/skills>` and :doc:`agents </apiref/agents>`) you can skip
 corresponding steps.
 

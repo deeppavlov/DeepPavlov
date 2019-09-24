@@ -23,14 +23,13 @@ from fastapi import FastAPI
 from starlette.responses import JSONResponse
 
 from deeppavlov import build_model
-from deeppavlov.agents.default_agent.default_agent import DefaultAgent
-from deeppavlov.agents.processors.default_rich_content_processor import DefaultRichContentWrapper
-from deeppavlov.core.agent import Agent
-from deeppavlov.core.agent.rich_content import RichMessage
 from deeppavlov.core.common.paths import get_settings_path
-from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
-from deeppavlov.utils.server.server import SSLConfig, get_server_params, get_ssl_params, redirect_root_do_docs
 from deeppavlov.utils.alice.data_model import Data
+from deeppavlov.utils.deprecated.agent import Agent, RichMessage
+from deeppavlov.utils.deprecated.agents.default_agent import DefaultAgent
+from deeppavlov.utils.deprecated.agents.processors import DefaultRichContentWrapper
+from deeppavlov.utils.deprecated.skills.default_skill import DefaultStatelessSkill
+from deeppavlov.utils.server.server import SSLConfig, get_server_params, get_ssl_params, redirect_root_do_docs
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 

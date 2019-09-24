@@ -1,5 +1,5 @@
-deeppavlov.skills.aiml_skill
-========================================
+deeppavlov.utils.deprecated.skills.aiml_skill
+=============================================
 
-.. automodule:: deeppavlov.skills.aiml_skill.aiml_skill
+.. automodule:: deeppavlov.utils.deprecated.skills.aiml_skill.aiml_skill
    :members:

@@ -27,7 +27,7 @@ from pydantic.fields import Field
 from pydantic.main import MetaModel
 from starlette.responses import JSONResponse, RedirectResponse
 
-from deeppavlov.core.agent.dialog_logger import DialogLogger
+from deeppavlov.utils.deprecated.agent import DialogLogger
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.common.chainer import Chainer

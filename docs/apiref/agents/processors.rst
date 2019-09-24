@@ -1,12 +1,12 @@
-deeppavlov.agents.processors
-============================
+deeppavlov.utils.deprecated.agents.processors
+=============================================
 Processors for default agent.
 
-.. automodule:: deeppavlov.agents.processors.default_rich_content_processor
+.. automodule:: deeppavlov.utils.deprecated.agents.processors.default_rich_content_processor
    :members:
 
-.. automodule:: deeppavlov.agents.processors.highest_confidence_selector
+.. automodule:: deeppavlov.utils.deprecated.agents.processors.highest_confidence_selector
    :members:
 
-.. automodule:: deeppavlov.agents.processors.random_selector
+.. automodule:: deeppavlov.utils.deprecated.agents.processors.random_selector
    :members:

@@ -27,9 +27,9 @@ Usage
 
 .. code:: python
 
-    from deeppavlov.agents.default_agent.default_agent import DefaultAgent
-    from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
-    from deeppavlov.skills.aiml_skill.aiml_skill import AIMLSkill
+    from deeppavlov.utils.deprecated.agents.default_agent import DefaultAgent
+    from deeppavlov.utils.deprecated.agents.processors import HighestConfidenceSelector
+    from deeppavlov.utils.deprecated.skills.aiml_skill import AIMLSkill
 
     aiml_skill_config = {
         'positive_confidence': 0.66,

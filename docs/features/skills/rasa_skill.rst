@@ -1,7 +1,7 @@
 Rasa Skill
 ======================
 
-A :class:`Rasa wrapper implementation<deeppavlov.skills.rasa_skill.rasa_skill.RASASkill>` that reads a folder with Rasa models
+A :class:`Rasa wrapper implementation<deeppavlov.utils.deprecated.skills.rasa_skill.rasa_skill.RASASkill>` that reads a folder with Rasa models
 (provided by ``path_to_models`` argument), initializes Rasa Agent with this configuration and responds for incoming
 utterances according to responses predicted by Rasa. Each response has confidence value estimated as product of
 scores of executed actions by Rasa system in the current prediction step (each prediction step in Rasa usually consists of
@@ -37,9 +37,9 @@ Usage without DeepPavlov configuration files
 
 .. code:: python
 
-    from deeppavlov.agents.default_agent.default_agent import DefaultAgent
-    from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
-    from deeppavlov.skills.rasa_skill.rasa_skill import RASASkill
+    from deeppavlov.utils.deprecated.agents.default_agent import DefaultAgent
+    from deeppavlov.utils.deprecated.agents.processors import HighestConfidenceSelector
+    from deeppavlov.utils.deprecated.skills.rasa_skill import RASASkill
 
     rasa_skill_config = {
         'path_to_models': <put the path to your Rasa models>,

@@ -2,7 +2,7 @@ from logging import getLogger
 
 from deeppavlov import configs, build_model
 from deeppavlov.core.common.file import read_json
-from deeppavlov.skills.dsl_skill.dsl_skill import DSLMeta
+from deeppavlov.utils.deprecated.skills.dsl_skill import DSLMeta
 from deeppavlov.utils.pip_wrapper.pip_wrapper import install_from_config
 
 log = getLogger(__name__)

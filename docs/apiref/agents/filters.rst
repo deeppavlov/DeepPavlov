@@ -1,6 +1,6 @@
-deeppavlov.agents.filters
-=========================
+deeppavlov.utils.deprecated.agents.filters
+==========================================
 Filters for default agent.
 
-.. automodule:: deeppavlov.agents.filters.transparent_filter
+.. automodule:: deeppavlov.utils.deprecated.agents.filters.transparent_filter
    :members:

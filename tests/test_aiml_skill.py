@@ -1,10 +1,7 @@
-from pathlib import Path
 from logging import getLogger
 
-import pytest
-
-from deeppavlov.agents.default_agent.default_agent import DefaultAgent
-from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
+from deeppavlov.utils.deprecated.agents.default_agent import DefaultAgent
+from deeppavlov.utils.deprecated.agents.processors import HighestConfidenceSelector
 from deeppavlov import configs, build_model
 from deeppavlov.utils.pip_wrapper.pip_wrapper import install_from_config
 

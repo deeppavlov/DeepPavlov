@@ -1,32 +1,30 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 from logging import getLogger
 from pathlib import Path
 from typing import Union
 
 import telebot
 
-from deeppavlov.agents.default_agent.default_agent import DefaultAgent
-from deeppavlov.agents.processors.default_rich_content_processor import DefaultRichContentWrapper
-from deeppavlov.core.agent import Agent
-from deeppavlov.core.agent.rich_content import RichMessage
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
-from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
+from deeppavlov.utils.deprecated.agent import Agent, RichMessage
+from deeppavlov.utils.deprecated.agents.default_agent import DefaultAgent
+from deeppavlov.utils.deprecated.agents.processors import DefaultRichContentWrapper
+from deeppavlov.utils.deprecated.skills.default_skill import DefaultStatelessSkill
 
 log = getLogger(__name__)
 

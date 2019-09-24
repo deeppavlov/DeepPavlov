@@ -1,18 +1,18 @@
-deeppavlov.core.agent
-=====================
+deeppavlov.utils.deprecated.agent
+=================================
 Basic classes for building DeepPavlov agents.
 
-.. automodule:: deeppavlov.core.agent.agent
+.. automodule:: deeppavlov.utils.deprecated.agent.agent
    :members:
 
-.. automodule:: deeppavlov.core.agent.dialog_logger
+.. automodule:: deeppavlov.utils.deprecated.agent.dialog_logger
    :members:
 
-.. automodule:: deeppavlov.core.agent.filter
+.. automodule:: deeppavlov.utils.deprecated.agent.filter
    :members:
 
-.. automodule:: deeppavlov.core.agent.processor
+.. automodule:: deeppavlov.utils.deprecated.agent.processor
    :members:
 
-.. automodule:: deeppavlov.core.agent.rich_content
+.. automodule:: deeppavlov.utils.deprecated.agent.rich_content
    :members:

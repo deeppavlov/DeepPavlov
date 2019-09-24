@@ -24,14 +24,14 @@ import json
 from fastapi import FastAPI
 from starlette.responses import JSONResponse
 
-from deeppavlov.agents.default_agent.default_agent import DefaultAgent
-from deeppavlov.agents.processors.default_rich_content_processor import DefaultRichContentWrapper
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
-from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
 from deeppavlov.utils.alexa.bot import Bot
 from deeppavlov.utils.alexa.data_model import Data, cert_chain_url_header, signature_header
+from deeppavlov.utils.deprecated.agents.default_agent import DefaultAgent
+from deeppavlov.utils.deprecated.agents.processors import DefaultRichContentWrapper
+from deeppavlov.utils.deprecated.skills.default_skill import DefaultStatelessSkill
 from deeppavlov.utils.server.server import get_ssl_params, redirect_root_do_docs
 
 SERVER_CONFIG_FILENAME = 'server_config.json'

@@ -1,5 +1,5 @@
-deeppavlov.skills.rasa_skill
-========================================
+deeppavlov.utils.deprecated.skills.rasa_skill
+=============================================
 
-.. automodule:: deeppavlov.skills.rasa_skill.rasa_skill
+.. automodule:: deeppavlov.utils.deprecated.skills.rasa_skill.rasa_skill
    :members:
