@@ -134,10 +134,10 @@ Integrations section for more info.
 Docker images
 ~~~~~~~~~~~~~
 
-You can run DeepPavlov models in `riseapi` mode via Docker without installing DP.
-Both your CPU and GPU (we support NVIDIA graphic processors) can be utilised,
-please refer our `CPU <https://hub.docker.com/r/deeppavlov/base-cpu>`_ and
-`GPU <https://hub.docker.com/r/deeppavlov/base-gpu>`_ Docker images run instructions.
+You can run DeepPavlov models in :doc:`riseapi </integrations/rest_api>` mode
+via Docker without installing DP. Both your CPU and GPU (we support NVIDIA graphic
+processors) can be utilised, please refer our `CPU <https://hub.docker.com/r/deeppavlov/base-cpu>`_
+and `GPU <https://hub.docker.com/r/deeppavlov/base-gpu>`_ Docker images run instructions.
 
 
 Out-of-the-box pretrained models
@@ -148,12 +148,15 @@ and training model according to the domain and actually task itself, DeepPavlov 
 offer several pretrained models, which can give an acceptable quality for a range
 of tasks in some common cases.
 
-**Text Question Answering**
+You can run these models via Docker or in ``riseapi``/``risesocket`` mode to use in
+solutions. See :doc:`riseapi </integrations/rest_api>` and :doc:`risesocket </integrations/socket_api>`
+modes documentation for API details.
+
+
+Text Question Answering
+=======================
 
 Answer the question to the text with a segment of this text.
-
-
-
 
 .. table::
     :widths: auto
@@ -167,39 +170,71 @@ Answer the question to the text with a segment of this text.
     +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
     | Ru       | :config:`squad_ru_bert_infer <squad/squad_ru_bert_infer.json>`                                 | https://demo.deeppavlov.ai/#/ru/textqa    |
     +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+
+
+Name Entity Recognition
+=======================
+
+Name Entity Recognition: find in the text words which can be attributed to one
+of the predefined categories (such as person names, organisations, time, locations).
+
+.. table::
+    :widths: auto
+
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Language | DeepPavlov config                                                                              | Demo                                      |
+    +==========+================================================================================================+===========================================+
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
     | Multi    | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>`                           | https://demo.deeppavlov.ai/#/mu/ner       |
     +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
     | En       | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>`                           | https://demo.deeppavlov.ai/#/en/ner       |
     +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
     | Ru       | :config:`ner_rus_bert <ner/ner_rus_bert.json>`                                                 | https://demo.deeppavlov.ai/#/ru/ner       |
     +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    | En       | :config:`ner_conll2003 <ner/ner_conll2003.json>`                                               | https://demo.deeppavlov.ai/#/en/insult    |
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    | Ru       | :config:`ner_dstc2 <ner/ner_dstc2.json>`                                                       | https://demo.deeppavlov.ai/#/ru/sentiment |
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
 
 
+Insult Detection
+================
 
+Predict whether a speech is considered insulting to the person it is addressed.
 
 .. table::
     :widths: auto
 
-    +--------------------------------------------------------------------------------------------------+----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    | Task                                                                                             | Language | DeepPavlov config                                                                              | Demo                                      |
-    +==================================================================================================+==========+================================================================================================+===========================================+
-    | Text Question Answering: answer the question to the text with a segment of this text.            | Multi    | :config:`squad_bert_multilingual_freezed_emb <squad/squad_bert_multilingual_freezed_emb.json>` | https://demo.deeppavlov.ai/#/mu/textqa    |
-    |                                                                                                  +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    |                                                                                                  | En       | :config:`squad_bert_infer <squad/squad_bert_infer.json>`                                       | https://demo.deeppavlov.ai/#/en/textqa    |
-    |                                                                                                  +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    |                                                                                                  | Ru       | :config:`squad_ru_bert_infer <squad/squad_ru_bert_infer.json>`                                 | https://demo.deeppavlov.ai/#/ru/textqa    |
-    +--------------------------------------------------------------------------------------------------+----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    | Name Entity Recognition: find in the text words which can be attributed to one of the predefined | Multi    | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>`                           | https://demo.deeppavlov.ai/#/mu/ner       |
-    | categories (such as person names, organisations, time, locations).                               +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    |                                                                                                  | En       | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>`                           | https://demo.deeppavlov.ai/#/en/ner       |
-    |                                                                                                  +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    |                                                                                                  | Ru       | :config:`ner_rus_bert <ner/ner_rus_bert.json>`                                                 | https://demo.deeppavlov.ai/#/ru/ner       |
-    +--------------------------------------------------------------------------------------------------+----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    | Insult detection: predict whether a speech is considered insulting to the person it is addressed.| En       | :config:`ner_conll2003 <ner/ner_conll2003.json>`                                               | https://demo.deeppavlov.ai/#/en/insult    |
-    +--------------------------------------------------------------------------------------------------+----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    | Sentiment analysis: classify text according prevailing emotion (positive, negative) in it.       | Ru       | :config:`ner_dstc2 <ner/ner_dstc2.json>`                                                       | https://demo.deeppavlov.ai/#/ru/sentiment |
-    +--------------------------------------------------------------------------------------------------+----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Language | DeepPavlov config                                                                              | Demo                                      |
+    +==========+================================================================================================+===========================================+
+    | En       | :config:`insults_kaggle_conv_bert <classifiers/insults_kaggle_conv_bert.json>`                 | https://demo.deeppavlov.ai/#/en/insult    |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+
+
+Sentiment Analysis
+==================
+
+Classify text according prevailing emotion (positive, negative) in it.
+
+.. table::
+    :widths: auto
+
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Language | DeepPavlov config                                                                              | Demo                                      |
+    +==========+================================================================================================+===========================================+
+    | Ru       | :config:`rusentiment_elmo_twitter_cnn <classifiers/rusentiment_elmo_twitter_cnn.json>`         | https://demo.deeppavlov.ai/#/ru/sentiment |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+
+
+Paraphrase Detection
+====================
+
+Detect if two given texts have the same meaning.
+
+.. table::
+    :widths: auto
+
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Language | DeepPavlov config                                                                              | Demo                                      |
+    +==========+================================================================================================+===========================================+
+    | En       | :config:`paraphraser_bert <classifiers/paraphraser_bert.json>`                                 | None                                      |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Ru       | :config:`paraphraser_rubert <classifiers/paraphraser_rubert.json>`                             | None                                      |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
