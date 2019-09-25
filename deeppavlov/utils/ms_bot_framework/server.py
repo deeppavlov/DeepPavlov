@@ -19,7 +19,6 @@ from typing import Union, Optional
 
 import uvicorn
 from fastapi import FastAPI
-from starlette.responses import JSONResponse
 
 from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.agents.processors.default_rich_content_processor import DefaultRichContentWrapper
@@ -122,9 +121,9 @@ def run_ms_bot_framework_server(agent_generator: callable,
     redirect_root_do_docs(app, 'answer', endpoint, 'post')
 
     @app.post(endpoint)
-    async def answer(activity: dict) -> JSONResponse:
+    async def answer(activity: dict) -> dict:
         bot.input_queue.put(activity)
-        return JSONResponse({})
+        return {}
 
     uvicorn.run(app, host=host, port=port, logger=uvicorn_log, ssl_version=ssl_config.version,
                 ssl_keyfile=ssl_config.keyfile, ssl_certfile=ssl_config.certfile)

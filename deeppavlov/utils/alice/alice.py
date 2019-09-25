@@ -20,7 +20,6 @@ from typing import Dict, Union, Optional
 
 import uvicorn
 from fastapi import FastAPI
-from starlette.responses import JSONResponse
 
 from deeppavlov import build_model
 from deeppavlov.agents.default_agent.default_agent import DefaultAgent
@@ -41,7 +40,7 @@ app = FastAPI()
 DialogID = namedtuple('DialogID', ['user_id', 'session_id'])
 
 
-def interact_alice(agent: Agent, data: Dict) -> JSONResponse:
+def interact_alice(agent: Agent, data: Dict) -> Dict:
     """
     Exchange messages between basic pipelines and the Yandex.Dialogs service.
     If the pipeline returns multiple values, only the first one is forwarded to Yandex.
@@ -74,7 +73,7 @@ def interact_alice(agent: Agent, data: Dict) -> JSONResponse:
         'version': '1.0'
     }
 
-    return JSONResponse(response)
+    return response
 
 
 def start_alice_server(model_config: Path,
@@ -115,7 +114,7 @@ def start_agent_server(agent: Agent,
     redirect_root_do_docs(app, 'answer', endpoint, 'post')
 
     @app.post(endpoint, summary='A model endpoint', response_description='A model response')
-    async def answer(data: Data) -> JSONResponse:
+    async def answer(data: Data) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, interact_alice, agent, data.dict())
 
