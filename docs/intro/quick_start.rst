@@ -131,6 +131,16 @@ There are also available integrations with various messengers, see
 Integrations section for more info.
 
 
+Pretrained models
+~~~~~~~~~~~~~~~~~
+
+DeepPavlov provides wide range of pretrained models and skills.
+See :doc:`features overview </features/overview>` for more info. Please
+note that most of our models are trained on specific datasets for
+specific tasks and may require further training on you data.
+List of our out-of-the-box models you can find below.
+
+
 Docker images
 ~~~~~~~~~~~~~
 
