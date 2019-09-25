@@ -131,17 +131,59 @@ There are also available integrations with various messengers, see
 Integrations section for more info.
 
 
+Docker images
+~~~~~~~~~~~~~
+
+You can run DeepPavlov models in `riseapi` mode via Docker without installing DP.
+Both your CPU and GPU (we support NVIDIA graphic processors) can be utilised,
+please refer our `CPU <https://hub.docker.com/r/deeppavlov/base-cpu>`_ and
+`GPU <https://hub.docker.com/r/deeppavlov/base-gpu>`_ Docker images run instructions.
+
+
 Out-of-the-box pretrained models
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 While the best way to solve most of the NLP tasks lies through collecting dataset
 and training model according to the domain and actually task itself, DeepPavlov can
 offer several pretrained models, which can give an acceptable quality for a range
-of tasks in some common cases:
+of tasks in some common cases.
+
+**Text Question Answering**
+
+Answer the question to the text with a segment of this text.
+
+
 
 
 .. table::
     :widths: auto
+
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Language | DeepPavlov config                                                                              | Demo                                      |
+    +==========+================================================================================================+===========================================+
+    | Multi    | :config:`squad_bert_multilingual_freezed_emb <squad/squad_bert_multilingual_freezed_emb.json>` | https://demo.deeppavlov.ai/#/mu/textqa    |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | En       | :config:`squad_bert_infer <squad/squad_bert_infer.json>`                                       | https://demo.deeppavlov.ai/#/en/textqa    |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Ru       | :config:`squad_ru_bert_infer <squad/squad_ru_bert_infer.json>`                                 | https://demo.deeppavlov.ai/#/ru/textqa    |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Multi    | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>`                           | https://demo.deeppavlov.ai/#/mu/ner       |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | En       | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>`                           | https://demo.deeppavlov.ai/#/en/ner       |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Ru       | :config:`ner_rus_bert <ner/ner_rus_bert.json>`                                                 | https://demo.deeppavlov.ai/#/ru/ner       |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | En       | :config:`ner_conll2003 <ner/ner_conll2003.json>`                                               | https://demo.deeppavlov.ai/#/en/insult    |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Ru       | :config:`ner_dstc2 <ner/ner_dstc2.json>`                                                       | https://demo.deeppavlov.ai/#/ru/sentiment |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+
+
+
+
+.. table::
+    :widths: auto
+
     +--------------------------------------------------------------------------------------------------+----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
     | Task                                                                                             | Language | DeepPavlov config                                                                              | Demo                                      |
     +==================================================================================================+==========+================================================================================================+===========================================+
