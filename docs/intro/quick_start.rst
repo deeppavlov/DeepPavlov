@@ -156,7 +156,8 @@ modes documentation for API details.
 Text Question Answering
 =======================
 
-Answer the question to the text with a segment of this text.
+Text Question Answering component answers a question based on a given context (e.g,
+a paragraph of text), where the answer to the question is a segment of the context.
 
 .. table::
     :widths: auto
@@ -175,8 +176,9 @@ Answer the question to the text with a segment of this text.
 Name Entity Recognition
 =======================
 
-Name Entity Recognition: find in the text words which can be attributed to one
-of the predefined categories (such as person names, organisations, time, locations).
+Named Entity Recognition (NER) classifies tokens in text into predefined categories
+(tags), such as person names, quantity expressions, percentage expressions, names
+of locations, organizations, as well as expression of time, currency and others.
 
 .. table::
     :widths: auto
@@ -184,7 +186,6 @@ of the predefined categories (such as person names, organisations, time, locatio
     +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
     | Language | DeepPavlov config                                                                              | Demo                                      |
     +==========+================================================================================================+===========================================+
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
     | Multi    | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>`                           | https://demo.deeppavlov.ai/#/mu/ner       |
     +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
     | En       | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>`                           | https://demo.deeppavlov.ai/#/en/ner       |
@@ -196,7 +197,9 @@ of the predefined categories (such as person names, organisations, time, locatio
 Insult Detection
 ================
 
-Predict whether a speech is considered insulting to the person it is addressed.
+Insult detection predicts whether a text (e.g, post or speech in some
+public discussion) is considered insulting to one of the persons it is
+related to.
 
 .. table::
     :widths: auto
