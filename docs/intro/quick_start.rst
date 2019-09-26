@@ -224,7 +224,7 @@ related to.
 Sentiment Analysis
 ==================
 
-Classify text according prevailing emotion (positive, negative) in it.
+Classify text according to a prevailing emotion (positive, negative, etc.) in it.
 
 .. table::
     :widths: auto
