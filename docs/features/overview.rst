@@ -87,6 +87,14 @@ Several pre-trained models are available and presented in Table below.
 | 5 topics         | `AG News`_         |      | :config:`Wiki emb <classifiers/topic_ag_news.json>`                                             | Accuracy    | 0.8922 | 0.9059 |  8.5 Gb   |
 +------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | Intent           |`Yahoo-L31`_        |      | :config:`Yahoo-L31 on conversational BERT <classifiers/yahoo_convers_vs_info_bert.json>`        | ROC-AUC     | 0.9436 |   --   |  1200 Mb  |
++------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
+| Sentiment        |`SST`_              |      | :config:`5-classes SST on conversational BERT <classifiers/sentiment_sst_conv_bert.json>`       | Accuracy    | 0.6456 | 0.6715 |  400 Mb   |
++                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |                    |      | :config:`5-classes SST on multilingual BERT <classifiers/sentiment_sst_multi_bert.json>`        |             | 0.5738 | 0.6024 |  660 Mb   |
++                  +--------------------+      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |`Yelp`_             |      | :config:`5-classes Yelp on conversational BERT <classifiers/sentiment_yelp_conv_bert.json>`     |             | 0.6925 | 0.6842 |  400 Mb   |
++                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |                    |      | :config:`5-classes Yelp on multilingual BERT <classifiers/sentiment_yelp_multi_bert.json>`      |             | 0.5896 | 0.5874 |  660 Mb   |
 +------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | Sentiment        |`Twitter mokoron`_  | Ru   | :config:`RuWiki+Lenta emb w/o preprocessing <classifiers/sentiment_twitter.json>`               |             | 0.9965 | 0.9961 |  6.2 Gb   |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
@@ -116,6 +124,8 @@ Several pre-trained models are available and presented in Table below.
 .. _`RuSentiment`: http://text-machine.cs.uml.edu/projects/rusentiment/
 .. _`Yahoo-L31`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 .. _`Yahoo-L6`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
+.. _`SST`: https://nlp.stanford.edu/sentiment/index.html
+.. _`Yelp`: https://www.yelp.com/dataset
 
 As no one had published intent recognition for DSTC-2 data, the
 comparison of the presented model is given on **SNIPS** dataset. The
