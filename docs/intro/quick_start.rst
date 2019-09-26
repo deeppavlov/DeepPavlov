@@ -158,7 +158,7 @@ and training models according to the domain and an actual task itself, DeepPavlo
 offer several pretrained models, which can give an acceptable quality for a range
 of tasks in some common cases.
 
-You can run these models via Docker or in ``riseapi``/``risesocket`` mode to use in
+You can run these models `via Docker <#docker-images>`_ or in ``riseapi``/``risesocket`` mode to use in
 solutions. See :doc:`riseapi </integrations/rest_api>` and :doc:`risesocket </integrations/socket_api>`
 modes documentation for API details.
 
