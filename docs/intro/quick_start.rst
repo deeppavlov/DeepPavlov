@@ -1,11 +1,13 @@
 QuickStart
 ------------
 
-There is a bunch of great pre-trained NLP models in DeepPavlov. Each model is
-determined by its config file.
+First, follow instructions on :doc:`Installation page </intro/installation>`
+to install ``deeppavlov`` package for Python 3.6/3.7.
 
-List of models is available on :doc:`the doc page </features/overview>` or in
-the ``deeppavlov.configs`` (Python):
+DeepPavlov contains a bunch of great pre-trained NLP models. Each model is
+determined by it's config file. List of models is available on
+:doc:`the doc page </features/overview>` or in
+the ``deeppavlov.configs``:
 
     .. code:: python
         
@@ -154,9 +156,8 @@ Out-of-the-box pretrained models
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 While the best way to solve most of the NLP tasks lies through collecting datasets
-and training models according to the domain and an actual task itself, DeepPavlov can
-offer several pretrained models, which can give an acceptable quality for a range
-of tasks in some common cases.
+and training models according to the domain and an actual task itself, DeepPavlov
+offers several pretrained models, which can be strong baselines for a wide range of tasks.
 
 You can run these models `via Docker <#docker-images>`_ or in ``riseapi``/``risesocket`` mode to use in
 solutions. See :doc:`riseapi </integrations/rest_api>` and :doc:`risesocket </integrations/socket_api>`

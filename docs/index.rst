@@ -5,8 +5,8 @@ Welcome to DeepPavlov's documentation!
    :glob:
    :maxdepth: 1
 
-   QuickStart <intro/quick_start>
    Installation <intro/installation>
+   QuickStart <intro/quick_start>
    General concepts <intro/overview>
    Configuration file <intro/configuration>
    Models/Skills overview <features/overview>
