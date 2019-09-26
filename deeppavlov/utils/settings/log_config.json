@@ -8,11 +8,22 @@
         "stderr"
       ],
       "propagate": true
+    },
+    "uvicorn": {
+      "level": "INFO",
+      "handlers": [
+        "uvicorn_handler"
+      ],
+      "propagate": true
     }
   },
   "formatters": {
     "default": {
       "format": "%(asctime)s.%(msecs)d %(levelname)s in '%(name)s'['%(module)s'] at line %(lineno)d: %(message)s",
+      "datefmt": "%Y-%m-%d %H:%M:%S"
+    },
+    "uvicorn_fmt": {
+      "format":"%(asctime)s %(message)s",
       "datefmt": "%Y-%m-%d %H:%M:%S"
     }
   },
@@ -34,6 +45,12 @@
       "level": "DEBUG",
       "formatter": "default",
       "stream": "ext://sys.stderr"
+    },
+    "uvicorn_handler": {
+      "class": "logging.StreamHandler",
+      "level": "INFO",
+      "formatter": "uvicorn_fmt",
+      "stream": "ext://sys.stdout"
     }
   }
 }
