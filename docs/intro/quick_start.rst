@@ -156,9 +156,8 @@ Out-of-the-box pretrained models
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 While the best way to solve most of the NLP tasks lies through collecting datasets
-and training models according to the domain and an actual task itself, DeepPavlov can
-offer several pretrained models, which can give an acceptable quality for a range
-of tasks in some common cases.
+and training models according to the domain and an actual task itself, DeepPavlov
+offers several pretrained models, which can be strong baselines for a wide range of tasks.
 
 You can run these models `via Docker <#docker-images>`_ or in ``riseapi``/``risesocket`` mode to use in
 solutions. See :doc:`riseapi </integrations/rest_api>` and :doc:`risesocket </integrations/socket_api>`
