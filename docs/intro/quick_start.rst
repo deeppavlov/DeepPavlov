@@ -1,11 +1,13 @@
 QuickStart
 ------------
 
-There is a bunch of great pre-trained NLP models in DeepPavlov. Each model is
-determined by its config file.
+First, follow instructions on :doc:`Installation page </intro/installation>`
+to install ``deeppavlov`` package for Python 3.6/3.7.
 
-List of models is available on :doc:`the doc page </features/overview>` or in
-the ``deeppavlov.configs`` (Python):
+DeepPavlov contains a bunch of great pre-trained NLP models. Each model is
+determined by it's config file. List of models is available on
+:doc:`the doc page </features/overview>` or in
+the ``deeppavlov.configs``:
 
     .. code:: python
         
