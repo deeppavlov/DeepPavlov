@@ -134,11 +134,11 @@ Integrations section for more info.
 Pretrained models
 ~~~~~~~~~~~~~~~~~
 
-DeepPavlov provides wide range of pretrained models and skills.
+DeepPavlov provides a wide range of pretrained models and skills.
 See :doc:`features overview </features/overview>` for more info. Please
 note that most of our models are trained on specific datasets for
 specific tasks and may require further training on you data.
-List of our out-of-the-box models you can find below.
+You can find a list of our out-of-the-box models `below <#out-of-the-box-pretrained-models>`_.
 
 
 Docker images
@@ -153,8 +153,8 @@ and `GPU <https://hub.docker.com/r/deeppavlov/base-gpu>`_ Docker images run inst
 Out-of-the-box pretrained models
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-While the best way to solve most of the NLP tasks lies through collecting dataset
-and training model according to the domain and actually task itself, DeepPavlov can
+While the best way to solve most of the NLP tasks lies through collecting datasets
+and training models according to the domain and an actual task itself, DeepPavlov can
 offer several pretrained models, which can give an acceptable quality for a range
 of tasks in some common cases.
 
