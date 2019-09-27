@@ -22,7 +22,7 @@ from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.data.utils import download_decompress, mark_done
 
 WORD_COLUMN, POS_COLUMN, TAG_COLUMN = 1, 3, 5
-
+HEAD_COLUMN, DEP_COLUMN = 6, 7
 
 log = getLogger(__name__)
 
@@ -33,8 +33,9 @@ def get_language(filepath: str) -> str:
 
 def read_infile(infile: Union[Path, str], from_words=False,
                 word_column: int = WORD_COLUMN, pos_column: int = POS_COLUMN,
-                tag_column: int = TAG_COLUMN, max_sents: int = -1,
-                read_only_words: bool = False) -> List[Tuple[List, Union[List, None]]]:
+                tag_column: int = TAG_COLUMN, head_column: int = HEAD_COLUMN,
+                dep_column: int = DEP_COLUMN, max_sents: int = -1,
+                read_only_words: bool = False, read_syntax: bool = False) -> List[Tuple[List, Union[List, None]]]:
     """Reads input file in CONLL-U format
 
     Args:
@@ -42,6 +43,8 @@ def read_infile(infile: Union[Path, str], from_words=False,
         word_column: column containing words (default=1)
         pos_column: column containing part-of-speech labels (default=3)
         tag_column: column containing fine-grained tags (default=5)
+        head_column: column containing syntactic head position (default=6)
+        dep_column: column containing syntactic dependency label (default=7)
         max_sents: maximal number of sents to read
         read_only_words: whether to read only words
 
@@ -50,6 +53,7 @@ def read_infile(infile: Union[Path, str], from_words=False,
         in case ``read_only_words = True``
     """
     answer, curr_word_sent, curr_tag_sent = [], [], []
+    curr_head_sent, curr_dep_sent = [], []
     if from_words:
         word_column, read_only_words = 0, True
     if infile is not sys.stdin:
@@ -64,7 +68,10 @@ def read_infile(infile: Union[Path, str], from_words=False,
             if len(curr_word_sent) > 0:
                 if read_only_words:
                     curr_tag_sent = None
-                answer.append((curr_word_sent, curr_tag_sent))
+                curr_answer = (curr_word_sent, curr_tag_sent)
+                if read_syntax:
+                    curr_answer += (curr_head_sent, curr_dep_sent)
+                answer.append(curr_answer)
             curr_tag_sent, curr_word_sent = [], []
             if len(answer) == max_sents:
                 break
@@ -78,10 +85,16 @@ def read_infile(infile: Union[Path, str], from_words=False,
             pos, tag = splitted[pos_column], splitted[tag_column]
             tag = pos if tag == "_" else "{},{}".format(pos, tag)
             curr_tag_sent.append(tag)
+            if read_syntax:
+                curr_head_sent.append(int(splitted[head_column]))
+                curr_dep_sent.append(splitted[dep_column])
     if len(curr_word_sent) > 0:
         if read_only_words:
             curr_tag_sent = None
-        answer.append((curr_word_sent, curr_tag_sent))
+        curr_answer = (curr_word_sent, curr_tag_sent)
+        if read_syntax:
+            curr_answer += (curr_head_sent, curr_dep_sent)
+        answer.append(curr_answer)
     if infile is not sys.stdin:
         fin.close()
     return answer
