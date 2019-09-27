@@ -127,3 +127,4 @@ def run_ms_bot_framework_server(agent_generator: callable,
 
     uvicorn.run(app, host=host, port=port, logger=uvicorn_log, ssl_version=ssl_config.version,
                 ssl_keyfile=ssl_config.keyfile, ssl_certfile=ssl_config.certfile)
+    bot.join()
