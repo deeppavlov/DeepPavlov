@@ -25,7 +25,7 @@ from hashlib import md5
 from itertools import chain
 from logging import getLogger
 from pathlib import Path
-from typing import List, Union, Iterable, Optional, Sized, Sequence
+from typing import List, Union, Iterable, Optional, Sized, Sequence, Collection
 from urllib.parse import urlencode, parse_qs, urlsplit, urlunsplit, urlparse
 
 import numpy as np
@@ -334,40 +334,25 @@ def flatten_str_batch(batch):
         return chain(*[flatten_str_batch(sample) for sample in batch])
 
 
-def zero_pad_truncate(batch, max_len, pad='post', trunc='post', dtype=np.float32):
-    batch_size = len(batch)
-    if isinstance(batch[0][0], (int, np.int)):
-        padded_batch = np.zeros([batch_size, max_len], dtype=np.int32)
-        for n, utterance in enumerate(batch):
-            if len(utterance) > max_len:
-                if trunc == 'post':
-                    padded_batch[n, :] = utterance[:max_len]
-                elif trunc == 'pre':
-                    padded_batch[n, :] = utterance[-max_len:]
-            else:
-                if pad == 'post':
-                    padded_batch[n, :len(utterance)] = utterance
-                elif pad == 'pre':
-                    padded_batch[n, -len(utterance):] = utterance
+def zero_pad_truncate(batch: Sequence[Sequence[Union[int, float, np.numeric,
+                                                     Sequence[Union[int, float, np.numeric]]]]],
+                      max_len: int, pad: str = 'post', trunc: str = 'post',
+                      dtype: Optional[Union[type, str]] = None) -> np.ndarray:
+    if isinstance(batch[0][0], Collection):  #
+        size = (len(batch), max_len, len(batch[0][0]))
+        dtype = dtype or np.float32
     else:
-        n_features = len(batch[0][0])
-        padded_batch = np.zeros([batch_size, max_len, n_features], dtype=dtype)
-        for n, utterance in enumerate(batch):
-            if len(utterance) > max_len:
-                if trunc == 'post':
-                    for k, token_features in enumerate(utterance[:max_len]):
-                        padded_batch[n, k] = token_features
-                elif trunc == 'pre':
-                    for k, token_features in enumerate(utterance[-max_len:]):
-                        padded_batch[n, k] = token_features
-            else:
-                if pad == 'post':
-                    for k, token_features in enumerate(utterance):
-                        padded_batch[n, k] = token_features
-                elif pad == 'pre':
-                    for k, token_features in enumerate(utterance):
-                        padded_batch[n, k + max_len - len(utterance)] = token_features
-    return padded_batch
+        size = (len(batch), max_len)
+        dtype = dtype or np.int32
+
+    padded_batch = np.zeros(size, dtype=dtype)
+    for i, batch_item in enumerate(batch):
+        if len(batch_item) > max_len:  # trunc
+            padded_batch[i] = batch_item[slice(max_len) if trunc == 'post' else slice(-max_len, None)]
+        else:  # pad
+            padded_batch[i, slice(len(batch_item)) if pad == 'post' else slice(-len(batch_item), None)] = batch_item
+
+    return np.asarray(padded_batch)
 
 
 def zero_pad_char(batch, dtype=np.float32):
