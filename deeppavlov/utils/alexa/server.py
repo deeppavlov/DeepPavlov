@@ -112,7 +112,7 @@ def run_alexa_server(agent_generator: callable,
     alexa_server_params['stateful'] = stateful or server_params['common_defaults']['stateful']
     alexa_server_params['amazon_cert_lifetime'] = AMAZON_CERTIFICATE_LIFETIME
 
-    ssl_config = get_ssl_params(server_params, https, ssl_key=ssl_key, ssl_cert=ssl_cert)
+    ssl_config = get_ssl_params(server_params['common_defaults'], https, ssl_key=ssl_key, ssl_cert=ssl_cert)
 
     input_q = Queue()
     output_q = Queue()
