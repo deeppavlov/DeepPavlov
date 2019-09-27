@@ -294,6 +294,12 @@ class BertSequenceNetwork(LRScheduledTFModel):
             units = tf.nn.dropout(units, keep_prob=self.keep_prob_ph)
         return units
 
+    def _get_tag_mask(self):
+        max_length = tf.reduce_max(self.seq_lengths)
+        one_hot_max_len = tf.one_hot(self.seq_lengths - 1, max_length)
+        tag_mask = tf.cumsum(one_hot_max_len[:, ::-1], axis=1)[:, ::-1]
+        return tag_mask
+
     def encoder_layers(self):
         return [self.bert.all_encoder_layers[i] for i in self.encoder_layer_ids]
 
@@ -565,10 +571,6 @@ class BertSequenceTagger(BertSequenceNetwork):
 
             self.logits = token_from_subtoken(logits, self.y_masks_ph)
 
-            max_length = tf.reduce_max(self.seq_lengths)
-            one_hot_max_len = tf.one_hot(self.seq_lengths - 1, max_length)
-            tag_mask = tf.cumsum(one_hot_max_len[:, ::-1], axis=1)[:, ::-1]
-
             # CRF
             if self.use_crf:
                 transition_params = tf.get_variable('Transition_Params',
@@ -586,6 +588,7 @@ class BertSequenceTagger(BertSequenceNetwork):
             self.y_probas = tf.nn.softmax(self.logits, axis=2)
 
         with tf.variable_scope("loss"):
+            tag_mask = self._get_tag_mask()
             y_mask = tf.cast(tag_mask, tf.float32)
             if self.use_crf:
                 self.loss = tf.reduce_mean(loss_tensor)
