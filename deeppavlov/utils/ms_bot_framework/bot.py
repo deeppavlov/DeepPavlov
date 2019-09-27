@@ -48,7 +48,9 @@ class Bot(Thread):
 
     def join(self, timeout=None):
         self._run_flag = False
-        self.timer.cancel()
+        for timer in threading.enumerate():
+            if isinstance(timer, threading.Timer):
+                timer.cancel()
         Thread.join(self, timeout)
 
     def del_conversation(self, conversation_key: ConvKey):
