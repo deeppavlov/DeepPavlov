@@ -69,10 +69,11 @@ def read_infile(infile: Union[Path, str], from_words=False,
                 if read_only_words:
                     curr_tag_sent = None
                 curr_answer = (curr_word_sent, curr_tag_sent)
-                if read_syntax:
+                if not read_only_words and read_syntax:
                     curr_answer += (curr_head_sent, curr_dep_sent)
                 answer.append(curr_answer)
             curr_tag_sent, curr_word_sent = [], []
+            curr_head_sent, curr_dep_sent = [], []
             if len(answer) == max_sents:
                 break
             continue
@@ -92,7 +93,7 @@ def read_infile(infile: Union[Path, str], from_words=False,
         if read_only_words:
             curr_tag_sent = None
         curr_answer = (curr_word_sent, curr_tag_sent)
-        if read_syntax:
+        if not read_only_words and read_syntax:
             curr_answer += (curr_head_sent, curr_dep_sent)
         answer.append(curr_answer)
     if infile is not sys.stdin:
