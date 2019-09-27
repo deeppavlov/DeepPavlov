@@ -563,7 +563,7 @@ class BertSequenceTagger(BertSequenceNetwork):
             # TODO: maybe add one more layer?
             logits = tf.layers.dense(units, units=self.n_tags, name="output_dense")
 
-            self.logits = self.token_from_subtoken(logits, self.y_masks_ph)
+            self.logits = token_from_subtoken(logits, self.y_masks_ph)
 
             max_length = tf.reduce_max(self.seq_lengths)
             one_hot_max_len = tf.one_hot(self.seq_lengths - 1, max_length)
