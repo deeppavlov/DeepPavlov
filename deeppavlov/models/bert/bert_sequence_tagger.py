@@ -338,7 +338,7 @@ class BertSequenceTagger(LRScheduledTFModel):
         nf = shape[2]
         nf_int = units.get_shape().as_list()[-1]
 
-        # numer of TOKENS in each sentence
+        # number of TOKENS in each sentence
         token_seq_lengths = tf.cast(tf.reduce_sum(mask, 1), tf.int64)
         # for a matrix m =
         # [[1, 1, 1],
@@ -373,6 +373,7 @@ class BertSequenceTagger(LRScheduledTFModel):
         #  [2, 0]]
         # it is
         # [0, 0, 0, 0, 1, 1, 2]
+        # padding is for computing change from one sample to another in the batch
 
         a = tf.cast(tf.not_equal(sample_ids_in_batch[1:], sample_ids_in_batch[:-1]), tf.int64)
         # for the example above the result of this statement equals
@@ -390,8 +391,8 @@ class BertSequenceTagger(LRScheduledTFModel):
         # tf.cumsum(a) -> [0, 0, 0, 1, 1, 2]
         # tf.gather(count_to_substract, tf.cumsum(a)) -> [0, 0, 0, 3, 3, 5]
         # new_word_indices -> [0, 1, 2, 3, 4, 5] - [0, 0, 0, 3, 3, 5] = [0, 1, 2, 0, 1, 0]
-        # new_word_indices is the concatenation of range(word_len(sentence)) 
-        # for all sentences in units 
+        # new_word_indices is the concatenation of range(word_len(sentence))
+        # for all sentences in units
 
         n_total_word_elements = tf.cast(batch_size * max_token_seq_len, tf.int32)
         word_indices_flat = tf.cast(idxs[:, 0] * max_token_seq_len + new_word_indices, tf.int32)
@@ -425,7 +426,7 @@ class BertSequenceTagger(LRScheduledTFModel):
         paddings = tf.zeros(tf.stack([tf.reduce_sum(max_token_seq_len - token_seq_lengths),
                                       nf], 0), tf.float32)
 
-        tensor_flat = tf.dynamic_stitch([word_indices_flat, nonword_indices_flat], 
+        tensor_flat = tf.dynamic_stitch([word_indices_flat, nonword_indices_flat],
                                         [elements, paddings])
         # tensor_flat -> [x, x, x, x, x, 0, x, 0, 0]
 
