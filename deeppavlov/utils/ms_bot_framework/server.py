@@ -111,7 +111,7 @@ def run_ms_bot_framework_server(agent_generator: callable,
         log.error(e)
         raise e
 
-    ssl_config = get_ssl_params(server_params, https, ssl_key=ssl_key, ssl_cert=ssl_cert)
+    ssl_config = get_ssl_params(server_params['common_defaults'], https, ssl_key=ssl_key, ssl_cert=ssl_cert)
 
     input_q = Queue()
     bot = Bot(agent_generator, ms_bf_server_params, input_q)
