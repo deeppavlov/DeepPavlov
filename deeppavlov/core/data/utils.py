@@ -351,7 +351,7 @@ def zero_pad_truncate(batch: Sequence[Sequence[Union[int, float, np.numeric,
     Returns:
         a 2-d array of size ``(len(batch), max_len)`` or a 3-d array of size ``(len(batch), max_len, len(batch[0][0]))``
     """
-    if isinstance(batch[0][0], Collection):  #
+    if isinstance(batch[0][0], Collection):  # ndarray behaves like a Sequence without actually being one
         size = (len(batch), max_len, len(batch[0][0]))
         dtype = dtype or np.float32
     else:
