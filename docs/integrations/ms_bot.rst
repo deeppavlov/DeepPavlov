@@ -51,8 +51,8 @@ The whole process takes two main steps:
     to the *Messaging endpoint* pane. Note, that Microsoft Bot
     Framework requires https endpoint with valid certificate from CA.
 
-    3.3 Save somewhere *Microsoft App ID* (*App ID*). To get *App Secret*
-    you need to proceed to the *Manage* ling near the *Microsoft App ID* pane.
+    3.3 Save somewhere *Microsoft App ID* (*App ID*). To create *App Secret*
+    you need to proceed to the *Manage* link near the *Microsoft App ID* pane.
     You will need both during your DeepPavlov skill/model REST service start.
 
     .. image:: ../_static/ms_bot_framework/04_bot_settings.png
