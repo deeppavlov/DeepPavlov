@@ -338,6 +338,19 @@ def zero_pad_truncate(batch: Sequence[Sequence[Union[int, float, np.numeric,
                                                      Sequence[Union[int, float, np.numeric]]]]],
                       max_len: int, pad: str = 'post', trunc: str = 'post',
                       dtype: Optional[Union[type, str]] = None) -> np.ndarray:
+    """
+
+    Args:
+        batch: assumes a batch of lists of word indexes or their vector representations
+        max_len: resulting length of every batch item
+        pad: how to pad shorter batch items: can be ``'post'`` or ``'pre'``
+        trunc: how tu truncate a batch item: can be ``'post'`` or ``'pre'``
+        dtype: overrides dtype for the resulting ``ndarray`` if specified,
+         otherwise ``np.int32`` is used for 2-d arrays and ``np.float32`` — for 3-d arrays
+
+    Returns:
+        a 2-d array of size ``(len(batch), max_len)`` or a 3-d array of size ``(len(batch), max_len, len(batch[0][0]))``
+    """
     if isinstance(batch[0][0], Collection):  #
         size = (len(batch), max_len, len(batch[0][0]))
         dtype = dtype or np.float32
