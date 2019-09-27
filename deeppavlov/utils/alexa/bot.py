@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import threading
 from collections import namedtuple
 from datetime import timedelta, datetime
 from logging import getLogger
-from queue import Queue
+from queue import Empty, Queue
 from threading import Timer, Thread
 from typing import Optional, Dict
 
@@ -58,6 +59,7 @@ class Bot(Thread):
         self.conversations: Dict[str, Conversation] = {}
         self.input_queue = input_queue
         self.output_queue = output_queue
+        self._run_flag = True
 
         self.valid_certificates: Dict[str, ValidatedCert] = {}
 
@@ -73,10 +75,22 @@ class Bot(Thread):
 
     def run(self) -> None:
         """Thread run method implementation."""
-        while True:
-            request = self.input_queue.get()
-            response = self._handle_request(request)
-            self.output_queue.put(response)
+        while self._run_flag:
+            try:
+                request = self.input_queue.get(timeout=1)
+            except Empty:
+                pass
+            else:
+                response = self._handle_request(request)
+                self.output_queue.put(response)
+
+    def join(self, timeout=None):
+        """Thread join method implementation."""
+        self._run_flag = False
+        for timer in threading.enumerate():
+            if isinstance(timer, threading.Timer):
+                timer.cancel()
+        Thread.join(self, timeout)
 
     def _del_conversation(self, conversation_key: str) -> None:
         """Deletes Conversation instance.
