@@ -331,7 +331,7 @@ class BertNerModel(LRScheduledTFModel):
         nf = shape[2]
         nf_int = units.get_shape().as_list()[-1]
 
-        # numer of TOKENS in each sentence
+        # number of TOKENS in each sentence
         token_seq_lenghs = tf.cast(tf.reduce_sum(mask, 1), tf.int64)
         # for a matrix m =
         # [[1, 1, 1],
