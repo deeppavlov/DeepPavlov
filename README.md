@@ -11,13 +11,13 @@ DeepPavlov is designed for
 
 ## Quick Links
 
-* Demo [*demo.ipavlov.ai*](https://demo.ipavlov.ai/)
+* Demo [*demo.deeppavlov.ai*](https://demo.deeppavlov.ai/)
 * Documentation [*docs.deeppavlov.ai*](http://docs.deeppavlov.ai/)
     * Model List [*docs:features/*](http://docs.deeppavlov.ai/en/master/features/overview.html)
     * Contribution Guide [*docs:contribution_guide/*](http://docs.deeppavlov.ai/en/master/devguides/contribution_guide.html)
 * Issues [*github/issues/*](https://github.com/deepmipt/DeepPavlov/issues)
-* Forum [*forum.ipavlov.ai*](https://forum.ipavlov.ai/)
-* Blogs [*ipavlov.ai/#rec108281800*](http://ipavlov.ai/#rec108281800)
+* Forum [*forum.deeppavlov.ai*](https://forum.deeppavlov.ai/)
+* Blogs [*medium.com/deeppavlov*](https://medium.com/deeppavlov)
 * Tutorials [*examples/*](https://github.com/deepmipt/DeepPavlov/tree/master/examples) and [extended colab tutorials](https://github.com/deepmipt/dp_tutorials)
 * Docker Hub [*hub.docker.com/u/deeppavlov/*](https://hub.docker.com/u/deeppavlov/) 
     * Docker Images Documentation [*docs:docker-images/*](http://docs.deeppavlov.ai/en/master/intro/installation.html#docker-images)
@@ -55,6 +55,14 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 **Auto ML**
 
 [Tuning Models with Evolutionary Algorithm](http://docs.deeppavlov.ai/en/master/features/hypersearch.html)
+
+**Integrations**
+
+[REST API](http://docs.deeppavlov.ai/en/master/integrations/rest_api.html) | [Socket API](http://docs.deeppavlov.ai/en/master/integrations/socket_api.html) | [Yandex Alice](http://docs.deeppavlov.ai/en/master/integrations/yandex_alice.html)
+
+[Telegram](http://docs.deeppavlov.ai/en/master/integrations/telegram.html) | [Microsoft Bot Framework](http://docs.deeppavlov.ai/en/master/integrations/ms_bot.html)
+
+[Amazon Alexa](http://docs.deeppavlov.ai/en/master/integrations/amazon_alexa.html) | [Amazon AWS](http://docs.deeppavlov.ai/en/master/integrations/aws_ec2.html)
 
 ## Installation
 
@@ -207,6 +215,18 @@ and others in the Integrations section for more info.
 
 
 ## Breaking Changes
+
+**Breaking changes in version 0.6.0**
+- [REST API](http://docs.deeppavlov.ai/en/0.6.0/integrations/rest_api.html):
+  - all models default endpoints were renamed to `/model`
+  - by default model arguments names are taken from `chainer.in`
+    [configuration parameter](http://docs.deeppavlov.ai/en/0.6.0/intro/configuration.html) instead of pre-set names
+    from a [settings file](http://docs.deeppavlov.ai/en/0.6.0/integrations/settings.html)
+  - swagger api endpoint moved from `/apidocs` to `/docs`
+- when using `"max_proba": true` in
+  a [`proba2labels` component](http://docs.deeppavlov.ai/en/0.6.0/apiref/models/classifiers.html) for classification,
+  it will return single label for every batch element instead of a list. One can set `"top_n": 1`
+  to get batches of single item lists as before
 
 **Breaking changes in version 0.5.0**
 - dependencies have to be reinstalled for most pipeline configurations

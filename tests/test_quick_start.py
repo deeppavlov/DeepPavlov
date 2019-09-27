@@ -24,7 +24,7 @@ from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
 from deeppavlov.utils.server.server import get_server_params, SERVER_CONFIG_FILENAME
-from deeppavlov.utils.socket.socket import get_socket_params, SOCKET_CONFIG_FILENAME
+from deeppavlov.utils.socket.socket import SOCKET_CONFIG_FILENAME
 
 tests_dir = Path(__file__).parent
 test_configs_path = tests_dir / "deeppavlov" / "configs"
@@ -385,17 +385,11 @@ class TestQuickStart(object):
         server_conf_file = get_settings_path() / SERVER_CONFIG_FILENAME
 
         server_params = get_server_params(server_conf_file, config_path)
-        model_args_names = server_params['model_args_names']
 
-        url_base = 'http://{}:{}/'.format(server_params['host'], api_port or server_params['port'])
+        url_base = 'http://{}:{}'.format(server_params['host'], api_port or server_params['port'])
         url = urljoin(url_base.replace('http://0.0.0.0:', 'http://127.0.0.1:'), server_params['model_endpoint'])
 
         post_headers = {'Accept': 'application/json'}
-
-        post_payload = {}
-        for arg_name in model_args_names:
-            arg_value = ' '.join(['qwerty'] * 10)
-            post_payload[arg_name] = [arg_value]
 
         logfile = io.BytesIO(b'')
         args = [sys.executable, "-m", "deeppavlov", "riseapi", str(config_path)]
@@ -405,6 +399,18 @@ class TestQuickStart(object):
                                            timeout=None, logfile=logfile)
         try:
             p.expect(url_base)
+
+            get_url = urljoin(url_base.replace('http://0.0.0.0:', 'http://127.0.0.1:'), '/api')
+            get_response = requests.get(get_url)
+            response_code = get_response.status_code
+            assert response_code == 200, f"GET /api request returned error code {response_code} with {config_path}"
+
+            model_args_names = get_response.json()
+            post_payload = dict()
+            for arg_name in model_args_names:
+                arg_value = ' '.join(['qwerty'] * 10)
+                post_payload[arg_name] = [arg_value]
+
             post_response = requests.post(url, json=post_payload, headers=post_headers)
             response_code = post_response.status_code
             assert response_code == 200, f"POST request returned error code {response_code} with {config_path}"
@@ -422,7 +428,7 @@ class TestQuickStart(object):
     def interact_socket(config_path, socket_type):
         socket_conf_file = get_settings_path() / SOCKET_CONFIG_FILENAME
 
-        socket_params = get_socket_params(socket_conf_file, config_path)
+        socket_params = get_server_params(socket_conf_file, config_path)
         model_args_names = socket_params['model_args_names']
 
         host = socket_params['host']
@@ -466,7 +472,10 @@ class TestQuickStart(object):
                                            f" with {config_path}\n{logfile.getvalue().decode()}"
 
         except pexpect.exceptions.EOF:
-            raise RuntimeError('Got unexpected EOF: \n{}'.format(logfile.getvalue().decode()))
+            raise RuntimeError(f'Got unexpected EOF: \n{logfile.getvalue().decode()}')
+
+        except json.JSONDecodeError:
+            raise ValueError(f'Got JSON not serializable response from model: "{data}"\n{logfile.getvalue().decode()}')
 
         finally:
             p.kill(signal.SIGTERM)

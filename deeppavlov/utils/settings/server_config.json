@@ -2,8 +2,8 @@
   "common_defaults": {
     "host": "0.0.0.0",
     "port": 5000,
-    "model_endpoint": "/model",
-    "model_args_names": ["context"],
+    "docs_endpoint": "/docs",
+    "model_args_names": "",
     "https": false,
     "https_cert_path": "",
     "https_key_path": "",
@@ -30,55 +30,46 @@
     "DstcSlotFillingNetwork": {
       "host": "",
       "port": "",
-      "model_endpoint": "/slot-fill",
       "model_args_names": ""
     },
     "EcommerceSkill": {
       "host": "",
       "port": "",
-      "model_endpoint": "/ecommerce_skill",
-      "model_args_names": ["query", "history", "state"]
+      "model_args_names": ""
     },
     "ErrorModel": {
       "host": "",
       "port": "",
-      "model_endpoint": "/error-model",
       "model_args_names": ""
     },
     "GoalOrientedBot": {
       "host": "",
       "port": "",
-      "model_endpoint": "/go-bot",
       "model_args_names": ""
     },
     "KerasIntentModel": {
       "host": "",
       "port": "",
-      "model_endpoint": "/intents",
       "model_args_names": ""
     },
     "NER": {
       "host": "",
       "port": "",
-      "model_endpoint": "/ner",
       "model_args_names": ""
     },
     "SquadModel": {
       "host": "",
       "port": "",
-      "model_endpoint": "/squad",
-      "model_args_names": ["context", "question"]
+      "model_args_names": ""
     },
     "ODQA": {
       "host": "",
       "port": "",
-      "model_endpoint": "/odqa",
       "model_args_names": ""
     },
     "Ranker": {
       "host": "",
       "port": "",
-      "model_endpoint": "/ranker",
       "model_args_names": ""
     }
   }

@@ -5,8 +5,8 @@ Welcome to DeepPavlov's documentation!
    :glob:
    :maxdepth: 1
 
-   QuickStart <intro/quick_start>
    Installation <intro/installation>
+   QuickStart <intro/quick_start>
    General concepts <intro/overview>
    Configuration file <intro/configuration>
    Models/Skills overview <features/overview>
@@ -51,6 +51,7 @@ Welcome to DeepPavlov's documentation!
    Frequently Asked Questions Answering <features/skills/faq>
    eCommerce Bot <features/skills/ecommerce>
    AIML <features/skills/aiml_skill>
+   Rasa <features/skills/rasa_skill>
    DSL <features/skills/dsl_skill>
 
 
