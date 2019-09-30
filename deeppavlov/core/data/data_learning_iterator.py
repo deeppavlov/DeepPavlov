@@ -32,7 +32,12 @@ class DataLearningIterator:
         random: instance of ``Random`` initialized with a seed
     """
     def split(self, *args, **kwargs):
+        """ Manipulate self.train, self.valid, and self.test into their final form. """
         pass
+
+    def preprocess(self, data: List[Tuple[Any, Any]], *args, **kwargs) -> List[Tuple[Any, Any]]:
+        """ Transform the data for a specific data type (e.g. ``'train'``). """
+        return data
 
     def __init__(self, data: Dict[str, List[Tuple[Any, Any]]], seed: int = None, shuffle: bool = True,
                  *args, **kwargs) -> None:
@@ -40,9 +45,9 @@ class DataLearningIterator:
 
         self.random = Random(seed)
 
-        self.train = data.get('train', [])
-        self.valid = data.get('valid', [])
-        self.test = data.get('test', [])
+        self.train = self.preprocess(data.get('train', []), *args, **kwargs)
+        self.valid = self.preprocess(data.get('valid', []), *args, **kwargs)
+        self.test = self.preprocess(data.get('test', []), *args, **kwargs)
         self.split(*args, **kwargs)
         self.data = {
             'train': self.train,

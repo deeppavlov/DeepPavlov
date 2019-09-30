@@ -1,11 +1,11 @@
 {
   "dataset_reader": {
     "class_name": "dstc2_reader",
-    "data_path": "{DOWNLOADS_PATH}/dstc2"
+    "data_path": "{DATA_PATH}"
   },
   "dataset_iterator": {
     "class_name": "dstc2_ner_iterator",
-    "dataset_path": "{DOWNLOADS_PATH}/dstc2"
+    "slot_values_path": "{SLOT_VALS_PATH}"
   },
   "chainer": {
     "in": ["x"],
@@ -27,8 +27,8 @@
         "class_name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["x_lower"],
-        "save_path": "{MODELS_PATH}/slotfill_dstc2/word.dict",
-        "load_path": "{MODELS_PATH}/slotfill_dstc2/word.dict",
+        "save_path": "{MODEL_PATH}/word.dict",
+        "load_path": "{MODEL_PATH}/word.dict",
         "out": ["x_tok_ind"]
       },
       {
@@ -43,8 +43,8 @@
         "class_name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["y"],
-        "save_path": "{MODELS_PATH}/slotfill_dstc2/tag.dict",
-        "load_path": "{MODELS_PATH}/slotfill_dstc2/tag.dict",
+        "save_path": "{MODEL_PATH}/tag.dict",
+        "load_path": "{MODEL_PATH}/tag.dict",
         "out": ["y_ind"]
       },
       {
@@ -62,8 +62,8 @@
         "n_hidden_list": [64, 64],
         "net_type": "cnn",
         "n_tags": "#tag_vocab.len",
-        "save_path": "{MODELS_PATH}/slotfill_dstc2/model",
-        "load_path": "{MODELS_PATH}/slotfill_dstc2/model",
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
         "embeddings_dropout": true,
         "top_dropout": true,
         "intra_layer_dropout": false,
@@ -107,8 +107,10 @@
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
-      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models"
+      "DATA_PATH": "{ROOT_PATH}/downloads/dstc2",
+      "SLOT_VALS_PATH": "{DATA_PATH}/dstc_slot_vals.json",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/slotfill_dstc2"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt"
@@ -118,6 +120,10 @@
       "server_utils": "NER"
     },
     "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/dstc_slot_vals.tar.gz",
+        "subdir": "{DATA_PATH}"
+      },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/slotfill_dstc2.tar.gz",
         "subdir": "{MODELS_PATH}"

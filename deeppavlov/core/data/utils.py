@@ -55,29 +55,44 @@ def simple_download(url: str, destination: [Path, str]):
 
     destination = Path(destination)
     destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary = destination.with_suffix(destination.suffix + '.part')
 
     headers = {'dp-token': get_download_token()}
     r = requests.get(url, stream=True, headers=headers)
     total_length = int(r.headers.get('content-length', 0))
 
     log.info('Downloading from {} to {}'.format(url, destination))
-    with destination.open('wb') as f, tqdm(total=total_length, unit='B', unit_scale=True) as pbar:
+
+    if temporary.exists() and temporary.stat().st_size > total_length:
+        temporary.write_bytes(b'')  # clearing temporary file when total_length is inconsistent
+
+    with temporary.open('ab') as f:
         done = False
-        downloaded = 0
-        while not done:
-            for chunk in r.iter_content(chunk_size=CHUNK):
-                if chunk:  # filter out keep-alive new chunks
-                    downloaded += len(chunk)
-                    pbar.update(len(chunk))
-                    f.write(chunk)
-            if downloaded < total_length:
-                log.warn(f'Download stopped abruptly, trying to resume from {downloaded} to reach {total_length}')
-                headers['Range'] = f'bytes={downloaded}-'
-                r = requests.get(url, headers=headers, stream=True)
-                if total_length - downloaded != int(r.headers['content-length']):
-                    raise RuntimeError('It looks like the server does not support resuming downloads')
-            else:
-                done = True
+        downloaded = f.tell()
+        if downloaded != 0:
+            log.warn(f'Found a partial download {temporary}')
+        with tqdm(initial=downloaded, total=total_length, unit='B', unit_scale=True) as pbar:
+            while not done:
+                if downloaded != 0:
+                    log.warn(f'Download stopped abruptly, trying to resume from {downloaded} '
+                             f'to reach {total_length}')
+                    headers['Range'] = f'bytes={downloaded}-'
+                    r = requests.get(url, headers=headers, stream=True)
+                    if 'content-length' not in r.headers or \
+                            total_length - downloaded != int(r.headers['content-length']):
+                        raise RuntimeError(f'It looks like the server does not support resuming '
+                                           f'downloads.')
+                for chunk in r.iter_content(chunk_size=CHUNK):
+                    if chunk:  # filter out keep-alive new chunks
+                        downloaded += len(chunk)
+                        pbar.update(len(chunk))
+                        f.write(chunk)
+                if downloaded >= total_length:
+                    # Note that total_length is 0 if the server didn't return the content length,
+                    # in this case we perform just one iteration and assume that we are done.
+                    done = True
+
+    temporary.rename(destination)
 
 
 def download(dest_file_path: [List[Union[str, Path]]], source_url: str, force_download=True):
@@ -413,10 +428,9 @@ def jsonify_data(data):
             result[key] = jsonify_data(data[key])
     elif isinstance(data, np.ndarray):
         result = data.tolist()
-    elif isinstance(data, (np.int_, np.intc, np.intp, np.int8, np.int16, np.int32,
-                           np.int64, np.uint8, np.uint16, np.uint32, np.uint64)):
+    elif isinstance(data, np.integer):
         result = int(data)
-    elif isinstance(data, (np.float_, np.float16, np.float32, np.float64)):
+    elif isinstance(data, np.floating):
         result = float(data)
     else:
         result = data

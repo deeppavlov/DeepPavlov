@@ -37,12 +37,8 @@ class SquadIterator(DataLearningIterator):
 
     """
 
-    def split(self, *args, **kwargs) -> None:
-        for dt in ['train', 'valid', 'test']:
-            setattr(self, dt, SquadIterator._extract_cqas(getattr(self, dt)))
-
-    @staticmethod
-    def _extract_cqas(data: Dict[str, Any]) -> List[Tuple[Tuple[str, str], Tuple[List[str], List[int]]]]:
+    def preprocess(self, data: Dict[str, Any], *args, **kwargs) -> \
+            List[Tuple[Tuple[str, str], Tuple[List[str], List[int]]]]:
         """Extracts context, question, answer, answer_start from SQuAD data
 
         Args:

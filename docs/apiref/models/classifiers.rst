@@ -25,3 +25,8 @@ deeppavlov.models.classifiers
     :members:
 
     .. automethod:: __call__
+
+.. autoclass:: deeppavlov.models.classifiers.proba2labels.Proba2Labels
+    :members:
+
+    .. automethod:: __call__
