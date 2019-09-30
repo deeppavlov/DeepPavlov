@@ -29,7 +29,7 @@ from deeppavlov.core.agent.rich_content import RichMessage
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
 from deeppavlov.utils.server.server import SSLConfig, get_server_params, get_ssl_params, redirect_root_do_docs
-from deeppavlov.utils.alice.data_model import Data
+from deeppavlov.utils.alice.request_parameters import data_body
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 
@@ -114,9 +114,9 @@ def start_agent_server(agent: Agent,
     redirect_root_do_docs(app, 'answer', endpoint, 'post')
 
     @app.post(endpoint, summary='A model endpoint', response_description='A model response')
-    async def answer(data: Data) -> Dict:
+    async def answer(data: dict = data_body) -> dict:
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, interact_alice, agent, data.dict())
+        return await loop.run_in_executor(None, interact_alice, agent, data)
 
     uvicorn.run(app, host=host, port=port, logger=uvicorn_log, ssl_version=ssl_config.version,
                 ssl_keyfile=ssl_config.keyfile, ssl_certfile=ssl_config.certfile)

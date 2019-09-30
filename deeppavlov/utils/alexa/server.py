@@ -31,7 +31,7 @@ from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
 from deeppavlov.utils.alexa.bot import Bot
-from deeppavlov.utils.alexa.data_model import Data, cert_chain_url_header, signature_header
+from deeppavlov.utils.alexa.request_parameters import data_body, cert_chain_url_header, signature_header
 from deeppavlov.utils.server.server import get_ssl_params, redirect_root_do_docs
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
@@ -120,24 +120,23 @@ def run_alexa_server(agent_generator: callable,
     bot = Bot(agent_generator, alexa_server_params, input_q, output_q)
     bot.start()
 
-    loop = asyncio.get_event_loop()
-
     endpoint = '/interact'
     redirect_root_do_docs(app, 'interact', endpoint, 'post')
 
     @app.post(endpoint, summary='Amazon Alexa custom service endpoint', response_description='A model response')
-    async def interact(data: Data,
+    async def interact(data: dict = data_body,
                        signature: str = signature_header,
                        signature_chain_url: str = cert_chain_url_header) -> JSONResponse:
-        data_dict = data.dict(by_alias=True)
+        # It is necessary for correct data validation to serialize date to a JSON formatted string with separators.
         request_dict = {
-            'request_body': json.dumps(data_dict).encode('utf-8'),
+            'request_body': json.dumps(data, separators=(',', ':')).encode('utf-8'),
             'signature_chain_url': signature_chain_url,
             'signature': signature,
-            'alexa_request': data_dict
+            'alexa_request': data
         }
 
         bot.input_queue.put(request_dict)
+        loop = asyncio.get_event_loop()
         response: dict = await loop.run_in_executor(None, bot.output_queue.get)
         response_code = 400 if 'error' in response.keys() else 200
 
