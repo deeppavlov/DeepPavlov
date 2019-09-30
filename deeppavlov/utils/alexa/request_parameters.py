@@ -25,9 +25,9 @@ See details at https://fastapi.tiangolo.com/tutorial/header-params/,
 
 from fastapi import Header, Body
 
-signature_example = 'Z5H5wqd06ExFVPNfJiqhKvAFjkf+cTVodOUirucHGcEVAMO1LfvgqWUkZ/X1ITDZbI0w+SMwVkEQZlkeThbVS/54M22StNDUtfz4Ua20xNDpIPwcWIACAmZ38XxbbTEFJI5WwqrbilNcfzqiGrIPfdO5rl+/xUjHFUdcJdUY/QzBxXsceytVYfEiR9MzOCN2m4C0XnpThUavAu159KrLj8AkuzN0JF87iXv+zOEeZRgEuwmsAnJrRUwkJ4yWokEPnSVdjF0D6f6CscfyvRe9nsWShq7/zRTa41meweh+n006zvf58MbzRdXPB22RI4AN0ksWW7hSC8/QLAKQE+lvaw=='
-signature_cert_chain_url_example = 'https://s3.amazonaws.com/echo.api/echo-api-cert-6-ats.pem'
-body_example = {
+_signature_example = 'Z5H5wqd06ExFVPNfJiqhKvAFjkf+cTVodOUirucHGcEVAMO1LfvgqWUkZ/X1ITDZbI0w+SMwVkEQZlkeThbVS/54M22StNDUtfz4Ua20xNDpIPwcWIACAmZ38XxbbTEFJI5WwqrbilNcfzqiGrIPfdO5rl+/xUjHFUdcJdUY/QzBxXsceytVYfEiR9MzOCN2m4C0XnpThUavAu159KrLj8AkuzN0JF87iXv+zOEeZRgEuwmsAnJrRUwkJ4yWokEPnSVdjF0D6f6CscfyvRe9nsWShq7/zRTa41meweh+n006zvf58MbzRdXPB22RI4AN0ksWW7hSC8/QLAKQE+lvaw=='
+_signature_cert_chain_url_example = 'https://s3.amazonaws.com/echo.api/echo-api-cert-6-ats.pem'
+_body_example = {
     "version": "1.0",
     "session": {
         "new": True,
@@ -89,6 +89,6 @@ body_example = {
     }
 }
 
-signature_header = Header(..., example=signature_example, alias='Signature')
-cert_chain_url_header = Header(..., example=signature_cert_chain_url_example, alias='Signaturecertchainurl')
-data_body = Body(..., example=body_example)
+signature_header = Header(..., example=_signature_example, alias='Signature')
+cert_chain_url_header = Header(..., example=_signature_cert_chain_url_example, alias='Signaturecertchainurl')
+data_body = Body(..., example=_body_example)

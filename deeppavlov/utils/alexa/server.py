@@ -127,7 +127,7 @@ def run_alexa_server(agent_generator: callable,
     async def interact(data: dict = data_body,
                        signature: str = signature_header,
                        signature_chain_url: str = cert_chain_url_header) -> JSONResponse:
-        # It is necessary for correct data validation to serialize date to a JSON formatted string with separators.
+        # It is necessary for correct data validation to serialize data to a JSON formatted string with separators.
         request_dict = {
             'request_body': json.dumps(data, separators=(',', ':')).encode('utf-8'),
             'signature_chain_url': signature_chain_url,

@@ -106,6 +106,10 @@ def start_agent_server(agent: Agent,
                        ssl_cert: Optional[str] = None,
                        ssl_config: Optional[SSLConfig] = None) -> None:
 
+    if ssl_key and ssl_cert and ssl_config:
+        raise ValueError('ssl_key, ssl_cert, ssl_config was assigned at the same time. Please, use either'
+                         'ssl_config or ssl_key and ssl_cert')
+
     if ssl_key and ssl_cert:
         ssl_config = get_ssl_params({}, True, ssl_key=ssl_key, ssl_cert=ssl_cert)
     else:

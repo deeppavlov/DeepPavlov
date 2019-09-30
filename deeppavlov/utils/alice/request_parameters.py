@@ -24,7 +24,7 @@ See details at https://fastapi.tiangolo.com/tutorial/body-multiple-params/
 
 from fastapi import Body
 
-body_example = {
+_body_example = {
     'name': 'data',
     'in': 'body',
     'required': 'true',
@@ -54,4 +54,4 @@ body_example = {
     }
 }
 
-data_body = Body(..., example=body_example)
+data_body = Body(..., example=_body_example)
