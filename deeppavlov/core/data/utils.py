@@ -368,27 +368,6 @@ def zero_pad_truncate(batch: Sequence[Sequence[Union[int, float, np.integer, np.
     return np.asarray(padded_batch)
 
 
-def zero_pad_char(batch, dtype=np.float32):
-    if len(batch) == 1 and len(batch[0]) == 0:
-        return np.array([], dtype=dtype)
-    batch_size = len(batch)
-    max_len = max(len(utterance) for utterance in batch)
-    max_token_len = max(len(ch) for token in batch for ch in token)
-    if isinstance(batch[0][0][0], (int, np.int)):
-        padded_batch = np.zeros([batch_size, max_len, max_token_len], dtype=np.int32)
-        for n, utterance in enumerate(batch):
-            for k, token in enumerate(utterance):
-                padded_batch[n, k, :len(token)] = token
-    else:
-        n_features = len(batch[0][0][0])
-        padded_batch = np.zeros([batch_size, max_len, max_token_len, n_features], dtype=dtype)
-        for n, utterance in enumerate(batch):
-            for k, token in enumerate(utterance):
-                for q, char_features in enumerate(token):
-                    padded_batch[n, k, q] = char_features
-    return padded_batch
-
-
 def get_all_elems_from_json(search_json, search_key):
     result = []
     if isinstance(search_json, dict):
