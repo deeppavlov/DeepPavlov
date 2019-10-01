@@ -35,7 +35,7 @@ class KBAnswerParserWikidata(KBBase):
     """
 
     def __init__(self, top_k_classes: int, classes_vocab_keys: Tuple, debug: bool = False,
-                 return_confidences: bool = True, *args, **kwargs) -> None:
+                 *args, **kwargs) -> None:
         """
 
         Args:
@@ -50,7 +50,6 @@ class KBAnswerParserWikidata(KBBase):
         self.top_k_classes = top_k_classes
         self.classes = list(classes_vocab_keys)
         self._debug = debug
-        self.return_confidences = return_confidences
 
     def __call__(self, tokens_batch: List[List[str]],
                  tags_batch: List[List[int]],
@@ -95,10 +94,8 @@ class KBAnswerParserWikidata(KBBase):
                 confidences_batch.append(0.0)
 
         parsed_objects_batch, confidences_batch = self.parse_wikidata_object(objects_batch, confidences_batch)
-        if self.return_confidences:
-            return parsed_objects_batch, confidences_batch
-        else:
-            return parsed_objects_batch
+
+        return parsed_objects_batch, confidences_batch
 
     def _parse_relations_probs(self, probs: List[float]) -> Tuple[List[str], List[str]]:
         top_k_inds = np.asarray(probs).argsort()[-self.top_k_classes:][::-1]

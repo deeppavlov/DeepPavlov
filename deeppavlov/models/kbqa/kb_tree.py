@@ -38,7 +38,7 @@ class KBTree(KBBase):
     """
 
     def __init__(self, tree_parser: TreeParser, ft_embedder: FasttextEmbedder,
-                 debug: bool = False, use_templates: bool = True, return_confidences: bool = True,
+                 debug: bool = False, use_templates: bool = True,
                      *args, **kwargs) -> None:
 
         """
@@ -56,7 +56,6 @@ class KBTree(KBBase):
         super().__init__(*args, **kwargs)
         self._debug = debug
         self.use_templates = use_templates
-        self.return_confidences = return_confidences
         self.tree_parser = tree_parser
         self.ft_embedder = ft_embedder
 
@@ -103,10 +102,7 @@ class KBTree(KBBase):
 
         parsed_objects_batch, confidences_batch = self.parse_wikidata_object(objects_batch, confidences_batch)
 
-        if self.return_confidences:
-            return parsed_objects_batch, confidences_batch
-        else:
-            return parsed_objects_batch
+        return parsed_objects_batch, confidences_batch
 
     def filter_triplets(self, triplets: List[List[str]],
                               sentence: str) -> List[List[str]]:
