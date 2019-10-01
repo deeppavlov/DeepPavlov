@@ -107,7 +107,11 @@ PARAMS = {
             [
                 ("Ну и сука же она", 'True'),
                 ("я два года жду эту игру", 'False')
-            ]
+            ],
+        ("classifiers/sentiment_sst_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_sst_multi_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_yelp_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_yelp_multi_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "snips": {
         ("classifiers/intents_snips.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
