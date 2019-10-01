@@ -37,8 +37,8 @@
         ],
         "id": "tfidf_vec",
         "class_name": "sklearn_component",
-        "save_path": "{MODELS_PATH}/vectorizer/tfidf_vectorizer_ruwiki_v1.pkl",
-        "load_path": "{MODELS_PATH}/vectorizer/tfidf_vectorizer_ruwiki_v1.pkl",
+        "save_path": "{MODELS_PATH}/vectorizer/tfidf_vectorizer_ruwiki_v2.pkl",
+        "load_path": "{MODELS_PATH}/vectorizer/tfidf_vectorizer_ruwiki_v2.pkl",
         "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
         "infer_method": "transform"
       },
@@ -64,8 +64,8 @@
         ],
         "class_name": "sklearn_component",
         "main": true,
-        "save_path": "{MODELS_PATH}/faq/tfidf_logreg_classifier_v1.pkl",
-        "load_path": "{MODELS_PATH}/faq/tfidf_logreg_classifier_v1.pkl",
+        "save_path": "{MODELS_PATH}/faq/tfidf_logreg_classifier_v2.pkl",
+        "load_path": "{MODELS_PATH}/faq/tfidf_logreg_classifier_v2.pkl",
         "model_class": "sklearn.linear_model:LogisticRegression",
         "infer_method": "predict_proba",
         "C": 1000,
@@ -100,11 +100,11 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/faq/school/tfidf_logreg_classifier_v1.pkl",
+        "url": "http://files.deeppavlov.ai/faq/school/tfidf_logreg_classifier_v2.pkl",
         "subdir": "{MODELS_PATH}/faq"
       },
       {
-        "url": "http://files.deeppavlov.ai/vectorizer/tfidf_vectorizer_ruwiki_v1.pkl",
+        "url": "http://files.deeppavlov.ai/vectorizer/tfidf_vectorizer_ruwiki_v2.pkl",
         "subdir": "{MODELS_PATH}/vectorizer"
       },
       {

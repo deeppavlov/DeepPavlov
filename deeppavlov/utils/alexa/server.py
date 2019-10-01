@@ -38,7 +38,6 @@ AMAZON_CERTIFICATE_LIFETIME = timedelta(hours=1)
 log = getLogger(__name__)
 
 app = Flask(__name__)
-Swagger(app)
 CORS(app)
 
 
@@ -104,6 +103,10 @@ def run_alexa_server(agent_generator: callable,
 
     host = server_params['common_defaults']['host']
     port = port or server_params['common_defaults']['port']
+    docs_endpoint = server_params['common_defaults']['docs_endpoint']
+
+    Swagger.DEFAULT_CONFIG['specs_route'] = docs_endpoint
+    Swagger(app)
 
     alexa_server_params = server_params['alexa_defaults']
 
@@ -248,7 +251,7 @@ def run_alexa_server(agent_generator: callable,
 
     @app.route('/')
     def index():
-        return redirect('/apidocs/')
+        return redirect(docs_endpoint)
 
     @app.route('/interact', methods=['POST'])
     @swag_from(endpoint_description)

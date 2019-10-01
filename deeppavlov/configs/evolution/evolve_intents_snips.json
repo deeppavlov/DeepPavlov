@@ -1,28 +1,19 @@
 {
   "dataset_reader": {
-    "class_name": "basic_classification_reader",
+    "class_name": "snips_reader",
     "x": "text",
     "y": "intents",
     "data_path": "{DOWNLOADS_PATH}/snips"
   },
   "dataset_iterator": {
-    "class_name": "basic_classification_iterator",
+    "class_name": "snips_intents_iterator",
     "seed": {
       "evolve_range": [
         50,
         500
       ],
       "discrete": true
-    },
-    "field_to_split": "train",
-    "split_fields": [
-      "train",
-      "valid"
-    ],
-    "split_proportions": [
-      0.9,
-      0.1
-    ]
+    }
   },
   "chainer": {
     "in": [
@@ -177,7 +168,7 @@
       "discrete": true
     },
     "metrics": [
-      "sets_accuracy",
+      "accuracy",
       "f1_macro",
       {
         "name": "roc_auc",
@@ -208,10 +199,6 @@
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      {
-        "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
-        "subdir": "{DOWNLOADS_PATH}/snips"
-      },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
         "subdir": "{DOWNLOADS_PATH}/embeddings"
