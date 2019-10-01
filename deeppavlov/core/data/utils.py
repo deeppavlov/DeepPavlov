@@ -334,8 +334,8 @@ def flatten_str_batch(batch):
         return chain(*[flatten_str_batch(sample) for sample in batch])
 
 
-def zero_pad_truncate(batch: Sequence[Sequence[Union[int, float, np.numeric,
-                                                     Sequence[Union[int, float, np.numeric]]]]],
+def zero_pad_truncate(batch: Sequence[Sequence[Union[int, float, np.integer, np.floating,
+                                                     Sequence[Union[int, float, np.integer, np.floating]]]]],
                       max_len: int, pad: str = 'post', trunc: str = 'post',
                       dtype: Optional[Union[type, str]] = None) -> np.ndarray:
     """
