@@ -28,10 +28,10 @@ from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.utils.alexa.bot import Bot
+from deeppavlov.utils.alexa.request_parameters import data_body, cert_chain_url_header, signature_header
 from deeppavlov.utils.deprecated.agents.default_agent import DefaultAgent
 from deeppavlov.utils.deprecated.agents.processors import DefaultRichContentWrapper
 from deeppavlov.utils.deprecated.skills.default_skill import DefaultStatelessSkill
-from deeppavlov.utils.alexa.request_parameters import data_body, cert_chain_url_header, signature_header
 from deeppavlov.utils.server.server import get_ssl_params, redirect_root_do_docs
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
