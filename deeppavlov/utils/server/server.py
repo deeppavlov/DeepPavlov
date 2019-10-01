@@ -22,6 +22,9 @@ from typing import Dict, List, Optional
 import uvicorn
 from fastapi import Body, FastAPI, HTTPException
 from fastapi.utils import generate_operation_id_for_path
+from pydantic import BaseConfig, BaseModel, Schema
+from pydantic.fields import Field
+from pydantic.main import MetaModel
 from starlette.responses import RedirectResponse
 
 from deeppavlov.core.agent.dialog_logger import DialogLogger
@@ -111,24 +114,16 @@ def redirect_root_do_docs(fast_app: FastAPI, func_name: str, endpoint: str, meth
         return response
 
 
-def interact(model: Chainer, param_names: List[str], payload: Dict[str, list]) -> List:
+def interact(model: Chainer, payload: Dict[str, Optional[List]]) -> List:
+    model_args = payload.values()
     dialog_logger.log_in(payload)
-
-    model_args = []
-    for param_name in param_names:
-        param_value = payload.get(param_name)
-        if param_value is None or len(param_value) > 0:
-            model_args.append(param_value)
-        else:
-            error_msg = f"nonempty array expected but got '{param_name}'={repr(param_value)}"
-            log.error(error_msg)
-            raise HTTPException(status_code=400, detail=error_msg)
-
     error_msg = None
     lengths = {len(model_arg) for model_arg in model_args if model_arg is not None}
 
     if not lengths:
         error_msg = 'got empty request'
+    elif 0 in lengths:
+        error_msg = 'got empty array as model argument'
     elif len(lengths) > 1:
         error_msg = 'got several different batch sizes'
 
@@ -148,11 +143,8 @@ def interact(model: Chainer, param_names: List[str], payload: Dict[str, list]) -
     return result
 
 
-def test_interact(model: Chainer, param_names: List[str], payload: Dict[str, list]) -> List[str]:
-    if not payload:
-        model_args = [["Test string."] for _ in param_names]
-    else:
-        model_args = [payload.get(param_name) for param_name in param_names]
+def test_interact(model: Chainer, payload: Dict[str, Optional[List]]) -> List[str]:
+    model_args = [arg or ["Test string."] for arg in payload.values()]
     try:
         _ = model(*model_args)
         return ["Test passed"]
@@ -176,19 +168,30 @@ def start_model_server(model_config: Path,
     ssl_config = get_ssl_params(server_params, https, ssl_key=ssl_key, ssl_cert=ssl_cert)
 
     model = build_model(model_config)
-    model_endpoint_post_example = {arg_name: ['string'] for arg_name in model_args_names}
+
+    def batch_decorator(cls: MetaModel) -> MetaModel:
+        cls.__annotations__ = {arg_name: list for arg_name in model_args_names}
+        cls.__fields__ = {arg_name: Field(name=arg_name, type_=list, class_validators=None,
+                                          model_config=BaseConfig, required=False, schema=Schema(None))
+                          for arg_name in model_args_names}
+        return cls
+
+    @batch_decorator
+    class Batch(BaseModel):
+        pass
 
     redirect_root_do_docs(app, 'answer', model_endpoint, 'post')
 
+    model_endpoint_post_example = {arg_name: ['string'] for arg_name in model_args_names}
     @app.post(model_endpoint, summary='A model endpoint')
-    async def answer(item: Dict[str, list] = Body(..., example=model_endpoint_post_example)) -> List:
+    async def answer(item: Batch = Body(..., example=model_endpoint_post_example)) -> List:
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, interact, model, model_args_names, item)
+        return await loop.run_in_executor(None, interact, model, item.dict())
 
     @app.post('/probe', include_in_schema=False)
-    async def probe(item: Dict[str, list] = Body(...)) -> List[str]:
+    async def probe(item: Batch) -> List[str]:
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, test_interact, model, model_args_names, item)
+        return await loop.run_in_executor(None, test_interact, model, item.dict())
 
     @app.get('/api', summary='Model argument names')
     async def api() -> List[str]:
