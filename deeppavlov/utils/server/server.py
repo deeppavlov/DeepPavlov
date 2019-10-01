@@ -25,7 +25,7 @@ from fastapi.utils import generate_operation_id_for_path
 from pydantic import BaseConfig, BaseModel, Schema
 from pydantic.fields import Field
 from pydantic.main import MetaModel
-from starlette.responses import JSONResponse, RedirectResponse
+from starlette.responses import RedirectResponse
 
 from deeppavlov.utils.deprecated.agent import DialogLogger
 from deeppavlov.core.commands.infer import build_model
@@ -114,7 +114,7 @@ def redirect_root_do_docs(fast_app: FastAPI, func_name: str, endpoint: str, meth
         return response
 
 
-def interact(model: Chainer, payload: Dict[str, Optional[List]]) -> JSONResponse:
+def interact(model: Chainer, payload: Dict[str, Optional[List]]) -> List:
     model_args = payload.values()
     dialog_logger.log_in(payload)
     error_msg = None
@@ -140,14 +140,14 @@ def interact(model: Chainer, payload: Dict[str, Optional[List]]) -> JSONResponse
     prediction = list(zip(*prediction))
     result = jsonify_data(prediction)
     dialog_logger.log_out(result)
-    return JSONResponse(result)
+    return result
 
 
-def test_interact(model: Chainer, payload: Dict[str, Optional[List]]) -> JSONResponse:
+def test_interact(model: Chainer, payload: Dict[str, Optional[List]]) -> List[str]:
     model_args = [arg or ["Test string."] for arg in payload.values()]
     try:
         _ = model(*model_args)
-        return JSONResponse(["Test passed"])
+        return ["Test passed"]
     except Exception as e:
         raise HTTPException(status_code=400, detail=e)
 
@@ -183,18 +183,18 @@ def start_model_server(model_config: Path,
     redirect_root_do_docs(app, 'answer', model_endpoint, 'post')
 
     @app.post(model_endpoint, summary='A model endpoint')
-    async def answer(item: Batch) -> JSONResponse:
+    async def answer(item: Batch) -> List:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, interact, model, item.dict())
 
     @app.post('/probe', include_in_schema=False)
-    async def probe(item: Batch) -> JSONResponse:
+    async def probe(item: Batch) -> List[str]:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, test_interact, model, item.dict())
 
     @app.get('/api', summary='Model argument names')
-    async def api() -> JSONResponse:
-        return JSONResponse(model_args_names)
+    async def api() -> List[str]:
+        return model_args_names
 
     uvicorn.run(app, host=host, port=port, logger=uvicorn_log, ssl_version=ssl_config.version,
                 ssl_keyfile=ssl_config.keyfile, ssl_certfile=ssl_config.certfile)

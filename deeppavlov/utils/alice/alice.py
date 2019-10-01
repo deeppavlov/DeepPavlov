@@ -20,16 +20,15 @@ from typing import Dict, Union, Optional
 
 import uvicorn
 from fastapi import FastAPI
-from starlette.responses import JSONResponse
 
 from deeppavlov import build_model
 from deeppavlov.core.common.paths import get_settings_path
-from deeppavlov.utils.alice.data_model import Data
 from deeppavlov.utils.deprecated.agent import Agent, RichMessage
-from deeppavlov.utils.deprecated.agents.default_agent import DefaultAgent
 from deeppavlov.utils.deprecated.agents.processors import DefaultRichContentWrapper
+from deeppavlov.utils.deprecated.agents.default_agent import DefaultAgent
 from deeppavlov.utils.deprecated.skills.default_skill import DefaultStatelessSkill
 from deeppavlov.utils.server.server import SSLConfig, get_server_params, get_ssl_params, redirect_root_do_docs
+from deeppavlov.utils.alice.request_parameters import data_body
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 
@@ -40,7 +39,7 @@ app = FastAPI()
 DialogID = namedtuple('DialogID', ['user_id', 'session_id'])
 
 
-def interact_alice(agent: Agent, data: Dict) -> JSONResponse:
+def interact_alice(agent: Agent, data: Dict) -> Dict:
     """
     Exchange messages between basic pipelines and the Yandex.Dialogs service.
     If the pipeline returns multiple values, only the first one is forwarded to Yandex.
@@ -73,7 +72,7 @@ def interact_alice(agent: Agent, data: Dict) -> JSONResponse:
         'version': '1.0'
     }
 
-    return JSONResponse(response)
+    return response
 
 
 def start_alice_server(model_config: Path,
@@ -106,6 +105,10 @@ def start_agent_server(agent: Agent,
                        ssl_cert: Optional[str] = None,
                        ssl_config: Optional[SSLConfig] = None) -> None:
 
+    if ssl_key and ssl_cert and ssl_config:
+        raise ValueError('ssl_key, ssl_cert, ssl_config was assigned at the same time. Please, use either'
+                         'ssl_config or ssl_key and ssl_cert')
+
     if ssl_key and ssl_cert:
         ssl_config = get_ssl_params({}, True, ssl_key=ssl_key, ssl_cert=ssl_cert)
     else:
@@ -114,9 +117,9 @@ def start_agent_server(agent: Agent,
     redirect_root_do_docs(app, 'answer', endpoint, 'post')
 
     @app.post(endpoint, summary='A model endpoint', response_description='A model response')
-    async def answer(data: Data) -> JSONResponse:
+    async def answer(data: dict = data_body) -> dict:
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, interact_alice, agent, data.dict())
+        return await loop.run_in_executor(None, interact_alice, agent, data)
 
     uvicorn.run(app, host=host, port=port, logger=uvicorn_log, ssl_version=ssl_config.version,
                 ssl_keyfile=ssl_config.keyfile, ssl_certfile=ssl_config.certfile)

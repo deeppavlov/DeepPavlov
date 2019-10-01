@@ -19,7 +19,6 @@ from typing import Union, Optional
 
 import uvicorn
 from fastapi import FastAPI
-from starlette.responses import JSONResponse
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.file import read_json
@@ -112,7 +111,7 @@ def run_ms_bot_framework_server(agent_generator: callable,
         log.error(e)
         raise e
 
-    ssl_config = get_ssl_params(server_params, https, ssl_key=ssl_key, ssl_cert=ssl_cert)
+    ssl_config = get_ssl_params(server_params['common_defaults'], https, ssl_key=ssl_key, ssl_cert=ssl_cert)
 
     input_q = Queue()
     bot = Bot(agent_generator, ms_bf_server_params, input_q)
@@ -122,9 +121,10 @@ def run_ms_bot_framework_server(agent_generator: callable,
     redirect_root_do_docs(app, 'answer', endpoint, 'post')
 
     @app.post(endpoint)
-    async def answer(activity: dict) -> JSONResponse:
+    async def answer(activity: dict) -> dict:
         bot.input_queue.put(activity)
-        return JSONResponse({})
+        return {}
 
     uvicorn.run(app, host=host, port=port, logger=uvicorn_log, ssl_version=ssl_config.version,
                 ssl_keyfile=ssl_config.keyfile, ssl_certfile=ssl_config.certfile)
+    bot.join()
