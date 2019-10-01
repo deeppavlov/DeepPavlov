@@ -42,7 +42,7 @@ will return list with argument names.
 """""
 
 To interact with the REST API via graphical interface open
-``<host>:<port>/docs`` in a browser (Flasgger UI).
+``<host>:<port>/docs`` in a browser (Swagger UI).
 
 
 Advanced configuration

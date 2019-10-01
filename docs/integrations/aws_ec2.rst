@@ -127,7 +127,7 @@ Deployment process consists of two main stages:
 
 1.  Get your AWS instance public DNS from the instance dashboard.
 
-2.  Get full info about your ODQA API from its Flasgger by navigating to
+2.  Get full info about your ODQA API from its Swagger by navigating to
     following URL in your browser:
 
     ``http://<your_aws_instance_public_dns>:<your_odqa_service_port>``
