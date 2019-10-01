@@ -21,7 +21,7 @@ import numpy as np
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.utils import zero_pad, is_str_batch, flatten_str_batch
+from deeppavlov.core.data.utils import zero_pad, flatten_str_batch
 from deeppavlov.core.models.estimator import Estimator
 
 log = getLogger(__name__)
@@ -89,7 +89,7 @@ class SimpleVocabulary(Estimator):
             looked_up_batch = [self(sample, is_top=False) for sample in batch]
         else:
             return self[batch]
-        if self._pad_with_zeros and is_top and not is_str_batch(looked_up_batch):
+        if self._pad_with_zeros and is_top and not isinstance(batch, str):
             looked_up_batch = zero_pad(looked_up_batch)
 
         return looked_up_batch

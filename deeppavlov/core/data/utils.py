@@ -311,22 +311,6 @@ def zero_pad(batch, zp_batch=None, dtype=np.float32, padding=0):
     return zp_batch
 
 
-def is_str_batch(batch):
-    while True:
-        if isinstance(batch, Iterable):
-            if isinstance(batch, str):
-                return True
-            elif isinstance(batch, np.ndarray):
-                return batch.dtype.kind == 'U'
-            else:
-                if len(batch) > 0:
-                    batch = batch[0]
-                else:
-                    return True
-        else:
-            return False
-
-
 def flatten_str_batch(batch):
     if isinstance(batch, str):
         return [batch]
