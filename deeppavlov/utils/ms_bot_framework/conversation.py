@@ -18,7 +18,7 @@ from urllib.parse import urljoin
 
 import requests
 
-from deeppavlov.utils.deprecated.agent import RichMessage
+from deeppavlov.deprecated.agent import RichMessage
 
 log = getLogger(__name__)
 

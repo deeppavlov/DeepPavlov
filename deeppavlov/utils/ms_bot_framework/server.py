@@ -23,9 +23,9 @@ from fastapi import FastAPI
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
-from deeppavlov.utils.deprecated.agents.default_agent import DefaultAgent
-from deeppavlov.utils.deprecated.agents.processors import DefaultRichContentWrapper
-from deeppavlov.utils.deprecated.skills.default_skill import DefaultStatelessSkill
+from deeppavlov.deprecated.agents.default_agent import DefaultAgent
+from deeppavlov.deprecated.agents.processors import DefaultRichContentWrapper
+from deeppavlov.deprecated.skills.default_skill import DefaultStatelessSkill
 from deeppavlov.utils.ms_bot_framework.bot import Bot
 from deeppavlov.utils.server.server import get_ssl_params, redirect_root_do_docs
 

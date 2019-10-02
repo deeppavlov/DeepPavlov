@@ -24,10 +24,10 @@ from fastapi import FastAPI
 from deeppavlov import build_model
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.utils.alice.request_parameters import data_body
-from deeppavlov.utils.deprecated.agent import Agent, RichMessage
-from deeppavlov.utils.deprecated.agents.processors import DefaultRichContentWrapper
-from deeppavlov.utils.deprecated.agents.default_agent import DefaultAgent
-from deeppavlov.utils.deprecated.skills.default_skill import DefaultStatelessSkill
+from deeppavlov.deprecated.agent import Agent, RichMessage
+from deeppavlov.deprecated.agents.processors import DefaultRichContentWrapper
+from deeppavlov.deprecated.agents.default_agent import DefaultAgent
+from deeppavlov.deprecated.skills.default_skill import DefaultStatelessSkill
 from deeppavlov.utils.server.server import SSLConfig, get_server_params, get_ssl_params, redirect_root_do_docs
 
 SERVER_CONFIG_FILENAME = 'server_config.json'

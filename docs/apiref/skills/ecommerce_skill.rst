@@ -1,5 +1,5 @@
-deeppavlov.utils.deprecated.skills.ecommerce_skill
+deeppavlov.deprecated.skills.ecommerce_skill
 ==================================================
 
-.. automodule:: deeppavlov.utils.deprecated.skills.ecommerce_skill.tfidf_retrieve
+.. automodule:: deeppavlov.deprecated.skills.ecommerce_skill.tfidf_retrieve
    :members:

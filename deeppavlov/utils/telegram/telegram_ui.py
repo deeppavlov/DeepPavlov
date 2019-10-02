@@ -21,10 +21,10 @@ import telebot
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
-from deeppavlov.utils.deprecated.agent import Agent, RichMessage
-from deeppavlov.utils.deprecated.agents.default_agent import DefaultAgent
-from deeppavlov.utils.deprecated.agents.processors import DefaultRichContentWrapper
-from deeppavlov.utils.deprecated.skills.default_skill import DefaultStatelessSkill
+from deeppavlov.deprecated.agent import Agent, RichMessage
+from deeppavlov.deprecated.agents.default_agent import DefaultAgent
+from deeppavlov.deprecated.agents.processors import DefaultRichContentWrapper
+from deeppavlov.deprecated.skills.default_skill import DefaultStatelessSkill
 
 log = getLogger(__name__)
 

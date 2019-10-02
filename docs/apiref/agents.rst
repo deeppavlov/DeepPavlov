@@ -2,7 +2,7 @@ agents
 ======
 Agent classes.
 
-.. automodule:: deeppavlov.utils.deprecated.agents
+.. automodule:: deeppavlov.deprecated.agents
    :members:
 
 .. toctree::

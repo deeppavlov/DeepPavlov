@@ -17,8 +17,8 @@ from logging import getLogger
 from threading import Timer
 from typing import Optional
 
-from deeppavlov.utils.deprecated.agent import RichMessage
-from deeppavlov.utils.deprecated.agents.default_agent import DefaultAgent
+from deeppavlov.deprecated.agent import RichMessage
+from deeppavlov.deprecated.agents.default_agent import DefaultAgent
 
 log = getLogger(__name__)
 

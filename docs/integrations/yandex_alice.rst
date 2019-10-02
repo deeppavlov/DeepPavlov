@@ -35,15 +35,15 @@ Python
 ~~~~~~
 
 To run a model specified by a DeepPavlov config ``<config_path>`` as an Alice
-skill, firstly, you have to turn it to a :class:`~deeppavlov.utils.deprecated.skill.skill.Skill`
-and then make it an :class:`~deeppavlov.utils.deprecated.agent.agent.Agent`.
+skill, firstly, you have to turn it to a :class:`~deeppavlov.deprecated.skill.skill.Skill`
+and then make it an :class:`~deeppavlov.deprecated.agent.agent.Agent`.
 
 .. code:: python
 
     from deeppavlov import build_model
-    from deeppavlov.utils.deprecated.skills.default_skill import DefaultStatelessSkill
-    from deeppavlov.utils.deprecated.agents.default_agent import DefaultAgent
-    from deeppavlov.utils.deprecated.agents.processors import HighestConfidenceSelector
+    from deeppavlov.deprecated.skills.default_skill import DefaultStatelessSkill
+    from deeppavlov.deprecated.agents.default_agent import DefaultAgent
+    from deeppavlov.deprecated.agents.processors import HighestConfidenceSelector
     from deeppavlov.utils.alice import start_agent_server
 
     model = build_model("<config_path>", download=True)
@@ -55,8 +55,8 @@ and then make it an :class:`~deeppavlov.utils.deprecated.agent.agent.Agent`.
     # Step 3: run server
     start_agent_server(agent, host='0.0.0.0', port=7051, endpoint='/agent', ssl_key='my.key', ssl_cert='my.crt')
 
-If your model is already a subclass of :class:`~deeppavlov.utils.deprecated.skill.skill.Skill`
-or a subclass of :class:`~deeppavlov.utils.deprecated.agent.agent.Agent` (see
+If your model is already a subclass of :class:`~deeppavlov.deprecated.skill.skill.Skill`
+or a subclass of :class:`~deeppavlov.deprecated.agent.agent.Agent` (see
 :doc:`skills </apiref/skills>` and :doc:`agents </apiref/agents>`) you can skip
 corresponding steps.
 

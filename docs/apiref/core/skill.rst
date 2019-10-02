@@ -1,6 +1,6 @@
-deeppavlov.utils.deprecated.skill
+deeppavlov.deprecated.skill
 =================================
 Basic class for building DeepPavlov skills.
 
-.. automodule:: deeppavlov.utils.deprecated.skill.skill
+.. automodule:: deeppavlov.deprecated.skill.skill
    :members:
