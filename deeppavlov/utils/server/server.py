@@ -149,7 +149,7 @@ def test_interact(model: Chainer, payload: Dict[str, Optional[List]]) -> List[st
         _ = model(*model_args)
         return ["Test passed"]
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=repr(e))
 
 
 def start_model_server(model_config: Path,
