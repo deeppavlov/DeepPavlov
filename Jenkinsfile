@@ -5,7 +5,7 @@ node('cuda-module') {
                 sh "rm -rf .[^.] .??* *"
             }
             stage('Checkout') {
-                sh "cp -r ${pwd()}@script/* ."
+                checkout scm
             }
             stage('Setup') {
                 env.TFHUB_CACHE_DIR="tfhub_cache"
