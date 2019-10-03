@@ -156,7 +156,7 @@ def download(dest_file_path: [List[Union[str, Path]]], source_url: str, force_do
             shutil.copy(str(first_dest_path), str(dest_path))
 
 
-def _untar(file_path: Union[Path, str], extract_folder: Optional[Union[Path, str]] = None) -> None:
+def untar(file_path: Union[Path, str], extract_folder: Optional[Union[Path, str]] = None) -> None:
     """Simple tar archive extractor.
 
     Args:
@@ -172,7 +172,7 @@ def _untar(file_path: Union[Path, str], extract_folder: Optional[Union[Path, str
     tar.close()
 
 
-def _ungzip(file_path: Union[Path, str], extract_path: Union[Path, str] = None) -> None:
+def ungzip(file_path: Union[Path, str], extract_path: Union[Path, str] = None) -> None:
     """Simple .gz archive extractor.
 
     Args:
@@ -236,9 +236,9 @@ def download_decompress(url: str,
         extracted_path.mkdir(parents=True, exist_ok=True)
 
         if file_name.endswith('.tar.gz'):
-            _untar(arch_file_path, extracted_path)
+            untar(arch_file_path, extracted_path)
         elif file_name.endswith('.gz'):
-            _ungzip(arch_file_path, extracted_path / Path(file_name).with_suffix('').name)
+            ungzip(arch_file_path, extracted_path / Path(file_name).with_suffix('').name)
         elif file_name.endswith('.zip'):
             with zipfile.ZipFile(arch_file_path, 'r') as zip_ref:
                 zip_ref.extractall(extracted_path)
@@ -282,10 +282,10 @@ def file_md5(fpath: Union[str, Path], chunk_size: int = 2**16) -> Optional[str]:
 
     Args:
         fpath: Path to file.
-        chunk_size: md5 object updated by `chunk_size` bytes from file.
+        chunk_size: md5 object updated by ``chunk_size`` bytes from file.
 
     Returns:
-        None if `fpath` does not point to a file, else returns md5 hash value as string.
+        None if ``fpath`` does not point to a file, else returns md5 hash value as string.
 
     """
     fpath = Path(fpath)
@@ -299,13 +299,13 @@ def file_md5(fpath: Union[str, Path], chunk_size: int = 2**16) -> Optional[str]:
 
 
 def mark_done(path: Union[Path, str]) -> None:
-    """Create `.done` empty file in the directory.
+    """Create ``.done`` empty file in the directory.
 
     Args:
         path: Path to directory.
 
     Raises:
-        NotADirectoryError: If `path` does not point to a directory.
+        NotADirectoryError: If ``path`` does not point to a directory.
 
     """
     path = Path(path)
@@ -316,16 +316,16 @@ def mark_done(path: Union[Path, str]) -> None:
 
 
 def is_done(path: Union[Path, str]) -> bool:
-    """Check if `.done` file exists in directory.
+    """Check if ``.done`` file exists in directory.
 
     Args:
         path: Path to directory.
 
     Returns:
-        True if directory contains `.done` file, False otherwise.
+        True if directory contains ``.done`` file, False otherwise.
 
     Raises:
-        NotADirectoryError: If `path` does not point to a directory.
+        NotADirectoryError: If ``path`` does not point to a directory.
 
     """
     path = Path(path)
@@ -364,7 +364,7 @@ def _get_all_dimensions(batch: Sequence, level: int = 0, res: Optional[List[List
     return res
 
 
-def _get_dimensions(batch: Sequence) -> List[int]:
+def get_dimensions(batch: Sequence) -> List[int]:
     """Return maximal size of each batch dimension."""
     return list(map(max, _get_all_dimensions(batch)))
 
@@ -393,7 +393,7 @@ def zero_pad(batch: Sequence,
 
     """
     if zp_batch is None:
-        dims = _get_dimensions(batch)
+        dims = get_dimensions(batch)
         zp_batch = np.ones(dims, dtype=dtype) * padding
     if zp_batch.ndim == 1:
         zp_batch[:len(batch)] = batch
@@ -421,13 +421,13 @@ def is_str_batch(batch: Iterable) -> bool:
 
 
 def flatten_str_batch(batch: Union[str, Iterable]) -> Union[list, chain]:
-    """Joins all strings from nested lists to one `itertools.chain`.
+    """Joins all strings from nested lists to one ``itertools.chain``.
 
     Args:
         batch: List with nested lists to flatten.
 
     Returns:
-        Generator of flat List[str]. For str `batch` returns [`batch`].
+        Generator of flat List[str]. For str ``batch`` returns [``batch``].
 
     Examples:
         >>> [string for string in flatten_str_batch(['a', ['b'], [['c', 'd']]])]
@@ -505,7 +505,7 @@ def get_all_elems_from_json(search_json: dict, search_key: str) -> list:
         search_key: Key for search.
 
     Returns:
-        List of values stored in nestled structures by `search_key`.
+        List of values stored in nested structures by ``search_key``.
 
     Examples:
         >>> get_all_elems_from_json({'a':{'b': [1,2,3]}, 'b':42}, 'b')
@@ -527,15 +527,15 @@ def get_all_elems_from_json(search_json: dict, search_key: str) -> list:
 
 
 def check_nested_dict_keys(check_dict: dict, keys: list) -> bool:
-    """Checks if dictionary contains nestled keys from keys list.
+    """Checks if dictionary contains nested keys from keys list.
 
     Args:
         check_dict: Dictionary to check.
-        keys: Keys list. i-th nested dict of `check_dict` should contain dict containing (i+1)-th key from the `keys`
-            list by i-th key.
+        keys: Keys list. i-th nested dict of ``check_dict`` should contain dict containing (i+1)-th key
+        from the ``keys`` list by i-th key.
 
     Returns:
-        True if dictionary contains nestled keys from keys list, False otherwise.
+        True if dictionary contains nested keys from keys list, False otherwise.
 
     Examples:
         >>> check_nested_dict_keys({'x': {'y': {'z': 42}}}, ['x', 'y', 'z'])
@@ -559,9 +559,9 @@ def check_nested_dict_keys(check_dict: dict, keys: list) -> bool:
 
 
 def jsonify_data(data: Any) -> Any:
-    """Replaces JSON-non-serializable objects by JSON-serializable.
+    """Replaces JSON-non-serializable objects with JSON-serializable.
 
-    Function replaces numpy arrays and numbers by python lists and numbers, tuples is replaces by lists. All other
+    Function replaces numpy arrays and numbers with python lists and numbers, tuples is replaces with lists. All other
     object types remain the same.
 
     Args:
@@ -596,14 +596,14 @@ def chunk_generator(items_list: list, chunk_size: int) -> Generator[list, None, 
         chunk_size: Length of slice.
 
     Yields:
-        list: `items_list` consecutive slices.
+        list: ``items_list`` consecutive slices.
 
     """
     for i in range(0, len(items_list), chunk_size):
         yield items_list[i:i + chunk_size]
 
 
-def update_dict_recursive(editable_dict: dict, editing_dict: Union[dict, Mapping]) -> None:
+def update_dict_recursive(editable_dict: dict, editing_dict: Mapping) -> None:
     """Updates dict recursively.
 
     You need to use this function to update dictionary if depth of editing_dict is more then 1.

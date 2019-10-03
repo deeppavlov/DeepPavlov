@@ -39,7 +39,6 @@ class SlotFillingComponent(Component, Serializable):
 
     @overrides
     def __call__(self, batch, *args, **kwargs):
-
         slots = [{}] * len(batch)
 
         m = [i for i, v in enumerate(batch) if v]
