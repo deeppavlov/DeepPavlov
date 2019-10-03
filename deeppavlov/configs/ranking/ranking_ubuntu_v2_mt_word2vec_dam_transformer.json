@@ -69,7 +69,7 @@
         "class_name": "dam_nn_use_transformer",
         "stack_num": 5,
         "is_positional": true,
-        "num_context_turns": "#preproc.num_context_turns",
+        "num_context_turns": "{NUM_CONTEXT_TURNS}",
         "max_sequence_length": "#preproc.max_sequence_length",
         "embedding_dim": "#word2vec_embedder.dim",
         "emb_matrix": "#embeddings.emb_mat",

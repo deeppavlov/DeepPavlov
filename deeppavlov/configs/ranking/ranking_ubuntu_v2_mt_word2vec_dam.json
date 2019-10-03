@@ -40,7 +40,7 @@
         "save_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam/preproc/tok.dict",
         "load_path": "{MODELS_PATH}/ubuntu_v2_mt_word2vec_dam/preproc/tok.dict",
         "num_ranking_samples": 10,
-        "num_context_turns": 10,
+        "num_context_turns": "{NUM_CONTEXT_TURNS}",
         "max_sequence_length": 50,
         "embedding_dim": 200,
         "fit_on": ["x"],
