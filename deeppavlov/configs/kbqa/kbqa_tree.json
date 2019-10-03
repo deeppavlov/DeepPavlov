@@ -38,6 +38,7 @@
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_q_to_name.pickle",
         "class_name": "kb_tree",
         "relations_maping_filename": "wiki_properties_rus.pickle",
+        "templates_filename": "templates.pickle",
         "debug": true,
         "use_templates": true,
         "ft_embedder": "#my_embedder",
@@ -60,7 +61,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/kbqa_mix_lowercase"
+      "MODELS_PATH": "{ROOT_PATH}/models"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",

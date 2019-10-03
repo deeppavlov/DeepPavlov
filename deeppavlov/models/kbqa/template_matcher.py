@@ -34,7 +34,7 @@ class TemplateMatcher(Component, Serializable):
                 self.templates = pickle.load(t)
 
     def save(self) -> None:
-        pass
+        raise NotImplementedError
 
     def __call__(self, tokens: List[str], *args, **kwargs) -> Tuple[str, str]:
         s_sanitized = ' '.join([ch for ch in tokens if ch not in punctuation]).lower()

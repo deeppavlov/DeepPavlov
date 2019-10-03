@@ -28,7 +28,7 @@ class KBBase(Component, Serializable):
     """
 
     def __init__(self, load_path: str, linker: EntityLinker, template_matcher: TemplateMatcher,
-                 relations_maping_filename: str = None, templates_filename: str = None,
+                 relations_maping_filename: Optional[str] = None, templates_filename: Optional[str] = None,
                      *args, **kwargs) -> None:
 
         """

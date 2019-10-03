@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import nltk
 import numpy as np
@@ -39,6 +39,7 @@ class KBTree(KBBase):
 
     def __init__(self, tree_parser: TreeParser, ft_embedder: FasttextEmbedder,
                  debug: bool = False, use_templates: bool = True,
+                 relations_maping_filename: Optional[str] = None, templates_filename: Optional[str] = None,
                      *args, **kwargs) -> None:
 
         """
@@ -48,7 +49,10 @@ class KBTree(KBBase):
             ft_embedder: component `deeppavlov.models.embedders.fasttext`
             debug: whether to print entities and relations extracted from the question
             use_templates: whether to use templates for entity and relation extraction
-            return_confidences: whether to return confidences of answers
+            relations_maping_filename: file with the dictionary of ids(keys) and titles(values) of relations
+            from Wikidata
+            templates_filename: file with the dictionary of question templates(keys) and relations for these templates
+            (values)
             *args:
             **kwargs:
         """
@@ -58,6 +62,8 @@ class KBTree(KBBase):
         self.use_templates = use_templates
         self.tree_parser = tree_parser
         self.ft_embedder = ft_embedder
+        self._relations_filename = relations_maping_filename
+        self._templates_filename = templates_filename
 
     def __call__(self, sentences: List[str],
                  *args, **kwargs) -> List[str]:
