@@ -165,14 +165,15 @@ def untar(file_path: Union[Path, str], extract_folder: Optional[Union[Path, str]
 
     """
     file_path = Path(file_path)
-    extract_folder = extract_folder or file_path.parent
+    if extract_folder is None:
+        extract_folder = file_path.parent
     extract_folder = Path(extract_folder)
     tar = tarfile.open(file_path)
     tar.extractall(extract_folder)
     tar.close()
 
 
-def ungzip(file_path: Union[Path, str], extract_path: Union[Path, str] = None) -> None:
+def ungzip(file_path: Union[Path, str], extract_path: Optional[Union[Path, str]] = None) -> None:
     """Simple .gz archive extractor.
 
     Args:
@@ -182,7 +183,8 @@ def ungzip(file_path: Union[Path, str], extract_path: Union[Path, str] = None) -
     """
     chunk_size = 16 * 1024
     file_path = Path(file_path)
-    extract_path = extract_path or file_path.with_suffix('')
+    if extract_path is None:
+        extract_path = file_path.with_suffix('')
     extract_path = Path(extract_path)
 
     with gzip.open(file_path, 'rb') as fin, extract_path.open('wb') as fout:
