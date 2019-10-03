@@ -1,7 +1,7 @@
 import threading
 from collections import namedtuple
 from logging import getLogger
-from queue import Queue
+from queue import Empty, Queue
 from threading import Thread
 
 import requests
@@ -18,6 +18,7 @@ class Bot(Thread):
     def __init__(self, agent_generator: callable, config: dict, input_queue: Queue):
         super(Bot, self).__init__()
         self.config = config
+        self._run_flag = True
 
         self.conversations = {}
         self.access_info = {}
@@ -37,9 +38,20 @@ class Bot(Thread):
         self.timer.start()
 
     def run(self):
-        while True:
-            activity = self.input_queue.get()
-            self._handle_activity(activity)
+        while self._run_flag:
+            try:
+                activity = self.input_queue.get(timeout=1)
+            except Empty:
+                pass
+            else:
+                self._handle_activity(activity)
+
+    def join(self, timeout=None):
+        self._run_flag = False
+        for timer in threading.enumerate():
+            if isinstance(timer, threading.Timer):
+                timer.cancel()
+        Thread.join(self, timeout)
 
     def del_conversation(self, conversation_key: ConvKey):
         del self.conversations[conversation_key]
