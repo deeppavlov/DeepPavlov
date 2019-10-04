@@ -30,22 +30,21 @@
         ]
       },
       {
-        "id": "lowercase_preprocessor",
-        "class_name": "lowercase_preprocessor",
+        "id": "char_splitting_lowercase_preprocessor",
+        "class_name": "char_splitting_lowercase_preprocessor",
         "in": [
           "x_tokens"
         ],
         "out": [
-          "x_processed"
+          "x_chars_lowered_marked"
         ]
       },
       {
         "id": "tag_vocab",
-        "class_name": "default_vocab",
+        "class_name": "simple_vocab",
         "fit_on": [
           "y"
         ],
-        "level": "token",
         "special_tokens": [
           "PAD",
           "BEGIN",
@@ -56,23 +55,22 @@
       },
       {
         "id": "char_vocab",
-        "class_name": "default_vocab",
+        "class_name": "simple_vocab",
         "min_freq": 3,
         "fit_on": [
-          "x_processed"
+          "x_chars_lowered_marked"
         ],
         "special_tokens": [
           "PAD",
           "BEGIN",
           "END"
         ],
-        "level": "char",
         "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/cs/char.dict",
         "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/cs/char.dict"
       },
       {
         "in": [
-          "x_processed"
+          "x_chars_lowered_marked"
         ],
         "in_y": [
           "y"
@@ -152,10 +150,6 @@
       "valid",
       "test"
     ]
-  },
-  "predict": {
-    "batch_size": 32,
-    "outfile": "{RESULTS_PATH}/ud_cs_test.res"
   },
   "metadata": {
     "variables": {

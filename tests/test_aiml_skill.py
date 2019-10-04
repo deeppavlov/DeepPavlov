@@ -13,7 +13,7 @@ log = getLogger(__name__)
 
 class TestAIMLSkill:
     def setup(self):
-        config_ref = configs.aiml_skill.aiml_skill
+        config_ref = configs.skills.aiml_skill
         install_from_config(config_ref)
         aiml_skill = build_model(config_ref, download=True)
         self.agent = DefaultAgent([aiml_skill], skills_selector=HighestConfidenceSelector())

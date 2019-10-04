@@ -67,7 +67,7 @@ class MorphoTaggerDatasetIterator(DataLearningIterator):
         self.min_train_fraction = min_train_fraction
         super().__init__(data, seed, shuffle)
 
-    def split(self) -> None:
+    def split(self, *args, **kwargs) -> None:
         """
         Splits the `train` part to `train` and `valid`, if no `valid` part is specified.
         Moves deficient data from `valid` to `train` if both parts are given,
@@ -77,7 +77,7 @@ class MorphoTaggerDatasetIterator(DataLearningIterator):
             if self.shuffle:
                 random.shuffle(self.train)
             L = int(len(self.train) * (1.0 - self.validation_split))
-            self.train, self.valid = self.train[:L], self.valid[L:]
+            self.train, self.valid = self.train[:L], self.train[L:]
         elif self.min_train_fraction > 0.0:
             train_length = len(self.train)
             valid_length = len(self.valid)
@@ -90,13 +90,11 @@ class MorphoTaggerDatasetIterator(DataLearningIterator):
     def gen_batches(self, batch_size: int, data_type: str = 'train',
                     shuffle: bool = None, return_indexes: bool = False) -> Iterator[tuple]:
         """Generate batches of inputs and expected output to train neural networks
-
         Args:
             batch_size: number of samples in batch
             data_type: can be either 'train', 'test', or 'valid'
             shuffle: whether to shuffle dataset before batching
             return_indexes: whether to return indexes of batch elements in initial dataset
-
         Yields:
             a tuple of a batch of inputs and a batch of expected outputs.
             If `return_indexes` is True, also yields indexes of batch elements.
@@ -112,7 +110,7 @@ class MorphoTaggerDatasetIterator(DataLearningIterator):
         if batch_size < 0:
             batch_size = L
         for start in range(0, L, batch_size):
-            indexes_to_yield = indexes[start:start+batch_size]
+            indexes_to_yield = indexes[start:start + batch_size]
             data_to_yield = tuple(list(x) for x in zip(*([data[i] for i in indexes_to_yield])))
             if return_indexes:
                 yield indexes_to_yield, data_to_yield

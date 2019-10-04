@@ -35,8 +35,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "{MODELS_PATH}/classes.dict",
-        "load_path": "{MODELS_PATH}/classes.dict",
+        "save_path": "{MODEL_PATH}/classes.dict",
+        "load_path": "{MODEL_PATH}/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -85,8 +85,8 @@
         ],
         "main": true,
         "class_name": "keras_classification_model",
-        "save_path": "{MODELS_PATH}/model",
-        "load_path": "{MODELS_PATH}/model",
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "units_gru": 256,
@@ -130,7 +130,7 @@
     "metrics": [
       "f1_weighted",
       "f1_macro",
-      "sets_accuracy",
+      "accuracy",
       {
         "name": "roc_auc",
         "inputs": ["y_onehot", "y_pred_probas"]
@@ -142,13 +142,14 @@
     "show_examples": false,
     "validate_best": true,
     "test_best": true,
-    "tensorboard_log_dir": "{MODELS_PATH}/logs"
+    "tensorboard_log_dir": "{MODEL_PATH}/logs"
   },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/rusentiment_v14"
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/rusentiment_v14"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -165,7 +166,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/rusentiment_v14.tar.gz",
-        "subdir": "{ROOT_PATH}/models/classifiers"
+        "subdir": "{MODELS_PATH}/classifiers"
       }
     ]
   }

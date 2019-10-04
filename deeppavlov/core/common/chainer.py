@@ -13,8 +13,9 @@
 # limitations under the License.
 
 import pickle
+from itertools import islice
 from logging import getLogger
-from typing import Union, Tuple, List, Optional, Hashable
+from typing import Union, Tuple, List, Optional, Hashable, Reversible
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.component import Component
@@ -234,6 +235,36 @@ class Chainer(Component):
         if len(res) == 1:
             res = res[0]
         return res
+
+    def batched_call(self, *args: Reversible, batch_size: int = 16) -> Union[list, Tuple[list, ...]]:
+        """
+        Partitions data into mini-batches and applies :meth:`__call__` to each batch.
+
+        Args:
+            args: input data, each element of the data corresponds to a single model inputs sequence.
+            batch_size: the size of a batch.
+
+        Returns:
+            the model output as if the data was passed to the :meth:`__call__` method.
+        """
+        args = [iter(arg) for arg in args]
+        answer = [[] for _ in self.out_params]
+
+        while True:
+            batch = [list(islice(arg, batch_size)) for arg in args]
+            if not any(batch):  # empty batch, reached the end
+                break
+
+            curr_answer = self.__call__(*batch)
+            if len(self.out_params) == 1:
+                curr_answer = [curr_answer]
+
+            for y, curr_y in zip(answer, curr_answer):
+                y.extend(curr_y)
+
+        if len(self.out_params) == 1:
+            answer = answer[0]
+        return answer
 
     def get_main_component(self) -> Optional[Serializable]:
         try:

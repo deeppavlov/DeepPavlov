@@ -1,0 +1,30 @@
+{
+    "chainer": {
+        "in": [
+            "text"
+        ],
+        "pipe": [
+            {
+                "class_name": "ru_obscenity_classifier",
+                "data_path": "{DOWNLOADS_PATH}/obscenity_dataset/",
+                "in": "text",
+                "out": "flags_obscenity_or_not"
+            }
+        ],
+        "out": [
+            "flags_obscenity_or_not"
+        ]
+    },
+    "metadata": {
+        "variables": {
+          "ROOT_PATH": "~/.deeppavlov",
+          "DOWNLOADS_PATH": "{ROOT_PATH}/downloads"
+        },
+        "download": [
+            {
+              "url": "http://files.deeppavlov.ai/models/obscenity_classifier/ru_obscenity_dataset.zip",
+              "subdir": "{DOWNLOADS_PATH}/obscenity_dataset"
+            }
+          ]
+      }
+}

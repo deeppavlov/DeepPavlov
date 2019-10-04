@@ -55,8 +55,8 @@ class KvretDialogDatasetIterator(DataLearningIterator):
             dialogs[-1][1][1].append(task)
         return dialogs
 
-    @staticmethod
-    def _utterances(data):
+    @overrides
+    def preprocess(self, data, *args, **kwargs):
         utters = []
         history = []
         for x, y in data:
@@ -74,9 +74,3 @@ class KvretDialogDatasetIterator(DataLearningIterator):
             y_tuple = (y['text'], y['task']['intent'])
             utters.append((x_tuple, y_tuple))
         return utters
-
-    @overrides
-    def split(self, *args, **kwargs):
-        self.train = self._utterances(self.train)
-        self.valid = self._utterances(self.valid)
-        self.test = self._utterances(self.test)

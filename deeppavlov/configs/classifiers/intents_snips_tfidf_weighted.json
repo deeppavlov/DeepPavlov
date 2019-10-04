@@ -1,22 +1,13 @@
 {
   "dataset_reader": {
-    "class_name": "basic_classification_reader",
+    "class_name": "snips_reader",
     "x": "text",
     "y": "intents",
     "data_path": "{DOWNLOADS_PATH}/snips"
   },
   "dataset_iterator": {
-    "class_name": "basic_classification_iterator",
-    "seed": 42,
-    "field_to_split": "train",
-    "split_fields": [
-      "train",
-      "valid"
-    ],
-    "split_proportions": [
-      0.9,
-      0.1
-    ]
+    "class_name": "snips_intents_iterator",
+    "seed": 42
   },
   "chainer": {
     "in": [
@@ -32,8 +23,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v10/classes.dict",
-        "load_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v10/classes.dict",
+        "save_path": "{MODEL_PATH}/classes.dict",
+        "load_path": "{MODEL_PATH}/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -50,8 +41,8 @@
         ],
         "id": "my_tfidf_vectorizer",
         "class_name": "sklearn_component",
-        "save_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v10/tfidf.pkl",
-        "load_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v10/tfidf.pkl",
+        "save_path": "{MODEL_PATH}/tfidf.pkl",
+        "load_path": "{MODEL_PATH}/tfidf.pkl",
         "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
         "infer_method": "transform",
         "lowercase": true,
@@ -70,8 +61,8 @@
         ],
         "id": "my_selector",
         "class_name": "sklearn_component",
-        "save_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v10/selectkbest.pkl",
-        "load_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v10/selectkbest.pkl",
+        "save_path": "{MODEL_PATH}/selectkbest.pkl",
+        "load_path": "{MODEL_PATH}/selectkbest.pkl",
         "model_class": "sklearn.feature_selection:SelectKBest",
         "infer_method": "transform",
         "score_func": "sklearn.feature_selection:chi2",
@@ -89,8 +80,8 @@
         ],
         "id": "my_pca",
         "class_name": "sklearn_component",
-        "save_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v10/pca.pkl",
-        "load_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v10/pca.pkl",
+        "save_path": "{MODEL_PATH}/pca.pkl",
+        "load_path": "{MODEL_PATH}/pca.pkl",
         "model_class": "sklearn.decomposition:PCA",
         "infer_method": "transform",
         "n_components": 300
@@ -142,8 +133,8 @@
         ],
         "class_name": "sklearn_component",
         "main": true,
-        "save_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v10/model.pkl",
-        "load_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v10/model.pkl",
+        "save_path": "{MODEL_PATH}/model.pkl",
+        "load_path": "{MODEL_PATH}/model.pkl",
         "model_class": "sklearn.linear_model:LogisticRegression",
         "infer_method": "predict",
         "ensure_list_output": true
@@ -174,7 +165,8 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models"
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v12"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -186,15 +178,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
-        "subdir": "{MODELS_PATH}"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
-        "subdir": "{DOWNLOADS_PATH}/snips"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/intents_snips_sklearn_v10.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/intents_snips_sklearn_v12.tar.gz",
         "subdir": "{MODELS_PATH}/classifiers"
       },
       {
