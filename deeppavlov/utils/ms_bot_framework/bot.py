@@ -43,15 +43,23 @@ class MSBot(BaseBot):
         self._request_access_info()
         self._timer.start()
 
-    def del_conversation(self, conversation_key: ConvKey):
-        del self.conversations[conversation_key]
-        log.info(f'Deleted conversation, key: {str(conversation_key)}')
+    def _del_conversation(self, conversation_key: ConvKey):
+        if conversation_key in self.conversations.keys():
+            del self.conversations[conversation_key]
+            log.info(f'Deleted conversation, key: {str(conversation_key)}')
 
     def _update_access_info(self):
         polling_interval = self._config['auth_polling_interval']
         self._timer = threading.Timer(polling_interval, self._update_access_info)
         self._timer.start()
         self._request_access_info()
+
+    def _get_headers(self):
+        headers = {
+            'Authorization': f"{self.access_info['token_type']} {self.access_info['access_token']}",
+            'Content-Type': 'application/json'
+        }
+        return headers
 
     def _request_access_info(self):
         headers = {'Host': self._config['auth_host'],
@@ -77,10 +85,12 @@ class MSBot(BaseBot):
         conversation_key = ConvKey(activity['channelId'], activity['conversation']['id'])
 
         if conversation_key not in self.conversations.keys():
-            self.conversations[conversation_key] = Conversation(bot=self,
+            self.conversations[conversation_key] = Conversation(config=self._config,
                                                                 agent=self._agent,
                                                                 activity=activity,
-                                                                conversation_key=conversation_key)
+                                                                conversation_key=conversation_key,
+                                                                self_destruct_callback=lambda: self._del_conversation(conversation_key),
+                                                                get_headers_callback=lambda: self._get_headers())
 
             log.info(f'Created new conversation, key: {str(conversation_key)}')
 

@@ -26,10 +26,13 @@ log = getLogger(__name__)
 class Conversation:
     http_sessions = dict()
 
-    def __init__(self, bot, agent, activity: dict, conversation_key):
-        self.bot = bot
+    def __init__(self, config, agent, activity: dict, conversation_key, self_destruct_callback: callable,
+                 get_headers_callback: callable):
+        self.config = config
         self.agent = agent
         self.key = conversation_key
+        self._self_destruct_callback = self_destruct_callback
+        self._get_headers_callback = get_headers_callback
 
         self.bot_id = activity['recipient']['id']
         self.bot_name = activity['recipient']['name']
@@ -37,9 +40,9 @@ class Conversation:
         self.channel_id = activity['channelId']
         self.conversation_id = activity['conversation']['id']
 
-        self.stateful = self.bot.config['stateful']
+        self.stateful = self.config['stateful']
 
-        self.conversation_lifetime = self.bot.config['conversation_lifetime']
+        self.conversation_lifetime = self.config['conversation_lifetime']
         self.timer = None
         self._start_timer()
 
@@ -63,15 +66,12 @@ class Conversation:
         }
 
     def _start_timer(self):
-        self.timer = threading.Timer(self.conversation_lifetime, self._self_destruct)
+        self.timer = threading.Timer(self.conversation_lifetime, self._self_destruct_callback)
         self.timer.start()
 
     def _rearm_self_destruct(self):
         self.timer.cancel()
         self._start_timer()
-
-    def _self_destruct(self):
-        self.bot.del_conversation(self.key)
 
     def handle_activity(self, activity: dict):
         activity_type = activity['type']
@@ -141,17 +141,10 @@ class Conversation:
 
         url = urljoin(service_url, f"v3/conversations/{self.conversation_id}/activities")
 
-        authorization = f"{self.bot.access_info['token_type']} " \
-                        f"{self.bot.access_info['access_token']}"
-        headers = {
-            'Authorization': authorization,
-            'Content-Type': 'application/json'
-        }
-
         response = self.http_session.post(
             url=url,
             json=out_activity,
-            headers=headers)
+            headers=self._get_headers_callback())
 
         try:
             response_json_str = str(response.json())
