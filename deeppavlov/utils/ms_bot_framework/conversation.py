@@ -37,7 +37,6 @@ class Conversation:
         self.channel_id = activity['channelId']
         self.conversation_id = activity['conversation']['id']
 
-        self.out_gateway = OutGateway(self)
         self.stateful = self.bot.config['stateful']
 
         self.conversation_lifetime = self.bot.config['conversation_lifetime']
@@ -51,6 +50,16 @@ class Conversation:
 
         self.handled_activities = {
             'message': self._handle_message
+        }
+
+        self.activity_template = {
+            'from': {
+                'id': self.bot_id,
+                'name': self.bot_name
+            },
+            'conversation': {
+                'id': self.conversation_id
+            }
         }
 
     def _start_timer(self):
@@ -90,11 +99,11 @@ class Conversation:
         ms_bf_response = response.ms_bot_framework()
         for out_activity in ms_bf_response:
             if out_activity:
-                self.out_gateway.send_activity(out_activity, in_activity)
+                self.send_activity(out_activity, in_activity)
 
     def _handle_usupported(self, in_activity: dict):
         activity_type = in_activity['type']
-        self.out_gateway.send_plain_text(f'Unsupported kind of {activity_type} activity!')
+        self.send_plain_text(f'Unsupported kind of {activity_type} activity!')
         log.warning(f'Received message with unsupported type: {str(in_activity)}')
 
     def _handle_message(self, in_activity: dict):
@@ -107,32 +116,13 @@ class Conversation:
         else:
             self._handle_usupported(in_activity)
 
-
-class OutGateway:
-    def __init__(self, conversation: Conversation):
-        self.conversation = conversation
-        self.service_url = self.conversation.service_url
-        self.activity_template = {
-            'from': {
-                'id': self.conversation.bot_id,
-                'name': self.conversation.bot_name
-            },
-            'conversation': {
-                'id': self.conversation.conversation_id
-            }
-        }
-
     def send_activity(self, out_activity: dict, in_activity: dict = None):
         service_url = self.service_url
-
         for key, value in self.activity_template.items():
             out_activity[key] = value
 
         if in_activity:
-            try:
-                service_url = in_activity['serviceUrl']
-            except KeyError:
-                pass
+            service_url = in_activity.get('serviceUrl', service_url)
 
             try:
                 out_activity['recepient']['id'] = in_activity['from']['id']
@@ -149,16 +139,16 @@ class OutGateway:
             except KeyError:
                 pass
 
-        url = urljoin(service_url, f"v3/conversations/{self.conversation.conversation_id}/activities")
+        url = urljoin(service_url, f"v3/conversations/{self.conversation_id}/activities")
 
-        authorization = f"{self.conversation.bot.access_info['token_type']} " \
-                        f"{self.conversation.bot.access_info['access_token']}"
+        authorization = f"{self.bot.access_info['token_type']} " \
+                        f"{self.bot.access_info['access_token']}"
         headers = {
             'Authorization': authorization,
             'Content-Type': 'application/json'
         }
 
-        response = self.conversation.http_session.post(
+        response = self.http_session.post(
             url=url,
             json=out_activity,
             headers=headers)
@@ -170,3 +160,6 @@ class OutGateway:
 
         log.debug(f'Sent activity to the MSBotFramework server. '
                   f'Response code: {response.status_code}, response contents: {response_json_str}')
+
+    def send_plain_text(self, text: str):
+        raise NotImplementedError
