@@ -105,7 +105,7 @@ def get_ssl_params(server_params: dict,
     return ssl_config
 
 
-def redirect_root_do_docs(fast_app: FastAPI, func_name: str, endpoint: str, method: str) -> None:
+def redirect_root_to_docs(fast_app: FastAPI, func_name: str, endpoint: str, method: str) -> None:
     """Adds api route to server that redirects user from root to docs with opened `endpoint` description."""
     @fast_app.get('/', include_in_schema=False)
     async def redirect_to_docs() -> RedirectResponse:
@@ -180,7 +180,7 @@ def start_model_server(model_config: Path,
     class Batch(BaseModel):
         pass
 
-    redirect_root_do_docs(app, 'answer', model_endpoint, 'post')
+    redirect_root_to_docs(app, 'answer', model_endpoint, 'post')
 
     @app.post(model_endpoint, summary='A model endpoint')
     async def answer(item: Batch) -> List:

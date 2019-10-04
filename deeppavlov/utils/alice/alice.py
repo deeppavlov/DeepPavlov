@@ -28,7 +28,7 @@ from deeppavlov.deprecated.agent import Agent, RichMessage
 from deeppavlov.deprecated.agents.processors import DefaultRichContentWrapper
 from deeppavlov.deprecated.agents.default_agent import DefaultAgent
 from deeppavlov.deprecated.skills.default_skill import DefaultStatelessSkill
-from deeppavlov.utils.server.server import SSLConfig, get_server_params, get_ssl_params, redirect_root_do_docs
+from deeppavlov.utils.server.server import SSLConfig, get_server_params, get_ssl_params, redirect_root_to_docs
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 
@@ -114,7 +114,7 @@ def start_agent_server(agent: Agent,
     else:
         ssl_config = ssl_config or get_ssl_params({}, False, ssl_key=None, ssl_cert=None)
 
-    redirect_root_do_docs(app, 'answer', endpoint, 'post')
+    redirect_root_to_docs(app, 'answer', endpoint, 'post')
 
     @app.post(endpoint, summary='A model endpoint', response_description='A model response')
     async def answer(data: dict = data_body) -> dict:

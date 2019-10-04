@@ -28,7 +28,7 @@ from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.utils.alexa.bot import AlexaBot
 from deeppavlov.utils.alexa.request_parameters import data_body, cert_chain_url_header, signature_header
-from deeppavlov.utils.server.server import get_ssl_params, redirect_root_do_docs
+from deeppavlov.utils.server.server import get_ssl_params, redirect_root_to_docs
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 
@@ -79,7 +79,7 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict],
     bot.start()
 
     endpoint = '/interact'
-    redirect_root_do_docs(app, 'interact', endpoint, 'post')
+    redirect_root_to_docs(app, 'interact', endpoint, 'post')
 
     @app.post(endpoint, summary='Amazon Alexa custom service endpoint', response_description='A model response')
     async def interact(data: dict = data_body,
