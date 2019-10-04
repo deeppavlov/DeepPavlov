@@ -14,6 +14,7 @@
 
 from typing import Optional
 
+import numpy as np
 import tensorflow as tf
 
 
@@ -24,7 +25,6 @@ class MultiHeadSelfAttention(tf.keras.layers.Layer):
     Args:
           hidden_size: hidden size of the Transformer (d_model)
           num_heads: number of attention heads
-          neg_inf: some number close to -infinity to add to logits in order to mask corresponding values
           attention_probs_dropout_prob: dropout probability of the attention probabilities.
           trainable: whether the layer's variables should be trainable
           **kwargs: keyword arguments for base Layer class
@@ -32,7 +32,6 @@ class MultiHeadSelfAttention(tf.keras.layers.Layer):
     def __init__(self,
                  hidden_size: int = 768,
                  num_heads: int = 12,
-                 neg_inf: float = -10000.0,
                  attention_probs_dropout_prob: float = 0.1,
                  trainable: bool = True,
                  **kwargs) -> None:
@@ -42,7 +41,7 @@ class MultiHeadSelfAttention(tf.keras.layers.Layer):
 
         self.num_heads = num_heads
         self.hidden_size = hidden_size
-        self.neg_inf = neg_inf
+        self.neg_inf = np.finfo(np.float32).min
 
         assert hidden_size % self.num_heads == 0
 
