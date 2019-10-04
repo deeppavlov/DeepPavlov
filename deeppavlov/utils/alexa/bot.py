@@ -64,8 +64,7 @@ class AlexaBot(BaseBot):
         self.output_queue = output_queue
         self.valid_certificates: Dict[str, ValidatedCert] = {}
 
-        self._timer = Timer(REFRESH_VALID_CERTS_PERIOD_SECS, self._refresh_valid_certs)
-        self._timer.start()
+        self._refresh_valid_certs()
 
     def _del_conversation(self, conversation_key: str) -> None:
         """Deletes Conversation instance.

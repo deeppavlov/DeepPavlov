@@ -35,7 +35,6 @@ class AlexaConversation(BaseConversation):
         config: Alexa skill configuration settings.
         agent: Alexa skill agent.
         key: Alexa conversation ID.
-        stateful: Stateful mode flag.
         timer: Conversation self-destruct timer.
         handled_requests: Mapping of Alexa requests types to requests handlers.
         response_template: Alexa response template.
@@ -90,10 +89,7 @@ class AlexaConversation(BaseConversation):
         Returns:
             response: DeepPavlov agent response.
         """
-        if self.stateful:
-            utterance = [[utterance], [self.key]]
-        else:
-            utterance = [[utterance]]
+        utterance = [[utterance]]
 
         agent_response: list = self.agent(*utterance)
 

@@ -6,7 +6,6 @@ from deeppavlov.deprecated.agents.default_agent import DefaultAgent
 class BaseConversation:
     config: dict
     agent: DefaultAgent
-    stateful: bool
     conversation_lifetime: float
     timer: Timer
 
@@ -15,7 +14,6 @@ class BaseConversation:
         self.agent = agent
         self.key = conversation_key
         self._self_destruct_callback = self_destruct_callback
-        self.stateful = self.config['stateful']
         self.conversation_lifetime = self.config['conversation_lifetime']
 
     def _start_timer(self) -> None:

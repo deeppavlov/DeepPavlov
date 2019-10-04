@@ -40,7 +40,6 @@ app = FastAPI()
 
 
 def run_alexa_default_agent(model_config: Union[str, Path, dict],
-                            stateful: bool = False,
                             port: Optional[int] = None,
                             https: bool = False,
                             ssl_key: Optional[str] = None,
@@ -52,7 +51,6 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict],
 
     Args:
         model_config: DeepPavlov config path.
-        stateful: Stateful mode flag.
         port: FastAPI web service port.
         https: Flag for running Alexa skill service in https mode.
         ssl_key: SSL key file path.
@@ -67,7 +65,6 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict],
     port = port or server_params['common_defaults']['port']
     alexa_server_params = server_params['alexa_defaults']
 
-    alexa_server_params['stateful'] = stateful or server_params['common_defaults']['stateful']
     alexa_server_params['amazon_cert_lifetime'] = AMAZON_CERTIFICATE_LIFETIME
 
     ssl_config = get_ssl_params(server_params['common_defaults'], https, ssl_key=ssl_key, ssl_cert=ssl_cert)

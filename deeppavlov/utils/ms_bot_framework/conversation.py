@@ -64,11 +64,7 @@ class MSConversation(BaseConversation):
         self._rearm_self_destruct()
 
     def _act(self, utterance: str):
-        if self.stateful:
-            utterance = [[utterance], [self.key]]
-        else:
-            utterance = [[utterance]]
-
+        utterance = [[utterance]]
         prediction = self.agent(*utterance)
 
         return prediction

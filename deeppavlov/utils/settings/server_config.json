@@ -5,8 +5,7 @@
     "model_args_names": "",
     "https": false,
     "https_cert_path": "",
-    "https_key_path": "",
-    "stateful": false
+    "https_key_path": ""
   },
   "telegram_defaults": {
     "token": ""

@@ -35,7 +35,6 @@ app = FastAPI()
 def run_ms_bf_default_agent(model_config: Union[str, Path, dict],
                             app_id: Optional[str],
                             app_secret: Optional[str],
-                            stateful: Optional[bool] = False,
                             port: Optional[int] = None,
                             https: bool = False,
                             ssl_key: Optional[str] = None,
@@ -49,8 +48,6 @@ def run_ms_bf_default_agent(model_config: Union[str, Path, dict],
     port = port or server_params['common_defaults']['port']
 
     ms_bf_server_params = server_params['ms_bot_framework_defaults']
-
-    ms_bf_server_params['stateful'] = stateful or server_params['common_defaults']['stateful']
 
     ms_bf_server_params['auth_payload']['client_id'] = app_id or ms_bf_server_params['auth_payload']['client_id']
     if not ms_bf_server_params['auth_payload']['client_id']:

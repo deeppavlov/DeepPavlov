@@ -51,7 +51,6 @@ parser.add_argument("-t", "--token", default=None,  help="telegram bot token", t
 parser.add_argument("-i", "--ms-id", default=None, help="microsoft bot framework app id", type=str)
 parser.add_argument("-s", "--ms-secret", default=None, help="microsoft bot framework app secret", type=str)
 
-parser.add_argument("--stateful", action="store_true", default=None, help="interact with a stateful model")
 parser.add_argument("--no-default-skill", action="store_true", help="do not wrap with default skill")
 
 parser.add_argument("--https", action="store_true", help="run model in https mode")
@@ -77,8 +76,6 @@ def main():
     if args.download or args.mode == 'download':
         deep_download(pipeline_config_path)
 
-    stateful = args.stateful
-
     if args.mode == 'train':
         train_evaluate_model_from_config(pipeline_config_path, recursive=args.recursive, 
                                          start_epoch_num=args.start_epoch_num)
@@ -97,7 +94,6 @@ def main():
         run_ms_bf_default_agent(model_config=pipeline_config_path,
                                 app_id=ms_id,
                                 app_secret=ms_secret,
-                                stateful=stateful,
                                 port=args.port,
                                 https=https,
                                 ssl_key=ssl_key,
@@ -105,7 +101,6 @@ def main():
                                 default_skill_wrap=not args.no_default_skill)
     elif args.mode == 'alexa':
         run_alexa_default_agent(model_config=pipeline_config_path,
-                                stateful=stateful,
                                 port=args.port,
                                 https=https,
                                 ssl_key=ssl_key,
