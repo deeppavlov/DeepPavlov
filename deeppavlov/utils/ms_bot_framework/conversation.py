@@ -12,26 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import threading
 from logging import getLogger
 from urllib.parse import urljoin
 
 import requests
 
 from deeppavlov.deprecated.agent import RichMessage
+from deeppavlov.utils.bot import BaseConversation
 
 log = getLogger(__name__)
 
 
-class Conversation:
+class MSConversation(BaseConversation):
     http_sessions = dict()
 
     def __init__(self, config, agent, activity: dict, conversation_key, self_destruct_callback: callable,
                  get_headers_callback: callable):
-        self.config = config
-        self.agent = agent
-        self.key = conversation_key
-        self._self_destruct_callback = self_destruct_callback
+        super(MSConversation, self).__init__(config, agent, conversation_key, self_destruct_callback)
         self._get_headers_callback = get_headers_callback
 
         self.bot_id = activity['recipient']['id']
@@ -40,16 +37,10 @@ class Conversation:
         self.channel_id = activity['channelId']
         self.conversation_id = activity['conversation']['id']
 
-        self.stateful = self.config['stateful']
+        if self.channel_id not in MSConversation.http_sessions:
+            MSConversation.http_sessions[self.channel_id] = requests.Session()
 
-        self.conversation_lifetime = self.config['conversation_lifetime']
-        self.timer = None
-        self._start_timer()
-
-        if self.channel_id not in Conversation.http_sessions:
-            Conversation.http_sessions[self.channel_id] = requests.Session()
-
-        self.http_session = Conversation.http_sessions[self.channel_id]
+        self.http_session = MSConversation.http_sessions[self.channel_id]
 
         self.handled_activities = {
             'message': self._handle_message
@@ -65,12 +56,6 @@ class Conversation:
             }
         }
 
-    def _start_timer(self):
-        self.timer = threading.Timer(self.conversation_lifetime, self._self_destruct_callback)
-        self.timer.start()
-
-    def _rearm_self_destruct(self):
-        self.timer.cancel()
         self._start_timer()
 
     def handle_activity(self, activity: dict):

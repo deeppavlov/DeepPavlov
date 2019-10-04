@@ -14,16 +14,15 @@
 
 from copy import deepcopy
 from logging import getLogger
-from threading import Timer
-from typing import Optional
 
 from deeppavlov.deprecated.agent import RichMessage
 from deeppavlov.deprecated.agents.default_agent import DefaultAgent
+from deeppavlov.utils.bot import BaseConversation
 
 log = getLogger(__name__)
 
 
-class Conversation:
+class AlexaConversation(BaseConversation):
     """Contains agent, receives requests, generates responses.
 
     Args:
@@ -43,12 +42,7 @@ class Conversation:
         """
     def __init__(self, config: dict, agent: DefaultAgent, conversation_key: str,
                  self_destruct_callback: callable) -> None:
-        self.config = config
-        self.agent = agent
-        self.key = conversation_key
-        self.self_destruct_callback = self_destruct_callback
-        self.stateful: bool = self.config['stateful']
-        self.timer: Optional[Timer] = None
+        super(AlexaConversation, self).__init__(config, agent, conversation_key, self_destruct_callback)
 
         self.handled_requests = {
             'LaunchRequest': self._handle_launch,
@@ -64,16 +58,6 @@ class Conversation:
             }
         }
 
-        self._start_timer()
-
-    def _start_timer(self) -> None:
-        """Initiates self-destruct timer."""
-        self.timer = Timer(self.config['conversation_lifetime'], self.self_destruct_callback)
-        self.timer.start()
-
-    def _rearm_self_destruct(self) -> None:
-        """Rearms self-destruct timer."""
-        self.timer.cancel()
         self._start_timer()
 
     def handle_request(self, request: dict) -> dict:
@@ -208,7 +192,7 @@ class Conversation:
             response: Dummy empty response dict.
         """
         response = {}
-        self.self_destruct_callback()
+        self._self_destruct_callback()
         return response
 
     def _handle_unsupported(self, request: dict) -> dict:

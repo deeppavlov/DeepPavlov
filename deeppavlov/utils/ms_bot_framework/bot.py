@@ -23,7 +23,7 @@ import requests
 from requests.exceptions import HTTPError
 
 from deeppavlov.utils.bot import BaseBot
-from deeppavlov.utils.ms_bot_framework.conversation import Conversation
+from deeppavlov.utils.ms_bot_framework.conversation import MSConversation
 
 log = getLogger(__name__)
 
@@ -85,12 +85,12 @@ class MSBot(BaseBot):
         conversation_key = ConvKey(activity['channelId'], activity['conversation']['id'])
 
         if conversation_key not in self.conversations.keys():
-            self.conversations[conversation_key] = Conversation(config=self._config,
-                                                                agent=self._agent,
-                                                                activity=activity,
-                                                                conversation_key=conversation_key,
-                                                                self_destruct_callback=lambda: self._del_conversation(conversation_key),
-                                                                get_headers_callback=lambda: self._get_headers())
+            self.conversations[conversation_key] = MSConversation(config=self._config,
+                                                                  agent=self._agent,
+                                                                  activity=activity,
+                                                                  conversation_key=conversation_key,
+                                                                  self_destruct_callback=lambda: self._del_conversation(conversation_key),
+                                                                  get_headers_callback=lambda: self._get_headers())
 
             log.info(f'Created new conversation, key: {str(conversation_key)}')
 

@@ -22,7 +22,7 @@ from typing import Dict, Union
 
 from OpenSSL.crypto import X509
 
-from deeppavlov.utils.alexa.conversation import Conversation
+from deeppavlov.utils.alexa.conversation import AlexaConversation
 from deeppavlov.utils.alexa.ssl_tools import verify_cert, verify_signature
 from deeppavlov.utils.bot import BaseBot
 
@@ -60,7 +60,7 @@ class AlexaBot(BaseBot):
                  input_queue: Queue,
                  output_queue: Queue) -> None:
         super(AlexaBot, self).__init__(model_config, default_skill_wrap, config, input_queue)
-        self.conversations: Dict[str, Conversation] = {}
+        self.conversations: Dict[str, AlexaConversation] = {}
         self.output_queue = output_queue
         self.valid_certificates: Dict[str, ValidatedCert] = {}
 
@@ -157,10 +157,10 @@ class AlexaBot(BaseBot):
 
         if conversation_key not in self.conversations.keys():
             self.conversations[conversation_key] = \
-                Conversation(config=self._config,
-                             agent=self._agent,
-                             conversation_key=conversation_key,
-                             self_destruct_callback=lambda: self._del_conversation(conversation_key))
+                AlexaConversation(config=self._config,
+                                  agent=self._agent,
+                                  conversation_key=conversation_key,
+                                  self_destruct_callback=lambda: self._del_conversation(conversation_key))
 
             log.info(f'Created new conversation, key: {conversation_key}')
 
