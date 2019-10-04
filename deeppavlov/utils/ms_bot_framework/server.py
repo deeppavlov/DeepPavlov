@@ -38,8 +38,7 @@ def run_ms_bf_default_agent(model_config: Union[str, Path, dict],
                             port: Optional[int] = None,
                             https: bool = False,
                             ssl_key: Optional[str] = None,
-                            ssl_cert: Optional[str] = None,
-                            default_skill_wrap: bool = True) -> None:
+                            ssl_cert: Optional[str] = None) -> None:
 
     server_config_path = Path(get_settings_path(), SERVER_CONFIG_FILENAME).resolve()
     server_params = read_json(server_config_path)
@@ -66,7 +65,7 @@ def run_ms_bf_default_agent(model_config: Union[str, Path, dict],
     ssl_config = get_ssl_params(server_params['common_defaults'], https, ssl_key=ssl_key, ssl_cert=ssl_cert)
 
     input_q = Queue()
-    bot = MSBot(model_config, default_skill_wrap, ms_bf_server_params, input_q)
+    bot = MSBot(model_config, ms_bf_server_params, input_q)
     bot.start()
 
     endpoint = '/v3/conversations'

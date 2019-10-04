@@ -13,16 +13,11 @@ with a ``<telegram_token>``:
 
 .. code:: bash
 
-    python -m deeppavlov interactbot <config_path> -t <telegram_token> [-d] [--no-default-skill]
+    python -m deeppavlov interactbot <config_path> -t <telegram_token> [-d]
 
 
 * ``-t <telegram_token>``: specifies telegram token as ``<telegram_token>``.
 * ``-d``: downloads model specific data before starting the service.
-* ``-no-default-skill``: states that your model is already implements an
-  interface of a :class:`~deeppavlov.deprecated.skill.skill.Skill` and doesn't
-  need additional wrapping into a stateless skill
-  :class:`~deeppavlov.deprecated.skills.default_skill.default_skill.DefaultStatelessSkill` (models from
-  Skills section require the flag).
 
 The command will print the used host and port. Default web service properties
 (host, port, model endpoint, GET request arguments) can be modified via changing

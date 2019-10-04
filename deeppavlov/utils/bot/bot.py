@@ -20,7 +20,6 @@ class BaseBot(Thread):
     _agent: DefaultAgent
 
     def __init__(self, model_config: Union[str, Path, dict],
-                 default_skill_wrap: bool,
                  config: dict,
                  input_queue: Queue) -> None:
         super(BaseBot, self).__init__()
@@ -29,7 +28,7 @@ class BaseBot(Thread):
         self._run_flag = True
 
         model = build_model(model_config)
-        skill = DefaultStatelessSkill(model) if default_skill_wrap else model
+        skill = DefaultStatelessSkill(model)
         self._agent = DefaultAgent([skill], skills_processor=DefaultRichContentWrapper())
         log.info('New bot instance level agent initiated')
 

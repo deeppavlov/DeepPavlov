@@ -55,11 +55,10 @@ class AlexaBot(BaseBot):
     """
     def __init__(self,
                  model_config: Union[str, Path, dict],
-                 default_skill_wrap: bool,
                  config: dict,
                  input_queue: Queue,
                  output_queue: Queue) -> None:
-        super(AlexaBot, self).__init__(model_config, default_skill_wrap, config, input_queue)
+        super(AlexaBot, self).__init__(model_config, config, input_queue)
         self.conversations: Dict[str, AlexaConversation] = {}
         self.output_queue = output_queue
         self.valid_certificates: Dict[str, ValidatedCert] = {}

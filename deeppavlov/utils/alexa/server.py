@@ -43,8 +43,7 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict],
                             port: Optional[int] = None,
                             https: bool = False,
                             ssl_key: Optional[str] = None,
-                            ssl_cert: Optional[str] = None,
-                            default_skill_wrap: bool = True) -> None:
+                            ssl_cert: Optional[str] = None) -> None:
     """Initiates FastAPI web service with Alexa skill.
 
     Allows raise Alexa web service with DeepPavlov config in backend.
@@ -55,7 +54,6 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict],
         https: Flag for running Alexa skill service in https mode.
         ssl_key: SSL key file path.
         ssl_cert: SSL certificate file path.
-        default_skill_wrap: Wrap with default skill flag.
 
     """
     server_config_path = Path(get_settings_path(), SERVER_CONFIG_FILENAME).resolve()
@@ -72,7 +70,7 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict],
     input_q = Queue()
     output_q = Queue()
 
-    bot = AlexaBot(model_config, default_skill_wrap, alexa_server_params, input_q, output_q)
+    bot = AlexaBot(model_config, alexa_server_params, input_q, output_q)
     bot.start()
 
     endpoint = '/interact'

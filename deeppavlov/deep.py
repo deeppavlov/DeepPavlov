@@ -51,8 +51,6 @@ parser.add_argument("-t", "--token", default=None,  help="telegram bot token", t
 parser.add_argument("-i", "--ms-id", default=None, help="microsoft bot framework app id", type=str)
 parser.add_argument("-s", "--ms-secret", default=None, help="microsoft bot framework app secret", type=str)
 
-parser.add_argument("--no-default-skill", action="store_true", help="do not wrap with default skill")
-
 parser.add_argument("--https", action="store_true", help="run model in https mode")
 parser.add_argument("--key", default=None, help="ssl key", type=str)
 parser.add_argument("--cert", default=None, help="ssl certificate", type=str)
@@ -86,8 +84,7 @@ def main():
     elif args.mode == 'interactbot':
         token = args.token
         interact_model_by_telegram(model_config=pipeline_config_path,
-                                   token=token,
-                                   default_skill_wrap=not args.no_default_skill)
+                                   token=token)
     elif args.mode == 'interactmsbot':
         ms_id = args.ms_id
         ms_secret = args.ms_secret
@@ -97,15 +94,13 @@ def main():
                                 port=args.port,
                                 https=https,
                                 ssl_key=ssl_key,
-                                ssl_cert=ssl_cert,
-                                default_skill_wrap=not args.no_default_skill)
+                                ssl_cert=ssl_cert)
     elif args.mode == 'alexa':
         run_alexa_default_agent(model_config=pipeline_config_path,
                                 port=args.port,
                                 https=https,
                                 ssl_key=ssl_key,
-                                ssl_cert=ssl_cert,
-                                default_skill_wrap=not args.no_default_skill)
+                                ssl_cert=ssl_cert)
     elif args.mode == 'riseapi':
         alice = args.api_mode == 'alice'
         if alice:

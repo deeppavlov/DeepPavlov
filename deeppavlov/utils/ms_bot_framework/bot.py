@@ -32,10 +32,9 @@ ConvKey = namedtuple('ConvKey', ['channel_id', 'conversation_id'])
 
 class MSBot(BaseBot):
     def __init__(self, model_config: Union[str, Path, dict],
-                 default_skill_wrap: bool,
                  config: dict,
                  input_queue: Queue):
-        super(MSBot, self).__init__(model_config, default_skill_wrap, config, input_queue)
+        super(MSBot, self).__init__(model_config, config, input_queue)
         self.conversations = {}
         self.http_session = requests.Session()
         self._update_access_info()
