@@ -15,7 +15,7 @@
 from logging import getLogger
 from urllib.parse import urljoin
 
-import requests
+from requests import Session
 
 from deeppavlov.deprecated.agent import RichMessage
 from deeppavlov.utils.bot import BaseConversation
@@ -24,23 +24,16 @@ log = getLogger(__name__)
 
 
 class MSConversation(BaseConversation):
-    http_sessions = dict()
-
     def __init__(self, config, agent, activity: dict, conversation_key, self_destruct_callback: callable,
-                 get_headers_callback: callable):
+                 http_session: Session) -> None:
         super(MSConversation, self).__init__(config, agent, conversation_key, self_destruct_callback)
-        self._get_headers_callback = get_headers_callback
-
         self.bot_id = activity['recipient']['id']
         self.bot_name = activity['recipient']['name']
         self.service_url = activity['serviceUrl']
         self.channel_id = activity['channelId']
         self.conversation_id = activity['conversation']['id']
 
-        if self.channel_id not in MSConversation.http_sessions:
-            MSConversation.http_sessions[self.channel_id] = requests.Session()
-
-        self.http_session = MSConversation.http_sessions[self.channel_id]
+        self.http_session = http_session
 
         self.handled_activities = {
             'message': self._handle_message
@@ -126,10 +119,7 @@ class MSConversation(BaseConversation):
 
         url = urljoin(service_url, f"v3/conversations/{self.conversation_id}/activities")
 
-        response = self.http_session.post(
-            url=url,
-            json=out_activity,
-            headers=self._get_headers_callback())
+        response = self.http_session.post(url=url, json=out_activity)
 
         try:
             response_json_str = str(response.json())

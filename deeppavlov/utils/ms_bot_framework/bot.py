@@ -37,11 +37,8 @@ class MSBot(BaseBot):
                  input_queue: Queue):
         super(MSBot, self).__init__(model_config, default_skill_wrap, config, input_queue)
         self.conversations = {}
-        self.access_info = {}
-        polling_interval = self._config['auth_polling_interval']
-        self._timer = threading.Timer(polling_interval, self._update_access_info)
-        self._request_access_info()
-        self._timer.start()
+        self.http_session = requests.Session()
+        self._update_access_info()
 
     def _del_conversation(self, conversation_key: ConvKey):
         if conversation_key in self.conversations.keys():
@@ -52,17 +49,8 @@ class MSBot(BaseBot):
         polling_interval = self._config['auth_polling_interval']
         self._timer = threading.Timer(polling_interval, self._update_access_info)
         self._timer.start()
-        self._request_access_info()
 
-    def _get_headers(self):
-        headers = {
-            'Authorization': f"{self.access_info['token_type']} {self.access_info['access_token']}",
-            'Content-Type': 'application/json'
-        }
-        return headers
-
-    def _request_access_info(self):
-        headers = {'Host': self._config['auth_host'],
+        ms_headers = {'Host': self._config['auth_host'],
                    'Content-Type': self._config['auth_content_type']}
 
         payload = {'grant_type': self._config['auth_grant_type'],
@@ -71,15 +59,22 @@ class MSBot(BaseBot):
                    'client_secret': self._config['auth_app_secret']}
 
         result = requests.post(url=self._config['auth_url'],
-                               headers=headers,
+                               headers=ms_headers,
                                data=payload)
 
         status_code = result.status_code
         if status_code != 200:
             raise HTTPError(f'Authentication token request returned wrong HTTP status code: {status_code}')
 
-        self.access_info = result.json()
-        log.info(f'Obtained authentication information from Microsoft Bot Framework: {str(self.access_info)}')
+        access_info = result.json()
+        headers = {
+            'Authorization': f"{access_info['token_type']} {access_info['access_token']}",
+            'Content-Type': 'application/json'
+        }
+
+        self.http_session.headers.update(headers)
+
+        log.info(f'Obtained authentication information from Microsoft Bot Framework: {str(access_info)}')
 
     def _handle_request(self, activity: dict):
         conversation_key = ConvKey(activity['channelId'], activity['conversation']['id'])
@@ -90,7 +85,7 @@ class MSBot(BaseBot):
                                                                   activity=activity,
                                                                   conversation_key=conversation_key,
                                                                   self_destruct_callback=lambda: self._del_conversation(conversation_key),
-                                                                  get_headers_callback=lambda: self._get_headers())
+                                                                  http_session=self.http_session)
 
             log.info(f'Created new conversation, key: {str(conversation_key)}')
 
