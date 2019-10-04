@@ -24,6 +24,8 @@ log = getLogger(__name__)
 
 
 class Conversation:
+    http_sessions = dict()
+
     def __init__(self, bot, agent, activity: dict, conversation_key):
         self.bot = bot
         self.agent = agent
@@ -42,10 +44,10 @@ class Conversation:
         self.timer = None
         self._start_timer()
 
-        if self.channel_id not in self.bot.http_sessions.keys() or not self.bot.http_sessions['self.channel_id']:
-            self.bot.http_sessions['self.channel_id'] = requests.Session()
+        if self.channel_id not in Conversation.http_sessions:
+            Conversation.http_sessions[self.channel_id] = requests.Session()
 
-        self.http_session = self.bot.http_sessions['self.channel_id']
+        self.http_session = Conversation.http_sessions[self.channel_id]
 
         self.handled_activities = {
             'message': self._handle_message

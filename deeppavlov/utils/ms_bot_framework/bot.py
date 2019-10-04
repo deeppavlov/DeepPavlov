@@ -15,12 +15,14 @@
 import threading
 from collections import namedtuple
 from logging import getLogger
+from pathlib import Path
 from queue import Empty, Queue
-from threading import Thread
+from typing import Union
 
 import requests
 from requests.exceptions import HTTPError
 
+from deeppavlov.utils.bot import BaseBot
 from deeppavlov.utils.ms_bot_framework.conversation import Conversation
 
 log = getLogger(__name__)
@@ -28,24 +30,14 @@ log = getLogger(__name__)
 ConvKey = namedtuple('ConvKey', ['channel_id', 'conversation_id'])
 
 
-class Bot(Thread):
-    def __init__(self, agent_generator: callable, config: dict, input_queue: Queue):
-        super(Bot, self).__init__()
-        self.config = config
-        self._run_flag = True
-
+class MSBot(BaseBot):
+    def __init__(self, model_config: Union[str, Path, dict],
+                 default_skill_wrap: bool,
+                 config: dict,
+                 input_queue: Queue):
+        super(MSBot, self).__init__(model_config, default_skill_wrap, config, input_queue)
         self.conversations = {}
         self.access_info = {}
-        self.http_sessions = {}
-        self.input_queue = input_queue
-
-        self.agent = None
-        self.agent_generator = agent_generator
-
-        if not self.config['multi_instance']:
-            self.agent = self._init_agent()
-            log.info('New bot instance level agent initiated')
-
         polling_interval = self.config['auth_polling_interval']
         self.timer = threading.Timer(polling_interval, self._update_access_info)
         self._request_access_info()
@@ -60,22 +52,9 @@ class Bot(Thread):
             else:
                 self._handle_activity(activity)
 
-    def join(self, timeout=None):
-        self._run_flag = False
-        for timer in threading.enumerate():
-            if isinstance(timer, threading.Timer):
-                timer.cancel()
-        Thread.join(self, timeout)
-
     def del_conversation(self, conversation_key: ConvKey):
         del self.conversations[conversation_key]
         log.info(f'Deleted conversation, key: {str(conversation_key)}')
-
-    def _init_agent(self):
-        # TODO: Decide about multi-instance mode necessity.
-        # If model multi-instancing is still necessary - refactor and remove
-        agent = self.agent_generator()
-        return agent
 
     def _update_access_info(self):
         polling_interval = self.config['auth_polling_interval']
@@ -108,7 +87,7 @@ class Bot(Thread):
 
         if conversation_key not in self.conversations.keys():
             if self.config['multi_instance']:
-                conv_agent = self._init_agent()
+                conv_agent = self._get_default_agent()
                 log.info('New conversation instance level agent initiated')
             else:
                 conv_agent = self.agent

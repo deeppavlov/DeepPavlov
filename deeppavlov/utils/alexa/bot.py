@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import threading
 from collections import namedtuple
 from datetime import timedelta, datetime
 from logging import getLogger
+from pathlib import Path
 from queue import Empty, Queue
-from threading import Timer, Thread
-from typing import Optional, Dict
+from threading import Timer
+from typing import Dict, Union
 
 from OpenSSL.crypto import X509
 
 from deeppavlov.utils.alexa.conversation import Conversation
 from deeppavlov.utils.alexa.ssl_tools import verify_cert, verify_signature
-from deeppavlov.deprecated.agents.default_agent import DefaultAgent
+from deeppavlov.utils.bot import BaseBot
 
 REQUEST_TIMESTAMP_TOLERANCE_SECS = 150
 REFRESH_VALID_CERTS_PERIOD_SECS = 120
@@ -33,8 +33,8 @@ log = getLogger(__name__)
 
 ValidatedCert = namedtuple('ValidatedCert', ['cert', 'expiration_timestamp'])
 
-# TODO: make common superclass with Bot from ms_bot_framework
-class Bot(Thread):
+
+class AlexaBot(BaseBot):
     """Contains agent (if not multi-instanced), conversations, validates Alexa requests and routes them to conversations.
 
     Args:
@@ -53,22 +53,16 @@ class Bot(Thread):
         agent_generator: Callback which generates DefaultAgent instance with alexa skill.
         timer: Timer which triggers periodical certificates with expired validation cleanup.
     """
-    def __init__(self, agent_generator: callable, config: dict, input_queue: Queue, output_queue: Queue) -> None:
-        super(Bot, self).__init__()
-        self.config = config
+    def __init__(self,
+                 model_config: Union[str, Path, dict],
+                 default_skill_wrap: bool,
+                 config: dict,
+                 input_queue: Queue,
+                 output_queue: Queue) -> None:
+        super(AlexaBot, self).__init__(model_config, default_skill_wrap, config, input_queue)
         self.conversations: Dict[str, Conversation] = {}
-        self.input_queue = input_queue
         self.output_queue = output_queue
-        self._run_flag = True
-
         self.valid_certificates: Dict[str, ValidatedCert] = {}
-
-        self.agent: Optional[DefaultAgent] = None
-        self.agent_generator = agent_generator
-
-        if not self.config['multi_instance']:
-            self.agent = self._init_agent()
-            log.info('New bot instance level agent initiated')
 
         self.timer = Timer(REFRESH_VALID_CERTS_PERIOD_SECS, self._refresh_valid_certs)
         self.timer.start()
@@ -84,14 +78,6 @@ class Bot(Thread):
                 response = self._handle_request(request)
                 self.output_queue.put(response)
 
-    def join(self, timeout=None):
-        """Thread join method implementation."""
-        self._run_flag = False
-        for timer in threading.enumerate():
-            if isinstance(timer, threading.Timer):
-                timer.cancel()
-        Thread.join(self, timeout)
-
     def _del_conversation(self, conversation_key: str) -> None:
         """Deletes Conversation instance.
 
@@ -101,13 +87,6 @@ class Bot(Thread):
         if conversation_key in self.conversations.keys():
             del self.conversations[conversation_key]
             log.info(f'Deleted conversation, key: {conversation_key}')
-
-    def _init_agent(self) -> DefaultAgent:
-        """Initiates Alexa skill agent from agent generator"""
-        # TODO: Decide about multi-instance mode necessity.
-        # If model multi-instancing is still necessary - refactor and remove
-        agent = self.agent_generator()
-        return agent
 
     def _refresh_valid_certs(self) -> None:
         """Conducts cleanup of periodical certificates with expired validation."""
@@ -189,7 +168,7 @@ class Bot(Thread):
 
         if conversation_key not in self.conversations.keys():
             if self.config['multi_instance']:
-                conv_agent = self._init_agent()
+                conv_agent = self._get_default_agent()
                 log.info('New conversation instance level agent initiated')
             else:
                 conv_agent = self.agent

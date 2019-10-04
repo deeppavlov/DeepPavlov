@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import asyncio
+import json
 from datetime import timedelta
 from logging import getLogger
 from pathlib import Path
@@ -20,18 +21,13 @@ from queue import Queue
 from typing import Union, Optional
 
 import uvicorn
-import json
 from fastapi import FastAPI
 from starlette.responses import JSONResponse
 
-from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
-from deeppavlov.utils.alexa.bot import Bot
+from deeppavlov.utils.alexa.bot import AlexaBot
 from deeppavlov.utils.alexa.request_parameters import data_body, cert_chain_url_header, signature_header
-from deeppavlov.deprecated.agents.default_agent import DefaultAgent
-from deeppavlov.deprecated.agents.processors import DefaultRichContentWrapper
-from deeppavlov.deprecated.skills.default_skill import DefaultStatelessSkill
 from deeppavlov.utils.server.server import get_ssl_params, redirect_root_do_docs
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
@@ -51,10 +47,9 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict],
                             ssl_key: Optional[str] = None,
                             ssl_cert: Optional[str] = None,
                             default_skill_wrap: bool = True) -> None:
-    """Creates Alexa agents factory and initiates Alexa web service.
+    """Initiates FastAPI web service with Alexa skill.
 
-    Wrapper around run_alexa_server. Allows raise Alexa web service with
-    DeepPavlov config in backend.
+    Allows raise Alexa web service with DeepPavlov config in backend.
 
     Args:
         model_config: DeepPavlov config path.
@@ -65,40 +60,6 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict],
         ssl_key: SSL key file path.
         ssl_cert: SSL certificate file path.
         default_skill_wrap: Wrap with default skill flag.
-
-    """
-    def get_default_agent() -> DefaultAgent:
-        model = build_model(model_config)
-        skill = DefaultStatelessSkill(model) if default_skill_wrap else model
-        agent = DefaultAgent([skill], skills_processor=DefaultRichContentWrapper())
-        return agent
-
-    run_alexa_server(agent_generator=get_default_agent,
-                     multi_instance=multi_instance,
-                     stateful=stateful,
-                     port=port,
-                     https=https,
-                     ssl_key=ssl_key,
-                     ssl_cert=ssl_cert)
-
-
-def run_alexa_server(agent_generator: callable,
-                     multi_instance: bool = False,
-                     stateful: bool = False,
-                     port: Optional[int] = None,
-                     https: bool = False,
-                     ssl_key: Optional[str] = None,
-                     ssl_cert: Optional[str] = None) -> None:
-    """Initiates FastAPI web service with Alexa skill.
-
-    Args:
-        agent_generator: Callback Alexa agents factory.
-        multi_instance: Multi instance mode flag.
-        stateful: Stateful mode flag.
-        port: FastAPI web service port.
-        https: Flag for running Alexa skill service in https mode.
-        ssl_key: SSL key file path.
-        ssl_cert: SSL certificate file path.
 
     """
     server_config_path = Path(get_settings_path(), SERVER_CONFIG_FILENAME).resolve()
@@ -117,7 +78,7 @@ def run_alexa_server(agent_generator: callable,
     input_q = Queue()
     output_q = Queue()
 
-    bot = Bot(agent_generator, alexa_server_params, input_q, output_q)
+    bot = AlexaBot(model_config, default_skill_wrap, alexa_server_params, input_q, output_q)
     bot.start()
 
     endpoint = '/interact'
