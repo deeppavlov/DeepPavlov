@@ -39,11 +39,13 @@ class MultiHeadSelfAttention(tf.keras.layers.Layer):
 
         self.supports_masking = True
 
+        if hidden_size % num_heads != 0:
+            raise ValueError(f'hidden_size should be divisible by num_heads'
+                             f', got {hidden_size} hidden_size and {num_heads} num_heads instead')
+
         self.num_heads = num_heads
         self.hidden_size = hidden_size
         self.neg_inf = np.finfo(np.float32).min
-
-        assert hidden_size % self.num_heads == 0
 
         self.depth = hidden_size // self.num_heads
 
