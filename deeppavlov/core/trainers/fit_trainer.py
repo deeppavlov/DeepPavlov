@@ -158,12 +158,12 @@ class FitTrainer:
             self._loaded = True
 
     def get_chainer(self) -> Chainer:
-        """Return a :class:`~deeppavlov.core.common.chainer.Chainer` built from ``self.chainer_config`` for inference"""
+        """Returns a :class:`~deeppavlov.core.common.chainer.Chainer` built from ``self.chainer_config`` for inference"""
         self._load()
         return self._chainer
 
     def train(self, iterator: Union[DataFittingIterator, DataLearningIterator]) -> None:
-        """Call :meth:`~fit_chainer` with provided data iterator as an argument"""
+        """Calls :meth:`~fit_chainer` with provided data iterator as an argument"""
         self.fit_chainer(iterator)
         self._saved = True
 

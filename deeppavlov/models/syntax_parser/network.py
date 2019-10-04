@@ -38,7 +38,7 @@ def biaffine_attention(deps, heads, name="biaffine_attention"):
     heads_dim_int = heads.get_shape().as_list()[-1]
     assert deps_dim_int == heads_dim_int
     with tf.variable_scope(name):
-        kernel_shape = (deps_dim_int, deps_dim_int)
+        kernel_shape = (deps_dim_int, heads_dim_int)
         kernel = tf.get_variable('kernel', shape=kernel_shape, initializer=tf.initializers.identity())
         first_bias = tf.get_variable('first_bias', shape=(kernel_shape[0], 1),
                                      initializer=xavier_initializer())
@@ -103,6 +103,9 @@ class BertSyntaxParser(BertSequenceNetwork):
                  encoder_dropout: float = 0.0,
                  optimizer: str = None,
                  weight_decay_rate: float = 1e-6,
+                 use_birnn: bool = False,
+                 birnn_cell_type: str = 'lstm',
+                 birnn_hidden_size: int = 256,
                  ema_decay: float = None,
                  ema_variables_on_cpu: bool = True,
                  return_probas: bool = False,
@@ -118,6 +121,9 @@ class BertSyntaxParser(BertSequenceNetwork):
         self.n_deps = n_deps
         self.state_size = state_size
         self.embeddings_dropout = embeddings_dropout
+        self.use_birnn = use_birnn
+        self.birnn_cell_type = birnn_cell_type
+        self.birnn_hidden_size = birnn_hidden_size
         self.use_chl_decoding = use_chl_decoding
         self.return_probas = return_probas
         super().__init__(keep_prob=keep_prob,
@@ -147,8 +153,15 @@ class BertSyntaxParser(BertSequenceNetwork):
         units = super()._init_graph()
 
         with tf.variable_scope('ner'):
-            y_masks_with_cls_ph = tf.concat(tf.ones_like(self.y_masks_ph[:,:1]), self.y_masks_ph[:,1:], axis=1)
-            units = token_from_subtoken(units, y_masks_with_cls_ph)
+            units = token_from_subtoken(units, self.y_masks_ph)
+            if self.use_birnn:
+                units, _ = bi_rnn(units,
+                                  self.birnn_hidden_size,
+                                  cell_type=self.birnn_cell_type,
+                                  seq_lengths=self.seq_lengths,
+                                  name='birnn')
+                units = tf.concat(units, -1)
+            # y_masks_with_cls_ph = tf.concat([tf.ones_like(self.y_masks_ph[:,:1]), self.y_masks_ph[:,1:]], axis=1)
             head_embeddings = tf.layers.dense(units, units=self.state_size, activation="relu")
             head_embeddings = tf.nn.dropout(head_embeddings, self.embeddings_keep_prob_ph)
             dep_embeddings = tf.layers.dense(units, units=self.state_size, activation="relu")
@@ -160,6 +173,9 @@ class BertSyntaxParser(BertSequenceNetwork):
         with tf.variable_scope("loss"):
             tag_mask = self._get_tag_mask()
             y_mask = tf.cast(tag_mask, tf.float32)
+            first_column = tf.zeros_like(self.y_dep_ph[:,:1])
+            # labels = tf.concat([first_column, self.y_dep_ph], axis=1)
+            # weights = tf.concat([tf.ones_like(y_mask[:,:1]), y_mask], axis=1)
             self.loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_dep_ph,
                                                                logits=self.dep_head_similarities,
                                                                weights=y_mask)
@@ -172,14 +188,17 @@ class BertSyntaxParser(BertSequenceNetwork):
             1.0, shape=[], name="embeddings_keep_prob_ph")
 
 
-    def _build_feed_dict(self, input_ids, input_masks, y_masks, token_types=None,
-                         y_dep=None):
-        feed_dict = self._build_basic_feed_dict(
-            input_ids, input_masks, token_types=token_types, train=(y_dep is not None))
+    def _build_feed_dict(self, input_ids, input_masks, y_masks, y_dep=None):
+        y_masks = np.concatenate([np.ones_like(y_masks[:,:1]), y_masks[:,1:]], axis=1)
+        feed_dict = self._build_basic_feed_dict(input_ids, input_masks, train=(y_dep is not None))
         feed_dict[self.y_masks_ph] = y_masks
         if y_dep is not None:
-            feed_dict[self.embeddings_keep_prob_ph] = 1.0 - self.embeddings_dropout,
-            feed_dict[self.y_dep_ph] = y_dep
+            y_dep = zero_pad(y_dep)
+            y_dep = np.concatenate([np.zeros_like(y_dep[:,:1]), y_dep], axis=1)
+            feed_dict.update({self.embeddings_keep_prob_ph: 1.0 - self.embeddings_dropout,
+                              self.y_dep_ph: y_dep})
+            # feed_dict[self.embeddings_keep_prob_ph] = 1.0 - self.embeddings_dropout,
+            # feed_dict[self.y_dep_ph] = y_dep
         return feed_dict
 
     def __call__(self,
@@ -200,6 +219,10 @@ class BertSyntaxParser(BertSequenceNetwork):
         feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks)
         if self.ema:
             self.sess.run(self.ema.switch_to_test_op)
-        pred, seq_lengths = self.sess.run([self.y_dep_heads, self.seq_lengths], feed_dict=feed_dict)
-        pred = [p[:l] for l, p in zip(seq_lengths, pred)]
+        if self.return_probas:
+            pred, seq_lengths = self.sess.run([self.dep_head_probs, self.seq_lengths], feed_dict=feed_dict)
+            pred = [p[1:l,:l] for l, p in zip(seq_lengths, pred)] 
+        else:
+            pred, seq_lengths = self.sess.run([self.dep_heads, self.seq_lengths], feed_dict=feed_dict)
+            pred = [p[1:l] for l, p in zip(seq_lengths, pred)]
         return pred

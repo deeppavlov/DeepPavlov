@@ -102,14 +102,15 @@ class MorphoTaggerDatasetIterator(DataLearningIterator):
         if shuffle is None:
             shuffle = self.shuffle
         data = self.data[data_type]
-        if shuffle:
-            random.shuffle(data)
         lengths = [len(x[0]) for x in data]
         indexes = np.argsort(lengths)
         L = len(data)
         if batch_size < 0:
             batch_size = L
-        for start in range(0, L, batch_size):
+        starts = list(range(0, L, batch_size))
+        if shuffle:
+            np.random.shuffle(starts)
+        for start in starts:
             indexes_to_yield = indexes[start:start + batch_size]
             data_to_yield = tuple(list(x) for x in zip(*([data[i] for i in indexes_to_yield])))
             if return_indexes:

@@ -403,25 +403,27 @@ class BertSequenceNetwork(LRScheduledTFModel):
 
         return feed_dict
 
-    def _build_feed_dict(self, input_ids, input_masks, token_types=None, **kwargs):
+    def _build_feed_dict(self, input_ids, input_masks, token_types=None, *args,  **kwargs):
         raise NotImplementedError("You must implement _build_feed_dict in your derived class.")
 
     def train_on_batch(self,
                        input_ids: Union[List[List[int]], np.ndarray],
                        input_masks: Union[List[List[int]], np.ndarray],
-                       **kwargs) -> Dict[str, float]:
+                       *args, **kwargs) -> Dict[str, float]:
         """
 
         Args:
             input_ids: batch of indices of subwords
             input_masks: batch of masks which determine what should be attended
+            args: arguments passed  to _build_feed_dict
+                and corresponding to output tensors of the derived class.
             kwargs: keyword arguments passed to _build_feed_dict
-                and corresponding to output tensors.
+                and corresponding to output tensors of the derived class.
 
         Returns:
             dict with fields 'loss', 'head_learning_rate', and 'bert_learning_rate'
         """
-        feed_dict = self._build_feed_dict(input_ids, input_masks, **kwargs)
+        feed_dict = self._build_feed_dict(input_ids, input_masks, *args, **kwargs)
 
         if self.ema:
             self.sess.run(self.ema.switch_to_train_op)
@@ -618,9 +620,8 @@ class BertSequenceTagger(BertSequenceNetwork):
             y_pred += [viterbi_seq]
         return y_pred
 
-    def _build_feed_dict(self, input_ids, input_masks, y_masks, token_types=None, y=None):
-        feed_dict = self._build_basic_feed_dict(
-            input_ids, input_masks, token_types=token_types, train=(y is not None))
+    def _build_feed_dict(self, input_ids, input_masks, y_masks, y=None):
+        feed_dict = self._build_basic_feed_dict(input_ids, input_masks, train=(y is not None))
         feed_dict[self.y_masks_ph] = y_masks
         if y is not None:
             feed_dict[self.y_ph] = y

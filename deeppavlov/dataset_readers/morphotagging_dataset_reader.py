@@ -98,6 +98,8 @@ def read_infile(infile: Union[Path, str], from_words=False,
         answer.append(curr_answer)
     if infile is not sys.stdin:
         fin.close()
+    if len(answer) > 0 and len(answer[0]) > 2:
+        answer = [(elem[0], list(elem[1:])) for elem in answer]
     return answer
 
 

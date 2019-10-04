@@ -30,10 +30,17 @@ def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> flo
         y_predicted: array of predicted values
 
     Returns:
-        portion of absolutely coincidental samples
+        fraction of absolutely coincidental samples
     """
     examples_len = len(y_true)
-    correct = sum([y1 == y2 for y1, y2 in zip(y_true, y_predicted)])
+    # if y1 and y2 are both arrays, == can be interpreted as element-wise equality
+    def _are_equal(y1, y2):
+        answer = (y1 == y2)
+        if isinstance(answer, np.ndarray):
+            answer = answer.all()
+        return answer
+    equalities = [_are_equal(y1, y2) for y1, y2 in zip(y_true, y_predicted)]
+    correct = sum(equalities)
     return correct / examples_len if examples_len else 0
 
 

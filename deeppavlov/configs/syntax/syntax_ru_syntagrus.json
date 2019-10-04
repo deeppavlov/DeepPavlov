@@ -47,6 +47,7 @@
       {
         "class_name": "bert_syntax_parser",
         "n_deps": "1",
+        "state_size": 256,
         "keep_prob": 0.1,
         "bert_config_file": "{BERT_PATH}/bert_config.json",
         "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
@@ -58,19 +59,20 @@
         "learning_rate": 1e-3,
         "bert_learning_rate": 2e-5,
         "min_learning_rate": 1e-7,
+        "use_birnn": true,
         "learning_rate_drop_patience": 30,
         "learning_rate_drop_div": 1.5,
         "load_before_drop": true,
         "clip_norm": null,
-        "save_path": "{WORK_PATH}/model_last_multilayer_",
-        "load_path": "{WORK_PATH}/model_last_multilayer_",
+        "save_path": "{WORK_PATH}/model_last_multilayer",
+        "load_path": "{WORK_PATH}/model_last_multilayer",
         "in": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask"],
-        "in_y": ["y_deps"],
-        "out": ["y_predicted_deps"]
+        "in_y": ["y_heads"],
+        "out": ["y_predicted_heads"]
       }
     ],
     "out": [
-      "y_predicted_deps"
+      "y_predicted_heads"
     ]
   },
   "train": {
@@ -80,21 +82,21 @@
       {
         "name": "per_token_accuracy",
         "inputs": [
-          "y",
-          "y_predicted"
+          "y_heads",
+          "y_predicted_heads"
         ]
       },
       {
         "name": "accuracy",
         "inputs": [
-          "y",
-          "y_predicted"
+          "y_heads",
+          "y_predicted_heads"
         ]
       }
     ],
     "validation_patience": 10,
     "val_every_n_epochs": 1,
-    "val_every_n_batches": 10,
+    "val_every_n_batches": 300,
 
     "tensorboard_log_dir": "{WORK_PATH}/logs",
     "show_examples": false,
