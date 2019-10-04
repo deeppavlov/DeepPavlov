@@ -16,7 +16,7 @@ import threading
 from collections import namedtuple
 from logging import getLogger
 from pathlib import Path
-from queue import Empty, Queue
+from queue import Queue
 from typing import Union
 
 import requests
@@ -38,40 +38,31 @@ class MSBot(BaseBot):
         super(MSBot, self).__init__(model_config, default_skill_wrap, config, input_queue)
         self.conversations = {}
         self.access_info = {}
-        polling_interval = self.config['auth_polling_interval']
-        self.timer = threading.Timer(polling_interval, self._update_access_info)
+        polling_interval = self._config['auth_polling_interval']
+        self._timer = threading.Timer(polling_interval, self._update_access_info)
         self._request_access_info()
-        self.timer.start()
-
-    def run(self):
-        while self._run_flag:
-            try:
-                activity = self.input_queue.get(timeout=1)
-            except Empty:
-                pass
-            else:
-                self._handle_activity(activity)
+        self._timer.start()
 
     def del_conversation(self, conversation_key: ConvKey):
         del self.conversations[conversation_key]
         log.info(f'Deleted conversation, key: {str(conversation_key)}')
 
     def _update_access_info(self):
-        polling_interval = self.config['auth_polling_interval']
-        self.timer = threading.Timer(polling_interval, self._update_access_info)
-        self.timer.start()
+        polling_interval = self._config['auth_polling_interval']
+        self._timer = threading.Timer(polling_interval, self._update_access_info)
+        self._timer.start()
         self._request_access_info()
 
     def _request_access_info(self):
-        headers = {'Host': self.config['auth_host'],
-                   'Content-Type': self.config['auth_content_type']}
+        headers = {'Host': self._config['auth_host'],
+                   'Content-Type': self._config['auth_content_type']}
 
-        payload = {'grant_type': self.config['auth_grant_type'],
-                   'scope': self.config['auth_scope'],
-                   'client_id': self.config['auth_app_id'],
-                   'client_secret': self.config['auth_app_secret']}
+        payload = {'grant_type': self._config['auth_grant_type'],
+                   'scope': self._config['auth_scope'],
+                   'client_id': self._config['auth_app_id'],
+                   'client_secret': self._config['auth_app_secret']}
 
-        result = requests.post(url=self.config['auth_url'],
+        result = requests.post(url=self._config['auth_url'],
                                headers=headers,
                                data=payload)
 
@@ -82,18 +73,12 @@ class MSBot(BaseBot):
         self.access_info = result.json()
         log.info(f'Obtained authentication information from Microsoft Bot Framework: {str(self.access_info)}')
 
-    def _handle_activity(self, activity: dict):
+    def _handle_request(self, activity: dict):
         conversation_key = ConvKey(activity['channelId'], activity['conversation']['id'])
 
         if conversation_key not in self.conversations.keys():
-            if self.config['multi_instance']:
-                conv_agent = self._get_default_agent()
-                log.info('New conversation instance level agent initiated')
-            else:
-                conv_agent = self.agent
-
             self.conversations[conversation_key] = Conversation(bot=self,
-                                                                agent=conv_agent,
+                                                                agent=self._agent,
                                                                 activity=activity,
                                                                 conversation_key=conversation_key)
 
@@ -101,3 +86,6 @@ class MSBot(BaseBot):
 
         conversation = self.conversations[conversation_key]
         conversation.handle_activity(activity)
+
+    def _send_response(self, response: dict) -> None:
+        pass

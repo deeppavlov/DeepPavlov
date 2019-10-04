@@ -51,7 +51,6 @@ parser.add_argument("-t", "--token", default=None,  help="telegram bot token", t
 parser.add_argument("-i", "--ms-id", default=None, help="microsoft bot framework app id", type=str)
 parser.add_argument("-s", "--ms-secret", default=None, help="microsoft bot framework app secret", type=str)
 
-parser.add_argument("--multi-instance", action="store_true", help="allow rising of several instances of the model")
 parser.add_argument("--stateful", action="store_true", help="interact with a stateful model")
 parser.add_argument("--no-default-skill", action="store_true", help="do not wrap with default skill")
 
@@ -78,7 +77,6 @@ def main():
     if args.download or args.mode == 'download':
         deep_download(pipeline_config_path)
 
-    multi_instance = args.multi_instance
     stateful = args.stateful
 
     if args.mode == 'train':
@@ -99,7 +97,6 @@ def main():
         run_ms_bf_default_agent(model_config=pipeline_config_path,
                                 app_id=ms_id,
                                 app_secret=ms_secret,
-                                multi_instance=multi_instance,
                                 stateful=stateful,
                                 port=args.port,
                                 https=https,
@@ -108,7 +105,6 @@ def main():
                                 default_skill_wrap=not args.no_default_skill)
     elif args.mode == 'alexa':
         run_alexa_default_agent(model_config=pipeline_config_path,
-                                multi_instance=multi_instance,
                                 stateful=stateful,
                                 port=args.port,
                                 https=https,

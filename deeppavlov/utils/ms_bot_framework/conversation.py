@@ -95,7 +95,7 @@ class Conversation:
     def _handle_usupported(self, in_activity: dict):
         activity_type = in_activity['type']
         self.out_gateway.send_plain_text(f'Unsupported kind of {activity_type} activity!')
-        log.warn(f'Received message with unsupported type: {str(in_activity)}')
+        log.warning(f'Received message with unsupported type: {str(in_activity)}')
 
     def _handle_message(self, in_activity: dict):
         if 'text' in in_activity.keys():

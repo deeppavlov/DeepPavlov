@@ -16,7 +16,7 @@ from collections import namedtuple
 from datetime import timedelta, datetime
 from logging import getLogger
 from pathlib import Path
-from queue import Empty, Queue
+from queue import Queue
 from threading import Timer
 from typing import Dict, Union
 
@@ -35,7 +35,7 @@ ValidatedCert = namedtuple('ValidatedCert', ['cert', 'expiration_timestamp'])
 
 
 class AlexaBot(BaseBot):
-    """Contains agent (if not multi-instanced), conversations, validates Alexa requests and routes them to conversations.
+    """Contains agent, conversations, validates Alexa requests and routes them to conversations.
 
     Args:
         agent_generator: Callback which generates DefaultAgent instance with alexa skill.
@@ -49,9 +49,9 @@ class AlexaBot(BaseBot):
         input_queue: Queue for incoming requests from Alexa.
         output_queue: Queue for outcoming responses to Alexa.
         valid_certificates: Dict where key - signature chain url, value - ValidatedCert instance.
-        agent: Alexa skill agent if not multi-instance mode.
+        agent: Alexa skill agent.
         agent_generator: Callback which generates DefaultAgent instance with alexa skill.
-        timer: Timer which triggers periodical certificates with expired validation cleanup.
+        _timer: Timer which triggers periodical certificates with expired validation cleanup.
     """
     def __init__(self,
                  model_config: Union[str, Path, dict],
@@ -64,19 +64,8 @@ class AlexaBot(BaseBot):
         self.output_queue = output_queue
         self.valid_certificates: Dict[str, ValidatedCert] = {}
 
-        self.timer = Timer(REFRESH_VALID_CERTS_PERIOD_SECS, self._refresh_valid_certs)
-        self.timer.start()
-
-    def run(self) -> None:
-        """Thread run method implementation."""
-        while self._run_flag:
-            try:
-                request = self.input_queue.get(timeout=1)
-            except Empty:
-                pass
-            else:
-                response = self._handle_request(request)
-                self.output_queue.put(response)
+        self._timer = Timer(REFRESH_VALID_CERTS_PERIOD_SECS, self._refresh_valid_certs)
+        self._timer.start()
 
     def _del_conversation(self, conversation_key: str) -> None:
         """Deletes Conversation instance.
@@ -90,8 +79,8 @@ class AlexaBot(BaseBot):
 
     def _refresh_valid_certs(self) -> None:
         """Conducts cleanup of periodical certificates with expired validation."""
-        self.timer = Timer(REFRESH_VALID_CERTS_PERIOD_SECS, self._refresh_valid_certs)
-        self.timer.start()
+        self._timer = Timer(REFRESH_VALID_CERTS_PERIOD_SECS, self._refresh_valid_certs)
+        self._timer.start()
 
         expired_certificates = []
 
@@ -118,7 +107,7 @@ class AlexaBot(BaseBot):
         if signature_chain_url not in self.valid_certificates.keys():
             amazon_cert: X509 = verify_cert(signature_chain_url)
             if amazon_cert:
-                amazon_cert_lifetime: timedelta = self.config['amazon_cert_lifetime']
+                amazon_cert_lifetime: timedelta = self._config['amazon_cert_lifetime']
                 expiration_timestamp = datetime.utcnow() + amazon_cert_lifetime
                 validated_cert = ValidatedCert(cert=amazon_cert, expiration_timestamp=expiration_timestamp)
                 self.valid_certificates[signature_chain_url] = validated_cert
@@ -167,15 +156,9 @@ class AlexaBot(BaseBot):
         conversation_key = alexa_request['session']['user']['userId']
 
         if conversation_key not in self.conversations.keys():
-            if self.config['multi_instance']:
-                conv_agent = self._get_default_agent()
-                log.info('New conversation instance level agent initiated')
-            else:
-                conv_agent = self.agent
-
             self.conversations[conversation_key] = \
-                Conversation(config=self.config,
-                             agent=conv_agent,
+                Conversation(config=self._config,
+                             agent=self._agent,
                              conversation_key=conversation_key,
                              self_destruct_callback=lambda: self._del_conversation(conversation_key))
 
@@ -185,3 +168,6 @@ class AlexaBot(BaseBot):
         response = conversation.handle_request(alexa_request)
 
         return response
+
+    def _send_response(self, response: dict) -> None:
+        self.output_queue.put(response)

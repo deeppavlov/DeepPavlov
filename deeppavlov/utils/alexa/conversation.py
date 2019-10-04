@@ -24,7 +24,7 @@ log = getLogger(__name__)
 
 
 class Conversation:
-    """Contains agent (if multi-instanced), receives requests, generates responses.
+    """Contains agent, receives requests, generates responses.
 
     Args:
         config: Alexa skill configuration settings.

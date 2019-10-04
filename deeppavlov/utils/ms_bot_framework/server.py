@@ -41,7 +41,6 @@ app = FastAPI()
 def run_ms_bf_default_agent(model_config: Union[str, Path, dict],
                             app_id: str,
                             app_secret: str,
-                            multi_instance: bool = False,
                             stateful: bool = False,
                             port: Optional[int] = None,
                             https: bool = False,
@@ -57,7 +56,6 @@ def run_ms_bf_default_agent(model_config: Union[str, Path, dict],
 
     ms_bf_server_params = server_params['ms_bot_framework_defaults']
 
-    ms_bf_server_params['multi_instance'] = multi_instance or server_params['common_defaults']['multi_instance']
     ms_bf_server_params['stateful'] = stateful or server_params['common_defaults']['stateful']
 
     ms_bf_server_params['auth_url'] = AUTH_URL

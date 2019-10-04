@@ -6,8 +6,7 @@
     "https": false,
     "https_cert_path": "",
     "https_key_path": "",
-    "stateful": false,
-    "multi_instance": false
+    "stateful": false
   },
   "telegram_defaults": {
     "token": ""
