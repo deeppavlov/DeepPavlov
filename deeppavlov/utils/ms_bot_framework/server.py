@@ -27,21 +27,15 @@ from deeppavlov.utils.server.server import get_ssl_params, redirect_root_do_docs
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 
-AUTH_URL = "https://login.microsoftonline.com/botframework.com/oauth2/v2.0/token"
-AUTH_HOST = "login.microsoftonline.com"
-AUTH_CONTENT_TYPE = "application/x-www-form-urlencoded"
-AUTH_GRANT_TYPE = "client_credentials"
-AUTH_SCOPE = "https://api.botframework.com/.default"
-
 log = getLogger(__name__)
 uvicorn_log = getLogger('uvicorn')
 app = FastAPI()
 
 
 def run_ms_bf_default_agent(model_config: Union[str, Path, dict],
-                            app_id: str,
-                            app_secret: str,
-                            stateful: bool = False,
+                            app_id: Optional[str],
+                            app_secret: Optional[str],
+                            stateful: Optional[bool] = False,
                             port: Optional[int] = None,
                             https: bool = False,
                             ssl_key: Optional[str] = None,
@@ -58,23 +52,17 @@ def run_ms_bf_default_agent(model_config: Union[str, Path, dict],
 
     ms_bf_server_params['stateful'] = stateful or server_params['common_defaults']['stateful']
 
-    ms_bf_server_params['auth_url'] = AUTH_URL
-    ms_bf_server_params['auth_host'] = AUTH_HOST
-    ms_bf_server_params['auth_content_type'] = AUTH_CONTENT_TYPE
-    ms_bf_server_params['auth_grant_type'] = AUTH_GRANT_TYPE
-    ms_bf_server_params['auth_scope'] = AUTH_SCOPE
-
-    ms_bf_server_params['auth_app_id'] = app_id or ms_bf_server_params['auth_app_id']
-    if not ms_bf_server_params['auth_app_id']:
+    ms_bf_server_params['auth_payload']['client_id'] = app_id or ms_bf_server_params['auth_payload']['client_id']
+    if not ms_bf_server_params['auth_payload']['client_id']:
         e = ValueError('Microsoft Bot Framework app id required: initiate -i param '
-                       'or auth_app_id param in server configuration file')
+                       'or auth_payload.client_id param in server configuration file')
         log.error(e)
         raise e
 
-    ms_bf_server_params['auth_app_secret'] = app_secret or ms_bf_server_params['auth_app_secret']
-    if not ms_bf_server_params['auth_app_secret']:
+    ms_bf_server_params['auth_payload']['client_secret'] = app_secret or ms_bf_server_params['auth_payload']['client_secret']
+    if not ms_bf_server_params['auth_payload']['client_secret']:
         e = ValueError('Microsoft Bot Framework app secret required: initiate -s param '
-                       'or auth_app_secret param in server configuration file')
+                       'or auth_payload.client_secret param in server configuration file')
         log.error(e)
         raise e
 

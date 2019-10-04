@@ -50,17 +50,9 @@ class MSBot(BaseBot):
         self._timer = threading.Timer(polling_interval, self._update_access_info)
         self._timer.start()
 
-        ms_headers = {'Host': self._config['auth_host'],
-                   'Content-Type': self._config['auth_content_type']}
-
-        payload = {'grant_type': self._config['auth_grant_type'],
-                   'scope': self._config['auth_scope'],
-                   'client_id': self._config['auth_app_id'],
-                   'client_secret': self._config['auth_app_secret']}
-
         result = requests.post(url=self._config['auth_url'],
-                               headers=ms_headers,
-                               data=payload)
+                               headers=self._config['auth_headers'],
+                               data=self._config['auth_payload'])
 
         status_code = result.status_code
         if status_code != 200:

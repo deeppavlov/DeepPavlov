@@ -51,7 +51,7 @@ parser.add_argument("-t", "--token", default=None,  help="telegram bot token", t
 parser.add_argument("-i", "--ms-id", default=None, help="microsoft bot framework app id", type=str)
 parser.add_argument("-s", "--ms-secret", default=None, help="microsoft bot framework app secret", type=str)
 
-parser.add_argument("--stateful", action="store_true", help="interact with a stateful model")
+parser.add_argument("--stateful", action="store_true", default=None, help="interact with a stateful model")
 parser.add_argument("--no-default-skill", action="store_true", help="do not wrap with default skill")
 
 parser.add_argument("--https", action="store_true", help="run model in https mode")
