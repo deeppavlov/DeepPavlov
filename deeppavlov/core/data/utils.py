@@ -326,13 +326,8 @@ def is_done(path: Union[Path, str]) -> bool:
     Returns:
         True if directory contains ``.done`` file, False otherwise.
 
-    Raises:
-        NotADirectoryError: If ``path`` does not point to a directory.
-
     """
     path = Path(path)
-    if not path.is_dir():
-        raise NotADirectoryError(f"Not a directory: '{path}'")
     mark = Path(path) / _MARK_DONE
     return mark.is_file()
 
