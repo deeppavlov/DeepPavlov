@@ -23,6 +23,7 @@ class BaseConversation:
         self._self_destruct_callback = self_destruct_callback
         self._conversation_lifetime = self._config['conversation_lifetime']
         self._infer_utterances = list()
+        self._start_timer()
 
     def _start_timer(self) -> None:
         """Initiates self-destruct timer."""
@@ -71,20 +72,20 @@ class AlexaConversation(BaseConversation):
         agent: Alexa skill agent.
         key: Alexa conversation ID.
         timer: Conversation self-destruct timer.
-        handled_requests: Mapping of Alexa requests types to requests handlers.
-        response_template: Alexa response template.
+        _handled_requests: Mapping of Alexa requests types to requests handlers.
+        _response_template: Alexa response template.
         """
     def __init__(self, config: dict, model, self_destruct_callback: callable) -> None:
         super(AlexaConversation, self).__init__(config, model, self_destruct_callback)
 
-        self.handled_requests = {
+        self._handled_requests = {
             'LaunchRequest': self._handle_launch,
             'IntentRequest': self._handle_intent,
             'SessionEndedRequest': self._handle_end,
             '_unsupported': self._handle_unsupported
         }
 
-        self.response_template = {
+        self._response_template = {
             'version': '1.0',
             'sessionAttributes': {
                 'sessionId': None
@@ -102,8 +103,6 @@ class AlexaConversation(BaseConversation):
             }
         }
 
-        self._start_timer()
-
     def handle_request(self, request: dict) -> dict:
         """Routes Alexa requests to appropriate handlers.
 
@@ -116,10 +115,10 @@ class AlexaConversation(BaseConversation):
         request_id = request['request']['requestId']
         log.debug(f'Received request. Type: {request_type}, id: {request_id}')
 
-        if request_type in self.handled_requests.keys():
-            response: dict = self.handled_requests[request_type](request)
+        if request_type in self._handled_requests.keys():
+            response: dict = self._handled_requests[request_type](request)
         else:
-            response: dict = self.handled_requests['_unsupported'](request)
+            response: dict = self._handled_requests['_unsupported'](request)
             log.warning(f'Unsupported request type: {request_type}, request id: {request_id}')
 
         self._rearm_self_destruct()
@@ -135,7 +134,7 @@ class AlexaConversation(BaseConversation):
         Returns:
             response: Response conforming Alexa response specification.
         """
-        response = deepcopy(self.response_template)
+        response = deepcopy(self._response_template)
         response['sessionAttributes']['sessionId'] = request['session']['sessionId']
 
         response['response']['outputSpeech']['text'] = response['response']['card']['content'] = text
@@ -213,6 +212,48 @@ class AlexaConversation(BaseConversation):
         return response
 
 
+class AliceConversation(BaseConversation):
+    def __init__(self, config, model, self_destruct_callback):
+        super(AliceConversation, self).__init__(config, model, self_destruct_callback)
+        self._response_template = {
+            'response': {
+                'end_session': False,
+                'text': None
+            },
+            'session': {
+                'session_id': None,
+                'message_id': None,
+                'user_id': None
+            },
+            'version': '1.0'
+        }
+
+    def handle_request(self, data: dict):
+        if data['session']['new']:
+            response = self._generate_response(self._config['start_message'], data)
+        elif data['request']['command'].strip():
+            text = data['request']['command'].strip()
+            model_response = self._act(text)
+            response = self._generate_response(model_response, data)
+        else:
+            response = self._generate_response('got unsupported message', data)
+        self._rearm_self_destruct()
+        return response
+
+    def _handle_launch(self, data: dict):
+        return self._generate_response(self._config['start_message'], data)
+
+    def _generate_response(self, text, request: dict) -> dict:
+        response = deepcopy(self._response_template)
+
+        for key in ['session_id', 'user_id', 'message_id']:
+            response['session'][key] = request['session'][key]
+
+        response['response']['text'] = text
+
+        return response
+
+
 class MSConversation(BaseConversation):
     def __init__(self, config, model, activity: dict, self_destruct_callback: callable,
                  http_session: Session) -> None:
@@ -235,8 +276,6 @@ class MSConversation(BaseConversation):
             'conversation': activity['conversation'],
             'text': 'default_text'
         }
-
-        self._start_timer()
 
     def handle_request(self, request: dict):
         activity_type = request['type']

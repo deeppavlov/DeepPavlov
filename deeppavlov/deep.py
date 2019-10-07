@@ -34,7 +34,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
                     choices={'train', 'evaluate', 'interact', 'predict', 'interactbot', 'interactmsbot',
-                             'alexa', 'riseapi', 'risesocket', 'download', 'install', 'crossval'})
+                             'alexa', 'alice', 'riseapi', 'risesocket', 'download', 'install', 'crossval'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 
 parser.add_argument("-e", "--start-epoch-num", dest="start_epoch_num", default=None,
@@ -58,9 +58,6 @@ parser.add_argument("--cert", default=None, help="ssl certificate", type=str)
 parser.add_argument("-p", "--port", default=None, help="api port", type=int)
 parser.add_argument("--socket-type", default='TCP', type=str, choices={"TCP", "UNIX"})
 parser.add_argument("--socket-file", default="/tmp/deeppavlov_socket.s", type=str)
-
-parser.add_argument("--api-mode", help="rest api mode: 'basic' with batches or 'alice' for  Yandex.Dialogs format",
-                    type=str, default='basic', choices={'basic', 'alice'})
 
 
 def main():
@@ -101,12 +98,10 @@ def main():
                                 https=https,
                                 ssl_key=ssl_key,
                                 ssl_cert=ssl_cert)
+    elif args.mode == 'alice':
+        start_alice_server(pipeline_config_path, https, ssl_key, ssl_cert, port=args.port)
     elif args.mode == 'riseapi':
-        alice = args.api_mode == 'alice'
-        if alice:
-            start_alice_server(pipeline_config_path, https, ssl_key, ssl_cert, port=args.port)
-        else:
-            start_model_server(pipeline_config_path, https, ssl_key, ssl_cert, port=args.port)
+        start_model_server(pipeline_config_path, https, ssl_key, ssl_cert, port=args.port)
     elif args.mode == 'risesocket':
         start_socket_server(pipeline_config_path, args.socket_type, port=args.port, socket_file=args.socket_file)
     elif args.mode == 'predict':

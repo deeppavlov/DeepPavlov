@@ -18,7 +18,7 @@ Then run:
 
 ::
 
-    python -m deeppavlov riseapi --api-mode alice --https --key my.key --cert my.crt  <config_path> [-d] [-p <port>]
+    python -m deeppavlov alice --https --key my.key --cert my.crt  <config_path> [-d] [-p <port>]
 
 
 * ``-d``: download model specific data before starting the service.

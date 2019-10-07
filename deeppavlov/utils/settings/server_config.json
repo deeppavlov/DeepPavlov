@@ -33,6 +33,10 @@
     "unsupported_message": "Sorry, DeepPavlov can't understand it.",
     "conversation_lifetime": 3600
   },
+  "alice_defaults": {
+    "start_message": "DeepPavlov Alice connector initiated",
+    "conversation_lifetime": 3600
+  },
   "model_defaults": {
     "DstcSlotFillingNetwork": {
       "host": "",
