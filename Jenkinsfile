@@ -9,7 +9,6 @@ node('cuda-module') {
             }
             stage('Setup') {
                 env.TFHUB_CACHE_DIR="tfhub_cache"
-                env.LD_LIBRARY_PATH="/usr/local/cuda-10.0/lib64"
                 sh """
                     virtualenv --python=python3.7 '.venv-$BUILD_NUMBER'
                     . '.venv-$BUILD_NUMBER/bin/activate'
