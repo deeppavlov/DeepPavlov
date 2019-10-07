@@ -26,7 +26,7 @@ from starlette.responses import JSONResponse
 
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
-from deeppavlov.utils.alexa.bot import AlexaBot
+from deeppavlov.utils.connector import AlexaBot
 from deeppavlov.utils.alexa.request_parameters import data_body, cert_chain_url_header, signature_header
 from deeppavlov.utils.server.server import get_ssl_params, redirect_root_to_docs
 

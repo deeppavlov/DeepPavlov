@@ -1,37 +1,68 @@
-# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
+import threading
 from collections import namedtuple
 from datetime import timedelta, datetime
 from logging import getLogger
 from pathlib import Path
-from queue import Queue
-from threading import Timer
-from typing import Dict, Union
+from queue import Empty, Queue
+from threading import Thread, Timer
+from typing import Union, Dict
 
+import requests
 from OpenSSL.crypto import X509
+from requests.exceptions import HTTPError
 
-from deeppavlov.utils.alexa.conversation import AlexaConversation
-from deeppavlov.utils.alexa.ssl_tools import verify_cert, verify_signature
-from deeppavlov.utils.wrapper import BaseBot
+from deeppavlov.core.commands.infer import build_model
+from deeppavlov.utils.connector.ssl_tools import verify_cert, verify_signature
+from deeppavlov.utils.connector.conversation import MSConversation, AlexaConversation
 
 REQUEST_TIMESTAMP_TOLERANCE_SECS = 150
 REFRESH_VALID_CERTS_PERIOD_SECS = 120
 
 log = getLogger(__name__)
-
+MSConvKey = namedtuple('ConvKey', ['channel_id', 'conversation_id'])
 ValidatedCert = namedtuple('ValidatedCert', ['cert', 'expiration_timestamp'])
+
+
+class BaseBot(Thread):
+    _config: dict
+    input_queue: Queue
+    _run_flag: bool
+
+    def __init__(self, model_config: Union[str, Path, dict],
+                 config: dict,
+                 input_queue: Queue) -> None:
+        super(BaseBot, self).__init__()
+        self._config = config
+        self.input_queue = input_queue
+        self._run_flag = True
+        self._model = build_model(model_config)
+        self._config['next_utter_msg'] = "Please enter an argument '{}'"
+        log.info('Bot initiated')
+
+    def run(self) -> None:
+        """Thread run method implementation."""
+        while self._run_flag:
+            try:
+                request = self.input_queue.get(timeout=1)
+            except Empty:
+                pass
+            else:
+                response = self._handle_request(request)
+                self._send_response(response)
+
+    def join(self, timeout=None):
+        """Thread join method implementation."""
+        self._run_flag = False
+        for timer in threading.enumerate():
+            if isinstance(timer, Timer):
+                timer.cancel()
+        Thread.join(self, timeout)
+
+    def _handle_request(self, request: dict) -> dict:
+        raise NotImplementedError
+
+    def _send_response(self, response: dict) -> None:
+        raise NotImplementedError
 
 
 class AlexaBot(BaseBot):
@@ -168,3 +199,60 @@ class AlexaBot(BaseBot):
 
     def _send_response(self, response: dict) -> None:
         self.output_queue.put(response)
+
+
+class MSBot(BaseBot):
+    def __init__(self,
+                 model_config: Union[str, Path, dict],
+                 config: dict,
+                 input_queue: Queue):
+        super(MSBot, self).__init__(model_config, config, input_queue)
+        self._conversations = {}
+        self._http_session = requests.Session()
+        self._update_access_info()
+
+    def _del_conversation(self, conversation_key: MSConvKey):
+        if conversation_key in self._conversations.keys():
+            del self._conversations[conversation_key]
+            log.info(f'Deleted conversation, key: {str(conversation_key)}')
+
+    def _update_access_info(self):
+        polling_interval = self._config['auth_polling_interval']
+        self._timer = threading.Timer(polling_interval, self._update_access_info)
+        self._timer.start()
+
+        result = requests.post(url=self._config['auth_url'],
+                               headers=self._config['auth_headers'],
+                               data=self._config['auth_payload'])
+
+        status_code = result.status_code
+        if status_code != 200:
+            raise HTTPError(f'Authentication token request returned wrong HTTP status code: {status_code}')
+
+        access_info = result.json()
+        headers = {
+            'Authorization': f"{access_info['token_type']} {access_info['access_token']}",
+            'Content-Type': 'application/json'
+        }
+
+        self._http_session.headers.update(headers)
+
+        log.info(f'Obtained authentication information from Microsoft Bot Framework: {str(access_info)}')
+
+    def _handle_request(self, request: dict):
+        conversation_key = MSConvKey(request['channelId'], request['conversation']['id'])
+
+        if conversation_key not in self._conversations.keys():
+            self._conversations[conversation_key] = MSConversation(config=self._config,
+                                                                   model=self._model,
+                                                                   activity=request,
+                                                                   self_destruct_callback=lambda: self._del_conversation(conversation_key),
+                                                                   http_session=self._http_session)
+
+            log.info(f'Created new conversation, key: {str(conversation_key)}')
+
+        conversation = self._conversations[conversation_key]
+        conversation.handle_request(request)
+
+    def _send_response(self, response: dict) -> None:
+        pass

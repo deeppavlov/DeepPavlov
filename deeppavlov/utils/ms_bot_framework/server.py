@@ -22,7 +22,7 @@ from fastapi import FastAPI
 
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
-from deeppavlov.utils.ms_bot_framework.bot import MSBot
+from deeppavlov.utils.connector import MSBot
 from deeppavlov.utils.server.server import get_ssl_params, redirect_root_to_docs
 
 SERVER_CONFIG_FILENAME = 'server_config.json'

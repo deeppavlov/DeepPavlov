@@ -1,23 +1,60 @@
-# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 from copy import deepcopy
 from logging import getLogger
+from threading import Timer
+from urllib.parse import urljoin
 
-from deeppavlov.utils.wrapper import BaseConversation
+from requests import Session
+
+from deeppavlov.core.common.chainer import Chainer
 
 log = getLogger(__name__)
+
+
+class BaseConversation:
+    _config: dict
+    _model: Chainer
+    _conversation_lifetime: float
+    _timer: Timer
+    _infer_utterances: list
+
+    def __init__(self, config: dict, model: Chainer, self_destruct_callback: callable):
+        self._config = config
+        self._model = model
+        self._self_destruct_callback = self_destruct_callback
+        self._conversation_lifetime = self._config['conversation_lifetime']
+        self._infer_utterances = list()
+
+    def _start_timer(self) -> None:
+        """Initiates self-destruct timer."""
+        self._timer = Timer(self._config['conversation_lifetime'], self._self_destruct_callback)
+        self._timer.start()
+
+    def _rearm_self_destruct(self) -> None:
+        """Rearms self-destruct timer."""
+        self._timer.cancel()
+        self._start_timer()
+
+    def _act(self, utterance: str) -> str:
+        """Infers DeepPavlov model with raw user input extracted from request.
+
+        Args:
+            utterance: Raw user input extracted from request.
+
+        Returns:
+            response: DeepPavlov model response if  ``next_utter_msg`` from config with.
+
+        """
+        self._infer_utterances.append([utterance])
+        if len(self._infer_utterances) == len(self._model.in_x):
+            prediction = self._model(*self._infer_utterances)
+            self._infer_utterances = list()
+            if len(self._model.out_params) == 1:
+                prediction = [prediction]
+            prediction = '; '.join([str(output[0]) for output in prediction])
+            response = prediction
+        else:
+            response = self._config['next_utter_msg'].format(self._model.in_x[len(self._infer_utterances)])
+        return response
 
 
 class AlexaConversation(BaseConversation):
@@ -174,3 +211,75 @@ class AlexaConversation(BaseConversation):
         response = self._generate_response(self._config['unsupported_message'], request)
 
         return response
+
+
+class MSConversation(BaseConversation):
+    def __init__(self, config, model, activity: dict, self_destruct_callback: callable,
+                 http_session: Session) -> None:
+        super(MSConversation, self).__init__(config, model, self_destruct_callback)
+        self._service_url = activity['serviceUrl']
+        self._conversation_id = activity['conversation']['id']
+
+        self._http_session = http_session
+
+        self._handled_activities = {
+            'message': self._handle_message,
+            'conversationUpdate': self._handle_update,
+            '_unsupported': self._handle_usupported
+        }
+
+        self._response_template = {
+            "type": "message",
+            "from": activity['recipient'],
+            "recipient": activity['from'],
+            'conversation': activity['conversation'],
+            'text': 'default_text'
+        }
+
+        self._start_timer()
+
+    def handle_request(self, request: dict):
+        activity_type = request['type']
+        activity_id = request['id']
+        log.debug(f'Received activity. Type: {activity_type}, id: {activity_id}')
+
+        if activity_type in self._handled_activities.keys():
+            self._handled_activities[activity_type](request)
+        else:
+            self._handled_activities['_unsupported'](request)
+            log.warning(f'Unsupported activity type: {activity_type}, activity id: {activity_id}')
+
+        self._rearm_self_destruct()
+
+    def _handle_usupported(self, in_activity: dict) -> None:
+        activity_type = in_activity['type']
+        self._send_plain_text(f'Unsupported kind of {activity_type} activity!')
+        log.warning(f'Received message with unsupported type: {str(in_activity)}')
+
+    def _handle_message(self, in_activity: dict) -> None:
+        if 'text' in in_activity.keys():
+            in_text = in_activity['text']
+            agent_response = self._act(in_text)
+            if agent_response:
+                self._send_plain_text(agent_response)
+        else:
+            self._handle_usupported(in_activity)
+
+    def _send_plain_text(self, text: str) -> None:
+        response = deepcopy(self._response_template)
+        response['text'] = text
+
+        url = urljoin(self._service_url, f"v3/conversations/{self._conversation_id}/activities")
+
+        response = self._http_session.post(url=url, json=response)
+
+        try:
+            response_json_str = str(response.json())
+        except ValueError:
+            response_json_str = ''
+
+        log.debug(f'Sent activity to the MSBotFramework server. '
+                  f'Response code: {response.status_code}, response contents: {response_json_str}')
+
+    def _handle_update(self, in_activity: dict) -> None:
+        self._send_plain_text(self._config['start_message'])
