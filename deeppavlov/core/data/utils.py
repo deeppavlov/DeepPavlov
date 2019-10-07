@@ -327,7 +327,6 @@ def is_done(path: Union[Path, str]) -> bool:
         True if directory contains ``.done`` file, False otherwise.
 
     """
-    path = Path(path)
     mark = Path(path) / _MARK_DONE
     return mark.is_file()
 
