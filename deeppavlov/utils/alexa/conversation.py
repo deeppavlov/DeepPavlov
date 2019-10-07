@@ -15,8 +15,6 @@
 from copy import deepcopy
 from logging import getLogger
 
-from deeppavlov.deprecated.agent import RichMessage
-from deeppavlov.deprecated.agents.default_agent import DefaultAgent
 from deeppavlov.utils.wrapper import BaseConversation
 
 log = getLogger(__name__)
@@ -39,9 +37,8 @@ class AlexaConversation(BaseConversation):
         handled_requests: Mapping of Alexa requests types to requests handlers.
         response_template: Alexa response template.
         """
-    def __init__(self, config: dict, agent: DefaultAgent, conversation_key: str,
-                 self_destruct_callback: callable) -> None:
-        super(AlexaConversation, self).__init__(config, agent, conversation_key, self_destruct_callback)
+    def __init__(self, config: dict, model, self_destruct_callback: callable) -> None:
+        super(AlexaConversation, self).__init__(config, model, self_destruct_callback)
 
         self.handled_requests = {
             'LaunchRequest': self._handle_launch,
@@ -54,6 +51,17 @@ class AlexaConversation(BaseConversation):
             'version': '1.0',
             'sessionAttributes': {
                 'sessionId': None
+            },
+            'response': {
+                'shouldEndSession': False,
+                'outputSpeech': {
+                    'type': 'PlainText',
+                    'text': None
+                },
+                'card': {
+                    'type': 'Simple',
+                    'content': None
+                }
             }
         }
 
@@ -81,7 +89,7 @@ class AlexaConversation(BaseConversation):
 
         return response
 
-    def _generate_response(self, response: dict, request: dict) -> dict:
+    def _generate_response(self, text: str, request: dict) -> dict:
         """Populates generated response with additional data conforming Alexa response specification.
 
         Args:
@@ -90,12 +98,10 @@ class AlexaConversation(BaseConversation):
         Returns:
             response: Response conforming Alexa response specification.
         """
-        response_template = deepcopy(self.response_template)
-        response_template['sessionAttributes']['sessionId'] = request['session']['sessionId']
+        response = deepcopy(self.response_template)
+        response['sessionAttributes']['sessionId'] = request['session']['sessionId']
 
-        for key, value in response_template.items():
-            if key not in response.keys():
-                response[key] = value
+        response['response']['outputSpeech']['text'] = response['response']['card']['content'] = text
 
         return response
 
@@ -122,20 +128,13 @@ class AlexaConversation(BaseConversation):
             return {'error': 'no slot found'}
 
         utterance = request_intent['slots'][slot_name]['value']
-        agent_response = self._act(utterance)
+        model_response = self._act(utterance)
 
-        if not agent_response:
+        if not model_response:
             log.error(f'Some error during response generation for request {request_id}')
             return {'error': 'error during response generation'}
 
-        prediction: RichMessage = agent_response[0]
-        prediction: list = prediction.alexa()
-
-        if not prediction:
-            log.error(f'Some error during response generation for request {request_id}')
-            return {'error': 'error during response generation'}
-
-        response = self._generate_response(prediction[0], request)
+        response = self._generate_response(model_response, request)
 
         return response
 
@@ -146,22 +145,9 @@ class AlexaConversation(BaseConversation):
             request: Alexa request.
         Returns:
             response: "response" part of response dict conforming Alexa specification.
-        """
-        response = {
-            'response': {
-                'shouldEndSession': False,
-                'outputSpeech': {
-                    'type': 'PlainText',
-                    'text': self._config['start_message']
-                },
-                'card': {
-                    'type': 'Simple',
-                    'content': self._config['start_message']
-                }
-            }
-        }
 
-        response = self._generate_response(response, request)
+        """
+        response = self._generate_response(self._config['start_message'], request)
 
         return response
 
@@ -185,20 +171,6 @@ class AlexaConversation(BaseConversation):
         Returns:
             response: "response" part of response dict conforming Alexa specification.
         """
-        response = {
-            'response': {
-                'shouldEndSession': False,
-                'outputSpeech': {
-                    'type': 'PlainText',
-                    'text': self._config['unsupported_message']
-                },
-                'card': {
-                    'type': 'Simple',
-                    'content': self._config['unsupported_message']
-                }
-            }
-        }
-
-        response = self._generate_response(response, request)
+        response = self._generate_response(self._config['unsupported_message'], request)
 
         return response

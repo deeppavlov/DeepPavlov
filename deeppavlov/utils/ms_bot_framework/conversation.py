@@ -56,6 +56,7 @@ class MSConversation(BaseConversation):
         if activity_type in self._handled_activities.keys():
             self._handled_activities[activity_type](request)
         else:
+            self._handled_activities['_unsupported'](request)
             log.warning(f'Unsupported activity type: {activity_type}, activity id: {activity_id}')
 
         self._rearm_self_destruct()

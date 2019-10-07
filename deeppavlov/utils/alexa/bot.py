@@ -156,8 +156,7 @@ class AlexaBot(BaseBot):
         if conversation_key not in self.conversations.keys():
             self.conversations[conversation_key] = \
                 AlexaConversation(config=self._config,
-                                  agent=self._agent,
-                                  conversation_key=conversation_key,
+                                  model=self._model,
                                   self_destruct_callback=lambda: self._del_conversation(conversation_key))
 
             log.info(f'Created new conversation, key: {conversation_key}')
