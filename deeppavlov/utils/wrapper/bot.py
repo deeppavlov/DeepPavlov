@@ -3,12 +3,10 @@ from logging import getLogger
 from pathlib import Path
 from queue import Empty, Queue
 from threading import Thread, Timer
-from typing import Union
+from typing import Optional, Union
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.deprecated.agents.default_agent import DefaultAgent
-from deeppavlov.deprecated.agents.processors import DefaultRichContentWrapper
-from deeppavlov.deprecated.skills.default_skill import DefaultStatelessSkill
 
 log = getLogger(__name__)
 
@@ -26,11 +24,9 @@ class BaseBot(Thread):
         self._config = config
         self.input_queue = input_queue
         self._run_flag = True
-
-        model = build_model(model_config)
-        skill = DefaultStatelessSkill(model)
-        self._agent = DefaultAgent([skill], skills_processor=DefaultRichContentWrapper())
-        log.info('New bot instance level agent initiated')
+        self._model = build_model(model_config)
+        self._config['next_utter_msg'] = "Please enter an argument '{}'"
+        log.info('Bot initiated')
 
     def run(self) -> None:
         """Thread run method implementation."""

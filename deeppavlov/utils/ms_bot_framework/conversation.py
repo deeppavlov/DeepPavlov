@@ -12,118 +12,83 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from copy import deepcopy
 from logging import getLogger
 from urllib.parse import urljoin
 
 from requests import Session
 
-from deeppavlov.deprecated.agent import RichMessage
-from deeppavlov.utils.bot import BaseConversation
+from deeppavlov.utils.wrapper import BaseConversation
 
 log = getLogger(__name__)
 
 
 class MSConversation(BaseConversation):
-    def __init__(self, config, agent, activity: dict, conversation_key, self_destruct_callback: callable,
+    def __init__(self, config, model, activity: dict, self_destruct_callback: callable,
                  http_session: Session) -> None:
-        super(MSConversation, self).__init__(config, agent, conversation_key, self_destruct_callback)
-        self.bot_id = activity['recipient']['id']
-        self.bot_name = activity['recipient']['name']
-        self.service_url = activity['serviceUrl']
-        self.channel_id = activity['channelId']
-        self.conversation_id = activity['conversation']['id']
+        super(MSConversation, self).__init__(config, model, self_destruct_callback)
+        self._service_url = activity['serviceUrl']
+        self._conversation_id = activity['conversation']['id']
 
-        self.http_session = http_session
+        self._http_session = http_session
 
-        self.handled_activities = {
-            'message': self._handle_message
+        self._handled_activities = {
+            'message': self._handle_message,
+            'conversationUpdate': self._handle_update,
+            '_unsupported': self._handle_usupported
         }
 
-        self.activity_template = {
-            'from': {
-                'id': self.bot_id,
-                'name': self.bot_name
-            },
-            'conversation': {
-                'id': self.conversation_id
-            }
+        self._response_template = {
+            "type": "message",
+            "from": activity['recipient'],
+            "recipient": activity['from'],
+            'conversation': activity['conversation'],
+            'text': 'default_text'
         }
 
         self._start_timer()
 
-    def handle_activity(self, activity: dict):
-        activity_type = activity['type']
-        activity_id = activity['id']
+    def handle_request(self, request: dict):
+        activity_type = request['type']
+        activity_id = request['id']
         log.debug(f'Received activity. Type: {activity_type}, id: {activity_id}')
 
-        if activity_type in self.handled_activities.keys():
-            self.handled_activities[activity_type](activity)
+        if activity_type in self._handled_activities.keys():
+            self._handled_activities[activity_type](request)
         else:
             log.warning(f'Unsupported activity type: {activity_type}, activity id: {activity_id}')
 
         self._rearm_self_destruct()
 
-    def _act(self, utterance: str):
-        utterance = [[utterance]]
-        prediction = self.agent(*utterance)
-
-        return prediction
-
-    def _send_infer_results(self, response: RichMessage, in_activity: dict):
-        ms_bf_response = response.ms_bot_framework()
-        for out_activity in ms_bf_response:
-            if out_activity:
-                self.send_activity(out_activity, in_activity)
-
-    def _handle_usupported(self, in_activity: dict):
+    def _handle_usupported(self, in_activity: dict) -> None:
         activity_type = in_activity['type']
-        self.send_plain_text(f'Unsupported kind of {activity_type} activity!')
+        self._send_plain_text(f'Unsupported kind of {activity_type} activity!')
         log.warning(f'Received message with unsupported type: {str(in_activity)}')
 
-    def _handle_message(self, in_activity: dict):
+    def _handle_message(self, in_activity: dict) -> None:
         if 'text' in in_activity.keys():
             in_text = in_activity['text']
             agent_response = self._act(in_text)
             if agent_response:
-                response = agent_response[0]
-                self._send_infer_results(response, in_activity)
+                self._send_plain_text(agent_response)
         else:
             self._handle_usupported(in_activity)
 
-    def send_activity(self, out_activity: dict, in_activity: dict = None):
-        service_url = self.service_url
-        for key, value in self.activity_template.items():
-            out_activity[key] = value
+    def _send_plain_text(self, text: str) -> None:
+        response = deepcopy(self._response_template)
+        response['text'] = text
 
-        if in_activity:
-            service_url = in_activity.get('serviceUrl', service_url)
+        url = urljoin(self._service_url, f"v3/conversations/{self._conversation_id}/activities")
 
-            try:
-                out_activity['recepient']['id'] = in_activity['from']['id']
-            except KeyError:
-                pass
-
-            try:
-                out_activity['conversation']['name'] = in_activity['conversation']['name']
-            except KeyError:
-                pass
-
-            try:
-                out_activity['recepient']['name'] = in_activity['from']['name']
-            except KeyError:
-                pass
-
-        url = urljoin(service_url, f"v3/conversations/{self.conversation_id}/activities")
-
-        response = self.http_session.post(url=url, json=out_activity)
+        response = self._http_session.post(url=url, json=response)
 
         try:
             response_json_str = str(response.json())
-        except Exception:
+        except ValueError:
             response_json_str = ''
 
         log.debug(f'Sent activity to the MSBotFramework server. '
                   f'Response code: {response.status_code}, response contents: {response_json_str}')
 
-    def send_plain_text(self, text: str):
-        raise NotImplementedError
+    def _handle_update(self, in_activity: dict) -> None:
+        self._send_plain_text(self._config['start_message'])

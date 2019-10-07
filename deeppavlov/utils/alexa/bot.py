@@ -24,7 +24,7 @@ from OpenSSL.crypto import X509
 
 from deeppavlov.utils.alexa.conversation import AlexaConversation
 from deeppavlov.utils.alexa.ssl_tools import verify_cert, verify_signature
-from deeppavlov.utils.bot import BaseBot
+from deeppavlov.utils.wrapper import BaseBot
 
 REQUEST_TIMESTAMP_TOLERANCE_SECS = 150
 REFRESH_VALID_CERTS_PERIOD_SECS = 120

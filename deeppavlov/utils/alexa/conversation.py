@@ -17,7 +17,7 @@ from logging import getLogger
 
 from deeppavlov.deprecated.agent import RichMessage
 from deeppavlov.deprecated.agents.default_agent import DefaultAgent
-from deeppavlov.utils.bot import BaseConversation
+from deeppavlov.utils.wrapper import BaseConversation
 
 log = getLogger(__name__)
 
@@ -81,20 +81,6 @@ class AlexaConversation(BaseConversation):
 
         return response
 
-    def _act(self, utterance: str) -> list:
-        """Infers DeepPavlov agent with raw user input extracted from Alexa request.
-
-        Args:
-            utterance: Raw user input extracted from Alexa request.
-        Returns:
-            response: DeepPavlov agent response.
-        """
-        utterance = [[utterance]]
-
-        agent_response: list = self.agent(*utterance)
-
-        return agent_response
-
     def _generate_response(self, response: dict, request: dict) -> dict:
         """Populates generated response with additional data conforming Alexa response specification.
 
@@ -121,8 +107,8 @@ class AlexaConversation(BaseConversation):
         Returns:
             response: "response" part of response dict conforming Alexa specification.
         """
-        intent_name = self.config['intent_name']
-        slot_name = self.config['slot_name']
+        intent_name = self._config['intent_name']
+        slot_name = self._config['slot_name']
 
         request_id = request['request']['requestId']
         request_intent: dict = request['request']['intent']
@@ -166,11 +152,11 @@ class AlexaConversation(BaseConversation):
                 'shouldEndSession': False,
                 'outputSpeech': {
                     'type': 'PlainText',
-                    'text': self.config['start_message']
+                    'text': self._config['start_message']
                 },
                 'card': {
                     'type': 'Simple',
-                    'content': self.config['start_message']
+                    'content': self._config['start_message']
                 }
             }
         }
@@ -204,11 +190,11 @@ class AlexaConversation(BaseConversation):
                 'shouldEndSession': False,
                 'outputSpeech': {
                     'type': 'PlainText',
-                    'text': self.config['unsupported_message']
+                    'text': self._config['unsupported_message']
                 },
                 'card': {
                     'type': 'Simple',
-                    'content': self.config['unsupported_message']
+                    'content': self._config['unsupported_message']
                 }
             }
         }

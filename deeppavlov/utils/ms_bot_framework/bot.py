@@ -22,7 +22,7 @@ from typing import Union
 import requests
 from requests.exceptions import HTTPError
 
-from deeppavlov.utils.bot import BaseBot
+from deeppavlov.utils.wrapper import BaseBot
 from deeppavlov.utils.ms_bot_framework.conversation import MSConversation
 
 log = getLogger(__name__)
@@ -31,17 +31,18 @@ ConvKey = namedtuple('ConvKey', ['channel_id', 'conversation_id'])
 
 
 class MSBot(BaseBot):
-    def __init__(self, model_config: Union[str, Path, dict],
+    def __init__(self,
+                 model_config: Union[str, Path, dict],
                  config: dict,
                  input_queue: Queue):
         super(MSBot, self).__init__(model_config, config, input_queue)
-        self.conversations = {}
-        self.http_session = requests.Session()
+        self._conversations = {}
+        self._http_session = requests.Session()
         self._update_access_info()
 
     def _del_conversation(self, conversation_key: ConvKey):
-        if conversation_key in self.conversations.keys():
-            del self.conversations[conversation_key]
+        if conversation_key in self._conversations.keys():
+            del self._conversations[conversation_key]
             log.info(f'Deleted conversation, key: {str(conversation_key)}')
 
     def _update_access_info(self):
@@ -63,25 +64,24 @@ class MSBot(BaseBot):
             'Content-Type': 'application/json'
         }
 
-        self.http_session.headers.update(headers)
+        self._http_session.headers.update(headers)
 
         log.info(f'Obtained authentication information from Microsoft Bot Framework: {str(access_info)}')
 
-    def _handle_request(self, activity: dict):
-        conversation_key = ConvKey(activity['channelId'], activity['conversation']['id'])
+    def _handle_request(self, request: dict):
+        conversation_key = ConvKey(request['channelId'], request['conversation']['id'])
 
-        if conversation_key not in self.conversations.keys():
-            self.conversations[conversation_key] = MSConversation(config=self._config,
-                                                                  agent=self._agent,
-                                                                  activity=activity,
-                                                                  conversation_key=conversation_key,
-                                                                  self_destruct_callback=lambda: self._del_conversation(conversation_key),
-                                                                  http_session=self.http_session)
+        if conversation_key not in self._conversations.keys():
+            self._conversations[conversation_key] = MSConversation(config=self._config,
+                                                                   model=self._model,
+                                                                   activity=request,
+                                                                   self_destruct_callback=lambda: self._del_conversation(conversation_key),
+                                                                   http_session=self._http_session)
 
             log.info(f'Created new conversation, key: {str(conversation_key)}')
 
-        conversation = self.conversations[conversation_key]
-        conversation.handle_activity(activity)
+        conversation = self._conversations[conversation_key]
+        conversation.handle_request(request)
 
     def _send_response(self, response: dict) -> None:
         pass
