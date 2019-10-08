@@ -15,24 +15,20 @@
 from logging import getLogger
 from pathlib import Path
 from queue import Queue
-from typing import Union, Optional
+from typing import Optional
 
 import uvicorn
 from fastapi import FastAPI
 
-from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.paths import get_settings_path
-from deeppavlov.utils.connector import MSBot
+from deeppavlov.utils.connector import MSBot, get_connector_params
 from deeppavlov.utils.server.server import get_ssl_params, redirect_root_to_docs
-
-SERVER_CONFIG_FILENAME = 'server_config.json'
 
 log = getLogger(__name__)
 uvicorn_log = getLogger('uvicorn')
 app = FastAPI()
 
 
-def run_ms_bf_default_agent(model_config: Union[str, Path, dict],
+def run_ms_bf_default_agent(model_config: Path,
                             app_id: Optional[str],
                             app_secret: Optional[str],
                             port: Optional[int] = None,
@@ -40,32 +36,41 @@ def run_ms_bf_default_agent(model_config: Union[str, Path, dict],
                             ssl_key: Optional[str] = None,
                             ssl_cert: Optional[str] = None) -> None:
 
-    server_config_path = Path(get_settings_path(), SERVER_CONFIG_FILENAME).resolve()
-    server_params = read_json(server_config_path)
+    connector_params = get_connector_params('ms_bot_framework', model_config)
 
-    host = server_params['common_defaults']['host']
-    port = port or server_params['common_defaults']['port']
+    host = connector_params['host']
+    port = port or connector_params['port']
 
-    ms_bf_server_params = server_params['ms_bot_framework_defaults']
+    auth_params = {
+        "auth_headers": {
+          "Host": "login.microsoftonline.com",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "auth_payload": {
+          "grant_type": "client_credentials",
+          "scope": "https://api.botframework.com/.default",
+          "client_id": app_id or connector_params['client_id'],
+          "client_secret": app_secret or connector_params['client_secret']
+        }
+    }
+    connector_params.update(auth_params)
 
-    ms_bf_server_params['auth_payload']['client_id'] = app_id or ms_bf_server_params['auth_payload']['client_id']
-    if not ms_bf_server_params['auth_payload']['client_id']:
+    if not connector_params['auth_payload']['client_id']:
         e = ValueError('Microsoft Bot Framework app id required: initiate -i param '
                        'or auth_payload.client_id param in server configuration file')
         log.error(e)
         raise e
 
-    ms_bf_server_params['auth_payload']['client_secret'] = app_secret or ms_bf_server_params['auth_payload']['client_secret']
-    if not ms_bf_server_params['auth_payload']['client_secret']:
+    if not connector_params['auth_payload']['client_secret']:
         e = ValueError('Microsoft Bot Framework app secret required: initiate -s param '
                        'or auth_payload.client_secret param in server configuration file')
         log.error(e)
         raise e
 
-    ssl_config = get_ssl_params(server_params['common_defaults'], https, ssl_key=ssl_key, ssl_cert=ssl_cert)
+    ssl_config = get_ssl_params(connector_params, https, ssl_key=ssl_key, ssl_cert=ssl_cert)
 
     input_q = Queue()
-    bot = MSBot(model_config, ms_bf_server_params, input_q)
+    bot = MSBot(model_config, connector_params, input_q)
     bot.start()
 
     endpoint = '/v3/conversations'

@@ -16,26 +16,20 @@ from logging import getLogger
 from pathlib import Path
 from typing import Union
 
-from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.paths import get_settings_path
-from deeppavlov.utils.connector import TelegramBot
-from deeppavlov.utils.server.server import SERVER_CONFIG_FILENAME
+from deeppavlov.utils.connector import TelegramBot, get_connector_params
 
 log = getLogger(__name__)
 
 
-def interact_model_by_telegram(model_config: Union[str, Path, dict],
-                               token=None):
+def interact_model_by_telegram(model_config: Union[str, Path, dict], token=None) -> None:
+    telegram_params = get_connector_params('telegram', model_config)
+    telegram_params['token'] = token or telegram_params['token']
 
-    server_config_path = get_settings_path() / SERVER_CONFIG_FILENAME
-    telegram_server_params = read_json(server_config_path)['telegram_defaults']
-    telegram_server_params['token'] = token or telegram_server_params['token']
-
-    if not telegram_server_params['token']:
+    if not telegram_params['token']:
         e = ValueError('Telegram token required: initiate -t param or telegram_defaults/token '
                        'in server configuration file')
         log.error(e)
         raise e
 
-    bot = TelegramBot(model_config, telegram_server_params)
-    bot.polling()
+    bot = TelegramBot(model_config, telegram_params)
+    bot.start()

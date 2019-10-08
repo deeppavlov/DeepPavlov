@@ -1,6 +1,21 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from copy import deepcopy
 from logging import getLogger
 from threading import Timer
+from typing import Optional
 from urllib.parse import urljoin
 
 from requests import Session
@@ -13,7 +28,6 @@ log = getLogger(__name__)
 class BaseConversation:
     _config: dict
     _model: Chainer
-    _conversation_lifetime: float
     _timer: Timer
     _infer_utterances: list
 
@@ -21,9 +35,12 @@ class BaseConversation:
         self._config = config
         self._model = model
         self._self_destruct_callback = self_destruct_callback
-        self._conversation_lifetime = self._config['conversation_lifetime']
         self._infer_utterances = list()
         self._start_timer()
+
+    def handle_request(self, request: dict) -> Optional[dict]:
+        self._rearm_self_destruct()
+        return self._handle_request(request)
 
     def _start_timer(self) -> None:
         """Initiates self-destruct timer."""
@@ -34,6 +51,9 @@ class BaseConversation:
         """Rearms self-destruct timer."""
         self._timer.cancel()
         self._start_timer()
+
+    def _handle_request(self, request: dict) -> Optional[dict]:
+        raise NotImplementedError
 
     def _act(self, utterance: str) -> str:
         """Infers DeepPavlov model with raw user input extracted from request.
@@ -103,7 +123,7 @@ class AlexaConversation(BaseConversation):
             }
         }
 
-    def handle_request(self, request: dict) -> dict:
+    def _handle_request(self, request: dict) -> dict:
         """Routes Alexa requests to appropriate handlers.
 
         Args:
@@ -228,7 +248,7 @@ class AliceConversation(BaseConversation):
             'version': '1.0'
         }
 
-    def handle_request(self, data: dict):
+    def _handle_request(self, data: dict):
         if data['session']['new']:
             response = self._generate_response(self._config['start_message'], data)
         elif data['request']['command'].strip():
@@ -277,7 +297,7 @@ class MSConversation(BaseConversation):
             'text': 'default_text'
         }
 
-    def handle_request(self, request: dict):
+    def _handle_request(self, request: dict):
         activity_type = request['type']
         activity_id = request['id']
         log.debug(f'Received activity. Type: {activity_type}, id: {activity_id}')
@@ -328,6 +348,6 @@ class TgConversation(BaseConversation):
     def __init__(self, config, model, self_destruct_callback):
         super(TgConversation, self).__init__(config, model, self_destruct_callback)
 
-    def handle_request(self, text):
+    def _handle_request(self, text):
         self._rearm_self_destruct()
         return self._act(text)

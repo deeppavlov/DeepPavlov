@@ -7,36 +7,30 @@
     "https_cert_path": "",
     "https_key_path": ""
   },
-  "telegram_defaults": {
-    "token": "",
-    "conversation_lifetime": 3600
-  },
-  "ms_bot_framework_defaults": {
-    "auth_polling_interval": 3500,
+  "connector_defaults": {
     "conversation_lifetime": 3600,
-    "start_message": "DeepPavlov Microsoft Bot Framework connector initiated",
-    "auth_url": "https://login.microsoftonline.com/botframework.com/oauth2/v2.0/token",
-    "auth_headers": {
-      "Host": "login.microsoftonline.com",
-      "Content-Type": "application/x-www-form-urlencoded"
+    "next_utter_msg": "Please enter an argument '{}'",
+    "telegram": {
+      "token": ""
     },
-    "auth_payload": {
-      "grant_type": "client_credentials",
-      "scope": "https://api.botframework.com/.default",
+    "ms_bot_framework": {
       "client_id": "",
-      "client_secret": ""
+      "client_secret": "",
+      "auth_polling_interval": 3500,
+      "start_message": "DeepPavlov Microsoft Bot Framework connector initiated",
+      "auth_url": "https://login.microsoftonline.com/botframework.com/oauth2/v2.0/token"
+    },
+    "alexa": {
+      "request_timestamp_tolerance_secs": 150,
+      "refresh_valid_certs_period_secs": 120,
+      "intent_name": "AskDeepPavlov",
+      "slot_name": "raw_input",
+      "start_message": "DeepPavlov Alexa connector initiated",
+      "unsupported_message": "Sorry, DeepPavlov can't understand it."
+    },
+    "alice": {
+      "start_message": "DeepPavlov Alice connector initiated"
     }
-  },
-  "alexa_defaults": {
-    "intent_name": "AskDeepPavlov",
-    "slot_name": "raw_input",
-    "start_message": "DeepPavlov Alexa connector initiated",
-    "unsupported_message": "Sorry, DeepPavlov can't understand it.",
-    "conversation_lifetime": 3600
-  },
-  "alice_defaults": {
-    "start_message": "DeepPavlov Alice connector initiated",
-    "conversation_lifetime": 3600
   },
   "model_defaults": {
     "DstcSlotFillingNetwork": {

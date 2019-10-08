@@ -24,13 +24,9 @@ import uvicorn
 from fastapi import FastAPI
 from starlette.responses import JSONResponse
 
-from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.paths import get_settings_path
-from deeppavlov.utils.connector import AlexaBot
 from deeppavlov.utils.alexa.request_parameters import data_body, cert_chain_url_header, signature_header
+from deeppavlov.utils.connector import AlexaBot, get_connector_params
 from deeppavlov.utils.server.server import get_ssl_params, redirect_root_to_docs
-
-SERVER_CONFIG_FILENAME = 'server_config.json'
 
 AMAZON_CERTIFICATE_LIFETIME = timedelta(hours=1)
 
@@ -56,21 +52,18 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict],
         ssl_cert: SSL certificate file path.
 
     """
-    server_config_path = Path(get_settings_path(), SERVER_CONFIG_FILENAME).resolve()
-    server_params = read_json(server_config_path)
+    alexa_params = get_connector_params('alexa', model_config)
+    alexa_params['amazon_cert_lifetime'] = AMAZON_CERTIFICATE_LIFETIME
 
-    host = server_params['common_defaults']['host']
-    port = port or server_params['common_defaults']['port']
-    alexa_server_params = server_params['alexa_defaults']
+    host = alexa_params['host']
+    port = port or alexa_params['port']
 
-    alexa_server_params['amazon_cert_lifetime'] = AMAZON_CERTIFICATE_LIFETIME
-
-    ssl_config = get_ssl_params(server_params['common_defaults'], https, ssl_key=ssl_key, ssl_cert=ssl_cert)
+    ssl_config = get_ssl_params(alexa_params, https, ssl_key=ssl_key, ssl_cert=ssl_cert)
 
     input_q = Queue()
     output_q = Queue()
 
-    bot = AlexaBot(model_config, alexa_server_params, input_q, output_q)
+    bot = AlexaBot(model_config, alexa_params, input_q, output_q)
     bot.start()
 
     endpoint = '/interact'
@@ -92,7 +85,7 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict],
         loop = asyncio.get_event_loop()
         response: dict = await loop.run_in_executor(None, bot.output_queue.get)
         response_code = 400 if 'error' in response.keys() else 200
-
+        print(response)
         return JSONResponse(response, status_code=response_code)
 
     uvicorn.run(app, host=host, port=port, logger=uvicorn_log, ssl_version=ssl_config.version,

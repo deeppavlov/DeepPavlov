@@ -1,3 +1,17 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import threading
 from collections import namedtuple
 from datetime import timedelta, datetime
@@ -15,11 +29,9 @@ from requests.exceptions import HTTPError
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
-from deeppavlov.utils.connector.conversation import MSConversation, AlexaConversation, AliceConversation, TgConversation
+from deeppavlov.utils.connector.conversation import BaseConversation, MSConversation, AlexaConversation, AliceConversation, TgConversation
 from deeppavlov.utils.connector.ssl_tools import verify_cert, verify_signature
 
-REQUEST_TIMESTAMP_TOLERANCE_SECS = 150
-REFRESH_VALID_CERTS_PERIOD_SECS = 120
 TELEGRAM_MODELS_INFO_FILENAME = 'models_info.json'
 
 log = getLogger(__name__)
@@ -31,7 +43,7 @@ class BaseBot(Thread):
     _config: dict
     input_queue: Queue
     _run_flag: bool
-    _conversations: Dict[str, Union[MSConversation, AlexaConversation, AliceConversation, TgConversation]]
+    _conversations: Dict[str, BaseConversation]
 
     def __init__(self, model_config: Union[str, Path, dict],
                  config: dict,
@@ -41,7 +53,6 @@ class BaseBot(Thread):
         self.input_queue = input_queue
         self._run_flag = True
         self._model = build_model(model_config)
-        self._config['next_utter_msg'] = "Please enter an argument '{}'"
         self._conversations = dict()
         log.info('Bot initiated')
 
@@ -113,7 +124,7 @@ class AlexaBot(BaseBot):
 
     def _refresh_valid_certs(self) -> None:
         """Conducts cleanup of periodical certificates with expired validation."""
-        self._timer = Timer(REFRESH_VALID_CERTS_PERIOD_SECS, self._refresh_valid_certs)
+        self._timer = Timer(self._config['refresh_valid_certs_period_secs'], self._refresh_valid_certs)
         self._timer.start()
 
         expired_certificates = []
@@ -183,7 +194,7 @@ class AlexaBot(BaseBot):
 
         delta = now - timestamp_datetime if now >= timestamp_datetime else timestamp_datetime - now
 
-        if abs(delta.seconds) > REQUEST_TIMESTAMP_TOLERANCE_SECS:
+        if abs(delta.seconds) > self._config['request_timestamp_tolerance_secs']:
             log.error(f'Failed timestamp check for request: {request_body.decode("utf-8", "replace")}')
             return {'error': 'failed request timestamp check'}
 
@@ -288,28 +299,30 @@ class MSBot(BaseBot):
 class TelegramBot(BaseBot):
     def __init__(self, model_config: Union[str, Path, dict], config: dict):
         super(TelegramBot, self).__init__(model_config, config, Queue())
-        print(config)
-        self._tgbot = telebot.TeleBot(config['token'])
-        self._tgbot.remove_webhook()
+        self._token = config['token']
+
+    def start(self):
+        bot = telebot.TeleBot(self._token)
+        bot.remove_webhook()
 
         model_name = type(self._model.get_main_component()).__name__
         models_info_path = Path(get_settings_path(), TELEGRAM_MODELS_INFO_FILENAME).resolve()
         models_info = read_json(str(models_info_path))
-        model_info = models_info[model_name] if model_name in models_info else models_info['@default']
+        model_info = models_info.get(model_name, models_info['@default'])
 
-        @self._tgbot.message_handler(commands=['start'])
+        @bot.message_handler(commands=['start'])
         def send_start_message(message):
             chat_id = message.chat.id
             out_message = model_info['start_message']
-            self._tgbot.send_message(chat_id, out_message)
+            bot.send_message(chat_id, out_message)
 
-        @self._tgbot.message_handler(commands=['help'])
+        @bot.message_handler(commands=['help'])
         def send_help_message(message):
             chat_id = message.chat.id
             out_message = model_info['help_message']
-            self._tgbot.send_message(chat_id, out_message)
+            bot.send_message(chat_id, out_message)
 
-        @self._tgbot.message_handler()
+        @bot.message_handler()
         def handle_inference(message):
             chat_id = message.chat.id
             context = message.text
@@ -320,10 +333,9 @@ class TelegramBot(BaseBot):
 
             conversation = self._conversations[chat_id]
             response = conversation.handle_request(context)
-            self._tgbot.send_message(chat_id, response)
+            bot.send_message(chat_id, response)
 
-    def polling(self):
-        self._tgbot.polling()
+        bot.polling()
 
     def _handle_request(self, request: dict) -> Optional[dict]:
         pass
