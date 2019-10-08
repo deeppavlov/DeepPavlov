@@ -8,15 +8,19 @@ from threading import Thread, Timer
 from typing import Optional, Union, Dict
 
 import requests
+import telebot
 from OpenSSL.crypto import X509
 from requests.exceptions import HTTPError
 
 from deeppavlov.core.commands.infer import build_model
-from deeppavlov.utils.connector.conversation import MSConversation, AlexaConversation, AliceConversation
+from deeppavlov.core.common.file import read_json
+from deeppavlov.core.common.paths import get_settings_path
+from deeppavlov.utils.connector.conversation import MSConversation, AlexaConversation, AliceConversation, TgConversation
 from deeppavlov.utils.connector.ssl_tools import verify_cert, verify_signature
 
 REQUEST_TIMESTAMP_TOLERANCE_SECS = 150
 REFRESH_VALID_CERTS_PERIOD_SECS = 120
+TELEGRAM_MODELS_INFO_FILENAME = 'models_info.json'
 
 log = getLogger(__name__)
 
@@ -27,7 +31,7 @@ class BaseBot(Thread):
     _config: dict
     input_queue: Queue
     _run_flag: bool
-    _conversations: Dict[str, Union[MSConversation, AlexaConversation, AliceConversation]]
+    _conversations: Dict[str, Union[MSConversation, AlexaConversation, AliceConversation, TgConversation]]
 
     def __init__(self, model_config: Union[str, Path, dict],
                  config: dict,
@@ -278,4 +282,51 @@ class MSBot(BaseBot):
         conversation.handle_request(request)
 
     def _send_response(self, response: dict) -> None:
+        pass
+
+
+class TelegramBot(BaseBot):
+    def __init__(self, model_config: Union[str, Path, dict], config: dict):
+        super(TelegramBot, self).__init__(model_config, config, Queue())
+        print(config)
+        self._tgbot = telebot.TeleBot(config['token'])
+        self._tgbot.remove_webhook()
+
+        model_name = type(self._model.get_main_component()).__name__
+        models_info_path = Path(get_settings_path(), TELEGRAM_MODELS_INFO_FILENAME).resolve()
+        models_info = read_json(str(models_info_path))
+        model_info = models_info[model_name] if model_name in models_info else models_info['@default']
+
+        @self._tgbot.message_handler(commands=['start'])
+        def send_start_message(message):
+            chat_id = message.chat.id
+            out_message = model_info['start_message']
+            self._tgbot.send_message(chat_id, out_message)
+
+        @self._tgbot.message_handler(commands=['help'])
+        def send_help_message(message):
+            chat_id = message.chat.id
+            out_message = model_info['help_message']
+            self._tgbot.send_message(chat_id, out_message)
+
+        @self._tgbot.message_handler()
+        def handle_inference(message):
+            chat_id = message.chat.id
+            context = message.text
+
+            if chat_id not in self._conversations:
+                self._conversations[chat_id] = \
+                    TgConversation(self._config, self._model, self._del_conversation(chat_id))
+
+            conversation = self._conversations[chat_id]
+            response = conversation.handle_request(context)
+            self._tgbot.send_message(chat_id, response)
+
+    def polling(self):
+        self._tgbot.polling()
+
+    def _handle_request(self, request: dict) -> Optional[dict]:
+        pass
+
+    def _send_response(self, response: Optional[dict]) -> None:
         pass

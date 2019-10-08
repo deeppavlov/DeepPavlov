@@ -322,3 +322,12 @@ class MSConversation(BaseConversation):
 
     def _handle_update(self, in_activity: dict) -> None:
         self._send_plain_text(self._config['start_message'])
+
+
+class TgConversation(BaseConversation):
+    def __init__(self, config, model, self_destruct_callback):
+        super(TgConversation, self).__init__(config, model, self_destruct_callback)
+
+    def handle_request(self, text):
+        self._rearm_self_destruct()
+        return self._act(text)
