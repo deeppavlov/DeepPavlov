@@ -8,6 +8,8 @@
   "basic_classification_reader": "deeppavlov.dataset_readers.basic_classification_reader:BasicClassificationDatasetReader",
   "bert_as_summarizer": "deeppavlov.models.bert.bert_as_summarizer:BertAsSummarizer",
   "bert_classifier": "deeppavlov.models.bert.bert_classifier:BertClassifierModel",
+  "bert_embedder": "deeppavlov.models.embedders.bert_embedder:BertEmbedder",
+  "bert_ner": "deeppavlov.models.bert.bert_ner:BertNerModel",
   "bert_sequence_tagger": "deeppavlov.models.bert.bert_sequence_tagger:BertSequenceTagger",
   "bert_syntax_parser": "deeppavlov.models.syntax_parser.network:BertSyntaxParser",
   "bert_ner_preprocessor": "deeppavlov.models.preprocessors.bert_preprocessor:BertNerPreprocessor",
