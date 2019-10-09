@@ -23,7 +23,7 @@ from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
-from deeppavlov.utils.server.server import get_server_params, SERVER_CONFIG_FILENAME
+from deeppavlov.utils.server.server import get_server_params
 from deeppavlov.utils.socket.socket import SOCKET_CONFIG_FILENAME
 
 tests_dir = Path(__file__).parent
@@ -386,9 +386,7 @@ class TestQuickStart(object):
 
     @staticmethod
     def interact_api(config_path):
-        server_conf_file = get_settings_path() / SERVER_CONFIG_FILENAME
-
-        server_params = get_server_params(server_conf_file, config_path)
+        server_params = get_server_params(config_path)
 
         url_base = 'http://{}:{}'.format(server_params['host'], api_port or server_params['port'])
         url = urljoin(url_base.replace('http://0.0.0.0:', 'http://127.0.0.1:'), server_params['model_endpoint'])
@@ -430,9 +428,9 @@ class TestQuickStart(object):
 
     @staticmethod
     def interact_socket(config_path, socket_type):
-        socket_conf_file = get_settings_path() / SOCKET_CONFIG_FILENAME
+        socket_config_path = get_settings_path() / SOCKET_CONFIG_FILENAME
 
-        socket_params = get_server_params(socket_conf_file, config_path)
+        socket_params = get_server_params(config_path, socket_config_path)
         model_args_names = socket_params['model_args_names']
 
         host = socket_params['host']

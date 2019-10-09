@@ -12,24 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import getLogger
 from pathlib import Path
 from typing import Union
 
-from deeppavlov.utils.connector import TelegramBot, get_connector_params
-
-log = getLogger(__name__)
+from deeppavlov.utils.connector import TelegramBot
 
 
-def interact_model_by_telegram(model_config: Union[str, Path, dict], token=None) -> None:
-    telegram_params = get_connector_params('telegram', model_config)
-    telegram_params['token'] = token or telegram_params['token']
-
-    if not telegram_params['token']:
-        e = ValueError('Telegram token required: initiate -t param or telegram_defaults/token '
-                       'in server configuration file')
-        log.error(e)
-        raise e
-
-    bot = TelegramBot(model_config, telegram_params)
+def interact_model_by_telegram(model_config: Union[str, Path, dict], token: str = None) -> None:
+    bot = TelegramBot(model_config, token)
     bot.start()

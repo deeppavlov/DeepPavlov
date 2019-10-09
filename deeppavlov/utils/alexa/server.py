@@ -14,7 +14,6 @@
 
 import asyncio
 import json
-from datetime import timedelta
 from logging import getLogger
 from pathlib import Path
 from queue import Queue
@@ -25,10 +24,8 @@ from fastapi import FastAPI
 from starlette.responses import JSONResponse
 
 from deeppavlov.utils.alexa.request_parameters import data_body, cert_chain_url_header, signature_header
-from deeppavlov.utils.connector import AlexaBot, get_connector_params
-from deeppavlov.utils.server.server import get_ssl_params, redirect_root_to_docs
-
-AMAZON_CERTIFICATE_LIFETIME = timedelta(hours=1)
+from deeppavlov.utils.connector import AlexaBot
+from deeppavlov.utils.server.server import get_ssl_params, redirect_root_to_docs, get_server_params
 
 log = getLogger(__name__)
 uvicorn_log = getLogger('uvicorn')
@@ -52,18 +49,17 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict],
         ssl_cert: SSL certificate file path.
 
     """
-    alexa_params = get_connector_params('alexa', model_config)
-    alexa_params['amazon_cert_lifetime'] = AMAZON_CERTIFICATE_LIFETIME
+    server_params = get_server_params(model_config)
 
-    host = alexa_params['host']
-    port = port or alexa_params['port']
+    host = server_params['host']
+    port = port or server_params['port']
 
-    ssl_config = get_ssl_params(alexa_params, https, ssl_key=ssl_key, ssl_cert=ssl_cert)
+    ssl_config = get_ssl_params(server_params, https, ssl_key=ssl_key, ssl_cert=ssl_cert)
 
     input_q = Queue()
     output_q = Queue()
 
-    bot = AlexaBot(model_config, alexa_params, input_q, output_q)
+    bot = AlexaBot(model_config, input_q, output_q)
     bot.start()
 
     endpoint = '/interact'

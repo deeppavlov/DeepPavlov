@@ -7,25 +7,6 @@
     "https_cert_path": "",
     "https_key_path": ""
   },
-  "connector_defaults": {
-    "conversation_lifetime": 3600,
-    "next_utter_msg": "Please enter an argument '{}'",
-    "telegram": {
-      "token": ""
-    },
-    "ms_bot_framework": {
-      "client_id": "",
-      "client_secret": "",
-      "auth_polling_interval": 3500
-    },
-    "alexa": {
-      "request_timestamp_tolerance_secs": 150,
-      "refresh_valid_certs_period_secs": 120,
-      "intent_name": "AskDeepPavlov",
-      "slot_name": "raw_input"
-    },
-    "alice": {}
-  },
   "model_defaults": {
     "DstcSlotFillingNetwork": {
       "host": "",

@@ -22,8 +22,8 @@ import uvicorn
 from fastapi import FastAPI
 
 from deeppavlov.utils.alice.request_parameters import data_body
-from deeppavlov.utils.connector import AliceBot, get_connector_params
-from deeppavlov.utils.server.server import SSLConfig, get_ssl_params, redirect_root_to_docs
+from deeppavlov.utils.connector import AliceBot
+from deeppavlov.utils.server.server import SSLConfig, get_ssl_params, redirect_root_to_docs, get_server_params
 
 log = getLogger(__name__)
 uvicorn_log = getLogger('uvicorn')
@@ -35,18 +35,18 @@ def start_alice_server(model_config: Path,
                        ssl_key: Optional[str] = None,
                        ssl_cert: Optional[str] = None,
                        port: Optional[int] = None) -> None:
-    alice_params = get_connector_params('alice', model_config)
+    server_params = get_server_params(model_config)
 
-    host = alice_params['host']
-    port = port or alice_params['port']
-    model_endpoint = alice_params['model_endpoint']
+    host = server_params['host']
+    port = port or server_params['port']
+    model_endpoint = server_params['model_endpoint']
 
-    ssl_config = get_ssl_params(alice_params, https, ssl_key=ssl_key, ssl_cert=ssl_cert)
+    ssl_config = get_ssl_params(server_params, https, ssl_key=ssl_key, ssl_cert=ssl_cert)
 
     input_q = Queue()
     output_q = Queue()
 
-    bot = AliceBot(model_config, alice_params, input_q, output_q)
+    bot = AliceBot(model_config, input_q, output_q)
 
     start_agent_server(bot, host, port, model_endpoint, ssl_config=ssl_config)
 

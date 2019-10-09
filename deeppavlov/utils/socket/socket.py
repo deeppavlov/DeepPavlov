@@ -67,7 +67,7 @@ class SocketServer:
 
         """
         socket_config_path = get_settings_path() / SOCKET_CONFIG_FILENAME
-        self._params = get_server_params(socket_config_path, model_config)
+        self._params = get_server_params(model_config, socket_config_path)
         self._socket_type = socket_type or self._params['socket_type']
 
         if self._socket_type == 'TCP':

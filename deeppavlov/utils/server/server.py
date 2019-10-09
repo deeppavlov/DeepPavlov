@@ -35,7 +35,7 @@ from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import check_nested_dict_keys, jsonify_data
 
-SERVER_CONFIG_FILENAME = 'server_config.json'
+SERVER_CONFIG_PATH = get_settings_path() / 'server_config.json'
 SSLConfig = namedtuple('SSLConfig', ['version', 'keyfile', 'certfile'])
 
 
@@ -54,7 +54,7 @@ app = FastAPI(__file__)
 dialog_logger = DialogLogger(agent_name='dp_api')
 
 
-def get_server_params(server_config_path: Path, model_config: Path) -> Dict:
+def get_server_params(model_config: Path, server_config_path: Path = SERVER_CONFIG_PATH) -> Dict:
     server_config = read_json(server_config_path)
     model_config = parse_config(model_config)
 
@@ -157,8 +157,8 @@ def start_model_server(model_config: Path,
                        ssl_key: Optional[str] = None,
                        ssl_cert: Optional[str] = None,
                        port: Optional[int] = None) -> None:
-    server_config_path = get_settings_path() / SERVER_CONFIG_FILENAME
-    server_params = get_server_params(server_config_path, model_config)
+
+    server_params = get_server_params(model_config)
 
     host = server_params['host']
     port = port or server_params['port']

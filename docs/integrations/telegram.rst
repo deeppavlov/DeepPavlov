@@ -26,9 +26,10 @@ configuration is described in :doc:`REST API </integrations/rest_api>` section.
 
 If you want to get custom ``/start`` and ``/help`` Telegram messages for the running model you should:
 
-* Add section to ``deeppavlov/utils/settings/models_info.json`` with your custom Telegram messages
+* Add section to ``models_info`` section of ``deeppavlov/utils/settings/connector_config.json`` with your custom
+  Telegram messages
 * In model config file specify ``metadata.labels.telegram_utils`` parameter with name which
-  refers to the added section of ``deeppavlov/utils/settings/models_info.json``
+  refers to the added section of ``deeppavlov/utils/settings/models_info.json`` ``models_info`` section.
 
 Python
 ~~~~~~
