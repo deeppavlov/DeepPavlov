@@ -42,15 +42,16 @@ def run_ms_bf_default_agent(model_config: Path,
     port = port or connector_params['port']
 
     auth_params = {
-        "auth_headers": {
-          "Host": "login.microsoftonline.com",
-          "Content-Type": "application/x-www-form-urlencoded"
+        'auth_url': 'https://login.microsoftonline.com/botframework.com/oauth2/v2.0/token',
+        'auth_headers': {
+          'Host': 'login.microsoftonline.com',
+          'Content-Type': 'application/x-www-form-urlencoded'
         },
-        "auth_payload": {
-          "grant_type": "client_credentials",
-          "scope": "https://api.botframework.com/.default",
-          "client_id": app_id or connector_params['client_id'],
-          "client_secret": app_secret or connector_params['client_secret']
+        'auth_payload': {
+          'grant_type': 'client_credentials',
+          'scope': 'https://api.botframework.com/.default',
+          'client_id': app_id or connector_params['client_id'],
+          'client_secret': app_secret or connector_params['client_secret']
         }
     }
     connector_params.update(auth_params)

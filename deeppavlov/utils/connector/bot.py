@@ -53,6 +53,13 @@ class BaseBot(Thread):
         self.input_queue = input_queue
         self._run_flag = True
         self._model = build_model(model_config)
+
+        model_name = type(self._model.get_main_component()).__name__
+        models_info_path = Path(get_settings_path(), TELEGRAM_MODELS_INFO_FILENAME).resolve()
+        models_info = read_json(str(models_info_path))
+        model_info = models_info.get(model_name, models_info['@default'])
+        self._config.update(model_info)
+
         self._conversations = dict()
         log.info('Bot initiated')
 
@@ -118,13 +125,16 @@ class AlexaBot(BaseBot):
                  output_queue: Queue) -> None:
         super(AlexaBot, self).__init__(model_config, config, input_queue)
         self.output_queue = output_queue
+        self._amazon_cert_lifetime = config['amazon_cert_lifetime']
+        self._request_timestamp_tolerance_secs = config['request_timestamp_tolerance_secs']
+        self._refresh_valid_certs_period_secs = config['refresh_valid_certs_period_secs']
         self._valid_certificates: Dict[str, ValidatedCert] = {}
 
         self._refresh_valid_certs()
 
     def _refresh_valid_certs(self) -> None:
         """Conducts cleanup of periodical certificates with expired validation."""
-        self._timer = Timer(self._config['refresh_valid_certs_period_secs'], self._refresh_valid_certs)
+        self._timer = Timer(self._refresh_valid_certs_period_secs, self._refresh_valid_certs)
         self._timer.start()
 
         expired_certificates = []
@@ -152,8 +162,7 @@ class AlexaBot(BaseBot):
         if signature_chain_url not in self._valid_certificates.keys():
             amazon_cert: X509 = verify_cert(signature_chain_url)
             if amazon_cert:
-                amazon_cert_lifetime: timedelta = self._config['amazon_cert_lifetime']
-                expiration_timestamp = datetime.utcnow() + amazon_cert_lifetime
+                expiration_timestamp = datetime.utcnow() + self._amazon_cert_lifetime
                 validated_cert = ValidatedCert(cert=amazon_cert, expiration_timestamp=expiration_timestamp)
                 self._valid_certificates[signature_chain_url] = validated_cert
                 log.info(f'Certificate {signature_chain_url} validated')
@@ -194,7 +203,7 @@ class AlexaBot(BaseBot):
 
         delta = now - timestamp_datetime if now >= timestamp_datetime else timestamp_datetime - now
 
-        if abs(delta.seconds) > self._config['request_timestamp_tolerance_secs']:
+        if abs(delta.seconds) > self._request_timestamp_tolerance_secs:
             log.error(f'Failed timestamp check for request: {request_body.decode("utf-8", "replace")}')
             return {'error': 'failed request timestamp check'}
 
@@ -250,17 +259,20 @@ class MSBot(BaseBot):
                  config: dict,
                  input_queue: Queue):
         super(MSBot, self).__init__(model_config, config, input_queue)
+        self._auth_polling_interval = config['auth_polling_interval']
+        self._auth_url = config['auth_url']
+        self._auth_headers = config['auth_headers']
+        self._auth_payload = config['auth_payload']
         self._http_session = requests.Session()
         self._update_access_info()
 
     def _update_access_info(self):
-        polling_interval = self._config['auth_polling_interval']
-        self._timer = threading.Timer(polling_interval, self._update_access_info)
+        self._timer = threading.Timer(self._auth_polling_interval, self._update_access_info)
         self._timer.start()
 
-        result = requests.post(url=self._config['auth_url'],
-                               headers=self._config['auth_headers'],
-                               data=self._config['auth_payload'])
+        result = requests.post(url=self._auth_url,
+                               headers=self._auth_headers,
+                               data=self._auth_payload)
 
         status_code = result.status_code
         if status_code != 200:
@@ -300,26 +312,23 @@ class TelegramBot(BaseBot):
     def __init__(self, model_config: Union[str, Path, dict], config: dict):
         super(TelegramBot, self).__init__(model_config, config, Queue())
         self._token = config['token']
+        self._start_message = self._config['start_message']
+        self._help_message = self._config['help_message']
 
     def start(self):
         bot = telebot.TeleBot(self._token)
         bot.remove_webhook()
 
-        model_name = type(self._model.get_main_component()).__name__
-        models_info_path = Path(get_settings_path(), TELEGRAM_MODELS_INFO_FILENAME).resolve()
-        models_info = read_json(str(models_info_path))
-        model_info = models_info.get(model_name, models_info['@default'])
-
         @bot.message_handler(commands=['start'])
         def send_start_message(message):
             chat_id = message.chat.id
-            out_message = model_info['start_message']
+            out_message = self._start_message
             bot.send_message(chat_id, out_message)
 
         @bot.message_handler(commands=['help'])
         def send_help_message(message):
             chat_id = message.chat.id
-            out_message = model_info['help_message']
+            out_message = self._help_message
             bot.send_message(chat_id, out_message)
 
         @bot.message_handler()

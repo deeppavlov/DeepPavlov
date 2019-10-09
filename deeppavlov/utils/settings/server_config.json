@@ -16,21 +16,15 @@
     "ms_bot_framework": {
       "client_id": "",
       "client_secret": "",
-      "auth_polling_interval": 3500,
-      "start_message": "DeepPavlov Microsoft Bot Framework connector initiated",
-      "auth_url": "https://login.microsoftonline.com/botframework.com/oauth2/v2.0/token"
+      "auth_polling_interval": 3500
     },
     "alexa": {
       "request_timestamp_tolerance_secs": 150,
       "refresh_valid_certs_period_secs": 120,
       "intent_name": "AskDeepPavlov",
-      "slot_name": "raw_input",
-      "start_message": "DeepPavlov Alexa connector initiated",
-      "unsupported_message": "Sorry, DeepPavlov can't understand it."
+      "slot_name": "raw_input"
     },
-    "alice": {
-      "start_message": "DeepPavlov Alice connector initiated"
-    }
+    "alice": {}
   },
   "model_defaults": {
     "DstcSlotFillingNetwork": {

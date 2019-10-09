@@ -26,16 +26,17 @@ log = getLogger(__name__)
 
 
 class BaseConversation:
-    _config: dict
     _model: Chainer
     _timer: Timer
     _infer_utterances: list
 
     def __init__(self, config: dict, model: Chainer, self_destruct_callback: callable):
-        self._config = config
         self._model = model
         self._self_destruct_callback = self_destruct_callback
         self._infer_utterances = list()
+        self._conversation_lifetime = config['conversation_lifetime']
+        self._next_utter_msg = config['next_utter_msg']
+        self._start_message = config['start_message']
         self._start_timer()
 
     def handle_request(self, request: dict) -> Optional[dict]:
@@ -44,7 +45,7 @@ class BaseConversation:
 
     def _start_timer(self) -> None:
         """Initiates self-destruct timer."""
-        self._timer = Timer(self._config['conversation_lifetime'], self._self_destruct_callback)
+        self._timer = Timer(self._conversation_lifetime, self._self_destruct_callback)
         self._timer.start()
 
     def _rearm_self_destruct(self) -> None:
@@ -74,7 +75,7 @@ class BaseConversation:
             prediction = '; '.join([str(output[0]) for output in prediction])
             response = prediction
         else:
-            response = self._config['next_utter_msg'].format(self._model.in_x[len(self._infer_utterances)])
+            response = self._next_utter_msg.format(self._model.in_x[len(self._infer_utterances)])
         return response
 
 
@@ -97,6 +98,8 @@ class AlexaConversation(BaseConversation):
         """
     def __init__(self, config: dict, model, self_destruct_callback: callable) -> None:
         super(AlexaConversation, self).__init__(config, model, self_destruct_callback)
+        self._intent_name = config['intent_name']
+        self._slot_name = config['slot_name']
 
         self._handled_requests = {
             'LaunchRequest': self._handle_launch,
@@ -169,21 +172,18 @@ class AlexaConversation(BaseConversation):
         Returns:
             response: "response" part of response dict conforming Alexa specification.
         """
-        intent_name = self._config['intent_name']
-        slot_name = self._config['slot_name']
-
         request_id = request['request']['requestId']
         request_intent: dict = request['request']['intent']
 
-        if intent_name != request_intent['name']:
+        if self._intent_name != request_intent['name']:
             log.error(f"Wrong intent name received: {request_intent['name']} in request {request_id}")
             return {'error': 'wrong intent name'}
 
-        if slot_name not in request_intent['slots'].keys():
-            log.error(f'No slot named {slot_name} found in request {request_id}')
+        if self._slot_name not in request_intent['slots'].keys():
+            log.error(f'No slot named {self._slot_name} found in request {request_id}')
             return {'error': 'no slot found'}
 
-        utterance = request_intent['slots'][slot_name]['value']
+        utterance = request_intent['slots'][self._slot_name]['value']
         model_response = self._act(utterance)
 
         if not model_response:
@@ -203,7 +203,7 @@ class AlexaConversation(BaseConversation):
             response: "response" part of response dict conforming Alexa specification.
 
         """
-        response = self._generate_response(self._config['start_message'], request)
+        response = self._generate_response(self._start_message, request)
 
         return response
 
@@ -227,7 +227,7 @@ class AlexaConversation(BaseConversation):
         Returns:
             response: "response" part of response dict conforming Alexa specification.
         """
-        response = self._generate_response(self._config['unsupported_message'], request)
+        response = self._generate_response('Got unsupported message', request)
 
         return response
 
@@ -250,7 +250,7 @@ class AliceConversation(BaseConversation):
 
     def _handle_request(self, data: dict):
         if data['session']['new']:
-            response = self._generate_response(self._config['start_message'], data)
+            response = self._generate_response(self._start_message, data)
         elif data['request']['command'].strip():
             text = data['request']['command'].strip()
             model_response = self._act(text)
@@ -261,7 +261,7 @@ class AliceConversation(BaseConversation):
         return response
 
     def _handle_launch(self, data: dict):
-        return self._generate_response(self._config['start_message'], data)
+        return self._generate_response(self._start_message, data)
 
     def _generate_response(self, text, request: dict) -> dict:
         response = deepcopy(self._response_template)
@@ -341,7 +341,7 @@ class MSConversation(BaseConversation):
                   f'Response code: {response.status_code}, response contents: {response_json_str}')
 
     def _handle_update(self, in_activity: dict) -> None:
-        self._send_plain_text(self._config['start_message'])
+        self._send_plain_text(self._start_message)
 
 
 class TgConversation(BaseConversation):
