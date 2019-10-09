@@ -2,7 +2,6 @@
   "common_defaults": {
     "host": "0.0.0.0",
     "port": 5000,
-    "docs_endpoint": "/docs",
     "model_args_names": "",
     "https": false,
     "https_cert_path": "",

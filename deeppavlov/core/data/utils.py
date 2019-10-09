@@ -1,22 +1,20 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 import collections
 import gzip
 import os
-import re
 import secrets
 import shutil
 import tarfile
@@ -25,7 +23,7 @@ from hashlib import md5
 from itertools import chain
 from logging import getLogger
 from pathlib import Path
-from typing import List, Union, Iterable, Optional, Sized, Sequence, Collection
+from typing import Any, Generator, Iterable, List, Mapping, Optional, Sequence, Sized, Union, Collection
 from urllib.parse import urlencode, parse_qs, urlsplit, urlunsplit, urlparse
 
 import numpy as np
@@ -39,7 +37,16 @@ _MARK_DONE = '.done'
 tqdm.monitor_interval = 0
 
 
-def get_download_token():
+def _get_download_token() -> str:
+    """Return a download token from ~/.deeppavlov/token file.
+
+    If token file does not exists, creates the file and writes to it a random URL-safe text string
+    containing 32 random bytes.
+
+    Returns:
+        32 byte URL-safe text string from ~/.deeppavlov/token.
+
+    """
     token_file = Path.home() / '.deeppavlov' / 'token'
     if not token_file.exists():
         if token_file.parent.is_file():
@@ -50,14 +57,23 @@ def get_download_token():
     return token_file.read_text(encoding='utf8').strip()
 
 
-def simple_download(url: str, destination: [Path, str]):
-    CHUNK = 32 * 1024
+def simple_download(url: str, destination: Union[Path, str]) -> None:
+    """Download a file from URL to target location.
+
+    Displays progress bar to the terminal during the download process.
+
+    Args:
+        url: The source URL.
+        destination: Path to the file destination (including file name).
+
+    """
+    chunk_size = 32 * 1024
 
     destination = Path(destination)
     destination.parent.mkdir(parents=True, exist_ok=True)
     temporary = destination.with_suffix(destination.suffix + '.part')
 
-    headers = {'dp-token': get_download_token()}
+    headers = {'dp-token': _get_download_token()}
     r = requests.get(url, stream=True, headers=headers)
     total_length = int(r.headers.get('content-length', 0))
 
@@ -70,19 +86,19 @@ def simple_download(url: str, destination: [Path, str]):
         done = False
         downloaded = f.tell()
         if downloaded != 0:
-            log.warn(f'Found a partial download {temporary}')
+            log.warning(f'Found a partial download {temporary}')
         with tqdm(initial=downloaded, total=total_length, unit='B', unit_scale=True) as pbar:
             while not done:
                 if downloaded != 0:
-                    log.warn(f'Download stopped abruptly, trying to resume from {downloaded} '
-                             f'to reach {total_length}')
+                    log.warning(f'Download stopped abruptly, trying to resume from {downloaded} '
+                                f'to reach {total_length}')
                     headers['Range'] = f'bytes={downloaded}-'
                     r = requests.get(url, headers=headers, stream=True)
                     if 'content-length' not in r.headers or \
                             total_length - downloaded != int(r.headers['content-length']):
                         raise RuntimeError(f'It looks like the server does not support resuming '
                                            f'downloads.')
-                for chunk in r.iter_content(chunk_size=CHUNK):
+                for chunk in r.iter_content(chunk_size=chunk_size):
                     if chunk:  # filter out keep-alive new chunks
                         downloaded += len(chunk)
                         pbar.update(len(chunk))
@@ -95,13 +111,13 @@ def simple_download(url: str, destination: [Path, str]):
     temporary.rename(destination)
 
 
-def download(dest_file_path: [List[Union[str, Path]]], source_url: str, force_download=True):
-    """Download a file from URL to one or several target locations
+def download(dest_file_path: [List[Union[str, Path]]], source_url: str, force_download: bool = True) -> None:
+    """Download a file from URL to one or several target locations.
 
     Args:
-        dest_file_path: path or list of paths to the file destination files (including file name)
-        source_url: the source URL
-        force_download: download file if it already exists, or not
+        dest_file_path: Path or list of paths to the file destination (including file name).
+        source_url: The source URL.
+        force_download: Download file if it already exists, or not.
 
     """
 
@@ -140,12 +156,12 @@ def download(dest_file_path: [List[Union[str, Path]]], source_url: str, force_do
             shutil.copy(str(first_dest_path), str(dest_path))
 
 
-def untar(file_path, extract_folder=None):
-    """Simple tar archive extractor
+def untar(file_path: Union[Path, str], extract_folder: Optional[Union[Path, str]] = None) -> None:
+    """Simple tar archive extractor.
 
     Args:
-        file_path: path to the tar file to be extracted
-        extract_folder: folder to which the files will be extracted
+        file_path: Path to the tar file to be extracted.
+        extract_folder: Folder to which the files will be extracted.
 
     """
     file_path = Path(file_path)
@@ -157,35 +173,40 @@ def untar(file_path, extract_folder=None):
     tar.close()
 
 
-def ungzip(file_path, extract_path: Path = None):
-    """Simple .gz archive extractor
+def ungzip(file_path: Union[Path, str], extract_path: Optional[Union[Path, str]] = None) -> None:
+    """Simple .gz archive extractor.
 
-        Args:
-            file_path: path to the gzip file to be extracted
-            extract_path: path where the file will be extracted
+    Args:
+        file_path: Path to the gzip file to be extracted.
+        extract_path: Path where the file will be extracted.
 
-        """
-    CHUNK = 16 * 1024
+    """
+    chunk_size = 16 * 1024
     file_path = Path(file_path)
-    extract_path = extract_path or file_path.with_suffix('')
+    if extract_path is None:
+        extract_path = file_path.with_suffix('')
+    extract_path = Path(extract_path)
 
     with gzip.open(file_path, 'rb') as fin, extract_path.open('wb') as fout:
         while True:
-            block = fin.read(CHUNK)
+            block = fin.read(chunk_size)
             if not block:
                 break
             fout.write(block)
 
 
-def download_decompress(url: str, download_path: [Path, str], extract_paths=None):
+def download_decompress(url: str,
+                        download_path: Union[Path, str],
+                        extract_paths: Optional[Union[List[Union[Path, str]], Path, str]] = None) -> None:
     """Download and extract .tar.gz or .gz file to one or several target locations.
+
     The archive is deleted if extraction was successful.
 
     Args:
-        url: URL for file downloading
-        download_path: path to the directory where downloaded file will be stored
-        until the end of extraction
-        extract_paths: path or list of paths where contents of archive will be extracted
+        url: URL for file downloading.
+        download_path: Path to the directory where downloaded file will be stored until the end of extraction.
+        extract_paths: Path or list of paths where contents of archive will be extracted.
+
     """
     file_name = Path(urlparse(url).path).name
     download_path = Path(download_path)
@@ -233,23 +254,42 @@ def download_decompress(url: str, download_path: [Path, str], extract_paths=None
         for src in extracted_path.iterdir():
             dest = extract_path / src.name
             if src.is_dir():
-                copytree(src, dest)
+                _copytree(src, dest)
             else:
                 extract_path.mkdir(parents=True, exist_ok=True)
                 shutil.copy(str(src), str(dest))
 
 
-def copytree(src: Path, dest: Path):
+def _copytree(src: Path, dest: Path) -> None:
+    """Recursively copies directory.
+
+    Destination directory could exist (unlike if we used shutil.copytree).
+
+    Args:
+        src: Path to copied directory.
+        dest: Path to destination directory.
+
+    """
     dest.mkdir(parents=True, exist_ok=True)
     for f in src.iterdir():
         f_dest = dest / f.name
         if f.is_dir():
-            copytree(f, f_dest)
+            _copytree(f, f_dest)
         else:
             shutil.copy(str(f), str(f_dest))
 
 
 def file_md5(fpath: Union[str, Path], chunk_size: int = 2**16) -> Optional[str]:
+    """Return md5 hash value for file contents.
+
+    Args:
+        fpath: Path to file.
+        chunk_size: md5 object updated by ``chunk_size`` bytes from file.
+
+    Returns:
+        None if ``fpath`` does not point to a file, else returns md5 hash value as string.
+
+    """
     fpath = Path(fpath)
     if not fpath.is_file():
         return None
@@ -260,28 +300,54 @@ def file_md5(fpath: Union[str, Path], chunk_size: int = 2**16) -> Optional[str]:
     return file_hash.hexdigest()
 
 
-def load_vocab(vocab_path):
-    vocab_path = Path(vocab_path)
-    with vocab_path.open(encoding='utf8') as f:
-        return f.read().split()
+def mark_done(path: Union[Path, str]) -> None:
+    """Create ``.done`` empty file in the directory.
 
+    Args:
+        path: Path to directory.
 
-def mark_done(path):
-    mark = Path(path) / _MARK_DONE
+    Raises:
+        NotADirectoryError: If ``path`` does not point to a directory.
+
+    """
+    path = Path(path)
+    if not path.is_dir():
+        raise NotADirectoryError(f"Not a directory: '{path}'")
+    mark = path / _MARK_DONE
     mark.touch(exist_ok=True)
 
 
-def is_done(path):
+def is_done(path: Union[Path, str]) -> bool:
+    """Check if ``.done`` file exists in directory.
+
+    Args:
+        path: Path to directory.
+
+    Returns:
+        True if directory contains ``.done`` file, False otherwise.
+
+    """
     mark = Path(path) / _MARK_DONE
     return mark.is_file()
 
 
-def tokenize_reg(s):
-    pattern = "[\w]+|[‑–—“”€№…’\"#$%&\'()+,-./:;<>?]"
-    return re.findall(re.compile(pattern), s)
+def _get_all_dimensions(batch: Sequence, level: int = 0, res: Optional[List[List[int]]] = None) -> List[List[int]]:
+    """Return all presented element sizes of each dimension.
 
+    Args:
+        batch: Data array.
+        level: Recursion level.
+        res: List containing element sizes of each dimension.
 
-def get_all_dimensions(batch: Sequence, level: int = 0, res: Optional[List[List[int]]] = None) -> List[List[int]]:
+    Return:
+        List, i-th element of which is list containing all presented sized of batch's i-th dimension.
+
+    Examples:
+        >>> x = [[[1], [2, 3]], [[4], [5, 6, 7], [8, 9]]]
+        >>> _get_all_dimensions(x)
+        [[2], [2, 3], [1, 2, 1, 3, 2]]
+
+    """
     if not level:
         res = [[len(batch)]]
     if len(batch) and isinstance(batch[0], Sized) and not isinstance(batch[0], str):
@@ -290,16 +356,38 @@ def get_all_dimensions(batch: Sequence, level: int = 0, res: Optional[List[List[
             res.append([])
         for item in batch:
             res[level].append(len(item))
-            get_all_dimensions(item, level, res)
+            _get_all_dimensions(item, level, res)
     return res
 
 
-def get_dimensions(batch) -> List[int]:
-    """"""
-    return list(map(max, get_all_dimensions(batch)))
+def get_dimensions(batch: Sequence) -> List[int]:
+    """Return maximal size of each batch dimension."""
+    return list(map(max, _get_all_dimensions(batch)))
 
 
-def zero_pad(batch, zp_batch=None, dtype=np.float32, padding=0):
+def zero_pad(batch: Sequence,
+             zp_batch: Optional[np.ndarray] = None,
+             dtype: type = np.float32,
+             padding: Union[int, float] = 0) -> np.ndarray:
+    """Fills the end of each array item to make its length maximal along each dimension.
+
+    Args:
+        batch: Initial array.
+        zp_batch: Padded array.
+        dtype = Type of padded array.
+        padding = Number to will initial array with.
+
+    Returns:
+        Padded array.
+
+    Examples:
+        >>> x = np.array([[1, 2, 3], [4], [5, 6]])
+        >>> zero_pad(x)
+        array([[1., 2., 3.],
+               [4., 0., 0.],
+               [5., 6., 0.]], dtype=float32)
+
+    """
     if zp_batch is None:
         dims = get_dimensions(batch)
         zp_batch = np.ones(dims, dtype=dtype) * padding
@@ -311,7 +399,8 @@ def zero_pad(batch, zp_batch=None, dtype=np.float32, padding=0):
     return zp_batch
 
 
-def is_str_batch(batch):
+def is_str_batch(batch: Iterable) -> bool:
+    """Checks if iterable argument contains string at any nesting level."""
     while True:
         if isinstance(batch, Iterable):
             if isinstance(batch, str):
@@ -327,7 +416,20 @@ def is_str_batch(batch):
             return False
 
 
-def flatten_str_batch(batch):
+def flatten_str_batch(batch: Union[str, Iterable]) -> Union[list, chain]:
+    """Joins all strings from nested lists to one ``itertools.chain``.
+
+    Args:
+        batch: List with nested lists to flatten.
+
+    Returns:
+        Generator of flat List[str]. For str ``batch`` returns [``batch``].
+
+    Examples:
+        >>> [string for string in flatten_str_batch(['a', ['b'], [['c', 'd']]])]
+        ['a', 'b', 'c', 'd']
+
+    """
     if isinstance(batch, str):
         return [batch]
     else:
@@ -368,7 +470,21 @@ def zero_pad_truncate(batch: Sequence[Sequence[Union[int, float, np.integer, np.
     return np.asarray(padded_batch)
 
 
-def get_all_elems_from_json(search_json, search_key):
+def get_all_elems_from_json(search_json: dict, search_key: str) -> list:
+    """Returns values by key in all nested dicts.
+
+    Args:
+        search_json: Dictionary in which one needs to find all values by specific key.
+        search_key: Key for search.
+
+    Returns:
+        List of values stored in nested structures by ``search_key``.
+
+    Examples:
+        >>> get_all_elems_from_json({'a':{'b': [1,2,3]}, 'b':42}, 'b')
+        [[1, 2, 3], 42]
+
+    """
     result = []
     if isinstance(search_json, dict):
         for key in search_json:
@@ -383,7 +499,26 @@ def get_all_elems_from_json(search_json, search_key):
     return result
 
 
-def check_nested_dict_keys(check_dict: dict, keys: list):
+def check_nested_dict_keys(check_dict: dict, keys: list) -> bool:
+    """Checks if dictionary contains nested keys from keys list.
+
+    Args:
+        check_dict: Dictionary to check.
+        keys: Keys list. i-th nested dict of ``check_dict`` should contain dict containing (i+1)-th key
+        from the ``keys`` list by i-th key.
+
+    Returns:
+        True if dictionary contains nested keys from keys list, False otherwise.
+
+    Examples:
+        >>> check_nested_dict_keys({'x': {'y': {'z': 42}}}, ['x', 'y', 'z'])
+        True
+        >>> check_nested_dict_keys({'x': {'y': {'z': 42}}}, ['x', 'z', 'y'])
+        False
+        >>> check_nested_dict_keys({'x': {'y': 1, 'z': 42}}, ['x', 'y', 'z'])
+        False
+
+    """
     if isinstance(keys, list) and len(keys) > 0:
         element = check_dict
         for key in keys:
@@ -396,7 +531,19 @@ def check_nested_dict_keys(check_dict: dict, keys: list):
         return False
 
 
-def jsonify_data(data):
+def jsonify_data(data: Any) -> Any:
+    """Replaces JSON-non-serializable objects with JSON-serializable.
+
+    Function replaces numpy arrays and numbers with python lists and numbers, tuples is replaces with lists. All other
+    object types remain the same.
+
+    Args:
+        data: Object to make JSON-serializable.
+
+    Returns:
+        Modified input data.
+
+    """
     if isinstance(data, (list, tuple)):
         result = [jsonify_data(item) for item in data]
     elif isinstance(data, dict):
@@ -414,21 +561,30 @@ def jsonify_data(data):
     return result
 
 
-def chunk_generator(items_list, chunk_size):
+def chunk_generator(items_list: list, chunk_size: int) -> Generator[list, None, None]:
+    """Yields consecutive slices of list.
+
+    Args:
+        items_list: List to slice.
+        chunk_size: Length of slice.
+
+    Yields:
+        list: ``items_list`` consecutive slices.
+
+    """
     for i in range(0, len(items_list), chunk_size):
         yield items_list[i:i + chunk_size]
 
 
-def update_dict_recursive(editable_dict: dict, editing_dict: dict) -> None:
-    """Updates dict recursively
+def update_dict_recursive(editable_dict: dict, editing_dict: Mapping) -> None:
+    """Updates dict recursively.
 
-    You need to use this function to update dictionary if depth of editing_dict is more then 1
+    You need to use this function to update dictionary if depth of editing_dict is more then 1.
 
     Args:
-        editable_dict: dictionary, that will be edited
-        editing_dict: dictionary, that contains edits
-    Returns:
-        None
+        editable_dict: Dictionary to edit.
+        editing_dict: Dictionary containing edits.
+
     """
     for k, v in editing_dict.items():
         if isinstance(v, collections.Mapping):
@@ -437,13 +593,15 @@ def update_dict_recursive(editable_dict: dict, editing_dict: dict) -> None:
             editable_dict[k] = v
 
 
-def path_set_md5(url):
-    """Given a file URL, return a md5 query of the file
+def path_set_md5(url: str) -> str:
+    """Given a file URL, return a md5 query of the file.
 
     Args:
-        url: a given URL
+        url: A given URL.
+
     Returns:
-        URL of the md5 file
+        URL of the md5 file.
+
     """
     scheme, netloc, path, query_string, fragment = urlsplit(url)
     path += '.md5'
@@ -451,15 +609,16 @@ def path_set_md5(url):
     return urlunsplit((scheme, netloc, path, query_string, fragment))
 
 
-def set_query_parameter(url, param_name, param_value):
+def set_query_parameter(url: str, param_name: str, param_value: str) -> str:
     """Given a URL, set or replace a query parameter and return the modified URL.
 
     Args:
-        url: a given  URL
-        param_name: the parameter name to add
-        param_value: the parameter value
+        url: A given  URL.
+        param_name: The parameter name to add.
+        param_value: The parameter value.
+
     Returns:
-        URL with the added parameter
+        URL with the added parameter.
 
     """
     scheme, netloc, path, query_string, fragment = urlsplit(url)

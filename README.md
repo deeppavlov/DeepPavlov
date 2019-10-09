@@ -268,7 +268,8 @@ DeepPavlov is Apache 2.0 - licensed.
 
 ## The Team
 
-DeepPavlov is built and maintained by [Neural Networks and Deep Learning Lab](https://mipt.ru/english/research/labs/neural-networks-and-deep-learning-lab) at [MIPT](https://mipt.ru/english/) within [iPavlov](http://ipavlov.ai/) project.
+DeepPavlov is built and maintained by [Neural Networks and Deep Learning Lab](https://www.facebook.com/deepmipt/)
+at [MIPT](https://mipt.ru/english/) within [iPavlov](http://ipavlov.ai/) project.
 
 <p align="center">
 <img src="docs/_static/ipavlov_footer.png" width="50%" height="50%"/>
