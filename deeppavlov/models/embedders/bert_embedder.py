@@ -41,9 +41,20 @@ class BertEmbedder(TFModel):
     def __init__(self,
                  bert_config_path: str,
                  load_path: str,
+                 level: str = 'word',
+                 include_cls: bool = False,
+                 include_sep: bool = False,
                  encoder_layer_ids: List[int] = (-1,),
                  **kwargs) -> None:
         super().__init__(load_path=load_path, save_path=None, **kwargs)
+
+        self.include_cls = include_cls
+        self.include_sep = include_sep
+        self.encoder_layer_ids = encoder_layer_ids
+        assert level in ('word', 'subword', 'sentence'), \
+            f"`level` argument should have value of 'word', 'subword'" \
+            f" or 'sentence', but has value of {level}"
+        self.level = level
 
         bert_config_path = str(expand_path(bert_config_path))
         self.bert_config = BertConfig.from_json_file(bert_config_path)
@@ -63,8 +74,6 @@ class BertEmbedder(TFModel):
     def _init_graph(self) -> None:
         self._init_placeholders()
 
-        self.seq_lengths = tf.reduce_sum(self.y_masks_ph, axis=1)
-
         self.bert = BertModel(config=self.bert_config,
                               is_training=self.is_train_ph,
                               input_ids=self.input_ids_ph,
@@ -72,13 +81,22 @@ class BertEmbedder(TFModel):
                               token_type_ids=self.token_types_ph,
                               use_one_hot_embeddings=False)
 
-        self.predictions = self.bert.all_encoder_layers[-1]
+        encoder_layer = tf.reduce_mean([self.bert.all_encoder_layers[i]
+                                        for i in self.encoder_layer_ids],
+                                        axis=0)
+        if self.level == 'word':
+            self.seq_lengths = tf.reduce_sum(self.startofword_markers_ph,
+                                             axis=1)
+            self.predictions = self.token_from_subtoken(encoder_layer,
+                                                        self.startofword_markers_ph)
+        elif self.level == 'subword':
+            self.seq_lengths = tf.reduce_sum(self.input_masks_ph, axis=1)
+            self.predictions = encoder_layer
+        elif self.level == 'sentence':
+            raise NotImplementedError()
         """
-        encoder_layers = [self.bert.all_encoder_layers[i]
-                          for i in self.encoder_layer_ids]
-
         with tf.variable_scope('ner'):
-            self.logits = self.token_from_subtoken(logits, self.y_masks_ph)
+            self.logits = self.token_from_subtoken(logits, self.startofword_markers_ph)
 
             max_length = tf.reduce_max(self.seq_lengths)
             one_hot_max_len = tf.one_hot(self.seq_lengths - 1, max_length)
@@ -101,9 +119,9 @@ class BertEmbedder(TFModel):
                                         shape=self.input_ids_ph.shape,
                                         name='token_types_ph')
 
-        self.y_masks_ph = tf.placeholder(shape=(None, None),
-                                         dtype=tf.int32,
-                                         name='y_mask_ph')
+        self.startofword_markers_ph = tf.placeholder(shape=(None, None),
+                                                     dtype=tf.int32,
+                                                     name='y_mask_ph')
 
         self.is_train_ph = \
             tf.placeholder_with_default(False, shape=[], name='is_train_ph')
@@ -245,7 +263,7 @@ class BertEmbedder(TFModel):
         feed_dict = {
             self.input_ids_ph: input_ids,
             self.input_masks_ph: input_masks,
-            self.y_masks_ph: y_masks
+            self.startofword_markers_ph: y_masks
         }
         if token_types is not None:
             feed_dict[self.token_types_ph] = token_types
@@ -270,8 +288,12 @@ class BertEmbedder(TFModel):
 
         """
         feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks)
+
         pred, seq_lengths = self.sess.run([self.predictions, self.seq_lengths], feed_dict=feed_dict)
-        pred = [p[:l] for l, p in zip(seq_lengths, pred)]
+        # range_l = 0 if self.include_cls else 1
+        # range_r_shift = -1 if self.include_sep else 0
+        # pred = [p[range_l:l+range_r_shift] for p, l in zip(pred, seq_lengths)]
+        pred = [p[:l] for p, l in zip(pred, seq_lengths)]
         return pred
 
     def load(self,
