@@ -152,10 +152,12 @@ class BertNerPreprocessor(Component):
                 f" for tokens = `{toks}` should match"
         subword_tok_ids = zero_pad(subword_tok_ids, dtype=int, padding=0)
         startofword_markers = zero_pad(startofword_markers, dtype=int, padding=0)
+        attention_mask = Mask()(subword_tokens)
 
         if tags is not None:
             if self.provide_subword_tags:
-                return tokens, subword_tokens, subword_tok_ids, startofword_markers, subword_tags
+                return tokens, subword_tokens, subword_tok_ids, \
+                    attention_mask, startofword_markers, subword_tags
             else:
                 nonmasked_tags = [[t for t in ts if t != 'X'] for ts in tags]
                 for swts, swids, swms, ts in zip(subword_tokens,
@@ -168,8 +170,9 @@ class BertNerPreprocessor(Component):
                         log.warning(f'Markers len: {len(swms)}, sum: {sum(swms)}')
                         log.warning(f'Masks: {swms}')
                         log.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
-                return tokens, subword_tokens, subword_tok_ids, startofword_markers, nonmasked_tags
-        return tokens, subword_tokens, subword_tok_ids, startofword_markers
+                return tokens, subword_tokens, subword_tok_ids, \
+                    attention_mask, startofword_markers, nonmasked_tags
+        return tokens, subword_tokens, subword_tok_ids, attention_mask, startofword_markers
 
     @staticmethod
     def _ner_bert_tokenize(tokens: List[str],
@@ -178,7 +181,7 @@ class BertNerPreprocessor(Component):
                            max_subword_len: int = None,
                            mode: str = None,
                            token_maksing_prob: float = None) -> Tuple[List[str], List[int], List[str]]:
-        do_masking = (mode == 'train') and (token_maksing_prob is not None)))
+        do_masking = (mode == 'train') and (token_maksing_prob is not None)
         do_cutting = (max_subword_len is not None)
 
         tokens_subword = ['[CLS]']
