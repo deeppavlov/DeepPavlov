@@ -20,12 +20,7 @@
         "max_subword_length": 15,
         "token_masking_prob": 0.0,
         "in": ["x"],
-        "out": ["x_tokens", "x_subword_tokens", "x_subword_tok_ids", "pred_subword_mask"]
-      },
-      {
-        "class_name": "mask",
-        "in": ["x_subword_tokens"],
-        "out": ["x_subword_mask"]
+        "out": ["x_tokens", "x_subword_tokens", "x_subword_tok_ids", "attention_mask", "startofword_markers"]
       },
       {
         "id": "tag_vocab",
@@ -59,7 +54,7 @@
         "clip_norm": null,
         "save_path": "{NER_PATH}/model",
         "load_path": "{NER_PATH}/model",
-        "in": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask"],
+        "in": ["x_subword_tok_ids", "attention_mask", "startofword_markers"],
         "in_y": ["y_ind"],
         "out": ["y_pred_ind"]
       },
