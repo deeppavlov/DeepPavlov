@@ -28,13 +28,13 @@ uvicorn_log = getLogger('uvicorn')
 app = FastAPI()
 
 
-def run_ms_bf_default_agent(model_config: Path,
-                            app_id: Optional[str],
-                            app_secret: Optional[str],
-                            port: Optional[int] = None,
-                            https: bool = False,
-                            ssl_key: Optional[str] = None,
-                            ssl_cert: Optional[str] = None) -> None:
+def run_ms_bf_default_server(model_config: Path,
+                             app_id: Optional[str],
+                             app_secret: Optional[str],
+                             port: Optional[int] = None,
+                             https: bool = False,
+                             ssl_key: Optional[str] = None,
+                             ssl_cert: Optional[str] = None) -> None:
 
     server_params = get_server_params(model_config)
 

@@ -14,8 +14,8 @@
 
 from typing import Callable, Optional
 
-from deeppavlov.deprecated.skills.dsl_skill.context import UserContext
-from deeppavlov.deprecated.skills.dsl_skill.utils import SkillResponse
+from deeppavlov.skills.dsl_skill.context import UserContext
+from deeppavlov.skills.dsl_skill.utils import SkillResponse
 
 
 class Handler:

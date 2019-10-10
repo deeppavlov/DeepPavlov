@@ -22,7 +22,7 @@ from deeppavlov.core.common.file import find_config
 from deeppavlov.download import deep_download
 from deeppavlov.utils.alexa.server import run_alexa_default_agent
 from deeppavlov.utils.alice import start_alice_server
-from deeppavlov.utils.ms_bot_framework.server import run_ms_bf_default_agent
+from deeppavlov.utils.ms_bot_framework.server import run_ms_bf_default_server
 from deeppavlov.utils.pip_wrapper import install_from_config
 from deeppavlov.utils.server.server import start_model_server
 from deeppavlov.utils.socket.socket import start_socket_server
@@ -85,13 +85,13 @@ def main():
     elif args.mode == 'interactmsbot':
         ms_id = args.ms_id
         ms_secret = args.ms_secret
-        run_ms_bf_default_agent(model_config=pipeline_config_path,
-                                app_id=ms_id,
-                                app_secret=ms_secret,
-                                port=args.port,
-                                https=https,
-                                ssl_key=ssl_key,
-                                ssl_cert=ssl_cert)
+        run_ms_bf_default_server(model_config=pipeline_config_path,
+                                 app_id=ms_id,
+                                 app_secret=ms_secret,
+                                 port=args.port,
+                                 https=https,
+                                 ssl_key=ssl_key,
+                                 ssl_cert=ssl_cert)
     elif args.mode == 'alexa':
         run_alexa_default_agent(model_config=pipeline_config_path,
                                 port=args.port,

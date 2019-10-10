@@ -16,7 +16,7 @@ from typing import Optional, Union, Dict
 
 import json
 
-from deeppavlov.deprecated.skills.dsl_skill.utils import UserId
+from deeppavlov.skills.dsl_skill.utils import UserId
 
 
 class UserContext:

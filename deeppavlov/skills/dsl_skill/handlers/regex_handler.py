@@ -15,8 +15,8 @@
 import re
 from typing import List, Callable, Optional
 
-from deeppavlov.deprecated.skills.dsl_skill.context import UserContext
-from deeppavlov.deprecated.skills.dsl_skill.handlers.handler import Handler
+from deeppavlov.skills.dsl_skill.context import UserContext
+from deeppavlov.skills.dsl_skill.handlers.handler import Handler
 
 
 class RegexHandler(Handler):

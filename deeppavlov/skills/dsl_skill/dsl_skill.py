@@ -19,10 +19,10 @@ from itertools import zip_longest, starmap
 from typing import List, Optional, Dict, Callable, Tuple
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.deprecated.skills.dsl_skill.context import UserContext
-from deeppavlov.deprecated.skills.dsl_skill.handlers.handler import Handler
-from deeppavlov.deprecated.skills.dsl_skill.handlers.regex_handler import RegexHandler
-from deeppavlov.deprecated.skills.dsl_skill.utils import SkillResponse, UserId
+from deeppavlov.skills.dsl_skill.context import UserContext
+from deeppavlov.skills.dsl_skill.handlers.handler import Handler
+from deeppavlov.skills.dsl_skill.handlers.regex_handler import RegexHandler
+from deeppavlov.skills.dsl_skill.utils import SkillResponse, UserId
 
 
 class DSLMeta(ABCMeta):
