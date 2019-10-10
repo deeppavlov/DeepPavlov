@@ -188,7 +188,7 @@ class BertNerPreprocessor(Component):
         startofword_markers = [0]
         tags_subword = ['X']
         for token, tag in zip(tokens, tags):
-            token_marker = (tag != 'X')
+            token_marker = int(tag != 'X')
             subwords = tokenizer.tokenize(token)
             if not subwords or (do_cutting and (len(subwords) > max_subword_len)):
                 tokens_subword.append('[UNK]')
