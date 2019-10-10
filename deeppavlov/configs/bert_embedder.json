@@ -1,0 +1,44 @@
+{
+  "chainer": {
+    "in": ["texts"],
+    "pipe": [
+      {
+        "class_name": "bert_ner_preprocessor",
+        "vocab_file": "{BERT_PATH}/vocab.txt",
+        "do_lower_case": false,
+        "max_seq_length": 512,
+        "max_subword_length": 15,
+        "token_maksing_prob": 0.0,
+        "in": ["texts"],
+        "out": ["tokens", "subword_tokens", "subword_tok_ids", "attention_mask", "startofword_markers"]
+      },
+      {
+        "class_name": "bert_embedder",
+        "bert_config_path": "{BERT_PATH}/bert_config.json",
+        "load_path": "{BERT_PATH}/bert_model.ckpt",
+        "in": ["subword_tok_ids", "attention_mask", "startofword_markers"],
+        "out": ["embeddings"]
+      }
+    ],
+    "out": ["tokens", "embeddings"]
+  },
+  "train": {},
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+    ],
+    "labels": {},
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
+        "subdir": "{DOWNLOADS_PATH}/bert_models"
+      }
+    ]
+  }
+}
