@@ -68,6 +68,7 @@
   "kvret_dialog_iterator": "deeppavlov.dataset_iterators.kvret_dialog_iterator:KvretDialogDatasetIterator",
   "kvret_reader": "deeppavlov.dataset_readers.kvret_reader:KvretDatasetReader",
   "lazy_tokenizer": "deeppavlov.models.tokenizers.lazy_tokenizer:LazyTokenizer",
+  "dependency_output_prettifier": "deeppavlov.models.morpho_tagger.common:DependencyOutputPrettifier",
   "lemmatized_output_prettifier": "deeppavlov.models.morpho_tagger.common:LemmatizedOutputPrettifier",
   "line_reader": "deeppavlov.dataset_readers.line_reader:LineReader",
   "logit_ranker": "deeppavlov.models.doc_retrieval.logit_ranker:LogitRanker",

@@ -33,7 +33,7 @@ def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> flo
         fraction of absolutely coincidental samples
     """
     examples_len = len(y_true)
-    # if y1 and y2 are both arrays, == can be interpreted as element-wise equality
+    # if y1 and y2 are both arrays, == can be erroneously interpreted as element-wise equality
     def _are_equal(y1, y2):
         answer = (y1 == y2)
         if isinstance(answer, np.ndarray):
@@ -42,6 +42,36 @@ def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> flo
     equalities = [_are_equal(y1, y2) for y1, y2 in zip(y_true, y_predicted)]
     correct = sum(equalities)
     return correct / examples_len if examples_len else 0
+
+
+@register_metric('multitask_accuracy')
+def multitask_accuracy(*args) -> float:
+    n = len(args)
+    y_true_by_tasks, y_predicted_by_tasks = args[:n // 2], args[n // 2:]
+    y_true, y_predicted = list(zip(*y_true_by_tasks)), list(zip(*y_predicted_by_tasks))
+    return accuracy(y_true, y_predicted)
+
+
+@register_metric('multitask_sequence_accuracy')
+def multitask_sequence_accuracy(*args) -> float:
+    n = len(args)
+    y_true_by_tasks, y_predicted_by_tasks = args[:n // 2], args[n // 2:]
+    y_true_by_sents = list(zip(*y_true_by_tasks))
+    y_predicted_by_sents = list(zip(*y_predicted_by_tasks))
+    y_true = list(list(zip(*elem)) for elem in y_true_by_sents)
+    y_predicted = list(list(zip(*elem)) for elem in y_predicted_by_sents)
+    return accuracy(y_true, y_predicted)
+
+
+@register_metric('multitask_token_accuracy')
+def multitask_token_accuracy(*args) -> float:
+    n = len(args)
+    y_true_by_tasks, y_predicted_by_tasks = args[:n // 2], args[n // 2:]
+    y_true_by_sents = list(zip(*y_true_by_tasks))
+    y_predicted_by_sents = list(zip(*y_predicted_by_tasks))
+    y_true = list(list(zip(*elem)) for elem in y_true_by_sents)
+    y_predicted = list(list(zip(*elem)) for elem in y_predicted_by_sents)
+    return per_token_accuracy(y_true, y_predicted)
 
 
 @register_metric('sets_accuracy')

@@ -227,3 +227,56 @@ class LemmatizedOutputPrettifier(Component):
         if self.return_string:
             answer = self.begin + self.sep.join(answer) + self.end
         return answer
+
+
+@register('dependency_output_prettifier')
+class DependencyOutputPrettifier(Component):
+    """Class which prettifies dependency parser output
+    to 10-column (Universal Dependencies) format.
+
+    Args:
+        return_string: whether to return a list of strings or a single string
+        begin: a string to append in the beginning
+        end: a string to append in the end
+        sep: separator between word analyses
+    """
+
+    def __init__(self, return_string: bool = True, begin: str = "", 
+                 end: str = "", sep: str = "\n", **kwargs) -> None:
+        self.return_string = return_string
+        self.begin = begin
+        self.end = end
+        self.sep = sep
+        self.format_string = "{}\t{}\t_\t_\t_\t_\t{}\t{}\t_\t_"
+
+    def __call__(self, X: List[List[str]], Y: List[List[int]], Z: List[List[str]]) -> List[Union[List[str], str]]:
+        """Calls the ``prettify`` function for each input sentence.
+
+        Args:
+            X: a list of input sentences
+            Y: a list of lists of head positions for sentence words
+            Z: a list of lists of dependency labels for sentence words
+
+        Returns:
+            a list of prettified morphological analyses
+        """
+        return [self.prettify(x, y, z) for x, y, z in zip(X, Y, Z)]
+
+    def prettify(self, tokens: List[str], heads: List[int], deps: List[str]) -> Union[List[str], str]:
+        """Prettifies output of dependency parser.
+
+        Args:
+            tokens: tokenized source sentence
+            heads: list of head positions, the output of the parser
+            deps: list of head positions, the output of the parser
+
+        Returns:
+            the prettified output of the tagger.
+
+        """
+        answer = []
+        for i, (word, head, dep) in enumerate(zip(tokens, heads, deps)):
+            answer.append(self.format_string.format(i + 1, word, head, dep))
+        if self.return_string:
+            answer = self.begin + self.sep.join(answer) + self.end
+        return answer

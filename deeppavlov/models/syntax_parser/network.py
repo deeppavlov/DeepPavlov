@@ -33,6 +33,42 @@ from deeppavlov.core.models.tf_model import LRScheduledTFModel
 log = getLogger(__name__)
 
 
+def gather_indexes(A, B):
+    """
+    Returns a tensor C such that C[i, j] = A[i, B[i, j]]
+    """
+    first_dim_indexes = tf.expand_dims(tf.range(tf.shape(B)[0]), -1)
+    first_dim_indexes = tf.tile(first_dim_indexes, [1, tf.shape(B)[1]])
+    indexes = tf.stack([first_dim_indexes, B], axis=-1)
+    return tf.gather_nd(A, indexes)
+
+
+def biaffine_layer(deps, heads, deps_dim, heads_dim, output_dim, name="biaffine_layer"):
+    # input_shape = deps.get_shape().as_list()
+    input_shape = [tf.keras.backend.shape(deps)[i] 
+                   for i in range(tf.keras.backend.ndim(deps))]
+    first_input = tf.reshape(deps, [-1, deps_dim])  # first_input.shape = (B*L, D1)
+    second_input = tf.reshape(heads, [-1, heads_dim])  # second_input.shape = (B*L, D2)
+    with tf.variable_scope(name):
+        kernel_shape=(deps_dim, heads_dim * output_dim)
+        kernel = tf.get_variable('kernel', shape=kernel_shape, initializer=xavier_initializer())
+        first = tf.matmul(first_input, kernel)  # (B*L, D2*H)
+        first = tf.reshape(first, [-1, heads_dim, output_dim])  # (B*L, D2, H)
+        # answer = tf.matmul(first, tf.expand_dims(second_input, -1), transpose_a=True)  # (B*L, H, 1)
+        # answer = tf.reshape(answer, answer.get_shape().as_list()[:-1])
+        answer = tf.keras.backend.batch_dot(first, second_input, axes=[1,1])
+        first_bias = tf.get_variable('first_bias', shape=(deps_dim, output_dim), initializer=xavier_initializer())
+        answer += tf.matmul(first_input, first_bias)
+        second_bias = tf.get_variable('second_bias', shape=(heads_dim, output_dim), initializer=xavier_initializer())
+        answer += tf.matmul(second_input, second_bias)
+        label_bias = tf.get_variable('label_bias', shape=(output_dim,), initializer=xavier_initializer())
+        # label_bias = tf.reshape(label_bias, [1, output_dim])
+        # answer += label_bias
+        answer = tf.keras.backend.bias_add(answer, label_bias)
+        answer = tf.reshape(answer, input_shape[:-1] + [output_dim])
+    return answer
+
+
 def biaffine_attention(deps, heads, name="biaffine_attention"):
     deps_dim_int = deps.get_shape().as_list()[-1]
     heads_dim_int = heads.get_shape().as_list()[-1]
@@ -91,7 +127,6 @@ class BertSyntaxParser(BertSequenceNetwork):
 
     def __init__(self,
                  n_deps: int,
-                 state_size: int,
                  keep_prob: float,
                  bert_config_file: str,
                  pretrained_bert: str = None,
@@ -103,6 +138,8 @@ class BertSyntaxParser(BertSequenceNetwork):
                  encoder_dropout: float = 0.0,
                  optimizer: str = None,
                  weight_decay_rate: float = 1e-6,
+                 state_size: int = 256,
+                 dep_state_size: int = 256,
                  use_birnn: bool = False,
                  birnn_cell_type: str = 'lstm',
                  birnn_hidden_size: int = 256,
@@ -119,8 +156,9 @@ class BertSyntaxParser(BertSequenceNetwork):
                  clip_norm: float = 1.0,
                  **kwargs) -> None:
         self.n_deps = n_deps
-        self.state_size = state_size
         self.embeddings_dropout = embeddings_dropout
+        self.state_size = state_size
+        self.dep_state_size = dep_state_size
         self.use_birnn = use_birnn
         self.birnn_cell_type = birnn_cell_type
         self.birnn_hidden_size = birnn_hidden_size
@@ -161,7 +199,7 @@ class BertSyntaxParser(BertSequenceNetwork):
                                   seq_lengths=self.seq_lengths,
                                   name='birnn')
                 units = tf.concat(units, -1)
-            # y_masks_with_cls_ph = tf.concat([tf.ones_like(self.y_masks_ph[:,:1]), self.y_masks_ph[:,1:]], axis=1)
+            # for heads
             head_embeddings = tf.layers.dense(units, units=self.state_size, activation="relu")
             head_embeddings = tf.nn.dropout(head_embeddings, self.embeddings_keep_prob_ph)
             dep_embeddings = tf.layers.dense(units, units=self.state_size, activation="relu")
@@ -169,36 +207,51 @@ class BertSyntaxParser(BertSequenceNetwork):
             self.dep_head_similarities = biaffine_attention(dep_embeddings, head_embeddings)
             self.dep_heads = tf.argmax(self.dep_head_similarities, -1)
             self.dep_head_probs = tf.nn.softmax(self.dep_head_similarities)
+            # for dependency types
+            head_embeddings = tf.layers.dense(units, units=self.state_size, activation="relu")
+            head_embeddings = tf.nn.dropout(head_embeddings, self.embeddings_keep_prob_ph)
+            dep_embeddings = tf.layers.dense(units, units=self.state_size, activation="relu")
+            dep_embeddings = tf.nn.dropout(dep_embeddings, self.embeddings_keep_prob_ph)
+            # matching each word with its head
+            head_embeddings = gather_indexes(head_embeddings, self.y_head_ph)
+            self.dep_logits = biaffine_layer(dep_embeddings, head_embeddings, 
+                                             deps_dim=self.state_size, heads_dim=self.state_size, 
+                                             output_dim=self.n_deps)
+            self.deps = tf.argmax(self.dep_logits, -1)
+            self.dep_probs = tf.nn.softmax(self.dep_logits) 
 
         with tf.variable_scope("loss"):
             tag_mask = self._get_tag_mask()
             y_mask = tf.cast(tag_mask, tf.float32)
-            first_column = tf.zeros_like(self.y_dep_ph[:,:1])
-            # labels = tf.concat([first_column, self.y_dep_ph], axis=1)
-            # weights = tf.concat([tf.ones_like(y_mask[:,:1]), y_mask], axis=1)
-            self.loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_dep_ph,
+            first_column = tf.zeros_like(self.y_head_ph[:,:1])
+            self.loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_head_ph,
                                                                logits=self.dep_head_similarities,
                                                                weights=y_mask)
+            self.loss += tf.losses.sparse_softmax_cross_entropy(labels=self.y_dep_ph,
+                                                                logits=self.dep_logits,
+                                                                weights=y_mask)                                                   
 
     def _init_placeholders(self) -> None:
         super()._init_placeholders()
+        self.y_head_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='y_head_ph')
         self.y_dep_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='y_dep_ph')
         self.y_masks_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='y_mask_ph')
         self.embeddings_keep_prob_ph = tf.placeholder_with_default(
             1.0, shape=[], name="embeddings_keep_prob_ph")
 
 
-    def _build_feed_dict(self, input_ids, input_masks, y_masks, y_dep=None):
+    def _build_feed_dict(self, input_ids, input_masks, y_masks, y_head=None, y_dep=None):
         y_masks = np.concatenate([np.ones_like(y_masks[:,:1]), y_masks[:,1:]], axis=1)
-        feed_dict = self._build_basic_feed_dict(input_ids, input_masks, train=(y_dep is not None))
+        feed_dict = self._build_basic_feed_dict(input_ids, input_masks, train=(y_head is not None))
         feed_dict[self.y_masks_ph] = y_masks
-        if y_dep is not None:
+        if y_head is not None:
+            y_head = zero_pad(y_head)
+            y_head = np.concatenate([np.zeros_like(y_head[:,:1]), y_head], axis=1)
             y_dep = zero_pad(y_dep)
             y_dep = np.concatenate([np.zeros_like(y_dep[:,:1]), y_dep], axis=1)
             feed_dict.update({self.embeddings_keep_prob_ph: 1.0 - self.embeddings_dropout,
+                              self.y_head_ph: y_head,
                               self.y_dep_ph: y_dep})
-            # feed_dict[self.embeddings_keep_prob_ph] = 1.0 - self.embeddings_dropout,
-            # feed_dict[self.y_dep_ph] = y_dep
         return feed_dict
 
     def __call__(self,
@@ -220,9 +273,28 @@ class BertSyntaxParser(BertSequenceNetwork):
         if self.ema:
             self.sess.run(self.ema.switch_to_test_op)
         if self.return_probas:
-            pred, seq_lengths = self.sess.run([self.dep_head_probs, self.seq_lengths], feed_dict=feed_dict)
-            pred = [p[1:l,:l] for l, p in zip(seq_lengths, pred)] 
+            pred_head_probs, pred_heads, seq_lengths =\
+                 self.sess.run([self.dep_head_probs, self.dep_heads, self.seq_lengths], feed_dict=feed_dict)
+            pred_heads_to_return = [p[1:l,:l] for l, p in zip(seq_lengths, pred_head_probs)]
         else:
-            pred, seq_lengths = self.sess.run([self.dep_heads, self.seq_lengths], feed_dict=feed_dict)
-            pred = [p[1:l] for l, p in zip(seq_lengths, pred)]
-        return pred
+            pred_heads, seq_lengths = self.sess.run([self.dep_heads, self.seq_lengths], feed_dict=feed_dict)
+            pred_heads_to_return = [p[1:l] for l, p in zip(seq_lengths, pred_heads)]
+        feed_dict[self.y_head_ph] = pred_heads
+        pred_deps = self.sess.run(self.deps, feed_dict=feed_dict)
+        pred_deps = [p[1:l] for l, p in zip(seq_lengths, pred_deps)]    
+        return (pred_heads_to_return, pred_deps)
+
+
+
+
+if __name__ == "__main__":
+    deps_dim, heads_dim, output_dim = 100, 150, 256
+    deps = tf.placeholder("float", [16, 10, deps_dim])
+    heads = tf.placeholder("float", [16, 10, heads_dim])
+    y = biaffine_layer(deps, heads, deps_dim, heads_dim, output_dim, name="biaffine_layer")
+    with tf.Session() as session:
+        session.run(tf.global_variables_initializer())
+        feed_dict = {deps: np.random.uniform(size=(16, 10, deps_dim)),
+                     heads: np.random.uniform(size=(16, 10, heads_dim))}
+        result = session.run(y, feed_dict=feed_dict)
+        print(result.shape)
