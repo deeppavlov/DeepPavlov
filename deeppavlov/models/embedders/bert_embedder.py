@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from logging import getLogger
-from typing import List, Union
+from typing import List, Union, Tuple
 
 import numpy as np
 import tensorflow as tf
@@ -42,14 +42,10 @@ class BertEmbedder(TFModel):
                  bert_config_path: str,
                  load_path: str,
                  level: str = 'all',
-                 include_cls: bool = False,
-                 include_sep: bool = False,
                  encoder_layer_ids: List[int] = (-1,),
                  **kwargs) -> None:
         super().__init__(load_path=load_path, save_path=None, **kwargs)
 
-        self.include_cls = include_cls
-        self.include_sep = include_sep
         self.encoder_layer_ids = encoder_layer_ids
         assert level in ('word', 'subword', 'sentence', 'all'),\
             f"`level` argument should have value of 'word', 'subword', 'text'"\
@@ -73,27 +69,33 @@ class BertEmbedder(TFModel):
 
     def _init_graph(self) -> None:
         self._init_placeholders()
-
         self.bert = BertModel(config=self.bert_config,
                               is_training=self.is_train_ph,
                               input_ids=self.input_ids_ph,
                               input_mask=self.input_masks_ph,
                               token_type_ids=self.token_types_ph,
                               use_one_hot_embeddings=False)
-
         encoder_layer = tf.reduce_mean([self.bert.all_encoder_layers[i]
                                         for i in self.encoder_layer_ids],
                                        axis=0)
-        if self.level in ('word', 'all'):
-            self.word_seq_lengths = \
-                tf.reduce_sum(self.startofword_markers_ph, axis=1)
-            self.word_predictions = \
-                self.token_from_subtoken(encoder_layer, self.startofword_markers_ph)
-        if self.level in ('subword', 'all'):
-            self.subword_seq_lengths = tf.reduce_sum(self.input_masks_ph, axis=1)
-            self.subword_predictions = encoder_layer
-        if self.level in ('text', 'all'):
-            pass
+
+        self.subword_seq_lengths = tf.reduce_sum(self.input_masks_ph, axis=1)
+        self.subword_embs = encoder_layer
+        self.word_seq_lengths = \
+            tf.reduce_sum(self.startofword_markers_ph, axis=1)
+        self.word_embs = \
+            self.token_from_subtoken(encoder_layer, self.startofword_markers_ph)
+
+        self.cls_emb = self.subword_embs[:, 0]
+
+        idxs = tf.expand_dims(self.subword_seq_lengths - 1, 1)
+        self.sep_emb = tf.gather_nd(self.subword_embs, idxs, batch_dims=1)
+
+        pad_mask = tf.expand_dims(1 - tf.cast(self.input_masks_ph, tf.float32),
+                                  axis=2)
+        self.max_pool_emb = tf.reduce_max(encoder_layer - 1e9 * pad_mask,
+                                          axis=1)
+        # TODO: implement text embeddings
 
     def _init_placeholders(self) -> None:
         self.input_ids_ph = tf.placeholder(shape=(None, None),
@@ -280,32 +282,52 @@ class BertEmbedder(TFModel):
         """
         feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks)
 
-        # range_l = 0 if self.include_cls else 1
-        # range_r_shift = -1 if self.include_sep else 0
-        # pred = [p[range_l:l+range_r_shift] for p, l in zip(pred, seq_lengths)]
-        if self.level in ('word', 'all'):
-            pred, lengths = self.sess.run([self.word_predictions,
-                                           self.word_seq_lengths],
-                                          feed_dict=feed_dict)
-            word_preds = [{'words': ts, 'word_embeddings': p[:l]}
-                          for ts, p, l in zip(tokens, pred, lengths)]
-        if self.level in ('subword', 'all'):
-            pred, lengths = self.sess.run([self.subword_predictions,
-                                           self.subword_seq_lengths],
-                                          feed_dict=feed_dict)
-            subword_preds = [{'subwords': ts, 'subword_embeddings': p[:l]}
-                             for ts, p, l in zip(subword_tokens, pred, lengths)]
-        if self.level in ('text', 'all'):
-            text_preds = {}
-
         if self.level == 'word':
-            return word_preds
+            return self.predict_word_embs(tokens, feed_dict)
         elif self.level == 'subword':
-            return subword_preds
+            return self.predict_subword_embs(subword_tokens, feed_dict)
         elif self.level == 'text':
-            return text_preds
+            return self.predict_text_embs(feed_dict)
 
-        return text_preds, word_preds, subword_preds
+        return self.predict_all(tokens, subword_tokens, feed_dict)
+
+    def predict_word_embs(self, tokens, feed_dict) -> dict:
+        pred, lengths = self.sess.run([self.word_embs,
+                                       self.word_seq_lengths],
+                                      feed_dict=feed_dict)
+        return [{'words': ts,
+                 'word_embeddings': np.array(p[:l])}
+                for ts, p, l in zip(tokens, pred, lengths)]
+
+    def predict_subword_embs(self, subword_tokens, feed_dict) -> dict:
+        pred, lengths = self.sess.run([self.subword_embs,
+                                       self.subword_seq_lengths],
+                                      feed_dict=feed_dict)
+        return [{'subwords': ts[1:-1],
+                 'subword_embeddings': np.array(p[1:l-1])}
+                for ts, p, l in zip(subword_tokens, pred, lengths)]
+
+    def predict_text_embs(self, feed_dict) -> dict:
+        return {}
+
+    def predict_all(self, tokens, subword_tokens, feed_dict) -> Tuple:
+        sw_emb, sw_lengths, w_emb, w_lengths, cls_emb, sep_emb, max_emb = \
+            self.sess.run([self.subword_embs, self.subword_seq_lengths,
+                           self.word_embs, self.word_seq_lengths,
+                           self.cls_emb, self.sep_emb,
+                           self.max_pool_emb],
+                          feed_dict=feed_dict)
+        word_embs = [{'words': ts,
+                      'word_embeddings': np.array(p[:l])}
+                     for ts, p, l in zip(tokens, w_emb, w_lengths)]
+        subword_embs = [{'subwords': ts[1:-1],
+                         'subword_embeddings': np.array(p[1:l-1])}
+                        for ts, p, l in zip(subword_tokens, sw_emb, sw_lengths)]
+        text_embs = [{'[CLS]': cls,
+                      '[SEP]': sep,
+                      'max': mx}
+                     for cls, sep, mx in zip(cls_emb, sep_emb, max_emb)]
+        return text_embs, word_embs, subword_embs
 
     def load(self,
              exclude_scopes=('Optimizer', 'learning_rate', 'momentum'),
