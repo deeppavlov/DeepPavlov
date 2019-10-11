@@ -47,7 +47,7 @@ class BertEmbedder(TFModel):
         super().__init__(load_path=load_path, save_path=None, **kwargs)
 
         self.encoder_layer_ids = encoder_layer_ids
-        assert level in ('word', 'subword', 'sentence', 'all'),\
+        assert level in ('word', 'subword', 'text', 'all'),\
             f"`level` argument should have value of 'word', 'subword', 'text'"\
             f" or 'all', but has value of {level}."
         self.level = level
