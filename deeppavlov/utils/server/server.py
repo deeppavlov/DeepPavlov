@@ -27,13 +27,13 @@ from pydantic.fields import Field
 from pydantic.main import MetaModel
 from starlette.responses import RedirectResponse
 
-from deeppavlov.deprecated.agent import DialogLogger
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import check_nested_dict_keys, jsonify_data
+from deeppavlov.utils.connector import DialogLogger
 
 SERVER_CONFIG_PATH = get_settings_path() / 'server_config.json'
 SSLConfig = namedtuple('SSLConfig', ['version', 'keyfile', 'certfile'])
@@ -51,7 +51,7 @@ uvicorn_log = logging.getLogger('uvicorn')
 uvicorn_log.addFilter(ProbeFilter())
 app = FastAPI(__file__)
 
-dialog_logger = DialogLogger(agent_name='dp_api')
+dialog_logger = DialogLogger(logger_name='rest_api')
 
 
 def get_server_params(model_config: Path, server_config_path: Path = SERVER_CONFIG_PATH) -> Dict:

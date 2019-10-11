@@ -31,7 +31,7 @@ from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.utils.connector.conversation import AlexaConversation, AliceConversation, BaseConversation
-from deeppavlov.utils.connector.conversation import MSConversation, TgConversation
+from deeppavlov.utils.connector.conversation import MSConversation, TelegramConversation
 from deeppavlov.utils.connector.ssl_tools import verify_cert, verify_signature
 
 CONNECTOR_CONFIG_FILENAME = 'connector_config.json'
@@ -96,7 +96,7 @@ class BaseBot(Thread):
                 timer.cancel()
         Thread.join(self, timeout)
 
-    def _del_conversation(self, conversation_key: str) -> None:
+    def _del_conversation(self, conversation_key: Union[int, str]) -> None:
         """Deletes Conversation instance.
 
         Args:
@@ -283,7 +283,8 @@ class AlexaBot(BaseBot):
             self._conversations[conversation_key] = \
                 AlexaConversation(config=self._conversation_config,
                                   model=self._model,
-                                  self_destruct_callback=lambda: self._del_conversation(conversation_key))
+                                  self_destruct_callback=self._del_conversation,
+                                  conversation_id=conversation_key)
 
             log.info(f'Created new conversation, key: {conversation_key}')
 
@@ -346,7 +347,8 @@ class AliceBot(BaseBot):
             self._conversations[conversation_key] = \
                 AliceConversation(config=self._conversation_config,
                                   model=self._model,
-                                  self_destruct_callback=lambda: self._del_conversation(conversation_key))
+                                  self_destruct_callback=self._del_conversation,
+                                  conversation_id=conversation_key)
             log.info(f'Created new conversation, key: {conversation_key}')
         conversation = self._conversations[conversation_key]
         response = conversation.handle_request(request)
@@ -418,7 +420,7 @@ class MSBot(BaseBot):
         self._update_access_info()
 
     def _update_access_info(self) -> None:
-        """Updates headers for http_session that is used to send responses to Bot Framework."""
+        """Updates headers for http_session used to send responses to Bot Framework."""
         self._timer = threading.Timer(self._auth_polling_interval, self._update_access_info)
         self._timer.start()
 
@@ -453,7 +455,8 @@ class MSBot(BaseBot):
             self._conversations[conversation_key] = \
                 MSConversation(config=self._conversation_config,
                                model=self._model,
-                               self_destruct_callback=lambda: self._del_conversation(conversation_key),
+                               self_destruct_callback=self._del_conversation,
+                               conversation_id=conversation_key,
                                http_session=self._http_session)
 
             log.info(f'Created new conversation, key: {conversation_key}')
@@ -515,7 +518,10 @@ class TelegramBot(BaseBot):
 
             if chat_id not in self._conversations:
                 self._conversations[chat_id] = \
-                    TgConversation(self._conversation_config, self._model, self._del_conversation(chat_id))
+                    TelegramConversation(config=self._conversation_config,
+                                         model=self._model,
+                                         self_destruct_callback=self._del_conversation,
+                                         conversation_id=chat_id)
 
             conversation = self._conversations[chat_id]
             response = conversation.handle_request(context)

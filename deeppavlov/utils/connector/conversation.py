@@ -14,42 +14,61 @@
 
 from logging import getLogger
 from threading import Timer
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 from urllib.parse import urljoin
 
 from requests import Session
 
 from deeppavlov.core.common.chainer import Chainer
+from deeppavlov.utils.connector.dialog_logger import DialogLogger
 
 log = getLogger(__name__)
+
+DIALOG_LOGGER_NAME_MAPPING = {
+    'AlexaConversation': 'alexa',
+    'AliceConversation': 'alice',
+    'MSConversation': 'ms_bot_framework',
+    'TelegramConversation': 'telegram',
+    '_unsupported': 'new_conversation'
+}
 
 
 class BaseConversation:
     """Receives requests, generates responses."""
     _model: Chainer
     _self_destruct_callback: callable
+    _conversation_id: Union[int, str]
     _timer: Timer
     _infer_utterances: list
     _conversation_lifetime: int
     _next_utter_msg: str
     _start_message: str
 
-    def __init__(self, config: dict, model: Chainer, self_destruct_callback: callable) -> None:
-        """Initiates object properties and starts self-destruct timer.
+    def __init__(self,
+                 config: dict,
+                 model: Chainer,
+                 self_destruct_callback: callable,
+                 conversation_id: Union[int, str]) -> None:
+        """Initiates instance properties and starts self-destruct timer.
 
         Args:
             config: Dictionary containing base conversation parameters.
             model: Model that infered with user messages.
             self_destruct_callback: Function that removes this Conversation instance.
+            conversation_id: Conversation ID.
 
         """
         self._model = model
         self._self_destruct_callback = self_destruct_callback
+        self._conversation_id = conversation_id
         self._infer_utterances = list()
         self._conversation_lifetime = config['conversation_lifetime']
         self._next_utter_msg = config['next_utter_msg']
         self._start_message = config['start_message']
         self._unsupported_message = config['unsupported_msg']
+        logger_name: str = DIALOG_LOGGER_NAME_MAPPING.get(type(self).__name__,
+                                                          DIALOG_LOGGER_NAME_MAPPING['_unsupported'])
+        self._dialog_logger = DialogLogger(logger_name=logger_name)
         self._start_timer()
 
     def handle_request(self, request: dict) -> Optional[dict]:
@@ -68,7 +87,7 @@ class BaseConversation:
 
     def _start_timer(self) -> None:
         """Initiates self-destruct timer."""
-        self._timer = Timer(self._conversation_lifetime, self._self_destruct_callback)
+        self._timer = Timer(self._conversation_lifetime, self._self_destruct_callback, [self._conversation_id])
         self._timer.start()
 
     def _rearm_self_destruct(self) -> None:
@@ -149,12 +168,14 @@ class BaseConversation:
         self._infer_utterances.append([utterance])
 
         if len(self._infer_utterances) == len(self._model.in_x):
+            self._dialog_logger.log_in(self._infer_utterances, self._conversation_id)
             prediction = self._model(*self._infer_utterances)
             self._infer_utterances = list()
             if len(self._model.out_params) == 1:
                 prediction = [prediction]
             prediction = '; '.join([str(output[0]) for output in prediction])
             response = prediction
+            self._dialog_logger.log_out(response, self._conversation_id)
         else:
             response = self._next_utter_msg.format(self._model.in_x[len(self._infer_utterances)])
 
@@ -167,8 +188,8 @@ class AlexaConversation(BaseConversation):
     _slot_name: str
     _handled_requests: Dict[str, callable]
 
-    def __init__(self, config: dict, model, self_destruct_callback: callable) -> None:
-        super(AlexaConversation, self).__init__(config, model, self_destruct_callback)
+    def __init__(self, config: dict, model, self_destruct_callback: callable, conversation_id: str) -> None:
+        super(AlexaConversation, self).__init__(config, model, self_destruct_callback, conversation_id)
         self._intent_name = config['intent_name']
         self._slot_name = config['slot_name']
 
@@ -274,7 +295,7 @@ class AlexaConversation(BaseConversation):
 
         """
         response = {}
-        self._self_destruct_callback()
+        self._self_destruct_callback(self._conversation_id)
         return response
 
 
@@ -305,7 +326,7 @@ class AliceConversation(BaseConversation):
 
         return response
 
-    def _generate_response(self, message, request: dict) -> dict:
+    def _generate_response(self, message: str, request: dict) -> dict:
         """Wraps message in the conforming to the Alice data structure.
 
         Args:
@@ -334,8 +355,23 @@ class AliceConversation(BaseConversation):
 
 class MSConversation(BaseConversation):
     """Receives requests from Microsoft Bot Framework and generates responses."""
-    def __init__(self, config, model, self_destruct_callback: callable, http_session: Session) -> None:
-        super(MSConversation, self).__init__(config, model, self_destruct_callback)
+    def __init__(self,
+                 config: dict,
+                 model: Chainer,
+                 self_destruct_callback: callable,
+                 conversation_id: str,
+                 http_session: Session) -> None:
+        """Initiates instance properties and starts self-destruct timer.
+
+        Args:
+            config: Dictionary containing base conversation parameters.
+            model: Model that infered with user messages.
+            self_destruct_callback: Function that removes this Conversation instance.
+            conversation_id: Conversation ID.
+            http_session: Session used to send responses to Bot Framework.
+
+        """
+        super(MSConversation, self).__init__(config, model, self_destruct_callback, conversation_id)
         self._http_session = http_session
 
         self._handled_activities = {
@@ -408,7 +444,7 @@ class MSConversation(BaseConversation):
                   f'Response code: {response.status_code}, response contents: {response_json_str}')
 
 
-class TgConversation(BaseConversation):
+class TelegramConversation(BaseConversation):
     """Receives requests from Telegram bot and generates responses."""
     def _handle_request(self, message: str) -> str:
         """Handles raw text message from Telegram bot.

@@ -21,7 +21,6 @@ from typing import Any, Optional, Hashable
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import jsonify_data
-from deeppavlov.deprecated.agent.rich_content import RichMessage
 
 LOGGER_CONFIG_FILENAME = 'dialog_logger_config.json'
 LOG_TIMESTAMP_FORMAT = '%Y-%m-%d_%H-%M-%S_%f'
@@ -36,19 +35,19 @@ class DialogLogger:
 
     Args:
         enabled: DialogLogger on/off flag.
-        agent_name: Agent name which is used for organising log files.
+        logger_name: Dialog logger name that is used for organising log files.
 
     Attributes:
-        agent_name: Agent name which is used for organising log files.
+        logger_name: Dialog logger name which is used for organising log files.
         log_max_size: Maximum size of log file, kb.
         self.log_file: Current log file object.
     """
-    def __init__(self, enabled: bool = False, agent_name: Optional[str] = None) -> None:
+    def __init__(self, enabled: bool = False, logger_name: Optional[str] = None) -> None:
         self.config: dict = read_json(get_settings_path() / LOGGER_CONFIG_FILENAME)
         self.enabled: bool = enabled or self.config['enabled']
 
         if self.enabled:
-            self.agent_name: str = agent_name or self.config['agent_name']
+            self.logger_name: str = logger_name or self.config['logger_name']
             self.log_max_size: int = self.config['logfile_max_size_kb']
             self.log_file = self._get_log_file()
             self.log_file.writelines('"Agent initiated"\n')
@@ -69,9 +68,9 @@ class DialogLogger:
         Returns:
             log_file: opened Python file object.
         """
-        log_dir: Path = Path(self.config['log_path']).expanduser().resolve() / self.agent_name
+        log_dir: Path = Path(self.config['log_path']).expanduser().resolve() / self.logger_name
         log_dir.mkdir(parents=True, exist_ok=True)
-        log_file_path = Path(log_dir, f'{self._get_timestamp_utc_str()}_{self.agent_name}.log')
+        log_file_path = Path(log_dir, f'{self._get_timestamp_utc_str()}_{self.logger_name}.log')
         log_file = open(log_file_path, 'a', buffering=1, encoding='utf8')
         return log_file
 
@@ -85,8 +84,6 @@ class DialogLogger:
         """
         if isinstance(utterance, str):
             pass
-        elif isinstance(utterance, RichMessage):
-            utterance = utterance.json()
         elif isinstance(utterance, (list, dict)):
             utterance = jsonify_data(utterance)
         else:

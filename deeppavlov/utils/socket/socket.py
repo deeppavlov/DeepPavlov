@@ -19,14 +19,16 @@ from logging import getLogger
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
-from deeppavlov.deprecated.agent import DialogLogger
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import jsonify_data
+from deeppavlov.utils.connector import DialogLogger
 from deeppavlov.utils.server.server import get_server_params
 
 SOCKET_CONFIG_FILENAME = 'socket_config.json'
+
+dialog_logger = DialogLogger(logger_name='socket_api')
 
 
 class SocketServer:
@@ -87,7 +89,6 @@ class SocketServer:
         else:
             raise ValueError(f'socket type "{self._socket_type}" is not supported')
 
-        self._dialog_logger = DialogLogger(agent_name='dp_api')
         self._log = getLogger(__name__)
         self._loop = asyncio.get_event_loop()
         self._model = build_model(model_config)
@@ -132,7 +133,7 @@ class SocketServer:
         except ValueError:
             await self._wrap_error(conn, f'request "{recv_data}" type is not json')
             return
-        self._dialog_logger.log_in(data)
+        dialog_logger.log_in(data)
         model_args = []
         for param_name in self._params['model_args_names']:
             param_value = data.get(param_name)
@@ -160,7 +161,7 @@ class SocketServer:
             prediction = [prediction]
         prediction = list(zip(*prediction))
         result = await self._response('OK', prediction)
-        self._dialog_logger.log_out(result)
+        dialog_logger.log_out(result)
         await self._loop.sock_sendall(conn, result)
 
     async def _wrap_error(self, conn: socket.socket, error: str) -> None:

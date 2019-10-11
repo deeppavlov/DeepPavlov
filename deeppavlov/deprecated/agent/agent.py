@@ -17,7 +17,7 @@ from collections import defaultdict
 from typing import List, Dict, Tuple, Optional
 
 from deeppavlov.core.models.component import Component
-from deeppavlov.deprecated.agent.dialog_logger import DialogLogger
+from deeppavlov.utils.connector.dialog_logger import DialogLogger
 
 
 class Agent(Component, metaclass=ABCMeta):
