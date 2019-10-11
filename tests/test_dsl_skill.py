@@ -43,7 +43,7 @@ class ContextConditionSkill(metaclass=DSLMeta):
 
 class TestDSLSkill:
     def setup(self):
-        self.skill_config = read_json(configs.dsl_skill.dsl_skill)
+        self.skill_config = read_json(configs.skills.dsl_skill)
         install_from_config(self.skill_config)
 
     def test_simple_skill(self):

@@ -101,8 +101,8 @@ class AIMLSkill(Component):
         """
         return uuid.uuid1().hex
 
-    def __call__(self, utterances_batch: List[str],
-                 history_batch: Optional[List] = None,
+    def __call__(self,
+                 utterances_batch: List[str],
                  states_batch: Optional[List] = None) -> Tuple[List[str], List[float], list]:
         """Returns skill inference result.
 
@@ -112,7 +112,6 @@ class AIMLSkill(Component):
 
         Args:
             utterances_batch: A batch of utterances of str type.
-            history_batch: A batch of list typed histories for each utterance.
             states_batch:  A batch of arbitrary typed states for
                 each utterance.
 

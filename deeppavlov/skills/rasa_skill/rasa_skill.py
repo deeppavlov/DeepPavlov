@@ -12,22 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import uuid
 import asyncio
 import logging
+import uuid
+from functools import reduce
 from pathlib import Path
 from typing import Tuple, Optional, List
-from functools import reduce
-
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.component import Component
 
 from rasa.cli.utils import get_validated_path
 from rasa.constants import DEFAULT_MODELS_PATH
 from rasa.core.agent import Agent
-from rasa.core.channels import UserMessage
 from rasa.core.channels import CollectingOutputChannel
+from rasa.core.channels import UserMessage
 from rasa.model import get_model
+
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.component import Component
 
 logger = logging.getLogger(__name__)
 
@@ -65,9 +65,9 @@ class RASASkill(Component):
         self.ioloop = asyncio.new_event_loop()
         logger.info(f"path to RASA models is: `{self.path_to_models}`")
 
-    def __call__(self, utterances_batch: List[str],
-                 history_batch: Optional[List]=None,
-                 states_batch: Optional[List]=None) -> Tuple[List[str], List[float], list]:
+    def __call__(self,
+                 utterances_batch: List[str],
+                 states_batch: Optional[List] = None) -> Tuple[List[str], List[float], list]:
         """Returns skill inference result.
 
         Returns batches of skill inference results, estimated confidence
@@ -76,7 +76,6 @@ class RASASkill(Component):
 
         Args:
             utterances_batch: A batch of utterances of str type.
-            history_batch: A batch of list typed histories for each utterance.
             states_batch:  A batch of arbitrary typed states for
                 each utterance.
 

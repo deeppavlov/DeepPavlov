@@ -37,8 +37,6 @@ Usage without DeepPavlov configuration files
 
 .. code:: python
 
-    from deeppavlov.deprecated.agents.default_agent import DefaultAgent
-    from deeppavlov.deprecated.agents.processors import HighestConfidenceSelector
     from deeppavlov.skills import RASASkill
 
     rasa_skill_config = {
@@ -46,6 +44,8 @@ Usage without DeepPavlov configuration files
     }
 
     rasa_skill = RASASkill(**rasa_skill_config)
-    agent = DefaultAgent([rasa_skill], skills_selector=HighestConfidenceSelector())
-    responses = agent(["Hello"])
-    print(responses)
+
+    states_batch = None
+    for utterance in ["Hello", "Hello to the same user_id"]:
+        responses_batch, confidences_batch, states_batch = rasa_skill([utterance], states_batch)
+        print(responses_batch[0])
