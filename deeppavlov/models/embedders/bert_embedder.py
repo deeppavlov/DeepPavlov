@@ -95,7 +95,9 @@ class BertEmbedder(TFModel):
                                   axis=2)
         self.max_pool_emb = tf.reduce_max(encoder_layer - 1e9 * pad_mask,
                                           axis=1)
-        # TODO: implement text embeddings
+        self.mean_pool_emb = \
+            tf.reduce_sum(encoder_layer * (1. - pad_mask), axis=1) /\
+            tf.expand_dims(tf.cast(self.subword_seq_lengths, tf.float32), axis=1)
 
     def _init_placeholders(self) -> None:
         self.input_ids_ph = tf.placeholder(shape=(None, None),
@@ -308,14 +310,23 @@ class BertEmbedder(TFModel):
                 for ts, p, l in zip(subword_tokens, pred, lengths)]
 
     def predict_text_embs(self, feed_dict) -> dict:
-        return {}
+        cls_e, sep_e, max_e, mean_e = \
+            self.sess.run([self.cls_emb, self.sep_emb,
+                           self.max_pool_emb, self.mean_pool_emb],
+                          feed_dict=feed_dict)
+        text_embs = [{'[CLS]': cls,
+                      '[SEP]': sep,
+                      'MAX': mx,
+                      'MEAN': mn}
+                     for cls, sep, mx, mn in zip(cls_e, sep_e, max_e, mean_e)]
+        return text_embs
 
     def predict_all(self, tokens, subword_tokens, feed_dict) -> Tuple:
-        sw_emb, sw_lengths, w_emb, w_lengths, cls_emb, sep_emb, max_emb = \
+        sw_emb, sw_lengths, w_emb, w_lengths, cls_e, sep_e, max_e, mean_e = \
             self.sess.run([self.subword_embs, self.subword_seq_lengths,
                            self.word_embs, self.word_seq_lengths,
                            self.cls_emb, self.sep_emb,
-                           self.max_pool_emb],
+                           self.max_pool_emb, self.mean_pool_emb],
                           feed_dict=feed_dict)
         word_embs = [{'words': ts,
                       'word_embeddings': np.array(p[:l])}
@@ -325,8 +336,9 @@ class BertEmbedder(TFModel):
                         for ts, p, l in zip(subword_tokens, sw_emb, sw_lengths)]
         text_embs = [{'[CLS]': cls,
                       '[SEP]': sep,
-                      'max': mx}
-                     for cls, sep, mx in zip(cls_emb, sep_emb, max_emb)]
+                      'MAX': mx,
+                      'MEAN': mn}
+                     for cls, sep, mx, mn in zip(cls_e, sep_e, max_e, mean_e)]
         return text_embs, word_embs, subword_embs
 
     def load(self,
