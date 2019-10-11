@@ -145,6 +145,9 @@ class BertSyntaxParser(BertSequenceNetwork):
                  birnn_hidden_size: int = 256,
                  ema_decay: float = None,
                  ema_variables_on_cpu: bool = True,
+                 predict_tags = False,
+                 n_tags = None,
+                 tag_weight = 1.0,
                  return_probas: bool = False,
                  freeze_embeddings: bool = False,
                  learning_rate: float = 1e-3,
@@ -164,6 +167,11 @@ class BertSyntaxParser(BertSequenceNetwork):
         self.birnn_hidden_size = birnn_hidden_size
         self.use_chl_decoding = use_chl_decoding
         self.return_probas = return_probas
+        self.predict_tags = predict_tags
+        self.n_tags = n_tags
+        self.tag_weight = tag_weight
+        if self.predict_tags and self.n_tags is None:
+            raise ValueError("n_tags should be given if `predict_tags`=True.")
         super().__init__(keep_prob=keep_prob,
                          bert_config_file=bert_config_file,
                          pretrained_bert=pretrained_bert,
@@ -218,8 +226,13 @@ class BertSyntaxParser(BertSequenceNetwork):
                                              deps_dim=self.state_size, heads_dim=self.state_size, 
                                              output_dim=self.n_deps)
             self.deps = tf.argmax(self.dep_logits, -1)
-            self.dep_probs = tf.nn.softmax(self.dep_logits) 
-
+            self.dep_probs = tf.nn.softmax(self.dep_logits)
+            if self.predict_tags:
+                tag_embeddings = tf.layers.dense(units, units=self.state_size, activation="relu")
+                tag_embeddings = tf.nn.dropout(tag_embeddings, self.embeddings_keep_prob_ph) 
+                self.tag_logits = tf.layers.dense(tag_embeddings, units=self.n_tags)
+                self.tags = tf.argmax(self.tag_logits, -1)
+                self.tag_probs = tf.nn.softmax(self.tag_logits)
         with tf.variable_scope("loss"):
             tag_mask = self._get_tag_mask()
             y_mask = tf.cast(tag_mask, tf.float32)
@@ -229,18 +242,28 @@ class BertSyntaxParser(BertSequenceNetwork):
                                                                weights=y_mask)
             self.loss += tf.losses.sparse_softmax_cross_entropy(labels=self.y_dep_ph,
                                                                 logits=self.dep_logits,
-                                                                weights=y_mask)                                                   
+                                                                weights=y_mask)
+            if self.predict_tags:
+                tag_loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_tag_ph,
+                                                                  logits=self.tag_logits,
+                                                                  weights=y_mask)
+                self.loss += self.tag_weight_ph * tag_loss                                                  
 
     def _init_placeholders(self) -> None:
         super()._init_placeholders()
         self.y_head_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='y_head_ph')
         self.y_dep_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='y_dep_ph')
+        if self.predict_tags:
+            self.y_tag_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='y_tag_ph')
         self.y_masks_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='y_mask_ph')
         self.embeddings_keep_prob_ph = tf.placeholder_with_default(
             1.0, shape=[], name="embeddings_keep_prob_ph")
+        if self.predict_tags:
+            self.tag_weight_ph = tf.placeholder_with_default(1.0, shape=[], name="tag_weight_ph")
 
 
-    def _build_feed_dict(self, input_ids, input_masks, y_masks, y_head=None, y_dep=None):
+    def _build_feed_dict(self, input_ids, input_masks, y_masks, 
+                         y_head=None, y_dep=None, y_tag=None):
         y_masks = np.concatenate([np.ones_like(y_masks[:,:1]), y_masks[:,1:]], axis=1)
         feed_dict = self._build_basic_feed_dict(input_ids, input_masks, train=(y_head is not None))
         feed_dict[self.y_masks_ph] = y_masks
@@ -252,6 +275,9 @@ class BertSyntaxParser(BertSequenceNetwork):
             feed_dict.update({self.embeddings_keep_prob_ph: 1.0 - self.embeddings_dropout,
                               self.y_head_ph: y_head,
                               self.y_dep_ph: y_dep})
+            if self.predict_tags:
+                y_tag = np.concatenate([np.zeros_like(y_tag[:,:1]), y_tag], axis=1)
+                feed_dict.update({self.y_tag_ph: y_tag, self.tag_weight_ph: self.tag_weight})
         return feed_dict
 
     def __call__(self,
@@ -282,9 +308,12 @@ class BertSyntaxParser(BertSequenceNetwork):
         feed_dict[self.y_head_ph] = pred_heads
         pred_deps = self.sess.run(self.deps, feed_dict=feed_dict)
         pred_deps = [p[1:l] for l, p in zip(seq_lengths, pred_deps)]    
-        return (pred_heads_to_return, pred_deps)
-
-
+        answer = [pred_heads_to_return, pred_deps]
+        if self.predict_tags:
+            pred_tags = self.sess.run(self.tags, feed_dict=feed_dict)
+            pred_tags = [p[1:l] for l, p in zip(seq_lengths, pred_tags)] 
+            answer.append(pred_tags)
+        return tuple(answer)
 
 
 if __name__ == "__main__":
