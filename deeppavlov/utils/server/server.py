@@ -20,12 +20,13 @@ from ssl import PROTOCOL_TLSv1_2
 from typing import Dict, List, Optional, Union
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import Body, FastAPI, HTTPException
 from fastapi.utils import generate_operation_id_for_path
 from pydantic import BaseConfig, BaseModel, Schema
 from pydantic.fields import Field
 from pydantic.main import MetaModel
 from starlette.responses import RedirectResponse
+from starlette.middleware.cors import CORSMiddleware
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import parse_config
@@ -50,6 +51,14 @@ log = logging.getLogger(__name__)
 uvicorn_log = logging.getLogger('uvicorn')
 uvicorn_log.addFilter(ProbeFilter())
 app = FastAPI(__file__)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*']
+)
 
 dialog_logger = DialogLogger(logger_name='rest_api')
 
@@ -123,7 +132,7 @@ def interact(model: Chainer, payload: Dict[str, Optional[List]]) -> List:
     if not lengths:
         error_msg = 'got empty request'
     elif 0 in lengths:
-        error_msg = 'dot empty array as model argument'
+        error_msg = 'got empty array as model argument'
     elif len(lengths) > 1:
         error_msg = 'got several different batch sizes'
 
@@ -149,7 +158,7 @@ def test_interact(model: Chainer, payload: Dict[str, Optional[List]]) -> List[st
         _ = model(*model_args)
         return ["Test passed"]
     except Exception as e:
-        raise HTTPException(status_code=400, detail=e)
+        raise HTTPException(status_code=400, detail=repr(e))
 
 
 def start_model_server(model_config: Path,
@@ -170,8 +179,8 @@ def start_model_server(model_config: Path,
     model = build_model(model_config)
 
     def batch_decorator(cls: MetaModel) -> MetaModel:
-        cls.__annotations__ = {arg_name: List[str] for arg_name in model_args_names}
-        cls.__fields__ = {arg_name: Field(name=arg_name, type_=List[str], class_validators=None,
+        cls.__annotations__ = {arg_name: list for arg_name in model_args_names}
+        cls.__fields__ = {arg_name: Field(name=arg_name, type_=list, class_validators=None,
                                           model_config=BaseConfig, required=False, schema=Schema(None))
                           for arg_name in model_args_names}
         return cls
@@ -182,8 +191,9 @@ def start_model_server(model_config: Path,
 
     redirect_root_to_docs(app, 'answer', model_endpoint, 'post')
 
+    model_endpoint_post_example = {arg_name: ['string'] for arg_name in model_args_names}
     @app.post(model_endpoint, summary='A model endpoint')
-    async def answer(item: Batch) -> List:
+    async def answer(item: Batch = Body(..., example=model_endpoint_post_example)) -> List:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, interact, model, item.dict())
 

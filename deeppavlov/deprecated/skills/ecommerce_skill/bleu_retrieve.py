@@ -221,8 +221,7 @@ class EcommerceSkillBleu(Skill):
                 price = value
                 log.debug(f"Items before price filtering {len(results_args_sim)} with price {price}")
                 results_args_sim = [idx for idx in results_args_sim
-                                    if self.preprocess.price(self.ec_data[idx]) >= price[0] and
-                                    self.preprocess.price(self.ec_data[idx]) <= price[1] and
+                                    if price[0] <= self.preprocess.price(self.ec_data[idx]) <= price[1] and
                                     self.preprocess.price(self.ec_data[idx]) != 0]
                 log.debug(f"Items after price filtering {len(results_args_sim)}")
 
