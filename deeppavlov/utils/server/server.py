@@ -26,6 +26,7 @@ from pydantic import BaseConfig, BaseModel, Schema
 from pydantic.fields import Field
 from pydantic.main import MetaModel
 from starlette.responses import RedirectResponse
+from starlette.middleware.cors import CORSMiddleware
 
 from deeppavlov.core.agent.dialog_logger import DialogLogger
 from deeppavlov.core.commands.infer import build_model
@@ -50,6 +51,14 @@ log = logging.getLogger(__name__)
 uvicorn_log = logging.getLogger('uvicorn')
 uvicorn_log.addFilter(ProbeFilter())
 app = FastAPI(__file__)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*']
+)
 
 dialog_logger = DialogLogger(agent_name='dp_api')
 
