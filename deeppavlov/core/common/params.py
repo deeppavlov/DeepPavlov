@@ -14,7 +14,8 @@
 
 import inspect
 from logging import getLogger
-from typing import Dict, Any
+from types import FunctionType
+from typing import Any, Dict, Union
 
 from deeppavlov.core.commands.utils import expand_path, parse_config
 from deeppavlov.core.common.errors import ConfigError
@@ -54,7 +55,7 @@ def _init_param(param, mode):
     return param
 
 
-def from_params(params: Dict, mode: str = 'infer', serialized: Any = None, **kwargs) -> Component:
+def from_params(params: Dict, mode: str = 'infer', serialized: Any = None, **kwargs) -> Union[Component, FunctionType]:
     """Builds and returns the Component from corresponding dictionary of parameters."""
     # what is passed in json:
     config_params = {k: _resolve(v) for k, v in params.items()}
@@ -91,25 +92,29 @@ def from_params(params: Dict, mode: str = 'infer', serialized: Any = None, **kwa
         e = ConfigError('Component config has no `class_name` nor `ref` fields')
         log.exception(e)
         raise e
-    cls = get_model(cls_name)
+    obj = get_model(cls_name)
 
-    # find the submodels params recursively
-    config_params = {k: _init_param(v, mode) for k, v in config_params.items()}
+    if inspect.isclass(obj):
+        # find the submodels params recursively
+        config_params = {k: _init_param(v, mode) for k, v in config_params.items()}
 
-    try:
-        spec = inspect.getfullargspec(cls)
-        if 'mode' in spec.args+spec.kwonlyargs or spec.varkw is not None:
-            kwargs['mode'] = mode
-
-        component = cls(**dict(config_params, **kwargs))
         try:
-            _refs[config_params['id']] = component
-        except KeyError:
-            pass
-    except Exception:
-        log.exception("Exception in {}".format(cls))
-        raise
+            spec = inspect.getfullargspec(obj)
+            if 'mode' in spec.args+spec.kwonlyargs or spec.varkw is not None:
+                kwargs['mode'] = mode
 
-    if serialized is not None:
-        component.deserialize(serialized)
+            component = obj(**dict(config_params, **kwargs))
+            try:
+                _refs[config_params['id']] = component
+            except KeyError:
+                pass
+        except Exception:
+            log.exception("Exception in {}".format(obj))
+            raise
+
+        if serialized is not None:
+            component.deserialize(serialized)
+    else:
+        component = obj
+
     return component
