@@ -24,7 +24,7 @@ from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import jsonify_data
 from deeppavlov.utils.connector import DialogLogger
-from deeppavlov.utils.server.server import get_server_params
+from deeppavlov.utils.server import get_server_params
 
 SOCKET_CONFIG_FILENAME = 'socket_config.json'
 

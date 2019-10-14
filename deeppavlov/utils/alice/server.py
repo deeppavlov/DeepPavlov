@@ -16,30 +16,32 @@ import asyncio
 from logging import getLogger
 from pathlib import Path
 from queue import Queue
-from typing import Optional
+from typing import Optional, Union
 
 import uvicorn
 from fastapi import FastAPI
 
 from deeppavlov.utils.alice.request_parameters import data_body
 from deeppavlov.utils.connector import AliceBot
-from deeppavlov.utils.server.server import SSLConfig, get_ssl_params, redirect_root_to_docs, get_server_params
+from deeppavlov.utils.server import get_server_params, get_ssl_params, redirect_root_to_docs
 
 log = getLogger(__name__)
 uvicorn_log = getLogger('uvicorn')
 app = FastAPI()
 
 
-def start_alice_server(model_config: Path,
-                       https: bool = False,
+def start_alice_server(model_config: Union[str, Path],
+                       host: Optional[str] = None,
+                       port: Optional[int] = None,
+                       endpoint: Optional[str] = None,
+                       https: Optional[bool] = None,
                        ssl_key: Optional[str] = None,
-                       ssl_cert: Optional[str] = None,
-                       port: Optional[int] = None) -> None:
+                       ssl_cert: Optional[str] = None) -> None:
     server_params = get_server_params(model_config)
 
-    host = server_params['host']
+    host = host or server_params['host']
     port = port or server_params['port']
-    model_endpoint = server_params['model_endpoint']
+    endpoint = endpoint or server_params['model_endpoint']
 
     ssl_config = get_ssl_params(server_params, https, ssl_key=ssl_key, ssl_cert=ssl_cert)
 
@@ -47,27 +49,6 @@ def start_alice_server(model_config: Path,
     output_q = Queue()
 
     bot = AliceBot(model_config, input_q, output_q)
-
-    start_agent_server(bot, host, port, model_endpoint, ssl_config=ssl_config)
-
-
-def start_agent_server(bot: AliceBot,
-                       host: str,
-                       port: int,
-                       endpoint: str,
-                       ssl_key: Optional[str] = None,
-                       ssl_cert: Optional[str] = None,
-                       ssl_config: Optional[SSLConfig] = None) -> None:
-
-    if ssl_key and ssl_cert and ssl_config:
-        raise ValueError('ssl_key, ssl_cert, ssl_config was assigned at the same time. Please, use either'
-                         'ssl_config or ssl_key and ssl_cert')
-
-    if ssl_key and ssl_cert:
-        ssl_config = get_ssl_params({}, True, ssl_key=ssl_key, ssl_cert=ssl_cert)
-    else:
-        ssl_config = ssl_config or get_ssl_params({}, False, ssl_key=None, ssl_cert=None)
-
     bot.start()
 
     redirect_root_to_docs(app, 'answer', endpoint, 'post')

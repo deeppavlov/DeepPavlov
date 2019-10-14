@@ -92,11 +92,10 @@ class AIMLSkill(Component):
         return response, confidence
 
     def _generate_user_id(self) -> str:
-        """
-        Here you put user id generative logic if you want to implement it in the skill.
+        """Here you put user id generative logic if you want to implement it in the skill.
 
-        Although it is better to delegate user_id generation to Agent Layer
-        Returns: str
+        Returns:
+            user_id: Random generated user ID.
 
         """
         return uuid.uuid1().hex

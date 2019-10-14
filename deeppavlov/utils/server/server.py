@@ -17,7 +17,7 @@ import logging
 from collections import namedtuple
 from pathlib import Path
 from ssl import PROTOCOL_TLSv1_2
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
@@ -54,7 +54,7 @@ app = FastAPI(__file__)
 dialog_logger = DialogLogger(logger_name='rest_api')
 
 
-def get_server_params(model_config: Path, server_config_path: Path = SERVER_CONFIG_PATH) -> Dict:
+def get_server_params(model_config: Union[str, Path], server_config_path: Path = SERVER_CONFIG_PATH) -> Dict:
     server_config = read_json(server_config_path)
     model_config = parse_config(model_config)
 

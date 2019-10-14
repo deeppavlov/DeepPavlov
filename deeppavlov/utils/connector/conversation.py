@@ -409,9 +409,9 @@ class MSConversation(BaseConversation):
         """
         if 'text' in request:
             in_text = request['text']
-            agent_response = self._act(in_text)
-            if agent_response:
-                self._generate_response(agent_response, request)
+            model_response = self._act(in_text)
+            if model_response:
+                self._generate_response(model_response, request)
         else:
             self._handled_activities['_unsupported'](request)
 

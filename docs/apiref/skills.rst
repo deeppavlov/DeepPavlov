@@ -2,7 +2,7 @@ skills
 ======
 Skill classes. Skills are dialog models.
 
-.. automodule:: deeppavlov.deprecated.skills
+.. automodule:: deeppavlov.skills
    :members:
 
 .. toctree::

@@ -25,18 +25,18 @@ from starlette.responses import JSONResponse
 
 from deeppavlov.utils.alexa.request_parameters import data_body, cert_chain_url_header, signature_header
 from deeppavlov.utils.connector import AlexaBot
-from deeppavlov.utils.server.server import get_ssl_params, redirect_root_to_docs, get_server_params
+from deeppavlov.utils.server import get_ssl_params, redirect_root_to_docs, get_server_params
 
 log = getLogger(__name__)
 uvicorn_log = getLogger('uvicorn')
 app = FastAPI()
 
 
-def run_alexa_default_agent(model_config: Union[str, Path, dict],
-                            port: Optional[int] = None,
-                            https: bool = False,
-                            ssl_key: Optional[str] = None,
-                            ssl_cert: Optional[str] = None) -> None:
+def start_alexa_server(model_config: Union[str, Path, dict],
+                       port: Optional[int] = None,
+                       https: bool = False,
+                       ssl_key: Optional[str] = None,
+                       ssl_cert: Optional[str] = None) -> None:
     """Initiates FastAPI web service with Alexa skill.
 
     Allows raise Alexa web service with DeepPavlov config in backend.

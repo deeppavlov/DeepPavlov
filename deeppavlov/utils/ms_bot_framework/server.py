@@ -21,20 +21,20 @@ import uvicorn
 from fastapi import FastAPI
 
 from deeppavlov.utils.connector import MSBot
-from deeppavlov.utils.server.server import get_server_params, get_ssl_params, redirect_root_to_docs
+from deeppavlov.utils.server import get_server_params, get_ssl_params, redirect_root_to_docs
 
 log = getLogger(__name__)
 uvicorn_log = getLogger('uvicorn')
 app = FastAPI()
 
 
-def run_ms_bf_default_server(model_config: Path,
-                             app_id: Optional[str],
-                             app_secret: Optional[str],
-                             port: Optional[int] = None,
-                             https: bool = False,
-                             ssl_key: Optional[str] = None,
-                             ssl_cert: Optional[str] = None) -> None:
+def start_ms_bf_server(model_config: Path,
+                       app_id: Optional[str],
+                       app_secret: Optional[str],
+                       port: Optional[int] = None,
+                       https: bool = False,
+                       ssl_key: Optional[str] = None,
+                       ssl_cert: Optional[str] = None) -> None:
 
     server_params = get_server_params(model_config)
 

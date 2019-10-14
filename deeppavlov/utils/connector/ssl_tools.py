@@ -29,9 +29,8 @@ log = getLogger(__name__)
 def verify_sc_url(url: str) -> bool:
     """Verify signature certificate URL against Amazon Alexa requirements.
 
-    Each call of Agent passes incoming utterances batch through skills filter,
-    agent skills, skills processor. Batch of dialog IDs can be provided, in
-    other case utterances indexes in incoming batch are used as dialog IDs.
+    Batch of dialog IDs can be provided, in other case utterances indexes in
+    incoming batch are used as dialog IDs.
 
     Args:
         url: Signature certificate URL from SignatureCertChainUrl HTTP header.

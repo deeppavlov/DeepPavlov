@@ -392,6 +392,10 @@ class MSBot(BaseBot):
             client_id: Microsoft App ID.
             client_secret: Microsoft App Secret.
 
+        Raises:
+            ValueError: If ``client_id`` or ``client_secret`` were not set neither in the configuration file nor
+                in method arguments.
+
         """
         super(MSBot, self).__init__(model_config, input_queue)
         connector_config: dict = self._get_connector_params()
@@ -420,7 +424,12 @@ class MSBot(BaseBot):
         self._update_access_info()
 
     def _update_access_info(self) -> None:
-        """Updates headers for http_session used to send responses to Bot Framework."""
+        """Updates headers for http_session used to send responses to Bot Framework.
+
+        Raises:
+            HTTPError: If authentication token request returned other than 200 status code.
+
+        """
         self._timer = threading.Timer(self._auth_polling_interval, self._update_access_info)
         self._timer.start()
 
@@ -480,6 +489,9 @@ class TelegramBot(BaseBot):
         Args:
             model_config: Path to DeepPavlov model config file.
             token: Telegram bot token.
+
+        Raises:
+            ValueError: If telegram token was not set neither in config file nor in method arguments.
 
         """
         super(TelegramBot, self).__init__(model_config, Queue())

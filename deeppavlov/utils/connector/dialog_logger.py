@@ -50,7 +50,7 @@ class DialogLogger:
             self.logger_name: str = logger_name or self.config['logger_name']
             self.log_max_size: int = self.config['logfile_max_size_kb']
             self.log_file = self._get_log_file()
-            self.log_file.writelines('"Agent initiated"\n')
+            self.log_file.writelines('"Dialog logger initiated"\n')
 
     @staticmethod
     def _get_timestamp_utc_str() -> str:
