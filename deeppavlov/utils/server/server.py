@@ -207,4 +207,4 @@ def start_model_server(model_config: Path,
         return model_args_names
 
     uvicorn.run(app, host=host, port=port, logger=uvicorn_log, ssl_version=ssl_config.version,
-                ssl_keyfile=ssl_config.keyfile, ssl_certfile=ssl_config.certfile)
+                ssl_keyfile=ssl_config.keyfile, ssl_certfile=ssl_config.certfile, timeout_keep_alive=20)
