@@ -14,7 +14,7 @@
       },
       {
         "class_name": "bert_embedder",
-        "encoder_layer_ids": [-2, -1],
+        "encoder_layer_ids": [-1],
         "bert_config_path": "{BERT_PATH}/bert_config.json",
         "load_path": "{BERT_PATH}/bert_model.ckpt",
         "in": ["tokens", "subword_tokens", "subword_tok_ids", "attention_mask", "startofword_markers"],
