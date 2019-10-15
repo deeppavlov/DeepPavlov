@@ -63,9 +63,12 @@ class BertEmbedder(TFModel):
 
         self.sess.run(tf.global_variables_initializer())
 
-        if self.load_path is not None:
-            log.info(f"[initializing model with Bert from {self.load_path}]")
+        if self.load_path is not None and \
+                tf.train.checkpoint_exists(str(self.load_path)):
+            log.info(f"[initializing Bert embedder from {self.load_path}]")
             self.load()
+        else:
+            log.info(f"[initializing Bert embedder from scratch]")
 
     def _init_graph(self) -> None:
         self._init_placeholders()
@@ -91,13 +94,13 @@ class BertEmbedder(TFModel):
         idxs = tf.expand_dims(self.subword_seq_lengths - 1, 1)
         self.sep_emb = tf.gather_nd(self.subword_embs, idxs, batch_dims=1)
 
-        pad_mask = tf.expand_dims(1 - tf.cast(self.input_masks_ph, tf.float32),
-                                  axis=2)
-        self.max_pool_emb = tf.reduce_max(encoder_layer - 1e9 * pad_mask,
-                                          axis=1)
+        mask_expanded = \
+            tf.expand_dims(tf.cast(self.input_masks_ph, tf.float32), axis=2)
+        self.max_pool_emb = \
+            tf.reduce_max(encoder_layer - 1e9 * (1 - mask_expanded), axis=1)
         self.mean_pool_emb = \
-            tf.reduce_sum(encoder_layer * (1. - pad_mask), axis=1) /\
-            tf.expand_dims(tf.cast(self.subword_seq_lengths, tf.float32), axis=1)
+            tf.reduce_sum(encoder_layer * mask_expanded, axis=1) /\
+            tf.reduce_sum(mask_expanded, axis=1)
 
     def _init_placeholders(self) -> None:
         self.input_ids_ph = tf.placeholder(shape=(None, None),
