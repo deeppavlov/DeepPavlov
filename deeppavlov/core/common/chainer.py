@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import pickle
+from inspect import isclass
 from itertools import islice
 from logging import getLogger
 from types import FunctionType
@@ -302,7 +303,8 @@ class Chainer(Component):
     def serialize(self) -> bytes:
         data = []
         for in_params, out_params, component in self.train_pipe:
-            data.append(component.serialize())
+            serialized = component.serialize() if isclass(component) else None
+            data.append(serialized)
         return pickle.dumps(data, protocol=4)
 
     def deserialize(self, data: bytes) -> None:
