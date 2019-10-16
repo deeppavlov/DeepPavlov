@@ -21,6 +21,8 @@ We have trained BERT-base model for other languages and domains:
 -  SlavicBERT, Slavic (bg, cs, pl, ru), cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/bg_cs_pl_ru_cased_L-12_H-768_A-12_v1.tar.gz>`__
 -  Conversational BERT, English, cased, 12-layer, 768-hidden, 12-heads, 110M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12_v1.tar.gz>`__
 -  Conversational RuBERT, Russian, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/ru_conversational_cased_L-12_H-768_A-12.tar.gz>`__
+-  Sentence Multilingual BERT, 101 languages, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_multi_cased_L-12_H-768_A-12.tar.gz>`__
+-  Sentence RuBERT, Russian, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_ru_cased_L-12_H-768_A-12.tar.gz>`__
 
 RuBERT was trained on the Russian part of Wikipedia and news data. We used this training data to build vocabulary of Russian subtokens and took
 multilingual version of BERT-base as initialization for RuBERT [1]_.
@@ -34,6 +36,12 @@ English cased version of BERT-base as initialization for English Conversational 
 
 Conversational RuBERT was trained on OpenSubtitles [4]_, Dirty, Pikabu, and Social Media segment of Taiga corpus [7]_.
 We assembled new vocabulary for Conversational RuBERT model on this data and initialized model with RuBERT.
+
+Sentence Multilingual BERT was inited with Multilingual BERT and then fine-tuned on english MultiNLI [8]_ and
+on dev set of multilingual XNLI [9]_. The model is purposed to encode sentences in 101 languages of Multilingual BERT (mean pooling).
+
+Sentence RuBERT was inited with RuBERT and fine-tuned on SNLI [10]_ google-translated to russian and
+on russian part of XNLI dev set [9]_. The model is purposed to encode sentences in Russian.
 
 Here, in DeepPavlov, we made it easy to use pre-trained BERT for downstream tasks like classification, tagging, question answering and
 ranking. We also provide pre-trained models and examples on how to use BERT with DeepPavlov.
@@ -140,3 +148,6 @@ the :doc:`config </intro/configuration>` file must be changed to match new BERT 
 .. [5] Justine Zhang, Ravi Kumar, Sujith Ravi, Cristian Danescu-Niculescu-Mizil. Proceedings of NAACL, 2016.
 .. [6] J. Schler, M. Koppel, S. Argamon and J. Pennebaker (2006). Effects of Age and Gender on Blogging in Proceedings of 2006 AAAI Spring Symposium on Computational Approaches for Analyzing Weblogs.
 .. [7] Shavrina T., Shapovalova O. (2017) TO THE METHODOLOGY OF CORPUS CONSTRUCTION FOR MACHINE LEARNING: «TAIGA» SYNTAX TREE CORPUS AND PARSER. in proc. of “CORPORA2017”, international conference , Saint-Petersbourg, 2017.
+.. [8] Williams A., Nangia N. & Bowman S. (2017) A Broad-Coverage Challenge Corpus for Sentence Understanding through Inference. arXiv preprint arXiv:1704.05426
+.. [9] Williams A., Bowman S. (2018) XNLI: Evaluating Cross-lingual Sentence Representations. arXiv preprint arXiv:1809.05053
+.. [10] S. R. Bowman, G. Angeli, C. Potts, and C. D. Manning. (2015) A large annotated corpus for learning natural language inference. arXiv preprint arXiv:1508.05326
