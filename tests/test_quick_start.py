@@ -460,18 +460,21 @@ class TestQuickStart(object):
             with socket.socket(address_family, socket.SOCK_STREAM) as s:
                 s.connect(connect_arg)
                 s.sendall(dumped_socket_payload.encode('utf-8'))
+                s.settimeout(20)
                 data = b''
                 try:
                     while True:
                         buf = s.recv(1024)
-                        s.setblocking(False)
                         if buf:
                             data += buf
                         else:
                             break
-                except BlockingIOError:
+                except (BlockingIOError, socket.timeout):
                     pass
-            resp = json.loads(data)
+            try:
+                resp = json.loads(data)
+            except json.decoder.JSONDecodeError:
+                raise ValueError(f"Can't decode model response {data}")
             assert resp['status'] == 'OK', f"{socket_type} socket request returned status: {resp['status']}"\
                                            f" with {config_path}\n{logfile.getvalue().decode()}"
 
