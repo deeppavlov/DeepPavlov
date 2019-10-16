@@ -11,19 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from logging import getLogger
-from typing import List, Any, Tuple, Union, Dict
+from typing import List, Union, Dict
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.python.ops import array_ops
 from bert_dp.modeling import BertConfig, BertModel
 from bert_dp.optimization import AdamWeightDecayOptimizer
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.utils import zero_pad
-from deeppavlov.core.models.component import Component
 from deeppavlov.core.layers.tf_layers import bi_rnn
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
 

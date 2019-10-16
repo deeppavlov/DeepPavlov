@@ -37,7 +37,7 @@ Usage without DeepPavlov configuration files
 
 .. code:: python
 
-    from deeppavlov.skills import RASASkill
+    from deeppavlov.skills.rasa_skill import RASASkill
 
     rasa_skill_config = {
         'path_to_models': <put the path to your Rasa models>,

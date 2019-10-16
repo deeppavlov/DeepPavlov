@@ -22,7 +22,7 @@ Usage
 
     from deeppavlov import configs, build_model
     from deeppavlov.core.common.file import read_json
-    from deeppavlov.skills import DSLMeta
+    from deeppavlov.skills.dsl_skill import DSLMeta
 
 
     class DSLSkill(metaclass=DSLMeta):

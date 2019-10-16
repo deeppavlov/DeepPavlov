@@ -27,7 +27,7 @@ Usage
 
 .. code:: python
 
-    from deeppavlov.skills import AIMLSkill
+    from deeppavlov.skills.aiml_skill import AIMLSkill
 
     aiml_skill_config = {
         'positive_confidence': 0.66,
