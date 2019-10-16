@@ -9,7 +9,9 @@ We are publishing several pre-trained BERT models:
 * RuBERT for Russian language
 * Slavic BERT for Bulgarian, Czech, Polish, and Russian
 * Conversational BERT for informal English
-* and Conversational BERT for informal Russian
+* Conversational BERT for informal Russian
+* Sentence Multilingual BERT for encoding sentences in 101 languages
+* Sentence RuBERT for encoding sentences in Russian
 
 Description of these models is available in the :doc:`BERT section </features/models/bert>` of the docs.
 
@@ -24,17 +26,22 @@ Downloads
 
 The models can be run with the original `BERT repo <https://github.com/google-research/bert>`_ code. The download links are:
 
-+------------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| Description            | Model parameters                                   | Download link                                                                                                                                    |
-+========================+====================================================+==================================================================================================================================================+
-| RuBERT                 | vocab size = 120K, parameters = 180M, size = 632MB | `[rubert_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v2.tar.gz>`__                      |
-+------------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| Slavic BERT            | vocab size = 120K, parameters = 180M, size = 632MB | `[bg_cs_pl_ru_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/bg_cs_pl_ru_cased_L-12_H-768_A-12_v1.tar.gz>`__            |
-+------------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| Conversational BERT    | vocab size = 30K, parameters = 110M, size = 385MB  | `[conversational_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12_v1.tar.gz>`__      |
-+------------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| Conversational RuBERT  | vocab size = 120K, parameters = 180M, size = 630MB | `[conversational_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/ru_conversational_cased_L-12_H-768_A-12.tar.gz>`__      |
-+------------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
++----------------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
+| Description                | Model parameters                                   | Download link                                                                                                                                    |
++============================+====================================================+==================================================================================================================================================+
+| RuBERT                     | vocab size = 120K, parameters = 180M, size = 632MB | `[rubert_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v2.tar.gz>`__                      |
++----------------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
+| Slavic BERT                | vocab size = 120K, parameters = 180M, size = 632MB | `[bg_cs_pl_ru_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/bg_cs_pl_ru_cased_L-12_H-768_A-12_v1.tar.gz>`__            |
++----------------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
+| Conversational BERT        | vocab size = 30K, parameters = 110M, size = 385MB  | `[conversational_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12_v1.tar.gz>`__      |
++----------------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
+| Conversational RuBERT      | vocab size = 120K, parameters = 180M, size = 630MB | `[conversational_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/ru_conversational_cased_L-12_H-768_A-12.tar.gz>`__      |
++----------------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
+| Sentence Multilingual BERT | vocab size = 120K, parameters = 180M, size = 630MB | `[sentence_multi_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_multi_cased_L-12_H-768_A-12.tar.gz>`__         |
++----------------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
+| Sentence RuBERT            | vocab size = 120K, parameters = 180M, size = 630MB | `[sentence_ru_cased_L-12_H-768_A-12] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_ru_cased_L-12_H-768_A-12.tar.gz>`__               |
++----------------------------+----------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
+
 
 ELMo
 ----
