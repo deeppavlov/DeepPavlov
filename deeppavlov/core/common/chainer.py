@@ -310,4 +310,5 @@ class Chainer(Component):
     def deserialize(self, data: bytes) -> None:
         data = pickle.loads(data)
         for in_params, out_params, component in self.train_pipe:
-            component.deserialize(data)
+            if isclass(component):
+                component.deserialize(data)
