@@ -70,7 +70,6 @@ class DSLMeta(ABCMeta):
         # FAQ handlers
         for attribute in namespace.values():
             if isinstance(attribute, FAQHandler):
-                attribute.add_faq_dict(attribute.model_config['dataset_reader']['data'])
                 attribute.train()
                 handlers.append(attribute)
 
@@ -245,7 +244,7 @@ class DSLMeta(ABCMeta):
 
     @staticmethod
     def faq_handler(faq_dict: dict,
-                    faq_model_config_path: str = Path(deeppavlov.__path__[0]) / "configs/faq/fasttext_tfidf_autofaq.json",
+                    faq_model_config_path: Path = deeppavlov.configs.faq.fasttext_tfidf_autofaq,
                     score_threshold: float = 0.5,
                     top_n: int = 3,
                     state: Optional[str] = None,
@@ -304,7 +303,8 @@ class DSLMeta(ABCMeta):
             model_config['dataset_reader']['data'] = faq_dict
 
             for pipe_step in model_config['chainer']['pipe']:
-                if 'class_name' in pipe_step and pipe_step['class_name'] == 'cos_sim_classifier':
+                if 'class_name' in pipe_step and (pipe_step['class_name'] == 'cos_sim_classifier' or
+                                                  pipe_step['class_name'] == 'proba2labels'):
                     pipe_step['top_n'] = top_n
 
             return FAQHandler(func, model_config, score_threshold, state, context_condition, priority)
