@@ -465,11 +465,12 @@ class TestQuickStart(object):
                 try:
                     while True:
                         buf = s.recv(1024)
+                        s.setblocking(False)
                         if buf:
                             data += buf
                         else:
                             break
-                except (BlockingIOError, socket.timeout):
+                except BlockingIOError:
                     pass
             try:
                 resp = json.loads(data)
