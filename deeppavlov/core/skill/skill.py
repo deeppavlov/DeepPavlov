@@ -24,9 +24,10 @@ class Skill(Component, metaclass=ABCMeta):
     Skill is a DeepPavlov component, which provides handling dialog state,
     dialog history and rich content.
     """
+
     @abstractmethod
     def __call__(self, utterances_batch: list, history_batch: list,
-                 states_batch: Optional[list]=None) -> Union[Tuple[list, list], Tuple[list, list, Optional[list]]]:
+                 states_batch: Optional[list] = None) -> Union[Tuple[list, list], Tuple[list, list, Optional[list]]]:
         """Returns skill inference result.
 
         Returns batches of skill inference results, estimated confidence

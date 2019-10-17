@@ -1,19 +1,19 @@
-import uuid
 import asyncio
 import logging
+import uuid
+from functools import reduce
 from pathlib import Path
 from typing import Tuple, Optional, List
-from functools import reduce
+
+from rasa.cli.utils import get_validated_path
+from rasa.constants import DEFAULT_MODELS_PATH
+from rasa.core.agent import Agent
+from rasa.core.channels import CollectingOutputChannel
+from rasa.core.channels import UserMessage
+from rasa.model import get_model
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.skill.skill import Skill
-
-from rasa.core.agent import Agent
-from rasa.core.channels import UserMessage
-from rasa.core.channels import CollectingOutputChannel
-from rasa.model import get_model
-from rasa.cli.utils import get_validated_path
-from rasa.constants import DEFAULT_MODELS_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -52,8 +52,8 @@ class RASASkill(Skill):
         logger.info(f"path to RASA models is: `{self.path_to_models}`")
 
     def __call__(self, utterances_batch: List[str],
-                 history_batch: Optional[List]=None,
-                 states_batch: Optional[List]=None) -> Tuple[List[str], List[float], list]:
+                 history_batch: Optional[List] = None,
+                 states_batch: Optional[List] = None) -> Tuple[List[str], List[float], list]:
         """Returns skill inference result.
 
         Returns batches of skill inference results, estimated confidence

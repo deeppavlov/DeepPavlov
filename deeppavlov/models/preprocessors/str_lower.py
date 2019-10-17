@@ -23,6 +23,7 @@ class StrLower(Component):
     """Component for converting strings to lowercase at any level of lists nesting
 
     """
+
     def __init__(self, *args, **kwargs):
         pass
 

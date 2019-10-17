@@ -23,7 +23,7 @@ class ApiRouter(Component):
         n_workers: The maximum number of subprocesses to run
     """
 
-    def __init__(self, api_requesters: List[ApiRequester], n_workers: int=1, *args, **kwargs):
+    def __init__(self, api_requesters: List[ApiRequester], n_workers: int = 1, *args, **kwargs):
         self.api_requesters = api_requesters
         self.n_workers = n_workers
 

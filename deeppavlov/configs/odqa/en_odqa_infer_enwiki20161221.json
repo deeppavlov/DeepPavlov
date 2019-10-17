@@ -30,20 +30,31 @@
       },
       {
         "class_name": "document_chunker",
-        "in": ["tfidf_doc_text"],
-        "out": ["chunks"],
+        "in": [
+          "tfidf_doc_text"
+        ],
+        "out": [
+          "chunks"
+        ],
         "flatten_result": true,
         "paragraphs": true
       },
       {
         "class_name": "string_multiplier",
-        "in": ["question_raw", "chunks"],
-        "out":["questions"]
+        "in": [
+          "question_raw",
+          "chunks"
+        ],
+        "out": [
+          "questions"
+        ]
       },
       {
         "class_name": "logit_ranker",
         "batch_size": 10,
-        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/multi_squad_noans_infer.json"},
+        "squad_model": {
+          "config_path": "{CONFIGS_PATH}/squad/multi_squad_noans_infer.json"
+        },
         "sort_noans": true,
         "in": [
           "chunks",

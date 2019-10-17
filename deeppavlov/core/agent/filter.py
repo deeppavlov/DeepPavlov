@@ -22,6 +22,7 @@ class Filter(Component, metaclass=ABCMeta):
     which is used in Agent to select utterances from incoming batch
     to be processed for each Agent skill.
     """
+
     @abstractmethod
     def __call__(self, utterances_batch: list, history_batch: list) -> list:
         """Returns skills-utterances application matrix.

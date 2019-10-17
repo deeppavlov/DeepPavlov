@@ -8,26 +8,38 @@
     "seed": 42
   },
   "chainer": {
-    "in": ["x"],
-    "in_y": ["y"],
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
     "pipe": [
       {
         "id": "classes_vocab",
         "class_name": "simple_vocab",
-        "fit_on": ["y"],
+        "fit_on": [
+          "y"
+        ],
         "save_path": "{MODEL_PATH}/classes.dict",
         "load_path": "{MODEL_PATH}/classes.dict",
         "in": "y",
         "out": "y_ids",
-        "special_tokens": ["<UNK>"]
+        "special_tokens": [
+          "<UNK>"
+        ]
       },
       {
         "class_name": "bert_preprocessor",
         "vocab_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/vocab.txt",
         "do_lower_case": false,
         "max_seq_length": 64,
-        "in": ["x"],
-        "out": ["bert_features"]
+        "in": [
+          "x"
+        ],
+        "out": [
+          "bert_features"
+        ]
       },
       {
         "in": "y_ids",
@@ -51,9 +63,15 @@
         "learning_rate": 2e-05,
         "learning_rate_drop_patience": 3,
         "learning_rate_drop_div": 2.0,
-        "in": ["bert_features"],
-        "in_y": ["y_onehot"],
-        "out": ["y_pred_probas"]
+        "in": [
+          "bert_features"
+        ],
+        "in_y": [
+          "y_onehot"
+        ],
+        "out": [
+          "y_pred_probas"
+        ]
       },
       {
         "in": "y_pred_probas",
@@ -72,17 +90,26 @@
         "out": "y_pred_onehot"
       }
     ],
-    "out": ["y_pred_probas", "y_pred_labels"]
+    "out": [
+      "y_pred_probas",
+      "y_pred_labels"
+    ]
   },
   "train": {
     "metrics": [
       {
         "name": "sets_accuracy",
-        "inputs": ["y", "y_pred_labels"]
+        "inputs": [
+          "y",
+          "y_pred_labels"
+        ]
       },
       {
         "name": "roc_auc",
-        "inputs": ["y_onehot", "y_pred_probas"]
+        "inputs": [
+          "y_onehot",
+          "y_pred_probas"
+        ]
       }
     ],
     "show_examples": false,
@@ -123,7 +150,6 @@
         "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/intents_dstc2_bert_v0.tar.gz",
         "subdir": "{MODELS_PATH}/classifiers"
       }
-
     ]
   }
 }

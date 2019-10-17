@@ -10,8 +10,12 @@
     "seed": 243
   },
   "chainer": {
-    "in": ["x"],
-    "in_y": ["y"],
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
     "pipe": [
       {
         "id": "preproc",
@@ -19,9 +23,15 @@
         "use_matrix": false,
         "num_ranking_samples": 500,
         "max_sequence_length": 200,
-        "fit_on": ["x"],
-        "in": ["x"],
-        "out": ["x_proc"],
+        "fit_on": [
+          "x"
+        ],
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_proc"
+        ],
         "sent_vocab": {
           "id": "siam_sent_vocab",
           "class_name": "simple_vocab",
@@ -72,9 +82,15 @@
         "preprocess": "#preproc.__call__"
       },
       {
-        "in": ["x_proc"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
+        "in": [
+          "x_proc"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "y_predicted"
+        ],
         "class_name": "siamese_predictor",
         "model": "#model",
         "batch_size": "#model.batch_size",
@@ -83,14 +99,19 @@
         "preproc_func": "#preproc.__call__"
       }
     ],
-    "out": ["y_predicted"]
+    "out": [
+      "y_predicted"
+    ]
   },
   "train": {
     "epochs": 200,
     "batch_size": 256,
     "pytest_max_batches": 2,
     "train_metrics": [],
-    "metrics": ["r@1_insQA", "rank_response"],
+    "metrics": [
+      "r@1_insQA",
+      "rank_response"
+    ],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
     "log_every_n_batches": 24,

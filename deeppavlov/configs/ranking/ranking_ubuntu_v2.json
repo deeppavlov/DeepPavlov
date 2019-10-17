@@ -8,8 +8,12 @@
     "seed": 243
   },
   "chainer": {
-    "in": ["x"],
-    "in_y": ["y"],
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
     "pipe": [
       {
         "id": "preproc",
@@ -17,9 +21,15 @@
         "use_matrix": true,
         "num_ranking_samples": 10,
         "max_sequence_length": 50,
-        "fit_on": ["x"],
-        "in": ["x"],
-        "out": ["x_proc"],
+        "fit_on": [
+          "x"
+        ],
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_proc"
+        ],
         "sent_vocab": {
           "id": "siam_sent_vocab",
           "class_name": "simple_vocab",
@@ -48,9 +58,15 @@
         "vocab": "#siam_vocab"
       },
       {
-        "in": ["x_proc"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
+        "in": [
+          "x_proc"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "y_predicted"
+        ],
         "class_name": "bilstm_nn",
         "len_vocab": "#siam_vocab.len",
         "use_matrix": "#preproc.use_matrix",
@@ -67,14 +83,19 @@
         "load_path": "{MODELS_PATH}/ubuntu_v2_model/model_weights.h5"
       }
     ],
-    "out": ["y_predicted"]
+    "out": [
+      "y_predicted"
+    ]
   },
   "train": {
     "epochs": 200,
     "batch_size": 256,
     "pytest_max_batches": 2,
     "train_metrics": [],
-    "metrics": ["r@1", "rank_response"],
+    "metrics": [
+      "r@1",
+      "rank_response"
+    ],
     "validation_patience": 10,
     "val_every_n_epochs": 1,
     "log_every_n_batches": 1000,

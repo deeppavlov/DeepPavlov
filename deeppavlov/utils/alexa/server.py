@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import asyncio
+import json
 from datetime import timedelta
 from logging import getLogger
 from pathlib import Path
@@ -20,7 +21,6 @@ from queue import Queue
 from typing import Union, Optional
 
 import uvicorn
-import json
 from fastapi import FastAPI
 from starlette.responses import JSONResponse
 
@@ -67,6 +67,7 @@ def run_alexa_default_agent(model_config: Union[str, Path, dict],
         default_skill_wrap: Wrap with default skill flag.
 
     """
+
     def get_default_agent() -> DefaultAgent:
         model = build_model(model_config)
         skill = DefaultStatelessSkill(model) if default_skill_wrap else model

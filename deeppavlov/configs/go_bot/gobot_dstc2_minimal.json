@@ -7,20 +7,34 @@
     "class_name": "dialog_iterator"
   },
   "chainer": {
-    "in": ["x"],
-    "in_y": ["y"],
-    "out": ["y_predicted"],
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
+    "out": [
+      "y_predicted"
+    ],
     "pipe": [
       {
         "class_name": "deeppavlov.models.go_bot.wrapper:DialogComponentWrapper",
-        "component": { "class_name": "split_tokenizer" },
-        "in": ["x"],
-        "out": ["x_tokens"]
+        "component": {
+          "class_name": "split_tokenizer"
+        },
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_tokens"
+        ]
       },
       {
         "id": "word_vocab",
         "class_name": "simple_vocab",
-        "fit_on": ["x_tokens"],
+        "fit_on": [
+          "x_tokens"
+        ],
         "save_path": "{MODEL_PATH}/word.dict",
         "load_path": "{MODEL_PATH}/word.dict"
       },
@@ -28,9 +42,15 @@
         "class_name": "go_bot",
         "load_path": "{MODEL_PATH}/model",
         "save_path": "{MODEL_PATH}/model",
-        "in": ["x"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
+        "in": [
+          "x"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "y_predicted"
+        ],
         "main": true,
         "debug": false,
         "learning_rate": 0.003,
@@ -62,7 +82,13 @@
         },
         "tracker": {
           "class_name": "featurized_tracker",
-          "slot_names": ["pricerange", "this", "area", "food", "name"]
+          "slot_names": [
+            "pricerange",
+            "this",
+            "area",
+            "food",
+            "name"
+          ]
         }
       }
     ]
@@ -70,11 +96,11 @@
   "train": {
     "epochs": 200,
     "batch_size": 4,
-
-    "metrics": ["per_item_dialog_accuracy"],
+    "metrics": [
+      "per_item_dialog_accuracy"
+    ],
     "validation_patience": 10,
     "val_every_n_batches": 15,
-
     "log_every_n_batches": 15,
     "log_on_k_batches": -1,
     "show_examples": false,

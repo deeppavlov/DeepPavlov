@@ -52,7 +52,6 @@ def run_ms_bf_default_agent(model_config: Union[str, Path, dict],
                             ssl_key: Optional[str] = None,
                             ssl_cert: Optional[str] = None,
                             default_skill_wrap: bool = True) -> None:
-
     def get_default_agent() -> DefaultAgent:
         model = build_model(model_config)
         skill = DefaultStatelessSkill(model) if default_skill_wrap else model
@@ -79,7 +78,6 @@ def run_ms_bot_framework_server(agent_generator: callable,
                                 https: bool = False,
                                 ssl_key: Optional[str] = None,
                                 ssl_cert: Optional[str] = None) -> None:
-
     server_config_path = Path(get_settings_path(), SERVER_CONFIG_FILENAME).resolve()
     server_params = read_json(server_config_path)
 

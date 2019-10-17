@@ -47,13 +47,14 @@ class DefaultAgent(Agent):
         skills_processor: Initiated agent processor.
         skills_filter: Initiated agent filter.
     """
+
     def __init__(self, skills: List[Component], skills_processor: Optional[Processor] = None,
                  skills_filter: Optional[Filter] = None, *args, **kwargs) -> None:
         super(DefaultAgent, self).__init__(skills=skills)
         self.skills_filter = skills_filter or TransparentFilter(len(skills))
         self.skills_processor = skills_processor or HighestConfidenceSelector()
 
-    def _call(self, utterances_batch: list, utterances_ids: Optional[list]=None) -> list:
+    def _call(self, utterances_batch: list, utterances_ids: Optional[list] = None) -> list:
         """
         Processes batch of utterances and returns corresponding responses batch.
 

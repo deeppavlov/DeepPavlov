@@ -28,8 +28,8 @@ from deeppavlov.core.agent import Agent
 from deeppavlov.core.agent.rich_content import RichMessage
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
-from deeppavlov.utils.server.server import SSLConfig, get_server_params, get_ssl_params, redirect_root_do_docs
 from deeppavlov.utils.alice.request_parameters import data_body
+from deeppavlov.utils.server.server import SSLConfig, get_server_params, get_ssl_params, redirect_root_do_docs
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 
@@ -105,7 +105,6 @@ def start_agent_server(agent: Agent,
                        ssl_key: Optional[str] = None,
                        ssl_cert: Optional[str] = None,
                        ssl_config: Optional[SSLConfig] = None) -> None:
-
     if ssl_key and ssl_cert and ssl_config:
         raise ValueError('ssl_key, ssl_cert, ssl_config was assigned at the same time. Please, use either'
                          'ssl_config or ssl_key and ssl_cert')

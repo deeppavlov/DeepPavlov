@@ -214,20 +214,20 @@ PARAMS = {
     },
     "seq2seq_go_bot": {
         ("seq2seq_go_bot/bot_kvret_train.json", "seq2seq_go_bot", ('TI',)):
-        [
-           ("will it snow on tuesday?",
-            "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
-            "",
-            "",
-            "",
-            None)
-        ],
+            [
+                ("will it snow on tuesday?",
+                 "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
+                 "",
+                 "",
+                 "",
+                 None)
+            ],
         ("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ('IP',)):
-        [
-           ("will it snow on tuesday?",
-            "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
-            None)
-        ]
+            [
+                ("will it snow on tuesday?",
+                 "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
+                 None)
+            ]
     },
     "odqa": {
         ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -373,7 +373,7 @@ class TestQuickStart(object):
                 p.expect(">> ")
                 if expected_response is not None:
                     actual_response = p.readline().decode().strip()
-                    assert expected_response == actual_response,\
+                    assert expected_response == actual_response, \
                         f"Error in interacting with {model_directory} ({config_path}): {query}"
 
             p.expect("::")
@@ -472,7 +472,7 @@ class TestQuickStart(object):
                 except BlockingIOError:
                     pass
             resp = json.loads(data)
-            assert resp['status'] == 'OK', f"{socket_type} socket request returned status: {resp['status']}"\
+            assert resp['status'] == 'OK', f"{socket_type} socket request returned status: {resp['status']}" \
                                            f" with {config_path}\n{logfile.getvalue().decode()}"
 
         except pexpect.exceptions.EOF:
@@ -542,7 +542,7 @@ class TestQuickStart(object):
                 config_path = str(test_configs_path.joinpath(conf_file))
                 install_config(config_path)
                 deep_download(config_path)
-            shutil.rmtree(str(model_path),  ignore_errors=True)
+            shutil.rmtree(str(model_path), ignore_errors=True)
 
             logfile = io.BytesIO(b'')
             p = pexpect.popen_spawn.PopenSpawn(sys.executable + " -m deeppavlov train " + str(c), timeout=None,
@@ -569,7 +569,7 @@ def test_crossvalidation():
 
     install_config(c)
     deep_download(c)
-    shutil.rmtree(str(model_path),  ignore_errors=True)
+    shutil.rmtree(str(model_path), ignore_errors=True)
 
     logfile = io.BytesIO(b'')
     p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov crossval {c} --folds 2",
@@ -594,7 +594,7 @@ def test_param_search():
     install_config(c)
     deep_download(c)
 
-    shutil.rmtree(str(model_path),  ignore_errors=True)
+    shutil.rmtree(str(model_path), ignore_errors=True)
 
     logfile = io.BytesIO(b'')
     p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov.paramsearch {c} --folds 2",

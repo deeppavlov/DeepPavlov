@@ -23,7 +23,8 @@ class ApiRequester(Component):
         param_names: list of parameter names for API requests.
         debatchify: if True, single instances will be sent to the API endpoint instead of batches.
     """
-    def __init__(self, url: str, out: [int, list], param_names: [list, tuple]=(), debatchify: bool=False,
+
+    def __init__(self, url: str, out: [int, list], param_names: [list, tuple] = (), debatchify: bool = False,
                  *args, **kwargs):
         self.url = url
         self.param_names = param_names

@@ -54,7 +54,6 @@ class SMNNetwork(TensorflowBaseMatchingModel):
                  *args,
                  **kwargs):
 
-
         self.max_sentence_len = max_sequence_length
         self.word_embedding_size = embedding_dim
         self.trainable = trainable_embeddings

@@ -13,13 +13,13 @@ _tf_re = re.compile(r'\s*tensorflow\s*([<=>;]|$)')
 
 
 def install(*packages):
-    if any(_tf_re.match(package) for package in packages)\
+    if any(_tf_re.match(package) for package in packages) \
             and b'tensorflow-gpu' in subprocess.check_output([sys.executable, '-m', 'pip', 'freeze'],
                                                              env=os.environ.copy()):
         log.warn('found tensorflow-gpu installed, so upgrading it instead of tensorflow')
         packages = [_tf_re.sub(r'tensorflow-gpu\1', package) for package in packages]
     result = subprocess.check_call([sys.executable, '-m', 'pip', 'install',
-                                   *[re.sub(r'\s', '', package) for package in packages]],
+                                    *[re.sub(r'\s', '', package) for package in packages]],
                                    env=os.environ.copy())
     return result
 

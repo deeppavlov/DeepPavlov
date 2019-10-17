@@ -26,6 +26,7 @@ class PlainText(RichControl):
     Attributes:
         content: Text of the message.
     """
+
     def __init__(self, text: str) -> None:
         super(PlainText, self).__init__('plain_text')
         self.content: str = text
@@ -42,7 +43,7 @@ class PlainText(RichControl):
         self.control_json['content'] = self.content
         return self.control_json
 
-    def ms_bot_framework(self)-> dict:
+    def ms_bot_framework(self) -> dict:
         """Returns MS Bot Framework compatible state of the PlainText instance.
 
         Creating MS Bot Framework activity blank with "text" field populated.
@@ -91,6 +92,7 @@ class Button(RichControl):
         name: Displayed name of the button.
         callback: Plain text returned as callback when button pressed.
     """
+
     def __init__(self, name: str, callback: str) -> None:
         super(Button, self).__init__('button')
         self.name: str = name
@@ -136,7 +138,8 @@ class ButtonsFrame(RichControl):
         text: Text displayed with embedded buttons.
         content: Container with Button objects.
     """
-    def __init__(self, text: Optional[str]=None) -> None:
+
+    def __init__(self, text: Optional[str] = None) -> None:
         super(ButtonsFrame, self).__init__('buttons_frame')
         self.text: [str, None] = text
         self.content: list = []

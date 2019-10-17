@@ -21,7 +21,7 @@ from tensorflow.python.ops import init_ops
 
 
 class KBAttention(base.Layer):
-# TODO: update class doc
+    # TODO: update class doc
     """Densely-connected layer class.
     Arguments:
         units: Integer or Long, dimensionality of the output space.
@@ -104,10 +104,10 @@ class KBAttention(base.Layer):
             "_reuse": reuse
         }
         # print("KB shape =", self.kb_input_shape)
-    
+
     def build(self, input_shape):
         # if in_shape[:-1] != self.kb_inputs.shape 
-# TODO: check input shape
+        # TODO: check input shape
         # print("in build")
         in_shape = input_shape[:1].concatenate(self.kb_input_shape)
         in_shape = in_shape[:-1].concatenate(in_shape[-1] + input_shape[-1])
@@ -120,7 +120,7 @@ class KBAttention(base.Layer):
             layer = tf.layers.Dense(size, name=name, _scope=name, **self.dense_params)
             layer.build(in_shape)
             in_shape = layer.compute_output_shape(in_shape)
- 
+
             self.layers.append(layer)
 
         # print("input_shape =", input_shape)
@@ -131,10 +131,10 @@ class KBAttention(base.Layer):
         self.output_layer.build(input_shape)
         # print("build = True")
         self.built = True
-      
+
     def call(self, inputs):
         # print("in call")
-# TODO: check input dtype
+        # TODO: check input dtype
 
         # Tile kb_inputs
         kb_inputs = self.kb_inputs

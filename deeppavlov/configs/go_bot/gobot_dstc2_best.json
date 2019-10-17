@@ -7,19 +7,33 @@
     "class_name": "dialog_iterator"
   },
   "chainer": {
-    "in": ["x"],
-    "in_y": ["y"],
-    "out": ["y_predicted"],
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
+    "out": [
+      "y_predicted"
+    ],
     "pipe": [
       {
         "class_name": "deeppavlov.models.go_bot.wrapper:DialogComponentWrapper",
-        "component": { "class_name": "split_tokenizer" },
-        "in": ["x"],
-        "out": ["x_tokens"]
+        "component": {
+          "class_name": "split_tokenizer"
+        },
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_tokens"
+        ]
       },
       {
         "id": "token_vocab",
-        "fit_on": ["x_tokens"],
+        "fit_on": [
+          "x_tokens"
+        ],
         "class_name": "simple_vocab",
         "save_path": "{MODELS_PATH}/gobot_dstc2_best/word.dict",
         "load_path": "{MODELS_PATH}/gobot_dstc2_best/word.dict"
@@ -28,16 +42,24 @@
         "id": "restaurant_database",
         "class_name": "sqlite_database",
         "table_name": "mytable",
-        "primary_keys": ["name"],
+        "primary_keys": [
+          "name"
+        ],
         "save_path": "{DOWNLOADS_PATH}/dstc2/resto.sqlite"
       },
       {
         "class_name": "go_bot",
         "load_path": "{MODELS_PATH}/gobot_dstc2_best/model",
         "save_path": "{MODELS_PATH}/gobot_dstc2_best/model",
-        "in": ["x"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
+        "in": [
+          "x"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "y_predicted"
+        ],
         "main": true,
         "debug": false,
         "learning_rate": 3e-3,
@@ -56,7 +78,7 @@
           "action_as_key": true,
           "intent_as_key": true,
           "max_num_tokens": 100,
-          "projected_align": false 
+          "projected_align": false
         },
         "word_vocab": "#token_vocab",
         "template_path": "{DOWNLOADS_PATH}/dstc2/dstc2-templates.txt",
@@ -81,7 +103,13 @@
         },
         "tracker": {
           "class_name": "featurized_tracker",
-          "slot_names": ["pricerange", "this", "area", "food", "name"]
+          "slot_names": [
+            "pricerange",
+            "this",
+            "area",
+            "food",
+            "name"
+          ]
         }
       }
     ]
@@ -89,13 +117,12 @@
   "train": {
     "epochs": 100,
     "batch_size": 8,
-
     "pytest_max_batches": 2,
-
-    "metrics": ["per_item_dialog_accuracy"],
+    "metrics": [
+      "per_item_dialog_accuracy"
+    ],
     "validation_patience": 15,
     "val_every_n_batches": 15,
-
     "log_every_n_batches": 15,
     "show_examples": false,
     "evaluation_targets": [

@@ -1,14 +1,11 @@
 import sys
 from pathlib import Path
-from typing import List, Dict, Union, Optional
+from typing import List, Union, Optional
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import expand_path, parse_config
-from deeppavlov.core.common.params import from_params
-from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
-from deeppavlov.dataset_iterators.morphotagger_iterator import MorphoTaggerDatasetIterator
 from deeppavlov.dataset_readers.morphotagging_dataset_reader import read_infile
 from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag
 
@@ -98,7 +95,7 @@ class TagOutputPrettifier(Component):
 
     def _make_format_string(self) -> None:
         if self.format_mode == "basic":
-            self.format_string =  "{}\t{}\t{}\t{}"
+            self.format_string = "{}\t{}\t{}\t{}"
         elif self.format_mode.lower() in ["conllu", "ud"]:
             self.format_string = "{}\t{}\t_\t{}\t_\t{}\t_\t_\t_\t_"
         else:

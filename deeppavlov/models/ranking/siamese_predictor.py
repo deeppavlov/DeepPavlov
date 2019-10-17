@@ -24,6 +24,7 @@ from deeppavlov.models.ranking.keras_siamese_model import SiameseModel
 
 log = getLogger(__name__)
 
+
 @register('siamese_predictor')
 class SiamesePredictor(Component):
     """The class for ranking or paraphrase identification using the trained siamese network  in the ``interact`` mode.
@@ -77,7 +78,7 @@ class SiamesePredictor(Component):
             if not self.attention:
                 self._build_response_embeddings()
 
-    def __call__(self, batch: Iterable[List[np.ndarray]]) -> List[Union[List[str],str]]:
+    def __call__(self, batch: Iterable[List[np.ndarray]]) -> List[Union[List[str], str]]:
         context = next(batch)
         try:
             next(batch)
@@ -85,13 +86,12 @@ class SiamesePredictor(Component):
         except StopIteration:
             pass
 
-
         if self.ranking:
             if len(context) == self.num_context_turns:
                 scores = []
                 if self.attention:
                     for i in range(len(self.preproc_responses) // self.batch_size + 1):
-                        responses = self.preproc_responses[i*self.batch_size: (i+1)*self.batch_size]
+                        responses = self.preproc_responses[i * self.batch_size: (i + 1) * self.batch_size]
                         b = [context + el for el in responses]
                         b = self.model._make_batch(b)
                         sc = self.model._predict_on_batch(b)
@@ -126,7 +126,7 @@ class SiamesePredictor(Component):
     def _build_response_embeddings(self) -> None:
         resp_vecs = []
         for i in range(len(self.preproc_responses) // self.batch_size + 1):
-            resp_preproc = self.preproc_responses[i*self.batch_size: (i+1)*self.batch_size]
+            resp_preproc = self.preproc_responses[i * self.batch_size: (i + 1) * self.batch_size]
             resp_preproc = self.model._make_batch(resp_preproc)
             resp_preproc = resp_preproc
             resp_vecs.append(self.model._predict_response_on_batch(resp_preproc))
@@ -135,7 +135,7 @@ class SiamesePredictor(Component):
     def _build_preproc_responses(self) -> None:
         responses = list(self.responses.values())
         for i in range(len(responses) // self.batch_size + 1):
-            el = self.preproc_func(responses[i*self.batch_size: (i+1)*self.batch_size])
+            el = self.preproc_func(responses[i * self.batch_size: (i + 1) * self.batch_size])
             self.preproc_responses += list(el)
 
     def rebuild_responses(self, candidates) -> None:
@@ -144,6 +144,3 @@ class SiamesePredictor(Component):
         self.preproc_responses = list()
         self.responses = {idx: sentence for idx, sentence in enumerate(candidates)}
         self._build_preproc_responses()
-
-
-

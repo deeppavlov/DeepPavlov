@@ -33,6 +33,7 @@ log = getLogger(__name__)
 
 ValidatedCert = namedtuple('ValidatedCert', ['cert', 'expiration_timestamp'])
 
+
 # TODO: make common superclass with Bot from ms_bot_framework
 class Bot(Thread):
     """Contains agent (if not multi-instanced), conversations, validates Alexa requests and routes them to conversations.
@@ -53,6 +54,7 @@ class Bot(Thread):
         agent_generator: Callback which generates DefaultAgent instance with alexa skill.
         timer: Timer which triggers periodical certificates with expired validation cleanup.
     """
+
     def __init__(self, agent_generator: callable, config: dict, input_queue: Queue, output_queue: Queue) -> None:
         super(Bot, self).__init__()
         self.config = config

@@ -31,12 +31,13 @@ class DefaultStatelessSkill(Skill):
     Attributes:
         model: DeepPavlov model to be wrapped into default skill instance.
     """
-    def __init__(self, model: Chainer, lang: str='en', *args, **kwargs) -> None:
+
+    def __init__(self, model: Chainer, lang: str = 'en', *args, **kwargs) -> None:
         self.model = model
         self.proposal: str = proposals[lang]
 
     def __call__(self, utterances_batch: list, history_batch: list,
-                 states_batch: Optional[list]=None) -> Tuple[list, list, list]:
+                 states_batch: Optional[list] = None) -> Tuple[list, list, list]:
         """Returns skill inference result.
 
         Returns batches of skill inference results, estimated confidence

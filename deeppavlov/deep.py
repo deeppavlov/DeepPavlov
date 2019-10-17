@@ -49,7 +49,7 @@ parser.add_argument("-d", "--download", action="store_true", help="download mode
 
 parser.add_argument("--folds", help="number of folds", type=int, default=5)
 
-parser.add_argument("-t", "--token", default=None,  help="telegram bot token", type=str)
+parser.add_argument("-t", "--token", default=None, help="telegram bot token", type=str)
 parser.add_argument("-i", "--ms-id", default=None, help="microsoft bot framework app id", type=str)
 parser.add_argument("-s", "--ms-secret", default=None, help="microsoft bot framework app secret", type=str)
 
@@ -84,7 +84,7 @@ def main():
     stateful = args.stateful
 
     if args.mode == 'train':
-        train_evaluate_model_from_config(pipeline_config_path, recursive=args.recursive, 
+        train_evaluate_model_from_config(pipeline_config_path, recursive=args.recursive,
                                          start_epoch_num=args.start_epoch_num)
     elif args.mode == 'evaluate':
         train_evaluate_model_from_config(pipeline_config_path, to_train=False, start_epoch_num=args.start_epoch_num)

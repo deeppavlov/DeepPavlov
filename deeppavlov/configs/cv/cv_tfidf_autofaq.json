@@ -63,7 +63,9 @@
   },
   "train": {
     "metrics": [
-      {"name": "accuracy"}
+      {
+        "name": "accuracy"
+      }
     ],
     "evaluation_targets": [
       "valid"

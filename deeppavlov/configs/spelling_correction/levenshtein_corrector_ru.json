@@ -1,18 +1,28 @@
 {
-  "chainer":{
-    "in": ["x"],
+  "chainer": {
+    "in": [
+      "x"
+    ],
     "pipe": [
       {
         "class_name": "str_lower",
         "id": "lower",
-        "in": ["x"],
-        "out": ["x_lower"]
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_lower"
+        ]
       },
       {
         "class_name": "nltk_moses_tokenizer",
         "id": "tokenizer",
-        "in": ["x_lower"],
-        "out": ["x_tokens"]
+        "in": [
+          "x_lower"
+        ],
+        "out": [
+          "x_tokens"
+        ]
       },
       {
         "id": "vocab",
@@ -21,24 +31,38 @@
         "load_path": "{DOWNLOADS_PATH}/vocabs/russian_words_vocab.dict"
       },
       {
-        "in": ["x_tokens"],
-        "out": ["tokens_candidates"],
+        "in": [
+          "x_tokens"
+        ],
+        "out": [
+          "tokens_candidates"
+        ],
         "class_name": "deeppavlov.models.spelling_correction.levenshtein.searcher_component:LevenshteinSearcherComponent",
         "words": "#vocab.keys()"
       },
       {
         "class_name": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
-        "in": ["tokens_candidates"],
-        "out": ["y_predicted_tokens"],
+        "in": [
+          "tokens_candidates"
+        ],
+        "out": [
+          "y_predicted_tokens"
+        ],
         "load_path": "{DOWNLOADS_PATH}/language_models/ru_wiyalen_no_punkt.arpa.binary"
       },
       {
         "ref": "tokenizer",
-        "in": ["y_predicted_tokens"],
-        "out": ["y_predicted"]
+        "in": [
+          "y_predicted_tokens"
+        ],
+        "out": [
+          "y_predicted"
+        ]
       }
     ],
-    "out": ["y_predicted"]
+    "out": [
+      "y_predicted"
+    ]
   },
   "metadata": {
     "variables": {

@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Iterable, Union, Tuple, Optional
 from collections import defaultdict
 from logging import getLogger
 from pathlib import Path
+from typing import Iterable, Union, Tuple, Optional
 
 import numpy as np
 import tensorflow as tf
@@ -24,10 +24,9 @@ from tensorflow.python.ops import variables
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import cls_from_str
+from deeppavlov.core.models.lr_scheduled_model import LRScheduledModel
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.models.tf_backend import TfModelMeta
-from deeppavlov.core.models.lr_scheduled_model import LRScheduledModel
-
 
 log = getLogger(__name__)
 
@@ -244,7 +243,7 @@ class LRScheduledTFModel(TFModel, LRScheduledModel):
     def get_optimizer(self):
         return self._optimizer
 
-    def load(self, 
+    def load(self,
              exclude_scopes: Optional[Iterable] = ('Optimizer',
                                                    'learning_rate',
                                                    'momentum'),
@@ -253,4 +252,3 @@ class LRScheduledTFModel(TFModel, LRScheduledModel):
 
     def process_event(self, *args, **kwargs):
         LRScheduledModel.process_event(self, *args, **kwargs)
-

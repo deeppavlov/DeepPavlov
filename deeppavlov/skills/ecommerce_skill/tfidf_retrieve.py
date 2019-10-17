@@ -42,7 +42,6 @@ class EcommerceSkillTfidf(Component):
         min_entropy: min entropy threshold for specifying
     """
 
-
     def __init__(self,
                  save_path: str,
                  load_path: str,
@@ -61,7 +60,6 @@ class EcommerceSkillTfidf(Component):
         if kwargs.get('mode') != 'train':
             self.load()
 
-
     def fit(self, data, query) -> None:
         """Preprocess items `title` and `description` from the `data`
 
@@ -75,13 +73,11 @@ class EcommerceSkillTfidf(Component):
         self.x_train_features = vstack(list(query))
         self.ec_data = data
 
-
     def save(self) -> None:
         """Save classifier parameters"""
         log.info("Saving to {}".format(self.save_path))
         path = expand_path(self.save_path)
         save_pickle((self.ec_data, self.x_train_features), path)
-
 
     def load(self) -> None:
         """Load classifier parameters"""
@@ -89,8 +85,8 @@ class EcommerceSkillTfidf(Component):
         self.ec_data, self.x_train_features = load_pickle(
             expand_path(self.load_path))
 
-
-    def __call__(self, q_vects: List[csr_matrix], histories: List[Any], states: List[Dict[Any, Any]]) -> Tuple[Tuple[List[Dict[Any, Any]], List[Any]], List[float], Dict[Any, Any]]:
+    def __call__(self, q_vects: List[csr_matrix], histories: List[Any], states: List[Dict[Any, Any]]) -> Tuple[
+        Tuple[List[Dict[Any, Any]], List[Any]], List[float], Dict[Any, Any]]:
         """Retrieve catalog items according to the TFIDF measure
 
         Parameters:
@@ -126,7 +122,7 @@ class EcommerceSkillTfidf(Component):
 
             log.info(f"Search query {q_vect}")
 
-            if len(states) >= idx+1:
+            if len(states) >= idx + 1:
                 state = states[idx]
             else:
                 state = {'start': 0, 'stop': 5}
@@ -181,16 +177,13 @@ class EcommerceSkillTfidf(Component):
             entropies.append(self._entropy_subquery(answer_ids))
         return (items, entropies), confidences, back_states
 
-
     def _csr_to_list(self, csr: csr_matrix) -> List[Any]:
         return [csr.data.tolist(), csr.indices.tolist()]
-
 
     def _list_to_csr(self, _list: List) -> csr_matrix:
         row_ind = [0] * len(_list[0])
         col_ind = _list[1]
         return csr_matrix((_list[0], (row_ind, col_ind)))
-
 
     def _take_complex_query(self, q_prev: csr_matrix, q_cur: csr_matrix) -> bool:
         """Decides whether to use the long compound query or the current short query
@@ -214,7 +207,6 @@ class EcommerceSkillTfidf(Component):
 
         return False
 
-
     def _similarity(self, q_vect: Union[csr_matrix, List]) -> List[float]:
         """Calculates cosine similarity between the user's query and product items.
 
@@ -226,12 +218,11 @@ class EcommerceSkillTfidf(Component):
         """
 
         norm = sparse_norm(q_vect) * sparse_norm(self.x_train_features, axis=1)
-        cos_similarities = np.array(q_vect.dot(self.x_train_features.T).todense())/norm
+        cos_similarities = np.array(q_vect.dot(self.x_train_features.T).todense()) / norm
 
         cos_similarities = cos_similarities[0]
         cos_similarities = np.nan_to_num(cos_similarities)
         return cos_similarities
-
 
     def _state_based_filter(self, ids: List[int], state: Dict[Any, Any]):
         """Filters the candidates based on the key-values from the state
@@ -255,7 +246,6 @@ class EcommerceSkillTfidf(Component):
                        if key in self.ec_data[idx]
                        if self.ec_data[idx][key].lower() == value.lower()]
         return ids
-
 
     def _entropy_subquery(self, results_args: List[int]) -> List[Tuple[float, str, List[Tuple[str, int]]]]:
         """Calculate entropy of selected attributes for items from the catalog.

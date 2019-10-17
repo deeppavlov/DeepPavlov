@@ -11,8 +11,14 @@
     "with_answer_rate": 0.666
   },
   "chainer": {
-    "in": ["context_raw", "question_raw"],
-    "in_y": ["ans_raw", "ans_raw_start"],
+    "in": [
+      "context_raw",
+      "question_raw"
+    ],
+    "in_y": [
+      "ans_raw",
+      "ans_raw_start"
+    ],
     "pipe": [
       {
         "class_name": "squad_preprocessor",
@@ -20,16 +26,36 @@
         "context_limit": 500,
         "question_limit": 150,
         "char_limit": 16,
-        "in": ["context_raw", "question_raw"],
-        "out": ["context", "context_tokens", "context_chars",
-                "c_r2p", "c_p2r", "question",
-                "question_tokens", "question_chars", "spans"]
+        "in": [
+          "context_raw",
+          "question_raw"
+        ],
+        "out": [
+          "context",
+          "context_tokens",
+          "context_chars",
+          "c_r2p",
+          "c_p2r",
+          "question",
+          "question_tokens",
+          "question_chars",
+          "spans"
+        ]
       },
       {
         "class_name": "squad_ans_preprocessor",
         "id": "squad_ans_prepr",
-        "in": ["ans_raw", "ans_raw_start", "c_r2p", "spans"],
-        "out": ["ans", "ans_start", "ans_end"]
+        "in": [
+          "ans_raw",
+          "ans_raw_start",
+          "c_r2p",
+          "spans"
+        ],
+        "out": [
+          "ans",
+          "ans_start",
+          "ans_end"
+        ]
       },
       {
         "class_name": "squad_vocab_embedder",
@@ -42,9 +68,18 @@
         "context_limit": "#squad_prepr.context_limit",
         "question_limit": "#squad_prepr.question_limit",
         "char_limit": "#squad_prepr.char_limit",
-        "fit_lol": ["context_tokens", "question_tokens"],
-        "in": ["context_tokens", "question_tokens"],
-        "out": ["context_tokens_idxs", "question_tokens_idxs"]
+        "fit_lol": [
+          "context_tokens",
+          "question_tokens"
+        ],
+        "in": [
+          "context_tokens",
+          "question_tokens"
+        ],
+        "out": [
+          "context_tokens_idxs",
+          "question_tokens_idxs"
+        ]
       },
       {
         "class_name": "squad_vocab_embedder",
@@ -57,9 +92,18 @@
         "context_limit": "#squad_prepr.context_limit",
         "question_limit": "#squad_prepr.question_limit",
         "char_limit": "#squad_prepr.char_limit",
-        "fit_lol": ["context_chars", "question_chars"],
-        "in": ["context_chars", "question_chars"],
-        "out": ["context_chars_idxs", "question_chars_idxs"]
+        "fit_lol": [
+          "context_chars",
+          "question_chars"
+        ],
+        "in": [
+          "context_chars",
+          "question_chars"
+        ],
+        "out": [
+          "context_chars_idxs",
+          "question_chars_idxs"
+        ]
       },
       {
         "class_name": "squad_model",
@@ -95,16 +139,35 @@
           "y1s": "ans_start",
           "y2s": "ans_end"
         },
-        "out": ["ans_start_predicted", "ans_end_predicted", "prob", "score"]
+        "out": [
+          "ans_start_predicted",
+          "ans_end_predicted",
+          "prob",
+          "score"
+        ]
       },
       {
         "class_name": "squad_ans_postprocessor",
         "id": "squad_ans_postprepr",
-        "in": ["ans_start_predicted", "ans_end_predicted", "context_raw", "c_p2r", "spans"],
-        "out": ["ans_predicted", "ans_start_predicted", "ans_end_predicted"]
+        "in": [
+          "ans_start_predicted",
+          "ans_end_predicted",
+          "context_raw",
+          "c_p2r",
+          "spans"
+        ],
+        "out": [
+          "ans_predicted",
+          "ans_start_predicted",
+          "ans_end_predicted"
+        ]
       }
     ],
-    "out": ["ans_predicted", "ans_start_predicted", "score"]
+    "out": [
+      "ans_predicted",
+      "ans_start_predicted",
+      "score"
+    ]
   },
   "train": {
     "show_examples": false,
@@ -118,19 +181,31 @@
     "metrics": [
       {
         "name": "squad_v1_f1",
-        "inputs": ["ans_raw", "ans_predicted"]
+        "inputs": [
+          "ans_raw",
+          "ans_predicted"
+        ]
       },
       {
         "name": "squad_v1_em",
-        "inputs": ["ans_raw", "ans_predicted"]
+        "inputs": [
+          "ans_raw",
+          "ans_predicted"
+        ]
       },
       {
         "name": "squad_v2_f1",
-        "inputs": ["ans_raw", "ans_predicted"]
+        "inputs": [
+          "ans_raw",
+          "ans_predicted"
+        ]
       },
       {
         "name": "squad_v2_em",
-        "inputs": ["ans_raw", "ans_predicted"]
+        "inputs": [
+          "ans_raw",
+          "ans_predicted"
+        ]
       }
     ],
     "tensorboard_log_dir": "{MODELS_PATH}/multi_squad_retr_model_ru_noans/logs"
@@ -161,6 +236,6 @@
         "url": "http://files.deeppavlov.ai/embeddings/wiki-news-300d-1M-char.vec",
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
-      ]
+    ]
   }
 }

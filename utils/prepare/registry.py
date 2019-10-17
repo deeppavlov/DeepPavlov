@@ -24,7 +24,7 @@ if __name__ == '__main__':
     C_REGISTRY.clear()
     M_REGISTRY.clear()
 
-    for _, pkg_name, _ in pkgutil.walk_packages(deeppavlov.__path__, deeppavlov.__name__+'.'):
+    for _, pkg_name, _ in pkgutil.walk_packages(deeppavlov.__path__, deeppavlov.__name__ + '.'):
         if pkg_name not in ('deeppavlov.core.common.registry', 'deeppavlov.core.common.metrics_registry'):
             reload(import_module(pkg_name))
 

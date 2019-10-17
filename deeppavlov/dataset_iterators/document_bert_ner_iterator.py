@@ -12,22 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from copy import copy
-from random import Random
-from typing import List, Dict, Tuple, Any, Iterator, Optional
 import itertools
+from copy import copy
 from logging import getLogger
+from random import Random
+from typing import List, Dict, Tuple, Any, Iterator
 
-import numpy as np
-from bert_dp.preprocessing import convert_examples_to_features, InputExample, InputFeatures
 from bert_dp.tokenization import FullTokenizer
 
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.utils import zero_pad
-from deeppavlov.core.models.component import Component
+from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 logger = getLogger(__name__)
 
@@ -129,7 +124,7 @@ class DocumentBertNerIterator(DataLearningIterator):
         x, y = sample
         if not isinstance(x[0], str):
             return x[0]
-        return x 
+        return x
 
     @staticmethod
     def merge_samples(samples: List[Tuple[Any, Any]]) -> Tuple[Any, Any]:
@@ -192,12 +187,12 @@ class DocumentBertNerIterator(DataLearningIterator):
             l_rate = left_context_rate if r_i < len(r_ctx) else 1.0
             if (l_i < len(l_ctx)) and (random.random() < l_rate):
                 # add one sentence from left_context
-                subtoks = [st for t in l_ctx[-l_i-1]
+                subtoks = [st for t in l_ctx[-l_i - 1]
                            for st in subtokenizer.tokenize(t)]
                 if subtoks_len + len(subtoks) > max_subtokens_length:
                     break
                 subtoks_len += len(subtoks)
-                rich_sample_indices = [sample_id - l_i - 1] + rich_sample_indices 
+                rich_sample_indices = [sample_id - l_i - 1] + rich_sample_indices
                 l_i += 1
             else:
                 # add one sentence from right_context
@@ -208,4 +203,3 @@ class DocumentBertNerIterator(DataLearningIterator):
                 rich_sample_indices.append(sample_id + r_i + 1)
                 r_i += 1
         return rich_sample_indices
-

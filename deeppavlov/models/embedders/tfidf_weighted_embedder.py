@@ -197,7 +197,8 @@ class TfidfWeightedEmbedder(Component):
         if self.tags_vocab:
             if tags_batch is None:
                 raise ConfigError("TfidfWeightedEmbedder got 'tags_vocab_path' but __call__ did not get tags_batch.")
-            batch = [self._tags_encode(sample, tags_sample, mean=mean) for sample, tags_sample in zip(batch, tags_batch)]
+            batch = [self._tags_encode(sample, tags_sample, mean=mean) for sample, tags_sample in
+                     zip(batch, tags_batch)]
         else:
             if tags_batch:
                 raise ConfigError("TfidfWeightedEmbedder got tags batch, but 'tags_vocab_path' is empty.")
@@ -301,4 +302,3 @@ class TfidfWeightedEmbedder(Component):
             embedded_tokens = np.array([weights[i] * embedded_tokens[i] for i in range(len(tokens))])
 
         return embedded_tokens
-

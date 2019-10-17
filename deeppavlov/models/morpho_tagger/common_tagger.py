@@ -9,6 +9,7 @@ import numpy as np
 
 EPS = 1e-15
 
+
 # AUXILIARY = ['PAD', 'BEGIN', 'END', 'UNKNOWN']
 # AUXILIARY_CODES = PAD, BEGIN, END, UNKNOWN = 0, 1, 2, 3
 

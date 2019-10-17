@@ -95,7 +95,7 @@ class MultiSquadIterator(DataLearningIterator):
         self.np_random = np.random.RandomState(seed)
         super().__init__(data, seed, shuffle, *args, **kwargs)
 
-    def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: bool = None)\
+    def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: bool = None) \
             -> Generator[Tuple[Tuple[Tuple[str, str]], Tuple[List[str], List[int]]], None, None]:
 
         if shuffle is None:
@@ -114,7 +114,7 @@ class MultiSquadIterator(DataLearningIterator):
 
         for i in range((data_len - 1) // batch_size + 1):
             batch = []
-            for j in range(i * batch_size, min((i+1) * batch_size, data_len)):
+            for j in range(i * batch_size, min((i + 1) * batch_size, data_len)):
                 q = data[j]['question']
                 contexts = data[j]['contexts']
                 ans_contexts = [c for c in contexts if len(c['answer']) > 0]
@@ -131,7 +131,8 @@ class MultiSquadIterator(DataLearningIterator):
                     context = noans_contexts[np.argmax(random.multinomial(1, noans_scores))]
 
                 answer_text = [ans['text'] for ans in context['answer']] if len(context['answer']) > 0 else ['']
-                answer_start = [ans['answer_start'] for ans in context['answer']] if len(context['answer']) > 0 else [-1]
+                answer_start = [ans['answer_start'] for ans in context['answer']] if len(context['answer']) > 0 else [
+                    -1]
                 batch.append(((context['context'], q), (answer_text, answer_start)))
             yield tuple(zip(*batch))
 
@@ -194,7 +195,7 @@ class MultiSquadRetrIterator(DataLearningIterator):
         if self.shuffle:
             raise RuntimeError('MultiSquadIterator doesn\'t support shuffling.')
 
-    def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: bool = None)\
+    def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: bool = None) \
             -> Generator[Tuple[Tuple[Tuple[str, str]], Tuple[List[str], List[int]]], None, None]:
 
         if shuffle is None:

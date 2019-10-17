@@ -1,8 +1,6 @@
 from logging import getLogger
 from typing import Tuple, Optional, List
 
-import numpy as np
-
 from deeppavlov import build_model, train_model
 from deeppavlov.configs import configs
 from deeppavlov.core.commands.utils import expand_path

@@ -1,7 +1,7 @@
 import uuid
-from pathlib import Path
-from typing import Tuple, Optional, List, Iterable
 from logging import getLogger
+from pathlib import Path
+from typing import Tuple, Optional, List
 
 import aiml
 
@@ -88,8 +88,8 @@ class AIMLSkill(Skill):
         return uuid.uuid1().hex
 
     def __call__(self, utterances_batch: List[str],
-                 history_batch: Optional[List]=None,
-                 states_batch: Optional[List]=None) -> Tuple[List[str], List[float], list]:
+                 history_batch: Optional[List] = None,
+                 states_batch: Optional[List] = None) -> Tuple[List[str], List[float], list]:
         """Returns skill inference result.
 
         Returns batches of skill inference results, estimated confidence

@@ -30,8 +30,9 @@ class PatternMatchingSkill(Skill):
         ignore_case: Turns on utterances case ignoring.
         default_confidence: The default confidence.
     """
-    def __init__(self, responses: List[str], patterns: Optional[List[str]]=None,
-                 regex: bool=False, ignore_case: bool=True, default_confidence: float = 1) -> None:
+
+    def __init__(self, responses: List[str], patterns: Optional[List[str]] = None,
+                 regex: bool = False, ignore_case: bool = True, default_confidence: float = 1) -> None:
         if isinstance(responses, str):
             responses = [responses]
         self.responses = responses
@@ -50,7 +51,7 @@ class PatternMatchingSkill(Skill):
         self.patterns = patterns
 
     def __call__(self, utterances_batch: list, history_batch: list,
-                 states_batch: Optional[list]=None) -> Tuple[list, list]:
+                 states_batch: Optional[list] = None) -> Tuple[list, list]:
         """Returns skill inference result.
 
         Returns batches of skill inference results, estimated confidence
@@ -75,10 +76,11 @@ class PatternMatchingSkill(Skill):
             if self.ignore_case:
                 utterances_batch = [utterance.lower() for utterance in utterances_batch]
             if self.regex:
-                confidence = [self.default_confidence*float(any([pattern.search(utterance) for pattern in self.patterns]))
-                              for utterance in utterances_batch]
+                confidence = [
+                    self.default_confidence * float(any([pattern.search(utterance) for pattern in self.patterns]))
+                    for utterance in utterances_batch]
             else:
-                confidence = [self.default_confidence*float(any([pattern in utterance for pattern in self.patterns]))
+                confidence = [self.default_confidence * float(any([pattern in utterance for pattern in self.patterns]))
                               for utterance in utterances_batch]
 
         return response, confidence

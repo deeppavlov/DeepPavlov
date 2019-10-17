@@ -24,7 +24,7 @@ from zipfile import ZipFile
 from deeppavlov.core.data.utils import file_md5
 
 
-def tar_md5(fpath: Union[str, Path], chunk_size: int = 2**16) -> Dict[str, str]:
+def tar_md5(fpath: Union[str, Path], chunk_size: int = 2 ** 16) -> Dict[str, str]:
     tar = tarfile.open(fpath)
     res = {}
     while True:
@@ -41,7 +41,7 @@ def tar_md5(fpath: Union[str, Path], chunk_size: int = 2**16) -> Dict[str, str]:
     return res
 
 
-def gzip_md5(fpath: Union[str, Path], chunk_size: int = 2**16) -> str:
+def gzip_md5(fpath: Union[str, Path], chunk_size: int = 2 ** 16) -> str:
     file_hash = md5()
     with gzip.open(fpath, 'rb') as f:
         for chunk in iter(lambda: f.read(chunk_size), b""):
@@ -49,7 +49,7 @@ def gzip_md5(fpath: Union[str, Path], chunk_size: int = 2**16) -> str:
     return file_hash.hexdigest()
 
 
-def zip_md5(fpath: Union[str, Path], chunk_size: int = 2**16) -> Dict[str, str]:
+def zip_md5(fpath: Union[str, Path], chunk_size: int = 2 ** 16) -> Dict[str, str]:
     res = {}
     with ZipFile(fpath) as zip_f:
         for item in zip_f.infolist():

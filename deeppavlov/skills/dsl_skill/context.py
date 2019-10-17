@@ -13,9 +13,8 @@
 # limitations under the License.
 
 
-from typing import Optional, Union, Dict
-
 import json
+from typing import Optional, Union, Dict
 
 from deeppavlov.skills.dsl_skill.utils import UserId
 

@@ -10,16 +10,26 @@
     "len_valid": 500
   },
   "chainer": {
-    "in": ["text_a", "text_b"],
-    "in_y": ["y"],
+    "in": [
+      "text_a",
+      "text_b"
+    ],
+    "in_y": [
+      "y"
+    ],
     "pipe": [
       {
         "class_name": "bert_preprocessor",
         "vocab_file": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1/vocab.txt",
         "do_lower_case": false,
         "max_seq_length": 64,
-        "in": ["text_a", "text_b"],
-        "out": ["bert_features"]
+        "in": [
+          "text_a",
+          "text_b"
+        ],
+        "out": [
+          "bert_features"
+        ]
       },
       {
         "class_name": "bert_classifier",
@@ -34,18 +44,32 @@
         "learning_rate": 2e-05,
         "learning_rate_drop_patience": 3,
         "learning_rate_drop_div": 2.0,
-        "in": ["bert_features"],
-        "in_y": ["y"],
-        "out": ["predictions"]
+        "in": [
+          "bert_features"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "predictions"
+        ]
       }
     ],
-    "out": ["predictions"]
+    "out": [
+      "predictions"
+    ]
   },
   "train": {
     "batch_size": 64,
     "pytest_max_batches": 2,
-    "train_metrics": ["f1", "acc"],
-    "metrics": ["f1", "acc"],
+    "train_metrics": [
+      "f1",
+      "acc"
+    ],
+    "metrics": [
+      "f1",
+      "acc"
+    ],
     "validation_patience": 7,
     "val_every_n_batches": 50,
     "log_every_n_batches": 50,

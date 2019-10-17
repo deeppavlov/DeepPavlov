@@ -279,7 +279,7 @@ def _copytree(src: Path, dest: Path) -> None:
             shutil.copy(str(f), str(f_dest))
 
 
-def file_md5(fpath: Union[str, Path], chunk_size: int = 2**16) -> Optional[str]:
+def file_md5(fpath: Union[str, Path], chunk_size: int = 2 ** 16) -> Optional[str]:
     """Return md5 hash value for file contents.
 
     Args:

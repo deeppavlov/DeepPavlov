@@ -7,13 +7,19 @@
     "class_name": "data_learning_iterator"
   },
   "chainer": {
-    "in": ["x"],
-    "in_y": ["y"],
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
     "pipe": [
       {
         "id": "classes_vocab",
         "class_name": "simple_vocab",
-        "fit_on": ["y"],
+        "fit_on": [
+          "y"
+        ],
         "save_path": "{MODEL_PATH}/relation_prediction/classes.dict",
         "load_path": "{MODEL_PATH}/relation_prediction/classes.dict",
         "in": "y",
@@ -27,9 +33,13 @@
         "tokenizer": "wordpunct_tokenize"
       },
       {
-        "in": ["x_tok"],
+        "in": [
+          "x_tok"
+        ],
         "class_name": "str_lower",
-        "out": ["x_lower"]
+        "out": [
+          "x_lower"
+        ]
       },
       {
         "in": "x_lower",
@@ -45,9 +55,15 @@
         "depth": "#classes_vocab.len"
       },
       {
-        "in": ["x_emb"],
-        "in_y": ["y_onehot"],
-        "out": ["y_pred_probas"],
+        "in": [
+          "x_emb"
+        ],
+        "in_y": [
+          "y_onehot"
+        ],
+        "out": [
+          "y_pred_probas"
+        ],
         "main": true,
         "class_name": "keras_classification_model",
         "save_path": "{MODEL_PATH}/relation_prediction/model",
@@ -79,69 +95,113 @@
         "max_proba": true
       },
       {
-        "in": ["x"],
+        "in": [
+          "x"
+        ],
         "class_name": "lazy_tokenizer",
-        "out": ["x_tokens"]
+        "out": [
+          "x_tokens"
+        ]
       },
       {
-        "in": ["x_tokens"],
+        "in": [
+          "x_tokens"
+        ],
         "class_name": "str_lower",
-        "out": ["x_lower"]
+        "out": [
+          "x_lower"
+        ]
       },
       {
-        "in": ["x_lower"],
+        "in": [
+          "x_lower"
+        ],
         "class_name": "sanitizer",
         "nums": true,
-        "out": ["x_san"]
+        "out": [
+          "x_san"
+        ]
       },
       {
-        "in": ["x_san"],
+        "in": [
+          "x_san"
+        ],
         "id": "word_vocab",
         "class_name": "simple_vocab",
         "pad_with_zeros": true,
-        "special_tokens": ["<UNK>"],
-        "fit_on": ["x_san"],
+        "special_tokens": [
+          "<UNK>"
+        ],
+        "fit_on": [
+          "x_san"
+        ],
         "save_path": "{MODEL_PATH}/ner/word.dict",
         "load_path": "{MODEL_PATH}/ner/word.dict",
-        "out": ["x_tok_ind"]
+        "out": [
+          "x_tok_ind"
+        ]
       },
       {
-        "in": ["y"],
+        "in": [
+          "y"
+        ],
         "id": "tag_vocab",
         "class_name": "simple_vocab",
         "pad_with_zeros": true,
-        "fit_on": ["y"],
+        "fit_on": [
+          "y"
+        ],
         "save_path": "{MODEL_PATH}/ner/tag.dict",
         "load_path": "{MODEL_PATH}/ner/tag.dict",
-        "out": ["y_ind"]
+        "out": [
+          "y_ind"
+        ]
       },
       {
-        "in": ["x_lower"],
+        "in": [
+          "x_lower"
+        ],
         "class_name": "char_splitter",
-        "out": ["x_char"]
+        "out": [
+          "x_char"
+        ]
       },
       {
-        "in": ["x_char"],
+        "in": [
+          "x_char"
+        ],
         "id": "char_vocab",
         "class_name": "simple_vocab",
         "pad_with_zeros": true,
-        "fit_on": ["x_char"],
+        "fit_on": [
+          "x_char"
+        ],
         "save_path": "{MODEL_PATH}/ner/char.dict",
         "load_path": "{MODEL_PATH}/ner/char.dict",
-        "out": ["x_char_ind"]
+        "out": [
+          "x_char_ind"
+        ]
       },
       {
-        "in": ["x_san"],
+        "in": [
+          "x_san"
+        ],
         "id": "embedder",
         "class_name": "fasttext",
         "pad_zero": true,
         "load_path": "{DOWNLOADS_PATH}/embeddings/lenta_lower_100.bin",
-        "out": ["x_emb"]
+        "out": [
+          "x_emb"
+        ]
       },
       {
-        "in": ["x_tokens"],
+        "in": [
+          "x_tokens"
+        ],
         "class_name": "mask",
-        "out": ["mask"]
+        "out": [
+          "mask"
+        ]
       },
       {
         "class_name": "random_emb_mat",
@@ -156,12 +216,22 @@
         "emb_dim": 100
       },
       {
-        "in": ["x_emb", "mask", "x_char_ind"],
-        "in_y": ["y_ind"],
-        "out": ["y_predicted"],
+        "in": [
+          "x_emb",
+          "mask",
+          "x_char_ind"
+        ],
+        "in_y": [
+          "y_ind"
+        ],
+        "out": [
+          "y_predicted"
+        ],
         "class_name": "ner",
         "main": true,
-        "n_hidden_list": [128],
+        "n_hidden_list": [
+          128
+        ],
         "net_type": "rnn",
         "cell_type": "lstm",
         "use_cudnn_rnn": true,
@@ -193,8 +263,14 @@
         "debug": false
       },
       {
-        "in": ["x_tokens", "y_predicted", "y_pred_probas"],
-        "out": ["answers"],
+        "in": [
+          "x_tokens",
+          "y_predicted",
+          "y_pred_probas"
+        ],
+        "out": [
+          "answers"
+        ],
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus/wiki_rus_q_to_name.pickle",
         "class_name": "kb_answer_parser_wikidata",
         "classes_vocab_keys": "#classes_vocab.keys()",
@@ -207,13 +283,18 @@
         "linker": "#linker"
       }
     ],
-    "out": ["answers"]
+    "out": [
+      "answers"
+    ]
   },
-  "train":{
+  "train": {
     "metrics": [
       {
         "name": "kbqa_accuracy",
-        "inputs": ["y", "answers"]
+        "inputs": [
+          "y",
+          "answers"
+        ]
       }
     ]
   },
@@ -254,7 +335,6 @@
         "url": "http://files.deeppavlov.ai/deeppavlov_data/kbqa_mix_lowercase.tar.gz",
         "subdir": "{MODELS_PATH}/kbqa_mix_lowercase"
       },
-
       {
         "url": "http://files.deeppavlov.ai/embeddings/lenta_lower_100.bin",
         "subdir": "{DOWNLOADS_PATH}/embeddings"

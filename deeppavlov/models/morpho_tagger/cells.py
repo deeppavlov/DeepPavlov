@@ -54,7 +54,6 @@ def weighted_sum(first, second, sigma, first_threshold=-np.inf, second_threshold
 
 
 class WeightedCombinationLayer(kl.Layer):
-
     """
     A class for weighted combination of probability distributions
     """
@@ -118,7 +117,7 @@ class WeightedCombinationLayer(kl.Layer):
         embedded_features = kb.bias_add(
             embedded_features, self.features_bias, data_format="channels_last")
         if self.use_dimension_bias:
-            tiling_shape = [1] * (kb.ndim(first)-1) + [kb.shape(first)[-1]]
+            tiling_shape = [1] * (kb.ndim(first) - 1) + [kb.shape(first)[-1]]
             embedded_features = kb.tile(embedded_features, tiling_shape)
             embedded_features = kb.bias_add(
                 embedded_features, self.dimensions_bias, data_format="channels_last")

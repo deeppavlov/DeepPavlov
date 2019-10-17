@@ -7,16 +7,22 @@
     "class_name": "dialog_db_result_iterator"
   },
   "chainer": {
-    "in": ["db_result"],
+    "in": [
+      "db_result"
+    ],
     "in_y": [],
     "out": [],
     "pipe": [
       {
         "id": "restaurant_database",
         "class_name": "sqlite_database",
-        "fit_on": ["db_result"],
+        "fit_on": [
+          "db_result"
+        ],
         "table_name": "mytable",
-        "primary_keys": ["name"],
+        "primary_keys": [
+          "name"
+        ],
         "save_path": "{DOWNLOADS_PATH}/dstc2/resto.sqlite"
       }
     ]

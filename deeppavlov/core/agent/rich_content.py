@@ -24,6 +24,7 @@ class RichItem(metaclass=ABCMeta):
     at least in json format (mandatory) as well as in the formats compatible
     with other channels.
     """
+
     @abstractmethod
     def json(self) -> Union[list, dict]:
         """Returns json compatible state of the control instance including
@@ -77,6 +78,7 @@ class RichControl(RichItem, metaclass=ABCMeta):
         control_json: Control json representation template, which
             contains control type and content fields.
     """
+
     def __init__(self, control_type: str) -> None:
         self.control_type: str = control_type
         self.content = None

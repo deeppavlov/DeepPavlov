@@ -1,11 +1,8 @@
-from pathlib import Path
 from logging import getLogger
 
-import pytest
-
+from deeppavlov import configs, build_model
 from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
-from deeppavlov import configs, build_model
 from deeppavlov.utils.pip_wrapper.pip_wrapper import install_from_config
 
 log = getLogger(__name__)
@@ -27,7 +24,7 @@ class TestAIMLSkill:
                                   "Comedy movies are nice to watch",
                                   "I LIKE WATCHING COMEDY!",
                                   "Ok, goodbye"
-        ]
+                                  ]
 
         history_of_responses = []
         for each_utt in user_messages_sequence:

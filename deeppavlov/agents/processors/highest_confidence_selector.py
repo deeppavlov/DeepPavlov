@@ -17,6 +17,7 @@ from deeppavlov.core.agent.processor import Processor
 
 class HighestConfidenceSelector(Processor):
     """Returns for each utterance response with highest confidence."""
+
     def __init__(self, *args, **kwargs) -> None:
         pass
 

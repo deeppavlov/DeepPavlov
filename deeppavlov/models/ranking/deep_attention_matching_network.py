@@ -19,9 +19,9 @@ import numpy as np
 import tensorflow as tf
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.ranking.tf_base_matching_model import TensorflowBaseMatchingModel
 from deeppavlov.models.ranking.matching_models.dam_utils import layers
 from deeppavlov.models.ranking.matching_models.dam_utils import operations as op
+from deeppavlov.models.ranking.tf_base_matching_model import TensorflowBaseMatchingModel
 
 log = getLogger(__name__)
 
