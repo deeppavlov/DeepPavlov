@@ -460,7 +460,7 @@ class TestQuickStart(object):
             with socket.socket(address_family, socket.SOCK_STREAM) as s:
                 s.connect(connect_arg)
                 s.sendall(dumped_socket_payload.encode('utf-8'))
-                s.settimeout(20)
+                s.settimeout(60)
                 data = b''
                 try:
                     while True:
