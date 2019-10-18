@@ -8,50 +8,30 @@
     "shuffle": false
   },
   "chainer": {
-    "in": [
-      "x_text",
-      "dialog_id"
-    ],
-    "in_y": [
-      "y_text",
-      "y_domain"
-    ],
-    "out": [
-      "prediction_text"
-    ],
+    "in": ["x_text", "dialog_id"],
+    "in_y": ["y_text", "y_domain"],
+    "out": ["prediction_text"],
     "pipe": [
       {
         "id": "stream_spacy",
         "class_name": "stream_spacy_tokenizer",
         "lowercase": true,
         "alphas_only": false,
-        "in": [
-          "x_text"
-        ],
-        "out": [
-          "x_tokens"
-        ]
+        "in": ["x_text"],
+        "out": ["x_tokens"]
       },
       {
         "id": "dialog_history",
         "class_name": "dialog_state",
-        "in": [
-          "dialog_id"
-        ],
-        "out": [
-          "history_tokens"
-        ]
+        "in": ["dialog_id"],
+        "out": ["history_tokens"]
       },
       {
         "id": "kb",
         "class_name": "knowledge_base",
         "tokenizer": "#stream_spacy",
-        "in": [
-          "dialog_id"
-        ],
-        "out": [
-          "kb_entries"
-        ],
+        "in": ["dialog_id"],
+        "out": ["kb_entries"],
         "save_path": "{MODELS_PATH}/seq2seq_go_bot/kvret_kb.json",
         "load_path": "{MODELS_PATH}/seq2seq_go_bot/kvret_kb.json"
       },
@@ -59,10 +39,7 @@
         "id": "src_token_vocab",
         "class_name": "simple_vocab",
         "unk_token": "<UNK>",
-        "special_tokens": [
-          "<UNK>",
-          "<SOS>"
-        ],
+        "special_tokens": ["<UNK>", "<SOS>"],
         "save_path": "{MODELS_PATH}/vocabs/kvret_src_tokens.dict",
         "load_path": "{MODELS_PATH}/vocabs/kvret_src_tokens.dict"
       },
@@ -70,11 +47,7 @@
         "id": "tgt_token_vocab",
         "class_name": "simple_vocab",
         "unk_token": "<UNK>",
-        "special_tokens": [
-          "<UNK>",
-          "<SOS>",
-          "<EOS>"
-        ],
+        "special_tokens": ["<UNK>", "<SOS>", "<EOS>"],
         "save_path": "{MODELS_PATH}/vocabs/kvret_tgt_tokens.dict",
         "load_path": "{MODELS_PATH}/vocabs/kvret_tgt_tokens.dict"
       },
@@ -84,14 +57,8 @@
         "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin"
       },
       {
-        "in": [
-          "x_tokens",
-          "history_tokens",
-          "kb_entries"
-        ],
-        "out": [
-          "prediction_norm_tokens"
-        ],
+        "in": ["x_tokens", "history_tokens", "kb_entries"],
+        "out": ["prediction_norm_tokens"],
         "main": true,
         "class_name": "seq2seq_go_bot",
         "load_path": "{MODELS_PATH}/seq2seq_go_bot/model",
@@ -109,10 +76,7 @@
           "source_vocab_size": "#src_token_vocab.__len__()",
           "target_vocab_size": "#tgt_token_vocab.__len__()",
           "hidden_size": 256,
-          "kb_attention_hidden_sizes": [
-            64,
-            32
-          ]
+          "kb_attention_hidden_sizes": [64, 32]
         },
         "debug": false,
         "source_vocab": "#src_token_vocab",
@@ -122,42 +86,23 @@
       {
         "class_name": "knowledge_base_entity_normalizer",
         "denormalize": true,
-        "in": [
-          "prediction_norm_tokens",
-          "kb_entries"
-        ],
-        "out": [
-          "prediction_tokens"
-        ]
+        "in": ["prediction_norm_tokens", "kb_entries"],
+        "out": ["prediction_tokens"]
       },
       {
         "ref": "stream_spacy",
-        "in": [
-          "prediction_tokens"
-        ],
-        "out": [
-          "prediction_text"
-        ]
+        "in": ["prediction_tokens"],
+        "out": ["prediction_text"]
       },
       {
         "ref": "dialog_history",
-        "in": [
-          "dialog_id",
-          "x_tokens"
-        ],
-        "out": [
-          "x_history_tokens"
-        ]
+        "in": ["dialog_id", "x_tokens"],
+        "out": ["x_history_tokens"]
       },
       {
         "ref": "dialog_history",
-        "in": [
-          "dialog_id",
-          "prediction_tokens"
-        ],
-        "out": [
-          "x_pred_history_tokens"
-        ]
+        "in": ["dialog_id", "prediction_tokens"],
+        "out": ["x_pred_history_tokens"]
       }
     ]
   },

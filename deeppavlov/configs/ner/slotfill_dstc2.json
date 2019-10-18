@@ -8,54 +8,33 @@
     "slot_values_path": "{SLOT_VALS_PATH}"
   },
   "chainer": {
-    "in": [
-      "x"
-    ],
-    "in_y": [
-      "y"
-    ],
+    "in": ["x"],
+    "in_y": ["y"],
     "pipe": [
       {
-        "in": [
-          "x"
-        ],
+        "in": ["x"],
         "class_name": "lazy_tokenizer",
-        "out": [
-          "x_tokens"
-        ]
+        "out": ["x_tokens"]
       },
       {
-        "in": [
-          "x_tokens"
-        ],
+        "in": ["x_tokens"],
         "config_path": "{NER_CONFIG_PATH}",
-        "out": [
-          "x_tokens",
-          "tags"
-        ]
+        "out": ["x_tokens", "tags"]
       },
+
       {
-        "in": [
-          "x_tokens",
-          "tags"
-        ],
+        "in": ["x_tokens", "tags"],
         "class_name": "dstc_slotfilling",
         "threshold": 0.8,
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
-        "out": [
-          "slots"
-        ]
+        "out": ["slots"]
       }
     ],
-    "out": [
-      "slots"
-    ]
+    "out": ["slots"]
   },
   "train": {
-    "metrics": [
-      "slots_accuracy"
-    ],
+    "metrics": ["slots_accuracy"],
     "class_name": "fit_trainer",
     "evaluation_targets": [
       "valid",

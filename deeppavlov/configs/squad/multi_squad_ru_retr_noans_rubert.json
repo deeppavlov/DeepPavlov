@@ -12,53 +12,28 @@
     "with_answer_rate": 0.666
   },
   "chainer": {
-    "in": [
-      "context_raw",
-      "question_raw"
-    ],
-    "in_y": [
-      "ans_raw",
-      "ans_raw_start"
-    ],
+    "in": ["context_raw", "question_raw"],
+    "in_y": ["ans_raw", "ans_raw_start"],
     "pipe": [
       {
         "class_name": "bert_preprocessor",
         "vocab_file": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1/vocab.txt",
         "do_lower_case": false,
         "max_seq_length": 384,
-        "in": [
-          "question_raw",
-          "context_raw"
-        ],
-        "out": [
-          "bert_features"
-        ]
+        "in": ["question_raw", "context_raw"],
+        "out": ["bert_features"]
       },
       {
         "class_name": "squad_bert_mapping",
         "do_lower_case": false,
-        "in": [
-          "context_raw",
-          "bert_features"
-        ],
-        "out": [
-          "subtok2chars",
-          "char2subtoks"
-        ]
+        "in": ["context_raw", "bert_features"],
+        "out": ["subtok2chars", "char2subtoks"]
       },
       {
         "class_name": "squad_bert_ans_preprocessor",
         "do_lower_case": false,
-        "in": [
-          "ans_raw",
-          "ans_raw_start",
-          "char2subtoks"
-        ],
-        "out": [
-          "ans",
-          "ans_start",
-          "ans_end"
-        ]
+        "in": ["ans_raw", "ans_raw_start","char2subtoks"],
+        "out": ["ans", "ans_start", "ans_end"]
       },
       {
         "class_name": "squad_bert_model",
@@ -70,41 +45,17 @@
         "learning_rate": 2e-05,
         "learning_rate_drop_patience": 3,
         "learning_rate_drop_div": 2.0,
-        "in": [
-          "bert_features"
-        ],
-        "in_y": [
-          "ans_start",
-          "ans_end"
-        ],
-        "out": [
-          "ans_start_predicted",
-          "ans_end_predicted",
-          "logits",
-          "score"
-        ]
+        "in": ["bert_features"],
+        "in_y": ["ans_start", "ans_end"],
+        "out": ["ans_start_predicted", "ans_end_predicted", "logits", "score"]
       },
       {
         "class_name": "squad_bert_ans_postprocessor",
-        "in": [
-          "ans_start_predicted",
-          "ans_end_predicted",
-          "context_raw",
-          "bert_features",
-          "subtok2chars"
-        ],
-        "out": [
-          "ans_predicted",
-          "ans_start_predicted",
-          "ans_end_predicted"
-        ]
+        "in": ["ans_start_predicted", "ans_end_predicted", "context_raw", "bert_features", "subtok2chars"],
+        "out": ["ans_predicted", "ans_start_predicted", "ans_end_predicted"]
       }
     ],
-    "out": [
-      "ans_predicted",
-      "ans_start_predicted",
-      "score"
-    ]
+    "out": ["ans_predicted", "ans_start_predicted", "score"]
   },
   "train": {
     "show_examples": false,
@@ -118,31 +69,19 @@
     "metrics": [
       {
         "name": "squad_f1",
-        "inputs": [
-          "ans_raw",
-          "ans_predicted"
-        ]
+        "inputs": ["ans_raw", "ans_predicted"]
       },
       {
         "name": "squad_f1_1.1",
-        "inputs": [
-          "ans_raw",
-          "ans_predicted"
-        ]
+        "inputs": ["ans_raw", "ans_predicted"]
       },
       {
         "name": "exact_match",
-        "inputs": [
-          "ans_raw",
-          "ans_predicted"
-        ]
+        "inputs": ["ans_raw", "ans_predicted"]
       },
       {
         "name": "exact_match_1.1",
-        "inputs": [
-          "ans_raw",
-          "ans_predicted"
-        ]
+        "inputs": ["ans_raw", "ans_predicted"]
       }
     ],
     "tensorboard_log_dir": "{MODELS_PATH}/multi_squad_ru_retr_bert/logs_rubert"
@@ -169,6 +108,6 @@
         "url": "http://files.deeppavlov.ai/deeppavlov_data/multi_squad_ru_retr_rubert.tar.gz",
         "subdir": "{MODELS_PATH}"
       }
-    ]
+      ]
   }
 }

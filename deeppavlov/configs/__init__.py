@@ -20,7 +20,7 @@ class Struct:
 
         self.keys = lambda: self._keys
 
-    def _asdict(self, *, to_string: bool = False) -> dict:
+    def _asdict(self, *, to_string: bool=False) -> dict:
         res = []
         for key in self._keys:
             value = getattr(self, key)

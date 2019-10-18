@@ -11,14 +11,8 @@
     "shuffle": true
   },
   "chainer": {
-    "in": [
-      "context_raw",
-      "question_raw"
-    ],
-    "in_y": [
-      "ans_raw",
-      "ans_raw_start"
-    ],
+    "in": ["context_raw", "question_raw"],
+    "in_y": ["ans_raw", "ans_raw_start"],
     "pipe": [
       {
         "class_name": "squad_bert_infer",
@@ -28,22 +22,11 @@
         "vocab_file": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1/vocab.txt",
         "do_lower_case": false,
         "max_seq_length": 256,
-        "in": [
-          "context_raw",
-          "question_raw"
-        ],
-        "out": [
-          "ans_predicted",
-          "ans_start_predicted",
-          "logits"
-        ]
+        "in": ["context_raw", "question_raw"],
+        "out": ["ans_predicted", "ans_start_predicted", "logits"]
       }
     ],
-    "out": [
-      "ans_predicted",
-      "ans_start_predicted",
-      "logits"
-    ]
+    "out": ["ans_predicted", "ans_start_predicted", "logits"]
   },
   "train": {
     "show_examples": false,
@@ -57,31 +40,19 @@
     "metrics": [
       {
         "name": "squad_v2_f1",
-        "inputs": [
-          "ans_raw",
-          "ans_predicted"
-        ]
+        "inputs": ["ans_raw", "ans_predicted"]
       },
       {
         "name": "squad_v2_em",
-        "inputs": [
-          "ans_raw",
-          "ans_predicted"
-        ]
+        "inputs": ["ans_raw", "ans_predicted"]
       },
       {
         "name": "squad_v1_f1",
-        "inputs": [
-          "ans_raw",
-          "ans_predicted"
-        ]
+        "inputs": ["ans_raw", "ans_predicted"]
       },
       {
         "name": "squad_v1_em",
-        "inputs": [
-          "ans_raw",
-          "ans_predicted"
-        ]
+        "inputs": ["ans_raw", "ans_predicted"]
       }
     ]
   },

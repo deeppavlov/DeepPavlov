@@ -95,14 +95,8 @@
         "learning_rate_decay": "trapezoid",
         "learning_rate_decay_batches": 10000,
         "fit_batch_size": 64,
-        "fit_on": [
-          "x_emb",
-          "y_onehot"
-        ],
-        "momentum": [
-          0.95,
-          0.55
-        ],
+        "fit_on": ["x_emb", "y_onehot"],
+        "momentum": [0.95, 0.55],
         "momentum_decay": "trapezoid",
         "momentum_decay_batches": 10000,
         "loss": "categorical_crossentropy",
@@ -139,10 +133,7 @@
       "accuracy",
       {
         "name": "roc_auc",
-        "inputs": [
-          "y_onehot",
-          "y_pred_probas"
-        ]
+        "inputs": ["y_onehot", "y_pred_probas"]
       }
     ],
     "validation_patience": 5,

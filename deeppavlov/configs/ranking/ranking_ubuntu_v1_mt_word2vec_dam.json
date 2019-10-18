@@ -12,12 +12,8 @@
     "seed": 42
   },
   "chainer": {
-    "in": [
-      "x"
-    ],
-    "in_y": [
-      "y"
-    ],
+    "in": ["x"],
+    "in_y": ["y"],
     "pipe": [
       {
         "class_name": "split_tokenizer",
@@ -25,14 +21,9 @@
       },
       {
         "class_name": "simple_vocab",
-        "special_tokens": [
-          "",
-          "<UNK>"
-        ],
+        "special_tokens": ["", "<UNK>"],
         "unk_token": "<UNK>",
-        "fit_on": [
-          "x"
-        ],
+        "fit_on": ["x"],
         "id": "vocab_1",
         "save_path": "{MODELS_PATH}/ubuntu_v1_mt_word2vec_dam/vocabs/int_tok.dict",
         "load_path": "{MODELS_PATH}/ubuntu_v1_mt_word2vec_dam/vocabs/int_tok.dict"
@@ -52,15 +43,9 @@
         "num_context_turns": "{NUM_CONTEXT_TURNS}",
         "max_sequence_length": 50,
         "embedding_dim": 200,
-        "fit_on": [
-          "x"
-        ],
-        "in": [
-          "x"
-        ],
-        "out": [
-          "x_proc"
-        ],
+        "fit_on": ["x"],
+        "in": ["x"],
+        "out": ["x_proc"],
         "tokenizer": {
           "ref": "tok_1",
           "notes": "use defined tokenizer"
@@ -77,15 +62,9 @@
         "vocab": "#vocab_1"
       },
       {
-        "in": [
-          "x_proc"
-        ],
-        "in_y": [
-          "y"
-        ],
-        "out": [
-          "y_predicted"
-        ],
+        "in": ["x_proc"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
         "class_name": "dam_nn",
         "stack_num": 5,
         "is_positional": true,

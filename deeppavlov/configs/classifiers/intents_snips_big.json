@@ -107,10 +107,7 @@
       "f1_macro",
       {
         "name": "roc_auc",
-        "inputs": [
-          "y_onehot",
-          "y_pred_probas"
-        ]
+        "inputs": ["y_onehot", "y_pred_probas"]
       }
     ],
     "validation_patience": 5,
@@ -139,7 +136,7 @@
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      {
+{
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       },

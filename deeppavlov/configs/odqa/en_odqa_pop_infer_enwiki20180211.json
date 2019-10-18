@@ -30,12 +30,8 @@
       },
       {
         "class_name": "document_chunker",
-        "in": [
-          "pop_doc_text"
-        ],
-        "out": [
-          "chunks"
-        ],
+        "in": ["pop_doc_text"],
+        "out": ["chunks"],
         "tokens_limit": 4000,
         "flatten_result": true
       },

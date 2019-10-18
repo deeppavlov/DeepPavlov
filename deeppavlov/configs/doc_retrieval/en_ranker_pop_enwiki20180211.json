@@ -58,14 +58,8 @@
         "pop_dict_path": "{DOWNLOADS_PATH}/odqa/enwiki20180211_popularities.json",
         "load_path": "{MODELS_PATH}/odqa/logreg_3features.joblib",
         "top_n": 10,
-        "in": [
-          "tfidf_doc_ids",
-          "tfidf_doc_scores"
-        ],
-        "out": [
-          "pop_doc_ids",
-          "pop_doc_scores"
-        ]
+        "in": ["tfidf_doc_ids", "tfidf_doc_scores"],
+        "out": ["pop_doc_ids", "pop_doc_scores"]
       }
     ]
   },

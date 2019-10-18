@@ -25,9 +25,7 @@
         "load_path": "{MODEL_PATH}/classes.dict",
         "in": "y",
         "out": "y_ids",
-        "special_tokens": [
-          "<UNK>"
-        ]
+        "special_tokens": ["<UNK>"]
       },
       {
         "in": "x",
