@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import xml.etree.ElementTree as ET
+from pathlib import Path
 from typing import Dict, List, Tuple
 
 from deeppavlov.core.commands.utils import expand_path
@@ -30,48 +31,31 @@ class ParaphraserReader(DatasetReader):
     def read(self,
              data_path: str,
              do_lower_case: bool = True,
-             seed: int = None, *args, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
+             *args, **kwargs) -> Dict[str, List[Tuple[Tuple[str, str], int]]]:
         """Read the paraphraser.ru dataset from files.
 
         Args:
             data_path: A path to a folder with dataset files.
             do_lower_case: Do you want to lowercase all texts
-            seed: Random seed.
         """
 
         data_path = expand_path(data_path)
         train_fname = data_path / 'paraphrases.xml'
         test_fname = data_path / 'paraphrases_gold.xml'
-        train_data = self.build_data(train_fname, do_lower_case)
-        test_data = self.build_data(test_fname, do_lower_case)
-        dataset = {"train": train_data, "valid": [], "test": test_data}
-        return dataset
 
-    def build_data(self, fname, do_lower_case):
-        with open(fname, 'r') as labels_file:
-            context = ET.iterparse(labels_file, events=("start", "end"))
-            # turn it into an iterator
-            context = iter(context)
-            # get the root element
-            event, root = next(context)
-            same_set = set()
-            questions = []
-            labels = []
-            for event, elem in context:
-                if event == "end" and elem.tag == "paraphrase":
-                    question = []
-                    y = None
-                    for child in elem.iter():
-                        if child.get('name') == 'text_1':
-                            question.append(child.text.lower() if do_lower_case else child.text)
-                        if child.get('name') == 'text_2':
-                            question.append(child.text.lower() if do_lower_case else child.text)
-                        if child.get('name') == 'class':
-                            y = 1 if int(child.text) >= 0 else 0
-                    root.clear()
-                    check_string = "\n".join(question)
-                    if check_string not in same_set:
-                        same_set.add(check_string)
-                        questions.append(question)
-                        labels.append(y)
-            return list(zip(questions, labels))
+        train_data = self._build_data(train_fname, do_lower_case)
+        test_data = self._build_data(test_fname, do_lower_case)
+        return {"train": train_data, "valid": [], "test": test_data}
+
+    @staticmethod
+    def _build_data(data_path: Path, do_lower_case: bool) -> List[Tuple[Tuple[str, str], int]]:
+        root = ET.fromstring(data_path.read_text(encoding='utf8'))
+        data = {}
+        for paraphrase in root.findall('corpus/paraphrase'):
+            key = (paraphrase.find('value[@name="text_1"]').text,
+                   paraphrase.find('value[@name="text_2"]').text)
+            if do_lower_case:
+                key = tuple([t.lower() for t in key])
+
+            data[key] = int(paraphrase.find('value[@name="class"]').text)
+        return list(data.items())
