@@ -64,7 +64,6 @@ class KBAnswerParserWikidata(KBBase):
 
         objects_batch = []
         confidences_batch = []
-        print(tokens_batch, tags_batch)
 
         for tokens, tags, relations_probs in zip(tokens_batch, tags_batch, relations_probs_batch):
             is_kbqa = self.is_kbqa_question(tokens)

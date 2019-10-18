@@ -28,8 +28,7 @@ class KBBase(Component, Serializable):
     """
 
     def __init__(self, load_path: str, linker: EntityLinker, template_matcher: TemplateMatcher,
-                 relations_maping_filename: Optional[str] = None, templates_filename: Optional[str] = None,
-                     *args, **kwargs) -> None:
+                 relations_maping_filename: Optional[str] = None, *args, **kwargs) -> None:
 
         """
 
@@ -49,7 +48,6 @@ class KBBase(Component, Serializable):
         self._relations_filename = relations_maping_filename
         self.q_to_name: Optional[Dict[str, Dict[str, str]]] = None
         self._relations_mapping: Optional[Dict[str, str]] = None
-        self._templates_filename = templates_filename
         self.linker = linker
         self.template_matcher = template_matcher
         self.load()
