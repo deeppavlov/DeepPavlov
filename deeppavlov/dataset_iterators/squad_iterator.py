@@ -131,8 +131,8 @@ class MultiSquadIterator(DataLearningIterator):
                     context = noans_contexts[np.argmax(random.multinomial(1, noans_scores))]
 
                 answer_text = [ans['text'] for ans in context['answer']] if len(context['answer']) > 0 else ['']
-                answer_start = [ans['answer_start'] for ans in context['answer']] if len(context['answer']) > 0 else [
-                    -1]
+                answer_start = [ans['answer_start']
+                                for ans in context['answer']] if len(context['answer']) > 0 else [-1]
                 batch.append(((context['context'], q), (answer_text, answer_start)))
             yield tuple(zip(*batch))
 
