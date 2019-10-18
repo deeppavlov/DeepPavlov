@@ -163,7 +163,7 @@ PARAMS = {
         ("ranking/ranking_insurance_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_insurance_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v2_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v2_mt_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v2_mt_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/paraphrase_ident_paraphraser_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
