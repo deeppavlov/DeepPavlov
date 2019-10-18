@@ -57,13 +57,13 @@ class KBTree(KBBase):
             **kwargs:
         """
         
-        super().__init__(*args, **kwargs)
         self._debug = debug
         self.use_templates = use_templates
         self.tree_parser = tree_parser
         self.ft_embedder = ft_embedder
         self._relations_filename = relations_maping_filename
         self._templates_filename = templates_filename
+        super().__init__(relations_maping_filename=self._relations_filename, *args, **kwargs)
 
     def __call__(self, sentences: List[str],
                  *args, **kwargs) -> List[str]:

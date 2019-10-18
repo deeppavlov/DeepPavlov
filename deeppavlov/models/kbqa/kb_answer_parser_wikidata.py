@@ -50,12 +50,12 @@ class KBAnswerParserWikidata(KBBase):
             *args:
             **kwargs:
         """
-        super().__init__(*args, **kwargs)
         self.top_k_classes = top_k_classes
         self.classes = list(classes_vocab_keys)
         self._debug = debug
         self._relations_filename = relations_maping_filename
         self._templates_filename = templates_filename
+        super().__init__(relations_maping_filename=self._relations_filename, *args, **kwargs)
 
     def __call__(self, tokens_batch: List[List[str]],
                  tags_batch: List[List[int]],
@@ -64,6 +64,7 @@ class KBAnswerParserWikidata(KBBase):
 
         objects_batch = []
         confidences_batch = []
+        print(tokens_batch, tags_batch)
 
         for tokens, tags, relations_probs in zip(tokens_batch, tags_batch, relations_probs_batch):
             is_kbqa = self.is_kbqa_question(tokens)
