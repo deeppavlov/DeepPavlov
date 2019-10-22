@@ -137,7 +137,7 @@
   "squad_preprocessor": "deeppavlov.models.preprocessors.squad_preprocessor:SquadPreprocessor",
   "squad_vocab_embedder": "deeppavlov.models.preprocessors.squad_preprocessor:SquadVocabEmbedder",
   "static_dictionary": "deeppavlov.vocabs.typos:StaticDictionary",
-  "str_lower": "deeppavlov.models.preprocessors.str_lower:StrLower",
+  "str_lower": "deeppavlov.models.preprocessors.str_lower:str_lower",
   "str_token_reverser": "deeppavlov.models.preprocessors.str_token_reverser:StrTokenReverser",
   "str_utf8_encoder": "deeppavlov.models.preprocessors.str_utf8_encoder:StrUTF8Encoder",
   "stream_spacy_tokenizer": "deeppavlov.models.tokenizers.spacy_tokenizer:StreamSpacyTokenizer",
