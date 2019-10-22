@@ -163,7 +163,7 @@ PARAMS = {
         ("ranking/ranking_insurance_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_insurance_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v2_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v2_mt_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v2_mt_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/paraphrase_ident_paraphraser_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -460,6 +460,7 @@ class TestQuickStart(object):
             with socket.socket(address_family, socket.SOCK_STREAM) as s:
                 s.connect(connect_arg)
                 s.sendall(dumped_socket_payload.encode('utf-8'))
+                s.settimeout(60)
                 data = b''
                 try:
                     while True:
@@ -471,7 +472,10 @@ class TestQuickStart(object):
                             break
                 except BlockingIOError:
                     pass
-            resp = json.loads(data)
+            try:
+                resp = json.loads(data)
+            except json.decoder.JSONDecodeError:
+                raise ValueError(f"Can't decode model response {data}")
             assert resp['status'] == 'OK', f"{socket_type} socket request returned status: {resp['status']}"\
                                            f" with {config_path}\n{logfile.getvalue().decode()}"
 
