@@ -37,11 +37,13 @@ English cased version of BERT-base as initialization for English Conversational 
 Conversational RuBERT was trained on OpenSubtitles [4]_, Dirty, Pikabu, and Social Media segment of Taiga corpus [7]_.
 We assembled new vocabulary for Conversational RuBERT model on this data and initialized model with RuBERT.
 
-Sentence Multilingual BERT was inited with Multilingual BERT and then fine-tuned on english MultiNLI [8]_ and
-on dev set of multilingual XNLI [9]_. The model is purposed to encode sentences in 101 languages of Multilingual BERT (mean pooling).
+Sentence Multilingual BERT is a representation-based sentence encoder for 101 languages of Multilingual BERT.
+It is inited with Multilingual BERT and then fine-tuned on english MultiNLI [8]_ and on dev set of multilingual XNLI [9]_.
+Sentence representations are mean pooled token embeddings in the same manner as in Sentence-BERT [11]_.
 
-Sentence RuBERT was inited with RuBERT and fine-tuned on SNLI [10]_ google-translated to russian and
-on russian part of XNLI dev set [9]_. The model is purposed to encode sentences in Russian.
+Sentence RuBERT is a representation-based sentence encoder for Russian.
+It is inited with RuBERT and fine-tuned on SNLI [10]_ google-translated to russian and on russian part of XNLI dev set [9]_.
+Sentence representations are mean pooled token embeddings in the same manner as in Sentence-BERT [11]_.
 
 Here, in DeepPavlov, we made it easy to use pre-trained BERT for downstream tasks like classification, tagging, question answering and
 ranking. We also provide pre-trained models and examples on how to use BERT with DeepPavlov.
@@ -151,3 +153,4 @@ the :doc:`config </intro/configuration>` file must be changed to match new BERT 
 .. [8] Williams A., Nangia N. & Bowman S. (2017) A Broad-Coverage Challenge Corpus for Sentence Understanding through Inference. arXiv preprint arXiv:1704.05426
 .. [9] Williams A., Bowman S. (2018) XNLI: Evaluating Cross-lingual Sentence Representations. arXiv preprint arXiv:1809.05053
 .. [10] S. R. Bowman, G. Angeli, C. Potts, and C. D. Manning. (2015) A large annotated corpus for learning natural language inference. arXiv preprint arXiv:1508.05326
+.. [11] N. Reimers, I. Gurevych (2019) Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. arXiv preprint arXiv:1908.10084
