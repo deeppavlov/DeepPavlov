@@ -216,6 +216,25 @@ and others in the Integrations section for more info.
 
 ## Breaking Changes
 
+**Breaking changes in version 0.7.0**
+- server logs formatting was changed at [REST API](http://docs.deeppavlov.ai/en/0.7.0/integrations/rest_api.html),
+  [Yandex Alice](http://docs.deeppavlov.ai/en/0.7.0/integrations/yandex_alice.html),
+  [Amazon Alexa](http://docs.deeppavlov.ai/en/0.7.0/integrations/amazon_alexa.html) and
+  [Microsoft Bot Framework](http://docs.deeppavlov.ai/en/0.7.0/integrations/ms_bot.html) integrations
+- in dialog logger config file `dialog_logger_config.json` `agent_name` parameter was renamed to `logger_name`,
+  the default value was changed
+- [agent](http://docs.deeppavlov.ai/en/0.6.0/apiref/core/agent.html),
+  [skill](http://docs.deeppavlov.ai/en/0.6.0/apiref/core/skill.html), 
+  [eCommerce Bot](http://docs.deeppavlov.ai/en/0.6.0/features/skills/ecommerce.html), 
+  [Pattern Matching](http://docs.deeppavlov.ai/en/0.6.0/features/skills/pattern_matching.html) moved to `deeppavlov.deprecated`
+- [AIML Skill](http://docs.deeppavlov.ai/en/0.7.0/features/skills/aiml_skill.html),
+  [RASA Skill](http://docs.deeppavlov.ai/en/0.7.0/features/skills/rasa_skill.html),
+  [Yandex Alice](http://docs.deeppavlov.ai/en/0.7.0/integrations/yandex_alice.html),
+  [Amazon Alexa](http://docs.deeppavlov.ai/en/0.7.0/integrations/amazon_alexa.html),
+  [Microsoft Bot Framework](http://docs.deeppavlov.ai/en/0.7.0/integrations/ms_bot.html) and
+  [Telegram integration](http://docs.deeppavlov.ai/en/0.7.0/integrations/telegram.html) interfaces were changed
+- `/start` and `/help` Telegram messages were moved from `models_info.json` to `connector_config.json` file
+
 **Breaking changes in version 0.6.0**
 - [REST API](http://docs.deeppavlov.ai/en/0.6.0/integrations/rest_api.html):
   - all models default endpoints were renamed to `/model`
