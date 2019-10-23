@@ -81,7 +81,6 @@ def start_alexa_server(model_config: Union[str, Path, dict],
         loop = asyncio.get_event_loop()
         response: dict = await loop.run_in_executor(None, bot.output_queue.get)
         response_code = 400 if 'error' in response.keys() else 200
-        print(response)
         return JSONResponse(response, status_code=response_code)
 
     uvicorn.run(app, host=host, port=port, logger=uvicorn_log, ssl_version=ssl_config.version,

@@ -31,7 +31,7 @@ Key Concepts
    end-to-end mode being joined in a chain.
 -  ``Skill Manager`` performs selection of the ``Skill`` to generate
    response.
--  ``Chainer`` builds an model pipeline from heterogeneous
+-  ``Chainer`` builds a model pipeline from heterogeneous
    components (Rule-based/ML/DL). It allows to train and infer models in
    a pipeline as a whole.
 

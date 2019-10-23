@@ -27,7 +27,7 @@ log = getLogger(__name__)
 
 class Chainer(Component):
     """
-    Builds an component pipeline from heterogeneous components (Rule-based/ML/DL). It allows to train
+    Builds a component pipeline from heterogeneous components (Rule-based/ML/DL). It allows to train
     and infer models in a pipeline as a whole.
 
     Attributes:

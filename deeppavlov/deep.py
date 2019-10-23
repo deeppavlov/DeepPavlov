@@ -64,78 +64,52 @@ parser.add_argument("--socket-file", default="/tmp/deeppavlov_socket.s", type=st
 
 def main():
     args = parser.parse_args()
-
-    mode = args.mode
     pipeline_config_path = find_config(args.config_path)
 
-    start_epoch_num = args.start_epoch_num
-    recursive = args.recursive
-
-    batch_size = args.batch_size
-    file_path = args.file_path
-    download = args.download
-
-    folds = args.folds
-
-    token = args.token
-
-    ms_id = args.ms_id
-    ms_secret = args.ms_secret
-
-    https = args.https
-    ssl_key = args.key
-    ssl_cert = args.cert
-
-    port = args.port
-
-    socket_type = args.socket_type
-    socket_file = args.socket_file
-
-    if download or mode == 'download':
+    if args.download or args.mode == 'download':
         deep_download(pipeline_config_path)
 
-    if mode == 'train':
-        train_evaluate_model_from_config(pipeline_config_path, recursive=recursive, start_epoch_num=start_epoch_num)
-    elif mode == 'evaluate':
-        train_evaluate_model_from_config(pipeline_config_path, to_train=False, start_epoch_num=start_epoch_num)
-    elif mode == 'interact':
+    if args.mode == 'train':
+        train_evaluate_model_from_config(pipeline_config_path, recursive=args.recursive, start_epoch_num=args.start_epoch_num)
+    elif args.mode == 'evaluate':
+        train_evaluate_model_from_config(pipeline_config_path, to_train=False, start_epoch_num=args.start_epoch_num)
+    elif args.mode == 'interact':
         interact_model(pipeline_config_path)
-    elif mode == 'interactbot':
-        interact_model_by_telegram(model_config=pipeline_config_path, token=token)
-    elif mode == 'interactmsbot':
+    elif args.mode == 'interactbot':
+        interact_model_by_telegram(model_config=pipeline_config_path, token=args.token)
+    elif args.mode == 'interactmsbot':
         start_ms_bf_server(model_config=pipeline_config_path,
-                           app_id=ms_id,
-                           app_secret=ms_secret,
-                           port=port,
-                           https=https,
-                           ssl_key=ssl_key,
-                           ssl_cert=ssl_cert)
-    elif mode == 'alexa':
+                           app_id=args.ms_id,
+                           app_secret=args.ms_secret,
+                           port=args.port,
+                           https=args.https,
+                           ssl_key=args.ssl_key,
+                           ssl_cert=args.ssl_cert)
+    elif args.mode == 'alexa':
         start_alexa_server(model_config=pipeline_config_path,
-                           port=port,
-                           https=https,
-                           ssl_key=ssl_key,
-                           ssl_cert=ssl_cert)
-    elif mode == 'alice':
+                           port=args.port,
+                           https=args.https,
+                           ssl_key=args.ssl_key,
+                           ssl_cert=args.ssl_cert)
+    elif args.mode == 'alice':
         start_alice_server(model_config=pipeline_config_path,
-                           port=port,
-                           https=https,
-                           ssl_key=ssl_key,
-                           ssl_cert=ssl_cert)
-    elif mode == 'riseapi':
-        start_model_server(pipeline_config_path, https, ssl_key, ssl_cert, port=port)
-    elif mode == 'risesocket':
-        start_socket_server(pipeline_config_path, socket_type, port=port, socket_file=socket_file)
-    elif mode == 'predict':
-        predict_on_stream(pipeline_config_path, batch_size, file_path)
-    elif mode == 'install':
+                           port=args.port,
+                           https=args.https,
+                           ssl_key=args.ssl_key,
+                           ssl_cert=args.ssl_cert)
+    elif args.mode == 'riseapi':
+        start_model_server(pipeline_config_path, args.https, args.ssl_key, args.ssl_cert, port=args.port)
+    elif args.mode == 'risesocket':
+        start_socket_server(pipeline_config_path, args.socket_type, port=args.port, socket_file=args.socket_file)
+    elif args.mode == 'predict':
+        predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
+    elif args.mode == 'install':
         install_from_config(pipeline_config_path)
-    elif mode == 'crossval':
-        if folds < 2:
+    elif args.mode == 'crossval':
+        if args.folds < 2:
             log.error('Minimum number of Folds is 2')
         else:
-            n_folds = folds
-            calc_cv_score(pipeline_config_path, n_folds=n_folds, is_loo=False)
+            calc_cv_score(pipeline_config_path, n_folds=args.folds, is_loo=False)
 
 
 if __name__ == "__main__":
