@@ -223,10 +223,7 @@ and others in the Integrations section for more info.
   [Microsoft Bot Framework](http://docs.deeppavlov.ai/en/0.7.0/integrations/ms_bot.html) integrations
 - in dialog logger config file [dialog_logger_config.json](deeppavlov/utils/settings/dialog_logger_config.json) `agent_name` parameter was renamed to `logger_name`,
   the default value was changed
-- [agent](http://docs.deeppavlov.ai/en/0.6.0/apiref/core/agent.html),
-  [skill](http://docs.deeppavlov.ai/en/0.6.0/apiref/core/skill.html), 
-  [eCommerce Bot](http://docs.deeppavlov.ai/en/0.6.0/features/skills/ecommerce.html), 
-  [Pattern Matching](http://docs.deeppavlov.ai/en/0.6.0/features/skills/pattern_matching.html) moved to `deeppavlov.deprecated`
+- Agent, Skill, eCommerce Bot and Pattern Matching classes were moved to [deeppavlov.deprecated](deeppavlov/deprecated/)
 - [AIML Skill](http://docs.deeppavlov.ai/en/0.7.0/features/skills/aiml_skill.html),
   [RASA Skill](http://docs.deeppavlov.ai/en/0.7.0/features/skills/rasa_skill.html),
   [Yandex Alice](http://docs.deeppavlov.ai/en/0.7.0/integrations/yandex_alice.html),
