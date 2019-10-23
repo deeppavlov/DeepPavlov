@@ -217,10 +217,6 @@ and others in the Integrations section for more info.
 ## Breaking Changes
 
 **Breaking changes in version 0.7.0**
-- server logs formatting was changed at [REST API](http://docs.deeppavlov.ai/en/0.7.0/integrations/rest_api.html),
-  [Yandex Alice](http://docs.deeppavlov.ai/en/0.7.0/integrations/yandex_alice.html),
-  [Amazon Alexa](http://docs.deeppavlov.ai/en/0.7.0/integrations/amazon_alexa.html) and
-  [Microsoft Bot Framework](http://docs.deeppavlov.ai/en/0.7.0/integrations/ms_bot.html) integrations
 - in dialog logger config file [dialog_logger_config.json](deeppavlov/utils/settings/dialog_logger_config.json) `agent_name` parameter was renamed to `logger_name`,
   the default value was changed
 - Agent, Skill, eCommerce Bot and Pattern Matching classes were moved to [deeppavlov.deprecated](deeppavlov/deprecated/)
