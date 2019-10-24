@@ -70,7 +70,9 @@ def main():
         deep_download(pipeline_config_path)
 
     if args.mode == 'train':
-        train_evaluate_model_from_config(pipeline_config_path, recursive=args.recursive, start_epoch_num=args.start_epoch_num)
+        train_evaluate_model_from_config(pipeline_config_path,
+                                         recursive=args.recursive,
+                                         start_epoch_num=args.start_epoch_num)
     elif args.mode == 'evaluate':
         train_evaluate_model_from_config(pipeline_config_path, to_train=False, start_epoch_num=args.start_epoch_num)
     elif args.mode == 'interact':
