@@ -9,12 +9,12 @@ from .tabled_trie import Trie, make_trie
 
 class LevenshteinSearcher:
     """
-    Класс для поиска близких слов
-    в соответствии с расстоянием Левенштейна
+     A class for finding related words
+     according to Levenshtein distance
 
     """
-    def __init__(self, alphabet, dictionary, operation_costs=None,
-                 allow_spaces=False, euristics='none'):
+
+    def __init__(self, alphabet, dictionary, operation_costs=None, allow_spaces=False, euristics="none"):
         self.alphabet = alphabet
         self.allow_spaces = allow_spaces
         if isinstance(euristics, int):
@@ -27,14 +27,17 @@ class LevenshteinSearcher:
         else:
             raise ValueError("Euristics should be non-negative integer or None")
         if isinstance(dictionary, Trie):
-            # словарь передан уже в виде бора
+            # the dictionary is already transferred in the form of forest
             self.dictionary = dictionary
         else:
-            self.dictionary = make_trie(alphabet, dictionary, make_cashed=True,
-                                        precompute_symbols=self.euristics,
-                                        allow_spaces=self.allow_spaces)
-        self.transducer = SegmentTransducer(
-            alphabet, operation_costs=operation_costs, allow_spaces=allow_spaces)
+            self.dictionary = make_trie(
+                alphabet,
+                dictionary,
+                make_cashed=True,
+                precompute_symbols=self.euristics,
+                allow_spaces=self.allow_spaces,
+            )
+        self.transducer = SegmentTransducer(alphabet, operation_costs=operation_costs, allow_spaces=allow_spaces)
         self._precompute_euristics()
         self._define_h_function()
 
@@ -45,34 +48,31 @@ class LevenshteinSearcher:
         """
         Finds all dictionary words in d-window from word
         """
-        if not all((c in self.alphabet
-                    or (c == " " and self.allow_spaces)) for c in word):
+        if not all((c in self.alphabet or (c == " " and self.allow_spaces)) for c in word):
             return []
             # raise ValueError("{0} contains an incorrect symbol".format(word))
-        return self._trie_search(
-            word, d, allow_spaces=allow_spaces, return_cost=return_cost)
+        return self._trie_search(word, d, allow_spaces=allow_spaces, return_cost=return_cost)
 
-    def _trie_search(self, word, d, transducer=None,
-                     allow_spaces=True, return_cost=True):
+    def _trie_search(self, word, d, transducer=None, allow_spaces=True, return_cost=True):
         """
-        Находит все слова в префиксном боре, расстояние до которых
-        в соответствии с заданным преобразователем не превышает d
+        Finds all words in the prefix forest, the distance to which
+         in accordance with a given converter does not exceed d
         """
         if transducer is None:
-            # разобраться с пробелами
+            #  TODO: check spaces
             transducer = self.transducer.inverse()
         allow_spaces &= self.allow_spaces
         trie = self.dictionary
-        #  инициализация переменных
+        #  variable initialization
         used_agenda_keys = set()
-        agenda = SortedListWithKey(key=(lambda x:x[1]))
+        agenda = SortedListWithKey(key=(lambda x: x[1]))
         h = self.h_func(word, trie.root)
         # agenda[self.agenda_key("", 0, trie.root)] = (0.0, 0.0, h)
         key, value = ("", 0, trie.root), (0.0, 0.0, h)
         agenda.add((key, value))
         answer = dict()
         k = 0
-        # очередь с приоритетом с промежуточными результатами
+        # priority queue with intermediate results
         while len(agenda) > 0:
             key, value = agenda.pop(0)
             if key in used_agenda_keys:
@@ -80,18 +80,18 @@ class LevenshteinSearcher:
             used_agenda_keys.add(key)
             low, pos, index = key
             cost, g, h = value
-            # g --- текущая стоимость, h --- нижняя оценка будущей стоимости
-            # cost = g + h --- нижняя оценка суммарной стоимости
+            # g --- current value, h --- lower estimate of future value
+            # cost = g + h --- lower total cost estimate
             k += 1
             max_upperside_length = min(len(word) - pos, transducer.max_up_length)
             for upperside_length in range(max_upperside_length + 1):
                 new_pos = pos + upperside_length
-                curr_up = word[pos: new_pos]
+                curr_up = word[pos:new_pos]
                 if curr_up not in transducer.operation_costs:
                     continue
                 for curr_low, curr_cost in transducer.operation_costs[curr_up].items():
                     new_g = g + curr_cost
-                    if new_g > d:  #если g > d, то h можно не вычислять
+                    if new_g > d:  # if g> d, then h can not be calculated
                         continue
                     if curr_low == " ":
                         if allow_spaces and trie.is_final(index):
@@ -103,7 +103,7 @@ class LevenshteinSearcher:
                     if new_index is Trie.NO_NODE:
                         continue
                     new_low = low + curr_low
-                    new_h = self.h_func(word[new_pos: ], new_index)
+                    new_h = self.h_func(word[new_pos:], new_index)
                     new_cost = new_g + new_h
                     if new_cost > d:
                         continue
@@ -122,76 +122,75 @@ class LevenshteinSearcher:
 
     def _precompute_euristics(self):
         """
-        Предвычисляет будущие символы и стоимости операций с ними
-        для h-эвристики
+        Calculates future symbols and costs of operations 
+        for h-heuristics
         """
         if self.euristics is None:
             return
-        # вычисление минимальной стоимости операции,
-        # приводящей к появлению ('+') или исчезновению ('-') данного символа
-        removal_costs = {a : np.inf for a in self.alphabet}
-        insertion_costs = {a : np.inf for a in self.alphabet}
+        # calculation of the minimum cost of the operation,
+        # leading to the appearance ('-') of this character
+        removal_costs = {a: np.inf for a in self.alphabet}
+        insertion_costs = {a: np.inf for a in self.alphabet}
         if self.allow_spaces:
-            removal_costs[' '] = np.inf
-            insertion_costs[' '] = np.inf
+            removal_costs[" "] = np.inf
+            insertion_costs[" "] = np.inf
         for up, costs in self.transducer.operation_costs.items():
             for low, cost in costs.items():
                 if up == low:
                     continue
-                if up != '':
+                if up != "":
                     removal_cost = cost / len(up)
                     for a in up:
                         removal_costs[a] = min(removal_costs[a], removal_cost)
-                if low != '':
+                if low != "":
                     insertion_cost = cost / len(low)
                     for a in low:
                         insertion_costs[a] = min(insertion_costs[a], insertion_cost)
-        # предвычисление возможных будущих символов в узлах дерева
-        # precompute_future_symbols(self.dictionary, self.euristics, self.allow_spaces)
-        # предвычисление стоимостей потери символа в узлах дерева
+        # Calculating possible future characters in tree nodes
+        # precompute_future_symbols (self.dictionary, self.euristics, self.allow_spaces)
+        # calculating symbol loss costs in tree nodes
         self._absense_costs_by_node = _precompute_absense_costs(
-            self.dictionary, removal_costs, insertion_costs,
-            self.euristics, self.allow_spaces)
-        # массив для сохранения эвристик
+            self.dictionary, removal_costs, insertion_costs, self.euristics, self.allow_spaces
+        )
+        # array to save heuristics
         self._temporary_euristics = [dict() for i in range(len(self.dictionary))]
 
     def _define_h_function(self):
         if self.euristics in [None, 0]:
-            self.h_func = (lambda *x: 0.0)
+            self.h_func = lambda *x: 0.0
         else:
             self.h_func = self._euristic_h_function
 
     def _euristic_h_function(self, suffix, index):
         """
-        Вычисление h-эвристики из работы Hulden,2009 для текущей вершины словаря
+        Computing h-heuristics from Hulden, 2009 for the current dictionary top
 
-        Аргументы:
+        Arguments:
         ----------
-        suffix : string
-            непрочитанный суффикс входного слова
-        index : int
-            индекс текущего узла в словаре
-
-        Возвращает:
+        suffix: string
+            unread suffix of input word
+        index: int
+            index of the current node in the dictionary
+        Returns:
         -----------
-        cost : float
-            оценка снизу для стоимости замены,
-            приводящей к входному слову с суффиксом suffix,
-            если прочитанный префикс слова без опечатки
-            привёл в вершину с номером index
+        cost: float
+            lower estimate for replacement cost,
+            leading to the `suffix` suffix,
+            if the read prefix of the word without a typo
+            brought to the top with `index` number
         """
         if self.euristics > 0:
-            suffix = suffix[:self.euristics]
-        # кэширование результатов
+            suffix = suffix[: self.euristics]
+        # caching results
         index_temporary_euristics = self._temporary_euristics[index]
         cost = index_temporary_euristics.get(suffix, None)
         if cost is not None:
             return cost
-        # извлечение нужных данных из массивов
+        # extraction of the necessary data from arrays
         absense_costs = self._absense_costs_by_node[index]
         data = self.dictionary.data[index]
         costs = np.zeros(dtype=np.float64, shape=(self.euristics,))
-        # costs[j] --- оценка штрафа при предпросмотре вперёд на j символов
+        # costs [j] --- penalty estimate when looking ahead by j characters
         for i, a in enumerate(suffix):
             costs[i:] += absense_costs[a][i:]
         cost = max(costs)
@@ -211,52 +210,51 @@ class LevenshteinSearcher:
         return min(removal_cost, insertion_cost)
 
 
-def _precompute_absense_costs(dictionary, removal_costs, insertion_costs, n,
-                              allow_spaces=False):
+def _precompute_absense_costs(dictionary, removal_costs, insertion_costs, n, allow_spaces=False):
     """
-    Вычисляет минимальную стоимость появления нового символа в узлах словаря
-    в соответствии со штрафами из costs
+    Calculates the minimum cost for a new character to appear in dictionary nodes
+    according to fines from costs
 
-    Аргументы:
+    Arguments:
     ---------------
-    dictionary : Trie
-        словарь, хранящийся в виде ациклического автомата
+    dictionary: Trie
+        dictionary stored as an acyclic automaton
 
-    removal_costs : dict
-        штрафы за удаление символов
+    removal_costs: dict
+        character removal fines
 
-    insertion_costs : dict
-        штрафы за вставку символов
+    insertion_costs: dict
+        character insertion fines
 
-    n : int
-        глубина ``заглядывания вперёд'' в словаре
+    n: int
+        depth of `` looking ahead '' in the dictionary
 
-    Возвращает
+    Returns
     ---------------
-    answer : list of dicts, len(answer)=len(dictionary)
-        answer[i][a][j] равно минимальному штрафу за появление символа a
-        в j-ой позиции в вершине с номером i
+    answer: list of dicts, len (answer) = len (dictionary)
+        answer [i] [a] [j] is equal to the minimum penalty for the appearance of the character a
+        at the j-th position at the vertex number i
     """
     answer = [dict() for node in dictionary.data]
     if n == 0:
         return answer
     curr_alphabet = copy.copy(dictionary.alphabet)
     if allow_spaces:
-        curr_alphabet += [' ']
+        curr_alphabet += [" "]
     for l, (costs_in_node, node) in enumerate(zip(answer, dictionary.data)):
-        # определение минимальной стоимости удаления символов
+        # determination of the minimum cost of removing characters
         curr_node_removal_costs = np.empty(dtype=np.float64, shape=(n,))
         if len(node[0]) > 0:
             curr_node_removal_costs[0] = min(removal_costs[symbol] for symbol in node[0])
             for j, symbols in enumerate(node[1:], 1):
                 if len(symbols) == 0:
-                    curr_node_removal_costs[j:] = curr_node_removal_costs[j-1]
+                    curr_node_removal_costs[j:] = curr_node_removal_costs[j - 1]
                     break
                 curr_cost = min(removal_costs[symbol] for symbol in symbols)
-                curr_node_removal_costs[j] = min(curr_node_removal_costs[j-1], curr_cost)
+                curr_node_removal_costs[j] = min(curr_node_removal_costs[j - 1], curr_cost)
         else:
             curr_node_removal_costs[:] = np.inf
-        # определение минимальной стоимости вставки
+        # determination of the minimum cost of insertion
         for a in curr_alphabet:
             curr_symbol_costs = np.empty(dtype=np.float64, shape=(n,))
             curr_symbol_costs.fill(insertion_costs[a])
@@ -271,23 +269,23 @@ def _precompute_absense_costs(dictionary, removal_costs, insertion_costs, n,
 
 class SegmentTransducer:
     """
-    Класс, реализующий взвешенный конечный преобразователь,
-    осуществляющий замены из заданного списка операций
+    A class that implements a weighted final transducer,
+    performing replacements from a given list of operations
 
-    Аргументы:
+    Arguments:
     ----------
-    alphabet : list
-        алфавит
+    alphabet: list
+        alphabet
 
-    operation_costs : dict or None(optional, default=None)
-        словарь вида {(up,low) : cost}
+    operation_costs: dict or None (optional, default = None)
+        dictionary like {(up, low): cost}
 
-    allow_spaces : bool(optional, default=False)
-        разрешены ли элементы трансдукции, содержащие пробел
-        (используется только если явно не заданы operation costs
-        и они равны значению по умолчанию)
-
+    allow_spaces: bool (optional, default = False)
+        whether transduction elements containing a space are allowed
+        (used only if operation costs are not explicitly set
+        and they are equal to the default value)
     """
+
     def __init__(self, alphabet, operation_costs=None, allow_spaces=False):
         self.alphabet = alphabet
         if operation_costs is None:
@@ -300,26 +298,26 @@ class SegmentTransducer:
         self._make_maximal_key_lengths()
         # self.maximal_value_lengths = {}
         # for up, probs in self.operation_costs.items():
-            # СЛИШКОМ МНОГО ВЫЗОВОВ, НАДО КАК-ТО ЗАПОМНИТЬ
-            # МАКСИМАЛЬНЫЕ ДЛИНЫ КЛЮЧЕЙ ПРИ ОБРАЩЕНИИ
-            # max_low_length = max(len(low) for low in probs) if (len(probs) > 0) else -1
-            # self.maximal_value_lengths[up] = self.maximal_key_length
+        # TOO MUCH CALLS NEEDS TO REMEMBER
+        # MAXIMUM KEY LENGTHS WHEN HANDLING
+        # max_low_length = max(len(low) for low in probs) if (len(probs) > 0) else -1
+        # self.maximal_value_lengths[up] = self.maximal_key_length
 
     def get_operation_cost(self, up, low):
         """
-        Возвращает стоимость элементарной трансдукции up->low
-        или np.inf, если такой элементарной трансдукции нет
+        Returns the cost of elemental transduction up-> low
+        or np.inf if there is no such elementary transduction
 
-        Аргументы:
+        Arguments:
         ----------
-        up, low : string
-            элементы элементарной трансдукции
+        up, low: string
+            elemental transduction elements
 
-        Возвращает:
+        Returns:
         -----------
-        cost : float
-            стоимость элементарной трансдукции up->low
-            (np.inf, если такая трансдукция отсутствует)
+        cost: float
+            elementary transduction cost up-> low
+            (np.inf if such transduction is absent)
         """
         up_costs = self.operation_costs.get(up, None)
         if up_costs is None:
@@ -329,9 +327,9 @@ class SegmentTransducer:
 
     def inverse(self):
         """
-        Строит пробразователь, задающий обратное конечное преобразование
+        Build a transformer specifying the inverse final transformation
         """
-        # УПРОСТИТЬ ОБРАЩЕНИЕ!!!
+        # SIMPLIFY THE CALL!!!
         inversed_transducer = SegmentTransducer(self.alphabet, operation_costs=dict())
         inversed_transducer.operation_costs = self._reversed_operation_costs
         inversed_transducer._reversed_operation_costs = self.operation_costs
@@ -341,46 +339,44 @@ class SegmentTransducer:
         inversed_transducer.max_up_lengths_by_low = self.max_low_lengths_by_up
         return inversed_transducer
 
-    def distance(self, first, second, return_transduction = False):
+    def distance(self, first, second, return_transduction=False):
         """
-        Вычисляет трансдукцию минимальной стоимости,
-        отображающую first в second
+        Calculates the minimum cost transduction,
+        mapping `first` to `second`
 
-        Аргументы:
+        Arguments:
         -----------
-        first : string
-        second : string
-            Верхний и нижний элементы трансдукции
+        first: string
+        second: string
+            Upper and lower transduction elements
 
-        return_transduction : bool (optional, default=False)
-            следует ли возвращать трансдукцию минимального веса
-            (см. возвращаемое значение)
+        return_transduction: bool (optional, default = False)
+            should minimum weight transduction be returned
+            (see return value)
 
-        Возвращает:
+        Returns:
         -----------
-        (final_cost, transductions) : tuple(float, list)
-            если return_transduction=True, то возвращает
-            минимальную стоимость трансдукции, переводящей first в second
-            и список трансдукций с данной стоимостью
+        (final_cost, transductions): tuple (float, list)
+            if return_transduction = True, then returns
+            minimum cost of transduction converting first to second
+            and a list of transductions with a given value
 
-        final_cost : float
-            если return_transduction=False, то возвращает
-            минимальную стоимость трансдукции, переводящей first в second
+        final_cost: float
+            if return_transduction = False, then returns
+            minimum cost of transduction converting first to second
         """
         if return_transduction:
-            add_pred = (lambda x, y: (y == np.inf or x < y))
+            add_pred = lambda x, y: (y == np.inf or x < y)
         else:
-            add_pred = (lambda x, y: (y == np.inf or x <= y))
-        clear_pred = (lambda x, y: x < y < np.inf)
+            add_pred = lambda x, y: (y == np.inf or x <= y)
+        clear_pred = lambda x, y: x < y < np.inf
         update_func = lambda x, y: min(x, y)
-        costs, backtraces = self._fill_levenshtein_table(first, second,
-                                                        update_func, add_pred, clear_pred)
+        costs, backtraces = self._fill_levenshtein_table(first, second, update_func, add_pred, clear_pred)
         final_cost = costs[-1][-1]
         if final_cost == np.inf:
             transductions = [None]
         elif return_transduction:
-            transductions = self._backtraces_to_transductions(first, second, backtraces,
-                                                              final_cost, return_cost=False)
+            transductions = self._backtraces_to_transductions(first, second, backtraces, final_cost, return_cost=False)
         if return_transduction:
             return final_cost, transductions
         else:
@@ -388,49 +384,48 @@ class SegmentTransducer:
 
     def transduce(self, first, second, threshold):
         """
-        Возвращает все трансдукции, переводящие first в second,
-        чья стоимость не превышает threshold
+        Returns all transductions translating first to second,
+        whose value does not exceed threshold
 
-        Возвращает:
+        Returns:
         ----------
-        result : list
-            список вида [(трансдукция, стоимость)]
+        result: list
+            type list [(transduction, cost)]
         """
-        add_pred = (lambda x, y: x <= threshold)
-        clear_pred =(lambda x, y: False)
-        update_func = (lambda x, y: min(x, y))
-        costs, backtraces = self._fill_levenshtein_table(first, second,
-                                                        update_func, add_pred, clear_pred,
-                                                        threshold=threshold)
-        result = self._backtraces_to_transductions(first, second,
-                                                   backtraces, threshold, return_cost=True)
+        add_pred = lambda x, y: x <= threshold
+        clear_pred = lambda x, y: False
+        update_func = lambda x, y: min(x, y)
+        costs, backtraces = self._fill_levenshtein_table(
+            first, second, update_func, add_pred, clear_pred, threshold=threshold
+        )
+        result = self._backtraces_to_transductions(first, second, backtraces, threshold, return_cost=True)
         return result
 
     def lower_transductions(self, word, max_cost, return_cost=True):
         """
-        Возвращает все трансдукции с верхним элементом word,
-        чья стоимость не превышает max_cost
+        Returns all transductions with the top word element,
+        whose value does not exceed max_cost
 
-    `   Возвращает:
+         Returns:
         ----------
-        result : list
-            список вида [(трансдукция, стоимость)], если return_cost=True
-            список трансдукций, если return_cost=False
-            список отсортирован в порядке возрастания стоимости трансдукции
+        result: list
+            a list of the form [(transduction, cost)] if return_cost = True
+            transduction list if return_cost = False
+            the list is sorted in ascending order of transduction cost
         """
         prefixes = [[] for i in range(len(word) + 1)]
         prefixes[0].append(((), 0.0))
         for pos in range(len(prefixes)):
-            # вставки
+            # insertions
             prefixes[pos] = self._perform_insertions(prefixes[pos], max_cost)
             max_upperside_length = min(len(word) - pos, self.max_up_length)
             for upperside_length in range(1, max_upperside_length + 1):
-                up = word[pos: pos + upperside_length]
+                up = word[pos : pos + upperside_length]
                 for low, low_cost in self.operation_costs.get(up, dict()).items():
                     for transduction, cost in prefixes[pos]:
                         new_cost = cost + low_cost
                         if new_cost <= max_cost:
-                            new_transduction = transduction +(up, low)
+                            new_transduction = transduction + (up, low)
                             prefixes[pos + upperside_length].append((new_transduction, new_cost))
         answer = sorted(prefixes[-1], key=(lambda x: x[0]))
         if return_cost:
@@ -460,55 +455,54 @@ class SegmentTransducer:
         inversed_transducer = self.inverse()
         return inversed_transducer.lower_transductions(word, max_cost, return_cost)
 
-    def _fill_levenshtein_table(self, first, second, update_func, add_pred, clear_pred,
-                               threshold=None):
+    def _fill_levenshtein_table(self, first, second, update_func, add_pred, clear_pred, threshold=None):
         """
-        Функция, динамически заполняющая таблицу costs стоимости трансдукций,
-        costs[i][j] --- минимальная стоимость трансдукции,
-        переводящей first[:i] в second[:j]
+        A function that dynamically populates the transduction cost table
+        costs [i] [j] --- the minimum cost of transduction,
+        translating first [: i] to second [: j]
 
-        Аргументы:
+        Arguments:
         ----------
-        first, second : string
-            Верхний и нижний элементы трансдукции
-        update_func : callable, float*float -> bool
-            update_func(x, y) возвращает новое значение в ячейке таблицы costs,
-            если старое значение --- y, а потенциально новое значение --- x
-            везде update_func = min
-        add_pred : callable : float*float -> bool
-            add_pred(x, y) возвращает, производится ли добавление
-            нового элемента p стоимости x в ячейку backtraces[i][j]
-            в зависимости от значения costs[i][j]=y и текущей стоимости x
-        clear_pred : callable : float*float -> bool
-            clear_pred(x, y) возвращает, производится ли очистка
-            ячейки backtraces[i][j] в зависимости от значения costs[i][j]=y
-            и текущей стоимости x элемента p, добавляемого в эту ячейку
+        first, second: string
+            Upper and lower transduction elements
+        update_func: callable, float * float -> bool
+            update_func (x, y) returns the new value in the table cell costs,
+            if the old value is y, and the potentially new value is x
+            everywhere update_func = min
+        add_pred: callable: float * float -> bool
+            add_pred (x, y) returns whether adding
+            a new element p of cost x to the cell backtraces [i] [j]
+            depending on the value of costs [i] [j] = y and current value x
+        clear_pred: callable: float * float -> bool
+            clear_pred (x, y) returns whether cleaning is performed
+            cells backtraces [i] [j] depending on the value of costs [i] [j] = y
+            and the current value x of the element p being added to this cell
 
-        Возвращает:
+        Returns:
         -----------
-        costs : array, dtype=float, shape=(len(first)+1, len(second)+1)
-            массив, в ячейке с индексами i, j которого хранится
-            минимальная стоимость трансдукции, переводящей first[:i] в second[:j]
-        backtraces : array, dtype=list, shape=(len(first)+1, len(second)+1)
-            массив, в ячейке с индексами i, j которого хранятся
-            обратные ссылки на предыдущую ячейку в оптимальной трансдукции,
-            приводящей в ячейку backtraces[i][j]
+        costs: array, dtype = float, shape = (len (first) +1, len (second) +1)
+            an array in the cell with indices i whose j is stored
+            minimum cost of transduction converting first [: i] to second [: j]
+        backtraces: array, dtype = list, shape = (len (first) +1, len (second) +1)
+            an array in the cell with indices i, j of which are stored
+            backlinks to the previous cell in optimal transduction,
+            cell leading backtraces [i] [j]
         """
         m, n = len(first), len(second)
-        # если threshold=None, то в качестве порога берётся удвоенная стоимость
-        # трансдукции, отображающей символы на одинаковых позициях друг в друга
+        # if threshold = None, then double value is taken as a threshold
+        # transduction, displaying characters at the same positions in each other
         if threshold is None:
             threshold = 0.0
             for a, b in zip(first, second):
                 threshold += self.get_operation_cost(a, b)
             if m > n:
-                for a in first[n: ]:
-                    threshold += self.get_operation_cost(a, '')
+                for a in first[n:]:
+                    threshold += self.get_operation_cost(a, "")
             elif m < n:
-                for b in second[m: ]:
-                    threshold += self.get_operation_cost('', b)
+                for b in second[m:]:
+                    threshold += self.get_operation_cost("", b)
             threshold *= 2
-        # инициализация возвращаемых массивов
+        # initialization of returned arrays
         costs = np.zeros(shape=(m + 1, n + 1), dtype=np.float64)
         costs[:] = np.inf
         backtraces = [None] * (m + 1)
@@ -517,19 +511,18 @@ class SegmentTransducer:
         costs[0][0] = 0.0
         for i in range(m + 1):
             for i_right in range(i, min(i + self.max_up_length, m) + 1):
-                up = first[i: i_right]
+                up = first[i:i_right]
                 max_low_length = self.max_low_lengths_by_up.get(up, -1)
-                if max_low_length == -1: # no up key in transduction
+                if max_low_length == -1:  # no up key in transduction
                     continue
                 up_costs = self.operation_costs[up]
                 for j in range(n + 1):
                     if costs[i][j] > threshold:
                         continue
                     if len(backtraces[i][j]) == 0 and i + j > 0:
-                        continue # не нашлось обратных ссылок
-                    for j_right in range((j if i_right > i else j + 1),
-                                         min(j + max_low_length, n) + 1):
-                        low = second[j: j_right]
+                        continue  # no backlinks found
+                    for j_right in range((j if i_right > i else j + 1), min(j + max_low_length, n) + 1):
+                        low = second[j:j_right]
                         curr_cost = up_costs.get(low, np.inf)
                         old_cost = costs[i_right][j_right]
                         new_cost = costs[i][j] + curr_cost
@@ -544,8 +537,8 @@ class SegmentTransducer:
 
     def _make_reversed_operation_costs(self):
         """
-        Заполняет массив _reversed_operation_costs
-        на основе имеющегося массива operation_costs
+        Fills the _reversed_operation_costs array
+        based on the available operation_costs array
         """
         _reversed_operation_costs = dict()
         for up, costs in self.operation_costs.items():
@@ -557,53 +550,49 @@ class SegmentTransducer:
 
     def _make_maximal_key_lengths(self):
         """
-        Вычисляет максимальную длину элемента low
-        в элементарной трансдукции (up, low) для каждого up
-        и максимальную длину элемента up
-        в элементарной трансдукции (up, low) для каждого low
+        Calculates the maximum length of an element. Low
+        in elementary transduction (up, low) for each up
+        and the maximum length of the up element
+        in elementary transduction (up, low) for each low
         """
-        self.max_up_length =\
-            (max(len(up) for up in self.operation_costs)
-             if len(self.operation_costs) > 0 else -1)
-        self.max_low_length =\
-            (max(len(low) for low in self._reversed_operation_costs)
-             if len(self._reversed_operation_costs) > 0 else -1)
+        self.max_up_length = max(len(up) for up in self.operation_costs) if len(self.operation_costs) > 0 else -1
+        self.max_low_length = (
+            max(len(low) for low in self._reversed_operation_costs) if len(self._reversed_operation_costs) > 0 else -1
+        )
         self.max_low_lengths_by_up, self.max_up_lengths_by_low = dict(), dict()
         for up, costs in self.operation_costs.items():
-            self.max_low_lengths_by_up[up] =\
-                max(len(low) for low in costs) if len(costs) > 0 else -1
+            self.max_low_lengths_by_up[up] = max(len(low) for low in costs) if len(costs) > 0 else -1
         for low, costs in self._reversed_operation_costs.items():
-            self.max_up_lengths_by_low[low] =\
-                max(len(up) for up in costs) if len(costs) > 0 else -1
+            self.max_up_lengths_by_low[low] = max(len(up) for up in costs) if len(costs) > 0 else -1
 
     def _backtraces_to_transductions(self, first, second, backtraces, threshold, return_cost=False):
         """
-        Восстанавливает трансдукции по таблице обратных ссылок
+        Recovers transductions using the backlink table
 
-        Аргументы:
+        Arguments:
         ----------
-        first, second : string
-            верхние и нижние элементы трансдукции
-        backtraces : array-like, dtype=list, shape=(len(first)+1, len(second)+1)
-            таблица обратных ссылок
-        threshold : float
-            порог для отсева трансдукций,
-            возвращаются только трансдукции стоимостью <= threshold
-        return_cost : bool (optional, default=False)
-            если True, то вместе с трансдукциями возвращается их стоимость
+        first, second: string
+            upper and lower transduction elements
+        backtraces: array-like, dtype = list, shape = (len (first) +1, len (second) +1)
+            backlink table
+        threshold: float
+            threshold for screening transductions,
+            only transductions worth <= threshold are returned
+        return_cost: bool (optional, default = False)
+            if True, then along with transductions, their value is returned
 
-        Возвращает:
+        Returns:
         -----------
-        result : list
-            список вида [(трансдукция, стоимость)], если return_cost=True
-            и вида [трансдукция], если return_cost=False,
-            содержащий все трансдукции, переводящие first в second,
-            чья стоимость не превышает threshold
+        result: list
+            a list of the form [(transduction, cost)] if return_cost = True
+            and type [transduction] if return_cost = False,
+            containing all transductions converting first to second,
+            whose value does not exceed threshold
         """
         m, n = len(first), len(second)
         agenda = [None] * (m + 1)
         for i in range(m + 1):
-            agenda[i] = [[] for j in range(n+1)]
+            agenda[i] = [[] for j in range(n + 1)]
         agenda[m][n] = [((), 0.0)]
         for i_right in range(m, -1, -1):
             for j_right in range(n, -1, -1):
@@ -615,7 +604,7 @@ class SegmentTransducer:
                     add_cost = self.operation_costs[up][low]
                     for elem, cost in current_agenda:
                         new_cost = cost + add_cost
-                        if new_cost <= threshold: # удаление трансдукций большой стоимости
+                        if new_cost <= threshold:  # high cost transduction removal
                             agenda[i][j].append((((up, low),) + elem, new_cost))
         if return_cost:
             return agenda[0][0]
@@ -624,20 +613,20 @@ class SegmentTransducer:
 
     def _perform_insertions(self, initial, max_cost):
         """
-        возвращает все трансдукции стоимости <= max_cost,
-        которые можно получить из элементов initial
+        returns all transductions values <= max_cost,
+        which can be obtained from the elements of `initial`
 
-        Аргументы:
+        Arguments:
         ----------
-        initial : list of tuples
-            список исходных трансдукций вида [(трансдукция, стоимость)]
-        max_cost : float
-            максимальная стоимость трансдукции
+        initial: list of tuples
+            list of source transductions of the form [(transduction, cost)]
+        max_cost: float
+            maximum cost of transduction
 
-        Возвращает:
+        Returns:
         -----------
-        final : list of tuples
-            финальный список трансдукций вида [(трансдукция, стоимость)]
+        final: list of tuples
+            final list of transductions of the form [(transduction, cost)]
         """
         queue = list(initial)
         final = initial
@@ -657,7 +646,7 @@ class SegmentTransducer:
         sets 1.0 cost for every replacement, insertion, deletion and transposition
         """
         self.operation_costs = dict()
-        self.operation_costs[""] = {c: 1.0 for c in list(self.alphabet) + [' ']}
+        self.operation_costs[""] = {c: 1.0 for c in list(self.alphabet) + [" "]}
         for a in self.alphabet:
             current_costs = {c: 1.0 for c in self.alphabet}
             current_costs[a] = 0.0
@@ -665,10 +654,10 @@ class SegmentTransducer:
             if allow_spaces:
                 current_costs[" "] = 1.0
             self.operation_costs[a] = current_costs
-        # транспозиции
+        # transposition
         for a, b in itertools.permutations(self.alphabet, 2):
             self.operation_costs[a + b] = {b + a: 1.0}
-        # пробелы
+        # spaces
         if allow_spaces:
             self.operation_costs[" "] = {c: 1.0 for c in self.alphabet}
             self.operation_costs[" "][""] = 1.0
