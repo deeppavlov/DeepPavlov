@@ -83,22 +83,22 @@ def main():
                            app_secret=args.ms_secret,
                            port=args.port,
                            https=args.https,
-                           ssl_key=args.ssl_key,
-                           ssl_cert=args.ssl_cert)
+                           ssl_key=args.key,
+                           ssl_cert=args.cert)
     elif args.mode == 'alexa':
         start_alexa_server(model_config=pipeline_config_path,
                            port=args.port,
                            https=args.https,
-                           ssl_key=args.ssl_key,
-                           ssl_cert=args.ssl_cert)
+                           ssl_key=args.key,
+                           ssl_cert=args.cert)
     elif args.mode == 'alice':
         start_alice_server(model_config=pipeline_config_path,
                            port=args.port,
                            https=args.https,
-                           ssl_key=args.ssl_key,
-                           ssl_cert=args.ssl_cert)
+                           ssl_key=args.key,
+                           ssl_cert=args.cert)
     elif args.mode == 'riseapi':
-        start_model_server(pipeline_config_path, args.https, args.ssl_key, args.ssl_cert, port=args.port)
+        start_model_server(pipeline_config_path, args.https, args.key, args.cert, port=args.port)
     elif args.mode == 'risesocket':
         start_socket_server(pipeline_config_path, args.socket_type, port=args.port, socket_file=args.socket_file)
     elif args.mode == 'predict':
