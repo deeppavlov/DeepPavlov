@@ -12,11 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from keras import backend as K
-from keras.activations import softmax
-from keras.engine.topology import Layer
-from keras.layers import Dense, Reshape, Concatenate, Lambda
-from keras.layers.merge import Multiply
+from tensorflow.keras import backend as K
+from tensorflow.keras.activations import softmax
+from tensorflow.keras.layers import Dense, Reshape, Concatenate, Lambda, Layer, Multiply
 
 
 def expand_tile(units, axis):
