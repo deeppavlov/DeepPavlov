@@ -91,7 +91,7 @@ class LevenshteinSearcher:
                     continue
                 for curr_low, curr_cost in transducer.operation_costs[curr_up].items():
                     new_g = g + curr_cost
-                    if new_g > d:  # if g> d, then h can not be calculated
+                    if new_g > d:  # h cannot be calculated if g > d
                         continue
                     if curr_low == " ":
                         if allow_spaces and trie.is_final(index):
@@ -190,7 +190,7 @@ class LevenshteinSearcher:
         absense_costs = self._absense_costs_by_node[index]
         data = self.dictionary.data[index]
         costs = np.zeros(dtype=np.float64, shape=(self.euristics,))
-        # costs [j] --- penalty estimate when looking ahead by j characters
+        # costs[j] --- penalty estimate when looking ahead by j characters
         for i, a in enumerate(suffix):
             costs[i:] += absense_costs[a][i:]
         cost = max(costs)
@@ -231,7 +231,7 @@ def _precompute_absense_costs(dictionary, removal_costs, insertion_costs, n, all
 
     Returns
     ---------------
-    answer: list of dicts, len (answer) = len (dictionary)
+    answer: list of dicts, len(answer) = len(dictionary)
         answer [i] [a] [j] is equal to the minimum penalty for the appearance of the character a
         at the j-th position at the vertex number i
     """
