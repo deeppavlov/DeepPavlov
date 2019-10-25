@@ -17,21 +17,15 @@ from logging import getLogger
 from pathlib import Path
 from typing import List, Tuple, Optional, Generator, Union
 
-import keras.metrics
-import keras.optimizers
 import numpy as np
-from keras import backend as K
-from keras.layers import Dense, Input
-from keras.layers import concatenate, Activation, Concatenate, Reshape
-from keras.layers.convolutional import Conv1D
-from keras.layers.core import Dropout
-from keras.layers.normalization import BatchNormalization
-from keras.layers.pooling import GlobalMaxPooling1D, MaxPooling1D, GlobalAveragePooling1D
-from keras.layers.recurrent import LSTM, GRU
-from keras.layers.wrappers import Bidirectional
-from keras.models import Model
-from keras.regularizers import l2
+import tensorflow.keras
 from overrides import overrides
+from tensorflow.keras import backend as K
+from tensorflow.keras.layers import (Conv1D, Dropout, Dense, Input, BatchNormalization, GlobalMaxPooling1D,
+                                     MaxPooling1D, concatenate, Activation, Reshape,
+                                     GlobalAveragePooling1D, LSTM, GRU, Bidirectional)
+from tensorflow.keras.models import Model
+from tensorflow.keras.regularizers import l2
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import save_json, read_json
@@ -148,14 +142,14 @@ class KerasClassificationModel(LRScheduledKerasModel):
             array of embedded texts
         """
         pad = np.zeros(self.opt['embedding_size'])
-        cutted_batch = [sen[:self.opt['text_size']] for sen in sentences]
+        cut_batch = [sen[:self.opt['text_size']] for sen in sentences]
         if self.opt["padding"] == "pre":
-            cutted_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + list(tokens) for tokens in cutted_batch]
+            cut_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + list(tokens) for tokens in cut_batch]
         elif self.opt["padding"] == "post":
-            cutted_batch = [list(tokens) + [pad] * (self.opt['text_size'] - len(tokens)) for tokens in cutted_batch]
+            cut_batch = [list(tokens) + [pad] * (self.opt['text_size'] - len(tokens)) for tokens in cut_batch]
         else:
             raise ConfigError("Padding type {} is not acceptable".format(self.opt['padding']))
-        return np.asarray(cutted_batch)
+        return np.asarray(cut_batch)
 
     def check_input(self, texts: List[List[np.ndarray]]) -> np.ndarray:
         """
@@ -284,8 +278,8 @@ class KerasClassificationModel(LRScheduledKerasModel):
                 try:
                     model.load_weights(str(weights_path))
                 except ValueError:
-                    raise ConfigError(
-                        "Some non-changable parameters of neural network differ from given pre-trained model")
+                    raise ConfigError("Some non-changable parameters of neural network differ"
+                                      " from given pre-trained model")
 
                 self.model = model
 
@@ -314,7 +308,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
         Returns:
 
         """
-        optimizer_func = getattr(keras.optimizers, optimizer_name, None)
+        optimizer_func = getattr(tensorflow.keras.optimizers, optimizer_name, None)
         if callable(optimizer_func):
             if isinstance(learning_rate, float) and isinstance(learning_rate_decay, float):
                 # in this case decay will be either given in config or, by default, learning_rate_decay=0.
@@ -322,9 +316,9 @@ class KerasClassificationModel(LRScheduledKerasModel):
             else:
                 self.optimizer = optimizer_func()
         else:
-            raise AttributeError("Optimizer {} is not defined in `keras.optimizers`".format(optimizer_name))
+            raise AttributeError("Optimizer {} is not defined in `tensorflow.keras.optimizers`".format(optimizer_name))
 
-        loss_func = getattr(keras.losses, loss_name, None)
+        loss_func = getattr(tensorflow.keras.losses, loss_name, None)
         if callable(loss_func):
             loss = loss_func
         else:
@@ -378,15 +372,15 @@ class KerasClassificationModel(LRScheduledKerasModel):
         # then change load_path to save_path for config
         self.opt["epochs_done"] = self.epochs_done
         if isinstance(self.opt.get("learning_rate", None), float):
-            self.opt["final_learning_rate"] = K.eval(self.optimizer.lr) / (1. +
-                                                                           K.eval(
-                                                                               self.optimizer.decay) * self.batches_seen)
+            self.opt["final_learning_rate"] = (K.eval(self.optimizer.lr) /
+                                               (1. + K.eval(self.optimizer.decay) * self.batches_seen))
 
         if self.opt.get("load_path") and self.opt.get("save_path"):
             if self.opt.get("save_path") != self.opt.get("load_path"):
                 self.opt["load_path"] = str(self.opt["save_path"])
         save_json(self.opt, opt_path)
 
+    # noinspection PyUnusedLocal
     def cnn_model(self, kernel_sizes_cnn: List[int], filters_cnn: int, dense_size: int,
                   coef_reg_cnn: float = 0., coef_reg_den: float = 0., dropout_rate: float = 0.,
                   input_projection_size: Optional[int] = None, **kwargs) -> Model:
@@ -440,6 +434,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
         model = Model(inputs=inp, outputs=act_output)
         return model
 
+    # noinspection PyUnusedLocal
     def dcnn_model(self, kernel_sizes_cnn: List[int], filters_cnn: List[int], dense_size: int,
                    coef_reg_cnn: float = 0., coef_reg_den: float = 0., dropout_rate: float = 0.,
                    input_projection_size: Optional[int] = None, **kwargs) -> Model:
@@ -490,6 +485,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
         model = Model(inputs=inp, outputs=act_output)
         return model
 
+    # noinspection PyUnusedLocal
     def cnn_model_max_and_aver_pool(self, kernel_sizes_cnn: List[int], filters_cnn: int, dense_size: int,
                                     coef_reg_cnn: float = 0., coef_reg_den: float = 0., dropout_rate: float = 0.,
                                     input_projection_size: Optional[int] = None, **kwargs) -> Model:
@@ -529,7 +525,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
             output_i = Activation('relu')(output_i)
             output_i_0 = GlobalMaxPooling1D()(output_i)
             output_i_1 = GlobalAveragePooling1D()(output_i)
-            output_i = Concatenate()([output_i_0, output_i_1])
+            output_i = concatenate([output_i_0, output_i_1])
             outputs.append(output_i)
 
         output = concatenate(outputs, axis=1)
@@ -547,6 +543,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
         model = Model(inputs=inp, outputs=act_output)
         return model
 
+    # noinspection PyUnusedLocal
     def bilstm_model(self, units_lstm: int, dense_size: int,
                      coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
                      dropout_rate: float = 0., rec_dropout_rate: float = 0.,
@@ -594,6 +591,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
         model = Model(inputs=inp, outputs=act_output)
         return model
 
+    # noinspection PyUnusedLocal
     def bilstm_bilstm_model(self, units_lstm_1: int, units_lstm_2: int, dense_size: int,
                             coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
                             dropout_rate: float = 0., rec_dropout_rate: float = 0.,
@@ -650,6 +648,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
         model = Model(inputs=inp, outputs=act_output)
         return model
 
+    # noinspection PyUnusedLocal
     def bilstm_cnn_model(self, units_lstm: int, kernel_sizes_cnn: List[int], filters_cnn: int, dense_size: int,
                          coef_reg_lstm: float = 0., coef_reg_cnn: float = 0., coef_reg_den: float = 0.,
                          dropout_rate: float = 0., rec_dropout_rate: float = 0.,
@@ -701,7 +700,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
             output_i = GlobalMaxPooling1D()(output_i)
             outputs.append(output_i)
 
-        output = Concatenate(axis=1)(outputs)
+        output = concatenate(outputs, axis=1)
         output = Dropout(rate=dropout_rate)(output)
         output = Dense(dense_size, activation=None,
                        kernel_regularizer=l2(coef_reg_den))(output)
@@ -713,6 +712,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
         model = Model(inputs=inp, outputs=act_output)
         return model
 
+    # noinspection PyUnusedLocal
     def cnn_bilstm_model(self, kernel_sizes_cnn: List[int], filters_cnn: int, units_lstm: int, dense_size: int,
                          coef_reg_cnn: float = 0., coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
                          dropout_rate: float = 0., rec_dropout_rate: float = 0.,
@@ -777,6 +777,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
         model = Model(inputs=inp, outputs=act_output)
         return model
 
+    # noinspection PyUnusedLocal
     def bilstm_self_add_attention_model(self, units_lstm: int, dense_size: int, self_att_hid: int, self_att_out: int,
                                         coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
                                         dropout_rate: float = 0., rec_dropout_rate: float = 0.,
@@ -830,6 +831,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
         model = Model(inputs=inp, outputs=act_output)
         return model
 
+    # noinspection PyUnusedLocal
     def bilstm_self_mult_attention_model(self, units_lstm: int, dense_size: int, self_att_hid: int, self_att_out: int,
                                          coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
                                          dropout_rate: float = 0., rec_dropout_rate: float = 0.,
@@ -883,6 +885,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
         model = Model(inputs=inp, outputs=act_output)
         return model
 
+    # noinspection PyUnusedLocal
     def bigru_model(self, units_gru: int, dense_size: int,
                     coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
                     dropout_rate: float = 0., rec_dropout_rate: float = 0.,
@@ -930,6 +933,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
         model = Model(inputs=inp, outputs=act_output)
         return model
 
+    # noinspection PyUnusedLocal
     def bigru_with_max_aver_pool_model(self, units_gru: int, dense_size: int,
                                        coef_reg_gru: float = 0., coef_reg_den: float = 0.,
                                        dropout_rate: float = 0., rec_dropout_rate: float = 0.,
@@ -964,7 +968,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
         output1 = GlobalMaxPooling1D()(output)
         output2 = GlobalAveragePooling1D()(output)
 
-        output = Concatenate()([output1, output2, state1, state2])
+        output = concatenate([output1, output2, state1, state2])
 
         output = Dropout(rate=dropout_rate)(output)
         output = Dense(dense_size, activation=None,
