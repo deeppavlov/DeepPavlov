@@ -1,25 +1,39 @@
-import uuid
+# Copyright 2019 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import asyncio
 import logging
+import uuid
+from functools import reduce
 from pathlib import Path
 from typing import Tuple, Optional, List
-from functools import reduce
 
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.skill.skill import Skill
-
-from rasa.core.agent import Agent
-from rasa.core.channels import UserMessage
-from rasa.core.channels import CollectingOutputChannel
-from rasa.model import get_model
 from rasa.cli.utils import get_validated_path
 from rasa.constants import DEFAULT_MODELS_PATH
+from rasa.core.agent import Agent
+from rasa.core.channels import CollectingOutputChannel
+from rasa.core.channels import UserMessage
+from rasa.model import get_model
+
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.component import Component
 
 logger = logging.getLogger(__name__)
 
 
 @register("rasa_skill")
-class RASASkill(Skill):
+class RASASkill(Component):
     """RASASkill lets you to wrap RASA Agent as a Skill within DeepPavlov environment.
 
     The component requires path to your RASA models (folder with timestamped tar.gz archieves)
@@ -51,9 +65,9 @@ class RASASkill(Skill):
         self.ioloop = asyncio.new_event_loop()
         logger.info(f"path to RASA models is: `{self.path_to_models}`")
 
-    def __call__(self, utterances_batch: List[str],
-                 history_batch: Optional[List]=None,
-                 states_batch: Optional[List]=None) -> Tuple[List[str], List[float], list]:
+    def __call__(self,
+                 utterances_batch: List[str],
+                 states_batch: Optional[List] = None) -> Tuple[List[str], List[float], list]:
         """Returns skill inference result.
 
         Returns batches of skill inference results, estimated confidence
@@ -62,7 +76,6 @@ class RASASkill(Skill):
 
         Args:
             utterances_batch: A batch of utterances of str type.
-            history_batch: A batch of list typed histories for each utterance.
             states_batch:  A batch of arbitrary typed states for
                 each utterance.
 

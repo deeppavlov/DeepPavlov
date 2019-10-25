@@ -14,16 +14,22 @@ a new one -- run:
 
     openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/CN=MY_DOMAIN_OR_IP" -keyout my.key -out my.crt
 
-Then run:
+To run a model specified by the ``<config_path>`` config file as an Alice
+skill, run:
 
 ::
 
-    python -m deeppavlov riseapi --api-mode alice --https --key my.key --cert my.crt  <config_path> [-d] [-p <port>]
-
+    python -m deeppavlov alice <config_path> --https --key my.key --cert my.crt  [-d] [-p <port>]
 
 * ``-d``: download model specific data before starting the service.
-* ``-p <port>``: sets the port to ``<port>``. Overrides default
-  settings from ``deeppavlov/utils/settings/server_config.json``.
+
+The command will print the used host and port. Default web service properties
+(host, port, model endpoint, GET request arguments, paths to ssl cert and key,
+https mode) can be modified via changing
+``deeppavlov/utils/settings/server_config.json`` file. ``--https``, ``--key``,
+``--cert``, ``-p`` arguments override values from ``server_config.json``.
+Advanced API configuration is described in
+:doc:`REST API </integrations/rest_api>` section.
 
 Now set up and test your dialog (https://dialogs.yandex.ru/developer/).
 Detailed documentation of the platform could be found on 
@@ -35,28 +41,19 @@ Python
 ~~~~~~
 
 To run a model specified by a DeepPavlov config ``<config_path>`` as an Alice
-skill, firstly, you have to turn it to a :class:`~deeppavlov.core.skill.skill.Skill`
-and then make it an :class:`~deeppavlov.core.agent.agent.Agent`.
+skill using python, you have to run following code:
 
 .. code:: python
 
-    from deeppavlov import build_model
-    from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
-    from deeppavlov.agents.default_agent.default_agent import DefaultAgent
-    from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
-    from deeppavlov.utils.alice import start_agent_server
+    from deeppavlov.utils.alice import start_alice_server
 
-    model = build_model("<config_path>", download=True)
+    start_alice_server(<config_path>,
+                       host=<host>,
+                       port=<port>,
+                       endpoint=<endpoint>,
+                       https=True,
+                       ssl_key='my.key',
+                       ssl_cert='my.crt')
 
-    # Step 1: make it a Skill 
-    skill = DefaultStatelessSkill(model)
-    # Step 2: make it an Agent
-    agent = DefaultAgent(skills=[skill])
-    # Step 3: run server
-    start_agent_server(agent, host='0.0.0.0', port=7051, endpoint='/agent', ssl_key='my.key', ssl_cert='my.crt')
-
-If your model is already a subclass of :class:`~deeppavlov.core.skill.skill.Skill`
-or a subclass of :class:`~deeppavlov.core.agent.agent.Agent` (see
-:doc:`skills </apiref/skills>` and :doc:`agents </apiref/agents>`) you can skip
-corresponding steps.
-
+All arguments except ``<model_config_path>`` are optional. Optional arguments override
+corresponding values from ``deeppavlov/utils/settings/server_config.json``.
