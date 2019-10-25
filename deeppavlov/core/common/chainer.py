@@ -15,6 +15,7 @@
 import pickle
 from itertools import islice
 from logging import getLogger
+from types import FunctionType
 from typing import Union, Tuple, List, Optional, Hashable, Reversible
 
 from deeppavlov.core.common.errors import ConfigError
@@ -123,8 +124,8 @@ class Chainer(Component):
                                 break
                     p.pretty(component)
 
-    def append(self, component: Component, in_x: [str, list, dict] = None, out_params: [str, list] = None,
-               in_y: [str, list, dict] = None, main: bool = False):
+    def append(self, component: Union[Component, FunctionType], in_x: [str, list, dict] = None,
+               out_params: [str, list] = None, in_y: [str, list, dict] = None, main: bool = False):
         if isinstance(in_x, str):
             in_x = [in_x]
         if isinstance(in_y, str):
@@ -302,10 +303,12 @@ class Chainer(Component):
     def serialize(self) -> bytes:
         data = []
         for in_params, out_params, component in self.train_pipe:
-            data.append(component.serialize())
+            serialized = component.serialize() if isinstance(component, Component) else None
+            data.append(serialized)
         return pickle.dumps(data, protocol=4)
 
     def deserialize(self, data: bytes) -> None:
         data = pickle.loads(data)
-        for in_params, out_params, component in self.train_pipe:
-            component.deserialize(data)
+        for (in_params, out_params, component), component_data in zip(self.train_pipe, data):
+            if isinstance(component, Component):
+                component.deserialize(component_data)
