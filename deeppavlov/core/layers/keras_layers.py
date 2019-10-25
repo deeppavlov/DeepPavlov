@@ -100,11 +100,11 @@ def multiplicative_self_attention(units, n_hidden=None, n_output_features=None, 
     return output
 
 
-class FullMatchingLayer(Layer):
-
+class MatchingLayer(Layer):
     def __init__(self, output_dim, **kwargs):
         self.output_dim = output_dim
-        super(FullMatchingLayer, self).__init__(**kwargs)
+        self.W = []
+        super().__init__(**kwargs)
 
     def build(self, input_shape):
         assert isinstance(input_shape, list)
@@ -114,9 +114,17 @@ class FullMatchingLayer(Layer):
                                           shape=(1, input_shape[0][-1]),
                                           initializer='uniform',
                                           trainable=True))
-        super(FullMatchingLayer, self).build(input_shape)  # Be sure to call this at the end
+        super().build(input_shape)  # Be sure to call this at the end
 
-    def call(self, x):
+    def compute_output_shape(self, input_shape):
+        assert isinstance(input_shape, list)
+        shape_a, shape_b = input_shape
+        return [(shape_a[0], shape_a[1], self.output_dim), (shape_a[0], shape_a[1], self.output_dim)]
+
+
+class FullMatchingLayer(MatchingLayer):
+
+    def call(self, x, **kwargs):
         assert isinstance(x, list)
         inp_a, inp_b = x
         last_state = K.expand_dims(inp_b[:, -1, :], 1)
@@ -134,29 +142,10 @@ class FullMatchingLayer(Layer):
             persp = m[0]
         return [persp, persp]
 
-    def compute_output_shape(self, input_shape):
-        assert isinstance(input_shape, list)
-        shape_a, shape_b = input_shape
-        return [(shape_a[0], shape_a[1], self.output_dim), (shape_a[0], shape_a[1], self.output_dim)]
 
+class MaxpoolingMatchingLayer(MatchingLayer):
 
-class MaxpoolingMatchingLayer(Layer):
-
-    def __init__(self, output_dim, **kwargs):
-        self.output_dim = output_dim
-        super(MaxpoolingMatchingLayer, self).__init__(**kwargs)
-
-    def build(self, input_shape):
-        assert isinstance(input_shape, list)
-        self.W = []
-        for i in range(self.output_dim):
-            self.W.append(self.add_weight(name='kernel',
-                                          shape=(1, input_shape[0][-1]),
-                                          initializer='uniform',
-                                          trainable=True))
-        super(MaxpoolingMatchingLayer, self).build(input_shape)  # Be sure to call this at the end
-
-    def call(self, x):
+    def call(self, x, **kwargs):
         assert isinstance(x, list)
         inp_a, inp_b = x
         m = []
@@ -174,29 +163,10 @@ class MaxpoolingMatchingLayer(Layer):
             persp = m[0]
         return [persp, persp]
 
-    def compute_output_shape(self, input_shape):
-        assert isinstance(input_shape, list)
-        shape_a, shape_b = input_shape
-        return [(shape_a[0], shape_a[1], self.output_dim), (shape_a[0], shape_a[1], self.output_dim)]
 
+class AttentiveMatchingLayer(MatchingLayer):
 
-class AttentiveMatchingLayer(Layer):
-
-    def __init__(self, output_dim, **kwargs):
-        self.output_dim = output_dim
-        super(AttentiveMatchingLayer, self).__init__(**kwargs)
-
-    def build(self, input_shape):
-        assert isinstance(input_shape, list)
-        self.W = []
-        for i in range(self.output_dim):
-            self.W.append(self.add_weight(name='kernel',
-                                          shape=(1, input_shape[0][-1]),
-                                          initializer='uniform',
-                                          trainable=True))
-        super(AttentiveMatchingLayer, self).build(input_shape)  # Be sure to call this at the end
-
-    def call(self, x):
+    def call(self, x, **kwargs):
         assert isinstance(x, list)
         inp_a, inp_b = x
 
@@ -222,29 +192,10 @@ class AttentiveMatchingLayer(Layer):
             persp = m[0]
         return [persp, persp]
 
-    def compute_output_shape(self, input_shape):
-        assert isinstance(input_shape, list)
-        shape_a, shape_b = input_shape
-        return [(shape_a[0], shape_a[1], self.output_dim), (shape_a[0], shape_a[1], self.output_dim)]
 
+class MaxattentiveMatchingLayer(MatchingLayer):
 
-class MaxattentiveMatchingLayer(Layer):
-
-    def __init__(self, output_dim, **kwargs):
-        self.output_dim = output_dim
-        super(MaxattentiveMatchingLayer, self).__init__(**kwargs)
-
-    def build(self, input_shape):
-        assert isinstance(input_shape, list)
-        self.W = []
-        for i in range(self.output_dim):
-            self.W.append(self.add_weight(name='kernel',
-                                          shape=(1, input_shape[0][-1]),
-                                          initializer='uniform',
-                                          trainable=True))
-        super(MaxattentiveMatchingLayer, self).build(input_shape)  # Be sure to call this at the end
-
-    def call(self, x):
+    def call(self, x, **kwargs):
         assert isinstance(x, list)
         inp_a, inp_b = x
 
@@ -270,8 +221,3 @@ class MaxattentiveMatchingLayer(Layer):
         else:
             persp = m[0]
         return [persp, persp]
-
-    def compute_output_shape(self, input_shape):
-        assert isinstance(input_shape, list)
-        shape_a, shape_b = input_shape
-        return [(shape_a[0], shape_a[1], self.output_dim), (shape_a[0], shape_a[1], self.output_dim)]
