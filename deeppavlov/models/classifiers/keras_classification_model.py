@@ -111,6 +111,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
                      **kwargs}
         self.opt = deepcopy(given_opt)
         self.model = None
+        self.optimizer = None
 
         super().__init__(**given_opt)
 
@@ -187,43 +188,20 @@ class KerasClassificationModel(LRScheduledKerasModel):
         metrics_values = self.model.train_on_batch(features, np.array(labels))
         return metrics_values
 
-    def infer_on_batch(self, texts: List[List[np.ndarray]], labels: list = None) -> \
-            Union[float, List[float], np.ndarray]:
-        """
-        Infer the model on the given batch
-
-        Args:
-            texts: list of tokenized embedded text samples
-            labels: list of labels
-
-        Returns:
-            metrics values on the given batch, if labels are given
-            predictions, otherwise
-        """
-        features = self.check_input(texts)
-
-        if labels:
-            metrics_values = self.model.test_on_batch(features, np.array(labels))
-            return metrics_values
-        else:
-            predictions = self.model.predict(features)
-            return predictions
-
-    def __call__(self, data: List[List[np.ndarray]], *args) -> List[List[float]]:
+    def __call__(self, data: List[List[np.ndarray]]) -> List[List[float]]:
         """
         Infer on the given data
 
         Args:
             data: list of tokenized text samples
-            *args: additional arguments
 
         Returns:
             for each sentence:
                 vector of probabilities to belong with each class
                 or list of labels sentence belongs with
         """
-        preds = np.array(self.infer_on_batch(data), dtype="float64").tolist()
-        return preds
+        features = self.check_input(data)
+        return self.model.predict(features)
 
     def init_model_from_scratch(self, model_name: str) -> Model:
         """
