@@ -9,8 +9,7 @@ from .tabled_trie import Trie, make_trie
 
 class LevenshteinSearcher:
     """
-     A class for finding related words
-     according to Levenshtein distance
+     A class that finds close words according to Levenshtein distance
     """
 
     def __init__(self, alphabet, dictionary, operation_costs=None, allow_spaces=False, euristics="none"):
