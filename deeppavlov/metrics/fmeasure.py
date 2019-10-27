@@ -236,6 +236,26 @@ def round_f1_weighted(y_true, y_predicted):
     return f1_score(np.array(y_true), np.array(predictions), average="weighted")
 
 
+@register_metric('f1_samples')
+def round_f1_samples(y_true, y_predicted):
+    """
+    Calculates F1 samples measure.
+
+    Args:
+        y_true: list of true values
+        y_predicted: list of predicted values
+
+    Returns:
+        F1 score
+    """
+    try:
+        predictions = [np.round(x) for x in y_predicted]
+    except TypeError:
+        predictions = y_predicted
+
+    return f1_score(np.array(y_true), np.array(predictions), average="samples")
+
+
 def chunk_finder(current_token, previous_token, tag):
     current_tag = current_token.split('-', 1)[-1]
     previous_tag = previous_token.split('-', 1)[-1]
