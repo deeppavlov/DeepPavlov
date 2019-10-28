@@ -17,7 +17,8 @@ import json
 import socket
 from logging import getLogger
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from struct import pack, unpack, error
+from typing import Dict, List, Optional, Tuple, Union, Any
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.chainer import Chainer
@@ -27,8 +28,17 @@ from deeppavlov.utils.connector import DialogLogger
 from deeppavlov.utils.server import get_server_params
 
 SOCKET_CONFIG_FILENAME = 'socket_config.json'
+HEADER_FORMAT = '<I'
 
+log = getLogger(__name__)
 dialog_logger = DialogLogger(logger_name='socket_api')
+
+
+def encode(data: Any) -> bytes:
+    json_data = jsonify_data(data)
+    bytes_data = json.dumps(json_data).encode()
+    response = pack(HEADER_FORMAT, len(bytes_data)) + bytes_data
+    return response
 
 
 class SocketServer:
@@ -46,16 +56,16 @@ class SocketServer:
         payload: (Optional[List[Tuple]]): The model result if no error has occurred, otherwise None
 
     """
-    _address_family: socket.AddressFamily
-    _bind_address: Union[Tuple[str, int], str]
     _launch_msg: str
     _loop: asyncio.AbstractEventLoop
     _model: Chainer
     _params: Dict
     _socket: socket.socket
-    _socket_type: str
 
-    def __init__(self, model_config: Path, socket_type: str, port: Optional[int] = None,
+    def __init__(self,
+                 model_config: Path,
+                 socket_type: str,
+                 port: Optional[int] = None,
                  socket_file: Optional[Union[str, Path]] = None) -> None:
         """Initialize socket server.
 
@@ -68,71 +78,67 @@ class SocketServer:
                 is not defined, the path from the model_config is used.
 
         """
+        self._loop = asyncio.get_event_loop()
         socket_config_path = get_settings_path() / SOCKET_CONFIG_FILENAME
         self._params = get_server_params(model_config, socket_config_path)
-        self._socket_type = socket_type or self._params['socket_type']
+        socket_type = socket_type or self._params['socket_type']
 
-        if self._socket_type == 'TCP':
+        if socket_type == 'TCP':
             host = self._params['host']
             port = port or self._params['port']
-            self._address_family = socket.AF_INET
             self._launch_msg = f'{self._params["binding_message"]} http://{host}:{port}'
-            self._bind_address = (host, port)
-        elif self._socket_type == 'UNIX':
-            self._address_family = socket.AF_UNIX
-            bind_address = socket_file or self._params['unix_socket_file']
-            bind_address = Path(bind_address).resolve()
-            if bind_address.exists():
-                bind_address.unlink()
-            self._bind_address = str(bind_address)
-            self._launch_msg = f'{self._params["binding_message"]} {self._bind_address}'
+            self._loop.create_task(asyncio.start_server(self._handle_client, host, port))
+        elif socket_type == 'UNIX':
+            socket_file = socket_file or self._params['unix_socket_file']
+            socket_path = Path(socket_file).resolve()
+            if socket_path.exists():
+                socket_path.unlink()
+            self._launch_msg = f'{self._params["binding_message"]} {socket_file}'
+            self._loop.create_task(asyncio.start_unix_server(self._handle_client, socket_file))
         else:
-            raise ValueError(f'socket type "{self._socket_type}" is not supported')
+            raise ValueError(f'socket type "{socket_type}" is not supported')
 
-        self._log = getLogger(__name__)
-        self._loop = asyncio.get_event_loop()
         self._model = build_model(model_config)
-        self._socket = socket.socket(self._address_family, socket.SOCK_STREAM)
-
-        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self._socket.setblocking(False)
 
     def start(self) -> None:
         """Binds the socket to the address and enables the server to accept connections"""
-        self._socket.bind(self._bind_address)
-        self._socket.listen()
-        self._log.info(self._launch_msg)
+        log.info(self._launch_msg)
         try:
-            self._loop.run_until_complete(self._server())
+            self._loop.run_forever()
+        except KeyboardInterrupt:
+            pass
         except Exception as e:
-            self._log.error(f'got exception {e} while running server')
+            log.error(f'got exception {e} while running server')
         finally:
             self._loop.close()
-            self._socket.close()
 
-    async def _server(self) -> None:
+    async def _handle_client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+        addr = writer.get_extra_info('peername')
+        log.info(f'handling connection from {addr}')
         while True:
-            conn, addr = await self._loop.sock_accept(self._socket)
-            self._loop.create_task(self._handle_connection(conn, addr))
+            header = await reader.read(4)
+            if not header:
+                log.info(f'closing connection from {addr}')
+                writer.close()
+                break
+            elif len(header) != 4:
+                error_msg = f'header "{header}" lengths less than 4 bytes'
+                log.error(error_msg)
+                response = self._response(error_msg)
+            else:
+                data_len = unpack(HEADER_FORMAT, header)[0]
+                request_body = await reader.read(data_len)
+                try:
+                    data = json.loads(request_body)
+                    response = await self.interact(data)
+                except ValueError:
+                    error_msg = f'request "{request_body}" type is not json'
+                    log.error(error_msg)
+                    response = self._response(error_msg)
+            writer.write(response)
+            await writer.drain()
 
-    async def _handle_connection(self, conn: socket.socket, addr: Tuple) -> None:
-        self._log.info(f'handling connection from {addr}')
-        conn.setblocking(False)
-        recv_data = b''
-        try:
-            while True:
-                chunk = await self._loop.run_in_executor(None, conn.recv, self._params['bufsize'])
-                if chunk:
-                    recv_data += chunk
-                else:
-                    break
-        except BlockingIOError:
-            pass
-        try:
-            data = json.loads(recv_data)
-        except ValueError:
-            await self._wrap_error(conn, f'request "{recv_data}" type is not json')
-            return
+    async def interact(self, data) -> bytes:
         dialog_logger.log_in(data)
         model_args = []
         for param_name in self._params['model_args_names']:
@@ -140,16 +146,20 @@ class SocketServer:
             if param_value is None or (isinstance(param_value, list) and len(param_value) > 0):
                 model_args.append(param_value)
             else:
-                await self._wrap_error(conn, f"nonempty array expected but got '{param_name}'={repr(param_value)}")
-                return
+                error_msg = f"nonempty array expected but got '{param_name}'={repr(param_value)}"
+                log.error(error_msg)
+                return self._response(error_msg)
         lengths = {len(i) for i in model_args if i is not None}
 
         if not lengths:
-            await self._wrap_error(conn, 'got empty request')
-            return
+            error_msg = 'got empty request'
+            log.error(error_msg)
+            return self._response(error_msg)
         elif len(lengths) > 1:
-            await self._wrap_error(conn, f'got several different batch sizes: {lengths}')
-            return
+            error_msg = f'got several different batch sizes: {lengths}'
+            log.error(error_msg)
+            return self._response(error_msg)
+
         batch_size = list(lengths)[0]
         model_args = [arg or [None] * batch_size for arg in model_args]
 
@@ -160,16 +170,11 @@ class SocketServer:
         if len(self._model.out_params) == 1:
             prediction = [prediction]
         prediction = list(zip(*prediction))
-        result = await self._response('OK', prediction)
-        dialog_logger.log_out(result)
-        await self._loop.sock_sendall(conn, result)
-
-    async def _wrap_error(self, conn: socket.socket, error: str) -> None:
-        self._log.error(error)
-        await self._loop.sock_sendall(conn, await self._response(error, None))
+        dialog_logger.log_out(prediction)
+        return self._response(payload=prediction)
 
     @staticmethod
-    async def _response(status: str, payload: Optional[List[Tuple]]) -> bytes:
+    def _response(status: str = 'OK', payload: Optional[List[Tuple]] = None) -> bytes:
         """Puts arguments into dict and serialize it to JSON formatted byte array.
 
         Args:
@@ -180,9 +185,7 @@ class SocketServer:
             dict({'status': status, 'payload': payload}) serialized to a JSON formatted byte array.
 
         """
-        resp_dict = jsonify_data({'status': status, 'payload': payload})
-        resp_str = json.dumps(resp_dict)
-        return resp_str.encode('utf-8')
+        return encode({'status': status, 'payload': payload})
 
 
 def start_socket_server(model_config: Path, socket_type: str, port: Optional[int],
