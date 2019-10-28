@@ -3,7 +3,6 @@ Cython==0.29.12
 fastapi==0.38.1
 fuzzywuzzy==0.17.0
 h5py==2.9.0
-keras==2.2.4
 nltk==3.2.5
 numpy==1.16.4
 overrides==1.9
