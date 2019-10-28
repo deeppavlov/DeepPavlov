@@ -16,14 +16,13 @@ from logging import getLogger
 from typing import List
 
 import numpy as np
-from keras import backend as K
-from keras import losses
-from keras.initializers import glorot_uniform, Orthogonal
-from keras.layers import Input, LSTM, Embedding, GlobalMaxPooling1D, Lambda, Dense, Layer
-from keras.layers.merge import Multiply
-from keras.layers.wrappers import Bidirectional
-from keras.models import Model
-from keras.optimizers import Adam
+from tensorflow.keras import backend as K
+from tensorflow.keras import losses
+from tensorflow.keras.initializers import glorot_uniform, Orthogonal
+from tensorflow.keras.layers import (Input, LSTM, Embedding, GlobalMaxPooling1D, Lambda, Dense, Layer, Multiply,
+                                     Bidirectional)
+from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import Adam
 from tensorflow.python.framework.ops import Tensor
 
 from deeppavlov.core.common.registry import register
@@ -195,9 +194,9 @@ class BiLSTMSiameseNetwork(KerasSiameseModel):
         x2_norm = K.l2_normalize(x_pair[1], axis=1)
         diff = x1_norm - x2_norm
         square = K.square(diff)
-        sum = K.sum(square, axis=1)
-        sum = K.clip(sum, min_value=1e-12, max_value=None)
-        dist = K.sqrt(sum) / 2.
+        _sum = K.sum(square, axis=1)
+        _sum = K.clip(_sum, min_value=1e-12, max_value=None)
+        dist = K.sqrt(_sum) / 2.
         return dist
 
     def _pairwise_distances(self, inputs: List[Tensor]) -> Tensor:
@@ -207,7 +206,8 @@ class BiLSTMSiameseNetwork(KerasSiameseModel):
         dot_product = K.dot(embeddings, K.transpose(embeddings))
         square_norm = K.batch_dot(embeddings, embeddings, axes=1)
         distances = K.transpose(square_norm) - 2.0 * dot_product + square_norm
-        distances = K.slice(distances, (0, bs), (bs, bs))
+        # distances = K.slice(distances, (0, bs), (bs, bs))
+        distances = distances[0:bs, bs:bs+bs]
         distances = K.clip(distances, 0.0, None)
         mask = K.cast(K.equal(distances, 0.0), K.dtype(distances))
         distances = distances + mask * 1e-16
