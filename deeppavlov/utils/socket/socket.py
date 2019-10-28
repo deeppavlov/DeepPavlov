@@ -14,11 +14,10 @@
 
 import asyncio
 import json
-import socket
 from logging import getLogger
 from pathlib import Path
-from struct import pack, unpack, error
-from typing import Dict, List, Optional, Tuple, Union, Any
+from struct import pack, unpack
+from typing import Any, List, Optional, Tuple, Union
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.chainer import Chainer
@@ -35,6 +34,26 @@ dialog_logger = DialogLogger(logger_name='socket_api')
 
 
 def encode(data: Any) -> bytes:
+    """Сonverts data to the socket server input formatted bytes array.
+
+    Serializes ``data`` to the JSON formatted bytes array and adds 4 bytes to the beginning of the array - packed
+    to bytes length of the JSON formatted bytes array. Header format is "<I"
+    (see https://docs.python.org/3/library/struct.html#struct-format-strings)
+
+    Args:
+        data: Object to pact to the bytes array.
+
+    Raises:
+        TypeError: If data is not JSON-serializable object.
+
+    Examples:
+        >>> from deeppavlov.utils.socket import encode
+        >>> encode({'a':1})
+        b'\x08\x00\x00\x00{"a": 1}
+        >>> encode([42])
+        b'\x04\x00\x00\x00[42]'
+
+    """
     json_data = jsonify_data(data)
     bytes_data = json.dumps(json_data).encode()
     response = pack(HEADER_FORMAT, len(bytes_data)) + bytes_data
@@ -44,64 +63,72 @@ def encode(data: Any) -> bytes:
 class SocketServer:
     """Creates socket server that sends the received data to the DeepPavlov model and returns model response.
 
-    The server receives dictionary serialized to JSON formatted bytes array and sends it to the model. The dictionary
+    The server receives bytes array consists of the `header` and the `body`. The `header` is the first 4 bytes
+    of the array - `body` length in bytes represented by a packed unsigned int (byte order is little-endian).
+    `body` is dictionary serialized to JSON formatted bytes array that server sends to the model. The dictionary
     keys should match model arguments names, the values should be lists or tuples of inferenced values.
 
-    Example:
-        {“context”:[“Elon Musk launched his cherry Tesla roadster to the Mars orbit”]}
+    Socket server request creation example:
+        >>> from deeppavlov.utils.socket import encode
+        >>> request = encode({"context":["Elon Musk launched his cherry Tesla roadster to the Mars orbit"]})
+        >>> request
+        b'I\x00\x00\x00{"x": ["Elon Musk launched his cherry Tesla roadster to the Mars orbit"]}'
 
-    Socket server returns dictionary {'status': status, 'payload': payload} serialized to a JSON formatted byte array,
-    where:
+    Socket server response, like the request, consists of the header and the body. Response body is dictionary
+    {'status': status, 'payload': payload} serialized to a JSON formatted byte array, where:
         status (str): 'OK' if the model successfully processed the data, else - error message.
-        payload: (Optional[List[Tuple]]): The model result if no error has occurred, otherwise None
+        payload: (Optional[List[Tuple]]): The model result if no error has occurred, otherwise None.
 
     """
     _launch_msg: str
     _loop: asyncio.AbstractEventLoop
     _model: Chainer
-    _params: Dict
-    _socket: socket.socket
+    _model_args_names: List
 
     def __init__(self,
                  model_config: Path,
                  socket_type: str,
                  port: Optional[int] = None,
                  socket_file: Optional[Union[str, Path]] = None) -> None:
-        """Initialize socket server.
+        """Initializes socket server.
 
         Args:
             model_config: Path to the config file.
-            socket_type: Socket family. "TCP" for the AF_INET socket, "UNIX" for the AF_UNIX.
+            socket_type: Socket family. "TCP" for the AF_INET socket server, "UNIX" for UNIX Domain Socket server.
             port: Port number for the AF_INET address family. If parameter is not defined, the port number from the
-                model_config is used.
-            socket_file: Path to the file to which server of the AF_UNIX address family connects. If parameter
-                is not defined, the path from the model_config is used.
+                utils/settings/socket_config.json is used.
+            socket_file: Path to the file to which UNIX Domain Socket server connects. If parameter is not defined,
+                the path from the utils/settings/socket_config.json is used.
+
+        Raises:
+            ValueError: If ``socket_type`` parameter is neither "TCP" nor "UNIX".
 
         """
-        self._loop = asyncio.get_event_loop()
         socket_config_path = get_settings_path() / SOCKET_CONFIG_FILENAME
-        self._params = get_server_params(model_config, socket_config_path)
-        socket_type = socket_type or self._params['socket_type']
+        server_params = get_server_params(model_config, socket_config_path)
+        socket_type = socket_type or server_params['socket_type']
+        self._loop = asyncio.get_event_loop()
 
         if socket_type == 'TCP':
-            host = self._params['host']
-            port = port or self._params['port']
-            self._launch_msg = f'{self._params["binding_message"]} http://{host}:{port}'
+            host = server_params['host']
+            port = port or server_params['port']
+            self._launch_msg = f'{server_params["launch_message"]} http://{host}:{port}'
             self._loop.create_task(asyncio.start_server(self._handle_client, host, port))
         elif socket_type == 'UNIX':
-            socket_file = socket_file or self._params['unix_socket_file']
+            socket_file = socket_file or server_params['unix_socket_file']
             socket_path = Path(socket_file).resolve()
             if socket_path.exists():
                 socket_path.unlink()
-            self._launch_msg = f'{self._params["binding_message"]} {socket_file}'
+            self._launch_msg = f'{server_params["launch_message"]} {socket_file}'
             self._loop.create_task(asyncio.start_unix_server(self._handle_client, socket_file))
         else:
             raise ValueError(f'socket type "{socket_type}" is not supported')
 
         self._model = build_model(model_config)
+        self._model_args_names = server_params['model_args_names']
 
     def start(self) -> None:
-        """Binds the socket to the address and enables the server to accept connections"""
+        """Launches socket server"""
         log.info(self._launch_msg)
         try:
             self._loop.run_forever()
@@ -113,6 +140,11 @@ class SocketServer:
             self._loop.close()
 
     async def _handle_client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+        """Handles connection from a client.
+
+        Validates requests, sends request body to DeepPavlov model, sends responses to client.
+
+        """
         addr = writer.get_extra_info('peername')
         log.info(f'handling connection from {addr}')
         while True:
@@ -122,7 +154,7 @@ class SocketServer:
                 writer.close()
                 break
             elif len(header) != 4:
-                error_msg = f'header "{header}" lengths less than 4 bytes'
+                error_msg = f'header "{header}" length less than 4 bytes'
                 log.error(error_msg)
                 response = self._response(error_msg)
             else:
@@ -130,7 +162,7 @@ class SocketServer:
                 request_body = await reader.read(data_len)
                 try:
                     data = json.loads(request_body)
-                    response = await self.interact(data)
+                    response = await self._interact(data)
                 except ValueError:
                     error_msg = f'request "{request_body}" type is not json'
                     log.error(error_msg)
@@ -138,10 +170,10 @@ class SocketServer:
             writer.write(response)
             await writer.drain()
 
-    async def interact(self, data) -> bytes:
+    async def _interact(self, data: dict) -> bytes:
         dialog_logger.log_in(data)
         model_args = []
-        for param_name in self._params['model_args_names']:
+        for param_name in self._model_args_names:
             param_value = data.get(param_name)
             if param_value is None or (isinstance(param_value, list) and len(param_value) > 0):
                 model_args.append(param_value)
@@ -175,14 +207,15 @@ class SocketServer:
 
     @staticmethod
     def _response(status: str = 'OK', payload: Optional[List[Tuple]] = None) -> bytes:
-        """Puts arguments into dict and serialize it to JSON formatted byte array.
+        """Puts arguments into dict and serialize it to JSON formatted byte array with header.
 
         Args:
             status: Response status. 'OK' if no error has occurred, otherwise error message.
             payload: DeepPavlov model result if no error has occurred, otherwise None.
 
         Returns:
-            dict({'status': status, 'payload': payload}) serialized to a JSON formatted byte array.
+            dict({'status': status, 'payload': payload}) serialized to a JSON formatted byte array starting with the
+                4-byte header - the length of serialized dict in bytes.
 
         """
         return encode({'status': status, 'payload': payload})

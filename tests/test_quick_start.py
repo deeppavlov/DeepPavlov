@@ -454,7 +454,7 @@ class TestQuickStart(object):
         p = pexpect.popen_spawn.PopenSpawn(' '.join(args),
                                            timeout=None, logfile=logfile)
         try:
-            p.expect(socket_params['binding_message'])
+            p.expect(socket_params['launch_message'])
             with socket.socket(address_family, socket.SOCK_STREAM) as s:
                 s.connect(connect_arg)
                 s.sendall(dumped_socket_payload.encode('utf-8'))
