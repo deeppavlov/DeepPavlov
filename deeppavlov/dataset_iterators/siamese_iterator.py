@@ -26,11 +26,11 @@ class SiameseIterator(DataLearningIterator):
     """The class contains methods for iterating over a dataset for ranking in training, validation and test mode."""
 
     def split(self, *args, len_valid=1000, len_test=1000, **kwargs) -> None:
-        if len(self.valid) == 0 and self.len_valid != 0:
+        if len(self.valid) == 0 and len_valid != 0:
             self.random.shuffle(self.train)
-            self.valid = self.train[-self.len_valid:]
-            self.train = self.train[:-self.len_valid]
-        if len(self.test) == 0:
+            self.valid = self.train[-len_valid:]
+            self.train = self.train[:-len_valid]
+        if len(self.test) == 0 and len_test != 0:
             self.random.shuffle(self.train)
-            self.test = self.train[-self.len_test:]
-            self.train = self.train[:-self.len_test]
+            self.test = self.train[-len_test:]
+            self.train = self.train[:-len_test]
