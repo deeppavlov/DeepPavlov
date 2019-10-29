@@ -30,14 +30,12 @@ def _graph_wrap(func, graph):
     return _wrapped
 
 
-def _keras_wrap(func, graph, session):
+def _keras_wrap(func, session):
     """Constructs function encapsulated in the graph and the session."""
-    from tensorflow.keras import backend as K
-
     @wraps(func)
     def _wrapped(*args, **kwargs):
-        with graph.as_default():
-            K.set_session(session)
+        with session.graph.as_default():
+            tf.keras.backend.set_session(session)
             return func(*args, **kwargs)
 
     return _wrapped
@@ -47,7 +45,7 @@ class TfModelMeta(with_metaclass(type, ABCMeta)):
     """Metaclass that helps all child classes to have their own graph and session."""
 
     def __call__(cls, *args, **kwargs):
-        obj = cls.__new__(cls)
+        obj = cls.__new__(cls, *args, **kwargs)
         from .keras_model import KerasModel
         if issubclass(cls, KerasModel):
             from tensorflow.keras import backend as K
@@ -71,7 +69,7 @@ class TfModelMeta(with_metaclass(type, ABCMeta)):
             attr = getattr(obj, meth)
             if callable(attr):
                 if issubclass(cls, KerasModel):
-                    wrapped_attr = _keras_wrap(attr, obj.graph, obj.sess)
+                    wrapped_attr = _keras_wrap(attr, obj.sess)
                 else:
                     wrapped_attr = _graph_wrap(attr, obj.graph)
                 setattr(obj, meth, wrapped_attr)

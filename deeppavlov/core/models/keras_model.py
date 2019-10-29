@@ -15,7 +15,7 @@
 from abc import abstractmethod
 from logging import getLogger
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from tensorflow.keras import backend as K
 from overrides import overrides
 
