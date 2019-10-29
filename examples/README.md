@@ -14,8 +14,6 @@
 
 * Optimal learning rate search in DeepPavlov [[notebook]](super_convergence_tutorial.ipynb) [[colab]](https://colab.research.google.com/github/deepmipt/DeepPavlov/blob/master/examples/super_convergence_tutorial.ipynb)
 
-* Integration of FAQ skill with Yandex Alice (RU) [[notebook]](yandex_faq_ru.ipynb) [[colab]](https://colab.research.google.com/github/deepmipt/DeepPavlov/blob/master/examples/yandex_faq_ru.ipynb)
-
 # Links
 
 More examples are available:

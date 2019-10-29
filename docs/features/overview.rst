@@ -501,16 +501,6 @@ Comparison of deeppavlov pretrained model with others:
 .. _`Stanford Kvret`: https://nlp.stanford.edu/blog/a-new-multi-turn-multi-domain-task-oriented-dialogue-dataset/
 
 
-eCommerce bot :doc:`[docs] </features/skills/ecommerce>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The eCommerce bot intends to retrieve product items from catalog in sorted order. In addition, it asks an user to provide additional information to specify the search.
-
-.. note::
-
-    About **130 Mb** on disc required for eCommerce bot with TfIdf-based ranker and **500 Mb** for BLEU-based ranker.
-
-
 ODQA :doc:`[docs] </features/skills/odqa>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

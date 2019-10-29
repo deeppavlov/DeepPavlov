@@ -216,6 +216,18 @@ and others in the Integrations section for more info.
 
 ## Breaking Changes
 
+**Breaking changes in version 0.7.0**
+- in dialog logger config file [dialog_logger_config.json](deeppavlov/utils/settings/dialog_logger_config.json) `agent_name` parameter was renamed to `logger_name`,
+  the default value was changed
+- Agent, Skill, eCommerce Bot and Pattern Matching classes were moved to [deeppavlov.deprecated](deeppavlov/deprecated/)
+- [AIML Skill](http://docs.deeppavlov.ai/en/0.7.0/features/skills/aiml_skill.html),
+  [RASA Skill](http://docs.deeppavlov.ai/en/0.7.0/features/skills/rasa_skill.html),
+  [Yandex Alice](http://docs.deeppavlov.ai/en/0.7.0/integrations/yandex_alice.html),
+  [Amazon Alexa](http://docs.deeppavlov.ai/en/0.7.0/integrations/amazon_alexa.html),
+  [Microsoft Bot Framework](http://docs.deeppavlov.ai/en/0.7.0/integrations/ms_bot.html) and
+  [Telegram integration](http://docs.deeppavlov.ai/en/0.7.0/integrations/telegram.html) interfaces were changed
+- `/start` and `/help` Telegram messages were moved from `models_info.json` to [connector_config.json](/deeppavlov/utils/settings/connector_config.json)
+
 **Breaking changes in version 0.6.0**
 - [REST API](http://docs.deeppavlov.ai/en/0.6.0/integrations/rest_api.html):
   - all models default endpoints were renamed to `/model`
