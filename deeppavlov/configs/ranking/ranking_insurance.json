@@ -16,6 +16,7 @@
         "class_name": "siamese_preprocessor",
         "use_matrix": false,
         "num_ranking_samples": 500,
+        "pytest_num_ranking_samples": 2,
         "max_sequence_length": 200,
         "fit_on": ["x"],
         "in": ["x"],

@@ -16,6 +16,7 @@
         "class_name": "siamese_preprocessor",
         "use_matrix": false,
         "num_ranking_samples": 500,
+        "pytest_num_ranking_samples": 2,
         "max_sequence_length": 200,
         "fit_on": ["x"],
         "in": ["x"],
@@ -67,7 +68,8 @@
         "batch_size": 256,
         "save_path": "{MODELS_PATH}/insurance_model/model_weights.h5",
         "load_path": "{MODELS_PATH}/insurance_model/model_weights.h5",
-        "preprocess": "#preproc.__call__"
+        "preprocess": "#preproc.__call__",
+        "pytest_interact_pred_num": 3
       },
       {
         "in": ["x_proc"],
