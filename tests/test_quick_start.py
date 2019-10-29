@@ -9,6 +9,7 @@ import socket
 import sys
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
+from struct import unpack
 from typing import Optional, Union
 from urllib.parse import urljoin
 
@@ -24,7 +25,7 @@ from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
 from deeppavlov.utils.server import get_server_params
-from deeppavlov.utils.socket import SOCKET_CONFIG_FILENAME
+from deeppavlov.utils.socket import encode, SOCKET_CONFIG_FILENAME
 
 tests_dir = Path(__file__).parent
 test_configs_path = tests_dir / "deeppavlov" / "configs"
@@ -440,7 +441,6 @@ class TestQuickStart(object):
         for arg_name in model_args_names:
             arg_value = ' '.join(['qwerty'] * 10)
             socket_payload[arg_name] = [arg_value]
-        dumped_socket_payload = json.dumps(socket_payload)
 
         logfile = io.BytesIO(b'')
         args = [sys.executable, "-m", "deeppavlov", "risesocket", str(config_path), '--socket-type', socket_type]
@@ -457,19 +457,12 @@ class TestQuickStart(object):
             p.expect(socket_params['launch_message'])
             with socket.socket(address_family, socket.SOCK_STREAM) as s:
                 s.connect(connect_arg)
-                s.sendall(dumped_socket_payload.encode('utf-8'))
+                s.sendall(encode(socket_payload))
                 s.settimeout(60)
-                data = b''
-                try:
-                    while True:
-                        buf = s.recv(1024)
-                        s.setblocking(False)
-                        if buf:
-                            data += buf
-                        else:
-                            break
-                except BlockingIOError:
-                    pass
+                header = s.recv(4)
+                body_len = unpack('<I', header)[0]
+                data = s.recv(body_len)
+                assert len(data) == body_len
             try:
                 resp = json.loads(data)
             except json.decoder.JSONDecodeError:
