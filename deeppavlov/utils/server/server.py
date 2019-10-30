@@ -17,7 +17,7 @@ import logging
 from collections import namedtuple
 from pathlib import Path
 from ssl import PROTOCOL_TLSv1_2
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import uvicorn
 from fastapi import Body, FastAPI, HTTPException
@@ -28,15 +28,15 @@ from pydantic.main import MetaModel
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
 
-from deeppavlov.core.agent.dialog_logger import DialogLogger
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import check_nested_dict_keys, jsonify_data
+from deeppavlov.utils.connector import DialogLogger
 
-SERVER_CONFIG_FILENAME = 'server_config.json'
+SERVER_CONFIG_PATH = get_settings_path() / 'server_config.json'
 SSLConfig = namedtuple('SSLConfig', ['version', 'keyfile', 'certfile'])
 
 
@@ -61,10 +61,10 @@ app.add_middleware(
     allow_headers=['*']
 )
 
-dialog_logger = DialogLogger(agent_name='dp_api')
+dialog_logger = DialogLogger(logger_name='rest_api')
 
 
-def get_server_params(server_config_path: Path, model_config: Path) -> Dict:
+def get_server_params(model_config: Union[str, Path], server_config_path: Path = SERVER_CONFIG_PATH) -> Dict:
     server_config = read_json(server_config_path)
     model_config = parse_config(model_config)
 
@@ -115,7 +115,7 @@ def get_ssl_params(server_params: dict,
     return ssl_config
 
 
-def redirect_root_do_docs(fast_app: FastAPI, func_name: str, endpoint: str, method: str) -> None:
+def redirect_root_to_docs(fast_app: FastAPI, func_name: str, endpoint: str, method: str) -> None:
     """Adds api route to server that redirects user from root to docs with opened `endpoint` description."""
 
     @fast_app.get('/', include_in_schema=False)
@@ -168,8 +168,8 @@ def start_model_server(model_config: Path,
                        ssl_key: Optional[str] = None,
                        ssl_cert: Optional[str] = None,
                        port: Optional[int] = None) -> None:
-    server_config_path = get_settings_path() / SERVER_CONFIG_FILENAME
-    server_params = get_server_params(server_config_path, model_config)
+
+    server_params = get_server_params(model_config)
 
     host = server_params['host']
     port = port or server_params['port']
@@ -191,7 +191,7 @@ def start_model_server(model_config: Path,
     class Batch(BaseModel):
         pass
 
-    redirect_root_do_docs(app, 'answer', model_endpoint, 'post')
+    redirect_root_to_docs(app, 'answer', model_endpoint, 'post')
 
     model_endpoint_post_example = {arg_name: ['string'] for arg_name in model_args_names}
 
@@ -210,4 +210,4 @@ def start_model_server(model_config: Path,
         return model_args_names
 
     uvicorn.run(app, host=host, port=port, logger=uvicorn_log, ssl_version=ssl_config.version,
-                ssl_keyfile=ssl_config.keyfile, ssl_certfile=ssl_config.certfile)
+                ssl_keyfile=ssl_config.keyfile, ssl_certfile=ssl_config.certfile, timeout_keep_alive=20)
