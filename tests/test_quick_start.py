@@ -10,6 +10,7 @@ import sys
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from struct import unpack
+from time import sleep
 from typing import Optional, Union
 from urllib.parse import urljoin
 
