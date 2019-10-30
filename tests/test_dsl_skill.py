@@ -2,7 +2,7 @@ from logging import getLogger
 
 from deeppavlov import configs, build_model
 from deeppavlov.core.common.file import read_json
-from deeppavlov.skills.dsl_skill.dsl_skill import DSLMeta
+from deeppavlov.skills.dsl_skill import DSLMeta
 from deeppavlov.utils.pip_wrapper.pip_wrapper import install_from_config
 
 log = getLogger(__name__)
@@ -43,7 +43,7 @@ class ContextConditionSkill(metaclass=DSLMeta):
 
 class TestDSLSkill:
     def setup(self):
-        self.skill_config = read_json(configs.dsl_skill.dsl_skill)
+        self.skill_config = read_json(configs.skills.dsl_skill)
         install_from_config(self.skill_config)
 
     def test_simple_skill(self):

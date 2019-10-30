@@ -1,0 +1,47 @@
+{
+  "chainer": {
+    "in": [
+      "utterances_batch",
+      "states_batch"
+    ],
+    "out": [
+      "responses_batch",
+      "confidences_batch",
+      "output_states_batch"
+    ],
+    "pipe": [
+      {
+        "class_name": "aiml_skill",
+        "path_to_aiml_scripts": "{DOWNLOADS_PATH}/aiml_scripts",
+        "positive_confidence": 0.66,
+        "null_response": "I don't know",
+        "null_confidence": 0.33,
+        "in": [
+          "utterances_batch",
+          "states_batch"
+        ],
+        "out": [
+          "responses_batch",
+          "confidences_batch",
+          "output_states_batch"
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/aiml_skill.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/aiml_skill/aiml_scripts.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      }
+    ]
+  }
+}

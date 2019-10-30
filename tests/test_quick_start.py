@@ -5,10 +5,11 @@ import os
 import pickle
 import shutil
 import signal
+import socket
 import sys
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 from urllib.parse import urljoin
 
 import pexpect
@@ -22,7 +23,8 @@ from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
-from deeppavlov.utils.server.server import get_server_params, SERVER_CONFIG_FILENAME
+from deeppavlov.utils.server import get_server_params
+from deeppavlov.utils.socket import SOCKET_CONFIG_FILENAME
 
 tests_dir = Path(__file__).parent
 test_configs_path = tests_dir / "deeppavlov" / "configs"
@@ -30,11 +32,13 @@ src_dir = Path(deeppavlov.__path__[0]) / "configs"
 test_src_dir = tests_dir / "test_configs"
 download_path = tests_dir / "download"
 
-cache_dir: Path = None
+cache_dir: Optional[Path] = None
 if not os.getenv('DP_PYTEST_NO_CACHE'):
     cache_dir = tests_dir / 'download_cache'
 
 api_port = os.getenv('DP_PYTEST_API_PORT')
+if api_port is not None:
+    api_port = int(api_port)
 
 TEST_MODES = ['IP',  # test_interacting_pretrained_model
               'TI',  # test_consecutive_training_and_interacting
@@ -99,11 +103,15 @@ PARAMS = {
         ("classifiers/rusentiment_elmo_twitter_cnn.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/rusentiment_bigru_superconv.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/yahoo_convers_vs_info.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/ru_obscenity_classifier.json", "classifiers", ('IP')):
+        ("classifiers/ru_obscenity_classifier.json", "classifiers", ('IP',)):
             [
                 ("Ну и сука же она", 'True'),
                 ("я два года жду эту игру", 'False')
-            ]
+            ],
+        ("classifiers/sentiment_sst_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_sst_multi_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_yelp_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_yelp_multi_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "snips": {
         ("classifiers/intents_snips.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -155,7 +163,7 @@ PARAMS = {
         ("ranking/ranking_insurance_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_insurance_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v2_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v2_mt_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v2_mt_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/paraphrase_ident_paraphraser_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -378,20 +386,12 @@ class TestQuickStart(object):
 
     @staticmethod
     def interact_api(config_path):
-        server_conf_file = get_settings_path() / SERVER_CONFIG_FILENAME
+        server_params = get_server_params(config_path)
 
-        server_params = get_server_params(server_conf_file, config_path)
-        model_args_names = server_params['model_args_names']
-
-        url_base = 'http://{}:{}/'.format(server_params['host'], api_port or server_params['port'])
+        url_base = 'http://{}:{}'.format(server_params['host'], api_port or server_params['port'])
         url = urljoin(url_base.replace('http://0.0.0.0:', 'http://127.0.0.1:'), server_params['model_endpoint'])
 
         post_headers = {'Accept': 'application/json'}
-
-        post_payload = {}
-        for arg_name in model_args_names:
-            arg_value = str(' '.join(['qwerty'] * 10))
-            post_payload[arg_name] = [arg_value]
 
         logfile = io.BytesIO(b'')
         args = [sys.executable, "-m", "deeppavlov", "riseapi", str(config_path)]
@@ -401,6 +401,18 @@ class TestQuickStart(object):
                                            timeout=None, logfile=logfile)
         try:
             p.expect(url_base)
+
+            get_url = urljoin(url_base.replace('http://0.0.0.0:', 'http://127.0.0.1:'), '/api')
+            get_response = requests.get(get_url)
+            response_code = get_response.status_code
+            assert response_code == 200, f"GET /api request returned error code {response_code} with {config_path}"
+
+            model_args_names = get_response.json()
+            post_payload = dict()
+            for arg_name in model_args_names:
+                arg_value = ' '.join(['qwerty'] * 10)
+                post_payload[arg_name] = [arg_value]
+
             post_response = requests.post(url, json=post_payload, headers=post_headers)
             response_code = post_response.status_code
             assert response_code == 200, f"POST request returned error code {response_code} with {config_path}"
@@ -413,6 +425,67 @@ class TestQuickStart(object):
             p.wait()
             # if p.wait() != 0:
             #     raise RuntimeError('Error in shutting down API server: \n{}'.format(logfile.getvalue().decode()))
+
+    @staticmethod
+    def interact_socket(config_path, socket_type):
+        socket_config_path = get_settings_path() / SOCKET_CONFIG_FILENAME
+
+        socket_params = get_server_params(config_path, socket_config_path)
+        model_args_names = socket_params['model_args_names']
+
+        host = socket_params['host']
+        port = api_port or socket_params['port']
+
+        socket_payload = {}
+        for arg_name in model_args_names:
+            arg_value = ' '.join(['qwerty'] * 10)
+            socket_payload[arg_name] = [arg_value]
+        dumped_socket_payload = json.dumps(socket_payload)
+
+        logfile = io.BytesIO(b'')
+        args = [sys.executable, "-m", "deeppavlov", "risesocket", str(config_path), '--socket-type', socket_type]
+        if socket_type == 'TCP':
+            args += ['-p', str(port)]
+            address_family = socket.AF_INET
+            connect_arg = (host, port)
+        else:
+            address_family = socket.AF_UNIX
+            connect_arg = socket_params['unix_socket_file']
+        p = pexpect.popen_spawn.PopenSpawn(' '.join(args),
+                                           timeout=None, logfile=logfile)
+        try:
+            p.expect(socket_params['binding_message'])
+            with socket.socket(address_family, socket.SOCK_STREAM) as s:
+                s.connect(connect_arg)
+                s.sendall(dumped_socket_payload.encode('utf-8'))
+                s.settimeout(60)
+                data = b''
+                try:
+                    while True:
+                        buf = s.recv(1024)
+                        s.setblocking(False)
+                        if buf:
+                            data += buf
+                        else:
+                            break
+                except BlockingIOError:
+                    pass
+            try:
+                resp = json.loads(data)
+            except json.decoder.JSONDecodeError:
+                raise ValueError(f"Can't decode model response {data}")
+            assert resp['status'] == 'OK', f"{socket_type} socket request returned status: {resp['status']}"\
+                                           f" with {config_path}\n{logfile.getvalue().decode()}"
+
+        except pexpect.exceptions.EOF:
+            raise RuntimeError(f'Got unexpected EOF: \n{logfile.getvalue().decode()}')
+
+        except json.JSONDecodeError:
+            raise ValueError(f'Got JSON not serializable response from model: "{data}"\n{logfile.getvalue().decode()}')
+
+        finally:
+            p.kill(signal.SIGTERM)
+            p.wait()
 
     def test_interacting_pretrained_model(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
@@ -427,11 +500,17 @@ class TestQuickStart(object):
     def test_interacting_pretrained_model_api(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
             self.interact_api(test_configs_path / conf_file)
+        else:
+            pytest.skip("Unsupported mode: {}".format(mode))
+
+    def test_interacting_pretrained_model_socket(self, model, conf_file, model_dir, mode):
+        if 'IP' in mode:
+            self.interact_socket(test_configs_path / conf_file, 'TCP')
 
             if 'TI' not in mode:
                 shutil.rmtree(str(download_path), ignore_errors=True)
         else:
-            pytest.skip("Unsupported mode: {}".format(mode))
+            pytest.skip(f"Unsupported mode: {mode}")
 
     def test_serialization(self, model, conf_file, model_dir, mode):
         if 'SR' not in mode:

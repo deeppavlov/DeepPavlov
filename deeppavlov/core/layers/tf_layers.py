@@ -945,4 +945,4 @@ def variational_dropout(units, keep_prob, fixed_mask_dims=(1,)):
     noise_shape = [units_shape[n] for n in range(len(units.shape))]
     for dim in fixed_mask_dims:
         noise_shape[dim] = 1
-    return tf.nn.dropout(units, keep_prob, noise_shape)
+    return tf.nn.dropout(units, rate=1-keep_prob, noise_shape=noise_shape)

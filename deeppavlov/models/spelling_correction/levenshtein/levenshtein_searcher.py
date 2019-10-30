@@ -371,7 +371,7 @@ class SegmentTransducer:
             add_pred = (lambda x, y: (y == np.inf or x < y))
         else:
             add_pred = (lambda x, y: (y == np.inf or x <= y))
-        clear_pred = (lambda x, y: (y < np.inf and x < y))
+        clear_pred = (lambda x, y: x < y < np.inf)
         update_func = lambda x, y: min(x, y)
         costs, backtraces = self._fill_levenshtein_table(first, second,
                                                         update_func, add_pred, clear_pred)

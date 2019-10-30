@@ -26,7 +26,7 @@ How to contribute:
    Accompany code with **clear comments** to let other people understand the
    flow of your mind.
 
-   If you create new models, refer to the :doc:`Registry your model
+   If you create new models, refer to the :doc:`Register your model
    </devguides/registry>` section to add it to the DeepPavlov registry of
    models.
 
@@ -105,7 +105,7 @@ added to the framework. Your research will become a part of a common big work
 and other people will happily use it and thank you :D 
 
 If you still have any questions, either on the contribution process or about
-the framework itself, please ask us at our forum `<https://forum.ipavlov.ai/>`_.
+the framework itself, please ask us at our forum `<https://forum.deeppavlov.ai/>`_.
 Follow us on Facebook to get news on releases, new features, approved
 contributions and resolved issues `<https://www.facebook.com/deepmipt/>`_
 

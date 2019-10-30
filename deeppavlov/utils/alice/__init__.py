@@ -1,1 +1,1 @@
-from .alice import start_agent_server, start_alice_server
+from .server import start_alice_server

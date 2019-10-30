@@ -33,12 +33,12 @@ class Proba2Labels(Component):
 
     Args:
         max_proba: whether to choose label with maximal probability
-        confident_threshold: boundary probability value for smaple to belong with the class (best use for multi-label)
+        confident_threshold: boundary probability value for sample to belong with the class (best use for multi-label)
         top_n: how many top labels with the highest probabilities to return
 
     Attributes:
         max_proba: whether to choose label with maximal probability
-        confident_threshold: boundary probability value for smaple to belong with the class (best use for multi-label)
+        confident_threshold: boundary probability value for sample to belong with the class (best use for multi-label)
         top_n: how many top labels with the highest probabilities to return
     """
 
@@ -54,14 +54,12 @@ class Proba2Labels(Component):
         self.top_n = top_n
 
     def __call__(self, data: Union[np.ndarray, List[List[float]], List[List[int]]],
-                 *args, **kwargs) -> Union[List[List[str]], List[str]]:
+                 *args, **kwargs) -> Union[List[List[int]], List[int]]:
         """
         Process probabilities to labels
 
         Args:
             data: list of vectors with probability distribution
-            *args:
-            **kwargs:
 
         Returns:
             list of labels (only label classification) or list of lists of labels (multi-label classification)
@@ -70,7 +68,7 @@ class Proba2Labels(Component):
             return [list(np.where(np.array(d) > self.confident_threshold)[0])
                     for d in data]
         elif self.max_proba:
-            return [[np.argmax(d)] for d in data]
+            return [np.argmax(d) for d in data]
         elif self.top_n:
             return [np.argsort(d)[::-1][:self.top_n] for d in data]
         else:

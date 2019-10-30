@@ -5,8 +5,8 @@ Welcome to DeepPavlov's documentation!
    :glob:
    :maxdepth: 1
 
-   QuickStart <intro/quick_start>
    Installation <intro/installation>
+   QuickStart <intro/quick_start>
    General concepts <intro/overview>
    Configuration file <intro/configuration>
    Models/Skills overview <features/overview>
@@ -46,11 +46,10 @@ Welcome to DeepPavlov's documentation!
    
    Goal-Oriented Dialogue Bot <features/skills/go_bot>
    Open-Domain Question Answering <features/skills/odqa>
-   Pattern Matching <features/skills/pattern_matching>
    Sequence-To-Sequence Dialogue Bot <features/skills/seq2seq_go_bot>
    Frequently Asked Questions Answering <features/skills/faq>
-   eCommerce Bot <features/skills/ecommerce>
    AIML <features/skills/aiml_skill>
+   Rasa <features/skills/rasa_skill>
    DSL <features/skills/dsl_skill>
 
 
@@ -60,6 +59,7 @@ Welcome to DeepPavlov's documentation!
    :caption: Integrations
 
    REST API <integrations/rest_api>
+   Socket API <integrations/socket_api>
    Telegram integration <integrations/telegram>
    Yandex Alice integration <integrations/yandex_alice>
    Amazon Alexa integration <integrations/amazon_alexa>
@@ -74,7 +74,7 @@ Welcome to DeepPavlov's documentation!
    :caption: Developer Guides
 
    Contribution guide <devguides/contribution_guide>
-   Registry your model <devguides/registry>
+   Register your model <devguides/registry>
 
 
 .. toctree::

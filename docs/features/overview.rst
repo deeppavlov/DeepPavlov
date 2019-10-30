@@ -85,7 +85,17 @@ Several pre-trained models are available and presented in Table below.
 |                  |                    |      | :config:`English Conversational BERT <classifiers/insults_kaggle_conv_bert.json>`               |             | 0.9389 | 0.8941 |  1200 Mb  |
 +------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | 5 topics         | `AG News`_         |      | :config:`Wiki emb <classifiers/topic_ag_news.json>`                                             | Accuracy    | 0.8922 | 0.9059 |  8.5 Gb   |
-+------------------+--------------------+------+-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
++------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
+| Intent           |`Yahoo-L31`_        |      | :config:`Yahoo-L31 on conversational BERT <classifiers/yahoo_convers_vs_info_bert.json>`        | ROC-AUC     | 0.9436 |   --   |  1200 Mb  |
++------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
+| Sentiment        |`SST`_              |      | :config:`5-classes SST on conversational BERT <classifiers/sentiment_sst_conv_bert.json>`       | Accuracy    | 0.6456 | 0.6715 |  400 Mb   |
++                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |                    |      | :config:`5-classes SST on multilingual BERT <classifiers/sentiment_sst_multi_bert.json>`        |             | 0.5738 | 0.6024 |  660 Mb   |
++                  +--------------------+      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |`Yelp`_             |      | :config:`5-classes Yelp on conversational BERT <classifiers/sentiment_yelp_conv_bert.json>`     |             | 0.6925 | 0.6842 |  400 Mb   |
++                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |                    |      | :config:`5-classes Yelp on multilingual BERT <classifiers/sentiment_yelp_multi_bert.json>`      |             | 0.5896 | 0.5874 |  660 Mb   |
++------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | Sentiment        |`Twitter mokoron`_  | Ru   | :config:`RuWiki+Lenta emb w/o preprocessing <classifiers/sentiment_twitter.json>`               |             | 0.9965 | 0.9961 |  6.2 Gb   |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
 |                  |                    |      | :config:`RuWiki+Lenta emb with preprocessing <classifiers/sentiment_twitter_preproc.json>`      |             | 0.7823 | 0.7759 |  6.2 Gb   |
@@ -97,8 +107,10 @@ Several pre-trained models are available and presented in Table below.
 |                  |                    |      | :config:`ELMo <classifiers/rusentiment_elmo_twitter_cnn.json>`                                  |             | 0.7519 | 0.7875 |  700 Mb   |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
 |                  |                    |      | :config:`Multi-language BERT <classifiers/rusentiment_bert.json>`                               |             | 0.6809 | 0.7193 |  1900 Mb  |
++                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |                    |      | :config:`Conversational RuBERT <classifiers/rusentiment_convers_bert.json>`                     |             | 0.7548 | 0.7742 |  657 Mb   |
 +------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
-| Intent           |`Yahoo-L31`_        |      | :config:`Yahoo-L31 on ELMo <classifiers/yahoo_convers_vs_info.json>` pre-trained on `Yahoo-L6`_ | ROC-AUC     | 0.9412 |   --   |  700 Mb   |
+| Intent           |Ru like`Yahoo-L31`_ |      | :config:`Conversational vs Informational on ELMo <classifiers/yahoo_convers_vs_info.json>`      | ROC-AUC     | 0.9412 |   --   |  700 Mb   |
 +------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 
 .. [1] Coucke A. et al. Snips voice platform: an embedded spoken language understanding system for private-by-design voice interfaces //arXiv preprint arXiv:1805.10190. – 2018.
@@ -112,6 +124,8 @@ Several pre-trained models are available and presented in Table below.
 .. _`RuSentiment`: http://text-machine.cs.uml.edu/projects/rusentiment/
 .. _`Yahoo-L31`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 .. _`Yahoo-L6`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
+.. _`SST`: https://nlp.stanford.edu/sentiment/index.html
+.. _`Yelp`: https://www.yelp.com/dataset
 
 As no one had published intent recognition for DSTC-2 data, the
 comparison of the presented model is given on **SNIPS** dataset. The
@@ -442,9 +456,9 @@ Available pre-trained models and their comparison with existing benchmarks:
 +----------------+------+-------------------------------------------------------------------------------------+---------------+---------+------------+------------------+
 | Dataset        | Lang | Model                                                                               | Metric        | Valid   | Test       | Downloads        |
 +================+======+=====================================================================================+===============+=========+============+==================+
-| `DSTC 2`_ [*]_ | En   | :config:`bot with slot filler <go_bot/gobot_dstc2.json>`                            | Turn Accuracy | 0.521   | 0.529      | 400 Mb           |
+| `DSTC 2`_ [*]_ | En   | :config:`bot with slot filler <go_bot/gobot_dstc2.json>`                            | Turn Accuracy | 0.544   | 0.542      | 400 Mb           |
 +                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-|                |      | :config:`bot with slot filler & intents & attention <go_bot/gobot_dstc2_best.json>` |               | 0.555   | **0.561**  | 8.5 Gb           |
+|                |      | :config:`bot with slot filler & intents & attention <go_bot/gobot_dstc2_best.json>` |               | 0.548   | **0.553**  | 8.5 Gb           |
 +----------------+      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
 | `DSTC 2`_      |      | Bordes and Weston (2016)                                                            |               | --      | 0.411      | --               |
 +                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
@@ -485,16 +499,6 @@ Comparison of deeppavlov pretrained model with others:
 +-------------------+------+----------------------------------------------------+------------------+-----------------+-----------+
 
 .. _`Stanford Kvret`: https://nlp.stanford.edu/blog/a-new-multi-turn-multi-domain-task-oriented-dialogue-dataset/
-
-
-eCommerce bot :doc:`[docs] </features/skills/ecommerce>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The eCommerce bot intends to retrieve product items from catalog in sorted order. In addition, it asks an user to provide additional information to specify the search.
-
-.. note::
-
-    About **130 Mb** on disc required for eCommerce bot with TfIdf-based ranker and **500 Mb** for BLEU-based ranker.
 
 
 ODQA :doc:`[docs] </features/skills/odqa>`
