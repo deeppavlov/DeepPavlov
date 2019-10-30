@@ -456,7 +456,11 @@ class TestQuickStart(object):
         try:
             p.expect(socket_params['launch_message'])
             with socket.socket(address_family, socket.SOCK_STREAM) as s:
-                s.connect(connect_arg)
+                try:
+                    s.connect(connect_arg)
+                except ConnectionRefusedError:
+                    sleep(1)
+                    s.connect(connect_arg)
                 s.sendall(encode(socket_payload))
                 s.settimeout(60)
                 header = s.recv(4)
