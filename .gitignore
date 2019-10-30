@@ -109,6 +109,10 @@ ENV/
 #vscode IDE
 .vscode
 
+# Vim
+*.vim
+*.vimrc
+
 #GIT
 .git/
 

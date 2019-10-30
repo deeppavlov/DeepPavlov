@@ -180,7 +180,7 @@ class EntityLinker(Component, Serializable):
         candidates = []
         for title in self.name_to_q:
             length_ratio = len(title) / word_length
-            if length_ratio > 0.75 and length_ratio < 1.25:
+            if 0.75 < length_ratio < 1.25:
                 ratio = fuzz.ratio(title, entity)
                 if ratio > 70:
                     entity_candidates = self.name_to_q.get(title, [])

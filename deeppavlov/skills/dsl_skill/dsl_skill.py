@@ -24,7 +24,10 @@ import deeppavlov
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.registry import register
 from deeppavlov.skills.dsl_skill.context import UserContext
-from deeppavlov.skills.dsl_skill.handlers import Handler, RegexHandler, FAQHandler, ParaphraseHandler
+from deeppavlov.skills.dsl_skill.handlers.handler import Handler
+from deeppavlov.skills.dsl_skill.handlers.regex_handler import RegexHandler
+from deeppavlov.skills.dsl_skill.handlers.regex_handler import FAQHandler
+from deeppavlov.skills.dsl_skill.handlers.regex_handler import ParaphraseHandler
 from deeppavlov.skills.dsl_skill.utils import SkillResponse, UserId
 from deeppavlov.utils.pip_wrapper import install_from_config
 

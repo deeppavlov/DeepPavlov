@@ -17,8 +17,6 @@ Our goal is to enable AI-application developers and researchers with:
 Key Concepts
 ------------
 
--  ``Agent`` is a conversational agent communicating with users in
-   natural language (text).
 -  ``Skill`` fulfills user’s goal in some domain. Typically, this is
    accomplished by presenting information or completing transaction
    (e.g. answer question by FAQ, booking tickets etc.). However, for
@@ -33,7 +31,7 @@ Key Concepts
    end-to-end mode being joined in a chain.
 -  ``Skill Manager`` performs selection of the ``Skill`` to generate
    response.
--  ``Chainer`` builds an agent/model pipeline from heterogeneous
+-  ``Chainer`` builds a model pipeline from heterogeneous
    components (Rule-based/ML/DL). It allows to train and infer models in
    a pipeline as a whole.
 
@@ -48,12 +46,6 @@ implementation ``Models``\ s are not different from ``Component``\ s. The
 difference of a ``Skill`` from a ``Model`` is that its input and output should
 both be strings. Therefore, ``Skill``\ s are usually associated with
 dialogue tasks.
-
-``Agent`` is supposed to be a multi-purpose dialogue system that
-comprises several ``Skill``\ s and can switch between them. It can be a
-dialogue system that contains a goal-oriented and chatbot skills and
-chooses which one to use for generating the answer depending on user
-input.
 
 DeepPavlov is built on top of machine learning frameworks
 `TensorFlow <https://www.tensorflow.org/>`__ and

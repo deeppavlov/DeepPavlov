@@ -20,16 +20,14 @@ parameter `path_to_aiml_scripts`.
 You can download bunch of free and ready for use AIML scripts from pandorabots repo:
 https://github.com/pandorabots/Free-AIML
 
-DeepPavlov library has default config for AIMLSkill here: :config:`configs/aiml_skill/aiml_skill.json <aiml_skill/aiml_skill.json>`
+DeepPavlov library has default config for AIMLSkill here: :config:`configs/skills/aiml_skill.json <skills/aiml_skill.json>`
 
 Usage
 ^^^^^^^^
 
 .. code:: python
 
-    from deeppavlov.agents.default_agent.default_agent import DefaultAgent
-    from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
-    from deeppavlov.skills.aiml_skill.aiml_skill import AIMLSkill
+    from deeppavlov.skills.aiml_skill import AIMLSkill
 
     aiml_skill_config = {
         'positive_confidence': 0.66,
@@ -39,6 +37,8 @@ Usage
     }
 
     aiml_skill = AIMLSkill(**aiml_skill_config)
-    agent = DefaultAgent([aiml_skill], skills_selector=HighestConfidenceSelector())
-    responses = agent(["Hello"])
-    print(responses)
+
+    states_batch = None
+    for utterance in ["Hello", "Hello to the same user_id"]:
+        responses_batch, confidences_batch, states_batch = aiml_skill([utterance], states_batch)
+        print(responses_batch[0])

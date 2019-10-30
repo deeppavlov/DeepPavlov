@@ -1,11 +1,13 @@
 QuickStart
 ------------
 
-There is a bunch of great pre-trained NLP models in DeepPavlov. Each model is
-determined by its config file.
+First, follow instructions on :doc:`Installation page </intro/installation>`
+to install ``deeppavlov`` package for Python 3.6/3.7.
 
-List of models is available on :doc:`the doc page </features/overview>` or in
-the ``deeppavlov.configs`` (Python):
+DeepPavlov contains a bunch of great pre-trained NLP models. Each model is
+determined by it's config file. List of models is available on
+:doc:`the doc page </features/overview>` or in
+the ``deeppavlov.configs``:
 
     .. code:: python
         
@@ -67,6 +69,8 @@ There are even more actions you can perform with configs:
         * ``interact`` to interact via CLI,
         * ``riseapi`` to run a REST API server (see :doc:`docs
           </integrations/rest_api>`),
+        * ``risesocket`` to run a socket API server (see :doc:`docs
+          </integrations/socket_api>`),
         * ``interactbot`` to run as a Telegram bot (see :doc:`docs
           </integrations/telegram>`),
         * ``interactmsbot`` to run a Miscrosoft Bot Framework server (see
@@ -128,3 +132,123 @@ There are also available integrations with various messengers, see
 :doc:`Telegram Bot doc page </integrations/telegram>` and others in the
 Integrations section for more info.
 
+
+Pretrained models
+~~~~~~~~~~~~~~~~~
+
+DeepPavlov provides a wide range of pretrained models and skills.
+See :doc:`features overview </features/overview>` for more info. Please
+note that most of our models are trained on specific datasets for
+specific tasks and may require further training on you data.
+You can find a list of our out-of-the-box models `below <#out-of-the-box-pretrained-models>`_.
+
+
+Docker images
+~~~~~~~~~~~~~
+
+You can run DeepPavlov models in :doc:`riseapi </integrations/rest_api>` mode
+via Docker without installing DP. Both your CPU and GPU (we support NVIDIA graphic
+processors) can be utilised, please refer our `CPU <https://hub.docker.com/r/deeppavlov/base-cpu>`_
+and `GPU <https://hub.docker.com/r/deeppavlov/base-gpu>`_ Docker images run instructions.
+
+
+Out-of-the-box pretrained models
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+While the best way to solve most of the NLP tasks lies through collecting datasets
+and training models according to the domain and an actual task itself, DeepPavlov
+offers several pretrained models, which can be strong baselines for a wide range of tasks.
+
+You can run these models `via Docker <#docker-images>`_ or in ``riseapi``/``risesocket`` mode to use in
+solutions. See :doc:`riseapi </integrations/rest_api>` and :doc:`risesocket </integrations/socket_api>`
+modes documentation for API details.
+
+
+Text Question Answering
+=======================
+
+Text Question Answering component answers a question based on a given context (e.g,
+a paragraph of text), where the answer to the question is a segment of the context.
+
+.. table::
+    :widths: auto
+
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Language | DeepPavlov config                                                                              | Demo                                      |
+    +==========+================================================================================================+===========================================+
+    | Multi    | :config:`squad_bert_multilingual_freezed_emb <squad/squad_bert_multilingual_freezed_emb.json>` | https://demo.deeppavlov.ai/#/mu/textqa    |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | En       | :config:`squad_bert_infer <squad/squad_bert_infer.json>`                                       | https://demo.deeppavlov.ai/#/en/textqa    |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Ru       | :config:`squad_ru_bert_infer <squad/squad_ru_bert_infer.json>`                                 | https://demo.deeppavlov.ai/#/ru/textqa    |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+
+
+Name Entity Recognition
+=======================
+
+Named Entity Recognition (NER) classifies tokens in text into predefined categories
+(tags), such as person names, quantity expressions, percentage expressions, names
+of locations, organizations, as well as expression of time, currency and others.
+
+.. table::
+    :widths: auto
+
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Language | DeepPavlov config                                                                              | Demo                                      |
+    +==========+================================================================================================+===========================================+
+    | Multi    | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>`                           | https://demo.deeppavlov.ai/#/mu/ner       |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | En       | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>`                           | https://demo.deeppavlov.ai/#/en/ner       |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Ru       | :config:`ner_rus_bert <ner/ner_rus_bert.json>`                                                 | https://demo.deeppavlov.ai/#/ru/ner       |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+
+
+Insult Detection
+================
+
+Insult detection predicts whether a text (e.g, post or speech in some
+public discussion) is considered insulting to one of the persons it is
+related to.
+
+.. table::
+    :widths: auto
+
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Language | DeepPavlov config                                                                              | Demo                                      |
+    +==========+================================================================================================+===========================================+
+    | En       | :config:`insults_kaggle_conv_bert <classifiers/insults_kaggle_conv_bert.json>`                 | https://demo.deeppavlov.ai/#/en/insult    |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+
+
+Sentiment Analysis
+==================
+
+Classify text according to a prevailing emotion (positive, negative, etc.) in it.
+
+.. table::
+    :widths: auto
+
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Language | DeepPavlov config                                                                              | Demo                                      |
+    +==========+================================================================================================+===========================================+
+    | Ru       | :config:`rusentiment_elmo_twitter_cnn <classifiers/rusentiment_elmo_twitter_cnn.json>`         | https://demo.deeppavlov.ai/#/ru/sentiment |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+
+
+Paraphrase Detection
+====================
+
+Detect if two given texts have the same meaning.
+
+.. table::
+    :widths: auto
+
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Language | DeepPavlov config                                                                              | Demo                                      |
+    +==========+================================================================================================+===========================================+
+    | En       | :config:`paraphraser_bert <classifiers/paraphraser_bert.json>`                                 | None                                      |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    | Ru       | :config:`paraphraser_rubert <classifiers/paraphraser_rubert.json>`                             | None                                      |
+    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
