@@ -461,8 +461,13 @@ class TestQuickStart(object):
                 s.settimeout(60)
                 header = s.recv(4)
                 body_len = unpack('<I', header)[0]
-                data = s.recv(body_len)
-                assert len(data) == body_len
+                data = bytearray()
+                while len(data) < body_len:
+                    chunk = s.recv(body_len - len(data))
+                    if not chunk:
+                        raise ValueError(f'header does not match body\nheader: {body_len}\nbody length: {len(data)}'
+                                         f'data: {data}')
+                    data.extend(chunk)
             try:
                 resp = json.loads(data)
             except json.decoder.JSONDecodeError:
