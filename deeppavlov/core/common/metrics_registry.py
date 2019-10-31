@@ -29,6 +29,7 @@ def fn_from_str(name: str) -> Callable[..., Any]:
 
 def register_metric(metric_name: str) -> Callable[..., Any]:
     """Decorator for metric registration."""
+
     def decorate(fn):
         fn_name = fn.__module__ + ':' + fn.__name__
         if metric_name in _REGISTRY and _REGISTRY[metric_name] != fn_name:
@@ -36,6 +37,7 @@ def register_metric(metric_name: str) -> Callable[..., Any]:
                         .format(metric_name))
         _REGISTRY[metric_name] = fn_name
         return fn
+
     return decorate
 
 

@@ -1,11 +1,12 @@
-from pathlib import Path
 from logging import getLogger
+from pathlib import Path
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.data.utils import download_decompress
 
 log = getLogger(__name__)
+
 
 @register('conll2003_reader')
 class Conll2003DatasetReader(DatasetReader):
@@ -94,7 +95,7 @@ class Conll2003DatasetReader(DatasetReader):
                         except:
                             log.warning('Skip {}, splitted as {}'.format(repr(line), repr(line.split())))
                             continue
-                
+
                     tags.append(tag)
                     tokens.append(token)
 
@@ -106,7 +107,7 @@ class Conll2003DatasetReader(DatasetReader):
                     x = x + (self.num_docs,)
                 samples.append((x, tags))
                 self.num_docs += 1
-            
+
             if self.iob:
                 return [(x, self._iob2_to_iob(tags)) for x, tags in samples]
 

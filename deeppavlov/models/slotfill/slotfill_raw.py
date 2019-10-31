@@ -29,6 +29,7 @@ log = getLogger(__name__)
 @register('slotfill_raw')
 class SlotFillingComponent(Component, Serializable):
     """Slot filling using Fuzzy search"""
+
     def __init__(self, threshold: float = 0.7, return_all: bool = False, **kwargs):
         super().__init__(**kwargs)
         self.threshold = threshold

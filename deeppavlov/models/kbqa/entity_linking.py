@@ -11,18 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import itertools
 import pickle
 from logging import getLogger
 from typing import List, Dict, Tuple, Optional
-import itertools
 
-from fuzzywuzzy import fuzz
-import pymorphy2
 import nltk
+import pymorphy2
+from fuzzywuzzy import fuzz
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.models.component import Component
+from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.models.spelling_correction.levenshtein.levenshtein_searcher import LevenshteinSearcher
 
 log = getLogger(__name__)
@@ -149,7 +149,7 @@ class EntityLinker(Component, Serializable):
         entities_to_print = []
         for name, q, ratio, n_rel in srtd_cand_ent:
             entities_to_print.append(f'{name}, http://wikidata.org/wiki/{q}, {ratio}, {n_rel}')
-        log.debug('\n'+'\n'.join(entities_to_print))
+        log.debug('\n' + '\n'.join(entities_to_print))
 
     def find_candidate_entities(self, entity: str) -> List[str]:
         candidate_entities = list(self.name_to_q.get(entity, []))
@@ -226,7 +226,8 @@ class EntityLinker(Component, Serializable):
                 if triplet[0] == property_is_instance_of and triplet[1] == id_for_entity_asteroid:
                     entity_is_asteroid = True
                     break
-            if found_what_template and (entity_is_human or entity_is_named or entity_is_asteroid or wiki_entity[2]<90):
+            if found_what_template and (
+                    entity_is_human or entity_is_named or entity_is_asteroid or wiki_entity[2] < 90):
                 continue
             filtered_entity_triplets.append(triplets_for_entity)
             filtered_entities.append(wiki_entity)
@@ -270,8 +271,8 @@ class EntityLinker(Component, Serializable):
         return candidate_names
 
     def sort_found_entities(self, candidate_entities: List[Tuple[str]],
-                                  candidate_names: List[List[str]],
-                                  entity: str) -> Tuple[List[str], List[str], List[Tuple[str]]]:
+                            candidate_names: List[List[str]],
+                            entity: str) -> Tuple[List[str], List[str], List[Tuple[str]]]:
         entities_ratios = []
         for candidate, entity_names in zip(candidate_entities, candidate_names):
             entity_id = candidate[0]
@@ -286,6 +287,6 @@ class EntityLinker(Component, Serializable):
 
         srtd_with_ratios = sorted(entities_ratios, key=lambda x: (x[2], x[3]), reverse=True)
         wiki_entities = [ent[1] for ent in srtd_with_ratios if ent[2] > 84]
-        confidences = [float(ent[2])*0.01 for ent in srtd_with_ratios if ent[2] > 84]
-        
+        confidences = [float(ent[2]) * 0.01 for ent in srtd_with_ratios if ent[2] > 84]
+
         return wiki_entities, confidences, srtd_with_ratios

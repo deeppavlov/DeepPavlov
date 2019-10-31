@@ -50,6 +50,7 @@ class Agent(Component, metaclass=ABCMeta):
             We highly recommend to use wrapped skills for skills inference.
         dialog_logger: DeepPavlov dialog logging facility.
     """
+
     def __init__(self, skills: List[Component]) -> None:
         self.skills = skills
         self.history: Dict = defaultdict(list)
@@ -118,6 +119,7 @@ class SkillWrapper:
         skill_id: Skill index in Agent.skills list.
         agent: Agent instance.
     """
+
     def __init__(self, skill: Component, skill_id: int, agent: Agent) -> None:
         self.skill = skill
         self.skill_id = skill_id

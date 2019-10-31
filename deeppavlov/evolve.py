@@ -195,7 +195,7 @@ def run_population(population, evolution, gpus):
                 f_name = save_path / "config.json"
                 save_json(population[i], f_name)
 
-                with save_path.joinpath('out.txt').open('w', encoding='utf8') as outlog,\
+                with save_path.joinpath('out.txt').open('w', encoding='utf8') as outlog, \
                         save_path.joinpath('err.txt').open('w', encoding='utf8') as errlog:
                     env = dict(os.environ)
                     if len(gpus) > 1 or gpus[0] != -1:

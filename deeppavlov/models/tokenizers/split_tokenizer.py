@@ -25,6 +25,7 @@ class SplitTokenizer(Component):
 
     Doesn't have any parameters.
     """
+
     def __init__(self, **kwargs) -> None:
         pass
 

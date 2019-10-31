@@ -1,16 +1,14 @@
-from typing import List, Union
-from pathlib import Path
-from logging import getLogger
-import errno
 import json
 import re
-import os
+from logging import getLogger
+from pathlib import Path
+from typing import List, Union
 
 import pymorphy2
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Component
-from deeppavlov.core.commands.utils import expand_path
 
 log = getLogger(__name__)
 
@@ -107,14 +105,14 @@ class RuObscenityClassifier(Component):
             word = word.lower()
             word.replace('ё', 'е')
             normal_word = self.morph.parse(word)[0].normal_form
-            if normal_word in self.obscenity_words_exception\
+            if normal_word in self.obscenity_words_exception \
                     or word in self.obscenity_words_exception:
                 continue
-            if normal_word in self.obscenity_words\
-                    or word in self.obscenity_words\
-                    or bool(self.regexp.findall(normal_word))\
-                    or bool(self.regexp.findall(word))\
-                    or bool(self.regexp2.findall(normal_word))\
+            if normal_word in self.obscenity_words \
+                    or word in self.obscenity_words \
+                    or bool(self.regexp.findall(normal_word)) \
+                    or bool(self.regexp.findall(word)) \
+                    or bool(self.regexp2.findall(normal_word)) \
                     or bool(self.regexp2.findall(word)):
                 return True
         return False

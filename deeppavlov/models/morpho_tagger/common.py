@@ -109,7 +109,7 @@ class TagOutputPrettifier(Component):
 
     def _make_format_string(self) -> None:
         if self.format_mode == "basic":
-            self.format_string =  "{}\t{}\t{}\t{}"
+            self.format_string = "{}\t{}\t{}\t{}"
         elif self.format_mode.lower() in ["conllu", "ud"]:
             self.format_string = "{}\t{}\t_\t{}\t_\t{}\t_\t_\t_\t_"
         else:

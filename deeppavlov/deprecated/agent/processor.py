@@ -22,6 +22,7 @@ class Processor(Component, metaclass=ABCMeta):
     which is used in Agent to process skills responses and give one final
     response for each utterance.
     """
+
     # TODO: change *responses to [[], [], ...] argument
     @abstractmethod
     def __call__(self, utterances_batch: list, history_batch: list, *responses: list) -> list:

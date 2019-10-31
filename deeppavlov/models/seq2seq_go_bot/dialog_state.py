@@ -30,4 +30,3 @@ class DialogState(Component):
         for user, utter in zip(user_ids, utterances):
             self.states[user] = self.states.get(user, []) + utter
         return
-

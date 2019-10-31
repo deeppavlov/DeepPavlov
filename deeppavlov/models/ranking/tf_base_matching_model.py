@@ -52,7 +52,8 @@ class TensorflowBaseMatchingModel(TFModel, SiameseModel):
                                                           *args, **kwargs)
         self.use_logits = use_logits
         if mean_oov:
-            self.emb_matrix[1] = np.mean(self.emb_matrix[2:], axis=0)  # set mean embedding for OOV token at the 2nd index
+            self.emb_matrix[1] = np.mean(self.emb_matrix[2:],
+                                         axis=0)  # set mean embedding for OOV token at the 2nd index
 
     def _append_sample_to_batch_buffer(self, sample: List[np.ndarray], buf: List[Tuple]) -> int:
         """
@@ -65,9 +66,9 @@ class TensorflowBaseMatchingModel(TFModel, SiameseModel):
              a number of candidate responses
         """
         #
-        batch_buffer_context = []       # [batch_size, 10, 50]
-        batch_buffer_context_len = []   # [batch_size, 10]
-        batch_buffer_response = []      # [batch_size, 50]
+        batch_buffer_context = []  # [batch_size, 10, 50]
+        batch_buffer_context_len = []  # [batch_size, 10]
+        batch_buffer_response = []  # [batch_size, 50]
         batch_buffer_response_len = []  # [batch_size]
 
         context_sentences = sample[:self.num_context_turns]

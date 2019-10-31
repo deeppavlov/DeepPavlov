@@ -46,6 +46,7 @@ class DefaultAgent(Agent):
         skills_processor: Initiated agent processor.
         skills_filter: Initiated agent filter.
     """
+
     def __init__(self, skills: List[Component], skills_processor: Optional[Processor] = None,
                  skills_filter: Optional[Filter] = None, *args, **kwargs) -> None:
         super(DefaultAgent, self).__init__(skills=skills)

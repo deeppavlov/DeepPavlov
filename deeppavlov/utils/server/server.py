@@ -25,8 +25,8 @@ from fastapi.utils import generate_operation_id_for_path
 from pydantic import BaseConfig, BaseModel, Schema
 from pydantic.fields import Field
 from pydantic.main import MetaModel
-from starlette.responses import RedirectResponse
 from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import RedirectResponse
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import parse_config
@@ -42,6 +42,7 @@ SSLConfig = namedtuple('SSLConfig', ['version', 'keyfile', 'certfile'])
 
 class ProbeFilter(logging.Filter):
     """ProbeFilter class is used to filter POST requests to /probe endpoint from logs."""
+
     def filter(self, record: logging.LogRecord) -> bool:
         """To log the record method should return True."""
         return 'POST /probe HTTP' not in record.getMessage()
@@ -116,6 +117,7 @@ def get_ssl_params(server_params: dict,
 
 def redirect_root_to_docs(fast_app: FastAPI, func_name: str, endpoint: str, method: str) -> None:
     """Adds api route to server that redirects user from root to docs with opened `endpoint` description."""
+
     @fast_app.get('/', include_in_schema=False)
     async def redirect_to_docs() -> RedirectResponse:
         operation_id = generate_operation_id_for_path(name=func_name, path=endpoint, method=method)
@@ -192,6 +194,7 @@ def start_model_server(model_config: Path,
     redirect_root_to_docs(app, 'answer', model_endpoint, 'post')
 
     model_endpoint_post_example = {arg_name: ['string'] for arg_name in model_args_names}
+
     @app.post(model_endpoint, summary='A model endpoint')
     async def answer(item: Batch = Body(..., example=model_endpoint_post_example)) -> List:
         loop = asyncio.get_event_loop()

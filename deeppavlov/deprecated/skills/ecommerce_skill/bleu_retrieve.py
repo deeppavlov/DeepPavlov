@@ -49,7 +49,6 @@ class EcommerceSkillBleu(Skill):
         min_entropy: min entropy threshold for specifying
     """
 
-
     def __init__(self,
                  preprocess: Component,
                  save_path: str,
@@ -74,7 +73,6 @@ class EcommerceSkillBleu(Skill):
         if kwargs.get('mode') != 'train':
             self.load()
 
-
     def fit(self, data: List[Dict[Any, Any]]) -> None:
         """Preprocess items `title` and `description` from the `data`
 
@@ -88,16 +86,14 @@ class EcommerceSkillBleu(Skill):
         log.info(f"Items to nlp: {len(data)}")
         self.ec_data = [dict(item, **{
             'title_nlped': self.preprocess.spacy2dict(self.preprocess.analyze(item['Title'])),
-            'feat_nlped': self.preprocess.spacy2dict(self.preprocess.analyze(item['Title']+'. '+item['Feature']))
+            'feat_nlped': self.preprocess.spacy2dict(self.preprocess.analyze(item['Title'] + '. ' + item['Feature']))
         }) for item in data]
         log.info('Data are nlped')
-
 
     def save(self, **kwargs) -> None:
         """Save classifier parameters"""
         log.info(f"Saving model to {self.save_path}")
         save_pickle(self.ec_data, self.save_path)
-
 
     def load(self, **kwargs) -> None:
         """Load classifier parameters"""
@@ -109,7 +105,6 @@ class EcommerceSkillBleu(Skill):
                 raise FileNotFoundError
 
         log.info(f"Loaded items {len(self.ec_data)}")
-
 
     def __call__(self, queries: List[str], history: List[Any], states: List[Dict[Any, Any]]) -> \
             Tuple[Tuple[List[Any], List[Any]], List[float], List[Any]]:
@@ -165,12 +160,12 @@ class EcommerceSkillBleu(Skill):
                 state['Price'] = money_range
 
             score_title = [bleu_advanced(self.preprocess.lemmas(item['title_nlped']),
-                                        self.preprocess.lemmas(self.preprocess.filter_nlp_title(query)),
-                                        weights = (1,), penalty = False) for item in self.ec_data]
+                                         self.preprocess.lemmas(self.preprocess.filter_nlp_title(query)),
+                                         weights=(1,), penalty=False) for item in self.ec_data]
 
             score_feat = [bleu_advanced(self.preprocess.lemmas(item['feat_nlped']),
                                         self.preprocess.lemmas(self.preprocess.filter_nlp(query)),
-                                        weights = (0.3, 0.7), penalty = False) for idx, item in enumerate(self.ec_data)]
+                                        weights=(0.3, 0.7), penalty=False) for idx, item in enumerate(self.ec_data)]
 
             scores = np.mean([score_feat, score_title], axis=0).tolist()
 
@@ -182,8 +177,9 @@ class EcommerceSkillBleu(Skill):
 
             results_args_sim = [idx for idx in results_args if scores[idx] >= self.min_similarity]
 
-            log.debug(f"Items before similarity filtering {len(results_args)} and after {len(results_args_sim)} with th={self.min_similarity} " +
-                      f"the best one has score {scores[results_args[0]]} with title {self.ec_data[results_args[0]]['Title']}")
+            log.debug(
+                f"Items before similarity filtering {len(results_args)} and after {len(results_args_sim)} with th={self.min_similarity} " +
+                f"the best one has score {scores[results_args[0]]} with title {self.ec_data[results_args[0]]['Title']}")
 
             results_args_sim = self._filter_state(state, results_args_sim)
 
@@ -202,7 +198,6 @@ class EcommerceSkillBleu(Skill):
 
         return (response, entropies), confidence, back_states
 
-
     def _clean_items(self, results: List[int]) -> List[Any]:
         local_response: List = []
         for idx in results:
@@ -211,7 +206,6 @@ class EcommerceSkillBleu(Skill):
             del temp['feat_nlped']
             local_response.append(temp)
         return local_response
-
 
     def _filter_state(self, state: Dict[Any, Any], results_args_sim: List[int]) -> List[Any]:
         for key, value in state.items():
@@ -234,7 +228,6 @@ class EcommerceSkillBleu(Skill):
                                     if self.ec_data[idx][key].lower() == value.lower()]
 
         return results_args_sim
-
 
     def _entropy_subquery(self, results_args: List[int]) -> List[Tuple[float, str, List[Tuple[str, int]]]]:
         """Calculate entropy of selected attributes for items from the catalog.

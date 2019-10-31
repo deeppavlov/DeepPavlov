@@ -159,7 +159,6 @@ class Trie:
             branch.append(next_child)
             letters_with_children.append(self._get_children_and_letters(branch[-1]))
 
-
     def is_final(self, index):
         """
         Аргументы
@@ -189,13 +188,13 @@ class Trie:
                     continue
                 next_agenda.append((child, borders, cost))
                 if self.is_final(child):
-                    next_agenda.append((self.root, borders + [i+1], cost+1))
+                    next_agenda.append((self.root, borders + [i + 1], cost + 1))
             curr_agenda = next_agenda
         answer = []
         for curr, borders, cost in curr_agenda:
             if curr == self.root:
                 borders = [0] + borders
-                answer.append([s[left:borders[i+1]] for i, left in enumerate(borders[:-1])])
+                answer.append([s[left:borders[i + 1]] for i, left in enumerate(borders[:-1])])
         return answer
 
     def __len__(self):
@@ -275,8 +274,8 @@ class Trie:
         if self.dict_storage:
             answer = list(self.graph[index].keys())
         else:
-            answer =  [i for i, elem in enumerate(self.graph[index])
-                       if elem != Trie.NO_NODE]
+            answer = [i for i, elem in enumerate(self.graph[index])
+                      if elem != Trie.NO_NODE]
         if not return_indexes:
             answer = [(self.alphabet[i] if i >= 0 else " ") for i in answer]
         return answer
@@ -285,8 +284,8 @@ class Trie:
         if self.dict_storage:
             answer = list(self.graph[index].items())
         else:
-            answer =  [elem for elem in enumerate(self.graph[index])
-                       if elem[1] != Trie.NO_NODE]
+            answer = [elem for elem in enumerate(self.graph[index])
+                      if elem[1] != Trie.NO_NODE]
         if not return_indexes:
             for i, (letter_index, child) in enumerate(answer):
                 answer[i] = (self.alphabet[letter_index], child)
@@ -318,7 +317,7 @@ class TrieMinimizer:
         node_classes[index] = 0
         class_representatives = [index]
         node_key = ((), (), trie.is_final(index))
-        classes, class_keys = {node_key : 0}, [node_key]
+        classes, class_keys = {node_key: 0}, [node_key]
         curr_index = 1
         for index in order[1:]:
             letter_indexes = tuple(trie._get_letters(index, return_indexes=True))
@@ -348,9 +347,9 @@ class TrieMinimizer:
             new_final = np.array(new_final, dtype=bool)
         else:
             new_graph = [[Trie.NO_NODE for a in trie.alphabet] for i in range(L)]
-        for (indexes, children, final), class_index in\
+        for (indexes, children, final), class_index in \
                 sorted(classes.items(), key=(lambda x: x[1])):
-            row = new_graph[L-class_index-1]
+            row = new_graph[L - class_index - 1]
             for i, child_index in zip(indexes, children):
                 row[i] = L - child_index - 1
         compressed.graph = new_graph
@@ -386,7 +385,7 @@ class TrieMinimizer:
         while len(stack) > 0:
             index = stack[-1]
             color = colors[index]
-            if color == 'white': # вершина ещё не обрабатывалась
+            if color == 'white':  # вершина ещё не обрабатывалась
                 colors[index] = 'grey'
                 for child in trie._get_children(index):
                     # проверяем, посещали ли мы ребёнка раньше
@@ -403,7 +402,7 @@ class TrieMinimizer:
 def load_trie(infile):
     with open(infile, "r", encoding="utf8") as fin:
         line = fin.readline().strip()
-        flags = [x=='T' for x in line.split()]
+        flags = [x == 'T' for x in line.split()]
         if len(flags) != len(Trie.ATTRS) + 1:
             raise ValueError("Wrong file format")
         nodes_number, root = map(int, fin.readline().strip().split())
@@ -413,7 +412,7 @@ def load_trie(infile):
             setattr(trie, attr, flags[i])
         read_data = flags[-1]
         final = [False] * nodes_number
-        #print(len(alphabet), nodes_number)
+        # print(len(alphabet), nodes_number)
         if trie.dict_storage:
             graph = [defaultdict(lambda: -1) for _ in range(nodes_number)]
         elif trie.is_numpied:

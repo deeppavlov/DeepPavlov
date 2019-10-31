@@ -13,6 +13,7 @@ class LevenshteinSearcher:
     в соответствии с расстоянием Левенштейна
 
     """
+
     def __init__(self, alphabet, dictionary, operation_costs=None,
                  allow_spaces=False, euristics='none'):
         self.alphabet = alphabet
@@ -65,7 +66,7 @@ class LevenshteinSearcher:
         trie = self.dictionary
         #  инициализация переменных
         used_agenda_keys = set()
-        agenda = SortedListWithKey(key=(lambda x:x[1]))
+        agenda = SortedListWithKey(key=(lambda x: x[1]))
         h = self.h_func(word, trie.root)
         # agenda[self.agenda_key("", 0, trie.root)] = (0.0, 0.0, h)
         key, value = ("", 0, trie.root), (0.0, 0.0, h)
@@ -91,7 +92,7 @@ class LevenshteinSearcher:
                     continue
                 for curr_low, curr_cost in transducer.operation_costs[curr_up].items():
                     new_g = g + curr_cost
-                    if new_g > d:  #если g > d, то h можно не вычислять
+                    if new_g > d:  # если g > d, то h можно не вычислять
                         continue
                     if curr_low == " ":
                         if allow_spaces and trie.is_final(index):
@@ -103,7 +104,7 @@ class LevenshteinSearcher:
                     if new_index is Trie.NO_NODE:
                         continue
                     new_low = low + curr_low
-                    new_h = self.h_func(word[new_pos: ], new_index)
+                    new_h = self.h_func(word[new_pos:], new_index)
                     new_cost = new_g + new_h
                     if new_cost > d:
                         continue
@@ -129,8 +130,8 @@ class LevenshteinSearcher:
             return
         # вычисление минимальной стоимости операции,
         # приводящей к появлению ('+') или исчезновению ('-') данного символа
-        removal_costs = {a : np.inf for a in self.alphabet}
-        insertion_costs = {a : np.inf for a in self.alphabet}
+        removal_costs = {a: np.inf for a in self.alphabet}
+        insertion_costs = {a: np.inf for a in self.alphabet}
         if self.allow_spaces:
             removal_costs[' '] = np.inf
             insertion_costs[' '] = np.inf
@@ -250,10 +251,10 @@ def _precompute_absense_costs(dictionary, removal_costs, insertion_costs, n,
             curr_node_removal_costs[0] = min(removal_costs[symbol] for symbol in node[0])
             for j, symbols in enumerate(node[1:], 1):
                 if len(symbols) == 0:
-                    curr_node_removal_costs[j:] = curr_node_removal_costs[j-1]
+                    curr_node_removal_costs[j:] = curr_node_removal_costs[j - 1]
                     break
                 curr_cost = min(removal_costs[symbol] for symbol in symbols)
-                curr_node_removal_costs[j] = min(curr_node_removal_costs[j-1], curr_cost)
+                curr_node_removal_costs[j] = min(curr_node_removal_costs[j - 1], curr_cost)
         else:
             curr_node_removal_costs[:] = np.inf
         # определение минимальной стоимости вставки
@@ -288,6 +289,7 @@ class SegmentTransducer:
         и они равны значению по умолчанию)
 
     """
+
     def __init__(self, alphabet, operation_costs=None, allow_spaces=False):
         self.alphabet = alphabet
         if operation_costs is None:
@@ -300,10 +302,10 @@ class SegmentTransducer:
         self._make_maximal_key_lengths()
         # self.maximal_value_lengths = {}
         # for up, probs in self.operation_costs.items():
-            # СЛИШКОМ МНОГО ВЫЗОВОВ, НАДО КАК-ТО ЗАПОМНИТЬ
-            # МАКСИМАЛЬНЫЕ ДЛИНЫ КЛЮЧЕЙ ПРИ ОБРАЩЕНИИ
-            # max_low_length = max(len(low) for low in probs) if (len(probs) > 0) else -1
-            # self.maximal_value_lengths[up] = self.maximal_key_length
+        # СЛИШКОМ МНОГО ВЫЗОВОВ, НАДО КАК-ТО ЗАПОМНИТЬ
+        # МАКСИМАЛЬНЫЕ ДЛИНЫ КЛЮЧЕЙ ПРИ ОБРАЩЕНИИ
+        # max_low_length = max(len(low) for low in probs) if (len(probs) > 0) else -1
+        # self.maximal_value_lengths[up] = self.maximal_key_length
 
     def get_operation_cost(self, up, low):
         """
@@ -341,7 +343,7 @@ class SegmentTransducer:
         inversed_transducer.max_up_lengths_by_low = self.max_low_lengths_by_up
         return inversed_transducer
 
-    def distance(self, first, second, return_transduction = False):
+    def distance(self, first, second, return_transduction=False):
         """
         Вычисляет трансдукцию минимальной стоимости,
         отображающую first в second
@@ -374,7 +376,7 @@ class SegmentTransducer:
         clear_pred = (lambda x, y: x < y < np.inf)
         update_func = lambda x, y: min(x, y)
         costs, backtraces = self._fill_levenshtein_table(first, second,
-                                                        update_func, add_pred, clear_pred)
+                                                         update_func, add_pred, clear_pred)
         final_cost = costs[-1][-1]
         if final_cost == np.inf:
             transductions = [None]
@@ -397,11 +399,11 @@ class SegmentTransducer:
             список вида [(трансдукция, стоимость)]
         """
         add_pred = (lambda x, y: x <= threshold)
-        clear_pred =(lambda x, y: False)
+        clear_pred = (lambda x, y: False)
         update_func = (lambda x, y: min(x, y))
         costs, backtraces = self._fill_levenshtein_table(first, second,
-                                                        update_func, add_pred, clear_pred,
-                                                        threshold=threshold)
+                                                         update_func, add_pred, clear_pred,
+                                                         threshold=threshold)
         result = self._backtraces_to_transductions(first, second,
                                                    backtraces, threshold, return_cost=True)
         return result
@@ -430,7 +432,7 @@ class SegmentTransducer:
                     for transduction, cost in prefixes[pos]:
                         new_cost = cost + low_cost
                         if new_cost <= max_cost:
-                            new_transduction = transduction +(up, low)
+                            new_transduction = transduction + (up, low)
                             prefixes[pos + upperside_length].append((new_transduction, new_cost))
         answer = sorted(prefixes[-1], key=(lambda x: x[0]))
         if return_cost:
@@ -461,7 +463,7 @@ class SegmentTransducer:
         return inversed_transducer.lower_transductions(word, max_cost, return_cost)
 
     def _fill_levenshtein_table(self, first, second, update_func, add_pred, clear_pred,
-                               threshold=None):
+                                threshold=None):
         """
         Функция, динамически заполняющая таблицу costs стоимости трансдукций,
         costs[i][j] --- минимальная стоимость трансдукции,
@@ -502,10 +504,10 @@ class SegmentTransducer:
             for a, b in zip(first, second):
                 threshold += self.get_operation_cost(a, b)
             if m > n:
-                for a in first[n: ]:
+                for a in first[n:]:
                     threshold += self.get_operation_cost(a, '')
             elif m < n:
-                for b in second[m: ]:
+                for b in second[m:]:
                     threshold += self.get_operation_cost('', b)
             threshold *= 2
         # инициализация возвращаемых массивов
@@ -519,14 +521,14 @@ class SegmentTransducer:
             for i_right in range(i, min(i + self.max_up_length, m) + 1):
                 up = first[i: i_right]
                 max_low_length = self.max_low_lengths_by_up.get(up, -1)
-                if max_low_length == -1: # no up key in transduction
+                if max_low_length == -1:  # no up key in transduction
                     continue
                 up_costs = self.operation_costs[up]
                 for j in range(n + 1):
                     if costs[i][j] > threshold:
                         continue
                     if len(backtraces[i][j]) == 0 and i + j > 0:
-                        continue # не нашлось обратных ссылок
+                        continue  # не нашлось обратных ссылок
                     for j_right in range((j if i_right > i else j + 1),
                                          min(j + max_low_length, n) + 1):
                         low = second[j: j_right]
@@ -562,18 +564,18 @@ class SegmentTransducer:
         и максимальную длину элемента up
         в элементарной трансдукции (up, low) для каждого low
         """
-        self.max_up_length =\
+        self.max_up_length = \
             (max(len(up) for up in self.operation_costs)
              if len(self.operation_costs) > 0 else -1)
-        self.max_low_length =\
+        self.max_low_length = \
             (max(len(low) for low in self._reversed_operation_costs)
              if len(self._reversed_operation_costs) > 0 else -1)
         self.max_low_lengths_by_up, self.max_up_lengths_by_low = dict(), dict()
         for up, costs in self.operation_costs.items():
-            self.max_low_lengths_by_up[up] =\
+            self.max_low_lengths_by_up[up] = \
                 max(len(low) for low in costs) if len(costs) > 0 else -1
         for low, costs in self._reversed_operation_costs.items():
-            self.max_up_lengths_by_low[low] =\
+            self.max_up_lengths_by_low[low] = \
                 max(len(up) for up in costs) if len(costs) > 0 else -1
 
     def _backtraces_to_transductions(self, first, second, backtraces, threshold, return_cost=False):
@@ -603,7 +605,7 @@ class SegmentTransducer:
         m, n = len(first), len(second)
         agenda = [None] * (m + 1)
         for i in range(m + 1):
-            agenda[i] = [[] for j in range(n+1)]
+            agenda[i] = [[] for j in range(n + 1)]
         agenda[m][n] = [((), 0.0)]
         for i_right in range(m, -1, -1):
             for j_right in range(n, -1, -1):
@@ -615,7 +617,7 @@ class SegmentTransducer:
                     add_cost = self.operation_costs[up][low]
                     for elem, cost in current_agenda:
                         new_cost = cost + add_cost
-                        if new_cost <= threshold: # удаление трансдукций большой стоимости
+                        if new_cost <= threshold:  # удаление трансдукций большой стоимости
                             agenda[i][j].append((((up, low),) + elem, new_cost))
         if return_cost:
             return agenda[0][0]

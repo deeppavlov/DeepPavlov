@@ -58,15 +58,15 @@ setup(
     keywords=deeppavlov.__keywords__,
     include_package_data=True,
     extras_require={
-            'tests': [
-                'flake8',
-                'pytest',
-                'pexpect'],
-            'docs': [
-                'sphinx>=1.7.9',
-                'sphinx_rtd_theme>=0.4.0',
-                'nbsphinx>=0.3.4',
-                'ipykernel>=4.8.0'
-            ]},
+        'tests': [
+            'flake8',
+            'pytest',
+            'pexpect'],
+        'docs': [
+            'sphinx>=1.7.9',
+            'sphinx_rtd_theme>=0.4.0',
+            'nbsphinx>=0.3.4',
+            'ipykernel>=4.8.0'
+        ]},
     **read_requirements()
 )

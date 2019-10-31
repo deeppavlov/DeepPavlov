@@ -82,7 +82,7 @@ def from_params(params: Dict, mode: str = 'infer', serialized: Any = None, **kwa
         _refs.clear()
         _refs.update(refs)
         try:
-            _refs[config_params['id']] = model 
+            _refs[config_params['id']] = model
         except KeyError:
             pass
         return model
@@ -100,7 +100,7 @@ def from_params(params: Dict, mode: str = 'infer', serialized: Any = None, **kwa
 
         try:
             spec = inspect.getfullargspec(obj)
-            if 'mode' in spec.args+spec.kwonlyargs or spec.varkw is not None:
+            if 'mode' in spec.args + spec.kwonlyargs or spec.varkw is not None:
                 kwargs['mode'] = mode
 
             component = obj(**dict(config_params, **kwargs))

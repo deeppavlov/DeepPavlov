@@ -87,13 +87,13 @@ class DualTemplate(Template):
         self.dontcare = self.dontcare or dontcare
 
     def __contains__(self, t):
-        return t.default and (t.default == self.default)\
-                or t.dontcare and (t.dontcare == self.dontcare)
+        return t.default and (t.default == self.default) \
+               or t.dontcare and (t.dontcare == self.dontcare)
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            return (self.default == other.default)\
-                    and (self.dontcare == other.dontcare)
+            return (self.default == other.default) \
+                   and (self.dontcare == other.dontcare)
         return False
 
     def __hash__(self):

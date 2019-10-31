@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import collections
+import copy
 import json
 import re
-import copy
 from logging import getLogger
 from typing import Dict, Any, List, Optional, Union, Tuple
 
@@ -282,7 +282,7 @@ class GoalOrientedBot(LRScheduledTFModel):
                 # random embedding instead of zeros
                 if np.all(emb_features < 1e-20):
                     emb_dim = self.embedder.dim
-                    emb_features = np.fabs(np.random.normal(0, 1/emb_dim, emb_dim))
+                    emb_features = np.fabs(np.random.normal(0, 1 / emb_dim, emb_dim))
 
         # Intent features
         intent_features = []
@@ -321,11 +321,11 @@ class GoalOrientedBot(LRScheduledTFModel):
 
         if self.debug:
             log.debug(f"Context features = {context_features}")
-            debug_msg = f"num bow features = {bow_features}" +\
-                        f", num emb features = {emb_features}" +\
-                        f", num intent features = {intent_features}" +\
-                        f", num state features = {len(state_features)}" +\
-                        f", num context features = {len(context_features)}" +\
+            debug_msg = f"num bow features = {bow_features}" + \
+                        f", num emb features = {emb_features}" + \
+                        f", num intent features = {intent_features}" + \
+                        f", num state features = {len(state_features)}" + \
+                        f", num context features = {len(context_features)}" + \
                         f", prev_action shape = {len(state['prev_action'])}"
             log.debug(debug_msg)
 
@@ -559,7 +559,7 @@ class GoalOrientedBot(LRScheduledTFModel):
             feed_dict[self._emb_context] = emb_context
             feed_dict[self._key] = key
 
-        probs, prediction, state =\
+        probs, prediction, state = \
             self.sess.run([self._probs, self._prediction, self._state],
                           feed_dict=feed_dict)
 
