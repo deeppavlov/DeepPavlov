@@ -5,8 +5,7 @@
     "unix_socket_file": "/tmp/deeppavlov_socket.s",
     "socket_type": "TCP",
     "model_args_names": "",
-    "bufsize": 1024,
-    "binding_message": "binding socket to"
+    "launch_message": "launching socket server at"
   },
   "model_defaults": {
     "SquadModel": {}

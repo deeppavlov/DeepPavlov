@@ -90,6 +90,9 @@ two elements:
 
     import json
     import socket
+    from struct import unpack
+
+    from deeppavlov.utils.socket import encode
 
     socket_payload = {
         "context_raw": [
@@ -101,13 +104,15 @@ two elements:
             "Who I used to be?"
         ]
     }
-    dumped_socket_payload = json.dumps(socket_payload)
+    serialized_socket_payload = encode(socket_payload)
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect(('0.0.0.0', 5000))
-        s.sendall(dumped_socket_payload.encode('utf-8'))
-        serialized_payload = s.recv(1024)
-        json_payload = json.loads(serialized_payload)
+        s.sendall(serialized_socket_payload)
+        header = s.recv(4)
+        body_len = unpack('<I', header)[0]
+        serialized_response = s.recv(body_len)
+        json_payload = json.loads(serialized_response)
 
     print(json_payload)
 
