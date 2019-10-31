@@ -175,7 +175,7 @@ class Sqlite3Database(Estimator):
                 set_fields.append(f"{k}=?")
                 set_values.append(v)
         set_expr = ", ".join(set_fields)
-        where_expr = ", ".join(where_fields)
+        where_expr = " AND ".join(where_fields)
         self.cursor.execute(f"UPDATE {self.tname}" +
                             f" SET {set_expr}" +
                             f" WHERE {where_expr}", set_values+where_values)
