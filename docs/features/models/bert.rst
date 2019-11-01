@@ -49,6 +49,58 @@ Sentence representations are mean pooled token embeddings in the same manner as 
 Here, in DeepPavlov, we made it easy to use pre-trained BERT for downstream tasks like classification, tagging, question answering and
 ranking. We also provide pre-trained models and examples on how to use BERT with DeepPavlov.
 
+BERT as Embedder
+----------------
+
+All embeddings from above support original Google's repository format.
+
+Additionaly the embeddings can be easily used in DeepPavlov. To get text level, token level and subtoken level representations, run: 
+
+.. code:: python
+    
+    from deeppavlov.core.common.file import read_json
+    from deeppavlov import build_model, configs
+    
+    bert_config = read_json(configs.embedder.bert_embedder)
+    bert_config['metadata']['variables']['BERT_PATH'] = 'path/to/bert/directory'
+
+    m = build_model(bert_config)
+
+    texts = ['Hi, i want my embedding.', 'And mine too, please!']
+    text_embs, token_embs, subtoken_embs = m(texts)
+
+You can further access the following embeddings:
+
+.. code:: python
+
+    text_id = 0 # 0 for 'Hi, 'i want my embedding' 
+
+    print(text_embs[text_id].keys())
+    # dict_keys(['[CLS]', '[SEP]', 'MAX', 'MEAN'])
+
+    print(token_embs[text_id].keys())
+    # dict_keys(['words', 'word_embeddings'])
+
+    print(subtoken_embs[text_id].keys())
+    # dict_keys(['subwords', 'subword_embeddings'])
+
+
+To get only text level representations (recommended for SentenceMultilingualBERT and SentenceRuBert), run:
+
+.. code:: python
+
+    from deeppavlov.core.common.file import read_json
+    from deeppavlov import build_model, configs
+    
+    bert_config = read_json(configs.embedder.bert_sentence_embedder)
+    bert_config['metadata']['variables']['BERT_PATH'] = 'path/to/bert/directory'
+
+    m = build_model(bert_config)
+
+    texts = ['Hi, i want my embedding.', 'And mine too, please!']
+    text_embs = m(texts)
+
+
 BERT for Classification
 -----------------------
 
