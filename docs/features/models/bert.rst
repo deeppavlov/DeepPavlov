@@ -29,21 +29,22 @@ multilingual version of BERT-base as initialization for RuBERT [1]_.
 
 SlavicBERT was trained on Russian News and four Wikipedias: Bulgarian, Czech, Polish, and Russian.
 Subtoken vocabulary was built using this data. Multilingual BERT was used as an initialization for SlavicBERT.
+The model is described in our ACL paper [2]_.
 
-Conversational BERT was trained on the English part of Twitter, Reddit, DailyDialogues [3]_, OpenSubtitles [4]_, Debates [5]_, Blogs [6]_, Facebook News Comments.
+Conversational BERT was trained on the English part of Twitter, Reddit, DailyDialogues [4]_, OpenSubtitles [5]_, Debates [6]_, Blogs [7]_, Facebook News Comments.
 We used this training data to build the vocabulary of English subtokens and took
 English cased version of BERT-base as initialization for English Conversational BERT.
 
-Conversational RuBERT was trained on OpenSubtitles [4]_, Dirty, Pikabu, and Social Media segment of Taiga corpus [7]_.
+Conversational RuBERT was trained on OpenSubtitles [5]_, Dirty, Pikabu, and Social Media segment of Taiga corpus [8]_.
 We assembled new vocabulary for Conversational RuBERT model on this data and initialized model with RuBERT.
 
 Sentence Multilingual BERT is a representation-based sentence encoder for 101 languages of Multilingual BERT.
-It is inited with Multilingual BERT and then fine-tuned on english MultiNLI [8]_ and on dev set of multilingual XNLI [9]_.
-Sentence representations are mean pooled token embeddings in the same manner as in Sentence-BERT [11]_.
+It is inited with Multilingual BERT and then fine-tuned on english MultiNLI [9]_ and on dev set of multilingual XNLI [10]_.
+Sentence representations are mean pooled token embeddings in the same manner as in Sentence-BERT [12]_.
 
 Sentence RuBERT is a representation-based sentence encoder for Russian.
-It is inited with RuBERT and fine-tuned on SNLI [10]_ google-translated to russian and on russian part of XNLI dev set [9]_.
-Sentence representations are mean pooled token embeddings in the same manner as in Sentence-BERT [11]_.
+It is inited with RuBERT and fine-tuned on SNLI [11]_ google-translated to russian and on russian part of XNLI dev set [10]_.
+Sentence representations are mean pooled token embeddings in the same manner as in Sentence-BERT [12]_.
 
 Here, in DeepPavlov, we made it easy to use pre-trained BERT for downstream tasks like classification, tagging, question answering and
 ranking. We also provide pre-trained models and examples on how to use BERT with DeepPavlov.
@@ -106,7 +107,7 @@ transformations to predict probability that current subtoken is start/end positi
 BERT for Ranking
 ----------------
 There are two main approaches in text ranking. The first one is interaction-based which is relatively accurate but
-works slow and the second one is representation-based which is less accurate but faster [2]_.
+works slow and the second one is representation-based which is less accurate but faster [3]_.
 The interaction-based ranking based on BERT is represented in the DeepPavlov with two main components
 :class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertRankerPreprocessor`
 and :class:`~deeppavlov.models.bert.bert_ranker.BertRankerModel`
@@ -144,13 +145,14 @@ the :doc:`config </intro/configuration>` file must be changed to match new BERT 
 * ``vocab_file`` in the ``bert_preprocessor``
 
 .. [1] Kuratov, Y., Arkhipov, M. (2019). Adaptation of Deep Bidirectional Multilingual Transformers for Russian Language. arXiv preprint arXiv:1905.07213.
-.. [2] McDonald, R., Brokos, G. I., & Androutsopoulos, I. (2018). Deep relevance ranking using enhanced document-query interactions. arXiv preprint arXiv:1809.01682.
-.. [3] Yanran Li, Hui Su, Xiaoyu Shen, Wenjie Li, Ziqiang Cao, and Shuzi Niu. DailyDialog: A Manually Labelled Multi-turn Dialogue Dataset. IJCNLP 2017.
-.. [4] P. Lison and J. Tiedemann, 2016, OpenSubtitles2016: Extracting Large Parallel Corpora from Movie and TV Subtitles. In Proceedings of the 10th International Conference on Language Resources and Evaluation (LREC 2016)
-.. [5] Justine Zhang, Ravi Kumar, Sujith Ravi, Cristian Danescu-Niculescu-Mizil. Proceedings of NAACL, 2016.
-.. [6] J. Schler, M. Koppel, S. Argamon and J. Pennebaker (2006). Effects of Age and Gender on Blogging in Proceedings of 2006 AAAI Spring Symposium on Computational Approaches for Analyzing Weblogs.
-.. [7] Shavrina T., Shapovalova O. (2017) TO THE METHODOLOGY OF CORPUS CONSTRUCTION FOR MACHINE LEARNING: «TAIGA» SYNTAX TREE CORPUS AND PARSER. in proc. of “CORPORA2017”, international conference , Saint-Petersbourg, 2017.
-.. [8] Williams A., Nangia N. & Bowman S. (2017) A Broad-Coverage Challenge Corpus for Sentence Understanding through Inference. arXiv preprint arXiv:1704.05426
-.. [9] Williams A., Bowman S. (2018) XNLI: Evaluating Cross-lingual Sentence Representations. arXiv preprint arXiv:1809.05053
-.. [10] S. R. Bowman, G. Angeli, C. Potts, and C. D. Manning. (2015) A large annotated corpus for learning natural language inference. arXiv preprint arXiv:1508.05326
-.. [11] N. Reimers, I. Gurevych (2019) Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. arXiv preprint arXiv:1908.10084
+.. [2] Arkhipov M., Trofimova M., Kuratov Y., Sorokin A. (2019). `Tuning Multilingual Transformers for Language-Specific Named Entity Recognition <https://www.aclweb.org/anthology/W19-3712/>`__ . ACL anthology W19-3712.
+.. [3] McDonald, R., Brokos, G. I., & Androutsopoulos, I. (2018). Deep relevance ranking using enhanced document-query interactions. arXiv preprint arXiv:1809.01682.
+.. [4] Yanran Li, Hui Su, Xiaoyu Shen, Wenjie Li, Ziqiang Cao, and Shuzi Niu. DailyDialog: A Manually Labelled Multi-turn Dialogue Dataset. IJCNLP 2017.
+.. [5] P. Lison and J. Tiedemann, 2016, OpenSubtitles2016: Extracting Large Parallel Corpora from Movie and TV Subtitles. In Proceedings of the 10th International Conference on Language Resources and Evaluation (LREC 2016)
+.. [6] Justine Zhang, Ravi Kumar, Sujith Ravi, Cristian Danescu-Niculescu-Mizil. Proceedings of NAACL, 2016.
+.. [7] J. Schler, M. Koppel, S. Argamon and J. Pennebaker (2006). Effects of Age and Gender on Blogging in Proceedings of 2006 AAAI Spring Symposium on Computational Approaches for Analyzing Weblogs.
+.. [8] Shavrina T., Shapovalova O. (2017) TO THE METHODOLOGY OF CORPUS CONSTRUCTION FOR MACHINE LEARNING: «TAIGA» SYNTAX TREE CORPUS AND PARSER. in proc. of “CORPORA2017”, international conference , Saint-Petersbourg, 2017.
+.. [9] Williams A., Nangia N. & Bowman S. (2017) A Broad-Coverage Challenge Corpus for Sentence Understanding through Inference. arXiv preprint arXiv:1704.05426
+.. [10] Williams A., Bowman S. (2018) XNLI: Evaluating Cross-lingual Sentence Representations. arXiv preprint arXiv:1809.05053
+.. [11] S. R. Bowman, G. Angeli, C. Potts, and C. D. Manning. (2015) A large annotated corpus for learning natural language inference. arXiv preprint arXiv:1508.05326
+.. [12] N. Reimers, I. Gurevych (2019) Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. arXiv preprint arXiv:1908.10084
