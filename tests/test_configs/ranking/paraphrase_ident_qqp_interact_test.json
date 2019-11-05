@@ -131,10 +131,6 @@
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
     ],
-    "labels": {
-      "telegram_utils": "SiameseModel",
-      "server_utils": "Ranker"
-    },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/paraphrase_ident_qqp.tar.gz",

@@ -21,12 +21,10 @@ from typing import Any, List, Optional, Tuple, Union
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.chainer import Chainer
-from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import jsonify_data
 from deeppavlov.utils.connector import DialogLogger
 from deeppavlov.utils.server import get_server_params
 
-SOCKET_CONFIG_FILENAME = 'socket_config.json'
 HEADER_FORMAT = '<I'
 
 log = getLogger(__name__)
@@ -96,30 +94,29 @@ class SocketServer:
             model_config: Path to the config file.
             socket_type: Socket family. "TCP" for the AF_INET socket server, "UNIX" for UNIX Domain Socket server.
             port: Port number for the AF_INET address family. If parameter is not defined, the port number from the
-                utils/settings/socket_config.json is used.
+                utils/settings/server_config.json is used.
             socket_file: Path to the file to which UNIX Domain Socket server connects. If parameter is not defined,
-                the path from the utils/settings/socket_config.json is used.
+                the path from the utils/settings/server_config.json is used.
 
         Raises:
             ValueError: If ``socket_type`` parameter is neither "TCP" nor "UNIX".
 
         """
-        socket_config_path = get_settings_path() / SOCKET_CONFIG_FILENAME
-        server_params = get_server_params(model_config, socket_config_path)
+        server_params = get_server_params(model_config)
         socket_type = socket_type or server_params['socket_type']
         self._loop = asyncio.get_event_loop()
 
         if socket_type == 'TCP':
             host = server_params['host']
             port = port or server_params['port']
-            self._launch_msg = f'{server_params["launch_message"]} http://{host}:{port}'
+            self._launch_msg = f'{server_params["socket_launch_message"]} http://{host}:{port}'
             self._loop.create_task(asyncio.start_server(self._handle_client, host, port))
         elif socket_type == 'UNIX':
             socket_file = socket_file or server_params['unix_socket_file']
             socket_path = Path(socket_file).resolve()
             if socket_path.exists():
                 socket_path.unlink()
-            self._launch_msg = f'{server_params["launch_message"]} {socket_file}'
+            self._launch_msg = f'{server_params["socket_launch_message"]} {socket_file}'
             self._loop.create_task(asyncio.start_unix_server(self._handle_client, socket_file))
         else:
             raise ValueError(f'socket type "{socket_type}" is not supported')

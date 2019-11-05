@@ -117,10 +117,6 @@
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
       "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
     ],
-    "labels": {
-      "telegram_utils": "SiameseModel",
-      "server_utils": "Ranker"
-    },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v1_mt_word2vec_dam.tar.gz",

@@ -28,8 +28,6 @@ If you want to get custom ``/start`` and ``/help`` Telegram messages for the run
 
 * Add section to ``models_info`` section of ``deeppavlov/utils/settings/connector_config.json`` with your custom
   Telegram messages
-* In model config file specify ``metadata.labels.telegram_utils`` parameter with name which
-  refers to the added section of ``deeppavlov/utils/settings/connector_config.json`` ``models_info`` section.
 
 Python
 ~~~~~~

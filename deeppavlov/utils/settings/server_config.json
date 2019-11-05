@@ -5,53 +5,9 @@
     "model_args_names": "",
     "https": false,
     "https_cert_path": "",
-    "https_key_path": ""
-  },
-  "model_defaults": {
-    "DstcSlotFillingNetwork": {
-      "host": "",
-      "port": "",
-      "model_args_names": ""
-    },
-    "EcommerceSkill": {
-      "host": "",
-      "port": "",
-      "model_args_names": ""
-    },
-    "ErrorModel": {
-      "host": "",
-      "port": "",
-      "model_args_names": ""
-    },
-    "GoalOrientedBot": {
-      "host": "",
-      "port": "",
-      "model_args_names": ""
-    },
-    "KerasIntentModel": {
-      "host": "",
-      "port": "",
-      "model_args_names": ""
-    },
-    "NER": {
-      "host": "",
-      "port": "",
-      "model_args_names": ""
-    },
-    "SquadModel": {
-      "host": "",
-      "port": "",
-      "model_args_names": ""
-    },
-    "ODQA": {
-      "host": "",
-      "port": "",
-      "model_args_names": ""
-    },
-    "Ranker": {
-      "host": "",
-      "port": "",
-      "model_args_names": ""
-    }
+    "https_key_path": "",
+    "socket_type": "TCP",
+    "unix_socket_file": "/tmp/deeppavlov_socket.s",
+    "socket_launch_message": "launching socket server at"
   }
 }

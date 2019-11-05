@@ -109,10 +109,6 @@
       "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
       "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
     ],
-    "labels": {
-      "telegram_utils": "GoalOrientedBot",
-      "server_utils": "GoalOrientedBot"
-    },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_v9.tar.gz",

@@ -64,15 +64,15 @@ app.add_middleware(
 dialog_logger = DialogLogger(logger_name='rest_api')
 
 
-def get_server_params(model_config: Union[str, Path], server_config_path: Path = SERVER_CONFIG_PATH) -> Dict:
-    server_config = read_json(server_config_path)
+def get_server_params(model_config: Union[str, Path]) -> Dict:
+    server_config = read_json(SERVER_CONFIG_PATH)
     model_config = parse_config(model_config)
 
     server_params = server_config['common_defaults']
 
-    if check_nested_dict_keys(model_config, ['metadata', 'labels', 'server_utils']):
-        model_tag = model_config['metadata']['labels']['server_utils']
-        if model_tag in server_config['model_defaults']:
+    if check_nested_dict_keys(model_config, ['metadata', 'server_utils']):
+        model_tag = model_config['metadata']['server_utils']
+        if model_tag in server_config.get('model_defaults', {}):
             model_defaults = server_config['model_defaults'][model_tag]
             for param_name in model_defaults.keys():
                 if model_defaults[param_name]:
