@@ -186,7 +186,8 @@ DeepPavlov skill/model can be made available for Amazon Alexa as a REST service 
 
 .. code:: bash
 
-    python -m deeppavlov alexa <config_path> --https --key <SSL key file path> --cert <SSL certificate file path> [-d] [-p <port_number>]
+    python -m deeppavlov alexa <config_path> [--https] [--key <SSL key file path>] \
+    [--cert <SSL certificate file path>] [-d] [-p <port_number>]
 
 If you redirect requests to your skills service from some https endpoint, you may want to run it in http mode by
 omitting ``--https``, ``--key``, ``--cert`` keys.

@@ -226,8 +226,11 @@ and others in the Integrations section for more info.
   [Amazon Alexa](http://docs.deeppavlov.ai/en/0.7.0/integrations/amazon_alexa.html),
   [Microsoft Bot Framework](http://docs.deeppavlov.ai/en/0.7.0/integrations/ms_bot.html) and
   [Telegram integration](http://docs.deeppavlov.ai/en/0.7.0/integrations/telegram.html) interfaces were changed
-- `/start` and `/help` Telegram messages were moved from `models_info.json` to [connector_config.json](/deeppavlov/utils/settings/connector_config.json)
+- `/start` and `/help` Telegram messages were moved from `models_info.json` to [server_config.json](deeppavlov/utils/settings/server_config.json)
 - [risesocket](http://docs.deeppavlov.ai/en/0.7.0/integrations/socket_api.html) request and response format was changed
+- [riseapi](http://docs.deeppavlov.ai/en/0.7.0/integrations/rest_api.html#advanced-configuration) and
+  [risesocket](http://docs.deeppavlov.ai/en/0.7.0/integrations/socket_api.html#advanced-configuration) model-specific
+  properties parametrization was changed
 
 **Breaking changes in version 0.6.0**
 - [REST API](http://docs.deeppavlov.ai/en/0.6.0/integrations/rest_api.html):

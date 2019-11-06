@@ -164,7 +164,7 @@ def test_interact(model: Chainer, payload: Dict[str, Optional[List]]) -> List[st
 
 
 def start_model_server(model_config: Path,
-                       https: bool = False,
+                       https: Optional[bool] = None,
                        ssl_key: Optional[str] = None,
                        ssl_cert: Optional[str] = None,
                        port: Optional[int] = None) -> None:

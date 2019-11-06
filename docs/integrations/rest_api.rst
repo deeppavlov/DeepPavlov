@@ -6,12 +6,19 @@ inference as a REST web service. The general method is:
 
 .. code:: bash
 
-    python -m deeppavlov riseapi <config_path> [-d] [-p <port>]
+    python -m deeppavlov riseapi <config_path> [-d] [-p <port>] [--https] [--key <SSL key file path>] \
+    [--cert <SSL certificate file path>]
 
 
 * ``-d``: downloads model specific data before starting the service.
 * ``-p <port>``: sets the port to ``<port>``. Overrides default
-  settings from ``deeppavlov/utils/settings/server_config.json``.
+  value from ``deeppavlov/utils/settings/server_config.json``.
+* ``--https``: use https instead of http. Overrides default
+  value from ``deeppavlov/utils/settings/server_config.json``.
+* ``--key <SSL key file path>``: path to SSL key file. Overrides default
+  value from ``deeppavlov/utils/settings/server_config.json``.
+* ``--cert <SSL certificate file path>``: path to SSL certificate file. Overrides default
+  value from ``deeppavlov/utils/settings/server_config.json``.
 
 The command will print the used host and port. Default web service properties
 (host, port, POST request arguments) can be modified via changing
@@ -61,7 +68,7 @@ properties key from ``model_defaults`` section of ``server_config.json``.
 For example, adding ``metadata/server_utils`` key to ``go_bot/gobot_dstc2.json``
 with value *GoalOrientedBot* will initiate the search of *GoalOrientedBot* tag
 at ``model_defaults`` section of ``server_config.json``. Therefore, if this
-section is present, then all parameters with non empty (i.e. not ``""``,
+section is present, all parameters with non empty (i.e. not ``""``,
 not ``[]`` etc.) values stored by this tag will overwrite the parameter values
 in ``common_defaults``.
 
