@@ -23,7 +23,8 @@ with a ``<telegram_token>``:
 The command will print info message ``Bot initiated`` when starts bot.
 
 ``/start`` and ``/help`` Telegram bot messages can be modified via changing
-``deeppavlov/utils/settings/server_config.json`.
+``telegram.start_message`` and ``telegram.help_message``
+in `deeppavlov/utils/settings/server_config.json`.
 
 Python
 ~~~~~~
