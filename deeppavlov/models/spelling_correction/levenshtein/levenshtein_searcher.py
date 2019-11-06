@@ -1,5 +1,6 @@
 import copy
 import itertools
+from typing import Optional, List, Tuple, Union
 
 import numpy as np
 from sortedcontainers import SortedListWithKey
@@ -8,11 +9,21 @@ from .tabled_trie import Trie, make_trie
 
 
 class LevenshteinSearcher:
-    """
-     A class that finds close words according to Levenshtein distance
+    """A class to search close words using Levenshtein distance
+
+    Parameters:
+        alphabet: the alphabet of characters,
+        dictionary: the dictionary of words,
+        operation_costs: the Levenshtein operation costs. If it is `None`,
+            the basic Levenshtein distance is used.
+        allow_spaces: whether spaces are allowed,
+        euristics: the lookahead euristics, see [Hulden, 2009] for details
+            if ``euristics`` = `None`, no lookahead is applied.
     """
 
-    def __init__(self, alphabet, dictionary, operation_costs=None, allow_spaces=False, euristics="none"):
+    def __init__(self, alphabet: Union[List[str], str], dictionary: Union[Trie, List[str]],
+                 operation_costs: Optional[dict] = None, allow_spaces: bool = False,
+                 euristics: Optional[int] = None):
         self.alphabet = alphabet
         self.allow_spaces = allow_spaces
         if isinstance(euristics, int):
@@ -20,14 +31,14 @@ class LevenshteinSearcher:
                 raise ValueError("Euristics should be non-negative integer or None")
             else:
                 self.euristics = euristics if euristics != 0 else None
-        elif euristics in ["none", "None", None]:
+        elif euristics is None:
             self.euristics = None
         else:
             raise ValueError("Euristics should be non-negative integer or None")
         if isinstance(dictionary, Trie):
-            # the dictionary is already transferred in the form of forest
             self.dictionary = dictionary
         else:
+            # converting the dictionary to the trie format
             self.dictionary = make_trie(
                 alphabet,
                 dictionary,
@@ -44,33 +55,29 @@ class LevenshteinSearcher:
 
     def search(self, word, d, allow_spaces=True, return_cost=True):
         """
-        Finds all dictionary words in d-window from word
+        Finds all dictionary words in a window of width `d` around `word`
         """
         if not all((c in self.alphabet or (c == " " and self.allow_spaces)) for c in word):
             return []
-            # raise ValueError("{0} contains an incorrect symbol".format(word))
         return self._trie_search(word, d, allow_spaces=allow_spaces, return_cost=return_cost)
 
     def _trie_search(self, word, d, transducer=None, allow_spaces=True, return_cost=True):
         """
-        Finds all words in the prefix forest, the distance to which
-         in accordance with a given converter does not exceed d
+        Finds all words in the trie that belong to the window of width `d` around `word`
         """
         if transducer is None:
-            #  TODO: check spaces
             transducer = self.transducer.inverse()
         allow_spaces &= self.allow_spaces
         trie = self.dictionary
-        #  variable initialization
+
         used_agenda_keys = set()
         agenda = SortedListWithKey(key=(lambda x: x[1]))
         h = self.h_func(word, trie.root)
-        # agenda[self.agenda_key("", 0, trie.root)] = (0.0, 0.0, h)
         key, value = ("", 0, trie.root), (0.0, 0.0, h)
+        # priority queue with intermediate results
         agenda.add((key, value))
         answer = dict()
         k = 0
-        # priority queue with intermediate results
         while len(agenda) > 0:
             key, value = agenda.pop(0)
             if key in used_agenda_keys:
@@ -78,8 +85,8 @@ class LevenshteinSearcher:
             used_agenda_keys.add(key)
             low, pos, index = key
             cost, g, h = value
-            # g --- current value, h --- lower estimate of future value
-            # cost = g + h --- lower total cost estimate
+            # g --- current value, h --- lower bound of the future cost
+            # cost = g + h --- lower bound of the total cost
             k += 1
             max_upperside_length = min(len(word) - pos, transducer.max_up_length)
             for upperside_length in range(max_upperside_length + 1):
@@ -120,13 +127,11 @@ class LevenshteinSearcher:
 
     def _precompute_euristics(self):
         """
-        Calculates future symbols and costs of operations 
-        for h-heuristics
+        Calculates future symbols and operation costs for h-heuristic (Hulden, 2009)
         """
         if self.euristics is None:
             return
-        # calculation of the minimum cost of the operation,
-        # leading to the appearance ('+') or disappearance ('-') of this symbol
+        # calculates minimal costs of symbol removal and insertion
         removal_costs = {a: np.inf for a in self.alphabet}
         insertion_costs = {a: np.inf for a in self.alphabet}
         if self.allow_spaces:
@@ -144,13 +149,10 @@ class LevenshteinSearcher:
                     insertion_cost = cost / len(low)
                     for a in low:
                         insertion_costs[a] = min(insertion_costs[a], insertion_cost)
-        # Calculating possible future characters in tree nodes
-        # precompute_future_symbols (self.dictionary, self.euristics, self.allow_spaces)
         # calculating symbol loss costs in tree nodes
         self._absense_costs_by_node = _precompute_absense_costs(
             self.dictionary, removal_costs, insertion_costs, self.euristics, self.allow_spaces
         )
-        # array to save heuristics
         self._temporary_euristics = [dict() for i in range(len(self.dictionary))]
 
     def _define_h_function(self):
@@ -161,7 +163,7 @@ class LevenshteinSearcher:
 
     def _euristic_h_function(self, suffix, index):
         """
-        Computing h-heuristics from Hulden, 2009 for the current dictionary top
+        Computing h-heuristics (Hulden, 2009) for the current dictionary vertex
 
         Args:
             suffix (str): unread suffix of input word
@@ -179,11 +181,9 @@ class LevenshteinSearcher:
         cost = index_temporary_euristics.get(suffix, None)
         if cost is not None:
             return cost
-        # extraction of the necessary data from arrays
         absense_costs = self._absense_costs_by_node[index]
-        data = self.dictionary.data[index]
         costs = np.zeros(dtype=np.float64, shape=(self.euristics,))
-        # costs[j] --- penalty estimate when looking ahead by j characters
+        # costs[j] --- cost estimate for looking ahead for j steps
         for i, a in enumerate(suffix):
             costs[i:] += absense_costs[a][i:]
         cost = max(costs)
@@ -205,19 +205,18 @@ class LevenshteinSearcher:
 
 def _precompute_absense_costs(dictionary, removal_costs, insertion_costs, n, allow_spaces=False):
     """
-    Calculates the minimum cost for a new character to appear in dictionary nodes
-    according to fines from costs
+    Calculates the minimum cost
 
     Args:
         dictionary: Trie, dictionary stored as an acyclic automaton
-        removal_costs (dict): character removal fines
-        insertion_costs (dict): character insertion fines
-        n (int): depth of `` looking ahead '' in the dictionary
+        removal_costs (dict): character removal costs
+        insertion_costs (dict): character insertion costs
+        n (int): lookahead depth
 
     Returns:
-        answer (List[dict]): len(answer) = len(dictionary) answer[i][a][j] is equal to the minimum penalty 
-            for the appearance of the character a
-            at the j-th position at the vertex number i
+        answer (List[dict]): len(answer) = len(dictionary)
+            answer[i][a][j] is minimal possible cost
+            for character `a` being `j`-th symbol after the trie node `i`
     """
     answer = [dict() for node in dictionary.data]
     if n == 0:
@@ -226,7 +225,7 @@ def _precompute_absense_costs(dictionary, removal_costs, insertion_costs, n, all
     if allow_spaces:
         curr_alphabet += [" "]
     for l, (costs_in_node, node) in enumerate(zip(answer, dictionary.data)):
-        # determination of the minimum cost of removing characters
+        # calculating minimal removal cost
         curr_node_removal_costs = np.empty(dtype=np.float64, shape=(n,))
         if len(node[0]) > 0:
             curr_node_removal_costs[0] = min(removal_costs[symbol] for symbol in node[0])
@@ -238,7 +237,7 @@ def _precompute_absense_costs(dictionary, removal_costs, insertion_costs, n, all
                 curr_node_removal_costs[j] = min(curr_node_removal_costs[j - 1], curr_cost)
         else:
             curr_node_removal_costs[:] = np.inf
-        # determination of the minimum cost of insertion
+        # calculating minimal insertion cost
         for a in curr_alphabet:
             curr_symbol_costs = np.empty(dtype=np.float64, shape=(n,))
             curr_symbol_costs.fill(insertion_costs[a])
@@ -253,22 +252,21 @@ def _precompute_absense_costs(dictionary, removal_costs, insertion_costs, n, all
 
 class SegmentTransducer:
     """
-    A class that implements a weighted final transducer,
-    performing replacements from a given list of operations
+    Our implementation of weighted finite transducer.
+    The transducer performs substitutions from a given set of operations.
 
     Args:
         alphabet (list): alphabet
 
         operation_costs (dict, optional, default = None):
-            dictionary like {(up, low): cost}
+            dictionary of the form {(up, low): cost}
 
         allow_spaces (bool, optional, default = False):
-            whether transduction elements containing a space are allowed
-            (used only if operation costs are not explicitly set
-            and they are equal to the default value)
+            whether spaces are allowed in transduction elements
+            It is used only with default operation costs (``operation_costs``=``None``).
     """
 
-    def __init__(self, alphabet, operation_costs=None, allow_spaces=False):
+    def __init__(self, alphabet: Union[List, str], operation_costs=None, allow_spaces=False):
         self.alphabet = alphabet
         if operation_costs is None:
             self._make_default_operation_costs(allow_spaces=allow_spaces)
@@ -278,26 +276,20 @@ class SegmentTransducer:
             self.operation_costs = operation_costs
         self._make_reversed_operation_costs()
         self._make_maximal_key_lengths()
-        # self.maximal_value_lengths = {}
-        # for up, probs in self.operation_costs.items():
-        # TOO MUCH CALLS NEEDS TO REMEMBER
-        # MAXIMUM KEY LENGTHS WHEN HANDLING
-        # max_low_length = max(len(low) for low in probs) if (len(probs) > 0) else -1
-        # self.maximal_value_lengths[up] = self.maximal_key_length
 
     def get_operation_cost(self, up, low):
         """
-        Returns the cost of elemental transduction up-> low
+        Returns the cost of elementary transduction up-> low
         or np.inf if there is no such elementary transduction
 
         Args:
             up, low (str):
-                elemental transduction elements
+                elementary transduction (substitution) elements
 
         Returns:
             cost (float):
                 elementary transduction cost up-> low
-                (np.inf if such transduction is absent)
+                (`np.inf` if there is no such transduction)
         """
         up_costs = self.operation_costs.get(up, None)
         if up_costs is None:
@@ -307,9 +299,8 @@ class SegmentTransducer:
 
     def inverse(self):
         """
-        Build a transformer specifying the inverse final transformation
+        Inverts current transducer.
         """
-        # SIMPLIFY THE CALL!!!
         inversed_transducer = SegmentTransducer(self.alphabet, operation_costs=dict())
         inversed_transducer.operation_costs = self._reversed_operation_costs
         inversed_transducer._reversed_operation_costs = self.operation_costs
@@ -319,19 +310,17 @@ class SegmentTransducer:
         inversed_transducer.max_up_lengths_by_low = self.max_low_lengths_by_up
         return inversed_transducer
 
-    def distance(self, first, second, return_transduction=False):
+    def distance(self, first: str, second: str, return_transduction: bool = False):
         """
-        Calculates the minimum cost transduction,
-        mapping ``first`` to ``second``
+        Calculates the cost of replacing ``first`` by ``second``.
 
         Args:
-            first (str):
-            second (str):
+            first:
+            second:
                 Upper and lower transduction elements
 
-            return_transduction (bool, optional, default = False): bool (optional, default = False)
-                should minimum weight transduction be returned
-                (see return value)
+            return_transduction: bool (optional, default = False)
+                whether to return the corresponding transduction
 
         Returns:
             (final_cost, transductions) ( Tuple (float, list)):
