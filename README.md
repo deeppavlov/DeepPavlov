@@ -153,9 +153,9 @@ python -m deeppavlov <action> <config_path> [-d]
     * `interact` to interact via CLI,
     * `riseapi` to run a REST API server (see
     [doc](http://docs.deeppavlov.ai/en/master/integrations/rest_api.html)),
-    * `interactbot` to run as a Telegram bot (see
+    * `telegram` to run as a Telegram bot (see
     [doc](http://docs.deeppavlov.ai/en/master/integrations/telegram.html)),
-    * `interactmsbot` to run a Miscrosoft Bot Framework server (see
+    * `msbot` to run a Miscrosoft Bot Framework server (see
     [doc](http://docs.deeppavlov.ai/en/master/integrations/ms_bot.html)),
     * `predict` to get prediction for samples from *stdin* or from
       *<file_path>* if `-f <file_path>` is specified.

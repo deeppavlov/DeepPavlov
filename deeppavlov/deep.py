@@ -33,8 +33,8 @@ log = getLogger(__name__)
 parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
-                    choices={'train', 'evaluate', 'interact', 'predict', 'interactbot', 'interactmsbot',
-                             'alexa', 'alice', 'riseapi', 'risesocket', 'download', 'install', 'crossval'})
+                    choices={'train', 'evaluate', 'interact', 'predict', 'telegram', 'msbot', 'alexa', 'alice',
+                             'riseapi', 'risesocket', 'download', 'install', 'crossval'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 
 parser.add_argument("-e", "--start-epoch-num", dest="start_epoch_num", default=None,
@@ -77,9 +77,9 @@ def main():
         train_evaluate_model_from_config(pipeline_config_path, to_train=False, start_epoch_num=args.start_epoch_num)
     elif args.mode == 'interact':
         interact_model(pipeline_config_path)
-    elif args.mode == 'interactbot':
+    elif args.mode == 'telegram':
         interact_model_by_telegram(model_config=pipeline_config_path, token=args.token)
-    elif args.mode == 'interactmsbot':
+    elif args.mode == 'msbot':
         start_ms_bf_server(model_config=pipeline_config_path,
                            app_id=args.ms_id,
                            app_secret=args.ms_secret,

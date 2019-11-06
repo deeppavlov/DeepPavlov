@@ -13,7 +13,7 @@ with a ``<telegram_token>``:
 
 .. code:: bash
 
-    python -m deeppavlov interactbot <config_path> -t <telegram_token> [-d]
+    python -m deeppavlov telegram <config_path> -t <telegram_token> [-d]
 
 
 * ``-t <telegram_token>``: specifies telegram token as ``<telegram_token>``.

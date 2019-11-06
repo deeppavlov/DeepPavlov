@@ -34,7 +34,7 @@ from deeppavlov.utils.connector.conversation import AlexaConversation, AliceConv
 from deeppavlov.utils.connector.conversation import MSConversation, TelegramConversation
 from deeppavlov.utils.connector.ssl_tools import verify_cert, verify_signature
 
-CONNECTOR_CONFIG_FILENAME = 'connector_config.json'
+CONNECTOR_CONFIG_FILENAME = 'server_config.json'
 INPUT_QUEUE_TIMEOUT = 1
 
 log = getLogger(__name__)
@@ -139,14 +139,8 @@ class BaseBot(Thread):
         connector_config: dict = read_json(connector_config_path)
 
         bot_name = type(self).__name__
-        bot_defaults = connector_config['bot_defaults'].get(bot_name, {})
-
-        model_name = type(self._model.get_main_component()).__name__
-        models_info = connector_config['models_info']
-        model_msgs = models_info.get(model_name, models_info['@default'])
-        conversation_defaults = connector_config['conversation_defaults']
-        conversation_defaults['start_message'] = model_msgs['start_message']
-        conversation_defaults['help_message'] = model_msgs['help_message']
+        conversation_defaults = connector_config['telegram']
+        bot_defaults = connector_config['deprecated'].get(bot_name, conversation_defaults)
 
         connector_defaults = {'bot_defaults': bot_defaults,
                               'conversation_defaults': conversation_defaults}
