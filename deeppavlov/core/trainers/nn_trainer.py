@@ -337,7 +337,7 @@ class NNTrainer(FitTrainer):
             except KeyboardInterrupt:
                 log.info('Stopped training')
         else:
-            log.warn(f'Using {self.__class__.__name__} for a pipeline without batched training')
+            log.warning(f'Using {self.__class__.__name__} for a pipeline without batched training')
 
         # Run the at-train-exit model-saving logic
         if self.validation_number < 1:

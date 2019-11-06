@@ -51,7 +51,7 @@ class WikiSQLiteVocab(SQLiteDataIterator, Component):
         """
         all_contents = []
         if not doc_ids:
-            logger.warn('No doc_ids are provided in WikiSqliteVocab, return all docs')
+            logger.warning('No doc_ids are provided in WikiSqliteVocab, return all docs')
             doc_ids = [self.get_doc_ids()]
 
         for ids in doc_ids:

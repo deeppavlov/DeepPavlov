@@ -39,7 +39,7 @@ class EntityLinker(Component, Serializable):
         Levenstein distance between the entity and keys (titles) in the dictionary.
     """
 
-    LANGUAGES = set(['rus'])
+    LANGUAGES = {'rus'}
 
     def __init__(self, load_path: str, wiki_filename: str, entities_filename: str, inverted_index_filename: str,
                  id_to_name_file: str, lemmatize: bool = True, debug: bool = False, rule_filter_entities: bool = True,

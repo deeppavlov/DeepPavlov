@@ -408,7 +408,7 @@ class GoalOrientedBot(LRScheduledTFModel):
                 if self.debug:
                     log.debug(f"True response = '{response['text']}'.")
                     if d_a_masks[-1][action_id] != 1.:
-                        log.warn("True action forbidden by action mask.")
+                        log.warning("True action forbidden by action mask.")
 
             # padding to max_num_utter
             num_padds = max_num_utter - len(d_contexts)
@@ -481,7 +481,7 @@ class GoalOrientedBot(LRScheduledTFModel):
             if len(db_results) > 1:
                 db_results = [r for r in db_results if r != state['db_result']]
         else:
-            log.warn("No database specified.")
+            log.warning("No database specified.")
         log.info(f"Made api_call with {slots}, got {len(db_results)} results.")
         return {} if not db_results else db_results[0]
 

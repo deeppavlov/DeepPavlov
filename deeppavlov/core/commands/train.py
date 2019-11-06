@@ -131,8 +131,8 @@ def train_evaluate_model_from_config(config: Union[str, Path, dict],
                 if to_validate:
                     evaluation_targets.append('valid')
             else:
-                log.warn('Both "evaluation_targets" and "to_validate" parameters are specified.'
-                         ' "to_validate" is deprecated and will be ignored')
+                log.warning('Both "evaluation_targets" and "to_validate" parameters are specified.'
+                            ' "to_validate" is deprecated and will be ignored')
 
         res = trainer.evaluate(iterator, evaluation_targets, print_reports=True)
         trainer.get_chainer().destroy()
