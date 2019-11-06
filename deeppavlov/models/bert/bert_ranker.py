@@ -43,12 +43,12 @@ class BertRankerModel(BertClassifierModel):
         bert_config_file: path to Bert configuration file
         n_classes: number of classes
         keep_prob: dropout keep_prob for non-Bert layers
-        return_probas: set True if return class probabilites instead of most probable label needed
+        return_probas: set True if class probabilities are returned instead of the most probable label
     """
 
     def __init__(self, bert_config_file, n_classes=2, keep_prob=0.9, return_probas=True, **kwargs) -> None:
-        super().__init__(bert_config_file=bert_config_file, n_classes=n_classes, keep_prob=keep_prob,
-                         return_probas=return_probas, **kwargs)
+        super().__init__(bert_config_file=bert_config_file, n_classes=n_classes,
+                         keep_prob=keep_prob, return_probas=return_probas, **kwargs)
 
     def train_on_batch(self, features_li: List[List[InputFeatures]], y: Union[List[int], List[List[int]]]) -> Dict:
         """Train the model on the given batch.

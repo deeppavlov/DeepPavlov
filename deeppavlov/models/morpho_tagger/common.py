@@ -45,7 +45,8 @@ def predict_with_model(config_path: [Path, str], infile: Optional[Union[Path, st
         else:
             data = sys.stdin.readlines()
     model = build_model(config, load_trained=True)
-    model.pipe[-1][-1].set_format_mode(output_format)
+    if isinstance(model.pipe[-1][-1], TagOutputPrettifier):
+        model.pipe[-1][-1].set_format_mode(output_format)
     answers = model.batched_call(data, batch_size=batch_size)
     for elem in answers:
         print(elem)

@@ -27,7 +27,7 @@ def parse_metrics(metrics: Iterable[Union[str, dict]], in_y: List[str], out_vars
             metric = {'name': metric, 'alias': metric}
 
         metric_name = metric['name']
-        alias = metric['alias']
+        alias = metric.get('alias', metric_name)
 
         f = get_metric_by_name(metric_name)
 
@@ -46,6 +46,7 @@ def prettify_metrics(metrics: List[Tuple[str, float]], precision: int = 4) -> Or
     for key, value in metrics:
         if key in prettified_metrics:
             Warning("Multiple metrics with the same name {}.".format(key))
-        value = round(value, precision)
+        if not isinstance(value, str):
+            value = round(value, precision)
         prettified_metrics[key] = value
     return prettified_metrics
