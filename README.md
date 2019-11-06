@@ -105,6 +105,20 @@ evaluate and infer it:
 * via [Command line interface (CLI)](#command-line-interface-cli) and
 * via [Python](#python).
 
+#### GPU requirements
+
+To run DeepPavlov on GPU you should have [CUDA](https://developer.nvidia.com/cuda-toolkit) 10.0
+installed on your host machine and TensorFlow with GPU support (`tensorflow-gpu`)
+installed in your python environment. Current supported TensorFlow version is 1.14.0.
+Run
+
+```
+pip install tensorflow-gpu==1.14.0
+```
+
+before installing model's package requirements to install supported `tensorflow-gpu` version.
+
+
 Before making choice of an interface, install model's package requirements
 (CLI):
 
