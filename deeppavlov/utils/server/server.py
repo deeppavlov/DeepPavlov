@@ -72,7 +72,7 @@ def get_server_params(model_config: Union[str, Path]) -> Dict:
 
     if check_nested_dict_keys(model_config, ['metadata', 'server_utils']):
         model_tag = model_config['metadata']['server_utils']
-        if model_tag in server_config.get('model_defaults', {}):
+        if check_nested_dict_keys(server_config, ['model_defaults', model_tag]):
             model_defaults = server_config['model_defaults'][model_tag]
             for param_name in model_defaults.keys():
                 if model_defaults[param_name]:
