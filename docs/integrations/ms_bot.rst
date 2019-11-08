@@ -83,7 +83,8 @@ as a REST service by:
 
 .. code:: bash
 
-    python -m deeppavlov interactmsbot <config_path> -i <microsoft_app_id> -s <microsoft_app_secret> --https --key <SSL key file path> --cert <SSL certificate file path> [-d] [-p <port_number>]
+    python -m deeppavlov msbot <config_path> [-i <microsoft_app_id>] [-s <microsoft_app_secret>] \
+    [--https] [--key <SSL key file path>] [--cert <SSL certificate file path>] [-d] [-p <port_number>]
 
 Use *Microsoft App ID* and *Microsoft App Secret* obtained
 in the **Web App Bot connection configuration** section.

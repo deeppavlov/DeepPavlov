@@ -34,7 +34,7 @@ app = FastAPI()
 
 def start_alexa_server(model_config: Union[str, Path, dict],
                        port: Optional[int] = None,
-                       https: bool = False,
+                       https: Optional[bool] = None,
                        ssl_key: Optional[str] = None,
                        ssl_cert: Optional[str] = None) -> None:
     """Initiates FastAPI web service with Alexa skill.

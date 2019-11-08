@@ -13,40 +13,41 @@ method is:
 * ``-d``: downloads model specific data before starting the service.
 * ``--socket-type <address_family>``: sets socket address family to ``AF_INET``
   if ``<address_family>`` is ``TCP`` or to ``AF_UNIX`` if ``<address_family>``
-  is ``UNIX``. Overrides default settings from
-  ``deeppavlov/utils/settings/socket_config.json``.
+  is ``UNIX``. Overrides default value from
+  ``deeppavlov/utils/settings/server_config.json``.
 * ``-p <port>``: sets the port to ``<port>`` if socket address family is
-  ``AF_INET``. Overrides default settings from
-  ``deeppavlov/utils/settings/socket_config.json``.
+  ``AF_INET``. Overrides default value from
+  ``deeppavlov/utils/settings/server_config.json``.
 * ``--socket-file <unix_socket_file>``: sets the file for socket binding to
   ``<unix_socket_file>`` if socket address family is ``AF_UNIX``. Overrides
-  default settings from ``deeppavlov/utils/settings/socket_config.json``.
+  default value from ``deeppavlov/utils/settings/server_config.json``.
 
 The command will print the binding address: host and port for ``AF_INET``
 socket family and path to the UNIX socket file for ``AF_UNIX`` socket family.
 Default service properties (socket address family, host, port, path to the UNIX
 socket file, socket buffer size, binding message) can be modified via changing
-``deeppavlov/utils/settings/socket_config.json`` file.
+``deeppavlov/utils/settings/server_config.json`` file.
 
 Advanced configuration
 ~~~~~~~~~~~~~~~~~~~~~~
 
-By modifying ``deeppavlov/utils/settings/socket_config.json`` you can change
+By modifying ``deeppavlov/utils/settings/server_config.json`` you can change
 socket address family, host, port, path to the UNIX socket file and other
 properties of the API service.
 
-Properties from ``common_defaults`` section are used by default unless they are
-overridden by model-specific properties, provided in ``model_defaults`` section
-of the ``socket_config.json``. Model-specific properties are bound to the model
-by ``server_utils`` label in ``metadata/labels`` section of the model config.
-Value of ``server_utils`` label from model config should match with properties
-key from ``model_defaults`` section of ``socket_config.json``.
+Properties from ``common_defaults`` section are used by default unless
+they are overridden by model-specific properties, provided in ``model_defaults``
+section of the ``server_config.json``. Model-specific properties are bound
+to the model by ``server_utils`` label in ``metadata`` section of the model
+config. Value of ``server_utils`` label from model config should match with
+properties key from ``model_defaults`` section of ``server_config.json``.
 
-For example, ``metadata/labels/server_utils`` tag from
-``deeppavlov/configs/squad/squad.json`` references to the *SquadModel* section
-of ``socket_config.json``. Therefore, all parameters with non empty (i.e. not
-``""``, not ``[]`` etc.) values from ``model_defaults/SquadModel`` will
-overwrite the parameter values in ``common_defaults``.
+For example, adding ``metadata/server_utils`` key to ``go_bot/gobot_dstc2.json``
+with value *GoalOrientedBot* will initiate the search of *GoalOrientedBot* tag
+at ``model_defaults`` section of ``server_config.json``. Therefore, if this
+section is present, all parameters with non empty (i.e. not ``""``,
+not ``[]`` etc.) values stored by this tag will overwrite the parameter values
+in ``common_defaults``.
 
 If ``model_args_names`` parameter of ``server_config.json`` is empty string,
 then model argument names are provided as list from ``chainer/in`` section of

@@ -41,7 +41,7 @@ class BaseConversation:
     _timer: Timer
     _infer_utterances: list
     _conversation_lifetime: int
-    _next_utter_msg: str
+    _next_arg_msg: str
     _start_message: str
 
     def __init__(self,
@@ -63,9 +63,9 @@ class BaseConversation:
         self._conversation_id = conversation_id
         self._infer_utterances = list()
         self._conversation_lifetime = config['conversation_lifetime']
-        self._next_utter_msg = config['next_utter_msg']
+        self._next_arg_msg = config['next_argument_message']
         self._start_message = config['start_message']
-        self._unsupported_message = config['unsupported_msg']
+        self._unsupported_message = config['unsupported_message']
         logger_name: str = DIALOG_LOGGER_NAME_MAPPING.get(type(self).__name__,
                                                           DIALOG_LOGGER_NAME_MAPPING['_unsupported'])
         self._dialog_logger = DialogLogger(logger_name=logger_name)
@@ -177,7 +177,7 @@ class BaseConversation:
             response = prediction
             self._dialog_logger.log_out(response, self._conversation_id)
         else:
-            response = self._next_utter_msg.format(self._model.in_x[len(self._infer_utterances)])
+            response = self._next_arg_msg.format(self._model.in_x[len(self._infer_utterances)])
 
         return response
 

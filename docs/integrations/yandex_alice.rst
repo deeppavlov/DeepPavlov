@@ -27,7 +27,7 @@ The command will print the used host and port. Default web service properties
 (host, port, model endpoint, GET request arguments, paths to ssl cert and key,
 https mode) can be modified via changing
 ``deeppavlov/utils/settings/server_config.json`` file. ``--https``, ``--key``,
-``--cert``, ``-p`` arguments override values from ``server_config.json``.
+``--cert``, ``-p`` arguments override default values from ``server_config.json``.
 Advanced API configuration is described in
 :doc:`REST API </integrations/rest_api>` section.
 

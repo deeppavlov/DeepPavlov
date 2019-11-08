@@ -13,28 +13,23 @@ with a ``<telegram_token>``:
 
 .. code:: bash
 
-    python -m deeppavlov interactbot <config_path> -t <telegram_token> [-d]
+    python -m deeppavlov telegram <config_path> [-t <telegram_token>] [-d]
 
 
-* ``-t <telegram_token>``: specifies telegram token as ``<telegram_token>``.
+* ``-t <telegram_token>``: specifies telegram token as ``<telegram_token>``. Overrides
+  default value from ``deeppavlov/utils/settings/server_config.json``.
 * ``-d``: downloads model specific data before starting the service.
 
-The command will print the used host and port. Default web service properties
-(host, port, model endpoint, GET request arguments) can be modified via changing
-``deeppavlov/utils/settings/server_config.json`` file. Advanced API
-configuration is described in :doc:`REST API </integrations/rest_api>` section.
+The command will print info message ``Bot initiated`` when starts bot.
 
-If you want to get custom ``/start`` and ``/help`` Telegram messages for the running model you should:
-
-* Add section to ``models_info`` section of ``deeppavlov/utils/settings/connector_config.json`` with your custom
-  Telegram messages
-* In model config file specify ``metadata.labels.telegram_utils`` parameter with name which
-  refers to the added section of ``deeppavlov/utils/settings/connector_config.json`` ``models_info`` section.
+``/start`` and ``/help`` Telegram bot messages can be modified via changing
+``telegram.start_message`` and ``telegram.help_message``
+in `deeppavlov/utils/settings/server_config.json`.
 
 Python
 ~~~~~~
 
-To run a model specified by a DeepPavlov config ``<config_path>`` as as
+To run a model specified by a DeepPavlov config ``<config_path>`` as
 Telegram bot, you have to run following code:
 
 .. code:: python

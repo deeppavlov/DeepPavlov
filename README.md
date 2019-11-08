@@ -153,9 +153,9 @@ python -m deeppavlov <action> <config_path> [-d]
     * `interact` to interact via CLI,
     * `riseapi` to run a REST API server (see
     [doc](http://docs.deeppavlov.ai/en/master/integrations/rest_api.html)),
-    * `interactbot` to run as a Telegram bot (see
+    * `telegram` to run as a Telegram bot (see
     [doc](http://docs.deeppavlov.ai/en/master/integrations/telegram.html)),
-    * `interactmsbot` to run a Miscrosoft Bot Framework server (see
+    * `msbot` to run a Miscrosoft Bot Framework server (see
     [doc](http://docs.deeppavlov.ai/en/master/integrations/ms_bot.html)),
     * `predict` to get prediction for samples from *stdin* or from
       *<file_path>* if `-f <file_path>` is specified.
@@ -219,15 +219,18 @@ and others in the Integrations section for more info.
 **Breaking changes in version 0.7.0**
 - in dialog logger config file [dialog_logger_config.json](deeppavlov/utils/settings/dialog_logger_config.json) `agent_name` parameter was renamed to `logger_name`,
   the default value was changed
-- Agent, Skill, eCommerce Bot and Pattern Matching classes were moved to [deeppavlov.deprecated](deeppavlov/deprecated/)
+- Agent, Skill, eCommerce Bot and Pattern Matching classes were moved to [deeppavlov.deprecated](deeppavlov/deprecated)
 - [AIML Skill](http://docs.deeppavlov.ai/en/0.7.0/features/skills/aiml_skill.html),
   [RASA Skill](http://docs.deeppavlov.ai/en/0.7.0/features/skills/rasa_skill.html),
   [Yandex Alice](http://docs.deeppavlov.ai/en/0.7.0/integrations/yandex_alice.html),
   [Amazon Alexa](http://docs.deeppavlov.ai/en/0.7.0/integrations/amazon_alexa.html),
   [Microsoft Bot Framework](http://docs.deeppavlov.ai/en/0.7.0/integrations/ms_bot.html) and
   [Telegram integration](http://docs.deeppavlov.ai/en/0.7.0/integrations/telegram.html) interfaces were changed
-- `/start` and `/help` Telegram messages were moved from `models_info.json` to [connector_config.json](/deeppavlov/utils/settings/connector_config.json)
+- `/start` and `/help` Telegram messages were moved from `models_info.json` to [server_config.json](deeppavlov/utils/settings/server_config.json)
 - [risesocket](http://docs.deeppavlov.ai/en/0.7.0/integrations/socket_api.html) request and response format was changed
+- [riseapi](http://docs.deeppavlov.ai/en/0.7.0/integrations/rest_api.html#advanced-configuration) and
+  [risesocket](http://docs.deeppavlov.ai/en/0.7.0/integrations/socket_api.html#advanced-configuration) model-specific
+  properties parametrization was changed
 
 **Breaking changes in version 0.6.0**
 - [REST API](http://docs.deeppavlov.ai/en/0.6.0/integrations/rest_api.html):

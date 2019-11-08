@@ -32,7 +32,7 @@ def start_ms_bf_server(model_config: Path,
                        app_id: Optional[str],
                        app_secret: Optional[str],
                        port: Optional[int] = None,
-                       https: bool = False,
+                       https: Optional[bool] = None,
                        ssl_key: Optional[str] = None,
                        ssl_cert: Optional[str] = None) -> None:
 

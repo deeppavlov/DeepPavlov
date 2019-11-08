@@ -13,11 +13,11 @@
 # limitations under the License.
 
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 from deeppavlov.utils.connector import TelegramBot
 
 
-def interact_model_by_telegram(model_config: Union[str, Path, dict], token: str = None) -> None:
+def interact_model_by_telegram(model_config: Union[str, Path, dict], token: Optional[str] = None) -> None:
     bot = TelegramBot(model_config, token)
     bot.start()

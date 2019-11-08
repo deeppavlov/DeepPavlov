@@ -143,8 +143,8 @@ class KvretDatasetReader(DatasetReader):
             if cls._check_dialog(dialog):
                 yield dialog, sample['scenario']
             else:
-                log.warn("Skipping {}th dialogue with uuid={}: wrong format." \
-                         .format(i, sample['scenario']['uuid']))
+                log.warning("Skipping {}th dialogue with uuid={}: wrong format." \
+                            .format(i, sample['scenario']['uuid']))
 
     @staticmethod
     def _get_turns(data, with_indices=False):

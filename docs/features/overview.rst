@@ -546,7 +546,7 @@ Examples of some models
 
 -  Run goal-oriented bot with Telegram interface:
 
-   ``python -m deeppavlov interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -d -t <TELEGRAM_TOKEN>``
+   ``python -m deeppavlov telegram deeppavlov/configs/go_bot/gobot_dstc2.json -d -t <TELEGRAM_TOKEN>``
 -  Run goal-oriented bot with console interface:
 
    ``python -m deeppavlov interact deeppavlov/configs/go_bot/gobot_dstc2.json -d``
@@ -555,7 +555,7 @@ Examples of some models
    ``python -m deeppavlov riseapi deeppavlov/configs/go_bot/gobot_dstc2.json -d``
 -  Run slot-filling model with Telegram interface:
 
-   ``python -m deeppavlov interactbot deeppavlov/configs/ner/slotfill_dstc2.json -d -t <TELEGRAM_TOKEN>``
+   ``python -m deeppavlov telegram deeppavlov/configs/ner/slotfill_dstc2.json -d -t <TELEGRAM_TOKEN>``
 -  Run slot-filling model with console interface:
 
    ``python -m deeppavlov interact deeppavlov/configs/ner/slotfill_dstc2.json -d``

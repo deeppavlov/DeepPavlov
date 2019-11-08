@@ -22,11 +22,10 @@ import requests
 import deeppavlov
 from deeppavlov import build_model
 from deeppavlov.core.commands.utils import parse_config
-from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
 from deeppavlov.utils.server import get_server_params
-from deeppavlov.utils.socket import encode, SOCKET_CONFIG_FILENAME
+from deeppavlov.utils.socket import encode
 
 tests_dir = Path(__file__).parent
 test_configs_path = tests_dir / "deeppavlov" / "configs"
@@ -430,9 +429,7 @@ class TestQuickStart(object):
 
     @staticmethod
     def interact_socket(config_path, socket_type):
-        socket_config_path = get_settings_path() / SOCKET_CONFIG_FILENAME
-
-        socket_params = get_server_params(config_path, socket_config_path)
+        socket_params = get_server_params(config_path)
         model_args_names = socket_params['model_args_names']
 
         host = socket_params['host']
@@ -455,7 +452,7 @@ class TestQuickStart(object):
         p = pexpect.popen_spawn.PopenSpawn(' '.join(args),
                                            timeout=None, logfile=logfile)
         try:
-            p.expect(socket_params['launch_message'])
+            p.expect(socket_params['socket_launch_message'])
             with socket.socket(address_family, socket.SOCK_STREAM) as s:
                 try:
                     s.connect(connect_arg)
