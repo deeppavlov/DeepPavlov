@@ -107,7 +107,7 @@ evaluate and infer it:
 
 #### GPU requirements
 
-To run DeepPavlov on GPU you should have [CUDA](https://developer.nvidia.com/cuda-toolkit) 10.0
+To run supported DeepPavlov models on GPU you should have [CUDA](https://developer.nvidia.com/cuda-toolkit) 10.0
 installed on your host machine and TensorFlow with GPU support (`tensorflow-gpu`)
 installed in your python environment. Current supported TensorFlow version is 1.14.0.
 Run
