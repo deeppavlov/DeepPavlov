@@ -494,6 +494,8 @@ class GoalOrientedBot(LRScheduledTFModel):
             if not user_ids:
                 user_ids = ['finn' for i in range(len(batch))]
             for user_id, x in zip(user_ids, batch):
+                if user_id not in self.states:
+                    self.reset(user_id)
                 state = self.states[user_id]
                 state['current_db_result'] = None
 
@@ -535,8 +537,11 @@ class GoalOrientedBot(LRScheduledTFModel):
             )
         }
 
-    def reset(self, user_id: Union[str, int] = 'finn') -> None:
-        self.states[user_id] = self._zero_state()
+    def reset(self, user_id: Union[None, str, int] = None) -> None:
+        if user_id is None:
+            self.states.clear()
+        else:
+            self.states[user_id] = self._zero_state()
         if self.debug:
             log.debug("Bot reset.")
 
