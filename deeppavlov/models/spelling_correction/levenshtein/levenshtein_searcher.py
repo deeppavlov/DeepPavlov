@@ -30,9 +30,9 @@ class LevenshteinSearcher:
             if euristics < 0:
                 raise ValueError("Euristics should be non-negative integer or None")
             else:
-                self.euristics = euristics if euristics != 0 else None
+                self.heuristics = euristics if euristics != 0 else None
         elif euristics is None:
-            self.euristics = None
+            self.heuristics = None
         else:
             raise ValueError("Euristics should be non-negative integer or None")
         if isinstance(dictionary, Trie):
@@ -43,17 +43,17 @@ class LevenshteinSearcher:
                 alphabet,
                 dictionary,
                 make_cashed=True,
-                precompute_symbols=self.euristics,
+                precompute_symbols=self.heuristics,
                 allow_spaces=self.allow_spaces,
             )
         self.transducer = SegmentTransducer(alphabet, operation_costs=operation_costs, allow_spaces=allow_spaces)
-        self._precompute_euristics()
+        self._precompute_heuristics()
         self._define_h_function()
 
     def __contains__(self, word):
         return word in self.dictionary
 
-    def search(self, word, d, allow_spaces=True, return_cost=True):
+    def search(self, word: str, d: int, allow_spaces: bool=True, return_cost: bool=True) -> list:
         """
         Finds all dictionary words in a window of width `d` around `word`
         """
@@ -61,9 +61,10 @@ class LevenshteinSearcher:
             return []
         return self._trie_search(word, d, allow_spaces=allow_spaces, return_cost=return_cost)
 
-    def _trie_search(self, word, d, transducer=None, allow_spaces=True, return_cost=True):
+    def _trie_search(self, word: str, d: int, transducer: Optional[SegmentTransducer]=None,
+                     allow_spaces: bool=True, return_cost: bool=True) -> list:
         """
-        Finds all words in the trie that belong to the window of width `d` around `word`
+        Finds all `w` with distance(`word`, `w`) <= d using a prefix trie.
         """
         if transducer is None:
             transducer = self.transducer.inverse()
@@ -71,10 +72,10 @@ class LevenshteinSearcher:
         trie = self.dictionary
 
         used_agenda_keys = set()
+        # priority queue with intermediate results
         agenda = SortedListWithKey(key=(lambda x: x[1]))
         h = self.h_func(word, trie.root)
         key, value = ("", 0, trie.root), (0.0, 0.0, h)
-        # priority queue with intermediate results
         agenda.add((key, value))
         answer = dict()
         k = 0
@@ -125,11 +126,11 @@ class LevenshteinSearcher:
         else:
             return [elem[0] for elem in answer]
 
-    def _precompute_euristics(self):
+    def _precompute_heuristics(self):
         """
         Calculates future symbols and operation costs for h-heuristic (Hulden, 2009)
         """
-        if self.euristics is None:
+        if self.heuristics is None:
             return
         # calculates minimal costs of symbol removal and insertion
         removal_costs = {a: np.inf for a in self.alphabet}
@@ -149,40 +150,37 @@ class LevenshteinSearcher:
                     insertion_cost = cost / len(low)
                     for a in low:
                         insertion_costs[a] = min(insertion_costs[a], insertion_cost)
-        # calculating symbol loss costs in tree nodes
+        # costs for symbols absence
         self._absense_costs_by_node = _precompute_absense_costs(
-            self.dictionary, removal_costs, insertion_costs, self.euristics, self.allow_spaces
+            self.dictionary, removal_costs, insertion_costs, self.heuristics, self.allow_spaces
         )
-        self._temporary_euristics = [dict() for i in range(len(self.dictionary))]
+        self._temporary_heuristics = [dict() for i in range(len(self.dictionary))]
 
     def _define_h_function(self):
-        if self.euristics in [None, 0]:
+        if self.heuristics in [None, 0]:
             self.h_func = lambda *x: 0.0
         else:
             self.h_func = self._euristic_h_function
 
-    def _euristic_h_function(self, suffix, index):
+    def _euristic_h_function(self, suffix: str, index: int) -> float:
         """
-        Computing h-heuristics (Hulden, 2009) for the current dictionary vertex
+        Computes h-heuristics (Hulden, 2009) for current dictionary vertex
 
         Args:
-            suffix (str): unread suffix of input word
-            index (int): index of the current node in the dictionary
+            suffix: unread suffix of input word
+            index: current dictionary node index
         Returns:
-            cost (float): lower estimate for replacement cost,
-                leading to the ``suffix`` suffix,
-                if the read prefix of the word without a typo
-                brought to the top with ``index`` number
+            cost: lower bound for the cost for attaching ``suffix`` to ``index`` node
         """
-        if self.euristics > 0:
-            suffix = suffix[: self.euristics]
+        if self.heuristics > 0:
+            suffix = suffix[: self.heuristics]
         # caching results
-        index_temporary_euristics = self._temporary_euristics[index]
+        index_temporary_euristics = self._temporary_heuristics[index]
         cost = index_temporary_euristics.get(suffix, None)
         if cost is not None:
             return cost
         absense_costs = self._absense_costs_by_node[index]
-        costs = np.zeros(dtype=np.float64, shape=(self.euristics,))
+        costs = np.zeros(dtype=np.float64, shape=(self.heuristics,))
         # costs[j] --- cost estimate for looking ahead for j steps
         for i, a in enumerate(suffix):
             costs[i:] += absense_costs[a][i:]
@@ -203,20 +201,21 @@ class LevenshteinSearcher:
         return min(removal_cost, insertion_cost)
 
 
-def _precompute_absense_costs(dictionary, removal_costs, insertion_costs, n, allow_spaces=False):
+def _precompute_absense_costs(dictionary: Trie, removal_costs: dict,
+                              insertion_costs: dict, n: int, allow_spaces: bool=False) -> List[dict]:
     """
-    Calculates the minimum cost
+    Calculates the minimum cost of symbol insertion and removal for all nodes in dictionary
 
     Args:
-        dictionary: Trie, dictionary stored as an acyclic automaton
-        removal_costs (dict): character removal costs
-        insertion_costs (dict): character insertion costs
-        n (int): lookahead depth
+        dictionary: dictionary stored as an acyclic automaton,
+        removal_costs: symbol removal costs,
+        insertion_costs: symbol insertion costs
+        n: lookahead depth
 
     Returns:
-        answer (List[dict]): len(answer) = len(dictionary)
-            answer[i][a][j] is minimal possible cost
-            for character `a` being `j`-th symbol after the trie node `i`
+        answer: the list of symbol costs for each node of the dictionary
+            answer[i][a][j] is minimal cost for symbol `a`
+            to appear as `j`-th symbol after the trie node `i`
     """
     answer = [dict() for node in dictionary.data]
     if n == 0:
@@ -225,7 +224,7 @@ def _precompute_absense_costs(dictionary, removal_costs, insertion_costs, n, all
     if allow_spaces:
         curr_alphabet += [" "]
     for l, (costs_in_node, node) in enumerate(zip(answer, dictionary.data)):
-        # calculating minimal removal cost
+        # minimal removal costs
         curr_node_removal_costs = np.empty(dtype=np.float64, shape=(n,))
         if len(node[0]) > 0:
             curr_node_removal_costs[0] = min(removal_costs[symbol] for symbol in node[0])
@@ -237,7 +236,7 @@ def _precompute_absense_costs(dictionary, removal_costs, insertion_costs, n, all
                 curr_node_removal_costs[j] = min(curr_node_removal_costs[j - 1], curr_cost)
         else:
             curr_node_removal_costs[:] = np.inf
-        # calculating minimal insertion cost
+        # minimal insertion costs
         for a in curr_alphabet:
             curr_symbol_costs = np.empty(dtype=np.float64, shape=(n,))
             curr_symbol_costs.fill(insertion_costs[a])
@@ -256,17 +255,16 @@ class SegmentTransducer:
     The transducer performs substitutions from a given set of operations.
 
     Args:
-        alphabet (list): alphabet
-
-        operation_costs (dict, optional, default = None):
-            dictionary of the form {(up, low): cost}
-
-        allow_spaces (bool, optional, default = False):
-            whether spaces are allowed in transduction elements
+        alphabet: alphabet
+        operation_costs: dictionary of the form {(`up`, `low`): `cost`},
+            where `up` and `low` are the components of substitution operation.
+        allow_spaces:
+            whether spaces are allowed in transduction components.
             It is used only with default operation costs (``operation_costs``=``None``).
     """
 
-    def __init__(self, alphabet: Union[List, str], operation_costs=None, allow_spaces=False):
+    def __init__(self, alphabet: Union[List, str],
+                 operation_costs: Optional[dict]=None, allow_spaces: bool=False):
         self.alphabet = alphabet
         if operation_costs is None:
             self._make_default_operation_costs(allow_spaces=allow_spaces)
@@ -277,18 +275,16 @@ class SegmentTransducer:
         self._make_reversed_operation_costs()
         self._make_maximal_key_lengths()
 
-    def get_operation_cost(self, up, low):
+    def get_operation_cost(self, up: str, low: str) -> float:
         """
-        Returns the cost of elementary transduction up-> low
+        Returns the cost of elementary transduction `up`->`low`
         or np.inf if there is no such elementary transduction
 
         Args:
-            up, low (str):
-                elementary transduction (substitution) elements
+            up, low: upper and lower parts of the transduction (substitution)
 
         Returns:
-            cost (float):
-                elementary transduction cost up-> low
+            cost: cost of the transduction `up`->`low`
                 (`np.inf` if there is no such transduction)
         """
         up_costs = self.operation_costs.get(up, None)
@@ -310,7 +306,8 @@ class SegmentTransducer:
         inversed_transducer.max_up_lengths_by_low = self.max_low_lengths_by_up
         return inversed_transducer
 
-    def distance(self, first: str, second: str, return_transduction: bool = False):
+    def distance(self, first: str, second: str,
+                 return_transduction: bool = False) -> Union[Tuple[float, List], float]:
         """
         Calculates the cost of replacing ``first`` by ``second``.
 
@@ -319,18 +316,10 @@ class SegmentTransducer:
             second:
                 Upper and lower transduction elements
 
-            return_transduction: bool (optional, default = False)
-                whether to return the corresponding transduction
+            return_transduction: whether to return the corresponding transduction
 
-        Returns:
-            (final_cost, transductions) ( Tuple (float, list)):
-                if return_transduction = True, then returns
-                minimum cost of transduction converting first to second
-                and a list of transductions with a given value
-
-            final_cost (float):
-                if return_transduction = False, then returns
-                minimum cost of transduction converting first to second
+        Returns: minimal cost of the transduction that converts `first` to `second`.
+            If ``return_transduction``=True, additionally returns the transduction itself.
         """
         if return_transduction:
             add_pred = lambda x, y: (y == np.inf or x < y)
@@ -343,20 +332,19 @@ class SegmentTransducer:
         if final_cost == np.inf:
             transductions = [None]
         elif return_transduction:
-            transductions = self._backtraces_to_transductions(first, second, backtraces, final_cost, return_cost=False)
+            transductions = self._backtraces_to_transductions(
+                first, second, backtraces, final_cost, return_cost=False)
         if return_transduction:
             return final_cost, transductions
         else:
             return final_cost
 
-    def transduce(self, first, second, threshold):
+    def transduce(self, first: str, second: str, threshold: float) -> List[Tuple]:
         """
-        Returns all transductions translating first to second,
-        whose value does not exceed threshold
+        Returns all transductions that convert `first` to `second` and cost less than `threshold`.
 
         Returns:
-            result: list
-                type list [(transduction, cost)]
+            result: the list of pairs (transduction, cost) for all such transductions.
         """
         add_pred = lambda x, y: x <= threshold
         clear_pred = lambda x, y: False
@@ -367,21 +355,20 @@ class SegmentTransducer:
         result = self._backtraces_to_transductions(first, second, backtraces, threshold, return_cost=True)
         return result
 
-    def lower_transductions(self, word, max_cost, return_cost=True):
+    def lower_transductions(self, word: str, max_cost: float, return_cost: bool=True):
         """
-        Returns all transductions with the top word element,
-        whose value does not exceed max_cost
+        Returns all transductions whose upper element is `word`
+        and whose cost does not exceed `max_cost`.
 
         Returns:
-            result (list):
-                a list of the form [(transduction, cost)] if return_cost = True
-                transduction list if return_cost = False
-                the list is sorted in ascending order of transduction cost
+            result:
+                a list of all pairs (transduction, cost) if return_cost = True,
+                a list of all such transductions if return_cost = False.
+                The list is sorted from cheaper transduction to more expensive.
         """
         prefixes = [[] for i in range(len(word) + 1)]
         prefixes[0].append(((), 0.0))
         for pos in range(len(prefixes)):
-            # insertions
             prefixes[pos] = self._perform_insertions(prefixes[pos], max_cost)
             max_upperside_length = min(len(word) - pos, self.max_up_length)
             for upperside_length in range(1, max_upperside_length + 1):
@@ -398,7 +385,17 @@ class SegmentTransducer:
         else:
             return [elem[0] for elem in answer]
 
-    def lower(self, word, max_cost, return_cost=True):
+    def lower(self, word: str, max_cost: float, return_cost: bool=True):
+        """
+        Returns lower elements for all transductions
+        whose upper element is `word` and whose cost does not exceed `max_cost`.
+
+        Returns:
+            result:
+                a list of all pairs (transduction, cost) if return_cost = True,
+                a list of all such transductions if return_cost = False.
+                The list is sorted from cheaper transduction to more expensive.
+        """
         transductions = self.lower_transductions(word, max_cost, return_cost=True)
         answer = dict()
         for transduction, cost in transductions:
@@ -412,48 +409,65 @@ class SegmentTransducer:
         else:
             return [elem[0] for elem in answer]
 
-    def upper(self, word, max_cost, return_cost=True):
+    def upper(self, word: str, max_cost: float, return_cost: bool=True):
+        """
+        Returns upper elements for all transductions
+        whose lower element is `word` and whose cost does not exceed `max_cost`.
+
+        Returns:
+            result:
+                a list of all pairs (transduction, cost) if return_cost = True,
+                a list of all such transductions if return_cost = False.
+                The list is sorted from cheaper transduction to more expensive.
+        """
         inversed_transducer = self.inverse()
         return inversed_transducer.lower(word, max_cost, return_cost)
 
-    def upper_transductions(self, word, max_cost, return_cost=True):
+    def upper_transductions(self, word: str, max_cost: float, return_cost: bool=True):
+        """
+        Returns all transductions whose lower element is `word`
+        and whose cost does not exceed `max_cost`.
+
+        Returns:
+            result:
+                a list of all pairs (transduction, cost) if return_cost = True,
+                a list of all such transductions if return_cost = False.
+                The list is sorted from cheaper transduction to more expensive.
+        """
         inversed_transducer = self.inverse()
         return inversed_transducer.lower_transductions(word, max_cost, return_cost)
 
-    def _fill_levenshtein_table(self, first, second, update_func, add_pred, clear_pred, threshold=None):
+    def _fill_levenshtein_table(self, first: str, second: str, update_func: callable,
+                                add_pred: callable, clear_pred: callable,
+                                threshold: float=None) -> Tuple[np.ndarray, np.ndarray]:
         """
-        A function that dynamically populates the transduction cost table
-        costs[i][j] --- the minimum cost of transduction,
-        translating first[: i] to second[: j]
+        Dynamically calculates the table of costs
+        for transduction between `first` and `second`.
+        costs[i][j] --- the minimum cost of transduction between first[:i] and second[:j].
 
         Args:
-            first, second (str):
-                Upper and lower transduction elements
-            update_func ( float * float -> bool): callable,
-                update_func(x, y) returns the new value in the table cell costs,
-                if the old value is y, and the potentially new value is x
-                everywhere update_func = min
-            add_pred ( float * float -> bool): callable,
-                add_pred(x, y) returns whether adding
-                a new element p of cost x to the cell backtraces [i] [j]
-                depending on the value of costs [i] [j] = y and current value x
-            clear_pred ( float * float -> bool): callable,
-                clear_pred(x, y) returns whether cleaning is performed
-                cells backtraces [i] [j] depending on the value of costs [i] [j] = y
-                and the current value x of the element p being added to this cell
+            first, second: upper and lower transduction elements
+            update_func: a callable `update_func`(x, y),
+                that returns the new value of the table cell
+                for the old value `y`, and new candidate value `x`.
+            add_pred: a callable `add_pred`(x, y),
+                add_pred(x, y) returns whether we shall add a new element
+                to current backtraces cell if `x` is the new cost of the
+                current table cell add `y` was the old one.
+            clear_pred: a callable `clear_pred`(x, y),
+                clear_pred(x, y) returns whether we shall clear
+                current backtraces cell if `x` is the new cost of the
+                current table cell add `y` was the old one.
 
         Returns:
-            costs (array(float)): array, dtype = float, shape = (len(first) +1, len(second) +1)
-                an array in the cell with indices i whose j is stored
-                minimum cost of transduction converting first [: i] to second [: j]
-            backtraces (array(float)): array, dtype = list, shape = (len(first) +1, len(second) +1)
-                an array in the cell with indices i, j of which are stored
-                backlinks to the previous cell in optimal transduction,
-                cell leading backtraces [i] [j]
+            costs: an array of floats of shape (`len`(`first`) +1, `len`(`second`) +1)
+                costs[i,j] contains the distance between first [:i] and second [:j].
+            backtraces: an array of lists of shape (`len`(`first`) +1, `len`(`second`) +1)
+                backtraces[i,j] contains the links to the previous cells in the paths
+                correspondings to optimal transductions between first [:i] and second [:j].
         """
         m, n = len(first), len(second)
-        # if threshold = None, then double value is taken as a threshold
-        # transduction, displaying characters at the same positions in each other
+        # if `threshold`=`None`, the threshold equals double identity transduction cost.
         if threshold is None:
             threshold = 0.0
             for a, b in zip(first, second):
@@ -465,7 +479,7 @@ class SegmentTransducer:
                 for b in second[m:]:
                     threshold += self.get_operation_cost("", b)
             threshold *= 2
-        # initialization of returned arrays
+        # initialization of output arrays
         costs = np.zeros(shape=(m + 1, n + 1), dtype=np.float64)
         costs[:] = np.inf
         backtraces = [None] * (m + 1)
@@ -500,8 +514,8 @@ class SegmentTransducer:
 
     def _make_reversed_operation_costs(self):
         """
-        Fills the _reversed_operation_costs array
-        based on the available operation_costs array
+        Fills the ``_reversed_operation_costs`` array
+        using the available ``operation_costs`` array
         """
         _reversed_operation_costs = dict()
         for up, costs in self.operation_costs.items():
@@ -513,14 +527,16 @@ class SegmentTransducer:
 
     def _make_maximal_key_lengths(self):
         """
-        Calculates the maximum length of an element. Low
-        in elementary transduction(up, low) for each up
-        and the maximum length of the up element
-        in elementary transduction(up, low) for each low
+        Calculates the dictionaries that contain the maximal length
+        of the lower transduction part for each upper transduction part,
+        as well as calculates maximal upper part lengths
+        for given lower transduction parts.
         """
-        self.max_up_length = max(len(up) for up in self.operation_costs) if len(self.operation_costs) > 0 else -1
+        self.max_up_length = (max(len(up) for up in self.operation_costs)
+                              if len(self.operation_costs) > 0 else -1)
         self.max_low_length = (
-            max(len(low) for low in self._reversed_operation_costs) if len(self._reversed_operation_costs) > 0 else -1
+            max(len(low) for low in self._reversed_operation_costs)
+            if len(self._reversed_operation_costs) > 0 else -1
         )
         self.max_low_lengths_by_up, self.max_up_lengths_by_low = dict(), dict()
         for up, costs in self.operation_costs.items():
@@ -528,27 +544,20 @@ class SegmentTransducer:
         for low, costs in self._reversed_operation_costs.items():
             self.max_up_lengths_by_low[low] = max(len(up) for up in costs) if len(costs) > 0 else -1
 
-    def _backtraces_to_transductions(self, first, second, backtraces, threshold, return_cost=False):
+    def _backtraces_to_transductions(self, first: str, second: str, backtraces: np.ndarray,
+                                     threshold: float, return_cost: bool=False) -> List:
         """
-        Recovers transductions using the backlink table
+        Recovers the transduction using the backtraces table.
 
         Args:
-            first, second (str):
-                upper and lower transduction elements
-            backtraces (list): array-like, dtype = list, shape = (len(first) +1, len(second) +1)
-                backlink table
-            threshold (float):
-                threshold for screening transductions,
-                only transductions worth <= threshold are returned
-            return_cost (bool, optional, default = False):
-                if True, then along with transductions, their value is returned
+            first, second: upper and lower transduction parts
+            backtraces: the backtraces matrix
+            threshold: the maximal allowed cost of the transduction
+            return_cost: if `True`, then transduction costs are returned
 
         Returns:
-            result (list):
-                a list of the form [(transduction, cost)] if return_cost = True
-                and type [transduction] if return_cost = False,
-                containing all transductions converting first to second,
-                whose value does not exceed threshold
+            result: the list of output transductions whose cost does not exceed ``threshold``.
+                If ``return_cost``=`True`, transduction costs are also returned.
         """
         m, n = len(first), len(second)
         agenda = [None] * (m + 1)
@@ -572,20 +581,18 @@ class SegmentTransducer:
         else:
             return [elem[0] for elem in agenda[0][0]]
 
-    def _perform_insertions(self, initial, max_cost):
+    def _perform_insertions(self, initial: List[Tuple], max_cost: float) -> List:
         """
-        returns all transductions values <= max_cost,
-        which can be obtained from the elements of ``initial``
+        returns all transductions whose value does not exceed `max_cost`,
+        that can be obtained from ``initial`` by appending
+        transductions with empty upper part.
 
         Args:
-            initial (List[tuple]): list of tuples
-                list of source transductions of the form [(transduction, cost)]
-            max_cost (float): float
-                maximum cost of transduction
+            initial: list of initial transductions of the form (transduction, cost)
+            max_cost: maximal allowed cost
 
         Returns:
-            final (List[tuple]): list of tuples
-                final list of transductions of the form [(transduction, cost)]
+            final: the final list of transductions of the form (transduction, cost)
         """
         queue = list(initial)
         final = initial
