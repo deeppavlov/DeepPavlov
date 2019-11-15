@@ -504,14 +504,14 @@ class SegmentTransducer:
             for i_right in range(i, min(i + self.max_up_length, m) + 1):
                 up = first[i:i_right]
                 max_low_length = self.max_low_lengths_by_up.get(up, -1)
-                if max_low_length == -1:  # no up key in transduction
+                if max_low_length == -1:  # `up` is not present in transducer
                     continue
                 up_costs = self.operation_costs[up]
                 for j in range(n + 1):
                     if costs[i][j] > threshold:
                         continue
                     if len(backtraces[i][j]) == 0 and i + j > 0:
-                        continue  # no backlinks found
+                        continue
                     for j_right in range((j if i_right > i else j + 1), min(j + max_low_length, n) + 1):
                         low = second[j:j_right]
                         curr_cost = up_costs.get(low, np.inf)

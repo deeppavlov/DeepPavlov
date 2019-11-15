@@ -353,12 +353,10 @@ class TrieMinimizer:
         if make_cashed:
             compressed.make_cashed()
         if precompute_symbols is not None:
-            if (trie.is_terminated and trie.precompute_symbols
-                    and trie.allow_spaces == allow_spaces):
-                # копируем будущие символы из исходного дерева
-                # нужно, чтобы возврат из финальных состояний в начальное был одинаковым в обоих деревьях
+            if (trie.is_terminated and trie.precompute_symbols and trie.allow_spaces == allow_spaces):
+                # copy the future symbols
                 for i, node_index in enumerate(class_representatives[::-1]):
-                    # будущие символы для представителя i-го класса
+                    # future symbols for `i`-th equivalence class
                     compressed.data[i] = copy.copy(trie.data[node_index])
             else:
                 precompute_future_symbols(compressed, precompute_symbols, allow_spaces)
@@ -377,10 +375,9 @@ class TrieMinimizer:
         while len(stack) > 0:
             index = stack[-1]
             color = colors[index]
-            if color == 'white': # вершина ещё не обрабатывалась
+            if color == 'white':
                 colors[index] = 'grey'
                 for child in trie._get_children(index):
-                    # проверяем, посещали ли мы ребёнка раньше
                     if child != Trie.NO_NODE and colors[child] == 'white':
                         stack.append(child)
             else:
@@ -467,7 +464,7 @@ def precompute_future_symbols(trie: Trie, n: int, allow_spaces: bool = False):
     if n == 0:
         return
     if trie.is_terminated and trie.precompute_symbols:
-        # символы уже предпосчитаны
+        # symbols are already precomputed
         return
     for index, final in enumerate(trie.final):
         trie.data[index] = [set() for i in range(n)]
@@ -480,7 +477,7 @@ def precompute_future_symbols(trie: Trie, n: int, allow_spaces: bool = False):
             children = set(trie._get_children(index))
             for child in children:
                 node_data[d] |= trie.data[child][d - 1]
-            # в случае, если разрешён возврат по пробелу в стартовое состояние
             if allow_spaces and final:
+                # we can return by space to the initial state
                 node_data[d] |= trie.data[trie.root][d - 1]
     trie.terminated = True
