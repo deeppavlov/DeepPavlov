@@ -61,7 +61,7 @@ class LevenshteinSearcher:
             return []
         return self._trie_search(word, d, allow_spaces=allow_spaces, return_cost=return_cost)
 
-    def _trie_search(self, word: str, d: int, transducer: Optional[SegmentTransducer]=None,
+    def _trie_search(self, word: str, d: int, transducer: Optional["SegmentTransducer"]=None,
                      allow_spaces: bool=True, return_cost: bool=True) -> list:
         """
         Finds all `w` with distance(`word`, `w`) <= d using a prefix trie.

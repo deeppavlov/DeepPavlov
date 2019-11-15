@@ -23,7 +23,7 @@ We support ``Linux`` and ``Windows`` platforms, ``Python 3.6`` and ``Python 3.7`
 
     * Linux
 
-        .. code::
+        .. code:: bash
 
             source ./env/bin/activate
 
