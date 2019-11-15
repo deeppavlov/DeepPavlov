@@ -36,7 +36,7 @@ class LineReader(DatasetReader):
             content = f.readlines()
 
         dataset = dict()
-        dataset["train"] = [(line, ) for line in content]
+        dataset["train"] = [(line,) for line in content]
         dataset["valid"] = []
         dataset["test"] = []
 

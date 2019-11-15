@@ -65,7 +65,7 @@ class SiameseIterator(DataLearningIterator):
             self.test = self.train[-self.len_test:]
             self.train = self.train[:-self.len_test]
 
-    def gen_batches(self, batch_size: int, data_type: str = "train", shuffle: bool = True)->\
+    def gen_batches(self, batch_size: int, data_type: str = "train", shuffle: bool = True) -> \
             Tuple[List[List[Tuple[int, int]]], List[int]]:
         """Generate batches of inputs and expected outputs to train neural networks.
 

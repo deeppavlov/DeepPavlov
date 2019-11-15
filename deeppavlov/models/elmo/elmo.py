@@ -214,7 +214,7 @@ class ELMo(NNModel):
                  unroll_steps: Optional[int] = None,
                  n_tokens_vocab: Optional[int] = None,
                  lstm: Optional[dict] = None,
-                 dropout: Optional[float] = None,   # Regularization
+                 dropout: Optional[float] = None,  # Regularization
                  n_negative_samples_batch: Optional[int] = None,  # Train options
                  all_clip_norm_val: Optional[float] = None,
                  initial_accumulator_value: float = 1.0,
@@ -230,10 +230,10 @@ class ELMo(NNModel):
                  **kwargs) -> None:
 
         # ================ Checking input args =================
-        if not(options_json_path or (char_cnn and bidirectional and unroll_steps
-                                     and n_tokens_vocab and lstm and dropout and
-                                     n_negative_samples_batch and all_clip_norm_val
-                                     )):
+        if not (options_json_path or (char_cnn and bidirectional and unroll_steps
+                                      and n_tokens_vocab and lstm and dropout and
+                                      n_negative_samples_batch and all_clip_norm_val
+        )):
             raise Warning('Use options_json_path or/and direct params to set net architecture.')
         self.options = self._load_options(options_json_path)
         self._update_arch_options(char_cnn, bidirectional, unroll_steps, n_tokens_vocab, lstm)
@@ -250,7 +250,7 @@ class ELMo(NNModel):
 
         self.train_options = {}
         self.valid_options = {'batch_size': 256, 'unroll_steps': 1, 'n_gpus': 1}
-        self.model_mode=''
+        self.model_mode = ''
 
         tf.set_random_seed(seed)
         np.random.seed(seed)
@@ -306,7 +306,7 @@ class ELMo(NNModel):
         if all_clip_norm_val is not None:
             self.options['all_clip_norm_val'] = all_clip_norm_val
 
-    def _get_epoch_from(self, epoch_load_path, default = 0):
+    def _get_epoch_from(self, epoch_load_path, default=0):
         path = self.load_path
         path = path.parent / epoch_load_path
         candidates = path.resolve().glob('[0-9]*')
@@ -315,7 +315,7 @@ class ELMo(NNModel):
         epoch_num = max(candidates, default=default)
         return epoch_num
 
-    def _build_graph(self, graph, train = True):
+    def _build_graph(self, graph, train=True):
         with graph.as_default():
             with tf.device('/cpu:0'):
                 init_step = 0
@@ -417,8 +417,8 @@ class ELMo(NNModel):
     def _fill_feed_dict(self,
                         char_ids_batches,
                         reversed_char_ids_batches,
-                        token_ids_batches = None,
-                        reversed_token_ids_batches = None):
+                        token_ids_batches=None,
+                        reversed_token_ids_batches=None):
         # init state tensors
         feed_dict = {t: v for t, v in zip(self.init_state_tensors, self.init_state_values)}
 
@@ -475,7 +475,7 @@ class ELMo(NNModel):
                 saver = tf.train.Saver()
                 saver.restore(self.sess, path)
         else:
-            log.info(f'[A checkpoint not found in  {path}]') 
+            log.info(f'[A checkpoint not found in  {path}]')
 
     @overrides
     def save(self, epoch: Optional[int] = None) -> None:
@@ -540,7 +540,7 @@ class ELMo(NNModel):
                                                                                   train=False)
 
         with self.graph.as_default():
-            self.init_state_values, self.init_state_tensors, self.final_state_tensors =\
+            self.init_state_values, self.init_state_tensors, self.final_state_tensors = \
                 self._init_session()
         self.load(epoch)
 

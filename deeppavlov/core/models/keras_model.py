@@ -12,21 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import inspect
 from abc import abstractmethod
-from copy import deepcopy
 from logging import getLogger
-from typing import Optional, List, Union
 
-import numpy as np
 import tensorflow as tf
 from keras import backend as K
 from overrides import overrides
 
+from deeppavlov.core.models.lr_scheduled_model import LRScheduledModel
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.models.tf_backend import TfModelMeta
-from deeppavlov.core.models.lr_scheduled_model import LRScheduledModel
-
 
 log = getLogger(__name__)
 
@@ -101,6 +96,7 @@ class LRScheduledKerasModel(LRScheduledModel, KerasModel):
     KerasModel enhanced with optimizer, learning rate and momentum
     management and search.
     """
+
     def __init__(self, **kwargs):
         """
         Initialize model with given parameters

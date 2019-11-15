@@ -453,25 +453,23 @@ customizable: embeddings, slot filler and intent classifier can be switched on a
 
 Available pre-trained models and their comparison with existing benchmarks:
 
-+----------------+------+-------------------------------------------------------------------------------------+---------------+---------+------------+------------------+
-| Dataset        | Lang | Model                                                                               | Metric        | Valid   | Test       | Downloads        |
-+================+======+=====================================================================================+===============+=========+============+==================+
-| `DSTC 2`_ [*]_ | En   | :config:`bot with slot filler <go_bot/gobot_dstc2.json>`                            | Turn Accuracy | 0.544   | 0.542      | 400 Mb           |
-+                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-|                |      | :config:`bot with slot filler & intents & attention <go_bot/gobot_dstc2_best.json>` |               | 0.548   | **0.553**  | 8.5 Gb           |
-+----------------+      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-| `DSTC 2`_      |      | Bordes and Weston (2016)                                                            |               | --      | 0.411      | --               |
-+                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-|                |      | Eric and Manning (2017)                                                             |               | --      | 0.480      | --               |
-+                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-|                |      | Perez and Liu (2016)                                                                |               | --      | 0.487      | --               |
-+                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-|                |      | Williams et al. (2017)                                                              |               | --      | **0.556**  | --               |
-+----------------+------+-------------------------------------------------------------------------------------+---------------+---------+------------+------------------+
-
-.. _`DSTC 2`: http://camdial.org/~mh521/dstc/
-
-.. [*] There were a few :ref:`modifications <dstc2_dataset>` to the original dataset. 
++-----------------------------------+------+------------------------------------------------------------------------------------+---------------+-----------+---------------+
+| Dataset                           | Lang | Model                                                                              | Metric        | Test      | Downloads     |
++===================================+======+====================================================================================+===============+===========+===============+
+| `DSTC 2`_                         | En   | :config:`basic bot <go_bot/gobot_dstc2_minimal.json>`                              | Turn Accuracy | 0.380     | 10 Mb         |
++ (:ref:`modified <dstc2_dataset>`) +      +------------------------------------------------------------------------------------+               +-----------+---------------+
+|                                   |      | :config:`bot with slot filler <go_bot/gobot_dstc2.json>`                           |               | 0.542     | 400 Mb        |
++                                   +      +------------------------------------------------------------------------------------+               +-----------+---------------+
+|                                   |      | :config:`bot with slot filler, intents & attention <go_bot/gobot_dstc2_best.json>` |               | **0.553** | 8.5 Gb        |
++-----------------------------------+      +------------------------------------------------------------------------------------+               +-----------+---------------+
+| `DSTC 2`_                         |      | Bordes and Weston (2016)                                                           |               | 0.411     | --            |
++                                   +      +------------------------------------------------------------------------------------+               +-----------+---------------+
+|                                   |      | Eric and Manning (2017)                                                            |               | 0.480     | --            |
++                                   +      +------------------------------------------------------------------------------------+               +-----------+---------------+
+|                                   |      | Perez and Liu (2016)                                                               |               | 0.487     | --            |
++                                   +      +------------------------------------------------------------------------------------+               +-----------+---------------+
+|                                   |      | Williams et al. (2017)                                                             |               | **0.556** | --            |
++-----------------------------------+------+------------------------------------------------------------------------------------+---------------+-----------+---------------+
 
 
 Seq2seq goal-oriented bot :doc:`[docs] </features/skills/seq2seq_go_bot>`
@@ -499,16 +497,6 @@ Comparison of deeppavlov pretrained model with others:
 +-------------------+------+----------------------------------------------------+------------------+-----------------+-----------+
 
 .. _`Stanford Kvret`: https://nlp.stanford.edu/blog/a-new-multi-turn-multi-domain-task-oriented-dialogue-dataset/
-
-
-eCommerce bot :doc:`[docs] </features/skills/ecommerce>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The eCommerce bot intends to retrieve product items from catalog in sorted order. In addition, it asks an user to provide additional information to specify the search.
-
-.. note::
-
-    About **130 Mb** on disc required for eCommerce bot with TfIdf-based ranker and **500 Mb** for BLEU-based ranker.
 
 
 ODQA :doc:`[docs] </features/skills/odqa>`
@@ -556,7 +544,7 @@ Examples of some models
 
 -  Run goal-oriented bot with Telegram interface:
 
-   ``python -m deeppavlov interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -d -t <TELEGRAM_TOKEN>``
+   ``python -m deeppavlov telegram deeppavlov/configs/go_bot/gobot_dstc2.json -d -t <TELEGRAM_TOKEN>``
 -  Run goal-oriented bot with console interface:
 
    ``python -m deeppavlov interact deeppavlov/configs/go_bot/gobot_dstc2.json -d``
@@ -565,7 +553,7 @@ Examples of some models
    ``python -m deeppavlov riseapi deeppavlov/configs/go_bot/gobot_dstc2.json -d``
 -  Run slot-filling model with Telegram interface:
 
-   ``python -m deeppavlov interactbot deeppavlov/configs/ner/slotfill_dstc2.json -d -t <TELEGRAM_TOKEN>``
+   ``python -m deeppavlov telegram deeppavlov/configs/ner/slotfill_dstc2.json -d -t <TELEGRAM_TOKEN>``
 -  Run slot-filling model with console interface:
 
    ``python -m deeppavlov interact deeppavlov/configs/ner/slotfill_dstc2.json -d``

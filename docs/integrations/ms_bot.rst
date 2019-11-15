@@ -83,7 +83,8 @@ as a REST service by:
 
 .. code:: bash
 
-    python -m deeppavlov interactmsbot <config_path> -i <microsoft_app_id> -s <microsoft_app_secret> --https --key <SSL key file path> --cert <SSL certificate file path> [-d] [-p <port_number>] [--stateful] [--multi-instance] [--no-default-skill]
+    python -m deeppavlov msbot <config_path> [-i <microsoft_app_id>] [-s <microsoft_app_secret>] \
+    [--https] [--key <SSL key file path>] [--cert <SSL certificate file path>] [-d] [-p <port_number>]
 
 Use *Microsoft App ID* and *Microsoft App Secret* obtained
 in the **Web App Bot connection configuration** section.
@@ -95,14 +96,7 @@ Optional ``-d`` key can be provided for dependencies download
 before service start.
 
 Optional ``-p`` key can be provided to override the port value from a settings file.
-
-Optional ``--stateful`` flag should be provided for stateful skills/models.
-
-Optional ``--multi-instance`` can be provided if you wish to raise separate skill/model instance
 for **each** conversation.
-
-You should use ``--no-default-skill`` optional flag if your model implements an interface of DeepPavlov *Skill*
-to skip its wrapping with DeepPavlov *DefaultStatelessSkill*.
 
 REST service properties (host, port) are provided in ``deeppavlov/utils/settings/server_config.json``. You can also store your
 app id and app secret in appropriate section of ``server_config.json``. Please note, that all command line parameters

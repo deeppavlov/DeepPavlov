@@ -60,8 +60,9 @@ class MorphoTaggerDatasetIterator(DataLearningIterator):
                 For fair comparison with UD Pipe it is set to 0.9 for UD experiments.
                 It is actually used only for Turkish data.
     """
+
     def __init__(self, data: Dict[str, List[Tuple[Any, Any]]], seed: int = None,
-                 shuffle: bool = True,  min_train_fraction: float = 0.0,
+                 shuffle: bool = True, min_train_fraction: float = 0.0,
                  validation_split: float = 0.2) -> None:
         self.validation_split = validation_split
         self.min_train_fraction = min_train_fraction

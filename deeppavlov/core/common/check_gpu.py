@@ -19,7 +19,6 @@ from tensorflow.python.client import device_lib
 
 log = getLogger(__name__)
 
-
 _gpu_available = None
 
 

@@ -87,6 +87,7 @@ class NNTrainer(FitTrainer):
         * Save the model if it happened before 1st validation (to capture early training results), don't save otherwise.
 
     """
+
     def __init__(self, chainer_config: dict, *, batch_size: int = 1,
                  epochs: int = -1,
                  start_epoch_num: int = 0,
@@ -115,7 +116,7 @@ class NNTrainer(FitTrainer):
 
         def _improved(op):
             return lambda score, baseline: False if baseline is None or score is None \
-                                                else op(score,baseline)
+                else op(score, baseline)
 
         if metric_optimization == 'maximize':
             self.improved = _improved(lambda a, b: a > b)
@@ -156,7 +157,7 @@ class NNTrainer(FitTrainer):
 
     def _is_initial_validation(self):
         return self.validation_number == 0
-    
+
     def _is_first_validation(self):
         return self.validation_number == 1
 
@@ -240,7 +241,7 @@ class NNTrainer(FitTrainer):
 
         report.update(self.last_result)
         if self.losses:
-            report['loss'] = sum(self.losses)/len(self.losses)
+            report['loss'] = sum(self.losses) / len(self.losses)
             self.losses.clear()
             metrics.append(('loss', report['loss']))
 
@@ -336,11 +337,9 @@ class NNTrainer(FitTrainer):
             except KeyboardInterrupt:
                 log.info('Stopped training')
         else:
-            log.warn(f'Using {self.__class__.__name__} for a pipeline without batched training')
+            log.warning(f'Using {self.__class__.__name__} for a pipeline without batched training')
 
         # Run the at-train-exit model-saving logic
         if self.validation_number < 1:
             log.info('Save model to capture early training results')
             self.save()
-
-

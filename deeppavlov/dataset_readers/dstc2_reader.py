@@ -111,7 +111,7 @@ class DSTC2DatasetReader(DatasetReader):
         """Returns data from single file"""
         log.info(f"[loading dialogs from {file_path}]")
 
-        utterances, responses, dialog_indices =\
+        utterances, responses, dialog_indices = \
             cls._get_turns(cls._iter_file(file_path), with_indices=True)
 
         data = list(map(cls._format_turn, zip(utterances, responses)))
@@ -289,7 +289,7 @@ class SimpleDSTC2DatasetReader(DatasetReader):
         """Returns data from single file"""
         log.info(f"[loading dialogs from {file_path}]")
 
-        utterances, responses, dialog_indices =\
+        utterances, responses, dialog_indices = \
             cls._get_turns(json.load(open(file_path, 'rt')), with_indices=True)
 
         data = list(map(cls._format_turn, zip(utterances, responses)))

@@ -87,7 +87,7 @@ class SiameseModel(NNModel):
             n_responses = self._append_sample_to_batch_buffer(sample, buf)
             if len(buf) >= self.batch_size:
                 for i in range(len(buf) // self.batch_size):
-                    b = self._make_batch(buf[i*self.batch_size:(i+1)*self.batch_size])
+                    b = self._make_batch(buf[i * self.batch_size:(i + 1) * self.batch_size])
                     yp = self._predict_on_batch(b)
                     y_pred += list(yp)
                 lenb = len(buf) % self.batch_size
@@ -133,4 +133,3 @@ class SiameseModel(NNModel):
             z = [el[i] for el in x]
             b.append(np.asarray(z))
         return b
-

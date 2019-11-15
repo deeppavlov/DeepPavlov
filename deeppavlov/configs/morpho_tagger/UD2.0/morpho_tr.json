@@ -171,9 +171,6 @@
         "url": "http://files.deeppavlov.ai/datasets/UD2.0_source/tr.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/UD2.0_source/tr"
       }
-    ],
-    "labels": {
-      "telegram_utils": "MorphoTaggerModel"
-    }
+    ]
   }
 }

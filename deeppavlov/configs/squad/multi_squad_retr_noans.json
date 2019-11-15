@@ -144,10 +144,6 @@
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
-    "labels": {
-      "telegram_utils": "SquadModel",
-      "server_utils": "SquadModel"
-    },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/multi_squad_model_noans_1.1.tar.gz",

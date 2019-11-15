@@ -1,3 +1,17 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import copy
 from collections import defaultdict
 from typing import List, Optional, Tuple, Union
@@ -297,7 +311,7 @@ class TrieMinimizer:
         node_classes[index] = 0
         class_representatives = [index]
         node_key = ((), (), trie.is_final(index))
-        classes, class_keys = {node_key : 0}, [node_key]
+        classes, class_keys = {node_key: 0}, [node_key]
         curr_index = 1
         for index in order[1:]:
             letter_indexes = tuple(trie._get_letters(index, return_indexes=True))
@@ -381,7 +395,7 @@ def load_trie(infile: str) -> None:
     """Loads a Trie from file."""
     with open(infile, "r", encoding="utf8") as fin:
         line = fin.readline().strip()
-        flags = [x=='T' for x in line.split()]
+        flags = [x == 'T' for x in line.split()]
         if len(flags) != len(Trie.ATTRS) + 1:
             raise ValueError("Wrong file format")
         nodes_number, root = map(int, fin.readline().strip().split())

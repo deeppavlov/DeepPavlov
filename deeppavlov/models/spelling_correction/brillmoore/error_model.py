@@ -47,7 +47,7 @@ class ErrorModel(Estimator):
         candidates_count: maximum number of replacement candidates to return for every token in the input
     """
 
-    def __init__(self, dictionary: StaticDictionary, window: int=1, candidates_count: int=1, *args, **kwargs):
+    def __init__(self, dictionary: StaticDictionary, window: int = 1, candidates_count: int = 1, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.costs = defaultdict(itertools.repeat(float('-inf')).__next__)
         self.dictionary = dictionary

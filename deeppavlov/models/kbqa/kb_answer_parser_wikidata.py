@@ -13,16 +13,15 @@
 # limitations under the License.
 
 import pickle
-from pathlib import Path
-from string import punctuation
 from logging import getLogger
+from string import punctuation
 from typing import List, Tuple, Optional, Dict
 
 import numpy as np
 
-from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
+from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.models.kbqa.entity_linking import EntityLinker
 
 log = getLogger(__name__)
@@ -115,7 +114,7 @@ class KBAnswerParserWikidata(Component, Serializable):
                     top_k_relations, top_k_probs = self._parse_relations_probs(relations_probs)
                     top_k_relation_names = [self._relations_mapping[rel] for rel in top_k_relations]
                     if self._debug:
-                        log.debug("top k relations {}" .format(str(top_k_relation_names)))
+                        log.debug("top k relations {}".format(str(top_k_relation_names)))
                     obj, confidence = self._match_triplet(entity_triplets,
                                                           entity_linking_confidences,
                                                           top_k_relations,
@@ -194,16 +193,16 @@ class KBAnswerParserWikidata(Component, Serializable):
             if template_start in s_sanitized and template_end in s_sanitized:
                 template_start_pos = s_sanitized.find(template_start)
                 template_end_pos = s_sanitized.find(template_end)
-                ent_cand = s_sanitized[template_start_pos+len(template_start): template_end_pos or len(s_sanitized)]
+                ent_cand = s_sanitized[template_start_pos + len(template_start): template_end_pos or len(s_sanitized)]
                 if len(ent_cand) < len(ent) or len(ent) == 0:
                     ent = ent_cand
                     relation = self.templates[template]
         return ent, relation
 
     def is_kbqa_question(self, question_tokens: List[List[str]]) -> bool:
-        not_kbqa_question_templates = ["почему", "когда будет", "что будет", "что если", "для чего ", "как ", \
+        not_kbqa_question_templates = ["почему", "когда будет", "что будет", "что если", "для чего ", "как ",
                                        "что делать", "зачем", "что может"]
-        kbqa_question_templates = ["как зовут", "как называется", "как звали", "как ты думаешь", "как твое мнение", \
+        kbqa_question_templates = ["как зовут", "как называется", "как звали", "как ты думаешь", "как твое мнение",
                                    "как ты считаешь"]
         question_init = ' '.join(question_tokens)
         question = ''.join([ch for ch in question_init if ch not in punctuation]).lower()

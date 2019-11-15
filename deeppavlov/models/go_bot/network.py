@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import collections
+import copy
 import json
 import re
-import copy
 from logging import getLogger
 from typing import Dict, Any, List, Optional, Union, Tuple
 
@@ -24,6 +24,7 @@ import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer as xav
 
 import deeppavlov.models.go_bot.templates as templ
+from deeppavlov import Chainer
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
@@ -69,7 +70,8 @@ class GoalOrientedBot(LRScheduledTFModel):
         dense_size: rnn input size.
         attention_mechanism: describes attention applied to embeddings of input tokens.
 
-            * **type** – type of attention mechanism, possible values are ``'general'``, ``'bahdanau'``, ``'light_general'``, ``'light_bahdanau'``, ``'cs_general'`` and ``'cs_bahdanau'``.
+            * **type** – type of attention mechanism, possible values are ``'general'``, ``'bahdanau'``,
+              ``'light_general'``, ``'light_bahdanau'``, ``'cs_general'`` and ``'cs_bahdanau'``.
             * **hidden_size** – attention hidden state size.
             * **max_num_tokens** – maximum number of input tokens.
             * **depth** – number of averages used in constrained attentions
@@ -78,7 +80,8 @@ class GoalOrientedBot(LRScheduledTFModel):
               to attention.
             * **intent_as_key** – use utterance intents as attention key or not.
             * **projected_align** – whether to use output projection.
-        network_parameters: dictionary with network parameters (for compatibility with release 0.1.1, deprecated in the future)
+        network_parameters: dictionary with network parameters (for compatibility with release 0.1.1,
+            deprecated in the future)
 
         template_path: file with mapping between actions and text templates
             for response generation.
@@ -124,7 +127,7 @@ class GoalOrientedBot(LRScheduledTFModel):
                  l2_reg_coef: float = 0.,
                  dense_size: int = None,
                  attention_mechanism: dict = None,
-                 network_parameters: Dict[str, Any] = {},
+                 network_parameters: Optional[Dict[str, Any]] = None,
                  load_path: str = None,
                  template_type: str = "DefaultTemplate",
                  word_vocab: Component = None,
@@ -137,11 +140,12 @@ class GoalOrientedBot(LRScheduledTFModel):
                  use_action_mask: bool = False,
                  debug: bool = False,
                  **kwargs) -> None:
+        network_parameters = network_parameters or {}
         if any(p in network_parameters for p in self.DEPRECATED):
             log.warning(f"parameters {self.DEPRECATED} are deprecated,"
                         f" for learning rate schedule documentation see"
                         f" deeppavlov.core.models.lr_scheduled_tf_model"
-                        f" or read gitub tutorial on super convergence.")
+                        f" or read a github tutorial on super convergence.")
         if 'learning_rate' in network_parameters:
             kwargs['learning_rate'] = network_parameters.pop('learning_rate')
         super().__init__(load_path=load_path, save_path=save_path, **kwargs)
@@ -169,7 +173,7 @@ class GoalOrientedBot(LRScheduledTFModel):
             self.api_call_id = self.templates.actions.index(api_call_action)
 
         self.intents = []
-        if callable(self.intent_classifier):
+        if isinstance(self.intent_classifier, Chainer):
             self.intents = self.intent_classifier.get_main_component().classes
 
         new_network_parameters = {
@@ -282,7 +286,7 @@ class GoalOrientedBot(LRScheduledTFModel):
                 # random embedding instead of zeros
                 if np.all(emb_features < 1e-20):
                     emb_dim = self.embedder.dim
-                    emb_features = np.fabs(np.random.normal(0, 1/emb_dim, emb_dim))
+                    emb_features = np.fabs(np.random.normal(0, 1 / emb_dim, emb_dim))
 
         # Intent features
         intent_features = []
@@ -321,11 +325,11 @@ class GoalOrientedBot(LRScheduledTFModel):
 
         if self.debug:
             log.debug(f"Context features = {context_features}")
-            debug_msg = f"num bow features = {bow_features}" +\
-                        f", num emb features = {emb_features}" +\
-                        f", num intent features = {intent_features}" +\
-                        f", num state features = {len(state_features)}" +\
-                        f", num context features = {len(context_features)}" +\
+            debug_msg = f"num bow features = {bow_features}" + \
+                        f", num emb features = {emb_features}" + \
+                        f", num intent features = {intent_features}" + \
+                        f", num state features = {len(state_features)}" + \
+                        f", num context features = {len(context_features)}" + \
                         f", prev_action shape = {len(state['prev_action'])}"
             log.debug(debug_msg)
 
@@ -408,7 +412,7 @@ class GoalOrientedBot(LRScheduledTFModel):
                 if self.debug:
                     log.debug(f"True response = '{response['text']}'.")
                     if d_a_masks[-1][action_id] != 1.:
-                        log.warn("True action forbidden by action mask.")
+                        log.warning("True action forbidden by action mask.")
 
             # padding to max_num_utter
             num_padds = max_num_utter - len(d_contexts)
@@ -481,7 +485,7 @@ class GoalOrientedBot(LRScheduledTFModel):
             if len(db_results) > 1:
                 db_results = [r for r in db_results if r != state['db_result']]
         else:
-            log.warn("No database specified.")
+            log.warning("No database specified.")
         log.info(f"Made api_call with {slots}, got {len(db_results)} results.")
         return {} if not db_results else db_results[0]
 
@@ -492,8 +496,10 @@ class GoalOrientedBot(LRScheduledTFModel):
         if isinstance(batch[0], str):
             res = []
             if not user_ids:
-                user_ids = ['finn' for i in range(len(batch))]
+                user_ids = ['finn'] * len(batch)
             for user_id, x in zip(user_ids, batch):
+                if user_id not in self.states:
+                    self.reset(user_id)
                 state = self.states[user_id]
                 state['current_db_result'] = None
 
@@ -535,8 +541,11 @@ class GoalOrientedBot(LRScheduledTFModel):
             )
         }
 
-    def reset(self, user_id: Union[str, int] = 'finn') -> None:
-        self.states[user_id] = self._zero_state()
+    def reset(self, user_id: Union[None, str, int] = None) -> None:
+        if user_id is None:
+            self.states.clear()
+        else:
+            self.states[user_id] = self._zero_state()
         if self.debug:
             log.debug("Bot reset.")
 
@@ -559,7 +568,7 @@ class GoalOrientedBot(LRScheduledTFModel):
             feed_dict[self._emb_context] = emb_context
             feed_dict[self._key] = key
 
-        probs, prediction, state =\
+        probs, prediction, state = \
             self.sess.run([self._probs, self._prediction, self._state],
                           feed_dict=feed_dict)
 

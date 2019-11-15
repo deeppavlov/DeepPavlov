@@ -38,6 +38,7 @@ class CapitalizationPreprocessor(Component):
     Attributes:
         dim: dimensionality of the feature vectors, produced by the featurizer
     """
+
     def __init__(self, pad_zeros: bool = True, *args, **kwargs) -> None:
         self.pad_zeros = pad_zeros
         self._num_of_features = 4

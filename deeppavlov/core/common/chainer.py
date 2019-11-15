@@ -28,7 +28,7 @@ log = getLogger(__name__)
 
 class Chainer(Component):
     """
-    Builds an agent/component pipeline from heterogeneous components (Rule-based/ML/DL). It allows to train
+    Builds a component pipeline from heterogeneous components (Rule-based/ML/DL). It allows to train
     and infer models in a pipeline as a whole.
 
     Attributes:
@@ -46,6 +46,7 @@ class Chainer(Component):
         out_params: names of pipeline inference outputs
         in_y: names of additional inputs for pipeline training and evaluation modes
     """
+
     def __init__(self, in_x: Union[str, list] = None, out_params: Union[str, list] = None,
                  in_y: Union[str, list] = None, *args, **kwargs) -> None:
         self.pipe: List[Tuple[Tuple[List[str], List[str]], List[str], Component]] = []
@@ -150,9 +151,9 @@ class Chainer(Component):
 
             component: NNModel
             main = True
-            assert self.train_map.issuperset(in_x+in_y), ('Arguments {} are expected but only {} are set'
-                                                          .format(in_x+in_y, self.train_map))
-            preprocessor = Chainer(self.in_x, in_x+in_y, self.in_y)
+            assert self.train_map.issuperset(in_x + in_y), ('Arguments {} are expected but only {} are set'
+                                                            .format(in_x + in_y, self.train_map))
+            preprocessor = Chainer(self.in_x, in_x + in_y, self.in_y)
             for (t_in_x_keys, t_in_x), t_out, t_component in self.train_pipe:
                 if t_in_x_keys:
                     t_in_x = dict(zip(t_in_x_keys, t_in_x))
@@ -160,7 +161,7 @@ class Chainer(Component):
 
             def train_on_batch(*args, **kwargs):
                 preprocessed = preprocessor.compute(*args, **kwargs)
-                if len(in_x+in_y) == 1:
+                if len(in_x + in_y) == 1:
                     preprocessed = [preprocessed]
                 if keys:
                     return component.train_on_batch(**dict(zip(keys, preprocessed)))

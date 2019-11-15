@@ -9,6 +9,8 @@ import socket
 import sys
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
+from struct import unpack
+from time import sleep
 from typing import Optional, Union
 from urllib.parse import urljoin
 
@@ -20,11 +22,10 @@ import requests
 import deeppavlov
 from deeppavlov import build_model
 from deeppavlov.core.commands.utils import parse_config
-from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
-from deeppavlov.utils.server.server import get_server_params, SERVER_CONFIG_FILENAME
-from deeppavlov.utils.socket.socket import SOCKET_CONFIG_FILENAME
+from deeppavlov.utils.server import get_server_params
+from deeppavlov.utils.socket import encode
 
 tests_dir = Path(__file__).parent
 test_configs_path = tests_dir / "deeppavlov" / "configs"
@@ -214,20 +215,20 @@ PARAMS = {
     },
     "seq2seq_go_bot": {
         ("seq2seq_go_bot/bot_kvret_train.json", "seq2seq_go_bot", ('TI',)):
-        [
-           ("will it snow on tuesday?",
-            "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
-            "",
-            "",
-            "",
-            None)
-        ],
+            [
+                ("will it snow on tuesday?",
+                 "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
+                 "",
+                 "",
+                 "",
+                 None)
+            ],
         ("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ('IP',)):
-        [
-           ("will it snow on tuesday?",
-            "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
-            None)
-        ]
+            [
+                ("will it snow on tuesday?",
+                 "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
+                 None)
+            ]
     },
     "odqa": {
         ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -373,7 +374,7 @@ class TestQuickStart(object):
                 p.expect(">> ")
                 if expected_response is not None:
                     actual_response = p.readline().decode().strip()
-                    assert expected_response == actual_response,\
+                    assert expected_response == actual_response, \
                         f"Error in interacting with {model_directory} ({config_path}): {query}"
 
             p.expect("::")
@@ -386,9 +387,7 @@ class TestQuickStart(object):
 
     @staticmethod
     def interact_api(config_path):
-        server_conf_file = get_settings_path() / SERVER_CONFIG_FILENAME
-
-        server_params = get_server_params(server_conf_file, config_path)
+        server_params = get_server_params(config_path)
 
         url_base = 'http://{}:{}'.format(server_params['host'], api_port or server_params['port'])
         url = urljoin(url_base.replace('http://0.0.0.0:', 'http://127.0.0.1:'), server_params['model_endpoint'])
@@ -430,9 +429,7 @@ class TestQuickStart(object):
 
     @staticmethod
     def interact_socket(config_path, socket_type):
-        socket_conf_file = get_settings_path() / SOCKET_CONFIG_FILENAME
-
-        socket_params = get_server_params(socket_conf_file, config_path)
+        socket_params = get_server_params(config_path)
         model_args_names = socket_params['model_args_names']
 
         host = socket_params['host']
@@ -442,7 +439,6 @@ class TestQuickStart(object):
         for arg_name in model_args_names:
             arg_value = ' '.join(['qwerty'] * 10)
             socket_payload[arg_name] = [arg_value]
-        dumped_socket_payload = json.dumps(socket_payload)
 
         logfile = io.BytesIO(b'')
         args = [sys.executable, "-m", "deeppavlov", "risesocket", str(config_path), '--socket-type', socket_type]
@@ -456,27 +452,29 @@ class TestQuickStart(object):
         p = pexpect.popen_spawn.PopenSpawn(' '.join(args),
                                            timeout=None, logfile=logfile)
         try:
-            p.expect(socket_params['binding_message'])
+            p.expect(socket_params['socket_launch_message'])
             with socket.socket(address_family, socket.SOCK_STREAM) as s:
-                s.connect(connect_arg)
-                s.sendall(dumped_socket_payload.encode('utf-8'))
-                s.settimeout(60)
-                data = b''
                 try:
-                    while True:
-                        buf = s.recv(1024)
-                        s.setblocking(False)
-                        if buf:
-                            data += buf
-                        else:
-                            break
-                except BlockingIOError:
-                    pass
+                    s.connect(connect_arg)
+                except ConnectionRefusedError:
+                    sleep(1)
+                    s.connect(connect_arg)
+                s.sendall(encode(socket_payload))
+                s.settimeout(60)
+                header = s.recv(4)
+                body_len = unpack('<I', header)[0]
+                data = bytearray()
+                while len(data) < body_len:
+                    chunk = s.recv(body_len - len(data))
+                    if not chunk:
+                        raise ValueError(f'header does not match body\nheader: {body_len}\nbody length: {len(data)}'
+                                         f'data: {data}')
+                    data.extend(chunk)
             try:
                 resp = json.loads(data)
             except json.decoder.JSONDecodeError:
                 raise ValueError(f"Can't decode model response {data}")
-            assert resp['status'] == 'OK', f"{socket_type} socket request returned status: {resp['status']}"\
+            assert resp['status'] == 'OK', f"{socket_type} socket request returned status: {resp['status']}" \
                                            f" with {config_path}\n{logfile.getvalue().decode()}"
 
         except pexpect.exceptions.EOF:
@@ -546,7 +544,7 @@ class TestQuickStart(object):
                 config_path = str(test_configs_path.joinpath(conf_file))
                 install_config(config_path)
                 deep_download(config_path)
-            shutil.rmtree(str(model_path),  ignore_errors=True)
+            shutil.rmtree(str(model_path), ignore_errors=True)
 
             logfile = io.BytesIO(b'')
             p = pexpect.popen_spawn.PopenSpawn(sys.executable + " -m deeppavlov train " + str(c), timeout=None,
@@ -573,7 +571,7 @@ def test_crossvalidation():
 
     install_config(c)
     deep_download(c)
-    shutil.rmtree(str(model_path),  ignore_errors=True)
+    shutil.rmtree(str(model_path), ignore_errors=True)
 
     logfile = io.BytesIO(b'')
     p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov crossval {c} --folds 2",
@@ -598,7 +596,7 @@ def test_param_search():
     install_config(c)
     deep_download(c)
 
-    shutil.rmtree(str(model_path),  ignore_errors=True)
+    shutil.rmtree(str(model_path), ignore_errors=True)
 
     logfile = io.BytesIO(b'')
     p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov.paramsearch {c} --folds 2",
