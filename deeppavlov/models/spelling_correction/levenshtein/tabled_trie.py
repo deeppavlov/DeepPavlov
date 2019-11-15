@@ -1,25 +1,29 @@
 import copy
 from collections import defaultdict
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 
 
 class Trie:
-    """
-    Реализация префиксного бора (точнее, корневого направленного ациклического графа)
+    """DAG implementation (actually, it is not a trie since multiple input edges can enter a single node)
 
-    Атрибуты
-    --------
-    alphabet: list, алфавит
-    alphabet_codes: dict, словарь символ:код
-    compressed: bool, индикатор сжатия
-    cashed: bool, индикатор кэширования запросов к функции descend
-    root: int, индекс корня
-    graph: array, type=int, shape=(число вершин, размер алфавита), матрица потомков
-    graph[i][j] = k <-> вершина k --- потомок вершины i по ребру, помеченному символом alphabet[j]
-    data: array, type=object, shape=(число вершин), массив с данными, хранящямися в вершинах
-    final: array, type=bool, shape=(число вершин), массив индикаторов
-    final[i] = True <-> i --- финальная вершина
+    Args:
+        alphabet: the alphabet
+        make_alphabet_codes: whether to make alphabet codes
+        is_numpied: whether the children are stored as Numpy array (only if ``dict_storage``=`False`).
+        to_make_cashed: whether to cash the search queries
+        alphabet_codes: the dictionary of alphabet codes
+        precompute_symbols: the number of future symbols to precompute for faster queries
+        allow_spaces: whether spaces are allowed in the search queries
+        dict_storage: whether the children are stored as a dictionary
+
+    Attributes:
+        root: the root index
+        graph: the list of nodes, `graph`[`i`][`j`] = `k`
+            if there is an edge labeled by ``alphabet``[`j`] from node `i` to node `k`.
+        data: the list of node data.
+        final: the boolean array, ``final``[`i`] = `True` if `i` is a terminal vertex.
     """
     NO_NODE = -1
     SPACE_CODE = -1
@@ -27,10 +31,11 @@ class Trie:
     ATTRS = ['is_numpied', 'precompute_symbols', 'allow_spaces',
              'is_terminated', 'to_make_cashed']
 
-    def __init__(self, alphabet, make_sorted=True, make_alphabet_codes=True,
-                 is_numpied=False, to_make_cashed=False,
-                 precompute_symbols=None, allow_spaces=False, dict_storage=False):
-        self.alphabet = sorted(alphabet) if make_sorted else alphabet
+    def __init__(self, alphabet: List, make_alphabet_codes: bool = True,
+                 is_numpied: bool = False, to_make_cashed: bool = False,
+                 precompute_symbols: Optional[int] = None,
+                 allow_spaces: bool = False, dict_storage: bool = False):
+        self.alphabet = sorted(alphabet)
         self.alphabet_codes = ({a: i for i, a in enumerate(self.alphabet)}
                                if make_alphabet_codes else self.alphabet)
         self.alphabet_codes[" "] = Trie.SPACE_CODE
@@ -41,7 +46,8 @@ class Trie:
         self.allow_spaces = allow_spaces
         self.initialize()
 
-    def initialize(self):
+    def initialize(self) -> None:
+        """Initializes the trie."""
         self.root = 0
         self.graph = [self._make_default_node()]
         self.data, self.final = [None], [False]
@@ -53,14 +59,13 @@ class Trie:
         if self.dict_storage:
             return defaultdict(lambda: -1)
         elif self.is_numpied:
-            return np.full(shape=(len(self.alphabet),),
-                           fill_value=Trie.NO_NODE, dtype=int)
+            return np.full(shape=(len(self.alphabet),), fill_value=Trie.NO_NODE, dtype=int)
         else:
             return [Trie.NO_NODE] * len(self.alphabet)
 
-    def save(self, outfile):
+    def save(self, outfile: str) -> None:
         """
-        Сохраняет дерево для дальнейшего использования
+        Saves the trie in human-readable format
         """
         with open(outfile, "w", encoding="utf8") as fout:
             attr_values = [getattr(self, attr) for attr in Trie.ATTRS]
@@ -77,25 +82,22 @@ class Trie:
                                                     for elem in zip(letters, children))))
             if self.precompute_symbols is not None:
                 for elem in self.data:
-                    fout.write(":".join(",".join(
-                        map(str, symbols)) for symbols in elem) + "\n")
+                    fout.write(":".join(",".join(map(str, symbols)) for symbols in elem) + "\n")
         return
 
     def make_cashed(self):
-        """
-        Включает кэширование запросов к descend
-        """
+        """Turns on the cashing of ``descend`` queries."""
         self._descendance_cash = [dict() for _ in self.graph]
         self.descend = self._descend_cashed
 
     def make_numpied(self):
+        """Turns the graph to a numpy array."""
         self.graph = np.array(self.graph)
         self.final = np.asarray(self.final, dtype=bool)
         self.is_numpied = True
 
-    def add(self, s):
-        """
-        Добавление строки s в префиксный бор
+    def add(self, s: str):
+        """Adds a new word `s` to the trie.
         """
         if self.is_terminated:
             raise TypeError("Impossible to add string to fitted trie")
@@ -114,18 +116,18 @@ class Trie:
         self._set_final(curr)
         return self
 
-    def fit(self, words):
+    def fit(self, words: List) -> None:
+        """Constructs the trie from the list of words"""
         for s in words:
             self.add(s)
-        self.terminate()
+        self._terminate()
 
-    def terminate(self):
+    def _terminate(self):
         if self.is_numpied:
             self.make_numpied()
         self.terminated = True
         if self.precompute_symbols is not None:
-            precompute_future_symbols(self, self.precompute_symbols,
-                                      allow_spaces=self.allow_spaces)
+            precompute_future_symbols(self, self.precompute_symbols, allow_spaces=self.allow_spaces)
         if self.to_make_cashed:
             self.make_cashed()
 
@@ -137,8 +139,7 @@ class Trie:
         return (node != Trie.NO_NODE) and self.is_final(node)
 
     def words(self):
-        """
-        Возвращает итератор по словам, содержащимся в боре
+        """Returns the generator for dictionary words.
         """
         branch, word, indexes = [self.root], [], [0]
         letters_with_children = [self._get_children_and_letters(self.root)]
@@ -160,22 +161,13 @@ class Trie:
             letters_with_children.append(self._get_children_and_letters(branch[-1]))
 
 
-    def is_final(self, index):
-        """
-        Аргументы
-        ---------
-        index: int, номер вершины
-
-        Возвращает
-        ----------
-        True: если index --- номер финальной вершины
+    def is_final(self, index: int) -> bool:
+        """Returns whether the given index is the index of final vertex.
         """
         return self.final[index]
 
-    def find_partitions(self, s, max_count=1):
-        """
-        Находит все разбиения s = s_1 ... s_m на словарные слова s_1, ..., s_m
-        для m <= max_count
+    def find_partitions(self, s: str, max_count: int = 1) -> List:
+        """Returns all partitions of `s` to at most `max_count` dictionary words.
         """
         curr_agenda = [(self.root, [], 0)]
         for i, a in enumerate(s):
@@ -222,9 +214,6 @@ class Trie:
         return parent
 
     def _add_empty_child(self, parent, code, final=False):
-        """
-        Добавление ребёнка к вершине parent по символу с кодом code
-        """
         self.graph[parent][code] = self.nodes_number
         self.graph.append(self._make_default_node())
         self.data.append(None)
@@ -233,9 +222,6 @@ class Trie:
         return (self.nodes_number - 1)
 
     def _descend_simple(self, curr, s):
-        """
-        Спуск из вершины curr по строке s
-        """
         for a in s:
             curr = self.graph[curr][self.alphabet_codes[a]]
             if curr == Trie.NO_NODE:
@@ -243,35 +229,24 @@ class Trie:
         return curr
 
     def _descend_cashed(self, curr, s):
-        """
-        Спуск из вершины curr по строке s с кэшированием
-        """
         if s == "":
             return curr
         curr_cash = self._descendance_cash[curr]
         answer = curr_cash.get(s, None)
         if answer is not None:
             return answer
-        # для оптимизации дублируем код
         res = curr
         for a in s:
             res = self.graph[res][self.alphabet_codes[a]]
-            # res = self.graph[res][a]
             if res == Trie.NO_NODE:
                 break
         curr_cash[s] = res
         return res
 
     def _set_final(self, curr):
-        """
-        Делает состояние curr завершающим
-        """
         self.final[curr] = True
 
     def _get_letters(self, index, return_indexes=False):
-        """
-        Извлекает все метки выходных рёбер вершины с номером index
-        """
         if self.dict_storage:
             answer = list(self.graph[index].keys())
         else:
@@ -293,9 +268,6 @@ class Trie:
         return answer
 
     def _get_children(self, index):
-        """
-        Извлекает всех потомков вершины с номером index
-        """
         if self.dict_storage:
             return list(self.graph[index].values())
         else:
@@ -303,16 +275,23 @@ class Trie:
 
 
 class TrieMinimizer:
+    """A class for Trie minimization.
+    """
     def __init__(self):
         pass
 
-    def minimize(self, trie, dict_storage=False, make_cashed=False, make_numpied=False,
-                 precompute_symbols=None, allow_spaces=False, return_groups=False):
+    def minimize(self, trie: Trie, dict_storage: bool = False, make_cashed: bool = False,
+                 make_numpied: bool = False, precompute_symbols: Optional[int]=None,
+                 allow_spaces: bool = False, return_groups: bool = False):
+        """Performs acyclic automata minimization in linear time.
+        See :class:`deeppavlov.models.spelling_correction.levenshtein.Tree` documentation
+        for the meaning of parameters.
+        """
         N = len(trie)
         if N == 0:
             raise ValueError("Trie should be non-empty")
         node_classes = np.full(shape=(N,), fill_value=-1, dtype=int)
-        order = self.generate_postorder(trie)
+        order = self._generate_postorder(trie)
         # processing the first node
         index = order[0]
         node_classes[index] = 0
@@ -329,12 +308,12 @@ class TrieMinimizer:
             if key_class is not None:
                 node_classes[index] = key_class
             else:
-                # появился новый класс
+                # a new equivalence class
                 class_keys.append(key)
                 classes[key] = node_classes[index] = curr_index
                 class_representatives.append(curr_index)
                 curr_index += 1
-        # построение нового дерева
+        # building a new compressed trie
         compressed = Trie(trie.alphabet, is_numpied=make_numpied,
                           dict_storage=dict_storage, allow_spaces=allow_spaces,
                           precompute_symbols=precompute_symbols)
@@ -348,8 +327,7 @@ class TrieMinimizer:
             new_final = np.array(new_final, dtype=bool)
         else:
             new_graph = [[Trie.NO_NODE for a in trie.alphabet] for i in range(L)]
-        for (indexes, children, final), class_index in\
-                sorted(classes.items(), key=(lambda x: x[1])):
+        for (indexes, children, final), class_index in sorted(classes.items(), key=(lambda x: x[1])):
             row = new_graph[L-class_index-1]
             for i, child_index in zip(indexes, children):
                 row[i] = L - child_index - 1
@@ -376,9 +354,8 @@ class TrieMinimizer:
         else:
             return compressed
 
-    def generate_postorder(self, trie):
-        """
-        Обратная топологическая сортировка
+    def _generate_postorder(self, trie: Trie):
+        """Reverse topological order.
         """
         order, stack = [], []
         stack.append(trie.root)
@@ -400,7 +377,8 @@ class TrieMinimizer:
         return order
 
 
-def load_trie(infile):
+def load_trie(infile: str) -> None:
+    """Loads a Trie from file."""
     with open(infile, "r", encoding="utf8") as fin:
         line = fin.readline().strip()
         flags = [x=='T' for x in line.split()]
@@ -448,9 +426,16 @@ def load_trie(infile):
         return trie
 
 
-def make_trie(alphabet, words, compressed=True, is_numpied=False,
-              make_cashed=False, precompute_symbols=False,
-              allow_spaces=False, dict_storage=False):
+def make_trie(alphabet: Union[List,str], words: List[str], compressed: bool = True,
+              is_numpied: bool = False, make_cashed: bool = False, precompute_symbols: bool = False,
+              allow_spaces: bool = False, dict_storage: bool = False) -> Trie:
+    """Constructs a trie from the words in ``words`` and optionally minimizes it. See
+    :class:`deeppavlov.models.spelling_correction.levenshtein.Tree` documentation
+    for the meaning of parameters.
+
+    Returns:
+        trie: a Trie
+    """
     trie = Trie(alphabet, is_numpied=is_numpied, to_make_cashed=make_cashed,
                 precompute_symbols=precompute_symbols, dict_storage=dict_storage)
     trie.fit(words)
@@ -462,9 +447,8 @@ def make_trie(alphabet, words, compressed=True, is_numpied=False,
     return trie
 
 
-def precompute_future_symbols(trie, n, allow_spaces=False):
-    """
-    Collecting possible continuations of length <= n for every node
+def precompute_future_symbols(trie: Trie, n: int, allow_spaces: bool = False):
+    """Collects possible continuations of length <= n for every node in trie.
     """
     if n == 0:
         return

@@ -97,7 +97,7 @@ class LevenshteinSearcher:
                     continue
                 for curr_low, curr_cost in transducer.operation_costs[curr_up].items():
                     new_g = g + curr_cost
-                    if new_g > d:  # h cannot be calculated if g > d
+                    if new_g > d:  # there is no need to calculate `h` if `new_g` is already large.
                         continue
                     if curr_low == " ":
                         if allow_spaces and trie.is_final(index):
