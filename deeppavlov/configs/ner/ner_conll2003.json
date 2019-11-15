@@ -167,10 +167,6 @@
       "{DEEPPAVLOV_PATH}/requirements/gensim.txt",
       "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
-    "labels": {
-      "telegram_utils": "NERCoNLL2003Model",
-      "server_utils": "NER"
-    },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_conll2003_v5.tar.gz",

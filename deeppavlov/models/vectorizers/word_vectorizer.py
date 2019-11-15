@@ -79,6 +79,7 @@ class DictionaryVectorizer(WordIndexVectorizer):
         min_freq: minimal frequency of tag to memorize this tag,
         unk_token: unknown token to be yielded for unknown words
     """
+
     def __init__(self, save_path: str, load_path: Union[str, List[str]],
                  min_freq: int = 1, unk_token: str = None, **kwargs) -> None:
         super().__init__(save_path, load_path, **kwargs)
@@ -116,7 +117,7 @@ class DictionaryVectorizer(WordIndexVectorizer):
                     labels_by_words[word].update(labels.split())
         self._initialize(labels_by_words)
 
-    def _initialize(self, labels_by_words : Dict):
+    def _initialize(self, labels_by_words: Dict):
         self._i2t = [self.unk_token] if self.unk_token is not None else []
         self._t2i = defaultdict(lambda: self.unk_token)
         freq = defaultdict(int)
@@ -286,4 +287,3 @@ class PymorphyVectorizer(WordIndexVectorizer):
             tag = self.converter(str(pymorphy_tag))
             answer = self.memorized_tag_indexes[pymorphy_tag] = self.find_compatible(tag)
         return answer
-

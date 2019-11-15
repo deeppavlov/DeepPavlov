@@ -25,7 +25,7 @@ components:
 .. code:: python
 
     {
-      "class_name": "deeppavlov.models.preprocessors.str_lower:StrLower",
+      "class_name": "deeppavlov.models.preprocessors.str_lower:str_lower",
       "in": ["x"],
       "out": ["x_lower"]
     },
@@ -34,6 +34,8 @@ components:
       "in": ["x_lower"],
       "out": ["x_tokens"]
     },
+
+Pipeline elements could be child classes of :class:`~deeppavlov.core.models.component.Component` or functions.
 
 Each :class:`~deeppavlov.core.models.component.Component` in the pipeline must implement method :meth:`__call__` and has
 ``class_name`` parameter, which is its registered codename, or full name of any python class in the form of
@@ -307,8 +309,7 @@ Preprocessor is a component that processes batch of samples.
       apostrophe ``'``,  transforming more than three the same symbols to two
       symbols.
 
-    - :class:`~deeppavlov.models.preprocessors.str_lower.StrLower` (registered
-      as ``str_lower``) converts samples to lowercase.
+    - :meth:`~deeppavlov.models.preprocessors.str_lower.str_lower` converts samples to lowercase.
 
 * Already implemented universal preprocessors of another type of features:
 

@@ -29,7 +29,7 @@ or its name without an extension, for example :config:`"intents_snips" <classifi
 
 To download pre-trained models, vocabs, embeddings on the dataset of interest one should run the following command
 providing corresponding name of the config file (see above)
-or provide flag ``-d`` for commands like ``interact``, ``interactbot``, ``train``, ``evaluate``.:
+or provide flag ``-d`` for commands like ``interact``, ``telegram``, ``train``, ``evaluate``.:
 
 .. code:: bash
 
@@ -270,9 +270,19 @@ combined to one big dataset.
 contains **intent classification** of English questions into two category: informational (`0`) and conversational (`1`) questions.
 The dataset includes some additional metadata but for the presented pre-trained model only `Title` of questions and `Label` were used.
 Embeddings were obtained from language model (ELMo) fine-tuned on the dataset
+
 `L6 - Yahoo! Answers Comprehensive Questions and Answers <https://webscope.sandbox.yahoo.com/catalog.php?datatype=l>`__.
 We do not provide datasets, both are available upon request to Yahoo Research.
 Therefore, this model is available only for interaction.
+
+`Stanford Sentiment Treebank <https://nlp.stanford.edu/sentiment/index.html>`__ contains 5-classes fine-grained **sentiment classification**
+of sentences. Each sentence were initially labelled with floating point value from 0 to 1. For fine-grained classification
+the floating point labels are converted to integer labels according to the intervals `[0, 0.2], (0.2, 0.4], (0.4, 0.6], (0.6, 0.8], (0.8, 1.0]`
+corresponding to `very negative`, `negative`, `neutral`, `positive`, `very positive` classes.
+
+`Yelp Reviews <https://www.yelp.com/dataset>`__ contains 5-classes **sentiment classification** of product reviews.
+The labels are `1`, `2`, `3`, `4`, `5` corresponding to `very negative`, `negative`, `neutral`, `positive`, `very positive` classes.
+The reviews are long enough (cut up to 200 subtokens).
 
 
 +------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
@@ -301,6 +311,14 @@ Therefore, this model is available only for interaction.
 | 5 topics         | `AG News`_         |      | :config:`Wiki emb <classifiers/topic_ag_news.json>`                                             | Accuracy    | 0.8922 | 0.9059 |  8.5 Gb   |
 +------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | Intent           |`Yahoo-L31`_        |      | :config:`Yahoo-L31 on conversational BERT <classifiers/yahoo_convers_vs_info_bert.json>`        | ROC-AUC     | 0.9436 |   --   |  1200 Mb  |
++------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
+| Sentiment        |`SST`_              |      | :config:`5-classes SST on conversational BERT <classifiers/sentiment_sst_conv_bert.json>`       | Accuracy    | 0.6456 | 0.6715 |  400 Mb   |
++                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |                    |      | :config:`5-classes SST on multilingual BERT <classifiers/sentiment_sst_multi_bert.json>`        |             | 0.5738 | 0.6024 |  660 Mb   |
++                  +--------------------+      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |`Yelp`_             |      | :config:`5-classes Yelp on conversational BERT <classifiers/sentiment_yelp_conv_bert.json>`     |             | 0.6925 | 0.6842 |  400 Mb   |
++                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |                    |      | :config:`5-classes Yelp on multilingual BERT <classifiers/sentiment_yelp_multi_bert.json>`      |             | 0.5896 | 0.5874 |  660 Mb   |
 +------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | Sentiment        |`Twitter mokoron`_  | Ru   | :config:`RuWiki+Lenta emb w/o preprocessing <classifiers/sentiment_twitter.json>`               |             | 0.9965 | 0.9961 |  6.2 Gb   |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
@@ -328,7 +346,8 @@ Therefore, this model is available only for interaction.
 .. _`SentiRuEval`: http://www.dialog-21.ru/evaluation/2016/sentiment/
 .. _`Yahoo-L31`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 .. _`Yahoo-L6`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
-
+.. _`SST`: https://nlp.stanford.edu/sentiment/index.html
+.. _`Yelp`: https://www.yelp.com/dataset
 
 How to train on other datasets
 ------------------------------

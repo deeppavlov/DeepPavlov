@@ -1,4 +1,3 @@
-
 # Copyright 2017 Neural Networks and Deep Learning lab, MIPT
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,6 +27,7 @@ class StrTokenReverser(Component):
     Args:
         tokenized: The parameter is only needed to reverse tokenized strings.
     """
+
     def __init__(self, tokenized: bool = False, *args, **kwargs) -> None:
         self.tokenized = tokenized
 
@@ -54,7 +54,7 @@ class StrTokenReverser(Component):
         """
         if isinstance(batch, (list, tuple)):
             batch = batch.copy()
-        
+
         if self.tokenized:
             if isinstance(batch, (list, tuple)):
                 if isinstance(batch[-1], str):
@@ -69,4 +69,3 @@ class StrTokenReverser(Component):
                 return [self(line) for line in batch]
             else:
                 return self._reverse_str(batch)
-

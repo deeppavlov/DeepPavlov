@@ -29,6 +29,7 @@ log = getLogger(__name__)
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(Component, Serializable):
     """Slot filling for DSTC2 task with neural network"""
+
     def __init__(self, threshold: float = 0.8, **kwargs):
         super().__init__(**kwargs)
         self.threshold = threshold

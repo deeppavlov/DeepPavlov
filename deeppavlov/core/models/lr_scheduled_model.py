@@ -12,16 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Union, Tuple, List, Optional
-from logging import getLogger
-from abc import abstractmethod
 import math
+from abc import abstractmethod
 from enum import IntEnum
+from logging import getLogger
+from typing import Union, Tuple, List, Optional
 
 import numpy as np
 
 from deeppavlov.core.common.errors import ConfigError
-
 
 log = getLogger(__name__)
 
@@ -80,8 +79,8 @@ class DecayScheduler:
             self.div = 1.0 if not self.start_val else self.end_val / self.start_val
 
     def __str__(self):
-        return f"DecayScheduler(start_val={self.start_val}, end_val={self.end_val}"\
-            f", dec_type={self.dec_type.name}, num_it={self.nb}, extra={self.extra})"
+        return f"DecayScheduler(start_val={self.start_val}, end_val={self.end_val}" \
+               f", dec_type={self.dec_type.name}, num_it={self.nb}, extra={self.extra})"
 
     def next_val(self) -> float:
         self.iters = min(self.iters + 1, self.nb)
@@ -334,8 +333,8 @@ class LRScheduledModel:
             if not isinstance(report, dict):
                 report = {'loss': report}
             # Calculating smoothed loss
-            avg_loss = self._fit_beta*avg_loss + (1 - self._fit_beta)*report['loss']
-            smoothed_loss = avg_loss / (1 - self._fit_beta**(i + 1))
+            avg_loss = self._fit_beta * avg_loss + (1 - self._fit_beta) * report['loss']
+            smoothed_loss = avg_loss / (1 - self._fit_beta ** (i + 1))
             lrs.append(self._lr)
             losses.append(smoothed_loss)
             log.info(f"Batch {i}/{num_batches}: smooth_loss = {smoothed_loss}"
@@ -392,7 +391,7 @@ class LRScheduledModel:
         assert len(values) == len(losses), "lengths of values and losses should be equal"
         min_ind = np.argmin(losses)
         for i in range(min_ind - 1, 0, -1):
-            if (losses[i] * max_loss_div > losses[min_ind]) or\
+            if (losses[i] * max_loss_div > losses[min_ind]) or \
                     (values[i] * min_val_div < values[min_ind]):
                 return values[i + 1]
         return values[min_ind] / min_val_div
@@ -417,7 +416,7 @@ class LRScheduledModel:
 
             self._learning_rate_last_impatience = data['impatience']
 
-            if (self._learning_rate_drop_patience is not None) and\
+            if (self._learning_rate_drop_patience is not None) and \
                     (self._learning_rate_cur_impatience >=
                      self._learning_rate_drop_patience):
                 self._learning_rate_cur_impatience = 0
@@ -447,4 +446,3 @@ class LRScheduledModel:
                 data['learning_rate'] = self._lr
             if (self._mom is not None) and ('momentum' not in data):
                 data['momentum'] = self._mom
-

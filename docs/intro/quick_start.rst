@@ -71,9 +71,9 @@ There are even more actions you can perform with configs:
           </integrations/rest_api>`),
         * ``risesocket`` to run a socket API server (see :doc:`docs
           </integrations/socket_api>`),
-        * ``interactbot`` to run as a Telegram bot (see :doc:`docs
+        * ``telegram`` to run as a Telegram bot (see :doc:`docs
           </integrations/telegram>`),
-        * ``interactmsbot`` to run a Miscrosoft Bot Framework server (see
+        * ``msbot`` to run a Miscrosoft Bot Framework server (see
           :doc:`docs </integrations/ms_bot>`),
         * ``predict`` to get prediction for samples from `stdin` or from
           `<file_path>` if ``-f <file_path>`` is specified.
@@ -131,6 +131,20 @@ You can also calculate metrics on the dataset specified in your config file:
 There are also available integrations with various messengers, see
 :doc:`Telegram Bot doc page </integrations/telegram>` and others in the
 Integrations section for more info.
+
+
+Using GPU
+~~~~~~~~~
+
+To run or train DeepPavlov models on GPU you should have `CUDA <https://developer.nvidia.com/cuda-toolkit>`__ 10.0
+installed on your host machine and TensorFlow with GPU support (``tensorflow-gpu``)
+installed in your python environment. Current supported TensorFlow version is 1.14.0. Run
+
+    .. code:: bash
+
+        pip install tensorflow-gpu==1.14.0
+
+before installing model's package requirements to install supported ``tensorflow-gpu`` version.
 
 
 Pretrained models

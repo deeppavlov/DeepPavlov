@@ -20,9 +20,9 @@ import tensorflow as tf
 import tensorflow_hub as hub
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.ranking.tf_base_matching_model import TensorflowBaseMatchingModel
 from deeppavlov.models.ranking.matching_models.dam_utils import layers
 from deeppavlov.models.ranking.matching_models.dam_utils import operations as op
+from deeppavlov.models.ranking.tf_base_matching_model import TensorflowBaseMatchingModel
 
 log = getLogger(__name__)
 
@@ -69,9 +69,7 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
     """
 
     def __init__(self,
-                 batch_size: int,
                  embedding_dim: int = 200,
-                 num_context_turns: int = 10,
                  max_sequence_length: int = 50,
                  learning_rate: float = 1e-3,
                  emb_matrix: Optional[np.ndarray] = None,
@@ -86,8 +84,6 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
         self.seed = seed
         tf.set_random_seed(self.seed)
 
-        self.batch_size = batch_size
-        self.num_context_turns = num_context_turns
         self.max_sentence_len = max_sequence_length
         self.word_embedding_size = embedding_dim
         self.trainable = trainable_embeddings
@@ -97,6 +93,8 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
         self.emb_matrix = emb_matrix
         self.decay_steps = decay_steps
 
+        super(DAMNetworkUSETransformer, self).__init__(*args, **kwargs)
+
         ##############################################################################
         self._init_graph()
         self.sess_config = tf.ConfigProto(allow_soft_placement=True)
@@ -104,9 +102,6 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
         self.sess = tf.Session(config=self.sess_config)
         self.sess.run([tf.global_variables_initializer(), tf.tables_initializer()])
         ##############################################################################
-
-        super(DAMNetworkUSETransformer, self).__init__(
-            batch_size=batch_size, num_context_turns=num_context_turns, *args, **kwargs)
 
         if self.load_path is not None:
             self.load()
@@ -149,7 +144,6 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
             self.sent_embedder_context = tf.expand_dims(embed_context_turns, axis=2)
             # for resp sentences: shape=(None, 1, 512)
             self.sent_embedder_response = tf.expand_dims(embed_response, axis=1)
-
 
     def _init_graph(self):
         self._init_placeholders()
@@ -194,7 +188,7 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
 
         # context part
         # a list of length max_turn_num, every element is a tensor with shape [batch, max_turn_len]
-        list_turn_t      = tf.unstack(self.utterance_ph, axis=1)
+        list_turn_t = tf.unstack(self.utterance_ph, axis=1)
         list_turn_length = tf.unstack(self.all_utterance_len_ph, axis=1)
         list_turn_t_sent = tf.unstack(sent_embedder_context, axis=1)
 
@@ -269,7 +263,7 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
         sim = tf.stack(sim_turns, axis=1)
         log.info('sim shape: %s' % sim.shape)
         with tf.variable_scope('cnn_aggregation'):
-            final_info = layers.CNN_3d(sim, 32, 32)    # We can improve performance if use 32 filters for each layer
+            final_info = layers.CNN_3d(sim, 32, 32)  # We can improve performance if use 32 filters for each layer
             # for douban
             # final_info = layers.CNN_3d(sim, 16, 16)
 
@@ -317,12 +311,12 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
         """
         sample_len = len(sample)
 
-        batch_buffer_context = []       # [batch_size, 10, 50]
-        batch_buffer_context_len = []   # [batch_size, 10]
-        batch_buffer_response = []      # [batch_size, 50]
+        batch_buffer_context = []  # [batch_size, 10, 50]
+        batch_buffer_context_len = []  # [batch_size, 10]
+        batch_buffer_response = []  # [batch_size, 50]
         batch_buffer_response_len = []  # [batch_size]
 
-        raw_batch_buffer_context = []   # [batch_size, 10]
+        raw_batch_buffer_context = []  # [batch_size, 10]
         raw_batch_buffer_response = []  # [batch_size]
 
         context_sentences = sample[:self.num_context_turns]
@@ -335,12 +329,12 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
         # 4 model inputs
 
         # 1. Token indices for context
-        batch_buffer_context += [context_sentences for sent in response_sentences]    # replicate context N times
+        batch_buffer_context += [context_sentences for sent in response_sentences]  # replicate context N times
         # 2. Token indices for response
         batch_buffer_response += [response_sentence for response_sentence in response_sentences]
         # 3. Lengths of all context sentences
         lens = []
-        for context in [context_sentences for sent in response_sentences]:    # replicate context N times
+        for context in [context_sentences for sent in response_sentences]:  # replicate context N times
             context_sentences_lens = []
             for sent in context:
                 sent_len = len(sent[sent != 0])
@@ -396,7 +390,7 @@ class DAMNetworkUSETransformer(TensorflowBaseMatchingModel):
             input_context_len.append(sample[1])
             input_response.append(sample[2])
             input_response_len.append(sample[3])
-            input_raw_context.append(sample[4])   # raw context is the 4th element of each Tuple in the batch
+            input_raw_context.append(sample[4])  # raw context is the 4th element of each Tuple in the batch
             input_raw_response.append(sample[5])  # raw response is the 5th element of each Tuple in the batch
 
         return {

@@ -25,6 +25,7 @@ log = getLogger(__name__)
 @register('char_splitter')
 class CharSplitter(Component):
     """This component transforms batch of sequences of tokens into batch of sequences of character sequences."""
+
     def __init__(self, **kwargs):
         pass
 

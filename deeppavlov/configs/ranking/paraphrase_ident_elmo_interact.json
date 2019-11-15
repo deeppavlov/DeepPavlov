@@ -106,10 +106,6 @@
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
       "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
     ],
-    "labels": {
-      "telegram_utils": "SiameseModel",
-      "server_utils": "Ranker"
-    },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/paraphraser_elmo_ft_pre_1_model.tar.gz",

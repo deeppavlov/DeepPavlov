@@ -18,5 +18,6 @@ from contextlib import redirect_stdout
 
 class RedirectedPrints(redirect_stdout):
     """Context manager for temporarily redirecting stdout to another stream """
+
     def __init__(self, new_target=sys.stderr):
         super().__init__(new_target=new_target)

@@ -131,6 +131,7 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
 
 
     """
+
     def __init__(self, spec: str, elmo_output_names: Optional[List] = None,
                  dim: Optional[int] = None, pad_zero: bool = False,
                  concat_last_axis: bool = True, max_token: Optional[int] = None,
@@ -224,7 +225,7 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
             batch = [batch_line[:self.max_token] for batch_line in batch]
         tokens_length = [len(batch_line) for batch_line in batch]
         tokens_length_max = max(tokens_length)
-        batch = [batch_line + ['']*(tokens_length_max - len(batch_line)) for batch_line in batch]
+        batch = [batch_line + [''] * (tokens_length_max - len(batch_line)) for batch_line in batch]
 
         return batch, tokens_length
 

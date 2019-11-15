@@ -146,7 +146,6 @@ class DPGRUModel:
 
 
 class TestTFLayers:
-
     allowed_error_lvl = 0.01 * 2 ** 0.5
 
     @staticmethod

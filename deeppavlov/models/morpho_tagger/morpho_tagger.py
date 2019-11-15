@@ -16,11 +16,11 @@ from logging import getLogger
 from pathlib import Path
 from typing import List, Optional, Union, Tuple
 
-import numpy as np
+import keras.backend as kb
 import keras.layers as kl
 import keras.optimizers as ko
 import keras.regularizers as kreg
-import keras.backend as kb
+import numpy as np
 from keras import Model
 
 from deeppavlov.core.common.registry import register
@@ -75,6 +75,7 @@ class MorphoTagger(KerasModel):
 
     A subclass of :class:`~deeppavlov.core.models.keras_model.KerasModel`
     """
+
     def __init__(self,
                  symbols: SimpleVocabulary,
                  tags: SimpleVocabulary,
@@ -166,7 +167,7 @@ class MorphoTagger(KerasModel):
     def build(self):
         """Builds the network using Keras.
         """
-        word_inputs = kl.Input(shape=(None, MAX_WORD_LENGTH+2), dtype="int32")
+        word_inputs = kl.Input(shape=(None, MAX_WORD_LENGTH + 2), dtype="int32")
         inputs = [word_inputs]
         word_outputs = self._build_word_cnn(word_inputs)
         if len(self.word_vectorizers) > 0:
@@ -231,17 +232,17 @@ class MorphoTagger(KerasModel):
             lstm_outputs = kl.Dropout(self.word_dropout)(word_outputs)
         else:
             lstm_outputs = word_outputs
-        for j in range(self.word_lstm_layers-1):
+        for j in range(self.word_lstm_layers - 1):
             lstm_outputs = kl.Bidirectional(
                 kl.LSTM(self.word_lstm_units[j], return_sequences=True,
                         dropout=self.lstm_dropout))(lstm_outputs)
         lstm_outputs = kl.Bidirectional(
-                kl.LSTM(self.word_lstm_units[-1], return_sequences=True,
-                        dropout=self.lstm_dropout))(lstm_outputs)
+            kl.LSTM(self.word_lstm_units[-1], return_sequences=True,
+                    dropout=self.lstm_dropout))(lstm_outputs)
         pre_outputs = kl.TimeDistributed(
-                kl.Dense(len(self.tags), activation="softmax",
-                         activity_regularizer=self.regularizer),
-                name="p")(lstm_outputs)
+            kl.Dense(len(self.tags), activation="softmax",
+                     activity_regularizer=self.regularizer),
+            name="p")(lstm_outputs)
         return pre_outputs, lstm_outputs
 
     def _transform_batch(self, data, labels=None, transform_to_one_hot=True):
@@ -309,7 +310,7 @@ class MorphoTagger(KerasModel):
         """
         return self.predict_on_batch(x_batch, **kwargs)
 
-    def _make_sent_vector(self, sent: List, bucket_length: int =None) -> np.ndarray:
+    def _make_sent_vector(self, sent: List, bucket_length: int = None) -> np.ndarray:
         """Transforms a sentence to Numpy array, which will be the network input.
 
         Args:
@@ -321,14 +322,14 @@ class MorphoTagger(KerasModel):
             in j-th word of i-th input sentence.
         """
         bucket_length = bucket_length or len(sent)
-        answer = np.zeros(shape=(bucket_length, MAX_WORD_LENGTH+2), dtype=np.int32)
+        answer = np.zeros(shape=(bucket_length, MAX_WORD_LENGTH + 2), dtype=np.int32)
         for i, word in enumerate(sent):
             answer[i, 0] = self.tags["BEGIN"]
             m = min(len(word), MAX_WORD_LENGTH)
             for j, x in enumerate(word[-m:]):
-                answer[i, j+1] = self.symbols[x]
-            answer[i, m+1] = self.tags["END"]
-            answer[i, m+2:] = self.tags["PAD"]
+                answer[i, j + 1] = self.symbols[x]
+            answer[i, m + 1] = self.tags["END"]
+            answer[i, m + 2:] = self.tags["PAD"]
         return answer
 
     def _make_tags_vector(self, tags, bucket_length=None) -> np.ndarray:

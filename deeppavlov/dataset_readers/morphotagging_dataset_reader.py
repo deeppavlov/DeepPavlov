@@ -23,13 +23,14 @@ from deeppavlov.core.data.utils import download_decompress, mark_done
 
 WORD_COLUMN, POS_COLUMN, TAG_COLUMN = 1, 3, 5
 
-
 log = getLogger(__name__)
+
 
 def get_language(filepath: str) -> str:
     """Extracts language from typical UD filename
     """
     return filepath.split("-")[0]
+
 
 def read_infile(infile: Union[Path, str], from_words=False,
                 word_column: int = WORD_COLUMN, pos_column: int = POS_COLUMN,
@@ -163,7 +164,7 @@ class MorphotaggerDatasetReader(DatasetReader):
         for mode, filepath in zip(data_types, data_path):
             if mode == "dev":
                 mode = "valid"
-#             if mode == "test":
-#                 kwargs["read_only_words"] = True
+            #             if mode == "test":
+            #                 kwargs["read_only_words"] = True
             data[mode] = read_infile(filepath, **kwargs)
         return data

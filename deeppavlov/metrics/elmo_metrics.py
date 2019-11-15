@@ -31,4 +31,3 @@ def elmo_loss2ppl(losses: List[np.ndarray]) -> float:
     """
     avg_loss = np.mean(losses)
     return float(np.exp(avg_loss))
-

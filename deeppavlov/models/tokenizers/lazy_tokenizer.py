@@ -26,6 +26,7 @@ log = getLogger(__name__)
 @register('lazy_tokenizer')
 class LazyTokenizer(Component):
     """Tokenizes if there is something to tokenize."""
+
     def __init__(self, **kwargs):
         pass
 

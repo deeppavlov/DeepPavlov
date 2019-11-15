@@ -1,8 +1,5 @@
 Cython==0.29.12
 fastapi==0.38.1
-flasgger==0.9.2
-flask==1.1.1
-flask_cors==3.0.8
 fuzzywuzzy==0.17.0
 h5py==2.9.0
 keras==2.2.4

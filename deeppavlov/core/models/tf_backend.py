@@ -21,10 +21,12 @@ from six import with_metaclass
 
 def _graph_wrap(func, graph):
     """Constructs function encapsulated in the graph."""
+
     @wraps(func)
     def _wrapped(*args, **kwargs):
         with graph.as_default():
             return func(*args, **kwargs)
+
     return _wrapped
 
 
@@ -37,11 +39,13 @@ def _keras_wrap(func, graph, session):
         with graph.as_default():
             K.set_session(session)
             return func(*args, **kwargs)
+
     return _wrapped
 
 
 class TfModelMeta(with_metaclass(type, ABCMeta)):
     """Metaclass that helps all child classes to have their own graph and session."""
+
     def __call__(cls, *args, **kwargs):
         obj = cls.__new__(cls)
         from .keras_model import KerasModel

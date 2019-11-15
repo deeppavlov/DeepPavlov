@@ -15,27 +15,19 @@
 from typing import Union
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.component import Component
 
 
 @register('str_lower')
-class StrLower(Component):
-    """Component for converting strings to lowercase at any level of lists nesting
+def str_lower(batch: Union[str, list, tuple]):
+    """Recursively search for strings in a list and convert them to lowercase
 
+    Args:
+        batch: a string or a list containing strings at some level of nesting
+
+    Returns:
+        the same structure where all strings are converted to lowercase
     """
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def __call__(self, batch: Union[str, list, tuple]):
-        """Recursively search for strings in a list and convert them to lowercase
-
-        Args:
-            batch: a string or a list containing strings at some level of nesting
-
-        Returns:
-            the same structure where all strings are converted to lowercase
-        """
-        if isinstance(batch, (list, tuple)):
-            return [self(line) for line in batch]
-        else:
-            return batch.lower()
+    if isinstance(batch, str):
+        return batch.lower()
+    else:
+        return list(map(str_lower, batch))

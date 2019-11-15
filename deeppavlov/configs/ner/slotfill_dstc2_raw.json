@@ -47,9 +47,6 @@
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
-    "labels": {
-      "telegram_utils": "NERModel"
-    },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/dstc_slot_vals.tar.gz",

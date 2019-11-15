@@ -72,6 +72,7 @@ class TyposWikipedia(TyposCustom):
      English Wikipedia's list of common misspellings
 
     """
+
     @staticmethod
     def build(data_path: str) -> Path:
         """Download and parse common misspellings list from `Wikipedia <https://en.wikipedia.org/wiki/Wikipedia:Lists_of_common_misspellings/For_machines>`_
@@ -116,6 +117,7 @@ class TyposKartaslov(DatasetReader):
      a Russian misspellings dataset from `kartaslov <https://github.com/dkulagin/kartaslov>`_
 
     """
+
     def __init__(self):
         pass
 

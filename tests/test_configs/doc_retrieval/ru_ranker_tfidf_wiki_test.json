@@ -67,9 +67,6 @@
       "MODELS_PATH": "{ROOT_PATH}/models"
     },
     "requirements": [],
-    "labels": {
-      "server_utils": "Ranker"
-    },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/wikipedia/ruwiki_test.tar.gz",

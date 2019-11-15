@@ -14,7 +14,6 @@
 
 import json
 import logging
-from overrides import overrides
 from typing import List, Tuple, Dict, Any
 
 from deeppavlov.core.commands.utils import expand_path
@@ -36,6 +35,7 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
         seed: value for random seed
         shuffle: whether to shuffle the data
     """
+
     def __init__(self,
                  data: Dict[str, List[Tuple]],
                  slot_values_path: str,
@@ -88,8 +88,8 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
                     slot_tokens = entity.split()
                     slot_len = len(slot_tokens)
                     if n + slot_len <= n_toks and \
-                       self._is_equal_sequences(tokens[n: n + slot_len],
-                                                slot_tokens):
+                            self._is_equal_sequences(tokens[n: n + slot_len],
+                                                     slot_tokens):
                         tags[n] = 'B-' + slot_type
                         for k in range(1, slot_len):
                             tags[n + k] = 'I-' + slot_type

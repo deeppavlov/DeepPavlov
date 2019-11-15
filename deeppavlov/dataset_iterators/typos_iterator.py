@@ -22,7 +22,8 @@ class TyposDatasetIterator(DataLearningIterator):
      :class:`~deeppavlov.models.spelling_correction.brillmoore.ErrorModel`
 
     """
-    def split(self, test_ratio: float=0., *args, **kwargs):
+
+    def split(self, test_ratio: float = 0., *args, **kwargs):
         """Split all data into train and test
 
         Args:

@@ -48,11 +48,11 @@ class CudnnGRU:
             init_fw, init_bw = self.inits[layer]
             mask_fw, mask_bw = self.dropout_mask[layer]
             with tf.variable_scope('fw_{}'.format(layer), reuse=tf.AUTO_REUSE):
-                out_fw, _ = gru_fw(outputs[-1] * mask_fw, (init_fw, ))
+                out_fw, _ = gru_fw(outputs[-1] * mask_fw, (init_fw,))
             with tf.variable_scope('bw_{}'.format(layer), reuse=tf.AUTO_REUSE):
                 inputs_bw = tf.reverse_sequence(
                     outputs[-1] * mask_bw, seq_lengths=seq_len, seq_dim=0, batch_dim=1)
-                out_bw, _ = gru_bw(inputs_bw, (init_bw, ))
+                out_bw, _ = gru_bw(inputs_bw, (init_bw,))
                 out_bw = tf.reverse_sequence(
                     out_bw, seq_lengths=seq_len, seq_dim=0, batch_dim=1)
             outputs.append(tf.concat([out_fw, out_bw], axis=2))
