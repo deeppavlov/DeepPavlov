@@ -18,6 +18,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.ops import array_ops
 from tensorflow.contrib.layers import xavier_initializer
+import tensorflow.keras.backend as kb
 from bert_dp.modeling import BertConfig, BertModel
 from bert_dp.optimization import AdamWeightDecayOptimizer
 
@@ -33,19 +34,46 @@ from deeppavlov.core.models.tf_model import LRScheduledTFModel
 log = getLogger(__name__)
 
 
-def gather_indexes(A, B):
+def gather_indexes(A: tf.Tensor, B: tf.Tensor) -> tf.Tensor:
     """
-    Returns a tensor C such that C[i, j] = A[i, B[i, j]]
+    Args:
+        A: a tensor with data
+        B: an integer tensor with indexes
+
+    Returns:
+        answer: a tensor C, such that C[i, j] = A[i, B[i, j]].
+            In case B is one-dimensional, the output is C[i] = A[i, B[i]]
+
     """
+    are_indexes_one_dim = (kb.ndim(B) == 1)
+    if are_indexes_one_dim:
+        B = tf.expand_dims(B, -1)
     first_dim_indexes = tf.expand_dims(tf.range(tf.shape(B)[0]), -1)
     first_dim_indexes = tf.tile(first_dim_indexes, [1, tf.shape(B)[1]])
     indexes = tf.stack([first_dim_indexes, B], axis=-1)
-    return tf.gather_nd(A, indexes)
+    answer = tf.gather_nd(A, indexes)
+    if are_indexes_one_dim:
+        answer = answer[:,0]
+    return answer
 
 
-def biaffine_layer(deps, heads, deps_dim, heads_dim, output_dim, name="biaffine_layer"):
-    # input_shape = deps.get_shape().as_list()
-    input_shape = [tf.keras.backend.shape(deps)[i] 
+def biaffine_layer(deps: tf.Tensor, heads: tf.Tensor, deps_dim: int,
+                   heads_dim: int, output_dim: int, name: str="biaffine_layer"):
+    """Implements a biaffine layer from [Dozat, Manning, 2016].
+
+    Args:
+        deps: the 3D-tensor of dependency states,
+        heads: the 3D-tensor of head states,
+        deps_dim: the dimension of dependency states,
+        heads_dim: the dimension of head_states,
+        output_dim: the output dimension
+        name: the name of a layer
+
+    Returns:
+        answer: the output 3D-tensor
+
+    """
+    input_shape = [tf.keras.backend.shape(deps)[i]
                    for i in range(tf.keras.backend.ndim(deps))]
     first_input = tf.reshape(deps, [-1, deps_dim])  # first_input.shape = (B*L, D1)
     second_input = tf.reshape(heads, [-1, heads_dim])  # second_input.shape = (B*L, D2)
@@ -69,7 +97,17 @@ def biaffine_layer(deps, heads, deps_dim, heads_dim, output_dim, name="biaffine_
     return answer
 
 
-def biaffine_attention(deps, heads, name="biaffine_attention"):
+def biaffine_attention(deps: tf.Tensor, heads: tf.Tensor, name="biaffine_attention"):
+    """Implements a trainable matching layer between two families of embeddings.
+
+    Args:
+        deps: the 3D-tensor of dependency states,
+        heads: the 3D-tensor of head states,
+        name: the name of a layer
+
+    Returns:
+        answer: a 3D-tensor of pairwise scores between deps and heads
+    """
     deps_dim_int = deps.get_shape().as_list()[-1]
     heads_dim_int = heads.get_shape().as_list()[-1]
     assert deps_dim_int == heads_dim_int
