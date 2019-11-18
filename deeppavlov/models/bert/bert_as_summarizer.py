@@ -161,7 +161,7 @@ class BertAsSummarizer(Component):
         input_type_ids = [f.input_type_ids for f in features]
         feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids)
         nsp_probs = self.sess.run(self.nsp_probs, feed_dict=feed_dict)
-        return nsp_probs[:,0]
+        return nsp_probs[:, 0]
 
     def __call__(self, texts: List[str], init_sentences: Optional[List[str]] = None) -> List[List[str]]:
         """Builds summary for text from `texts`
@@ -180,7 +180,7 @@ class BertAsSummarizer(Component):
             init_sentences = [None] * len(texts)
 
         for text, init_sentence in zip(texts, init_sentences): 
-            text_sentences =  self.sent_tokenizer(text)
+            text_sentences = self.sent_tokenizer(text)
 
             if init_sentence is None:
                 init_sentence = text_sentences[0]
@@ -194,10 +194,11 @@ class BertAsSummarizer(Component):
             summary = [init_sentence]
             if self.max_summary_length_in_tokens:
                 # get length in tokens
-                get_length = lambda x: len(self.tokenize_reg.findall(' '.join(x)))
+                def get_length(x):
+                    return len(self.tokenize_reg.findall(' '.join(x)))
             else:
                 # get length as number of sentences 
-                get_length = lambda x: len(x)
+                get_length = len
 
             candidates = text_sentences[:]
             while len(candidates) > 0:
