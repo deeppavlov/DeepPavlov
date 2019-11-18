@@ -45,7 +45,7 @@ class BertAsSummarizer(Component):
     This NSP head can be used to stack sentences from a long document, based on a initial sentence.
     summary_0 = init_sentence
     summary_1 = summary_0 + argmax(nsp_score(candidates))
-    sent_2 = summary_1 + argmax(nsp_score(candidates))
+    summary_2 = summary_1 + argmax(nsp_score(candidates))
     ...
     , where candidates are all sentences from a document.
         
