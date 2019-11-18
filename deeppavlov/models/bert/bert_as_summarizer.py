@@ -12,25 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-import math
 import re
 from logging import getLogger
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional
 
 import numpy as np
 import tensorflow.compat.v1 as tf
 
-from bert_dp.modeling import (BertConfig, BertModel, create_initializer,
-                              get_assignment_map_from_checkpoint)
-from bert_dp.preprocessing import InputFeatures
-from bert_dp.tokenization import FullTokenizer
-
-from deeppavlov import build_model
+from bert_dp.modeling import BertConfig, BertModel, create_initializer, get_assignment_map_from_checkpoint
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
-from deeppavlov.core.models.estimator import Component
 from deeppavlov.models.preprocessors.bert_preprocessor import BertPreprocessor
 
 logger = getLogger(__name__)
@@ -48,7 +40,7 @@ class BertAsSummarizer(Component):
     summary_2 = summary_1 + argmax(nsp_score(candidates))
     ...
     , where candidates are all sentences from a document.
-        
+
         Args:
             bert_config_file (str): path to Bert configuration file
             pretrained_bert (str): path to pretrained Bert checkpoint
@@ -57,10 +49,10 @@ class BertAsSummarizer(Component):
                 `max_summary_length_in_tokens` is set to False, else number of tokens is used.
             max_summary_length_in_tokens (Optional[bool], optional): Use number of tokens as length of summary.
                  Defaults to False.
-            max_seq_length (Optional[int], optional): max sequence length in subtokens, including [SEP] and [CLS] 
+            max_seq_length (Optional[int], optional): max sequence length in subtokens, including [SEP] and [CLS]
             tokens. `max_seq_length` is used in Bert to compute NSP scores. Defaults to 128.
             do_lower_case (Optional[bool], optional): set True if lowercasing is needed. Defaults to False.
-            lang (Optional[str], optional): use ru_sent_tokenizer for 'ru' and ntlk.sent_tokener for other languages. 
+            lang (Optional[str], optional): use ru_sent_tokenizer for 'ru' and ntlk.sent_tokener for other languages.
                 Defaults to 'ru'.
         """
 
@@ -151,7 +143,7 @@ class BertAsSummarizer(Component):
         Args:
             sentences (List[str]): list of sentences
             candidates (List[str]): list of candidates to be the next sentence
-        
+
         Returns:
             probabilities that candidate is a next sentence
         """
@@ -165,12 +157,12 @@ class BertAsSummarizer(Component):
 
     def __call__(self, texts: List[str], init_sentences: Optional[List[str]] = None) -> List[List[str]]:
         """Builds summary for text from `texts`
-        
+
         Args:
             texts (List[str]): texts to build summaries for
             init_sentences (Optional[List[str]], optional): `init_sentence` is used as the first sentence in summary.
                 Defaults to None.
-        
+
         Returns:
             List[List[str]]: summaries tokenized on sentences
         """
@@ -179,13 +171,13 @@ class BertAsSummarizer(Component):
         if init_sentences is None:
             init_sentences = [None] * len(texts)
 
-        for text, init_sentence in zip(texts, init_sentences): 
+        for text, init_sentence in zip(texts, init_sentences):
             text_sentences = self.sent_tokenizer(text)
 
             if init_sentence is None:
                 init_sentence = text_sentences[0]
                 text_sentences = text_sentences[1:]
-            
+
             # remove duplicates
             text_sentences = list(set(text_sentences))
             # remove init_sentence from text sentences
@@ -197,7 +189,7 @@ class BertAsSummarizer(Component):
                 def get_length(x):
                     return len(self.tokenize_reg.findall(' '.join(x)))
             else:
-                # get length as number of sentences 
+                # get length as number of sentences
                 get_length = len
 
             candidates = text_sentences[:]
