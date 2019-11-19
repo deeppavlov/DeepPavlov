@@ -22,7 +22,7 @@ from deeppavlov.deep import find_config
 from deeppavlov.deprecated.agent import Agent, RichMessage
 from deeppavlov.deprecated.agents.rich_content import PlainText, ButtonsFrame, Button
 from deeppavlov.deprecated.skill import Skill
-from deeppavlov.utils.ms_bot_framework.server import run_ms_bot_framework_server
+from deeppavlov.utils.ms_bot_framework import start_ms_bf_server
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--ms-id", help="microsoft bot framework app id", type=str)
@@ -190,9 +190,8 @@ def main():
     """Parse parameters and run ms bot framework"""
 
     args = parser.parse_args()
-    run_ms_bot_framework_server(agent_generator=make_agent,
-                                app_id=args.ms_id,
-                                app_secret=args.ms_secret)
+    start_ms_bf_server(app_id=args.ms_id,
+                       app_secret=args.ms_secret)
 
 
 if __name__ == '__main__':
