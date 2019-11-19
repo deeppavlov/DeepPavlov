@@ -39,11 +39,9 @@ class EntityLinker(Component, Serializable):
         Levenstein distance between the entity and keys (titles) in the dictionary.
     """
 
-    LANGUAGES = set(['rus'])
-
     def __init__(self, load_path: str, wiki_filename: str, entities_filename: str, inverted_index_filename: str,
                  id_to_name_file: str, lemmatize: bool = True, debug: bool = False, rule_filter_entities: bool = True,
-                 use_inverted_index: bool = True, language: str = 'rus', *args, **kwargs) -> None:
+                 use_inverted_index: bool = True, *args, **kwargs) -> None:
         """
 
         Args:
@@ -66,9 +64,6 @@ class EntityLinker(Component, Serializable):
         self.debug = debug
         self.rule_filter_entities = rule_filter_entities
         self.use_inverted_index = use_inverted_index
-        self._language = language
-        if language not in self.LANGUAGES:
-            log.warning(f'EntityLinker supports only the following languages: {self.LANGUAGES}')
 
         self._wiki_filename = wiki_filename
         self._entities_filename = entities_filename
@@ -138,12 +133,14 @@ class EntityLinker(Component, Serializable):
 
         entity_triplets = self.extract_triplets_from_wiki(wiki_entities)
         if self.rule_filter_entities and self._language == 'rus':
-            filtered_entities, filtered_entity_triplets = self.filter_triplets_rus(entity_triplets,
+            srtd_cand_ent, entity_triplets = self.filter_triplets_rus(entity_triplets,
                                                                                    question_tokens, srtd_cand_ent)
-        if self.debug:
-            self._log_entities(filtered_entities[:10])
+        
 
-        return filtered_entity_triplets, confidences
+        if self.debug:
+            self._log_entities(srtd_cand_ent[:10])
+
+        return entity_triplets, confidences
 
     def _log_entities(self, srtd_cand_ent):
         entities_to_print = []

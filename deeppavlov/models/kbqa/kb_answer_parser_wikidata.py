@@ -36,7 +36,7 @@ class KBAnswerParserWikidata(KBBase):
 
     def __init__(self, top_k_classes: int, classes_vocab_keys: Tuple, debug: bool = False,
                  relations_maping_filename: Optional[str] = None, templates_filename: Optional[str] = None,
-                 *args, **kwargs) -> None:
+                 lang: str = None, *args, **kwargs) -> None:
         """
 
         Args:
@@ -55,6 +55,7 @@ class KBAnswerParserWikidata(KBBase):
         self._debug = debug
         self._relations_filename = relations_maping_filename
         self._templates_filename = templates_filename
+        self.lang = lang
         super().__init__(relations_maping_filename=self._relations_filename, *args, **kwargs)
 
     def __call__(self, tokens_batch: List[List[str]],
@@ -66,7 +67,7 @@ class KBAnswerParserWikidata(KBBase):
         confidences_batch = []
 
         for tokens, tags, relations_probs in zip(tokens_batch, tags_batch, relations_probs_batch):
-            is_kbqa = self.is_kbqa_question(tokens)
+            is_kbqa = self.is_kbqa_question(tokens, self.lang)
             if is_kbqa:
                 if self._templates_filename is not None:
                     entity_from_template, relation_from_template = self.template_matcher(tokens)
@@ -88,7 +89,7 @@ class KBAnswerParserWikidata(KBBase):
                     top_k_relations, top_k_probs = self._parse_relations_probs(relations_probs)
                     top_k_relation_names = [self._relations_mapping[rel] for rel in top_k_relations]
                     if self._debug:
-                        log.debug("top k relations {}" .format(str(top_k_relation_names)))
+                        log.debug("entity_from_ner {}, top k relations {}" .format(str(entity_from_ner), str(top_k_relation_names)))
                     obj, confidence = self.match_triplet(entity_triplets,
                                                          entity_linking_confidences,
                                                          top_k_relations,
@@ -113,9 +114,8 @@ class KBAnswerParserWikidata(KBBase):
     def extract_entities(tokens: List[str], tags: List[str]) -> str:
         entity = []
         for j, tok in enumerate(tokens):
-            if tags[j] != 'O':
+            if tags[j] != 'O' and tags[j] != 0:
                 entity.append(tok)
         entity = ' '.join(entity)
 
         return entity
-

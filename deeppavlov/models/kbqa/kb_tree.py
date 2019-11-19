@@ -40,7 +40,7 @@ class KBTree(KBBase):
     def __init__(self, tree_parser: TreeParser, ft_embedder: FasttextEmbedder,
                  debug: bool = False, use_templates: bool = True,
                  relations_maping_filename: Optional[str] = None, templates_filename: Optional[str] = None,
-                     *args, **kwargs) -> None:
+                 lang: str = None, *args, **kwargs) -> None:
 
         """
 
@@ -63,6 +63,7 @@ class KBTree(KBBase):
         self.ft_embedder = ft_embedder
         self._relations_filename = relations_maping_filename
         self._templates_filename = templates_filename
+        self.lang = lang
         super().__init__(relations_maping_filename=self._relations_filename, *args, **kwargs)
 
     def __call__(self, sentences: List[str],
@@ -71,7 +72,7 @@ class KBTree(KBBase):
         objects_batch = []
         confidences_batch = []
         for sentence in sentences:
-            is_kbqa = self.is_kbqa_question(sentence)
+            is_kbqa = self.is_kbqa_question(sentence, self.lang)
             if is_kbqa:
                 q_tokens = nltk.word_tokenize(sentence)
                 entity_from_template, relation_from_template = self.template_matcher(q_tokens)
@@ -200,4 +201,3 @@ class KBTree(KBBase):
             emb.append(self.ft_embedder._get_word_vector(tok))
         av_emb = np.asarray(emb).mean(axis=0)
         return av_emb
-
