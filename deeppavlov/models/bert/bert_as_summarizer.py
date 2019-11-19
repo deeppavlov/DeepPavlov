@@ -32,7 +32,7 @@ logger = getLogger(__name__)
 class BertAsSummarizer(Component):
     """Naive Extractive Summarization model based on BERT.
     BERT model was trained on Masked Language Modeling (MLM) and Next Sentence Prediction (NSP) tasks.
-    NSP head was trained to detect in [CLS] text_a [SEP] text_b [SEP] if text_b follows text_a in original document.
+    NSP head was trained to detect in ``[CLS] text_a [SEP] text_b [SEP]`` if text_b follows text_a in original document.
 
     This NSP head can be used to stack sentences from a long document, based on a initial sentence.
 
@@ -144,6 +144,7 @@ class BertAsSummarizer(Component):
 
     def _get_nsp_predictions(self, sentences: List[str], candidates: List[str]):
         """Compute NextSentence probability for every (sentence_i, candidate_i) pair.
+
         [CLS] sentence_i [SEP] candidate_i [SEP]
 
         Args:

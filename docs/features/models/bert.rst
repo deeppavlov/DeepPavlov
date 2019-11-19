@@ -94,6 +94,18 @@ where the task for ranking is to retrieve the best possible response from some p
 the trained model. Working examples with the trained models are given :doc:`here </features/models/neural_ranking>`.
 Statistics are available :doc:`here </features/overview>`.
 
+BERT for Extractive Summarization
+---------------------------------
+The BERT model was trained on Masked Language Modeling (MLM) and Next Sentence Prediction (NSP) tasks.
+NSP head was trained to detect in ``[CLS] text_a [SEP] text_b [SEP]`` if text_b follows text_a in original document.
+This NSP head can be used to stack sentences from a long document, based on a initial sentence. The first sentence in
+a document can be used as initial one. :class:`~deeppavlov.models.bert.bert_as_summarizer.BertAsSummarizer` relies on 
+pretrained BERT models and does not require training on summarization dataset. 
+We have two configuration files:
+
+- :config:`BertAsSummarizer <summarization/bert_as_summarizer.json>` takes first sentence in document as initialization. 
+- :config:`BertAsSummarizer with init <summarization/bert_as_summarizer_with_init.json>` uses provided initial sentence.
+
 Using custom BERT in DeepPavlov
 -------------------------------
 
