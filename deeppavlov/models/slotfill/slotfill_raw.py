@@ -20,7 +20,6 @@ from math import exp
 from overrides import overrides
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.utils import tokenize_reg
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
 
@@ -30,6 +29,7 @@ log = getLogger(__name__)
 @register('slotfill_raw')
 class SlotFillingComponent(Component, Serializable):
     """Slot filling using Fuzzy search"""
+
     def __init__(self, threshold: float = 0.7, return_all: bool = False, **kwargs):
         super().__init__(**kwargs)
         self.threshold = threshold
@@ -40,9 +40,6 @@ class SlotFillingComponent(Component, Serializable):
 
     @overrides
     def __call__(self, batch, *args, **kwargs):
-        if isinstance(batch[0], str):
-            batch = [tokenize_reg(instance.strip()) for instance in batch]
-
         slots = [{}] * len(batch)
 
         m = [i for i, v in enumerate(batch) if v]

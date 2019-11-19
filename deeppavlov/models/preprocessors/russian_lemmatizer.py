@@ -21,6 +21,7 @@ from deeppavlov.core.models.component import Component
 @register('pymorphy_russian_lemmatizer')
 class PymorphyRussianLemmatizer(Component):
     """Class for lemmatization using PyMorphy."""
+
     def __init__(self, *args, **kwargs):
         self.lemmatizer = pymorphy2.MorphAnalyzer()
 

@@ -75,9 +75,6 @@
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
-    "labels": {
-      "server_utils": "ODQA"
-    },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/odqa_test.tar.gz",

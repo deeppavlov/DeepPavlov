@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import re
 from typing import List, Callable, Optional
 
 from deeppavlov.skills.dsl_skill.context import UserContext
-from .handler import Handler
+from deeppavlov.skills.dsl_skill.handlers.handler import Handler
 
 
 class RegexHandler(Handler):

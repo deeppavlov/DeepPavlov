@@ -32,7 +32,7 @@ class NLTKMosesTokenizer(Component):
         escape: whether escape characters for use in html markup
     """
 
-    def __init__(self, escape: bool=False, *args, **kwargs):
+    def __init__(self, escape: bool = False, *args, **kwargs):
         self.escape = escape
         self.tokenizer = MosesTokenizer()
         self.detokenizer = MosesDetokenizer()

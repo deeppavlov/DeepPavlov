@@ -25,6 +25,7 @@ class DirtyCommentsPreprocessor(Component):
     """
     Class implements preprocessing of english texts with low level of literacy such as comments
     """
+
     def __init__(self, remove_punctuation: bool = True, *args, **kwargs):
         self.remove_punctuation = remove_punctuation
 

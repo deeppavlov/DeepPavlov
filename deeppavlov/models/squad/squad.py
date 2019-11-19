@@ -51,6 +51,7 @@ class SquadModel(LRScheduledTFModel):
         min_learning_rate: minimal learning rate, is used in learning rate decay
         noans_token: boolean, flags whether to use special no_ans token to make model able not to answer on question
     """
+
     def __init__(self, word_emb: np.ndarray, char_emb: np.ndarray, context_limit: int = 450, question_limit: int = 150,
                  char_limit: int = 16, train_char_emb: bool = True, char_hidden_size: int = 100,
                  encoder_hidden_size: int = 75, attention_hidden_size: int = 75, keep_prob: float = 0.7,
@@ -217,8 +218,8 @@ class SquadModel(LRScheduledTFModel):
         self.cc_ph = tf.placeholder(shape=(None, None, self.char_limit), dtype=tf.int32, name='cc_ph')
         self.q_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='q_ph')
         self.qc_ph = tf.placeholder(shape=(None, None, self.char_limit), dtype=tf.int32, name='qc_ph')
-        self.y1_ph = tf.placeholder(shape=(None, ), dtype=tf.int32, name='y1_ph')
-        self.y2_ph = tf.placeholder(shape=(None, ), dtype=tf.int32, name='y2_ph')
+        self.y1_ph = tf.placeholder(shape=(None,), dtype=tf.int32, name='y1_ph')
+        self.y2_ph = tf.placeholder(shape=(None,), dtype=tf.int32, name='y2_ph')
 
         self.lear_rate_ph = tf.placeholder_with_default(0.0, shape=[], name='learning_rate')
         self.keep_prob_ph = tf.placeholder_with_default(1.0, shape=[], name='keep_prob_ph')

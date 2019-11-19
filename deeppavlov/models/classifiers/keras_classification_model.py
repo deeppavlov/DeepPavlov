@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from copy import deepcopy
+from logging import getLogger
 from pathlib import Path
 from typing import List, Tuple, Optional, Generator, Union
-from logging import getLogger
-from copy import deepcopy
 
-import numpy as np
 import keras.metrics
 import keras.optimizers
+import numpy as np
 from keras import backend as K
 from keras.layers import Dense, Input
 from keras.layers import concatenate, Activation, Concatenate, Reshape
@@ -36,8 +36,8 @@ from overrides import overrides
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import save_json, read_json
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.keras_model import LRScheduledKerasModel
 from deeppavlov.core.layers.keras_layers import additive_self_attention, multiplicative_self_attention
+from deeppavlov.core.models.keras_model import LRScheduledKerasModel
 
 log = getLogger(__name__)
 
@@ -284,7 +284,8 @@ class KerasClassificationModel(LRScheduledKerasModel):
                 try:
                     model.load_weights(str(weights_path))
                 except ValueError:
-                    raise ConfigError("Some non-changable parameters of neural network differ from given pre-trained model")
+                    raise ConfigError(
+                        "Some non-changable parameters of neural network differ from given pre-trained model")
 
                 self.model = model
 
@@ -378,7 +379,8 @@ class KerasClassificationModel(LRScheduledKerasModel):
         self.opt["epochs_done"] = self.epochs_done
         if isinstance(self.opt.get("learning_rate", None), float):
             self.opt["final_learning_rate"] = K.eval(self.optimizer.lr) / (1. +
-                                                                           K.eval(self.optimizer.decay) * self.batches_seen)
+                                                                           K.eval(
+                                                                               self.optimizer.decay) * self.batches_seen)
 
         if self.opt.get("load_path") and self.opt.get("save_path"):
             if self.opt.get("save_path") != self.opt.get("load_path"):

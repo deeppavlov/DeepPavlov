@@ -24,6 +24,7 @@ log = getLogger(__name__)
 @register('ner_bio_converter')
 class BIOMarkupRestorer(Component):
     """Restores BIO markup for tags batch"""
+
     def __init__(self, *args, **kwargs) -> None:
         pass
 

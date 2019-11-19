@@ -2,7 +2,6 @@
   "chainer": {
     "in": [
       "utterances_batch",
-      "history_batch",
       "states_batch"
     ],
     "out": [
@@ -19,7 +18,6 @@
         "null_confidence": 0.33,
         "in": [
           "utterances_batch",
-          "history_batch",
           "states_batch"
         ],
         "out": [

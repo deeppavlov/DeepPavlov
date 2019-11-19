@@ -16,12 +16,12 @@ from abc import ABCMeta, abstractmethod
 
 from logging import getLogger
 
-
 log = getLogger(__name__)
 
 
 class Component(metaclass=ABCMeta):
     """Abstract class for all callables that could be used in Chainer's pipe."""
+
     @abstractmethod
     def __call__(self, *args, **kwargs):
         pass

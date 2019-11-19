@@ -98,10 +98,6 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models"
     },
-    "labels": {
-      "telegram_utils": "EcommerceSkill",
-      "server_utils": "EcommerceSkill"
-    },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
       "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"

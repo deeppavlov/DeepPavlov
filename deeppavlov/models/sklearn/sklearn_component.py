@@ -60,6 +60,7 @@ class SklearnComponent(Estimator):
             e.g. ``predict``, ``predict_proba``, ``predict_log_proba``, ``transform``
         ensure_list_output: whether to ensure that output for each sample is iterable (but not string)
     """
+
     def __init__(self, model_class: str,
                  save_path: Union[str, Path] = None,
                  load_path: Union[str, Path] = None,

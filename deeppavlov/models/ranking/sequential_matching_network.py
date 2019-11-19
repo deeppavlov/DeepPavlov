@@ -47,7 +47,6 @@ class SMNNetwork(TensorflowBaseMatchingModel):
 
     def __init__(self,
                  embedding_dim: int = 200,
-                 num_context_turns: int = 10,
                  max_sequence_length: int = 50,
                  learning_rate: float = 1e-3,
                  emb_matrix: Optional[np.ndarray] = None,
@@ -55,21 +54,19 @@ class SMNNetwork(TensorflowBaseMatchingModel):
                  *args,
                  **kwargs):
 
-
-        self.num_context_turns = num_context_turns
         self.max_sentence_len = max_sequence_length
         self.word_embedding_size = embedding_dim
         self.trainable = trainable_embeddings
         self.learning_rate = learning_rate
         self.emb_matrix = emb_matrix
 
+        super(SMNNetwork, self).__init__(*args, **kwargs)
+
         self.sess_config = tf.ConfigProto(allow_soft_placement=True)
         self.sess_config.gpu_options.allow_growth = True
         self.sess = tf.Session(config=self.sess_config)
         self._init_graph()
         self.sess.run(tf.global_variables_initializer())
-
-        super(SMNNetwork, self).__init__(*args, **kwargs)
 
         if self.load_path is not None:
             self.load()

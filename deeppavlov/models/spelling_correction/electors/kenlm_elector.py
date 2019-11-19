@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import kenlm
 from logging import getLogger
 from pathlib import Path
 from typing import List, Tuple
+
+import kenlm
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
@@ -36,7 +37,8 @@ class KenlmElector(Component):
         lm: kenlm object
         beam_size: beam size for highest probability search
     """
-    def __init__(self, load_path: Path, beam_size: int=4, *args, **kwargs):
+
+    def __init__(self, load_path: Path, beam_size: int = 4, *args, **kwargs):
         self.lm = kenlm.Model(str(expand_path(load_path)))
         self.beam_size = beam_size
 

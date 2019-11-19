@@ -56,6 +56,7 @@ class FitTrainer:
             (default is ``-1``)
         **kwargs: additional parameters whose names will be logged but otherwise ignored
     """
+
     def __init__(self, chainer_config: dict, *, batch_size: int = -1,
                  metrics: Iterable[Union[str, dict]] = ('accuracy',),
                  evaluation_targets: Iterable[str] = ('valid', 'test'),
