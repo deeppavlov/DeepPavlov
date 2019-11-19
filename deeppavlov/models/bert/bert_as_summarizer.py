@@ -35,26 +35,31 @@ class BertAsSummarizer(Component):
     NSP head was trained to detect in [CLS] text_a [SEP] text_b [SEP] if text_b follows text_a in original document.
 
     This NSP head can be used to stack sentences from a long document, based on a initial sentence.
+
     summary_0 = init_sentence
+
     summary_1 = summary_0 + argmax(nsp_score(candidates))
+
     summary_2 = summary_1 + argmax(nsp_score(candidates))
+
     ...
+
     , where candidates are all sentences from a document.
 
-        Args:
-            bert_config_file (str): path to Bert configuration file
-            pretrained_bert (str): path to pretrained Bert checkpoint
-            vocab_file (str): path to Bert vocabulary
-            max_summary_length (int): limit on summary length, number of sentences is used if
-                `max_summary_length_in_tokens` is set to False, else number of tokens is used.
-            max_summary_length_in_tokens (Optional[bool], optional): Use number of tokens as length of summary.
-                 Defaults to False.
-            max_seq_length (Optional[int], optional): max sequence length in subtokens, including [SEP] and [CLS]
-            tokens. `max_seq_length` is used in Bert to compute NSP scores. Defaults to 128.
-            do_lower_case (Optional[bool], optional): set True if lowercasing is needed. Defaults to False.
-            lang (Optional[str], optional): use ru_sent_tokenizer for 'ru' and ntlk.sent_tokener for other languages.
-                Defaults to 'ru'.
-        """
+    Args:
+        bert_config_file (str): path to Bert configuration file
+        pretrained_bert (str): path to pretrained Bert checkpoint
+        vocab_file (str): path to Bert vocabulary
+        max_summary_length (int): limit on summary length, number of sentences is used if `max_summary_length_in_tokens`
+            is set to False, else number of tokens is used.
+        max_summary_length_in_tokens (Optional[bool], optional): Use number of tokens as length of summary.
+            Defaults to False.
+        max_seq_length (Optional[int], optional): max sequence length in subtokens, including [SEP] and [CLS] tokens.
+            `max_seq_length` is used in Bert to compute NSP scores. Defaults to 128.
+        do_lower_case (Optional[bool], optional): set True if lowercasing is needed. Defaults to False.
+        lang (Optional[str], optional): use ru_sent_tokenizer for 'ru' and ntlk.sent_tokener for other languages.
+            Defaults to 'ru'.
+    """
 
     def __init__(self, bert_config_file: str,
                  pretrained_bert: str,
@@ -140,6 +145,7 @@ class BertAsSummarizer(Component):
     def _get_nsp_predictions(self, sentences: List[str], candidates: List[str]):
         """Compute NextSentence probability for every (sentence_i, candidate_i) pair.
         [CLS] sentence_i [SEP] candidate_i [SEP]
+
         Args:
             sentences (List[str]): list of sentences
             candidates (List[str]): list of candidates to be the next sentence
