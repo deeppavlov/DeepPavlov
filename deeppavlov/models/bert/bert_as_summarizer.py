@@ -22,19 +22,19 @@ import tensorflow.compat.v1 as tf
 from bert_dp.modeling import BertConfig, BertModel, create_initializer, get_assignment_map_from_checkpoint
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.component import Component
+from deeppavlov.core.models.tf_model import TFModel
 from deeppavlov.models.preprocessors.bert_preprocessor import BertPreprocessor
 
 logger = getLogger(__name__)
 
 
 @register('bert_as_summarizer')
-class BertAsSummarizer(Component):
+class BertAsSummarizer(TFModel):
     """Naive Extractive Summarization model based on BERT.
     BERT model was trained on Masked Language Modeling (MLM) and Next Sentence Prediction (NSP) tasks.
     NSP head was trained to detect in ``[CLS] text_a [SEP] text_b [SEP]`` if text_b follows text_a in original document.
 
-    This NSP head can be used to stack sentences from a long document, based on a initial sentence.
+    This NSP head can be used to stack sentences from a long document, based on a initial sentence:
 
     summary_0 = init_sentence
 
@@ -47,18 +47,18 @@ class BertAsSummarizer(Component):
     , where candidates are all sentences from a document.
 
     Args:
-        bert_config_file (str): path to Bert configuration file
-        pretrained_bert (str): path to pretrained Bert checkpoint
-        vocab_file (str): path to Bert vocabulary
-        max_summary_length (int): limit on summary length, number of sentences is used if `max_summary_length_in_tokens`
+        bert_config_file: path to Bert configuration file
+        pretrained_bert: path to pretrained Bert checkpoint
+        vocab_file: path to Bert vocabulary
+        max_summary_length: limit on summary length, number of sentences is used if ``max_summary_length_in_tokens``
             is set to False, else number of tokens is used.
-        max_summary_length_in_tokens (Optional[bool], optional): Use number of tokens as length of summary.
-            Defaults to False.
-        max_seq_length (Optional[int], optional): max sequence length in subtokens, including [SEP] and [CLS] tokens.
-            `max_seq_length` is used in Bert to compute NSP scores. Defaults to 128.
-        do_lower_case (Optional[bool], optional): set True if lowercasing is needed. Defaults to False.
-        lang (Optional[str], optional): use ru_sent_tokenizer for 'ru' and ntlk.sent_tokener for other languages.
-            Defaults to 'ru'.
+        max_summary_length_in_tokens: Use number of tokens as length of summary.
+            Defaults to ``False``.
+        max_seq_length: max sequence length in subtokens, including ``[SEP]`` and ``[CLS]`` tokens.
+            `max_seq_length` is used in Bert to compute NSP scores. Defaults to ``128``.
+        do_lower_case: set ``True`` if lowercasing is needed. Defaults to ``False``.
+        lang: use ru_sent_tokenizer for 'ru' and ntlk.sent_tokener for other languages.
+            Defaults to ``'ru'``.
     """
 
     def __init__(self, bert_config_file: str,
@@ -148,8 +148,8 @@ class BertAsSummarizer(Component):
         [CLS] sentence_i [SEP] candidate_i [SEP]
 
         Args:
-            sentences (List[str]): list of sentences
-            candidates (List[str]): list of candidates to be the next sentence
+            sentences: list of sentences
+            candidates: list of candidates to be the next sentence
 
         Returns:
             probabilities that candidate is a next sentence
@@ -166,8 +166,8 @@ class BertAsSummarizer(Component):
         """Builds summary for text from `texts`
 
         Args:
-            texts (List[str]): texts to build summaries for
-            init_sentences (Optional[List[str]], optional): `init_sentence` is used as the first sentence in summary.
+            texts: texts to build summaries for
+            init_sentences: ``init_sentence`` is used as the first sentence in summary.
                 Defaults to None.
 
         Returns:
@@ -211,3 +211,6 @@ class BertAsSummarizer(Component):
                 summary = summary + [best_candidate]
             summaries += [summary]
         return summaries
+
+    def train_on_batch(self, **kwargs):
+        raise NotImplementedError
