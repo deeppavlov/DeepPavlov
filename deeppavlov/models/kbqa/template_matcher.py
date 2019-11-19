@@ -51,4 +51,3 @@ class TemplateMatcher(Component, Serializable):
                     ent = ent_cand
                     relation = self.templates[template]
         return ent, relation
-

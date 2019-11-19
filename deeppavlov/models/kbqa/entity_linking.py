@@ -104,7 +104,7 @@ class EntityLinker(Component, Serializable):
     def save(self) -> None:
         pass
 
-    def __call__(self, entity: str, question_tokens: List[str]) -> Tuple[List[List[List[str]]], List[str]]:
+    def __call__(self, entity: str, question_tokens: List[str]) -> Tuple[List[List[List[str]]], List[float]]:
         confidences = []
         srtd_cand_ent = []
         if not entity:
@@ -138,12 +138,14 @@ class EntityLinker(Component, Serializable):
 
         entity_triplets = self.extract_triplets_from_wiki(wiki_entities)
         if self.rule_filter_entities and self._language == 'rus':
-            filtered_entities, filtered_entity_triplets = self.filter_triplets_rus(entity_triplets,
+            srtd_cand_ent, entity_triplets = self.filter_triplets_rus(entity_triplets,
                                                                                    question_tokens, srtd_cand_ent)
-        if self.debug:
-            self._log_entities(filtered_entities[:10])
+        
 
-        return filtered_entity_triplets, confidences
+        if self.debug:
+            self._log_entities(srtd_cand_ent[:10])
+
+        return entity_triplets, confidences
 
     def _log_entities(self, srtd_cand_ent):
         entities_to_print = []
@@ -226,7 +228,7 @@ class EntityLinker(Component, Serializable):
                 if triplet[0] == property_is_instance_of and triplet[1] == id_for_entity_asteroid:
                     entity_is_asteroid = True
                     break
-            if found_what_template and (entity_is_human or entity_is_named or entity_is_asteroid or wiki_entity[2]<90):
+            if found_what_template and (entity_is_human or entity_is_named or entity_is_asteroid or wiki_entity[2]<0.9):
                 continue
             filtered_entity_triplets.append(triplets_for_entity)
             filtered_entities.append(wiki_entity)
