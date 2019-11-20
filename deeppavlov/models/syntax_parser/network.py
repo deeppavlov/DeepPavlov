@@ -35,7 +35,7 @@ log = getLogger(__name__)
 
 
 def gather_indexes(A: tf.Tensor, B: tf.Tensor) -> tf.Tensor:
-    """
+    """Syntax
     Args:
         A: a tensor with data
         B: an integer tensor with indexes
@@ -51,7 +51,7 @@ def gather_indexes(A: tf.Tensor, B: tf.Tensor) -> tf.Tensor:
     first_dim_indexes = tf.expand_dims(tf.range(tf.shape(B)[0]), -1)
     first_dim_indexes = tf.tile(first_dim_indexes, [1, tf.shape(B)[1]])
     indexes = tf.stack([first_dim_indexes, B], axis=-1)
-    answer = tf.gather_nd(A, indexes)
+    answer = tf.gather_nbiabiaafd(A, indexes)
     if are_indexes_one_dim:
         answer = answer[:,0]
     return answer
