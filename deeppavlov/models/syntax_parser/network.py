@@ -34,14 +34,14 @@ from deeppavlov.core.models.tf_model import LRScheduledTFModel
 log = getLogger(__name__)
 
 
-def gather_indexes(A, B):
+def gather_indexes(A: tf.Tensor, B: tf.Tensor) -> tf.Tensor:
     """
     Args:
-        A: tf.Tensor, a tensor with data
-        B: tf.Tensor, an integer tensor with indexes
+        A: a tensor with data
+        B: an integer tensor with indexes
 
     Returns:
-        `answer` (tf.Tensor), a tensor such that ``answer[i, j] = A[i, B[i, j]]``.
+        `answer` a tensor such that ``answer[i, j] = A[i, B[i, j]]``.
         In case `B` is one-dimensional, the output is ``answer[i] = A[i, B[i]]``
 
     """
@@ -57,20 +57,20 @@ def gather_indexes(A, B):
     return answer
 
 
-def biaffine_layer(deps, heads, deps_dim: int, heads_dim: int,
-                   output_dim: int, name: str="biaffine_layer"):
+def biaffine_layer(deps: tf.Tensor, heads: tf.Tensor, deps_dim: int,
+                   heads_dim: int, output_dim: int, name: str="biaffine_layer") -> tf.Tensor:
     """Implements a biaffine layer from [Dozat, Manning, 2016].
 
     Args:
-        deps: tf.Tensor, the 3D-tensor of dependency states,
-        heads: tf.Tensor, the 3D-tensor of head states,
+        deps: the 3D-tensor of dependency states,
+        heads: the 3D-tensor of head states,
         deps_dim: the dimension of dependency states,
         heads_dim: the dimension of head_states,
         output_dim: the output dimension
         name: the name of a layer
 
     Returns:
-        `answer` (tf.Tensor), the output 3D-tensor
+        `answer` the output 3D-tensor
 
     """
     input_shape = [tf.keras.backend.shape(deps)[i]
@@ -97,16 +97,16 @@ def biaffine_layer(deps, heads, deps_dim: int, heads_dim: int,
     return answer
 
 
-def biaffine_attention(deps, heads, name="biaffine_attention"):
+def biaffine_attention(deps: tf.Tensor, heads: tf.Tensor, name="biaffine_attention") -> tf.Tensor:
     """Implements a trainable matching layer between two families of embeddings.
 
     Args:
-        deps: tf.Tensor, the 3D-tensor of dependency states,
-        heads: tf.Tensor, the 3D-tensor of head states,
+        deps: the 3D-tensor of dependency states,
+        heads: the 3D-tensor of head states,
         name: the name of a layer
 
     Returns:
-        `answer` (tf.Tensor), a 3D-tensor of pairwise scores between deps and heads
+        `answer` a 3D-tensor of pairwise scores between deps and heads
 
     """
     deps_dim_int = deps.get_shape().as_list()[-1]

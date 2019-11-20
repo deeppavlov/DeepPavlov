@@ -118,7 +118,7 @@ class TagOutputPrettifier(Component):
                              "it must be 'basic', 'conllu' or 'ud'.".format(self.mode))
 
     def __call__(self, X: List[List[str]], Y: List[List[str]]) -> List[Union[List[str], str]]:
-        """Calls the ``prettify`` function for each input sentence.
+        """Calls the :meth:`~prettify` function for each input sentence.
 
         Args:
             X: a list of input sentences
@@ -195,7 +195,7 @@ class LemmatizedOutputPrettifier(Component):
         self.format_string = "{0}\t{1}\t{4}\t{2}\t_\t{3}\t_\t_\t_\t_"
 
     def __call__(self, X: List[List[str]], Y: List[List[str]], Z: List[List[str]]) -> List[Union[List[str], str]]:
-        """Calls the ``prettify`` function for each input sentence.
+        """Calls the :meth:`~prettify` function for each input sentence.
 
         Args:
             X: a list of input sentences
@@ -262,7 +262,7 @@ class DependencyOutputPrettifier(Component):
         self.format_string = "{}\t{}\t_\t_\t_\t_\t{}\t{}\t_\t_"
 
     def __call__(self, X: List[List[str]], Y: List[List[int]], Z: List[List[str]]) -> List[Union[List[str], str]]:
-        """Calls the ``prettify`` function for each input sentence.
+        """Calls the :meth:`~prettify` function for each input sentence.
 
         Args:
             X: a list of input sentences
