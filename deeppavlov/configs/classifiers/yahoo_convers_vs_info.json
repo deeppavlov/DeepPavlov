@@ -157,10 +157,6 @@
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
       "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
     ],
-    "labels": {
-      "telegram_utils": "IntentModel",
-      "server_utils": "KerasIntentModel"
-    },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/embeddings/yahooo-sber-questions_epoches_n_15.tar.gz",

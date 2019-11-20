@@ -170,9 +170,6 @@
         "url": "http://files.deeppavlov.ai/datasets/UD2.0_source/es_ancora.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/UD2.0_source/es_ancora"
       }
-    ],
-    "labels": {
-      "telegram_utils": "MorphoTaggerModel"
-    }
+    ]
   }
 }

@@ -157,10 +157,6 @@
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
     ],
-    "labels": {
-      "telegram_utils": "IntentModel",
-      "server_utils": "KerasIntentModel"
-    },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",

@@ -1,3 +1,17 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import importlib
 import json
 from logging import getLogger
@@ -29,6 +43,7 @@ def fn_from_str(name: str) -> Callable[..., Any]:
 
 def register_metric(metric_name: str) -> Callable[..., Any]:
     """Decorator for metric registration."""
+
     def decorate(fn):
         fn_name = fn.__module__ + ':' + fn.__name__
         if metric_name in _REGISTRY and _REGISTRY[metric_name] != fn_name:
@@ -36,6 +51,7 @@ def register_metric(metric_name: str) -> Callable[..., Any]:
                         .format(metric_name))
         _REGISTRY[metric_name] = fn_name
         return fn
+
     return decorate
 
 

@@ -47,8 +47,8 @@ def general_attention(key, context, hidden_size, projected_align=False):
         tf.layers.dense(key, hidden_size, kernel_initializer=xav())
     r_projected_key = tf.reshape(projected_key, shape=[-1, hidden_size, 1])
 
-    lstm_fw_cell = tf.nn.rnn_cell.LSTMCell(hidden_size//2)
-    lstm_bw_cell = tf.nn.rnn_cell.LSTMCell(hidden_size//2)
+    lstm_fw_cell = tf.nn.rnn_cell.LSTMCell(hidden_size // 2)
+    lstm_bw_cell = tf.nn.rnn_cell.LSTMCell(hidden_size // 2)
     (output_fw, output_bw), states = \
         tf.nn.bidirectional_dynamic_rnn(cell_fw=lstm_fw_cell,
                                         cell_bw=lstm_bw_cell,
@@ -139,8 +139,8 @@ def cs_general_attention(key, context, hidden_size, depth, projected_align=False
                                         kernel_initializer=xav(),
                                         name='projected_context')
 
-    lstm_fw_cell = tf.nn.rnn_cell.LSTMCell(hidden_size//2)
-    lstm_bw_cell = tf.nn.rnn_cell.LSTMCell(hidden_size//2)
+    lstm_fw_cell = tf.nn.rnn_cell.LSTMCell(hidden_size // 2)
+    lstm_bw_cell = tf.nn.rnn_cell.LSTMCell(hidden_size // 2)
     (output_fw, output_bw), states = \
         tf.nn.bidirectional_dynamic_rnn(cell_fw=lstm_fw_cell,
                                         cell_bw=lstm_bw_cell,
@@ -192,8 +192,8 @@ def bahdanau_attention(key, context, hidden_size, projected_align=False):
         tf.tile(tf.reshape(projected_key, shape=[-1, 1, hidden_size]),
                 [1, max_num_tokens, 1])
 
-    lstm_fw_cell = tf.nn.rnn_cell.LSTMCell(hidden_size//2)
-    lstm_bw_cell = tf.nn.rnn_cell.LSTMCell(hidden_size//2)
+    lstm_fw_cell = tf.nn.rnn_cell.LSTMCell(hidden_size // 2)
+    lstm_bw_cell = tf.nn.rnn_cell.LSTMCell(hidden_size // 2)
     (output_fw, output_bw), states = \
         tf.nn.bidirectional_dynamic_rnn(cell_fw=lstm_fw_cell,
                                         cell_bw=lstm_bw_cell,
@@ -308,8 +308,8 @@ def cs_bahdanau_attention(key, context, hidden_size, depth, projected_align=Fals
         tf.tile(tf.reshape(projected_key, shape=[-1, 1, hidden_size]),
                 [1, max_num_tokens, 1])
 
-    lstm_fw_cell = tf.nn.rnn_cell.LSTMCell(hidden_size//2)
-    lstm_bw_cell = tf.nn.rnn_cell.LSTMCell(hidden_size//2)
+    lstm_fw_cell = tf.nn.rnn_cell.LSTMCell(hidden_size // 2)
+    lstm_bw_cell = tf.nn.rnn_cell.LSTMCell(hidden_size // 2)
     (output_fw, output_bw), states = \
         tf.nn.bidirectional_dynamic_rnn(cell_fw=lstm_fw_cell,
                                         cell_bw=lstm_bw_cell,

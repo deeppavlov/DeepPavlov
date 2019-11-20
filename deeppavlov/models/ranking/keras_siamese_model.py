@@ -68,7 +68,7 @@ class KerasSiameseModel(SiameseModel, KerasModel):
         self.model = self.create_model()
         self.compile()
         if self.load_path.exists():
-           self.load()
+            self.load()
         else:
             self.load_initial_emb_matrix()
 
@@ -100,12 +100,12 @@ class KerasSiameseModel(SiameseModel, KerasModel):
 
     def create_context_model(self) -> Model:
         m = Model(self.model.inputs[:-1],
-              self.model.get_layer("sentence_embedding").get_output_at(0))
+                  self.model.get_layer("sentence_embedding").get_output_at(0))
         return m
 
     def create_response_model(self) -> Model:
         m = Model(self.model.inputs[-1],
-              self.model.get_layer("sentence_embedding").get_output_at(1))
+                  self.model.get_layer("sentence_embedding").get_output_at(1))
         return m
 
     def _train_on_batch(self, batch: List[np.ndarray], y: List[int]) -> float:
@@ -121,4 +121,3 @@ class KerasSiameseModel(SiameseModel, KerasModel):
 
     def _predict_response_on_batch(self, batch: List[np.ndarray]) -> np.ndarray:
         return self.response_model.predict_on_batch(batch)
-

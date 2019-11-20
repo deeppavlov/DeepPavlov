@@ -78,8 +78,8 @@ class KvretDatasetReader(DatasetReader):
         """Returns data from single file"""
         log.info("[loading dialogs from {}]".format(file_path))
 
-        utterances, responses, dialog_indices =\
-                cls._get_turns(cls._iter_file(file_path), with_indices=True)
+        utterances, responses, dialog_indices = \
+            cls._get_turns(cls._iter_file(file_path), with_indices=True)
 
         data = list(map(cls._format_turn, zip(utterances, responses)))
 
@@ -105,22 +105,22 @@ class KvretDatasetReader(DatasetReader):
 
     @staticmethod
     def _check_dialog(dialog):
-        #TODO: manually fix bad dialogs
+        # TODO: manually fix bad dialogs
         driver = True
         for turn in dialog:
             if turn['turn'] not in ('driver', 'assistant'):
                 raise RuntimeError("Dataset wrong format: `turn` key value is"
                                    " either `driver` or `assistant`.")
             if driver and turn['turn'] != 'driver':
-                log.debug("Turn is expected to by driver's, but it's {}'s"\
+                log.debug("Turn is expected to by driver's, but it's {}'s" \
                           .format(turn['turn']))
                 return False
             if not driver and turn['turn'] != 'assistant':
-                log.debug("Turn is expected to be assistant's but it's {}'s"\
+                log.debug("Turn is expected to be assistant's but it's {}'s" \
                           .format(turn['turn']))
                 return False
             driver = not driver
-        #if not driver:
+        # if not driver:
         #    log.debug("Last turn is expected to be by assistant")
         #    return False
         return True
@@ -143,8 +143,8 @@ class KvretDatasetReader(DatasetReader):
             if cls._check_dialog(dialog):
                 yield dialog, sample['scenario']
             else:
-                log.warn("Skipping {}th dialogue with uuid={}: wrong format."\
-                         .format(i, sample['scenario']['uuid']))
+                log.warning("Skipping {}th dialogue with uuid={}: wrong format." \
+                            .format(i, sample['scenario']['uuid']))
 
     @staticmethod
     def _get_turns(data, with_indices=False):
@@ -172,7 +172,7 @@ class KvretDatasetReader(DatasetReader):
             if last_utter and not last_utter[-1].isspace():
                 last_utter += ' '
             responses[-1]['utterance'] = last_utter + 'END_OF_DIALOGUE'
- 
+
             dialog_indices.append({
                 'start': len(utterances),
                 'end': len(utterances) + len(dialog),
@@ -181,4 +181,3 @@ class KvretDatasetReader(DatasetReader):
         if with_indices:
             return utterances, responses, dialog_indices
         return utterances, responses
-

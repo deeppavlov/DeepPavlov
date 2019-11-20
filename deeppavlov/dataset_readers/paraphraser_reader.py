@@ -41,7 +41,7 @@ class ParaphraserReader(DatasetReader):
 
         data_path = expand_path(data_path)
         train_fname = data_path / 'paraphrases.xml'
-        test_fname =  data_path / 'paraphrases_gold.xml'
+        test_fname = data_path / 'paraphrases_gold.xml'
         train_data = self.build_data(train_fname, do_lower_case)
         test_data = self.build_data(test_fname, do_lower_case)
         dataset = {"train": train_data, "valid": [], "test": test_data}

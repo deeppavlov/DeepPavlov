@@ -1,14 +1,25 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import sys
 from pathlib import Path
-from typing import List, Dict, Union, Optional
+from typing import List, Union, Optional
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import expand_path, parse_config
-from deeppavlov.core.common.params import from_params
-from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
-from deeppavlov.dataset_iterators.morphotagger_iterator import MorphoTaggerDatasetIterator
 from deeppavlov.dataset_readers.morphotagging_dataset_reader import read_infile
 from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag
 
@@ -99,7 +110,7 @@ class TagOutputPrettifier(Component):
 
     def _make_format_string(self) -> None:
         if self.format_mode == "basic":
-            self.format_string =  "{}\t{}\t{}\t{}"
+            self.format_string = "{}\t{}\t{}\t{}"
         elif self.format_mode.lower() in ["conllu", "ud"]:
             self.format_string = "{}\t{}\t_\t{}\t_\t{}\t_\t_\t_\t_"
         else:

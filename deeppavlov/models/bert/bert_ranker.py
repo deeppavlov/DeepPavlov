@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import getLogger
-from typing import List, Dict, Union
-from collections import OrderedDict
 import re
+from collections import OrderedDict
+from logging import getLogger
 from operator import itemgetter
+from typing import List, Dict, Union
 
 import numpy as np
 import tensorflow as tf
@@ -26,8 +26,8 @@ from bert_dp.preprocessing import InputFeatures
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.bert.bert_classifier import BertClassifierModel
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
+from deeppavlov.models.bert.bert_classifier import BertClassifierModel
 
 logger = getLogger(__name__)
 
@@ -301,7 +301,6 @@ class BertSepRankerModel(LRScheduledTFModel):
         _, loss = self.sess.run([self.train_op, self.loss], feed_dict=feed_dict)
         return {'loss': loss, 'learning_rate': feed_dict[self.learning_rate_ph]}
 
-
     def __call__(self, features_li: List[List[InputFeatures]]) -> Union[List[int], List[List[float]]]:
         """Calculate scores for the given context over candidate responses.
 
@@ -362,8 +361,8 @@ class BertSepRankerPredictor(BertSepRankerModel):
     """
 
     def __init__(self, bert_config_file, interact_mode=0, batch_size=32,
-                 resps=None, resp_features=None,  resp_vecs=None,
-                 conts=None,  cont_features=None, cont_vecs=None, **kwargs) -> None:
+                 resps=None, resp_features=None, resp_vecs=None,
+                 conts=None, cont_features=None, cont_vecs=None, **kwargs) -> None:
         super().__init__(bert_config_file=bert_config_file,
                          **kwargs)
 

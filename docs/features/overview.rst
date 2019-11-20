@@ -87,6 +87,14 @@ Several pre-trained models are available and presented in Table below.
 | 5 topics         | `AG News`_         |      | :config:`Wiki emb <classifiers/topic_ag_news.json>`                                             | Accuracy    | 0.8922 | 0.9059 |  8.5 Gb   |
 +------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | Intent           |`Yahoo-L31`_        |      | :config:`Yahoo-L31 on conversational BERT <classifiers/yahoo_convers_vs_info_bert.json>`        | ROC-AUC     | 0.9436 |   --   |  1200 Mb  |
++------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
+| Sentiment        |`SST`_              |      | :config:`5-classes SST on conversational BERT <classifiers/sentiment_sst_conv_bert.json>`       | Accuracy    | 0.6456 | 0.6715 |  400 Mb   |
++                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |                    |      | :config:`5-classes SST on multilingual BERT <classifiers/sentiment_sst_multi_bert.json>`        |             | 0.5738 | 0.6024 |  660 Mb   |
++                  +--------------------+      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |`Yelp`_             |      | :config:`5-classes Yelp on conversational BERT <classifiers/sentiment_yelp_conv_bert.json>`     |             | 0.6925 | 0.6842 |  400 Mb   |
++                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |                    |      | :config:`5-classes Yelp on multilingual BERT <classifiers/sentiment_yelp_multi_bert.json>`      |             | 0.5896 | 0.5874 |  660 Mb   |
 +------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | Sentiment        |`Twitter mokoron`_  | Ru   | :config:`RuWiki+Lenta emb w/o preprocessing <classifiers/sentiment_twitter.json>`               |             | 0.9965 | 0.9961 |  6.2 Gb   |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
@@ -116,6 +124,8 @@ Several pre-trained models are available and presented in Table below.
 .. _`RuSentiment`: http://text-machine.cs.uml.edu/projects/rusentiment/
 .. _`Yahoo-L31`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 .. _`Yahoo-L6`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
+.. _`SST`: https://nlp.stanford.edu/sentiment/index.html
+.. _`Yelp`: https://www.yelp.com/dataset
 
 As no one had published intent recognition for DSTC-2 data, the
 comparison of the presented model is given on **SNIPS** dataset. The
@@ -443,25 +453,23 @@ customizable: embeddings, slot filler and intent classifier can be switched on a
 
 Available pre-trained models and their comparison with existing benchmarks:
 
-+----------------+------+-------------------------------------------------------------------------------------+---------------+---------+------------+------------------+
-| Dataset        | Lang | Model                                                                               | Metric        | Valid   | Test       | Downloads        |
-+================+======+=====================================================================================+===============+=========+============+==================+
-| `DSTC 2`_ [*]_ | En   | :config:`bot with slot filler <go_bot/gobot_dstc2.json>`                            | Turn Accuracy | 0.544   | 0.542      | 400 Mb           |
-+                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-|                |      | :config:`bot with slot filler & intents & attention <go_bot/gobot_dstc2_best.json>` |               | 0.548   | **0.553**  | 8.5 Gb           |
-+----------------+      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-| `DSTC 2`_      |      | Bordes and Weston (2016)                                                            |               | --      | 0.411      | --               |
-+                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-|                |      | Eric and Manning (2017)                                                             |               | --      | 0.480      | --               |
-+                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-|                |      | Perez and Liu (2016)                                                                |               | --      | 0.487      | --               |
-+                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-|                |      | Williams et al. (2017)                                                              |               | --      | **0.556**  | --               |
-+----------------+------+-------------------------------------------------------------------------------------+---------------+---------+------------+------------------+
-
-.. _`DSTC 2`: http://camdial.org/~mh521/dstc/
-
-.. [*] There were a few :ref:`modifications <dstc2_dataset>` to the original dataset. 
++-----------------------------------+------+------------------------------------------------------------------------------------+---------------+-----------+---------------+
+| Dataset                           | Lang | Model                                                                              | Metric        | Test      | Downloads     |
++===================================+======+====================================================================================+===============+===========+===============+
+| `DSTC 2`_                         | En   | :config:`basic bot <go_bot/gobot_dstc2_minimal.json>`                              | Turn Accuracy | 0.380     | 10 Mb         |
++ (:ref:`modified <dstc2_dataset>`) +      +------------------------------------------------------------------------------------+               +-----------+---------------+
+|                                   |      | :config:`bot with slot filler <go_bot/gobot_dstc2.json>`                           |               | 0.542     | 400 Mb        |
++                                   +      +------------------------------------------------------------------------------------+               +-----------+---------------+
+|                                   |      | :config:`bot with slot filler, intents & attention <go_bot/gobot_dstc2_best.json>` |               | **0.553** | 8.5 Gb        |
++-----------------------------------+      +------------------------------------------------------------------------------------+               +-----------+---------------+
+| `DSTC 2`_                         |      | Bordes and Weston (2016)                                                           |               | 0.411     | --            |
++                                   +      +------------------------------------------------------------------------------------+               +-----------+---------------+
+|                                   |      | Eric and Manning (2017)                                                            |               | 0.480     | --            |
++                                   +      +------------------------------------------------------------------------------------+               +-----------+---------------+
+|                                   |      | Perez and Liu (2016)                                                               |               | 0.487     | --            |
++                                   +      +------------------------------------------------------------------------------------+               +-----------+---------------+
+|                                   |      | Williams et al. (2017)                                                             |               | **0.556** | --            |
++-----------------------------------+------+------------------------------------------------------------------------------------+---------------+-----------+---------------+
 
 
 Seq2seq goal-oriented bot :doc:`[docs] </features/skills/seq2seq_go_bot>`
@@ -489,16 +497,6 @@ Comparison of deeppavlov pretrained model with others:
 +-------------------+------+----------------------------------------------------+------------------+-----------------+-----------+
 
 .. _`Stanford Kvret`: https://nlp.stanford.edu/blog/a-new-multi-turn-multi-domain-task-oriented-dialogue-dataset/
-
-
-eCommerce bot :doc:`[docs] </features/skills/ecommerce>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The eCommerce bot intends to retrieve product items from catalog in sorted order. In addition, it asks an user to provide additional information to specify the search.
-
-.. note::
-
-    About **130 Mb** on disc required for eCommerce bot with TfIdf-based ranker and **500 Mb** for BLEU-based ranker.
 
 
 ODQA :doc:`[docs] </features/skills/odqa>`
@@ -546,7 +544,7 @@ Examples of some models
 
 -  Run goal-oriented bot with Telegram interface:
 
-   ``python -m deeppavlov interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -d -t <TELEGRAM_TOKEN>``
+   ``python -m deeppavlov telegram deeppavlov/configs/go_bot/gobot_dstc2.json -d -t <TELEGRAM_TOKEN>``
 -  Run goal-oriented bot with console interface:
 
    ``python -m deeppavlov interact deeppavlov/configs/go_bot/gobot_dstc2.json -d``
@@ -555,7 +553,7 @@ Examples of some models
    ``python -m deeppavlov riseapi deeppavlov/configs/go_bot/gobot_dstc2.json -d``
 -  Run slot-filling model with Telegram interface:
 
-   ``python -m deeppavlov interactbot deeppavlov/configs/ner/slotfill_dstc2.json -d -t <TELEGRAM_TOKEN>``
+   ``python -m deeppavlov telegram deeppavlov/configs/ner/slotfill_dstc2.json -d -t <TELEGRAM_TOKEN>``
 -  Run slot-filling model with console interface:
 
    ``python -m deeppavlov interact deeppavlov/configs/ner/slotfill_dstc2.json -d``

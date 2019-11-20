@@ -1,3 +1,17 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from abc import abstractmethod
 from typing import List, Optional
 
@@ -5,8 +19,8 @@ import numpy as np
 from pymorphy2 import MorphAnalyzer
 from russian_tagsets import converters
 
-from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.models.morpho_tagger.common_tagger import get_tag_distance
 
 
@@ -63,6 +77,7 @@ class UDPymorphyLemmatizer(BasicLemmatizer):
     Lemma is selected from one of PyMorphy parses,
     the parse whose tag resembles the most a known UD tag is chosen.
     """
+
     def __init__(self, save_path: Optional[str] = None, load_path: Optional[str] = None,
                  transform_lemmas=False, **kwargs) -> None:
         self.transform_lemmas = transform_lemmas

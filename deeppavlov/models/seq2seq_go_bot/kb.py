@@ -53,6 +53,7 @@ class KnowledgeBase(Estimator):
         **kwargs: parameters passed to parent
             :class:`~deeppavlov.core.models.estimator.Estimator`.
     """
+
     def __init__(self,
                  save_path: str,
                  load_path: str = None,
@@ -82,6 +83,7 @@ class KnowledgeBase(Estimator):
     def _key_value_entries(self, kb_item, kb_columns, update=True):
         def _format(s):
             return re.sub('\s+', '_', s.lower().strip())
+
         first_key = _format(kb_item[kb_columns[0]])
         for col in kb_columns:
             key = first_key + '_' + _format(col)
@@ -182,18 +184,18 @@ class KnowledgeBaseEntityNormalizer(Component):
             ent_num_tokens = len(ent_tokens)
             if ' '.join(ent_tokens).strip():
                 for i in range(len(tokens)):
-                    if tokens[i:i+ent_num_tokens] == ent_tokens:
+                    if tokens[i:i + ent_num_tokens] == ent_tokens:
                         if self.remove:
-                            tokens = tokens[:i] + tokens[i+ent_num_tokens:]
+                            tokens = tokens[:i] + tokens[i + ent_num_tokens:]
                         else:
-                            tokens = tokens[:i] + [entity] + tokens[i+ent_num_tokens:]
+                            tokens = tokens[:i] + [entity] + tokens[i + ent_num_tokens:]
         return tokens
 
     def denormalize(self, tokens, entries):
         for entity, ent_tokens in entries:
             while (entity in tokens):
                 ent_pos = tokens.index(entity)
-                tokens = tokens[:ent_pos] + ent_tokens + tokens[ent_pos+1:]
+                tokens = tokens[:ent_pos] + ent_tokens + tokens[ent_pos + 1:]
         return tokens
 
     def __call__(self,

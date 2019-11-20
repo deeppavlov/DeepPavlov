@@ -63,6 +63,7 @@ class DialogDBResultDatasetIterator(DataLearningIterator):
         valid: list of tuples ``(db_result dictionary, '')`` from "valid" data
         test: list of tuples ``(db_result dictionary, '')`` from "test" data
     """
+
     @staticmethod
     def _db_result(data):
         x, y = data

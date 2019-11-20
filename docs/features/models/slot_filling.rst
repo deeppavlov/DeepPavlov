@@ -198,13 +198,28 @@ The last part of the config is metadata:
 ::
 
     "metadata": {
-        "labels": {
-          "telegram_utils": "NERModel"
+      "variables": {
+        "ROOT_PATH": "~/.deeppavlov",
+        "NER_CONFIG_PATH": "{DEEPPAVLOV_PATH}/configs/ner/ner_dstc2.json",
+        "DATA_PATH": "{ROOT_PATH}/downloads/dstc2",
+        "SLOT_VALS_PATH": "{DATA_PATH}/dstc_slot_vals.json",
+        "MODELS_PATH": "{ROOT_PATH}/models",
+        "MODEL_PATH": "{MODELS_PATH}/slotfill_dstc2"
+      },
+      "requirements": [
+        "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+      ],
+      "download": [
+        {
+          "url": "http://files.deeppavlov.ai/deeppavlov_data/dstc_slot_vals.tar.gz",
+          "subdir": "{DATA_PATH}"
         },
-        "download": [
-          "http://files.deeppavlov.ai/deeppavlov_data/slotfill_dstc2.tar.gz"
-        ]
-      }
+        {
+          "url": "http://files.deeppavlov.ai/deeppavlov_data/slotfill_dstc2.tar.gz",
+          "subdir": "{MODELS_PATH}"
+        }
+      ]
+    }
 
 It contains information for deployment of the model and urls for
 download pre-trained models.

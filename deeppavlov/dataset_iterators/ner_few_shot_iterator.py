@@ -35,6 +35,7 @@ class NERFewShotIterator(DataLearningIterator):
             the same
         remove_not_targets: whether to replace all non target tags with `O` tag or not.
     """
+
     def __init__(self,
                  data: Dict[str, List[Tuple[Any, Any]]],
                  seed: int = None,
