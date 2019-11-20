@@ -27,7 +27,7 @@ class KBAttention(base.Layer):
           linear activation.
         use_bias: Boolean, whether the layer uses a bias.
         kernel_initializer: Initializer function for the weight matrix.
-          If `None` (default), weights are initialized using the default
+          If ``None`` (default), weights are initialized using the default
           initializer used by `tf.get_variable`.
         bias_initializer: Initializer function for the bias.
         kernel_regularizer: Regularizer function for the weight matrix.

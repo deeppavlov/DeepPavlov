@@ -353,10 +353,10 @@ class BertSepRankerPredictor(BertSepRankerModel):
         batch_size: batch size for building response (and context) vectors over the base
         keep_prob: dropout keep_prob for non-Bert layers
         resps: list of strings containing the base of text responses
-        resp_vecs: BERT vector respresentations of `resps`, if is `None` it will be build
+        resp_vecs: BERT vector respresentations of `resps`, if is ``None`` it will be build
         resp_features: features of `resps` to build their BERT vector representations
         conts: list of strings containing the base of text contexts
-        cont_vecs: BERT vector respresentations of `conts`, if is `None` it will be build
+        cont_vecs: BERT vector respresentations of `conts`, if is ``None`` it will be build
         cont_features: features of `conts` to build their BERT vector representations
     """
 

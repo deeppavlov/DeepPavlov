@@ -31,7 +31,7 @@ def get_language(filepath: str) -> str:
     """
     return filepath.split("-")[0]
 
-def read_infile(infile: Union[Path, str], from_words=False,
+def read_infile(infile: Union[Path, str], *, from_words=False,
                 word_column: int = WORD_COLUMN, pos_column: int = POS_COLUMN,
                 tag_column: int = TAG_COLUMN, head_column: int = HEAD_COLUMN,
                 dep_column: int = DEP_COLUMN, max_sents: int = -1,
@@ -50,7 +50,7 @@ def read_infile(infile: Union[Path, str], from_words=False,
 
     Returns:
         a list of sentences. Each item contains a word sequence and an output sequence.
-        The output sentence is `None`, if ``read_only_words`` = True,
+        The output sentence is ``None``, if ``read_only_words`` = True,
         a single list of word tags if ``read_syntax`` = False,
         and a list of the form [`tags`, `heads`, `deps`] in case ``read_syntax`` = True.
     """

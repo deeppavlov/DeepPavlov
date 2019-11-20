@@ -46,7 +46,7 @@ def prettify_metrics(metrics: List[Tuple[str, float]], precision: int = 4) -> Or
     for key, value in metrics:
         if key in prettified_metrics:
             Warning("Multiple metrics with the same name {}.".format(key))
-        if not isinstance(value, str):
+        if isinstance(value, float):
             value = round(value, precision)
         prettified_metrics[key] = value
     return prettified_metrics
