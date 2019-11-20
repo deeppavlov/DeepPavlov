@@ -26,6 +26,7 @@ HEAD_COLUMN, DEP_COLUMN = 6, 7
 
 log = getLogger(__name__)
 
+
 def get_language(filepath: str) -> str:
     """Extracts language from typical UD filename
     """
@@ -45,17 +46,19 @@ def read_infile(infile: Union[Path, str], *, from_words=False,
         tag_column: column containing fine-grained tags (default=5)
         head_column: column containing syntactic head position (default=6)
         dep_column: column containing syntactic dependency label (default=7)
-        max_sents: maximal number of sents to read
+        max_sents: maximal number of sentences to read
         read_only_words: whether to read only words
+        read_syntax: whether to return ``heads`` and ``deps`` alongside ``tags``. Ignored if read_only_words is ``True``
 
     Returns:
         a list of sentences. Each item contains a word sequence and an output sequence.
-        The output sentence is ``None``, if ``read_only_words`` = True,
+        The output sentence is ``None``, if ``read_only_words`` is ``True``,
         a single list of word tags if ``read_syntax`` = False,
-        and a list of the form [`tags`, `heads`, `deps`] in case ``read_syntax`` = True.
+        and a list of the form [``tags``, ``heads``, ``deps``] in case ``read_syntax`` is ``True``.
     """
     answer, curr_word_sent, curr_tag_sent = [], [], []
     curr_head_sent, curr_dep_sent = [], []
+    # read_syntax = read_syntax and read_only_words
     if from_words:
         word_column, read_only_words = 0, True
     if infile is not sys.stdin:
@@ -70,10 +73,9 @@ def read_infile(infile: Union[Path, str], *, from_words=False,
             if len(curr_word_sent) > 0:
                 if read_only_words:
                     curr_tag_sent = None
-                curr_answer = (curr_word_sent, curr_tag_sent)
-                if not read_only_words and read_syntax:
-                    curr_answer += (curr_head_sent, curr_dep_sent)
-                answer.append(curr_answer)
+                elif read_syntax:
+                    curr_tag_sent = [curr_tag_sent, curr_head_sent, curr_dep_sent]
+                answer.append((curr_word_sent, curr_tag_sent))
             curr_tag_sent, curr_word_sent = [], []
             curr_head_sent, curr_dep_sent = [], []
             if len(answer) == max_sents:
@@ -94,14 +96,11 @@ def read_infile(infile: Union[Path, str], *, from_words=False,
     if len(curr_word_sent) > 0:
         if read_only_words:
             curr_tag_sent = None
-        curr_answer = (curr_word_sent, curr_tag_sent)
-        if not read_only_words and read_syntax:
-            curr_answer += (curr_head_sent, curr_dep_sent)
-        answer.append(curr_answer)
+        elif read_syntax:
+            curr_tag_sent = [curr_tag_sent, curr_head_sent, curr_dep_sent]
+        answer.append((curr_word_sent, curr_tag_sent))
     if infile is not sys.stdin:
         fin.close()
-    if len(answer) > 0 and len(answer[0]) > 2:
-        answer = [(elem[0], list(elem[1:])) for elem in answer]
     return answer
 
 
@@ -112,7 +111,7 @@ class MorphotaggerDatasetReader(DatasetReader):
     URL = 'http://files.deeppavlov.ai/datasets/UD2.0_source/'
 
     def read(self, data_path: Union[List, str],
-             language: Optional[None] = None,
+             language: Optional[str] = None,
              data_types: Optional[List[str]] = None,
              **kwargs) -> Dict[str, List]:
         """Reads UD dataset from data_path.
