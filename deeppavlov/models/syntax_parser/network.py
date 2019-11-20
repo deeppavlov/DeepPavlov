@@ -34,15 +34,15 @@ from deeppavlov.core.models.tf_model import LRScheduledTFModel
 log = getLogger(__name__)
 
 
-def gather_indexes(A: tf.Tensor, B: tf.Tensor) -> tf.Tensor:
-    """Syntax
+def gather_indexes(A, B):
+    """
     Args:
-        A: a tensor with data
-        B: an integer tensor with indexes
+        A: tf.Tensor, a tensor with data
+        B: tf.Tensor, an integer tensor with indexes
 
     Returns:
-        answer: a tensor C, such that C[i, j] = A[i, B[i, j]].
-            In case B is one-dimensional, the output is C[i] = A[i, B[i]]
+        `answer` (tf.Tensor), a tensor such that ``answer[i, j] = A[i, B[i, j]]``.
+        In case `B` is one-dimensional, the output is ``answer[i] = A[i, B[i]]``
 
     """
     are_indexes_one_dim = (kb.ndim(B) == 1)
@@ -51,26 +51,26 @@ def gather_indexes(A: tf.Tensor, B: tf.Tensor) -> tf.Tensor:
     first_dim_indexes = tf.expand_dims(tf.range(tf.shape(B)[0]), -1)
     first_dim_indexes = tf.tile(first_dim_indexes, [1, tf.shape(B)[1]])
     indexes = tf.stack([first_dim_indexes, B], axis=-1)
-    answer = tf.gather_nbiabiaafd(A, indexes)
+    answer = tf.gather_nd(A, indexes)
     if are_indexes_one_dim:
         answer = answer[:,0]
     return answer
 
 
-def biaffine_layer(deps: tf.Tensor, heads: tf.Tensor, deps_dim: int,
-                   heads_dim: int, output_dim: int, name: str="biaffine_layer"):
+def biaffine_layer(deps, heads, deps_dim: int, heads_dim: int,
+                   output_dim: int, name: str="biaffine_layer"):
     """Implements a biaffine layer from [Dozat, Manning, 2016].
 
     Args:
-        deps: the 3D-tensor of dependency states,
-        heads: the 3D-tensor of head states,
+        deps: tf.Tensor, the 3D-tensor of dependency states,
+        heads: tf.Tensor, the 3D-tensor of head states,
         deps_dim: the dimension of dependency states,
         heads_dim: the dimension of head_states,
         output_dim: the output dimension
         name: the name of a layer
 
     Returns:
-        answer: the output 3D-tensor
+        `answer` (tf.Tensor), the output 3D-tensor
 
     """
     input_shape = [tf.keras.backend.shape(deps)[i]
@@ -97,16 +97,17 @@ def biaffine_layer(deps: tf.Tensor, heads: tf.Tensor, deps_dim: int,
     return answer
 
 
-def biaffine_attention(deps: tf.Tensor, heads: tf.Tensor, name="biaffine_attention"):
+def biaffine_attention(deps, heads, name="biaffine_attention"):
     """Implements a trainable matching layer between two families of embeddings.
 
     Args:
-        deps: the 3D-tensor of dependency states,
-        heads: the 3D-tensor of head states,
+        deps: tf.Tensor, the 3D-tensor of dependency states,
+        heads: tf.Tensor, the 3D-tensor of head states,
         name: the name of a layer
 
     Returns:
-        answer: a 3D-tensor of pairwise scores between deps and heads
+        `answer` (tf.Tensor), a 3D-tensor of pairwise scores between deps and heads
+
     """
     deps_dim_int = deps.get_shape().as_list()[-1]
     heads_dim_int = heads.get_shape().as_list()[-1]
@@ -261,7 +262,6 @@ class BertSyntaxParser(BertSequenceNetwork):
         with tf.variable_scope("loss"):
             tag_mask = self._get_tag_mask()
             y_mask = tf.cast(tag_mask, tf.float32)
-            first_column = tf.zeros_like(self.y_head_ph[:,:1])
             self.loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_head_ph,
                                                                logits=self.dep_head_similarities,
                                                                weights=y_mask)
@@ -322,11 +322,13 @@ class BertSyntaxParser(BertSequenceNetwork):
         morphological tag for each word. The batch of such indexes becomes the third output of the function.
 
         Returns:
-            pred_heads_to_return: either a batch of most probable head positions for each token
-                (in case ``return_probas``=`False`)
-                or a batch of probability distribution over token head positions.
-            pred_deps: the indexes of token dependency relations
-            pred_tags: the indexes of token morphological tags (only if ``predict_tags`` = True)
+            `pred_heads_to_return`, either a batch of most probable head positions for each token
+            (in case ``return_probas`` = `False`)
+            or a batch of probability distribution over token head positions
+
+            `pred_deps`, the indexes of token dependency relations
+
+            `pred_tags`: the indexes of token morphological tags (only if ``predict_tags`` = `True`)
 
         """
         feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks)
