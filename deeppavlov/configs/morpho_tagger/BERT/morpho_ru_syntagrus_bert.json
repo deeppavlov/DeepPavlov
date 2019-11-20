@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "class_name": "morphotagger_dataset_reader",
-    "data_path": "{DOWNLOADS_PATH}/UD2.0_source",
+    "data_path": "{DOWNLOADS_PATH}/UD2.3_source",
     "language": "ru_syntagrus",
     "data_types": [
       "train", "dev", "test"
