@@ -1,11 +1,7 @@
 {
   "dataset_reader": {
     "class_name": "morphotagger_dataset_reader",
-    "data_path": [
-      "/home/sorokin/neural_tagging/data/UD2.3/UD_Russian-SynTagRus/ru_syntagrus-ud-train.conllu",
-      "/home/sorokin/neural_tagging/data/UD2.3/UD_Russian-SynTagRus/ru_syntagrus-ud-dev.conllu",
-      "/home/sorokin/neural_tagging/data/UD2.3/UD_Russian-SynTagRus/ru_syntagrus-ud-test.conllu"
-    ],
+    "data_path": "{DOWNLOADS_PATH}/UD2.0_source",
     "language": "ru_syntagrus",
     "data_types": [
       "train", "dev", "test"
@@ -79,8 +75,8 @@
         "learning_rate_drop_div": 1.5,
         "load_before_drop": true,
         "clip_norm": null,
-        "save_path": "{WORK_PATH}/model_last_multilayer_",
-        "load_path": "{WORK_PATH}/model_last_multilayer_",
+        "save_path": "{WORK_PATH}/model",
+        "load_path": "{WORK_PATH}/model",
         "in": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask"],
         "in_y": ["y_ind"],
         "out": ["y_predicted_ind"]
@@ -141,12 +137,23 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "BERT_PATH": "/home/sorokin/data/embeddings/BERT/rubert_cased_v1",
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1",
       "WORK_PATH": "{MODELS_PATH}/morpho_ru_syntagrus"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+      "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger/BERT/morpho_ru_syntagrus_bert.tar.gz",
+        "subdir": "{WORK_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v1.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/bert_models"
+      }
     ]
   }
 }
