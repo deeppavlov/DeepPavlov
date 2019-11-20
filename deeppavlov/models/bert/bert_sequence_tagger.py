@@ -174,9 +174,6 @@ class BertSequenceNetwork(LRScheduledTFModel):
             optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
             weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
         encoder_dropout: dropout probability of encoder output layer
-        use_birnn: whether to add bi rnn on top of the representations produced by BERT
-        birnn_cell_type: type of cell to use. Either `lstm` or `gru`
-        birnn_hidden_size: number of hidden units in the lstm
         ema_decay: what exponential moving averaging to use for network parameters, value from 0.0 to 1.0.
             Values closer to 1.0 put weight on the parameters history and values closer to 0.0 corresponds put weight
             on the current parameters.
@@ -466,39 +463,19 @@ class BertSequenceNetwork(LRScheduledTFModel):
 
 @register('bert_sequence_tagger')
 class BertSequenceTagger(BertSequenceNetwork):
-    """BERT-based model for text tagging.
-
-    For each token a tag is predicted. Can be used for any tagging.
+    """BERT-based model for text tagging. It predicts a label for every token (not subtoken) in the text.
+    You can use it for sequence labeling tasks, such as morphological tagging or named entity recognition.
+    See :class:`deeppavlov.models.bert.bert_sequence_tagger.BertSequenceNetwork`
+    for the description of inherited parameters.
 
     Args:
         n_tags: number of distinct tags
-        keep_prob: dropout keep_prob for non-Bert layers
-        bert_config_file: path to Bert configuration file
-        pretrained_bert: pretrained Bert checkpoint
-        attention_probs_keep_prob: keep_prob for Bert self-attention layers
-        hidden_keep_prob: keep_prob for Bert hidden layers
         use_crf: whether to use CRF on top or not
-        encoder_layer_ids: list of averaged layers from Bert encoder (layer ids)
-            optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
-            weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
-        use_birnn: whether to add bi rnn on top of the representations produced by BERT
-        birnn_cell_type: type of cell to use. Either `lstm` or `gru`
-        birnn_hidden_size: number of hidden units in the lstm
-        ema_decay: what exponential moving averaging to use for network parameters, value from 0.0 to 1.0.
-            Values closer to 1.0 put weight on the parameters history and values closer to 0.0 corresponds put weight
-            on the current parameters.
-        ema_variables_on_cpu: whether to put EMA variables to CPU. It may save a lot of GPU memory
-        return_probas: set True if return class probabilites instead of most probable label needed
-        freeze_embeddings: set True to not train input embeddings set True to
-            not train input embeddings set True to not train input embeddings
-        learning_rate: learning rate of the NER head
-        bert_learning_rate: learning rate of the BERT body
-            min_learning_rate: min value of learning rate if learning rate decay is used
-        learning_rate_drop_patience: how many validations with no improvements to wait
-        learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
-            validations
-        load_before_drop: whether to load best model before dropping learning rate or not
-        clip_norm: clip gradients by norm
+        use_birnn: whether to use bidirection rnn after BERT layers.
+            For NER and morphological tagging we usually set it to `False` as otherwise the model overfits
+        birnn_cell_type: the type of Bidirectional RNN. Either `lstm` or `gru`
+        birnn_hidden_size: number of hidden units in the BiRNN layer in each direction
+        return_probas: set this to `True` if you need the probabilities instead of raw answers
     """
 
     def __init__(self,

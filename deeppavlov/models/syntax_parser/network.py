@@ -96,33 +96,24 @@ def biaffine_attention(deps, heads, name="biaffine_attention"):
 @register('bert_syntax_parser')
 class BertSyntaxParser(BertSequenceNetwork):
     """BERT-based model for syntax parsing.
+    For each word the model predicts the index of its syntactic head
+    and the label of the dependency between this head and the current word.
+    See :class:`deeppavlov.models.bert.bert_sequence_tagger.BertSequenceNetwork`
+    for the description of inherited parameters.
 
     Args:
         n_deps: number of distinct syntactic dependencies
-        keep_prob: dropout keep_prob for non-Bert layers
-        bert_config_file: path to Bert configuration file
-        pretrained_bert: pretrained Bert checkpoint
-        attention_probs_keep_prob: keep_prob for Bert self-attention layers
-        hidden_keep_prob: keep_prob for Bert hidden layers
-        use_chl_decoding: whether to use Chu-Liu-Edmonds decoding
-        encoder_layer_ids: list of averaged layers from Bert encoder (layer ids)
-            optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
-            weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
-        ema_decay: what exponential moving averaging to use for network parameters, value from 0.0 to 1.0.
-            Values closer to 1.0 put weight on the parameters history and values closer to 0.0 corresponds put weight
-            on the current parameters.
-        ema_variables_on_cpu: whether to put EMA variables to CPU. It may save a lot of GPU memory
-        return_probas: set True if return class probabilites instead of most probable label needed
-        freeze_embeddings: set True to not train input embeddings set True to
-            not train input embeddings set True to not train input embeddings
-        learning_rate: learning rate of the NER head
-        bert_learning_rate: learning rate of the BERT body
-            min_learning_rate: min value of learning rate if learning rate decay is used
-        learning_rate_drop_patience: how many validations with no improvements to wait
-        learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
-            validations
-        load_before_drop: whether to load best model before dropping learning rate or not
-        clip_norm: clip gradients by norm
+        embeddings_dropout: dropout for embeddings in biaffine layer
+        state_size: the size of hidden state in biaffine layer
+        dep_state_size: the size of hidden state in biaffine layer
+        use_birnn: whether to use bidirection rnn after BERT layers.
+            Set it to `True` as it leads to much higher performance at least on large datasets
+        birnn_cell_type: the type of Bidirectional RNN. Either `lstm` or `gru`
+        birnn_hidden_size: number of hidden units in the BiRNN layer in each direction
+        return_probas: set this to `True` if you need the probabilities instead of raw answers
+        predict tags: whether to predict morphological tags together with syntactic information
+        n_tags: the number of morphological tags
+        tag_weight: the weight of tag model loss in multitask training
     """
 
     def __init__(self,
@@ -133,14 +124,12 @@ class BertSyntaxParser(BertSequenceNetwork):
                  attention_probs_keep_prob: float = None,
                  hidden_keep_prob: float = None,
                  embeddings_dropout: float = 0.0,
-                 use_chl_decoding: bool = False,
                  encoder_layer_ids: List[int] = (-1,),
                  encoder_dropout: float = 0.0,
                  optimizer: str = None,
                  weight_decay_rate: float = 1e-6,
                  state_size: int = 256,
-                 dep_state_size: int = 256,
-                 use_birnn: bool = False,
+                 use_birnn: bool = True,
                  birnn_cell_type: str = 'lstm',
                  birnn_hidden_size: int = 256,
                  ema_decay: float = None,
@@ -161,11 +150,9 @@ class BertSyntaxParser(BertSequenceNetwork):
         self.n_deps = n_deps
         self.embeddings_dropout = embeddings_dropout
         self.state_size = state_size
-        self.dep_state_size = dep_state_size
         self.use_birnn = use_birnn
         self.birnn_cell_type = birnn_cell_type
         self.birnn_hidden_size = birnn_hidden_size
-        self.use_chl_decoding = use_chl_decoding
         self.return_probas = return_probas
         self.predict_tags = predict_tags
         self.n_tags = n_tags
@@ -263,7 +250,7 @@ class BertSyntaxParser(BertSequenceNetwork):
 
 
     def _build_feed_dict(self, input_ids, input_masks, y_masks, 
-                         y_head=None, y_dep=None, y_tag=None):
+                         y_head=None, y_dep=None, y_tag=None) -> dict:
         y_masks = np.concatenate([np.ones_like(y_masks[:,:1]), y_masks[:,1:]], axis=1)
         feed_dict = self._build_basic_feed_dict(input_ids, input_masks, train=(y_head is not None))
         feed_dict[self.y_masks_ph] = y_masks
@@ -283,16 +270,25 @@ class BertSyntaxParser(BertSequenceNetwork):
     def __call__(self,
                  input_ids: Union[List[List[int]], np.ndarray],
                  input_masks: Union[List[List[int]], np.ndarray],
-                 y_masks: Union[List[List[int]], np.ndarray]) -> Union[List[List[int]], List[np.ndarray]]:
-        """ Predicts tag indices for a given subword tokens batch
-
-        Args:
-            input_ids: indices of the subwords
-            input_masks: mask that determines where to attend and where not to
-            y_masks: mask which determines the first subword units in the the word
+                 y_masks: Union[List[List[int]], np.ndarray]) \
+            -> Union[List[List[List[int]]], List[List[np.ndarray]]]:
+        """ Predicts the outputs for a batch of inputs.
+        By default (``return_probas`` = `False` and ``predict_tags`` = `False`) it returns two output batches.
+        The first is the batch of head indexes: `i` stands for `i`-th word in the sequence,
+        where numeration starts with 1. `0` is predicted for the syntactic root of the sentence.
+        The second is the batch of indexes for syntactic dependencies.
+        In case ``return_probas`` = `True` we return the probability distribution over possible heads
+        instead of the position of the most probable head. For a sentence of length `k` the output
+        is an array of shape `k * (k+1)`.
+        In case ``predict_tags`` = `True` the model additionally returns the index of the most probable
+        morphological tag for each word. The batch of such indexes becomes the third output of the function.
 
         Returns:
-            Predictions indices or predicted probabilities fro each token (not subtoken)
+            pred_heads_to_return: either a batch of most probable head positions for each token
+                (in case ``return_probas``=`False`)
+                or a batch of probability distribution over token head positions.
+            pred_deps: the indexes of token dependency relations
+            pred_tags: the indexes of token morphological tags (only if ``predict_tags`` = True)
 
         """
         feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks)
@@ -301,7 +297,7 @@ class BertSyntaxParser(BertSequenceNetwork):
         if self.return_probas:
             pred_head_probs, pred_heads, seq_lengths =\
                  self.sess.run([self.dep_head_probs, self.dep_heads, self.seq_lengths], feed_dict=feed_dict)
-            pred_heads_to_return = [p[1:l,:l] for l, p in zip(seq_lengths, pred_head_probs)]
+            pred_heads_to_return = [np.array(p[1:l,:l]) for l, p in zip(seq_lengths, pred_head_probs)]
         else:
             pred_heads, seq_lengths = self.sess.run([self.dep_heads, self.seq_lengths], feed_dict=feed_dict)
             pred_heads_to_return = [p[1:l] for l, p in zip(seq_lengths, pred_heads)]
@@ -314,16 +310,3 @@ class BertSyntaxParser(BertSequenceNetwork):
             pred_tags = [p[1:l] for l, p in zip(seq_lengths, pred_tags)] 
             answer.append(pred_tags)
         return tuple(answer)
-
-
-if __name__ == "__main__":
-    deps_dim, heads_dim, output_dim = 100, 150, 256
-    deps = tf.placeholder("float", [16, 10, deps_dim])
-    heads = tf.placeholder("float", [16, 10, heads_dim])
-    y = biaffine_layer(deps, heads, deps_dim, heads_dim, output_dim, name="biaffine_layer")
-    with tf.Session() as session:
-        session.run(tf.global_variables_initializer())
-        feed_dict = {deps: np.random.uniform(size=(16, 10, deps_dim)),
-                     heads: np.random.uniform(size=(16, 10, heads_dim))}
-        result = session.run(y, feed_dict=feed_dict)
-        print(result.shape)

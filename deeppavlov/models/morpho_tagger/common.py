@@ -167,7 +167,7 @@ class LemmatizedOutputPrettifier(Component):
             in `conllu` or `ud` mode it contains 10 columns:
             id, word, lemma, pos, xpos, feats, head, deprel, deps, misc
             (see http://universaldependencies.org/format.html for details)
-            Only id, word, tag and pos values are a in current version,
+            Only id, word, lemma, tag and pos columns are predicted in current version,
             other columns are filled by `_` value.
         return_string: whether to return a list of strings or a single string
         begin: a string to append in the beginning
@@ -259,7 +259,7 @@ class DependencyOutputPrettifier(Component):
             Z: a list of lists of dependency labels for sentence words
 
         Returns:
-            a list of prettified morphological analyses
+            a list of prettified UD outputs
         """
         return [self.prettify(x, y, z) for x, y, z in zip(X, Y, Z)]
 
@@ -272,7 +272,7 @@ class DependencyOutputPrettifier(Component):
             deps: list of head positions, the output of the parser
 
         Returns:
-            the prettified output of the tagger.
+            the prettified output of the parser
 
         """
         answer = []
