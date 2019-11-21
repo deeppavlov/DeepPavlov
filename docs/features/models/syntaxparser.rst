@@ -121,11 +121,14 @@ and dependency head.
     |                         +-------------------------------------------------------------------------------------------+---------+----------+
     |                         | `UD Pipe Future`_ (Straka, 2018)                                                          | 93.0    | 91.5     |
     |                         +-------------------------------------------------------------------------------------------+---------+----------+
+    |                         | `UDify (multilingual BERT)`_ (Kondratyuk, 2018)                                           | 94.8    | 93.1     |
+    |                         +-------------------------------------------------------------------------------------------+---------+----------+
     |                         |:config:`our BERT model <syntax/syntax_ru_syntagrus_bert.json>`                            | 95.2    | 93.7     |
     +-------------------------+-------------------------------------------------------------------------------------------+---------+----------+
 
 .. _`UD2.3`: http://hdl.handle.net/11234/1-2895
 .. _`UD Pipe 2.3`: http://ufal.mff.cuni.cz/udpipe
 .. _`UD Pipe Future`: https://github.com/CoNLL-UD-2018/UDPipe-Future
+.. _`UDify (multilingual BERT)`: https://github.com/hyperparticle/udify
 
 So our model is by a valuable margin the state-of-the-art system for Russian syntactic parsing.
