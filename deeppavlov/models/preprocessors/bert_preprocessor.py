@@ -78,7 +78,7 @@ class BertPreprocessor(Component):
 @register('bert_ner_preprocessor')
 class BertNerPreprocessor(Component):
     """Takes tokens and splits them into bert subtokens, encodes subtokens with their indices.
-    Creates the mask of subtokens (one for the first subtoken, zero for the others).
+    Creates a mask of subtokens (one for the first subtoken, zero for the others).
 
     If tags are provided, calculates tags for subtokens.
 
@@ -300,9 +300,9 @@ class BertSepRankerPredictorPreprocessor(BertSepRankerPreprocessor):
 
     Args:
         resps: list of strings containing the base of text responses
-        resp_vecs: BERT vector respresentations of `resps`, if is ``None`` features for the response base will be build
+        resp_vecs: BERT vector respresentations of ``resps``, if is ``None`` features for the response base will be build
         conts: list of strings containing the base of text contexts
-        cont_vecs: BERT vector respresentations of `conts`, if is ``None`` features for the response base will be build
+        cont_vecs: BERT vector respresentations of ``conts``, if is ``None`` features for the response base will be build
     """
 
     def __init__(self,

@@ -38,8 +38,8 @@ def token_from_subtoken(units: tf.Tensor, mask: tf.Tensor) -> tf.Tensor:
         units: tf.Tensor of shape [batch_size, SUBTOKEN_seq_length, n_features]
         mask: mask of token beginnings. For example: for tokens
 
-                [[`[CLS]` `My`, `capybara`, `[SEP]`],
-                [`[CLS]` `Your`, `aar`, `##dvark`, `is`, `awesome`, `[SEP]`]]
+                [[``[CLS]`` ``My``, ``capybara``, ``[SEP]``],
+                [``[CLS]`` ``Your``, ``aar``, ``##dvark``, ``is``, ``awesome``, ``[SEP]``]]
 
             the mask will be
 
@@ -50,8 +50,8 @@ def token_from_subtoken(units: tf.Tensor, mask: tf.Tensor) -> tf.Tensor:
         word_level_units: Units assembled from ones in the mask. For the
             example above this units will correspond to the following
 
-                [[`My`, `capybara`],
-                [`Your`, `aar`, `is`, `awesome`,]]
+                [[``My``, ``capybara``],
+                [``Your`, ``aar``, ``is``, ``awesome``,]]
 
             the shape of this tensor will be [batch_size, TOKEN_seq_length, n_features]
     """

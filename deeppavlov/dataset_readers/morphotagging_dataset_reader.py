@@ -53,8 +53,9 @@ def read_infile(infile: Union[Path, str], *, from_words=False,
     Returns:
         a list of sentences. Each item contains a word sequence and an output sequence.
         The output sentence is ``None``, if ``read_only_words`` is ``True``,
-        a single list of word tags if ``read_syntax`` = False,
+        a single list of word tags if ``read_syntax`` is False,
         and a list of the form [``tags``, ``heads``, ``deps``] in case ``read_syntax`` is ``True``.
+
     """
     answer, curr_word_sent, curr_tag_sent = [], [], []
     curr_head_sent, curr_dep_sent = [], []
