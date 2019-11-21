@@ -237,12 +237,11 @@ PARAMS = {
     },
     "morpho_tagger": {
         ("morpho_tagger/UD2.0/morpho_en.json", "morpho_en", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json", "morpho_tagger_pymorphy", ('IP', 'TI')):
-            [ONE_ARGUMENT_INFER_CHECK],
         ("morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy_lemmatize.json", "morpho_tagger_pymorphy", ('IP', 'TI')):
-            [ONE_ARGUMENT_INFER_CHECK],
-        ("morpho_tagger/UD2.0/morpho_ru_syntagrus.json", "morpho_tagger_pymorphy", ('IP', 'TI')):
             [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "syntax_tagger": {
+        ("syntax/syntax_ru_syntagrus_bert.json", "syntax_ru_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK]
     }
 }
 
