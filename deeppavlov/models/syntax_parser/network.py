@@ -12,24 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from logging import getLogger
-from typing import List, Any, Tuple, Union, Dict
+from typing import List, Union
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.python.ops import array_ops
-from tensorflow.contrib.layers import xavier_initializer
 import tensorflow.keras.backend as kb
-from bert_dp.modeling import BertConfig, BertModel
-from bert_dp.optimization import AdamWeightDecayOptimizer
+from tensorflow.contrib.layers import xavier_initializer
 
-from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.bert.bert_sequence_tagger import BertSequenceNetwork, token_from_subtoken,\
-    ExponentialMovingAverage
 from deeppavlov.core.data.utils import zero_pad
-from deeppavlov.core.models.component import Component
 from deeppavlov.core.layers.tf_layers import bi_rnn
-from deeppavlov.core.models.tf_model import LRScheduledTFModel
+from deeppavlov.models.bert.bert_sequence_tagger import BertSequenceNetwork, token_from_subtoken
 
 log = getLogger(__name__)
 

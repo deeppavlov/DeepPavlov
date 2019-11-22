@@ -46,6 +46,16 @@ def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> flo
 
 @register_metric('multitask_accuracy')
 def multitask_accuracy(*args) -> float:
+    """
+    Accuracy for multiple simultaneous tasks.
+
+    Args:
+        *args: a list of `2n` inputs. The first `n` inputs are the correct answers for `n` tasks
+            and the last `n` are the predicted ones.
+
+    Returns:
+        The percentage of inputs where the answers for all `n` tasks are correct.
+    """
     n = len(args)
     y_true_by_tasks, y_predicted_by_tasks = args[:n // 2], args[n // 2:]
     y_true, y_predicted = list(zip(*y_true_by_tasks)), list(zip(*y_predicted_by_tasks))
@@ -54,6 +64,19 @@ def multitask_accuracy(*args) -> float:
 
 @register_metric('multitask_sequence_accuracy')
 def multitask_sequence_accuracy(*args) -> float:
+    """
+    Accuracy for multiple simultaneous sequence labeling (tagging) tasks.
+    For each sequence the model checks whether all its elements
+    are labeled correctly for all the individual taggers.
+
+    Args:
+        *args: a list of `2n` inputs. The first `n` inputs are the correct answers for `n` tasks
+            and the last `n` are the predicted ones. For each task an
+
+    Returns:
+        The percentage of sequences where all the items has correct answers for all `n` tasks.
+
+    """
     n = len(args)
     y_true_by_tasks, y_predicted_by_tasks = args[:n // 2], args[n // 2:]
     y_true_by_sents = list(zip(*y_true_by_tasks))
@@ -65,6 +88,17 @@ def multitask_sequence_accuracy(*args) -> float:
 
 @register_metric('multitask_token_accuracy')
 def multitask_token_accuracy(*args) -> float:
+    """
+        Per-item accuracy for multiple simultaneous sequence labeling (tagging) tasks.
+
+        Args:
+            *args: a list of `2n` inputs. The first `n` inputs are the correct answers for `n` tasks
+                and the last `n` are the predicted ones. For each task an
+
+        Returns:
+            The percentage of sequence elements for which the answers for all `n` tasks are correct.
+
+        """
     n = len(args)
     y_true_by_tasks, y_predicted_by_tasks = args[:n // 2], args[n // 2:]
     y_true_by_sents = list(zip(*y_true_by_tasks))

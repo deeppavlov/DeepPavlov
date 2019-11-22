@@ -20,7 +20,7 @@ from dependency_decoding import chu_liu_edmonds
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 
-@register('chu_liu_edmonds_transformer') 
+@register('chu_liu_edmonds_transformer')
 class ChuLiuEdmonds(Component):
     """
     A wrapper for Chu-Liu-Edmonds algorithm for maximum spanning tree
