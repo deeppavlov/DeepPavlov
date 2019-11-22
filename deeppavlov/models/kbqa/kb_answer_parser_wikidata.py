@@ -34,7 +34,7 @@ class KBAnswerParserWikidata(KBBase):
         answer entity.
     """
 
-    def __init__(self, top_k_classes: int, classes_vocab_keys: Tuple, debug: bool = False,
+    def __init__(self, top_k_classes: int, debug: bool = False,
                  relations_maping_filename: Optional[str] = None, templates_filename: Optional[str] = None,
                  lang: str = None, *args, **kwargs) -> None:
         """
@@ -51,7 +51,6 @@ class KBAnswerParserWikidata(KBBase):
             **kwargs:
         """
         self.top_k_classes = top_k_classes
-        self.classes = list(classes_vocab_keys)
         self._debug = debug
         self._relations_filename = relations_maping_filename
         self._templates_filename = templates_filename
@@ -61,12 +60,13 @@ class KBAnswerParserWikidata(KBBase):
     def __call__(self, tokens_batch: List[List[str]],
                  tags_batch: List[List[int]],
                  relations_probs_batch: List[List[float]],
+                 relations_labels_batch: List[List[str]],
                  *args, **kwargs) -> List[str]:
 
         objects_batch = []
         confidences_batch = []
 
-        for tokens, tags, relations_probs in zip(tokens_batch, tags_batch, relations_probs_batch):
+        for tokens, tags, relations_probs, relations_labels in zip(tokens_batch, tags_batch, relations_probs_batch, relations_labels_batch):
             is_kbqa = self.is_kbqa_question(tokens, self.lang)
             if is_kbqa:
                 if self._templates_filename is not None:
@@ -86,13 +86,13 @@ class KBAnswerParserWikidata(KBBase):
                 else:
                     entity_from_ner = self.extract_entities(tokens, tags)
                     entity_triplets, entity_linking_confidences = self.linker(entity_from_ner, tokens)
-                    top_k_relations, top_k_probs = self._parse_relations_probs(relations_probs)
-                    top_k_relation_names = [self._relations_mapping[rel] for rel in top_k_relations]
+                    top_k_probs = self._parse_relations_probs(relations_probs)
+                    top_k_relation_names = [self._relations_mapping[rel] for rel in relations_labels]
                     if self._debug:
                         log.debug("entity_from_ner {}, top k relations {}" .format(str(entity_from_ner), str(top_k_relation_names)))
                     obj, confidence = self.match_triplet(entity_triplets,
                                                          entity_linking_confidences,
-                                                         top_k_relations,
+                                                         relations_labels,
                                                          top_k_probs)
                 objects_batch.append(obj)
                 confidences_batch.append(confidence)
@@ -104,11 +104,10 @@ class KBAnswerParserWikidata(KBBase):
 
         return parsed_objects_batch, confidences_batch
 
-    def _parse_relations_probs(self, probs: List[float]) -> Tuple[List[str], List[str]]:
+    def _parse_relations_probs(self, probs: List[float]) -> List[str]:
         top_k_inds = np.asarray(probs).argsort()[-self.top_k_classes:][::-1]
-        top_k_classes = [self.classes[k] for k in top_k_inds]
         top_k_probs = [probs[k] for k in top_k_inds]
-        return top_k_classes, top_k_probs
+        return top_k_probs
 
     @staticmethod
     def extract_entities(tokens: List[str], tags: List[str]) -> str:
