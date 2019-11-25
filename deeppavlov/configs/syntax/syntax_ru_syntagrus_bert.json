@@ -101,6 +101,7 @@
         "out": [
           "y_prettified"
         ],
+        "id": "dependency_output_prettifier",
         "class_name": "dependency_output_prettifier",
         "end": "\n"
       }
