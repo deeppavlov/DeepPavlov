@@ -1,0 +1,48 @@
+{
+    "chainer": {
+        "in": [
+            "x_words"
+        ],
+        "pipe": [
+            {
+                "class_name": "joint_tagger_parser",
+                "tagger_path": "morpho_ru_syntagrus_bert",
+                "parser_path": "syntax_ru_syntagrus_bert",
+                "to_output_string": true,
+                "in": [
+                    "x_words"
+                ],
+                "out": [
+                    "y_parsed"
+                ]
+            }
+        ],
+        "out": [
+            "y_parsed"
+        ]
+    },
+    "metadata": {
+        "variables": {
+            "ROOT_PATH": "~/.deeppavlov",
+            "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+            "MODELS_PATH": "{ROOT_PATH}/models",
+            "TAGGER_PATH": "{MODELS_PATH}/morpho_ru_syntagrus",
+            "PARSER_PATH": "{MODELS_PATH}/syntax_ru_syntagrus"
+        },
+        "requirements": [
+          "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+          "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+          "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
+        ],
+        "download": [
+          {
+            "url": "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger/BERT/morpho_ru_syntagrus_bert.tar.gz",
+            "subdir": "{TAGGER_PATH}"
+          },
+          {
+            "url": "http://files.deeppavlov.ai/deeppavlov_data/syntax_parser/syntax_ru_syntagrus_bert.tar.gz",
+            "subdir": "{PARSER_PATH}"
+          }
+        ]
+  }
+}

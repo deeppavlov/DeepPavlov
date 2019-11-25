@@ -20,6 +20,7 @@ from dependency_decoding import chu_liu_edmonds
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 
+
 @register('chu_liu_edmonds_transformer')
 class ChuLiuEdmonds(Component):
     """
@@ -28,7 +29,7 @@ class ChuLiuEdmonds(Component):
     def __init__(self, min_edge_prob=1e-6, **kwargs):
         self.min_edge_prob = min_edge_prob
 
-    def __call__(self, probs: List[np.ndarray]):
+    def __call__(self, probs: List[np.ndarray]) -> List[List[int]]:
         """Applies Chu-Liu-Edmonds algorithm to the matrix of head probabilities.
 
         probs: a 3D-array of probabilities of shape B*L*(L+1)

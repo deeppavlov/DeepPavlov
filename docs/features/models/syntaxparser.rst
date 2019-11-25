@@ -46,7 +46,7 @@ The example usage for inference is
 
    from deeppavlov import build_model, configs
    model = build_model(configs.syntax_parser.syntax_ru_syntagrus_bert, download=True)
-   sentences = ["Я шёл домой по незнакомой улице.", "Девушка пела в церковном хоре о всех уставших в чужом краю."]
+   sentences = ["Я шёл домой по незнакомой улице.", "Девушка пела в церковном хоре."]
    for parse in model(sentences):
        print(parse, end="\n\n")
 
@@ -66,13 +66,7 @@ The example usage for inference is
     3	в	        _	_	_	_	5	case	_	_
     4	церковном	_	_	_	_	5	amod	_	_
     5	хоре	    _	_	_	_	2	obl	_	_
-    6	о	        _	_	_	_	7	case	_	_
-    7	всех	    _	_	_	_	2	det	_	_
-    8	уставших	_	_	_	_	2	xcomp	_	_
-    9	в	        _	_	_	_	11	case	_	_
-    10	чужом	    _	_	_	_	11	amod	_	_
-    11	краю	    _	_	_	_	8	obl	_	_
-    12	.	        _	_	_	_	2	punct	_	_
+    6	.	        _	_	_	_	2	punct	_	_
 
 As prescribed by UD standards, our model writes the head information to the 7th column and the dependency
 information -- to the 8th. Our parser does not return morphological tags and even does not use them in
@@ -81,10 +75,52 @@ training.
 Model training is done via configuration files, see the
 :config:`configuration file <syntax/syntax_ru_syntagrus_bert.json>` for reference. Note that as any BERT
 model, it requires 16GB of GPU and the training speed is 1-5 sentences per second. However, you can
-try less powerful GPU for your own risk.
+try less powerful GPU at your own risk (the author himself was able to run the model on 11GB).
+The inference speed is several hundreds sentences per second, depending on their length, on GPU
+and one magnitude lower on CPU.
 
-For other usage options see the :doc:`morphological tagger config </features/models/morphotagger>`,
+For other usage options see the :doc:`morphological tagger documentation </features/models/morphotagger>`,
 the training and prediction procedure is analogous, only the model name is changed.
+
+Joint model usage
+==================
+
+Our model in principle supports joint prediction of morphological tags and syntactic information,
+however, the quality of the joint model is slightly inferior to the separate ones. Therefore we
+release a special component that can combine the outputs of tagger and parser:
+:class:`~deeppavlov.models.syntax_parser.joint.JointTaggerParser`. Its sample output for the
+Russian language with default settings
+(see the :config:`configuration file <syntax/ru_syntagrus_joint_parsing.json>` for exact options)
+looks like
+
+.. code:: python
+
+    from deeppavlov import build_model, configs
+    model = build_model("ru_syntagrus_joint_parsing", download=True)
+    sentences = ["Я шёл домой по незнакомой улице.", "Девушка пела в церковном хоре."]
+    for parse in model(sentences):
+       print(parse, end="\n\n")
+
+::
+
+    1	Я	я	PRON	_	Case=Nom|Number=Sing|Person=1	2	nsubj	_	_
+    2	шёл	идти	VERB	_	Aspect=Imp|Gender=Masc|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|Voice=Act	0	root	_	_
+    3	домой	домой	ADV	_	Degree=Pos	2	advmod	_	_
+    4	по	по	ADP	_	_	6	case	_	_
+    5	незнакомой	незнакомый	ADJ	_	Case=Dat|Degree=Pos|Gender=Fem|Number=Sing	6	amod	_	_
+    6	улице	улица	NOUN	_	Animacy=Inan|Case=Dat|Gender=Fem|Number=Sing	2	obl	_	_
+    7	.	.	PUNCT	_	_	2	punct	_	_
+
+    1	Девушка	девушка	NOUN	_	Animacy=Anim|Case=Nom|Gender=Fem|Number=Sing	2	nsubj	_	_
+    2	пела	петь	VERB	_	Aspect=Imp|Gender=Fem|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|Voice=Act	0	root	_	_
+    3	в	в	ADP	_	_	5	case	_	_
+    4	церковном	церковный	ADJ	_	Case=Loc|Degree=Pos|Gender=Masc|Number=Sing	5	amod	_	_
+    5	хоре	хор	NOUN	_	Animacy=Inan|Case=Loc|Gender=Masc|Number=Sing	2	obl	_	_
+    6	.	.	PUNCT	_	_	2	punct	_	_
+
+In the basic case the model outputs a human-readable string with parse data for each information. If you need
+to use the output in Python, consult the
+:class:`class documentation <deeppavlov.models.syntax_parser.joint.JointTaggerParser>` and source code.
 
 Model architecture
 ==================

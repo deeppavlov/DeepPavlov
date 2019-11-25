@@ -10,3 +10,7 @@ deeppavlov.models.syntax_parser
 .. autofunction:: deeppavlov.models.syntax_parser.network.biaffine_layer
 
 .. autofunction:: deeppavlov.models.syntax_parser.network.biaffine_attention
+
+.. autoclass:: deeppavlov.models.syntax_parser.joint.JointTaggerParser
+
+    .. automethod:: __call__

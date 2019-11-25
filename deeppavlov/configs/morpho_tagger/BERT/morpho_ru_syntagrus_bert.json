@@ -92,9 +92,21 @@
           "y_predicted"
         ],
         "out": [
+          "y_lemmas"
+        ],
+        "class_name": "UD_pymorphy_lemmatizer",
+        "end": "\n"
+      },
+      {
+        "in": [
+          "x_words",
+          "y_predicted",
+          "y_lemmas"
+        ],
+        "out": [
           "y_prettified"
         ],
-        "class_name": "tag_output_prettifier",
+        "class_name": "lemmatized_output_prettifier",
         "end": "\n"
       }
     ],
