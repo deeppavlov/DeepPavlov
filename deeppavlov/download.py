@@ -23,7 +23,6 @@ from typing import Union, Optional, Dict, Iterable, Set, Tuple, List
 import requests
 
 import deeppavlov
-from deeppavlov.core.common.file import find_config
 from deeppavlov.core.commands.utils import expand_path, parse_config
 from deeppavlov.core.data.utils import download, download_decompress, get_all_elems_from_json, file_md5, \
     set_query_parameter, path_set_md5

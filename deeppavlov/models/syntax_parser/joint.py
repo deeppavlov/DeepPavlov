@@ -1,8 +1,5 @@
 from typing import Union, List
-from pathlib import Path
 
-from deeppavlov.core.common.file import find_config
-from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.chainer import Chainer
