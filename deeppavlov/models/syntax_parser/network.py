@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from logging import getLogger
-from typing import List, Union
+from typing import List, Union, Tuple
 
 import numpy as np
 import tensorflow as tf
@@ -51,7 +51,7 @@ def gather_indexes(A: tf.Tensor, B: tf.Tensor) -> tf.Tensor:
 
 
 def biaffine_layer(deps: tf.Tensor, heads: tf.Tensor, deps_dim: int,
-                   heads_dim: int, output_dim: int, name: str="biaffine_layer") -> tf.Tensor:
+                   heads_dim: int, output_dim: int, name: str = "biaffine_layer") -> tf.Tensor:
     """Implements a biaffine layer from [Dozat, Manning, 2016].
 
     Args:
@@ -66,27 +66,25 @@ def biaffine_layer(deps: tf.Tensor, heads: tf.Tensor, deps_dim: int,
         `answer` the output 3D-tensor
 
     """
-    input_shape = [tf.keras.backend.shape(deps)[i]
-                   for i in range(tf.keras.backend.ndim(deps))]
+    input_shape = [kb.shape(deps)[i] for i in range(tf.keras.backend.ndim(deps))]
     first_input = tf.reshape(deps, [-1, deps_dim])  # first_input.shape = (B*L, D1)
     second_input = tf.reshape(heads, [-1, heads_dim])  # second_input.shape = (B*L, D2)
     with tf.variable_scope(name):
-        kernel_shape=(deps_dim, heads_dim * output_dim)
+        kernel_shape = (deps_dim, heads_dim * output_dim)
         kernel = tf.get_variable('kernel', shape=kernel_shape, initializer=xavier_initializer())
         first = tf.matmul(first_input, kernel)  # (B*L, D2*H)
         first = tf.reshape(first, [-1, heads_dim, output_dim])  # (B*L, D2, H)
-        # answer = tf.matmul(first, tf.expand_dims(second_input, -1), transpose_a=True)  # (B*L, H, 1)
-        # answer = tf.reshape(answer, answer.get_shape().as_list()[:-1])
-        answer = tf.keras.backend.batch_dot(first, second_input, axes=[1,1])
-        first_bias = tf.get_variable('first_bias', shape=(deps_dim, output_dim), initializer=xavier_initializer())
+        answer = kb.batch_dot(first, second_input, axes=[1, 1])  # (B*L, H)
+        first_bias = tf.get_variable('first_bias', shape=(deps_dim, output_dim),
+                                     initializer=xavier_initializer())
         answer += tf.matmul(first_input, first_bias)
-        second_bias = tf.get_variable('second_bias', shape=(heads_dim, output_dim), initializer=xavier_initializer())
+        second_bias = tf.get_variable('second_bias', shape=(heads_dim, output_dim),
+                                      initializer=xavier_initializer())
         answer += tf.matmul(second_input, second_bias)
-        label_bias = tf.get_variable('label_bias', shape=(output_dim,), initializer=xavier_initializer())
-        # label_bias = tf.reshape(label_bias, [1, output_dim])
-        # answer += label_bias
-        answer = tf.keras.backend.bias_add(answer, label_bias)
-        answer = tf.reshape(answer, input_shape[:-1] + [output_dim])
+        label_bias = tf.get_variable('label_bias', shape=(output_dim,),
+                                     initializer=xavier_initializer())
+        answer = kb.bias_add(answer, label_bias)
+        answer = tf.reshape(answer, input_shape[:-1] + [output_dim])  # (B, L, H)
     return answer
 
 
@@ -113,13 +111,14 @@ def biaffine_attention(deps: tf.Tensor, heads: tf.Tensor, name="biaffine_attenti
         second_bias = tf.get_variable('second_bias', shape=(kernel_shape[1], 1),
                                       initializer=xavier_initializer())
         # deps.shape = (B, L, D)
-        first = tf.tensordot(deps, kernel, axes=[-1,-2])  # first.shape = (B, L, D), first_rie = sum_d x_{rid} a_{de}
+        # first.shape = (B, L, D), first_rie = sum_d deps_{rid} kernel_{de}
+        first = tf.tensordot(deps, kernel, axes=[-1, -2])
         answer = tf.matmul(first, heads, transpose_b=True)  # answer.shape = (B, L, L)
         # add bias over x axis
-        first_bias_term = tf.tensordot(deps, first_bias, axes=[-1,-2])
+        first_bias_term = tf.tensordot(deps, first_bias, axes=[-1, -2])
         answer += first_bias_term
         # add bias over y axis
-        second_bias_term = tf.tensordot(heads, second_bias, axes=[-1,-2]) # (B, L, 1)
+        second_bias_term = tf.tensordot(heads, second_bias, axes=[-1, -2])  # (B, L, 1)
         second_bias_term = tf.transpose(second_bias_term, [0, 2, 1])  # (B, 1, L)
         answer += second_bias_term
     return answer
@@ -248,7 +247,7 @@ class BertSyntaxParser(BertSequenceNetwork):
             self.dep_probs = tf.nn.softmax(self.dep_logits)
             if self.predict_tags:
                 tag_embeddings = tf.layers.dense(units, units=self.state_size, activation="relu")
-                tag_embeddings = tf.nn.dropout(tag_embeddings, self.embeddings_keep_prob_ph) 
+                tag_embeddings = tf.nn.dropout(tag_embeddings, self.embeddings_keep_prob_ph)
                 self.tag_logits = tf.layers.dense(tag_embeddings, units=self.n_tags)
                 self.tags = tf.argmax(self.tag_logits, -1)
                 self.tag_probs = tf.nn.softmax(self.tag_logits)
@@ -265,7 +264,7 @@ class BertSyntaxParser(BertSequenceNetwork):
                 tag_loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_tag_ph,
                                                                   logits=self.tag_logits,
                                                                   weights=y_mask)
-                self.loss += self.tag_weight_ph * tag_loss                                                  
+                self.loss += self.tag_weight_ph * tag_loss
 
     def _init_placeholders(self) -> None:
         super()._init_placeholders()
@@ -279,10 +278,9 @@ class BertSyntaxParser(BertSequenceNetwork):
         if self.predict_tags:
             self.tag_weight_ph = tf.placeholder_with_default(1.0, shape=[], name="tag_weight_ph")
 
-
     def _build_feed_dict(self, input_ids, input_masks, y_masks, 
                          y_head=None, y_dep=None, y_tag=None) -> dict:
-        y_masks = np.concatenate([np.ones_like(y_masks[:,:1]), y_masks[:,1:]], axis=1)
+        y_masks = np.concatenate([np.ones_like(y_masks[:,:1]), y_masks[:, 1:]], axis=1)
         feed_dict = self._build_basic_feed_dict(input_ids, input_masks, train=(y_head is not None))
         feed_dict[self.y_masks_ph] = y_masks
         if y_head is not None:
@@ -302,7 +300,9 @@ class BertSyntaxParser(BertSequenceNetwork):
                  input_ids: Union[List[List[int]], np.ndarray],
                  input_masks: Union[List[List[int]], np.ndarray],
                  y_masks: Union[List[List[int]], np.ndarray]) \
-            -> Union[List[List[List[int]]], List[List[np.ndarray]]]:
+            -> Union[Tuple[List[Union[List[int], np.ndarray]], List[List[int]]],
+                     Tuple[List[Union[List[int], np.ndarray]], List[List[int]], List[List[int]]]]:
+
         """ Predicts the outputs for a batch of inputs.
         By default (``return_probas`` = `False` and ``predict_tags`` = `False`) it returns two output batches.
         The first is the batch of head indexes: `i` stands for `i`-th word in the sequence,
@@ -336,10 +336,10 @@ class BertSyntaxParser(BertSequenceNetwork):
             pred_heads_to_return = [p[1:l] for l, p in zip(seq_lengths, pred_heads)]
         feed_dict[self.y_head_ph] = pred_heads
         pred_deps = self.sess.run(self.deps, feed_dict=feed_dict)
-        pred_deps = [p[1:l] for l, p in zip(seq_lengths, pred_deps)]    
+        pred_deps = [p[1:l] for l, p in zip(seq_lengths, pred_deps)]
         answer = [pred_heads_to_return, pred_deps]
         if self.predict_tags:
             pred_tags = self.sess.run(self.tags, feed_dict=feed_dict)
-            pred_tags = [p[1:l] for l, p in zip(seq_lengths, pred_tags)] 
+            pred_tags = [p[1:l] for l, p in zip(seq_lengths, pred_tags)]
             answer.append(pred_tags)
         return tuple(answer)

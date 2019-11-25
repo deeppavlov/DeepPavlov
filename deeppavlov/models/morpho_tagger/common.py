@@ -254,7 +254,7 @@ class DependencyOutputPrettifier(Component):
         sep: separator between word analyses
     """
 
-    def __init__(self, return_string: bool = True, begin: str = "", 
+    def __init__(self, return_string: bool = True, begin: str = "",
                  end: str = "", sep: str = "\n", **kwargs) -> None:
         self.return_string = return_string
         self.begin = begin
