@@ -60,8 +60,6 @@ def predict_with_model(config_path: [Path, str], infile: Optional[Union[Path, st
         if isinstance(elem[-1], TagOutputPrettifier):
             elem[-1].set_format_mode(output_format)
     answers = model.batched_call(data, batch_size=batch_size)
-    for elem in answers:
-        print(elem)
     return answers
 
 

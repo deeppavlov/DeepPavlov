@@ -5,6 +5,7 @@ from deeppavlov.core.common.file import find_config
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
+from deeppavlov.core.common.chainer import Chainer
 
 from deeppavlov.models.morpho_tagger.common import TagOutputPrettifier,\
     LemmatizedOutputPrettifier, DependencyOutputPrettifier
@@ -21,10 +22,8 @@ class JointTaggerParser(Component):
     and comprises their results in a single output.
 
     Args:
-        tagger_path: the path to the morphological tagger config file.
-            It can also be simply a `config` name (for example, ``morpho_ru_syntagrus_bert``).
-        parser_path: the path to the syntactic parser config file.
-            It can be a `config` name as well.
+        tagger: the morphological tagger model (a :class:`~deeppavlov.core.common.chainer.Chainer` instance)
+        parser_path: the syntactic parser model (a :class:`~deeppavlov.core.common.chainer.Chainer` instance)
         output_format: the output format, it may be either `ud` (alias: `conllu`) or `json`.
         to_output_string: whether to convert the output to a list of strings
 
@@ -34,8 +33,7 @@ class JointTaggerParser(Component):
 
     """
 
-    def __init__(self, tagger_path: Union[str, Path, dict],
-                 parser_path: Union[str, Path, dict],
+    def __init__(self, tagger: Chainer, parser: Chainer,
                  output_format: str = "ud", to_output_string: bool = False,
                  *args, **kwargs):
         if output_format not in ["ud", "conllu", "json", "dict"]:
@@ -44,12 +42,12 @@ class JointTaggerParser(Component):
             output_format = "ud"
         self.output_format = output_format
         self.to_output_string = to_output_string
-        self.tagger = build_model(find_config(tagger_path))
-        self.parser = build_model(find_config(parser_path))
+        self.tagger = tagger
+        self.parser = parser
         self._check_models()
 
     def _check_models(self):
-        tagger_prettifier = self.tagger.pipe[-1][-1]
+        tagger_prettifier = self.tagger[-1]
         if not isinstance(tagger_prettifier, (TagOutputPrettifier, LemmatizedOutputPrettifier)):
             raise ValueError("The tagger should output prettified data: last component of the config "
                              "should be either a TagOutputPrettifier or a LemmatizedOutputPrettifier "
@@ -57,7 +55,7 @@ class JointTaggerParser(Component):
         if isinstance(tagger_prettifier, TagOutputPrettifier):
             tagger_prettifier.set_format_mode("ud")
         tagger_prettifier.return_string = False
-        parser_prettifier = self.parser.pipe[-1][-1]
+        parser_prettifier = self.parser[-1]
         if not isinstance(parser_prettifier, DependencyOutputPrettifier):
             raise ValueError("The tagger should output prettified data: last component of the config "
                              "should be either a DependencyOutputPrettifier instance.")
@@ -98,8 +96,8 @@ class JointTaggerParser(Component):
                 7	.	.	PUNCT	_	_	4	punct	_	_
 
             >>> # Dirty hacks to change model parameters in the code, you should do it in the configuration file.
-            >>> model.pipe[0][-1].to_output_string = False
-            >>> model.pipe[0][-1].output_format = "json"
+            >>> model["main"].to_output_string = False
+            >>> model["main"].output_format = "json"
             >>> for sent_parse in model(batch):
             >>>     for word_parse in sent_parse:
             >>>         print(word_parse)
