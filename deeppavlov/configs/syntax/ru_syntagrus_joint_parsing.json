@@ -27,12 +27,12 @@
             "ROOT_PATH": "~/.deeppavlov",
             "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
             "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
-            "MODELS_PATH": "{ROOT_PATH}/models",
+            "MODELS_PATH": "{ROOT_PATH}/models"
         },
         "requirements": [
           "{DEEPPAVLOV_PATH}/requirements/tf.txt",
           "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
           "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
         ]
-  }
+    }
 }
