@@ -116,7 +116,7 @@
     ]
   },
   "train": {
-    "epochs": 10,
+    "epochs": 1,
     "batch_size": 32,
     "metrics": [
       {
@@ -166,6 +166,10 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v1.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/bert_models"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger/UD2.3/ru_syntagrus.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/UD2.3_source/ru_syntagrus"
       }
     ]
   }
