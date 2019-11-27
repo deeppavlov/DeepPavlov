@@ -19,5 +19,7 @@ if __name__ == "__main__":
     config_path = find_config(args.config_path)
     if args.download:
         deep_download(config_path)
-    predict_with_model(config_path, infile=args.file_path, input_format=args.input_format,
-                       batch_size=args.batch_size, output_format=args.output_format)
+    answer = predict_with_model(config_path, infile=args.file_path, input_format=args.input_format,
+                                batch_size=args.batch_size, output_format=args.output_format)
+    for elem in answer:
+        print(elem)

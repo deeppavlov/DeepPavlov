@@ -237,12 +237,14 @@ PARAMS = {
     },
     "morpho_tagger": {
         ("morpho_tagger/UD2.0/morpho_en.json", "morpho_en", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json", "morpho_tagger_pymorphy", ('IP', 'TI')):
-            [ONE_ARGUMENT_INFER_CHECK],
         ("morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy_lemmatize.json", "morpho_tagger_pymorphy", ('IP', 'TI')):
             [ONE_ARGUMENT_INFER_CHECK],
-        ("morpho_tagger/UD2.0/morpho_ru_syntagrus.json", "morpho_tagger_pymorphy", ('IP', 'TI')):
+        ("morpho_tagger/BERT/morpho_ru_syntagrus_bert.json", "morpho_tagger_bert", ('IP', 'TI')):
             [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "syntax_tagger": {
+        ("syntax/syntax_ru_syntagrus_bert.json", "syntax_ru_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("syntax/ru_syntagrus_joint_parsing.json", "syntax_ru_bert", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     }
 }
 
@@ -285,8 +287,10 @@ def download_config(config_path):
     # Download referenced config files
     config_references = get_all_elems_from_json(parse_config(config), 'config_path')
     for config_ref in config_references:
-        m_name = config_ref.split('/')[-2]
-        config_ref = '/'.join(config_ref.split('/')[-2:])
+        splitted = config_ref.split("/")
+        first_subdir_index = splitted.index("configs") + 1
+        m_name = config_ref.split('/')[first_subdir_index]
+        config_ref = '/'.join(config_ref.split('/')[first_subdir_index:])
 
         test_configs_path.joinpath(m_name).mkdir(exist_ok=True)
         if not test_configs_path.joinpath(config_ref).exists():

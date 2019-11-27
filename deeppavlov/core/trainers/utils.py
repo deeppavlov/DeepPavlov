@@ -13,28 +13,30 @@
 # limitations under the License.
 
 from collections import OrderedDict, namedtuple
-from typing import List, Tuple, Union, Iterable
+from typing import List, Tuple, Union, Iterable, Any
 
 from deeppavlov.core.common.metrics_registry import get_metric_by_name
 
-Metric = namedtuple('Metric', ['name', 'fn', 'inputs'])
+Metric = namedtuple('Metric', ['name', 'fn', 'inputs', 'alias'])
 
 
 def parse_metrics(metrics: Iterable[Union[str, dict]], in_y: List[str], out_vars: List[str]) -> List[Metric]:
     metrics_functions = []
     for metric in metrics:
         if isinstance(metric, str):
-            metric = {'name': metric}
+            metric = {'name': metric, 'alias': metric}
 
         metric_name = metric['name']
+        alias = metric.get('alias', metric_name)
 
         f = get_metric_by_name(metric_name)
 
         inputs = metric.get('inputs', in_y + out_vars)
         if isinstance(inputs, str):
             inputs = [inputs]
+        
 
-        metrics_functions.append(Metric(metric_name, f, inputs))
+        metrics_functions.append(Metric(metric_name, f, inputs, alias))
     return metrics_functions
 
 
@@ -42,6 +44,9 @@ def prettify_metrics(metrics: List[Tuple[str, float]], precision: int = 4) -> Or
     """Prettifies the dictionary of metrics."""
     prettified_metrics = OrderedDict()
     for key, value in metrics:
-        value = round(value, precision)
+        if key in prettified_metrics:
+            Warning("Multiple metrics with the same name {}.".format(key))
+        if isinstance(value, float):
+            value = round(value, precision)
         prettified_metrics[key] = value
     return prettified_metrics

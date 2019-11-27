@@ -20,8 +20,7 @@ from deeppavlov.core.models.component import Component
 
 @register('mask')
 class Mask(Component):
-    """Takes batch of tokens and returns the masks of corresponding length"""
-
+    """Takes a batch of tokens and returns the masks of corresponding length"""
     def __init__(self, *args, **kwargs):
         pass
 

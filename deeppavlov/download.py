@@ -63,7 +63,6 @@ def get_config_downloads(config: Union[str, Path, dict]) -> Set[Tuple[str, Path]
 
 def get_configs_downloads(config: Optional[Union[str, Path, dict]] = None) -> Dict[str, Set[Path]]:
     all_downloads = defaultdict(set)
-
     if config:
         configs = [config]
     else:
