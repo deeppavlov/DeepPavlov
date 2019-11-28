@@ -66,7 +66,7 @@ Welcome to DeepPavlov's documentation!
    Amazon Alexa integration <integrations/amazon_alexa>
    Microsoft Bot Framework integration <integrations/ms_bot>
    Amazon AWS deployment <integrations/aws_ec2>
-   Deeppavlov settings <integrations/settings>
+   DeepPavlov settings <integrations/settings>
 
 
 .. toctree::

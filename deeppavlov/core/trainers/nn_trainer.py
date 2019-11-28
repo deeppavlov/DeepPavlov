@@ -52,7 +52,7 @@ class NNTrainer(FitTrainer):
         train_metrics: metrics calculated for train logs (if omitted, ``metrics`` argument is used)
         metric_optimization: one of ``'maximize'`` or ``'minimize'`` — strategy for metric optimization used in early
             stopping (default is ``'maximize'``)
-        evaluation_targets: data types on which to evaluate trained pipeline (default is ``('valid', 'test')``)
+        evaluation_targets: data types on which to evaluate a trained pipeline (default is ``('valid', 'test')``)
         show_examples: a flag used to print inputs, expected outputs and predicted outputs for the last batch
             in evaluation logs (default is ``False``)
         tensorboard_log_dir: path to a directory where tensorboard logs can be stored, ignored if None
@@ -75,7 +75,7 @@ class NNTrainer(FitTrainer):
         **kwargs: additional parameters whose names will be logged but otherwise ignored
 
 
-    Trainer saves the model if it sees a progress in scores. The full rules look like following:
+    Trainer saves the model if it sees progress in scores. The full rules look like following:
 
     - For the validation savepoint:
         * 0-th validation (optional). Don't save model, establish a baseline.
@@ -143,7 +143,7 @@ class NNTrainer(FitTrainer):
         self.patience = 0
         self.last_result = {}
         self.losses = []
-        self.start_time = None  # type:Optional[float]
+        self.start_time: Optional[float] = None
 
         if self.tensorboard_log_dir is not None:
             self.tb_train_writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir / 'train_log'))
@@ -208,7 +208,7 @@ class NNTrainer(FitTrainer):
             log.info('Saving model')
             self.save()
         else:
-            log.info('Did not improved on the {} of {}'.format(m_name, self.score_best))
+            log.info('Did not improve on the {} of {}'.format(m_name, self.score_best))
 
         report['impatience'] = self.patience
         if self.validation_patience > 0:
