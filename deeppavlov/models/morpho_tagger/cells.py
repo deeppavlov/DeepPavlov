@@ -1,3 +1,17 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import keras.activations as kact
 import keras.backend as kb
 import keras.initializers as kinit
@@ -54,7 +68,6 @@ def weighted_sum(first, second, sigma, first_threshold=-np.inf, second_threshold
 
 
 class WeightedCombinationLayer(kl.Layer):
-
     """
     A class for weighted combination of probability distributions
     """
@@ -118,7 +131,7 @@ class WeightedCombinationLayer(kl.Layer):
         embedded_features = kb.bias_add(
             embedded_features, self.features_bias, data_format="channels_last")
         if self.use_dimension_bias:
-            tiling_shape = [1] * (kb.ndim(first)-1) + [kb.shape(first)[-1]]
+            tiling_shape = [1] * (kb.ndim(first) - 1) + [kb.shape(first)[-1]]
             embedded_features = kb.tile(embedded_features, tiling_shape)
             embedded_features = kb.bias_add(
                 embedded_features, self.dimensions_bias, data_format="channels_last")

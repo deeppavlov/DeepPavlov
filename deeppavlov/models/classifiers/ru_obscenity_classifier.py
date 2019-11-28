@@ -1,16 +1,28 @@
-from typing import List, Union
-from pathlib import Path
-from logging import getLogger
-import errno
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import json
 import re
-import os
+from logging import getLogger
+from pathlib import Path
+from typing import List, Union
 
 import pymorphy2
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Component
-from deeppavlov.core.commands.utils import expand_path
 
 log = getLogger(__name__)
 
@@ -107,14 +119,14 @@ class RuObscenityClassifier(Component):
             word = word.lower()
             word.replace('ё', 'е')
             normal_word = self.morph.parse(word)[0].normal_form
-            if normal_word in self.obscenity_words_exception\
+            if normal_word in self.obscenity_words_exception \
                     or word in self.obscenity_words_exception:
                 continue
-            if normal_word in self.obscenity_words\
-                    or word in self.obscenity_words\
-                    or bool(self.regexp.findall(normal_word))\
-                    or bool(self.regexp.findall(word))\
-                    or bool(self.regexp2.findall(normal_word))\
+            if normal_word in self.obscenity_words \
+                    or word in self.obscenity_words \
+                    or bool(self.regexp.findall(normal_word)) \
+                    or bool(self.regexp.findall(word)) \
+                    or bool(self.regexp2.findall(normal_word)) \
                     or bool(self.regexp2.findall(word)):
                 return True
         return False

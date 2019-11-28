@@ -34,6 +34,7 @@ Welcome to DeepPavlov's documentation!
    Neural Ranking <features/models/neural_ranking>
    Slot filling <features/models/slot_filling>
    Spelling Correction <features/models/spelling_correction>
+   Syntactic Parser <features/models/syntaxparser>
    TF-IDF Ranking <features/models/tfidf_ranking>
    Popularity Ranking <features/models/popularity_ranking>
    Knowledge Base Question answering <features/models/kbqa>
@@ -46,10 +47,8 @@ Welcome to DeepPavlov's documentation!
    
    Goal-Oriented Dialogue Bot <features/skills/go_bot>
    Open-Domain Question Answering <features/skills/odqa>
-   Pattern Matching <features/skills/pattern_matching>
    Sequence-To-Sequence Dialogue Bot <features/skills/seq2seq_go_bot>
    Frequently Asked Questions Answering <features/skills/faq>
-   eCommerce Bot <features/skills/ecommerce>
    AIML <features/skills/aiml_skill>
    Rasa <features/skills/rasa_skill>
    DSL <features/skills/dsl_skill>
@@ -67,7 +66,7 @@ Welcome to DeepPavlov's documentation!
    Amazon Alexa integration <integrations/amazon_alexa>
    Microsoft Bot Framework integration <integrations/ms_bot>
    Amazon AWS deployment <integrations/aws_ec2>
-   Deeppavlov settings <integrations/settings>
+   DeepPavlov settings <integrations/settings>
 
 
 .. toctree::

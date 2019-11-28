@@ -40,9 +40,10 @@ class SimpleVocabulary(Estimator):
         unk_token: label assigned to unknown tokens.
         freq_drop_load: if True, then frequencies of tokens are set to min_freq on the model load.
         """
+
     def __init__(self,
                  special_tokens: Tuple[str, ...] = tuple(),
-                 max_tokens: int = 2**30,
+                 max_tokens: int = 2 ** 30,
                  min_freq: int = 0,
                  pad_with_zeros: bool = False,
                  unk_token: Optional[str] = None,
@@ -70,6 +71,8 @@ class SimpleVocabulary(Estimator):
             self._i2t.append(special_token)
             self.count += 1
         for token, freq in self.freqs.most_common()[:self._max_tokens]:
+            if token in self.special_tokens:
+                continue
             if freq >= self._min_freq:
                 self._t2i[token] = self.count
                 self._i2t.append(token)
@@ -118,7 +121,7 @@ class SimpleVocabulary(Estimator):
                 self._add_tokens_with_freqs(tokens, counts)
             elif not self.load_path.parent.is_dir():
                 raise ConfigError("Provided `load_path` for {} doesn't exist!".format(
-                                  self.__class__.__name__))
+                    self.__class__.__name__))
         else:
             raise ConfigError("`load_path` for {} is not provided!".format(self))
 
@@ -135,7 +138,7 @@ class SimpleVocabulary(Estimator):
         else:
             token, cnt = ln.split('\t', 1)
         return token, cnt
-        
+
     @property
     def len(self):
         return len(self)

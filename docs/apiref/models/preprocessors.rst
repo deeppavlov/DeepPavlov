@@ -27,9 +27,7 @@ deeppavlov.models.preprocessors
 
 .. autoclass:: deeppavlov.models.preprocessors.siamese_preprocessor.SiamesePreprocessor
 
-.. autoclass:: deeppavlov.models.preprocessors.str_lower.StrLower
-
-    .. automethod:: __call__
+.. autofunction:: deeppavlov.models.preprocessors.str_lower.str_lower
 
 .. autoclass:: deeppavlov.models.preprocessors.str_token_reverser.StrTokenReverser
 

@@ -74,7 +74,7 @@ class Sqlite3Database(Estimator):
                  ascending: bool = False) -> List[List[Dict]]:
         order = 'ASC' if ascending else 'DESC'
         if not self._check_if_table_exists():
-            log.warn("Database is empty, call fit() before using.")
+            log.warning("Database is empty, call fit() before using.")
             return [[] for i in range(len(batch))]
         return [self._search(b, order_by=order_by, order=order) for b in batch]
 
@@ -156,26 +156,29 @@ class Sqlite3Database(Estimator):
         self.conn.commit()
 
     def _get_record(self, primary_values):
-        ffields = ', '.join(self.keys) or '*'
-        where_expr = " AND ".join(f"{pk} = '{v}'"
-                                  for pk, v in zip(self.primary_keys,
-                                                   primary_values))
+        ffields = ", ".join(self.keys) or "*"
+        where_expr = " AND ".join(f"{pk}=?" for pk in self.primary_keys)
         fetched = self.cursor.execute(f"SELECT {ffields} FROM {self.tname}" +
-                                      f" WHERE {where_expr}").fetchone()
+                                      f" WHERE {where_expr}", primary_values).fetchone()
         if not fetched:
             return None
         return fetched
 
     def _update_one(self, record):
-        set_expr = ', '.join(f"{k} = '{v}'"
-                             for k, v in zip(self.keys, record)
-                             if k not in self.primary_keys)
-        where_expr = " AND ".join(f"{k} = '{v}'"
-                                  for k, v in zip(self.keys, record)
-                                  if k in self.primary_keys)
+        set_values, where_values = [], []
+        set_fields, where_fields = [], []
+        for k, v in zip(self.keys, record):
+            if k in self.primary_keys:
+                where_fields.append(f"{k}=?")
+                where_values.append(v)
+            else:
+                set_fields.append(f"{k}=?")
+                set_values.append(v)
+        set_expr = ", ".join(set_fields)
+        where_expr = " AND ".join(where_fields)
         self.cursor.execute(f"UPDATE {self.tname}" +
                             f" SET {set_expr}" +
-                            f" WHERE {where_expr}")
+                            f" WHERE {where_expr}", set_values+where_values)
 
     def save(self):
         pass

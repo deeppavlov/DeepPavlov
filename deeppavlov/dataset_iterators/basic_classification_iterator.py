@@ -46,6 +46,7 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
     Attributes:
         data: dictionary of data with fields "train", "valid" and "test" (or some of them)
     """
+
     def __init__(self, data: dict,
                  fields_to_merge: List[str] = None, merged_field: str = None,
                  field_to_split: str = None, split_fields: List[str] = None, split_proportions: List[float] = None,
@@ -81,7 +82,7 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
                 raise IOError("Given field to split BUT not given names of split fields")
 
     def _split_data(self, field_to_split: str = None, split_fields: List[str] = None,
-                    split_proportions: List[float] = None, split_seed: int=None, stratify: bool = None) -> bool:
+                    split_proportions: List[float] = None, split_seed: int = None, stratify: bool = None) -> bool:
         """
         Split given field of dataset to the given list of fields with corresponding proportions
 

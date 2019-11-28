@@ -43,6 +43,7 @@ class Embedder(Component, Serializable, metaclass=ABCMeta):
         mean: whether to return one mean embedding vector per sample
         load_path: path with pre-trained fastText binary model
     """
+
     def __init__(self, load_path: Union[str, Path], pad_zero: bool = False, mean: bool = False, **kwargs) -> None:
         """
         Initialize embedder with given parameters

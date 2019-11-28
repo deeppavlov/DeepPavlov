@@ -59,14 +59,30 @@ it is followed by ``softmax`` activation (``sigmoid`` if ``multilabel`` paramete
 BERT for Named Entity Recognition (Sequence Tagging)
 ----------------------------------------------------
 
-Pre-trained BERT model can be used for sequence tagging. Examples of usage of BERT for sequence tagging can be
-found :doc:`here </features/models/ner>`. The module used for tagging is :class:`~deeppavlov.models.bert.bert_ner.BertNerModel`.
-To tag each word representations of the first sub-word elements are extracted. So for each word there is only one vector produced.
-These representations are passed to a dense layer or Bi-RNN layer to produce distribution over tags. There is
-also an optional CRF layer on the top.
+Pre-trained BERT model can be used for sequence tagging. Examples of BERT application to sequence tagging
+can be found :doc:`here </features/models/ner>`. The module used for tagging
+is :class:`~deeppavlov.models.bert.bert_sequence_tagger.BertSequenceTagger`.
+The tags are obtained by applying a dense layer to the representation of
+the first subtoken of each word. There is also an optional CRF layer on the top.
 
 Multilingual BERT model allows to perform zero-shot transfer across languages. To use our 19 tags NER for over a
 hundred languages see :ref:`ner_multi_bert`.
+
+BERT for Morphological Tagging
+------------------------------
+
+Since morphological tagging is also a sequence labeling task, it can be solved in a similar fashion.
+The only difference is that we may use the last subtoken of each word in case word morphology
+is mostly defined by its suffixes, not prefixes (that is the case for most Indo-European languages,
+such as Russian, Spanish, German etc.). See :doc:`also </features/models/morphotagger>`.
+
+BERT for Syntactic Parsing
+--------------------------
+
+You can use BERT for syntactic parsing also. As most modern parsers, we use the biaffine model
+over the embedding layer, which is the output of BERT. The model outputs the index of syntactic
+head and the dependency type for each word. See :doc:`the parser documentation </features/models/syntaxparser>`
+for more information about model performance and algorithm.
 
 
 BERT for Context Question Answering (SQuAD)

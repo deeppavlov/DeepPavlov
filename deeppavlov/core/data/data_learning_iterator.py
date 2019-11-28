@@ -31,6 +31,7 @@ class DataLearningIterator:
         shuffle: whether to shuffle data during batching
         random: instance of ``Random`` initialized with a seed
     """
+
     def split(self, *args, **kwargs):
         """ Manipulate self.train, self.valid, and self.test into their final form. """
         pass

@@ -31,6 +31,7 @@ class NLTKTokenizer(Component):
     Attributes:
         tokenizer: tokenizer instance from nltk.tokenizers
     """
+
     def __init__(self, tokenizer: str = "wordpunct_tokenize", download: bool = False,
                  *args, **kwargs):
         if download:

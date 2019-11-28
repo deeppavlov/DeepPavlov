@@ -35,7 +35,7 @@ class EmbeddingsMatrixAssembler:
         character_level: whether to perform assembling on character level. This procedure will
             assemble matrix with embeddings for every character using averaged embeddings of
             words, that contain this character.
-        emb_dim: dimensionality of the resulting embeddings. If not `None` it should be less
+        emb_dim: dimensionality of the resulting embeddings. If not ``None`` it should be less
             or equal to the dimensionality of the embeddings provided by `Embedder`. The
             reduction of dimensionality is performed by taking main components of PCA.
         estimate_by_n: how much samples to use to estimate covariance matrix for PCA.

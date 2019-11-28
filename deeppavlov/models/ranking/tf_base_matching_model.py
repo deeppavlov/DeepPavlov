@@ -1,18 +1,16 @@
-"""
-Copyright 2018 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from logging import getLogger
 from typing import List, Dict, Tuple
@@ -52,7 +50,8 @@ class TensorflowBaseMatchingModel(TFModel, SiameseModel):
                                                           *args, **kwargs)
         self.use_logits = use_logits
         if mean_oov:
-            self.emb_matrix[1] = np.mean(self.emb_matrix[2:], axis=0)  # set mean embedding for OOV token at the 2nd index
+            self.emb_matrix[1] = np.mean(self.emb_matrix[2:],
+                                         axis=0)  # set mean embedding for OOV token at the 2nd index
 
     def _append_sample_to_batch_buffer(self, sample: List[np.ndarray], buf: List[Tuple]) -> int:
         """
@@ -65,9 +64,9 @@ class TensorflowBaseMatchingModel(TFModel, SiameseModel):
              a number of candidate responses
         """
         #
-        batch_buffer_context = []       # [batch_size, 10, 50]
-        batch_buffer_context_len = []   # [batch_size, 10]
-        batch_buffer_response = []      # [batch_size, 50]
+        batch_buffer_context = []  # [batch_size, 10, 50]
+        batch_buffer_context_len = []  # [batch_size, 10]
+        batch_buffer_response = []  # [batch_size, 50]
         batch_buffer_response_len = []  # [batch_size]
 
         context_sentences = sample[:self.num_context_turns]

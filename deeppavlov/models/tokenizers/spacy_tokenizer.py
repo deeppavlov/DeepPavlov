@@ -178,7 +178,7 @@ class StreamSpacyTokenizer(Component):
             processed_doc = ngramize(filtered, ngram_range=_ngram_range)
             yield from processed_doc
 
-    def _filter(self, items: List[str], alphas_only: bool=True) -> List[str]:
+    def _filter(self, items: List[str], alphas_only: bool = True) -> List[str]:
         """Filter a list of tokens/lemmas.
 
         Args:

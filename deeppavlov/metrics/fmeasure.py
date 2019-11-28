@@ -39,7 +39,7 @@ def ner_f1(y_true, y_predicted):
 @register_metric('ner_token_f1')
 def ner_token_f1(y_true, y_pred, print_results=False):
     y_true = list(chain(*y_true))
-    y_pred= list(chain(*y_pred))
+    y_pred = list(chain(*y_pred))
 
     # Drop BIO or BIOES markup
     assert all(len(tag.split('-')) <= 2 for tag in y_true)
@@ -77,7 +77,8 @@ def ner_token_f1(y_true, y_pred, print_results=False):
                         'f1': f1, 'n_true': n_true, 'n_pred': n_pred,
                         'tp': tp, 'fp': fp, 'fn': fn}
 
-    results['__total__'], accuracy, total_true_entities, total_predicted_entities, total_correct = _global_stats_f1(results)
+    results['__total__'], accuracy, total_true_entities, total_predicted_entities, total_correct = _global_stats_f1(
+        results)
     n_tokens = len(y_true)
     if print_results:
         log.debug('TOKEN LEVEL F1')
@@ -85,7 +86,8 @@ def ner_token_f1(y_true, y_pred, print_results=False):
     return results['__total__']['f1']
 
 
-def _print_conll_report(results, accuracy, total_true_entities, total_predicted_entities, n_tokens, total_correct, short_report=False, entity_of_interest=None):
+def _print_conll_report(results, accuracy, total_true_entities, total_predicted_entities, n_tokens, total_correct,
+                        short_report=False, entity_of_interest=None):
     tags = list(results.keys())
 
     s = 'processed {len} tokens ' \
@@ -124,12 +126,13 @@ def _print_conll_report(results, accuracy, total_true_entities, total_predicted_
                                                                tot_predicted=results[tag]['n_pred'])
     elif entity_of_interest is not None:
         s += '\t' + entity_of_interest + ': precision:  {tot_prec:.2f}%; ' \
-                          'recall:  {tot_recall:.2f}%; ' \
-                          'F1:  {tot_f1:.2f} ' \
-                          '{tot_predicted}\n\n'.format(tot_prec=results[entity_of_interest]['precision'],
-                                                       tot_recall=results[entity_of_interest]['recall'],
-                                                       tot_f1=results[entity_of_interest]['f1'],
-                                                       tot_predicted=results[entity_of_interest]['n_pred'])
+                                         'recall:  {tot_recall:.2f}%; ' \
+                                         'F1:  {tot_f1:.2f} ' \
+                                         '{tot_predicted}\n\n'.format(tot_prec=results[entity_of_interest]['precision'],
+                                                                      tot_recall=results[entity_of_interest]['recall'],
+                                                                      tot_f1=results[entity_of_interest]['f1'],
+                                                                      tot_predicted=results[entity_of_interest][
+                                                                          'n_pred'])
     log.debug(s)
 
 
@@ -381,11 +384,12 @@ def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, 
                                                                    tot_predicted=results[tag]['n_pred'])
         elif entity_of_interest is not None:
             s += '\t' + entity_of_interest + ': precision:  {tot_prec:.2f}%; ' \
-                              'recall:  {tot_recall:.2f}%; ' \
-                              'F1:  {tot_f1:.2f} ' \
-                              '{tot_predicted}\n\n'.format(tot_prec=results[entity_of_interest]['precision'],
-                                                           tot_recall=results[entity_of_interest]['recall'],
-                                                           tot_f1=results[entity_of_interest]['f1'],
-                                                           tot_predicted=results[entity_of_interest]['n_pred'])
+                                             'recall:  {tot_recall:.2f}%; ' \
+                                             'F1:  {tot_f1:.2f} ' \
+                                             '{tot_predicted}\n\n'.format(
+                tot_prec=results[entity_of_interest]['precision'],
+                tot_recall=results[entity_of_interest]['recall'],
+                tot_f1=results[entity_of_interest]['f1'],
+                tot_predicted=results[entity_of_interest]['n_pred'])
         log.debug(s)
     return results

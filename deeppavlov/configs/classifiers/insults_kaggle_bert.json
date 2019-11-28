@@ -123,10 +123,6 @@
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
       "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
     ],
-    "labels": {
-      "telegram_utils": "IntentModel",
-      "server_utils": "KerasIntentModel"
-    },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/insults_data.tar.gz",

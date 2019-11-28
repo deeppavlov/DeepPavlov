@@ -36,6 +36,7 @@ class SVMTagger(Estimator):
         kernel: kernel of SVM (RBF works well in the most of the cases)
         seed: seed for SVM initialization
     """
+
     def __init__(self, return_probabilities: bool = False, kernel: str = 'rbf', seed=42, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.classifier = None

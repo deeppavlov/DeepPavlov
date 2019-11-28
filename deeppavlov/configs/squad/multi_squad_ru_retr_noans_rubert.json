@@ -95,10 +95,6 @@
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
-    "labels": {
-      "telegram_utils": "SquadModel",
-      "server_utils": "SquadModel"
-    },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v1.tar.gz",

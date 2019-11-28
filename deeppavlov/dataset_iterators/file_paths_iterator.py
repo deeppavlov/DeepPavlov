@@ -39,7 +39,7 @@ class FilePathsIterator(DataLearningIterator):
 
     def __init__(self,
                  data: Dict[str, List[Union[str, Path]]],
-                 seed: Optional[int] = None, 
+                 seed: Optional[int] = None,
                  shuffle: bool = True,
                  *args, **kwargs) -> None:
         self.seed = seed
@@ -58,7 +58,7 @@ class FilePathsIterator(DataLearningIterator):
                 self.np_random.shuffle(lines)
             yield lines
 
-    def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: Optional[bool] = None)\
+    def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: Optional[bool] = None) \
             -> Iterator[Tuple[str, str]]:
         if shuffle is None:
             shuffle = self.shuffle

@@ -2,75 +2,43 @@
   "common_defaults": {
     "host": "0.0.0.0",
     "port": 5000,
-    "docs_endpoint": "/docs",
     "model_args_names": "",
     "https": false,
     "https_cert_path": "",
     "https_key_path": "",
-    "stateful": false,
-    "multi_instance": false
+    "socket_type": "TCP",
+    "unix_socket_file": "/tmp/deeppavlov_socket.s",
+    "socket_launch_message": "launching socket server at"
   },
-  "telegram_defaults": {
-    "token": ""
-  },
-  "ms_bot_framework_defaults": {
-    "auth_polling_interval": 3500,
+  "telegram": {
+    "token": "",
     "conversation_lifetime": 3600,
-    "auth_app_id": "",
-    "auth_app_secret": ""
+    "start_message": "Welcome to DeepPavlov inference bot!",
+    "help_message": "Welcome to DeepPavlov inference bot!",
+    "next_argument_message": "Please enter an argument '{}'",
+    "unsupported_message": "Unsupported message received."
   },
-  "alexa_defaults": {
-    "intent_name": "AskDeepPavlov",
-    "slot_name": "raw_input",
-    "start_message": "Welcome to DeepPavlov Alexa wrapper!",
-    "unsupported_message": "Sorry, DeepPavlov can't understand it.",
-    "conversation_lifetime": 3600
-  },
-  "model_defaults": {
-    "DstcSlotFillingNetwork": {
-      "host": "",
-      "port": "",
-      "model_args_names": ""
+  "deprecated": {
+    "AlexaBot": {
+      "amazon_cert_lifetime_secs": 3600,
+      "request_timestamp_tolerance_secs": 150,
+      "refresh_valid_certs_period_secs": 120,
+      "intent_name": "AskDeepPavlov",
+      "slot_name": "raw_input"
     },
-    "EcommerceSkill": {
-      "host": "",
-      "port": "",
-      "model_args_names": ""
-    },
-    "ErrorModel": {
-      "host": "",
-      "port": "",
-      "model_args_names": ""
-    },
-    "GoalOrientedBot": {
-      "host": "",
-      "port": "",
-      "model_args_names": ""
-    },
-    "KerasIntentModel": {
-      "host": "",
-      "port": "",
-      "model_args_names": ""
-    },
-    "NER": {
-      "host": "",
-      "port": "",
-      "model_args_names": ""
-    },
-    "SquadModel": {
-      "host": "",
-      "port": "",
-      "model_args_names": ""
-    },
-    "ODQA": {
-      "host": "",
-      "port": "",
-      "model_args_names": ""
-    },
-    "Ranker": {
-      "host": "",
-      "port": "",
-      "model_args_names": ""
+    "MSBot": {
+      "auth_polling_interval": 3500,
+      "auth_url": "https://login.microsoftonline.com/botframework.com/oauth2/v2.0/token",
+      "auth_headers": {
+        "Host": "login.microsoftonline.com",
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      "auth_payload": {
+        "grant_type": "client_credentials",
+        "scope": "https://api.botframework.com/.default",
+        "client_id": "",
+        "client_secret": ""
+      }
     }
   }
 }

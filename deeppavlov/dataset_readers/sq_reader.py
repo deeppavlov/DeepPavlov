@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pathlib import Path
 import pickle
 
-from deeppavlov.core.data.dataset_reader import DatasetReader
-from deeppavlov.core.data.utils import download
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.dataset_reader import DatasetReader
 
 
 @register('sq_reader')

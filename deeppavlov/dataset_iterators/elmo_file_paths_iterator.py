@@ -91,15 +91,15 @@ class ELMoFilePathsIterator(FilePathsIterator):
         reversed_token_ids = list(reversed(token_ids))
         token_ids = token_ids[1:]
         reversed_token_ids = reversed_token_ids[1:]
-        
+
         return char_ids, reversed_char_ids, token_ids, reversed_token_ids
-            
+
     def _line_generator(self, shard_generator):
         for shard in shard_generator:
             line_generator = chunk_generator(shard, 1)
             for line in line_generator:
                 line = line[0]
-                char_ids, reversed_char_ids, token_ids, reversed_token_ids =\
+                char_ids, reversed_char_ids, token_ids, reversed_token_ids = \
                     self._line2ids(line)
                 yield char_ids, reversed_char_ids, token_ids, reversed_token_ids
 
@@ -124,13 +124,13 @@ class ELMoFilePathsIterator(FilePathsIterator):
 
                         sti.clear()
                         sti.extend(_s)
-                char_ids, reversed_char_ids, token_ids, reversed_token_ids =\
+                char_ids, reversed_char_ids, token_ids, reversed_token_ids = \
                     zip(*batch)
                 yield char_ids, reversed_char_ids, token_ids, reversed_token_ids
         except StopIteration:
             pass
 
-    def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: Optional[bool] = None)\
+    def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: Optional[bool] = None) \
             -> Iterator[Tuple[str, str]]:
         if shuffle is None:
             shuffle = self.shuffle

@@ -46,6 +46,7 @@ class Seq2SeqGoalOrientedBot(NNModel):
         **kwargs: parameters passed to parent
             :class:`~deeppavlov.core.models.nn_model.NNModel` class.
     """
+
     def __init__(self,
                  network_parameters: Dict,
                  embedder: Component,
@@ -95,7 +96,7 @@ class Seq2SeqGoalOrientedBot(NNModel):
         return Seq2SeqGoalOrientedBotNetwork(**params)
 
     def _embed_kb_key(self, key):
-# TODO: fasttext embedder to work with tokens
+        # TODO: fasttext embedder to work with tokens
         emb = np.array(self.embedder([key.split('_')], mean=True)[0])
         if self.debug:
             log.debug("embedding key tokens='{}', embedding shape = {}"
@@ -124,10 +125,10 @@ class Seq2SeqGoalOrientedBot(NNModel):
         #    np.ones((batch_size, max_src_len), dtype=np.float32)
         b_enc_ins_np = np.zeros((batch_size, max_src_len, self.embedding_size),
                                 dtype=np.float32)
-        b_dec_ins_np = self.tgt_vocab[self.eos_token] *\
-            np.ones((batch_size, max_tgt_len), dtype=np.float32)
-        b_dec_outs_np = self.tgt_vocab[self.eos_token] *\
-            np.ones((batch_size, max_tgt_len), dtype=np.float32)
+        b_dec_ins_np = self.tgt_vocab[self.eos_token] * \
+                       np.ones((batch_size, max_tgt_len), dtype=np.float32)
+        b_dec_outs_np = self.tgt_vocab[self.eos_token] * \
+                        np.ones((batch_size, max_tgt_len), dtype=np.float32)
         b_tgt_weights_np = np.zeros((batch_size, max_tgt_len), dtype=np.float32)
         b_kb_masks_np = np.zeros((batch_size, self.kb_size), np.float32)
         for i, (src_len, tgt_len, kb_entries) in \
@@ -184,6 +185,7 @@ class Seq2SeqGoalOrientedBot(NNModel):
                     yield token
                 else:
                     yield self.kb_keys[idx - self.tgt_vocab_size]
+
         return [list(_idx2token(utter_idxs)) for utter_idxs in token_idxs]
 
     def __call__(self, *batch):
@@ -225,4 +227,3 @@ class Seq2SeqGoalOrientedBot(NNModel):
 
     def load(self):
         pass
-

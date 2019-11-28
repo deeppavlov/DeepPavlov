@@ -25,7 +25,7 @@ SMOOTH = SmoothingFunction()
 
 @register_metric('bleu_advanced')
 def bleu_advanced(y_true: List[Any], y_predicted: List[Any],
-                  weights: Tuple=(1,), smoothing_function=SMOOTH.method1,
+                  weights: Tuple = (1,), smoothing_function=SMOOTH.method1,
                   auto_reweigh=False, penalty=True) -> float:
     """Calculate BLEU score
 
@@ -52,7 +52,7 @@ def bleu_advanced(y_true: List[Any], y_predicted: List[Any],
     if penalty is True or bpenalty == 0:
         return bleu_measure
 
-    return bleu_measure/bpenalty
+    return bleu_measure / bpenalty
 
 
 @register_metric('bleu')

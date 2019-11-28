@@ -48,6 +48,7 @@ class BertClassifierModel(LRScheduledTFModel):
         pretrained_bert: pretrained Bert checkpoint
         min_learning_rate: min value of learning rate if learning rate decay is used
     """
+
     # TODO: add warmup
     # TODO: add head-only pre-training
     def __init__(self, bert_config_file, n_classes, keep_prob,
@@ -153,7 +154,7 @@ class BertClassifierModel(LRScheduledTFModel):
         self.token_types_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='token_types_ph')
 
         if not self.one_hot_labels:
-            self.y_ph = tf.placeholder(shape=(None, ), dtype=tf.int32, name='y_ph')
+            self.y_ph = tf.placeholder(shape=(None,), dtype=tf.int32, name='y_ph')
         else:
             self.y_ph = tf.placeholder(shape=(None, self.n_classes), dtype=tf.float32, name='y_ph')
 

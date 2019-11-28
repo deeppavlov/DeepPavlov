@@ -179,7 +179,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             tf.verify_tensor_all_finite(_loss_tensor, "Non finite values in loss tensor.")
         self._loss = tf.reduce_sum(_loss_tensor) / tf.cast(self._batch_size, tf.float32)
         # self._loss = tf.reduce_mean(_loss_tensor, name='loss')
-# TODO: tune clip_norm
+        # TODO: tune clip_norm
         self._train_op = \
             self.get_train_op(self._loss,
                               learning_rate=self._learning_rate,
@@ -221,7 +221,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                                                [None, None],
                                                name='decoder_outputs')
         # _kb_embedding: [kb_size, embedding_size]
-# TODO: try training embeddings
+        # TODO: try training embeddings
         kb_W = np.array(self.kb_embedding)[:, :self.embedding_size]
         self._kb_embedding = tf.get_variable("kb_embedding",
                                              shape=(kb_W.shape[0], kb_W.shape[1]),
@@ -231,7 +231,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         # _kb_mask: [batch_size, kb_size]
         self._kb_mask = tf.placeholder(tf.float32, [None, None], name='kb_mask')
 
-# TODO: compute sequence lengths on the go
+        # TODO: compute sequence lengths on the go
         # _src_sequence_lengths, _tgt_sequence_lengths: [batch_size]
         self._src_sequence_lengths = tf.placeholder(tf.int32,
                                                     [None],
@@ -272,7 +272,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             # Run Dynamic RNN
             #   _encoder_outputs: [max_time, batch_size, hidden_size]
             #   _encoder_state: [batch_size, hidden_size]
-# input_states?
+            # input_states?
             _encoder_outputs, _encoder_state = tf.nn.dynamic_rnn(
                 _encoder_cell, _encoder_emb_inp, dtype=tf.float32,
                 sequence_length=self._src_sequence_lengths, time_major=False)
@@ -346,8 +346,8 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                 _decoder_emb_inp, self._tgt_sequence_lengths, time_major=False)
             # Copy encoder hidden state to decoder inital state
             _decoder_init_state = \
-                _decoder_cell_tr.zero_state(self._batch_size, dtype=tf.float32)\
-                .clone(cell_state=self._encoder_state)
+                _decoder_cell_tr.zero_state(self._batch_size, dtype=tf.float32) \
+                    .clone(cell_state=self._encoder_state)
             _decoder_tr = \
                 tf.contrib.seq2seq.BasicDecoder(_decoder_cell_tr, _helper_tr,
                                                 initial_state=_decoder_init_state,
@@ -377,21 +377,21 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             # Decoder Init State
             _decoder_init_state = \
                 _decoder_cell_inf.zero_state(tf.shape(_tiled_encoder_outputs)[0],
-                                             dtype=tf.float32)\
-                .clone(cell_state=_tiled_encoder_state)
+                                             dtype=tf.float32) \
+                    .clone(cell_state=_tiled_encoder_state)
             # Define a beam-search decoder
             _start_tokens = tf.tile(tf.constant([self.tgt_sos_id], tf.int32),
                                     [self._batch_size])
             # _start_tokens = tf.fill([self._batch_size], self.tgt_sos_id)
             _decoder_inf = tf.contrib.seq2seq.BeamSearchDecoder(
-                    cell=_decoder_cell_inf,
-                    embedding=self._decoder_embedding,
-                    start_tokens=_start_tokens,
-                    end_token=self.tgt_eos_id,
-                    initial_state=_decoder_init_state,
-                    beam_width=self.beam_width,
-                    output_layer=_kb_attn_layer,
-                    length_penalty_weight=0.0)
+                cell=_decoder_cell_inf,
+                embedding=self._decoder_embedding,
+                start_tokens=_start_tokens,
+                end_token=self.tgt_eos_id,
+                initial_state=_decoder_init_state,
+                beam_width=self.beam_width,
+                output_layer=_kb_attn_layer,
+                length_penalty_weight=0.0)
 
             # Wrap into variable scope to share attention parameters
             # Required!
@@ -421,7 +421,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                 self._kb_mask: kb_masks
             }
         )
-# TODO: implement infer probabilities
+        # TODO: implement infer probabilities
         if prob:
             raise NotImplementedError("Probs not available for now.")
         return predictions
@@ -449,8 +449,8 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         # polynomial decay
         global_step = min(self.global_step, self.decay_steps)
         decayed_learning_rate = \
-            (self.learning_rate - self.end_learning_rate) *\
-            (1 - global_step / self.decay_steps) ** self.decay_power +\
+            (self.learning_rate - self.end_learning_rate) * \
+            (1 - global_step / self.decay_steps) ** self.decay_power + \
             self.end_learning_rate
         return decayed_learning_rate
 
@@ -465,9 +465,9 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             params = json.load(fp)
         for p in self.GRAPH_PARAMS:
             if self.opt.get(p) != params.get(p):
-                if p in ('kb_embedding_control_sum') and\
+                if p in ('kb_embedding_control_sum') and \
                         (math.abs(self.opt.get(p, 0.) - params.get(p, 0.)) < 1e-3):
-                        continue
+                    continue
                 raise ConfigError("`{}` parameter must be equal to saved model"
                                   " parameter value `{}`, but is equal to `{}`"
                                   .format(p, params.get(p), self.opt.get(p)))

@@ -87,6 +87,14 @@ Several pre-trained models are available and presented in Table below.
 | 5 topics         | `AG News`_         |      | :config:`Wiki emb <classifiers/topic_ag_news.json>`                                             | Accuracy    | 0.8922 | 0.9059 |  8.5 Gb   |
 +------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | Intent           |`Yahoo-L31`_        |      | :config:`Yahoo-L31 on conversational BERT <classifiers/yahoo_convers_vs_info_bert.json>`        | ROC-AUC     | 0.9436 |   --   |  1200 Mb  |
++------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
+| Sentiment        |`SST`_              |      | :config:`5-classes SST on conversational BERT <classifiers/sentiment_sst_conv_bert.json>`       | Accuracy    | 0.6456 | 0.6715 |  400 Mb   |
++                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |                    |      | :config:`5-classes SST on multilingual BERT <classifiers/sentiment_sst_multi_bert.json>`        |             | 0.5738 | 0.6024 |  660 Mb   |
++                  +--------------------+      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |`Yelp`_             |      | :config:`5-classes Yelp on conversational BERT <classifiers/sentiment_yelp_conv_bert.json>`     |             | 0.6925 | 0.6842 |  400 Mb   |
++                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |                    |      | :config:`5-classes Yelp on multilingual BERT <classifiers/sentiment_yelp_multi_bert.json>`      |             | 0.5896 | 0.5874 |  660 Mb   |
 +------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | Sentiment        |`Twitter mokoron`_  | Ru   | :config:`RuWiki+Lenta emb w/o preprocessing <classifiers/sentiment_twitter.json>`               |             | 0.9965 | 0.9961 |  6.2 Gb   |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
@@ -116,6 +124,8 @@ Several pre-trained models are available and presented in Table below.
 .. _`RuSentiment`: http://text-machine.cs.uml.edu/projects/rusentiment/
 .. _`Yahoo-L31`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 .. _`Yahoo-L6`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
+.. _`SST`: https://nlp.stanford.edu/sentiment/index.html
+.. _`Yelp`: https://www.yelp.com/dataset
 
 As no one had published intent recognition for DSTC-2 data, the
 comparison of the presented model is given on **SNIPS** dataset. The
@@ -384,11 +394,14 @@ model. This model outputs empty string in case if there is no answer in context.
 Morphological tagging model :doc:`[docs] </features/models/morphotagger>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Based on character-based approach to morphological tagging `Heigold et al., 2017. An extensive empirical evaluation of
-character-based morphological tagging for 14 languages <http://www.aclweb.org/anthology/E17-1048>`__. A state-of-the-art
-model for Russian and several other languages. Model takes as input tokenized sentences and outputs the corresponding
-sequence of morphological labels in `UD format <http://universaldependencies.org/format.html>`__. The table below
-contains word and sentence accuracy on UD2.0 datasets. For more scores see :doc:`full table </features/models/morphotagger>`.
+We have a BERT-based model for Russian and character-based models for 11 languages.
+The character model is based on `Heigold et al., 2017. An extensive empirical evaluation of
+character-based morphological tagging for 14 languages <http://www.aclweb.org/anthology/E17-1048>`__.
+It is a state-of-the-art model for Russian and near state of the art for several other languages.
+Model takes as input tokenized sentences and outputs the corresponding
+sequence of morphological labels in `UD format <http://universaldependencies.org/format.html>`__.
+The table below contains word and sentence accuracy on UD2.0 datasets.
+For more scores see :doc:`full table </features/models/morphotagger>`.
 
 .. table::
     :widths: auto
@@ -396,6 +409,12 @@ contains word and sentence accuracy on UD2.0 datasets. For more scores see :doc:
     +----------------------+--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
     |    Dataset           | Model                                                                                                        | Word accuracy | Sent. accuracy | Download size (MB) |
     +======================+==============================================================================================================+===============+================+====================+
+    |`UD2.3`_ (Russian)    |`UD Pipe 2.3`_ (Straka et al., 2017)                                                                          |    93.5       |                |                    |
+    |                      +--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
+    |                      | `UD Pipe Future`_ (Straka et al., 2018)                                                                      |    96.90      |                |                    |
+    |                      +--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
+    |                      |:config:`BERT-based model <morpho_tagger/BERT/morpho_ru_syntagrus_bert.json>`                                 |    97.83      |     72.02      |       661          |
+    +----------------------+--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
     |                      |`Pymorphy`_ + `russian_tagsets`_ (first tag)                                                                  |     60.93     |      0.00      |                    |
     +                      +--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
     |`UD2.0`_ (Russian)    |`UD Pipe 1.2`_ (Straka et al., 2017)                                                                          |     93.57     |     43.04      |                    |
@@ -420,7 +439,37 @@ contains word and sentence accuracy on UD2.0 datasets. For more scores see :doc:
 .. _`Pymorphy`: https://pymorphy2.readthedocs.io/en/latest/
 .. _`russian_tagsets`: https://github.com/kmike/russian-tagsets
 .. _`UD2.0`: https://lindat.mff.cuni.cz/repository/xmlui/handle/11234/1-1983
+.. _`UD2.3`: http://hdl.handle.net/11234/1-2895
 .. _`UD Pipe 1.2`: http://ufal.mff.cuni.cz/udpipe
+.. _`UD Pipe 2.3`: http://ufal.mff.cuni.cz/udpipe
+.. _`UD Pipe Future`: https://github.com/CoNLL-UD-2018/UDPipe-Future
+
+Syntactic parsing model :doc:`[docs] </features/models/syntaxparser>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We have a biaffine model for syntactic parsing based on RuBERT.
+It achieves the highest known labeled attachments score of 93.7%
+on ``ru_syntagrus`` Russian corpus (version UD 2.3).
+
+.. table::
+    :widths: auto
+
+    +-------------------------+-------------------------------------------------------------------------------------------+---------+----------+
+    |   Dataset               |  Model                                                                                    | UAS     | LAS      |
+    +=========================+===========================================================================================+=========+==========+
+    | `UD2.3`_ (Russian)      | `UD Pipe 2.3`_ (Straka et al., 2017)                                                      | 90.3    | 89.0     |
+    |                         +-------------------------------------------------------------------------------------------+---------+----------+
+    |                         | `UD Pipe Future`_ (Straka, 2018)                                                          | 93.0    | 91.5     |
+    |                         +-------------------------------------------------------------------------------------------+---------+----------+
+    |                         | `UDify (multilingual BERT)`_ (Kondratyuk, 2018)                                           | 94.8    | 93.1     |
+    |                         +-------------------------------------------------------------------------------------------+---------+----------+
+    |                         |:config:`our BERT model <syntax/syntax_ru_syntagrus_bert.json>`                            | 95.2    | 93.7     |
+    +-------------------------+-------------------------------------------------------------------------------------------+---------+----------+
+
+.. _`UD2.3`: http://hdl.handle.net/11234/1-2895
+.. _`UD Pipe 2.3`: http://ufal.mff.cuni.cz/udpipe
+.. _`UD Pipe Future`: https://github.com/CoNLL-UD-2018/UDPipe-Future
+.. _`UDify (multilingual BERT)`: https://github.com/hyperparticle/udify
 
 Frequently Asked Questions (FAQ) model :doc:`[docs] </features/skills/faq>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -443,25 +492,23 @@ customizable: embeddings, slot filler and intent classifier can be switched on a
 
 Available pre-trained models and their comparison with existing benchmarks:
 
-+----------------+------+-------------------------------------------------------------------------------------+---------------+---------+------------+------------------+
-| Dataset        | Lang | Model                                                                               | Metric        | Valid   | Test       | Downloads        |
-+================+======+=====================================================================================+===============+=========+============+==================+
-| `DSTC 2`_ [*]_ | En   | :config:`bot with slot filler <go_bot/gobot_dstc2.json>`                            | Turn Accuracy | 0.544   | 0.542      | 400 Mb           |
-+                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-|                |      | :config:`bot with slot filler & intents & attention <go_bot/gobot_dstc2_best.json>` |               | 0.548   | **0.553**  | 8.5 Gb           |
-+----------------+      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-| `DSTC 2`_      |      | Bordes and Weston (2016)                                                            |               | --      | 0.411      | --               |
-+                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-|                |      | Eric and Manning (2017)                                                             |               | --      | 0.480      | --               |
-+                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-|                |      | Perez and Liu (2016)                                                                |               | --      | 0.487      | --               |
-+                +      +-------------------------------------------------------------------------------------+               +---------+------------+------------------+
-|                |      | Williams et al. (2017)                                                              |               | --      | **0.556**  | --               |
-+----------------+------+-------------------------------------------------------------------------------------+---------------+---------+------------+------------------+
-
-.. _`DSTC 2`: http://camdial.org/~mh521/dstc/
-
-.. [*] There were a few :ref:`modifications <dstc2_dataset>` to the original dataset. 
++-----------------------------------+------+------------------------------------------------------------------------------------+---------------+-----------+---------------+
+| Dataset                           | Lang | Model                                                                              | Metric        | Test      | Downloads     |
++===================================+======+====================================================================================+===============+===========+===============+
+| `DSTC 2`_                         | En   | :config:`basic bot <go_bot/gobot_dstc2_minimal.json>`                              | Turn Accuracy | 0.380     | 10 Mb         |
++ (:ref:`modified <dstc2_dataset>`) +      +------------------------------------------------------------------------------------+               +-----------+---------------+
+|                                   |      | :config:`bot with slot filler <go_bot/gobot_dstc2.json>`                           |               | 0.542     | 400 Mb        |
++                                   +      +------------------------------------------------------------------------------------+               +-----------+---------------+
+|                                   |      | :config:`bot with slot filler, intents & attention <go_bot/gobot_dstc2_best.json>` |               | **0.553** | 8.5 Gb        |
++-----------------------------------+      +------------------------------------------------------------------------------------+               +-----------+---------------+
+| `DSTC 2`_                         |      | Bordes and Weston (2016)                                                           |               | 0.411     | --            |
++                                   +      +------------------------------------------------------------------------------------+               +-----------+---------------+
+|                                   |      | Eric and Manning (2017)                                                            |               | 0.480     | --            |
++                                   +      +------------------------------------------------------------------------------------+               +-----------+---------------+
+|                                   |      | Perez and Liu (2016)                                                               |               | 0.487     | --            |
++                                   +      +------------------------------------------------------------------------------------+               +-----------+---------------+
+|                                   |      | Williams et al. (2017)                                                             |               | **0.556** | --            |
++-----------------------------------+------+------------------------------------------------------------------------------------+---------------+-----------+---------------+
 
 
 Seq2seq goal-oriented bot :doc:`[docs] </features/skills/seq2seq_go_bot>`
@@ -489,16 +536,6 @@ Comparison of deeppavlov pretrained model with others:
 +-------------------+------+----------------------------------------------------+------------------+-----------------+-----------+
 
 .. _`Stanford Kvret`: https://nlp.stanford.edu/blog/a-new-multi-turn-multi-domain-task-oriented-dialogue-dataset/
-
-
-eCommerce bot :doc:`[docs] </features/skills/ecommerce>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The eCommerce bot intends to retrieve product items from catalog in sorted order. In addition, it asks an user to provide additional information to specify the search.
-
-.. note::
-
-    About **130 Mb** on disc required for eCommerce bot with TfIdf-based ranker and **500 Mb** for BLEU-based ranker.
 
 
 ODQA :doc:`[docs] </features/skills/odqa>`
@@ -546,7 +583,7 @@ Examples of some models
 
 -  Run goal-oriented bot with Telegram interface:
 
-   ``python -m deeppavlov interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -d -t <TELEGRAM_TOKEN>``
+   ``python -m deeppavlov telegram deeppavlov/configs/go_bot/gobot_dstc2.json -d -t <TELEGRAM_TOKEN>``
 -  Run goal-oriented bot with console interface:
 
    ``python -m deeppavlov interact deeppavlov/configs/go_bot/gobot_dstc2.json -d``
@@ -555,7 +592,7 @@ Examples of some models
    ``python -m deeppavlov riseapi deeppavlov/configs/go_bot/gobot_dstc2.json -d``
 -  Run slot-filling model with Telegram interface:
 
-   ``python -m deeppavlov interactbot deeppavlov/configs/ner/slotfill_dstc2.json -d -t <TELEGRAM_TOKEN>``
+   ``python -m deeppavlov telegram deeppavlov/configs/ner/slotfill_dstc2.json -d -t <TELEGRAM_TOKEN>``
 -  Run slot-filling model with console interface:
 
    ``python -m deeppavlov interact deeppavlov/configs/ner/slotfill_dstc2.json -d``

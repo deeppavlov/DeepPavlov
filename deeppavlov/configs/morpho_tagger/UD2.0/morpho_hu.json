@@ -115,6 +115,7 @@
         "out": [
           "y_prettified"
         ],
+        "id": "prettifier",
         "class_name": "tag_output_prettifier",
         "end": "\n"
       }
@@ -170,9 +171,6 @@
         "url": "http://files.deeppavlov.ai/datasets/UD2.0_source/hu.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/UD2.0_source/hu"
       }
-    ],
-    "labels": {
-      "telegram_utils": "MorphoTaggerModel"
-    }
+    ]
   }
 }
