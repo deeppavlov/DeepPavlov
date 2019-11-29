@@ -394,11 +394,14 @@ model. This model outputs empty string in case if there is no answer in context.
 Morphological tagging model :doc:`[docs] </features/models/morphotagger>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Based on character-based approach to morphological tagging `Heigold et al., 2017. An extensive empirical evaluation of
-character-based morphological tagging for 14 languages <http://www.aclweb.org/anthology/E17-1048>`__. A state-of-the-art
-model for Russian and several other languages. Model takes as input tokenized sentences and outputs the corresponding
-sequence of morphological labels in `UD format <http://universaldependencies.org/format.html>`__. The table below
-contains word and sentence accuracy on UD2.0 datasets. For more scores see :doc:`full table </features/models/morphotagger>`.
+We have a BERT-based model for Russian and character-based models for 11 languages.
+The character model is based on `Heigold et al., 2017. An extensive empirical evaluation of
+character-based morphological tagging for 14 languages <http://www.aclweb.org/anthology/E17-1048>`__.
+It is a state-of-the-art model for Russian and near state of the art for several other languages.
+Model takes as input tokenized sentences and outputs the corresponding
+sequence of morphological labels in `UD format <http://universaldependencies.org/format.html>`__.
+The table below contains word and sentence accuracy on UD2.0 datasets.
+For more scores see :doc:`full table </features/models/morphotagger>`.
 
 .. table::
     :widths: auto
@@ -406,6 +409,12 @@ contains word and sentence accuracy on UD2.0 datasets. For more scores see :doc:
     +----------------------+--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
     |    Dataset           | Model                                                                                                        | Word accuracy | Sent. accuracy | Download size (MB) |
     +======================+==============================================================================================================+===============+================+====================+
+    |`UD2.3`_ (Russian)    |`UD Pipe 2.3`_ (Straka et al., 2017)                                                                          |    93.5       |                |                    |
+    |                      +--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
+    |                      | `UD Pipe Future`_ (Straka et al., 2018)                                                                      |    96.90      |                |                    |
+    |                      +--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
+    |                      |:config:`BERT-based model <morpho_tagger/BERT/morpho_ru_syntagrus_bert.json>`                                 |    97.83      |     72.02      |       661          |
+    +----------------------+--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
     |                      |`Pymorphy`_ + `russian_tagsets`_ (first tag)                                                                  |     60.93     |      0.00      |                    |
     +                      +--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
     |`UD2.0`_ (Russian)    |`UD Pipe 1.2`_ (Straka et al., 2017)                                                                          |     93.57     |     43.04      |                    |
@@ -430,7 +439,37 @@ contains word and sentence accuracy on UD2.0 datasets. For more scores see :doc:
 .. _`Pymorphy`: https://pymorphy2.readthedocs.io/en/latest/
 .. _`russian_tagsets`: https://github.com/kmike/russian-tagsets
 .. _`UD2.0`: https://lindat.mff.cuni.cz/repository/xmlui/handle/11234/1-1983
+.. _`UD2.3`: http://hdl.handle.net/11234/1-2895
 .. _`UD Pipe 1.2`: http://ufal.mff.cuni.cz/udpipe
+.. _`UD Pipe 2.3`: http://ufal.mff.cuni.cz/udpipe
+.. _`UD Pipe Future`: https://github.com/CoNLL-UD-2018/UDPipe-Future
+
+Syntactic parsing model :doc:`[docs] </features/models/syntaxparser>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We have a biaffine model for syntactic parsing based on RuBERT.
+It achieves the highest known labeled attachments score of 93.7%
+on ``ru_syntagrus`` Russian corpus (version UD 2.3).
+
+.. table::
+    :widths: auto
+
+    +-------------------------+-------------------------------------------------------------------------------------------+---------+----------+
+    |   Dataset               |  Model                                                                                    | UAS     | LAS      |
+    +=========================+===========================================================================================+=========+==========+
+    | `UD2.3`_ (Russian)      | `UD Pipe 2.3`_ (Straka et al., 2017)                                                      | 90.3    | 89.0     |
+    |                         +-------------------------------------------------------------------------------------------+---------+----------+
+    |                         | `UD Pipe Future`_ (Straka, 2018)                                                          | 93.0    | 91.5     |
+    |                         +-------------------------------------------------------------------------------------------+---------+----------+
+    |                         | `UDify (multilingual BERT)`_ (Kondratyuk, 2018)                                           | 94.8    | 93.1     |
+    |                         +-------------------------------------------------------------------------------------------+---------+----------+
+    |                         |:config:`our BERT model <syntax/syntax_ru_syntagrus_bert.json>`                            | 95.2    | 93.7     |
+    +-------------------------+-------------------------------------------------------------------------------------------+---------+----------+
+
+.. _`UD2.3`: http://hdl.handle.net/11234/1-2895
+.. _`UD Pipe 2.3`: http://ufal.mff.cuni.cz/udpipe
+.. _`UD Pipe Future`: https://github.com/CoNLL-UD-2018/UDPipe-Future
+.. _`UDify (multilingual BERT)`: https://github.com/hyperparticle/udify
 
 Frequently Asked Questions (FAQ) model :doc:`[docs] </features/skills/faq>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

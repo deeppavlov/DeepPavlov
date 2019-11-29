@@ -159,12 +159,12 @@ class FitTrainer:
             self._loaded = True
 
     def get_chainer(self) -> Chainer:
-        """Return a :class:`~deeppavlov.core.common.chainer.Chainer` built from ``self.chainer_config`` for inference"""
+        """Returns a :class:`~deeppavlov.core.common.chainer.Chainer` built from ``self.chainer_config`` for inference"""
         self._load()
         return self._chainer
 
     def train(self, iterator: Union[DataFittingIterator, DataLearningIterator]) -> None:
-        """Call :meth:`~fit_chainer` with provided data iterator as an argument"""
+        """Calls :meth:`~fit_chainer` with provided data iterator as an argument"""
         self.fit_chainer(iterator)
         self._saved = True
 
@@ -214,7 +214,11 @@ class FitTrainer:
             log.warning('Got empty data iterable for scoring')
             return {'eval_examples_count': 0, 'metrics': None, 'time_spent': str(datetime.timedelta(seconds=0))}
 
-        metrics_values = [(m.name, m.fn(*[outputs[i] for i in m.inputs])) for m in metrics]
+        # metrics_values = [(m.name, m.fn(*[outputs[i] for i in m.inputs])) for m in metrics]
+        metrics_values = []
+        for metric in metrics:
+            value = metric.fn(*[outputs[i] for i in metric.inputs])
+            metrics_values.append((metric.alias, value))
 
         report = {
             'eval_examples_count': examples,

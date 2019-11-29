@@ -115,6 +115,7 @@
         "out": [
           "y_prettified"
         ],
+        "id": "prettifier",
         "class_name": "tag_output_prettifier",
         "end": "\n"
       }

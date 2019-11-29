@@ -31,7 +31,7 @@ log = getLogger(__name__)
 class BertPreprocessor(Component):
     """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks.
 
-    Check details in convert_examples_to_features function.
+    Check details in :func:`bert_dp.preprocessing.convert_examples_to_features` function.
 
     Args:
         vocab_file: path to vocabulary
@@ -54,7 +54,7 @@ class BertPreprocessor(Component):
                                        do_lower_case=do_lower_case)
 
     def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> List[InputFeatures]:
-        """Call Bert convert_examples_to_features function to tokenize and create masks.
+        """Call Bert :func:`bert_dp.preprocessing.convert_examples_to_features` function to tokenize and create masks.
 
         texts_a and texts_b are separated by [SEP] token
 
@@ -63,7 +63,7 @@ class BertPreprocessor(Component):
             texts_b: list of texts, it could be None, e.g. single sentence classification task
 
         Returns:
-            batch of InputFeatures with subtokens, subtoken ids, subtoken mask, segment mask.
+            batch of :class:`bert_dp.preprocessing.InputFeatures` with subtokens, subtoken ids, subtoken mask, segment mask.
 
         """
 
@@ -77,10 +77,10 @@ class BertPreprocessor(Component):
 
 @register('bert_ner_preprocessor')
 class BertNerPreprocessor(Component):
-    """Takes tokens and splits them into bert subtokens, encode subtokens with their indices.
-    Creates mask of subtokens (one for first subtoken, zero for later subtokens).
+    """Takes tokens and splits them into bert subtokens, encodes subtokens with their indices.
+    Creates a mask of subtokens (one for the first subtoken, zero for the others).
 
-    If tags are provided, calculate tags for subtokens.
+    If tags are provided, calculates tags for subtokens.
 
     Args:
         vocab_file: path to vocabulary
@@ -88,8 +88,10 @@ class BertNerPreprocessor(Component):
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
         max_subword_length: replace token to <unk> if it's length is larger than this
             (defaults to None, which is equal to +infinity)
-        token_mask_prob: probability of masking token while training
+        token_masking_prob: probability of masking token while training
         provide_subword_tags: output tags for subwords or for words
+        subword_mask_mode: subword to select inside word tokens, can be "first" or "last"
+            (default="first")
 
     Attributes:
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
@@ -102,18 +104,20 @@ class BertNerPreprocessor(Component):
                  do_lower_case: bool = False,
                  max_seq_length: int = 512,
                  max_subword_length: int = None,
-                 token_maksing_prob: float = 0.0,
+                 token_masking_prob: float = 0.0,
                  provide_subword_tags: bool = False,
+                 subword_mask_mode: str = "first",
                  **kwargs):
         self._re_tokenizer = re.compile(r"[\w']+|[^\w ]")
         self.provide_subword_tags = provide_subword_tags
         self.mode = kwargs.get('mode')
         self.max_seq_length = max_seq_length
         self.max_subword_length = max_subword_length
+        self.subword_mask_mode = subword_mask_mode
         vocab_file = str(expand_path(vocab_file))
         self.tokenizer = FullTokenizer(vocab_file=vocab_file,
                                        do_lower_case=do_lower_case)
-        self.token_maksing_prob = token_maksing_prob
+        self.token_masking_prob = token_masking_prob
 
     def __call__(self,
                  tokens: Union[List[List[str]], List[str]],
@@ -135,7 +139,8 @@ class BertNerPreprocessor(Component):
                                                               self.tokenizer,
                                                               self.max_subword_length,
                                                               mode=self.mode,
-                                                              token_maksing_prob=self.token_maksing_prob)
+                                                              subword_mask_mode=self.subword_mask_mode,
+                                                              token_masking_prob=self.token_masking_prob)
             if self.max_seq_length is not None:
                 if len(sw_toks) > self.max_seq_length:
                     raise RuntimeError(f"input sequence after bert tokenization"
@@ -175,7 +180,8 @@ class BertNerPreprocessor(Component):
                            tokenizer: FullTokenizer,
                            max_subword_len: int = None,
                            mode: str = None,
-                           token_maksing_prob: float = 0.0) -> Tuple[List[str], List[int], List[str]]:
+                           subword_mask_mode: str = "first",
+                           token_masking_prob: float = 0.0) -> Tuple[List[str], List[int], List[str]]:
         tokens_subword = ['[CLS]']
         mask_subword = [0]
         tags_subword = ['X']
@@ -187,11 +193,14 @@ class BertNerPreprocessor(Component):
                 mask_subword.append(flag)
                 tags_subword.append(tag)
             else:
-                if mode == 'train' and token_maksing_prob > 0.0 and np.random.rand() < token_maksing_prob:
+                if mode == 'train' and token_masking_prob > 0.0 and np.random.rand() < token_masking_prob:
                     tokens_subword.extend(['[MASK]'] * len(subwords))
                 else:
                     tokens_subword.extend(subwords)
-                mask_subword.extend([flag] + [0] * (len(subwords) - 1))
+                if subword_mask_mode == "last":
+                    mask_subword.extend([0] * (len(subwords) - 1) + [flag])
+                else:
+                    mask_subword.extend([flag] + [0] * (len(subwords) - 1))
                 tags_subword.extend([tag] + ['X'] * (len(subwords) - 1))
 
         tokens_subword.append('[SEP]')
@@ -208,7 +217,7 @@ class BertRankerPreprocessor(BertPreprocessor):
     """
 
     def __call__(self, batch: List[List[str]]) -> List[List[InputFeatures]]:
-        """Call BERT convert_examples_to_features function to tokenize and create masks.
+        """Call BERT :func:`bert_dp.preprocessing.convert_examples_to_features` function to tokenize and create masks.
 
         Args:
             batch: list of elemenents where the first element represents the batch with contexts
@@ -250,7 +259,7 @@ class BertSepRankerPreprocessor(BertPreprocessor):
     """
 
     def __call__(self, batch: List[List[str]]) -> List[List[InputFeatures]]:
-        """Call BERT convert_examples_to_features function to tokenize and create masks.
+        """Call BERT :func:`bert_dp.preprocessing.convert_examples_to_features` function to tokenize and create masks.
 
         Args:
             batch: list of elemenents where the first element represents the batch with contexts
@@ -291,9 +300,9 @@ class BertSepRankerPredictorPreprocessor(BertSepRankerPreprocessor):
 
     Args:
         resps: list of strings containing the base of text responses
-        resp_vecs: BERT vector respresentations of `resps`, if is `None` features for the response base will be build
+        resp_vecs: BERT vector respresentations of ``resps``, if is ``None`` features for the response base will be build
         conts: list of strings containing the base of text contexts
-        cont_vecs: BERT vector respresentations of `conts`, if is `None` features for the response base will be build
+        cont_vecs: BERT vector respresentations of ``conts``, if is ``None`` features for the response base will be build
     """
 
     def __init__(self,

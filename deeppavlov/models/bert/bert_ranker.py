@@ -43,12 +43,12 @@ class BertRankerModel(BertClassifierModel):
         bert_config_file: path to Bert configuration file
         n_classes: number of classes
         keep_prob: dropout keep_prob for non-Bert layers
-        return_probas: set True if return class probabilites instead of most probable label needed
+        return_probas: set True if class probabilities are returned instead of the most probable label
     """
 
     def __init__(self, bert_config_file, n_classes=2, keep_prob=0.9, return_probas=True, **kwargs) -> None:
-        super().__init__(bert_config_file=bert_config_file, n_classes=n_classes, keep_prob=keep_prob,
-                         return_probas=return_probas, **kwargs)
+        super().__init__(bert_config_file=bert_config_file, n_classes=n_classes,
+                         keep_prob=keep_prob, return_probas=return_probas, **kwargs)
 
     def train_on_batch(self, features_li: List[List[InputFeatures]], y: Union[List[int], List[List[int]]]) -> Dict:
         """Train the model on the given batch.
@@ -118,8 +118,8 @@ class BertSepRankerModel(LRScheduledTFModel):
         keep_prob: dropout keep_prob for non-Bert layers
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
-        optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
-        weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
+        optimizer: name of tf.train.* optimizer or None for ``AdamWeightDecayOptimizer``
+        weight_decay_rate: L2 weight decay for ``AdamWeightDecayOptimizer``
         pretrained_bert: pretrained Bert checkpoint
         min_learning_rate: min value of learning rate if learning rate decay is used
     """
@@ -353,11 +353,11 @@ class BertSepRankerPredictor(BertSepRankerModel):
         batch_size: batch size for building response (and context) vectors over the base
         keep_prob: dropout keep_prob for non-Bert layers
         resps: list of strings containing the base of text responses
-        resp_vecs: BERT vector respresentations of `resps`, if is `None` it will be build
-        resp_features: features of `resps` to build their BERT vector representations
+        resp_vecs: BERT vector respresentations of ``resps``, if is ``None`` it will be build
+        resp_features: features of ``resps`` to build their BERT vector representations
         conts: list of strings containing the base of text contexts
-        cont_vecs: BERT vector respresentations of `conts`, if is `None` it will be build
-        cont_features: features of `conts` to build their BERT vector representations
+        cont_vecs: BERT vector respresentations of ``conts``, if is ``None`` it will be build
+        cont_features: features of ``conts`` to build their BERT vector representations
     """
 
     def __init__(self, bert_config_file, interact_mode=0, batch_size=32,
@@ -428,7 +428,7 @@ class BertSepRankerPredictor(BertSepRankerModel):
         return np.vstack(pred)
 
     def _retrieve_db_response(self, ctx_vec):
-        """Retrieve a text response from the base based on the policy determined by `interact_mode`.
+        """Retrieve a text response from the base based on the policy determined by ``interact_mode``.
 
         Uses cosine similarity scores over vectors of responses (and corresponding contexts) from the base.
         """

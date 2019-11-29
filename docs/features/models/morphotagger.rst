@@ -1,40 +1,61 @@
 Neural Morphological Tagging
 ============================
 
-It is an implementation of neural morphological tagger from
+It is an implementation of neural morphological tagger.
+As for now (November, 2019) we have two types of models:
+the BERT-based ones (available only for Russian) and
+the character-based bidirectional LSTM. The BERT model
+includes only a dense layer on the top of BERT embedder.
+See the `BERT paper <http://arxiv.org/abs/1810.04805>`__
+for a more complete description, as well as the
+`BERT section <features/models/bert>`__ of the documentation.
+We plan to release more BERT-based models in near future.
+
+Most of our models follow
 `Heigold et al., 2017. An extensive empirical evaluation of
 character-based morphological tagging for 14
 languages <http://www.aclweb.org/anthology/E17-1048>`__.
-We distribute the models for 11 languages trained on `Universal
-Dependencies corpora <www.universaldependencies.org>`__.
-Our model achieves the state-of-the-art performance among open source
+They also achieve the state-of-the-art performance among open source
 systems.
 
-+----------------+--------------+-----------------+------------------+----------------+
-|    Language    | Code         | UDPipe accuracy | Our top accuracy | Model size (MB)|
-+================+==============+=================+==================+================+
-| Arabic         | ar           | 88.31           | 90.85            |  23.7          |
-+----------------+--------------+-----------------+------------------+----------------+
-| Czech          | cs           | 91.86           | 94.35            |  41.8          |
-+----------------+--------------+-----------------+------------------+----------------+
-| English        | en           | 92.53           | 93.00            |  16.9          |
-+----------------+--------------+-----------------+------------------+----------------+
-| French         | fr           | 95.25           | 95.45            |  19.0          |
-+----------------+--------------+-----------------+------------------+----------------+
-| German         | de           | 76.65           | 83.83            |  18.6          |
-+----------------+--------------+-----------------+------------------+----------------+
-| Hindi          | hi           | 87.74           | 90.01            |  21.9          |
-+----------------+--------------+-----------------+------------------+----------------+
-| Hungarian      | hu           | 69.52           | 75.34            |  15.4          |
-+----------------+--------------+-----------------+------------------+----------------+
-| Italian        | it           | 96.33           | 96.47            |  32.0          |
-+----------------+--------------+-----------------+------------------+----------------+
-| Russian        | ru_syntagrus | 93.57           | 96.23            |  48.7          |
-+----------------+--------------+-----------------+------------------+----------------+
-| Spanish        | es_ancora    | 96.88           | 97.00            |  20.8          |
-+----------------+--------------+-----------------+------------------+----------------+
-| Turkish        | tr           | 86.98           | 88.03            |  16.1          |
-+----------------+--------------+-----------------+------------------+----------------+
+The BERT-based model is trained on `Universal
+Dependencies corpora <www.universaldependencies.org>`__
+(version 2.3), while all the other models were trained
+on Universal Dependencies 2.0 corpora.
+
++----------------+--------------+-----------------+-------------------------------+------------------+----------------+
+|    Language    | Code         | UDPipe accuracy | UDPipe Future accuracy [#f1]_ | Our top accuracy | Model size (MB)|
++================+==============+=================+===============================+==================+================+
+| Arabic         | ar           | 88.31           |                               | 90.85            |  23.7          |
++----------------+--------------+-----------------+-------------------------------+------------------+----------------+
+| Czech          | cs           | 91.86           |                               | 94.35            |  41.8          |
++----------------+--------------+-----------------+-------------------------------+------------------+----------------+
+| English        | en           | 92.53           |                               | 93.00            |  16.9          |
++----------------+--------------+-----------------+-------------------------------+------------------+----------------+
+| French         | fr           | 95.25           |                               | 95.45            |  19.0          |
++----------------+--------------+-----------------+-------------------------------+------------------+----------------+
+| German         | de           | 76.65           |                               | 83.83            |  18.6          |
++----------------+--------------+-----------------+-------------------------------+------------------+----------------+
+| Hindi          | hi           | 87.74           |                               | 90.01            |  21.9          |
++----------------+--------------+-----------------+-------------------------------+------------------+----------------+
+| Hungarian      | hu           | 69.52           |                               | 75.34            |  15.4          |
++----------------+--------------+-----------------+-------------------------------+------------------+----------------+
+| Italian        | it           | 96.33           |                               | 96.47            |  32.0          |
++----------------+--------------+-----------------+-------------------------------+------------------+----------------+
+| Russian        | ru_syntagrus | 93.57           |                               | 96.23            |  48.7          |
++----------------+--------------+-----------------+-------------------------------+------------------+----------------+
+| Russian (UD2.3)| ru_syntagrus | 93.5            | 96.90                         | 97.83            |  661           |
++----------------+--------------+-----------------+-------------------------------+------------------+----------------+
+| Spanish        | es_ancora    | 96.88           |                               | 97.00            |  20.8          |
++----------------+--------------+-----------------+-------------------------------+------------------+----------------+
+| Turkish        | tr           | 86.98           |                               | 88.03            |  16.1          |
++----------------+--------------+-----------------+-------------------------------+------------------+----------------+
+
+.. rubric:: Footnotes
+
+.. [#f1] No models available, only the source code. The scores are taken from
+   `Straka. UDPipe 2.0 Prototype at CoNLL 2018 UD Shared Task. <https://www.aclweb.org/anthology/K18-2020.pdf>`__.
+
 
 ===========================
 Usage examples.
@@ -121,40 +142,50 @@ If you want the output in UD format, try setting ``"data_format": ud`` in the ``
 of :config:`configuration file <morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json>`
 you import.
 
-Exclusively for Russian language you can obtain lemmatized UD output by using
-:config:`augmented version <morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy_lemmatize.json>`
-of Pymorphy model.
+Advanced models (BERT and lemmatized models).
+---------------------------------------------
 
-.. code:: python
+#. For Russian you can use the BERT-based model. It has much higher performance (97.8% instead of 96.2),
+   however, you need a more powerful GPU (ideally, 16 GB) to train it. However, the speed
+   of inference and training on such GPU is comparable with character-based model.
 
-    from deeppavlov import build_model, configs
-    model = build_model(configs.morpho_tagger.UD2_0.morpho_ru_syntagrus_pymorphy_lemmatize, download=True)
-    sentences = ["Я шёл домой по незнакомой улице.", "Девушка пела в церковном хоре о всех уставших в чужом краю."]
-    for parse in model(sentences):
-        print(parse)
+#. Exclusively for Russian language you can obtain lemmatized UD output by using either the
+   :config:`BERT model <morpho_tagger/BERT/morpho_ru_syntagrus_bert.json>`
+   :config:`augmented version <morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy_lemmatize.json>`
+   of Pymorphy model. Both models select the Pymorphy lemma whose tag correspond to the tag
+   predicted by the tagger.
 
-::
+   .. code:: python
 
-    1	Я	я	PRON	_	Case=Nom|Number=Sing|Person=1	_	_	_	_
-    2	шёл	идти	VERB	_	Aspect=Imp|Gender=Masc|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|Voice=Act	_	_	_	_
-    3	домой	домой	ADV	_	Degree=Pos	_	_	_	_
-    4	по	по	ADP	_	_	_	_	_	_
-    5	незнакомой	незнакомый	ADJ	_	Case=Dat|Degree=Pos|Gender=Fem|Number=Sing	_	_	_	_
-    6	улице	улица	NOUN	_	Animacy=Inan|Case=Dat|Gender=Fem|Number=Sing	_	_	_	_
-    7	.	.	PUNCT	_	_	_	_	_	_
+       from deeppavlov import build_model, configs
+       model = build_model(configs.morpho_tagger.BERT.morpho_ru_syntagrus_bert, download=True)
+       # model = build_model(configs.morpho_tagger.UD2_0.morpho_ru_syntagrus_pymorphy_lemmatize, download=True)
+       sentences = ["Я шёл домой по незнакомой улице.", "Девушка пела в церковном хоре о всех уставших в чужом краю."]
+       for parse in model(sentences):
+           print(parse)
 
-    1	Девушка	девушка	NOUN	_	Animacy=Anim|Case=Nom|Gender=Fem|Number=Sing	_	_	_	_
-    2	пела	петь	VERB	_	Aspect=Imp|Gender=Fem|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|Voice=Act	_	_	_	_
-    3	в	в	ADP	_	_	_	_	_	_
-    4	церковном	церковный	ADJ	_	Case=Loc|Degree=Pos|Gender=Masc|Number=Sing	_	_	_	_
-    5	хоре	хор	NOUN	_	Animacy=Inan|Case=Loc|Gender=Masc|Number=Sing	_	_	_	_
-    6	о	о	ADP	_	_	_	_	_	_
-    7	всех	весь	PRON	_	Animacy=Anim|Case=Loc|Number=Plur	_	_	_	_
-    8	уставших	устать	VERB	_	Aspect=Perf|Case=Loc|Number=Plur|Tense=Past|VerbForm=Part|Voice=Act	_	_	_	_
-    9	в	в	ADP	_	_	_	_	_	_
-    10	чужом	чужой	ADJ	_	Case=Loc|Degree=Pos|Gender=Masc|Number=Sing	_	_	_	_
-    11	краю	край	NOUN	_	Animacy=Inan|Case=Loc|Gender=Masc|Number=Sing	_	_	_	_
-    12	.	.	PUNCT	_	_	_	_	_	_
+   ::
+
+       1	Я	я	PRON	_	Case=Nom|Number=Sing|Person=1	_	_	_	_
+       2	шёл	идти	VERB	_	Aspect=Imp|Gender=Masc|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|Voice=Act	_	_	_	_
+       3	домой	домой	ADV	_	Degree=Pos	_	_	_	_
+       4	по	по	ADP	_	_	_	_	_	_
+       5	незнакомой	незнакомый	ADJ	_	Case=Dat|Degree=Pos|Gender=Fem|Number=Sing	_	_	_	_
+       6	улице	улица	NOUN	_	Animacy=Inan|Case=Dat|Gender=Fem|Number=Sing	_	_	_	_
+       7	.	.	PUNCT	_	_	_	_	_	_
+
+       1	Девушка	девушка	NOUN	_	Animacy=Anim|Case=Nom|Gender=Fem|Number=Sing	_	_	_	_
+       2	пела	петь	VERB	_	Aspect=Imp|Gender=Fem|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|Voice=Act	_	_	_	_
+       3	в	в	ADP	_	_	_	_	_	_
+       4	церковном	церковный	ADJ	_	Case=Loc|Degree=Pos|Gender=Masc|Number=Sing	_	_	_	_
+       5	хоре	хор	NOUN	_	Animacy=Inan|Case=Loc|Gender=Masc|Number=Sing	_	_	_	_
+       6	о	о	ADP	_	_	_	_	_	_
+       7	всех	весь	PRON	_	Animacy=Anim|Case=Loc|Number=Plur	_	_	_	_
+       8	уставших	устать	VERB	_	Aspect=Perf|Case=Loc|Number=Plur|Tense=Past|VerbForm=Part|Voice=Act	_	_	_	_
+       9	в	в	ADP	_	_	_	_	_	_
+       10	чужом	чужой	ADJ	_	Case=Loc|Degree=Pos|Gender=Masc|Number=Sing	_	_	_	_
+       11	краю	край	NOUN	_	Animacy=Inan|Case=Loc|Gender=Masc|Number=Sing	_	_	_	_
+       12	.	.	PUNCT	_	_	_	_	_	_
 
 Command line:
 ----------------

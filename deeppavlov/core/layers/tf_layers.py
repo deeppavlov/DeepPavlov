@@ -125,7 +125,7 @@ def bi_rnn(units: tf.Tensor,
 
         Args:
             units: a tensorflow tensor with dimensionality [None, n_tokens, n_features]
-            n_hidden: list with number of hidden units at the ouput of each layer
+            n_hidden: list with number of hidden units in the output of each layer
             seq_lengths: length of sequences for different length sequences in batch
                 can be None for maximum length as a length for every sample in the batch
             cell_type: 'lstm' or 'gru'

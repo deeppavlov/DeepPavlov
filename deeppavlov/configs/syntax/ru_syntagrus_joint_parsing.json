@@ -1,0 +1,38 @@
+{
+    "chainer": {
+        "in": [
+            "x_words"
+        ],
+        "pipe": [
+            {
+                "id": "main",
+                "class_name": "joint_tagger_parser",
+                "tagger": {"config_path": "{CONFIGS_PATH}/morpho_tagger/BERT/morpho_ru_syntagrus_bert.json"},
+                "parser": {"config_path": "{CONFIGS_PATH}/syntax/syntax_ru_syntagrus_bert.json"},
+                "to_output_string": true,
+                "in": [
+                    "x_words"
+                ],
+                "out": [
+                    "y_parsed"
+                ]
+            }
+        ],
+        "out": [
+            "y_parsed"
+        ]
+    },
+    "metadata": {
+        "variables": {
+            "ROOT_PATH": "~/.deeppavlov",
+            "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+            "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
+            "MODELS_PATH": "{ROOT_PATH}/models"
+        },
+        "requirements": [
+          "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+          "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+          "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
+        ]
+    }
+}

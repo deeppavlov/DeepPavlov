@@ -22,6 +22,7 @@ from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.data.utils import download_decompress, mark_done
 
 WORD_COLUMN, POS_COLUMN, TAG_COLUMN = 1, 3, 5
+HEAD_COLUMN, DEP_COLUMN = 6, 7
 
 log = getLogger(__name__)
 
@@ -32,10 +33,11 @@ def get_language(filepath: str) -> str:
     return filepath.split("-")[0]
 
 
-def read_infile(infile: Union[Path, str], from_words=False,
+def read_infile(infile: Union[Path, str], *, from_words=False,
                 word_column: int = WORD_COLUMN, pos_column: int = POS_COLUMN,
-                tag_column: int = TAG_COLUMN, max_sents: int = -1,
-                read_only_words: bool = False) -> List[Tuple[List, Union[List, None]]]:
+                tag_column: int = TAG_COLUMN, head_column: int = HEAD_COLUMN,
+                dep_column: int = DEP_COLUMN, max_sents: int = -1,
+                read_only_words: bool = False, read_syntax: bool = False) -> List[Tuple[List, Union[List, None]]]:
     """Reads input file in CONLL-U format
 
     Args:
@@ -43,14 +45,22 @@ def read_infile(infile: Union[Path, str], from_words=False,
         word_column: column containing words (default=1)
         pos_column: column containing part-of-speech labels (default=3)
         tag_column: column containing fine-grained tags (default=5)
-        max_sents: maximal number of sents to read
+        head_column: column containing syntactic head position (default=6)
+        dep_column: column containing syntactic dependency label (default=7)
+        max_sents: maximal number of sentences to read
         read_only_words: whether to read only words
+        read_syntax: whether to return ``heads`` and ``deps`` alongside ``tags``. Ignored if read_only_words is ``True``
 
     Returns:
-        a list of sentences. Each item contains a word sequence and a tag sequence, which is ``None``
-        in case ``read_only_words = True``
+        a list of sentences. Each item contains a word sequence and an output sequence.
+        The output sentence is ``None``, if ``read_only_words`` is ``True``,
+        a single list of word tags if ``read_syntax`` is False,
+        and a list of the form [``tags``, ``heads``, ``deps``] in case ``read_syntax`` is ``True``.
+
     """
     answer, curr_word_sent, curr_tag_sent = [], [], []
+    curr_head_sent, curr_dep_sent = [], []
+    # read_syntax = read_syntax and read_only_words
     if from_words:
         word_column, read_only_words = 0, True
     if infile is not sys.stdin:
@@ -65,8 +75,11 @@ def read_infile(infile: Union[Path, str], from_words=False,
             if len(curr_word_sent) > 0:
                 if read_only_words:
                     curr_tag_sent = None
+                elif read_syntax:
+                    curr_tag_sent = [curr_tag_sent, curr_head_sent, curr_dep_sent]
                 answer.append((curr_word_sent, curr_tag_sent))
             curr_tag_sent, curr_word_sent = [], []
+            curr_head_sent, curr_dep_sent = [], []
             if len(answer) == max_sents:
                 break
             continue
@@ -79,9 +92,14 @@ def read_infile(infile: Union[Path, str], from_words=False,
             pos, tag = splitted[pos_column], splitted[tag_column]
             tag = pos if tag == "_" else "{},{}".format(pos, tag)
             curr_tag_sent.append(tag)
+            if read_syntax:
+                curr_head_sent.append(int(splitted[head_column]))
+                curr_dep_sent.append(splitted[dep_column])
     if len(curr_word_sent) > 0:
         if read_only_words:
             curr_tag_sent = None
+        elif read_syntax:
+            curr_tag_sent = [curr_tag_sent, curr_head_sent, curr_dep_sent]
         answer.append((curr_word_sent, curr_tag_sent))
     if infile is not sys.stdin:
         fin.close()
@@ -95,7 +113,7 @@ class MorphotaggerDatasetReader(DatasetReader):
     URL = 'http://files.deeppavlov.ai/datasets/UD2.0_source/'
 
     def read(self, data_path: Union[List, str],
-             language: Optional[None] = None,
+             language: Optional[str] = None,
              data_types: Optional[List[str]] = None,
              **kwargs) -> Dict[str, List]:
         """Reads UD dataset from data_path.
@@ -164,7 +182,7 @@ class MorphotaggerDatasetReader(DatasetReader):
         for mode, filepath in zip(data_types, data_path):
             if mode == "dev":
                 mode = "valid"
-            #             if mode == "test":
-            #                 kwargs["read_only_words"] = True
+#             if mode == "test":
+#                 kwargs["read_only_words"] = True
             data[mode] = read_infile(filepath, **kwargs)
         return data
