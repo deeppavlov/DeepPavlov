@@ -18,35 +18,30 @@ import logging
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import List, Optional, Callable
-from uuid import uuid4
+from typing import List, Optional, Callable, Any, Dict, TypeVar
 
 import aio_pika
 from aio_pika import Connection, Channel, Exchange, Queue, IncomingMessage, Message
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.chainer import Chainer
+from deeppavlov.core.common.file import read_json
+from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import jsonify_data
 from deeppavlov.utils.connector import DialogLogger
 from deeppavlov.utils.server import get_server_params
 
-dialog_logger = DialogLogger(logger_name='rest_api')
+dialog_logger = DialogLogger(logger_name='agent_rabbit')
 log = logging.getLogger(__name__)
+
+CONNECTOR_CONFIG_FILENAME = 'server_config.json'
 
 AGENT_IN_EXCHANGE_NAME_TEMPLATE = '{agent_namespace}_e_in'
 AGENT_OUT_EXCHANGE_NAME_TEMPLATE = '{agent_namespace}_e_out'
-AGENT_QUEUE_NAME_TEMPLATE = '{agent_namespace}_q_agent_{agent_name}'
 AGENT_ROUTING_KEY_TEMPLATE = 'agent.{agent_name}'
 
 SERVICE_QUEUE_NAME_TEMPLATE = '{agent_namespace}_q_service_{service_name}'
 SERVICE_ROUTING_KEY_TEMPLATE = 'service.{service_name}.any'
-SERVICE_INSTANCE_ROUTING_KEY_TEMPLATE = 'service.{service_name}.instance.{instance_id}'
-
-CHANNEL_QUEUE_NAME_TEMPLATE = '{agent_namespace}_{agent_name}_q_channel_{channel_id}'
-CHANNEL_ROUTING_KEY_TEMPLATE = 'agent.{agent_name}.channel.{channel_id}.any'
-
-
-from typing import TypeVar, Any, Dict
 
 
 class MessageBase:
@@ -77,50 +72,18 @@ class ServiceTaskMessage(MessageBase):
 
 class ServiceResponseMessage(MessageBase):
     agent_name: str
-    service_instance_id: str
     response: Any
     task_id: str
 
-    def __init__(self, task_id: str, agent_name: str, service_instance_id: str, response: Any) -> None:
+    def __init__(self, task_id: str, agent_name: str, response: Any) -> None:
         super().__init__('service_response', agent_name)
         self.task_id = task_id
-        self.service_instance_id = service_instance_id
         self.response = response
-
-
-class ToChannelMessage(MessageBase):
-    agent_name: str
-    channel_id: str
-    user_id: str
-    response: str
-
-    def __init__(self, agent_name: str, channel_id: str, user_id: str, response: str) -> None:
-        super().__init__('to_channel_message', agent_name)
-        self.channel_id = channel_id
-        self.user_id = user_id
-        self.response = response
-
-
-class FromChannelMessage(MessageBase):
-    agent_name: str
-    channel_id: str
-    user_id: str
-    utterance: str
-    reset_dialog: bool
-
-    def __init__(self, agent_name: str, channel_id: str, user_id: str, utterance: str, reset_dialog: bool) -> None:
-        super().__init__('from_channel_message', agent_name)
-        self.channel_id = channel_id
-        self.user_id = user_id
-        self.utterance = utterance
-        self.reset_dialog = reset_dialog
 
 
 _message_wrappers_map = {
     'service_task': ServiceTaskMessage,
-    'service_response': ServiceResponseMessage,
-    'to_channel_message': ToChannelMessage,
-    'from_channel_message': FromChannelMessage
+    'service_response': ServiceResponseMessage
 }
 
 
@@ -135,16 +98,13 @@ def get_transport_message(message_json: dict) -> TMessageBase:
     return message_wrapper_class.from_json(message_json)
 
 
-class ServiceGatewayBase:
+class RabbitMQServiceGateway:
     _to_service_callback: Callable
-
-    def __init__(self, to_service_callback: Callable, *args, **kwargs) -> None:
-        super(ServiceGatewayBase, self).__init__(*args, **kwargs)
-        self._to_service_callback = to_service_callback
-
-
-class RabbitMQTransportBase:
-    _config: dict
+    _service_name: str
+    _batch_size: int
+    _incoming_messages_buffer: List[IncomingMessage]
+    _add_to_buffer_lock: asyncio.Lock
+    _infer_lock: asyncio.Lock
     _loop: asyncio.AbstractEventLoop
     _agent_in_exchange: Exchange
     _agent_out_exchange: Exchange
@@ -154,28 +114,52 @@ class RabbitMQTransportBase:
     _in_queue: Optional[Queue]
     _utterance_lifetime_sec: int
 
-    def __init__(self, config: dict, *args, **kwargs):
-        super(RabbitMQTransportBase, self).__init__(*args, **kwargs)
-        self._config = config
+    def __init__(self,
+                 to_service_callback: Callable,
+                 service_name,
+                 agent_name,
+                 agent_namespace,
+                 utterance_lifetime_sec,
+                 rabbit_host,
+                 rabbit_port,
+                 rabbit_login,
+                 rabbit_password,
+                 rabbit_virtualhost,
+                 batch_size) -> None:
         self._in_queue = None
-        self._utterance_lifetime_sec = config['utterance_lifetime_sec']
+        self._utterance_lifetime_sec = utterance_lifetime_sec
+        self._to_service_callback = to_service_callback
+        self._loop = asyncio.get_event_loop()
+        self._service_name = service_name
+        self._batch_size = batch_size
+        self._agent_namespace = agent_namespace
+        self._agent_name = agent_name
+        self._incoming_messages_buffer = []
+        self._add_to_buffer_lock = asyncio.Lock()
+        self._infer_lock = asyncio.Lock()
+        self._rabbit_host = rabbit_host
+        self._rabbit_port = rabbit_port
+        self._rabbit_login = rabbit_login
+        self._rabbit_password = rabbit_password
+        self._rabbit_virtualhost = rabbit_virtualhost
+
+        self._loop.run_until_complete(self._connect())
+        self._loop.run_until_complete(self._setup_queues())
+        self._loop.run_until_complete(self._in_queue.consume(callback=self._on_message_callback))
+        log.info(f'Service in queue started consuming')
 
     async def _connect(self) -> None:
-        agent_namespace = self._config['agent_namespace']
-
-        host = self._config['transport']['AMQP']['host']
-        port = self._config['transport']['AMQP']['port']
-        login = self._config['transport']['AMQP']['login']
-        password = self._config['transport']['AMQP']['password']
-        virtualhost = self._config['transport']['AMQP']['virtualhost']
 
         log.info('Starting RabbitMQ connection...')
 
         while True:
             try:
-                self._connection = await aio_pika.connect_robust(loop=self._loop, host=host, port=port, login=login,
-                                                                 password=password, virtualhost=virtualhost)
-
+                self._connection = await aio_pika.connect_robust(loop=self._loop,
+                                                                 host=self._rabbit_host,
+                                                                 port=self._rabbit_port,
+                                                                 login=self._rabbit_login,
+                                                                 password=self._rabbit_password,
+                                                                 virtualhost=self._rabbit_virtualhost)
                 log.info('RabbitMQ connected')
                 break
             except ConnectionError:
@@ -184,13 +168,13 @@ class RabbitMQTransportBase:
                 time.sleep(reconnect_timeout)
 
         self._agent_in_channel = await self._connection.channel()
-        agent_in_exchange_name = AGENT_IN_EXCHANGE_NAME_TEMPLATE.format(agent_namespace=agent_namespace)
+        agent_in_exchange_name = AGENT_IN_EXCHANGE_NAME_TEMPLATE.format(agent_namespace=self._agent_namespace)
         self._agent_in_exchange = await self._agent_in_channel.declare_exchange(name=agent_in_exchange_name,
                                                                                 type=aio_pika.ExchangeType.TOPIC)
         log.info(f'Declared agent in exchange: {agent_in_exchange_name}')
 
         self._agent_out_channel = await self._connection.channel()
-        agent_out_exchange_name = AGENT_OUT_EXCHANGE_NAME_TEMPLATE.format(agent_namespace=agent_namespace)
+        agent_out_exchange_name = AGENT_OUT_EXCHANGE_NAME_TEMPLATE.format(agent_namespace=self._agent_namespace)
         self._agent_out_exchange = await self._agent_in_channel.declare_exchange(name=agent_out_exchange_name,
                                                                                  type=aio_pika.ExchangeType.TOPIC)
         log.info(f'Declared agent out exchange: {agent_out_exchange_name}')
@@ -199,57 +183,15 @@ class RabbitMQTransportBase:
         self._connection.close()
 
     async def _setup_queues(self) -> None:
-        raise NotImplementedError
-
-    async def _on_message_callback(self, message: IncomingMessage) -> None:
-        raise NotImplementedError
-
-
-class RabbitMQServiceGateway(RabbitMQTransportBase, ServiceGatewayBase):
-    _service_name: str
-    _instance_id: str
-    _batch_size: int
-    _incoming_messages_buffer: List[IncomingMessage]
-    _add_to_buffer_lock: asyncio.Lock
-    _infer_lock: asyncio.Lock
-
-    def __init__(self, config: dict, to_service_callback: Callable) -> None:
-        super(RabbitMQServiceGateway, self).__init__(config=config, to_service_callback=to_service_callback)
-        self._loop = asyncio.get_event_loop()
-        self._service_name = self._config['service']['name']
-        self._instance_id = self._config['service'].get('instance_id', None) or f'{self._service_name}{str(uuid4())}'
-        self._batch_size = self._config['service'].get('batch_size', 1)
-
-        self._incoming_messages_buffer = []
-        self._add_to_buffer_lock = asyncio.Lock()
-        self._infer_lock = asyncio.Lock()
-
-        self._loop.run_until_complete(self._connect())
-        self._loop.run_until_complete(self._setup_queues())
-        self._loop.run_until_complete(self._in_queue.consume(callback=self._on_message_callback))
-        log.info(f'Service in queue started consuming')
-
-    async def _setup_queues(self) -> None:
-        agent_namespace = self._config['agent_namespace']
-
-        in_queue_name = SERVICE_QUEUE_NAME_TEMPLATE.format(agent_namespace=agent_namespace,
+        in_queue_name = SERVICE_QUEUE_NAME_TEMPLATE.format(agent_namespace=self._agent_namespace,
                                                            service_name=self._service_name)
 
         self._in_queue = await self._agent_out_channel.declare_queue(name=in_queue_name, durable=True)
         log.info(f'Declared service in queue: {in_queue_name}')
 
-        # TODO think if we can remove this workaround for bot annotators
-        service_names = self._config['service'].get('names', []) or [self._service_name]
-        for service_name in service_names:
-            any_instance_routing_key = SERVICE_ROUTING_KEY_TEMPLATE.format(service_name=service_name)
-            await self._in_queue.bind(exchange=self._agent_out_exchange, routing_key=any_instance_routing_key)
-            log.info(f'Queue: {in_queue_name} bound to routing key: {any_instance_routing_key}')
-
-            this_instance_routing_key = SERVICE_INSTANCE_ROUTING_KEY_TEMPLATE.format(service_name=service_name,
-                                                                                     instance_id=self._instance_id)
-
-            await self._in_queue.bind(exchange=self._agent_out_exchange, routing_key=this_instance_routing_key)
-            log.info(f'Queue: {in_queue_name} bound to routing key: {this_instance_routing_key}')
+        service_routing_key = SERVICE_ROUTING_KEY_TEMPLATE.format(service_name=self._service_name)
+        await self._in_queue.bind(exchange=self._agent_out_exchange, routing_key=service_routing_key)
+        log.info(f'Queue: {in_queue_name} bound to routing key: {service_routing_key}')
 
         await self._agent_out_channel.set_qos(prefetch_count=self._batch_size * 2)
 
@@ -314,7 +256,6 @@ class RabbitMQServiceGateway(RabbitMQTransportBase, ServiceGatewayBase):
 
     async def _send_results(self, task: ServiceTaskMessage, response: Dict) -> None:
         result = ServiceResponseMessage(agent_name=task.agent_name,
-                                        service_instance_id=self._instance_id,
                                         task_id=task.payload["task_id"],
                                         response=response)
 
@@ -325,7 +266,6 @@ class RabbitMQServiceGateway(RabbitMQTransportBase, ServiceGatewayBase):
         routing_key = AGENT_ROUTING_KEY_TEMPLATE.format(agent_name=task.agent_name)
         await self._agent_in_exchange.publish(message=message, routing_key=routing_key)
         log.debug(f'Sent response for task {str(task.payload["task_id"])} with routing key {routing_key}')
-
 
 
 def interact(model: Chainer, payload: Dict[str, Optional[List]], model_args_names) -> List:
@@ -367,6 +307,20 @@ def start_rabbit_service(model_config: Path) -> None:
 
     model = build_model(model_config)
 
+    service_config_path = get_settings_path() / CONNECTOR_CONFIG_FILENAME
+    service_config: dict = read_json(service_config_path)['agent-rabbit']
+
+    service_name = service_config['service_name']
+    agent_namespace = service_config['agent_namespace']
+    agent_name = service_config['agent_name']
+    utterance_lifetime_sec = service_config['utterance_lifetime_sec']
+    rabbit_host = service_config['rabbit_host']
+    rabbit_port = service_config['rabbit_port']
+    rabbit_login = service_config['rabbit_login']
+    rabbit_password = service_config['rabbit_password']
+    rabbit_virtualhost = service_config['rabbit_virtualhost']
+    batch_size = service_config['batch_size']
+
     async def send_to_service(payloads: List[Dict]) -> List[Any]:
         batch = defaultdict(list)
         for payload in payloads:
@@ -376,27 +330,19 @@ def start_rabbit_service(model_config: Path) -> None:
 
         return responses_batch
 
-    gateway_config = {
-        'agent_namespace': 'deeppavlov_agent',
-        'agent_name': 'dp_agent',
-        'utterance_lifetime_sec': 120,
-        'channels': {},
-        'transport': {
-            'type': 'AMQP',
-            'AMQP': {
-                'host': '127.0.0.1',
-                'port': 5672,
-                'login': 'guest',
-                'password': 'guest',
-                'virtualhost': '/'
-            }
-        },
-        'service':{
-            'name': 'ner'
-        }
-    }
-
-    gateway = RabbitMQServiceGateway(config=gateway_config, to_service_callback=send_to_service)
+    gateway = RabbitMQServiceGateway(
+        service_name=service_name,
+        agent_name=agent_name,
+        agent_namespace=agent_namespace,
+        utterance_lifetime_sec=utterance_lifetime_sec,
+        rabbit_host=rabbit_host,
+        rabbit_port=rabbit_port,
+        rabbit_login=rabbit_login,
+        rabbit_password=rabbit_password,
+        rabbit_virtualhost=rabbit_virtualhost,
+        to_service_callback=send_to_service,
+        batch_size=batch_size
+    )
 
     loop = asyncio.get_event_loop()
 
