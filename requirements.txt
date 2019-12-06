@@ -1,3 +1,4 @@
+aio-pika==5.6.0
 Cython==0.29.12
 fastapi==0.38.1
 fuzzywuzzy==0.17.0

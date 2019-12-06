@@ -20,6 +20,7 @@ from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.common.cross_validation import calc_cv_score
 from deeppavlov.core.common.file import find_config
 from deeppavlov.download import deep_download
+from deeppavlov.utils.agent import start_rabbit_service
 from deeppavlov.utils.alexa import start_alexa_server
 from deeppavlov.utils.alice import start_alice_server
 from deeppavlov.utils.ms_bot_framework import start_ms_bf_server
@@ -34,7 +35,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
                     choices={'train', 'evaluate', 'interact', 'predict', 'telegram', 'msbot', 'alexa', 'alice',
-                             'riseapi', 'risesocket', 'download', 'install', 'crossval'})
+                             'riseapi', 'risesocket', 'agent-rabbit', 'download', 'install', 'crossval'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 
 parser.add_argument("-e", "--start-epoch-num", dest="start_epoch_num", default=None,
@@ -103,6 +104,8 @@ def main():
         start_model_server(pipeline_config_path, args.https, args.key, args.cert, port=args.port)
     elif args.mode == 'risesocket':
         start_socket_server(pipeline_config_path, args.socket_type, port=args.port, socket_file=args.socket_file)
+    elif args.mode == 'agent-rabbit':
+        start_rabbit_service(pipeline_config_path)
     elif args.mode == 'predict':
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
     elif args.mode == 'install':
