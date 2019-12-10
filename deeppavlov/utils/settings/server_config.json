@@ -20,7 +20,6 @@
   },
   "agent-rabbit": {
     "service_name": "",
-    "agent_name": "dp_agent",
     "agent_namespace": "deeppavlov_agent",
     "batch_size": 1,
     "utterance_lifetime_sec": 120,

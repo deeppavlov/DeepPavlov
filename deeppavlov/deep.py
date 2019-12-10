@@ -63,8 +63,7 @@ parser.add_argument("--socket-type", default="TCP", type=str, choices={"TCP", "U
 parser.add_argument("--socket-file", default="/tmp/deeppavlov_socket.s", type=str)
 
 parser.add_argument("-sn", "--service-name", default=None, help="service name for agent-rabbit mode", type=str)
-parser.add_argument("-an", "--agent-name", default=None, help="dp-agent name", type=str)
-parser.add_argument("-ans", "--agent-namespace", default=None, help="dp-agent namespace name", type=str)
+parser.add_argument("-an", "--agent-namespace", default=None, help="dp-agent namespace name", type=str)
 parser.add_argument("-ul", "--utterance-lifetime", default=None, help="message expiration in seconds", type=int)
 parser.add_argument("-rh", "--rabbit-host", default=None, help="RabbitMQ server host", type=str)
 parser.add_argument("-rp", "--rabbit-port", default=None, help="RabbitMQ server port", type=int)
@@ -117,7 +116,6 @@ def main():
     elif args.mode == 'agent-rabbit':
         start_rabbit_service(model_config=pipeline_config_path,
                              service_name=args.service_name,
-                             agent_name=args.agent_name,
                              agent_namespace=args.agent_namespace,
                              batch_size=args.batch_size,
                              utterance_lifetime_sec=args.utterance_lifetime,

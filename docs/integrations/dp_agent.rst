@@ -27,9 +27,8 @@ Agent service, run:
                                                     [-rvh <rabbit_virtualhost>]
 
 * ``-d``: download model specific data before starting the service.
-* ``-sn <service_name>``: service name adjusted in DeepPavlov config.
-* ``-an <agent_name>``: name of agent binded to RabbitMQ broker.
-* ``-ans <agent_namespace>``: namespace of agent binded to RabbitMQ broker.
+* ``-sn <service_name>``: service name set in DeepPavlov Agent config.
+* ``-an <agent_namespace>``: namespace the service works in. Messages only from agents from this namespace is processed.
 * ``-b <batch_size>``: inference batch size.
 * ``-ul <utterace_lifetime``: RabbitMQ message expiration time in seconds.
 * ``-rh <rabbit_host>``: RabbitMQ server host.
@@ -53,7 +52,6 @@ Agent service using python, run the following code:
 
     start_rabbit_service(model_config=<config_path>,
                          service_name=<service_name>,
-                         agent_name=<agent_name>,
                          agent_namespace=<agent_namespace>,
                          batch_size=<batch_size>,
                          utterance_lifetime_sec=<utterance_lifetime>,
