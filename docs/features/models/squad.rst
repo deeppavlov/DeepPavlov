@@ -218,3 +218,26 @@ Link to SDSJ Task B dataset: http://files.deeppavlov.ai/datasets/sber_squad-v1.1
 +------------------------------------------------------------------------+----------------+-----------------+
 | :config:`DeepPavlov R-Net <squad/squad_ru.json>`                       |     60.62      |     80.04       |
 +------------------------------------------------------------------------+----------------+-----------------+
+
+
+DRCD
+~~~~~~~~~~~
+
+Pretrained models are available and can be downloaded:
+
+.. code:: bash
+
+    python -m deeppavlov download deeppavlov/configs/squad/squad_zh_bert.json
+	
+	python -m deeppavlov download deeppavlov/configs/squad/squad_zh_zh_bert.json
+	
+Link to DRCD dataset: http://files.deeppavlov.ai/datasets/DRCD.tar.gz
+Link to DRCD paper: https://arxiv.org/abs/1806.00920
+
++------------------------------------------------------------------------+----------------+-----------------+
+| Model config                                                           |    EM (dev)    |    F-1 (dev)    |
++========================================================================+================+=================+
+| :config:`DeepPavlov ChineseBERT <squad/squad_zh_bert_zh.json>`         |   85.13+-0.26  |    85.15+-0.12  |
++------------------------------------------------------------------------+----------------+-----------------+
+| :config:`DeepPavlov multilingual BERT <squad/squad_zh_bert_mult.json>` |   84.18+-0.34  |    84.08+-0.07  |
++------------------------------------------------------------------------+----------------+-----------------+
