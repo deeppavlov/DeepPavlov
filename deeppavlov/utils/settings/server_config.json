@@ -19,16 +19,16 @@
     "unsupported_message": "Unsupported message received."
   },
   "agent-rabbit": {
-    "agent_namespace": "deeppavlov_agent",
+    "service_name": "",
     "agent_name": "dp_agent",
+    "agent_namespace": "deeppavlov_agent",
     "batch_size": 1,
     "utterance_lifetime_sec": 120,
-    "rabbit_host": "127.0.0.1",
+    "rabbit_host": "0.0.0.0",
     "rabbit_port": 5672,
     "rabbit_login": "guest",
     "rabbit_password": "guest",
-    "rabbit_virtualhost": "/",
-    "service_name": "ner"
+    "rabbit_virtualhost": "/"
   },
   "deprecated": {
     "AlexaBot": {

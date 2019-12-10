@@ -18,7 +18,7 @@ import logging
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import List, Optional, Callable, Any, Dict, TypeVar
+from typing import List, Optional, Any, Dict, TypeVar, Union
 
 import aio_pika
 from aio_pika import Connection, Channel, Exchange, Queue, IncomingMessage, Message
@@ -99,7 +99,7 @@ def get_transport_message(message_json: dict) -> TMessageBase:
 
 
 class RabbitMQServiceGateway:
-    _to_service_callback: Callable
+    _model: Chainer
     _service_name: str
     _batch_size: int
     _incoming_messages_buffer: List[IncomingMessage]
@@ -115,20 +115,24 @@ class RabbitMQServiceGateway:
     _utterance_lifetime_sec: int
 
     def __init__(self,
-                 to_service_callback: Callable,
-                 service_name,
-                 agent_name,
-                 agent_namespace,
-                 utterance_lifetime_sec,
-                 rabbit_host,
-                 rabbit_port,
-                 rabbit_login,
-                 rabbit_password,
-                 rabbit_virtualhost,
-                 batch_size) -> None:
+                 model_config: Union[str, Path],
+                 service_name: str,
+                 agent_name: str,
+                 agent_namespace: str,
+                 batch_size: int,
+                 utterance_lifetime_sec: int,
+                 rabbit_host: str,
+                 rabbit_port: int,
+                 rabbit_login: str,
+                 rabbit_password: str,
+                 rabbit_virtualhost: str) -> None:
+        server_params = get_server_params(model_config)
+
+        self._model_args_names = server_params['model_args_names']
+
+        self._model = build_model(model_config)
         self._in_queue = None
         self._utterance_lifetime_sec = utterance_lifetime_sec
-        self._to_service_callback = to_service_callback
         self._loop = asyncio.get_event_loop()
         self._service_name = service_name
         self._batch_size = batch_size
@@ -147,6 +151,15 @@ class RabbitMQServiceGateway:
         self._loop.run_until_complete(self._setup_queues())
         self._loop.run_until_complete(self._in_queue.consume(callback=self._on_message_callback))
         log.info(f'Service in queue started consuming')
+
+    async def send_to_service(self, payloads: List[Dict]) -> List[Any]:
+        batch = defaultdict(list)
+        for payload in payloads:
+            for key, value in payload.items():
+                batch[key].extend(value)
+        responses_batch = self.interact(batch)
+
+        return responses_batch
 
     async def _connect(self) -> None:
 
@@ -238,7 +251,7 @@ class RabbitMQServiceGateway:
         log.debug(f'Prepared for infering tasks {str(task_uuids_batch)}')
 
         try:
-            responses_batch = await asyncio.wait_for(self._to_service_callback(payloads),
+            responses_batch = await asyncio.wait_for(self.send_to_service(payloads),
                                                      self._utterance_lifetime_sec)
 
             results_replies = []
@@ -267,81 +280,75 @@ class RabbitMQServiceGateway:
         await self._agent_in_exchange.publish(message=message, routing_key=routing_key)
         log.debug(f'Sent response for task {str(task.payload["task_id"])} with routing key {routing_key}')
 
+    def interact(self, payload: Dict[str, Optional[List]]) -> List:
+        model_args = payload.values()
+        for key in payload.keys():
+            if key not in self._model_args_names:
+                raise ValueError(f'There is no key {key} in model args names of request')
+        dialog_logger.log_in(payload)
+        error_msg = None
+        lengths = {len(model_arg) for model_arg in model_args if model_arg is not None}
 
-def interact(model: Chainer, payload: Dict[str, Optional[List]], model_args_names) -> List:
-    model_args = payload.values()
-    for key in payload.keys():
-        if key not in model_args_names:
-            raise ValueError(f'There is no key {key} in model args names of request')
-    dialog_logger.log_in(payload)
-    error_msg = None
-    lengths = {len(model_arg) for model_arg in model_args if model_arg is not None}
+        if not lengths:
+            error_msg = 'got empty request'
+        elif 0 in lengths:
+            error_msg = 'got empty array as model argument'
+        elif len(lengths) > 1:
+            error_msg = 'got several different batch sizes'
 
-    if not lengths:
-        error_msg = 'got empty request'
-    elif 0 in lengths:
-        error_msg = 'got empty array as model argument'
-    elif len(lengths) > 1:
-        error_msg = 'got several different batch sizes'
+        if error_msg is not None:
+            log.error(error_msg)
+            raise ValueError(error_msg)
 
-    if error_msg is not None:
-        log.error(error_msg)
-        raise ValueError(error_msg)
+        batch_size = next(iter(lengths))
+        model_args = [arg or [None] * batch_size for arg in model_args]
 
-    batch_size = next(iter(lengths))
-    model_args = [arg or [None] * batch_size for arg in model_args]
-
-    prediction = model(*model_args)
-    if len(model.out_params) == 1:
-        prediction = [prediction]
-    prediction = list(zip(*prediction))
-    result = jsonify_data(prediction)
-    dialog_logger.log_out(result)
-    return result
+        prediction = self._model(*model_args)
+        if len(self._model.out_params) == 1:
+            prediction = [prediction]
+        prediction = list(zip(*prediction))
+        result = jsonify_data(prediction)
+        dialog_logger.log_out(result)
+        return result
 
 
-def start_rabbit_service(model_config: Path) -> None:
-    server_params = get_server_params(model_config)
-
-    model_args_names = server_params['model_args_names']
-
-    model = build_model(model_config)
-
+def start_rabbit_service(model_config: Path,
+                         service_name: Optional[str] = None,
+                         agent_name: Optional[str] = None,
+                         agent_namespace: Optional[str] = None,
+                         batch_size: Optional[int] = None,
+                         utterance_lifetime_sec: Optional[int] = None,
+                         rabbit_host: Optional[str] = None,
+                         rabbit_port: Optional[int] = None,
+                         rabbit_login: Optional[str] = None,
+                         rabbit_password: Optional[str] = None,
+                         rabbit_virtualhost: Optional[str] = None) -> None:
     service_config_path = get_settings_path() / CONNECTOR_CONFIG_FILENAME
     service_config: dict = read_json(service_config_path)['agent-rabbit']
 
-    service_name = service_config['service_name']
-    agent_namespace = service_config['agent_namespace']
-    agent_name = service_config['agent_name']
-    utterance_lifetime_sec = service_config['utterance_lifetime_sec']
-    rabbit_host = service_config['rabbit_host']
-    rabbit_port = service_config['rabbit_port']
-    rabbit_login = service_config['rabbit_login']
-    rabbit_password = service_config['rabbit_password']
-    rabbit_virtualhost = service_config['rabbit_virtualhost']
-    batch_size = service_config['batch_size']
-
-    async def send_to_service(payloads: List[Dict]) -> List[Any]:
-        batch = defaultdict(list)
-        for payload in payloads:
-            for key, value in payload.items():
-                batch[key].extend(value)
-        responses_batch = interact(model, batch, model_args_names)
-
-        return responses_batch
+    service_name = service_name or service_config['service_name']
+    agent_name = agent_name or service_config['agent_name']
+    agent_namespace = agent_namespace or service_config['agent_namespace']
+    batch_size = batch_size or service_config['batch_size']
+    utterance_lifetime_sec = utterance_lifetime_sec or service_config['utterance_lifetime_sec']
+    rabbit_host = rabbit_host or service_config['rabbit_host']
+    rabbit_port = rabbit_port or service_config['rabbit_port']
+    rabbit_login = rabbit_login or service_config['rabbit_login']
+    rabbit_password = rabbit_password or service_config['rabbit_password']
+    rabbit_virtualhost = rabbit_virtualhost or service_config['rabbit_virtualhost']
 
     gateway = RabbitMQServiceGateway(
+        model_config=model_config,
         service_name=service_name,
         agent_name=agent_name,
         agent_namespace=agent_namespace,
+        batch_size=batch_size,
         utterance_lifetime_sec=utterance_lifetime_sec,
         rabbit_host=rabbit_host,
         rabbit_port=rabbit_port,
         rabbit_login=rabbit_login,
         rabbit_password=rabbit_password,
-        rabbit_virtualhost=rabbit_virtualhost,
-        to_service_callback=send_to_service,
-        batch_size=batch_size
+        rabbit_virtualhost=rabbit_virtualhost
     )
 
     loop = asyncio.get_event_loop()
