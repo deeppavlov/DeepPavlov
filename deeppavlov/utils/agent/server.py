@@ -159,63 +159,72 @@ class RabbitMQServiceGateway:
         await self._infer_lock.acquire()
         try:
             messages_batch = self._incoming_messages_buffer
+            active_messages_batch: List[IncomingMessage] = []
+            tasks_batch: List[ServiceTaskMessage] = []
 
             if messages_batch:
                 self._incoming_messages_buffer = []
 
                 if self._add_to_buffer_lock.locked():
                     self._add_to_buffer_lock.release()
-                tasks_batch: List[ServiceTaskMessage] = [get_service_task_message(json.loads(message.body,
-                                                                                             encoding='utf-8'))
-                                                         for message in messages_batch]
 
-                # TODO: Think about proper infer errors and aknowledge handling
-                processed_ok = await self._process_tasks(tasks_batch)
-
-                if processed_ok:
-                    for message in messages_batch:
-                        await message.ack()
-                else:
-                    for message in messages_batch:
+                for message in messages_batch:
+                    try:
+                        task = get_service_task_message(json.loads(message.body, encoding='utf-8'))
+                        tasks_batch.append(task)
+                        active_messages_batch.append(message)
+                    except Exception as e:
+                        log.error(f'Failed to get ServiceTaskMessage from the incoming message: {repr(e)}')
                         await message.reject()
 
             elif self._add_to_buffer_lock.locked():
                 self._add_to_buffer_lock.release()
+
+            if tasks_batch:
+                try:
+                    await self._process_tasks(tasks_batch)
+                except Exception as e:
+                    log.error(f'got exception while processing tasks: {repr(e)}')
+                    for message in active_messages_batch:
+                        await message.reject()
+                else:
+                    for message in active_messages_batch:
+                        await message.ack()
         finally:
             self._infer_lock.release()
 
-    async def _process_tasks(self, tasks_batch: List[ServiceTaskMessage]) -> bool:
+    async def _process_tasks(self, tasks_batch: List[ServiceTaskMessage]) -> None:
         task_uuids_batch, payloads = \
             zip(*[(task.payload['task_id'], task.payload['payload']) for task in tasks_batch])
 
-        log.debug(f'Prepared for infering tasks {str(task_uuids_batch)}')
+        log.debug(f'Prepared to infer tasks {", ".join(task_uuids_batch)}')
 
-        try:
-            responses_batch = await asyncio.wait_for(self._send_to_service(payloads),
-                                                     self._utterance_lifetime_sec)
+        responses_batch = await asyncio.wait_for(self._interact(payloads),
+                                                 self._utterance_lifetime_sec)
 
-            results_replies = []
+        results_replies = [self._send_results(task, response) for task, response in zip(tasks_batch, responses_batch)]
+        await asyncio.gather(*results_replies)
 
-            for i, response in enumerate(responses_batch):
-                results_replies.append(
-                    self._send_results(tasks_batch[i], response)
-                )
+        log.debug(f'Processed tasks {", ".join(task_uuids_batch)}')
 
-            await asyncio.gather(*results_replies)
-            log.debug(f'Processed tasks {str(task_uuids_batch)}')
-            return True
-        except asyncio.TimeoutError:
-            return False
-
-    async def _send_to_service(self, payloads: List[Dict]) -> List[Any]:
+    async def _interact(self, payloads: List[Dict]) -> List[Any]:
         batch = defaultdict(list)
+
         for payload in payloads:
-            for key, value in payload.items():
-                batch[key].extend(value)
-        responses_batch = self.interact(batch)
+            for arg_name in self._model_args_names:
+                batch[arg_name].extend(payload.get(arg_name, [None]))
 
-        return responses_batch
+        dialog_logger.log_in(batch)
 
+        prediction = self._model(*batch.values())
+        if len(self._model.out_params) == 1:
+            prediction = [prediction]
+        prediction = list(zip(*prediction))
+        result = jsonify_data(prediction)
+
+        dialog_logger.log_out(result)
+
+        return result
 
     async def _send_results(self, task: ServiceTaskMessage, response: Dict) -> None:
         result = ServiceResponseMessage(agent_name=task.agent_name,
@@ -229,37 +238,6 @@ class RabbitMQServiceGateway:
         routing_key = AGENT_ROUTING_KEY_TEMPLATE.format(agent_name=task.agent_name)
         await self._agent_in_exchange.publish(message=message, routing_key=routing_key)
         log.debug(f'Sent response for task {str(task.payload["task_id"])} with routing key {routing_key}')
-
-    def interact(self, payload: Dict[str, Optional[List]]) -> List:
-        model_args = payload.values()
-        for key in payload.keys():
-            if key not in self._model_args_names:
-                raise ValueError(f'There is no key {key} in model args names of request')
-        dialog_logger.log_in(payload)
-        error_msg = None
-        lengths = {len(model_arg) for model_arg in model_args if model_arg is not None}
-
-        if not lengths:
-            error_msg = 'got empty request'
-        elif 0 in lengths:
-            error_msg = 'got empty array as model argument'
-        elif len(lengths) > 1:
-            error_msg = 'got several different batch sizes'
-
-        if error_msg is not None:
-            log.error(error_msg)
-            raise ValueError(error_msg)
-
-        batch_size = next(iter(lengths))
-        model_args = [arg or [None] * batch_size for arg in model_args]
-
-        prediction = self._model(*model_args)
-        if len(self._model.out_params) == 1:
-            prediction = [prediction]
-        prediction = list(zip(*prediction))
-        result = jsonify_data(prediction)
-        dialog_logger.log_out(result)
-        return result
 
 
 def start_rabbit_service(model_config: Union[str, Path],
