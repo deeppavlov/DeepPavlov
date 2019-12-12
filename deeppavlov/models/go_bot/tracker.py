@@ -27,16 +27,10 @@ class Tracker(metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def reset_state(self) -> None:
-        """Resets dialogue state"""
-        pass
-
-    @abstractmethod
-    def update_state(self,
-                     slots: Union[List[Tuple[str, Any]], Dict[str, Any]]) -> 'Tracker':
+    def update_state(self, slots: Union[List[Tuple[str, Any]], Dict[str, Any]]) -> 'Tracker':
         """
         Updates dialogue state with new ``slots``, calculates features.
-        
+
         Returns:
             Tracker: ."""
         pass
@@ -46,6 +40,11 @@ class Tracker(metaclass=ABCMeta):
         """
         Returns:
             Dict[str, Any]: dictionary with current slots and their values."""
+        pass
+
+    @abstractmethod
+    def reset_state(self) -> None:
+        """Resets dialogue state"""
         pass
 
     @abstractmethod
@@ -67,7 +66,8 @@ class DefaultTracker(Tracker):
 
     def __init__(self, slot_names: List[str]) -> None:
         self.slot_names = list(slot_names)
-        self.reset_state()
+        self.history = []
+        self.curr_feats = np.zeros(len(self.slot_names), dtype=np.float32)
 
     @property
     def state_size(self):
@@ -77,19 +77,14 @@ class DefaultTracker(Tracker):
     def num_features(self):
         return self.state_size
 
-    def reset_state(self):
-        self.history = []
-        self.curr_feats = np.zeros(self.num_features, dtype=np.float32)
-
     def update_state(self, slots):
-        def _filter(slots):
-            return filter(lambda s: s[0] in self.slot_names, slots)
-
         if isinstance(slots, list):
-            self.history.extend(_filter(slots))
+            self.history.extend(self._filter(slots))
+
         elif isinstance(slots, dict):
-            for slot, value in _filter(slots.items()):
+            for slot, value in self._filter(slots.items()):
                 self.history.append((slot, value))
+
         self.curr_feats = self._binary_features()
         return self
 
@@ -99,6 +94,16 @@ class DefaultTracker(Tracker):
             lasts[slot] = value
         return lasts
 
+    def reset_state(self):
+        self.history = []
+        self.curr_feats = np.zeros(self.state_size, dtype=np.float32)
+
+    def get_features(self):
+        return self.curr_feats
+
+    def _filter(self, slots):
+        return filter(lambda s: s[0] in self.slot_names, slots)
+
     def _binary_features(self):
         feats = np.zeros(self.state_size, dtype=np.float32)
         lasts = self.get_state()
@@ -107,12 +112,9 @@ class DefaultTracker(Tracker):
                 feats[i] = 1.
         return feats
 
-    def get_features(self):
-        return self.curr_feats
-
 
 @register('featurized_tracker')
-class FeaturizedTracker(Tracker):
+class FeaturizedTracker(DefaultTracker):
     """
     Tracker that overwrites slots with new values.
     Features are binary features (slot is present/absent) plus difference features
@@ -122,74 +124,54 @@ class FeaturizedTracker(Tracker):
     Parameters:
         slot_names: list of slots that should be tracked.
     """
-
-    def __init__(self, slot_names: List[str]) -> None:
-        self.slot_names = list(slot_names)
-        self.reset_state()
-
-    @property
-    def state_size(self):
-        return len(self.slot_names)
-
     @property
     def num_features(self):
         return self.state_size * 3 + 3
 
-    def reset_state(self):
-        self.history = []
-        self.curr_feats = np.zeros(self.num_features, dtype=np.float32)
-
     def update_state(self, slots):
-        def _filter(slots):
-            return filter(lambda s: s[0] in self.slot_names, slots)
+        super().update_state(slots)
+        bin_feats = self.curr_feats
 
         prev_state = self.get_state()
-        if isinstance(slots, list):
-            self.history.extend(_filter(slots))
-        elif isinstance(slots, dict):
-            for slot, value in _filter(slots.items()):
-                self.history.append((slot, value))
-        bin_feats = self._binary_features()
         diff_feats = self._diff_features(prev_state)
         new_feats = self._new_features(prev_state)
-        self.curr_feats = np.hstack((bin_feats,
-                                     diff_feats,
-                                     new_feats,
-                                     np.sum(bin_feats),
-                                     np.sum(diff_feats),
-                                     np.sum(new_feats)))
+        self.curr_feats = np.hstack((
+            bin_feats,
+            diff_feats,
+            new_feats,
+            np.sum(bin_feats),
+            np.sum(diff_feats),
+            np.sum(new_feats))
+        )
         return self
-
-    def get_state(self):
-        lasts = {}
-        for slot, value in self.history:
-            lasts[slot] = value
-        return lasts
-
-    def _binary_features(self):
-        feats = np.zeros(self.state_size, dtype=np.float32)
-        lasts = self.get_state()
-        for i, slot in enumerate(self.slot_names):
-            if slot in lasts:
-                feats[i] = 1.
-        return feats
 
     def _diff_features(self, state):
         feats = np.zeros(self.state_size, dtype=np.float32)
         curr_state = self.get_state()
+
         for i, slot in enumerate(self.slot_names):
-            if (slot in curr_state) and (slot in state) and \
-                    (curr_state[slot] != state[slot]):
+            if slot in curr_state and slot in state and curr_state[slot] != state[slot]:
                 feats[i] = 1.
+
         return feats
 
     def _new_features(self, state):
         feats = np.zeros(self.state_size, dtype=np.float32)
         curr_state = self.get_state()
+
         for i, slot in enumerate(self.slot_names):
-            if (slot in curr_state) and (slot not in state):
+            if slot in curr_state and slot not in state:
                 feats[i] = 1.
+
         return feats
 
-    def get_features(self):
-        return self.curr_feats
+
+class MultipleUserTracker(object):
+    def __init__(self):
+        self._ids_to_trackers = {}
+
+    def check_new_user(self, user_id):
+        return user_id in self._ids_to_trackers
+
+    def init_new_tracker(self, user_id, slot_names, tracker_class=FeaturizedTracker):
+        self._ids_to_trackers[user_id] = tracker_class(slot_names)
