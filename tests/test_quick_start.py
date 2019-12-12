@@ -8,7 +8,9 @@ import signal
 import socket
 import sys
 from concurrent.futures import ProcessPoolExecutor
+from multiprocessing import Queue
 from pathlib import Path
+from queue import Empty
 from struct import unpack
 from time import sleep
 from typing import Optional, Union
@@ -24,6 +26,7 @@ from deeppavlov import build_model
 from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
+from deeppavlov.utils.agent.rabbitmq import RabbitMQTestGateway
 from deeppavlov.utils.server import get_server_params
 from deeppavlov.utils.socket import encode
 
@@ -44,6 +47,7 @@ if api_port is not None:
 TEST_MODES = ['IP',  # test_interacting_pretrained_model
               'TI',  # test_consecutive_training_and_interacting
               'SR',  # test_serialization
+              'RI',  # test_interacting_agent_rabbit
               ]
 
 ALL_MODES = ('IP', 'TI', 'SR')
@@ -491,6 +495,43 @@ class TestQuickStart(object):
             p.kill(signal.SIGTERM)
             p.wait()
 
+    @staticmethod
+    def interact_agent_rabbit(config_path):
+        service_params = get_server_params(config_path)
+        model_args_names = service_params['model_args_names']
+
+        payload = {}
+        for arg_name in model_args_names:
+            arg_value = ' '.join(['qwerty'] * 10)
+            payload[arg_name] = [arg_value]
+
+        logfile = io.BytesIO(b'')
+        args = [sys.executable, "-m", "deeppavlov", "agent-rabbit", str(config_path), '-sn', 'some_service']
+        p = pexpect.popen_spawn.PopenSpawn(' '.join(args), timeout=None, logfile=logfile)
+
+        q = Queue()
+        agent = RabbitMQTestGateway(q, 'some_service', payload, 'agent',
+                                    'deeppavlov_agent', '0.0.0.0', 5672, 'guest', 'guest', '/')
+        try:
+            p.expect('routing key: service.some_service')
+            agent.start()
+            response = q.get(timeout=60)
+            # TODO: add proper response handling and check
+            print(response)
+
+        except pexpect.exceptions.EOF:
+            raise RuntimeError(f'Got unexpected EOF: \n{logfile.getvalue().decode()}')
+
+        except Empty:
+            raise ValueError(f'Got empty response from fake agent gateway.\n{logfile.getvalue().decode()}')
+
+        finally:
+            p.kill(signal.SIGTERM)
+            p.wait()
+            if agent.is_alive():
+                agent.terminate()
+                agent.join()
+
     def test_interacting_pretrained_model(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
             config_file_path = str(test_configs_path.joinpath(conf_file))
@@ -504,6 +545,13 @@ class TestQuickStart(object):
     def test_interacting_pretrained_model_api(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
             self.interact_api(test_configs_path / conf_file)
+        else:
+            pytest.skip("Unsupported mode: {}".format(mode))
+
+    def test_interacting_agent_rabbit(self, model, conf_file, model_dir, mode):
+        if 'RI' in mode:
+            self.interact_agent_rabbit(test_configs_path / conf_file)
+
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
 
