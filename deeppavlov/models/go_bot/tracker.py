@@ -166,12 +166,56 @@ class FeaturizedTracker(DefaultTracker):
         return feats
 
 
-class MultipleUserTracker(object):
+class DialogueStateTracker(Tracker):
+    def __init__(self, tracker, n_actions: int, hidden_size: int):
+        self.tracker = tracker
+        self.db_result = None
+        self.current_db_result = None
+
+        self.n_actions = n_actions
+        self.hidden_size = hidden_size
+        self.prev_action = np.zeros(n_actions, dtype=np.float32)
+
+        self.network_state = (
+            np.zeros([1, hidden_size], dtype=np.float32),
+            np.zeros([1, hidden_size], dtype=np.float32)
+        )
+
+    @property
+    def state_size(self):
+        return self.tracker.state_size
+
+    @property
+    def num_features(self):
+        return self.tracker.num_features
+
+    def update_state(self, slots):
+        self.tracker.update_state(slots)
+
+    def reset_state(self):
+        self.tracker.reset_state()
+        self.db_result = None
+        self.current_db_result = None
+        self.prev_action = np.zeros(self.n_actions, dtype=np.float32)
+
+        self.network_state = (
+            np.zeros([1, self.hidden_size], dtype=np.float32),
+            np.zeros([1, self.hidden_size], dtype=np.float32)
+        )
+
+    def get_state(self):
+        return self.tracker.get_state()
+
+    def get_features(self):
+        return self.tracker.get_features()
+
+
+class MultipleUserStateTracker(object):
     def __init__(self):
         self._ids_to_trackers = {}
 
     def check_new_user(self, user_id):
         return user_id in self._ids_to_trackers
 
-    def init_new_tracker(self, user_id, slot_names, tracker_class=FeaturizedTracker):
-        self._ids_to_trackers[user_id] = tracker_class(slot_names)
+    def init_new_tracker(self, user_id, tracker_class=DialogueStateTracker, **init_params):
+        self._ids_to_trackers[user_id] = tracker_class(**init_params)

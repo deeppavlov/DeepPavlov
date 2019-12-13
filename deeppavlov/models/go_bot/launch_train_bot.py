@@ -88,7 +88,7 @@ def create_bot_configs(bot_data_dir, bot_model_dir, load_data=False, max_train_d
 
     path_to_slotfill_config = os.path.join(bot_model_dir, 'slotfill_config.json')
     with open(path_to_slotfill_config, 'w') as f:
-        json.dump(slotfill_config, f)
+        json.dump(slotfill_config, f, indent=2)
         log.info(f'slot_fill config is saved to {path_to_slotfill_config}')
 
     gobot_config = read_json(configs.go_bot.gobot_simple_dstc2)
@@ -106,6 +106,7 @@ def create_bot_configs(bot_data_dir, bot_model_dir, load_data=False, max_train_d
     slot_names_dstc2 = ['pricerange', 'this', 'area', 'food']
 
     gobot_config['chainer']['pipe'][-1]['tracker']['slot_names'] = slot_names_dstc2
+
     gobot_config['chainer']['pipe'][-1]['template_type'] = 'DefaultTemplate'
     gobot_config['chainer']['pipe'][-1]['template_path'] = os.path.join(bot_data_dir, 'simple-dstc2-templates.txt')
 
@@ -121,7 +122,7 @@ def create_bot_configs(bot_data_dir, bot_model_dir, load_data=False, max_train_d
 
     path_to_gobot_config = os.path.join(bot_model_dir, 'gobot_config.json')
     with open(path_to_gobot_config, 'w') as f:
-        json.dump(gobot_config, f)
+        json.dump(gobot_config, f, indent=2)
         log.info(f'gobot config is saved to {path_to_gobot_config}')
 
     return gobot_config
