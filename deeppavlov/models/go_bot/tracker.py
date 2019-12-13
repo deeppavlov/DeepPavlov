@@ -218,7 +218,7 @@ class MultipleUserStateTracker(object):
         return user_id in self._ids_to_trackers
 
     def get_user_tracker(self, user_id):
-        if self.check_new_user(user_id):
+        if not self.check_new_user(user_id):
             raise RuntimeError(f"The user with {user_id} ID is not being tracked")
 
         return self._ids_to_trackers[user_id]
@@ -226,3 +226,13 @@ class MultipleUserStateTracker(object):
     def init_new_tracker(self, user_id, tracker_entity):
         tracker = copy.deepcopy(tracker_entity)
         self._ids_to_trackers[user_id] = tracker
+
+    def reset(self, user_id=None):
+        if user_id is not None and not self.check_new_user(user_id):
+            raise RuntimeError(f"The user with {user_id} ID is not being tracked")
+
+        if user_id is not None:
+            self._ids_to_trackers[user_id].reset_state()
+        else:
+            self._ids_to_trackers.clear()
+

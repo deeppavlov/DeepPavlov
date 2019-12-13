@@ -533,23 +533,8 @@ class GoalOrientedBot(LRScheduledTFModel):
         # batch is a list of dialogs, user_ids ignored
         return [self._infer_dialog(x) for x in batch]
 
-    def _zero_state(self) -> dict:
-        return {
-            'tracker': copy.deepcopy(self.default_tracker),
-            'db_result': None,
-            'current_db_result': None,
-            'prev_action': np.zeros(self.n_actions, dtype=np.float32),
-            'network_state': (
-                np.zeros([1, self.hidden_size], dtype=np.float32),
-                np.zeros([1, self.hidden_size], dtype=np.float32)
-            )
-        }
-
     def reset(self, user_id: Union[None, str, int] = None) -> None:
-        if user_id is None:
-            self.states.clear()
-        else:
-            self.states[user_id] = self._zero_state()
+        self.multiple_user_state_tracker.reset(user_id)
         if self.debug:
             log.debug("Bot reset.")
 
