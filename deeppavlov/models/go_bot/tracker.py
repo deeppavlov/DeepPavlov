@@ -11,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from abc import ABCMeta, abstractmethod
-from typing import List, Dict, Union, Tuple, Any
+import copy
 
 import numpy as np
 
+from abc import ABCMeta, abstractmethod
+from typing import List, Dict, Union, Tuple, Any
 from deeppavlov.core.common.registry import register
 
 
@@ -217,5 +217,12 @@ class MultipleUserStateTracker(object):
     def check_new_user(self, user_id):
         return user_id in self._ids_to_trackers
 
-    def init_new_tracker(self, user_id, tracker_class=DialogueStateTracker, **init_params):
-        self._ids_to_trackers[user_id] = tracker_class(**init_params)
+    def get_user_tracker(self, user_id):
+        if self.check_new_user(user_id):
+            raise RuntimeError(f"The user with {user_id} ID is not being tracked")
+
+        return self._ids_to_trackers[user_id]
+
+    def init_new_tracker(self, user_id, tracker_entity):
+        tracker = copy.deepcopy(tracker_entity)
+        self._ids_to_trackers[user_id] = tracker

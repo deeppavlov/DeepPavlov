@@ -16,14 +16,15 @@ import collections
 import copy
 import json
 import re
-from logging import getLogger
-from typing import Dict, Any, List, Optional, Union, Tuple
 
 import numpy as np
 import tensorflow as tf
+import deeppavlov.models.go_bot.templates as templ
+
+from logging import getLogger
+from typing import Dict, Any, List, Optional, Union, Tuple
 from tensorflow.contrib.layers import xavier_initializer as xav
 
-import deeppavlov.models.go_bot.templates as templ
 from deeppavlov import Chainer
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.errors import ConfigError
@@ -32,7 +33,7 @@ from deeppavlov.core.layers import tf_attention_mechanisms as am
 from deeppavlov.core.layers import tf_layers
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
-from deeppavlov.models.go_bot.tracker import Tracker, DialogueStateTracker
+from deeppavlov.models.go_bot.tracker import Tracker, DialogueStateTracker, MultipleUserStateTracker
 
 log = getLogger(__name__)
 
@@ -193,7 +194,7 @@ class GoalOrientedBot(LRScheduledTFModel):
         new_network_parameters.update(network_parameters)
         self._init_network(**new_network_parameters)
 
-        self.states = {}
+        self.multiple_user_state_tracker = MultipleUserStateTracker()
         self.reset()
 
     def _init_network(self,
@@ -501,33 +502,33 @@ class GoalOrientedBot(LRScheduledTFModel):
             if not user_ids:
                 user_ids = ['finn'] * len(batch)
             for user_id, x in zip(user_ids, batch):
-                if user_id not in self.states:
-                    self.reset(user_id)
-                state = self.states[user_id]
-                state['current_db_result'] = None
+                if not self.multiple_user_state_tracker.check_new_user(user_id):
+                    self.multiple_user_state_tracker.init_new_tracker(user_id, self.dialogue_state_tracker)
+
+                tracker = self.multiple_user_state_tracker.get_user_tracker(user_id)
+                tracker.current_db_result = None
 
                 tokens = self.tokenizer([x.lower().strip()])[0]
                 if callable(self.slot_filler):
                     utter_slots = self.slot_filler([tokens])[0]
-                    state['tracker'].update_state(utter_slots)
-                _, pred_act_id, state['network_state'] = \
-                    self._infer(tokens, state=state)
-                state['prev_action'] *= 0.
-                state['prev_action'][pred_act_id] = 1.
+                    tracker.update_state(utter_slots)
+                _, pred_act_id, tracker.network_state = \
+                    self._infer(tokens, tracker=tracker)
+                tracker.prev_action *= 0.
+                tracker.prev_action[pred_act_id] = 1.
 
                 # if made api_call, then respond with next prediction
                 if pred_act_id == self.api_call_id:
-                    state['current_db_result'] = self.make_api_call(state)
-                    if state['current_db_result'] is not None:
-                        state['db_result'] = state['current_db_result']
-                    _, pred_act_id, state['network_state'] = \
-                        self._infer(tokens, state=state)
-                    state['prev_action'] *= 0.
-                    state['prev_action'][pred_act_id] = 1.
+                    tracker.current_db_result = self.make_api_call(tracker)
+                    if tracker.current_db_result is not None:
+                        tracker.db_result = tracker.current_db_result
+                    _, pred_act_id, tracker.network_state = \
+                        self._infer(tokens, tracker=tracker)
+                    tracker.prev_action *= 0.
+                    tracker.prev_action[pred_act_id] = 1.
 
-                resp = self._decode_response(pred_act_id, state)
+                resp = self._decode_response(pred_act_id, tracker)
                 res.append(resp)
-                self.states[user_id] = state
             return res
         # batch is a list of dialogs, user_ids ignored
         return [self._infer_dialog(x) for x in batch]
