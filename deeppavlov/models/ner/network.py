@@ -114,7 +114,8 @@ class NerNetwork(LRScheduledTFModel):
         # ================ Building input features =================
 
         # Token embeddings
-        self._add_word_embeddings(token_emb_mat, token_emb_dim)
+        if token_emb_dim:
+            self._add_word_embeddings(token_emb_mat, token_emb_dim)
 
         # Masks for different lengths utterances
         self.mask_ph = self._add_mask()
