@@ -439,6 +439,7 @@ class TestQuickStart(object):
         model_args_names = socket_params['model_args_names']
 
         host = socket_params['host']
+        host = host.replace('0.0.0.0', '127.0.0.1')
         port = api_port or socket_params['port']
 
         socket_payload = {}
