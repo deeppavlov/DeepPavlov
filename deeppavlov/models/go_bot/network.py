@@ -169,7 +169,7 @@ class GoalOrientedBot(LRScheduledTFModel):
         log.info(f"{self.n_actions} templates loaded.")
 
         self.default_tracker = tracker
-        self.dialogue_state_tracker = DialogueStateTracker(tracker, self.n_actions, hidden_size)
+        self.dialogue_state_tracker = DialogueStateTracker(tracker.slot_names, self.n_actions, hidden_size)
 
         self.database = database
         self.api_call_id = -1

@@ -55,10 +55,13 @@ class Tracker(metaclass=ABCMeta):
         pass
 
 
-class DefaultTracker(Tracker):
+@register('featurized_tracker')
+class FeaturizedTracker(Tracker):
     """
     Tracker that overwrites slots with new values.
-    Features are binary indicators: slot is present/absent.
+    Features are binary features (slot is present/absent) plus difference features
+    (slot value is (the same)/(not the same) as before last update) and count
+    features (sum of present slots and sum of changed during last update slots).
 
     Parameters:
         slot_names: list of slots that should be tracked.
@@ -67,7 +70,7 @@ class DefaultTracker(Tracker):
     def __init__(self, slot_names: List[str]) -> None:
         self.slot_names = list(slot_names)
         self.history = []
-        self.curr_feats = np.zeros(len(self.slot_names), dtype=np.float32)
+        self.current_features = None
 
     @property
     def state_size(self):
@@ -75,7 +78,7 @@ class DefaultTracker(Tracker):
 
     @property
     def num_features(self):
-        return self.state_size
+        return self.state_size * 3 + 3
 
     def update_state(self, slots):
         if isinstance(slots, list):
@@ -85,8 +88,19 @@ class DefaultTracker(Tracker):
             for slot, value in self._filter(slots.items()):
                 self.history.append((slot, value))
 
-        self.curr_feats = self._binary_features()
-        return self
+        prev_state = self.get_state()
+        bin_feats = self._binary_features()
+        diff_feats = self._diff_features(prev_state)
+        new_feats = self._new_features(prev_state)
+
+        self.current_features = np.hstack((
+            bin_feats,
+            diff_feats,
+            new_feats,
+            np.sum(bin_feats),
+            np.sum(diff_feats),
+            np.sum(new_feats))
+        )
 
     def get_state(self):
         lasts = {}
@@ -96,10 +110,10 @@ class DefaultTracker(Tracker):
 
     def reset_state(self):
         self.history = []
-        self.curr_feats = np.zeros(self.state_size, dtype=np.float32)
+        self.current_features = np.zeros(self.state_size, dtype=np.float32)
 
     def get_features(self):
-        return self.curr_feats
+        return self.current_features
 
     def _filter(self, slots):
         return filter(lambda s: s[0] in self.slot_names, slots)
@@ -111,39 +125,6 @@ class DefaultTracker(Tracker):
             if slot in lasts:
                 feats[i] = 1.
         return feats
-
-
-@register('featurized_tracker')
-class FeaturizedTracker(DefaultTracker):
-    """
-    Tracker that overwrites slots with new values.
-    Features are binary features (slot is present/absent) plus difference features
-    (slot value is (the same)/(not the same) as before last update) and count
-    features (sum of present slots and sum of changed during last update slots).
-
-    Parameters:
-        slot_names: list of slots that should be tracked.
-    """
-    @property
-    def num_features(self):
-        return self.state_size * 3 + 3
-
-    def update_state(self, slots):
-        super().update_state(slots)
-        bin_feats = self.curr_feats
-
-        prev_state = self.get_state()
-        diff_feats = self._diff_features(prev_state)
-        new_feats = self._new_features(prev_state)
-        self.curr_feats = np.hstack((
-            bin_feats,
-            diff_feats,
-            new_feats,
-            np.sum(bin_feats),
-            np.sum(diff_feats),
-            np.sum(new_feats))
-        )
-        return self
 
     def _diff_features(self, state):
         feats = np.zeros(self.state_size, dtype=np.float32)
@@ -166,9 +147,9 @@ class FeaturizedTracker(DefaultTracker):
         return feats
 
 
-class DialogueStateTracker(Tracker):
-    def __init__(self, tracker, n_actions: int, hidden_size: int):
-        self.tracker = tracker
+class DialogueStateTracker(FeaturizedTracker):
+    def __init__(self, slot_names, n_actions: int, hidden_size: int) -> None:
+        super().__init__(slot_names)
         self.db_result = None
         self.current_db_result = None
 
@@ -181,19 +162,8 @@ class DialogueStateTracker(Tracker):
             np.zeros([1, hidden_size], dtype=np.float32)
         )
 
-    @property
-    def state_size(self):
-        return self.tracker.state_size
-
-    @property
-    def num_features(self):
-        return self.tracker.num_features
-
-    def update_state(self, slots):
-        self.tracker.update_state(slots)
-
     def reset_state(self):
-        self.tracker.reset_state()
+        super().reset_state()
         self.db_result = None
         self.current_db_result = None
         self.prev_action = np.zeros(self.n_actions, dtype=np.float32)
@@ -202,12 +172,6 @@ class DialogueStateTracker(Tracker):
             np.zeros([1, self.hidden_size], dtype=np.float32),
             np.zeros([1, self.hidden_size], dtype=np.float32)
         )
-
-    def get_state(self):
-        return self.tracker.get_state()
-
-    def get_features(self):
-        return self.tracker.get_features()
 
 
 class MultipleUserStateTracker(object):
