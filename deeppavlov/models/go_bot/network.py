@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import collections
-import copy
 import json
 import re
 
@@ -169,7 +168,7 @@ class GoalOrientedBot(LRScheduledTFModel):
         log.info(f"{self.n_actions} templates loaded.")
 
         self.default_tracker = tracker
-        self.dialogue_state_tracker = DialogueStateTracker(tracker.slot_names, self.n_actions, hidden_size)
+        self.dialogue_state_tracker = DialogueStateTracker(tracker.slot_names, self.n_actions, hidden_size, database)
 
         self.database = database
         self.api_call_id = -1
@@ -385,7 +384,7 @@ class GoalOrientedBot(LRScheduledTFModel):
         b_emb_context, b_keys = [], []  # for attention
         max_num_utter = max(len(d_contexts) for d_contexts in x)
         for d_contexts, d_responses in zip(x, y):
-            tracker = copy.deepcopy(self.dialogue_state_tracker)
+            self.dialogue_state_tracker.reset_state()
             d_features, d_a_masks, d_actions = [], [], []
             d_emb_context, d_key = [], []  # for attention
 
@@ -393,25 +392,25 @@ class GoalOrientedBot(LRScheduledTFModel):
                 tokens = self.tokenizer([context['text'].lower().strip()])[0]
 
                 # update state
-                tracker.current_db_result = context.get('db_result', None)
-                if tracker.current_db_result is not None:
-                    tracker.db_result = tracker.current_db_result
+                self.dialogue_state_tracker.current_db_result = context.get('db_result', None)
+                if self.dialogue_state_tracker.current_db_result is not None:
+                    self.dialogue_state_tracker.db_result = tracker.current_db_result
                 if callable(self.slot_filler):
                     context_slots = self.slot_filler([tokens])[0]
-                    tracker.update_state(context_slots)
+                    self.dialogue_state_tracker.update_state(context_slots)
 
-                features, emb_context, key = self._encode_context(tokens, tracker=tracker)
+                features, emb_context, key = self._encode_context(tokens, tracker=self.dialogue_state_tracker)
                 d_features.append(features)
                 d_emb_context.append(emb_context)
                 d_key.append(key)
-                d_a_masks.append(self.calc_action_mask(tracker))
+                d_a_masks.append(self.calc_action_mask(self.dialogue_state_tracker))
 
                 action_id = self._encode_response(response['act'])
                 d_actions.append(action_id)
                 # update state
                 # - previous action is teacher-forced here
-                tracker.prev_action *= 0.
-                tracker.prev_action[action_id] = 1.
+                self.dialogue_state_tracker.prev_action *= 0.
+                self.dialogue_state_tracker.prev_action[action_id] = 1.
 
                 if self.debug:
                     log.debug(f"True response = '{response['text']}'.")
@@ -450,48 +449,30 @@ class GoalOrientedBot(LRScheduledTFModel):
 
     def _infer_dialog(self, contexts: List[dict]) -> List[str]:
         res = []
-        tracker = copy.deepcopy(self.dialogue_state_tracker)
+        self.dialogue_state_tracker.reset_state()
         for context in contexts:
             if context.get('prev_resp_act') is not None:
                 prev_act_id = self._encode_response(context['prev_resp_act'])
                 # previous action is teacher-forced
-                tracker.prev_action *= 0.
-                tracker.prev_action[prev_act_id] = 1.
+                self.dialogue_state_tracker.prev_action *= 0.
+                self.dialogue_state_tracker.prev_action[prev_act_id] = 1.
 
-            tracker.current_db_result = context.get('db_result')
-            if tracker.current_db_result is not None:
-                tracker.db_result = tracker.current_db_result
+            self.dialogue_state_tracker.current_db_result = context.get('db_result')
+            if self.dialogue_state_tracker.current_db_result is not None:
+                self.dialogue_state_tracker.db_result = self.dialogue_state_tracker.current_db_result
 
             tokens = self.tokenizer([context['text'].lower().strip()])[0]
             if callable(self.slot_filler):
                 utter_slots = self.slot_filler([tokens])[0]
-                tracker.update_state(utter_slots)
-            _, pred_act_id, tracker.network_state = \
-                self._infer(tokens, tracker=tracker)
-            tracker.prev_action *= 0.
-            tracker.prev_action[pred_act_id] = 1.
+                self.dialogue_state_tracker.update_state(utter_slots)
+            _, pred_act_id, self.dialogue_state_tracker.network_state = \
+                self._infer(tokens, tracker=self.dialogue_state_tracker)
+            self.dialogue_state_tracker.prev_action *= 0.
+            self.dialogue_state_tracker.prev_action[pred_act_id] = 1.
 
-            resp = self._decode_response(pred_act_id, tracker)
+            resp = self._decode_response(pred_act_id, self.dialogue_state_tracker)
             res.append(resp)
         return res
-
-    def make_api_call(self, tracker) -> dict:
-        slots = tracker.get_state()
-        db_results = []
-        if self.database is not None:
-            # filter slot keys with value equal to 'dontcare' as
-            # there is no such value in database records
-            # and remove unknown slot keys (for example, 'this' in dstc2 tracker)
-            db_slots = {s: v for s, v in slots.items()
-                        if (v != 'dontcare') and (s in self.database.keys)}
-            db_results = self.database([db_slots])[0]
-            # filter api results if there are more than one
-            if len(db_results) > 1:
-                db_results = [r for r in db_results if r != tracker.db_result]
-        else:
-            log.warning("No database specified.")
-        log.info(f"Made api_call with {slots}, got {len(db_results)} results.")
-        return {} if not db_results else db_results[0]
 
     def __call__(self,
                  batch: Union[List[dict], List[str]],
@@ -519,7 +500,7 @@ class GoalOrientedBot(LRScheduledTFModel):
 
                 # if made api_call, then respond with next prediction
                 if pred_act_id == self.api_call_id:
-                    tracker.current_db_result = self.make_api_call(tracker)
+                    tracker.current_db_result = self.self.dialogue_state_tracker.make_api_call()
                     if tracker.current_db_result is not None:
                         tracker.db_result = tracker.current_db_result
                     _, pred_act_id, tracker.network_state = \

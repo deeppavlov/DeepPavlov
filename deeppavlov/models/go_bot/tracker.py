@@ -17,7 +17,10 @@ import numpy as np
 
 from abc import ABCMeta, abstractmethod
 from typing import List, Dict, Union, Tuple, Any
+from logging import getLogger
 from deeppavlov.core.common.registry import register
+
+log = getLogger(__name__)
 
 
 class Tracker(metaclass=ABCMeta):
@@ -148,10 +151,11 @@ class FeaturizedTracker(Tracker):
 
 
 class DialogueStateTracker(FeaturizedTracker):
-    def __init__(self, slot_names, n_actions: int, hidden_size: int) -> None:
+    def __init__(self, slot_names, n_actions: int, hidden_size: int, database) -> None:
         super().__init__(slot_names)
         self.db_result = None
         self.current_db_result = None
+        self.database = database
 
         self.n_actions = n_actions
         self.hidden_size = hidden_size
@@ -172,6 +176,29 @@ class DialogueStateTracker(FeaturizedTracker):
             np.zeros([1, self.hidden_size], dtype=np.float32),
             np.zeros([1, self.hidden_size], dtype=np.float32)
         )
+
+    def make_api_call(self) -> dict:
+        slots = self.get_state()
+        db_results = []
+        if self.database is not None:
+
+            # filter slot keys with value equal to 'dontcare' as
+            # there is no such value in database records
+            # and remove unknown slot keys (for example, 'this' in dstc2 tracker)
+            db_slots = {
+                s: v for s, v in slots.items() if v != 'dontcare' and s in self.database.keys
+            }
+
+            db_results = self.database([db_slots])[0]
+
+            # filter api results if there are more than one
+            # TODO: add sufficient criteria for database results ranking
+            if len(db_results) > 1:
+                db_results = [r for r in db_results if r != self.db_result]
+        else:
+            log.warning("No database specified.")
+        log.info(f"Made api_call with {slots}, got {len(db_results)} results.")
+        return {} if not db_results else db_results[0]
 
 
 class MultipleUserStateTracker(object):
