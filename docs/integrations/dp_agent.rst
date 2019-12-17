@@ -9,8 +9,7 @@ using command line interface or using python.
 Command line interface
 ~~~~~~~~~~~~~~~~~~~~~~
 
-To run a model specified by the ``<config_path>`` config file as a DeepPavlov
-Agent service, run:
+To run a model specified by the ``<config_path>`` config file as a DeepPavlov Agent service, run:
 
 .. code:: bash
 
@@ -27,7 +26,7 @@ Agent service, run:
                                                     [-rvh <rabbit_virtualhost>]
 
 * ``-d``: download model specific data before starting the service.
-* ``-sn <service_name>``: service name set in DeepPavlov Agent config.
+* ``-sn <service_name>``: service name set in the connector section of the DeepPavlov Agent config file.
 * ``-an <agent_namespace>``: namespace the service works in. Messages only from agents from this namespace is processed.
 * ``-b <batch_size>``: inference batch size.
 * ``-ul <utterace_lifetime``: RabbitMQ message expiration time in seconds.
@@ -37,14 +36,14 @@ Agent service, run:
 * ``-rpwd <rabbit_password>``: RabbitMQ server password.
 * ``-rvh <rabbit_virtualhost>``: RabbitMQ server virtualhost.
 
-Default service properties can be modified via changing ``agent-rabbit`` section
-of ``deeppavlov/utils/settings/server_config.json`` file.
+Default values of optional arguments can be modified via changing ``agent-rabbit`` section of the file
+``deeppavlov/utils/settings/server_config.json``.
 
-Command line interface
-~~~~~~~~~~~~~~~~~~~~~~
+Python interface
+~~~~~~~~~~~~~~~~
 
-To run a model specified by the ``<config_path>`` config file as a DeepPavlov
-Agent service using python, run the following code:
+To run a model specified by the ``<config_path>`` config file as a DeepPavlov Agent service using python,
+run the following code:
 
 .. code:: python
 
@@ -61,6 +60,5 @@ Agent service using python, run the following code:
                          rabbit_password=<rabbit_password>,
                          rabbit_virtualhost=<rabbit_virtualhost>)
 
-All arguments except ``<config_path>`` are optional. Optional arguments override
-corresponding values from ``agent-rabbit`` section of
-``deeppavlov/utils/settings/server_config.json``.
+All arguments except ``<config_path>`` are optional. Default values of optional arguments can be modified via changing
+``agent-rabbit`` section of the file ``deeppavlov/utils/settings/server_config.json``.
