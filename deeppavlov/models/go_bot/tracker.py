@@ -200,6 +200,15 @@ class DialogueStateTracker(FeaturizedTracker):
         log.info(f"Made api_call with {slots}, got {len(db_results)} results.")
         return {} if not db_results else db_results[0]
 
+    def calc_action_mask(self, api_call_id) -> np.ndarray:
+        mask = np.ones(self.n_actions, dtype=np.float32)
+
+        if np.any(self.prev_action):
+            prev_act_id = np.argmax(self.prev_action)
+            if prev_act_id == api_call_id:
+                mask[prev_act_id] = 0.
+        return mask
+
 
 class MultipleUserStateTracker(object):
     def __init__(self):
@@ -216,6 +225,7 @@ class MultipleUserStateTracker(object):
 
     def init_new_tracker(self, user_id, tracker_entity):
         tracker = copy.deepcopy(tracker_entity)
+        tracker.reset_state()
         self._ids_to_trackers[user_id] = tracker
 
     def reset(self, user_id=None):
