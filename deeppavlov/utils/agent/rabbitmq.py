@@ -15,11 +15,10 @@
 import asyncio
 import json
 import logging
-import multiprocessing
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import List, Optional, Any, Dict, Union
+from typing import Any, Dict, List, Optional, Union
 
 import aio_pika
 from aio_pika import Connection, Channel, Exchange, Queue, IncomingMessage, Message
@@ -36,19 +35,57 @@ log = logging.getLogger(__name__)
 
 AGENT_IN_EXCHANGE_NAME_TEMPLATE = '{agent_namespace}_e_in'
 AGENT_OUT_EXCHANGE_NAME_TEMPLATE = '{agent_namespace}_e_out'
-AGENT_QUEUE_NAME_TEMPLATE = '{agent_namespace}_q_agent_{agent_name}'
 AGENT_ROUTING_KEY_TEMPLATE = 'agent.{agent_name}'
 
 SERVICE_QUEUE_NAME_TEMPLATE = '{agent_namespace}_q_service_{service_name}'
 SERVICE_ROUTING_KEY_TEMPLATE = 'service.{service_name}'
 
 
-class RabbitMQTransportBase:
+class RabbitMQServiceGateway:
+    """Class object connects to the RabbitMQ broker to process requests from the DeepPavlov Agent."""
+    _add_to_buffer_lock: asyncio.Lock
+    _infer_lock: asyncio.Lock
+    _model: Chainer
+    _model_args_names: List[str]
+    _incoming_messages_buffer: List[IncomingMessage]
+    _batch_size: int
+    _utterance_lifetime_sec: int
+    _in_queue: Optional[Queue]
     _connection: Connection
     _agent_in_exchange: Exchange
     _agent_out_exchange: Exchange
     _agent_in_channel: Channel
     _agent_out_channel: Channel
+
+    def __init__(self,
+                 model_config: Union[str, Path],
+                 service_name: str,
+                 agent_namespace: str,
+                 batch_size: int,
+                 utterance_lifetime_sec: int,
+                 rabbit_host: str,
+                 rabbit_port: int,
+                 rabbit_login: str,
+                 rabbit_password: str,
+                 rabbit_virtualhost: str,
+                 loop: asyncio.AbstractEventLoop) -> None:
+        self._add_to_buffer_lock = asyncio.Lock()
+        self._infer_lock = asyncio.Lock()
+        server_params = get_server_params(model_config)
+        self._model_args_names = server_params['model_args_names']
+        self._model = build_model(model_config)
+        self._in_queue = None
+        self._utterance_lifetime_sec = utterance_lifetime_sec
+        self._batch_size = batch_size
+        self._incoming_messages_buffer = []
+
+        loop.run_until_complete(self._connect(loop=loop, host=rabbit_host, port=rabbit_port, login=rabbit_login,
+                                              password=rabbit_password, virtualhost=rabbit_virtualhost,
+                                              agent_namespace=agent_namespace))
+        loop.run_until_complete(self._setup_queues(service_name, agent_namespace))
+        loop.run_until_complete(self._in_queue.consume(callback=self._on_message_callback))
+
+        log.info(f'Service in queue started consuming')
 
     async def _connect(self,
                        loop: asyncio.AbstractEventLoop,
@@ -58,7 +95,7 @@ class RabbitMQTransportBase:
                        password: str,
                        virtualhost: str,
                        agent_namespace: str) -> None:
-
+        """Connects to RabbitMQ message broker and initiates agent in and out channels and exchanges."""
         log.info('Starting RabbitMQ connection...')
 
         while True:
@@ -91,48 +128,8 @@ class RabbitMQTransportBase:
     def disconnect(self):
         self._connection.close()
 
-
-class RabbitMQServiceGateway(RabbitMQTransportBase):
-    _add_to_buffer_lock: asyncio.Lock
-    _infer_lock: asyncio.Lock
-    _model: Chainer
-    _model_args_names: List[str]
-    _incoming_messages_buffer: List[IncomingMessage]
-    _batch_size: int
-    _utterance_lifetime_sec: int
-    _in_queue: Optional[Queue]
-
-    def __init__(self,
-                 model_config: Union[str, Path],
-                 service_name: str,
-                 agent_namespace: str,
-                 batch_size: int,
-                 utterance_lifetime_sec: int,
-                 rabbit_host: str,
-                 rabbit_port: int,
-                 rabbit_login: str,
-                 rabbit_password: str,
-                 rabbit_virtualhost: str,
-                 loop: asyncio.AbstractEventLoop) -> None:
-        self._add_to_buffer_lock = asyncio.Lock()
-        self._infer_lock = asyncio.Lock()
-        server_params = get_server_params(model_config)
-        self._model_args_names = server_params['model_args_names']
-        self._model = build_model(model_config)
-        self._in_queue = None
-        self._utterance_lifetime_sec = utterance_lifetime_sec
-        self._batch_size = batch_size
-        self._incoming_messages_buffer = []
-
-        loop.run_until_complete(self._connect(loop=loop, host=rabbit_host, port=rabbit_port, login=rabbit_login,
-                                              password=rabbit_password, virtualhost=rabbit_virtualhost,
-                                              agent_namespace=agent_namespace))
-        loop.run_until_complete(self._setup_queues(service_name, agent_namespace))
-        loop.run_until_complete(self._in_queue.consume(callback=self._on_message_callback))
-
-        log.info(f'Service in queue started consuming')
-
     async def _setup_queues(self, service_name: str, agent_namespace: str) -> None:
+        """Setups input queue to get messages from DeepPavlov Agent."""
         in_queue_name = SERVICE_QUEUE_NAME_TEMPLATE.format(agent_namespace=agent_namespace,
                                                            service_name=service_name)
 
@@ -146,6 +143,12 @@ class RabbitMQServiceGateway(RabbitMQTransportBase):
         await self._agent_out_channel.set_qos(prefetch_count=self._batch_size * 2)
 
     async def _on_message_callback(self, message: IncomingMessage) -> None:
+        """Processes messages from the input queue.
+
+        Collects incoming messages to buffer, sends tasks batches for further processing. Depending on the success of
+        the processing result sends negative or positive acknowledgements to the input messages.
+
+        """
         await self._add_to_buffer_lock.acquire()
         self._incoming_messages_buffer.append(message)
         log.debug('Incoming message received')
@@ -191,6 +194,7 @@ class RabbitMQServiceGateway(RabbitMQTransportBase):
             self._infer_lock.release()
 
     async def _process_tasks(self, tasks_batch: List[ServiceTaskMessage]) -> None:
+        """Gets from tasks batch payloads to infer model, processes them and creates tasks to send results."""
         task_uuids_batch, payloads = \
             zip(*[(task.payload['task_id'], task.payload['payload']) for task in tasks_batch])
 
@@ -205,6 +209,7 @@ class RabbitMQServiceGateway(RabbitMQTransportBase):
         log.debug(f'Processed tasks {", ".join(task_uuids_batch)}')
 
     async def _interact(self, payloads: List[Dict]) -> List[Any]:
+        """Infers model with the batch."""
         batch = defaultdict(list)
 
         for payload in payloads:
@@ -224,6 +229,7 @@ class RabbitMQServiceGateway(RabbitMQTransportBase):
         return result
 
     async def _send_results(self, task: ServiceTaskMessage, response: Dict) -> None:
+        """Sends responses batch to the DeepPavlov Agent using agent input exchange."""
         result = ServiceResponseMessage(agent_name=task.agent_name,
                                         task_id=task.payload["task_id"],
                                         response=response)
@@ -235,50 +241,3 @@ class RabbitMQServiceGateway(RabbitMQTransportBase):
         routing_key = AGENT_ROUTING_KEY_TEMPLATE.format(agent_name=task.agent_name)
         await self._agent_in_exchange.publish(message=message, routing_key=routing_key)
         log.debug(f'Sent response for task {str(task.payload["task_id"])} with routing key {routing_key}')
-
-
-class RabbitMQTestGateway(RabbitMQTransportBase, multiprocessing.Process):
-    def __init__(self,
-                 queue: multiprocessing.Queue,
-                 service_name: str,
-                 payload: dict,
-                 agent_name: str,
-                 agent_namespace: str,
-                 rabbit_host: str,
-                 rabbit_port: int,
-                 rabbit_login: str,
-                 rabbit_password: str,
-                 rabbit_virtualhost: str) -> None:
-        super(RabbitMQTestGateway, self).__init__()
-        self._payload = payload
-        self._queue = queue
-        self._loop = asyncio.get_event_loop()
-        self._loop.run_until_complete(self._connect(loop=self._loop, host=rabbit_host, port=rabbit_port,
-                                                    login=rabbit_login, password=rabbit_password,
-                                                    virtualhost=rabbit_virtualhost, agent_namespace=agent_namespace))
-        self._loop.run_until_complete(self._setup_queues(agent_name, agent_namespace))
-        self._loop.run_until_complete(self._in_queue.consume(callback=self._on_message_callback))
-        self._loop.create_task(self._send_test_data(agent_name, service_name))
-
-    async def _send_test_data(self, agent_name, service_name):
-        task = ServiceTaskMessage(agent_name=agent_name, payload={'task_id': 'asdfasdf', 'payload': self._payload})
-
-        message = Message(body=json.dumps(task.to_json()).encode('utf-8'),
-                          delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
-                          expiration=120)
-
-        routing_key = SERVICE_ROUTING_KEY_TEMPLATE.format(service_name=service_name)
-        await self._agent_out_exchange.publish(message=message, routing_key=routing_key)
-
-    async def _setup_queues(self, agent_name, agent_namespace: str):
-        in_queue_name = AGENT_QUEUE_NAME_TEMPLATE.format(agent_namespace=agent_namespace, agent_name=agent_name)
-        self._in_queue = await self._agent_in_channel.declare_queue(name=in_queue_name, durable=True)
-
-        routing_key = AGENT_ROUTING_KEY_TEMPLATE.format(agent_name=agent_name)
-        await self._in_queue.bind(exchange=self._agent_in_exchange, routing_key=routing_key)
-
-    async def _on_message_callback(self, message: IncomingMessage) -> None:
-        self._queue.put(json.loads(message.body, encoding='utf-8'))
-
-    def run(self):
-        self._loop.run_forever()

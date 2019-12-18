@@ -11,20 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Module contains classes defining messages received and sent by service via RabbitMQ message broker."""
 
-from typing import Any, Dict
+from typing import Any
 
 
 class MessageBase:
     agent_name: str
     msg_type: str
 
-    def __init__(self, msg_type: str, agent_name: str):
+    def __init__(self, msg_type: str, agent_name: str) -> None:
         self.msg_type = msg_type
         self.agent_name = agent_name
 
     @classmethod
-    def from_json(cls, message_json):
+    def from_json(cls, message_json: dict):
         return cls(**message_json)
 
     def to_json(self) -> dict:
@@ -32,9 +33,9 @@ class MessageBase:
 
 
 class ServiceTaskMessage(MessageBase):
-    payload: Dict
+    payload: dict
 
-    def __init__(self, agent_name: str, payload: Dict) -> None:
+    def __init__(self, agent_name: str, payload: dict) -> None:
         super().__init__('service_task', agent_name)
         self.payload = payload
 
@@ -50,7 +51,7 @@ class ServiceResponseMessage(MessageBase):
 
 
 def get_service_task_message(message_json: dict) -> ServiceTaskMessage:
-    """Creates instance of ServiceTaskMessage class using its json representation.
+    """Creates an instance of ServiceTaskMessage class using its json representation.
 
     Args:
         message_json: Dictionary with class fields.
