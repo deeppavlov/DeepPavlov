@@ -170,7 +170,6 @@ class GoalOrientedBot(LRScheduledTFModel):
         self.default_tracker = tracker
         self.dialogue_state_tracker = DialogueStateTracker(tracker.slot_names, self.n_actions, hidden_size, database)
 
-        self.database = database
         self.api_call_id = -1
         if api_call_action is not None:
             self.api_call_id = self.templates.actions.index(api_call_action)
@@ -392,8 +391,7 @@ class GoalOrientedBot(LRScheduledTFModel):
                 d_actions.append(action_id)
                 # update state
                 # - previous action is teacher-forced here
-                self.dialogue_state_tracker.prev_action *= 0.
-                self.dialogue_state_tracker.prev_action[action_id] = 1.
+                self.dialogue_state_tracker.update_previous_action(action_id)
 
                 if self.debug:
                     log.debug(f"True response = '{response['text']}'.")
@@ -435,10 +433,9 @@ class GoalOrientedBot(LRScheduledTFModel):
         self.dialogue_state_tracker.reset_state()
         for context in contexts:
             if context.get('prev_resp_act') is not None:
-                prev_act_id = self._encode_response(context['prev_resp_act'])
+                previous_act_id = self._encode_response(context['prev_resp_act'])
                 # previous action is teacher-forced
-                self.dialogue_state_tracker.prev_action *= 0.
-                self.dialogue_state_tracker.prev_action[prev_act_id] = 1.
+                self.dialogue_state_tracker.update_previous_action(previous_act_id)
 
             self.dialogue_state_tracker.current_db_result = context.get('db_result')
             if self.dialogue_state_tracker.current_db_result is not None:
@@ -448,12 +445,11 @@ class GoalOrientedBot(LRScheduledTFModel):
             if callable(self.slot_filler):
                 utter_slots = self.slot_filler([tokens])[0]
                 self.dialogue_state_tracker.update_state(utter_slots)
-            _, pred_act_id, self.dialogue_state_tracker.network_state = \
+            _, predicted_act_id, self.dialogue_state_tracker.network_state = \
                 self._infer(tokens, tracker=self.dialogue_state_tracker)
-            self.dialogue_state_tracker.prev_action *= 0.
-            self.dialogue_state_tracker.prev_action[pred_act_id] = 1.
 
-            resp = self._decode_response(pred_act_id, self.dialogue_state_tracker)
+            self.dialogue_state_tracker.update_previous_action(predicted_act_id)
+            resp = self._decode_response(predicted_act_id, self.dialogue_state_tracker)
             res.append(resp)
         return res
 
@@ -471,27 +467,30 @@ class GoalOrientedBot(LRScheduledTFModel):
 
                 tracker = self.multiple_user_state_tracker.get_user_tracker(user_id)
                 tracker.current_db_result = None
-
                 tokens = self.tokenizer([x.lower().strip()])[0]
+
                 if callable(self.slot_filler):
                     utter_slots = self.slot_filler([tokens])[0]
                     tracker.update_state(utter_slots)
-                _, pred_act_id, tracker.network_state = \
+
+                _, predicted_act_id, tracker.network_state = \
                     self._infer(tokens, tracker=tracker)
-                tracker.prev_action *= 0.
-                tracker.prev_action[pred_act_id] = 1.
+
+                tracker.update_previous_action(predicted_act_id)
 
                 # if made api_call, then respond with next prediction
-                if pred_act_id == self.api_call_id:
+                if predicted_act_id == self.api_call_id:
                     tracker.current_db_result = self.self.dialogue_state_tracker.make_api_call()
+
                     if tracker.current_db_result is not None:
                         tracker.db_result = tracker.current_db_result
-                    _, pred_act_id, tracker.network_state = \
-                        self._infer(tokens, tracker=tracker)
-                    tracker.prev_action *= 0.
-                    tracker.prev_action[pred_act_id] = 1.
 
-                resp = self._decode_response(pred_act_id, tracker)
+                    _, predicted_act_id, tracker.network_state = \
+                        self._infer(tokens, tracker=tracker)
+
+                    tracker.update_previous_action(predicted_act_id)
+
+                resp = self._decode_response(predicted_act_id, tracker)
                 res.append(resp)
             return res
         # batch is a list of dialogs, user_ids ignored

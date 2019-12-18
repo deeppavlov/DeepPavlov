@@ -177,6 +177,10 @@ class DialogueStateTracker(FeaturizedTracker):
             np.zeros([1, self.hidden_size], dtype=np.float32)
         )
 
+    def update_previous_action(self, prev_act_id):
+        self.prev_action *= 0.
+        self.prev_action[prev_act_id] = 1.
+
     def make_api_call(self) -> dict:
         slots = self.get_state()
         db_results = []
