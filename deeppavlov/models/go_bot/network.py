@@ -317,13 +317,14 @@ class GoalOrientedBot(LRScheduledTFModel):
             result_matches_state = all(v == tracker.db_result.get(s)
                                        for s, v in matching_items
                                        if v != 'dontcare') * 1.
-        context_features = np.array([bool(tracker.current_db_result) * 1.,
-                                     (tracker.current_db_result == {}) * 1.,
-                                     (tracker.db_result is None) * 1.,
-                                     bool(tracker.db_result) * 1.,
-                                     (tracker.db_result == {}) * 1.,
-                                     result_matches_state],
-                                    dtype=np.float32)
+        context_features = np.array([
+            bool(tracker.current_db_result) * 1.,
+            (tracker.current_db_result == {}) * 1.,
+            (tracker.db_result is None) * 1.,
+            bool(tracker.db_result) * 1.,
+            (tracker.db_result == {}) * 1.,
+            result_matches_state
+        ], dtype=np.float32)
 
         if self.debug:
             log.debug(f"Context features = {context_features}")
@@ -374,9 +375,8 @@ class GoalOrientedBot(LRScheduledTFModel):
                 tokens = self.tokenizer([context['text'].lower().strip()])[0]
 
                 # update state
-                self.dialogue_state_tracker.current_db_result = context.get('db_result', None)
-                if self.dialogue_state_tracker.current_db_result is not None:
-                    self.dialogue_state_tracker.db_result = self.dialogue_state_tracker.current_db_result
+                self.dialogue_state_tracker.get_ground_truth_db_result_from(context)
+
                 if callable(self.slot_filler):
                     context_slots = self.slot_filler([tokens])[0]
                     self.dialogue_state_tracker.update_state(context_slots)
@@ -437,11 +437,9 @@ class GoalOrientedBot(LRScheduledTFModel):
                 # previous action is teacher-forced
                 self.dialogue_state_tracker.update_previous_action(previous_act_id)
 
-            self.dialogue_state_tracker.current_db_result = context.get('db_result')
-            if self.dialogue_state_tracker.current_db_result is not None:
-                self.dialogue_state_tracker.db_result = self.dialogue_state_tracker.current_db_result
-
+            self.dialogue_state_tracker.get_ground_truth_db_result_from(context)
             tokens = self.tokenizer([context['text'].lower().strip()])[0]
+
             if callable(self.slot_filler):
                 utter_slots = self.slot_filler([tokens])[0]
                 self.dialogue_state_tracker.update_state(utter_slots)
@@ -480,10 +478,7 @@ class GoalOrientedBot(LRScheduledTFModel):
 
                 # if made api_call, then respond with next prediction
                 if predicted_act_id == self.api_call_id:
-                    tracker.current_db_result = self.self.dialogue_state_tracker.make_api_call()
-
-                    if tracker.current_db_result is not None:
-                        tracker.db_result = tracker.current_db_result
+                    tracker.make_api_call()
 
                     _, predicted_act_id, tracker.network_state = \
                         self._infer(tokens, tracker=tracker)

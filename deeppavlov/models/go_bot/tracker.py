@@ -181,6 +181,10 @@ class DialogueStateTracker(FeaturizedTracker):
         self.prev_action *= 0.
         self.prev_action[prev_act_id] = 1.
 
+    def get_ground_truth_db_result_from(self, context):
+        self.current_db_result = context.get('db_result', None)
+        self._update_db_result()
+
     def make_api_call(self) -> dict:
         slots = self.get_state()
         db_results = []
@@ -201,8 +205,10 @@ class DialogueStateTracker(FeaturizedTracker):
                 db_results = [r for r in db_results if r != self.db_result]
         else:
             log.warning("No database specified.")
+
         log.info(f"Made api_call with {slots}, got {len(db_results)} results.")
-        return {} if not db_results else db_results[0]
+        self.current_db_result = {} if not db_results else db_results[0]
+        self._update_db_result()
 
     def calc_action_mask(self, api_call_id) -> np.ndarray:
         mask = np.ones(self.n_actions, dtype=np.float32)
@@ -211,7 +217,12 @@ class DialogueStateTracker(FeaturizedTracker):
             prev_act_id = np.argmax(self.prev_action)
             if prev_act_id == api_call_id:
                 mask[prev_act_id] = 0.
+
         return mask
+
+    def _update_db_result(self):
+        if self.current_db_result is not None:
+            self.db_result = self.current_db_result
 
 
 class MultipleUserStateTracker(object):
