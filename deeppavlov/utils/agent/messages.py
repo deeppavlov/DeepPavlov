@@ -11,7 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Module contains classes defining messages received and sent by service via RabbitMQ message broker."""
+"""Module contains classes defining messages received and sent by service via RabbitMQ message broker.
+
+The classes created to document the DeepPavlov Agent API and should match the corresponding classes
+from https://github.com/deepmipt/dp-agent/blob/master/core/transport/messages.py
+
+"""
 
 from typing import Any
 

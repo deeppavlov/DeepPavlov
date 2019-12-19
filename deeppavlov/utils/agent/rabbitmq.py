@@ -159,7 +159,7 @@ class RabbitMQServiceGateway:
         await self._infer_lock.acquire()
         try:
             messages_batch = self._incoming_messages_buffer
-            active_messages_batch: List[IncomingMessage] = []
+            valid_messages_batch: List[IncomingMessage] = []
             tasks_batch: List[ServiceTaskMessage] = []
 
             if messages_batch:
@@ -172,7 +172,7 @@ class RabbitMQServiceGateway:
                     try:
                         task = get_service_task_message(json.loads(message.body, encoding='utf-8'))
                         tasks_batch.append(task)
-                        active_messages_batch.append(message)
+                        valid_messages_batch.append(message)
                     except Exception as e:
                         log.error(f'Failed to get ServiceTaskMessage from the incoming message: {repr(e)}')
                         await message.reject()
@@ -185,10 +185,10 @@ class RabbitMQServiceGateway:
                     await self._process_tasks(tasks_batch)
                 except Exception as e:
                     log.error(f'got exception while processing tasks: {repr(e)}')
-                    for message in active_messages_batch:
+                    for message in valid_messages_batch:
                         await message.reject()
                 else:
-                    for message in active_messages_batch:
+                    for message in valid_messages_batch:
                         await message.ack()
         finally:
             self._infer_lock.release()
