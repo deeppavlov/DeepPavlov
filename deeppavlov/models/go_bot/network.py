@@ -464,7 +464,6 @@ class GoalOrientedBot(LRScheduledTFModel):
                     self.multiple_user_state_tracker.init_new_tracker(user_id, self.dialogue_state_tracker)
 
                 tracker = self.multiple_user_state_tracker.get_user_tracker(user_id)
-                tracker.current_db_result = None
                 tokens = self.tokenizer([x.lower().strip()])[0]
 
                 if callable(self.slot_filler):

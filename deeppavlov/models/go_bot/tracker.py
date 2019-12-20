@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import copy
 
 import numpy as np
 
@@ -236,11 +235,21 @@ class MultipleUserStateTracker(object):
         if not self.check_new_user(user_id):
             raise RuntimeError(f"The user with {user_id} ID is not being tracked")
 
-        return self._ids_to_trackers[user_id]
+        tracker = self._ids_to_trackers[user_id]
+
+        # TODO: understand why setting current_db_result to None is necessary
+        tracker.current_db_result = None
+        return tracker
 
     def init_new_tracker(self, user_id, tracker_entity):
-        tracker = copy.deepcopy(tracker_entity)
-        tracker.reset_state()
+        # TODO: implement a better way to init a tracker
+        tracker = DialogueStateTracker(
+            tracker_entity.slot_names,
+            tracker_entity.n_actions,
+            tracker_entity.hidden_size,
+            tracker_entity.database
+        )
+
         self._ids_to_trackers[user_id] = tracker
 
     def reset(self, user_id=None):
