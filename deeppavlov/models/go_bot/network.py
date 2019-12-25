@@ -15,15 +15,14 @@
 import collections
 import json
 import re
+from logging import getLogger
+from typing import Dict, Any, List, Optional, Union, Tuple
 
 import numpy as np
 import tensorflow as tf
-import deeppavlov.models.go_bot.templates as templ
-
-from logging import getLogger
-from typing import Dict, Any, List, Optional, Union, Tuple
 from tensorflow.contrib.layers import xavier_initializer as xav
 
+import deeppavlov.models.go_bot.templates as templ
 from deeppavlov import Chainer
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.errors import ConfigError

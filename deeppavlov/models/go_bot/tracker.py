@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from abc import ABCMeta, abstractmethod
+from logging import getLogger
+from typing import List, Dict, Union, Tuple, Any
+
 import numpy as np
 
-from abc import ABCMeta, abstractmethod
-from typing import List, Dict, Union, Tuple, Any
-from logging import getLogger
 from deeppavlov.core.common.registry import register
 
 log = getLogger(__name__)

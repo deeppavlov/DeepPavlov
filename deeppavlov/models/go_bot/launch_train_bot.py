@@ -1,21 +1,15 @@
-import json
-import os
 import argparse
+import json
 import logging
-
+import os
 from logging import getLogger
 
-from deeppavlov.core.common.file import read_json
 from deeppavlov import configs, evaluate_model, train_model
-from deeppavlov.dataset_readers.dstc2_reader import SimpleDSTC2DatasetReader
-from deeppavlov.download import download_decompress
+from deeppavlov.core.common.file import read_json
 from deeppavlov.core.data.sqlite_database import Sqlite3Database
 from deeppavlov.dataset_iterators.dialog_iterator import DialogDatasetIterator
-
-
-logging.basicConfig(level=logging.INFO,
-                    format="[%(levelname)s] [%(asctime)s] %(message)s",
-                    datefmt="%y-%m-%d %H:%M:%S")
+from deeppavlov.dataset_readers.dstc2_reader import SimpleDSTC2DatasetReader
+from deeppavlov.download import download_decompress
 
 log = getLogger(__name__)
 log.setLevel(logging.DEBUG)
