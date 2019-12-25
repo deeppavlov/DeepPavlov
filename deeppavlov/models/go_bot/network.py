@@ -257,7 +257,7 @@ class GoalOrientedBot(LRScheduledTFModel):
 
     def _encode_context(self,
                         tokens: List[str],
-                        tracker) -> List[np.ndarray]:
+                        tracker: DialogueStateTracker) -> List[np.ndarray]:
         # Bag of words features
         bow_features = []
         if callable(self.bow_embedder):
@@ -343,7 +343,7 @@ class GoalOrientedBot(LRScheduledTFModel):
     def _encode_response(self, act: str) -> int:
         return self.templates.actions.index(act)
 
-    def _decode_response(self, action_id: int, tracker) -> str:
+    def _decode_response(self, action_id: int, tracker: DialogueStateTracker) -> str:
         """
         Convert action template id and entities from tracker
         to final response.
@@ -417,7 +417,7 @@ class GoalOrientedBot(LRScheduledTFModel):
     def train_on_batch(self, x: List[dict], y: List[dict]) -> dict:
         return self.network_train_on_batch(*self.prepare_data(x, y))
 
-    def _infer(self, tokens: List[str], tracker) -> List:
+    def _infer(self, tokens: List[str], tracker: DialogueStateTracker) -> List:
         features, emb_context, key = self._encode_context(tokens, tracker=tracker)
         action_mask = tracker.calc_action_mask(self.api_call_id)
         probs, state_c, state_h = \

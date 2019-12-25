@@ -14,11 +14,12 @@
 
 from abc import ABCMeta, abstractmethod
 from logging import getLogger
-from typing import List, Dict, Union, Tuple, Any
+from typing import List, Dict, Union, Tuple, Any, Iterator
 
 import numpy as np
 
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.component import Component
 
 log = getLogger(__name__)
 
@@ -30,7 +31,7 @@ class Tracker(metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def update_state(self, slots: Union[List[Tuple[str, Any]], Dict[str, Any]]) -> 'Tracker':
+    def update_state(self, slots: Union[List[Tuple[str, Any]], Dict[str, Any]]) -> None:
         """
         Updates dialogue state with new ``slots``, calculates features.
 
@@ -76,11 +77,11 @@ class FeaturizedTracker(Tracker):
         self.current_features = None
 
     @property
-    def state_size(self):
+    def state_size(self) -> int:
         return len(self.slot_names)
 
     @property
-    def num_features(self):
+    def num_features(self) -> int:
         return self.state_size * 3 + 3
 
     def update_state(self, slots):
@@ -118,10 +119,10 @@ class FeaturizedTracker(Tracker):
     def get_features(self):
         return self.current_features
 
-    def _filter(self, slots):
+    def _filter(self, slots) -> Iterator:
         return filter(lambda s: s[0] in self.slot_names, slots)
 
-    def _binary_features(self):
+    def _binary_features(self) -> np.ndarray:
         feats = np.zeros(self.state_size, dtype=np.float32)
         lasts = self.get_state()
         for i, slot in enumerate(self.slot_names):
@@ -129,7 +130,7 @@ class FeaturizedTracker(Tracker):
                 feats[i] = 1.
         return feats
 
-    def _diff_features(self, state):
+    def _diff_features(self, state) -> np.ndarray:
         feats = np.zeros(self.state_size, dtype=np.float32)
         curr_state = self.get_state()
 
@@ -139,7 +140,7 @@ class FeaturizedTracker(Tracker):
 
         return feats
 
-    def _new_features(self, state):
+    def _new_features(self, state) -> np.ndarray:
         feats = np.zeros(self.state_size, dtype=np.float32)
         curr_state = self.get_state()
 
@@ -151,7 +152,7 @@ class FeaturizedTracker(Tracker):
 
 
 class DialogueStateTracker(FeaturizedTracker):
-    def __init__(self, slot_names, n_actions: int, hidden_size: int, database) -> None:
+    def __init__(self, slot_names, n_actions: int, hidden_size: int, database: Component = None) -> None:
         super().__init__(slot_names)
         self.db_result = None
         self.current_db_result = None
@@ -177,15 +178,15 @@ class DialogueStateTracker(FeaturizedTracker):
             np.zeros([1, self.hidden_size], dtype=np.float32)
         )
 
-    def update_previous_action(self, prev_act_id):
+    def update_previous_action(self, prev_act_id: int) -> None:
         self.prev_action *= 0.
         self.prev_action[prev_act_id] = 1.
 
-    def get_ground_truth_db_result_from(self, context):
+    def get_ground_truth_db_result_from(self, context: Dict[str, Any]):
         self.current_db_result = context.get('db_result', None)
         self._update_db_result()
 
-    def make_api_call(self) -> dict:
+    def make_api_call(self) -> None:
         slots = self.get_state()
         db_results = []
         if self.database is not None:
@@ -210,7 +211,7 @@ class DialogueStateTracker(FeaturizedTracker):
         self.current_db_result = {} if not db_results else db_results[0]
         self._update_db_result()
 
-    def calc_action_mask(self, api_call_id) -> np.ndarray:
+    def calc_action_mask(self, api_call_id: int) -> np.ndarray:
         mask = np.ones(self.n_actions, dtype=np.float32)
 
         if np.any(self.prev_action):
@@ -229,10 +230,10 @@ class MultipleUserStateTracker(object):
     def __init__(self):
         self._ids_to_trackers = {}
 
-    def check_new_user(self, user_id):
+    def check_new_user(self, user_id: int) -> bool:
         return user_id in self._ids_to_trackers
 
-    def get_user_tracker(self, user_id):
+    def get_user_tracker(self, user_id: int) -> DialogueStateTracker:
         if not self.check_new_user(user_id):
             raise RuntimeError(f"The user with {user_id} ID is not being tracked")
 
@@ -242,7 +243,7 @@ class MultipleUserStateTracker(object):
         tracker.current_db_result = None
         return tracker
 
-    def init_new_tracker(self, user_id, tracker_entity):
+    def init_new_tracker(self, user_id: int, tracker_entity: DialogueStateTracker) -> None:
         # TODO: implement a better way to init a tracker
         tracker = DialogueStateTracker(
             tracker_entity.slot_names,
@@ -253,7 +254,7 @@ class MultipleUserStateTracker(object):
 
         self._ids_to_trackers[user_id] = tracker
 
-    def reset(self, user_id=None):
+    def reset(self, user_id: int = None) -> None:
         if user_id is not None and not self.check_new_user(user_id):
             raise RuntimeError(f"The user with {user_id} ID is not being tracked")
 
