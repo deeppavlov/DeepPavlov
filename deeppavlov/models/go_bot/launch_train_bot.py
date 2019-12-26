@@ -10,7 +10,7 @@ from deeppavlov.core.common.file import read_json
 from deeppavlov.core.data.sqlite_database import Sqlite3Database
 from deeppavlov.dataset_iterators.dialog_iterator import DialogDatasetIterator
 from deeppavlov.dataset_readers.dstc2_reader import SimpleDSTC2DatasetReader
-from deeppavlov.download import download_decompress
+from deeppavlov.download import download_decompress, download_resource
 
 log = getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -25,6 +25,16 @@ formatter = logging.Formatter('[%(levelname)s] [%(asctime)s] %(message)s',"%y-%m
 fh = logging.FileHandler("log")
 fh.setFormatter(formatter)
 log.addHandler(fh)
+
+
+class AssistantDatasetReader(SimpleDSTC2DatasetReader):
+
+    url = "http://files.deeppavlov.ai/datasets/tutor_assistant_data.tar.gz"
+
+    @staticmethod
+    def _data_fname(datatype):
+        assert datatype in ('val', 'trn', 'tst'), "wrong datatype name"
+        return f"assistant-{datatype}.json"
 
 
 def load_database(bot_data_dir: Path, data: Dict[str, Any]):
@@ -96,18 +106,49 @@ def create_bot_configs(bot_data_dir: Path, bot_model_dir: Path, load_data: bool 
     gobot_config['chainer']['pipe'][-1]['slot_filler']['config_path'] = str(path_to_slotfill_config)
     gobot_config['chainer']['pipe'][-1]['tracker']['slot_names'] = ['pricerange', 'this', 'area', 'food']
 
-    gobot_config['chainer']['pipe'][-1]['template_type'] = 'DefaultTemplate'
+    # gobot_config['chainer']['pipe'][-1]['template_type'] = 'DefaultTemplate'
     gobot_config['chainer']['pipe'][-1]['template_path'] = str(bot_data_dir / 'simple-dstc2-templates.txt')
 
     gobot_config['metadata']['variables']['DATA_PATH'] = str(bot_data_dir)
     gobot_config['metadata']['variables']['MODEL_PATH'] = str(bot_model_dir)
 
-    gobot_config['train']['epochs'] = 200
-    gobot_config['train']['batch_size'] = 8
     gobot_config['train']['max_batches'] = 250
     gobot_config['train']['log_on_k_batches'] = 20
     gobot_config['train']['val_every_n_batches'] = 40
     gobot_config['train']['log_every_n_batches'] = 40
+
+    path_to_gobot_config = bot_model_dir / 'gobot_config.json'
+    path_to_gobot_config.write_text(json.dumps(gobot_config, indent=2), encoding='utf-8')
+    log.info(f'gobot config is saved to {path_to_gobot_config}')
+
+    return gobot_config
+
+
+def create_minimal_bot_config(bot_data_dir: Path, bot_model_dir: Path, load_data: bool = False):
+    if not bot_data_dir.exists() or load_data:
+        _ = AssistantDatasetReader().read(str(bot_data_dir))
+
+    bot_model_dir.mkdir(parents=True, exist_ok=True)
+    download_resource(
+        url="http://files.deeppavlov.ai/embeddings/glove.6B.100d.txt",
+        dest_paths=[str(bot_model_dir)]
+    )
+
+    gobot_config = read_json(configs.go_bot.gobot_dstc2_minimal)
+    gobot_config['chainer']['pipe'][-1]['embedder'] = {
+        "class_name": "glove",
+        "load_path": str(bot_model_dir / "glove.6B.100d.txt")
+    }
+
+    gobot_config['chainer']['pipe'][-1]['template_path'] = str(bot_data_dir / 'assistant-templates.txt')
+    gobot_config['metadata']['variables']['DATA_PATH'] = str(bot_data_dir)
+    gobot_config['metadata']['variables']['MODEL_PATH'] = str(bot_model_dir)
+    gobot_config['dataset_reader']['class_name'] = '__main__:AssistantDatasetReader'
+
+    gobot_config['train']['max_batches'] = 30
+    gobot_config['train']['log_on_k_batches'] = 20
+    gobot_config['train']['val_every_n_batches'] = 30
+    gobot_config['train']['log_every_n_batches'] = 5
 
     path_to_gobot_config = bot_model_dir / 'gobot_config.json'
     path_to_gobot_config.write_text(json.dumps(gobot_config, indent=2), encoding='utf-8')
@@ -136,13 +177,18 @@ if __name__ == "__main__":
                         help="Whether to evaluate the bot performance.")
     parser.add_argument("--max_train_data", default=None, type=int, required=False,
                         help="Maximum number of dialogues to take from training data")
+    parser.add_argument("--minimal_config", action='store_true',
+                        help="Whether to use minimal bot config (no database).")
 
     args = parser.parse_args()
 
     bot_data_dir = args.working_directory / args.bot_data_dir
     bot_model_dir = args.working_directory / args.bot_model_dir
 
-    gobot_config = create_bot_configs(bot_data_dir, bot_model_dir, args.load_data, args.max_train_data)
+    if args.minimal_config:
+        gobot_config = create_minimal_bot_config(bot_data_dir, bot_model_dir, args.load_data)
+    else:
+        gobot_config = create_bot_configs(bot_data_dir, bot_model_dir, args.load_data, args.max_train_data)
 
     if args.do_train:
         train_model(gobot_config)

@@ -114,7 +114,7 @@ class FeaturizedTracker(Tracker):
 
     def reset_state(self):
         self.history = []
-        self.current_features = np.zeros(self.state_size, dtype=np.float32)
+        self.current_features = np.zeros(self.num_features, dtype=np.float32)
 
     def get_features(self):
         return self.current_features
