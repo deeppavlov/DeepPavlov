@@ -57,5 +57,5 @@ class ParaphraserReader(DatasetReader):
             if do_lower_case:
                 key = tuple([t.lower() for t in key])
 
-            data[key] = int(paraphrase.find('value[@name="class"]').text)
+            data[key] = 1 if int(paraphrase.find('value[@name="class"]').text) >= 0 else 0
         return list(data.items())
