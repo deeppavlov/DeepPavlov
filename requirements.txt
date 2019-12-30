@@ -1,6 +1,6 @@
 aio-pika==5.6.0
 Cython==0.29.14
-fastapi==0.45.0
+fastapi==0.38.1
 fuzzywuzzy==0.17.0
 h5py==2.10.0
 nltk==3.4.5
@@ -16,4 +16,4 @@ rusenttokenize==0.0.5
 scikit-learn==0.22
 scipy==1.4.1
 tqdm==4.41.0
-uvicorn==0.11.1
+uvicorn==0.9.0
