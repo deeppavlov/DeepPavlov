@@ -18,6 +18,7 @@ import logging
 import time
 from collections import defaultdict
 from pathlib import Path
+from traceback import format_exc
 from typing import Any, Dict, List, Optional, Union
 
 import aio_pika
@@ -26,7 +27,8 @@ from aio_pika import Connection, Channel, Exchange, Queue, IncomingMessage, Mess
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.data.utils import jsonify_data
-from deeppavlov.utils.agent.messages import ServiceTaskMessage, ServiceResponseMessage, get_service_task_message
+from deeppavlov.utils.agent.messages import ServiceTaskMessage, ServiceResponseMessage, ServiceErrorMessage
+from deeppavlov.utils.agent.messages import get_service_task_message
 from deeppavlov.utils.connector import DialogLogger
 from deeppavlov.utils.server import get_server_params
 
@@ -184,7 +186,11 @@ class RabbitMQServiceGateway:
                 try:
                     await self._process_tasks(tasks_batch)
                 except Exception as e:
-                    log.error(f'got exception while processing tasks: {repr(e)}')
+                    task_ids = [task.payload["task_id"] for task in tasks_batch]
+                    log.error(f'got exception {repr(e)} while processing tasks {", ".join(task_ids)}')
+                    formatted_exception = format_exc()
+                    error_replies = [self._send_results(task, formatted_exception) for task in tasks_batch]
+                    await asyncio.gather(*error_replies)
                     for message in valid_messages_batch:
                         await message.reject()
                 else:
@@ -228,11 +234,23 @@ class RabbitMQServiceGateway:
 
         return result
 
-    async def _send_results(self, task: ServiceTaskMessage, response: Dict) -> None:
-        """Sends responses batch to the DeepPavlov Agent using agent input exchange."""
-        result = ServiceResponseMessage(agent_name=task.agent_name,
-                                        task_id=task.payload["task_id"],
-                                        response=response)
+    async def _send_results(self, task: ServiceTaskMessage, response: Union[Dict, str]) -> None:
+        """Sends responses batch to the DeepPavlov Agent using agent input exchange.
+
+        Args:
+            task: Task message from DeepPavlov Agent.
+            response: DeepPavlov model response (dict type) if infer was successful otherwise string representation of
+                raised error
+
+        """
+        if isinstance(response, dict):
+            result = ServiceResponseMessage(agent_name=task.agent_name,
+                                            task_id=task.payload["task_id"],
+                                            response=response)
+        else:
+            result = ServiceErrorMessage(agent_name=task.agent_name,
+                                         task_id=task.payload["task_id"],
+                                         formatted_exc=response)
 
         message = Message(body=json.dumps(result.to_json()).encode('utf-8'),
                           delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
