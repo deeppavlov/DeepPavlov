@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import asyncio
-import logging
 from collections import namedtuple
+from logging import getLogger
 from pathlib import Path
 from ssl import PROTOCOL_TLSv1_2
 from typing import Dict, List, Optional, Union
@@ -32,6 +32,7 @@ from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import read_json
+from deeppavlov.core.common.log import log_config
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import check_nested_dict_keys, jsonify_data
 from deeppavlov.utils.connector import DialogLogger
@@ -40,17 +41,9 @@ SERVER_CONFIG_PATH = get_settings_path() / 'server_config.json'
 SSLConfig = namedtuple('SSLConfig', ['version', 'keyfile', 'certfile'])
 
 
-class ProbeFilter(logging.Filter):
-    """ProbeFilter class is used to filter POST requests to /probe endpoint from logs."""
+log = getLogger(__name__)
+dialog_logger = DialogLogger(logger_name='rest_api')
 
-    def filter(self, record: logging.LogRecord) -> bool:
-        """To log the record method should return True."""
-        return 'POST /probe HTTP' not in record.getMessage()
-
-
-log = logging.getLogger(__name__)
-uvicorn_log = logging.getLogger('uvicorn')
-uvicorn_log.addFilter(ProbeFilter())
 app = FastAPI(__file__)
 
 app.add_middleware(
@@ -60,8 +53,6 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*']
 )
-
-dialog_logger = DialogLogger(logger_name='rest_api')
 
 
 def get_server_params(model_config: Union[str, Path]) -> Dict:
@@ -209,5 +200,5 @@ def start_model_server(model_config: Path,
     async def api() -> List[str]:
         return model_args_names
 
-    uvicorn.run(app, host=host, port=port, logger=uvicorn_log, ssl_version=ssl_config.version,
+    uvicorn.run(app, host=host, port=port, log_config=log_config, ssl_version=ssl_config.version,
                 ssl_keyfile=ssl_config.keyfile, ssl_certfile=ssl_config.certfile, timeout_keep_alive=20)
