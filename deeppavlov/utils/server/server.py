@@ -23,8 +23,8 @@ import uvicorn
 from fastapi import Body, FastAPI, HTTPException
 from fastapi.utils import generate_operation_id_for_path
 from pydantic import BaseConfig, BaseModel, Schema
-from pydantic.fields import Field
-from pydantic.main import MetaModel
+from pydantic.fields import Field, ModelField
+from pydantic.main import ModelMetaclass
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
 
@@ -171,10 +171,10 @@ def start_model_server(model_config: Path,
 
     model = build_model(model_config)
 
-    def batch_decorator(cls: MetaModel) -> MetaModel:
+    def batch_decorator(cls: ModelMetaclass) -> ModelMetaclass:
         cls.__annotations__ = {arg_name: list for arg_name in model_args_names}
-        cls.__fields__ = {arg_name: Field(name=arg_name, type_=list, class_validators=None,
-                                          model_config=BaseConfig, required=False, schema=Schema(None))
+        cls.__fields__ = {arg_name: ModelField(name=arg_name, type_=list, class_validators=None,
+                                               model_config=BaseConfig, required=False, field_info=Field(None))
                           for arg_name in model_args_names}
         return cls
 
