@@ -55,6 +55,19 @@ class ServiceResponseMessage(MessageBase):
         self.response = response
 
 
+class ServiceErrorMessage(MessageBase):
+    formatted_exc: str
+
+    def __init__(self, task_id: str, agent_name: str, formatted_exc: str) -> None:
+        super().__init__('error', agent_name)
+        self.task_id = task_id
+        self.formatted_exc = formatted_exc
+
+    @property
+    def exception(self) -> Exception:
+        return Exception(self.formatted_exc)
+
+
 def get_service_task_message(message_json: dict) -> ServiceTaskMessage:
     """Creates an instance of ServiceTaskMessage class using its json representation.
 
