@@ -23,12 +23,12 @@ import uvicorn
 from fastapi import FastAPI
 from starlette.responses import JSONResponse
 
+from deeppavlov.core.common.log import log_config
 from deeppavlov.utils.alexa.request_parameters import data_body, cert_chain_url_header, signature_header
 from deeppavlov.utils.connector import AlexaBot
 from deeppavlov.utils.server import get_ssl_params, redirect_root_to_docs, get_server_params
 
 log = getLogger(__name__)
-uvicorn_log = getLogger('uvicorn')
 app = FastAPI()
 
 
@@ -83,6 +83,6 @@ def start_alexa_server(model_config: Union[str, Path, dict],
         response_code = 400 if 'error' in response.keys() else 200
         return JSONResponse(response, status_code=response_code)
 
-    uvicorn.run(app, host=host, port=port, logger=uvicorn_log, ssl_version=ssl_config.version,
+    uvicorn.run(app, host=host, port=port, log_config=log_config, ssl_version=ssl_config.version,
                 ssl_keyfile=ssl_config.keyfile, ssl_certfile=ssl_config.certfile)
     bot.join()
