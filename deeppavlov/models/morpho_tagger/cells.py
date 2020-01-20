@@ -13,11 +13,10 @@
 # limitations under the License.
 
 import numpy as np
+import tensorflow as tf
 import tensorflow.keras.backend as K
-from tensorflow.keras import activations
 from tensorflow.keras.initializers import Constant
-from tensorflow.keras.layers import InputSpec
-from tensorflow.keras.layers import Layer, Lambda, Dropout, Multiply
+from tensorflow.keras.layers import InputSpec, Layer, Lambda, Dropout, Multiply
 
 INFTY = -100
 
@@ -26,7 +25,7 @@ class Highway(Layer):
 
     def __init__(self, activation=None, bias_initializer=-1, **kwargs):
         super().__init__(**kwargs)
-        self.activation = activations.get(activation)
+        self.activation = tf.keras.activations.get(activation)
         self.bias_initializer = bias_initializer
         if isinstance(self.bias_initializer, int):
             self.bias_initializer = Constant(self.bias_initializer)
@@ -86,7 +85,7 @@ class WeightedCombinationLayer(Layer):
         self.use_dimension_bias = use_dimension_bias
         self.use_intermediate_layer = use_intermediate_layer
         self.intermediate_dim = intermediate_dim
-        self.intermediate_activation = activations.get(intermediate_activation)
+        self.intermediate_activation = tf.keras.activations.get(intermediate_activation)
         self.from_logits = from_logits
         self.return_logits = return_logits
         self.bias_initializer = bias_initializer
