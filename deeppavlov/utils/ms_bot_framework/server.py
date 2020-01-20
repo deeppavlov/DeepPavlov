@@ -20,11 +20,11 @@ from typing import Optional
 import uvicorn
 from fastapi import FastAPI
 
+from deeppavlov.core.common.log import log_config
 from deeppavlov.utils.connector import MSBot
 from deeppavlov.utils.server import get_server_params, get_ssl_params, redirect_root_to_docs
 
 log = getLogger(__name__)
-uvicorn_log = getLogger('uvicorn')
 app = FastAPI()
 
 
@@ -55,6 +55,6 @@ def start_ms_bf_server(model_config: Path,
         bot.input_queue.put(activity)
         return {}
 
-    uvicorn.run(app, host=host, port=port, logger=uvicorn_log, ssl_version=ssl_config.version,
+    uvicorn.run(app, host=host, port=port, log_config=log_config, ssl_version=ssl_config.version,
                 ssl_keyfile=ssl_config.keyfile, ssl_certfile=ssl_config.certfile)
     bot.join()
