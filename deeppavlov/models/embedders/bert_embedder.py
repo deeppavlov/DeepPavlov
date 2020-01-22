@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from logging import getLogger
-from typing import List, Union, Tuple
+from typing import List, Union, Tuple, Dict
 
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from bert_dp.modeling import BertConfig, BertModel
 
 from deeppavlov.core.commands.utils import expand_path
@@ -273,7 +273,10 @@ class BertEmbedder(TFModel):
                  subword_tokens: Union[List[List[str]], np.ndarray],
                  input_ids: Union[List[List[int]], np.ndarray],
                  input_masks: Union[List[List[int]], np.ndarray],
-                 y_masks: Union[List[List[int]], np.ndarray]) -> Union[List[List[int]], List[np.ndarray]]:
+                 y_masks: Union[List[List[int]], np.ndarray]) -> Union[Tuple[List[Dict[str, np.ndarray]],
+                                                                             List[Dict[str, np.ndarray]],
+                                                                             List[Dict[str, np.ndarray]]],
+                                                                       List[Dict[str, np.ndarray]]]:
         """ Predicts tag indices for a given subword tokens batch
 
         Args:
@@ -296,7 +299,7 @@ class BertEmbedder(TFModel):
 
         return self.predict_all(tokens, subword_tokens, feed_dict)
 
-    def predict_word_embs(self, tokens, feed_dict) -> dict:
+    def predict_word_embs(self, tokens, feed_dict) -> List[dict]:
         pred, lengths = self.sess.run([self.word_embs,
                                        self.word_seq_lengths],
                                       feed_dict=feed_dict)
@@ -304,7 +307,7 @@ class BertEmbedder(TFModel):
                  'word_embeddings': np.array(p[:l])}
                 for ts, p, l in zip(tokens, pred, lengths)]
 
-    def predict_subword_embs(self, subword_tokens, feed_dict) -> dict:
+    def predict_subword_embs(self, subword_tokens, feed_dict) -> List[Dict[str, np.ndarray]]:
         pred, lengths = self.sess.run([self.subword_embs,
                                        self.subword_seq_lengths],
                                       feed_dict=feed_dict)
@@ -312,7 +315,7 @@ class BertEmbedder(TFModel):
                  'subword_embeddings': np.array(p[1:l-1])}
                 for ts, p, l in zip(subword_tokens, pred, lengths)]
 
-    def predict_text_embs(self, feed_dict) -> dict:
+    def predict_text_embs(self, feed_dict) -> List[Dict[str, np.ndarray]]:
         cls_e, sep_e, max_e, mean_e = \
             self.sess.run([self.cls_emb, self.sep_emb,
                            self.max_pool_emb, self.mean_pool_emb],
@@ -324,7 +327,9 @@ class BertEmbedder(TFModel):
                      for cls, sep, mx, mn in zip(cls_e, sep_e, max_e, mean_e)]
         return text_embs
 
-    def predict_all(self, tokens, subword_tokens, feed_dict) -> Tuple:
+    def predict_all(self, tokens, subword_tokens, feed_dict) -> Tuple[List[Dict[str, np.ndarray]],
+                                                                      List[Dict[str, np.ndarray]],
+                                                                      List[Dict[str, np.ndarray]]]:
         sw_emb, sw_lengths, w_emb, w_lengths, cls_e, sep_e, max_e, mean_e = \
             self.sess.run([self.subword_embs, self.subword_seq_lengths,
                            self.word_embs, self.word_seq_lengths,
