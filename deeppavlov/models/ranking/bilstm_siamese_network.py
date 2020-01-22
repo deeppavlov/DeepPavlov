@@ -206,7 +206,6 @@ class BiLSTMSiameseNetwork(KerasSiameseModel):
         dot_product = K.dot(embeddings, K.transpose(embeddings))
         square_norm = K.batch_dot(embeddings, embeddings, axes=1)
         distances = K.transpose(square_norm) - 2.0 * dot_product + square_norm
-        # distances = K.slice(distances, (0, bs), (bs, bs))
         distances = distances[0:bs, bs:bs+bs]
         distances = K.clip(distances, 0.0, None)
         mask = K.cast(K.equal(distances, 0.0), K.dtype(distances))
