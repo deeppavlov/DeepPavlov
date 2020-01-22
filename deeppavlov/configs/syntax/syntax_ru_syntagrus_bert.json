@@ -33,12 +33,7 @@
         "subword_mask_mode": "last",
         "token_masking_prob": 0.0,
         "in": ["x_words"],
-        "out": ["x_tokens", "x_subword_tokens", "x_subword_tok_ids", "pred_subword_mask"]
-      },
-      {
-        "class_name": "mask",
-        "in": ["x_subword_tokens"],
-        "out": ["x_subword_mask"]
+        "out": ["x_tokens", "x_subword_tokens", "x_subword_tok_ids", "startofword_markers", "attention_mask"]
       },
       {
         "id": "dep_vocab",
@@ -78,7 +73,7 @@
         "clip_norm": null,
         "save_path": "{WORK_PATH}/model_joint",
         "load_path": "{WORK_PATH}/model_joint",
-        "in": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask"],
+        "in": ["x_subword_tok_ids", "attention_mask", "startofword_markers"],
         "in_y": ["y_heads", "y_deps_indexes"],
         "out": ["y_predicted_heads_probs", "y_predicted_deps_indexes"]
       },

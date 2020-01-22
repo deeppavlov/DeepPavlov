@@ -174,7 +174,7 @@ class BertNerPreprocessor(Component):
                         log.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
                 return tokens, subword_tokens, subword_tok_ids, \
                     attention_mask, startofword_markers, nonmasked_tags
-        return tokens, subword_tokens, subword_tok_ids, attention_mask, startofword_markers
+        return tokens, subword_tokens, subword_tok_ids, startofword_markers, attention_mask
 
     @staticmethod
     def _ner_bert_tokenize(tokens: List[str],

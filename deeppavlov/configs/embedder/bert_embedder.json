@@ -10,7 +10,7 @@
         "max_subword_length": 15,
         "token_maksing_prob": 0.0,
         "in": ["texts"],
-        "out": ["tokens", "subword_tokens", "subword_tok_ids", "attention_mask", "startofword_markers"]
+        "out": ["tokens", "subword_tokens", "subword_tok_ids", "startofword_markers", "attention_mask"]
       },
       {
         "class_name": "bert_embedder",
