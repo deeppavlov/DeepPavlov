@@ -13,7 +13,7 @@
 # limitations under the License.
 from typing import Union, List
 
-from nltk.tokenize.moses import MosesDetokenizer, MosesTokenizer
+from sacremoses import MosesDetokenizer, MosesTokenizer
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
