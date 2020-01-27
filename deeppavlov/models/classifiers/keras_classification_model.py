@@ -256,7 +256,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
                 try:
                     model.load_weights(str(weights_path))
                 except ValueError:
-                    raise ConfigError("Some non-changable parameters of neural network differ"
+                    raise ConfigError("Some non-changeable parameters of neural network differ"
                                       " from given pre-trained model")
 
                 self.model = model
