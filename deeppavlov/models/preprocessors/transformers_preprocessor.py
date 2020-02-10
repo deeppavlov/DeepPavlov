@@ -17,6 +17,7 @@ from typing import List, Union, Tuple
 import numpy as np
 from transformers import BertTokenizer
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 
@@ -38,6 +39,7 @@ class TransformersPreprocessor(Component):
                  max_seq_length: int = 512,
                  tokenize_chinese_chars: bool = True,
                  **kwargs):
+        vocab_file = expand_path(vocab_file)
         self.tokenizer = BertTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case,
                                        tokenize_chinese_chars=tokenize_chinese_chars)
         self.max_seq_length = max_seq_length
