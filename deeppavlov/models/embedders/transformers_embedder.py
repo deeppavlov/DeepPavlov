@@ -47,8 +47,14 @@ class TransformersEmbedder(Serializable):
         ids_tensor = torch.tensor(subtoken_ids_batch).to(self.device)
         attention_tensor = torch.tensor(attention_batch).to(self.device)
         with torch.no_grad():
-            outputs = self.model(ids_tensor, attention_tensor)
-        outputs = outputs[0].cpu().numpy()
-        word_emb = _filter(outputs, startofwords_batch)
-        subword_emb = _filter(outputs, attention_batch)
-        return word_emb, subword_emb
+            last_hidden, pooler_output = self.model(ids_tensor, attention_tensor)
+            attention_tensor = attention_tensor.unsqueeze(-1)
+            max_emb = torch.max(last_hidden - 1e9 * (1 - attention_tensor), dim=1)[0]
+            mean_emb = torch.sum(last_hidden * attention_tensor, dim=1) / torch.sum(attention_tensor, dim=1)
+        last_hidden = last_hidden.cpu().numpy()
+        pooler_output = pooler_output.cpu().numpy()
+        max_emb = max_emb.cpu().numpy()
+        mean_emb = mean_emb.cpu().numpy()
+        word_emb = _filter(last_hidden, startofwords_batch)
+        subword_emb = _filter(last_hidden, attention_batch)
+        return word_emb, subword_emb, max_emb, mean_emb, pooler_output

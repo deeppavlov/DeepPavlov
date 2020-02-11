@@ -99,8 +99,7 @@ class BertEmbedder(TFModel):
         self.max_pool_emb = \
             tf.reduce_max(encoder_layer - 1e9 * (1 - mask_expanded), axis=1)
         self.mean_pool_emb = \
-            tf.reduce_sum(encoder_layer * mask_expanded, axis=1) /\
-            tf.reduce_sum(mask_expanded, axis=1)
+            tf.reduce_sum(encoder_layer * mask_expanded, axis=1) / tf.reduce_sum(mask_expanded, axis=1)
 
     def _init_placeholders(self) -> None:
         self.input_ids_ph = tf.placeholder(shape=(None, None),
