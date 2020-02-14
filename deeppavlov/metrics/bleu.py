@@ -78,4 +78,4 @@ def per_item_bleu(y_true, y_predicted):
 def per_item_dialog_bleu(y_true, y_predicted):
     y_true = (y['text'] for dialog in y_true for y in dialog)
     return corpus_bleu([[y_t.lower().split()] for y_t in y_true],
-                       [y_p.lower().split() for y_p in y_predicted])
+                       [y.lower().split() for y_p in y_predicted for y in y_p])
