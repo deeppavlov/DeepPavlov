@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import List
+from pathlib import Path
+from typing import Union
 
 import torch
 import transformers
@@ -21,40 +22,52 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.serializable import Serializable
 
 
-def _filter(data_batch: List[List[float]], mask_batch: List[List[int]]):
-    return [[tok_data for tok_data, tok_mask in zip(sent_data, sent_mask) if tok_mask]
-            for sent_data, sent_mask in zip(data_batch, mask_batch)]
-
-
 @register('transformers_embedder')
 class TransformersEmbedder(Serializable):
+    model: transformers.BertModel
+    dim: int
+
+    def __init__(self, load_path: Union[str, Path], bert_config_path: Union[str, Path] = None,
+                 truncate: bool = False, **kwargs):
+        super().__init__(save_path=None, load_path=load_path, **kwargs)
+        if bert_config_path is not None:
+            bert_config_path = expand_path(bert_config_path)
+        self.config = bert_config_path
+        self.truncate = truncate
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.load()
+
     def save(self, *args, **kwargs):
         raise NotImplementedError
 
     def load(self):
         self.model = transformers.BertModel.from_pretrained(self.load_path, config=self.config).eval().to(self.device)
-
-    def __init__(self, load_path, bert_config_path=None, **kwargs):
-        super().__init__(save_path=None, load_path=load_path, **kwargs)
-        if bert_config_path is not None:
-            bert_config_path = expand_path(bert_config_path)
-        self.config = bert_config_path
-        self.model = None
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.load()
+        self.dim = self.model.config.hidden_size
 
     def __call__(self, subtoken_ids_batch, startofwords_batch, attention_batch):
-        ids_tensor = torch.tensor(subtoken_ids_batch).to(self.device)
-        attention_tensor = torch.tensor(attention_batch).to(self.device)
+        ids_tensor = torch.tensor(subtoken_ids_batch, device=self.device)
+        startofwords_tensor = torch.tensor(startofwords_batch, device=self.device).bool()
+        attention_tensor = torch.tensor(attention_batch, device=self.device)
         with torch.no_grad():
             last_hidden, pooler_output = self.model(ids_tensor, attention_tensor)
             attention_tensor = attention_tensor.unsqueeze(-1)
             max_emb = torch.max(last_hidden - 1e9 * (1 - attention_tensor), dim=1)[0]
-            mean_emb = torch.sum(last_hidden * attention_tensor, dim=1) / torch.sum(attention_tensor, dim=1)
-        last_hidden = last_hidden.cpu().numpy()
+            subword_emb = last_hidden * attention_tensor
+            mean_emb = torch.sum(subword_emb, dim=1) / torch.sum(attention_tensor, dim=1)
+
+            tokens_lengths = startofwords_tensor.sum(dim=1)
+            word_emb = torch.zeros((subword_emb.shape[0], tokens_lengths.max(), subword_emb.shape[2]),
+                                   device=self.device, dtype=subword_emb.dtype)
+            target_indexes = (torch.arange(word_emb.shape[1], device='cuda').expand(word_emb.shape[:-1]) <
+                              tokens_lengths.unsqueeze(-1))
+            word_emb[target_indexes] = subword_emb[startofwords_tensor]
+
+        subword_emb = subword_emb.cpu().numpy()
+        word_emb = word_emb.cpu().numpy()
         pooler_output = pooler_output.cpu().numpy()
         max_emb = max_emb.cpu().numpy()
         mean_emb = mean_emb.cpu().numpy()
-        word_emb = _filter(last_hidden, startofwords_batch)
-        subword_emb = _filter(last_hidden, attention_batch)
+        if self.truncate:
+            subword_emb = [item[:mask.sum()] for item, mask in zip(subword_emb, attention_batch)]
+            word_emb = [item[:mask.sum()] for item, mask in zip(word_emb, startofwords_batch)]
         return word_emb, subword_emb, max_emb, mean_emb, pooler_output
