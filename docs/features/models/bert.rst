@@ -12,12 +12,13 @@ There are several pre-trained BERT models released by Google Research, more deta
 -  BERT-base, English, cased, 12-layer, 768-hidden, 12-heads, 110M parameters: download from `[google] <https://storage.googleapis.com/bert_models/2018_10_18/cased_L-12_H-768_A-12.zip>`__, `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip>`__
 -  BERT-base, English, uncased, 12-layer, 768-hidden, 12-heads, 110M parameters: download from `[google] <https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-12_H-768_A-12.zip>`__, `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/uncased_L-12_H-768_A-12.zip>`__
 -  BERT-large, English, cased, 24-layer, 1024-hidden, 16-heads, 340M parameters: download from `[google] <https://storage.googleapis.com/bert_models/2018_10_18/cased_L-24_H-1024_A-16.zip>`__
--  BERT-base, multilingual, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: download from `[google] <https://storage.googleapis.com/bert_models/2018_11_23/multi_cased_L-12_H-768_A-12.zip>`__, `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/multi_cased_L-12_H-768_A-12.zip>`__
+-  BERT-base, multilingual, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: download from `[google] <https://storage.googleapis.com/bert_models/2018_11_23/multi_cased_L-12_H-768_A-12.zip>`__,
+   `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/multi_cased_L-12_H-768_A-12.zip>`__, `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/multi_cased_L-12_H-768_A-12_pt.tar.gz>`__
 -  BERT-base, Chinese, cased, 12-layer, 768-hidden, 12-heads, 110M parameters: download from `[google] <https://storage.googleapis.com/bert_models/2018_11_03/chinese_L-12_H-768_A-12.zip>`__
 
 We have trained BERT-base model for other languages and domains:
 
--  RuBERT, Russian, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v2.tar.gz>`__
+-  RuBERT, Russian, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v2.tar.gz>`__, `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_pt.tar.gz>`__
 -  SlavicBERT, Slavic (bg, cs, pl, ru), cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/bg_cs_pl_ru_cased_L-12_H-768_A-12_v1.tar.gz>`__
 -  Conversational BERT, English, cased, 12-layer, 768-hidden, 12-heads, 110M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12_v1.tar.gz>`__
 -  Conversational RuBERT, Russian, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/ru_conversational_cased_L-12_H-768_A-12.tar.gz>`__
@@ -52,7 +53,8 @@ ranking. We also provide pre-trained models and examples on how to use BERT with
 BERT as Embedder
 ----------------
 
-All embeddings from above support original Google's repository format.
+:class:`~deeppavlov.models.embedders.transformers_embedder.TransformersBertEmbedder` allows for using BERT
+model outputs as token, subtoken and sentence level embeddings.
 
 Additionaly the embeddings can be easily used in DeepPavlov. To get text level, token level and subtoken level representations, run: 
 
@@ -67,38 +69,10 @@ Additionaly the embeddings can be easily used in DeepPavlov. To get text level, 
     m = build_model(bert_config)
 
     texts = ['Hi, i want my embedding.', 'And mine too, please!']
-    text_embs, token_embs, subtoken_embs = m(texts)
+    token_embs, subtoken_embs, sent_max_embs, sent_mean_embs, bert_pooler_outputs = m(texts)
 
-You can further access the following embeddings:
-
-.. code:: python
-
-    text_id = 0 # 0 for 'Hi, 'i want my embedding' 
-
-    print(text_embs[text_id].keys())
-    # dict_keys(['[CLS]', '[SEP]', 'MAX', 'MEAN'])
-
-    print(token_embs[text_id].keys())
-    # dict_keys(['words', 'word_embeddings'])
-
-    print(subtoken_embs[text_id].keys())
-    # dict_keys(['subwords', 'subword_embeddings'])
-
-
-To get only text level representations (recommended for SentenceMultilingualBERT and SentenceRuBert), run:
-
-.. code:: python
-
-    from deeppavlov.core.common.file import read_json
-    from deeppavlov import build_model, configs
-    
-    bert_config = read_json(configs.embedder.bert_sentence_embedder)
-    bert_config['metadata']['variables']['BERT_PATH'] = 'path/to/bert/directory'
-
-    m = build_model(bert_config)
-
-    texts = ['Hi, i want my embedding.', 'And mine too, please!']
-    text_embs = m(texts)
+Examples of using these embeddings in model training pipelines can be found in :config:`Sentiment Twitter <classifiers/sentiment_twitter_bert_emb.json>`
+and :config:`NER Ontonotes <ner/ner_ontonotes_bert_emb.json>` configuration files.
 
 
 BERT for Classification

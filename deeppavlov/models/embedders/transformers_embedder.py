@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from pathlib import Path
-from typing import Union
+from typing import Union, Tuple, Collection
 
 import torch
 import transformers
@@ -22,8 +22,16 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.serializable import Serializable
 
 
-@register('transformers_embedder')
-class TransformersEmbedder(Serializable):
+@register('transformers_bert_embedder')
+class TransformersBertEmbedder(Serializable):
+    """Transformers-based BERT model for embeddings tokens, subtokens and sentences
+
+    Args:
+        load_path: path to a pretrained BERT pytorch checkpoint
+        bert_config_file: path to a BERT configuration file
+        truncate: whether to remove zero-paddings from returned data
+
+    """
     model: transformers.BertModel
     dim: int
 
@@ -44,7 +52,20 @@ class TransformersEmbedder(Serializable):
         self.model = transformers.BertModel.from_pretrained(self.load_path, config=self.config).eval().to(self.device)
         self.dim = self.model.config.hidden_size
 
-    def __call__(self, subtoken_ids_batch, startofwords_batch, attention_batch):
+    def __call__(self, subtoken_ids_batch: Collection[Collection[int]], startofwords_batch: Collection[Collection[int]],
+                 attention_batch: Collection[Collection[int]]) -> Tuple[Collection[Collection[Collection[float]]],
+                                                                        Collection[Collection[Collection[float]]],
+                                                                        Collection[Collection[float]],
+                                                                        Collection[Collection[float]],
+                                                                        Collection[Collection[float]]]:
+        """Predict embeddings values for a given batch
+
+        Args:
+            subtoken_ids_batch: padded indexes for every subtoken
+            startofwords_batch: a mask matrix with ``1`` for every first subtoken init in a token and ``0``
+             for every other subtoken
+            attention_batch: a mask matrix with ``1`` for every significant subtoken and ``0`` for paddings
+        """
         ids_tensor = torch.tensor(subtoken_ids_batch, device=self.device)
         startofwords_tensor = torch.tensor(startofwords_batch, device=self.device).bool()
         attention_tensor = torch.tensor(attention_batch, device=self.device)

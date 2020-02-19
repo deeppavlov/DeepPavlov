@@ -32,8 +32,8 @@ def _pad(data: List[List[Union[int, float]]], value: Union[int, float] = 0):
     return res
 
 
-@register('transrofmers_preprocessor')
-class TransformersPreprocessor(Component):
+@register('transformers_bert_preprocessor')
+class TransformersBertPreprocessor(Component):
     def __init__(self, vocab_file: str,
                  do_lower_case: bool = False,
                  max_seq_length: int = 512,

@@ -29,7 +29,7 @@
         "out": "y_ids"
       },
       {
-        "class_name": "transrofmers_preprocessor",
+        "class_name": "transformers_bert_preprocessor",
         "vocab_file": "{BERT_PATH}/vocab.txt",
         "do_lower_case": false,
         "max_seq_length": 512,
@@ -37,7 +37,7 @@
         "out": ["tokens", "subword_tokens", "subword_tok_ids", "startofword_markers", "attention_mask"]
       },
       {
-        "class_name": "transformers_embedder",
+        "class_name": "transformers_bert_embedder",
         "id": "my_embedder",
         "bert_config_path": "{BERT_PATH}/bert_config.json",
         "truncate": false,
