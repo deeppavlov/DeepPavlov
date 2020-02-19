@@ -145,33 +145,15 @@ Available Data and Pretrained Models
 
 As an example you can try pretrained models on FAQ dataset in English: MIPT FAQ for entrants - https://mipt.ru/english/edu/faqs/
 
-
-   ::
-
-    tfidf_logreg_classifier_en_mipt_faq  - http://files.deeppavlov.ai/faq/mipt/tfidf_logreg_classifier_en_mipt_faq.pkl
-    tfidf_vectorizer_en_mipt_faq         - http://files.deeppavlov.ai/faq/mipt/tfidf_vectorizer_en_mipt_faq.pkl
-
-
--  **tfidf_logreg_classifier_en_mipt_faq.pkl**  - pre-trained logistic regression classifier for classifying input question (vectorized by tfidf)
--  **tfidf_vectorizer_en_mipt_faq.pkl**         - pre-trained model for TF-IDF vectorizer based on MIPT FAQ
+- `tfidf_logreg_classifier_en_mipt_faq.pkl <http://files.deeppavlov.ai/faq/mipt/tfidf_logreg_classifier_en_mipt_faq.pkl>`__ - pre-trained logistic regression classifier for classifying input question (vectorized by tfidf)
+- `tfidf_vectorizer_en_mipt_faq.pkl <http://files.deeppavlov.ai/faq/mipt/tfidf_vectorizer_en_mipt_faq.pkl>`__ - pre-trained model for TF-IDF vectorizer based on MIPT FAQ   
 
 Example config - :config:`tfidf_logreg_en_faq.json <faq/tfidf_logreg_en_faq.json>`
 
 
-Also you can use pretrained model on Russan FAQ dataset from school-site: http://www.ftl.name/page/989
+Also you can use pretrained model on Russan FAQ dataset from school-site: https://gobu.ftl.name/page/1279/
 
-   ::
-
-    tfidf_cos_sim_classifier    - http://files.deeppavlov.ai/faq/school/faq_tfidf_cos_model.pkl
-    tfidf_logreg_classifier     - http://files.deeppavlov.ai/faq/school/faq_tfidf_logreg_model.pkl
-    fasttext_cos_classifier     - http://files.deeppavlov.ai/faq/school/faq_fasttext_cos_model.pkl
-    tfidf_vectorizer_ruwiki     - http://files.deeppavlov.ai/vectorizer/tfidf_vectorizer_ruwiki.pkl
-
-
--  **tfidf_cos_sim_classifier.pkl** - pre-trained cosine similarity classifier for classifying input question (vectorized by tfidf)
--  **tfidf_logreg_classifier.pkl**  - pre-trained logistic regression classifier for classifying input question (vectorized by tfidf)
--  **fasttext_cos_classifier.pkl**  - pre-trained cosine similarity classifier for classifying input question (vectorized by word embeddings)
--  **tfidf_vectorizer_ruwiki.pkl**  - pre-trained model for TF-IDF vectorizer based on Russian Wikipedia
-
-
-
+- `tfidf_cos_sim_classifier.pkl <http://files.deeppavlov.ai/faq/school/tfidf_cos_sim_classifier.pkl>`__ - pre-trained cosine similarity classifier for classifying input question (vectorized by tfidf)
+- `tfidf_logreg_classifier_v2.pkl <http://files.deeppavlov.ai/faq/school/tfidf_logreg_classifier_v2.pkl>`__ - pre-trained logistic regression classifier for classifying input question (vectorized by tfidf)
+- `fasttext_cos_classifier.pkl <http://files.deeppavlov.ai/faq/school/fasttext_cos_classifier.pkl>`__ - pre-trained cosine similarity classifier for classifying input question (vectorized by word embeddings)
+- `tfidf_vectorizer_ruwiki_v2.pkl <http://files.deeppavlov.ai/vectorizer/tfidf_vectorizer_ruwiki_v2.pkl>`__ - pre-trained model for TF-IDF vectorizer based on Russian Wikipedia
