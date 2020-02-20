@@ -18,10 +18,9 @@ Building
 
 .. code:: python
 
-    from deeppavlov import configs
-    from deeppavlov.core.commands.infer import build_model
+    from deeppavlov import build_model, configs
 
-    faq = build_model(configs.faq.tfidf_logreg_en_faq, load_trained=True)
+    faq = build_model(configs.faq.tfidf_logreg_en_faq, download=True)
 
 
 Inference
