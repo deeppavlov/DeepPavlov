@@ -19,7 +19,7 @@ They also achieve the state-of-the-art performance among open source
 systems.
 
 The BERT-based model is trained on `Universal
-Dependencies corpora <www.universaldependencies.org>`__
+Dependencies corpora <https://universaldependencies.org/>`__
 (version 2.3), while all the other models were trained
 on Universal Dependencies 2.0 corpora.
 
