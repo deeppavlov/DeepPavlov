@@ -79,7 +79,7 @@ class TransformersBertEmbedder(Serializable):
             tokens_lengths = startofwords_tensor.sum(dim=1)
             word_emb = torch.zeros((subword_emb.shape[0], tokens_lengths.max(), subword_emb.shape[2]),
                                    device=self.device, dtype=subword_emb.dtype)
-            target_indexes = (torch.arange(word_emb.shape[1], device='cuda').expand(word_emb.shape[:-1]) <
+            target_indexes = (torch.arange(word_emb.shape[1], device=self.device).expand(word_emb.shape[:-1]) <
                               tokens_lengths.unsqueeze(-1))
             word_emb[target_indexes] = subword_emb[startofwords_tensor]
 
