@@ -30,7 +30,7 @@ other cues. Note also that syntactic relations (`nsubj`, `obj` and so one) have 
 which makes syntactic parsing an appealing preprocessing step for the semantic-oriented tasks.
 
 Model usage
-===========
+-----------
 
 Before using the model make sure that all required packages are installed using the command:
 
@@ -83,7 +83,7 @@ For other usage options see the :doc:`morphological tagger documentation </featu
 the training and prediction procedure is analogous, only the model name is changed.
 
 Joint model usage
-==================
+-----------------
 
 Our model in principle supports joint prediction of morphological tags and syntactic information,
 however, the quality of the joint model is slightly inferior to the separate ones. Therefore we
@@ -123,7 +123,7 @@ to use the output in Python, consult the
 :class:`class documentation <deeppavlov.models.syntax_parser.joint.JointTaggerParser>` and source code.
 
 Model architecture
-==================
+------------------
 
 We use BERT as the lowest layer of our model (the embedder). To extract syntactic information we apply
 the biaffine network of `[Dozat, Manning, 2017] <https://arxiv.org/pdf/1611.01734.pdf>`__.
@@ -140,7 +140,7 @@ to return the optimal tree, using the open-source modification from
 `dependency_decoding package <https://github.com/andersjo/dependency_decoding>`.
 
 Model quality
-=============
+-------------
 
 Syntactic parsers are evaluated using two metrics: UAS (unlabeled attachment score), which is
 the percentage of correctly predicted head positions. The second metric is LAS (labeled attachment

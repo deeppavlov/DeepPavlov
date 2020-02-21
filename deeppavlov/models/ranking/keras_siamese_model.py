@@ -17,9 +17,9 @@ from logging import getLogger
 from typing import List
 
 import numpy as np
-from keras import losses
-from keras.models import Model
-from keras.optimizers import Adam
+from tensorflow.keras import losses
+from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import Adam
 
 from deeppavlov.core.models.keras_model import KerasModel
 from deeppavlov.models.ranking.siamese_model import SiameseModel
