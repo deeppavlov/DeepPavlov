@@ -7,7 +7,7 @@ English.
 | BERT paper: https://arxiv.org/abs/1810.04805
 | Google Research BERT repository: https://github.com/google-research/bert
 
-There are several pre-trained BERT models released by Google Research, more detail about these pretrained models could be found here https://github.com/google-research/bert#pre-trained-models:
+There are several pre-trained BERT models released by Google Research, more detail about these pretrained models could be found here: https://github.com/google-research/bert#pre-trained-models
 
 -  BERT-base, English, cased, 12-layer, 768-hidden, 12-heads, 110M parameters: download from `[google] <https://storage.googleapis.com/bert_models/2018_10_18/cased_L-12_H-768_A-12.zip>`__,
    `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip>`__
@@ -33,6 +33,8 @@ We have trained BERT-base model for other languages and domains:
    `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_multi_cased_L-12_H-768_A-12_pt.tar.gz>`__
 -  Sentence RuBERT, Russian, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_ru_cased_L-12_H-768_A-12.tar.gz>`__,
    `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_ru_cased_L-12_H-768_A-12_pt.tar.gz>`__
+
+The ``deeppavlov_pytorch`` models are designed to be run with the `HuggingFace's Transformers <https://huggingface.co/transformers/>`__ library.
 
 RuBERT was trained on the Russian part of Wikipedia and news data. We used this training data to build vocabulary of Russian subtokens and took
 multilingual version of BERT-base as initialization for RuBERT [1]_.
