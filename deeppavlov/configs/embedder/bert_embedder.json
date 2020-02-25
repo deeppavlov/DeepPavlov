@@ -19,7 +19,7 @@
         "out": ["word_emb", "subword_emb", "max_emb", "mean_emb", "pooler_output"]
       }
     ],
-    "out": ["word_emb", "subword_emb", "max_emb", "mean_emb", "pooler_output"]
+    "out": ["tokens", "word_emb", "subword_tokens", "subword_emb", "max_emb", "mean_emb", "pooler_output"]
   },
   "train": {},
   "metadata": {

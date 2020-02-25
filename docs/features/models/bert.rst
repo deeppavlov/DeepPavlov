@@ -67,7 +67,8 @@ BERT as Embedder
 :class:`~deeppavlov.models.embedders.transformers_embedder.TransformersBertEmbedder` allows for using BERT
 model outputs as token, subtoken and sentence level embeddings.
 
-Additionaly the embeddings can be easily used in DeepPavlov. To get text level, token level and subtoken level representations, run: 
+Additionaly the embeddings can be easily used in DeepPavlov. To get text level, token level and subtoken level representations,
+you can use or modify a :config:`BERT embedder configuration <embedder/bert_embedder.json>`:
 
 .. code:: python
     
@@ -80,7 +81,7 @@ Additionaly the embeddings can be easily used in DeepPavlov. To get text level, 
     m = build_model(bert_config)
 
     texts = ['Hi, i want my embedding.', 'And mine too, please!']
-    token_embs, subtoken_embs, sent_max_embs, sent_mean_embs, bert_pooler_outputs = m(texts)
+    tokens, token_embs, subtokens, subtoken_embs, sent_max_embs, sent_mean_embs, bert_pooler_outputs = m(texts)
 
 Examples of using these embeddings in model training pipelines can be found in :config:`Sentiment Twitter <classifiers/sentiment_twitter_bert_emb.json>`
 and :config:`NER Ontonotes <ner/ner_ontonotes_bert_emb.json>` configuration files.
