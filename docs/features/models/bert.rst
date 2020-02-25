@@ -51,11 +51,11 @@ Conversational RuBERT was trained on OpenSubtitles [5]_, Dirty, Pikabu, and Soci
 We assembled new vocabulary for Conversational RuBERT model on this data and initialized model with RuBERT.
 
 Sentence Multilingual BERT is a representation-based sentence encoder for 101 languages of Multilingual BERT.
-It is inited with Multilingual BERT and then fine-tuned on english MultiNLI [9]_ and on dev set of multilingual XNLI [10]_.
+It is initialized with Multilingual BERT and then fine-tuned on english MultiNLI [9]_ and on dev set of multilingual XNLI [10]_.
 Sentence representations are mean pooled token embeddings in the same manner as in Sentence-BERT [12]_.
 
 Sentence RuBERT is a representation-based sentence encoder for Russian.
-It is inited with RuBERT and fine-tuned on SNLI [11]_ google-translated to russian and on russian part of XNLI dev set [10]_.
+It is initialized with RuBERT and fine-tuned on SNLI [11]_ google-translated to russian and on russian part of XNLI dev set [10]_.
 Sentence representations are mean pooled token embeddings in the same manner as in Sentence-BERT [12]_.
 
 Here, in DeepPavlov, we made it easy to use pre-trained BERT for downstream tasks like classification, tagging, question answering and
