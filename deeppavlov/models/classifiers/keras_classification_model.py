@@ -120,7 +120,7 @@ class KerasClassificationModel(LRScheduledKerasModel):
 
         self.n_classes = self.opt.get('n_classes')
         if self.n_classes == 0:
-            raise ConfigError("Please, provide vocabulary with considered intents.")
+            raise ConfigError("Please, provide vocabulary with considered classes.")
 
         self.load()
 
