@@ -228,8 +228,7 @@ Pretrained models are available and can be downloaded:
 .. code:: bash
 
     python -m deeppavlov download deeppavlov/configs/squad/squad_zh_bert.json
-	
-	python -m deeppavlov download deeppavlov/configs/squad/squad_zh_zh_bert.json
+    python -m deeppavlov download deeppavlov/configs/squad/squad_zh_zh_bert.json
 	
 Link to DRCD dataset: http://files.deeppavlov.ai/datasets/DRCD.tar.gz
 Link to DRCD paper: https://arxiv.org/abs/1806.00920

@@ -63,7 +63,7 @@ class TransformersBertEmbedder(Serializable):
         Args:
             subtoken_ids_batch: padded indexes for every subtoken
             startofwords_batch: a mask matrix with ``1`` for every first subtoken init in a token and ``0``
-             for every other subtoken
+                for every other subtoken
             attention_batch: a mask matrix with ``1`` for every significant subtoken and ``0`` for paddings
         """
         ids_tensor = torch.tensor(subtoken_ids_batch, device=self.device)

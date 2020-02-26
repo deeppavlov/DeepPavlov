@@ -7,7 +7,7 @@ English.
 | BERT paper: https://arxiv.org/abs/1810.04805
 | Google Research BERT repository: https://github.com/google-research/bert
 
-There are several pre-trained BERT models released by Google Research, more detail about these pretrained models could be found here: https://github.com/google-research/bert#pre-trained-models
+There are several pre-trained BERT models released by Google Research, more details about these pre-trained models could be found here: https://github.com/google-research/bert#pre-trained-models
 
 -  BERT-base, English, cased, 12-layer, 768-hidden, 12-heads, 110M parameters: download from `[google] <https://storage.googleapis.com/bert_models/2018_10_18/cased_L-12_H-768_A-12.zip>`__,
    `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip>`__

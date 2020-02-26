@@ -167,4 +167,4 @@ and dependency head.
 .. _`UD Pipe Future`: https://github.com/CoNLL-UD-2018/UDPipe-Future
 .. _`UDify (multilingual BERT)`: https://github.com/hyperparticle/udify
 
-So our model is by a valuable margin the state-of-the-art system for Russian syntactic parsing.
+So our model is the state-of-the-art system for Russian syntactic parsing by a valuable margin.
