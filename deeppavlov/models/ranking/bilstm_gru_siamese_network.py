@@ -14,9 +14,9 @@
 
 from logging import getLogger
 
-from keras import backend as K
-from keras.layers import Input, GlobalMaxPooling1D, Lambda, Dense, GRU
-from keras.models import Model
+from tensorflow.keras import backend as K
+from tensorflow.keras.layers import Input, GlobalMaxPooling1D, Lambda, Dense, GRU
+from tensorflow.keras.models import Model
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.models.ranking.bilstm_siamese_network import BiLSTMSiameseNetwork

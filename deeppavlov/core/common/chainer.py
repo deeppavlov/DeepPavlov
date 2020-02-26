@@ -225,9 +225,9 @@ class Chainer(Component):
         for (in_keys, in_params), out_params, component in pipe:
             x = [mem[k] for k in in_params]
             if in_keys:
-                res = component(**dict(zip(in_keys, x)))
+                res = component.__call__(**dict(zip(in_keys, x)))
             else:
-                res = component(*x)
+                res = component.__call__(*x)
             if len(out_params) == 1:
                 mem[out_params[0]] = res
             else:

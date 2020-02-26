@@ -2,7 +2,7 @@
   "common_defaults": {
     "host": "0.0.0.0",
     "port": 5000,
-    "model_args_names": "",
+    "model_args_names": [],
     "https": false,
     "https_cert_path": "",
     "https_key_path": "",
@@ -17,6 +17,17 @@
     "help_message": "Welcome to DeepPavlov inference bot!",
     "next_argument_message": "Please enter an argument '{}'",
     "unsupported_message": "Unsupported message received."
+  },
+  "agent-rabbit": {
+    "service_name": "",
+    "agent_namespace": "deeppavlov_agent",
+    "batch_size": 1,
+    "utterance_lifetime_sec": 120,
+    "rabbit_host": "0.0.0.0",
+    "rabbit_port": 5672,
+    "rabbit_login": "guest",
+    "rabbit_password": "guest",
+    "rabbit_virtualhost": "/"
   },
   "deprecated": {
     "AlexaBot": {

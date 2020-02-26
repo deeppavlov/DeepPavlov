@@ -92,8 +92,12 @@ def interact_model(config: Union[str, Path, dict]) -> None:
         print('>>', *pred)
 
 
-def predict_on_stream(config: Union[str, Path, dict], batch_size: int = 1, file_path: Optional[str] = None) -> None:
+def predict_on_stream(config: Union[str, Path, dict],
+                      batch_size: Optional[int] = None,
+                      file_path: Optional[str] = None) -> None:
     """Make a prediction with the component described in corresponding configuration file."""
+
+    batch_size = batch_size or 1
     if file_path is None or file_path == '-':
         if sys.stdin.isatty():
             raise RuntimeError('To process data from terminal please use interact mode')

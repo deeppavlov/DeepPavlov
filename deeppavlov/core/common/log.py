@@ -24,13 +24,21 @@ TRACEBACK_LOGGER_ERRORS = True
 
 root_path = Path(__file__).resolve().parents[3]
 
+log_config_path = get_settings_path() / LOG_CONFIG_FILENAME
+
+with log_config_path.open(encoding='utf8') as log_config_json:
+    log_config = json.load(log_config_json)
+
+
+class ProbeFilter(logging.Filter):
+    """ProbeFilter class is used to filter POST requests to /probe endpoint from logs."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        """To log the record method should return True."""
+        return 'POST /probe HTTP' not in record.getMessage()
+
 
 def init_logger():
-    log_config_path = get_settings_path() / LOG_CONFIG_FILENAME
-
-    with log_config_path.open(encoding='utf8') as log_config_json:
-        log_config = json.load(log_config_json)
-
     configured_loggers = [log_config.get('root', {})] + [logger for logger in
                                                          log_config.get('loggers', {}).values()]
 

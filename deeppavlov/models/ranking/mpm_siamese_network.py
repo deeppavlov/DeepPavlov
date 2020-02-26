@@ -15,11 +15,10 @@
 
 from logging import getLogger
 
-from keras import backend as K
-from keras.initializers import glorot_uniform, Orthogonal
-from keras.layers import Input, LSTM, Lambda, Dense, Dropout
-from keras.layers.wrappers import Bidirectional
-from keras.models import Model
+from tensorflow.keras import backend as K
+from tensorflow.keras.initializers import glorot_uniform, Orthogonal
+from tensorflow.keras.layers import Input, LSTM, Lambda, Dense, Dropout, Bidirectional
+from tensorflow.keras.models import Model
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.layers.keras_layers import AttentiveMatchingLayer, MaxattentiveMatchingLayer
