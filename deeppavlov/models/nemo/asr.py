@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import logging
-import os
 from pathlib import Path
 from typing import Union
 
@@ -73,7 +71,9 @@ class NeMoASR(Component, Serializable):
         self.jasper_encoder.restore_from(self._encoder_ckpt_path, local_rank=0)
         self.jasper_decoder.restore_from(self._decoder_ckpt_path, local_rank=0)
 
-    def __call__(self, manifest):
+    def __call__(self, manifests):
+        # TODO: don't forget to add batch_size parametrization (batchification are speeding up inference)
+        manifest = ','.join(manifests)
         data_layer = nemo_asr.AudioToTextDataLayer(shuffle=False, manifest_filepath=manifest, labels=self.labels,
                                                    batch_size=1)
 
