@@ -20,7 +20,7 @@
       "NEMO_PATH": "{ROOT_PATH}/models/nemo"
     },
     "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/nemo.txt"
+      "{DEEPPAVLOV_PATH}/requirements/nemo-asr.txt"
     ],
     "download": [
       {
