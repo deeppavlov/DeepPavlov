@@ -19,9 +19,11 @@ from typing import Union
 import nemo
 import nemo_asr
 import torch
+from nemo.utils import get_checkpoint_from_dir
 from nemo_asr.helpers import post_process_predictions
 from ruamel.yaml import YAML
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
@@ -32,35 +34,31 @@ log = logging.getLogger(__name__)
 @register('nemo_asr')
 class NeMoASR(Component, Serializable):
     def __init__(self,
-                 load_path: Union[str, Path],
-                 model_yaml: str,
-                 encoder_checkpoint: str,
-                 decoder_checkpoint: str,
+                 model_path: Union[str, Path],
+                 checkpoints_dir: str,
                  **kwargs) -> None:
-        super(NeMoASR, self).__init__(save_path=None, load_path=load_path, **kwargs)
-        self._encoder_ckpt_path = self.load_path / encoder_checkpoint
-        self._decoder_ckpt_path = self.load_path / decoder_checkpoint
+        super(NeMoASR, self).__init__(save_path=None, load_path=checkpoints_dir, **kwargs)
 
         yaml = YAML(typ="safe")
-        with open(self.load_path / model_yaml) as f:
+        with open(expand_path(model_path)) as f:
             jasper_model_definition = yaml.load(f)
 
         self.labels = jasper_model_definition['labels']
         placement = nemo.core.DeviceType.GPU if torch.cuda.is_available() else nemo.core.DeviceType.CPU
         self.neural_factory = nemo.core.NeuralModuleFactory(placement=placement)
         self.data_preprocessor = nemo_asr.AudioToMelSpectrogramPreprocessor(
-            **jasper_model_definition['AudioPreprocessing'],
-            sample_rate=jasper_model_definition['sample_rate']
+            **jasper_model_definition['AudioToMelSpectrogramPreprocessor']
         )
         self.jasper_encoder = nemo_asr.JasperEncoder(
-            **jasper_model_definition['JasperEncoder'],
-            feat_in=jasper_model_definition['AudioPreprocessing']['features'],
+            **jasper_model_definition['JasperEncoder']
         )
         self.jasper_decoder = nemo_asr.JasperDecoderForCTC(
-            feat_in=jasper_model_definition['JasperEncoder']['jasper'][-1]['filters'],
-            num_classes=len(self.labels)
+            num_classes=len(self.labels),
+            **jasper_model_definition['JasperDecoder']
         )
         self.greedy_decoder = nemo_asr.GreedyCTCDecoder()
+        self.modules_to_restore = [self.jasper_encoder, self.jasper_decoder]
+        self.data_layer_kwargs = jasper_model_definition['AudioToTextDataLayer']
 
         self.load()
 
@@ -68,17 +66,19 @@ class NeMoASR(Component, Serializable):
         raise NotImplementedError
 
     def load(self) -> None:
-        self.jasper_encoder.restore_from(self._encoder_ckpt_path, local_rank=0)
-        self.jasper_decoder.restore_from(self._decoder_ckpt_path, local_rank=0)
+        checkpoints = get_checkpoint_from_dir([str(module) for module in self.modules_to_restore], self.load_path)
+        for module, checkpoint in zip(self.modules_to_restore, checkpoints):
+            log.info(f'Restoring {module} from {checkpoint}')
+            module.restore_from(checkpoint)
 
     def __call__(self, manifests):
-        # TODO: don't forget to add batch_size parametrization (batchification are speeding up inference)
         manifest = ','.join(manifests)
-        data_layer = nemo_asr.AudioToTextDataLayer(shuffle=False, manifest_filepath=manifest, labels=self.labels,
-                                                   batch_size=1)
+        data_layer = nemo_asr.AudioToTextDataLayer(manifest_filepath=manifest, **self.data_layer_kwargs)
+        audio_paths = [d['audio_filepath'] for d in data_layer._dataset.manifest._data]
 
         audio_signal, audio_signal_len, _, _ = data_layer()
-        processed_signal, processed_signal_len = self.data_preprocessor(input_signal=audio_signal, length=audio_signal_len)
+        processed_signal, processed_signal_len = self.data_preprocessor(input_signal=audio_signal,
+                                                                        length=audio_signal_len)
         encoded, encoded_len = self.jasper_encoder(audio_signal=processed_signal, length=processed_signal_len)
         log_probs = self.jasper_decoder(encoder_output=encoded)
         predictions = self.greedy_decoder(log_probs=log_probs)
@@ -86,4 +86,4 @@ class NeMoASR(Component, Serializable):
         tensors = self.neural_factory.infer(tensors=eval_tensors)
         prediction = post_process_predictions(tensors[0], self.labels)
 
-        return prediction
+        return audio_paths, prediction

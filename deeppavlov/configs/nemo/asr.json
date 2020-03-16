@@ -4,15 +4,13 @@
     "pipe": [
       {
         "class_name": "nemo_asr",
-        "load_path": "{NEMO_PATH}/quartznet15x5",
-        "model_yaml": "quartznet15x5.yaml",
-        "encoder_checkpoint": "JasperEncoder-STEP-247400.pt",
-        "decoder_checkpoint": "JasperDecoderForCTC-STEP-247400.pt",
+        "model_path": "{NEMO_PATH}/quartznet15x5/quartznet15x5.yaml",
+        "checkpoints_dir": "{NEMO_PATH}/quartznet15x5",
         "in": ["manifest"],
-        "out": ["transcription"]
+        "out": ["audio_path", "transcription"]
       }
     ],
-    "out": ["transcription"]
+    "out": ["audio_path", "transcription"]
   },
   "metadata": {
     "variables": {
