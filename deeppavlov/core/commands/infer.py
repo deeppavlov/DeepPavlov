@@ -22,6 +22,7 @@ from typing import Optional, Union
 from deeppavlov.core.commands.utils import import_packages, parse_config
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.params import from_params
+from deeppavlov.core.data.utils import jsonify_data
 from deeppavlov.download import deep_download
 
 log = getLogger(__name__)
@@ -122,7 +123,7 @@ def predict_on_stream(config: Union[str, Path, dict],
         if len(model.out_params) == 1:
             res = [res]
         for res in zip(*res):
-            res = json.dumps(res, ensure_ascii=False)
+            res = json.dumps(jsonify_data(res), ensure_ascii=False)
             print(res, flush=True)
 
     if f is not sys.stdin:
