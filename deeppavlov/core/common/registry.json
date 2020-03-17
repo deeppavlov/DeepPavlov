@@ -162,5 +162,10 @@
   "ubuntu_v2_mt_reader": "deeppavlov.dataset_readers.ubuntu_v2_mt_reader:UbuntuV2MTReader",
   "ubuntu_v2_reader": "deeppavlov.dataset_readers.ubuntu_v2_reader:UbuntuV2Reader",
   "wiki_sqlite_vocab": "deeppavlov.vocabs.wiki_sqlite:WikiSQLiteVocab",
-  "wikitionary_100K_vocab": "deeppavlov.vocabs.typos:Wiki100KDictionary"
+  "wikitionary_100K_vocab": "deeppavlov.vocabs.typos:Wiki100KDictionary",
+  "ner_reader": "deeppavlov.dataset_readers.ner_reader:NerReader",
+  "NER_model": "deeppavlov.models.ner.NER_model:NER_model",
+  "ner_preprocessor": "deeppavlov.models.preprocessors.ner_preprocessor:ner_preprocessor",
+  "convert_ids2tags": "deeppavlov.models.preprocessors.ner_preprocessor:convert_ids2tags",
+  "ner_vocab": "deeppavlov.models.preprocessors.ner_preprocessor:ner_vocab"
 }
