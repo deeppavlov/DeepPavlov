@@ -1,24 +1,12 @@
 {
-  "dataset_reader": {
-    "class_name": "kbqa_reader",
-    "data_path": "{DOWNLOADS_PATH}/wikidata_rus/"
-  },
-  "dataset_iterator": {
-    "class_name": "data_learning_iterator"
-  },
   "chainer": {
     "in": ["x"],
     "in_y": ["y"],
     "pipe": [
       {
-        "config_path": "{CONFIGS_PATH}/classifiers/relation_prediction_rus.json",
-        "in": ["x"],
-        "out": ["y_pred_probas", "y_pred_labels"]
-      },
-      {
-        "config_path": "{CONFIGS_PATH}/ner/ner_kb_rus.json",
-        "in": ["x"],
-        "out": ["x_tokens", "y_predicted"]
+        "id": "my_embedder",
+        "class_name": "fasttext",
+        "load_path": "{DOWNLOADS_PATH}/embeddings/lenta_lower_100.bin"
       },
       {
         "class_name": "entity_linker",
@@ -35,28 +23,33 @@
         "debug": false
       },
       {
+        "class_name": "tree_parser",
+        "id": "tree_p",
+        "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
+        "udpipe_filename": "russian-syntagrus-ud-2.3-181115.udpipe"
+      },
+      {
         "class_name": "template_matcher",
         "id": "template_m",
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "templates_filename": "templates_rus.pickle"
       },
       {
-        "in": ["x", "x_tokens", "y_predicted", "y_pred_probas", "y_pred_labels"],
+        "in": ["x"],
         "out": ["answers"],
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "q2name_filename": "wiki_rus_q_to_name_full.pickle",
         "wiki_filename": "wiki_rus.pickle",
-        "class_name": "kb_answer_parser_wikidata",
-        "top_k_classes": 5,
+        "class_name": "kb_tree",
         "relations_maping_filename": "wiki_properties_rus.pickle",
         "templates_filename": "templates_rus.pickle",
-        "debug": false,
-        "return_confidences": false,
-        "lemmatize": true,
-        "rule_filter_entities": true,
-        "language": "rus",
+        "debug": true,
+        "use_templates": true,
+        "ft_embedder": "#my_embedder",
+        "tree_parser": "#tree_p",
         "template_matcher": "#template_m",
-        "linker": "#linker"
+        "linker": "#linker",
+        "language": "rus"
       }
     ],
     "out": ["answers"]
@@ -73,14 +66,12 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/kbqa_mix_lowercase",
-      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+      "MODELS_PATH": "{ROOT_PATH}/models"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
-      "{DEEPPAVLOV_PATH}/requirements/spelling.txt"
+      "{DEEPPAVLOV_PATH}/requirements/udpipe.txt"
     ],
     "download": [
       {
@@ -104,15 +95,15 @@
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
-        "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.bin",
-        "subdir": "{DOWNLOADS_PATH}/embeddings"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/models/kbqa_mix_lowercase.tar.gz",
-        "subdir": "{MODELS_PATH}/kbqa_mix_lowercase"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/russian-syntagrus-ud-2.3-181115.udpipe",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
         "url": "http://files.deeppavlov.ai/embeddings/lenta_lower_100.bin",
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.bin",
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]

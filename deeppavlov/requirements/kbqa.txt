@@ -1,0 +1,4 @@
+ufal.udpipe
+git+https://github.com/udapi/udapi-python.git
+pybind11
+hdt
