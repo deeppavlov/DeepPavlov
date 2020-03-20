@@ -1,18 +1,15 @@
 {
   "dataset_reader": {
     "class_name": "ner_reader",
-    "data_path": "{DOWNLOADS_PATH}/conll2003/",
-    "dataset_name": "conll2003",
-    "provide_pos": true,
-    "provide_chunk": true,
-    "tagging_scheme": "iobes"
+    "data_path": "{DOWNLOADS_PATH}/sentseg_dailydialog/",
+    "dataset_name": "dailydialog"
   },
   "dataset_iterator": {
     "class_name": "data_learning_iterator"
   },
   "chainer": {
-    "in": ["x", "pos", "chunk"],
-    "in_y": ["y"],
+    "in": ["x"],
+    "in_y": ["y_tokens"],
     "pipe": [
       {
         "in": ["x"],
@@ -35,33 +32,6 @@
         "load_path": "{MODELS_PATH}/word.dict"
       },
       {
-        "in": ["pos"],
-        "out": ["pos_ind"],
-        "fit_on": ["pos"],
-        "class_name": "ner_vocab",
-        "id": "pos_vocab",
-        "save_path": "{MODELS_PATH}/pos.dict",
-        "load_path": "{MODELS_PATH}/pos.dict"
-      },
-      {
-        "in": ["chunk"],
-        "out": ["chunk_ind"],
-        "fit_on": ["chunk"],
-        "class_name": "ner_vocab",
-        "id": "chunk_vocab",
-        "save_path": "{MODELS_PATH}/chunk.dict",
-        "load_path": "{MODELS_PATH}/chunk.dict"
-      },
-      {
-        "in": ["y"],
-        "out": ["y_ind"],
-        "fit_on": ["y"],
-        "class_name": "ner_vocab",
-        "id": "tag_vocab",
-        "save_path": "{MODELS_PATH}/tag.dict",
-        "load_path": "{MODELS_PATH}/tag.dict"
-      },
-      {
         "in": ["x_tokens"],
         "out": ["x_char_ind"],
         "fit_on": ["x_tokens"],
@@ -72,11 +42,18 @@
         "load_path": "{MODELS_PATH}/char.dict"
       },
       {
-        "in":[
+        "in": ["y_tokens"],
+        "out": ["y_ind"],
+        "fit_on": ["y_tokens"],
+        "class_name": "ner_vocab",
+        "id": "tag_vocab",
+        "save_path": "{MODELS_PATH}/tag.dict",
+        "load_path": "{MODELS_PATH}/tag.dict"
+      },
+      {
+        "in": [
           "sent_lengths",
           "x_tok_ind",
-          "pos_ind",
-          "chunk_ind",
           "x_char_ind",
           "x_tokens_elmo"
         ],
@@ -89,15 +66,11 @@
         "word_dim": 100,
         "word_vocab": "#word_vocab",
         "char_vocab_size": "#char_vocab.len",
-        "pos_vocab_size": "#pos_vocab.len",
-        "chunk_vocab_size": "#chunk_vocab.len",
-        "pos_dim": 40,
-        "chunk_dim": 20,
-        "char_dim": 100,
-        "elmo_dim": 128,
+        "char_dim": 64,
+        "elmo_dim": 100,
         "lstm_hidden_size": 256,
-        "save_path": "{MODELS_PATH}/conll2003_m1",
-        "load_path": "{MODELS_PATH}/conll2003_m1",
+        "save_path": "{MODELS_PATH}/sentseg_dailydialog",
+        "load_path": "{MODELS_PATH}/sentseg_dailydialog",
         "learning_rate": 1e-3,
         "learning_rate_drop_patience": 5,
         "learning_rate_drop_div": 10,
@@ -108,17 +81,22 @@
         "out": ["tags"],
         "class_name": "convert_ids2tags",
         "id2tag": "#tag_vocab.i2t"
+      },
+      {
+        "in": ["x_tokens","tags"],
+        "out": "punctuated_sents",
+        "class_name": "sentseg_restore_sent"
       }
     ],
-    "out": ["x_tokens", "tags"]
+    "out": ["x", "punctuated_sents"]
   },
   "train": {
     "epochs": 100,
-    "batch_size": 64,
+    "batch_size": 50,
     "metrics": [
       {
         "name": "ner_prf1",
-        "inputs": ["y", "tags"]
+        "inputs": ["y_tokens", "tags"]
       }
     ],
     "validation_patience": 10,
@@ -126,16 +104,13 @@
     "log_every_n_epochs": 1,
     "show_examples": false,
     "class_name": "nn_trainer",
-    "evaluation_targets": [
-      "valid",
-      "test"
-    ]
+    "evaluation_targets": ["valid", "test"]
   },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/conll2003_m1"
+      "MODELS_PATH": "{ROOT_PATH}/models/sentseg_dailydialog"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/gensim.txt",
@@ -143,7 +118,7 @@
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_conll2003_m1.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/sentseg_dailydialog.tar.gz",
         "subdir": "{MODELS_PATH}"
       },
       {
