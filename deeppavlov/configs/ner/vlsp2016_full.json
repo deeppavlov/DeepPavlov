@@ -88,7 +88,7 @@
         ],
         "in_y": ["y_ind"],
         "out": ["y_predicted"],
-        "class_name": "NER_model",
+        "class_name": "hybrid_ner_model",
         "n_tags": "#tag_vocab.len",
         "word_emb_path": "{DOWNLOADS_PATH}/embeddings/baomoi.bin",
         "word_emb_name": "baomoi",

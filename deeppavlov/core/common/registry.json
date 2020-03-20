@@ -164,7 +164,7 @@
   "wiki_sqlite_vocab": "deeppavlov.vocabs.wiki_sqlite:WikiSQLiteVocab",
   "wikitionary_100K_vocab": "deeppavlov.vocabs.typos:Wiki100KDictionary",
   "ner_reader": "deeppavlov.dataset_readers.ner_reader:NerReader",
-  "NER_model": "deeppavlov.models.ner.NER_model:NER_model",
+  "hybrid_ner_model": "deeppavlov.models.ner.NER_model:HybridNerModel",
   "ner_preprocessor": "deeppavlov.models.preprocessors.ner_preprocessor:ner_preprocessor",
   "convert_ids2tags": "deeppavlov.models.preprocessors.ner_preprocessor:convert_ids2tags",
   "ner_vocab": "deeppavlov.models.preprocessors.ner_preprocessor:ner_vocab",

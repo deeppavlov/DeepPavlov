@@ -59,7 +59,7 @@
         ],
         "in_y": ["y_ind"],
         "out": ["y_predicted"],
-        "class_name": "NER_model",
+        "class_name": "hybrid_ner_model",
         "n_tags": "#tag_vocab.len",
         "word_emb_path": "{DOWNLOADS_PATH}/embeddings/glove.6B.100d.txt",
         "word_emb_name": "glove",

@@ -431,6 +431,17 @@ def print_prf(p, r, f):
 
 @register_metric('ner_prf1')
 def ner_prf1(batch_labels, batch_preds):
+    """
+    Compute Precision, Recall, and F1; supports both IOB and IOBES tagging scheme.
+
+    Args:
+        batch_labels: The Batch of groundtruth labels.
+        batch_preds: The batch of predicted labels.
+
+    Returns:
+          F1 score
+
+    """
     def update_chunks(bag, list_chunks):
         for chunk_type, _, _ in list_chunks:
             if chunk_type not in bag:

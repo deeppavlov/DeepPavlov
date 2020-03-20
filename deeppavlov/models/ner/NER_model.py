@@ -27,8 +27,29 @@ from deeppavlov.core.models.tf_model import LRScheduledTFModel
 log = getLogger(__name__)
 
 
-@register('NER_model')
-class NER_model(LRScheduledTFModel):
+@register('hybrid_ner_model')
+class HybridNerModel(LRScheduledTFModel):
+    """
+    This class implements the hybrid NER model published in the paper: http://www.ijmlc.org/show-83-881-1.html
+
+    Parameters:
+        n_tags: Number of pre-defined tags.
+        word_emb_path: The path to the pretrained word embedding model.
+        word_emb_name: The name of pretrained word embedding model.
+        word_vocab: The word vocabulary class.
+        word_dim: The dimension of the pretrained word vector.
+        char_vocab_size: The size of character vocabulary.
+        pos_vocab_size: The size of POS vocabulary.
+        chunk_vocab_size: The size of Chunk vocabulary.
+        char_dim: The dimension of character vector.
+        elmo_dim: The dimension of ELMo-based word vector
+        pos_dim: The dimension of POS vector.
+        chunk_dim: The dimension of Chunk vector.
+        cap_dim: The dimension of capitalization vector.
+        cap_vocab_size: The size of capitalization vocabulary.
+        lstm_hidden_size: The number of units in contextualized Bi-LSTM network
+        drop_out_keep_prob: The probability of keeping hidden state
+    """
 
     def __init__(self,
                  n_tags: int,
@@ -44,7 +65,7 @@ class NER_model(LRScheduledTFModel):
                  pos_dim: int = None,
                  chunk_dim: int = None,
                  cap_dim: int = None,
-                 cap_vocab_size=5,
+                 cap_vocab_size = 5,
                  lstm_hidden_size: int = 256,
                  dropout_keep_prob: float = 0.5,
                  **kwargs) -> None:
