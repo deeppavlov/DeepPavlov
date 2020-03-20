@@ -152,7 +152,7 @@
         "subdir": "{MODELS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/embeddings/glove.6B.100d.txt",
+        "url": "http://files.deeppavlov.ai/embeddings/baomoi.bin",
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
