@@ -20,7 +20,8 @@ import nemo
 import nemo_asr
 import nemo_tts
 import torch
-
+from io import BytesIO
+from scipy.io import wavfile
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.file import read_yaml
 from deeppavlov.core.common.registry import register
@@ -42,6 +43,7 @@ class NeMoTTS(Component, Serializable):
         self.neural_factory = nemo.core.NeuralModuleFactory(placement=placement)
 
         tacotron2_params = read_yaml(expand_path(model_path))
+        self.sample_rate = tacotron2_params['sample_rate']
 
         self.text_embedding = nemo_tts.TextEmbedding(
             len(tacotron2_params["labels"]) + 3,  # + 3 special chars
@@ -95,8 +97,11 @@ class NeMoTTS(Component, Serializable):
             tensors=infer_tensors
         )
 
-        audio = self.vocoder.get_audio(evaluated_tensors[0], evaluated_tensors[1])
-        return audio
+        data_batch = self.vocoder.get_audio(evaluated_tensors[0], evaluated_tensors[1])
+        audio_batch = [BytesIO() for _ in data_batch]
+        for audio, data in zip(audio_batch, data_batch):
+            wavfile.write(audio, self.sample_rate, data)
+        return audio_batch
 
     def load(self) -> None:
         checkpoints = nemo.utils.get_checkpoint_from_dir([str(module) for module in self.modules_to_restore], self.load_path)
@@ -109,8 +114,8 @@ class NeMoTTS(Component, Serializable):
 
 
 if __name__ == '__main__':
-    model = NeMoTTS('~/Downloads/tacotron2/tacotron2.yaml', '~/Downloads/tacotron2', 'griffin-lim')
+    model = NeMoTTS('~/Downloads/tacotron2/tacotron2.yaml', '~/Downloads/tacotron2')
     audio = model('/data/nemo/workdir/gen.json')
-    from scipy.io.wavfile import write
-    for i, a in enumerate(audio):
-        write(f'/home/ignatov/asdf/{i}.wav', 22050, a)
+    from deeppavlov.models.nemo.nemo_io import WAVSaver
+    saver = WAVSaver()
+    print(saver(audio))

@@ -71,8 +71,7 @@ class NeMoASR(Component, Serializable):
             log.info(f'Restoring {module} from {checkpoint}')
             module.restore_from(checkpoint)
 
-    def __call__(self, manifests):
-        manifest = ','.join(manifests)
+    def __call__(self, manifest):
         data_layer = nemo_asr.AudioToTextDataLayer(manifest_filepath=manifest, **self.data_layer_kwargs)
         audio_paths = [d['audio_filepath'] for d in data_layer._dataset.manifest._data]
 
