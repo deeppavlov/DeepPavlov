@@ -353,6 +353,11 @@ def _serialize(config):
     return chainer.serialize()
 
 
+def _infer(config, inputs, download=False):
+    chainer = build_model(config, download=download)
+    return chainer(*inputs)
+
+
 def _deserialize(config, raw_bytes, examples):
     chainer = build_model(config, serialized=raw_bytes)
     for *query, expected_response in examples:
@@ -370,28 +375,17 @@ class TestQuickStart(object):
     @staticmethod
     def interact(config_path, model_directory, qr_list=None):
         qr_list = qr_list or []
-        logfile = io.BytesIO(b'')
-        p = pexpect.popen_spawn.PopenSpawn(' '.join([sys.executable, "-m", "deeppavlov", "interact", str(config_path)]),
-                                           timeout=None, logfile=logfile)
-        try:
-            for *query, expected_response in qr_list:  # works until the first failed query
-                for q in query:
-                    p.expect("::")
-                    p.sendline(q)
 
-                p.expect(">> ")
-                if expected_response is not None:
-                    actual_response = p.readline().decode().strip()
-                    assert expected_response == actual_response, \
-                        f"Error in interacting with {model_directory} ({config_path}): {query}"
+        *inputs, expected_outputs = zip(*qr_list)
+        with ProcessPoolExecutor(max_workers=1) as executor:
+            f = executor.submit(_infer, config_path, inputs)
+        outputs = f.result()
 
-            p.expect("::")
-            p.sendline("quit")
-            p.readlines()
-            if p.wait() != 0:
-                raise RuntimeError('Error in quitting from deep.py: \n{}'.format(logfile.getvalue().decode()))
-        except pexpect.exceptions.EOF:
-            raise RuntimeError('Got unexpected EOF: \n{}'.format(logfile.getvalue().decode()))
+        errors = ';'.join([f'expected `{expected}` got `{output}`'
+                           for output, expected in zip(outputs, expected_outputs)
+                           if expected != output])
+        if errors:
+            raise RuntimeError(f'Unexpected results for {config_path}: {errors}')
 
     @staticmethod
     def interact_api(config_path):
