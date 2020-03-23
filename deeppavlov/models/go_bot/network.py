@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#region imports
+# region imports
 import collections
 import json
 import re
@@ -33,7 +33,8 @@ from deeppavlov.core.layers import tf_layers
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
 from deeppavlov.models.go_bot.tracker import FeaturizedTracker, DialogueStateTracker, MultipleUserStateTracker
-#endregion imports
+
+# endregion imports
 log = getLogger(__name__)
 
 
@@ -140,6 +141,11 @@ class GoalOrientedBot(LRScheduledTFModel):
                  use_action_mask: bool = False,
                  debug: bool = False,
                  **kwargs) -> None:
+
+        self.nn_stuff_handler = self.NNStuffHandler()
+
+        # kwargs here are mostly training hyperparameters
+
         network_parameters = network_parameters or {}
         if any(p in network_parameters for p in self.DEPRECATED):
             log.warning(f"parameters {self.DEPRECATED} are deprecated,"
@@ -150,33 +156,34 @@ class GoalOrientedBot(LRScheduledTFModel):
             kwargs['learning_rate'] = network_parameters.pop('learning_rate')
         super().__init__(load_path=load_path, save_path=save_path, **kwargs)
 
-        self.tokenizer = tokenizer
+        self.tokenizer = tokenizer  # preprocessing
 
-        self.bow_embedder = bow_embedder
-        self.embedder = embedder
-        self.slot_filler = slot_filler
-        self.intent_classifier = intent_classifier
-        self.use_action_mask = use_action_mask
+        self.bow_embedder = bow_embedder  # preprocessing?
+        self.embedder = embedder  # preprocessing?
+        self.slot_filler = slot_filler  # another unit of pipeline
+        self.intent_classifier = intent_classifier  # another unit of pipeline
+        self.use_action_mask = use_action_mask  # feature engineering
         self.debug = debug
-        self.word_vocab = word_vocab
+        self.word_vocab = word_vocab  # preprocessing?
 
         template_path = expand_path(template_path)
         template_type = getattr(templ, template_type)
         log.info(f"[loading templates from {template_path}]")
-        self.templates = templ.Templates(template_type).load(template_path)
-        self.n_actions = len(self.templates)
+        self.templates = templ.Templates(template_type).load(template_path)  # upper-level model logic
+        self.n_actions = len(self.templates)  # upper-level model logic
         log.info(f"{self.n_actions} templates loaded.")
 
-        self.default_tracker = tracker
-        self.dialogue_state_tracker = DialogueStateTracker(tracker.slot_names, self.n_actions, hidden_size, database)
+        self.default_tracker = tracker  # tracker
+        self.dialogue_state_tracker = DialogueStateTracker(tracker.slot_names, self.n_actions, hidden_size,
+                                                           database)  # tracker
 
         self.api_call_id = -1  # api call should have smth like action index
         if api_call_action is not None:
-            self.api_call_id = self.templates.actions.index(api_call_action)
+            self.api_call_id = self.templates.actions.index(api_call_action)  # upper-level model logic
 
         self.intents = []
         if isinstance(self.intent_classifier, Chainer):
-            self.intents = self.intent_classifier.get_main_component().classes
+            self.intents = self.intent_classifier.get_main_component().classes  # upper-level model logic
 
         new_network_parameters = {
             'hidden_size': hidden_size,
@@ -186,14 +193,14 @@ class GoalOrientedBot(LRScheduledTFModel):
             'l2_reg_coef': l2_reg_coef,
             'dense_size': dense_size,
             'attn': attention_mechanism
-        }
+        }  # network params
         if 'attention_mechanism' in network_parameters:
-            network_parameters['attn'] = network_parameters.pop('attention_mechanism')
-        new_network_parameters.update(network_parameters)
-        self._init_network(**new_network_parameters)
+            network_parameters['attn'] = network_parameters.pop('attention_mechanism')  # network params
+        new_network_parameters.update(network_parameters)  # network params
+        self._init_network(**new_network_parameters)  # network params
 
-        self.multiple_user_state_tracker = MultipleUserStateTracker()
-        self.reset()
+        self.multiple_user_state_tracker = MultipleUserStateTracker()  # tracker
+        self.reset()  # tracker
 
     def _init_network(self,
                       hidden_size: int,
@@ -242,9 +249,11 @@ class GoalOrientedBot(LRScheduledTFModel):
         }
 
         # initialize parameters
-        self._init_network_params()
+        # self._init_network_params()
+        self.nn_stuff_handler._init_network_params(self)
         # build computational graph
-        self._build_graph()
+        # self._build_graph()
+        self.nn_stuff_handler._build_graph(self)
         # initialize session
         self.sess = tf.Session()
 
@@ -495,11 +504,12 @@ class GoalOrientedBot(LRScheduledTFModel):
         return [self._infer_dialog(x) for x in batch]
 
     def reset(self, user_id: Union[None, str, int] = None) -> None:
-        self.multiple_user_state_tracker.reset(user_id)  # todo а чо, у нас всё что можно закешить лежит в мультиюхертрекере?
+        self.multiple_user_state_tracker.reset(
+            user_id)  # todo а чо, у нас всё что можно закешить лежит в мультиюхертрекере?
         if self.debug:
             log.debug("Bot reset.")
 
-    #region pure nn-specific stuff
+    # region pure nn-specific stuff
 
     def network_call(self,
                      features: np.ndarray,
@@ -553,158 +563,314 @@ class GoalOrientedBot(LRScheduledTFModel):
                 'learning_rate': self.get_learning_rate(),
                 'momentum': self.get_momentum()}
 
-    def _init_network_params(self) -> None:
-        self.dropout_rate = self.opt['dropout_rate']
-        self.hidden_size = self.opt['hidden_size']
-        self.action_size = self.opt['action_size']
-        self.obs_size = self.opt['obs_size']
-        self.dense_size = self.opt['dense_size']
-        self.l2_reg = self.opt['l2_reg_coef']
+    class NNStuffHandler():
+        def __init__(self):
+            pass
 
-        attn = self.opt.get('attention_mechanism')
-        if attn:
-            self.opt['attention_mechanism'] = attn
+        def _init_network_params(self, gobot_obj) -> None:
+            gobot_obj.dropout_rate = gobot_obj.opt['dropout_rate']
+            gobot_obj.hidden_size = gobot_obj.opt['hidden_size']
+            gobot_obj.action_size = gobot_obj.opt['action_size']
+            gobot_obj.obs_size = gobot_obj.opt['obs_size']
+            gobot_obj.dense_size = gobot_obj.opt['dense_size']
+            gobot_obj.l2_reg = gobot_obj.opt['l2_reg_coef']
 
-            self.attn = \
-                collections.namedtuple('attention_mechanism', attn.keys())(**attn)
-            self.obs_size -= attn['token_size']
-        else:
-            self.attn = None
+            attn = gobot_obj.opt.get('attention_mechanism')
+            if attn:
+                # gobot_obj.opt['attention_mechanism'] = attn
 
-    def _build_graph(self) -> None:
+                gobot_obj.attn = collections.namedtuple('attention_mechanism', attn.keys())(**attn)
+                gobot_obj.obs_size -= attn['token_size']
+            else:
+                gobot_obj.attn = None
 
-        self._add_placeholders()  # todo какая-то тензорфлововая тема
+        def _build_graph(self, gobot_obj) -> None:
 
-        # build body
-        _logits, self._state = self._build_body()
+            self._add_placeholders(gobot_obj)  # todo какая-то тензорфлововая тема
 
-        # probabilities normalization : elemwise multiply with action mask
-        _logits_exp = tf.multiply(tf.exp(_logits), self._action_mask)
-        _logits_exp_sum = tf.expand_dims(tf.reduce_sum(_logits_exp, -1), -1)
-        self._probs = tf.squeeze(_logits_exp / _logits_exp_sum, name='probs')
+            # build body
+            _logits, gobot_obj._state = self._build_body(gobot_obj)
 
-        # loss, train and predict operations
-        self._prediction = tf.argmax(self._probs, axis=-1, name='prediction')
+            # probabilities normalization : elemwise multiply with action mask
+            _logits_exp = tf.multiply(tf.exp(_logits), gobot_obj._action_mask)
+            _logits_exp_sum = tf.expand_dims(tf.reduce_sum(_logits_exp, -1), -1)
+            gobot_obj._probs = tf.squeeze(_logits_exp / _logits_exp_sum, name='probs')
 
-        # _weights = tf.expand_dims(self._utterance_mask, -1)
-        # TODO: try multiplying logits to action_mask
-        onehots = tf.one_hot(self._action, self.action_size)
-        _loss_tensor = tf.nn.softmax_cross_entropy_with_logits_v2(
-            logits=_logits, labels=onehots
-        )
-        # multiply with batch utterance mask
-        _loss_tensor = tf.multiply(_loss_tensor, self._utterance_mask)
-        self._loss = tf.reduce_mean(_loss_tensor, name='loss')
-        self._loss += self.l2_reg * tf.losses.get_regularization_loss()
-        self._train_op = self.get_train_op(self._loss)
+            # loss, train and predict operations
+            gobot_obj._prediction = tf.argmax(gobot_obj._probs, axis=-1, name='prediction')
 
-    def _add_placeholders(self) -> None:
-        # todo узнай что такое плейсхолдеры в тф
-        self._dropout_keep_prob = tf.placeholder_with_default(1.0,
-                                                              shape=[],
-                                                              name='dropout_prob')
-        self._features = tf.placeholder(tf.float32,
-                                        [None, None, self.obs_size],
-                                        name='features')
-        self._action = tf.placeholder(tf.int32,
-                                      [None, None],
-                                      name='ground_truth_action')
-        self._action_mask = tf.placeholder(tf.float32,
-                                           [None, None, self.action_size],
-                                           name='action_mask')
-        self._utterance_mask = tf.placeholder(tf.float32,
-                                              shape=[None, None],
-                                              name='utterance_mask')
-        self._batch_size = tf.shape(self._features)[0]
-        zero_state = tf.zeros([self._batch_size, self.hidden_size], dtype=tf.float32)
-        _initial_state_c = \
-            tf.placeholder_with_default(zero_state, shape=[None, self.hidden_size])
-        _initial_state_h = \
-            tf.placeholder_with_default(zero_state, shape=[None, self.hidden_size])
-        self._initial_state = tf.nn.rnn_cell.LSTMStateTuple(_initial_state_c,
-                                                            _initial_state_h)
-        if self.attn:
-            _emb_context_shape = \
-                [None, None, self.attn.max_num_tokens, self.attn.token_size]
-            self._emb_context = tf.placeholder(tf.float32,
-                                               _emb_context_shape,
-                                               name='emb_context')
-            self._key = tf.placeholder(tf.float32,
-                                       [None, None, self.attn.key_size],
-                                       name='key')
+            # _weights = tf.expand_dims(self._utterance_mask, -1)
+            # TODO: try multiplying logits to action_mask
+            onehots = tf.one_hot(gobot_obj._action, gobot_obj.action_size)
+            _loss_tensor = tf.nn.softmax_cross_entropy_with_logits_v2(
+                logits=_logits, labels=onehots
+            )
+            # multiply with batch utterance mask
+            _loss_tensor = tf.multiply(_loss_tensor, gobot_obj._utterance_mask)
+            gobot_obj._loss = tf.reduce_mean(_loss_tensor, name='loss')
+            gobot_obj._loss += gobot_obj.l2_reg * tf.losses.get_regularization_loss()
+            gobot_obj._train_op = gobot_obj.get_train_op(gobot_obj._loss)
 
-    def _build_body(self) -> Tuple[tf.Tensor, tf.Tensor]:
-        # input projection
-        _units = tf.layers.dense(self._features, self.dense_size,
-                                 kernel_regularizer=tf.nn.l2_loss,
-                                 kernel_initializer=xav())
-        if self.attn:
-            attn_scope = f"attention_mechanism/{self.attn.type}"
-            with tf.variable_scope(attn_scope):
-                if self.attn.type == 'general':
-                    _attn_output = am.general_attention(
-                        self._key,
-                        self._emb_context,
-                        hidden_size=self.attn.hidden_size,
-                        projected_align=self.attn.projected_align)
-                elif self.attn.type == 'bahdanau':
-                    _attn_output = am.bahdanau_attention(
-                        self._key,
-                        self._emb_context,
-                        hidden_size=self.attn.hidden_size,
-                        projected_align=self.attn.projected_align)
-                elif self.attn.type == 'cs_general':
-                    _attn_output = am.cs_general_attention(
-                        self._key,
-                        self._emb_context,
-                        hidden_size=self.attn.hidden_size,
-                        depth=self.attn.depth,
-                        projected_align=self.attn.projected_align)
-                elif self.attn.type == 'cs_bahdanau':
-                    _attn_output = am.cs_bahdanau_attention(
-                        self._key,
-                        self._emb_context,
-                        hidden_size=self.attn.hidden_size,
-                        depth=self.attn.depth,
-                        projected_align=self.attn.projected_align)
-                elif self.attn.type == 'light_general':
-                    _attn_output = am.light_general_attention(
-                        self._key,
-                        self._emb_context,
-                        hidden_size=self.attn.hidden_size,
-                        projected_align=self.attn.projected_align)
-                elif self.attn.type == 'light_bahdanau':
-                    _attn_output = am.light_bahdanau_attention(
-                        self._key,
-                        self._emb_context,
-                        hidden_size=self.attn.hidden_size,
-                        projected_align=self.attn.projected_align)
-                else:
-                    raise ValueError("wrong value for attention mechanism type")
-            _units = tf.concat([_units, _attn_output], -1)
+        def _add_placeholders(self, gobot_obj) -> None:
+            # todo узнай что такое плейсхолдеры в тф
+            gobot_obj._dropout_keep_prob = tf.placeholder_with_default(1.0,
+                                                                       shape=[],
+                                                                       name='dropout_prob')
+            gobot_obj._features = tf.placeholder(tf.float32,
+                                                 [None, None, gobot_obj.obs_size],
+                                                 name='features')
+            gobot_obj._action = tf.placeholder(tf.int32,
+                                               [None, None],
+                                               name='ground_truth_action')
+            gobot_obj._action_mask = tf.placeholder(tf.float32,
+                                                    [None, None, gobot_obj.action_size],
+                                                    name='action_mask')
+            gobot_obj._utterance_mask = tf.placeholder(tf.float32,
+                                                       shape=[None, None],
+                                                       name='utterance_mask')
+            gobot_obj._batch_size = tf.shape(gobot_obj._features)[0]
+            zero_state = tf.zeros([gobot_obj._batch_size, gobot_obj.hidden_size], dtype=tf.float32)
+            _initial_state_c = \
+                tf.placeholder_with_default(zero_state, shape=[None, gobot_obj.hidden_size])
+            _initial_state_h = \
+                tf.placeholder_with_default(zero_state, shape=[None, gobot_obj.hidden_size])
+            gobot_obj._initial_state = tf.nn.rnn_cell.LSTMStateTuple(_initial_state_c,
+                                                                     _initial_state_h)
+            if gobot_obj.attn:
+                _emb_context_shape = \
+                    [None, None, gobot_obj.attn.max_num_tokens, gobot_obj.attn.token_size]
+                gobot_obj._emb_context = tf.placeholder(tf.float32,
+                                                        _emb_context_shape,
+                                                        name='emb_context')
+                gobot_obj._key = tf.placeholder(tf.float32,
+                                                [None, None, gobot_obj.attn.key_size],
+                                                name='key')
 
-        _units = tf_layers.variational_dropout(_units,
-                                               keep_prob=self._dropout_keep_prob)
+        def _build_body(self, gobot_obj) -> Tuple[tf.Tensor, tf.Tensor]:
+            # input projection
+            _units = tf.layers.dense(gobot_obj._features, gobot_obj.dense_size,
+                                     kernel_regularizer=tf.nn.l2_loss,
+                                     kernel_initializer=xav())
+            if gobot_obj.attn:
+                attn_scope = f"attention_mechanism/{gobot_obj.attn.type}"
+                with tf.variable_scope(attn_scope):
+                    if gobot_obj.attn.type == 'general':
+                        _attn_output = am.general_attention(
+                            gobot_obj._key,
+                            gobot_obj._emb_context,
+                            hidden_size=gobot_obj.attn.hidden_size,
+                            projected_align=gobot_obj.attn.projected_align)
+                    elif gobot_obj.attn.type == 'bahdanau':
+                        _attn_output = am.bahdanau_attention(
+                            gobot_obj._key,
+                            gobot_obj._emb_context,
+                            hidden_size=gobot_obj.attn.hidden_size,
+                            projected_align=gobot_obj.attn.projected_align)
+                    elif gobot_obj.attn.type == 'cs_general':
+                        _attn_output = am.cs_general_attention(
+                            gobot_obj._key,
+                            gobot_obj._emb_context,
+                            hidden_size=gobot_obj.attn.hidden_size,
+                            depth=gobot_obj.attn.depth,
+                            projected_align=gobot_obj.attn.projected_align)
+                    elif gobot_obj.attn.type == 'cs_bahdanau':
+                        _attn_output = am.cs_bahdanau_attention(
+                            gobot_obj._key,
+                            gobot_obj._emb_context,
+                            hidden_size=gobot_obj.attn.hidden_size,
+                            depth=gobot_obj.attn.depth,
+                            projected_align=gobot_obj.attn.projected_align)
+                    elif gobot_obj.attn.type == 'light_general':
+                        _attn_output = am.light_general_attention(
+                            gobot_obj._key,
+                            gobot_obj._emb_context,
+                            hidden_size=gobot_obj.attn.hidden_size,
+                            projected_align=gobot_obj.attn.projected_align)
+                    elif gobot_obj.attn.type == 'light_bahdanau':
+                        _attn_output = am.light_bahdanau_attention(
+                            gobot_obj._key,
+                            gobot_obj._emb_context,
+                            hidden_size=gobot_obj.attn.hidden_size,
+                            projected_align=gobot_obj.attn.projected_align)
+                    else:
+                        raise ValueError("wrong value for attention mechanism type")
+                _units = tf.concat([_units, _attn_output], -1)
 
-        # recurrent network unit
-        _lstm_cell = tf.nn.rnn_cell.LSTMCell(self.hidden_size)
-        _utter_lengths = tf.cast(tf.reduce_sum(self._utterance_mask, axis=-1),
-                                 tf.int32)
-        # _output: [batch_size, max_time, hidden_size]
-        # _state: tuple of two [batch_size, hidden_size]
-        _output, _state = tf.nn.dynamic_rnn(_lstm_cell,
-                                            _units,
-                                            time_major=False,
-                                            initial_state=self._initial_state,
-                                            sequence_length=_utter_lengths)
-        _output = tf.reshape(_output, (self._batch_size, -1, self.hidden_size))
-        _output = tf_layers.variational_dropout(_output,
-                                                keep_prob=self._dropout_keep_prob)
-        # output projection
-        _logits = tf.layers.dense(_output, self.action_size,
-                                  kernel_regularizer=tf.nn.l2_loss,
-                                  kernel_initializer=xav(), name='logits')
-        return _logits, _state
+            _units = tf_layers.variational_dropout(_units,
+                                                   keep_prob=gobot_obj._dropout_keep_prob)
+
+            # recurrent network unit
+            _lstm_cell = tf.nn.rnn_cell.LSTMCell(gobot_obj.hidden_size)
+            _utter_lengths = tf.cast(tf.reduce_sum(gobot_obj._utterance_mask, axis=-1),
+                                     tf.int32)
+            # _output: [batch_size, max_time, hidden_size]
+            # _state: tuple of two [batch_size, hidden_size]
+            _output, _state = tf.nn.dynamic_rnn(_lstm_cell,
+                                                _units,
+                                                time_major=False,
+                                                initial_state=gobot_obj._initial_state,
+                                                sequence_length=_utter_lengths)
+            _output = tf.reshape(_output, (gobot_obj._batch_size, -1, gobot_obj.hidden_size))
+            _output = tf_layers.variational_dropout(_output,
+                                                    keep_prob=gobot_obj._dropout_keep_prob)
+            # output projection
+            _logits = tf.layers.dense(_output, gobot_obj.action_size,
+                                      kernel_regularizer=tf.nn.l2_loss,
+                                      kernel_initializer=xav(), name='logits')
+            return _logits, _state
+
+    # def _init_network_params(self) -> None:
+    #     self.dropout_rate = self.opt['dropout_rate']
+    #     self.hidden_size = self.opt['hidden_size']
+    #     self.action_size = self.opt['action_size']
+    #     self.obs_size = self.opt['obs_size']
+    #     self.dense_size = self.opt['dense_size']
+    #     self.l2_reg = self.opt['l2_reg_coef']
+    #
+    #     attn = self.opt.get('attention_mechanism')
+    #     if attn:
+    #         self.opt['attention_mechanism'] = attn
+    #
+    #         self.attn = \
+    #             collections.namedtuple('attention_mechanism', attn.keys())(**attn)
+    #         self.obs_size -= attn['token_size']
+    #     else:
+    #         self.attn = None
+
+    # def _build_graph(self) -> None:
+    #
+    #     self._add_placeholders()  # todo какая-то тензорфлововая тема
+    #
+    #     # build body
+    #     _logits, self._state = self._build_body()
+    #
+    #     # probabilities normalization : elemwise multiply with action mask
+    #     _logits_exp = tf.multiply(tf.exp(_logits), self._action_mask)
+    #     _logits_exp_sum = tf.expand_dims(tf.reduce_sum(_logits_exp, -1), -1)
+    #     self._probs = tf.squeeze(_logits_exp / _logits_exp_sum, name='probs')
+    #
+    #     # loss, train and predict operations
+    #     self._prediction = tf.argmax(self._probs, axis=-1, name='prediction')
+    #
+    #     # _weights = tf.expand_dims(self._utterance_mask, -1)
+    #     # TODO: try multiplying logits to action_mask
+    #     onehots = tf.one_hot(self._action, self.action_size)
+    #     _loss_tensor = tf.nn.softmax_cross_entropy_with_logits_v2(
+    #         logits=_logits, labels=onehots
+    #     )
+    #     # multiply with batch utterance mask
+    #     _loss_tensor = tf.multiply(_loss_tensor, self._utterance_mask)
+    #     self._loss = tf.reduce_mean(_loss_tensor, name='loss')
+    #     self._loss += self.l2_reg * tf.losses.get_regularization_loss()
+    #     self._train_op = self.get_train_op(self._loss)
+
+    # def _add_placeholders(self) -> None:
+    #     # todo узнай что такое плейсхолдеры в тф
+    #     self._dropout_keep_prob = tf.placeholder_with_default(1.0,
+    #                                                           shape=[],
+    #                                                           name='dropout_prob')
+    #     self._features = tf.placeholder(tf.float32,
+    #                                     [None, None, self.obs_size],
+    #                                     name='features')
+    #     self._action = tf.placeholder(tf.int32,
+    #                                   [None, None],
+    #                                   name='ground_truth_action')
+    #     self._action_mask = tf.placeholder(tf.float32,
+    #                                        [None, None, self.action_size],
+    #                                        name='action_mask')
+    #     self._utterance_mask = tf.placeholder(tf.float32,
+    #                                           shape=[None, None],
+    #                                           name='utterance_mask')
+    #     self._batch_size = tf.shape(self._features)[0]
+    #     zero_state = tf.zeros([self._batch_size, self.hidden_size], dtype=tf.float32)
+    #     _initial_state_c = \
+    #         tf.placeholder_with_default(zero_state, shape=[None, self.hidden_size])
+    #     _initial_state_h = \
+    #         tf.placeholder_with_default(zero_state, shape=[None, self.hidden_size])
+    #     self._initial_state = tf.nn.rnn_cell.LSTMStateTuple(_initial_state_c,
+    #                                                         _initial_state_h)
+    #     if self.attn:
+    #         _emb_context_shape = \
+    #             [None, None, self.attn.max_num_tokens, self.attn.token_size]
+    #         self._emb_context = tf.placeholder(tf.float32,
+    #                                            _emb_context_shape,
+    #                                            name='emb_context')
+    #         self._key = tf.placeholder(tf.float32,
+    #                                    [None, None, self.attn.key_size],
+    #                                    name='key')
+
+    # def _build_body(self) -> Tuple[tf.Tensor, tf.Tensor]:
+    #     # input projection
+    #     _units = tf.layers.dense(self._features, self.dense_size,
+    #                              kernel_regularizer=tf.nn.l2_loss,
+    #                              kernel_initializer=xav())
+    #     if self.attn:
+    #         attn_scope = f"attention_mechanism/{self.attn.type}"
+    #         with tf.variable_scope(attn_scope):
+    #             if self.attn.type == 'general':
+    #                 _attn_output = am.general_attention(
+    #                     self._key,
+    #                     self._emb_context,
+    #                     hidden_size=self.attn.hidden_size,
+    #                     projected_align=self.attn.projected_align)
+    #             elif self.attn.type == 'bahdanau':
+    #                 _attn_output = am.bahdanau_attention(
+    #                     self._key,
+    #                     self._emb_context,
+    #                     hidden_size=self.attn.hidden_size,
+    #                     projected_align=self.attn.projected_align)
+    #             elif self.attn.type == 'cs_general':
+    #                 _attn_output = am.cs_general_attention(
+    #                     self._key,
+    #                     self._emb_context,
+    #                     hidden_size=self.attn.hidden_size,
+    #                     depth=self.attn.depth,
+    #                     projected_align=self.attn.projected_align)
+    #             elif self.attn.type == 'cs_bahdanau':
+    #                 _attn_output = am.cs_bahdanau_attention(
+    #                     self._key,
+    #                     self._emb_context,
+    #                     hidden_size=self.attn.hidden_size,
+    #                     depth=self.attn.depth,
+    #                     projected_align=self.attn.projected_align)
+    #             elif self.attn.type == 'light_general':
+    #                 _attn_output = am.light_general_attention(
+    #                     self._key,
+    #                     self._emb_context,
+    #                     hidden_size=self.attn.hidden_size,
+    #                     projected_align=self.attn.projected_align)
+    #             elif self.attn.type == 'light_bahdanau':
+    #                 _attn_output = am.light_bahdanau_attention(
+    #                     self._key,
+    #                     self._emb_context,
+    #                     hidden_size=self.attn.hidden_size,
+    #                     projected_align=self.attn.projected_align)
+    #             else:
+    #                 raise ValueError("wrong value for attention mechanism type")
+    #         _units = tf.concat([_units, _attn_output], -1)
+    #
+    #     _units = tf_layers.variational_dropout(_units,
+    #                                            keep_prob=self._dropout_keep_prob)
+    #
+    #     # recurrent network unit
+    #     _lstm_cell = tf.nn.rnn_cell.LSTMCell(self.hidden_size)
+    #     _utter_lengths = tf.cast(tf.reduce_sum(self._utterance_mask, axis=-1),
+    #                              tf.int32)
+    #     # _output: [batch_size, max_time, hidden_size]
+    #     # _state: tuple of two [batch_size, hidden_size]
+    #     _output, _state = tf.nn.dynamic_rnn(_lstm_cell,
+    #                                         _units,
+    #                                         time_major=False,
+    #                                         initial_state=self._initial_state,
+    #                                         sequence_length=_utter_lengths)
+    #     _output = tf.reshape(_output, (self._batch_size, -1, self.hidden_size))
+    #     _output = tf_layers.variational_dropout(_output,
+    #                                             keep_prob=self._dropout_keep_prob)
+    #     # output projection
+    #     _logits = tf.layers.dense(_output, self.action_size,
+    #                               kernel_regularizer=tf.nn.l2_loss,
+    #                               kernel_initializer=xav(), name='logits')
+    #     return _logits, _state
 
     # endregion pure nn-specific stuff
 
