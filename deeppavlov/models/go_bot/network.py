@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#region imports
 import collections
 import json
 import re
@@ -32,7 +33,7 @@ from deeppavlov.core.layers import tf_layers
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
 from deeppavlov.models.go_bot.tracker import FeaturizedTracker, DialogueStateTracker, MultipleUserStateTracker
-
+#endregion imports
 log = getLogger(__name__)
 
 
@@ -169,7 +170,7 @@ class GoalOrientedBot(LRScheduledTFModel):
         self.default_tracker = tracker
         self.dialogue_state_tracker = DialogueStateTracker(tracker.slot_names, self.n_actions, hidden_size, database)
 
-        self.api_call_id = -1
+        self.api_call_id = -1  # api call should have smth like action index
         if api_call_action is not None:
             self.api_call_id = self.templates.actions.index(api_call_action)
 
@@ -310,6 +311,7 @@ class GoalOrientedBot(LRScheduledTFModel):
         state_features = tracker.get_features()
 
         # Other features
+        # todo (?) rename tracker -> dlg_stt_tracker
         result_matches_state = 0.
         if tracker.db_result is not None:
             matching_items = tracker.get_state().items()
@@ -417,6 +419,7 @@ class GoalOrientedBot(LRScheduledTFModel):
     def train_on_batch(self, x: List[dict], y: List[dict]) -> dict:
         return self.network_train_on_batch(*self.prepare_data(x, y))
 
+    # todo как инфер понимает из конфига что ему нужно. лёша что-то говорил про дерево
     def _infer(self, tokens: List[str], tracker: DialogueStateTracker) -> List:
         features, emb_context, key = self._encode_context(tokens, tracker=tracker)
         action_mask = tracker.calc_action_mask(self.api_call_id)
@@ -424,7 +427,7 @@ class GoalOrientedBot(LRScheduledTFModel):
             self.network_call([[features]], [[emb_context]], [[key]],
                               [[action_mask]], [[tracker.network_state[0]]],
                               [[tracker.network_state[1]]],
-                              prob=True)
+                              prob=True)  # todo чо за warning кидает ide, почему
         return probs, np.argmax(probs), (state_c, state_h)
 
     def _infer_dialog(self, contexts: List[dict]) -> List[str]:
@@ -436,8 +439,9 @@ class GoalOrientedBot(LRScheduledTFModel):
                 # previous action is teacher-forced
                 self.dialogue_state_tracker.update_previous_action(previous_act_id)
 
+            # todo это ответ бд тоже teacher forced?
             self.dialogue_state_tracker.get_ground_truth_db_result_from(context)
-            tokens = self.tokenizer([context['text'].lower().strip()])[0]
+            tokens = self.tokenizer([context['text'].lower().strip()])[0]  # todo поч хардкодим ловеркейс
 
             if callable(self.slot_filler):
                 utter_slots = self.slot_filler([tokens])[0]
@@ -487,12 +491,15 @@ class GoalOrientedBot(LRScheduledTFModel):
                 res.append(resp)
             return res
         # batch is a list of dialogs, user_ids ignored
+        # todo: что значит коммент выше, почему узер идс игноред
         return [self._infer_dialog(x) for x in batch]
 
     def reset(self, user_id: Union[None, str, int] = None) -> None:
-        self.multiple_user_state_tracker.reset(user_id)
+        self.multiple_user_state_tracker.reset(user_id)  # todo а чо, у нас всё что можно закешить лежит в мультиюхертрекере?
         if self.debug:
             log.debug("Bot reset.")
+
+    #region pure nn-specific stuff
 
     def network_call(self,
                      features: np.ndarray,
@@ -566,7 +573,7 @@ class GoalOrientedBot(LRScheduledTFModel):
 
     def _build_graph(self) -> None:
 
-        self._add_placeholders()
+        self._add_placeholders()  # todo какая-то тензорфлововая тема
 
         # build body
         _logits, self._state = self._build_body()
@@ -592,6 +599,7 @@ class GoalOrientedBot(LRScheduledTFModel):
         self._train_op = self.get_train_op(self._loss)
 
     def _add_placeholders(self) -> None:
+        # todo узнай что такое плейсхолдеры в тф
         self._dropout_keep_prob = tf.placeholder_with_default(1.0,
                                                               shape=[],
                                                               name='dropout_prob')
@@ -698,6 +706,9 @@ class GoalOrientedBot(LRScheduledTFModel):
                                   kernel_initializer=xav(), name='logits')
         return _logits, _state
 
+    # endregion pure nn-specific stuff
+
+    # region helping stuff
     def load(self, *args, **kwargs) -> None:
         self.load_params()
         super().load(*args, **kwargs)
@@ -725,3 +736,5 @@ class GoalOrientedBot(LRScheduledTFModel):
 
     def process_event(self, event_name, data) -> None:
         super().process_event(event_name, data)
+
+    # endregion helping stuff
