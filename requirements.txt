@@ -1,7 +1,7 @@
 aio-pika==6.4.1
 Cython==0.29.14
 fastapi==0.47.1
-rapidfuzzy==0.2.1
+rapidfuzz==0.2.1
 h5py==2.10.0
 nltk==3.4.5
 numpy==1.18.0
