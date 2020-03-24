@@ -8,7 +8,7 @@ from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.layers import tf_attention_mechanisms as am, tf_layers
 from tensorflow.contrib.layers import xavier_initializer as xav
 # from deeppavlov.models.go_bot.network import log
-from deeppavlov.models.go_bot.network import log
+# /from deeppavlov.models.go_bot.network import log
 
 
 def calc_obs_size(default_tracker_num_features,
@@ -278,6 +278,6 @@ class NNStuffHandler():
 
     def _save_nn_params(self, gobot_obj) -> None:
         path = str(gobot_obj.save_path.with_suffix('.json').resolve())
-        log.info(f"[saving parameters to {path}]")
+        # log.info(f"[saving parameters to {path}]")
         with open(path, 'w', encoding='utf8') as fp:
             json.dump(gobot_obj.nn_stuff_handler.opt, fp)
