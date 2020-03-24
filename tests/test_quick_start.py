@@ -355,7 +355,7 @@ def _serialize(config):
 
 def _infer(config, inputs, download=False):
     chainer = build_model(config, download=download)
-    return chainer(*inputs)
+    return chainer(*inputs) if inputs else []
 
 
 def _deserialize(config, raw_bytes, examples):
@@ -373,19 +373,19 @@ def _deserialize(config, raw_bytes, examples):
 @pytest.mark.parametrize("model,conf_file,model_dir,mode", TEST_GRID, scope='class')
 class TestQuickStart(object):
     @staticmethod
-    def interact(config_path, model_directory, qr_list=None):
-        qr_list = qr_list or []
+    def interact(config_path, qr_list=None, check_outputs=True):
 
-        *inputs, expected_outputs = zip(*qr_list)
+        *inputs, expected_outputs = zip(*qr_list) if qr_list else [],
         with ProcessPoolExecutor(max_workers=1) as executor:
             f = executor.submit(_infer, config_path, inputs)
         outputs = f.result()
 
-        errors = ';'.join([f'expected `{expected}` got `{output}`'
-                           for output, expected in zip(outputs, expected_outputs)
-                           if expected != output])
-        if errors:
-            raise RuntimeError(f'Unexpected results for {config_path}: {errors}')
+        if check_outputs:
+            errors = ';'.join([f'expected `{expected}` got `{output}`'
+                               for output, expected in zip(outputs, expected_outputs)
+                               if expected is not None and expected != output])
+            if errors:
+                raise RuntimeError(f'Unexpected results for {config_path}: {errors}')
 
     @staticmethod
     def interact_api(config_path):
@@ -496,7 +496,7 @@ class TestQuickStart(object):
             install_config(config_file_path)
             deep_download(config_file_path)
 
-            self.interact(test_configs_path / conf_file, model_dir, PARAMS[model][(conf_file, model_dir, mode)])
+            self.interact(test_configs_path / conf_file, PARAMS[model][(conf_file, model_dir, mode)])
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
 
@@ -556,7 +556,7 @@ class TestQuickStart(object):
             if p.wait() != 0:
                 raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
                                    .format(model_dir, logfile.getvalue().decode()))
-            self.interact(c, model_dir)
+            self.interact(c, PARAMS[model][(conf_file, model_dir, mode)], check_outputs=False)
 
             shutil.rmtree(str(download_path), ignore_errors=True)
         else:
