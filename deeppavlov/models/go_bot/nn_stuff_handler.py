@@ -6,7 +6,52 @@ import tensorflow as tf
 from deeppavlov.core.layers import tf_attention_mechanisms as am, tf_layers
 from tensorflow.contrib.layers import xavier_initializer as xav
 
-from deeppavlov.models.go_bot.network import calc_obs_size, configure_attn
+# from deeppavlov.models.go_bot.network import calc_obs_size, configure_attn
+
+
+
+def calc_obs_size(default_tracker_num_features,
+                  n_actions,
+                  bow_embedder, word_vocab, embedder,
+                  intent_classifier, intents):
+    obs_size = 6 + default_tracker_num_features + n_actions
+    if callable(bow_embedder):
+        obs_size += len(word_vocab)
+    if callable(embedder):
+        obs_size += embedder.dim
+    if callable(intent_classifier):
+        obs_size += len(intents)
+    # log.info(f"Calculated input size for `GoalOrientedBotNetwork` is {obs_size}")
+    return obs_size
+
+
+def configure_attn(curr_attn_token_size,
+                   curr_attn_action_as_key,
+                   curr_attn_intent_as_key,
+                   curr_attn_key_size,
+                   embedder,
+                   n_actions,
+                   intent_classifier,
+                   intents):
+    token_size = curr_attn_token_size or embedder.dim
+    action_as_key = curr_attn_action_as_key or False
+    intent_as_key = curr_attn_intent_as_key or False
+
+    possible_key_size = 0
+    if action_as_key:
+        possible_key_size += n_actions
+    if intent_as_key and callable(intent_classifier):
+        possible_key_size += len(intents)
+    possible_key_size = possible_key_size or 1
+    key_size = curr_attn_key_size or possible_key_size
+
+    new_attn = {}
+    new_attn['token_size'] = token_size
+    new_attn['action_as_key'] = action_as_key
+    new_attn['intent_as_key'] = intent_as_key
+    new_attn['key_size'] = key_size
+
+    return new_attn
 
 
 class NNStuffHandler():
@@ -166,8 +211,6 @@ class NNStuffHandler():
                                   kernel_initializer=xav(), name='logits')
         return _logits, _state
 
-    def set_opt(self, opt):
-        self.opt = opt
 
     def configure_network_opts(self, action_size, attn, dense_size, dropout_rate, hidden_size, l2_reg_coef, obs_size,
                                embedder,
@@ -206,5 +249,5 @@ class NNStuffHandler():
             'attention_mechanism': attn
         }
 
-        self.set_opt(opt)
+        self.opt = opt
         return opt

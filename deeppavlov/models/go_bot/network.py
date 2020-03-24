@@ -28,55 +28,13 @@ from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
-from deeppavlov.models.go_bot.nn_stuff_handler import NNStuffHandler, configure_network_opts
+from deeppavlov.models.go_bot.nn_stuff_handler import NNStuffHandler
 from deeppavlov.models.go_bot.tracker import FeaturizedTracker, DialogueStateTracker, MultipleUserStateTracker
 
 # endregion imports
 log = getLogger(__name__)
 
 
-def calc_obs_size(default_tracker_num_features,
-                  n_actions,
-                  bow_embedder, word_vocab, embedder,
-                  intent_classifier, intents):
-    obs_size = 6 + default_tracker_num_features + n_actions
-    if callable(bow_embedder):
-        obs_size += len(word_vocab)
-    if callable(embedder):
-        obs_size += embedder.dim
-    if callable(intent_classifier):
-        obs_size += len(intents)
-    log.info(f"Calculated input size for `GoalOrientedBotNetwork` is {obs_size}")
-    return obs_size
-
-
-def configure_attn(curr_attn_token_size,
-                   curr_attn_action_as_key,
-                   curr_attn_intent_as_key,
-                   curr_attn_key_size,
-                   embedder,
-                   n_actions,
-                   intent_classifier,
-                   intents):
-    token_size = curr_attn_token_size or embedder.dim
-    action_as_key = curr_attn_action_as_key or False
-    intent_as_key = curr_attn_intent_as_key or False
-
-    possible_key_size = 0
-    if action_as_key:
-        possible_key_size += n_actions
-    if intent_as_key and callable(intent_classifier):
-        possible_key_size += len(intents)
-    possible_key_size = possible_key_size or 1
-    key_size = curr_attn_key_size or possible_key_size
-
-    new_attn = {}
-    new_attn['token_size'] = token_size
-    new_attn['action_as_key'] = action_as_key
-    new_attn['intent_as_key'] = intent_as_key
-    new_attn['key_size'] = key_size
-
-    return new_attn
 
 
 @register("go_bot")
