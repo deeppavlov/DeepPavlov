@@ -12,29 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# region imports
 import json
 import re
 from logging import getLogger
 from typing import Dict, Any, List, Optional, Union
 
 import numpy as np
-import tensorflow as tf
 
 import deeppavlov.models.go_bot.templates as templ
 from deeppavlov import Chainer
 from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
 from deeppavlov.models.go_bot.nn_stuff_handler import NNStuffHandler
 from deeppavlov.models.go_bot.tracker import FeaturizedTracker, DialogueStateTracker, MultipleUserStateTracker
 
-# endregion imports
 log = getLogger(__name__)
 
+class RepresentationsConverter:
 
+    def meaningful2numeric(self, stuff):
+        numeric_stuff = 0
+        return numeric_stuff
+
+    def numeric2meaningful(self, numeric_stuff):
+        meaningful_stuff = None
+        return meaningful_stuff
 
 
 @register("go_bot")
@@ -141,7 +145,7 @@ class GoalOrientedBot(LRScheduledTFModel):
                  debug: bool = False,
                  **kwargs) -> None:
 
-        self.nn_stuff_handler =     NNStuffHandler()
+        self.nn_stuff_handler = NNStuffHandler()
 
         # kwargs here are mostly training hyperparameters
 
@@ -159,11 +163,11 @@ class GoalOrientedBot(LRScheduledTFModel):
 
         self.bow_embedder = bow_embedder  # preprocessing?
         self.embedder = embedder  # preprocessing?
+        self.word_vocab = word_vocab  # preprocessing?
         self.slot_filler = slot_filler  # another unit of pipeline
         self.intent_classifier = intent_classifier  # another unit of pipeline
         self.use_action_mask = use_action_mask  # feature engineering
         self.debug = debug
-        self.word_vocab = word_vocab  # preprocessing?
 
         template_path = expand_path(template_path)
         template_type = getattr(templ, template_type)
@@ -215,15 +219,10 @@ class GoalOrientedBot(LRScheduledTFModel):
                                      self.default_tracker.num_features, self.bow_embedder, self.word_vocab)
 
         # initialize parameters
-        self.nn_stuff_handler._init_network_params(self)
-        # build computational graph
-        self.nn_stuff_handler._build_graph(self)
-        # initialize session
-        self.sess = tf.Session()
+        self.nn_stuff_handler._configure_network(self)
 
-        self.sess.run(tf.global_variables_initializer())
 
-        if tf.train.checkpoint_exists(str(self.load_path.resolve())):
+        if self.nn_stuff_handler.train_checkpoint_exists(self.load_path):
             log.info(f"[initializing `{self.__class__.__name__}` from saved]")
             self.load()
         else:
@@ -528,29 +527,12 @@ class GoalOrientedBot(LRScheduledTFModel):
 
     # region helping stuff
     def load(self, *args, **kwargs) -> None:
-        self.load_params()
+        self.nn_stuff_handler._load_nn_params(self)
         super().load(*args, **kwargs)
 
     def save(self, *args, **kwargs) -> None:
         super().save(*args, **kwargs)
-        self.save_params()
-
-    def save_params(self) -> None:
-        path = str(self.save_path.with_suffix('.json').resolve())
-        log.info(f"[saving parameters to {path}]")
-        with open(path, 'w', encoding='utf8') as fp:
-            json.dump(self.nn_stuff_handler.opt, fp)
-
-    def load_params(self) -> None:
-        path = str(self.load_path.with_suffix('.json').resolve())
-        log.info(f"[loading parameters from {path}]")
-        with open(path, 'r', encoding='utf8') as fp:
-            params = json.load(fp)
-        for p in self.GRAPH_PARAMS:
-            if self.nn_stuff_handler.opt.get(p) != params.get(p):
-                raise ConfigError(f"`{p}` parameter must be equal to saved"
-                                  f" model parameter value `{params.get(p)}`,"
-                                  f" but is equal to `{self.nn_stuff_handler.opt.get(p)}`")
+        self.nn_stuff_handler._save_nn_params(self)
 
     def process_event(self, event_name, data) -> None:
         super().process_event(event_name, data)

@@ -1,13 +1,14 @@
 import collections
+import json
 from typing import Tuple
 
 import tensorflow as tf
 
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.layers import tf_attention_mechanisms as am, tf_layers
 from tensorflow.contrib.layers import xavier_initializer as xav
-
-# from deeppavlov.models.go_bot.network import calc_obs_size, configure_attn
-
+# from deeppavlov.models.go_bot.network import log
+from deeppavlov.models.go_bot.network import log
 
 
 def calc_obs_size(default_tracker_num_features,
@@ -58,11 +59,17 @@ class NNStuffHandler():
     def __init__(self):
         pass
 
+    def _configure_network(self, gobot_obj):
+        self._init_network_params(gobot_obj)
+        self._build_graph(gobot_obj)
+        gobot_obj.sess = tf.Session()
+        gobot_obj.sess.run(tf.global_variables_initializer())
+
     def _init_network_params(self, gobot_obj) -> None:
         gobot_obj.dropout_rate = self.opt['dropout_rate']
         gobot_obj.hidden_size = self.opt['hidden_size']
         gobot_obj.action_size = self.opt['action_size']
-        gobot_obj.obs_size = self.opt['obs_size']
+        gobot_obj.obs_size = self.opt['obs_size']  # todo что такое обс сайз
         gobot_obj.dense_size = self.opt['dense_size']
         gobot_obj.l2_reg = self.opt['l2_reg_coef']
 
@@ -251,3 +258,26 @@ class NNStuffHandler():
 
         self.opt = opt
         return opt
+
+    def train_checkpoint_exists(self, load_path):
+        return tf.train.checkpoint_exists(str(load_path.resolve()))
+
+    def _load_nn_params(self, gobot_obj) -> None:
+        # todo правда ли что тут загружаются только связанные с нейронкой вещи?
+
+        path = str(gobot_obj.load_path.with_suffix('.json').resolve())
+        # log.info(f"[loading parameters from {path}]")
+        with open(path, 'r', encoding='utf8') as fp:
+            params = json.load(fp)
+        for p in gobot_obj.GRAPH_PARAMS:
+            if gobot_obj.nn_stuff_handler.opt.get(p) != params.get(p):
+                raise ConfigError(f"`{p}` parameter must be equal to saved"
+                                  f" model parameter value `{params.get(p)}`,"
+                                  f" but is equal to `{gobot_obj.nn_stuff_handler.opt.get(p)}`")
+
+
+    def _save_nn_params(self, gobot_obj) -> None:
+        path = str(gobot_obj.save_path.with_suffix('.json').resolve())
+        log.info(f"[saving parameters to {path}]")
+        with open(path, 'w', encoding='utf8') as fp:
+            json.dump(gobot_obj.nn_stuff_handler.opt, fp)
