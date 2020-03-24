@@ -1,14 +1,17 @@
 import collections
 import json
-from typing import Tuple
+from typing import Tuple, List
 
+import numpy as np
 import tensorflow as tf
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.layers import tf_attention_mechanisms as am, tf_layers
 from tensorflow.contrib.layers import xavier_initializer as xav
+
 # from deeppavlov.models.go_bot.network import log
 # /from deeppavlov.models.go_bot.network import log
+from deeppavlov.core.models.tf_model import LRScheduledTFModel
 
 
 def calc_obs_size(default_tracker_num_features,
@@ -55,9 +58,15 @@ def configure_attn(curr_attn_token_size,
     return new_attn
 
 
-class NNStuffHandler():
-    def __init__(self):
+class NNStuffHandler(LRScheduledTFModel):
+    def train_on_batch(self, x: list, y: list):
         pass
+
+    def __call__(self, *args, **kwargs):
+        pass
+
+    def __init__(self, load_path, save_path, **kwargs):
+        super().__init__(load_path=load_path, save_path=save_path, **kwargs)
 
     def _configure_network(self, gobot_obj):
         self._init_network_params(gobot_obj)
@@ -108,7 +117,7 @@ class NNStuffHandler():
         _loss_tensor = tf.multiply(_loss_tensor, gobot_obj._utterance_mask)
         gobot_obj._loss = tf.reduce_mean(_loss_tensor, name='loss')
         gobot_obj._loss += gobot_obj.l2_reg * tf.losses.get_regularization_loss()
-        gobot_obj._train_op = gobot_obj.get_train_op(gobot_obj._loss)
+        gobot_obj._train_op = self.get_train_op(gobot_obj._loss)
 
     def _add_placeholders(self, gobot_obj) -> None:
         # todo узнай что такое плейсхолдеры в тф
@@ -218,7 +227,6 @@ class NNStuffHandler():
                                   kernel_initializer=xav(), name='logits')
         return _logits, _state
 
-
     def configure_network_opts(self, action_size, attn, dense_size, dropout_rate, hidden_size, l2_reg_coef, obs_size,
                                embedder,
                                n_actions,
@@ -260,12 +268,12 @@ class NNStuffHandler():
         return opt
 
     def train_checkpoint_exists(self, load_path):
-        return tf.train.checkpoint_exists(str(load_path.resolve()))
+        return tf.train.checkpoint_exists(str(self.load_path.resolve()))
 
     def _load_nn_params(self, gobot_obj) -> None:
         # todo правда ли что тут загружаются только связанные с нейронкой вещи?
 
-        path = str(gobot_obj.load_path.with_suffix('.json').resolve())
+        path = str(self.load_path.with_suffix('.json').resolve())
         # log.info(f"[loading parameters from {path}]")
         with open(path, 'r', encoding='utf8') as fp:
             params = json.load(fp)
@@ -275,9 +283,109 @@ class NNStuffHandler():
                                   f" model parameter value `{params.get(p)}`,"
                                   f" but is equal to `{gobot_obj.nn_stuff_handler.opt.get(p)}`")
 
-
     def _save_nn_params(self, gobot_obj) -> None:
-        path = str(gobot_obj.save_path.with_suffix('.json').resolve())
+        path = str(self.save_path.with_suffix('.json').resolve())
         # log.info(f"[saving parameters to {path}]")
         with open(path, 'w', encoding='utf8') as fp:
             json.dump(gobot_obj.nn_stuff_handler.opt, fp)
+
+    def _network_train_on_batch(self, gobot_obj,
+                                features: np.ndarray,
+                                emb_context: np.ndarray,
+                                key: np.ndarray,
+                                utter_mask: np.ndarray,
+                                action_mask: np.ndarray,
+                                action: np.ndarray) -> dict:
+        feed_dict = {
+            gobot_obj._dropout_keep_prob: 1.,
+            gobot_obj._utterance_mask: utter_mask,
+            gobot_obj._features: features,
+            gobot_obj._action: action,
+            gobot_obj._action_mask: action_mask
+        }
+        if gobot_obj.attn:
+            feed_dict[gobot_obj._emb_context] = emb_context
+            feed_dict[gobot_obj._key] = key
+
+        _, loss_value, prediction = \
+            gobot_obj.sess.run([gobot_obj._train_op, gobot_obj._loss, gobot_obj._prediction],
+                               feed_dict=feed_dict)
+        return {'loss': loss_value,
+                'learning_rate': gobot_obj.nn_stuff_handler.get_learning_rate(),
+                'momentum': gobot_obj.nn_stuff_handler.get_momentum()}
+
+
+    def _network_call(self, gobot_obj, features: np.ndarray, emb_context: np.ndarray, key: np.ndarray,
+                      action_mask: np.ndarray, states_c: np.ndarray, states_h: np.ndarray, prob: bool = False) -> List[np.ndarray]:
+        feed_dict = {
+            gobot_obj._features: features,
+            gobot_obj._dropout_keep_prob: 1.,
+            gobot_obj._utterance_mask: [[1.]],
+            gobot_obj._initial_state: (states_c, states_h),
+            gobot_obj._action_mask: action_mask
+        }
+        if gobot_obj.attn:
+            feed_dict[gobot_obj._emb_context] = emb_context
+            feed_dict[gobot_obj._key] = key
+
+        probs, prediction, state = \
+            gobot_obj.sess.run([gobot_obj._probs, gobot_obj._prediction, gobot_obj._state],
+                          feed_dict=feed_dict)
+
+        if prob:
+            return probs, state[0], state[1]
+        return prediction, state[0], state[1]
+
+    def _prepare_data(self, gobot_obj, x: List[dict], y: List[dict]) -> List[np.ndarray]:
+        b_features, b_u_masks, b_a_masks, b_actions = [], [], [], []
+        b_emb_context, b_keys = [], []  # for attention
+        max_num_utter = max(len(d_contexts) for d_contexts in x)
+        for d_contexts, d_responses in zip(x, y):
+            gobot_obj.dialogue_state_tracker.reset_state()
+            d_features, d_a_masks, d_actions = [], [], []
+            d_emb_context, d_key = [], []  # for attention
+
+            for context, response in zip(d_contexts, d_responses):
+                tokens = gobot_obj.tokenizer([context['text'].lower().strip()])[0]
+
+                # update state
+                gobot_obj.dialogue_state_tracker.get_ground_truth_db_result_from(context)
+
+                if callable(gobot_obj.slot_filler):
+                    context_slots = gobot_obj.slot_filler([tokens])[0]
+                    gobot_obj.dialogue_state_tracker.update_state(context_slots)
+
+                features, emb_context, key = gobot_obj.data_handler._encode_context(gobot_obj, tokens,
+                                                                                    tracker=gobot_obj.dialogue_state_tracker)
+                d_features.append(features)
+                d_emb_context.append(emb_context)
+                d_key.append(key)
+                d_a_masks.append(gobot_obj.dialogue_state_tracker.calc_action_mask(gobot_obj.api_call_id))
+
+                action_id = gobot_obj.data_handler._encode_response(gobot_obj, response['act'])
+                d_actions.append(action_id)
+                # update state
+                # - previous action is teacher-forced here
+                gobot_obj.dialogue_state_tracker.update_previous_action(action_id)
+
+                if gobot_obj.debug:
+                    log.debug(f"True response = '{response['text']}'.")
+                    if d_a_masks[-1][action_id] != 1.:
+                        log.warning("True action forbidden by action mask.")
+
+            # padding to max_num_utter
+            num_padds = max_num_utter - len(d_contexts)
+            d_features.extend([np.zeros_like(d_features[0])] * num_padds)
+            d_emb_context.extend([np.zeros_like(d_emb_context[0])] * num_padds)
+            d_key.extend([np.zeros_like(d_key[0])] * num_padds)
+            d_u_mask = [1] * len(d_contexts) + [0] * num_padds
+            d_a_masks.extend([np.zeros_like(d_a_masks[0])] * num_padds)
+            d_actions.extend([0] * num_padds)
+
+            b_features.append(d_features)
+            b_emb_context.append(d_emb_context)
+            b_keys.append(d_key)
+            b_u_masks.append(d_u_mask)
+            b_a_masks.append(d_a_masks)
+            b_actions.append(d_actions)
+        return b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions

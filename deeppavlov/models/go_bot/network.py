@@ -22,6 +22,7 @@ from deeppavlov import Chainer
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
+from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
 from deeppavlov.models.go_bot.data_handler import DataHandler
 from deeppavlov.models.go_bot.nn_stuff_handler import NNStuffHandler
@@ -31,7 +32,7 @@ log = getLogger(__name__)
 
 
 @register("go_bot")
-class GoalOrientedBot(LRScheduledTFModel):
+class GoalOrientedBot(NNModel):
     """
     The dialogue bot is based on  https://arxiv.org/abs/1702.03274, which
     introduces Hybrid Code Networks that combine an RNN with domain-specific
@@ -134,7 +135,9 @@ class GoalOrientedBot(LRScheduledTFModel):
                  debug: bool = False,
                  **kwargs) -> None:
 
-        self.nn_stuff_handler = NNStuffHandler()
+        self.nn_stuff_handler = NNStuffHandler(load_path=load_path, save_path=save_path, **kwargs)
+        self.load_path = self.nn_stuff_handler.load_path
+        self.save_path = self.nn_stuff_handler.save_path
         self.data_handler = DataHandler()
 
         # kwargs here are mostly training hyperparameters
@@ -147,7 +150,7 @@ class GoalOrientedBot(LRScheduledTFModel):
                         f" or read a github tutorial on super convergence.")
         if 'learning_rate' in network_parameters:
             kwargs['learning_rate'] = network_parameters.pop('learning_rate')
-        super().__init__(load_path=load_path, save_path=save_path, **kwargs)
+        super().__init__(save_path=None, **kwargs)
 
         self.tokenizer = tokenizer  # preprocessing
 
@@ -204,13 +207,15 @@ class GoalOrientedBot(LRScheduledTFModel):
                       dense_size: int,
                       attn: dict) -> None:
         # initialize network
-        self.nn_stuff_handler.configure_network_opts(action_size, attn, dense_size, dropout_rate, hidden_size, l2_reg_coef,
-                                     obs_size, self.embedder, self.n_actions, self.intent_classifier, self.intents,
-                                     self.default_tracker.num_features, self.bow_embedder, self.word_vocab)
+        self.nn_stuff_handler.configure_network_opts(action_size, attn, dense_size, dropout_rate, hidden_size,
+                                                     l2_reg_coef,
+                                                     obs_size, self.embedder, self.n_actions, self.intent_classifier,
+                                                     self.intents,
+                                                     self.default_tracker.num_features, self.bow_embedder,
+                                                     self.word_vocab)
 
         # initialize parameters
         self.nn_stuff_handler._configure_network(self)
-
 
         if self.nn_stuff_handler.train_checkpoint_exists(self.load_path):
             log.info(f"[initializing `{self.__class__.__name__}` from saved]")
@@ -218,69 +223,20 @@ class GoalOrientedBot(LRScheduledTFModel):
         else:
             log.info(f"[initializing `{self.__class__.__name__}` from scratch]")
 
-    def prepare_data(self, x: List[dict], y: List[dict]) -> List[np.ndarray]:
-        b_features, b_u_masks, b_a_masks, b_actions = [], [], [], []
-        b_emb_context, b_keys = [], []  # for attention
-        max_num_utter = max(len(d_contexts) for d_contexts in x)
-        for d_contexts, d_responses in zip(x, y):
-            self.dialogue_state_tracker.reset_state()
-            d_features, d_a_masks, d_actions = [], [], []
-            d_emb_context, d_key = [], []  # for attention
 
-            for context, response in zip(d_contexts, d_responses):
-                tokens = self.tokenizer([context['text'].lower().strip()])[0]
 
-                # update state
-                self.dialogue_state_tracker.get_ground_truth_db_result_from(context)
 
-                if callable(self.slot_filler):
-                    context_slots = self.slot_filler([tokens])[0]
-                    self.dialogue_state_tracker.update_state(context_slots)
-
-                features, emb_context, key = self.data_handler._encode_context(self, tokens, tracker=self.dialogue_state_tracker)
-                d_features.append(features)
-                d_emb_context.append(emb_context)
-                d_key.append(key)
-                d_a_masks.append(self.dialogue_state_tracker.calc_action_mask(self.api_call_id))
-
-                action_id = self.data_handler._encode_response(self, response['act'])
-                d_actions.append(action_id)
-                # update state
-                # - previous action is teacher-forced here
-                self.dialogue_state_tracker.update_previous_action(action_id)
-
-                if self.debug:
-                    log.debug(f"True response = '{response['text']}'.")
-                    if d_a_masks[-1][action_id] != 1.:
-                        log.warning("True action forbidden by action mask.")
-
-            # padding to max_num_utter
-            num_padds = max_num_utter - len(d_contexts)
-            d_features.extend([np.zeros_like(d_features[0])] * num_padds)
-            d_emb_context.extend([np.zeros_like(d_emb_context[0])] * num_padds)
-            d_key.extend([np.zeros_like(d_key[0])] * num_padds)
-            d_u_mask = [1] * len(d_contexts) + [0] * num_padds
-            d_a_masks.extend([np.zeros_like(d_a_masks[0])] * num_padds)
-            d_actions.extend([0] * num_padds)
-
-            b_features.append(d_features)
-            b_emb_context.append(d_emb_context)
-            b_keys.append(d_key)
-            b_u_masks.append(d_u_mask)
-            b_a_masks.append(d_a_masks)
-            b_actions.append(d_actions)
-        return b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions
 
     def train_on_batch(self, x: List[dict], y: List[dict]) -> dict:
-        b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions = self.prepare_data(x, y)
-        return self.network_train_on_batch(b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions)
+        b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions = self.nn_stuff_handler._prepare_data(self, x, y)
+        return self.nn_stuff_handler._network_train_on_batch(self, b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions)
 
     # todo как инфер понимает из конфига что ему нужно. лёша что-то говорил про дерево
     def _infer(self, tokens: List[str], tracker: DialogueStateTracker) -> List:
         features, emb_context, key = self.data_handler._encode_context(self, tokens, tracker=tracker)
         action_mask = tracker.calc_action_mask(self.api_call_id)
         probs, state_c, state_h = \
-            self.network_call([[features]], [[emb_context]], [[key]],
+            self.nn_stuff_handler._network_call(self, [[features]], [[emb_context]], [[key]],
                               [[action_mask]], [[tracker.network_state[0]]],
                               [[tracker.network_state[1]]],
                               prob=True)  # todo чо за warning кидает ide, почему
@@ -355,58 +311,6 @@ class GoalOrientedBot(LRScheduledTFModel):
             user_id)  # todo а чо, у нас всё что можно закешить лежит в мультиюхертрекере?
         if self.debug:
             log.debug("Bot reset.")
-
-    def network_call(self,
-                     features: np.ndarray,
-                     emb_context: np.ndarray,
-                     key: np.ndarray,
-                     action_mask: np.ndarray,
-                     states_c: np.ndarray,
-                     states_h: np.ndarray,
-                     prob: bool = False) -> List[np.ndarray]:
-        feed_dict = {
-            self._features: features,
-            self._dropout_keep_prob: 1.,
-            self._utterance_mask: [[1.]],
-            self._initial_state: (states_c, states_h),
-            self._action_mask: action_mask
-        }
-        if self.attn:
-            feed_dict[self._emb_context] = emb_context
-            feed_dict[self._key] = key
-
-        probs, prediction, state = \
-            self.sess.run([self._probs, self._prediction, self._state],
-                          feed_dict=feed_dict)
-
-        if prob:
-            return probs, state[0], state[1]
-        return prediction, state[0], state[1]
-
-    def network_train_on_batch(self,
-                               features: np.ndarray,
-                               emb_context: np.ndarray,
-                               key: np.ndarray,
-                               utter_mask: np.ndarray,
-                               action_mask: np.ndarray,
-                               action: np.ndarray) -> dict:
-        feed_dict = {
-            self._dropout_keep_prob: 1.,
-            self._utterance_mask: utter_mask,
-            self._features: features,
-            self._action: action,
-            self._action_mask: action_mask
-        }
-        if self.attn:
-            feed_dict[self._emb_context] = emb_context
-            feed_dict[self._key] = key
-
-        _, loss_value, prediction = \
-            self.sess.run([self._train_op, self._loss, self._prediction],
-                          feed_dict=feed_dict)
-        return {'loss': loss_value,
-                'learning_rate': self.get_learning_rate(),
-                'momentum': self.get_momentum()}
 
     # region helping stuff
     def load(self, *args, **kwargs) -> None:
