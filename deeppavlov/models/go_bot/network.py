@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-import re
 from logging import getLogger
 from typing import Dict, Any, List, Optional, Union
 
@@ -25,20 +23,11 @@ from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
+from deeppavlov.models.go_bot.data_handler import DataHandler
 from deeppavlov.models.go_bot.nn_stuff_handler import NNStuffHandler
 from deeppavlov.models.go_bot.tracker import FeaturizedTracker, DialogueStateTracker, MultipleUserStateTracker
 
 log = getLogger(__name__)
-
-class RepresentationsConverter:
-
-    def meaningful2numeric(self, stuff):
-        numeric_stuff = 0
-        return numeric_stuff
-
-    def numeric2meaningful(self, numeric_stuff):
-        meaningful_stuff = None
-        return meaningful_stuff
 
 
 @register("go_bot")
@@ -146,6 +135,7 @@ class GoalOrientedBot(LRScheduledTFModel):
                  **kwargs) -> None:
 
         self.nn_stuff_handler = NNStuffHandler()
+        self.data_handler = DataHandler()
 
         # kwargs here are mostly training hyperparameters
 
@@ -228,112 +218,112 @@ class GoalOrientedBot(LRScheduledTFModel):
         else:
             log.info(f"[initializing `{self.__class__.__name__}` from scratch]")
 
-    def _encode_context(self,
-                        tokens: List[str],
-                        tracker: DialogueStateTracker) -> List[np.ndarray]:
-        # Bag of words features
-        bow_features = []
-        if callable(self.bow_embedder):
-            tokens_idx = self.word_vocab(tokens)
-            bow_features = self.bow_embedder([tokens_idx])[0]
-            bow_features = bow_features.astype(np.float32)
+    # def _encode_response(self, act: str) -> int:
+    #     return self.templates.actions.index(act)
 
-        # Embeddings
-        emb_features = []
-        emb_context = np.array([], dtype=np.float32)
-        if callable(self.embedder):
-            if self.attn:
-                if tokens:
-                    pad = np.zeros((self.attn.max_num_tokens,
-                                    self.attn.token_size),
-                                   dtype=np.float32)
-                    sen = np.array(self.embedder([tokens])[0])
-                    # TODO : Unsupport of batch_size more than 1
-                    emb_context = np.concatenate((pad, sen))
-                    emb_context = emb_context[-self.attn.max_num_tokens:]
-                else:
-                    emb_context = np.zeros((self.attn.max_num_tokens,
-                                            self.attn.token_size),
-                                           dtype=np.float32)
-            else:
-                emb_features = self.embedder([tokens], mean=True)[0]
-                # random embedding instead of zeros
-                if np.all(emb_features < 1e-20):
-                    emb_dim = self.embedder.dim
-                    emb_features = np.fabs(np.random.normal(0, 1 / emb_dim, emb_dim))
+    # def _decode_response(self, action_id: int, tracker: DialogueStateTracker) -> str:
+    #     """
+    #     Convert action template id and entities from tracker
+    #     to final response.
+    #     """
+    #     template = self.templates.templates[int(action_id)]
+    #
+    #     slots = tracker.get_state()
+    #     if tracker.db_result is not None:
+    #         for k, v in tracker.db_result.items():
+    #             slots[k] = str(v)
+    #
+    #     resp = template.generate_text(slots)
+    #     # in api calls replace unknown slots to "dontcare"
+    #     if action_id == self.api_call_id:
+    #         resp = re.sub("#([A-Za-z]+)", "dontcare", resp).lower()
+    #     return resp
 
-        # Intent features
-        intent_features = []
-        if callable(self.intent_classifier):
-            intent_features = self.intent_classifier([' '.join(tokens)])[1][0]
-
-            if self.debug:
-                intent = self.intents[np.argmax(intent_features[0])]
-                log.debug(f"Predicted intent = `{intent}`")
-
-        attn_key = np.array([], dtype=np.float32)
-        if self.attn:
-            if self.attn.action_as_key:
-                attn_key = np.hstack((attn_key, tracker.prev_action))
-            if self.attn.intent_as_key:
-                attn_key = np.hstack((attn_key, intent_features))
-            if len(attn_key) == 0:
-                attn_key = np.array([1], dtype=np.float32)
-
-        state_features = tracker.get_features()
-
-        # Other features
-        # todo (?) rename tracker -> dlg_stt_tracker
-        result_matches_state = 0.
-        if tracker.db_result is not None:
-            matching_items = tracker.get_state().items()
-            result_matches_state = all(v == tracker.db_result.get(s)
-                                       for s, v in matching_items
-                                       if v != 'dontcare') * 1.
-        context_features = np.array([
-            bool(tracker.current_db_result) * 1.,
-            (tracker.current_db_result == {}) * 1.,
-            (tracker.db_result is None) * 1.,
-            bool(tracker.db_result) * 1.,
-            (tracker.db_result == {}) * 1.,
-            result_matches_state
-        ], dtype=np.float32)
-
-        if self.debug:
-            log.debug(f"Context features = {context_features}")
-            debug_msg = f"num bow features = {bow_features}" + \
-                        f", num emb features = {emb_features}" + \
-                        f", num intent features = {intent_features}" + \
-                        f", num state features = {len(state_features)}" + \
-                        f", num context features = {len(context_features)}" + \
-                        f", prev_action shape = {len(tracker.prev_action)}"
-            log.debug(debug_msg)
-
-        concat_feats = np.hstack((bow_features, emb_features, intent_features,
-                                  state_features, context_features,
-                                  tracker.prev_action))
-        return concat_feats, emb_context, attn_key
-
-    def _encode_response(self, act: str) -> int:
-        return self.templates.actions.index(act)
-
-    def _decode_response(self, action_id: int, tracker: DialogueStateTracker) -> str:
-        """
-        Convert action template id and entities from tracker
-        to final response.
-        """
-        template = self.templates.templates[int(action_id)]
-
-        slots = tracker.get_state()
-        if tracker.db_result is not None:
-            for k, v in tracker.db_result.items():
-                slots[k] = str(v)
-
-        resp = template.generate_text(slots)
-        # in api calls replace unknown slots to "dontcare"
-        if action_id == self.api_call_id:
-            resp = re.sub("#([A-Za-z]+)", "dontcare", resp).lower()
-        return resp
+    # def _encode_context(self,
+    #                     tokens: List[str],
+    #                     tracker: DialogueStateTracker) -> List[np.ndarray]:
+    #     # Bag of words features
+    #     bow_features = []
+    #     if callable(self.bow_embedder):
+    #         tokens_idx = self.word_vocab(tokens)
+    #         bow_features = self.bow_embedder([tokens_idx])[0]
+    #         bow_features = bow_features.astype(np.float32)
+    #
+    #     # Embeddings
+    #     emb_features = []
+    #     emb_context = np.array([], dtype=np.float32)
+    #     if callable(self.embedder):
+    #         if self.attn:
+    #             if tokens:
+    #                 pad = np.zeros((self.attn.max_num_tokens,
+    #                                 self.attn.token_size),
+    #                                dtype=np.float32)
+    #                 sen = np.array(self.embedder([tokens])[0])
+    #                 # TODO : Unsupport of batch_size more than 1
+    #                 emb_context = np.concatenate((pad, sen))
+    #                 emb_context = emb_context[-self.attn.max_num_tokens:]
+    #             else:
+    #                 emb_context = np.zeros((self.attn.max_num_tokens,
+    #                                         self.attn.token_size),
+    #                                        dtype=np.float32)
+    #         else:
+    #             emb_features = self.embedder([tokens], mean=True)[0]
+    #             # random embedding instead of zeros
+    #             if np.all(emb_features < 1e-20):
+    #                 emb_dim = self.embedder.dim
+    #                 emb_features = np.fabs(np.random.normal(0, 1 / emb_dim, emb_dim))
+    #
+    #     # Intent features
+    #     intent_features = []
+    #     if callable(self.intent_classifier):
+    #         intent_features = self.intent_classifier([' '.join(tokens)])[1][0]
+    #
+    #         if self.debug:
+    #             intent = self.intents[np.argmax(intent_features[0])]
+    #             log.debug(f"Predicted intent = `{intent}`")
+    #
+    #     attn_key = np.array([], dtype=np.float32)
+    #     if self.attn:
+    #         if self.attn.action_as_key:
+    #             attn_key = np.hstack((attn_key, tracker.prev_action))
+    #         if self.attn.intent_as_key:
+    #             attn_key = np.hstack((attn_key, intent_features))
+    #         if len(attn_key) == 0:
+    #             attn_key = np.array([1], dtype=np.float32)
+    #
+    #     state_features = tracker.get_features()
+    #
+    #     # Other features
+    #     # todo (?) rename tracker -> dlg_stt_tracker
+    #     result_matches_state = 0.
+    #     if tracker.db_result is not None:
+    #         matching_items = tracker.get_state().items()
+    #         result_matches_state = all(v == tracker.db_result.get(s)
+    #                                    for s, v in matching_items
+    #                                    if v != 'dontcare') * 1.
+    #     context_features = np.array([
+    #         bool(tracker.current_db_result) * 1.,
+    #         (tracker.current_db_result == {}) * 1.,
+    #         (tracker.db_result is None) * 1.,
+    #         bool(tracker.db_result) * 1.,
+    #         (tracker.db_result == {}) * 1.,
+    #         result_matches_state
+    #     ], dtype=np.float32)
+    #
+    #     if self.debug:
+    #         log.debug(f"Context features = {context_features}")
+    #         debug_msg = f"num bow features = {bow_features}" + \
+    #                     f", num emb features = {emb_features}" + \
+    #                     f", num intent features = {intent_features}" + \
+    #                     f", num state features = {len(state_features)}" + \
+    #                     f", num context features = {len(context_features)}" + \
+    #                     f", prev_action shape = {len(tracker.prev_action)}"
+    #         log.debug(debug_msg)
+    #
+    #     concat_feats = np.hstack((bow_features, emb_features, intent_features,
+    #                               state_features, context_features,
+    #                               tracker.prev_action))
+    #     return concat_feats, emb_context, attn_key
 
     def prepare_data(self, x: List[dict], y: List[dict]) -> List[np.ndarray]:
         b_features, b_u_masks, b_a_masks, b_actions = [], [], [], []
@@ -354,13 +344,13 @@ class GoalOrientedBot(LRScheduledTFModel):
                     context_slots = self.slot_filler([tokens])[0]
                     self.dialogue_state_tracker.update_state(context_slots)
 
-                features, emb_context, key = self._encode_context(tokens, tracker=self.dialogue_state_tracker)
+                features, emb_context, key = self.data_handler._encode_context(self, tokens, tracker=self.dialogue_state_tracker)
                 d_features.append(features)
                 d_emb_context.append(emb_context)
                 d_key.append(key)
                 d_a_masks.append(self.dialogue_state_tracker.calc_action_mask(self.api_call_id))
 
-                action_id = self._encode_response(response['act'])
+                action_id = self.data_handler._encode_response(self, response['act'])
                 d_actions.append(action_id)
                 # update state
                 # - previous action is teacher-forced here
@@ -394,7 +384,7 @@ class GoalOrientedBot(LRScheduledTFModel):
 
     # todo как инфер понимает из конфига что ему нужно. лёша что-то говорил про дерево
     def _infer(self, tokens: List[str], tracker: DialogueStateTracker) -> List:
-        features, emb_context, key = self._encode_context(tokens, tracker=tracker)
+        features, emb_context, key = self.data_handler._encode_context(self, tokens, tracker=tracker)
         action_mask = tracker.calc_action_mask(self.api_call_id)
         probs, state_c, state_h = \
             self.network_call([[features]], [[emb_context]], [[key]],
@@ -408,7 +398,7 @@ class GoalOrientedBot(LRScheduledTFModel):
         self.dialogue_state_tracker.reset_state()
         for context in contexts:
             if context.get('prev_resp_act') is not None:
-                previous_act_id = self._encode_response(context['prev_resp_act'])
+                previous_act_id = self.data_handler._encode_response(self, context['prev_resp_act'])
                 # previous action is teacher-forced
                 self.dialogue_state_tracker.update_previous_action(previous_act_id)
 
@@ -423,7 +413,7 @@ class GoalOrientedBot(LRScheduledTFModel):
                 self._infer(tokens, tracker=self.dialogue_state_tracker)
 
             self.dialogue_state_tracker.update_previous_action(predicted_act_id)
-            resp = self._decode_response(predicted_act_id, self.dialogue_state_tracker)
+            resp = self.data_handler._decode_response(self, predicted_act_id, self.dialogue_state_tracker)
             res.append(resp)
         return res
 
@@ -460,7 +450,7 @@ class GoalOrientedBot(LRScheduledTFModel):
 
                     tracker.update_previous_action(predicted_act_id)
 
-                resp = self._decode_response(predicted_act_id, tracker)
+                resp = self.data_handler._decode_response(self, predicted_act_id, tracker)
                 res.append(resp)
             return res
         # batch is a list of dialogs, user_ids ignored
