@@ -332,8 +332,8 @@ class NNStuffHandler(LRScheduledTFModel):
             self.sess.run([self._train_op, self._loss, self._prediction],
                                feed_dict=feed_dict)
         return {'loss': loss_value,
-                'learning_rate': gobot_obj.nn_stuff_handler.get_learning_rate(),
-                'momentum': gobot_obj.nn_stuff_handler.get_momentum()}
+                'learning_rate': self.get_learning_rate(),
+                'momentum': self.get_momentum()}
 
 
     def _network_call(self, gobot_obj, features: np.ndarray, emb_context: np.ndarray, key: np.ndarray,
