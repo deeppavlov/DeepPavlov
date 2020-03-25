@@ -83,7 +83,7 @@ class NNStuffHandler(LRScheduledTFModel):
     def _init_network_params(self, gobot_obj) -> None:
         self.dropout_rate = self.opt['dropout_rate']  # todo does dropout actually work
         self.hidden_size = self.opt['hidden_size']
-        gobot_obj.action_size = self.opt['action_size']
+        self.action_size = self.opt['action_size']
         self.obs_size = self.opt['obs_size']  # todo что такое обс сайз
         self.dense_size = self.opt['dense_size']
         self.l2_reg = self.opt['l2_reg_coef']
@@ -115,7 +115,7 @@ class NNStuffHandler(LRScheduledTFModel):
 
         # _weights = tf.expand_dims(self._utterance_mask, -1)
         # TODO: try multiplying logits to action_mask
-        onehots = tf.one_hot(self._action, gobot_obj.action_size)
+        onehots = tf.one_hot(self._action, self.action_size)
         _loss_tensor = tf.nn.softmax_cross_entropy_with_logits_v2(
             logits=_logits, labels=onehots
         )
@@ -137,7 +137,7 @@ class NNStuffHandler(LRScheduledTFModel):
                                            [None, None],
                                            name='ground_truth_action')
         self._action_mask = tf.placeholder(tf.float32,
-                                                [None, None, gobot_obj.action_size],
+                                                [None, None, self.action_size],
                                                 name='action_mask')
         self._utterance_mask = tf.placeholder(tf.float32,
                                                    shape=[None, None],
@@ -228,7 +228,7 @@ class NNStuffHandler(LRScheduledTFModel):
         _output = tf_layers.variational_dropout(_output,
                                                 keep_prob=self._dropout_keep_prob)
         # output projection
-        _logits = tf.layers.dense(_output, gobot_obj.action_size,
+        _logits = tf.layers.dense(_output, self.action_size,
                                   kernel_regularizer=tf.nn.l2_loss,
                                   kernel_initializer=xav(), name='logits')
         return _logits, _state
