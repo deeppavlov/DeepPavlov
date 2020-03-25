@@ -74,13 +74,13 @@ class NNStuffHandler(LRScheduledTFModel):
     def __init__(self, load_path, save_path, **kwargs):
         super().__init__(load_path=load_path, save_path=save_path, **kwargs)
 
-    def _configure_network(self, gobot_obj):
-        self._init_network_params(gobot_obj)
-        self._build_graph(gobot_obj)
+    def _configure_network(self):
+        self._init_network_params()
+        self._build_graph()
         self.sess = tf.Session()
         self.sess.run(tf.global_variables_initializer())
 
-    def _init_network_params(self, gobot_obj) -> None:
+    def _init_network_params(self) -> None:
         self.dropout_rate = self.opt['dropout_rate']  # todo does dropout actually work
         self.hidden_size = self.opt['hidden_size']
         self.action_size = self.opt['action_size']
@@ -90,20 +90,18 @@ class NNStuffHandler(LRScheduledTFModel):
 
         attn = self.opt.get('attention_mechanism')
         if attn:
-            # gobot_obj.opt['attention_mechanism'] = attn
-
             self.attn = collections.namedtuple('attention_mechanism', attn.keys())(**attn)
             self.obs_size -= attn['token_size']
         else:
             self.attn = None
 
-    def _build_graph(self, gobot_obj) -> None:
+    def _build_graph(self) -> None:
         # todo тут ещё и фичер инжиниринг
 
-        self._add_placeholders(gobot_obj)  # todo какая-то тензорфлововая тема
+        self._add_placeholders()  # todo какая-то тензорфлововая тема
 
         # build body
-        _logits, self._state = self._build_body(gobot_obj)
+        _logits, self._state = self._build_body()
 
         # probabilities normalization : elemwise multiply with action mask
         _logits_exp = tf.multiply(tf.exp(_logits), self._action_mask)
@@ -125,7 +123,7 @@ class NNStuffHandler(LRScheduledTFModel):
         self._loss += self.l2_reg * tf.losses.get_regularization_loss()
         self._train_op = self.get_train_op(self._loss)
 
-    def _add_placeholders(self, gobot_obj) -> None:
+    def _add_placeholders(self) -> None:
         # todo узнай что такое плейсхолдеры в тф
         self._dropout_keep_prob = tf.placeholder_with_default(1.0,
                                                                    shape=[],
@@ -160,7 +158,7 @@ class NNStuffHandler(LRScheduledTFModel):
                                             [None, None, self.attn.key_size],
                                             name='key')
 
-    def _build_body(self, gobot_obj) -> Tuple[tf.Tensor, tf.Tensor]:
+    def _build_body(self) -> Tuple[tf.Tensor, tf.Tensor]:
         # input projection
         _units = tf.layers.dense(self._features, self.dense_size,
                                  kernel_regularizer=tf.nn.l2_loss,
@@ -310,7 +308,7 @@ class NNStuffHandler(LRScheduledTFModel):
         with open(path, 'w', encoding='utf8') as fp:
             json.dump(self.opt, fp)
 
-    def _network_train_on_batch(self, gobot_obj,
+    def _network_train_on_batch(self,
                                 features: np.ndarray,
                                 emb_context: np.ndarray,
                                 key: np.ndarray,
@@ -336,7 +334,7 @@ class NNStuffHandler(LRScheduledTFModel):
                 'momentum': self.get_momentum()}
 
 
-    def _network_call(self, gobot_obj, features: np.ndarray, emb_context: np.ndarray, key: np.ndarray,
+    def _network_call(self, features: np.ndarray, emb_context: np.ndarray, key: np.ndarray,
                       action_mask: np.ndarray, states_c: np.ndarray, states_h: np.ndarray, prob: bool = False) -> List[np.ndarray]:
         feed_dict = {
             self._features: features,

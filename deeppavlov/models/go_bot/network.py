@@ -198,7 +198,7 @@ class GoalOrientedBot(NNModel):
                                                      self.intent_classifier, self.intents,
                                                      self.default_tracker.num_features, self.bow_embedder,
                                                      self.word_vocab)
-        self.nn_stuff_handler._configure_network(self)
+        self.nn_stuff_handler._configure_network()
 
         if self.nn_stuff_handler.train_checkpoint_exists():
             log.info(f"[initializing `{self.__class__.__name__}` from saved]")
@@ -213,14 +213,14 @@ class GoalOrientedBot(NNModel):
 
     def train_on_batch(self, x: List[dict], y: List[dict]) -> dict:
         b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions = self.data_handler._prepare_data(self, x, y)
-        return self.nn_stuff_handler._network_train_on_batch(self, b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions)
+        return self.nn_stuff_handler._network_train_on_batch(b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions)
 
     # todo как инфер понимает из конфига что ему нужно. лёша что-то говорил про дерево
     def _infer(self, tokens: List[str], tracker: DialogueStateTracker) -> List:
         features, emb_context, key = self.data_handler._encode_context(self, tokens, tracker=tracker)
         action_mask = tracker.calc_action_mask(self.api_call_id)
         probs, state_c, state_h = \
-            self.nn_stuff_handler._network_call(self, [[features]], [[emb_context]], [[key]],
+            self.nn_stuff_handler._network_call([[features]], [[emb_context]], [[key]],
                               [[action_mask]], [[tracker.network_state[0]]],
                               [[tracker.network_state[1]]],
                               prob=True)  # todo чо за warning кидает ide, почему
