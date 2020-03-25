@@ -86,7 +86,7 @@ class NNStuffHandler(LRScheduledTFModel):
         gobot_obj.action_size = self.opt['action_size']
         self.obs_size = self.opt['obs_size']  # todo что такое обс сайз
         self.dense_size = self.opt['dense_size']
-        gobot_obj.l2_reg = self.opt['l2_reg_coef']
+        self.l2_reg = self.opt['l2_reg_coef']
 
         attn = self.opt.get('attention_mechanism')
         if attn:
@@ -122,7 +122,7 @@ class NNStuffHandler(LRScheduledTFModel):
         # multiply with batch utterance mask
         _loss_tensor = tf.multiply(_loss_tensor, self._utterance_mask)
         self._loss = tf.reduce_mean(_loss_tensor, name='loss')
-        self._loss += gobot_obj.l2_reg * tf.losses.get_regularization_loss()
+        self._loss += self.l2_reg * tf.losses.get_regularization_loss()
         self._train_op = self.get_train_op(self._loss)
 
     def _add_placeholders(self, gobot_obj) -> None:
