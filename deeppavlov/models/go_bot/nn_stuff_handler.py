@@ -1,6 +1,7 @@
 import collections
 import json
 from typing import Tuple, List
+from logging import getLogger
 
 import numpy as np
 import tensorflow as tf
@@ -57,6 +58,8 @@ def configure_attn(curr_attn_token_size,
 
     return new_attn
 
+log = getLogger(__name__)
+
 
 class NNStuffHandler(LRScheduledTFModel):
     SAVE_LOAD_SUBDIR_NAME = "nn_stuff"
@@ -71,8 +74,55 @@ class NNStuffHandler(LRScheduledTFModel):
     def __call__(self, *args, **kwargs):
         pass
 
-    def __init__(self, load_path, save_path, **kwargs):
+    def __init__(self,
+                 hidden_size,
+                 action_size,
+                 obs_size,
+                 dropout_rate,
+                 l2_reg_coef,
+                 dense_size,
+                 attention_mechanism,
+                 network_parameters,
+                 embedder,
+                 n_actions,
+                 intent_classifier,
+                 intents,
+                 default_tracker_num_features,
+                 bow_embedder,
+                 word_vocab,
+                 load_path,
+                 save_path,
+                 **kwargs):
+
+        network_parameters = network_parameters or {}
+        if any(p in network_parameters for p in self.DEPRECATED):
+            log.warning(f"parameters {self.DEPRECATED} are deprecated,"
+                        f" for learning rate schedule documentation see"
+                        f" deeppavlov.core.models.lr_scheduled_tf_model"
+                        f" or read a github tutorial on super convergence.")
+
+        if 'learning_rate' in network_parameters:
+            kwargs['learning_rate'] = network_parameters.pop('learning_rate')
+
         super().__init__(load_path=load_path, save_path=save_path, **kwargs)
+
+        self.configure_network_opts(
+            hidden_size,
+            action_size,
+            obs_size,
+            dropout_rate,
+            l2_reg_coef,
+            dense_size,
+            attention_mechanism,
+            network_parameters,
+            embedder,
+            n_actions,
+            intent_classifier,
+            intents,
+            default_tracker_num_features,
+            bow_embedder,
+            word_vocab)
+
 
     def _configure_network(self):
         self._init_network_params()
@@ -232,11 +282,29 @@ class NNStuffHandler(LRScheduledTFModel):
         return _logits, _state
 
     def configure_network_opts(self,
-                               network_parameters, new_network_parameters,
+                               hidden_size,
+                               action_size,
+                               obs_size,
+                               dropout_rate,
+                               l2_reg_coef,
+                               dense_size,
+                               attention_mechanism,
+                               network_parameters,
                                embedder, n_actions, intent_classifier, intents, default_tracker_num_features,
                                bow_embedder, word_vocab) -> None:
 
+        new_network_parameters = {
+            'hidden_size': hidden_size,
+            'action_size': action_size,
+            'obs_size': obs_size,
+            'dropout_rate': dropout_rate,
+            'l2_reg_coef': l2_reg_coef,
+            'dense_size': dense_size,
+            'attn': attention_mechanism
+        }  # network params
+
         if 'attention_mechanism' in network_parameters:
+            # todo чекнуть что всё норм с оригинальными и новыми параметрами сети
             network_parameters['attn'] = network_parameters.pop('attention_mechanism')  # network params
         new_network_parameters.update(network_parameters)  # network params
 
@@ -277,6 +345,8 @@ class NNStuffHandler(LRScheduledTFModel):
         }
 
         self.opt = opt
+
+        self._configure_network()
 
     def train_checkpoint_exists(self):
         return tf.train.checkpoint_exists(str(self.load_path.resolve()))

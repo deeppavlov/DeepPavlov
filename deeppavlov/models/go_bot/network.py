@@ -106,7 +106,6 @@ class GoalOrientedBot(NNModel):
         debug: whether to display debug output.
     """
 
-
     def __init__(self,
                  tokenizer: Component,
                  tracker: FeaturizedTracker,
@@ -133,35 +132,20 @@ class GoalOrientedBot(NNModel):
                  debug: bool = False,
                  **kwargs) -> None:
 
+        # todo навести порядок
 
-        nn_stuff_save_path = Path(save_path, NNStuffHandler.SAVE_LOAD_SUBDIR_NAME)
-        nn_stuff_load_path = Path(load_path, NNStuffHandler.SAVE_LOAD_SUBDIR_NAME)
-
-        self.nn_stuff_handler = NNStuffHandler(load_path=nn_stuff_load_path, save_path=nn_stuff_save_path, **kwargs)
         self.load_path = load_path
         self.save_path = save_path
-        self.data_handler = DataHandler()
 
-        # kwargs here are mostly training hyperparameters
-
-        network_parameters = network_parameters or {}
-        if any(p in network_parameters for p in self.nn_stuff_handler.DEPRECATED):
-            log.warning(f"parameters {self.nn_stuff_handler.DEPRECATED} are deprecated,"
-                        f" for learning rate schedule documentation see"
-                        f" deeppavlov.core.models.lr_scheduled_tf_model"
-                        f" or read a github tutorial on super convergence.")
-        if 'learning_rate' in network_parameters:
-            kwargs['learning_rate'] = network_parameters.pop('learning_rate')
         super().__init__(save_path=self.save_path, load_path=self.load_path, **kwargs)
 
         self.tokenizer = tokenizer  # preprocessing
-
         self.bow_embedder = bow_embedder  # preprocessing?
         self.embedder = embedder  # preprocessing?
         self.word_vocab = word_vocab  # preprocessing?
         self.slot_filler = slot_filler  # another unit of pipeline
         self.intent_classifier = intent_classifier  # another unit of pipeline
-        self.use_action_mask = use_action_mask  # feature engineering
+        self.use_action_mask = use_action_mask  # feature engineering  todo: чот оно не на своём месте
         self.debug = debug
 
         template_path = expand_path(template_path)
@@ -172,8 +156,7 @@ class GoalOrientedBot(NNModel):
         log.info(f"{self.n_actions} templates loaded.")
 
         self.default_tracker = tracker  # tracker
-        self.dialogue_state_tracker = DialogueStateTracker(tracker.slot_names, self.n_actions, hidden_size,
-                                                           database)  # tracker
+        self.dialogue_state_tracker = DialogueStateTracker(tracker.slot_names, self.n_actions, hidden_size, database)  # tracker
 
         self.api_call_id = -1  # api call should have smth like action index
         if api_call_action is not None:
@@ -183,37 +166,47 @@ class GoalOrientedBot(NNModel):
         if isinstance(self.intent_classifier, Chainer):
             self.intents = self.intent_classifier.get_main_component().classes  # upper-level model logic
 
-        new_network_parameters = {
-            'hidden_size': hidden_size,
-            'action_size': action_size,
-            'obs_size': obs_size,
-            'dropout_rate': dropout_rate,
-            'l2_reg_coef': l2_reg_coef,
-            'dense_size': dense_size,
-            'attn': attention_mechanism
-        }  # network params
+        nn_stuff_save_path = Path(save_path, NNStuffHandler.SAVE_LOAD_SUBDIR_NAME)
+        nn_stuff_load_path = Path(load_path, NNStuffHandler.SAVE_LOAD_SUBDIR_NAME)
 
+        self.nn_stuff_handler = NNStuffHandler(
+            hidden_size,
+            action_size,
+            obs_size,
+            dropout_rate,
+            l2_reg_coef,
+            dense_size,
+            attention_mechanism,
+            network_parameters,
+            self.embedder,
+            self.n_actions,
+            self.intent_classifier,
+            self.intents,
+            self.default_tracker.num_features,
+            self.bow_embedder,
+            self.word_vocab,
+            load_path=nn_stuff_load_path,
+            save_path=nn_stuff_save_path,
+            **kwargs)
 
-        self.nn_stuff_handler.configure_network_opts(network_parameters, new_network_parameters, self.embedder, self.n_actions,
-                                                     self.intent_classifier, self.intents,
-                                                     self.default_tracker.num_features, self.bow_embedder,
-                                                     self.word_vocab)
-        self.nn_stuff_handler._configure_network()
 
         if self.nn_stuff_handler.train_checkpoint_exists():
+            # todo некрасиво,переделать
             log.info(f"[initializing `{self.__class__.__name__}` from saved]")
             self.load()
         else:
             log.info(f"[initializing `{self.__class__.__name__}` from scratch]")
 
+        self.data_handler = DataHandler()
+
 
         self.multiple_user_state_tracker = MultipleUserStateTracker()  # tracker
         self.reset()  # tracker
 
-
     def train_on_batch(self, x: List[dict], y: List[dict]) -> dict:
         b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions = self.data_handler._prepare_data(self, x, y)
-        return self.nn_stuff_handler._network_train_on_batch(b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions)
+        return self.nn_stuff_handler._network_train_on_batch(b_features, b_emb_context, b_keys, b_u_masks, b_a_masks,
+                                                             b_actions)
 
     # todo как инфер понимает из конфига что ему нужно. лёша что-то говорил про дерево
     def _infer(self, tokens: List[str], tracker: DialogueStateTracker) -> List:
@@ -221,9 +214,9 @@ class GoalOrientedBot(NNModel):
         action_mask = tracker.calc_action_mask(self.api_call_id)
         probs, state_c, state_h = \
             self.nn_stuff_handler._network_call([[features]], [[emb_context]], [[key]],
-                              [[action_mask]], [[tracker.network_state[0]]],
-                              [[tracker.network_state[1]]],
-                              prob=True)  # todo чо за warning кидает ide, почему
+                                                [[action_mask]], [[tracker.network_state[0]]],
+                                                [[tracker.network_state[1]]],
+                                                prob=True)  # todo чо за warning кидает ide, почему
         return probs, np.argmax(probs), (state_c, state_h)
 
     def _infer_dialog(self, contexts: List[dict]) -> List[str]:
@@ -291,8 +284,8 @@ class GoalOrientedBot(NNModel):
         return [self._infer_dialog(x) for x in batch]
 
     def reset(self, user_id: Union[None, str, int] = None) -> None:
-        self.multiple_user_state_tracker.reset(
-            user_id)  # todo а чо, у нас всё что можно закешить лежит в мультиюхертрекере?
+        # todo а чо, у нас всё что можно закешить лежит в мультиюхертрекере?
+        self.multiple_user_state_tracker.reset(user_id)
         if self.debug:
             log.debug("Bot reset.")
 
@@ -306,6 +299,7 @@ class GoalOrientedBot(NNModel):
         self.nn_stuff_handler.save()
 
     def process_event(self, event_name, data) -> None:
+        # todo что это
         super().process_event(event_name, data)
 
     # endregion helping stuff
