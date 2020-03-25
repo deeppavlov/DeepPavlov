@@ -75,7 +75,7 @@ class NNStuffHandler(LRScheduledTFModel):
         self.sess.run(tf.global_variables_initializer())
 
     def _init_network_params(self, gobot_obj) -> None:
-        gobot_obj.dropout_rate = self.opt['dropout_rate']
+        self.dropout_rate = self.opt['dropout_rate']  # todo does dropout actually work
         gobot_obj.hidden_size = self.opt['hidden_size']
         gobot_obj.action_size = self.opt['action_size']
         gobot_obj.obs_size = self.opt['obs_size']  # todo что такое обс сайз
