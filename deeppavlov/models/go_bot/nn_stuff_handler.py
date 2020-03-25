@@ -280,7 +280,7 @@ class NNStuffHandler(LRScheduledTFModel):
 
         self.opt = opt
 
-    def train_checkpoint_exists(self, load_path):
+    def train_checkpoint_exists(self):
         return tf.train.checkpoint_exists(str(self.load_path.resolve()))
 
     def load(self, *args, **kwargs) -> None:

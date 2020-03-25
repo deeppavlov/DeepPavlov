@@ -200,7 +200,7 @@ class GoalOrientedBot(NNModel):
                                                      self.word_vocab)
         self.nn_stuff_handler._configure_network(self)
 
-        if self.nn_stuff_handler.train_checkpoint_exists(self.load_path):
+        if self.nn_stuff_handler.train_checkpoint_exists():
             log.info(f"[initializing `{self.__class__.__name__}` from saved]")
             self.load()
         else:
