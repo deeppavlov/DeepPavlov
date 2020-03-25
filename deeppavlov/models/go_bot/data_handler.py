@@ -114,3 +114,58 @@ class DataHandler:
                                   state_features, context_features,
                                   tracker.prev_action))
         return concat_feats, emb_context, attn_key
+
+    def _prepare_data(self, gobot_obj, x: List[dict], y: List[dict]) -> List[np.ndarray]:
+        b_features, b_u_masks, b_a_masks, b_actions = [], [], [], []
+        b_emb_context, b_keys = [], []  # for attention
+        max_num_utter = max(len(d_contexts) for d_contexts in x)
+        for d_contexts, d_responses in zip(x, y):
+            gobot_obj.dialogue_state_tracker.reset_state()
+            d_features, d_a_masks, d_actions = [], [], []
+            d_emb_context, d_key = [], []  # for attention
+
+            for context, response in zip(d_contexts, d_responses):
+                tokens = gobot_obj.tokenizer([context['text'].lower().strip()])[0]
+
+                # update state
+                gobot_obj.dialogue_state_tracker.get_ground_truth_db_result_from(context)
+
+                if callable(gobot_obj.slot_filler):
+                    context_slots = gobot_obj.slot_filler([tokens])[0]
+                    gobot_obj.dialogue_state_tracker.update_state(context_slots)
+
+                features, emb_context, key = gobot_obj.data_handler._encode_context(gobot_obj, tokens,
+                                                                                    tracker=gobot_obj.dialogue_state_tracker)
+                d_features.append(features)
+                d_emb_context.append(emb_context)
+                d_key.append(key)
+                d_a_masks.append(gobot_obj.dialogue_state_tracker.calc_action_mask(gobot_obj.api_call_id))
+
+                action_id = gobot_obj.data_handler._encode_response(gobot_obj, response['act'])
+                d_actions.append(action_id)
+                # update state
+                # - previous action is teacher-forced here
+                gobot_obj.dialogue_state_tracker.update_previous_action(action_id)
+
+                if gobot_obj.debug:
+                    # log.debug(f"True response = '{response['text']}'.")
+                    if d_a_masks[-1][action_id] != 1.:
+                        pass
+                        # log.warning("True action forbidden by action mask.")
+
+            # padding to max_num_utter
+            num_padds = max_num_utter - len(d_contexts)
+            d_features.extend([np.zeros_like(d_features[0])] * num_padds)
+            d_emb_context.extend([np.zeros_like(d_emb_context[0])] * num_padds)
+            d_key.extend([np.zeros_like(d_key[0])] * num_padds)
+            d_u_mask = [1] * len(d_contexts) + [0] * num_padds
+            d_a_masks.extend([np.zeros_like(d_a_masks[0])] * num_padds)
+            d_actions.extend([0] * num_padds)
+
+            b_features.append(d_features)
+            b_emb_context.append(d_emb_context)
+            b_keys.append(d_key)
+            b_u_masks.append(d_u_mask)
+            b_a_masks.append(d_a_masks)
+            b_actions.append(d_actions)
+        return b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions

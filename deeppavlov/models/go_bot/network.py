@@ -212,7 +212,7 @@ class GoalOrientedBot(NNModel):
 
 
     def train_on_batch(self, x: List[dict], y: List[dict]) -> dict:
-        b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions = self.nn_stuff_handler._prepare_data(self, x, y)
+        b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions = self.data_handler._prepare_data(self, x, y)
         return self.nn_stuff_handler._network_train_on_batch(self, b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions)
 
     # todo как инфер понимает из конфига что ему нужно. лёша что-то говорил про дерево
