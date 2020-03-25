@@ -103,27 +103,27 @@ class NNStuffHandler(LRScheduledTFModel):
         self._add_placeholders(gobot_obj)  # todo какая-то тензорфлововая тема
 
         # build body
-        _logits, gobot_obj._state = self._build_body(gobot_obj)
+        _logits, self._state = self._build_body(gobot_obj)
 
         # probabilities normalization : elemwise multiply with action mask
         _logits_exp = tf.multiply(tf.exp(_logits), self._action_mask)
         _logits_exp_sum = tf.expand_dims(tf.reduce_sum(_logits_exp, -1), -1)
-        gobot_obj._probs = tf.squeeze(_logits_exp / _logits_exp_sum, name='probs')
+        self._probs = tf.squeeze(_logits_exp / _logits_exp_sum, name='probs')
 
         # loss, train and predict operations
-        gobot_obj._prediction = tf.argmax(gobot_obj._probs, axis=-1, name='prediction')
+        self._prediction = tf.argmax(self._probs, axis=-1, name='prediction')
 
         # _weights = tf.expand_dims(self._utterance_mask, -1)
         # TODO: try multiplying logits to action_mask
-        onehots = tf.one_hot(gobot_obj._action, gobot_obj.action_size)
+        onehots = tf.one_hot(self._action, gobot_obj.action_size)
         _loss_tensor = tf.nn.softmax_cross_entropy_with_logits_v2(
             logits=_logits, labels=onehots
         )
         # multiply with batch utterance mask
-        _loss_tensor = tf.multiply(_loss_tensor, gobot_obj._utterance_mask)
-        gobot_obj._loss = tf.reduce_mean(_loss_tensor, name='loss')
-        gobot_obj._loss += gobot_obj.l2_reg * tf.losses.get_regularization_loss()
-        gobot_obj._train_op = self.get_train_op(gobot_obj._loss)
+        _loss_tensor = tf.multiply(_loss_tensor, self._utterance_mask)
+        self._loss = tf.reduce_mean(_loss_tensor, name='loss')
+        self._loss += gobot_obj.l2_reg * tf.losses.get_regularization_loss()
+        self._train_op = self.get_train_op(self._loss)
 
     def _add_placeholders(self, gobot_obj) -> None:
         # todo узнай что такое плейсхолдеры в тф
@@ -133,22 +133,22 @@ class NNStuffHandler(LRScheduledTFModel):
         self._features = tf.placeholder(tf.float32,
                                              [None, None, self.obs_size],
                                              name='features')
-        gobot_obj._action = tf.placeholder(tf.int32,
+        self._action = tf.placeholder(tf.int32,
                                            [None, None],
                                            name='ground_truth_action')
         self._action_mask = tf.placeholder(tf.float32,
                                                 [None, None, gobot_obj.action_size],
                                                 name='action_mask')
-        gobot_obj._utterance_mask = tf.placeholder(tf.float32,
+        self._utterance_mask = tf.placeholder(tf.float32,
                                                    shape=[None, None],
                                                    name='utterance_mask')
-        gobot_obj._batch_size = tf.shape(self._features)[0]
-        zero_state = tf.zeros([gobot_obj._batch_size, self.hidden_size], dtype=tf.float32)
+        self._batch_size = tf.shape(self._features)[0]
+        zero_state = tf.zeros([self._batch_size, self.hidden_size], dtype=tf.float32)
         _initial_state_c = \
             tf.placeholder_with_default(zero_state, shape=[None, self.hidden_size])
         _initial_state_h = \
             tf.placeholder_with_default(zero_state, shape=[None, self.hidden_size])
-        gobot_obj._initial_state = tf.nn.rnn_cell.LSTMStateTuple(_initial_state_c,
+        self._initial_state = tf.nn.rnn_cell.LSTMStateTuple(_initial_state_c,
                                                                  _initial_state_h)
         if gobot_obj.attn:
             _emb_context_shape = \
@@ -215,16 +215,16 @@ class NNStuffHandler(LRScheduledTFModel):
 
         # recurrent network unit
         _lstm_cell = tf.nn.rnn_cell.LSTMCell(self.hidden_size)
-        _utter_lengths = tf.cast(tf.reduce_sum(gobot_obj._utterance_mask, axis=-1),
+        _utter_lengths = tf.cast(tf.reduce_sum(self._utterance_mask, axis=-1),
                                  tf.int32)
         # _output: [batch_size, max_time, hidden_size]
         # _state: tuple of two [batch_size, hidden_size]
         _output, _state = tf.nn.dynamic_rnn(_lstm_cell,
                                             _units,
                                             time_major=False,
-                                            initial_state=gobot_obj._initial_state,
+                                            initial_state=self._initial_state,
                                             sequence_length=_utter_lengths)
-        _output = tf.reshape(_output, (gobot_obj._batch_size, -1, self.hidden_size))
+        _output = tf.reshape(_output, (self._batch_size, -1, self.hidden_size))
         _output = tf_layers.variational_dropout(_output,
                                                 keep_prob=self._dropout_keep_prob)
         # output projection
@@ -319,9 +319,9 @@ class NNStuffHandler(LRScheduledTFModel):
                                 action: np.ndarray) -> dict:
         feed_dict = {
             self._dropout_keep_prob: 1.,
-            gobot_obj._utterance_mask: utter_mask,
+            self._utterance_mask: utter_mask,
             self._features: features,
-            gobot_obj._action: action,
+            self._action: action,
             self._action_mask: action_mask
         }
         if gobot_obj.attn:
@@ -329,7 +329,7 @@ class NNStuffHandler(LRScheduledTFModel):
             feed_dict[self._key] = key
 
         _, loss_value, prediction = \
-            self.sess.run([gobot_obj._train_op, gobot_obj._loss, gobot_obj._prediction],
+            self.sess.run([self._train_op, self._loss, self._prediction],
                                feed_dict=feed_dict)
         return {'loss': loss_value,
                 'learning_rate': gobot_obj.nn_stuff_handler.get_learning_rate(),
@@ -341,8 +341,8 @@ class NNStuffHandler(LRScheduledTFModel):
         feed_dict = {
             self._features: features,
             self._dropout_keep_prob: 1.,
-            gobot_obj._utterance_mask: [[1.]],
-            gobot_obj._initial_state: (states_c, states_h),
+            self._utterance_mask: [[1.]],
+            self._initial_state: (states_c, states_h),
             self._action_mask: action_mask
         }
         if gobot_obj.attn:
@@ -350,7 +350,7 @@ class NNStuffHandler(LRScheduledTFModel):
             feed_dict[self._key] = key
 
         probs, prediction, state = \
-            self.sess.run([gobot_obj._probs, gobot_obj._prediction, gobot_obj._state],
+            self.sess.run([self._probs, self._prediction, self._state],
                           feed_dict=feed_dict)
 
         if prob:
