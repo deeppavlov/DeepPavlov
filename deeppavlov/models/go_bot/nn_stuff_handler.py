@@ -76,7 +76,7 @@ class NNStuffHandler(LRScheduledTFModel):
 
     def _init_network_params(self, gobot_obj) -> None:
         self.dropout_rate = self.opt['dropout_rate']  # todo does dropout actually work
-        gobot_obj.hidden_size = self.opt['hidden_size']
+        self.hidden_size = self.opt['hidden_size']
         gobot_obj.action_size = self.opt['action_size']
         gobot_obj.obs_size = self.opt['obs_size']  # todo что такое обс сайз
         gobot_obj.dense_size = self.opt['dense_size']
@@ -137,11 +137,11 @@ class NNStuffHandler(LRScheduledTFModel):
                                                    shape=[None, None],
                                                    name='utterance_mask')
         gobot_obj._batch_size = tf.shape(gobot_obj._features)[0]
-        zero_state = tf.zeros([gobot_obj._batch_size, gobot_obj.hidden_size], dtype=tf.float32)
+        zero_state = tf.zeros([gobot_obj._batch_size, self.hidden_size], dtype=tf.float32)
         _initial_state_c = \
-            tf.placeholder_with_default(zero_state, shape=[None, gobot_obj.hidden_size])
+            tf.placeholder_with_default(zero_state, shape=[None, self.hidden_size])
         _initial_state_h = \
-            tf.placeholder_with_default(zero_state, shape=[None, gobot_obj.hidden_size])
+            tf.placeholder_with_default(zero_state, shape=[None, self.hidden_size])
         gobot_obj._initial_state = tf.nn.rnn_cell.LSTMStateTuple(_initial_state_c,
                                                                  _initial_state_h)
         if gobot_obj.attn:
@@ -208,7 +208,7 @@ class NNStuffHandler(LRScheduledTFModel):
                                                keep_prob=gobot_obj._dropout_keep_prob)
 
         # recurrent network unit
-        _lstm_cell = tf.nn.rnn_cell.LSTMCell(gobot_obj.hidden_size)
+        _lstm_cell = tf.nn.rnn_cell.LSTMCell(self.hidden_size)
         _utter_lengths = tf.cast(tf.reduce_sum(gobot_obj._utterance_mask, axis=-1),
                                  tf.int32)
         # _output: [batch_size, max_time, hidden_size]
@@ -218,7 +218,7 @@ class NNStuffHandler(LRScheduledTFModel):
                                             time_major=False,
                                             initial_state=gobot_obj._initial_state,
                                             sequence_length=_utter_lengths)
-        _output = tf.reshape(_output, (gobot_obj._batch_size, -1, gobot_obj.hidden_size))
+        _output = tf.reshape(_output, (gobot_obj._batch_size, -1, self.hidden_size))
         _output = tf_layers.variational_dropout(_output,
                                                 keep_prob=gobot_obj._dropout_keep_prob)
         # output projection
