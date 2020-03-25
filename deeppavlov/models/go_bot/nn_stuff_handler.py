@@ -124,7 +124,7 @@ class NNStuffHandler(LRScheduledTFModel):
         gobot_obj._dropout_keep_prob = tf.placeholder_with_default(1.0,
                                                                    shape=[],
                                                                    name='dropout_prob')
-        gobot_obj._features = tf.placeholder(tf.float32,
+        self._features = tf.placeholder(tf.float32,
                                              [None, None, self.obs_size],
                                              name='features')
         gobot_obj._action = tf.placeholder(tf.int32,
@@ -136,7 +136,7 @@ class NNStuffHandler(LRScheduledTFModel):
         gobot_obj._utterance_mask = tf.placeholder(tf.float32,
                                                    shape=[None, None],
                                                    name='utterance_mask')
-        gobot_obj._batch_size = tf.shape(gobot_obj._features)[0]
+        gobot_obj._batch_size = tf.shape(self._features)[0]
         zero_state = tf.zeros([gobot_obj._batch_size, self.hidden_size], dtype=tf.float32)
         _initial_state_c = \
             tf.placeholder_with_default(zero_state, shape=[None, self.hidden_size])
@@ -156,7 +156,7 @@ class NNStuffHandler(LRScheduledTFModel):
 
     def _build_body(self, gobot_obj) -> Tuple[tf.Tensor, tf.Tensor]:
         # input projection
-        _units = tf.layers.dense(gobot_obj._features, self.dense_size,
+        _units = tf.layers.dense(self._features, self.dense_size,
                                  kernel_regularizer=tf.nn.l2_loss,
                                  kernel_initializer=xav())
         if gobot_obj.attn:
@@ -306,7 +306,7 @@ class NNStuffHandler(LRScheduledTFModel):
         feed_dict = {
             gobot_obj._dropout_keep_prob: 1.,
             gobot_obj._utterance_mask: utter_mask,
-            gobot_obj._features: features,
+            self._features: features,
             gobot_obj._action: action,
             gobot_obj._action_mask: action_mask
         }
@@ -325,7 +325,7 @@ class NNStuffHandler(LRScheduledTFModel):
     def _network_call(self, gobot_obj, features: np.ndarray, emb_context: np.ndarray, key: np.ndarray,
                       action_mask: np.ndarray, states_c: np.ndarray, states_h: np.ndarray, prob: bool = False) -> List[np.ndarray]:
         feed_dict = {
-            gobot_obj._features: features,
+            self._features: features,
             gobot_obj._dropout_keep_prob: 1.,
             gobot_obj._utterance_mask: [[1.]],
             gobot_obj._initial_state: (states_c, states_h),
