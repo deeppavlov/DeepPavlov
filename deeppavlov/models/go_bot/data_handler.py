@@ -43,18 +43,18 @@ class DataHandler:
         emb_features = []
         emb_context = np.array([], dtype=np.float32)
         if callable(gobot_obj.embedder):
-            if gobot_obj.attn:
+            if gobot_obj.nn_stuff_handler.attn:
                 if tokens:
-                    pad = np.zeros((gobot_obj.attn.max_num_tokens,
-                                    gobot_obj.attn.token_size),
+                    pad = np.zeros((gobot_obj.nn_stuff_handler.attn.max_num_tokens,
+                                    gobot_obj.nn_stuff_handler.attn.token_size),
                                    dtype=np.float32)
                     sen = np.array(gobot_obj.embedder([tokens])[0])
                     # TODO : Unsupport of batch_size more than 1
                     emb_context = np.concatenate((pad, sen))
-                    emb_context = emb_context[-gobot_obj.attn.max_num_tokens:]
+                    emb_context = emb_context[-gobot_obj.nn_stuff_handler.attn.max_num_tokens:]
                 else:
-                    emb_context = np.zeros((gobot_obj.attn.max_num_tokens,
-                                            gobot_obj.attn.token_size),
+                    emb_context = np.zeros((gobot_obj.nn_stuff_handler.attn.max_num_tokens,
+                                            gobot_obj.nn_stuff_handler.attn.token_size),
                                            dtype=np.float32)
             else:
                 emb_features = gobot_obj.embedder([tokens], mean=True)[0]
@@ -73,10 +73,10 @@ class DataHandler:
                 # log.debug(f"Predicted intent = `{intent}`")
 
         attn_key = np.array([], dtype=np.float32)
-        if gobot_obj.attn:
-            if gobot_obj.attn.action_as_key:
+        if gobot_obj.nn_stuff_handler.attn:
+            if gobot_obj.nn_stuff_handler.attn.action_as_key:
                 attn_key = np.hstack((attn_key, tracker.prev_action))
-            if gobot_obj.attn.intent_as_key:
+            if gobot_obj.nn_stuff_handler.attn.intent_as_key:
                 attn_key = np.hstack((attn_key, intent_features))
             if len(attn_key) == 0:
                 attn_key = np.array([1], dtype=np.float32)

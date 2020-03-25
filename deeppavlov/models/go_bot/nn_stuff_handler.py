@@ -92,10 +92,10 @@ class NNStuffHandler(LRScheduledTFModel):
         if attn:
             # gobot_obj.opt['attention_mechanism'] = attn
 
-            gobot_obj.attn = collections.namedtuple('attention_mechanism', attn.keys())(**attn)
+            self.attn = collections.namedtuple('attention_mechanism', attn.keys())(**attn)
             self.obs_size -= attn['token_size']
         else:
-            gobot_obj.attn = None
+            self.attn = None
 
     def _build_graph(self, gobot_obj) -> None:
         # todo тут ещё и фичер инжиниринг
@@ -150,14 +150,14 @@ class NNStuffHandler(LRScheduledTFModel):
             tf.placeholder_with_default(zero_state, shape=[None, self.hidden_size])
         self._initial_state = tf.nn.rnn_cell.LSTMStateTuple(_initial_state_c,
                                                                  _initial_state_h)
-        if gobot_obj.attn:
+        if self.attn:
             _emb_context_shape = \
-                [None, None, gobot_obj.attn.max_num_tokens, gobot_obj.attn.token_size]
+                [None, None, self.attn.max_num_tokens, self.attn.token_size]
             self._emb_context = tf.placeholder(tf.float32,
                                                     _emb_context_shape,
                                                     name='emb_context')
             self._key = tf.placeholder(tf.float32,
-                                            [None, None, gobot_obj.attn.key_size],
+                                            [None, None, self.attn.key_size],
                                             name='key')
 
     def _build_body(self, gobot_obj) -> Tuple[tf.Tensor, tf.Tensor]:
@@ -165,47 +165,47 @@ class NNStuffHandler(LRScheduledTFModel):
         _units = tf.layers.dense(self._features, self.dense_size,
                                  kernel_regularizer=tf.nn.l2_loss,
                                  kernel_initializer=xav())
-        if gobot_obj.attn:
-            attn_scope = f"attention_mechanism/{gobot_obj.attn.type}"
+        if self.attn:
+            attn_scope = f"attention_mechanism/{self.attn.type}"
             with tf.variable_scope(attn_scope):
-                if gobot_obj.attn.type == 'general':
+                if self.attn.type == 'general':
                     _attn_output = am.general_attention(
                         self._key,
                         self._emb_context,
-                        hidden_size=gobot_obj.attn.hidden_size,
-                        projected_align=gobot_obj.attn.projected_align)
-                elif gobot_obj.attn.type == 'bahdanau':
+                        hidden_size=self.attn.hidden_size,
+                        projected_align=self.attn.projected_align)
+                elif self.attn.type == 'bahdanau':
                     _attn_output = am.bahdanau_attention(
                         self._key,
                         self._emb_context,
-                        hidden_size=gobot_obj.attn.hidden_size,
-                        projected_align=gobot_obj.attn.projected_align)
-                elif gobot_obj.attn.type == 'cs_general':
+                        hidden_size=self.attn.hidden_size,
+                        projected_align=self.attn.projected_align)
+                elif self.attn.type == 'cs_general':
                     _attn_output = am.cs_general_attention(
                         self._key,
                         self._emb_context,
-                        hidden_size=gobot_obj.attn.hidden_size,
-                        depth=gobot_obj.attn.depth,
-                        projected_align=gobot_obj.attn.projected_align)
-                elif gobot_obj.attn.type == 'cs_bahdanau':
+                        hidden_size=self.attn.hidden_size,
+                        depth=self.attn.depth,
+                        projected_align=self.attn.projected_align)
+                elif self.attn.type == 'cs_bahdanau':
                     _attn_output = am.cs_bahdanau_attention(
                         self._key,
                         self._emb_context,
-                        hidden_size=gobot_obj.attn.hidden_size,
-                        depth=gobot_obj.attn.depth,
-                        projected_align=gobot_obj.attn.projected_align)
-                elif gobot_obj.attn.type == 'light_general':
+                        hidden_size=self.attn.hidden_size,
+                        depth=self.attn.depth,
+                        projected_align=self.attn.projected_align)
+                elif self.attn.type == 'light_general':
                     _attn_output = am.light_general_attention(
                         self._key,
                         self._emb_context,
-                        hidden_size=gobot_obj.attn.hidden_size,
-                        projected_align=gobot_obj.attn.projected_align)
-                elif gobot_obj.attn.type == 'light_bahdanau':
+                        hidden_size=self.attn.hidden_size,
+                        projected_align=self.attn.projected_align)
+                elif self.attn.type == 'light_bahdanau':
                     _attn_output = am.light_bahdanau_attention(
                         self._key,
                         self._emb_context,
-                        hidden_size=gobot_obj.attn.hidden_size,
-                        projected_align=gobot_obj.attn.projected_align)
+                        hidden_size=self.attn.hidden_size,
+                        projected_align=self.attn.projected_align)
                 else:
                     raise ValueError("wrong value for attention mechanism type")
             _units = tf.concat([_units, _attn_output], -1)
@@ -324,7 +324,7 @@ class NNStuffHandler(LRScheduledTFModel):
             self._action: action,
             self._action_mask: action_mask
         }
-        if gobot_obj.attn:
+        if self.attn:
             feed_dict[self._emb_context] = emb_context
             feed_dict[self._key] = key
 
@@ -345,7 +345,7 @@ class NNStuffHandler(LRScheduledTFModel):
             self._initial_state: (states_c, states_h),
             self._action_mask: action_mask
         }
-        if gobot_obj.attn:
+        if self.attn:
             feed_dict[self._emb_context] = emb_context
             feed_dict[self._key] = key
 
