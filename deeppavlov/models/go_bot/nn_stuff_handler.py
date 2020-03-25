@@ -71,8 +71,8 @@ class NNStuffHandler(LRScheduledTFModel):
     def _configure_network(self, gobot_obj):
         self._init_network_params(gobot_obj)
         self._build_graph(gobot_obj)
-        gobot_obj.sess = tf.Session()
-        gobot_obj.sess.run(tf.global_variables_initializer())
+        self.sess = tf.Session()
+        self.sess.run(tf.global_variables_initializer())
 
     def _init_network_params(self, gobot_obj) -> None:
         gobot_obj.dropout_rate = self.opt['dropout_rate']
@@ -315,7 +315,7 @@ class NNStuffHandler(LRScheduledTFModel):
             feed_dict[gobot_obj._key] = key
 
         _, loss_value, prediction = \
-            gobot_obj.sess.run([gobot_obj._train_op, gobot_obj._loss, gobot_obj._prediction],
+            self.sess.run([gobot_obj._train_op, gobot_obj._loss, gobot_obj._prediction],
                                feed_dict=feed_dict)
         return {'loss': loss_value,
                 'learning_rate': gobot_obj.nn_stuff_handler.get_learning_rate(),
@@ -336,7 +336,7 @@ class NNStuffHandler(LRScheduledTFModel):
             feed_dict[gobot_obj._key] = key
 
         probs, prediction, state = \
-            gobot_obj.sess.run([gobot_obj._probs, gobot_obj._prediction, gobot_obj._state],
+            self.sess.run([gobot_obj._probs, gobot_obj._prediction, gobot_obj._state],
                           feed_dict=feed_dict)
 
         if prob:
