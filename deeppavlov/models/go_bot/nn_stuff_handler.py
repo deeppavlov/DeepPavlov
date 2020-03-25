@@ -79,7 +79,7 @@ class NNStuffHandler(LRScheduledTFModel):
         self.hidden_size = self.opt['hidden_size']
         gobot_obj.action_size = self.opt['action_size']
         self.obs_size = self.opt['obs_size']  # todo что такое обс сайз
-        gobot_obj.dense_size = self.opt['dense_size']
+        self.dense_size = self.opt['dense_size']
         gobot_obj.l2_reg = self.opt['l2_reg_coef']
 
         attn = self.opt.get('attention_mechanism')
@@ -156,7 +156,7 @@ class NNStuffHandler(LRScheduledTFModel):
 
     def _build_body(self, gobot_obj) -> Tuple[tf.Tensor, tf.Tensor]:
         # input projection
-        _units = tf.layers.dense(gobot_obj._features, gobot_obj.dense_size,
+        _units = tf.layers.dense(gobot_obj._features, self.dense_size,
                                  kernel_regularizer=tf.nn.l2_loss,
                                  kernel_initializer=xav())
         if gobot_obj.attn:
