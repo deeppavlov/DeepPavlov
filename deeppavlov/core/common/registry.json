@@ -83,6 +83,7 @@
   "multi_squad_iterator": "deeppavlov.dataset_iterators.squad_iterator:MultiSquadIterator",
   "multi_squad_retr_iterator": "deeppavlov.dataset_iterators.squad_iterator:MultiSquadRetrIterator",
   "nemo_asr": "deeppavlov.models.nemo.asr:NeMoASR",
+  "nemo_tts": "deeppavlov.models.nemo.tts:NeMoTTS",
   "ner": "deeppavlov.models.ner.network:NerNetwork",
   "ner_bio_converter": "deeppavlov.models.ner.bio:BIOMarkupRestorer",
   "ner_few_shot_iterator": "deeppavlov.dataset_iterators.ner_few_shot_iterator:NERFewShotIterator",
@@ -162,6 +163,7 @@
   "ubuntu_v1_mt_reader": "deeppavlov.dataset_readers.ubuntu_v1_mt_reader:UbuntuV1MTReader",
   "ubuntu_v2_mt_reader": "deeppavlov.dataset_readers.ubuntu_v2_mt_reader:UbuntuV2MTReader",
   "ubuntu_v2_reader": "deeppavlov.dataset_readers.ubuntu_v2_reader:UbuntuV2Reader",
+  "wav_saver": "deeppavlov.models.nemo.nemo_io:WAVSaver",
   "wiki_sqlite_vocab": "deeppavlov.vocabs.wiki_sqlite:WikiSQLiteVocab",
   "wikitionary_100K_vocab": "deeppavlov.vocabs.typos:Wiki100KDictionary"
 }

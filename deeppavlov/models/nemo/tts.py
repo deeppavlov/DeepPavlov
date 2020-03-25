@@ -12,16 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from functools import partial
+from io import BytesIO
 from logging import getLogger
 from pathlib import Path
 from typing import Union
 
 import nemo
-import nemo_asr
 import nemo_tts
 import torch
-from io import BytesIO
+from nemo.backends.pytorch import DataLayerNM
+from nemo.core import DeviceType
+from nemo.core.neural_types import NeuralType, AxisType, BatchTag, TimeTag
+from nemo.utils.misc import pad_to
+from nemo_asr.parts.dataset import TranscriptDataset
 from scipy.io import wavfile
+from torch.utils.data import Dataset
+
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.file import read_yaml
 from deeppavlov.core.common.registry import register
@@ -30,6 +37,124 @@ from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.models.nemo.vocoder import WaveGlow, GriffinLim
 
 log = getLogger(__name__)
+
+
+class TextDataset(TranscriptDataset):
+    """A dataset class that reads and returns the text of a file.
+
+    Args:
+        path: (str) Path to file with newline separate strings of text
+        labels (list): List of string labels to use when to str2int translation
+        eos_id (int): Label position of end of string symbol
+    """
+    def __init__(self, texts, labels, bos_id=None, eos_id=None, lowercase=True):
+        if lowercase:
+            texts = [l.strip().lower() for l in texts]
+        self.texts = texts
+
+        self.char2num = {c: i for i, c in enumerate(labels)}
+        self.bos_id = bos_id
+        self.eos_id = eos_id
+
+
+class TextDataLayer(DataLayerNM):
+    """A simple Neural Module for loading textual transcript data.
+    The path, labels, and eos_id arguments are dataset parameters.
+
+    Args:
+        pad_id (int): Label position of padding symbol
+        batch_size (int): Size of batches to generate in data loader
+        drop_last (bool): Whether we drop last (possibly) incomplete batch.
+            Defaults to False.
+        num_workers (int): Number of processes to work on data loading (0 for
+            just main process).
+            Defaults to 0.
+    """
+
+    @staticmethod
+    def create_ports():
+        input_ports = {}
+        output_ports = {
+            'texts': NeuralType({
+                0: AxisType(BatchTag),
+                1: AxisType(TimeTag)
+            }),
+
+            "texts_length": NeuralType({0: AxisType(BatchTag)})
+        }
+        return input_ports, output_ports
+
+    def __init__(self,
+                 texts,
+                 labels,
+                 batch_size=32,
+                 bos_id=None,
+                 eos_id=None,
+                 pad_id=None,
+                 drop_last=False,
+                 num_workers=0,
+                 shuffle=False,
+                 **kwargs):
+        super().__init__(**kwargs)
+
+        len_labels = len(labels)
+        if bos_id is None:
+            bos_id = len_labels
+        if eos_id is None:
+            eos_id = len_labels + 1
+        if pad_id is None:
+            pad_id = len_labels + 2
+
+        self._dataset = TextDataset(texts=texts, labels=labels, bos_id=bos_id, eos_id=eos_id)
+
+        if self._placement == DeviceType.AllGpu:
+            sampler = torch.utils.data.distributed.DistributedSampler(self._dataset)
+        else:
+            sampler = None
+
+        self._dataloader = torch.utils.data.DataLoader(
+            dataset=self._dataset,
+            batch_size=batch_size,
+            collate_fn=partial(self._collate_fn, pad_id=pad_id, pad8=True),
+            drop_last=drop_last,
+            shuffle=shuffle if sampler is None else False,
+            sampler=sampler,
+            num_workers=num_workers
+        )
+
+    @staticmethod
+    def _collate_fn(batch, pad_id, pad8=False):
+        texts_list, texts_len = zip(*batch)
+        max_len = max(texts_len)
+        if pad8:
+            max_len = pad_to(max_len, 8)
+
+        texts = torch.empty(len(texts_list), max_len,
+                            dtype=torch.long)
+        texts.fill_(pad_id)
+
+        for i, s in enumerate(texts_list):
+            texts[i].narrow(0, 0, s.size(0)).copy_(s)
+
+        if len(texts.shape) != 2:
+            raise ValueError(
+                f"Texts in collate function have shape {texts.shape},"
+                f" should have 2 dimensions."
+            )
+
+        return texts, torch.stack(texts_len)
+
+    def __len__(self):
+        return len(self._dataset)
+
+    @property
+    def dataset(self):
+        return None
+
+    @property
+    def data_iterator(self):
+        return self._dataloader
+
 
 @register('nemo_tts')
 class NeMoTTS(Component, Serializable):
@@ -55,14 +180,6 @@ class NeMoTTS(Component, Serializable):
             **tacotron2_params["Tacotron2Postnet"])
         self.modules_to_restore = [self.text_embedding, self.t2_enc, self.t2_dec, self.t2_postnet]
         self.data_layer_kwargs = tacotron2_params['TranscriptDataLayer']
-        num_labels = len(self.data_layer_kwargs['labels'])
-        self.data_layer_kwargs.update(
-            {
-                'bos_id': num_labels,
-                'eos_id': num_labels + 1,
-                'pad_id': num_labels + 2
-            }
-        )
 
         if vocoder == "waveglow":
             self.vocoder = WaveGlow(**tacotron2_params["WaveGlowNM"])
@@ -76,11 +193,8 @@ class NeMoTTS(Component, Serializable):
 
         self.load()
 
-    def __call__(self, manifest_path):
-        data_layer = nemo_asr.TranscriptDataLayer(
-            path=manifest_path,
-            **self.data_layer_kwargs
-        )
+    def __call__(self, texts):
+        data_layer = TextDataLayer(texts, **self.data_layer_kwargs)
         transcript, transcript_len = data_layer()
 
         transcript_embedded = self.text_embedding(char_phone=transcript)
@@ -111,11 +225,3 @@ class NeMoTTS(Component, Serializable):
 
     def save(self, *args, **kwargs):
         pass
-
-
-if __name__ == '__main__':
-    model = NeMoTTS('~/Downloads/tacotron2/tacotron2.yaml', '~/Downloads/tacotron2')
-    audio = model('/data/nemo/workdir/gen.json')
-    from deeppavlov.models.nemo.nemo_io import WAVSaver
-    saver = WAVSaver()
-    print(saver(audio))

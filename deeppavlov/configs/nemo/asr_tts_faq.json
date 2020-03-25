@@ -1,0 +1,114 @@
+{
+  "chainer": {
+    "in": "audio",
+    "in_y": "y",
+    "pipe": [
+      {
+        "class_name": "nemo_asr",
+        "model_path": "{NEMO_PATH}/quartznet15x5/quartznet15x5.yaml",
+        "checkpoints_dir": "{NEMO_PATH}/quartznet15x5",
+        "in": ["audio"],
+        "out": ["q"]
+      },
+      {
+        "class_name": "stream_spacy_tokenizer",
+        "in": "q",
+        "id": "my_tokenizer",
+        "lemmas": true,
+        "out": "q_token_lemmas"
+      },
+      {
+        "ref": "my_tokenizer",
+        "in": "q_token_lemmas",
+        "out": "q_lem"
+      },
+      {
+        "in": ["q_lem"],
+        "out": ["q_vect"],
+        "fit_on": ["q_lem"],
+        "id": "tfidf_vec",
+        "class_name": "sklearn_component",
+        "save_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v4/tfidf.pkl",
+        "load_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v4/tfidf.pkl",
+        "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
+        "infer_method": "transform"
+      },
+      {
+        "id": "answers_vocab",
+        "class_name": "simple_vocab",
+        "fit_on": ["y"],
+        "save_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v4/en_mipt_answers.dict",
+        "load_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v4/en_mipt_answers.dict",
+        "in": "y",
+        "out": "y_ids"
+      },
+      {
+        "in": "q_vect",
+        "fit_on": ["q_vect", "y_ids"],
+        "out": ["y_pred_proba"],
+        "class_name": "sklearn_component",
+        "main": true,
+        "save_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v4/logreg.pkl",
+        "load_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v4/logreg.pkl",
+        "model_class": "sklearn.linear_model:LogisticRegression",
+        "infer_method": "predict_proba",
+        "C": 1000,
+        "penalty": "l2"
+      },
+      {
+        "in": "y_pred_proba",
+        "out": "y_pred_ids",
+        "class_name": "proba2labels",
+        "max_proba": true
+      },
+      {
+        "in": "y_pred_ids",
+        "out": "y_pred_answers",
+        "ref": "answers_vocab"
+      },
+      {
+        "class_name": "nemo_tts",
+        "model_path": "{TTS_PATH}/tacotron2_waveglow.yaml",
+        "checkpoints_dir": "{TTS_PATH}",
+        "in": ["y_pred_answers"],
+        "out": ["audio_answer"]
+      },
+      {
+        "class_name": "wav_saver",
+        "wav_dir": "/data/nemo/workdir",
+        "in": ["audio_answer"],
+        "out": ["file_names"]
+      }
+    ],
+    "out": ["y_pred_answers", "file_names"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "NEMO_PATH": "{ROOT_PATH}/models/nemo",
+      "TTS_PATH": "{NEMO_PATH}/tacotron2_waveglow"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
+      "{DEEPPAVLOV_PATH}/requirements/nemo-asr.txt",
+      "{DEEPPAVLOV_PATH}/requirements/nemo-tts.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/faq/mipt/en_mipt_faq_v4.tar.gz",
+        "subdir": "{MODELS_PATH}/faq/mipt"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/nemo/quartznet15x5.tar.gz",
+        "subdir": "{NEMO_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/nemo/tacotron2_waveglow.tar.gz",
+        "subdir": "{NEMO_PATH}"
+      }
+    ]
+  }
+}

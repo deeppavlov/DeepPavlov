@@ -19,9 +19,13 @@ from typing import Union
 import nemo
 import nemo_asr
 import torch
+from nemo.backends.pytorch import DataLayerNM
+from nemo.core.neural_types import NeuralType, AxisType, BatchTag, TimeTag
 from nemo.utils import get_checkpoint_from_dir
 from nemo_asr.helpers import post_process_predictions
+from nemo_asr.parts.features import WaveformFeaturizer
 from ruamel.yaml import YAML
+from torch.utils.data import Dataset
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
@@ -29,6 +33,112 @@ from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
 
 log = logging.getLogger(__name__)
+
+
+class AudioInferDataset(Dataset):
+    def __init__(self, audio,
+            featurizer,
+            trim=False):
+        self.audio = audio
+        self.featurizer = featurizer
+        self.trim = trim
+
+    def __getitem__(self, index):
+        sample = self.audio[index]
+        features = self.featurizer.process(sample,
+                                           trim=self.trim)
+        features_length = torch.tensor(features.shape[0]).long()
+
+        return features, features_length
+
+    def __len__(self):
+        return len(self.audio)
+
+
+class AudioDataLayer(DataLayerNM):
+    @staticmethod
+    def create_ports():
+        input_ports = {}
+        output_ports = {
+            "audio_signal": NeuralType({0: AxisType(BatchTag),
+                                        1: AxisType(TimeTag)}),
+
+            "a_sig_length": NeuralType({0: AxisType(BatchTag)})
+        }
+        return input_ports, output_ports
+
+    def __init__(
+            self, *,
+            audio,
+            batch_size=32,
+            sample_rate=16000,
+            int_values=False,
+            trim_silence=False,
+            drop_last=False,
+            shuffle=False,
+            num_workers=0,
+            **kwargs
+    ):
+        super().__init__(**kwargs)
+
+        featurizer = WaveformFeaturizer(sample_rate=sample_rate, int_values=int_values)
+
+        # Set up dataset
+        self._dataset = AudioInferDataset(audio, featurizer, trim_silence)
+
+        self._dataloader = torch.utils.data.DataLoader(
+            dataset=self._dataset,
+            batch_size=batch_size,
+            collate_fn=self.seq_collate_fn,
+            drop_last=drop_last,
+            shuffle=shuffle,
+            num_workers=num_workers
+        )
+
+    def __len__(self):
+        return len(self._dataset)
+
+    @property
+    def dataset(self):
+        return None
+
+    @property
+    def data_iterator(self):
+        return self._dataloader
+
+    @staticmethod
+    def seq_collate_fn(batch):
+        """collate batch of audio sig, audio len, tokens, tokens len
+
+        Args:
+            batch (Optional[FloatTensor], Optional[LongTensor], LongTensor,
+                   LongTensor):  A tuple of tuples of signal, signal lengths,
+                   encoded tokens, and encoded tokens length.  This collate func
+                   assumes the signals are 1d torch tensors (i.e. mono audio).
+
+        """
+        _, audio_lengths = zip(*batch)
+        max_audio_len = 0
+        has_audio = audio_lengths[0] is not None
+        if has_audio:
+            max_audio_len = max(audio_lengths).item()
+
+        audio_signal = []
+        for sig, sig_len in batch:
+            if has_audio:
+                sig_len = sig_len.item()
+                if sig_len < max_audio_len:
+                    pad = (0, max_audio_len - sig_len)
+                    sig = torch.nn.functional.pad(sig, pad)
+                audio_signal.append(sig)
+
+        if has_audio:
+            audio_signal = torch.stack(audio_signal)
+            audio_lengths = torch.stack(audio_lengths)
+        else:
+            audio_signal, audio_lengths = None, None
+
+        return audio_signal, audio_lengths
 
 
 @register('nemo_asr')
@@ -71,11 +181,10 @@ class NeMoASR(Component, Serializable):
             log.info(f'Restoring {module} from {checkpoint}')
             module.restore_from(checkpoint)
 
-    def __call__(self, manifest):
-        data_layer = nemo_asr.AudioToTextDataLayer(manifest_filepath=manifest, **self.data_layer_kwargs)
-        audio_paths = [d['audio_filepath'] for d in data_layer._dataset.manifest._data]
+    def __call__(self, audio):
+        data_layer = AudioDataLayer(audio=audio, **self.data_layer_kwargs)
 
-        audio_signal, audio_signal_len, _, _ = data_layer()
+        audio_signal, audio_signal_len = data_layer()
         processed_signal, processed_signal_len = self.data_preprocessor(input_signal=audio_signal,
                                                                         length=audio_signal_len)
         encoded, encoded_len = self.jasper_encoder(audio_signal=processed_signal, length=processed_signal_len)
@@ -85,4 +194,4 @@ class NeMoASR(Component, Serializable):
         tensors = self.neural_factory.infer(tensors=eval_tensors)
         prediction = post_process_predictions(tensors[0], self.labels)
 
-        return audio_paths, prediction
+        return prediction
