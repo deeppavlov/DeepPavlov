@@ -59,6 +59,12 @@ def configure_attn(curr_attn_token_size,
 
 
 class NNStuffHandler(LRScheduledTFModel):
+    SAVE_LOAD_SUBDIR_NAME = "nn_stuff"
+
+    GRAPH_PARAMS = ["hidden_size", "action_size", "dense_size", "obs_size",
+                    "attention_mechanism"]
+    DEPRECATED = ["end_learning_rate", "decay_steps", "decay_power"]
+
     def train_on_batch(self, x: list, y: list):
         pass
 
@@ -277,24 +283,32 @@ class NNStuffHandler(LRScheduledTFModel):
     def train_checkpoint_exists(self, load_path):
         return tf.train.checkpoint_exists(str(self.load_path.resolve()))
 
-    def _load_nn_params(self, gobot_obj) -> None:
+    def load(self, *args, **kwargs) -> None:
+        self._load_nn_params()
+        super().load(*args, **kwargs)
+
+    def _load_nn_params(self) -> None:
         # todo правда ли что тут загружаются только связанные с нейронкой вещи?
 
         path = str(self.load_path.with_suffix('.json').resolve())
         # log.info(f"[loading parameters from {path}]")
         with open(path, 'r', encoding='utf8') as fp:
             params = json.load(fp)
-        for p in gobot_obj.GRAPH_PARAMS:
-            if gobot_obj.nn_stuff_handler.opt.get(p) != params.get(p):
+        for p in self.GRAPH_PARAMS:
+            if self.opt.get(p) != params.get(p):
                 raise ConfigError(f"`{p}` parameter must be equal to saved"
                                   f" model parameter value `{params.get(p)}`,"
-                                  f" but is equal to `{gobot_obj.nn_stuff_handler.opt.get(p)}`")
+                                  f" but is equal to `{self.opt.get(p)}`")
 
-    def _save_nn_params(self, gobot_obj) -> None:
+    def save(self, *args, **kwargs) -> None:
+        super().save(*args, **kwargs)
+        self._save_nn_params()
+
+    def _save_nn_params(self) -> None:
         path = str(self.save_path.with_suffix('.json').resolve())
         # log.info(f"[saving parameters to {path}]")
         with open(path, 'w', encoding='utf8') as fp:
-            json.dump(gobot_obj.nn_stuff_handler.opt, fp)
+            json.dump(self.opt, fp)
 
     def _network_train_on_batch(self, gobot_obj,
                                 features: np.ndarray,

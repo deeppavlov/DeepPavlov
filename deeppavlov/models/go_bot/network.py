@@ -27,6 +27,7 @@ from deeppavlov.core.models.tf_model import LRScheduledTFModel
 from deeppavlov.models.go_bot.data_handler import DataHandler
 from deeppavlov.models.go_bot.nn_stuff_handler import NNStuffHandler
 from deeppavlov.models.go_bot.tracker import FeaturizedTracker, DialogueStateTracker, MultipleUserStateTracker
+from pathlib import Path
 
 log = getLogger(__name__)
 
@@ -105,9 +106,6 @@ class GoalOrientedBot(NNModel):
         debug: whether to display debug output.
     """
 
-    GRAPH_PARAMS = ["hidden_size", "action_size", "dense_size", "obs_size",
-                    "attention_mechanism"]
-    DEPRECATED = ["end_learning_rate", "decay_steps", "decay_power"]
 
     def __init__(self,
                  tokenizer: Component,
@@ -135,22 +133,26 @@ class GoalOrientedBot(NNModel):
                  debug: bool = False,
                  **kwargs) -> None:
 
-        self.nn_stuff_handler = NNStuffHandler(load_path=load_path, save_path=save_path, **kwargs)
-        self.load_path = self.nn_stuff_handler.load_path
-        self.save_path = self.nn_stuff_handler.save_path
+
+        nn_stuff_save_path = Path(save_path, NNStuffHandler.SAVE_LOAD_SUBDIR_NAME)
+        nn_stuff_load_path = Path(load_path, NNStuffHandler.SAVE_LOAD_SUBDIR_NAME)
+
+        self.nn_stuff_handler = NNStuffHandler(load_path=nn_stuff_load_path, save_path=nn_stuff_save_path, **kwargs)
+        self.load_path = load_path
+        self.save_path = save_path
         self.data_handler = DataHandler()
 
         # kwargs here are mostly training hyperparameters
 
         network_parameters = network_parameters or {}
-        if any(p in network_parameters for p in self.DEPRECATED):
-            log.warning(f"parameters {self.DEPRECATED} are deprecated,"
+        if any(p in network_parameters for p in self.nn_stuff_handler.DEPRECATED):
+            log.warning(f"parameters {self.nn_stuff_handler.DEPRECATED} are deprecated,"
                         f" for learning rate schedule documentation see"
                         f" deeppavlov.core.models.lr_scheduled_tf_model"
                         f" or read a github tutorial on super convergence.")
         if 'learning_rate' in network_parameters:
             kwargs['learning_rate'] = network_parameters.pop('learning_rate')
-        super().__init__(save_path=None, **kwargs)
+        super().__init__(save_path=self.save_path, load_path=self.load_path, **kwargs)
 
         self.tokenizer = tokenizer  # preprocessing
 
@@ -296,12 +298,12 @@ class GoalOrientedBot(NNModel):
 
     # region helping stuff
     def load(self, *args, **kwargs) -> None:
-        self.nn_stuff_handler._load_nn_params(self)
+        self.nn_stuff_handler.load()
         super().load(*args, **kwargs)
 
     def save(self, *args, **kwargs) -> None:
         super().save(*args, **kwargs)
-        self.nn_stuff_handler._save_nn_params(self)
+        self.nn_stuff_handler.save()
 
     def process_event(self, event_name, data) -> None:
         super().process_event(event_name, data)
