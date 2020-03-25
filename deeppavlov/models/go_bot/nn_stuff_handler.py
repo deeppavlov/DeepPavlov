@@ -227,14 +227,22 @@ class NNStuffHandler(LRScheduledTFModel):
                                   kernel_initializer=xav(), name='logits')
         return _logits, _state
 
-    def configure_network_opts(self, action_size, attn, dense_size, dropout_rate, hidden_size, l2_reg_coef, obs_size,
-                               embedder,
-                               n_actions,
-                               intent_classifier,
-                               intents,
-                               default_tracker_num_features,
-                               bow_embedder,
-                               word_vocab):
+    def configure_network_opts(self,
+                               network_parameters, new_network_parameters,
+                               embedder, n_actions, intent_classifier, intents, default_tracker_num_features,
+                               bow_embedder, word_vocab) -> None:
+
+        if 'attention_mechanism' in network_parameters:
+            network_parameters['attn'] = network_parameters.pop('attention_mechanism')  # network params
+        new_network_parameters.update(network_parameters)  # network params
+
+        hidden_size = new_network_parameters["hidden_size"]
+        action_size = new_network_parameters["action_size"]
+        obs_size = new_network_parameters["obs_size"]
+        dropout_rate = new_network_parameters["dropout_rate"]
+        l2_reg_coef = new_network_parameters["l2_reg_coef"]
+        dense_size = new_network_parameters["dense_size"]
+        attn = new_network_parameters["attn"]
 
         dense_size = dense_size or hidden_size
 
@@ -265,7 +273,6 @@ class NNStuffHandler(LRScheduledTFModel):
         }
 
         self.opt = opt
-        return opt
 
     def train_checkpoint_exists(self, load_path):
         return tf.train.checkpoint_exists(str(self.load_path.resolve()))
@@ -369,9 +376,10 @@ class NNStuffHandler(LRScheduledTFModel):
                 gobot_obj.dialogue_state_tracker.update_previous_action(action_id)
 
                 if gobot_obj.debug:
-                    log.debug(f"True response = '{response['text']}'.")
+                    # log.debug(f"True response = '{response['text']}'.")
                     if d_a_masks[-1][action_id] != 1.:
-                        log.warning("True action forbidden by action mask.")
+                        pass
+                        # log.warning("True action forbidden by action mask.")
 
             # padding to max_num_utter
             num_padds = max_num_utter - len(d_contexts)

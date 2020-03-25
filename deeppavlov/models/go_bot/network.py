@@ -190,31 +190,12 @@ class GoalOrientedBot(NNModel):
             'dense_size': dense_size,
             'attn': attention_mechanism
         }  # network params
-        if 'attention_mechanism' in network_parameters:
-            network_parameters['attn'] = network_parameters.pop('attention_mechanism')  # network params
-        new_network_parameters.update(network_parameters)  # network params
-        self._init_network(**new_network_parameters)  # network params
 
-        self.multiple_user_state_tracker = MultipleUserStateTracker()  # tracker
-        self.reset()  # tracker
 
-    def _init_network(self,
-                      hidden_size: int,
-                      action_size: int,
-                      obs_size: int,
-                      dropout_rate: float,
-                      l2_reg_coef: float,
-                      dense_size: int,
-                      attn: dict) -> None:
-        # initialize network
-        self.nn_stuff_handler.configure_network_opts(action_size, attn, dense_size, dropout_rate, hidden_size,
-                                                     l2_reg_coef,
-                                                     obs_size, self.embedder, self.n_actions, self.intent_classifier,
-                                                     self.intents,
+        self.nn_stuff_handler.configure_network_opts(network_parameters, new_network_parameters, self.embedder, self.n_actions,
+                                                     self.intent_classifier, self.intents,
                                                      self.default_tracker.num_features, self.bow_embedder,
                                                      self.word_vocab)
-
-        # initialize parameters
         self.nn_stuff_handler._configure_network(self)
 
         if self.nn_stuff_handler.train_checkpoint_exists(self.load_path):
@@ -224,7 +205,8 @@ class GoalOrientedBot(NNModel):
             log.info(f"[initializing `{self.__class__.__name__}` from scratch]")
 
 
-
+        self.multiple_user_state_tracker = MultipleUserStateTracker()  # tracker
+        self.reset()  # tracker
 
 
     def train_on_batch(self, x: List[dict], y: List[dict]) -> dict:
