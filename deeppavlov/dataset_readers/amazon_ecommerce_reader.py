@@ -21,6 +21,7 @@ from deeppavlov.core.data.utils import download_decompress, mark_done, is_done
 
 logger = getLogger(__name__)
 
+
 @register('amazon_ecommerce_reader')
 class AmazonEcommerceReader(DatasetReader):
     """Class to download and load ecommerce data catalog"""
@@ -56,8 +57,8 @@ class AmazonEcommerceReader(DatasetReader):
         dataset = {
             'train': [((item['Title'], [], {}), item) for item in ec_data_global],
             'valid': [],
-            'test':  []
-            }
+            'test': []
+        }
 
         logger.info(f"In total {len(ec_data_global)} items are loaded")
         return dataset

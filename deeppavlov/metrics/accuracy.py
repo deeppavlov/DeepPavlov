@@ -30,11 +30,82 @@ def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> flo
         y_predicted: array of predicted values
 
     Returns:
-        portion of absolutely coincidental samples
+        fraction of absolutely coincidental samples
     """
     examples_len = len(y_true)
-    correct = sum([y1 == y2 for y1, y2 in zip(y_true, y_predicted)])
+    # if y1 and y2 are both arrays, == can be erroneously interpreted as element-wise equality
+    def _are_equal(y1, y2):
+        answer = (y1 == y2)
+        if isinstance(answer, np.ndarray):
+            answer = answer.all()
+        return answer
+    equalities = [_are_equal(y1, y2) for y1, y2 in zip(y_true, y_predicted)]
+    correct = sum(equalities)
     return correct / examples_len if examples_len else 0
+
+
+@register_metric('multitask_accuracy')
+def multitask_accuracy(*args) -> float:
+    """
+    Accuracy for multiple simultaneous tasks.
+
+    Args:
+        *args: a list of `2n` inputs. The first `n` inputs are the correct answers for `n` tasks
+            and the last `n` are the predicted ones.
+
+    Returns:
+        The percentage of inputs where the answers for all `n` tasks are correct.
+    """
+    n = len(args)
+    y_true_by_tasks, y_predicted_by_tasks = args[:n // 2], args[n // 2:]
+    y_true, y_predicted = list(zip(*y_true_by_tasks)), list(zip(*y_predicted_by_tasks))
+    return accuracy(y_true, y_predicted)
+
+
+@register_metric('multitask_sequence_accuracy')
+def multitask_sequence_accuracy(*args) -> float:
+    """
+    Accuracy for multiple simultaneous sequence labeling (tagging) tasks.
+    For each sequence the model checks whether all its elements
+    are labeled correctly for all the individual taggers.
+
+    Args:
+        *args: a list of `2n` inputs. The first `n` inputs are the correct answers for `n` tasks
+            and the last `n` are the predicted ones. For each task an
+
+    Returns:
+        The percentage of sequences where all the items has correct answers for all `n` tasks.
+
+    """
+    n = len(args)
+    y_true_by_tasks, y_predicted_by_tasks = args[:n // 2], args[n // 2:]
+    y_true_by_sents = list(zip(*y_true_by_tasks))
+    y_predicted_by_sents = list(zip(*y_predicted_by_tasks))
+    y_true = list(list(zip(*elem)) for elem in y_true_by_sents)
+    y_predicted = list(list(zip(*elem)) for elem in y_predicted_by_sents)
+    return accuracy(y_true, y_predicted)
+
+
+@register_metric('multitask_token_accuracy')
+def multitask_token_accuracy(*args) -> float:
+    """
+        Per-item accuracy for multiple simultaneous sequence labeling (tagging) tasks.
+
+        Args:
+            *args: a list of `2n` inputs. The first `n` inputs are the correct answers for `n` tasks
+                and the last `n` are the predicted ones. For each task an
+
+        Returns:
+            The percentage of sequence elements for which the answers for all `n` tasks are correct.
+
+        """
+    n = len(args)
+    y_true_by_tasks, y_predicted_by_tasks = args[:n // 2], args[n // 2:]
+    y_true_by_sents = list(zip(*y_true_by_tasks))
+    y_predicted_by_sents = list(zip(*y_predicted_by_tasks))
+    y_true = list(list(zip(*elem)) for elem in y_true_by_sents)
+    y_predicted = list(list(zip(*elem)) for elem in y_predicted_by_sents)
+    return per_token_accuracy(y_true, y_predicted)
 
 
 @register_metric('sets_accuracy')
@@ -59,17 +130,6 @@ def slots_accuracy(y_true, y_predicted):
     y_true = [{tag.split('-')[-1] for tag in s if tag != 'O'} for s in y_true]
     y_predicted = [set(s.keys()) for s in y_predicted]
     return accuracy(y_true, y_predicted)
-
-
-@register_metric('per_item_accuracy')
-def per_item_accuracy(y_true, y_predicted):
-    if isinstance(y_true[0], (tuple, list)):
-        y_true = (y[0] for y in y_true)
-    y_true = list(itertools.chain(*y_true))
-    y_predicted = itertools.chain(*y_predicted)
-    examples_len = len(y_true)
-    correct = sum([y1 == y2 for y1, y2 in zip(y_true, y_predicted)])
-    return correct / examples_len if examples_len else 0
 
 
 @register_metric('per_token_accuracy')

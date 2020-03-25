@@ -31,7 +31,7 @@ class UbuntuV2MTReader(DatasetReader):
         num_context_turns: A maximum number of dialogue ``context`` turns.
         padding: "post" or "pre" context sentences padding
     """
-    
+
     def read(self, data_path: str,
              num_context_turns: int = 1,
              padding: str = "post",
@@ -61,7 +61,7 @@ class UbuntuV2MTReader(DatasetReader):
         dataset["valid"] = self.preprocess_data_validation(valid_fname)
         dataset["test"] = self.preprocess_data_validation(test_fname)
         return dataset
-    
+
     def preprocess_data_train(self, train_fname: Union[Path, str]) -> List[Tuple[List[str], int]]:
         contexts = []
         responses = []
@@ -87,7 +87,7 @@ class UbuntuV2MTReader(DatasetReader):
                 contexts.append(self._expand_context(el[0].split('__eot__'), padding=self.padding))
                 responses.append(el[1:])
         data = [el[0] + el[1] for el in zip(contexts, responses)]
-        data = [(el, 1) for el in data]   # NOTE: labels are useless here actually...
+        data = [(el, 1) for el in data]  # NOTE: labels are useless here actually...
         return data
 
     def _expand_context(self, context: List[str], padding: str) -> List[str]:

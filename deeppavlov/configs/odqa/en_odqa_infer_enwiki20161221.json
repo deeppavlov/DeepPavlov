@@ -68,9 +68,6 @@
       "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
       "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
     ],
-    "labels": {
-      "server_utils": "ODQA"
-    },
     "download": [
     ]
   }

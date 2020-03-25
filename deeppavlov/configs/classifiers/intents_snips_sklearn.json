@@ -1,22 +1,13 @@
 {
   "dataset_reader": {
-    "class_name": "basic_classification_reader",
+    "class_name": "snips_reader",
     "x": "text",
     "y": "intents",
     "data_path": "{DOWNLOADS_PATH}/snips"
   },
   "dataset_iterator": {
-    "class_name": "basic_classification_iterator",
-    "seed": 42,
-    "field_to_split": "train",
-    "split_fields": [
-      "train",
-      "valid"
-    ],
-    "split_proportions": [
-      0.9,
-      0.1
-    ]
+    "class_name": "snips_intents_iterator",
+    "seed": 42
   },
   "chainer": {
     "in": [
@@ -32,8 +23,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v9/classes.dict",
-        "load_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v9/classes.dict",
+        "save_path": "{MODEL_PATH}/classes.dict",
+        "load_path": "{MODEL_PATH}/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -50,8 +41,8 @@
         ],
         "id": "tfidf_vec",
         "class_name": "sklearn_component",
-        "save_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v9/tfidf.pkl",
-        "load_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v9/tfidf.pkl",
+        "save_path": "{MODEL_PATH}/tfidf.pkl",
+        "load_path": "{MODEL_PATH}/tfidf.pkl",
         "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
         "infer_method": "transform",
         "lowercase": true,
@@ -76,8 +67,8 @@
         ],
         "id": "selector",
         "class_name": "sklearn_component",
-        "save_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v9/selectkbest.pkl",
-        "load_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v9/selectkbest.pkl",
+        "save_path": "{MODEL_PATH}/selectkbest.pkl",
+        "load_path": "{MODEL_PATH}/selectkbest.pkl",
         "model_class": "sklearn.feature_selection:SelectKBest",
         "infer_method": "transform",
         "score_func": "sklearn.feature_selection:chi2",
@@ -95,27 +86,11 @@
         ],
         "id": "pca",
         "class_name": "sklearn_component",
-        "save_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v9/pca.pkl",
-        "load_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v9/pca.pkl",
+        "save_path": "{MODEL_PATH}/pca.pkl",
+        "load_path": "{MODEL_PATH}/pca.pkl",
         "model_class": "sklearn.decomposition:PCA",
         "infer_method": "transform",
         "n_components": 300
-      },
-      {
-        "in": "x",
-        "out": "x_tok",
-        "id": "my_tokenizer",
-        "class_name": "nltk_tokenizer",
-        "tokenizer": "wordpunct_tokenize"
-      },
-      {
-        "in": "x_tok",
-        "out": "x_emb",
-        "id": "my_embedder",
-        "class_name": "fasttext",
-        "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin",
-        "dim": 300,
-        "mean": true
       },
       {
         "class_name": "one_hotter",
@@ -127,21 +102,19 @@
       },
       {
         "in": [
-          "x_pca",
-          "x_emb"
+          "x_pca"
         ],
         "out": [
           "y_pred_onehot"
         ],
         "fit_on": [
           "x_pca",
-          "x_emb",
           "y_onehot"
         ],
         "class_name": "sklearn_component",
         "main": true,
-        "save_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v9/model.pkl",
-        "load_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v9/model.pkl",
+        "save_path": "{MODEL_PATH}/model.pkl",
+        "load_path": "{MODEL_PATH}/model.pkl",
         "model_class": "sklearn.neighbors:KNeighborsClassifier",
         "infer_method": "predict",
         "ensure_list_output": true
@@ -167,7 +140,7 @@
     "metrics": [
       "accuracy"
     ],
-    "show_examples": true,
+    "show_examples": false,
     "evaluation_targets": [
       "train",
       "valid"
@@ -178,32 +151,17 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models"
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v11"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
     ],
-    "labels": {
-      "telegram_utils": "IntentModel",
-      "server_utils": "KerasIntentModel"
-    },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
-        "subdir": "{MODELS_PATH}"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
-        "subdir": "{DOWNLOADS_PATH}/snips"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/intents_snips_sklearn_v9.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/intents_snips_sklearn_v11.tar.gz",
         "subdir": "{MODELS_PATH}/classifiers"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
-        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
   }

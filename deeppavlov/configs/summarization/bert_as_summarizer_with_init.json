@@ -1,0 +1,41 @@
+{
+    "chainer": {
+      "in": ["texts", "init_sentences"],
+      "pipe": [
+        {
+          "class_name": "bert_as_summarizer",
+          "bert_config_file": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v2/bert_config.json",
+          "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v2/bert_model.ckpt",
+          "vocab_file": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v2/vocab.txt",
+          "max_summary_length": 100,
+          "max_summary_length_in_tokens": true,
+          "lang": "ru",
+          "do_lower_case": false,
+          "max_seq_length": 512,
+          "in": ["texts", "init_sentences"],
+          "out": ["summarized_text"]
+        }
+      ],
+      "out": ["summarized_text"]
+    },
+    "metadata": {
+      "variables": {
+        "ROOT_PATH": "~/.deeppavlov",
+        "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+        "MODELS_PATH": "{ROOT_PATH}/models",
+        "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+      },
+      "requirements": [
+        "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+        "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+      ],
+      "download": [
+        {
+          "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v2.tar.gz",
+          "subdir": "{DOWNLOADS_PATH}/bert_models"
+        }
+      ]
+    }
+  }
+  
+  

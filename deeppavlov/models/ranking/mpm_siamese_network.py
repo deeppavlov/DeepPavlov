@@ -15,11 +15,10 @@
 
 from logging import getLogger
 
-from keras import backend as K
-from keras.initializers import glorot_uniform, Orthogonal
-from keras.layers import Input, LSTM, Lambda, Dense, Dropout
-from keras.layers.wrappers import Bidirectional
-from keras.models import Model
+from tensorflow.keras import backend as K
+from tensorflow.keras.initializers import glorot_uniform, Orthogonal
+from tensorflow.keras.layers import Input, LSTM, Lambda, Dense, Dropout, Bidirectional
+from tensorflow.keras.models import Model
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.layers.keras_layers import AttentiveMatchingLayer, MaxattentiveMatchingLayer
@@ -31,7 +30,6 @@ log = getLogger(__name__)
 
 @register('mpm_nn')
 class MPMSiameseNetwork(BiLSTMSiameseNetwork):
-
     """The class implementing a siamese neural network with bilateral multi-Perspective matching.
 
     The network architecture is based on https://arxiv.org/abs/1702.03814.
@@ -89,7 +87,7 @@ class MPMSiameseNetwork(BiLSTMSiameseNetwork):
         ker_in = glorot_uniform(seed=self.seed)
         rec_in = Orthogonal(seed=self.seed)
         bioutp = Bidirectional(LSTM(self.aggregation_dim,
-                                    input_shape=(self.max_sequence_length, 8*self.perspective_num,),
+                                    input_shape=(self.max_sequence_length, 8 * self.perspective_num,),
                                     kernel_regularizer=None,
                                     recurrent_regularizer=None,
                                     bias_regularizer=None,
@@ -123,11 +121,11 @@ class MPMSiameseNetwork(BiLSTMSiameseNetwork):
         f_layer_b = FullMatchingLayer(self.perspective_num)
         f_a_forw = f_layer_f([lstm_a[0], lstm_b[0]])[0]
         f_a_back = f_layer_b([Lambda(lambda x: K.reverse(x, 1))(lstm_a[1]),
-                                      Lambda(lambda x: K.reverse(x, 1))(lstm_b[1])])[0]
+                              Lambda(lambda x: K.reverse(x, 1))(lstm_b[1])])[0]
         f_a_back = Lambda(lambda x: K.reverse(x, 1))(f_a_back)
         f_b_forw = f_layer_f([lstm_b[0], lstm_a[0]])[0]
         f_b_back = f_layer_b([Lambda(lambda x: K.reverse(x, 1))(lstm_b[1]),
-                                      Lambda(lambda x: K.reverse(x, 1))(lstm_a[1])])[0]
+                              Lambda(lambda x: K.reverse(x, 1))(lstm_a[1])])[0]
         f_b_back = Lambda(lambda x: K.reverse(x, 1))(f_b_back)
 
         mp_layer_f = MaxpoolingMatchingLayer(self.perspective_num)

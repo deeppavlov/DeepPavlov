@@ -25,7 +25,7 @@ SMOOTH = SmoothingFunction()
 
 @register_metric('bleu_advanced')
 def bleu_advanced(y_true: List[Any], y_predicted: List[Any],
-                  weights: Tuple=(1,), smoothing_function=SMOOTH.method1,
+                  weights: Tuple = (1,), smoothing_function=SMOOTH.method1,
                   auto_reweigh=False, penalty=True) -> float:
     """Calculate BLEU score
 
@@ -52,7 +52,7 @@ def bleu_advanced(y_true: List[Any], y_predicted: List[Any],
     if penalty is True or bpenalty == 0:
         return bleu_measure
 
-    return bleu_measure/bpenalty
+    return bleu_measure / bpenalty
 
 
 @register_metric('bleu')
@@ -78,4 +78,4 @@ def per_item_bleu(y_true, y_predicted):
 def per_item_dialog_bleu(y_true, y_predicted):
     y_true = (y['text'] for dialog in y_true for y in dialog)
     return corpus_bleu([[y_t.lower().split()] for y_t in y_true],
-                       [y_p.lower().split() for y_p in y_predicted])
+                       [y.lower().split() for y_p in y_predicted for y in y_p])

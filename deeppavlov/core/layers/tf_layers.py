@@ -22,8 +22,9 @@ from deeppavlov.core.common.check_gpu import check_gpu_existence
 
 log = getLogger(__name__)
 
-
 INITIALIZER = tf.orthogonal_initializer
+
+
 # INITIALIZER = xavier_initializer
 
 
@@ -124,7 +125,7 @@ def bi_rnn(units: tf.Tensor,
 
         Args:
             units: a tensorflow tensor with dimensionality [None, n_tokens, n_features]
-            n_hidden: list with number of hidden units at the ouput of each layer
+            n_hidden: list with number of hidden units in the output of each layer
             seq_lengths: length of sequences for different length sequences in batch
                 can be None for maximum length as a length for every sample in the batch
             cell_type: 'lstm' or 'gru'
@@ -537,13 +538,13 @@ def cudnn_gru(units, n_hidden, n_layers=1, trainable_initial_states=False,
 
         initial_h = input_initial_h or init_h
 
-        h, h_last = gru(tf.transpose(units, (1, 0, 2)), (initial_h, ))
+        h, h_last = gru(tf.transpose(units, (1, 0, 2)), (initial_h,))
         h = tf.transpose(h, (1, 0, 2))
         h_last = tf.squeeze(h_last, axis=0)[-1]  # extract last layer state
 
         # Extract last states if they are provided
         if seq_lengths is not None:
-            indices = tf.stack([tf.range(tf.shape(h)[0]), seq_lengths-1], axis=1)
+            indices = tf.stack([tf.range(tf.shape(h)[0]), seq_lengths - 1], axis=1)
             h_last = tf.gather_nd(h, indices)
 
         return h, h_last
@@ -586,6 +587,7 @@ def cudnn_compatible_gru(units, n_hidden, n_layers=1, trainable_initial_states=F
 
         with tf.variable_scope('cudnn_gru', reuse=reuse):
             def single_cell(): return tf.contrib.cudnn_rnn.CudnnCompatibleGRUCell(n_hidden)
+
             cell = tf.nn.rnn_cell.MultiRNNCell([single_cell() for _ in range(n_layers)])
 
             units = tf.transpose(units, (1, 0, 2))
@@ -598,7 +600,7 @@ def cudnn_compatible_gru(units, n_hidden, n_layers=1, trainable_initial_states=F
 
             # Extract last states if they are provided
             if seq_lengths is not None:
-                indices = tf.stack([tf.range(tf.shape(h)[0]), seq_lengths-1], axis=1)
+                indices = tf.stack([tf.range(tf.shape(h)[0]), seq_lengths - 1], axis=1)
                 h_last = tf.gather_nd(h, indices)
 
             return h, h_last
@@ -606,7 +608,6 @@ def cudnn_compatible_gru(units, n_hidden, n_layers=1, trainable_initial_states=F
 
 def cudnn_gru_wrapper(units, n_hidden, n_layers=1, trainable_initial_states=False,
                       seq_lengths=None, input_initial_h=None, name='cudnn_gru', reuse=False):
-
     if check_gpu_existence():
         return cudnn_gru(units, n_hidden, n_layers, trainable_initial_states,
                          seq_lengths, input_initial_h, name, reuse)
@@ -672,7 +673,7 @@ def cudnn_lstm(units, n_hidden, n_layers=1, trainable_initial_states=None, seq_l
 
         # Extract last states if they are provided
         if seq_lengths is not None:
-            indices = tf.stack([tf.range(tf.shape(h)[0]), seq_lengths-1], axis=1)
+            indices = tf.stack([tf.range(tf.shape(h)[0]), seq_lengths - 1], axis=1)
             h_last = tf.gather_nd(h, indices)
 
         return h, (h_last, c_last)
@@ -740,7 +741,7 @@ def cudnn_compatible_lstm(units, n_hidden, n_layers=1, trainable_initial_states=
 
             # Extract last states if they are provided
             if seq_lengths is not None:
-                indices = tf.stack([tf.range(tf.shape(h)[0]), seq_lengths-1], axis=1)
+                indices = tf.stack([tf.range(tf.shape(h)[0]), seq_lengths - 1], axis=1)
                 h_last = tf.gather_nd(h, indices)
 
             return h, (h_last, c_last)
@@ -748,7 +749,6 @@ def cudnn_compatible_lstm(units, n_hidden, n_layers=1, trainable_initial_states=
 
 def cudnn_lstm_wrapper(units, n_hidden, n_layers=1, trainable_initial_states=None, seq_lengths=None, initial_h=None,
                        initial_c=None, name='cudnn_lstm', reuse=False):
-
     if check_gpu_existence():
         return cudnn_lstm(units, n_hidden, n_layers, trainable_initial_states,
                           seq_lengths, initial_h, initial_c, name, reuse)
@@ -945,4 +945,4 @@ def variational_dropout(units, keep_prob, fixed_mask_dims=(1,)):
     noise_shape = [units_shape[n] for n in range(len(units.shape))]
     for dim in fixed_mask_dims:
         noise_shape[dim] = 1
-    return tf.nn.dropout(units, keep_prob, noise_shape)
+    return tf.nn.dropout(units, rate=1 - keep_prob, noise_shape=noise_shape)

@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple, Dict
-from pathlib import Path
 import json
+from pathlib import Path
+from typing import List, Tuple, Dict
 
 import numpy as np
 
@@ -36,7 +36,7 @@ class UbuntuDSTC7MTReader(DatasetReader):
             it can be reduced to 10 (1 true response + 9 random wrong responses) to adapt with succeeding pipeline
         padding (str): "post" or "pre" context sentences padding
     """
-    
+
     def read(self,
              data_path: str,
              num_context_turns: int = 10,
@@ -53,7 +53,7 @@ class UbuntuDSTC7MTReader(DatasetReader):
         dataset = {}
         dataset["train"] = self._create_dialog_iter(Path(data_path) / 'ubuntu_train_subtask_1.json', "train")
         dataset["valid"] = self._create_dialog_iter(Path(data_path) / 'ubuntu_dev_subtask_1.json', "valid")
-        dataset["test"]  = self._create_dialog_iter(Path(data_path) / 'ubuntu_test_subtask_1.json', "test")
+        dataset["test"] = self._create_dialog_iter(Path(data_path) / 'ubuntu_test_subtask_1.json', "test")
         return dataset
 
     def _create_dialog_iter(self, filename, mode="train"):
@@ -84,17 +84,17 @@ class UbuntuDSTC7MTReader(DatasetReader):
             for entry in json_data:
 
                 dialog = entry
-                utterances = []   # all the context sentences
+                utterances = []  # all the context sentences
                 for msg in dialog['messages-so-far']:
                     utterances.append(msg['utterance'])
 
                 true_response = ""  # true response sentence
-                if mode is not "test":
+                if mode != "test":
                     true_response = dialog['options-for-correct-answers'][0]['utterance']
 
-                fake_responses = []   # rest (wrong) responses
+                fake_responses = []  # rest (wrong) responses
                 target_id = ""
-                if mode is not "test":
+                if mode != "test":
                     correct_answer = dialog['options-for-correct-answers'][0]
                     target_id = correct_answer['candidate-id']
                 for i, utterance in enumerate(dialog['options-for-next']):
@@ -106,11 +106,13 @@ class UbuntuDSTC7MTReader(DatasetReader):
 
                 if mode == 'train':
                     data.append((expanded_context + [true_response], 1))
-                    data.append((expanded_context + list(self.np_random.choice(fake_responses, size=1)), 0))  # random 1 from 99
+                    data.append(
+                        (expanded_context + list(self.np_random.choice(fake_responses, size=1)), 0))  # random 1 from 99
 
                 elif mode == 'valid':
                     # NOTE: labels are useless here...
-                    data.append((expanded_context + [true_response] + list(self.np_random.choice(fake_responses, self.num_responses-1)), 0))
+                    data.append((expanded_context + [true_response] + list(
+                        self.np_random.choice(fake_responses, self.num_responses - 1)), 0))
 
                 elif mode == 'test':
                     data.append((expanded_context + fake_responses, 0))

@@ -5,10 +5,13 @@ import os
 import pickle
 import shutil
 import signal
+import socket
 import sys
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-from typing import Union
+from struct import unpack
+from time import sleep
+from typing import Optional, Union
 from urllib.parse import urljoin
 
 import pexpect
@@ -19,10 +22,10 @@ import requests
 import deeppavlov
 from deeppavlov import build_model
 from deeppavlov.core.commands.utils import parse_config
-from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
-from deeppavlov.utils.server.server import get_server_params, SERVER_CONFIG_FILENAME
+from deeppavlov.utils.server import get_server_params
+from deeppavlov.utils.socket import encode
 
 tests_dir = Path(__file__).parent
 test_configs_path = tests_dir / "deeppavlov" / "configs"
@@ -30,11 +33,13 @@ src_dir = Path(deeppavlov.__path__[0]) / "configs"
 test_src_dir = tests_dir / "test_configs"
 download_path = tests_dir / "download"
 
-cache_dir: Path = None
+cache_dir: Optional[Path] = None
 if not os.getenv('DP_PYTEST_NO_CACHE'):
     cache_dir = tests_dir / 'download_cache'
 
 api_port = os.getenv('DP_PYTEST_API_PORT')
+if api_port is not None:
+    api_port = int(api_port)
 
 TEST_MODES = ['IP',  # test_interacting_pretrained_model
               'TI',  # test_consecutive_training_and_interacting
@@ -86,18 +91,29 @@ PARAMS = {
         ("classifiers/paraphraser_bert.json", "classifiers", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/paraphraser_rubert.json", "classifiers", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/insults_kaggle_bert.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/insults_kaggle_conv_bert.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/rusentiment_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_dstc2_bert.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_dstc2.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_dstc2_big.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/insults_kaggle.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_twitter.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_twitter_bert_emb.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_twitter_preproc.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/topic_ag_news.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/rusentiment_cnn.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/rusentiment_elmo_twitter_cnn.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/rusentiment_bigru_superconv.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/yahoo_convers_vs_info.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("classifiers/yahoo_convers_vs_info.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/ru_obscenity_classifier.json", "classifiers", ('IP',)):
+            [
+                ("Ну и сука же она", 'True'),
+                ("я два года жду эту игру", 'False')
+            ],
+        ("classifiers/sentiment_sst_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_sst_multi_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_yelp_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_yelp_multi_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "snips": {
         ("classifiers/intents_snips.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -127,6 +143,7 @@ PARAMS = {
         ("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_ontonotes.json", "ner_ontonotes", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_ontonotes_bert_emb.json", "ner_ontonotes_bert_emb", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_few_shot_ru_simulate.json", "ner_fs", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_rus.json", "ner_rus", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/slotfill_dstc2.json", "slotfill_dstc2", ('IP',)):
@@ -140,20 +157,20 @@ PARAMS = {
         ("kbqa/kbqa_rus.json", "kbqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "elmo_embedder": {
-        ("elmo_embedder/elmo_ru_news.json", "elmo_embedder_ru_news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("embedder/elmo_ru_news.json", "embedder_ru_news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
     },
     "elmo_model": {
         ("elmo/elmo_1b_benchmark_test.json", "elmo_1b_benchmark_test", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
     },
     "ranking": {
-        ("ranking/ranking_insurance_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_insurance_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_mt_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_mt_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/paraphrase_ident_paraphraser_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/paraphrase_ident_paraphraser_interact_test.json", "ranking",
+        ("ranking/ranking_insurance.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_insurance_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_mt.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_mt_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_paraphraser.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_paraphraser_interact.json", "ranking",
          ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/paraphrase_ident_paraphraser_pretrain.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/paraphrase_ident_paraphraser_tune.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -162,14 +179,14 @@ PARAMS = {
         ("ranking/paraphrase_ident_paraphraser_elmo.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/paraphrase_ident_elmo_interact.json", "ranking",
          ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/paraphrase_ident_qqp_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/paraphrase_ident_qqp_bilstm_interact_test.json", "ranking",
+        ("ranking/paraphrase_ident_qqp.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_qqp_bilstm_interact.json", "ranking",
          ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/paraphrase_ident_qqp_bilstm_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/paraphrase_ident_qqp_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_bert_uncased_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_bert_sep_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_bert_sep_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_qqp_bilstm.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_qqp_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_bert_uncased.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_bert_sep.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_bert_sep_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v1_mt_word2vec_smn.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v1_mt_word2vec_dam.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v1_mt_word2vec_dam_transformer.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -196,24 +213,26 @@ PARAMS = {
         ("squad/squad_bert_infer.json", "squad_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/multi_squad_noans.json", "multi_squad_noans", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK]
+        ("squad/multi_squad_noans.json", "multi_squad_noans", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_zh_bert_mult.json", "squad_zh_bert_mult", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_zh_bert_zh.json", "squad_zh_bert_zh", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK]
     },
     "seq2seq_go_bot": {
         ("seq2seq_go_bot/bot_kvret_train.json", "seq2seq_go_bot", ('TI',)):
-        [
-           ("will it snow on tuesday?",
-            "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
-            "",
-            "",
-            "",
-            None)
-        ],
+            [
+                ("will it snow on tuesday?",
+                 "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
+                 "",
+                 "",
+                 "",
+                 None)
+            ],
         ("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ('IP',)):
-        [
-           ("will it snow on tuesday?",
-            "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
-            None)
-        ]
+            [
+                ("will it snow on tuesday?",
+                 "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
+                 None)
+            ]
     },
     "odqa": {
         ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -221,11 +240,15 @@ PARAMS = {
         ("odqa/en_odqa_pop_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "morpho_tagger": {
-        ("morpho_tagger/UD2.0/morpho_en.json", "morpho_tagger_en", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json", "morpho_tagger_pymorphy", ALL_MODES):
+        ("morpho_tagger/UD2.0/morpho_en.json", "morpho_en", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy_lemmatize.json", "morpho_tagger_pymorphy", ('IP', 'TI')):
             [ONE_ARGUMENT_INFER_CHECK],
-        ("morpho_tagger/UD2.0/morpho_ru_syntagrus.json", "morpho_tagger_pymorphy", ALL_MODES):
+        ("morpho_tagger/BERT/morpho_ru_syntagrus_bert.json", "morpho_tagger_bert", ('IP', 'TI')):
             [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "syntax_tagger": {
+        ("syntax/syntax_ru_syntagrus_bert.json", "syntax_ru_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("syntax/ru_syntagrus_joint_parsing.json", "syntax_ru_bert", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     }
 }
 
@@ -268,8 +291,10 @@ def download_config(config_path):
     # Download referenced config files
     config_references = get_all_elems_from_json(parse_config(config), 'config_path')
     for config_ref in config_references:
-        m_name = config_ref.split('/')[-2]
-        config_ref = '/'.join(config_ref.split('/')[-2:])
+        splitted = config_ref.split("/")
+        first_subdir_index = splitted.index("configs") + 1
+        m_name = config_ref.split('/')[first_subdir_index]
+        config_ref = '/'.join(config_ref.split('/')[first_subdir_index:])
 
         test_configs_path.joinpath(m_name).mkdir(exist_ok=True)
         if not test_configs_path.joinpath(config_ref).exists():
@@ -357,7 +382,7 @@ class TestQuickStart(object):
                 p.expect(">> ")
                 if expected_response is not None:
                     actual_response = p.readline().decode().strip()
-                    assert expected_response == actual_response,\
+                    assert expected_response == actual_response, \
                         f"Error in interacting with {model_directory} ({config_path}): {query}"
 
             p.expect("::")
@@ -370,20 +395,12 @@ class TestQuickStart(object):
 
     @staticmethod
     def interact_api(config_path):
-        server_conf_file = get_settings_path() / SERVER_CONFIG_FILENAME
+        server_params = get_server_params(config_path)
 
-        server_params = get_server_params(server_conf_file, config_path)
-        model_args_names = server_params['model_args_names']
-
-        url_base = 'http://{}:{}/'.format(server_params['host'], api_port or server_params['port'])
+        url_base = 'http://{}:{}'.format(server_params['host'], api_port or server_params['port'])
         url = urljoin(url_base.replace('http://0.0.0.0:', 'http://127.0.0.1:'), server_params['model_endpoint'])
 
         post_headers = {'Accept': 'application/json'}
-
-        post_payload = {}
-        for arg_name in model_args_names:
-            arg_value = str(' '.join(['qwerty'] * 10))
-            post_payload[arg_name] = [arg_value]
 
         logfile = io.BytesIO(b'')
         args = [sys.executable, "-m", "deeppavlov", "riseapi", str(config_path)]
@@ -393,6 +410,18 @@ class TestQuickStart(object):
                                            timeout=None, logfile=logfile)
         try:
             p.expect(url_base)
+
+            get_url = urljoin(url_base.replace('http://0.0.0.0:', 'http://127.0.0.1:'), '/api')
+            get_response = requests.get(get_url)
+            response_code = get_response.status_code
+            assert response_code == 200, f"GET /api request returned error code {response_code} with {config_path}"
+
+            model_args_names = get_response.json()
+            post_payload = dict()
+            for arg_name in model_args_names:
+                arg_value = ' '.join(['qwerty'] * 10)
+                post_payload[arg_name] = [arg_value]
+
             post_response = requests.post(url, json=post_payload, headers=post_headers)
             response_code = post_response.status_code
             assert response_code == 200, f"POST request returned error code {response_code} with {config_path}"
@@ -405,6 +434,67 @@ class TestQuickStart(object):
             p.wait()
             # if p.wait() != 0:
             #     raise RuntimeError('Error in shutting down API server: \n{}'.format(logfile.getvalue().decode()))
+
+    @staticmethod
+    def interact_socket(config_path, socket_type):
+        socket_params = get_server_params(config_path)
+        model_args_names = socket_params['model_args_names']
+
+        host = socket_params['host']
+        host = host.replace('0.0.0.0', '127.0.0.1')
+        port = api_port or socket_params['port']
+
+        socket_payload = {}
+        for arg_name in model_args_names:
+            arg_value = ' '.join(['qwerty'] * 10)
+            socket_payload[arg_name] = [arg_value]
+
+        logfile = io.BytesIO(b'')
+        args = [sys.executable, "-m", "deeppavlov", "risesocket", str(config_path), '--socket-type', socket_type]
+        if socket_type == 'TCP':
+            args += ['-p', str(port)]
+            address_family = socket.AF_INET
+            connect_arg = (host, port)
+        else:
+            address_family = socket.AF_UNIX
+            connect_arg = socket_params['unix_socket_file']
+        p = pexpect.popen_spawn.PopenSpawn(' '.join(args),
+                                           timeout=None, logfile=logfile)
+        try:
+            p.expect(socket_params['socket_launch_message'])
+            with socket.socket(address_family, socket.SOCK_STREAM) as s:
+                try:
+                    s.connect(connect_arg)
+                except ConnectionRefusedError:
+                    sleep(1)
+                    s.connect(connect_arg)
+                s.sendall(encode(socket_payload))
+                s.settimeout(60)
+                header = s.recv(4)
+                body_len = unpack('<I', header)[0]
+                data = bytearray()
+                while len(data) < body_len:
+                    chunk = s.recv(body_len - len(data))
+                    if not chunk:
+                        raise ValueError(f'header does not match body\nheader: {body_len}\nbody length: {len(data)}'
+                                         f'data: {data}')
+                    data.extend(chunk)
+            try:
+                resp = json.loads(data)
+            except json.decoder.JSONDecodeError:
+                raise ValueError(f"Can't decode model response {data}")
+            assert resp['status'] == 'OK', f"{socket_type} socket request returned status: {resp['status']}" \
+                                           f" with {config_path}\n{logfile.getvalue().decode()}"
+
+        except pexpect.exceptions.EOF:
+            raise RuntimeError(f'Got unexpected EOF: \n{logfile.getvalue().decode()}')
+
+        except json.JSONDecodeError:
+            raise ValueError(f'Got JSON not serializable response from model: "{data}"\n{logfile.getvalue().decode()}')
+
+        finally:
+            p.kill(signal.SIGTERM)
+            p.wait()
 
     def test_interacting_pretrained_model(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
@@ -419,11 +509,17 @@ class TestQuickStart(object):
     def test_interacting_pretrained_model_api(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
             self.interact_api(test_configs_path / conf_file)
+        else:
+            pytest.skip("Unsupported mode: {}".format(mode))
+
+    def test_interacting_pretrained_model_socket(self, model, conf_file, model_dir, mode):
+        if 'IP' in mode:
+            self.interact_socket(test_configs_path / conf_file, 'TCP')
 
             if 'TI' not in mode:
                 shutil.rmtree(str(download_path), ignore_errors=True)
         else:
-            pytest.skip("Unsupported mode: {}".format(mode))
+            pytest.skip(f"Unsupported mode: {mode}")
 
     def test_serialization(self, model, conf_file, model_dir, mode):
         if 'SR' not in mode:
@@ -457,7 +553,7 @@ class TestQuickStart(object):
                 config_path = str(test_configs_path.joinpath(conf_file))
                 install_config(config_path)
                 deep_download(config_path)
-            shutil.rmtree(str(model_path),  ignore_errors=True)
+            shutil.rmtree(str(model_path), ignore_errors=True)
 
             logfile = io.BytesIO(b'')
             p = pexpect.popen_spawn.PopenSpawn(sys.executable + " -m deeppavlov train " + str(c), timeout=None,
@@ -484,7 +580,7 @@ def test_crossvalidation():
 
     install_config(c)
     deep_download(c)
-    shutil.rmtree(str(model_path),  ignore_errors=True)
+    shutil.rmtree(str(model_path), ignore_errors=True)
 
     logfile = io.BytesIO(b'')
     p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov crossval {c} --folds 2",
@@ -509,7 +605,7 @@ def test_param_search():
     install_config(c)
     deep_download(c)
 
-    shutil.rmtree(str(model_path),  ignore_errors=True)
+    shutil.rmtree(str(model_path), ignore_errors=True)
 
     logfile = io.BytesIO(b'')
     p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov.paramsearch {c} --folds 2",

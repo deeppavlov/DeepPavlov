@@ -38,6 +38,7 @@ class CapitalizationPreprocessor(Component):
     Attributes:
         dim: dimensionality of the feature vectors, produced by the featurizer
     """
+
     def __init__(self, pad_zeros: bool = True, *args, **kwargs) -> None:
         self.pad_zeros = pad_zeros
         self._num_of_features = 4
@@ -74,8 +75,10 @@ class CapitalizationPreprocessor(Component):
 
 def process_word(word: str, to_lower: bool = False,
                  append_case: Optional[str] = None) -> Tuple[str]:
-    """Converts word to a tuple of symbols, optionally converts it to lowercase
-    and adds capitalization label.
+    """The method implements the following operations:
+        1. converts word to a tuple of symbols (character splitting),
+        2. optionally converts it to lowercase and
+        3. adds capitalization label.
 
     Args:
         word: input word
@@ -84,7 +87,13 @@ def process_word(word: str, to_lower: bool = False,
             ('<FIRST_UPPER>' for first capital and '<ALL_UPPER>' for all caps)
 
     Returns:
-        a preprocessed word
+        a preprocessed word.
+
+    Example:
+        >>> process_word(word="Zaman", to_lower=True, append_case="first")
+        ('<FIRST_UPPER>', 'z', 'a', 'm', 'a', 'n')
+        >>> process_word(word="MSU", to_lower=True, append_case="last")
+        ('m', 's', 'u', '<ALL_UPPER>')
     """
     if all(x.isupper() for x in word) and len(word) > 1:
         uppercase = "<ALL_UPPER>"
@@ -108,8 +117,8 @@ def process_word(word: str, to_lower: bool = False,
     return tuple(answer)
 
 
-@register('lowercase_preprocessor')
-class LowercasePreprocessor(Component):
+@register('char_splitting_lowercase_preprocessor')
+class CharSplittingLowercasePreprocessor(Component):
     """A callable wrapper over :func:`process_word`.
     Takes as input a batch of tokenized sentences
     and returns a batch of preprocessed sentences.

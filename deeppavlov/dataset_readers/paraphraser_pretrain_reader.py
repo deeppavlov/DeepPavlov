@@ -42,7 +42,6 @@ class ParaphraserPretrainReader(DatasetReader):
         dataset = {"train": train_data, "valid": test_data, "test": test_data}
         return dataset
 
-
     def int_class(self, str_y):
         if str_y == '-1':
             return 0
@@ -53,5 +52,3 @@ class ParaphraserPretrainReader(DatasetReader):
         with open(name) as f:
             data = json.load(f)
         return [([doc['text_1'], doc['text_2']], self.int_class(doc['class'])) for doc in data]
-
-

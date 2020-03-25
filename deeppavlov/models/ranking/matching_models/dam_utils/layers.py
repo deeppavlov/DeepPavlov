@@ -90,15 +90,16 @@ def dynamic_L(x):
         shape=[x.shape[-1]],
         dtype=tf.float32,
         initializer=tf.random_uniform_initializer(
-            -tf.sqrt(6./tf.cast(x.shape[-1], tf.float32)),
-            tf.sqrt(6./tf.cast(x.shape[-1], tf.float32))))
+            -tf.sqrt(6. / tf.cast(x.shape[-1], tf.float32)),
+            tf.sqrt(6. / tf.cast(x.shape[-1], tf.float32))))
 
-    key = op.dense(x, add_bias=False) #[batch, time, dimension]
-    weight = tf.reduce_sum(tf.multiply(key, key_0), axis=-1)  #[batch, time]
-    weight = tf.expand_dims(tf.nn.softmax(weight), -1)  #[batch, time, 1]
+    key = op.dense(x, add_bias=False)  # [batch, time, dimension]
+    weight = tf.reduce_sum(tf.multiply(key, key_0), axis=-1)  # [batch, time]
+    weight = tf.expand_dims(tf.nn.softmax(weight), -1)  # [batch, time, 1]
 
-    L = tf.reduce_sum(tf.multiply(x, weight), axis=1) #[batch, dimension]
-    return L 
+    L = tf.reduce_sum(tf.multiply(x, weight), axis=1)  # [batch, dimension]
+    return L
+
 
 def loss(x, y, num_classes=2, is_clip=True, clip_value=10):
     '''From info x calculate logits as return loss.
@@ -152,12 +153,13 @@ def loss(x, y, num_classes=2, is_clip=True, clip_value=10):
 
     return loss, logits
 
+
 def attention(
-    Q, K, V, 
-    Q_lengths, K_lengths, 
-    attention_type='dot', 
-    is_mask=True, mask_value=-2**32+1,
-    drop_prob=None):
+        Q, K, V,
+        Q_lengths, K_lengths,
+        attention_type='dot',
+        is_mask=True, mask_value=-2 ** 32 + 1,
+        drop_prob=None):
     '''Add attention layer.
     Args:
         Q: a tensor with shape [batch, Q_time, Q_dimension]
@@ -182,16 +184,16 @@ def attention(
     K_time = K.shape[1]
 
     if attention_type == 'dot':
-        logits = op.dot_sim(Q, K) #[batch, Q_time, time]
+        logits = op.dot_sim(Q, K)  # [batch, Q_time, time]
     if attention_type == 'bilinear':
         logits = op.bilinear_sim(Q, K)
 
     if is_mask:
-        mask = op.mask(Q_lengths, K_lengths, Q_time, K_time) #[batch, Q_time, K_time]
+        mask = op.mask(Q_lengths, K_lengths, Q_time, K_time)  # [batch, Q_time, K_time]
         # mask = tf.Print(mask, [logits[0], mask[0]], tf.get_variable_scope().name + " logits, mask: ", summarize=10)
         logits = mask * logits + (1 - mask) * mask_value
         # logits = tf.Print(logits, [logits[0]], tf.get_variable_scope().name + " masked logits: ", summarize=10)
-    
+
     attention = tf.nn.softmax(logits)
 
     if drop_prob is not None:
@@ -199,6 +201,7 @@ def attention(
         attention = tf.nn.dropout(attention, drop_prob)
 
     return op.weighted_sum(attention, V)
+
 
 def FFN(x, out_dimension_0=None, out_dimension_1=None):
     '''Add two dense connected layer, max(0, x*W0+b0)*W1+b1.
@@ -217,16 +220,17 @@ def FFN(x, out_dimension_0=None, out_dimension_1=None):
         y = tf.nn.relu(y)
     with tf.variable_scope('FFN_2'):
         # z = op.dense(y, out_dimension_1, initializer=tf.keras.initializers.glorot_uniform(seed=42))  # TODO: check
-        z = op.dense(y, out_dimension_1) #, add_bias=False)  #!!!!
+        z = op.dense(y, out_dimension_1)  # , add_bias=False)  #!!!!
     return z
 
+
 def block(
-    Q, K, V, 
-    Q_lengths, K_lengths, 
-    attention_type='dot', 
-    is_layer_norm=True, 
-    is_mask=True, mask_value=-2**32+1,
-    drop_prob=None):
+        Q, K, V,
+        Q_lengths, K_lengths,
+        attention_type='dot',
+        is_layer_norm=True,
+        is_mask=True, mask_value=-2 ** 32 + 1,
+        drop_prob=None):
     '''Add a block unit from https://arxiv.org/pdf/1706.03762.pdf.
     Args:
         Q: a tensor with shape [batch, Q_time, Q_dimension]
@@ -241,8 +245,8 @@ def block(
 
     Raises:
     '''
-    att = attention(Q, K, V, 
-                    Q_lengths, K_lengths, 
+    att = attention(Q, K, V,
+                    Q_lengths, K_lengths,
                     attention_type=attention_type,
                     is_mask=is_mask, mask_value=mask_value,
                     drop_prob=drop_prob)
@@ -260,6 +264,7 @@ def block(
         w = y + z
     return w
 
+
 def CNN(x, out_channels, filter_size, pooling_size, add_relu=True):
     '''Add a convlution layer with relu and max pooling layer.
 
@@ -274,9 +279,9 @@ def CNN(x, out_channels, filter_size, pooling_size, add_relu=True):
 
     Raises:
     '''
-    #calculate the last dimension of return
-    num_features = ((tf.shape(x)[1]-filter_size+1)/pooling_size * 
-        (tf.shape(x)[2]-filter_size+1)/pooling_size) * out_channels
+    # calculate the last dimension of return
+    num_features = ((tf.shape(x)[1] - filter_size + 1) / pooling_size *
+                    (tf.shape(x)[2] - filter_size + 1) / pooling_size) * out_channels
 
     in_channels = x.shape[-1]
     weights = tf.get_variable(
@@ -297,12 +302,13 @@ def CNN(x, out_channels, filter_size, pooling_size, add_relu=True):
         conv = tf.nn.relu(conv)
 
     pooling = tf.nn.max_pool(
-        conv, 
+        conv,
         ksize=[1, pooling_size, pooling_size, 1],
-        strides=[1, pooling_size, pooling_size, 1], 
+        strides=[1, pooling_size, pooling_size, 1],
         padding="VALID")
 
     return tf.contrib.layers.flatten(pooling)
+
 
 def CNN_3d(x, out_channels_0, out_channels_1, add_relu=True):
     '''Add a 3d convlution layer with relu and max pooling layer.
@@ -331,20 +337,20 @@ def CNN_3d(x, out_channels_0, out_channels_1, add_relu=True):
         initializer=tf.zeros_initializer())
 
     conv_0 = tf.nn.conv3d(x, weights_0, strides=[1, 1, 1, 1, 1], padding="SAME")
-    log.info('conv_0 shape: %s' %conv_0.shape)
+    log.info('conv_0 shape: %s' % conv_0.shape)
     conv_0 = conv_0 + bias_0
 
     if add_relu:
         conv_0 = tf.nn.elu(conv_0)
 
     pooling_0 = tf.nn.max_pool3d(
-        conv_0, 
+        conv_0,
         ksize=[1, 3, 3, 3, 1],
-        strides=[1, 3, 3, 3, 1], 
+        strides=[1, 3, 3, 3, 1],
         padding="SAME")
-    log.info('pooling_0 shape: %s' %pooling_0.shape)
+    log.info('pooling_0 shape: %s' % pooling_0.shape)
 
-    #layer_1
+    # layer_1
     weights_1 = tf.get_variable(
         name='filter_1',
         shape=[3, 3, 3, out_channels_0, out_channels_1],
@@ -357,20 +363,21 @@ def CNN_3d(x, out_channels_0, out_channels_1, add_relu=True):
         initializer=tf.zeros_initializer())
 
     conv_1 = tf.nn.conv3d(pooling_0, weights_1, strides=[1, 1, 1, 1, 1], padding="SAME")
-    log.info('conv_1 shape: %s' %conv_1.shape)
+    log.info('conv_1 shape: %s' % conv_1.shape)
     conv_1 = conv_1 + bias_1
 
     if add_relu:
         conv_1 = tf.nn.elu(conv_1)
 
     pooling_1 = tf.nn.max_pool3d(
-        conv_1, 
+        conv_1,
         ksize=[1, 3, 3, 3, 1],
-        strides=[1, 3, 3, 3, 1], 
+        strides=[1, 3, 3, 3, 1],
         padding="SAME")
-    log.info('pooling_1 shape: %s' %pooling_1.shape)
+    log.info('pooling_1 shape: %s' % pooling_1.shape)
 
     return tf.contrib.layers.flatten(pooling_1)
+
 
 def CNN_3d_2d(x, out_channels_0, out_channels_1, add_relu=True):
     '''Add a 3d convlution layer with relu and max pooling layer.
@@ -399,20 +406,20 @@ def CNN_3d_2d(x, out_channels_0, out_channels_1, add_relu=True):
         initializer=tf.zeros_initializer())
 
     conv_0 = tf.nn.conv3d(x, weights_0, strides=[1, 1, 1, 1, 1], padding="SAME")
-    log.info('conv_0 shape: %s' %conv_0.shape)
+    log.info('conv_0 shape: %s' % conv_0.shape)
     conv_0 = conv_0 + bias_0
 
     if add_relu:
         conv_0 = tf.nn.elu(conv_0)
 
     pooling_0 = tf.nn.max_pool3d(
-        conv_0, 
+        conv_0,
         ksize=[1, 1, 3, 3, 1],
-        strides=[1, 1, 3, 3, 1], 
+        strides=[1, 1, 3, 3, 1],
         padding="SAME")
-    log.info('pooling_0 shape: %s' %pooling_0.shape)
+    log.info('pooling_0 shape: %s' % pooling_0.shape)
 
-    #layer_1
+    # layer_1
     weights_1 = tf.get_variable(
         name='filter_1',
         shape=[1, 3, 3, out_channels_0, out_channels_1],
@@ -425,20 +432,21 @@ def CNN_3d_2d(x, out_channels_0, out_channels_1, add_relu=True):
         initializer=tf.zeros_initializer())
 
     conv_1 = tf.nn.conv3d(pooling_0, weights_1, strides=[1, 1, 1, 1, 1], padding="SAME")
-    log.info('conv_1 shape: %s' %conv_1.shape)
+    log.info('conv_1 shape: %s' % conv_1.shape)
     conv_1 = conv_1 + bias_1
 
     if add_relu:
         conv_1 = tf.nn.elu(conv_1)
 
     pooling_1 = tf.nn.max_pool3d(
-        conv_1, 
+        conv_1,
         ksize=[1, 1, 3, 3, 1],
-        strides=[1, 1, 3, 3, 1], 
+        strides=[1, 1, 3, 3, 1],
         padding="SAME")
-    log.info('pooling_1 shape: %s' %pooling_1.shape)
+    log.info('pooling_1 shape: %s' % pooling_1.shape)
 
     return tf.contrib.layers.flatten(pooling_1)
+
 
 def CNN_3d_change(x, out_channels_0, out_channels_1, add_relu=True):
     '''Add a 3d convlution layer with relu and max pooling layer.
@@ -459,22 +467,22 @@ def CNN_3d_change(x, out_channels_0, out_channels_1, add_relu=True):
         name='filter_0',
         shape=[3, 3, 3, in_channels, out_channels_0],
         dtype=tf.float32,
-        #initializer=tf.random_normal_initializer(0, 0.05))
+        # initializer=tf.random_normal_initializer(0, 0.05))
         initializer=tf.random_uniform_initializer(-0.01, 0.01))
     bias_0 = tf.get_variable(
         name='bias_0',
         shape=[out_channels_0],
         dtype=tf.float32,
         initializer=tf.zeros_initializer())
-    #Todo
+    # Todo
     g_0 = tf.get_variable(name='scale_0',
-        shape = [out_channels_0],
-        dtype=tf.float32,
-        initializer=tf.ones_initializer())
+                          shape=[out_channels_0],
+                          dtype=tf.float32,
+                          initializer=tf.ones_initializer())
     weights_0 = tf.reshape(g_0, [1, 1, 1, out_channels_0]) * tf.nn.l2_normalize(weights_0, [0, 1, 2])
 
     conv_0 = tf.nn.conv3d(x, weights_0, strides=[1, 1, 1, 1, 1], padding="VALID")
-    log.info('conv_0 shape: %s' %conv_0.shape)
+    log.info('conv_0 shape: %s' % conv_0.shape)
     conv_0 = conv_0 + bias_0
     #######
     '''
@@ -486,48 +494,49 @@ def CNN_3d_change(x, out_channels_0, out_channels_1, add_relu=True):
         conv_0 = tf.nn.elu(conv_0)
 
     pooling_0 = tf.nn.max_pool3d(
-        conv_0, 
+        conv_0,
         ksize=[1, 2, 3, 3, 1],
-        strides=[1, 2, 3, 3, 1], 
+        strides=[1, 2, 3, 3, 1],
         padding="VALID")
-    log.info('pooling_0 shape: %s' %pooling_0.shape)
+    log.info('pooling_0 shape: %s' % pooling_0.shape)
 
-    #layer_1
+    # layer_1
     weights_1 = tf.get_variable(
         name='filter_1',
         shape=[2, 2, 2, out_channels_0, out_channels_1],
         dtype=tf.float32,
         initializer=tf.random_uniform_initializer(-0.01, 0.01))
-    
+
     bias_1 = tf.get_variable(
         name='bias_1',
         shape=[out_channels_1],
         dtype=tf.float32,
         initializer=tf.zeros_initializer())
-    
+
     g_1 = tf.get_variable(name='scale_1',
-        shape = [out_channels_1],
-        dtype=tf.float32,
-        initializer=tf.ones_initializer())
+                          shape=[out_channels_1],
+                          dtype=tf.float32,
+                          initializer=tf.ones_initializer())
     weights_1 = tf.reshape(g_1, [1, 1, 1, out_channels_1]) * tf.nn.l2_normalize(weights_1, [0, 1, 2])
 
     conv_1 = tf.nn.conv3d(pooling_0, weights_1, strides=[1, 1, 1, 1, 1], padding="VALID")
-    log.info('conv_1 shape: %s' %conv_1.shape)
+    log.info('conv_1 shape: %s' % conv_1.shape)
     conv_1 = conv_1 + bias_1
-    #with tf.variable_scope('layer_1'):
+    # with tf.variable_scope('layer_1'):
     #    conv_1 = op.layer_norm(conv_1, axis=[1, 2, 3, 4])
 
     if add_relu:
         conv_1 = tf.nn.elu(conv_1)
 
     pooling_1 = tf.nn.max_pool3d(
-        conv_1, 
+        conv_1,
         ksize=[1, 3, 3, 3, 1],
-        strides=[1, 3, 3, 3, 1], 
+        strides=[1, 3, 3, 3, 1],
         padding="VALID")
-    log.info('pooling_1 shape: %s' %pooling_1.shape)
+    log.info('pooling_1 shape: %s' % pooling_1.shape)
 
     return tf.contrib.layers.flatten(pooling_1)
+
 
 def RNN_last_state(x, lengths, hidden_size):
     '''encode x with a gru cell and return the last state.
@@ -544,5 +553,3 @@ def RNN_last_state(x, lengths, hidden_size):
     cell = tf.nn.rnn_cell.GRUCell(hidden_size)
     outputs, last_states = tf.nn.dynamic_rnn(cell, x, lengths, dtype=tf.float32)
     return outputs, last_states
-
-

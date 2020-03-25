@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import getLogger
-from typing import List, Dict, Union
-from collections import OrderedDict
 import re
+from collections import OrderedDict
+from logging import getLogger
 from operator import itemgetter
+from typing import List, Dict, Union
 
 import numpy as np
 import tensorflow as tf
@@ -26,8 +26,8 @@ from bert_dp.preprocessing import InputFeatures
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.bert.bert_classifier import BertClassifierModel
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
+from deeppavlov.models.bert.bert_classifier import BertClassifierModel
 
 logger = getLogger(__name__)
 
@@ -43,12 +43,12 @@ class BertRankerModel(BertClassifierModel):
         bert_config_file: path to Bert configuration file
         n_classes: number of classes
         keep_prob: dropout keep_prob for non-Bert layers
-        return_probas: set True if return class probabilites instead of most probable label needed
+        return_probas: set True if class probabilities are returned instead of the most probable label
     """
 
     def __init__(self, bert_config_file, n_classes=2, keep_prob=0.9, return_probas=True, **kwargs) -> None:
-        super().__init__(bert_config_file=bert_config_file, n_classes=n_classes, keep_prob=keep_prob,
-                         return_probas=return_probas, **kwargs)
+        super().__init__(bert_config_file=bert_config_file, n_classes=n_classes,
+                         keep_prob=keep_prob, return_probas=return_probas, **kwargs)
 
     def train_on_batch(self, features_li: List[List[InputFeatures]], y: Union[List[int], List[List[int]]]) -> Dict:
         """Train the model on the given batch.
@@ -118,8 +118,8 @@ class BertSepRankerModel(LRScheduledTFModel):
         keep_prob: dropout keep_prob for non-Bert layers
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
-        optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
-        weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
+        optimizer: name of tf.train.* optimizer or None for ``AdamWeightDecayOptimizer``
+        weight_decay_rate: L2 weight decay for ``AdamWeightDecayOptimizer``
         pretrained_bert: pretrained Bert checkpoint
         min_learning_rate: min value of learning rate if learning rate decay is used
     """
@@ -213,7 +213,11 @@ class BertSepRankerModel(LRScheduledTFModel):
         with tf.variable_scope("loss"):
             output_layer_a = tf.nn.dropout(output_layer_a, keep_prob=self.keep_prob_ph)
             output_layer_b = tf.nn.dropout(output_layer_b, keep_prob=self.keep_prob_ph)
-            self.loss = tf.contrib.losses.metric_learning.npairs_loss(self.y_ph, output_layer_a, output_layer_b)
+            output_layer_a = tf.nn.l2_normalize(output_layer_a, axis=1)
+            output_layer_b = tf.nn.l2_normalize(output_layer_b, axis=1)
+            embeddings = tf.concat([output_layer_a, output_layer_b], axis=0)
+            labels = tf.concat([self.y_ph, self.y_ph], axis=0)
+            self.loss = tf.contrib.losses.metric_learning.triplet_semihard_loss(labels, embeddings)
             logits = tf.multiply(output_layer_a, output_layer_b)
             self.y_probas = tf.reduce_sum(logits, 1)
             self.pooled_out = output_layer_a
@@ -297,7 +301,6 @@ class BertSepRankerModel(LRScheduledTFModel):
         _, loss = self.sess.run([self.train_op, self.loss], feed_dict=feed_dict)
         return {'loss': loss, 'learning_rate': feed_dict[self.learning_rate_ph]}
 
-
     def __call__(self, features_li: List[List[InputFeatures]]) -> Union[List[int], List[List[float]]]:
         """Calculate scores for the given context over candidate responses.
 
@@ -350,16 +353,16 @@ class BertSepRankerPredictor(BertSepRankerModel):
         batch_size: batch size for building response (and context) vectors over the base
         keep_prob: dropout keep_prob for non-Bert layers
         resps: list of strings containing the base of text responses
-        resp_vecs: BERT vector respresentations of `resps`, if is `None` it will be build
-        resp_features: features of `resps` to build their BERT vector representations
+        resp_vecs: BERT vector respresentations of ``resps``, if is ``None`` it will be build
+        resp_features: features of ``resps`` to build their BERT vector representations
         conts: list of strings containing the base of text contexts
-        cont_vecs: BERT vector respresentations of `conts`, if is `None` it will be build
-        cont_features: features of `conts` to build their BERT vector representations
+        cont_vecs: BERT vector respresentations of ``conts``, if is ``None`` it will be build
+        cont_features: features of ``conts`` to build their BERT vector representations
     """
 
     def __init__(self, bert_config_file, interact_mode=0, batch_size=32,
-                 resps=None, resp_features=None,  resp_vecs=None,
-                 conts=None,  cont_features=None, cont_vecs=None, **kwargs) -> None:
+                 resps=None, resp_features=None, resp_vecs=None,
+                 conts=None, cont_features=None, cont_vecs=None, **kwargs) -> None:
         super().__init__(bert_config_file=bert_config_file,
                          **kwargs)
 
@@ -425,7 +428,7 @@ class BertSepRankerPredictor(BertSepRankerModel):
         return np.vstack(pred)
 
     def _retrieve_db_response(self, ctx_vec):
-        """Retrieve a text response from the base based on the policy determined by `interact_mode`.
+        """Retrieve a text response from the base based on the policy determined by ``interact_mode``.
 
         Uses cosine similarity scores over vectors of responses (and corresponding contexts) from the base.
         """

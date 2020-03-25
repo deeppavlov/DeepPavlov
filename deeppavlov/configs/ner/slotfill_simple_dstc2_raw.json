@@ -1,0 +1,57 @@
+{
+  "dataset_reader": {
+    "class_name": "simple_dstc2_reader",
+    "data_path": "{DATA_PATH}"
+  },
+  "dataset_iterator": {
+    "class_name": "dstc2_ner_iterator",
+    "slot_values_path": "{SLOT_VALS_PATH}"
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "in": ["x"],
+        "class_name": "lazy_tokenizer",
+        "out": ["x_tokens"]
+      },
+      {
+        "in": ["x_tokens"],
+        "class_name": "str_lower",
+        "out": ["x_lower"]
+      },
+      {
+        "in": ["x_lower"],
+        "class_name": "slotfill_raw",
+        "save_path": "{SLOT_VALS_PATH}",
+        "load_path": "{SLOT_VALS_PATH}",
+        "out": ["slots"]
+      }
+    ],
+    "out": ["slots"]
+  },
+  "train": {
+    "metrics": ["slots_accuracy"],
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DATA_PATH": "{ROOT_PATH}/downloads/simple-dstc2",
+      "SLOT_VALS_PATH": "{DATA_PATH}/dstc_slot_vals.json"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/dstc_slot_vals.tar.gz",
+        "subdir": "{DATA_PATH}"
+      }
+    ]
+  }
+}

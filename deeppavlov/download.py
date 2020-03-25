@@ -24,7 +24,8 @@ import requests
 
 import deeppavlov
 from deeppavlov.core.commands.utils import expand_path, parse_config
-from deeppavlov.core.data.utils import download, download_decompress, get_all_elems_from_json, file_md5, set_query_parameter, path_set_md5
+from deeppavlov.core.data.utils import download, download_decompress, get_all_elems_from_json, file_md5, \
+    set_query_parameter, path_set_md5
 
 log = getLogger(__name__)
 
@@ -60,9 +61,8 @@ def get_config_downloads(config: Union[str, Path, dict]) -> Set[Tuple[str, Path]
     return downloads
 
 
-def get_configs_downloads(config: Optional[Union[str, Path, dict]]=None) -> Dict[str, Set[Path]]:
+def get_configs_downloads(config: Optional[Union[str, Path, dict]] = None) -> Dict[str, Set[Path]]:
     all_downloads = defaultdict(set)
-
     if config:
         configs = [config]
     else:
@@ -105,12 +105,13 @@ def check_md5(url: str, dest_paths: List[Path]) -> bool:
     for base_path in not_done:
         log.info(f'Copying data from {done} to {base_path}')
         for p in expected.keys():
-            shutil.copy(done/p, base_path/p)
+            shutil.copy(done / p, base_path / p)
     return True
 
 
-def download_resource(url: str, dest_paths: Iterable[Path]) -> None:
-    dest_paths = list(dest_paths)
+def download_resource(url: str, dest_paths: Iterable[Union[Path, str]]) \
+        -> None:
+    dest_paths = [Path(dest) for dest in dest_paths]
 
     if check_md5(url, dest_paths):
         log.info(f'Skipped {url} download because of matching hashes')
@@ -146,7 +147,7 @@ def deep_download(config: Union[str, Path, dict]) -> None:
         download_resource(url, dest_paths)
 
 
-def main(args: Optional[List[str]]=None) -> None:
+def main(args: Optional[List[str]] = None) -> None:
     args = parser.parse_args(args)
     log.info("Downloading...")
     download_resources(args)

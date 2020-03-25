@@ -7,7 +7,7 @@ deeppavlov.models.preprocessors
 
 .. autofunction:: deeppavlov.models.preprocessors.capitalization.process_word
 
-.. autoclass:: deeppavlov.models.preprocessors.capitalization.LowercasePreprocessor
+.. autoclass:: deeppavlov.models.preprocessors.capitalization.CharSplittingLowercasePreprocessor
 
 .. autoclass:: deeppavlov.models.preprocessors.char_splitter.CharSplitter
 
@@ -27,9 +27,7 @@ deeppavlov.models.preprocessors
 
 .. autoclass:: deeppavlov.models.preprocessors.siamese_preprocessor.SiamesePreprocessor
 
-.. autoclass:: deeppavlov.models.preprocessors.str_lower.StrLower
-
-    .. automethod:: __call__
+.. autofunction:: deeppavlov.models.preprocessors.str_lower.str_lower
 
 .. autoclass:: deeppavlov.models.preprocessors.str_token_reverser.StrTokenReverser
 

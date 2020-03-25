@@ -1,18 +1,16 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import argparse
 import json
@@ -24,7 +22,7 @@ from subprocess import Popen
 
 import pandas as pd
 
-from deeppavlov.core.commands.utils import expand_path, parse_config
+from deeppavlov.core.commands.utils import expand_path, parse_config, parse_value_with_config
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json, save_json, find_config
 from deeppavlov.models.evolution.evolution_param_generator import ParamsEvolution
@@ -107,8 +105,8 @@ def main():
     evolve_metric = considered_metrics[0]
 
     # Create table variable for gathering results
-    abs_path_to_main_models = expand_path(str(evolution.models_path).format(
-        **evolution.basic_config['metadata']['variables']))
+    abs_path_to_main_models = expand_path(parse_value_with_config(evolution.models_path,
+                                                                  evolution.basic_config))
     abs_path_to_main_models.mkdir(parents=True, exist_ok=True)
 
     result_file = abs_path_to_main_models / "result_table.tsv"
@@ -197,7 +195,7 @@ def run_population(population, evolution, gpus):
                 f_name = save_path / "config.json"
                 save_json(population[i], f_name)
 
-                with save_path.joinpath('out.txt').open('w', encoding='utf8') as outlog,\
+                with save_path.joinpath('out.txt').open('w', encoding='utf8') as outlog, \
                         save_path.joinpath('err.txt').open('w', encoding='utf8') as errlog:
                     env = dict(os.environ)
                     if len(gpus) > 1 or gpus[0] != -1:

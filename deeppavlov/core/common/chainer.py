@@ -13,8 +13,10 @@
 # limitations under the License.
 
 import pickle
+from itertools import islice
 from logging import getLogger
-from typing import Union, Tuple, List, Optional, Hashable
+from types import FunctionType
+from typing import Union, Tuple, List, Optional, Hashable, Reversible
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.component import Component
@@ -26,7 +28,7 @@ log = getLogger(__name__)
 
 class Chainer(Component):
     """
-    Builds an agent/component pipeline from heterogeneous components (Rule-based/ML/DL). It allows to train
+    Builds a component pipeline from heterogeneous components (Rule-based/ML/DL). It allows to train
     and infer models in a pipeline as a whole.
 
     Attributes:
@@ -44,6 +46,7 @@ class Chainer(Component):
         out_params: names of pipeline inference outputs
         in_y: names of additional inputs for pipeline training and evaluation modes
     """
+
     def __init__(self, in_x: Union[str, list] = None, out_params: Union[str, list] = None,
                  in_y: Union[str, list] = None, *args, **kwargs) -> None:
         self.pipe: List[Tuple[Tuple[List[str], List[str]], List[str], Component]] = []
@@ -121,8 +124,8 @@ class Chainer(Component):
                                 break
                     p.pretty(component)
 
-    def append(self, component: Component, in_x: [str, list, dict] = None, out_params: [str, list] = None,
-               in_y: [str, list, dict] = None, main: bool = False):
+    def append(self, component: Union[Component, FunctionType], in_x: [str, list, dict] = None,
+               out_params: [str, list] = None, in_y: [str, list, dict] = None, main: bool = False):
         if isinstance(in_x, str):
             in_x = [in_x]
         if isinstance(in_y, str):
@@ -148,9 +151,9 @@ class Chainer(Component):
 
             component: NNModel
             main = True
-            assert self.train_map.issuperset(in_x+in_y), ('Arguments {} are expected but only {} are set'
-                                                          .format(in_x+in_y, self.train_map))
-            preprocessor = Chainer(self.in_x, in_x+in_y, self.in_y)
+            assert self.train_map.issuperset(in_x + in_y), ('Arguments {} are expected but only {} are set'
+                                                            .format(in_x + in_y, self.train_map))
+            preprocessor = Chainer(self.in_x, in_x + in_y, self.in_y)
             for (t_in_x_keys, t_in_x), t_out, t_component in self.train_pipe:
                 if t_in_x_keys:
                     t_in_x = dict(zip(t_in_x_keys, t_in_x))
@@ -158,7 +161,7 @@ class Chainer(Component):
 
             def train_on_batch(*args, **kwargs):
                 preprocessed = preprocessor.compute(*args, **kwargs)
-                if len(in_x+in_y) == 1:
+                if len(in_x + in_y) == 1:
                     preprocessed = [preprocessed]
                 if keys:
                     return component.train_on_batch(**dict(zip(keys, preprocessed)))
@@ -222,9 +225,9 @@ class Chainer(Component):
         for (in_keys, in_params), out_params, component in pipe:
             x = [mem[k] for k in in_params]
             if in_keys:
-                res = component(**dict(zip(in_keys, x)))
+                res = component.__call__(**dict(zip(in_keys, x)))
             else:
-                res = component(*x)
+                res = component.__call__(*x)
             if len(out_params) == 1:
                 mem[out_params[0]] = res
             else:
@@ -234,6 +237,36 @@ class Chainer(Component):
         if len(res) == 1:
             res = res[0]
         return res
+
+    def batched_call(self, *args: Reversible, batch_size: int = 16) -> Union[list, Tuple[list, ...]]:
+        """
+        Partitions data into mini-batches and applies :meth:`__call__` to each batch.
+
+        Args:
+            args: input data, each element of the data corresponds to a single model inputs sequence.
+            batch_size: the size of a batch.
+
+        Returns:
+            the model output as if the data was passed to the :meth:`__call__` method.
+        """
+        args = [iter(arg) for arg in args]
+        answer = [[] for _ in self.out_params]
+
+        while True:
+            batch = [list(islice(arg, batch_size)) for arg in args]
+            if not any(batch):  # empty batch, reached the end
+                break
+
+            curr_answer = self.__call__(*batch)
+            if len(self.out_params) == 1:
+                curr_answer = [curr_answer]
+
+            for y, curr_y in zip(answer, curr_answer):
+                y.extend(curr_y)
+
+        if len(self.out_params) == 1:
+            answer = answer[0]
+        return answer
 
     def get_main_component(self) -> Optional[Serializable]:
         try:
@@ -270,10 +303,12 @@ class Chainer(Component):
     def serialize(self) -> bytes:
         data = []
         for in_params, out_params, component in self.train_pipe:
-            data.append(component.serialize())
+            serialized = component.serialize() if isinstance(component, Component) else None
+            data.append(serialized)
         return pickle.dumps(data, protocol=4)
 
     def deserialize(self, data: bytes) -> None:
         data = pickle.loads(data)
-        for in_params, out_params, component in self.train_pipe:
-            component.deserialize(data)
+        for (in_params, out_params, component), component_data in zip(self.train_pipe, data):
+            if isinstance(component, Component):
+                component.deserialize(component_data)

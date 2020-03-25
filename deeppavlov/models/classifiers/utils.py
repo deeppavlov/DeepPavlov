@@ -21,7 +21,7 @@ import numpy as np
 log = getLogger(__name__)
 
 
-def labels2onehot(labels: [List[str], List[List[str]], np.ndarray], classes:  [list, np.ndarray]) -> np.ndarray:
+def labels2onehot(labels: [List[str], List[List[str]], np.ndarray], classes: [list, np.ndarray]) -> np.ndarray:
     """
     Convert labels to one-hot vectors for multi-class multi-label classification
 
@@ -49,7 +49,7 @@ def labels2onehot(labels: [List[str], List[List[str]], np.ndarray], classes:  [l
     return y
 
 
-def proba2labels(proba: [list, np.ndarray], confident_threshold: float, classes:  [list, np.ndarray]) -> List[List]:
+def proba2labels(proba: [list, np.ndarray], confident_threshold: float, classes: [list, np.ndarray]) -> List[List]:
     """
     Convert vectors of probabilities to labels using confident threshold
     (if probability to belong with the class is bigger than confident_threshold, sample belongs with the class;
@@ -74,7 +74,7 @@ def proba2labels(proba: [list, np.ndarray], confident_threshold: float, classes:
     return y
 
 
-def proba2onehot(proba: [list, np.ndarray], confident_threshold: float, classes:  [list, np.ndarray]) -> np.ndarray:
+def proba2onehot(proba: [list, np.ndarray], confident_threshold: float, classes: [list, np.ndarray]) -> np.ndarray:
     """
     Convert vectors of probabilities to one-hot representations using confident threshold
 

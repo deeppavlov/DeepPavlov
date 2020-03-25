@@ -1,17 +1,16 @@
-node('gpu') {
+node('cuda-module') {
     timestamps {
         try {
             stage('Clean') {
                 sh "rm -rf .[^.] .??* *"
             }
             stage('Checkout') {
-                sh "cp -r ${pwd()}@script/* ."
+                checkout scm
             }
             stage('Setup') {
                 env.TFHUB_CACHE_DIR="tfhub_cache"
-                env.LD_LIBRARY_PATH="/usr/local/cuda-9.0/lib64"
                 sh """
-                    virtualenv --python=python3 '.venv-$BUILD_NUMBER'
+                    virtualenv --python=python3.7 '.venv-$BUILD_NUMBER'
                     . '.venv-$BUILD_NUMBER/bin/activate'
                     pip install .[tests,docs]
                     pip install -r deeppavlov/requirements/tf-gpu.txt
@@ -20,11 +19,17 @@ node('gpu') {
             }
             stage('Tests') {
                 sh """
+                    . /etc/profile
+                    module add cuda/10.0
                     . .venv-$BUILD_NUMBER/bin/activate
-                    pytest -v --disable-warnings
+
                     cd docs
                     make clean
                     make html
+                    cd ..
+
+                    flake8 `python -c 'import deeppavlov; print(deeppavlov.__path__[0])'` --count --select=E9,F63,F7,F82 --show-source --statistics
+                    pytest -v --disable-warnings
                 """
                 currentBuild.result = 'SUCCESS'
             }

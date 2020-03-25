@@ -56,7 +56,7 @@
         "fit_on": ["x_tokens", "y_tokens"],
         "class_name": "simple_vocab",
         "min_freq": 2,
-        "default_token": "<UNK>",
+        "unk_token": "<UNK>",
         "special_tokens": ["<UNK>", "<SOS>"],
         "save_path": "{MODELS_PATH}/vocabs/kvret_src_tokens.dict",
         "load_path": "{MODELS_PATH}/vocabs/kvret_src_tokens.dict"
@@ -65,7 +65,7 @@
         "id": "tgt_token_vocab",
         "fit_on": ["y_without_entities_tokens"],
         "class_name": "simple_vocab",
-        "default_token": "<UNK>",
+        "unk_token": "<UNK>",
         "special_tokens": ["<UNK>", "<SOS>", "<EOS>"],
         "save_path": "{MODELS_PATH}/vocabs/kvret_tgt_tokens.dict",
         "load_path": "{MODELS_PATH}/vocabs/kvret_tgt_tokens.dict"
@@ -158,10 +158,6 @@
       "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
     ],
-    "labels": {
-      "telegram_utils": "Seq2SeqGoalOrientedBot",
-      "server_utils": "GoalOrientedBot"
-    },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",

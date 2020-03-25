@@ -34,7 +34,7 @@ class BasicClassificationDatasetReader(DatasetReader):
 
     @overrides
     def read(self, data_path: str, url: str = None,
-             format: str = "csv", class_sep: str = ",",
+             format: str = "csv", class_sep: str = None,
              *args, **kwargs) -> dict:
         """
         Read dataset from data_path directory.
@@ -47,7 +47,7 @@ class BasicClassificationDatasetReader(DatasetReader):
             url: download data files if data_path not exists or empty
             format: extension of files. Set of Values: ``"csv", "json"``
             class_sep: string separator of labels in column with labels
-            sep (str): delimeter for ``"csv"`` files. Default: ``","``
+            sep (str): delimeter for ``"csv"`` files. Default: None -> only one class per sample
             header (int): row number to use as the column names
             names (array): list of column names to use
             orient (str): indication of expected JSON string format
@@ -63,7 +63,9 @@ class BasicClassificationDatasetReader(DatasetReader):
 
         if not Path(data_path, train_file).exists():
             if url is None:
-                raise Exception("data path {} does not exist or is empty, and download url parameter not specified!".format(data_path))
+                raise Exception(
+                    "data path {} does not exist or is empty, and download url parameter not specified!".format(
+                        data_path))
             log.info("Loading train data from {} to {}".format(url, data_path))
             download(source_url=url, dest_file_path=Path(data_path, train_file))
 
@@ -88,9 +90,21 @@ class BasicClassificationDatasetReader(DatasetReader):
                 x = kwargs.get("x", "text")
                 y = kwargs.get('y', 'labels')
                 if isinstance(x, list):
-                    data[data_type] = [([row[x_] for x_ in x], str(row[y]).split(class_sep)) for _, row in df.iterrows()]
+                    if class_sep is None:
+                        # each sample is a tuple ("text", "label")
+                        data[data_type] = [([row[x_] for x_ in x], str(row[y]))
+                                           for _, row in df.iterrows()]
+                    else:
+                        # each sample is a tuple ("text", ["label", "label", ...])
+                        data[data_type] = [([row[x_] for x_ in x], str(row[y]).split(class_sep))
+                                           for _, row in df.iterrows()]
                 else:
-                    data[data_type] = [(row[x], str(row[y]).split(class_sep)) for _, row in df.iterrows()]
+                    if class_sep is None:
+                        # each sample is a tuple ("text", "label")
+                        data[data_type] = [(row[x], str(row[y])) for _, row in df.iterrows()]
+                    else:
+                        # each sample is a tuple ("text", ["label", "label", ...])
+                        data[data_type] = [(row[x], str(row[y]).split(class_sep)) for _, row in df.iterrows()]
             else:
                 log.warning("Cannot find {} file".format(file))
 

@@ -1,0 +1,171 @@
+{
+  "dataset_reader": {
+    "class_name": "morphotagger_dataset_reader",
+    "data_path": "{DOWNLOADS_PATH}/UD2.3_source",
+    "language": "ru_syntagrus",
+    "data_types": [
+      "train", "dev", "test"
+    ]
+  },
+  "dataset_iterator": {
+    "class_name": "morphotagger_dataset"
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "in": [
+          "x"
+        ],
+        "class_name": "lazy_tokenizer",
+        "out": [
+          "x_words"
+        ]
+      },
+      {
+        "class_name": "bert_ner_preprocessor",
+        "vocab_file": "{BERT_PATH}/vocab.txt",
+        "do_lower_case": false,
+        "max_seq_length": 512,
+        "max_subword_length": 15,
+        "subword_mask_mode": "last",
+        "token_masking_prob": 0.0,
+        "in": ["x_words"],
+        "out": ["x_tokens", "x_subword_tokens", "x_subword_tok_ids", "startofword_markers", "attention_mask"]
+      },
+      {
+        "id": "tag_vocab",
+        "class_name": "simple_vocab",
+        "min_freq": 3,
+        "fit_on": [
+          "y"
+        ],
+        "in": ["y"],
+        "out": ["y_ind"],
+        "special_tokens": [
+          "PAD",
+          "BEGIN",
+          "END"
+        ],
+        "pad_with_zeros": true,
+        "save_path": "{WORK_PATH}/tag.dict",
+        "load_path": "{WORK_PATH}/tag.dict"
+      },
+      {
+        "class_name": "bert_sequence_tagger",
+        "n_tags": "#tag_vocab.len",
+        "keep_prob": 0.1,
+        "bert_config_file": "{BERT_PATH}/bert_config.json",
+        "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
+        "attention_probs_keep_prob": 0.5,
+        "use_crf": false,
+        "return_probas": false,
+        "encoder_layer_ids": [6, 7, 8, 9, 10, 11],
+        "optimizer": "tf.train:AdamOptimizer",
+        "learning_rate": 1e-3,
+        "bert_learning_rate": 2e-5,
+        "min_learning_rate": 1e-7,
+        "learning_rate_drop_patience": 30,
+        "learning_rate_drop_div": 1.5,
+        "load_before_drop": true,
+        "clip_norm": null,
+        "save_path": "{WORK_PATH}/model",
+        "load_path": "{WORK_PATH}/model",
+        "in": ["x_subword_tok_ids", "attention_mask", "startofword_markers"],
+        "in_y": ["y_ind"],
+        "out": ["y_predicted_ind"]
+      },
+      {
+        "ref": "tag_vocab",
+        "in": ["y_predicted_ind"],
+        "out": ["y_predicted"]
+      },
+      {
+        "in": [
+          "x_words",
+          "y_predicted"
+        ],
+        "out": [
+          "y_lemmas"
+        ],
+        "class_name": "UD_pymorphy_lemmatizer",
+        "end": "\n"
+      },
+      {
+        "in": [
+          "x_words",
+          "y_predicted",
+          "y_lemmas"
+        ],
+        "out": [
+          "y_prettified"
+        ],
+        "id": "prettifier",
+        "class_name": "lemmatized_output_prettifier",
+        "end": "\n"
+      }
+    ],
+    "out": [
+      "y_prettified"
+    ]
+  },
+  "train": {
+    "epochs": 10,
+    "batch_size": 32,
+    "metrics": [
+      {
+        "name": "per_token_accuracy",
+        "inputs": [
+          "y",
+          "y_predicted"
+        ]
+      },
+      {
+        "name": "accuracy",
+        "inputs": [
+          "y",
+          "y_predicted"
+        ]
+      }
+    ],
+    "validation_patience": 10,
+    "val_every_n_epochs": 1,
+    "val_every_n_batches": 300,
+
+    "tensorboard_log_dir": "{WORK_PATH}/logs",
+    "show_examples": false,
+    "pytest_max_batches": 2,
+    "pytest_batch_size": 8,
+    "evaluation_targets": ["valid", "test"],
+    "class_name": "nn_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1",
+      "WORK_PATH": "{MODELS_PATH}/morpho_ru_syntagrus"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+      "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger/BERT/morpho_ru_syntagrus_bert.tar.gz",
+        "subdir": "{WORK_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v1.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/bert_models"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger/UD2.3/ru_syntagrus.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/UD2.3_source/ru_syntagrus"
+      }
+    ]
+  }
+}

@@ -29,11 +29,15 @@ deeppavlov.models.bert
     .. automethod:: __call__
     .. automethod:: train_on_batch
 
-.. autoclass:: deeppavlov.models.bert.bert_ner.BertNerModel
+.. autofunction:: deeppavlov.models.bert.bert_sequence_tagger.token_from_subtoken
+
+.. autoclass:: deeppavlov.models.bert.bert_sequence_tagger.BertSequenceNetwork
+
+    .. automethod:: train_on_batch
+
+.. autoclass:: deeppavlov.models.bert.bert_sequence_tagger.BertSequenceTagger
 
     .. automethod:: __call__
-    .. automethod:: train_on_batch
-    .. automethod:: token_from_subtoken
 
 .. autoclass:: deeppavlov.models.bert.bert_squad.BertSQuADModel
 
@@ -57,3 +61,8 @@ deeppavlov.models.bert
 .. autoclass:: deeppavlov.models.bert.bert_ranker.BertSepRankerPredictor
 
     .. automethod:: __call__
+
+.. autoclass:: deeppavlov.models.bert.bert_as_summarizer.BertAsSummarizer
+
+    .. automethod:: __call__
+    .. automethod:: _get_nsp_predictions

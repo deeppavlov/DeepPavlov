@@ -22,8 +22,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "{MODELS_PATH}/classes.dict",
-        "load_path": "{MODELS_PATH}/classes.dict",
+        "save_path": "{MODEL_PATH}/classes.dict",
+        "load_path": "{MODEL_PATH}/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -70,8 +70,8 @@
         ],
         "main": true,
         "class_name": "keras_classification_model",
-        "save_path": "{MODELS_PATH}/model",
-        "load_path": "{MODELS_PATH}/model",
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -111,7 +111,7 @@
     "epochs": 100,
     "batch_size": 64,
     "metrics": [
-      "sets_accuracy",
+      "accuracy",
       "f1_macro",
       {
         "name": "roc_auc",
@@ -133,16 +133,13 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/topic_ag_news_v3"
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/topic_ag_news_v3"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
     ],
-    "labels": {
-      "telegram_utils": "IntentModel",
-      "server_utils": "KerasIntentModel"
-    },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/ag_news_data.tar.gz",
@@ -154,7 +151,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/topic_ag_news_v3.tar.gz",
-        "subdir": "{ROOT_PATH}/models/classifiers"
+        "subdir": "{MODELS_PATH}/classifiers"
       }
     ]
   }

@@ -33,6 +33,7 @@ class OneHotter(Component):
         pad_zeros: whether to pad elements of batch with zeros
         single_vector: whether to return one vector for the sample (sum of each one-hotted vectors)
     """
+
     def __init__(self, depth: int, pad_zeros: bool = False,
                  single_vector=False, *args, **kwargs):
         self._depth = depth

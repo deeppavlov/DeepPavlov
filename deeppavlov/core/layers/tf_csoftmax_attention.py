@@ -114,28 +114,27 @@ def attention_gen_step(hidden_for_sketch, hidden_for_attn_alignment, sketch, key
         attn_alignment_dims = hidden_for_attn_alignment.get_shape().as_list()
         attn_alignment_hidden_size = attn_alignment_dims[2]
 
-        repeated_sketch = tf.tile(tf.reshape(sketch, [-1, 1, hidden_size]), (1,num_tokens, 1))
-        concat_mem = tf.concat([hidden_for_sketch, repeated_sketch],-1)
+        repeated_sketch = tf.tile(tf.reshape(sketch, [-1, 1, hidden_size]), (1, num_tokens, 1))
+        concat_mem = tf.concat([hidden_for_sketch, repeated_sketch], -1)
 
-
-        concat_mem = tf.reshape(concat_mem, [-1, num_tokens, 2*hidden_size]) # dirty trick
+        concat_mem = tf.reshape(concat_mem, [-1, num_tokens, 2 * hidden_size])  # dirty trick
         reduce_mem = tf.layers.dense(concat_mem, hidden_size)
 
         projected_key = tf.layers.dense(key, hidden_size)
-        t_key = tf.reshape(projected_key,[-1, hidden_size, 1])
+        t_key = tf.reshape(projected_key, [-1, hidden_size, 1])
 
         score = tf.reshape(tf.matmul(reduce_mem, t_key), [-1, num_tokens])
 
         inv_cum_att = tf.reshape(tf.ones_like(cum_att) - cum_att, [-1, num_tokens])
         att = csoftmax(score, inv_cum_att)
 
-        t_reduce_mem = tf.transpose(reduce_mem, [0,2,1])
-        t_hidden_for_attn_alignment = tf.transpose(hidden_for_attn_alignment, [0,2,1])
+        t_reduce_mem = tf.transpose(reduce_mem, [0, 2, 1])
+        t_hidden_for_attn_alignment = tf.transpose(hidden_for_attn_alignment, [0, 2, 1])
 
         r_att = tf.reshape(att, [-1, num_tokens, 1])
 
-        next_sketch = tf.squeeze(tf.matmul(t_reduce_mem,r_att),-1)
-        aligned_hidden_sketch = tf.squeeze(tf.matmul(t_hidden_for_attn_alignment,r_att),-1)
+        next_sketch = tf.squeeze(tf.matmul(t_reduce_mem, r_att), -1)
+        aligned_hidden_sketch = tf.squeeze(tf.matmul(t_hidden_for_attn_alignment, r_att), -1)
     return next_sketch, att, aligned_hidden_sketch
 
 
@@ -165,11 +164,13 @@ def attention_gen_block(hidden_for_sketch, hidden_for_attn_alignment, key, atten
         aligned_hiddens = []
         cum_att = tf.zeros(shape=[batch_size, num_tokens])  # cumulative attention
         for i in range(attention_depth):
-            sketch, cum_att_, aligned_hidden = attention_gen_step(hidden_for_sketch, hidden_for_attn_alignment, sketches[-1], key, cum_att)
-            sketches.append(sketch) #sketch
-            aligned_hiddens.append(aligned_hidden) #sketch
+            sketch, cum_att_, aligned_hidden = attention_gen_step(hidden_for_sketch, hidden_for_attn_alignment,
+                                                                  sketches[-1], key, cum_att)
+            sketches.append(sketch)  # sketch
+            aligned_hiddens.append(aligned_hidden)  # sketch
             cum_att += cum_att_
-        final_aligned_hiddens = tf.reshape(tf.transpose(tf.stack(aligned_hiddens), [1, 0, 2]),[1, attention_depth, attn_alignment_hidden_size])
+        final_aligned_hiddens = tf.reshape(tf.transpose(tf.stack(aligned_hiddens), [1, 0, 2]),
+                                           [1, attention_depth, attn_alignment_hidden_size])
     return final_aligned_hiddens
 
 
@@ -197,25 +198,24 @@ def attention_bah_step(hidden_for_sketch, hidden_for_attn_alignment, sketch, cum
         attn_alignment_dims = hidden_for_attn_alignment.get_shape().as_list()
         attn_alignment_hidden_size = attn_alignment_dims[2]
 
-        repeated_sketch = tf.tile(tf.reshape(sketch, [-1, 1, hidden_size]), (1,num_tokens, 1))
-        concat_mem = tf.concat([hidden_for_sketch, repeated_sketch],-1)
+        repeated_sketch = tf.tile(tf.reshape(sketch, [-1, 1, hidden_size]), (1, num_tokens, 1))
+        concat_mem = tf.concat([hidden_for_sketch, repeated_sketch], -1)
 
-
-        concat_mem = tf.reshape(concat_mem, [-1, num_tokens, 2*hidden_size]) # dirty trick
+        concat_mem = tf.reshape(concat_mem, [-1, num_tokens, 2 * hidden_size])  # dirty trick
         reduce_mem = tf.layers.dense(concat_mem, hidden_size)
 
-        score = tf.squeeze(tf.layers.dense(reduce_mem, units = 1,
-                                    use_bias=False),-1)
+        score = tf.squeeze(tf.layers.dense(reduce_mem, units=1,
+                                           use_bias=False), -1)
         inv_cum_att = tf.reshape(tf.ones_like(cum_att) - cum_att, [-1, num_tokens])
         att = csoftmax(score, inv_cum_att)
 
-        t_reduce_mem = tf.transpose(reduce_mem, [0,2,1])
-        t_hidden_for_attn_alignment = tf.transpose(hidden_for_attn_alignment, [0,2,1])
+        t_reduce_mem = tf.transpose(reduce_mem, [0, 2, 1])
+        t_hidden_for_attn_alignment = tf.transpose(hidden_for_attn_alignment, [0, 2, 1])
 
         r_att = tf.reshape(att, [-1, num_tokens, 1])
 
-        next_sketch = tf.squeeze(tf.matmul(t_reduce_mem,r_att),-1)
-        aligned_hidden_sketch = tf.squeeze(tf.matmul(t_hidden_for_attn_alignment,r_att),-1)
+        next_sketch = tf.squeeze(tf.matmul(t_reduce_mem, r_att), -1)
+        aligned_hidden_sketch = tf.squeeze(tf.matmul(t_hidden_for_attn_alignment, r_att), -1)
     return next_sketch, att, aligned_hidden_sketch
 
 
@@ -245,9 +245,11 @@ def attention_bah_block(hidden_for_sketch, hidden_for_attn_alignment, attention_
         aligned_hiddens = []
         cum_att = tf.zeros(shape=[batch_size, num_tokens])  # cumulative attention
         for i in range(attention_depth):
-            sketch, cum_att_, aligned_hidden = attention_bah_step(hidden_for_sketch, hidden_for_attn_alignment, sketches[-1], cum_att)
-            sketches.append(sketch) #sketch
-            aligned_hiddens.append(aligned_hidden) #sketch
+            sketch, cum_att_, aligned_hidden = attention_bah_step(hidden_for_sketch, hidden_for_attn_alignment,
+                                                                  sketches[-1], cum_att)
+            sketches.append(sketch)  # sketch
+            aligned_hiddens.append(aligned_hidden)  # sketch
             cum_att += cum_att_
-        final_aligned_hiddens = tf.reshape(tf.transpose(tf.stack(aligned_hiddens), [1, 0, 2]),[1, attention_depth, attn_alignment_hidden_size])
+        final_aligned_hiddens = tf.reshape(tf.transpose(tf.stack(aligned_hiddens), [1, 0, 2]),
+                                           [1, attention_depth, attn_alignment_hidden_size])
     return final_aligned_hiddens

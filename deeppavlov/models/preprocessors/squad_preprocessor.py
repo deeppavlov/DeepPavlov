@@ -13,13 +13,13 @@
 # limitations under the License.
 
 
+import bisect
 import pickle
 import unicodedata
 from collections import Counter
 from logging import getLogger
 from pathlib import Path
 from typing import Tuple, List, Union
-import bisect
 
 import numpy as np
 from nltk import word_tokenize
@@ -53,11 +53,11 @@ class SquadPreprocessor(Component):
 
     def __call__(self, contexts_raw: Tuple[str, ...], questions_raw: Tuple[str, ...],
                  **kwargs) -> Tuple[
-                                List[str], List[List[str]], List[List[List[str]]],
-                                List[List[int]], List[List[int]],
-                                List[str], List[List[str]], List[List[List[str]]],
-                                List[List[Tuple[int, int]]]
-                            ]:
+        List[str], List[List[str]], List[List[List[str]]],
+        List[List[int]], List[List[int]],
+        List[str], List[List[str]], List[List[List[str]]],
+        List[List[Tuple[int, int]]]
+    ]:
         """ Performs preprocessing of context and question
         Args:
             contexts_raw: batch of contexts to preprocess
@@ -100,7 +100,7 @@ class SquadPreprocessor(Component):
             questions_chars.append(q_chars)
             spans.append(SquadPreprocessor.convert_idx(c, c_tokens))
         return contexts, contexts_tokens, contexts_chars, contexts_r2p, contexts_p2r, \
-            questions, questions_tokens, questions_chars, spans
+               questions, questions_tokens, questions_chars, spans
 
     @staticmethod
     def preprocess_str(line: str, return_mapping: bool = False) -> Union[Tuple[str, List[int], List[int]], str]:
@@ -480,7 +480,7 @@ class SquadBertAnsPostprocessor(Component):
                 end = self.get_char_position(sub2c, answer_end)
                 subtok = features.tokens[answer_end]
                 subtok = subtok[2:] if subtok.startswith('##') else subtok
-                answer = context[st:end+len(subtok)]
+                answer = context[st:end + len(subtok)]
                 answers += [answer]
                 starts += [st]
                 ends += [ends]

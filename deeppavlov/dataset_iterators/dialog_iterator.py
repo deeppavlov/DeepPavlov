@@ -32,8 +32,8 @@ class DialogDatasetIterator(DataLearningIterator):
         test: list of dialogs used for testing (tuples ``(context, response)``)
     """
 
-    @staticmethod
-    def _dialogs(data):
+    @overrides
+    def preprocess(self, data, *args, **kwargs):
         dialogs = []
         prev_resp_act = None
         for x, y in data:
@@ -46,12 +46,6 @@ class DialogDatasetIterator(DataLearningIterator):
             dialogs[-1][0].append(x)
             dialogs[-1][1].append(y)
         return dialogs
-
-    @overrides
-    def split(self, *args, **kwargs):
-        self.train = self._dialogs(self.train)
-        self.valid = self._dialogs(self.valid)
-        self.test = self._dialogs(self.test)
 
 
 @register('dialog_db_result_iterator')
@@ -69,6 +63,7 @@ class DialogDBResultDatasetIterator(DataLearningIterator):
         valid: list of tuples ``(db_result dictionary, '')`` from "valid" data
         test: list of tuples ``(db_result dictionary, '')`` from "test" data
     """
+
     @staticmethod
     def _db_result(data):
         x, y = data
@@ -76,7 +71,5 @@ class DialogDBResultDatasetIterator(DataLearningIterator):
             return x['db_result']
 
     @overrides
-    def split(self, *args, **kwargs):
-        self.train = [(r, "") for r in filter(None, map(self._db_result, self.train))]
-        self.valid = [(r, "") for r in filter(None, map(self._db_result, self.valid))]
-        self.test = [(r, "") for r in filter(None, map(self._db_result, self.test))]
+    def preprocess(self, data, *args, **kwargs):
+        return [(r, "") for r in filter(None, map(self._db_result, data))]

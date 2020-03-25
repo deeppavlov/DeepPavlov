@@ -30,7 +30,8 @@ class KvretDialogDatasetIterator(DataLearningIterator):
         valid: list of "valid" ``(context, response)`` tuples 
         test: list of "test" ``(context, response)`` tuples 
     """
-# TODO: write custom batch_generator: order of utterances from one dialogue is presumed
+
+    # TODO: write custom batch_generator: order of utterances from one dialogue is presumed
     @staticmethod
     def _dialogs(data):
         dialogs = []
@@ -38,14 +39,14 @@ class KvretDialogDatasetIterator(DataLearningIterator):
         task = None
         for x, y in data:
             if x.get('episode_done'):
-                #history = []
+                # history = []
                 history = ""
                 dialogs.append((([], [], [], [], []), ([], [])))
                 task = y['task']
-            #history.append((x, y))
+            # history.append((x, y))
             history = history + ' ' + x['text'] + ' ' + y['text']
-            #x['history'] = history[:-1]
-            x['history'] = history[:-len(x['text'])-len(y['text'])-2]
+            # x['history'] = history[:-1]
+            x['history'] = history[:-len(x['text']) - len(y['text']) - 2]
             dialogs[-1][0][0].append(x['text'])
             dialogs[-1][0][1].append(x['dialog_id'])
             dialogs[-1][0][2].append(x['history'])
@@ -55,8 +56,8 @@ class KvretDialogDatasetIterator(DataLearningIterator):
             dialogs[-1][1][1].append(task)
         return dialogs
 
-    @staticmethod
-    def _utterances(data):
+    @overrides
+    def preprocess(self, data, *args, **kwargs):
         utters = []
         history = []
         for x, y in data:
@@ -68,15 +69,9 @@ class KvretDialogDatasetIterator(DataLearningIterator):
             history = history + ' ' + x['text'] + ' ' + y['text']
             # x['x_hist'] = x_hist[:-1]
             # x['y_hist'] = y_hist[:-1]
-            x['history'] = history[:-len(x['text'])-len(y['text'])-2]
+            x['history'] = history[:-len(x['text']) - len(y['text']) - 2]
             x_tuple = (x['text'], x['dialog_id'], x['history'],
                        x['kb_columns'], x['kb_items'])
             y_tuple = (y['text'], y['task']['intent'])
             utters.append((x_tuple, y_tuple))
         return utters
-
-    @overrides
-    def split(self, *args, **kwargs):
-        self.train = self._utterances(self.train)
-        self.valid = self._utterances(self.valid)
-        self.test = self._utterances(self.test)

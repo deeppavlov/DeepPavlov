@@ -1,19 +1,32 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import uuid
-from pathlib import Path
-from typing import Union
-from typing import Tuple, Optional, List
 from logging import getLogger
+from pathlib import Path
+from typing import Tuple, Optional, List
 
 import aiml
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.skill.skill import Skill
+from deeppavlov.core.models.component import Component
 
 log = getLogger(__name__)
 
 
 @register("aiml_skill")
-class AIMLSkill(Skill):
+class AIMLSkill(Component):
     """Skill wraps python-aiml library into DeepPavlov interfrace.
     AIML uses directory with AIML scripts which are loaded at initialization and used as patterns
     for answering at each step.
@@ -79,16 +92,17 @@ class AIMLSkill(Skill):
         return response, confidence
 
     def _generate_user_id(self) -> str:
-        """
-        Here you put user id generative logic if you want to implement it in the skill.
+        """Here you put user id generative logic if you want to implement it in the skill.
 
-        Although it is better to delegate user_id generation to Agent Layer
-        Returns: str
+        Returns:
+            user_id: Random generated user ID.
 
         """
         return uuid.uuid1().hex
 
-    def __call__(self, utterances_batch: List, history_batch: List, states_batch: List) -> Tuple[List, ...]:
+    def __call__(self,
+                 utterances_batch: List[str],
+                 states_batch: Optional[List] = None) -> Tuple[List[str], List[float], list]:
         """Returns skill inference result.
 
         Returns batches of skill inference results, estimated confidence
@@ -97,7 +111,6 @@ class AIMLSkill(Skill):
 
         Args:
             utterances_batch: A batch of utterances of str type.
-            history_batch: A batch of list typed histories for each utterance.
             states_batch:  A batch of arbitrary typed states for
                 each utterance.
 
@@ -118,6 +131,10 @@ class AIMLSkill(Skill):
         # In this implementation we use current datetime for generating uniqe ids
         output_states_batch = []
         user_ids = []
+        if states_batch is None:
+            # generate states batch matching batch of utterances:
+            states_batch = [None] * len(utterances_batch)
+
         for state in states_batch:
             if not state:
                 user_id = self._generate_user_id()

@@ -1,0 +1,43 @@
+{
+  "chainer": {
+    "in": ["texts"],
+    "pipe": [
+      {
+        "class_name": "transformers_bert_preprocessor",
+        "vocab_file": "{BERT_PATH}/vocab.txt",
+        "do_lower_case": false,
+        "max_seq_length": 512,
+        "in": ["texts"],
+        "out": ["tokens", "subword_tokens", "subword_tok_ids", "startofword_markers", "attention_mask"]
+      },
+      {
+        "class_name": "transformers_bert_embedder",
+        "bert_config_path": "{BERT_PATH}/bert_config.json",
+        "load_path": "{BERT_PATH}",
+        "truncate": true,
+        "in": ["subword_tok_ids", "startofword_markers", "attention_mask"],
+        "out": ["word_emb", "subword_emb", "max_emb", "mean_emb", "pooler_output"]
+      }
+    ],
+    "out": ["tokens", "word_emb", "subword_tokens", "subword_emb", "max_emb", "mean_emb", "pooler_output"]
+  },
+  "train": {},
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12_pt"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/transformers.txt",
+      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt"
+    ],
+    "labels": {},
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/multi_cased_L-12_H-768_A-12_pt.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/bert_models"
+      }
+    ]
+  }
+}

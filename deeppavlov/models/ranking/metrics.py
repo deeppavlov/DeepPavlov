@@ -28,11 +28,13 @@ def rank_response(y_true, y_pred):
             if x == 0:
                 rank_tot += i
                 break
-    return float(rank_tot)/num_examples
+    return float(rank_tot) / num_examples
+
 
 @register_metric('r@1_insQA')
 def r_at_1_insQA(y_true, y_pred):
     return recall_at_k_insQA(y_true, y_pred, k=1)
+
 
 def recall_at_k_insQA(y_true, y_pred, k):
     labels = np.repeat(np.expand_dims(np.asarray(y_true), axis=1), k, axis=1)
@@ -44,4 +46,3 @@ def recall_at_k_insQA(y_true, y_pred, k):
             if predictions[i][j] in np.arange(labels[i][j]):
                 flags[i][j] = 1.
     return np.mean((np.sum(flags, -1) >= 1.).astype(float))
-

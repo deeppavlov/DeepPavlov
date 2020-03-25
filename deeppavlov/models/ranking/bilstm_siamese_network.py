@@ -16,14 +16,13 @@ from logging import getLogger
 from typing import List
 
 import numpy as np
-from keras import backend as K
-from keras import losses
-from keras.initializers import glorot_uniform, Orthogonal
-from keras.layers import Input, LSTM, Embedding, GlobalMaxPooling1D, Lambda, Dense, Layer
-from keras.layers.merge import Multiply
-from keras.layers.wrappers import Bidirectional
-from keras.models import Model
-from keras.optimizers import Adam
+from tensorflow.keras import backend as K
+from tensorflow.keras import losses
+from tensorflow.keras.initializers import glorot_uniform, Orthogonal
+from tensorflow.keras.layers import (Input, LSTM, Embedding, GlobalMaxPooling1D, Lambda, Dense, Layer, Multiply,
+                                     Bidirectional)
+from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import Adam
 from tensorflow.python.framework.ops import Tensor
 
 from deeppavlov.core.common.registry import register
@@ -34,7 +33,6 @@ log = getLogger(__name__)
 
 @register('bilstm_nn')
 class BiLSTMSiameseNetwork(KerasSiameseModel):
-
     """The class implementing a siamese neural network with BiLSTM and max pooling.
 
     There is a possibility to use a binary cross-entropy loss as well as
@@ -120,10 +118,10 @@ class BiLSTMSiameseNetwork(KerasSiameseModel):
         rec_in = Orthogonal(seed=self.seed)
         if self.recurrent == "bilstm" or self.recurrent is None:
             out = Bidirectional(LSTM(self.hidden_dim,
-                                input_shape=(self.max_sequence_length, self.embedding_dim,),
-                                kernel_initializer=ker_in,
-                                recurrent_initializer=rec_in,
-                                return_sequences=ret_seq), merge_mode='concat')
+                                     input_shape=(self.max_sequence_length, self.embedding_dim,),
+                                     kernel_initializer=ker_in,
+                                     recurrent_initializer=rec_in,
+                                     return_sequences=ret_seq), merge_mode='concat')
         elif self.recurrent == "lstm":
             out = LSTM(self.hidden_dim,
                        input_shape=(self.max_sequence_length, self.embedding_dim,),
@@ -187,7 +185,7 @@ class BiLSTMSiameseNetwork(KerasSiameseModel):
 
     def _diff_mult_dist(self, inputs: List[Tensor]) -> Tensor:
         input1, input2 = inputs
-        a = K.abs(input1-input2)
+        a = K.abs(input1 - input2)
         b = Multiply()(inputs)
         return K.concatenate([input1, input2, a, b])
 
@@ -196,9 +194,9 @@ class BiLSTMSiameseNetwork(KerasSiameseModel):
         x2_norm = K.l2_normalize(x_pair[1], axis=1)
         diff = x1_norm - x2_norm
         square = K.square(diff)
-        sum = K.sum(square, axis=1)
-        sum = K.clip(sum, min_value=1e-12, max_value=None)
-        dist = K.sqrt(sum) / 2.
+        _sum = K.sum(square, axis=1)
+        _sum = K.clip(_sum, min_value=1e-12, max_value=None)
+        dist = K.sqrt(_sum) / 2.
         return dist
 
     def _pairwise_distances(self, inputs: List[Tensor]) -> Tensor:
@@ -208,7 +206,7 @@ class BiLSTMSiameseNetwork(KerasSiameseModel):
         dot_product = K.dot(embeddings, K.transpose(embeddings))
         square_norm = K.batch_dot(embeddings, embeddings, axes=1)
         distances = K.transpose(square_norm) - 2.0 * dot_product + square_norm
-        distances = K.slice(distances, (0, bs), (bs, bs))
+        distances = distances[0:bs, bs:bs+bs]
         distances = K.clip(distances, 0.0, None)
         mask = K.cast(K.equal(distances, 0.0), K.dtype(distances))
         distances = distances + mask * 1e-16
@@ -216,7 +214,7 @@ class BiLSTMSiameseNetwork(KerasSiameseModel):
         distances = distances * (1.0 - mask)
         return distances
 
-    def _triplet_loss(self, labels: Tensor, pairwise_dist: Tensor) -> Tensor :
+    def _triplet_loss(self, labels: Tensor, pairwise_dist: Tensor) -> Tensor:
         y_true = K.squeeze(labels, axis=1)
         """Triplet loss function"""
         if self.hard_triplets:
@@ -244,8 +242,8 @@ class BiLSTMSiameseNetwork(KerasSiameseModel):
         mask_anchor_negative = self._get_anchor_negative_triplet_mask(y_true, pairwise_dist)
         anchor_negative_dist = mask_anchor_negative * pairwise_dist
         mask_anchor_negative = self._get_semihard_anchor_negative_triplet_mask(anchor_negative_dist,
-                                                                          hardest_positive_dist,
-                                                                          mask_anchor_negative)
+                                                                               hardest_positive_dist,
+                                                                               mask_anchor_negative)
         max_anchor_negative_dist = K.max(pairwise_dist, axis=1, keepdims=True)
         anchor_negative_dist = pairwise_dist + max_anchor_negative_dist * (1.0 - mask_anchor_negative)
         hardest_negative_dist = K.min(anchor_negative_dist, axis=1, keepdims=True)
@@ -290,5 +288,5 @@ class BiLSTMSiameseNetwork(KerasSiameseModel):
         mask = mask_negative * (1 - mask_semihard) + mask * mask_semihard
         return mask
 
-    def _predict_on_batch(self, batch:  List[np.ndarray]) -> np.ndarray:
+    def _predict_on_batch(self, batch: List[np.ndarray]) -> np.ndarray:
         return self.score_model.predict_on_batch(x=batch)

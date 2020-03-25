@@ -142,7 +142,7 @@ class BidirectionalLanguageModel(object):
             for layer in layers:
                 layer_wo_bos_eos = layer[:, 1:, :]
                 layer_wo_bos_eos = tf.reverse_sequence(
-                    layer_wo_bos_eos, 
+                    layer_wo_bos_eos,
                     lm_graph.sequence_lengths - 1,
                     seq_axis=1,
                     batch_axis=0,
@@ -182,7 +182,7 @@ class BidirectionalLanguageModel(object):
             mask_wo_bos_eos = tf.cast(mask_wo_bos_eos, 'bool')
 
         return {
-            'lm_embeddings': lm_embeddings, 
+            'lm_embeddings': lm_embeddings,
             'lengths': sequence_length_wo_bos_eos,
             'token_embeddings': lm_graph.embedding,
             'mask': mask_wo_bos_eos,
@@ -253,6 +253,7 @@ class BidirectionalLanguageModelGraph(object):
     Creates the computational graph and holds the ops necessary for runnint
     a bidirectional language model
     """
+
     def __init__(self, options, weight_file, ids_placeholder,
                  use_character_inputs=True, embedding_weight_file=None,
                  max_batch_size=128):
@@ -405,15 +406,15 @@ class BidirectionalLanguageModelGraph(object):
         if use_proj:
             assert n_filters > projection_dim
             with tf.variable_scope('CNN_proj'):
-                    W_proj_cnn = tf.get_variable(
-                        "W_proj", [n_filters, projection_dim],
-                        initializer=tf.random_normal_initializer(
-                            mean=0.0, stddev=np.sqrt(1.0 / n_filters)),
-                        dtype=DTYPE)
-                    b_proj_cnn = tf.get_variable(
-                        "b_proj", [projection_dim],
-                        initializer=tf.constant_initializer(0.0),
-                        dtype=DTYPE)
+                W_proj_cnn = tf.get_variable(
+                    "W_proj", [n_filters, projection_dim],
+                    initializer=tf.random_normal_initializer(
+                        mean=0.0, stddev=np.sqrt(1.0 / n_filters)),
+                    dtype=DTYPE)
+                b_proj_cnn = tf.get_variable(
+                    "b_proj", [projection_dim],
+                    initializer=tf.constant_initializer(0.0),
+                    dtype=DTYPE)
 
         # apply highways layers
         def high(x, ww_carry, bb_carry, ww_tr, bb_tr):
@@ -586,7 +587,7 @@ class BidirectionalLanguageModelGraph(object):
                              init_states[i][batch_size:, :]], axis=0)
                         state_update_op = tf.assign(init_states[i], new_state)
                         update_ops.append(state_update_op)
-    
+
                 layer_input = layer_output
 
         self.mask = mask
@@ -623,6 +624,7 @@ def weight_layers(name, bilm_ops, l2_coef=None,
             'regularization_op': op to compute regularization term
         }
     """
+
     def _l2_regularizer(weights):
         if l2_coef is not None:
             return l2_coef * tf.reduce_sum(tf.square(weights))
@@ -647,7 +649,7 @@ def weight_layers(name, bilm_ops, l2_coef=None,
             x_masked = x * broadcast_mask
             N = tf.reduce_sum(mask_float) * lm_dim
             mean = tf.reduce_sum(x_masked) / N
-            variance = tf.reduce_sum(((x_masked - mean) * broadcast_mask)**2) / N
+            variance = tf.reduce_sum(((x_masked - mean) * broadcast_mask) ** 2) / N
             return tf.nn.batch_normalization(
                 x, mean, variance, None, None, 1E-12
             )
@@ -662,7 +664,7 @@ def weight_layers(name, bilm_ops, l2_coef=None,
             with tf.variable_scope("aggregation", reuse=reuse):
                 W = tf.get_variable(
                     '{}_ELMo_W'.format(name),
-                    shape=(n_lm_layers, ),
+                    shape=(n_lm_layers,),
                     initializer=tf.zeros_initializer,
                     regularizer=_l2_regularizer,
                     trainable=True,
@@ -697,7 +699,7 @@ def weight_layers(name, bilm_ops, l2_coef=None,
         with tf.variable_scope("aggregation", reuse=reuse):
             gamma = tf.get_variable(
                 '{}_ELMo_gamma'.format(name),
-                shape=(1, ),
+                shape=(1,),
                 initializer=tf.ones_initializer,
                 regularizer=None,
                 trainable=True,

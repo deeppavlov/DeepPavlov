@@ -45,6 +45,7 @@ def register(name: str = None) -> type:
     Register classes that could be initialized from JSON configuration file.
     If name is not passed, the class name is converted to snake-case.
     """
+
     def decorate(model_cls: type, reg_name: str = None) -> type:
         model_name = reg_name or short_name(model_cls)
         global _REGISTRY

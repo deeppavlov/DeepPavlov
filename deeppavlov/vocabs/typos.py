@@ -45,7 +45,7 @@ class StaticDictionary:
         words_trie: trie structure of all the words
     """
 
-    def __init__(self, data_dir: [Path, str]='', *args, dictionary_name: str='dictionary', **kwargs):
+    def __init__(self, data_dir: [Path, str] = '', *args, dictionary_name: str = 'dictionary', **kwargs):
         data_dir = expand_path(data_dir) / dictionary_name
 
         alphabet_path = data_dir / 'alphabet.pkl'
@@ -71,7 +71,7 @@ class StaticDictionary:
             words_trie = defaultdict(set)
             for word in words:
                 for i in range(len(word)):
-                    words_trie[word[:i]].add(word[:i+1])
+                    words_trie[word[:i]].add(word[:i + 1])
                 words_trie[word] = set()
             words_trie = {k: sorted(v) for k, v in words_trie.items()}
 
@@ -113,7 +113,7 @@ class RussianWordsVocab(StaticDictionary):
         words_trie: trie structure of all the words
     """
 
-    def __init__(self, data_dir: [Path, str]='', *args, **kwargs):
+    def __init__(self, data_dir: [Path, str] = '', *args, **kwargs):
         kwargs['dictionary_name'] = 'russian_words_vocab'
         super().__init__(data_dir, *args, **kwargs)
 
@@ -140,7 +140,8 @@ class Wiki100KDictionary(StaticDictionary):
         words_set: set of all the words
         words_trie: trie structure of all the words
     """
-    def __init__(self, data_dir: [Path, str]='', *args, **kwargs):
+
+    def __init__(self, data_dir: [Path, str] = '', *args, **kwargs):
         kwargs['dictionary_name'] = 'wikipedia_100K_vocab'
         super().__init__(data_dir, *args, **kwargs)
 

@@ -142,8 +142,10 @@ class BertSQuADModel(LRScheduledTFModel):
 
             logit_mask = self.token_types_ph
             # [CLS] token is used as no answer
-            mask = tf.concat([tf.ones((bs, 1), dtype=tf.int32), tf.zeros((bs, seq_len-1), dtype=tf.int32)], axis=-1)
-            logit_mask = tf.cast(logit_mask + mask, tf.float32)
+            #mask = tf.concat([tf.ones((bs, 1), dtype=tf.int32), tf.zeros((bs, seq_len-1), dtype=tf.int32)], axis=-1)
+            #logit_mask = tf.cast(logit_mask + mask, tf.float32)
+            mask = tf.concat([tf.ones((bs, 1), dtype=tf.int32), tf.zeros((bs, seq_len - 1), dtype=tf.int32)], axis=-1)
+            logit_mask = logit_mask + mask
 
             logits_st = softmax_mask(logits_st, logit_mask)
             logits_end = softmax_mask(logits_end, logit_mask)
@@ -279,7 +281,8 @@ class BertSQuADModel(LRScheduledTFModel):
         input_type_ids = [f.input_type_ids for f in features]
 
         feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids)
-        st, end, logits, scores = self.sess.run([self.start_pred, self.end_pred, self.yp_logits, self.yp_score], feed_dict=feed_dict)
+        st, end, logits, scores = self.sess.run([self.start_pred, self.end_pred, self.yp_logits, self.yp_score],
+                                                feed_dict=feed_dict)
         return st, end, logits.tolist(), scores.tolist()
 
 
@@ -309,6 +312,7 @@ class BertSQuADInferModel(Component):
         lang: either `en` or `ru`, it is used to select sentence tokenizer
 
     """
+
     def __init__(self, squad_model_config: str,
                  vocab_file: str,
                  do_lower_case: bool,
