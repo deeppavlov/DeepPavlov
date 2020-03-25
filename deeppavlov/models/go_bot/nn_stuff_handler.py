@@ -78,7 +78,7 @@ class NNStuffHandler(LRScheduledTFModel):
         self.dropout_rate = self.opt['dropout_rate']  # todo does dropout actually work
         self.hidden_size = self.opt['hidden_size']
         gobot_obj.action_size = self.opt['action_size']
-        gobot_obj.obs_size = self.opt['obs_size']  # todo что такое обс сайз
+        self.obs_size = self.opt['obs_size']  # todo что такое обс сайз
         gobot_obj.dense_size = self.opt['dense_size']
         gobot_obj.l2_reg = self.opt['l2_reg_coef']
 
@@ -87,7 +87,7 @@ class NNStuffHandler(LRScheduledTFModel):
             # gobot_obj.opt['attention_mechanism'] = attn
 
             gobot_obj.attn = collections.namedtuple('attention_mechanism', attn.keys())(**attn)
-            gobot_obj.obs_size -= attn['token_size']
+            self.obs_size -= attn['token_size']
         else:
             gobot_obj.attn = None
 
@@ -125,7 +125,7 @@ class NNStuffHandler(LRScheduledTFModel):
                                                                    shape=[],
                                                                    name='dropout_prob')
         gobot_obj._features = tf.placeholder(tf.float32,
-                                             [None, None, gobot_obj.obs_size],
+                                             [None, None, self.obs_size],
                                              name='features')
         gobot_obj._action = tf.placeholder(tf.int32,
                                            [None, None],
