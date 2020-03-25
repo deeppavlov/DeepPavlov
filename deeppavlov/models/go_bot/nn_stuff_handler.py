@@ -153,7 +153,7 @@ class NNStuffHandler(LRScheduledTFModel):
         if gobot_obj.attn:
             _emb_context_shape = \
                 [None, None, gobot_obj.attn.max_num_tokens, gobot_obj.attn.token_size]
-            gobot_obj._emb_context = tf.placeholder(tf.float32,
+            self._emb_context = tf.placeholder(tf.float32,
                                                     _emb_context_shape,
                                                     name='emb_context')
             self._key = tf.placeholder(tf.float32,
@@ -171,39 +171,39 @@ class NNStuffHandler(LRScheduledTFModel):
                 if gobot_obj.attn.type == 'general':
                     _attn_output = am.general_attention(
                         self._key,
-                        gobot_obj._emb_context,
+                        self._emb_context,
                         hidden_size=gobot_obj.attn.hidden_size,
                         projected_align=gobot_obj.attn.projected_align)
                 elif gobot_obj.attn.type == 'bahdanau':
                     _attn_output = am.bahdanau_attention(
                         self._key,
-                        gobot_obj._emb_context,
+                        self._emb_context,
                         hidden_size=gobot_obj.attn.hidden_size,
                         projected_align=gobot_obj.attn.projected_align)
                 elif gobot_obj.attn.type == 'cs_general':
                     _attn_output = am.cs_general_attention(
                         self._key,
-                        gobot_obj._emb_context,
+                        self._emb_context,
                         hidden_size=gobot_obj.attn.hidden_size,
                         depth=gobot_obj.attn.depth,
                         projected_align=gobot_obj.attn.projected_align)
                 elif gobot_obj.attn.type == 'cs_bahdanau':
                     _attn_output = am.cs_bahdanau_attention(
                         self._key,
-                        gobot_obj._emb_context,
+                        self._emb_context,
                         hidden_size=gobot_obj.attn.hidden_size,
                         depth=gobot_obj.attn.depth,
                         projected_align=gobot_obj.attn.projected_align)
                 elif gobot_obj.attn.type == 'light_general':
                     _attn_output = am.light_general_attention(
                         self._key,
-                        gobot_obj._emb_context,
+                        self._emb_context,
                         hidden_size=gobot_obj.attn.hidden_size,
                         projected_align=gobot_obj.attn.projected_align)
                 elif gobot_obj.attn.type == 'light_bahdanau':
                     _attn_output = am.light_bahdanau_attention(
                         self._key,
-                        gobot_obj._emb_context,
+                        self._emb_context,
                         hidden_size=gobot_obj.attn.hidden_size,
                         projected_align=gobot_obj.attn.projected_align)
                 else:
@@ -325,7 +325,7 @@ class NNStuffHandler(LRScheduledTFModel):
             self._action_mask: action_mask
         }
         if gobot_obj.attn:
-            feed_dict[gobot_obj._emb_context] = emb_context
+            feed_dict[self._emb_context] = emb_context
             feed_dict[self._key] = key
 
         _, loss_value, prediction = \
@@ -346,7 +346,7 @@ class NNStuffHandler(LRScheduledTFModel):
             self._action_mask: action_mask
         }
         if gobot_obj.attn:
-            feed_dict[gobot_obj._emb_context] = emb_context
+            feed_dict[self._emb_context] = emb_context
             feed_dict[self._key] = key
 
         probs, prediction, state = \
