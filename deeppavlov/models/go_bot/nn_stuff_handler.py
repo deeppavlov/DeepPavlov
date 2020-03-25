@@ -100,7 +100,7 @@ class NNStuffHandler(LRScheduledTFModel):
         _logits, gobot_obj._state = self._build_body(gobot_obj)
 
         # probabilities normalization : elemwise multiply with action mask
-        _logits_exp = tf.multiply(tf.exp(_logits), gobot_obj._action_mask)
+        _logits_exp = tf.multiply(tf.exp(_logits), self._action_mask)
         _logits_exp_sum = tf.expand_dims(tf.reduce_sum(_logits_exp, -1), -1)
         gobot_obj._probs = tf.squeeze(_logits_exp / _logits_exp_sum, name='probs')
 
@@ -130,7 +130,7 @@ class NNStuffHandler(LRScheduledTFModel):
         gobot_obj._action = tf.placeholder(tf.int32,
                                            [None, None],
                                            name='ground_truth_action')
-        gobot_obj._action_mask = tf.placeholder(tf.float32,
+        self._action_mask = tf.placeholder(tf.float32,
                                                 [None, None, gobot_obj.action_size],
                                                 name='action_mask')
         gobot_obj._utterance_mask = tf.placeholder(tf.float32,
@@ -308,7 +308,7 @@ class NNStuffHandler(LRScheduledTFModel):
             gobot_obj._utterance_mask: utter_mask,
             self._features: features,
             gobot_obj._action: action,
-            gobot_obj._action_mask: action_mask
+            self._action_mask: action_mask
         }
         if gobot_obj.attn:
             feed_dict[gobot_obj._emb_context] = emb_context
@@ -329,7 +329,7 @@ class NNStuffHandler(LRScheduledTFModel):
             gobot_obj._dropout_keep_prob: 1.,
             gobot_obj._utterance_mask: [[1.]],
             gobot_obj._initial_state: (states_c, states_h),
-            gobot_obj._action_mask: action_mask
+            self._action_mask: action_mask
         }
         if gobot_obj.attn:
             feed_dict[gobot_obj._emb_context] = emb_context
