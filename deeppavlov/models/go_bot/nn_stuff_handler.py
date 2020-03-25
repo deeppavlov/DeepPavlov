@@ -127,7 +127,7 @@ class NNStuffHandler(LRScheduledTFModel):
 
     def _add_placeholders(self, gobot_obj) -> None:
         # todo узнай что такое плейсхолдеры в тф
-        gobot_obj._dropout_keep_prob = tf.placeholder_with_default(1.0,
+        self._dropout_keep_prob = tf.placeholder_with_default(1.0,
                                                                    shape=[],
                                                                    name='dropout_prob')
         self._features = tf.placeholder(tf.float32,
@@ -211,7 +211,7 @@ class NNStuffHandler(LRScheduledTFModel):
             _units = tf.concat([_units, _attn_output], -1)
 
         _units = tf_layers.variational_dropout(_units,
-                                               keep_prob=gobot_obj._dropout_keep_prob)
+                                               keep_prob=self._dropout_keep_prob)
 
         # recurrent network unit
         _lstm_cell = tf.nn.rnn_cell.LSTMCell(self.hidden_size)
@@ -226,7 +226,7 @@ class NNStuffHandler(LRScheduledTFModel):
                                             sequence_length=_utter_lengths)
         _output = tf.reshape(_output, (gobot_obj._batch_size, -1, self.hidden_size))
         _output = tf_layers.variational_dropout(_output,
-                                                keep_prob=gobot_obj._dropout_keep_prob)
+                                                keep_prob=self._dropout_keep_prob)
         # output projection
         _logits = tf.layers.dense(_output, gobot_obj.action_size,
                                   kernel_regularizer=tf.nn.l2_loss,
@@ -318,7 +318,7 @@ class NNStuffHandler(LRScheduledTFModel):
                                 action_mask: np.ndarray,
                                 action: np.ndarray) -> dict:
         feed_dict = {
-            gobot_obj._dropout_keep_prob: 1.,
+            self._dropout_keep_prob: 1.,
             gobot_obj._utterance_mask: utter_mask,
             self._features: features,
             gobot_obj._action: action,
@@ -340,7 +340,7 @@ class NNStuffHandler(LRScheduledTFModel):
                       action_mask: np.ndarray, states_c: np.ndarray, states_h: np.ndarray, prob: bool = False) -> List[np.ndarray]:
         feed_dict = {
             self._features: features,
-            gobot_obj._dropout_keep_prob: 1.,
+            self._dropout_keep_prob: 1.,
             gobot_obj._utterance_mask: [[1.]],
             gobot_obj._initial_state: (states_c, states_h),
             self._action_mask: action_mask
