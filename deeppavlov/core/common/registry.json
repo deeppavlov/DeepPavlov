@@ -4,6 +4,7 @@
   "amazon_ecommerce_reader": "deeppavlov.dataset_readers.amazon_ecommerce_reader:AmazonEcommerceReader",
   "api_requester": "deeppavlov.models.api_requester.api_requester:ApiRequester",
   "api_router": "deeppavlov.models.api_requester.api_router:ApiRouter",
+  "ascii_to_bytesIO": "deeppavlov.models.nemo.nemo_io:ascii_to_bytes_io",
   "basic_classification_iterator": "deeppavlov.dataset_iterators.basic_classification_iterator:BasicClassificationDatasetIterator",
   "basic_classification_reader": "deeppavlov.dataset_readers.basic_classification_reader:BasicClassificationDatasetReader",
   "bert_as_summarizer": "deeppavlov.models.bert.bert_as_summarizer:BertAsSummarizer",
@@ -22,6 +23,8 @@
   "bilstm_gru_nn": "deeppavlov.models.ranking.bilstm_gru_siamese_network:BiLSTMGRUSiameseNetwork",
   "bilstm_nn": "deeppavlov.models.ranking.bilstm_siamese_network:BiLSTMSiameseNetwork",
   "bow": "deeppavlov.models.embedders.bow_embedder:BoWEmbedder",
+  "bytesIO_to_ascii": "deeppavlov.models.nemo.nemo_io:bytes_io_to_ascii",
+  "bytes_saver": "deeppavlov.models.nemo.nemo_io:BytesSaver",
   "capitalization_featurizer": "deeppavlov.models.preprocessors.capitalization:CapitalizationPreprocessor",
   "char_splitter": "deeppavlov.models.preprocessors.char_splitter:CharSplitter",
   "char_splitting_lowercase_preprocessor": "deeppavlov.models.preprocessors.capitalization:CharSplittingLowercasePreprocessor",
@@ -163,7 +166,6 @@
   "ubuntu_v1_mt_reader": "deeppavlov.dataset_readers.ubuntu_v1_mt_reader:UbuntuV1MTReader",
   "ubuntu_v2_mt_reader": "deeppavlov.dataset_readers.ubuntu_v2_mt_reader:UbuntuV2MTReader",
   "ubuntu_v2_reader": "deeppavlov.dataset_readers.ubuntu_v2_reader:UbuntuV2Reader",
-  "wav_saver": "deeppavlov.models.nemo.nemo_io:WAVSaver",
   "wiki_sqlite_vocab": "deeppavlov.vocabs.wiki_sqlite:WikiSQLiteVocab",
   "wikitionary_100K_vocab": "deeppavlov.vocabs.typos:Wiki100KDictionary"
 }

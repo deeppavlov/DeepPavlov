@@ -4,10 +4,15 @@
     "in_y": "y",
     "pipe": [
       {
+        "class_name": "ascii_to_bytesIO",
+        "in": ["audio"],
+        "out": ["audio_files"]
+      },
+      {
         "class_name": "nemo_asr",
         "model_path": "{NEMO_PATH}/quartznet15x5/quartznet15x5.yaml",
         "checkpoints_dir": "{NEMO_PATH}/quartznet15x5",
-        "in": ["audio"],
+        "in": ["audio_files"],
         "out": ["q"]
       },
       {
@@ -74,13 +79,12 @@
         "out": ["audio_answer"]
       },
       {
-        "class_name": "wav_saver",
-        "wav_dir": "/data/nemo/workdir",
+        "class_name": "bytesIO_to_ascii",
         "in": ["audio_answer"],
-        "out": ["file_names"]
+        "out": ["answer_text"]
       }
     ],
-    "out": ["y_pred_answers", "file_names"]
+    "out": ["answer_text"]
   },
   "metadata": {
     "variables": {
