@@ -17,9 +17,7 @@ from typing import Dict, Any, List, Optional, Union
 
 import numpy as np
 
-import deeppavlov.models.go_bot.templates as templ
 from deeppavlov import Chainer
-from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
@@ -143,19 +141,15 @@ class GoalOrientedBot(NNModel):
         self.use_action_mask = use_action_mask  # feature engineering  todo: чот оно не на своём месте
         self.debug = debug
 
-        template_path = expand_path(template_path)
-        template_type = getattr(templ, template_type)
-        log.info(f"[loading templates from {template_path}]")
-        self.templates = templ.Templates(template_type).load(template_path)  # upper-level model logic
-        self.n_actions = len(self.templates)  # upper-level model logic
+
+        self.n_actions = len(self.data_handler.templates)  # upper-level model logic
         log.info(f"{self.n_actions} templates loaded.")
+
+        self.data_handler = DataHandler(debug, template_path, template_type, api_call_action)
+
 
         self.default_tracker = tracker  # tracker
         self.dialogue_state_tracker = DialogueStateTracker(tracker.slot_names, self.n_actions, hidden_size, database)  # tracker
-
-        self.api_call_id = -1  # api call should have smth like action index
-        if api_call_action is not None:
-            self.api_call_id = self.templates.actions.index(api_call_action)  # upper-level model logic
 
         self.intents = []
         if isinstance(self.intent_classifier, Chainer):
@@ -163,6 +157,8 @@ class GoalOrientedBot(NNModel):
 
         nn_stuff_save_path = Path(save_path, NNStuffHandler.SAVE_LOAD_SUBDIR_NAME)
         nn_stuff_load_path = Path(load_path, NNStuffHandler.SAVE_LOAD_SUBDIR_NAME)
+
+        embedder_dim = self.embedder.dim if embedder else None
 
         self.nn_stuff_handler = NNStuffHandler(
             hidden_size,
@@ -172,7 +168,7 @@ class GoalOrientedBot(NNModel):
             dense_size,
             attention_mechanism,
             network_parameters,
-            self.embedder,
+            embedder_dim,
             self.n_actions,
             self.intent_classifier,
             self.intents,
@@ -191,7 +187,6 @@ class GoalOrientedBot(NNModel):
         else:
             log.info(f"[initializing `{self.__class__.__name__}` from scratch]")
 
-        self.data_handler = DataHandler()
 
 
         self.multiple_user_state_tracker = MultipleUserStateTracker()  # tracker
@@ -205,7 +200,7 @@ class GoalOrientedBot(NNModel):
     # todo как инфер понимает из конфига что ему нужно. лёша что-то говорил про дерево
     def _infer(self, tokens: List[str], tracker: DialogueStateTracker) -> List:
         features, emb_context, key = self.data_handler._encode_context(self, tokens, tracker=tracker)
-        action_mask = tracker.calc_action_mask(self.api_call_id)
+        action_mask = tracker.calc_action_mask(self.data_handler.api_call_id)
         probs, state_c, state_h = \
             self.nn_stuff_handler._network_call([[features]], [[emb_context]], [[key]],
                                                 [[action_mask]], [[tracker.network_state[0]]],
@@ -218,7 +213,7 @@ class GoalOrientedBot(NNModel):
         self.dialogue_state_tracker.reset_state()
         for context in contexts:
             if context.get('prev_resp_act') is not None:
-                previous_act_id = self.data_handler._encode_response(self, context['prev_resp_act'])
+                previous_act_id = self.data_handler._encode_response(context['prev_resp_act'])
                 # previous action is teacher-forced
                 self.dialogue_state_tracker.update_previous_action(previous_act_id)
 
@@ -262,7 +257,7 @@ class GoalOrientedBot(NNModel):
                 tracker.update_previous_action(predicted_act_id)
 
                 # if made api_call, then respond with next prediction
-                if predicted_act_id == self.api_call_id:
+                if predicted_act_id == self.data_handler.api_call_id:
                     tracker.make_api_call()
 
                     _, predicted_act_id, tracker.network_state = \

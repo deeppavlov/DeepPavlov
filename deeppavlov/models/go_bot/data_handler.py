@@ -4,18 +4,35 @@ from typing import List
 import numpy as np
 
 # from deeppavlov.models.go_bot.network import log
+import deeppavlov.models.go_bot.templates as templ
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.models.go_bot.tracker import DialogueStateTracker
 
 
 class DataHandler:
-    def _encode_response(self, gobot_obj, act: str) -> int:
-        return gobot_obj.templates.actions.index(act)
+
+    def __init__(self, debug, template_path, template_type, api_call_action):
+        self.debug = debug
+
+        template_path = expand_path(template_path)
+        template_type = getattr(templ, template_type)
+        log.info(f"[loading templates from {template_path}]")
+        self.templates = templ.Templates(template_type).load(template_path)  # upper-level model logic
+
+        self.api_call_id = -1  # api call should have smth like action index
+        if api_call_action is not None:
+            self.api_call_id = self.templates.actions.index(api_call_action)  # upper-level model logic
+
+    def _encode_response(self, act: str) -> int:
+        # conversion
+        return self.templates.actions.index(act)
 
     def _decode_response(self, gobot_obj, action_id: int, tracker: DialogueStateTracker) -> str:
         """
         Convert action template id and entities from tracker
         to final response.
         """
+        # conversion
         template = gobot_obj.templates.templates[int(action_id)]
 
         slots = tracker.get_state()
@@ -26,6 +43,7 @@ class DataHandler:
         resp = template.generate_text(slots)
         # in api calls replace unknown slots to "dontcare"
         if action_id == gobot_obj.api_call_id:
+            # todo: move api_call_id here
             resp = re.sub("#([A-Za-z]+)", "dontcare", resp).lower()
         return resp
 
@@ -71,7 +89,7 @@ class DataHandler:
         if callable(gobot_obj.intent_classifier):
             intent_features = gobot_obj.intent_classifier([' '.join(tokens)])[1][0]
 
-            if gobot_obj.debug:
+            if self.debug:
                 intent = gobot_obj.intents[np.argmax(intent_features[0])]
                 # log.debug(f"Predicted intent = `{intent}`")
 
@@ -103,7 +121,7 @@ class DataHandler:
             result_matches_state
         ], dtype=np.float32)
 
-        if gobot_obj.debug:
+        if self.debug:
             # log.debug(f"Context features = {context_features}")
             debug_msg = f"num bow features = {bow_features}" + \
                         f", num emb features = {emb_features}" + \
@@ -137,20 +155,20 @@ class DataHandler:
                     context_slots = gobot_obj.slot_filler([tokens])[0]
                     gobot_obj.dialogue_state_tracker.update_state(context_slots)
 
-                features, emb_context, key = gobot_obj.data_handler._encode_context(gobot_obj, tokens,
+                features, emb_context, key = self._encode_context(gobot_obj, tokens,
                                                                                     tracker=gobot_obj.dialogue_state_tracker)
                 d_features.append(features)
                 d_emb_context.append(emb_context)
                 d_key.append(key)
                 d_a_masks.append(gobot_obj.dialogue_state_tracker.calc_action_mask(gobot_obj.api_call_id))
 
-                action_id = gobot_obj.data_handler._encode_response(gobot_obj, response['act'])
+                action_id = self._encode_response(response['act'])
                 d_actions.append(action_id)
                 # update state
                 # - previous action is teacher-forced here
                 gobot_obj.dialogue_state_tracker.update_previous_action(action_id)
 
-                if gobot_obj.debug:
+                if self.debug:
                     # log.debug(f"True response = '{response['text']}'.")
                     if d_a_masks[-1][action_id] != 1.:
                         pass

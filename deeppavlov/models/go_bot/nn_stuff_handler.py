@@ -17,13 +17,13 @@ from deeppavlov.core.models.tf_model import LRScheduledTFModel
 
 def calc_obs_size(default_tracker_num_features,
                   n_actions,
-                  bow_embedder, word_vocab, embedder,
+                  bow_embedder, word_vocab, embedder_dim,
                   intent_classifier, intents):
     obs_size = 6 + default_tracker_num_features + n_actions
     if callable(bow_embedder):
         obs_size += len(word_vocab)
-    if callable(embedder):
-        obs_size += embedder.dim
+    if embedder_dim:
+        obs_size += embedder_dim
     if callable(intent_classifier):
         obs_size += len(intents)
     # log.info(f"Calculated input size for `GoalOrientedBotNetwork` is {obs_size}")
@@ -34,11 +34,11 @@ def configure_attn(curr_attn_token_size,
                    curr_attn_action_as_key,
                    curr_attn_intent_as_key,
                    curr_attn_key_size,
-                   embedder,
+                   embedder_dim,
                    n_actions,
                    intent_classifier,
                    intents):
-    token_size = curr_attn_token_size or embedder.dim
+    token_size = curr_attn_token_size or embedder_dim
     action_as_key = curr_attn_action_as_key or False
     intent_as_key = curr_attn_intent_as_key or False
 
@@ -83,7 +83,7 @@ class NNStuffHandler(LRScheduledTFModel):
                  dense_size,
                  attention_mechanism,
                  network_parameters,
-                 embedder,
+                 embedder_dim,
                  n_actions,
                  intent_classifier,
                  intents,
@@ -114,7 +114,7 @@ class NNStuffHandler(LRScheduledTFModel):
             dense_size,
             attention_mechanism,
             network_parameters,
-            embedder,
+            embedder_dim,
             n_actions,
             intent_classifier,
             intents,
@@ -287,8 +287,9 @@ class NNStuffHandler(LRScheduledTFModel):
                                dense_size,
                                attention_mechanism,
                                network_parameters,
-                               embedder, n_actions, intent_classifier, intents, default_tracker_num_features,
+                               embedder_dim, n_actions, intent_classifier, intents, default_tracker_num_features,
                                bow_embedder, word_vocab) -> None:
+
 
         new_network_parameters = {
             'hidden_size': hidden_size,
@@ -314,7 +315,7 @@ class NNStuffHandler(LRScheduledTFModel):
         dense_size = dense_size or hidden_size
 
         obs_size = calc_obs_size(default_tracker_num_features, n_actions,
-                                 bow_embedder, word_vocab, embedder,
+                                 bow_embedder, word_vocab, embedder_dim,
                                  intent_classifier, intents)
         if action_size is None:
             action_size = n_actions
@@ -323,7 +324,7 @@ class NNStuffHandler(LRScheduledTFModel):
                                        curr_attn_action_as_key=attn.get('action_as_key'),
                                        curr_attn_intent_as_key=attn.get('intent_as_key'),
                                        curr_attn_key_size=attn.get('key_size'),
-                                       embedder=embedder,
+                                       embedder_dim=embedder_dim,
                                        n_actions=n_actions,
                                        intent_classifier=intent_classifier,
                                        intents=intents))
