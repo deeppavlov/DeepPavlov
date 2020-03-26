@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from typing import List
+
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 
