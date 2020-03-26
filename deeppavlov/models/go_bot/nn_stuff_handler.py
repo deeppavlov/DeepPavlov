@@ -64,8 +64,9 @@ log = getLogger(__name__)
 class NNStuffHandler(LRScheduledTFModel):
     SAVE_LOAD_SUBDIR_NAME = "nn_stuff"
 
-    GRAPH_PARAMS = ["hidden_size", "action_size", "dense_size", "obs_size",
+    GRAPH_PARAMS = ["hidden_size", "action_size", "dense_size",
                     "attention_mechanism"]
+    UNSUPPORTED = ["obs_size"]
     DEPRECATED = ["end_learning_rate", "decay_steps", "decay_power"]
 
     def train_on_batch(self, x: list, y: list):
@@ -77,7 +78,6 @@ class NNStuffHandler(LRScheduledTFModel):
     def __init__(self,
                  hidden_size,
                  action_size,
-                 obs_size,
                  dropout_rate,
                  l2_reg_coef,
                  dense_size,
@@ -109,7 +109,6 @@ class NNStuffHandler(LRScheduledTFModel):
         self.configure_network_opts(
             hidden_size,
             action_size,
-            obs_size,
             dropout_rate,
             l2_reg_coef,
             dense_size,
@@ -134,7 +133,6 @@ class NNStuffHandler(LRScheduledTFModel):
         self.dropout_rate = self.opt['dropout_rate']  # todo does dropout actually work
         self.hidden_size = self.opt['hidden_size']
         self.action_size = self.opt['action_size']
-        self.obs_size = self.opt['obs_size']  # todo что такое обс сайз
         self.dense_size = self.opt['dense_size']
         self.l2_reg = self.opt['l2_reg_coef']
 
@@ -284,7 +282,6 @@ class NNStuffHandler(LRScheduledTFModel):
     def configure_network_opts(self,
                                hidden_size,
                                action_size,
-                               obs_size,
                                dropout_rate,
                                l2_reg_coef,
                                dense_size,
@@ -296,7 +293,6 @@ class NNStuffHandler(LRScheduledTFModel):
         new_network_parameters = {
             'hidden_size': hidden_size,
             'action_size': action_size,
-            'obs_size': obs_size,
             'dropout_rate': dropout_rate,
             'l2_reg_coef': l2_reg_coef,
             'dense_size': dense_size,
@@ -310,7 +306,6 @@ class NNStuffHandler(LRScheduledTFModel):
 
         hidden_size = new_network_parameters["hidden_size"]
         action_size = new_network_parameters["action_size"]
-        obs_size = new_network_parameters["obs_size"]
         dropout_rate = new_network_parameters["dropout_rate"]
         l2_reg_coef = new_network_parameters["l2_reg_coef"]
         dense_size = new_network_parameters["dense_size"]
@@ -318,10 +313,9 @@ class NNStuffHandler(LRScheduledTFModel):
 
         dense_size = dense_size or hidden_size
 
-        if obs_size is None:
-            obs_size = calc_obs_size(default_tracker_num_features, n_actions,
-                                     bow_embedder, word_vocab, embedder,
-                                     intent_classifier, intents)
+        obs_size = calc_obs_size(default_tracker_num_features, n_actions,
+                                 bow_embedder, word_vocab, embedder,
+                                 intent_classifier, intents)
         if action_size is None:
             action_size = n_actions
         if attn:
@@ -337,7 +331,6 @@ class NNStuffHandler(LRScheduledTFModel):
         opt = {
             'hidden_size': hidden_size,
             'action_size': action_size,
-            'obs_size': obs_size,
             'dense_size': dense_size,
             'dropout_rate': dropout_rate,
             'l2_reg_coef': l2_reg_coef,
@@ -345,6 +338,7 @@ class NNStuffHandler(LRScheduledTFModel):
         }
 
         self.opt = opt
+        self.obs_size = obs_size
 
         self._configure_network()
 

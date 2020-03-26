@@ -56,10 +56,6 @@ class GoalOrientedBot(NNModel):
             :doc:`deeppavlov.models.go_bot.tracker </apiref/models/go_bot>`.
         hidden_size: size of rnn hidden layer.
         action_size: size of rnn output (equals to number of bot actions).
-        obs_size: input features' size (must be equal to sum of output sizes of
-            ``bow_embedder``, ``embedder``, ``intent_classifier``,
-            ``tracker.num_features`` plus size of context features(=6) and
-            ``action_size``).
         dropout_rate: probability of weights dropping out.
         l2_reg_coef: l2 regularization weight (applied to input and output layer).
         dense_size: rnn input size.
@@ -112,7 +108,6 @@ class GoalOrientedBot(NNModel):
                  template_path: str,
                  save_path: str,
                  hidden_size: int = 128,
-                 obs_size: int = None,
                  action_size: int = None,
                  dropout_rate: float = 0.,
                  l2_reg_coef: float = 0.,
@@ -172,7 +167,6 @@ class GoalOrientedBot(NNModel):
         self.nn_stuff_handler = NNStuffHandler(
             hidden_size,
             action_size,
-            obs_size,
             dropout_rate,
             l2_reg_coef,
             dense_size,
