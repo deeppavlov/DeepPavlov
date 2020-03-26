@@ -11,6 +11,7 @@ from deeppavlov import evaluate_model
 from deeppavlov import build_model
 from deeppavlov import train_model
 from deeppavlov.download import download_decompress
+from deeppavlov.download import deep_download
 
 def main():
 
@@ -101,6 +102,7 @@ def main():
     json.dump(slotfill_config, open('my_bot/slotfill_config.json', 'wt'))
 
     gobot_config = read_json(configs.go_bot.gobot_dstc2_best)
+    # gobot_config = read_json(configs.go_bot.gobot_simple_dstc2)
 
     # gobot_config['chainer']['pipe'][-1]['embedder'] = None
 
@@ -129,7 +131,7 @@ def main():
     json.dump(gobot_config, open('my_bot/gobot_config.json', 'wt'))
 
 
-    train_model(gobot_config);
+    train_model(gobot_config, download=True);
 
     evaluate_model(gobot_config);
 

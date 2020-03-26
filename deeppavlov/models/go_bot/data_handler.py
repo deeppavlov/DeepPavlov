@@ -14,7 +14,7 @@ log = getLogger(__name__)
 
 class DataHandler:
 
-    def __init__(self, debug, template_path, template_type, word_vocab, bow_embedder, api_call_action):
+    def __init__(self, debug, template_path, template_type, word_vocab, bow_embedder, api_call_action, embedder):
         self.debug = debug
 
         template_path = expand_path(template_path)
@@ -29,6 +29,7 @@ class DataHandler:
 
         self.word_vocab = word_vocab
         self.bow_embedder = bow_embedder
+        self.embedder = embedder
 
     def use_bow_embedder(self):
         return callable(self.bow_embedder)
@@ -61,6 +62,24 @@ class DataHandler:
             resp = re.sub("#([A-Za-z]+)", "dontcare", resp).lower()
         return resp
 
+    def embed_tokens(self, tokens, use_attn, attn_window_size, attn_token_size):
+        if use_attn:
+            padding_length = attn_window_size - len(tokens)
+            padding = np.zeros(shape=(padding_length, attn_token_size), dtype=np.float32)
+            if tokens:
+                tokens_embedded = np.array(self.embedder([tokens])[0])
+                emb_context = np.concatenate((padding, tokens_embedded))
+            else:
+                emb_context = padding
+            return emb_context
+        else:
+            emb_features = self.embedder([tokens], mean=True)[0]
+            # random embedding instead of zeros
+            if np.all(emb_features < 1e-20):
+                emb_dim = self.embedder.dim
+                emb_features = np.fabs(np.random.normal(0, 1 / emb_dim, emb_dim))
+            return emb_features
+
     def _encode_context(self, gobot_obj,
                         use_attn,
                         attn_window_size,
@@ -77,26 +96,6 @@ class DataHandler:
             bow_features = self.bow_embedder([tokens_idx])[0]
             bow_features = bow_features.astype(np.float32)
 
-        # Embeddings
-        emb_features = []
-        emb_context = np.array([], dtype=np.float32)
-        if callable(gobot_obj.embedder):
-            if use_attn:
-                padding_length = attn_window_size - len(tokens)
-                padding = np.zeros(shape=(padding_length, attn_token_size), dtype=np.float32)
-
-                if tokens:
-                    tokens_embedded = np.array(gobot_obj.embedder([tokens])[0])
-                    emb_context = np.concatenate((padding, tokens_embedded))
-                else:
-                    emb_context = padding
-
-            else:
-                emb_features = gobot_obj.embedder([tokens], mean=True)[0]
-                # random embedding instead of zeros
-                if np.all(emb_features < 1e-20):
-                    emb_dim = gobot_obj.embedder.dim
-                    emb_features = np.fabs(np.random.normal(0, 1 / emb_dim, emb_dim))
 
         # Intent features
         intent_features = []
@@ -136,6 +135,28 @@ class DataHandler:
             result_matches_state
         ], dtype=np.float32)
 
+        # Embeddings
+        emb_features = []
+        emb_context = np.array([], dtype=np.float32)
+
+        if callable(self.embedder):
+            if use_attn:
+                padding_length = attn_window_size - len(tokens)
+                padding = np.zeros(shape=(padding_length, attn_token_size), dtype=np.float32)
+
+                if tokens:
+                    tokens_embedded = np.array(self.embedder([tokens])[0])
+                    emb_context = np.concatenate((padding, tokens_embedded))
+                else:
+                    emb_context = padding
+
+            else:
+                emb_features = self.embedder([tokens], mean=True)[0]
+                # random embedding instead of zeros
+                if np.all(emb_features < 1e-20):
+                    emb_dim = self.embedder.dim
+                    emb_features = np.fabs(np.random.normal(0, 1 / emb_dim, emb_dim))
+
         if self.debug:
             # log.debug(f"Context features = {context_features}")
             debug_msg = f"num bow features = {bow_features}" + \
@@ -145,7 +166,8 @@ class DataHandler:
                         f", num context features = {len(context_features)}" + \
                         f", prev_action shape = {len(tracker_prev_action)}"
             # log.debug(debug_msg)
-
+        # todo move this out of here
+        # todo move attention logic out of here.
         concat_feats = np.hstack((bow_features, emb_features, intent_features,
                                   state_features, context_features,
                                   tracker_prev_action))

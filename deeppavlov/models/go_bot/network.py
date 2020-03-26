@@ -133,7 +133,7 @@ class GoalOrientedBot(NNModel):
         super().__init__(save_path=self.save_path, load_path=self.load_path, **kwargs)
 
         self.tokenizer = tokenizer  # preprocessing
-        self.embedder = embedder  # preprocessing?
+        # self.embedder = embedder  # preprocessing?
         self.slot_filler = slot_filler  # another unit of pipeline
         self.intent_classifier = intent_classifier  # another unit of pipeline
         self.use_action_mask = use_action_mask  # feature engineering  todo: чот оно не на своём месте
@@ -142,7 +142,7 @@ class GoalOrientedBot(NNModel):
 
 
 
-        self.data_handler = DataHandler(debug, template_path, template_type, word_vocab, bow_embedder, api_call_action)
+        self.data_handler = DataHandler(debug, template_path, template_type, word_vocab, bow_embedder, api_call_action, embedder)
         self.n_actions = len(self.data_handler.templates)  # upper-level model logic
 
 
@@ -156,7 +156,7 @@ class GoalOrientedBot(NNModel):
         nn_stuff_save_path = Path(save_path, NNStuffHandler.SAVE_LOAD_SUBDIR_NAME)
         nn_stuff_load_path = Path(load_path, NNStuffHandler.SAVE_LOAD_SUBDIR_NAME)
 
-        embedder_dim = self.embedder.dim if embedder else None
+        embedder_dim = self.data_handler.embedder.dim if self.data_handler.embedder else None
         use_bow_embedder = self.data_handler.use_bow_embedder()
         word_vocab_size = self.data_handler.word_vocab_size()
 
