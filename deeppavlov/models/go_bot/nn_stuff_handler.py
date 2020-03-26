@@ -17,11 +17,11 @@ from deeppavlov.core.models.tf_model import LRScheduledTFModel
 
 def calc_obs_size(default_tracker_num_features,
                   n_actions,
-                  bow_embedder, word_vocab, embedder_dim,
+                  use_bow_embedder, word_vocab_size, embedder_dim,
                   intent_classifier, intents):
     obs_size = 6 + default_tracker_num_features + n_actions
-    if callable(bow_embedder):
-        obs_size += len(word_vocab)
+    if use_bow_embedder:
+        obs_size += word_vocab_size
     if embedder_dim:
         obs_size += embedder_dim
     if callable(intent_classifier):
@@ -88,8 +88,8 @@ class NNStuffHandler(LRScheduledTFModel):
                  intent_classifier,
                  intents,
                  default_tracker_num_features,
-                 bow_embedder,
-                 word_vocab,
+                 use_bow_embedder,
+                 word_vocab_size,
                  load_path,
                  save_path,
                  **kwargs):
@@ -119,8 +119,8 @@ class NNStuffHandler(LRScheduledTFModel):
             intent_classifier,
             intents,
             default_tracker_num_features,
-            bow_embedder,
-            word_vocab)
+            use_bow_embedder,
+            word_vocab_size)
 
 
     def _configure_network(self):
@@ -288,7 +288,7 @@ class NNStuffHandler(LRScheduledTFModel):
                                attention_mechanism,
                                network_parameters,
                                embedder_dim, n_actions, intent_classifier, intents, default_tracker_num_features,
-                               bow_embedder, word_vocab) -> None:
+                               use_bow_embedder, word_vocab_size) -> None:
 
 
         new_network_parameters = {
@@ -315,7 +315,7 @@ class NNStuffHandler(LRScheduledTFModel):
         dense_size = dense_size or hidden_size
 
         obs_size = calc_obs_size(default_tracker_num_features, n_actions,
-                                 bow_embedder, word_vocab, embedder_dim,
+                                 use_bow_embedder, word_vocab_size, embedder_dim,
                                  intent_classifier, intents)
         if action_size is None:
             action_size = n_actions

@@ -133,19 +133,17 @@ class GoalOrientedBot(NNModel):
         super().__init__(save_path=self.save_path, load_path=self.load_path, **kwargs)
 
         self.tokenizer = tokenizer  # preprocessing
-        self.bow_embedder = bow_embedder  # preprocessing?
         self.embedder = embedder  # preprocessing?
-        self.word_vocab = word_vocab  # preprocessing?
         self.slot_filler = slot_filler  # another unit of pipeline
         self.intent_classifier = intent_classifier  # another unit of pipeline
         self.use_action_mask = use_action_mask  # feature engineering  todo: чот оно не на своём месте
         self.debug = debug
 
 
-        self.n_actions = len(self.data_handler.templates)  # upper-level model logic
-        log.info(f"{self.n_actions} templates loaded.")
 
-        self.data_handler = DataHandler(debug, template_path, template_type, api_call_action)
+
+        self.data_handler = DataHandler(debug, template_path, template_type, word_vocab, bow_embedder, api_call_action)
+        self.n_actions = len(self.data_handler.templates)  # upper-level model logic
 
 
         self.default_tracker = tracker  # tracker
@@ -159,6 +157,8 @@ class GoalOrientedBot(NNModel):
         nn_stuff_load_path = Path(load_path, NNStuffHandler.SAVE_LOAD_SUBDIR_NAME)
 
         embedder_dim = self.embedder.dim if embedder else None
+        use_bow_embedder = self.data_handler.use_bow_embedder()
+        word_vocab_size = self.data_handler.word_vocab_size()
 
         self.nn_stuff_handler = NNStuffHandler(
             hidden_size,
@@ -173,8 +173,8 @@ class GoalOrientedBot(NNModel):
             self.intent_classifier,
             self.intents,
             self.default_tracker.num_features,
-            self.bow_embedder,
-            self.word_vocab,
+            use_bow_embedder,
+            word_vocab_size,
             load_path=nn_stuff_load_path,
             save_path=nn_stuff_save_path,
             **kwargs)
@@ -193,13 +193,26 @@ class GoalOrientedBot(NNModel):
         self.reset()  # tracker
 
     def train_on_batch(self, x: List[dict], y: List[dict]) -> dict:
-        b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions = self.data_handler._prepare_data(self, x, y)
+        b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions = self.data_handler._prepare_data(self, self.dialogue_state_tracker, x, y)
         return self.nn_stuff_handler._network_train_on_batch(b_features, b_emb_context, b_keys, b_u_masks, b_a_masks,
                                                              b_actions)
 
     # todo как инфер понимает из конфига что ему нужно. лёша что-то говорил про дерево
     def _infer(self, tokens: List[str], tracker: DialogueStateTracker) -> List:
-        features, emb_context, key = self.data_handler._encode_context(self, tokens, tracker=tracker)
+
+        use_attn = bool(self.nn_stuff_handler.attn)
+        attn_window_size = self.nn_stuff_handler.attn.max_num_tokens if use_attn else None
+        attn_token_size = self.nn_stuff_handler.attn.token_size if use_attn else None
+        attn_action_as_key = self.nn_stuff_handler.attn.action_as_key if use_attn else None
+        attn_intent_as_key = self.nn_stuff_handler.attn.intent_as_key if use_attn else None
+
+        features, emb_context, key = self.data_handler._encode_context(self,
+                                                                       use_attn,
+                                                                       attn_window_size,
+                                                                       attn_token_size,
+                                                                       attn_action_as_key,
+                                                                       attn_intent_as_key,
+                                                                       tokens, tracker=tracker)
         action_mask = tracker.calc_action_mask(self.data_handler.api_call_id)
         probs, state_c, state_h = \
             self.nn_stuff_handler._network_call([[features]], [[emb_context]], [[key]],
@@ -228,7 +241,7 @@ class GoalOrientedBot(NNModel):
                 self._infer(tokens, tracker=self.dialogue_state_tracker)
 
             self.dialogue_state_tracker.update_previous_action(predicted_act_id)
-            resp = self.data_handler._decode_response(self, predicted_act_id, self.dialogue_state_tracker)
+            resp = self.data_handler._decode_response(predicted_act_id, self.dialogue_state_tracker)
             res.append(resp)
         return res
 
@@ -265,7 +278,7 @@ class GoalOrientedBot(NNModel):
 
                     tracker.update_previous_action(predicted_act_id)
 
-                resp = self.data_handler._decode_response(self, predicted_act_id, tracker)
+                resp = self.data_handler._decode_response(predicted_act_id, tracker)
                 res.append(resp)
             return res
         # batch is a list of dialogs, user_ids ignored
