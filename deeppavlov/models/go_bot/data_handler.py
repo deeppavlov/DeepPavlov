@@ -32,6 +32,12 @@ class DataHandler:
     def _encode_context(self, gobot_obj,
                         tokens: List[str],
                         tracker: DialogueStateTracker) -> List[np.ndarray]:
+        use_attn = bool(gobot_obj.nn_stuff_handler.attn)
+        attn_window_size = gobot_obj.nn_stuff_handler.attn.max_num_tokens if use_attn else None
+        attn_token_size = gobot_obj.nn_stuff_handler.attn.token_size if use_attn else None
+        attn_action_as_key = gobot_obj.nn_stuff_handler.attn.action_as_key if use_attn else None
+        attn_intent_as_key = gobot_obj.nn_stuff_handler.attn.intent_as_key if use_attn else None
+
         # Bag of words features
         bow_features = []
         if callable(gobot_obj.bow_embedder):
@@ -43,19 +49,16 @@ class DataHandler:
         emb_features = []
         emb_context = np.array([], dtype=np.float32)
         if callable(gobot_obj.embedder):
-            if gobot_obj.nn_stuff_handler.attn:
+            if use_attn:
+                padding_length = attn_window_size - len(tokens)
+                padding = np.zeros(shape=(padding_length, attn_token_size), dtype=np.float32)
+
                 if tokens:
-                    pad = np.zeros((gobot_obj.nn_stuff_handler.attn.max_num_tokens,
-                                    gobot_obj.nn_stuff_handler.attn.token_size),
-                                   dtype=np.float32)
-                    sen = np.array(gobot_obj.embedder([tokens])[0])
-                    # TODO : Unsupport of batch_size more than 1
-                    emb_context = np.concatenate((pad, sen))
-                    emb_context = emb_context[-gobot_obj.nn_stuff_handler.attn.max_num_tokens:]
+                    tokens_embedded = np.array(gobot_obj.embedder([tokens])[0])
+                    emb_context = np.concatenate((padding, tokens_embedded))
                 else:
-                    emb_context = np.zeros((gobot_obj.nn_stuff_handler.attn.max_num_tokens,
-                                            gobot_obj.nn_stuff_handler.attn.token_size),
-                                           dtype=np.float32)
+                    emb_context = padding
+
             else:
                 emb_features = gobot_obj.embedder([tokens], mean=True)[0]
                 # random embedding instead of zeros
@@ -73,10 +76,10 @@ class DataHandler:
                 # log.debug(f"Predicted intent = `{intent}`")
 
         attn_key = np.array([], dtype=np.float32)
-        if gobot_obj.nn_stuff_handler.attn:
-            if gobot_obj.nn_stuff_handler.attn.action_as_key:
+        if use_attn:
+            if attn_action_as_key:
                 attn_key = np.hstack((attn_key, tracker.prev_action))
-            if gobot_obj.nn_stuff_handler.attn.intent_as_key:
+            if attn_intent_as_key:
                 attn_key = np.hstack((attn_key, intent_features))
             if len(attn_key) == 0:
                 attn_key = np.array([1], dtype=np.float32)
