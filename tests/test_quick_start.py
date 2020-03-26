@@ -41,8 +41,8 @@ api_port = os.getenv('DP_PYTEST_API_PORT')
 if api_port is not None:
     api_port = int(api_port)
 
-TEST_MODES = ['IP',  # test_interacting_pretrained_model
-              'TI',  # test_consecutive_training_and_interacting
+TEST_MODES = ['IP',  # test_inferring_pretrained_model
+              'TI',  # test_consecutive_training_and_inferring
               'SR',  # test_serialization
               ]
 
@@ -373,7 +373,7 @@ def _deserialize(config, raw_bytes, examples):
 @pytest.mark.parametrize("model,conf_file,model_dir,mode", TEST_GRID, scope='class')
 class TestQuickStart(object):
     @staticmethod
-    def interact(config_path, qr_list=None, check_outputs=True):
+    def infer(config_path, qr_list=None, check_outputs=True):
 
         *inputs, expected_outputs = zip(*qr_list) if qr_list else [],
         with ProcessPoolExecutor(max_workers=1) as executor:
@@ -388,7 +388,7 @@ class TestQuickStart(object):
                 raise RuntimeError(f'Unexpected results for {config_path}: {errors}')
 
     @staticmethod
-    def interact_api(config_path):
+    def infer_api(config_path):
         server_params = get_server_params(config_path)
 
         url_base = 'http://{}:{}'.format(server_params['host'], api_port or server_params['port'])
@@ -430,7 +430,7 @@ class TestQuickStart(object):
             #     raise RuntimeError('Error in shutting down API server: \n{}'.format(logfile.getvalue().decode()))
 
     @staticmethod
-    def interact_socket(config_path, socket_type):
+    def infer_socket(config_path, socket_type):
         socket_params = get_server_params(config_path)
         model_args_names = socket_params['model_args_names']
 
@@ -490,25 +490,25 @@ class TestQuickStart(object):
             p.kill(signal.SIGTERM)
             p.wait()
 
-    def test_interacting_pretrained_model(self, model, conf_file, model_dir, mode):
+    def test_inferring_pretrained_model(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
             config_file_path = str(test_configs_path.joinpath(conf_file))
             install_config(config_file_path)
             deep_download(config_file_path)
 
-            self.interact(test_configs_path / conf_file, PARAMS[model][(conf_file, model_dir, mode)])
+            self.infer(test_configs_path / conf_file, PARAMS[model][(conf_file, model_dir, mode)])
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
 
-    def test_interacting_pretrained_model_api(self, model, conf_file, model_dir, mode):
+    def test_inferring_pretrained_model_api(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
-            self.interact_api(test_configs_path / conf_file)
+            self.infer_api(test_configs_path / conf_file)
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
 
-    def test_interacting_pretrained_model_socket(self, model, conf_file, model_dir, mode):
+    def test_inferring_pretrained_model_socket(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
-            self.interact_socket(test_configs_path / conf_file, 'TCP')
+            self.infer_socket(test_configs_path / conf_file, 'TCP')
 
             if 'TI' not in mode:
                 shutil.rmtree(str(download_path), ignore_errors=True)
@@ -538,7 +538,7 @@ class TestQuickStart(object):
         if exc is not None:
             raise exc
 
-    def test_consecutive_training_and_interacting(self, model, conf_file, model_dir, mode):
+    def test_consecutive_training_and_inferring(self, model, conf_file, model_dir, mode):
         if 'TI' in mode:
             c = test_configs_path / conf_file
             model_path = download_path / model_dir
@@ -556,7 +556,7 @@ class TestQuickStart(object):
             if p.wait() != 0:
                 raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
                                    .format(model_dir, logfile.getvalue().decode()))
-            self.interact(c, PARAMS[model][(conf_file, model_dir, mode)], check_outputs=False)
+            self.infer(c, PARAMS[model][(conf_file, model_dir, mode)], check_outputs=False)
 
             shutil.rmtree(str(download_path), ignore_errors=True)
         else:
