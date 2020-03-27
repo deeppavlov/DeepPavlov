@@ -217,7 +217,7 @@ class GoalOrientedBot(NNModel):
                 # endregion Intent features
 
                 # region embeddings_features
-                mean_embeddings = attn_hyperparams is not None
+                mean_embeddings = attn_hyperparams is None
                 bow_features, tokens_embedded = self.data_handler.encode_context(tokens, mean_embeddings)
                 # endregion embeddings_features
 
@@ -333,7 +333,7 @@ class GoalOrientedBot(NNModel):
                 # log.debug(f"Predicted intent = `{intent}`")
 
         # region embeddings_features
-        mean_embeddings = attn_hyperparams is not None
+        mean_embeddings = attn_hyperparams is None
         bow_features, tokens_embedded = self.data_handler.encode_context(tokens, mean_embeddings)
         # endregion embeddings_features
 
