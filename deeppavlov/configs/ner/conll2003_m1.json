@@ -1,22 +1,27 @@
 {
   "dataset_reader": {
-    "class_name": "ner_reader",
+    "class_name": "conll2003_reader",
     "data_path": "{DOWNLOADS_PATH}/conll2003/",
     "dataset_name": "conll2003",
     "provide_pos": true,
-    "provide_chunk": true,
-    "tagging_scheme": "iobes"
+    "provide_chunk": false,
+    "iobes": true
   },
   "dataset_iterator": {
     "class_name": "data_learning_iterator"
   },
   "chainer": {
-    "in": ["x", "pos", "chunk"],
+    "in": ["x", "pos"],
     "in_y": ["y"],
     "pipe": [
       {
         "in": ["x"],
         "out": ["x_tokens"],
+        "class_name": "lazy_tokenizer"
+      },
+      {
+        "in": ["pos"],
+        "out": ["pos_tokens"],
         "class_name": "lazy_tokenizer"
       },
       {
@@ -35,22 +40,13 @@
         "load_path": "{MODELS_PATH}/word.dict"
       },
       {
-        "in": ["pos"],
+        "in": ["pos_tokens"],
         "out": ["pos_ind"],
-        "fit_on": ["pos"],
+        "fit_on": ["pos_tokens"],
         "class_name": "ner_vocab",
         "id": "pos_vocab",
         "save_path": "{MODELS_PATH}/pos.dict",
         "load_path": "{MODELS_PATH}/pos.dict"
-      },
-      {
-        "in": ["chunk"],
-        "out": ["chunk_ind"],
-        "fit_on": ["chunk"],
-        "class_name": "ner_vocab",
-        "id": "chunk_vocab",
-        "save_path": "{MODELS_PATH}/chunk.dict",
-        "load_path": "{MODELS_PATH}/chunk.dict"
       },
       {
         "in": ["y"],
@@ -76,7 +72,6 @@
           "sent_lengths",
           "x_tok_ind",
           "pos_ind",
-          "chunk_ind",
           "x_char_ind",
           "x_tokens_elmo"
         ],
@@ -90,9 +85,7 @@
         "word_vocab": "#word_vocab",
         "char_vocab_size": "#char_vocab.len",
         "pos_vocab_size": "#pos_vocab.len",
-        "chunk_vocab_size": "#chunk_vocab.len",
         "pos_dim": 40,
-        "chunk_dim": 20,
         "char_dim": 100,
         "elmo_dim": 128,
         "lstm_hidden_size": 256,

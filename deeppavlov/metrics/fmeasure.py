@@ -442,6 +442,7 @@ def ner_prf1(batch_labels, batch_preds):
           F1 score
 
     """
+
     def update_chunks(bag, list_chunks):
         for chunk_type, _, _ in list_chunks:
             if chunk_type not in bag:

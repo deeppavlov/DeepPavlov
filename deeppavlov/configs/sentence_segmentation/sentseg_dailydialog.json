@@ -1,6 +1,6 @@
 {
   "dataset_reader": {
-    "class_name": "ner_reader",
+    "class_name": "conll2003_reader",
     "data_path": "{DOWNLOADS_PATH}/sentseg_dailydialog/",
     "dataset_name": "dailydialog"
   },

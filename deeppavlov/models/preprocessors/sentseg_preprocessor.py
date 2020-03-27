@@ -1,21 +1,18 @@
-from nltk import word_tokenize
-from overrides import overrides
 from typing import List
 
 from deeppavlov.core.common.registry import register
 
 
 @register("sentseg_restore_sent")
-def SentSegRestoreSent(batch_x: List[List[str]], batch_y: List[List[str]]) -> List[str]:
+def SentSegRestoreSent(batch_words: List[List[str]], batch_tags: List[List[str]]) -> List[str]:
     ret = []
-    for x, y in zip(batch_x, batch_y):
-        assert len(x) == len(y)
-        if len(y) == 0:
+    for words, tags in zip(batch_words, batch_tags):
+        if len(tags) == 0:
             ret.append("")
             continue
-        sent = x[0]
-        punct = "" if y[0] == "O" else y[0][-1]
-        for word, tag in zip(x[1:], y[1:]):
+        sent = words[0]
+        punct = "" if tags[0] == "O" else tags[0][-1]
+        for word, tag in zip(words[1:], tags[1:]):
             if tag != "O":
                 sent += punct
                 punct = tag[-1]

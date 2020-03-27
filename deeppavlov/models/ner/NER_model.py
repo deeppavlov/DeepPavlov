@@ -65,7 +65,7 @@ class HybridNerModel(LRScheduledTFModel):
                  pos_dim: int = None,
                  chunk_dim: int = None,
                  cap_dim: int = None,
-                 cap_vocab_size = 5,
+                 cap_vocab_size: int = 5,
                  lstm_hidden_size: int = 256,
                  dropout_keep_prob: float = 0.5,
                  **kwargs) -> None:
@@ -226,13 +226,11 @@ class HybridNerModel(LRScheduledTFModel):
             self.loss = tf.reduce_mean(-log_likelihood)
             self.train_op = self.get_train_op(self.loss)
 
-        self.predict = self.predict_crf
-
         self.sess = tf.Session()
         self.sess.run(tf.global_variables_initializer())
         self.load()
 
-    def predict_crf(self, xs):
+    def predict(self, xs):
         feed_dict = self._fill_feed_dict(xs)
         logits, trans_params, sent_lengths = self.sess.run([self.logits,
                                                             self.transition_params,
@@ -261,7 +259,7 @@ class HybridNerModel(LRScheduledTFModel):
         return feed_dict
 
     def __call__(self, *args, **kwargs):
-        if len(args[0]) == 0:
+        if len(args[0]) == 0 or (args[0] == [0]):
             return []
         return self.predict(args)
 

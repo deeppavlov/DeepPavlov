@@ -1,11 +1,11 @@
 {
   "dataset_reader": {
-    "class_name": "ner_reader",
+    "class_name": "conll2003_reader",
     "data_path": "{DOWNLOADS_PATH}/vlsp2016/",
     "dataset_name": "vlsp2016",
     "provide_pos": true,
     "provide_chunk": true,
-    "tagging_scheme": "iobes"
+    "iobes": true
   },
   "dataset_iterator": {
     "class_name": "data_learning_iterator"
@@ -17,6 +17,16 @@
       {
         "in": ["x"],
         "out": ["x_tokens"],
+        "class_name": "lazy_tokenizer"
+      },
+      {
+        "in": ["pos"],
+        "out": ["pos_tokens"],
+        "class_name": "lazy_tokenizer"
+      },
+      {
+        "in": ["chunk"],
+        "out": ["chunk_tokens"],
         "class_name": "lazy_tokenizer"
       },
       {
@@ -37,18 +47,18 @@
         "load_path": "{MODELS_PATH}/word.dict"
       },
       {
-        "in": ["pos"],
+        "in": ["pos_tokens"],
         "out": ["pos_ind"],
-        "fit_on": ["pos"],
+        "fit_on": ["pos_tokens"],
         "class_name": "ner_vocab",
         "id": "pos_vocab",
         "save_path": "{MODELS_PATH}/pos.dict",
         "load_path": "{MODELS_PATH}/pos.dict"
       },
       {
-        "in": ["chunk"],
+        "in": ["chunk_tokens"],
         "out": ["chunk_ind"],
-        "fit_on": ["chunk"],
+        "fit_on": ["chunk_tokens"],
         "class_name": "ner_vocab",
         "id": "chunk_vocab",
         "save_path": "{MODELS_PATH}/chunk.dict",

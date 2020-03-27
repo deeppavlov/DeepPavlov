@@ -136,7 +136,7 @@ PARAMS = {
     },
     "ner": {
         ("ner/conll2003_m1.json", "conll2003_m1", ('IP', 'TI')): [
-            (["Peter", "Blackburn"], ["NNP", "NNP"], ["B-NP", "I-NP"], None)],
+            (["Peter", "Blackburn"], ["NNP", "NNP"], None)],
         ("ner/vlsp2016_full.json", "vlsp2016_full", ('IP', 'TI')): [
             (["Hương", "tự_tin"], ["NNP", "V"], ["B-NP", "B-VP"], None)],
         ("ner/ner_conll2003_bert.json", "ner_conll2003_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],

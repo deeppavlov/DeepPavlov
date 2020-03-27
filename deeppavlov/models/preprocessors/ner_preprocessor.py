@@ -150,7 +150,10 @@ class ner_vocab(Estimator):
                 padded_batch[i, :len(seq)] = seq
         else:
             max_len_seq = max([len(seq) for seq in tokens])
-            max_len_sub_seq = max([len(sub_seq) for seq in tokens for sub_seq in seq])
+            if max_len_seq == 0:
+                max_len_sub_seq = 0
+            else:
+                max_len_sub_seq = max([len(sub_seq) for seq in tokens for sub_seq in seq])
             padded_batch = np.full((batch_size, max_len_seq, max_len_sub_seq), self._t2i["<PAD>"])
             for i, seq in enumerate(tokens):
                 for j, sub_seq in enumerate(seq):
