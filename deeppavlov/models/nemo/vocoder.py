@@ -21,10 +21,28 @@ from nemo_tts import WaveGlowInferNM
 log = getLogger(__name__)
 
 
-class WaveGlow:
+class BaseVocoder:
+    def __call__(self, tensor):
+        raise NotImplementedError
+
+    def get_audio(self, input_tensor, mel_len):
+        raise NotImplementedError
+
+
+class WaveGlow(BaseVocoder):
+    """Wraps WaveGlowInferNM module."""
     def __init__(self, *,
                  denoiser_strength: float = 0.0,
-                 n_window_stride: int = 160, **kwargs):
+                 n_window_stride: int = 160,
+                 **kwargs) -> None:
+        """Builds WaveGlowInferNM object.
+
+        Args:
+            denoiser_strength: Denoiser strength for waveglow.
+            n_window_stride: Stride of window for fft in samples used in model training.
+            kwargs: Named arguments for WaveGlowInferNM constructor.
+
+        """
         self.waveglow = WaveGlowInferNM(**kwargs)
         self.denoiser_strength = denoiser_strength
         self.n_window_stride = n_window_stride
@@ -54,7 +72,7 @@ class WaveGlow:
         return audios
 
 
-class GriffinLim:
+class GriffinLim(BaseVocoder):
     def __init__(self, *,
                  sample_rate: float = 16000.0,
                  n_fft: int = 1024,

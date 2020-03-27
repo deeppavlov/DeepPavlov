@@ -18,7 +18,6 @@ from logging import getLogger
 from pathlib import Path
 from typing import Union
 
-import nemo
 import nemo_tts
 import torch
 from nemo.backends.pytorch import DataLayerNM
@@ -29,11 +28,8 @@ from nemo_asr.parts.dataset import TranscriptDataset
 from scipy.io import wavfile
 from torch.utils.data import Dataset
 
-from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.file import read_yaml
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.component import Component
-from deeppavlov.core.models.serializable import Serializable
+from deeppavlov.models.nemo.common import NeMoBase
 from deeppavlov.models.nemo.vocoder import WaveGlow, GriffinLim
 
 log = getLogger(__name__)
@@ -157,44 +153,48 @@ class TextDataLayer(DataLayerNM):
 
 
 @register('nemo_tts')
-class NeMoTTS(Component, Serializable):
+class NeMoTTS(NeMoBase):
+    """TTS model on NeMo modules."""
     def __init__(self,
-                 model_path: Union[str, Path],
-                 checkpoints_dir: str,
+                 load_path: Union[str, Path],
+                 nemo_params_path: Union[str, Path],
                  vocoder: str = 'waveglow',
-                 **kwargs):
-        super(NeMoTTS, self).__init__(save_path=None, load_path=checkpoints_dir, **kwargs)
-        placement = nemo.core.DeviceType.GPU if torch.cuda.is_available() else nemo.core.DeviceType.CPU
-        self.neural_factory = nemo.core.NeuralModuleFactory(placement=placement)
+                 **kwargs) -> None:
+        """Initializes NeuralModules for TTS.
 
-        tacotron2_params = read_yaml(expand_path(model_path))
-        self.sample_rate = tacotron2_params['sample_rate']
+        Args:
+            load_path: Path to a directory with pretrained checkpoints for TextEmbedding, Tacotron2Encoder,
+                Tacotron2DecoderInfer, Tacotron2Postnet and, if Waveglow vocoder is selected, WaveGlowInferNM.
+            nemo_params_path: Path to a file containig sample_rate, labels and params for TextEmbedding,
+                Tacotron2Encoder, Tacotron2Decoder, Tacotron2Postnet, TranscriptDataLayer
+
+        """
+        super(NeMoTTS, self).__init__(save_path=None, load_path=load_path, nemo_params_path=nemo_params_path, **kwargs)
+
+        self.sample_rate = self.nemo_params['sample_rate']
 
         self.text_embedding = nemo_tts.TextEmbedding(
-            len(tacotron2_params["labels"]) + 3,  # + 3 special chars
-            **tacotron2_params["TextEmbedding"])
-        self.t2_enc = nemo_tts.Tacotron2Encoder(**tacotron2_params["Tacotron2Encoder"])
+            len(self.nemo_params['labels']) + 3,  # + 3 special chars
+            **self.nemo_params['TextEmbedding'])
+        self.t2_enc = nemo_tts.Tacotron2Encoder(**self.nemo_params['Tacotron2Encoder'])
         self.t2_dec = nemo_tts.Tacotron2DecoderInfer(
-            **tacotron2_params["Tacotron2Decoder"])
+            **self.nemo_params['Tacotron2Decoder'])
         self.t2_postnet = nemo_tts.Tacotron2Postnet(
-            **tacotron2_params["Tacotron2Postnet"])
+            **self.nemo_params['Tacotron2Postnet'])
         self.modules_to_restore = [self.text_embedding, self.t2_enc, self.t2_dec, self.t2_postnet]
-        self.data_layer_kwargs = tacotron2_params['TranscriptDataLayer']
 
-        if vocoder == "waveglow":
-            self.vocoder = WaveGlow(**tacotron2_params["WaveGlowNM"])
+        if vocoder == 'waveglow':
+            self.vocoder = WaveGlow(**self.nemo_params['WaveGlowNM'])
             self.modules_to_restore.append(self.vocoder)
-
         elif vocoder == 'griffin-lim':
-            self.vocoder = GriffinLim(**tacotron2_params['GriffinLim'])
-
+            self.vocoder = GriffinLim(**self.nemo_params['GriffinLim'])
         else:
-            raise ValueError(f"'{vocoder} vocoder does not supported.'")
+            raise ValueError(f'{vocoder} vocoder does not supported.')
 
         self.load()
 
     def __call__(self, texts):
-        data_layer = TextDataLayer(texts, **self.data_layer_kwargs)
+        data_layer = TextDataLayer(texts, **self.nemo_params['TranscriptDataLayer'])
         transcript, transcript_len = data_layer()
 
         transcript_embedded = self.text_embedding(char_phone=transcript)
@@ -216,12 +216,3 @@ class NeMoTTS(Component, Serializable):
         for audio, data in zip(audio_batch, data_batch):
             wavfile.write(audio, self.sample_rate, data)
         return audio_batch
-
-    def load(self) -> None:
-        checkpoints = nemo.utils.get_checkpoint_from_dir([str(module) for module in self.modules_to_restore], self.load_path)
-        for module, checkpoint in zip(self.modules_to_restore, checkpoints):
-            log.info(f'Restoring {module} from {checkpoint}')
-            module.restore_from(checkpoint)
-
-    def save(self, *args, **kwargs):
-        pass

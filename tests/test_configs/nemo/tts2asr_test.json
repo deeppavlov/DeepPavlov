@@ -1,29 +1,33 @@
 {
   "chainer": {
-    "in": ["texts", "filenames"],
+    "in": ["text"],
     "pipe": [
       {
         "class_name": "nemo_tts",
         "model_path": "{TTS_PATH}/tacotron2_waveglow.yaml",
         "checkpoints_dir": "{TTS_PATH}",
-        "in": ["texts"],
-        "out": ["audio_batch"]
+        "in": ["text"],
+        "out": ["audio"]
       },
       {
-        "class_name": "bytes_saver",
-        "save_path": "{DEEPPAVLOV_PATH}/../tests",
-        "in": ["audio_batch", "filenames"],
-        "out": ["saved_file_path"]
+        "class_name": "bytesIO_to_ascii",
+        "in": ["audio"],
+        "out": ["ascii"]
+      },
+      {
+        "class_name": "ascii_to_bytesIO",
+        "in": ["ascii"],
+        "out": ["audio_restored"]
       },
       {
         "class_name": "nemo_asr",
         "model_path": "{NEMO_PATH}/quartznet15x5/quartznet15x5.yaml",
         "checkpoints_dir": "{NEMO_PATH}/quartznet15x5",
-        "in": ["saved_file_path"],
+        "in": ["audio_restored"],
         "out": ["transcription"]
       }
     ],
-    "out": ["transcription", "saved_file_path"]
+    "out": ["transcription"]
   },
   "metadata": {
     "variables": {

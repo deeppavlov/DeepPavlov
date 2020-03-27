@@ -13,51 +13,70 @@
 # limitations under the License.
 
 import logging
+from io import BytesIO
 from pathlib import Path
-from typing import Union
+from typing import List, Optional, Tuple, Union
 
-import nemo
 import nemo_asr
 import torch
 from nemo.backends.pytorch import DataLayerNM
 from nemo.core.neural_types import NeuralType, AxisType, BatchTag, TimeTag
-from nemo.utils import get_checkpoint_from_dir
 from nemo_asr.helpers import post_process_predictions
 from nemo_asr.parts.features import WaveformFeaturizer
-from ruamel.yaml import YAML
+from torch import Tensor
 from torch.utils.data import Dataset
 
-from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.component import Component
-from deeppavlov.core.models.serializable import Serializable
+from deeppavlov.models.nemo.common import NeMoBase
 
 log = logging.getLogger(__name__)
 
 
 class AudioInferDataset(Dataset):
-    def __init__(self, audio,
-            featurizer,
-            trim=False):
-        self.audio = audio
-        self.featurizer = featurizer
+    def __init__(self,
+                 audio_batch: List[Union[str, BytesIO]],
+                 sample_rate: int,
+                 int_values: bool,
+                 trim=False) -> None:
+        """Dataset reader for AudioDataLayer.
+
+        Args:
+            audio_batch: Batch to be red. Elements could be either paths to audio files or Binary I/O objects.
+            sample_rate: Audio files sample rate.
+            int_values: If true, load samples as 32-bit integers.
+            trim: Trim leading and trailing silence from an audio signal if True.
+
+        """
+        self.audio_batch = audio_batch
+        self.featurizer = WaveformFeaturizer(sample_rate=sample_rate, int_values=int_values)
         self.trim = trim
 
-    def __getitem__(self, index):
-        sample = self.audio[index]
+    def __getitem__(self, index: int) -> Tuple[Tensor, Tensor]:
+        """Processes audio batch item and extracts features.
+
+        Args:
+            index: Audio batch item index.
+
+        Returns:
+            features: Audio file's extracted features tensor.
+            features_length: Features length tensor.
+
+        """
+        sample = self.audio_batch[index]
         features = self.featurizer.process(sample,
                                            trim=self.trim)
         features_length = torch.tensor(features.shape[0]).long()
 
         return features, features_length
 
-    def __len__(self):
-        return len(self.audio)
+    def __len__(self) -> int:
+        return len(self.audio_batch)
 
 
-class AudioDataLayer(DataLayerNM):
+class AudioInferDataLayer(DataLayerNM):
+    """Data Layer for ASR pipeline inference."""
     @staticmethod
-    def create_ports():
+    def create_ports() -> Tuple[dict, dict]:
         input_ports = {}
         output_ports = {
             "audio_signal": NeuralType({0: AxisType(BatchTag),
@@ -67,54 +86,59 @@ class AudioDataLayer(DataLayerNM):
         }
         return input_ports, output_ports
 
-    def __init__(
-            self, *,
-            audio,
-            batch_size=32,
-            sample_rate=16000,
-            int_values=False,
-            trim_silence=False,
-            drop_last=False,
-            shuffle=False,
-            num_workers=0,
-            **kwargs
-    ):
+    def __init__(self, *,
+                 audio_batch: List[Union[str, BytesIO]],
+                 batch_size: int = 32,
+                 sample_rate: int = 16000,
+                 int_values: bool = False,
+                 trim_silence: bool = False,
+                 **kwargs) -> None:
+        """Initializes Data Loader.
+
+        Args:
+            audio_batch: Batch to be red. Elements could be either paths to audio files or Binary I/O objects.
+            batch_size: How many samples per batch to load.
+            sample_rate: Target sampling rate for data. Audio files will be resampled to sample_rate if
+                it is not already.
+            int_values: If true, load data as 32-bit integers.
+            trim_silence: Trim leading and trailing silence from an audio signal if True.
+
+        """
         super().__init__(**kwargs)
 
-        featurizer = WaveformFeaturizer(sample_rate=sample_rate, int_values=int_values)
-
-        # Set up dataset
-        self._dataset = AudioInferDataset(audio, featurizer, trim_silence)
+        self._dataset = AudioInferDataset(audio_batch=audio_batch,
+                                          sample_rate=sample_rate,
+                                          int_values=int_values,
+                                          trim=trim_silence)
 
         self._dataloader = torch.utils.data.DataLoader(
             dataset=self._dataset,
             batch_size=batch_size,
-            collate_fn=self.seq_collate_fn,
-            drop_last=drop_last,
-            shuffle=shuffle,
-            num_workers=num_workers
+            collate_fn=self.seq_collate_fn
         )
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._dataset)
 
     @property
-    def dataset(self):
+    def dataset(self) -> None:
         return None
 
     @property
-    def data_iterator(self):
+    def data_iterator(self) -> torch.utils.data.DataLoader:
         return self._dataloader
 
     @staticmethod
-    def seq_collate_fn(batch):
-        """collate batch of audio sig, audio len, tokens, tokens len
+    def seq_collate_fn(batch: Tuple[Tuple[Tensor], Tuple[Tensor]]) -> Tuple[Optional[Tensor], Optional[Tensor]]:
+        """Collates batch of audio signal and audio length, zero pads audio signal.
 
         Args:
-            batch (Optional[FloatTensor], Optional[LongTensor], LongTensor,
-                   LongTensor):  A tuple of tuples of signal, signal lengths,
-                   encoded tokens, and encoded tokens length.  This collate func
-                   assumes the signals are 1d torch tensors (i.e. mono audio).
+            batch: A tuple of tuples of audio signals and signal lengths. This collate function assumes the signals
+                are 1d torch tensors (i.e. mono audio).
+
+        Returns:
+            audio_signal: Zero padded audio signal tensor.
+            audio_length: Audio signal length tensor.
 
         """
         _, audio_lengths = zip(*batch)
@@ -142,48 +166,50 @@ class AudioDataLayer(DataLayerNM):
 
 
 @register('nemo_asr')
-class NeMoASR(Component, Serializable):
+class NeMoASR(NeMoBase):
+    """ASR model on NeMo modules."""
     def __init__(self,
-                 model_path: Union[str, Path],
-                 checkpoints_dir: str,
+                 load_path: Union[str, Path],
+                 nemo_params_path: Union[str, Path],
                  **kwargs) -> None:
-        super(NeMoASR, self).__init__(save_path=None, load_path=checkpoints_dir, **kwargs)
+        """Initializes NeuralModules for ASR.
 
-        yaml = YAML(typ="safe")
-        with open(expand_path(model_path)) as f:
-            jasper_model_definition = yaml.load(f)
+        Args:
+            load_path: Path to a directory with pretrained checkpoints for JasperEncoder and JasperDecoderForCTC.
+            nemo_params_path: Path to a file containig labels and params for AudioToMelSpectrogramPreprocessor,
+                JasperEncoder, JasperDecoderForCTC and AudioInferDataLayer.
 
-        self.labels = jasper_model_definition['labels']
-        placement = nemo.core.DeviceType.GPU if torch.cuda.is_available() else nemo.core.DeviceType.CPU
-        self.neural_factory = nemo.core.NeuralModuleFactory(placement=placement)
+        """
+        super(NeMoASR, self).__init__(save_path=None, load_path=load_path, nemo_params_path=nemo_params_path, **kwargs)
+
+        self.labels = self.nemo_params['labels']
+
         self.data_preprocessor = nemo_asr.AudioToMelSpectrogramPreprocessor(
-            **jasper_model_definition['AudioToMelSpectrogramPreprocessor']
+            **self.nemo_params['AudioToMelSpectrogramPreprocessor']
         )
         self.jasper_encoder = nemo_asr.JasperEncoder(
-            **jasper_model_definition['JasperEncoder']
+            **self.nemo_params['JasperEncoder']
         )
         self.jasper_decoder = nemo_asr.JasperDecoderForCTC(
             num_classes=len(self.labels),
-            **jasper_model_definition['JasperDecoder']
+            **self.nemo_params['JasperDecoder']
         )
         self.greedy_decoder = nemo_asr.GreedyCTCDecoder()
         self.modules_to_restore = [self.jasper_encoder, self.jasper_decoder]
-        self.data_layer_kwargs = jasper_model_definition['AudioToTextDataLayer']
 
         self.load()
 
-    def save(self, *args, **kwargs) -> None:
-        raise NotImplementedError
+    def __call__(self, audio_batch: List[Union[str, BytesIO]]) -> List[str]:
+        """Transcripts audio batch to text.
 
-    def load(self) -> None:
-        checkpoints = get_checkpoint_from_dir([str(module) for module in self.modules_to_restore], self.load_path)
-        for module, checkpoint in zip(self.modules_to_restore, checkpoints):
-            log.info(f'Restoring {module} from {checkpoint}')
-            module.restore_from(checkpoint)
+        Args:
+            audio_batch: Batch to be transctipted. Elements could be either paths to audio files or Binary I/O objects.
 
-    def __call__(self, audio):
-        data_layer = AudioDataLayer(audio=audio, **self.data_layer_kwargs)
+        Returns:
+            text_batch: Batch of transcripts.
 
+        """
+        data_layer = AudioInferDataLayer(audio_batch=audio_batch, **self.nemo_params['AudioToTextDataLayer'])
         audio_signal, audio_signal_len = data_layer()
         processed_signal, processed_signal_len = self.data_preprocessor(input_signal=audio_signal,
                                                                         length=audio_signal_len)
@@ -192,6 +218,6 @@ class NeMoASR(Component, Serializable):
         predictions = self.greedy_decoder(log_probs=log_probs)
         eval_tensors = [predictions]
         tensors = self.neural_factory.infer(tensors=eval_tensors)
-        prediction = post_process_predictions(tensors[0], self.labels)
+        text_batch = post_process_predictions(tensors[0], self.labels)
 
-        return prediction
+        return text_batch
