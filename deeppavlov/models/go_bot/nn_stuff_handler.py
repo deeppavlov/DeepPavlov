@@ -1,6 +1,6 @@
 import collections
 import json
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 from logging import getLogger
 
 import numpy as np
@@ -13,6 +13,7 @@ from tensorflow.contrib.layers import xavier_initializer as xav
 # from deeppavlov.models.go_bot.network import log
 # /from deeppavlov.models.go_bot.network import log
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
+from deeppavlov.models.go_bot.utils import GobotAttnHyperParams, GobotAttnParams
 
 
 def calc_obs_size(default_tracker_num_features,
@@ -50,13 +51,7 @@ def configure_attn(curr_attn_token_size,
     possible_key_size = possible_key_size or 1
     key_size = curr_attn_key_size or possible_key_size
 
-    new_attn = {}
-    new_attn['token_size'] = token_size
-    new_attn['action_as_key'] = action_as_key
-    new_attn['intent_as_key'] = intent_as_key
-    new_attn['key_size'] = key_size
-
-    return new_attn
+    return token_size, action_as_key, intent_as_key, key_size
 
 log = getLogger(__name__)
 
@@ -64,8 +59,8 @@ log = getLogger(__name__)
 class NNStuffHandler(LRScheduledTFModel):
     SAVE_LOAD_SUBDIR_NAME = "nn_stuff"
 
-    GRAPH_PARAMS = ["hidden_size", "action_size", "dense_size",
-                    "attention_mechanism"]
+    GRAPH_PARAMS = ["hidden_size", "action_size", "dense_size", "attention_mechanism"]
+    SERIALIZABLE_FIELDS = ["hidden_size", "action_size", "dense_size", "dropout_rate", "l2_reg_coef", "attention_mechanism"]
     UNSUPPORTED = ["obs_size"]
     DEPRECATED = ["end_learning_rate", "decay_steps", "decay_power"]
 
@@ -102,6 +97,7 @@ class NNStuffHandler(LRScheduledTFModel):
                         f" or read a github tutorial on super convergence.")
 
         if 'learning_rate' in network_parameters:
+            # todo почему это так
             kwargs['learning_rate'] = network_parameters.pop('learning_rate')
 
         super().__init__(load_path=load_path, save_path=save_path, **kwargs)
@@ -123,25 +119,6 @@ class NNStuffHandler(LRScheduledTFModel):
             word_vocab_size)
 
 
-    def _configure_network(self):
-        self._init_network_params()
-        self._build_graph()
-        self.sess = tf.Session()
-        self.sess.run(tf.global_variables_initializer())
-
-    def _init_network_params(self) -> None:
-        self.dropout_rate = self.opt['dropout_rate']  # todo does dropout actually work
-        self.hidden_size = self.opt['hidden_size']
-        self.action_size = self.opt['action_size']
-        self.dense_size = self.opt['dense_size']
-        self.l2_reg = self.opt['l2_reg_coef']
-
-        attn = self.opt.get('attention_mechanism')
-        if attn:
-            self.attn = collections.namedtuple('attention_mechanism', attn.keys())(**attn)
-            self.obs_size -= attn['token_size']
-        else:
-            self.attn = None
 
     def _build_graph(self) -> None:
         # todo тут ещё и фичер инжиниринг
@@ -168,7 +145,7 @@ class NNStuffHandler(LRScheduledTFModel):
         # multiply with batch utterance mask
         _loss_tensor = tf.multiply(_loss_tensor, self._utterance_mask)
         self._loss = tf.reduce_mean(_loss_tensor, name='loss')
-        self._loss += self.l2_reg * tf.losses.get_regularization_loss()
+        self._loss += self.l2_reg_coef * tf.losses.get_regularization_loss()
         self._train_op = self.get_train_op(self._loss)
 
     def _add_placeholders(self) -> None:
@@ -196,62 +173,62 @@ class NNStuffHandler(LRScheduledTFModel):
             tf.placeholder_with_default(zero_state, shape=[None, self.hidden_size])
         self._initial_state = tf.nn.rnn_cell.LSTMStateTuple(_initial_state_c,
                                                                  _initial_state_h)
-        if self.attn:
+        if self.attention_mechanism:
             _emb_context_shape = \
-                [None, None, self.attn.max_num_tokens, self.attn.token_size]
+                [None, None, self.attention_mechanism.max_num_tokens, self.attention_mechanism.token_size]
             self._emb_context = tf.placeholder(tf.float32,
                                                     _emb_context_shape,
                                                     name='emb_context')
             self._key = tf.placeholder(tf.float32,
-                                            [None, None, self.attn.key_size],
-                                            name='key')
+                                       [None, None, self.attention_mechanism.key_size],
+                                       name='key')
 
     def _build_body(self) -> Tuple[tf.Tensor, tf.Tensor]:
         # input projection
         _units = tf.layers.dense(self._features, self.dense_size,
                                  kernel_regularizer=tf.nn.l2_loss,
                                  kernel_initializer=xav())
-        if self.attn:
-            attn_scope = f"attention_mechanism/{self.attn.type}"
+        if self.attention_mechanism:
+            attn_scope = f"attention_mechanism/{self.attention_mechanism.type}"
             with tf.variable_scope(attn_scope):
-                if self.attn.type == 'general':
+                if self.attention_mechanism.type == 'general':
                     _attn_output = am.general_attention(
                         self._key,
                         self._emb_context,
-                        hidden_size=self.attn.hidden_size,
-                        projected_align=self.attn.projected_align)
-                elif self.attn.type == 'bahdanau':
+                        hidden_size=self.attention_mechanism.hidden_size,
+                        projected_align=self.attention_mechanism.projected_align)
+                elif self.attention_mechanism.type == 'bahdanau':
                     _attn_output = am.bahdanau_attention(
                         self._key,
                         self._emb_context,
-                        hidden_size=self.attn.hidden_size,
-                        projected_align=self.attn.projected_align)
-                elif self.attn.type == 'cs_general':
+                        hidden_size=self.attention_mechanism.hidden_size,
+                        projected_align=self.attention_mechanism.projected_align)
+                elif self.attention_mechanism.type == 'cs_general':
                     _attn_output = am.cs_general_attention(
                         self._key,
                         self._emb_context,
-                        hidden_size=self.attn.hidden_size,
-                        depth=self.attn.depth,
-                        projected_align=self.attn.projected_align)
-                elif self.attn.type == 'cs_bahdanau':
+                        hidden_size=self.attention_mechanism.hidden_size,
+                        depth=self.attention_mechanism.depth,
+                        projected_align=self.attention_mechanism.projected_align)
+                elif self.attention_mechanism.type == 'cs_bahdanau':
                     _attn_output = am.cs_bahdanau_attention(
                         self._key,
                         self._emb_context,
-                        hidden_size=self.attn.hidden_size,
-                        depth=self.attn.depth,
-                        projected_align=self.attn.projected_align)
-                elif self.attn.type == 'light_general':
+                        hidden_size=self.attention_mechanism.hidden_size,
+                        depth=self.attention_mechanism.depth,
+                        projected_align=self.attention_mechanism.projected_align)
+                elif self.attention_mechanism.type == 'light_general':
                     _attn_output = am.light_general_attention(
                         self._key,
                         self._emb_context,
-                        hidden_size=self.attn.hidden_size,
-                        projected_align=self.attn.projected_align)
-                elif self.attn.type == 'light_bahdanau':
+                        hidden_size=self.attention_mechanism.hidden_size,
+                        projected_align=self.attention_mechanism.projected_align)
+                elif self.attention_mechanism.type == 'light_bahdanau':
                     _attn_output = am.light_bahdanau_attention(
                         self._key,
                         self._emb_context,
-                        hidden_size=self.attn.hidden_size,
-                        projected_align=self.attn.projected_align)
+                        hidden_size=self.attention_mechanism.hidden_size,
+                        projected_align=self.attention_mechanism.projected_align)
                 else:
                     raise ValueError("wrong value for attention mechanism type")
             _units = tf.concat([_units, _attn_output], -1)
@@ -290,27 +267,13 @@ class NNStuffHandler(LRScheduledTFModel):
                                embedder_dim, n_actions, intent_classifier, intents, default_tracker_num_features,
                                use_bow_embedder, word_vocab_size) -> None:
 
+        hidden_size = network_parameters.get("hidden_size", hidden_size)
+        action_size = network_parameters.get("action_size", action_size)
+        dropout_rate = network_parameters.get("dropout_rate", dropout_rate)
+        l2_reg_coef = network_parameters.get("l2_reg_coef", l2_reg_coef)
+        dense_size = network_parameters.get("dense_size", dense_size)
+        attn = network_parameters.get('attention_mechanism', attention_mechanism)
 
-        new_network_parameters = {
-            'hidden_size': hidden_size,
-            'action_size': action_size,
-            'dropout_rate': dropout_rate,
-            'l2_reg_coef': l2_reg_coef,
-            'dense_size': dense_size,
-            'attn': attention_mechanism
-        }  # network params
-
-        if 'attention_mechanism' in network_parameters:
-            # todo чекнуть что всё норм с оригинальными и новыми параметрами сети
-            network_parameters['attn'] = network_parameters.pop('attention_mechanism')  # network params
-        new_network_parameters.update(network_parameters)  # network params
-
-        hidden_size = new_network_parameters["hidden_size"]
-        action_size = new_network_parameters["action_size"]
-        dropout_rate = new_network_parameters["dropout_rate"]
-        l2_reg_coef = new_network_parameters["l2_reg_coef"]
-        dense_size = new_network_parameters["dense_size"]
-        attn = new_network_parameters["attn"]
 
         dense_size = dense_size or hidden_size
 
@@ -319,29 +282,41 @@ class NNStuffHandler(LRScheduledTFModel):
                                  intent_classifier, intents)
         if action_size is None:
             action_size = n_actions
+
+        self.obs_size = obs_size
+        self.dropout_rate = dropout_rate  # self.opt['dropout_rate']  # todo does dropout actually work
+        self.hidden_size = hidden_size
+        self.action_size = action_size  # self.opt['action_size']
+        self.dense_size = dense_size  # self.opt['dense_size']
+        self.l2_reg_coef = l2_reg_coef  # self.opt['l2_reg_coef']
+
         if attn:
-            attn.update(configure_attn(curr_attn_token_size=attn.get('token_size'),
+            token_size, action_as_key, intent_as_key, key_size = configure_attn(curr_attn_token_size=attn.get('token_size'),
                                        curr_attn_action_as_key=attn.get('action_as_key'),
                                        curr_attn_intent_as_key=attn.get('intent_as_key'),
                                        curr_attn_key_size=attn.get('key_size'),
                                        embedder_dim=embedder_dim,
                                        n_actions=n_actions,
                                        intent_classifier=intent_classifier,
-                                       intents=intents))
-        # specify model options
-        opt = {
-            'hidden_size': hidden_size,
-            'action_size': action_size,
-            'dense_size': dense_size,
-            'dropout_rate': dropout_rate,
-            'l2_reg_coef': l2_reg_coef,
-            'attention_mechanism': attn
-        }
+                                       intents=intents)
 
-        self.opt = opt
-        self.obs_size = obs_size
+            self.attention_mechanism = GobotAttnParams(max_num_tokens=attn.get("max_num_tokens"),
+                                                       hidden_size=attn.get("hidden_size"),
+                                                       token_size=token_size,
+                                                       key_size=key_size,
+                                                       type=attn.get("type"),
+                                                       projected_align=attn.get("projected_align"),
+                                                       depth=attn.get("depth"),
+                                                       action_as_key=action_as_key,
+                                                       intent_as_key=intent_as_key)
 
-        self._configure_network()
+            self.obs_size -= self.attention_mechanism.token_size
+        else:
+            self.attention_mechanism = None
+
+        self._build_graph()
+        self.sess = tf.Session()
+        self.sess.run(tf.global_variables_initializer())
 
     def train_checkpoint_exists(self):
         return tf.train.checkpoint_exists(str(self.load_path.resolve()))
@@ -349,6 +324,16 @@ class NNStuffHandler(LRScheduledTFModel):
     def load(self, *args, **kwargs) -> None:
         self._load_nn_params()
         super().load(*args, **kwargs)
+
+    def get_attn_hyperparams(self) -> Optional[GobotAttnHyperParams]:
+        if not self.attention_mechanism:
+            return None
+        attn_hyperparams = GobotAttnHyperParams(key_size=self.attention_mechanism.key_size,
+                                                token_size=self.attention_mechanism.token_size,
+                                                window_size=self.attention_mechanism.max_num_tokens,
+                                                use_action_as_key=self.attention_mechanism.action_as_key,
+                                                use_intent_as_key=self.attention_mechanism.intent_as_key)
+        return attn_hyperparams
 
     def _load_nn_params(self) -> None:
         # todo правда ли что тут загружаются только связанные с нейронкой вещи?
@@ -358,10 +343,11 @@ class NNStuffHandler(LRScheduledTFModel):
         with open(path, 'r', encoding='utf8') as fp:
             params = json.load(fp)
         for p in self.GRAPH_PARAMS:
-            if self.opt.get(p) != params.get(p):
+            if self.__getattribute__(p) != params.get(p) and p not in {'attn', 'attention_mechanism'}:
+                # todo backward-compatible attention serialization
                 raise ConfigError(f"`{p}` parameter must be equal to saved"
                                   f" model parameter value `{params.get(p)}`,"
-                                  f" but is equal to `{self.opt.get(p)}`")
+                                  f" but is equal to `{self.__getattribute__(p)}`")
 
     def save(self, *args, **kwargs) -> None:
         super().save(*args, **kwargs)
@@ -369,9 +355,10 @@ class NNStuffHandler(LRScheduledTFModel):
 
     def _save_nn_params(self) -> None:
         path = str(self.save_path.with_suffix('.json').resolve())
+        nn_params = {opt: self.__getattribute__(opt) for opt in self.SERIALIZABLE_FIELDS}
         # log.info(f"[saving parameters to {path}]")
         with open(path, 'w', encoding='utf8') as fp:
-            json.dump(self.opt, fp)
+            json.dump(nn_params, fp)
 
     def _network_train_on_batch(self,
                                 features: np.ndarray,
@@ -387,7 +374,7 @@ class NNStuffHandler(LRScheduledTFModel):
             self._action: action,
             self._action_mask: action_mask
         }
-        if self.attn:
+        if self.attention_mechanism:
             feed_dict[self._emb_context] = emb_context
             feed_dict[self._key] = key
 
@@ -408,7 +395,7 @@ class NNStuffHandler(LRScheduledTFModel):
             self._initial_state: (states_c, states_h),
             self._action_mask: action_mask
         }
-        if self.attn:
+        if self.attention_mechanism:
             feed_dict[self._emb_context] = emb_context
             feed_dict[self._key] = key
 
