@@ -20,11 +20,14 @@ from typing import Union
 
 import nemo
 import torch
+from nemo.backends.pytorch import DataLayerNM
+from torch.utils.data import Dataset, DataLoader
 
+from deeppavlov.core.common.file import read_yaml
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
-from deeppavlov.core.common.file import read_yaml
+from deeppavlov.core.commands.utils import expand_path
 
 log = getLogger(__name__)
 
@@ -81,7 +84,7 @@ class NeMoBase(Component, Serializable):
         placement = nemo.core.DeviceType.GPU if torch.cuda.is_available() else nemo.core.DeviceType.CPU
         self.neural_factory = nemo.core.NeuralModuleFactory(placement=placement)
         self.modules_to_restore = []
-        self.nemo_params = read_yaml(nemo_params_path)
+        self.nemo_params = read_yaml(expand_path(nemo_params_path))
 
     def __call__(self, *args, **kwargs):
         raise NotImplementedError
@@ -96,3 +99,25 @@ class NeMoBase(Component, Serializable):
 
     def save(self, *args, **kwargs) -> None:
         pass
+
+
+class CustomDataLayerBase(DataLayerNM):
+    def __init__(self, dataset: Dataset, dataloader: DataLoader, **kwargs) -> None:
+        super(CustomDataLayerBase, self).__init__(**kwargs)
+        self._dataset = dataset
+        self._dataloader = dataloader
+
+    @staticmethod
+    def create_ports(**kwargs):
+        raise NotImplementedError
+
+    def __len__(self) -> int:
+        return len(self._dataset)
+
+    @property
+    def dataset(self) -> None:
+        return None
+
+    @property
+    def data_iterator(self) -> torch.utils.data.DataLoader:
+        return self._dataloader

@@ -17,25 +17,25 @@ from logging import getLogger
 import librosa
 import numpy as np
 from nemo_tts import WaveGlowInferNM
+from nemo.core.neural_types import NmTensor
 
 log = getLogger(__name__)
 
 
 class BaseVocoder:
-    def __call__(self, tensor):
+    def __call__(self, tensor: NmTensor) -> NmTensor:
         raise NotImplementedError
 
-    def get_audio(self, input_tensor, mel_len):
+    def get_audio(self, evaluated_tensor: list, mel_len: list):
         raise NotImplementedError
 
 
 class WaveGlow(BaseVocoder):
-    """Wraps WaveGlowInferNM module."""
     def __init__(self, *,
                  denoiser_strength: float = 0.0,
                  n_window_stride: int = 160,
                  **kwargs) -> None:
-        """Builds WaveGlowInferNM object.
+        """Wraps WaveGlowInferNM module.
 
         Args:
             denoiser_strength: Denoiser strength for waveglow.
@@ -47,13 +47,13 @@ class WaveGlow(BaseVocoder):
         self.denoiser_strength = denoiser_strength
         self.n_window_stride = n_window_stride
 
-    def __call__(self, mel_postnet):
+    def __call__(self, mel_postnet: NmTensor) -> NmTensor:
         return self.waveglow(mel_spectrogram=mel_postnet)
 
     def __str__(self):
         return str(self.waveglow)
 
-    def restore_from(self, path):
+    def restore_from(self, path: str) -> None:
         self.waveglow.restore_from(path)
         if self.denoiser_strength > 0:
             log.info('Setup denoiser for WaveGlow')
@@ -106,9 +106,7 @@ class GriffinLim(BaseVocoder):
         return audios
 
     def griffin_lim(self, magnitudes):
-        """
-        Griffin-Lim algorithm to convert magnitude spectrograms to audio signals
-        """
+        """Griffin-Lim algorithm to convert magnitude spectrograms to audio signals."""
         phase = np.exp(2j * np.pi * np.random.rand(*magnitudes.shape))
         complex_spec = magnitudes * phase
         signal = librosa.istft(complex_spec)

@@ -19,15 +19,14 @@ from typing import List, Optional, Tuple, Union
 
 import nemo_asr
 import torch
-from nemo.backends.pytorch import DataLayerNM
 from nemo.core.neural_types import NeuralType, AxisType, BatchTag, TimeTag
 from nemo_asr.helpers import post_process_predictions
 from nemo_asr.parts.features import WaveformFeaturizer
 from torch import Tensor
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.nemo.common import NeMoBase
+from deeppavlov.models.nemo.common import CustomDataLayerBase, NeMoBase
 
 log = logging.getLogger(__name__)
 
@@ -38,7 +37,7 @@ class AudioInferDataset(Dataset):
                  sample_rate: int,
                  int_values: bool,
                  trim=False) -> None:
-        """Dataset reader for AudioDataLayer.
+        """Dataset reader for AudioInferDataLayer.
 
         Args:
             audio_batch: Batch to be red. Elements could be either paths to audio files or Binary I/O objects.
@@ -73,7 +72,7 @@ class AudioInferDataset(Dataset):
         return len(self.audio_batch)
 
 
-class AudioInferDataLayer(DataLayerNM):
+class AudioInferDataLayer(CustomDataLayerBase):
     """Data Layer for ASR pipeline inference."""
     @staticmethod
     def create_ports() -> Tuple[dict, dict]:
@@ -104,29 +103,11 @@ class AudioInferDataLayer(DataLayerNM):
             trim_silence: Trim leading and trailing silence from an audio signal if True.
 
         """
-        super().__init__(**kwargs)
-
-        self._dataset = AudioInferDataset(audio_batch=audio_batch,
-                                          sample_rate=sample_rate,
-                                          int_values=int_values,
+        dataset = AudioInferDataset(audio_batch=audio_batch, sample_rate=sample_rate, int_values=int_values,
                                           trim=trim_silence)
 
-        self._dataloader = torch.utils.data.DataLoader(
-            dataset=self._dataset,
-            batch_size=batch_size,
-            collate_fn=self.seq_collate_fn
-        )
-
-    def __len__(self) -> int:
-        return len(self._dataset)
-
-    @property
-    def dataset(self) -> None:
-        return None
-
-    @property
-    def data_iterator(self) -> torch.utils.data.DataLoader:
-        return self._dataloader
+        dataloader = DataLoader(dataset=self._dataset, batch_size=batch_size, collate_fn=self.seq_collate_fn)
+        super(AudioInferDataLayer, self).__init__(dataset, dataloader, **kwargs)
 
     @staticmethod
     def seq_collate_fn(batch: Tuple[Tuple[Tensor], Tuple[Tensor]]) -> Tuple[Optional[Tensor], Optional[Tensor]]:
@@ -180,7 +161,7 @@ class NeMoASR(NeMoBase):
                 JasperEncoder, JasperDecoderForCTC and AudioInferDataLayer.
 
         """
-        super(NeMoASR, self).__init__(save_path=None, load_path=load_path, nemo_params_path=nemo_params_path, **kwargs)
+        super(NeMoASR, self).__init__(load_path=load_path, nemo_params_path=nemo_params_path, **kwargs)
 
         self.labels = self.nemo_params['labels']
 
@@ -203,7 +184,7 @@ class NeMoASR(NeMoBase):
         """Transcripts audio batch to text.
 
         Args:
-            audio_batch: Batch to be transctipted. Elements could be either paths to audio files or Binary I/O objects.
+            audio_batch: Batch to be transcribed. Elements could be either paths to audio files or Binary I/O objects.
 
         Returns:
             text_batch: Batch of transcripts.
