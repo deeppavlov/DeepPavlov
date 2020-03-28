@@ -159,6 +159,8 @@
   "tfidf_ranker": "deeppavlov.models.doc_retrieval.tfidf_ranker:TfidfRanker",
   "tfidf_weighted": "deeppavlov.models.embedders.tfidf_weighted_embedder:TfidfWeightedEmbedder",
   "top1_elector": "deeppavlov.models.spelling_correction.electors.top1_elector:TopOneElector",
+  "transformers_bert_embedder": "deeppavlov.models.embedders.transformers_embedder:TransformersBertEmbedder",
+  "transformers_bert_preprocessor": "deeppavlov.models.preprocessors.transformers_preprocessor:TransformersBertPreprocessor",
   "tree_parser": "deeppavlov.models.kbqa.tree_parser:TreeParser",
   "two_sentences_emb": "deeppavlov.models.ranking.rel_ranker:TwoSentencesEmbedder",
   "typos_custom_reader": "deeppavlov.dataset_readers.typos_reader:TyposCustom",
