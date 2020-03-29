@@ -13,11 +13,13 @@
 # limitations under the License.
 
 from logging import getLogger
+from typing import List
 
 import librosa
 import numpy as np
-from nemo_tts import WaveGlowInferNM
 from nemo.core.neural_types import NmTensor
+from nemo_tts import WaveGlowInferNM
+from numpy import ndarray
 
 log = getLogger(__name__)
 
@@ -54,14 +56,16 @@ class WaveGlow(BaseVocoder):
         return str(self.waveglow)
 
     def restore_from(self, path: str) -> None:
+        """Wraps WaveGlowInferNM restore_from method."""
         self.waveglow.restore_from(path)
         if self.denoiser_strength > 0:
             log.info('Setup denoiser for WaveGlow')
             self.waveglow.setup_denoiser()
 
-    def get_audio(self, audio_tensor, mel_len):
+    def get_audio(self, evaluated_audio: list, mel_len: list) -> List[ndarray]:
+        """Unpacks audio data from evaluated tensor and denoises it if `denoiser_strength` > 0."""
         audios = []
-        for i, batch in enumerate(audio_tensor):
+        for i, batch in enumerate(evaluated_audio):
             audio = batch.cpu().numpy()
             for j, sample in enumerate(audio):
                 sample_len = mel_len[i][j] * self.n_window_stride
@@ -79,7 +83,19 @@ class GriffinLim(BaseVocoder):
                  mag_scale: float = 2048.0,
                  power: float = 1.2,
                  n_iters: int = 50,
-                 **kwargs):
+                 **kwargs) -> None:
+        """Uses Griffin Lim algorithm to generate speech from spectrograms.
+
+        Args:
+            sample_rate:  Generated audio data sample rate.
+            n_fft: The number of points to use for the FFT.
+            mag_scale: Multiplied with the linear spectrogram to avoid audio sounding muted due to mel filter
+                normalization.
+            power: The linear spectrogram is raised to this power prior to running the Griffin Lim algorithm. A power
+                of greater than 1 has been shown to improve audio quality.
+            n_iters: Number of iterations of convertion magnitude spectrograms to audio signal.
+
+        """
         self.mag_scale = mag_scale
         self.power = power
         self.n_iters = n_iters
@@ -90,10 +106,10 @@ class GriffinLim(BaseVocoder):
             **kwargs
         )
 
-    def __call__(self, mel_postnet):
+    def __call__(self, mel_postnet: NmTensor) -> NmTensor:
         return mel_postnet
 
-    def get_audio(self, mel_spec, mel_len):
+    def get_audio(self, mel_spec: list, mel_len: list) -> List[ndarray]:
         audios = []
         for i, batch in enumerate(mel_spec):
             log_mel = batch.cpu().numpy().transpose(0, 2, 1)
@@ -110,9 +126,6 @@ class GriffinLim(BaseVocoder):
         phase = np.exp(2j * np.pi * np.random.rand(*magnitudes.shape))
         complex_spec = magnitudes * phase
         signal = librosa.istft(complex_spec)
-        if not np.isfinite(signal).all():
-            log.warning("audio was not finite, skipping audio saving")
-            return None
 
         for _ in range(self.n_iters):
             _, phase = librosa.magphase(librosa.stft(signal, n_fft=self.n_fft))

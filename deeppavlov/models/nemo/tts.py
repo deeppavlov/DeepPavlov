@@ -104,7 +104,7 @@ class TextDataLayer(CustomDataLayerBase):
 
         dataset = TextDataset(text_batch=text_batch, labels=labels, bos_id=bos_id, eos_id=eos_id)
 
-        dataloader = torch.utils.data.DataLoader(dataset=self._dataset, batch_size=batch_size,
+        dataloader = torch.utils.data.DataLoader(dataset=dataset, batch_size=batch_size,
                                                  collate_fn=partial(self._collate_fn, pad_id=pad_id))
         super(TextDataLayer, self).__init__(dataset, dataloader, **kwargs)
 

@@ -12,7 +12,7 @@
         "class_name": "nemo_asr",
         "nemo_params_path": "{NEMO_PATH}/quartznet15x5/quartznet15x5.yaml",
         "load_path": "{NEMO_PATH}/quartznet15x5",
-        "in": ["speech_in_bytes"],
+        "in": ["speech_in"],
         "out": ["q"]
       },
       {
@@ -84,7 +84,7 @@
         "out": ["speech_out_encoded"]
       }
     ],
-    "out": ["scpeech_out_encoded"]
+    "out": ["speech_out_encoded"]
   },
   "metadata": {
     "variables": {

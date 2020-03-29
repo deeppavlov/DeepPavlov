@@ -4,26 +4,26 @@
     "pipe": [
       {
         "class_name": "nemo_tts",
-        "model_path": "{TTS_PATH}/tacotron2_waveglow.yaml",
-        "checkpoints_dir": "{TTS_PATH}",
+        "nemo_params_path": "{TTS_PATH}/tacotron2_waveglow.yaml",
+        "load_path": "{TTS_PATH}",
         "in": ["text"],
-        "out": ["audio"]
+        "out": ["speech"]
       },
       {
         "class_name": "bytesIO_to_ascii",
-        "in": ["audio"],
+        "in": ["speech"],
         "out": ["ascii"]
       },
       {
         "class_name": "ascii_to_bytesIO",
         "in": ["ascii"],
-        "out": ["audio_restored"]
+        "out": ["speech_restored"]
       },
       {
         "class_name": "nemo_asr",
-        "model_path": "{NEMO_PATH}/quartznet15x5/quartznet15x5.yaml",
-        "checkpoints_dir": "{NEMO_PATH}/quartznet15x5",
-        "in": ["audio_restored"],
+        "nemo_params_path": "{NEMO_PATH}/quartznet15x5/quartznet15x5.yaml",
+        "load_path": "{NEMO_PATH}/quartznet15x5",
+        "in": ["speech_restored"],
         "out": ["transcription"]
       }
     ],

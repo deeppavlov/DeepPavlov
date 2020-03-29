@@ -106,7 +106,7 @@ class AudioInferDataLayer(CustomDataLayerBase):
         dataset = AudioInferDataset(audio_batch=audio_batch, sample_rate=sample_rate, int_values=int_values,
                                           trim=trim_silence)
 
-        dataloader = DataLoader(dataset=self._dataset, batch_size=batch_size, collate_fn=self.seq_collate_fn)
+        dataloader = DataLoader(dataset=dataset, batch_size=batch_size, collate_fn=self.seq_collate_fn)
         super(AudioInferDataLayer, self).__init__(dataset, dataloader, **kwargs)
 
     @staticmethod
