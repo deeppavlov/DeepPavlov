@@ -38,6 +38,10 @@ class Conll2003DatasetReader(DatasetReader):
                 url = 'http://files.deeppavlov.ai/deeppavlov_data/collection3_v2.tar.gz'
             elif dataset_name == 'ontonotes':
                 url = 'http://files.deeppavlov.ai/deeppavlov_data/ontonotes_ner.tar.gz'
+            elif dataset_name == 'vlsp2016':
+                url = 'http://files.deeppavlov.ai/deeppavlov_data/vlsp2016.tar.gz'
+            elif dataset_name == 'dailydialog':
+                url = 'http://files.deeppavlov.ai/deeppavlov_data/dailydialog.tar.gz'
             else:
                 raise RuntimeError('train.txt not found in "{}"'.format(data_path))
             data_path.mkdir(exist_ok=True, parents=True)
