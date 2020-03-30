@@ -22,8 +22,8 @@ from deeppavlov.models.kbqa.kb_answer_parser_base import KBBase
 log = getLogger(__name__)
 
 
-@register('kb_answer_parser_wikidata')
-class KBAnswerParserWikidata(KBBase):
+@register('kb_answer_parser_simple')
+class KBAnswerParserSimple(KBBase):
     """
         This class generates an answer for a given question using Wikidata.
         It searches for matching triplet from the Wikidata with entity and

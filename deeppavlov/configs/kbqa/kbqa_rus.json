@@ -46,7 +46,7 @@
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "q2name_filename": "wiki_rus_q_to_name_full.pickle",
         "wiki_filename": "wiki_rus.pickle",
-        "class_name": "kb_answer_parser_wikidata",
+        "class_name": "kb_answer_parser_simple",
         "top_k_classes": 5,
         "relations_maping_filename": "wiki_properties_rus.pickle",
         "templates_filename": "templates_rus.pickle",
