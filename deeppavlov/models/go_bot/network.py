@@ -187,116 +187,41 @@ class GoalOrientedBot(NNModel):
         self.reset()  # tracker
 
     def _prepare_data(self, attn_hyperparams, x: List[dict], y: List[dict]) -> List[np.ndarray]:
+        # region init vars
         b_features, b_u_masks, b_a_masks, b_actions = [], [], [], []
         b_emb_context, b_keys = [], []  # for attention
-        max_num_utter = max(len(d_contexts) for d_contexts in x)
+        # endregion init vars
+        max_num_utter = max(len(d_contexts) for d_contexts in x)  # for padding
         for d_contexts, d_responses in zip(x, y):
             self.dialogue_state_tracker.reset_state()
+            # region init dialogue_vars
             d_features, d_a_masks, d_actions = [], [], []
             d_emb_context, d_key = [], []  # for attention
+            # endregion init dialogue vars
 
             for context, response in zip(d_contexts, d_responses):
-                tokens = self.tokenizer([context['text'].lower().strip()])[0]
+                (action_id, utterance_action_mask,
+                 utterance_attn_key, utterance_emb_context,
+                 utterance_features) = self.process_utterance(attn_hyperparams, context, response)
 
-                # region update state
-                self.dialogue_state_tracker.get_ground_truth_db_result_from(context)
-
-                if callable(self.slot_filler):
-                    context_slots = self.slot_filler([tokens])[0]
-                    self.dialogue_state_tracker.update_state(context_slots)
-                # endregion update state
-
-                # region Intent features
-                intent_features = []
-                if callable(self.intent_classifier):
-                    intent_features = self.intent_classifier([' '.join(tokens)])[1][0]
-
-                    if self.debug:
-                        intent = self.intents[np.argmax(intent_features[0])]
-                        # log.debug(f"Predicted intent = `{intent}`")
-                # endregion Intent features
-
-                # region embeddings_features
-                mean_embeddings = attn_hyperparams is None
-                bow_features, tokens_embedded = self.data_handler.encode_context(tokens, mean_embeddings)
-                # endregion embeddings_features
-
-                # region attention key
-                attn_key = np.array([], dtype=np.float32)
-                tracker_prev_action = self.dialogue_state_tracker.prev_action
-                if attn_hyperparams:
-                    if attn_hyperparams.use_action_as_key:
-                        attn_key = np.hstack((attn_key, tracker_prev_action))
-                    if attn_hyperparams.use_intent_as_key:
-                        attn_key = np.hstack((attn_key, intent_features))
-                    if len(attn_key) == 0:
-                        attn_key = np.array([1], dtype=np.float32)
-                # endregion attention key
-
-                state_features = self.dialogue_state_tracker.get_features()
-
-                # region context features (from tracker)
-                # todo (?) rename tracker -> dlg_stt_tracker
-                result_matches_state = 0.
-                if self.dialogue_state_tracker.db_result is not None:
-                    matching_items = self.dialogue_state_tracker.get_state().items()
-                    result_matches_state = all(v == self.dialogue_state_tracker.db_result.get(s)
-                                               for s, v in matching_items
-                                               if v != 'dontcare') * 1.
-                context_features = np.array([
-                    bool(self.dialogue_state_tracker.current_db_result) * 1.,
-                    (self.dialogue_state_tracker.current_db_result == {}) * 1.,
-                    (self.dialogue_state_tracker.db_result is None) * 1.,
-                    bool(self.dialogue_state_tracker.db_result) * 1.,
-                    (self.dialogue_state_tracker.db_result == {}) * 1.,
-                    result_matches_state
-                ], dtype=np.float32)
-                # endregion context features (from tracker)
-
-                # Embeddings
-                emb_features = []
-                emb_context = np.array([], dtype=np.float32)
-
-                if tokens_embedded is not None:
-                    if attn_hyperparams:
-                        # emb_context = calc_a
-                        padding_length = attn_hyperparams.window_size - len(tokens)
-                        padding = np.zeros(shape=(padding_length, attn_hyperparams.token_size), dtype=np.float32)
-
-                        if tokens:
-                            emb_context = np.concatenate((padding, np.array(tokens_embedded)))
-                        else:
-                            emb_context = padding
-
-                    else:
-                        emb_features = tokens_embedded
-                        # random embedding instead of zeros
-                        if np.all(emb_features < 1e-20):
-                            emb_dim = self.data_handler.embedder.dim
-                            emb_features = np.fabs(np.random.normal(0, 1 / emb_dim, emb_dim))
-
-                concat_feats = np.hstack((bow_features, emb_features, intent_features,
-                                          state_features, context_features,
-                                          tracker_prev_action))
-
-                d_features.append(concat_feats)
-                d_emb_context.append(emb_context)
-                d_key.append(attn_key)
-                d_a_masks.append(self.dialogue_state_tracker.calc_action_mask(self.data_handler.api_call_id))
-
-                action_id = self.data_handler.encode_response(response['act'])
+                d_features.append(utterance_features)
+                d_emb_context.append(utterance_emb_context)
+                d_key.append(utterance_attn_key)
+                d_a_masks.append(utterance_action_mask)
                 d_actions.append(action_id)
                 # update state
                 # - previous action is teacher-forced here
                 self.dialogue_state_tracker.update_previous_action(action_id)
 
+                # region log mask
                 if self.debug:
                     # log.debug(f"True response = '{response['text']}'.")
                     if d_a_masks[-1][action_id] != 1.:
                         pass
                         # log.warning("True action forbidden by action mask.")
+                # endregion log mask
 
-            # padding to max_num_utter
+            # region padding to max_num_utter
             num_padds = max_num_utter - len(d_contexts)
             d_features.extend([np.zeros_like(d_features[0])] * num_padds)
             d_emb_context.extend([np.zeros_like(d_emb_context[0])] * num_padds)
@@ -304,14 +229,140 @@ class GoalOrientedBot(NNModel):
             d_u_mask = [1] * len(d_contexts) + [0] * num_padds
             d_a_masks.extend([np.zeros_like(d_a_masks[0])] * num_padds)
             d_actions.extend([0] * num_padds)
+            # endregion padding to max_num_utter
 
+            # region extend batch with dialogue data
             b_features.append(d_features)
             b_emb_context.append(d_emb_context)
             b_keys.append(d_key)
             b_u_masks.append(d_u_mask)
             b_a_masks.append(d_a_masks)
             b_actions.append(d_actions)
+            # endregion extend batch with dialogue data
         return b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions
+
+    def process_utterance(self, attn_hyperparams, context, response):
+        utterance_tokens = self.tokenize_single_text_entry(context['text'])
+        self.dialogue_state_tracker.update_ground_truth_db_result_from_context(context)
+        if callable(self.slot_filler):
+            context_slots = self.extract_slots_from_tokenized_text_entry(utterance_tokens)
+            self.dialogue_state_tracker.update_state(context_slots)
+        utterance_attn_key, utterance_features, utterance_emb_context = self.method_name(attn_hyperparams,
+                                                                                         utterance_tokens)
+        action_id = self.data_handler.encode_response(response['act'])
+        utterance_action_mask = self.dialogue_state_tracker.calc_action_mask(self.data_handler.api_call_id)
+        return action_id, utterance_action_mask, utterance_attn_key, utterance_emb_context, utterance_features
+
+    def method_name(self, attn_hyperparams, tokens):
+        intent_features = []
+        if callable(self.intent_classifier):
+            intent_features = self.extract_intents_from_tokenized_text_entry(tokens)
+
+        tracker_prev_action = self.dialogue_state_tracker.prev_action
+
+        state_features = self.dialogue_state_tracker.get_features()
+
+        context_features = self.calc_context_features(self.dialogue_state_tracker.current_db_result,
+                                                      self.dialogue_state_tracker.db_result,
+                                                      self.dialogue_state_tracker.get_state())
+
+
+        bow_features = []
+        if self.data_handler.use_bow_embedder():
+            bow_features = self.data_handler.bow_encode_tokens(tokens)
+
+        attn_key, emb_context, emb_features = self.calc_attn_stuff(tokens, attn_hyperparams,
+                                                                   intent_features, tracker_prev_action)
+
+        concat_feats = np.hstack((bow_features, emb_features,
+                                  intent_features, state_features,
+                                  context_features, tracker_prev_action))
+
+        return attn_key, concat_feats, emb_context
+
+    def calc_attn_stuff(self, tokens, attn_hyperparams, intent_features, tracker_prev_action):
+        emb_features = []
+        emb_context = np.array([], dtype=np.float32)
+        if attn_hyperparams:
+            emb_context = self.calc_emb_context(attn_hyperparams, tokens)
+        else:
+            emb_features = self.calc_tokens_embedding(tokens)
+        attn_key = np.array([], dtype=np.float32)
+        if attn_hyperparams:
+            attn_key = self.calc_attn_key(attn_hyperparams, intent_features, tracker_prev_action)
+        return attn_key, emb_context, emb_features
+
+    def calc_tokens_embedding(self, tokens):
+        #todo to data
+        emb_features = self.data_handler.embed_tokens(tokens, True)
+        # random embedding instead of zeros
+        if np.all(emb_features < 1e-20):
+            emb_features = np.fabs(self.standard_normal_like(emb_features))
+        return emb_features
+
+    def calc_emb_context(self, attn_hyperparams, tokens):
+        tokens_embedded = self.data_handler.embed_tokens(tokens, False)
+        if tokens_embedded is not None:
+            emb_context = self.calc_attn_context(attn_hyperparams, tokens_embedded)
+        else:
+            emb_context = np.array([], dtype=np.float32)
+        return emb_context
+
+    def standard_normal_like(self, source_vector):
+        vector_dim = source_vector.shape[0]
+        return np.random.normal(0, 1 / vector_dim, vector_dim)
+
+    def calc_context_features(selfs, current_db_result, db_result, dst_state):
+        result_matches_state = 0.
+        if current_db_result is not None:
+            matching_items = dst_state.items()
+            result_matches_state = all(v == db_result.get(s)
+                                       for s, v in matching_items
+                                       if v != 'dontcare') * 1.
+        context_features = np.array([
+            bool(current_db_result) * 1.,
+            (current_db_result == {}) * 1.,
+            (db_result is None) * 1.,
+            bool(db_result) * 1.,
+            (db_result == {}) * 1.,
+            result_matches_state
+        ], dtype=np.float32)
+        return context_features
+
+    def calc_attn_key(self, attn_hyperparams, intent_features, tracker_prev_action):
+        attn_key = np.array([], dtype=np.float32)
+
+        if attn_hyperparams.use_action_as_key:
+            attn_key = np.hstack((attn_key, tracker_prev_action))
+        if attn_hyperparams.use_intent_as_key:
+            attn_key = np.hstack((attn_key, intent_features))
+        if len(attn_key) == 0:
+            attn_key = np.array([1], dtype=np.float32)
+        return attn_key
+
+    def calc_attn_context(self, attn_hyperparams, tokens_embedded):
+        # emb_context = calc_a
+        padding_length = attn_hyperparams.window_size - len(tokens_embedded)
+        padding = np.zeros(shape=(padding_length, attn_hyperparams.token_size), dtype=np.float32)
+        if tokens_embedded:
+            emb_context = np.concatenate((padding, np.array(tokens_embedded)))
+        else:
+            emb_context = padding
+        return emb_context
+
+    def extract_intents_from_tokenized_text_entry(self, tokens):
+        intent_features = self.intent_classifier([' '.join(tokens)])[1][0]
+        if self.debug:
+            # todo log in intents extractor
+            intent = self.intents[np.argmax(intent_features[0])]
+            # log.debug(f"Predicted intent = `{intent}`")
+        return intent_features
+
+    def extract_slots_from_tokenized_text_entry(self, tokens):
+        return self.slot_filler([tokens])[0]
+
+    def tokenize_single_text_entry(self, x):
+        return self.tokenizer([x.lower().strip()])[0]
 
     def train_on_batch(self, x: List[dict], y: List[dict]) -> dict:
         attn_hyperparams = self.nn_stuff_handler.get_attn_hyperparams()
@@ -323,81 +374,7 @@ class GoalOrientedBot(NNModel):
     def _infer(self, tokens: List[str], tracker: DialogueStateTracker) -> List:
 
         attn_hyperparams = self.nn_stuff_handler.get_attn_hyperparams()
-        # Intent features
-        intent_features = []
-        if callable(self.intent_classifier):
-            intent_features = self.intent_classifier([' '.join(tokens)])[1][0]
-
-            if self.debug:
-                intent = self.intents[np.argmax(intent_features[0])]
-                # log.debug(f"Predicted intent = `{intent}`")
-
-        # region embeddings_features
-        mean_embeddings = attn_hyperparams is None
-        bow_features, tokens_embedded = self.data_handler.encode_context(tokens, mean_embeddings)
-        # endregion embeddings_features
-
-        # region attention key
-        attn_key = np.array([], dtype=np.float32)
-        tracker_prev_action = self.dialogue_state_tracker.prev_action
-        if attn_hyperparams:
-            if attn_hyperparams.use_action_as_key:
-                attn_key = np.hstack((attn_key, tracker_prev_action))
-            if attn_hyperparams.use_intent_as_key:
-                attn_key = np.hstack((attn_key, intent_features))
-            if len(attn_key) == 0:
-                attn_key = np.array([1], dtype=np.float32)
-        # endregion attention key
-
-        state_features = self.dialogue_state_tracker.get_features()
-
-        # region context features (from tracker)
-        # todo (?) rename tracker -> dlg_stt_tracker
-        result_matches_state = 0.
-        if self.dialogue_state_tracker.db_result is not None:
-            matching_items = self.dialogue_state_tracker.get_state().items()
-            result_matches_state = all(v == self.dialogue_state_tracker.db_result.get(s)
-                                       for s, v in matching_items
-                                       if v != 'dontcare') * 1.
-        context_features = np.array([
-            bool(self.dialogue_state_tracker.current_db_result) * 1.,
-            (self.dialogue_state_tracker.current_db_result == {}) * 1.,
-            (self.dialogue_state_tracker.db_result is None) * 1.,
-            bool(self.dialogue_state_tracker.db_result) * 1.,
-            (self.dialogue_state_tracker.db_result == {}) * 1.,
-            result_matches_state
-        ], dtype=np.float32)
-        # endregion context features (from tracker)
-
-        # Embeddings
-        emb_features = []
-        emb_context = np.array([], dtype=np.float32)
-
-        if tokens_embedded is not None:
-            if attn_hyperparams is not None:
-                padding_length = attn_hyperparams.window_size - len(tokens)
-                padding = np.zeros(shape=(padding_length, attn_hyperparams.token_size), dtype=np.float32)
-
-                if tokens:
-                    emb_context = np.concatenate((padding, np.array(tokens_embedded)))
-                else:
-                    emb_context = padding
-
-            else:
-                emb_features = tokens_embedded
-                # random embedding instead of zeros
-                if np.all(emb_features < 1e-20):
-                    emb_dim = self.data_handler.embedder.dim
-                    emb_features = np.fabs(np.random.normal(0, 1 / emb_dim, emb_dim))
-
-        concat_feats = np.hstack((bow_features, emb_features, intent_features,
-                                  state_features, context_features,
-                                  tracker_prev_action))
-
-        concat_feats = np.hstack((bow_features, emb_features, intent_features,
-                                  state_features, context_features,
-                                  tracker_prev_action))
-
+        attn_key, concat_feats, emb_context = self.method_name(attn_hyperparams, tokens)
 
         action_mask = tracker.calc_action_mask(self.data_handler.api_call_id)
         probs, state_c, state_h = \
@@ -417,14 +394,15 @@ class GoalOrientedBot(NNModel):
                 self.dialogue_state_tracker.update_previous_action(previous_act_id)
 
             # todo это ответ бд тоже teacher forced?
-            self.dialogue_state_tracker.get_ground_truth_db_result_from(context)
-            tokens = self.tokenizer([context['text'].lower().strip()])[0]  # todo поч хардкодим ловеркейс
+            tokens = self.tokenize_single_text_entry(context['text'])  # todo поч хардкодим ловеркейс
+
+            self.dialogue_state_tracker.update_ground_truth_db_result_from_context(context)
 
             if callable(self.slot_filler):
-                utter_slots = self.slot_filler([tokens])[0]
+                utter_slots = self.extract_slots_from_tokenized_text_entry(tokens)
                 self.dialogue_state_tracker.update_state(utter_slots)
-            _, predicted_act_id, self.dialogue_state_tracker.network_state = \
-                self._infer(tokens, tracker=self.dialogue_state_tracker)
+
+            _, predicted_act_id, self.dialogue_state_tracker.network_state = self._infer(tokens, tracker=self.dialogue_state_tracker)
 
             self.dialogue_state_tracker.update_previous_action(predicted_act_id)
             resp = self.data_handler.decode_response(predicted_act_id, self.dialogue_state_tracker)
@@ -444,14 +422,13 @@ class GoalOrientedBot(NNModel):
                     self.multiple_user_state_tracker.init_new_tracker(user_id, self.dialogue_state_tracker)
 
                 tracker = self.multiple_user_state_tracker.get_user_tracker(user_id)
-                tokens = self.tokenizer([x.lower().strip()])[0]
+                tokens = self.tokenize_single_text_entry(x)
 
                 if callable(self.slot_filler):
-                    utter_slots = self.slot_filler([tokens])[0]
+                    utter_slots = self.extract_slots_from_tokenized_text_entry(tokens)
                     tracker.update_state(utter_slots)
 
-                _, predicted_act_id, tracker.network_state = \
-                    self._infer(tokens, tracker=tracker)
+                _, predicted_act_id, tracker.network_state = self._infer(tokens, tracker=tracker)
 
                 tracker.update_previous_action(predicted_act_id)
 

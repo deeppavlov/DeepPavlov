@@ -107,10 +107,11 @@ class FeaturizedTracker(Tracker):
         )
 
     def get_state(self):
-        lasts = {}
-        for slot, value in self.history:
-            lasts[slot] = value
-        return lasts
+        # lasts = {}
+        # for slot, value in self.history:
+        #     lasts[slot] = value
+        # return lasts
+        return dict(self.history)
 
     def reset_state(self):
         self.history = []
@@ -182,8 +183,8 @@ class DialogueStateTracker(FeaturizedTracker):
         self.prev_action *= 0.
         self.prev_action[prev_act_id] = 1.
 
-    # todo oserikov это не геттер
-    def get_ground_truth_db_result_from(self, context: Dict[str, Any]):
+    # todo oserikov это стоит переписать
+    def update_ground_truth_db_result_from_context(self, context: Dict[str, Any]):
         self.current_db_result = context.get('db_result', None)
         self._update_db_result()
 

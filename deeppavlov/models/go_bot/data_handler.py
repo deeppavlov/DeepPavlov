@@ -63,31 +63,23 @@ class DataHandler:
             resp = re.sub("#([A-Za-z]+)", "dontcare", resp).lower()
         return resp
 
-    def encode_context(self, tokens: List[str], mean_embeddings):
+    def encode_tokens(self, tokens: List[str], mean_embeddings):
 
-        # Bag of words features
+        bow_features = self.bow_encode_tokens(tokens)
+        tokens_exexe = self.embed_tokens(tokens, mean_embeddings)
+
+        return bow_features, tokens_exexe
+
+    def embed_tokens(self, tokens, mean_embeddings):
+        tokens_embedded = None  # todo worst name ever
+        if callable(self.embedder):
+            tokens_embedded = self.embedder([tokens], mean=mean_embeddings)[0]
+        return tokens_embedded
+
+    def bow_encode_tokens(self, tokens):
         bow_features = []
         if self.use_bow_embedder():
             tokens_idx = self.word_vocab(tokens)
             bow_features = self.bow_embedder([tokens_idx])[0]
             bow_features = bow_features.astype(np.float32)
-
-        tokens_exexe = None
-        if callable(self.embedder):
-            tokens_exexe = self.embedder([tokens], mean=mean_embeddings)[0]
-
-        #
-        # if self.debug:
-        #     # log.debug(f"Context features = {context_features}")
-        #     debug_msg = f"num bow features = {bow_features}" + \
-        #                 f", num emb features = {emb_features}" + \
-        #                 f", num state features = {len(state_features)}" + \
-        #                 f", num context features = {len(context_features)}" + \
-        #                 f", prev_action shape = {len(tracker_prev_action)}"# + \
-        #                 # f", num intent features = {intent_features}"
-        #     # log.debug(debug_msg)
-        #
-        # todo move this out of here
-        # todo move attention logic out of here.
-
-        return bow_features, tokens_exexe
+        return bow_features
