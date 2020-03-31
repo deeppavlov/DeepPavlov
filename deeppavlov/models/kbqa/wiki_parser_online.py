@@ -55,6 +55,7 @@ class WikiParserOnline(Component):
                  find_label: bool = False) -> List[str]:
 
         if find_label:
+            entity = entity.replace('"', '')
             if entity.startswith("Q"):
                 template = "SELECT DISTINCT ?label WHERE {{ wd:{} rdfs:label ?label . FILTER (lang(?label) = 'en') }}"
                 query = template.format(entity)

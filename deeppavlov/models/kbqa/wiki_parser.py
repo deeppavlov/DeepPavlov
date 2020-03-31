@@ -52,11 +52,12 @@ class WikiParser(Component):
             find_label: whether to find label of entity from entity id
             find_alias: whether to find alias of entity from entity_id
         """
-
+        
         if not entity.startswith("http://www.wikidata.org/") and entity.startswith("Q"):
             entity = "http://www.wikidata.org/entity/" + entity
 
         if find_label:
+            entity = entity.replace('"', '')
             if entity.startswith("http://www.wikidata.org/entity/"):
                 labels, cardinality = self.document.search_triples(entity,
                                                                    "http://www.w3.org/2000/01/rdf-schema#label", "")
