@@ -14,6 +14,7 @@
   "multitask_sequence_accuracy": "deeppavlov.metrics.accuracy:multitask_sequence_accuracy",
   "multitask_token_accuracy": "deeppavlov.metrics.accuracy:multitask_token_accuracy",
   "ner_f1": "deeppavlov.metrics.fmeasure:ner_f1",
+  "ner_prf1": "deeppavlov.metrics.fmeasure:ner_prf1",
   "ner_token_f1": "deeppavlov.metrics.fmeasure:ner_token_f1",
   "per_item_bleu": "deeppavlov.metrics.bleu:per_item_bleu",
   "per_item_dialog_accuracy": "deeppavlov.metrics.accuracy:per_item_dialog_accuracy",
@@ -31,6 +32,5 @@
   "squad_v1_em": "deeppavlov.metrics.squad_metrics:squad_v1_exact_match",
   "squad_v1_f1": "deeppavlov.metrics.squad_metrics:squad_v1_f1",
   "squad_v2_em": "deeppavlov.metrics.squad_metrics:squad_v2_exact_match",
-  "squad_v2_f1": "deeppavlov.metrics.squad_metrics:squad_v2_f1",
-  "ner_prf1": "deeppavlov.metrics.fmeasure:ner_prf1"
+  "squad_v2_f1": "deeppavlov.metrics.squad_metrics:squad_v2_f1"
 }
