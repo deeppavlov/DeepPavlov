@@ -2,11 +2,7 @@ import io
 import json
 import logging
 import os
-import pexpect
-import pexpect.popen_spawn
 import pickle
-import pytest
-import requests
 import shutil
 import signal
 import socket
@@ -17,6 +13,11 @@ from struct import unpack
 from time import sleep
 from typing import Optional, Union
 from urllib.parse import urljoin
+
+import pexpect
+import pexpect.popen_spawn
+import pytest
+import requests
 
 import deeppavlov
 from deeppavlov import build_model
