@@ -35,6 +35,7 @@ class RelRankerBertInfer(Component, Serializable):
                  wiki_parser: WikiParser,
                  ranker: RelRanker,
                  batch_size: int = 32,
+                 rels_to_leave: int = 40,
                  debug: bool = False, **kwargs):
         """
 
@@ -44,6 +45,7 @@ class RelRankerBertInfer(Component, Serializable):
             wiki_parser: component deeppavlov.models.wiki_parser
             ranker: component deeppavlov.models.ranking.rel_ranker
             batch_size: infering batch size
+            rels_to_leave: how many relations to leave after relation ranking
             debug: whether to print debug information
             **kwargs:
         """
@@ -52,6 +54,7 @@ class RelRankerBertInfer(Component, Serializable):
         self.ranker = ranker
         self.wiki_parser = wiki_parser
         self.batch_size = batch_size
+        self.rels_to_leave = rels_to_leave
         self.debug = debug
         self.load()
 
@@ -62,60 +65,98 @@ class RelRankerBertInfer(Component, Serializable):
     def save(self) -> None:
         pass
 
-    def __call__(self, questions: List[str], candidate_answers: List[Tuple[str]]) -> List[List[str]]:
+    def __call__(self, questions: List[str], candidate_answers: List[Tuple[str]], return_answer=True) -> List[List[str]]:
         question = questions[0]
         answers_with_scores = []
+        rels_with_scores = []
 
-        if len(candidate_answers) == 0:
-            return ["Not Found"]
+        if return_answer:
+            
+            if len(candidate_answers) == 0:
+                return ["Not Found"]
 
-        for i in range(len(candidate_answers) // self.batch_size):
+            for i in range(len(candidate_answers) // self.batch_size):
+                questions_batch = []
+                rels_labels_batch = []
+                answers_batch = []
+                for j in range(self.batch_size):
+                    candidate_rels = candidate_answers[(i * self.batch_size + j)][:-1]
+                    candidate_rels = [candidate_rel.split('/')[-1] for candidate_rel in candidate_rels]
+                    candidate_answer = candidate_answers[(i * self.batch_size + j)][-1]
+                    candidate_rels = " [SEP] ".join([self.rel_q2name[candidate_rel] \
+                                                     for candidate_rel in candidate_rels if
+                                                     candidate_rel in self.rel_q2name])
+
+                    if candidate_rels:
+                        questions_batch.append(question)
+                        rels_labels_batch.append(candidate_rels)
+                        answers_batch.append(candidate_answer)
+
+                probas = self.ranker(questions_batch, rels_labels_batch)
+                probas = [proba[1] for proba in probas]
+                for j, answer in enumerate(answers_batch):
+                    answers_with_scores.append((answer, probas[j]))
+
             questions_batch = []
             rels_labels_batch = []
             answers_batch = []
-            for j in range(self.batch_size):
-                candidate_rels = candidate_answers[(i * self.batch_size + j)][:-1]
+            for j in range(len(candidate_answers) % self.batch_size):
+                candidate_rels = candidate_answers[(len(candidate_answers) // self.batch_size * self.batch_size + j)][:-1]
                 candidate_rels = [candidate_rel.split('/')[-1] for candidate_rel in candidate_rels]
-                candidate_answer = candidate_answers[(i * self.batch_size + j)][-1]
+                candidate_answer = candidate_answers[(len(candidate_answers) // self.batch_size * self.batch_size + j)][-1]
                 candidate_rels = " [SEP] ".join([self.rel_q2name[candidate_rel] \
-                                                 for candidate_rel in candidate_rels if
-                                                 candidate_rel in self.rel_q2name])
+                                                 for candidate_rel in candidate_rels if candidate_rel in self.rel_q2name])
 
                 if candidate_rels:
                     questions_batch.append(question)
                     rels_labels_batch.append(candidate_rels)
                     answers_batch.append(candidate_answer)
 
+            if questions_batch:
+                probas = self.ranker(questions_batch, rels_labels_batch)
+                probas = [proba[1] for proba in probas]
+                for j, answer in enumerate(answers_batch):
+                    answers_with_scores.append((answer, probas[j]))
+
+            answers_with_scores = sorted(answers_with_scores, key=lambda x: x[1], reverse=True)
+
+            if self.debug:
+                log.debug(f"answers: {answers_with_scores[0][0]}")
+            answer = self.wiki_parser("objects", "forw", answers_with_scores[0][0], find_label=True)
+
+            return [answer]
+
+        else:
+            for i in range(len(candidate_answers) // self.batch_size):
+                questions_batch = []
+                rels_labels_batch = []
+                rels_batch = []
+                for j in range(self.batch_size):
+                    candidate_rel = candidate_answers[(i * self.batch_size + j)]
+                    if candidate_rel in self.rel_q2name:
+                        questions_batch.append(question)
+                        rels_batch.append(candidate_rel)
+                        rels_labels_batch.append(self.rel_q2name[candidate_rel])
+                probas = self.ranker(questions_batch, rels_labels_batch)
+                probas = [proba[1] for proba in probas]
+                for j, rel in enumerate(rels_batch):
+                    rels_with_scores.append((rel, probas[j]))
+            
+            questions_batch = []
+            rels_batch = []
+            rels_labels_batch = []
+            for j in range(len(candidate_answers) % self.batch_size):
+                candidate_rel = candidate_answers[(len(candidate_answers) // self.batch_size * self.batch_size + j)]
+                if candidate_rel in self.rel_q2name:
+                    questions_batch.append(question)
+                    rels_batch.append(candidate_rel)
+                    rels_labels_batch.append(self.rel_q2name[candidate_rel])
+
             probas = self.ranker(questions_batch, rels_labels_batch)
             probas = [proba[1] for proba in probas]
-            for j, answer in enumerate(answers_batch):
-                answers_with_scores.append((answer, probas[j]))
+            for j, rel in enumerate(rels_batch):
+                rels_with_scores.append((rel, probas[j]))
 
-        questions_batch = []
-        rels_labels_batch = []
-        answers_batch = []
-        for j in range(len(candidate_answers) % self.batch_size):
-            candidate_rels = candidate_answers[(len(candidate_answers) // self.batch_size * self.batch_size + j)][:-1]
-            candidate_rels = [candidate_rel.split('/')[-1] for candidate_rel in candidate_rels]
-            candidate_answer = candidate_answers[(len(candidate_answers) // self.batch_size * self.batch_size + j)][-1]
-            candidate_rels = " [SEP] ".join([self.rel_q2name[candidate_rel] \
-                                             for candidate_rel in candidate_rels if candidate_rel in self.rel_q2name])
+            rels_with_scores = sorted(rels_with_scores, key=lambda x: x[1], reverse=True)
+            return rels_with_scores[:self.rels_to_leave]
 
-            if candidate_rels:
-                questions_batch.append(question)
-                rels_labels_batch.append(candidate_rels)
-                answers_batch.append(candidate_answer)
-
-        if questions_batch:
-            probas = self.ranker(questions_batch, rels_labels_batch)
-            probas = [proba[1] for proba in probas]
-            for j, answer in enumerate(answers_batch):
-                answers_with_scores.append((answer, probas[j]))
-
-        answers_with_scores = sorted(answers_with_scores, key=lambda x: x[1], reverse=True)
-
-        if self.debug:
-            log.debug(f"answers: {answers_with_scores[0][0]}")
-        answer = self.wiki_parser("objects", "forw", answers_with_scores[0][0], find_label=True)
-
-        return [answer]

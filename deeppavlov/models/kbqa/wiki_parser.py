@@ -57,7 +57,6 @@ class WikiParser(Component):
             entity = "http://www.wikidata.org/entity/" + entity
 
         if find_label:
-            entity = entity.replace('"', '')
             if entity.startswith("http://www.wikidata.org/entity/"):
                 labels, cardinality = self.document.search_triples(entity,
                                                                    "http://www.w3.org/2000/01/rdf-schema#label", "")
@@ -74,8 +73,8 @@ class WikiParser(Component):
                 entity = entity.strip("^^<http://www.w3.org/2001/XMLSchema#decimal>").strip('"').strip('"')
                 return entity
 
-            elif entity.isdigit():
-                return entity
+            elif entity.replace('"','').isdigit():
+                return entity.replace('"','')
 
             return "Not Found"
 
