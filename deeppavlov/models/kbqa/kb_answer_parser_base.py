@@ -36,12 +36,12 @@ class KBBase(Component, Serializable):
 
         Args:
             load_path: path to folder with wikidata files
+            wiki_filename: name of file with Wikidata
             linker: component `deeppavlov.models.kbqa.entity_linking`
             template_matcher: component `deeppavlov.models.kbqa.template_matcher`
+            q2name_filename: file with mapping of entity ids to entity titles
             relations_maping_filename: file with the dictionary of ids(keys) and titles(values) of relations
             from Wikidata
-            templates_filename: file with the dictionary of question templates(keys) and relations for these templates
-            (values)
             *args:
             **kwargs:
         """
