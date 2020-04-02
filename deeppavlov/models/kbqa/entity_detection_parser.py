@@ -26,7 +26,6 @@ class EntityDetectionParser(Component):
 
     def __init__(self, thres_proba: float = 0.86, **kwargs):
         self.thres_proba = thres_proba
-        pass
 
     def __call__(self, question_tokens: List[List[str]],
                  token_probas: List[List[List[float]]], **kwargs):
