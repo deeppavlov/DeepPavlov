@@ -41,7 +41,6 @@ class TweetQADatasetReader(DatasetReader):
             RuntimeError: if `dataset` is not one of these: ``'SQuAD'``, ``'SberSQuAD'``, ``'MultiSQuAD'``.
         """
         
-        dir_path = Path("/home/com/Shared/DeepPavlov/TweetQA_data")
         
 #         required_files = ['dev.json', 'test.json', 'train.json']
         required_files = ['dev.json', 'train.json']
