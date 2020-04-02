@@ -43,23 +43,17 @@ class EntityDetectionParser(Component):
 
     def entities_from_tags(self, tokens, tags, probas):
         entities = []
-        start = 0
-        entity = ''
+        entity = []
         replace_tokens = [(' - ', '-'), ("'s", ''), (' .', ''), ('{', ''), ('}', '')]
 
         for tok, tag, proba in zip(tokens, tags, probas):
-            if tag != 0 and start == 0:
-                start = 1
-                entity = tok
-            elif tag != 0 and start == 1:
-                entity += ' '
-                entity += tok
-            elif tag == 0 and len(entity) > 0 and start == 1:
-                start = 0
-                for replace_token in replace_tokens:
-                    entity = entity.replace(replace_token[0], replace_token[1])
+            if tag:
+                entity.append(tok)
+            elif len(entity) > 0:
+                entity = ' '.join(entity)
+                for old, new in replace_tokens:
+                    entity = entity.replace(old, new)
                 entities.append(entity)
-            else:
-                pass
+                entity = []
 
         return entities
