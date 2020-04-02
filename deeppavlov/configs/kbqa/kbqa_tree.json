@@ -71,6 +71,7 @@
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
+      "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
       "{DEEPPAVLOV_PATH}/requirements/udpipe.txt"
     ],
     "download": [

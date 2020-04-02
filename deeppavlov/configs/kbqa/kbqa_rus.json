@@ -74,13 +74,15 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
+
       "MODEL_PATH": "{MODELS_PATH}/kbqa_mix_lowercase",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
-      "{DEEPPAVLOV_PATH}/requirements/spelling.txt"
+      "{DEEPPAVLOV_PATH}/requirements/spelling.txt",
+      "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt"
     ],
     "download": [
       {
