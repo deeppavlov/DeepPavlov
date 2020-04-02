@@ -61,7 +61,6 @@ class TextDataset(TranscriptDataset):
 
 
 class TextDataLayer(CustomDataLayerBase):
-    """A simple Neural Module for loading text data."""
     @staticmethod
     def create_ports() -> Tuple[dict, dict]:
         input_ports = {}
@@ -89,9 +88,9 @@ class TextDataLayer(CustomDataLayerBase):
             text_batch: Texts to be used for speech synthesis.
             labels: List of string labels to use when to str2int translation.
             batch_size: How many strings per batch to load.
-            bos_id: Label position of beginning of string symbol.
-            eos_id: Label position of end of string symbol.
-            pad_id: Label position of pad symbol.
+            bos_id: Label position of beginning of string symbol. If None is initialized as `len(labels)`.
+            eos_id: Label position of end of string symbol. If None is initialized as `len(labels) + 1`.
+            pad_id: Label position of pad symbol. If None is initialized as `len(labels) + 2`.
 
         """
         len_labels = len(labels)
@@ -208,7 +207,7 @@ class NeMoTTS(NeMoBase):
         mel_postnet = self.t2_postnet(mel_input=mel_decoder)
         infer_tensors = [self.vocoder(mel_postnet), mel_len]
         evaluated_tensors = self.neural_factory.infer(tensors=infer_tensors)
-        synthesized_batch = self.vocoder.get_audio(evaluated_tensors[0], evaluated_tensors[1])
+        synthesized_batch = self.vocoder.get_audio(*evaluated_tensors)
 
         for fout, data in zip(path_batch, synthesized_batch):
             wavfile.write(fout, self.sample_rate, data)

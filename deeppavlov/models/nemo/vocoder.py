@@ -25,10 +25,13 @@ log = getLogger(__name__)
 
 
 class BaseVocoder:
+    """Class is used to maintain consistency in the construction of the TTS pipeline based on NeMo modules."""
     def __call__(self, tensor: NmTensor) -> NmTensor:
+        """Should return the tensor after the evaluation of which speech could be synthesized with `get_audio` method"""
         raise NotImplementedError
 
     def get_audio(self, evaluated_tensor: list, mel_len: list):
+        """Synthesizes audio from the evaluated tensor constructed by `__call__` method."""
         raise NotImplementedError
 
 

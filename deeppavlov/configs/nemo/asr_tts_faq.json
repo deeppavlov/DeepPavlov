@@ -4,7 +4,7 @@
     "in_y": "y",
     "pipe": [
       {
-        "class_name": "ascii_to_bytesIO",
+        "class_name": "base64_encode_bytesIO",
         "in": ["speech_in_encoded"],
         "out": ["speech_in"]
       },
@@ -79,7 +79,7 @@
         "out": ["speech_out"]
       },
       {
-        "class_name": "bytesIO_to_ascii",
+        "class_name": "bytesIO_decode_base64",
         "in": ["speech_out"],
         "out": ["speech_out_encoded"]
       }
