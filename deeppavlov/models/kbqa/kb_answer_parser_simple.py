@@ -14,6 +14,7 @@
 
 from logging import getLogger
 from typing import List, Tuple, Optional
+
 import numpy as np
 
 from deeppavlov.core.common.registry import register
