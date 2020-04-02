@@ -29,6 +29,15 @@ class EntityDetectionParser(Component):
 
     def __call__(self, question_tokens: List[List[str]],
                  token_probas: List[List[List[float]]], **kwargs):
+        """
+
+        Args:
+            question_tokens: tokenized questions
+            token_probas: list of probabilities of question tokens to belong to
+            "B-TAG" (beginning of entity substring), "I-TAG" (inner token of entity substring)
+            or "O-TAG" (not an entity token)
+            **kwargs
+        """
         tokens, probas = question_tokens[0], token_probas[0]
 
         tags = []
