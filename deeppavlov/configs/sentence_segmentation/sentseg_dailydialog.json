@@ -96,11 +96,11 @@
     "metrics": [
       {
         "name": "ner_f1",
-        "inputs": ["y", "tags"]
+        "inputs": ["y_tokens", "tags"]
       },
       {
         "name": "ner_token_f1",
-        "inputs": ["y", "tags"]
+        "inputs": ["y_tokens", "tags"]
       }
     ],
     "validation_patience": 10,
