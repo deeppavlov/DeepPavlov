@@ -227,6 +227,23 @@ class DialogueStateTracker(FeaturizedTracker):
         if self.current_db_result is not None:
             self.db_result = self.current_db_result
 
+    def calc_context_features(self):
+        result_matches_state = 0.
+        if self.db_result is not None:
+            matching_items = self.get_state().items()
+            result_matches_state = all(v == self.db_result.get(s)
+                                       for s, v in matching_items
+                                       if v != 'dontcare') * 1.
+        context_features = np.array([
+            bool(self.current_db_result) * 1.,
+            (self.current_db_result == {}) * 1.,
+            (self.db_result is None) * 1.,
+            bool(self.db_result) * 1.,
+            (self.db_result == {}) * 1.,
+            result_matches_state
+        ], dtype=np.float32)
+        return context_features
+
 
 class MultipleUserStateTracker(object):
     def __init__(self):

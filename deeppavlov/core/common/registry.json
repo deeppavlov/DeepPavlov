@@ -58,7 +58,7 @@
   "file_paths_reader": "deeppavlov.dataset_readers.file_paths_reader:FilePathsReader",
   "fit_trainer": "deeppavlov.core.trainers.fit_trainer:FitTrainer",
   "glove": "deeppavlov.models.embedders.glove_embedder:GloVeEmbedder",
-  "go_bot": "deeppavlov.models.go_bot.network:GoalOrientedBot",
+  "go_bot": "deeppavlov.models.go_bot.go_bot:GoalOrientedBot",
   "hashing_tfidf_vectorizer": "deeppavlov.models.vectorizers.hashing_tfidf_vectorizer:HashingTfIdfVectorizer",
   "insurance_reader": "deeppavlov.dataset_readers.insurance_reader:InsuranceReader",
   "joint_tagger_parser": "deeppavlov.models.syntax_parser.joint:JointTaggerParser",

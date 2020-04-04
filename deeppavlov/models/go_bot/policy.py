@@ -118,7 +118,19 @@ class NNStuffHandler(LRScheduledTFModel):
             use_bow_embedder,
             word_vocab_size)
 
+    def calc_attn_key(self, intent_features, tracker_prev_action):
+        # todo dto-like class for the attended features
 
+        attn_key = np.array([], dtype=np.float32)
+
+        if self.attention_mechanism:
+            if self.attention_mechanism.action_as_key:
+                attn_key = np.hstack((attn_key, tracker_prev_action))
+            if self.attention_mechanism.intent_as_key:
+                attn_key = np.hstack((attn_key, intent_features))
+            if len(attn_key) == 0:
+                attn_key = np.array([1], dtype=np.float32)
+        return attn_key
 
     def _build_graph(self) -> None:
         # todo тут ещё и фичер инжиниринг

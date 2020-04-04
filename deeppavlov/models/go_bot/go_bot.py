@@ -23,7 +23,9 @@ from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
 from deeppavlov.models.go_bot.data_handler import DataHandler
-from deeppavlov.models.go_bot.nn_stuff_handler import NNStuffHandler
+from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesDataset, UtteranceDataEntry, UtteranceTarget, \
+    DialogueDataEntry, UtteranceFeatures, PaddedDialogueDataEntry
+from deeppavlov.models.go_bot.policy import NNStuffHandler
 from deeppavlov.models.go_bot.tracker import FeaturizedTracker, DialogueStateTracker, MultipleUserStateTracker
 from pathlib import Path
 
@@ -154,7 +156,7 @@ class GoalOrientedBot(NNModel):
         nn_stuff_load_path = Path(load_path, NNStuffHandler.SAVE_LOAD_SUBDIR_NAME)
 
         embedder_dim = self.data_handler.embedder.dim if self.data_handler.embedder else None
-        use_bow_embedder = self.data_handler.use_bow_embedder()
+        use_bow_embedder = self.data_handler.use_bow_encoder()
         word_vocab_size = self.data_handler.word_vocab_size()
 
         self.nn_stuff_handler = NNStuffHandler(
@@ -186,60 +188,177 @@ class GoalOrientedBot(NNModel):
         self.multiple_user_state_tracker = MultipleUserStateTracker()  # tracker
         self.reset()  # tracker
 
-    def _prepare_data(self, attn_hyperparams, x: List[dict], y: List[dict]) -> List[np.ndarray]:
-        # region init vars
-        b_features, b_u_masks, b_a_masks, b_actions = [], [], [], []
-        b_emb_context, b_keys = [], []  # for attention
-        # endregion init vars
+    def prepare_dialogues_batches_training_data(self,
+                                                batch_dialogues_utterances_contexts_info: List[List[dict]],
+                                                batch_dialogues_utterances_responses_info: List[
+                                                    List[dict]]) -> BatchDialoguesDataset:
+        """
+        Parse the passed dialogue information to the dialogue information object.
+
+        :param batch_dialogues_utterances_contexts_info: the dictionary containing the dialogue utterances training information
+        :param batch_dialogues_utterances_responses_info: the dictionary containing the dialogue utterances responses training information
+        :return: the dialogue data object containing the numpy-vectorized features and target extracted
+        from the utterance data
+        """
+        # todo naming, docs, comments
+        max_dialogue_length = max(len(dialogue_info_entry)
+                                  for dialogue_info_entry in batch_dialogues_utterances_contexts_info)  # for padding
+
+        batch_dialogues_dataset = BatchDialoguesDataset(max_dialogue_length)
+        for dialogue_utterances_info in zip(batch_dialogues_utterances_contexts_info,
+                                            batch_dialogues_utterances_responses_info):
+            dialogue_training_data = self.prepare_dialogue_training_data(*dialogue_utterances_info)
+            batch_dialogues_dataset.append(dialogue_training_data)
+
+        return batch_dialogues_dataset
+
+    def prepare_dialogue_training_data(self,
+                                       dialogue_utterances_contexts_info: List[dict],
+                                       dialogue_utterances_responses_info: List[dict]) -> DialogueDataEntry:
+        """
+        Parse the passed dialogue information to the dialogue information object.
+
+        :param dialogue_utterances_contexts_info: the dictionary containing the dialogue utterances training information
+        :param dialogue_utterances_responses_info: the dictionary containing the dialogue utterances responses training information
+        :return: the dialogue data object containing the numpy-vectorized features and target extracted
+        from the utterance data
+        """
+
+        dialogue_training_data = DialogueDataEntry()
+        # we started to process new dialogue so resetting the dialogue state tracker.
+        # simplification of this logic is planned; there is a todo
+        self.dialogue_state_tracker.reset_state()
+        for context, response in zip(dialogue_utterances_contexts_info, dialogue_utterances_responses_info):
+
+            utterance_training_data = self.prepare_utterance_training_data(context, response)
+            dialogue_training_data.append(utterance_training_data)
+
+            # to correctly track the dialogue state
+            # we inform the tracker with the ground truth response info
+            # just like the tracker remembers the predicted response actions when real-time inference
+            self.dialogue_state_tracker.update_previous_action(utterance_training_data.target.action_id)
+
+            if self.debug:
+                log.debug(f"True response = '{response['text']}'.")
+                if utterance_training_data.features.action_mask[utterance_training_data.target.action_id] != 1.:
+                    log.warning("True action forbidden by action mask.")
+        return dialogue_training_data
+
+    def prepare_utterance_training_data(self,
+                                        utterance_context_info_dict: dict,
+                                        utterance_response_info_dict: dict) -> UtteranceDataEntry:
+        """
+        Parse the passed utterance information to the utterance information object.
+
+        :param utterance_context_info_dict: the dictionary containing the utterance training information
+        :param utterance_response_info_dict: the dictionary containing the utterance response training information
+        :return: the utterance data object containing the numpy-vectorized features and target extracted
+        from the utterance data
+        """
+
+        # todo naming, docs, comments
+        text = utterance_context_info_dict['text']
+
+        # if there already were db lookups in this utterance
+        # we inform the tracker with these lookups info
+        # just like the tracker remembers the db interaction results when real-time inference
+        # todo: not obvious logic
+        self.dialogue_state_tracker.update_ground_truth_db_result_from_context(utterance_context_info_dict)
+
+        utterance_features = self.extract_features_from_utterance_text(text, self.dialogue_state_tracker)
+
+        action_id = self.data_handler.encode_response(utterance_response_info_dict['act'])
+        utterance_target = UtteranceTarget(action_id)
+
+        utterance_data_entry = UtteranceDataEntry.from_features_and_target(utterance_features, utterance_target)
+        return utterance_data_entry
+
+    def extract_features_from_utterance_text(self, text, tracker, keep_tracker_state=False) -> UtteranceFeatures:
+        """
+        Extract ML features for the input text and the respective tracker.
+        Features are aggregated from the
+        * NLU;
+        * text BOW-encoding&embedding;
+        * tracker memory.
+
+        :param text: the text to infer to
+        :param tracker: the tracker that tracks the dialogue from which the text is taken
+        :param keep_tracker_state: if True, the tracker state will not be updated during the prediction.
+        Used to keep tracker's state intact when predicting the action to perform right after the api call action
+        is predicted and performed.
+        :return: the utterance features object containing the numpy-vectorized features extracted from the utterance
+        """
+        # todo comments
+
+        # context_slots, intent_features, tokens = self.nlu_handler.nlu(text)  # todo: dto-like class for the nlu output
+
+        tokens = self.tokenize_single_text_entry(text)
+        context_slots = None
+        if callable(self.slot_filler):
+            context_slots = self.extract_slots_from_tokenized_text_entry(tokens)
+        intent_features = []
+        if callable(self.intent_classifier):
+            intent_features = self.extract_intents_from_tokenized_text_entry(tokens)
+
+        # region text BOW-encoding and embedding
+        tokens_bow_encoded = []
+        if self.data_handler.use_bow_encoder():
+            tokens_bow_encoded = self.data_handler.bow_encode_tokens(tokens)
+
+        tokens_embeddings_padded = np.array([], dtype=np.float32)
+        tokens_aggregated_embedding = []
+        if self.nn_stuff_handler.attention_mechanism:
+            attn_window_size = self.nn_stuff_handler.attention_mechanism.max_num_tokens
+            attn_config_token_dim = self.nn_stuff_handler.attention_mechanism.token_size  # todo: this is ugly and caused by complicated nn configuration algorithm
+            tokens_embeddings_padded = self.data_handler.calc_tokens_embeddings(attn_window_size,
+                                                                                attn_config_token_dim,
+                                                                                tokens)
+        else:
+            tokens_aggregated_embedding = self.data_handler.calc_tokens_embedding(tokens)
+        # endregion text BOW-encoding and embedding
+
+        # region provide tracker with the incoming knowledge got from nlu (if we do not keep the tracker state intact)
+        if context_slots and not keep_tracker_state:
+            tracker.update_state(context_slots)  # todo: dto-like class for the nlu output; pass to tracker the dto
+        # endregion provide tracker with the incoming knowledge got from nlu (if we do not keep the tracker state intact)
+
+        # region get tracker knowledge features
+        # todo simplify; dto-like class for the tracker knowledge
+        tracker_prev_action = tracker.prev_action
+        state_features = tracker.get_features()
+        context_features = tracker.calc_context_features()
+        # endregion get tracker knowledge features
+
+        attn_key = self.nn_stuff_handler.calc_attn_key(intent_features, tracker_prev_action)
+
+        concat_feats = np.hstack((tokens_bow_encoded, tokens_aggregated_embedding, intent_features, state_features,
+                                  context_features, tracker_prev_action))
+
+        # mask is used to prevent tracker from predicting the api call twice via logical AND of action candidates and mask
+        # todo: seems to be an efficient idea but the intuition beyond this whole hack is not obvious
+        action_mask = tracker.calc_action_mask(self.data_handler.api_call_id)
+
+        return UtteranceFeatures(action_mask, attn_key, tokens_embeddings_padded, concat_feats)
+
+    def _prepare_data(self, attn_hyperparams, x: List[dict], y: List[dict]) -> BatchDialoguesDataset:
         max_num_utter = max(len(d_contexts) for d_contexts in x)  # for padding
+        batch_dialogues_dataset = BatchDialoguesDataset(max_num_utter)
         for d_contexts, d_responses in zip(x, y):
             self.dialogue_state_tracker.reset_state()
-            # region init dialogue_vars
-            d_features, d_a_masks, d_actions = [], [], []
-            d_emb_context, d_key = [], []  # for attention
-            # endregion init dialogue vars
-
+            dialogue_data_entry = DialogueDataEntry()
             for context, response in zip(d_contexts, d_responses):
-                (action_id, utterance_action_mask,
-                 utterance_attn_key, utterance_emb_context,
-                 utterance_features) = self.process_utterance(attn_hyperparams, context, response)
+                utterance_data_entry = self.process_utterance(attn_hyperparams, context, response)
+                dialogue_data_entry.append(utterance_data_entry)
+                self.dialogue_state_tracker.update_previous_action(utterance_data_entry.target.action_id)
 
-                d_features.append(utterance_features)
-                d_emb_context.append(utterance_emb_context)
-                d_key.append(utterance_attn_key)
-                d_a_masks.append(utterance_action_mask)
-                d_actions.append(action_id)
-                # update state
-                # - previous action is teacher-forced here
-                self.dialogue_state_tracker.update_previous_action(action_id)
-
-                # region log mask
                 if self.debug:
                     # log.debug(f"True response = '{response['text']}'.")
-                    if d_a_masks[-1][action_id] != 1.:
+                    if utterance_data_entry.features.action_mask[utterance_data_entry.target.action_id] != 1.:
                         pass
                         # log.warning("True action forbidden by action mask.")
-                # endregion log mask
+            batch_dialogues_dataset.append(dialogue_data_entry)
 
-            # region padding to max_num_utter
-            num_padds = max_num_utter - len(d_contexts)
-            d_features.extend([np.zeros_like(d_features[0])] * num_padds)
-            d_emb_context.extend([np.zeros_like(d_emb_context[0])] * num_padds)
-            d_key.extend([np.zeros_like(d_key[0])] * num_padds)
-            d_u_mask = [1] * len(d_contexts) + [0] * num_padds
-            d_a_masks.extend([np.zeros_like(d_a_masks[0])] * num_padds)
-            d_actions.extend([0] * num_padds)
-            # endregion padding to max_num_utter
-
-            # region extend batch with dialogue data
-            b_features.append(d_features)
-            b_emb_context.append(d_emb_context)
-            b_keys.append(d_key)
-            b_u_masks.append(d_u_mask)
-            b_a_masks.append(d_a_masks)
-            b_actions.append(d_actions)
-            # endregion extend batch with dialogue data
-        return b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions
+        return batch_dialogues_dataset
 
     def process_utterance(self, attn_hyperparams, context, response):
         utterance_tokens = self.tokenize_single_text_entry(context['text'])
@@ -251,7 +370,8 @@ class GoalOrientedBot(NNModel):
                                                                                          utterance_tokens)
         action_id = self.data_handler.encode_response(response['act'])
         utterance_action_mask = self.dialogue_state_tracker.calc_action_mask(self.data_handler.api_call_id)
-        return action_id, utterance_action_mask, utterance_attn_key, utterance_emb_context, utterance_features
+        utterance_data_entry = UtteranceDataEntry(action_id, utterance_action_mask, utterance_attn_key, utterance_emb_context, utterance_features)
+        return utterance_data_entry
 
     def method_name(self, attn_hyperparams, tokens):
         intent_features = []
@@ -262,13 +382,11 @@ class GoalOrientedBot(NNModel):
 
         state_features = self.dialogue_state_tracker.get_features()
 
-        context_features = self.calc_context_features(self.dialogue_state_tracker.current_db_result,
-                                                      self.dialogue_state_tracker.db_result,
-                                                      self.dialogue_state_tracker.get_state())
+        context_features = self.dialogue_state_tracker.calc_context_features()
 
 
         bow_features = []
-        if self.data_handler.use_bow_embedder():
+        if self.data_handler.use_bow_encoder():
             bow_features = self.data_handler.bow_encode_tokens(tokens)
 
         attn_key, emb_context, emb_features = self.calc_attn_stuff(tokens, attn_hyperparams,
@@ -289,7 +407,7 @@ class GoalOrientedBot(NNModel):
             emb_features = self.calc_tokens_embedding(tokens)
         attn_key = np.array([], dtype=np.float32)
         if attn_hyperparams:
-            attn_key = self.calc_attn_key(attn_hyperparams, intent_features, tracker_prev_action)
+            attn_key = self.nn_stuff_handler.calc_attn_key(intent_features, tracker_prev_action)
         return attn_key, emb_context, emb_features
 
     def calc_tokens_embedding(self, tokens):
@@ -311,34 +429,6 @@ class GoalOrientedBot(NNModel):
     def standard_normal_like(self, source_vector):
         vector_dim = source_vector.shape[0]
         return np.random.normal(0, 1 / vector_dim, vector_dim)
-
-    def calc_context_features(selfs, current_db_result, db_result, dst_state):
-        result_matches_state = 0.
-        if current_db_result is not None:
-            matching_items = dst_state.items()
-            result_matches_state = all(v == db_result.get(s)
-                                       for s, v in matching_items
-                                       if v != 'dontcare') * 1.
-        context_features = np.array([
-            bool(current_db_result) * 1.,
-            (current_db_result == {}) * 1.,
-            (db_result is None) * 1.,
-            bool(db_result) * 1.,
-            (db_result == {}) * 1.,
-            result_matches_state
-        ], dtype=np.float32)
-        return context_features
-
-    def calc_attn_key(self, attn_hyperparams, intent_features, tracker_prev_action):
-        attn_key = np.array([], dtype=np.float32)
-
-        if attn_hyperparams.use_action_as_key:
-            attn_key = np.hstack((attn_key, tracker_prev_action))
-        if attn_hyperparams.use_intent_as_key:
-            attn_key = np.hstack((attn_key, intent_features))
-        if len(attn_key) == 0:
-            attn_key = np.array([1], dtype=np.float32)
-        return attn_key
 
     def calc_attn_context(self, attn_hyperparams, tokens_embedded):
         # emb_context = calc_a
@@ -365,10 +455,14 @@ class GoalOrientedBot(NNModel):
         return self.tokenizer([x.lower().strip()])[0]
 
     def train_on_batch(self, x: List[dict], y: List[dict]) -> dict:
-        attn_hyperparams = self.nn_stuff_handler.get_attn_hyperparams()
-        b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions = self._prepare_data(attn_hyperparams, x, y)
-        return self.nn_stuff_handler._network_train_on_batch(b_features, b_emb_context, b_keys, b_u_masks, b_a_masks,
-                                                             b_actions)
+        # attn_hyperparams = self.nn_stuff_handler.get_attn_hyperparams()
+        batch_dialogues_dataset = self.prepare_dialogues_batches_training_data(x, y)
+        return self.nn_stuff_handler._network_train_on_batch(batch_dialogues_dataset.features.b_featuress,
+                                                             batch_dialogues_dataset.features.b_tokens_embeddings_paddeds,
+                                                             batch_dialogues_dataset.features.b_attn_keys,
+                                                             batch_dialogues_dataset.features.b_padded_dialogue_length_mask,
+                                                             batch_dialogues_dataset.features.b_action_masks,
+                                                             batch_dialogues_dataset.targets.b_action_ids)
 
     # todo как инфер понимает из конфига что ему нужно. лёша что-то говорил про дерево
     def _infer(self, tokens: List[str], tracker: DialogueStateTracker) -> List:
