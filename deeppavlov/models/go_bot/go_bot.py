@@ -26,7 +26,8 @@ from deeppavlov.models.go_bot.data_handler import DataHandler
 from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesDataset, UtteranceDataEntry, UtteranceTarget, \
     DialogueDataEntry, UtteranceFeatures, PaddedDialogueDataEntry
 from deeppavlov.models.go_bot.policy import NNStuffHandler
-from deeppavlov.models.go_bot.tracker import FeaturizedTracker, DialogueStateTracker, MultipleUserStateTracker
+from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
+from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DialogueStateTracker, MultipleUserStateTracker
 from pathlib import Path
 
 log = getLogger(__name__)
@@ -454,16 +455,6 @@ class GoalOrientedBot(NNModel):
     def tokenize_single_text_entry(self, x):
         return self.tokenizer([x.lower().strip()])[0]
 
-    def train_on_batch(self, x: List[dict], y: List[dict]) -> dict:
-        # attn_hyperparams = self.nn_stuff_handler.get_attn_hyperparams()
-        batch_dialogues_dataset = self.prepare_dialogues_batches_training_data(x, y)
-        return self.nn_stuff_handler._network_train_on_batch(batch_dialogues_dataset.features.b_featuress,
-                                                             batch_dialogues_dataset.features.b_tokens_embeddings_paddeds,
-                                                             batch_dialogues_dataset.features.b_attn_keys,
-                                                             batch_dialogues_dataset.features.b_padded_dialogue_length_mask,
-                                                             batch_dialogues_dataset.features.b_action_masks,
-                                                             batch_dialogues_dataset.targets.b_action_ids)
-
     # todo как инфер понимает из конфига что ему нужно. лёша что-то говорил про дерево
     def _infer(self, tokens: List[str], tracker: DialogueStateTracker) -> List:
 
@@ -503,47 +494,116 @@ class GoalOrientedBot(NNModel):
             res.append(resp)
         return res
 
-    def __call__(self,
-                 batch: Union[List[dict], List[str]],
-                 user_ids: Optional[List] = None) -> List[str]:
-        # batch is a list of utterances
-        if isinstance(batch[0], str):
+    # def __call__(self,
+    #              batch: Union[List[dict], List[str]],
+    #              user_ids: Optional[List] = None) -> List[str]:
+    #     # batch is a list of utterances
+    #     if isinstance(batch[0], str):
+    #         res = []
+    #         if not user_ids:
+    #             user_ids = ['finn'] * len(batch)
+    #         for user_id, x in zip(user_ids, batch):
+    #             if not self.multiple_user_state_tracker.check_new_user(user_id):
+    #                 self.multiple_user_state_tracker.init_new_tracker(user_id, self.dialogue_state_tracker)
+    #
+    #             tracker = self.multiple_user_state_tracker.get_user_tracker(user_id)
+    #             tokens = self.tokenize_single_text_entry(x)
+    #
+    #             if callable(self.slot_filler):
+    #                 utter_slots = self.extract_slots_from_tokenized_text_entry(tokens)
+    #                 tracker.update_state(utter_slots)
+    #
+    #             _, predicted_act_id, tracker.network_state = self._infer(tokens, tracker=tracker)
+    #
+    #             tracker.update_previous_action(predicted_act_id)
+    #
+    #             # if made api_call, then respond with next prediction
+    #             if predicted_act_id == self.data_handler.api_call_id:
+    #                 tracker.make_api_call()
+    #
+    #                 _, predicted_act_id, tracker.network_state = \
+    #                     self._infer(tokens, tracker=tracker)
+    #
+    #                 tracker.update_previous_action(predicted_act_id)
+    #
+    #             resp = self.data_handler.decode_response(predicted_act_id, tracker)
+    #             res.append(resp)
+    #         return res
+    #     # batch is a list of dialogs, user_ids ignored
+    #     # todo: что значит коммент выше, почему узер идс игноред
+    #     return [self._infer_dialog(x) for x in batch]
+
+    def __call__(self, batch: Union[List[List[dict]], List[str]],
+                 user_ids: Optional[List] = None) -> Union[List[str], List[List[str]]]:
+
+        if isinstance(batch[0], list):
+            # batch is a list of *completed* dialogues, infer on them to calculate metrics
+            # user ids are ignored here: the single tracker is used and is reset after each dialogue inference
+            # todo unify tracking: no need to distinguish tracking strategies on dialogues and realtime
+            res = []
+            for dialogue in batch:
+                dialogue: List[dict]
+                res.append(self._infer_dialog(dialogue))
+        else:
+            # batch is a list of utterances possibly came from different users: real-time inference
             res = []
             if not user_ids:
-                user_ids = ['finn'] * len(batch)
-            for user_id, x in zip(user_ids, batch):
-                if not self.multiple_user_state_tracker.check_new_user(user_id):
-                    self.multiple_user_state_tracker.init_new_tracker(user_id, self.dialogue_state_tracker)
+                user_ids = [self.DEFAULT_USER_ID] * len(batch)
+            for user_id, user_text in zip(user_ids, batch):
+                user_text: str
+                res.append(self._realtime_infer(user_id, user_text))
 
-                tracker = self.multiple_user_state_tracker.get_user_tracker(user_id)
-                tokens = self.tokenize_single_text_entry(x)
+        return res
 
-                if callable(self.slot_filler):
-                    utter_slots = self.extract_slots_from_tokenized_text_entry(tokens)
-                    tracker.update_state(utter_slots)
+    def _realtime_infer(self, user_id, user_text):
+        # realtime inference logic
+        #
+        # we have the pool of trackers, each one tracks the dialogue with its own user
+        # (1 to 1 mapping: each user has his own tracker and vice versa)
 
-                _, predicted_act_id, tracker.network_state = self._infer(tokens, tracker=tracker)
+        # user_tracker = self.multiple_user_state_tracker.get_or_init_tracker(user_id)
+        if not self.multiple_user_state_tracker.check_new_user(user_id):
+            self.multiple_user_state_tracker.init_new_tracker(user_id, self.dialogue_state_tracker)
 
-                tracker.update_previous_action(predicted_act_id)
+        user_tracker = self.multiple_user_state_tracker.get_user_tracker(user_id)
 
-                # if made api_call, then respond with next prediction
-                if predicted_act_id == self.data_handler.api_call_id:
-                    tracker.make_api_call()
+        # predict the action to perform (e.g. response smth or call the api)
+        _, action_id_predicted, network_state = self._infer(user_text, user_tracker)
+        user_tracker.update_previous_action(action_id_predicted)
+        user_tracker.network_state = network_state
 
-                    _, predicted_act_id, tracker.network_state = \
-                        self._infer(tokens, tracker=tracker)
+        if action_id_predicted == self.data_handler.api_call_id:
+            # tracker says we need to make an api call.
+            # we 1) perform the api call and 2) predict what to do next
+            user_tracker.make_api_call()
+            _, action_id_predicted, network_state = self._infer(user_text, user_tracker, keep_tracker_state=True)
+            user_tracker.update_previous_action(action_id_predicted)
+            user_tracker.network_state = network_state
 
-                    tracker.update_previous_action(predicted_act_id)
+        # tracker says we need to say smth to user. we
+        # * calculate the slotfilled state:
+        #   for each slot that is relevant to dialogue we fill this slot value if possible
+        # * generate text for the predicted speech action:
+        #   using the pattern provided for the action;
+        #   the slotfilled state provides info to encapsulate to the pattern
+        tracker_slotfilled_state = user_tracker.fill_current_state_with_db_results()
+        resp = self.data_handler.decode_response(action_id_predicted, tracker_slotfilled_state)
+        return resp
 
-                resp = self.data_handler.decode_response(predicted_act_id, tracker)
-                res.append(resp)
-            return res
-        # batch is a list of dialogs, user_ids ignored
-        # todo: что значит коммент выше, почему узер идс игноред
-        return [self._infer_dialog(x) for x in batch]
+    def train_on_batch(self, x: List[dict], y: List[dict]) -> dict:
+        batch_dialogues_dataset = self.prepare_dialogues_batches_training_data(x, y)
+        return self.nn_stuff_handler._network_train_on_batch(batch_dialogues_dataset.features.b_featuress,
+                                                             batch_dialogues_dataset.features.b_tokens_embeddings_paddeds,
+                                                             batch_dialogues_dataset.features.b_attn_keys,
+                                                             batch_dialogues_dataset.features.b_padded_dialogue_length_mask,
+                                                             batch_dialogues_dataset.features.b_action_masks,
+                                                             batch_dialogues_dataset.targets.b_action_ids)
 
     def reset(self, user_id: Union[None, str, int] = None) -> None:
-        # todo а чо, у нас всё что можно закешить лежит в мультиюхертрекере?
+        # WARNING: this method is confusing. todo
+        # the multiple_user_state_tracker is applicable only to the realtime inference scenario
+        # so the tracker used to calculate metrics on dialogues is never reset by this method
+        # (but that tracker usually is reset before each dialogue inference)
         self.multiple_user_state_tracker.reset(user_id)
         if self.debug:
             log.debug("Bot reset.")

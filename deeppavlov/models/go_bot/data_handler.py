@@ -7,7 +7,7 @@ import numpy as np
 # from deeppavlov.models.go_bot.network import log
 import deeppavlov.models.go_bot.templates as templ
 from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.models.go_bot.tracker import DialogueStateTracker
+from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DialogueStateTracker
 from deeppavlov.models.go_bot.utils import GobotAttnHyperParams
 
 log = getLogger(__name__)
