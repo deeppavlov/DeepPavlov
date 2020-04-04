@@ -103,6 +103,9 @@ class GoalOrientedBot(NNModel):
         debug: whether to display debug output.
     """
 
+    DEFAULT_USER_ID = 1
+    POLICY_DIR_NAME = "policy"
+
     def __init__(self,
                  tokenizer: Component,
                  tracker: FeaturizedTracker,
@@ -127,13 +130,11 @@ class GoalOrientedBot(NNModel):
                  use_action_mask: bool = False,
                  debug: bool = False,
                  **kwargs) -> None:
-
-        # todo навести порядок
+        self.use_action_mask = use_action_mask  # todo not supported actually
+        super().__init__(save_path=save_path, load_path=load_path, **kwargs)
 
         self.load_path = load_path
         self.save_path = save_path
-
-        super().__init__(save_path=self.save_path, load_path=self.load_path, **kwargs)
 
         self.tokenizer = tokenizer  # preprocessing
         self.slot_filler = slot_filler  # another unit of pipeline
@@ -186,7 +187,7 @@ class GoalOrientedBot(NNModel):
         else:
             log.info(f"[initializing `{self.__class__.__name__}` from scratch]")
 
-        self.multiple_user_state_tracker = MultipleUserStateTracker()  # tracker
+        self.multiple_user_state_tracker = MultipleUserStateTracker(base_tracker=self.dialogue_state_tracker)
         self.reset()  # tracker
 
     def prepare_dialogues_batches_training_data(self,
