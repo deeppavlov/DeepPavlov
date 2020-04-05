@@ -24,9 +24,10 @@ from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.models.go_bot.data_handler import DataHandler
 from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesDataset, UtteranceDataEntry, UtteranceTarget, \
     DialogueDataEntry, UtteranceFeatures, PaddedDialogueDataEntry
+from deeppavlov.models.go_bot.features_engineerer import FeaturesParams
 from deeppavlov.models.go_bot.nlg_mechanism import NLGHandler
 from deeppavlov.models.go_bot.nlu_mechanism import NLUHandler
-from deeppavlov.models.go_bot.policy import NNStuffHandler
+from deeppavlov.models.go_bot.policy import NNStuffHandler, PolicyNetworkParams
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DialogueStateTracker, MultipleUserStateTrackersPool
 from pathlib import Path
@@ -142,51 +143,27 @@ class GoalOrientedBot(NNModel):
         self.intent_classifier = intent_classifier  # another unit of pipeline
         self.use_action_mask = use_action_mask  # feature engineering  todo: чот оно не на своём месте
         self.debug = debug
+
+        policy_network_params = PolicyNetworkParams(hidden_size, action_size, dropout_rate, l2_reg_coef,
+                                                    dense_size, attention_mechanism, network_parameters)
+
         self.nlu_handler = NLUHandler(tokenizer, slot_filler, intent_classifier)
         self.nlg_handler = NLGHandler(template_path, template_type, api_call_action)
         self.data_handler = DataHandler(debug, word_vocab, bow_embedder, embedder)
         self.n_actions = len(self.nlg_handler.templates)  # upper-level model logic
         self.dialogue_state_tracker = DialogueStateTracker(tracker.slot_names, self.n_actions, hidden_size,
-                                                           database)  # tracker
-
-        self.default_tracker = tracker  # tracker
-
-
-        nn_stuff_save_path = Path(save_path, NNStuffHandler.SAVE_LOAD_SUBDIR_NAME)
-        nn_stuff_load_path = Path(load_path, NNStuffHandler.SAVE_LOAD_SUBDIR_NAME)
-
-
-        embedder_dim = self.data_handler.embedder.dim if self.data_handler.embedder else None
-        use_bow_embedder = self.data_handler.use_bow_encoder()
-        word_vocab_size = self.data_handler.word_vocab_size()
-
-        self.policy = NNStuffHandler(
-            hidden_size,
-            action_size,
-            dropout_rate,
-            l2_reg_coef,
-            dense_size,
-            attention_mechanism,
-            network_parameters,
-            embedder_dim,
-            self.n_actions,
-            self.nlu_handler.intent_classifier,
-            self.nlu_handler.intents,
-            self.default_tracker.num_features,
-            use_bow_embedder,
-            word_vocab_size,
-            load_path=nn_stuff_load_path,
-            save_path=nn_stuff_save_path,
-            **kwargs)
-
-        if self.policy.train_checkpoint_exists():
-            # todo переделать
-            log.info(f"[initializing `{self.__class__.__name__}` from saved]")
-            self.load()
-        else:
-            log.info(f"[initializing `{self.__class__.__name__}` from scratch]")
-
+                                                           database)
         self.multiple_user_state_tracker = MultipleUserStateTrackersPool(base_tracker=self.dialogue_state_tracker)
+
+        tokens_dims = self.data_handler.get_dims()
+        features_params = FeaturesParams.from_configured(self.nlg_handler, self.nlu_handler,
+                                                         self.dialogue_state_tracker)
+        policy_save_path = Path(save_path, self.POLICY_DIR_NAME)
+        policy_load_path = Path(load_path, self.POLICY_DIR_NAME)
+
+        self.policy = NNStuffHandler(policy_network_params, tokens_dims, features_params,
+                                    policy_load_path, policy_save_path, **kwargs)
+
         self.reset()
 
     def prepare_dialogues_batches_training_data(self,
