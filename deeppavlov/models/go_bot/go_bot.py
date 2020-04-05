@@ -143,9 +143,9 @@ class GoalOrientedBot(NNModel):
         self.use_action_mask = use_action_mask  # feature engineering  todo: чот оно не на своём месте
         self.debug = debug
 
-        self.data_handler = DataHandler(debug, template_path, template_type, word_vocab, bow_embedder, api_call_action,
-                                        embedder)
-        self.n_actions = len(self.data_handler.templates)  # upper-level model logic
+        self.data_handler = DataHandler(debug, word_vocab, bow_embedder, embedder)
+        self.nlg_handler = NLGHandler(template_path, template_type, api_call_action)
+        self.n_actions = len(self.nlg_handler.templates)  # upper-level model logic
 
         self.default_tracker = tracker  # tracker
         self.dialogue_state_tracker = DialogueStateTracker(tracker.slot_names, self.n_actions, hidden_size,
@@ -158,7 +158,6 @@ class GoalOrientedBot(NNModel):
         nn_stuff_save_path = Path(save_path, NNStuffHandler.SAVE_LOAD_SUBDIR_NAME)
         nn_stuff_load_path = Path(load_path, NNStuffHandler.SAVE_LOAD_SUBDIR_NAME)
 
-        self.nlg_handler = NLGHandler(template_path, template_type, api_call_action)
 
         embedder_dim = self.data_handler.embedder.dim if self.data_handler.embedder else None
         use_bow_embedder = self.data_handler.use_bow_encoder()

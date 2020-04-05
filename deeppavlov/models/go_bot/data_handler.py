@@ -4,12 +4,6 @@ from typing import List
 
 import numpy as np
 
-# from deeppavlov.models.go_bot.network import log
-import deeppavlov.models.go_bot.templates as templ
-from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DialogueStateTracker
-from deeppavlov.models.go_bot.utils import GobotAttnHyperParams
-
 log = getLogger(__name__)
 
 class TokensVectorRepresentationParams:
@@ -19,19 +13,8 @@ class TokensVectorRepresentationParams:
 
 class DataHandler:
 
-    def __init__(self, debug, template_path, template_type, word_vocab, bow_embedder, api_call_action, embedder):
+    def __init__(self, debug, word_vocab, bow_embedder, embedder):
         self.debug = debug
-
-        template_path = expand_path(template_path)
-        template_type = getattr(templ, template_type)
-        log.info(f"[loading templates from {template_path}]")
-        self.templates = templ.Templates(template_type).load(template_path)  # upper-level model logic
-        log.info(f"{len(self.templates)} templates loaded.")
-
-        self.api_call_id = -1  # api call should have smth like action index
-        if api_call_action is not None:
-            self.api_call_id = self.templates.actions.index(api_call_action)  # upper-level model logic
-
         self.word_vocab = word_vocab
         self.bow_embedder = bow_embedder
         self.embedder = embedder
@@ -92,3 +75,8 @@ class DataHandler:
         else:
             emb_context = np.array([], dtype=np.float32)
         return emb_context
+
+    def get_dims(self):
+        embedder_dim = self.embedder.dim if self.embedder else None
+        bow_encoder_dim = len(self.word_vocab) if self.bow_embedder else None
+        return TokensVectorRepresentationParams(embedder_dim, bow_encoder_dim)
