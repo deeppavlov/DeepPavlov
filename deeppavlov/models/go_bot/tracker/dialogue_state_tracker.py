@@ -12,126 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABCMeta, abstractmethod
 from logging import getLogger
-from typing import List, Dict, Union, Tuple, Any, Iterator
+from typing import Dict, Any
 
 import numpy as np
 
-from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
-from deeppavlov.models.go_bot.tracker.tracker import Tracker
+from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 
 log = getLogger(__name__)
 
-@register('featurized_tracker')
-class FeaturizedTracker(Tracker):
-    """
-    Tracker that overwrites slots with new values.
-    Features are binary features (slot is present/absent) plus difference features
-    (slot value is (the same)/(not the same) as before last update) and count
-    features (sum of present slots and sum of changed during last update slots).
-
-    Parameters:
-        slot_names: list of slots that should be tracked.
-    """
-
-    def __init__(self, slot_names: List[str]) -> None:
-        self.slot_names = list(slot_names)
-        self.history = []
-        self.current_features = None
-
-    @property
-    def state_size(self) -> int:
-        return len(self.slot_names)
-
-    @property
-    def num_features(self) -> int:
-        return self.state_size * 3 + 3
-
-    def update_state(self, slots):
-        if isinstance(slots, list):
-            self.history.extend(self._filter(slots))
-
-        elif isinstance(slots, dict):
-            for slot, value in self._filter(slots.items()):
-                self.history.append((slot, value))
-
-        prev_state = self.get_state()
-        bin_feats = self._binary_features()
-        diff_feats = self._diff_features(prev_state)
-        new_feats = self._new_features(prev_state)
-
-        self.current_features = np.hstack((
-            bin_feats,
-            diff_feats,
-            new_feats,
-            np.sum(bin_feats),
-            np.sum(diff_feats),
-            np.sum(new_feats))
-        )
-
-    def get_state(self):
-        # lasts = {}
-        # for slot, value in self.history:
-        #     lasts[slot] = value
-        # return lasts
-        return dict(self.history)
-
-    def reset_state(self):
-        self.history = []
-        self.current_features = np.zeros(self.num_features, dtype=np.float32)
-
-    def get_features(self):
-        return self.current_features
-
-    def _filter(self, slots) -> Iterator:
-        return filter(lambda s: s[0] in self.slot_names, slots)
-
-    def _binary_features(self) -> np.ndarray:
-        feats = np.zeros(self.state_size, dtype=np.float32)
-        lasts = self.get_state()
-        for i, slot in enumerate(self.slot_names):
-            if slot in lasts:
-                feats[i] = 1.
-        return feats
-
-    def _diff_features(self, state) -> np.ndarray:
-        feats = np.zeros(self.state_size, dtype=np.float32)
-        curr_state = self.get_state()
-
-        for i, slot in enumerate(self.slot_names):
-            if slot in curr_state and slot in state and curr_state[slot] != state[slot]:
-                feats[i] = 1.
-
-        return feats
-
-    def _new_features(self, state) -> np.ndarray:
-        feats = np.zeros(self.state_size, dtype=np.float32)
-        curr_state = self.get_state()
-
-        for i, slot in enumerate(self.slot_names):
-            if slot in curr_state and slot not in state:
-                feats[i] = 1.
-
-        return feats
-
-
+# todo naming
 class DialogueStateTracker(FeaturizedTracker):
     def __init__(self, slot_names, n_actions: int, hidden_size: int, database: Component = None) -> None:
         super().__init__(slot_names)
-        self.db_result = None
-        self.current_db_result = None
-        self.database = database
-
-        self.n_actions = n_actions
         self.hidden_size = hidden_size
-        self.prev_action = np.zeros(n_actions, dtype=np.float32)
+        self.database = database
+        self.n_actions = n_actions
 
-        self.network_state = (
-            np.zeros([1, hidden_size], dtype=np.float32),
-            np.zeros([1, hidden_size], dtype=np.float32)
-        )
+        self.reset_state()
 
     def reset_state(self):
         super().reset_state()
@@ -216,6 +115,12 @@ class DialogueStateTracker(FeaturizedTracker):
         if self.current_db_result is not None:
             self.db_result = self.current_db_result
 
+    def fill_current_state_with_db_results(self) -> dict:
+        slots = self.get_state()
+        if self.db_result:
+            for k, v in self.db_result.items():
+                slots[k] = str(v)
+        return slots
 
 
 class MultipleUserStateTracker(object):
