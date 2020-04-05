@@ -123,7 +123,7 @@ class DialogueStateTracker(FeaturizedTracker):
         return slots
 
 
-class MultipleUserStateTracker(object):
+class MultipleUserStateTrackersPool(object):
     def __init__(self, base_tracker: DialogueStateTracker):
         self._ids_to_trackers = {}
         self.base_tracker = base_tracker
