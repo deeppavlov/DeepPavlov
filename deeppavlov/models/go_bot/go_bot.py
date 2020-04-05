@@ -437,12 +437,8 @@ class GoalOrientedBot(NNModel):
                        batch_dialogues_utterances_targets: List[List[dict]]) -> dict:
         batch_dialogues_dataset = self.prepare_dialogues_batches_training_data(batch_dialogues_utterances_features,
                                                                                batch_dialogues_utterances_targets)
-        return self.policy.train_on_batch(batch_dialogues_dataset.features.b_featuress,
-                                                   batch_dialogues_dataset.features.b_tokens_embeddings_paddeds,
-                                                   batch_dialogues_dataset.features.b_attn_keys,
-                                                   batch_dialogues_dataset.features.b_padded_dialogue_length_mask,
-                                                   batch_dialogues_dataset.features.b_action_masks,
-                                                   batch_dialogues_dataset.targets.b_action_ids)
+        return self.policy.train_on_batch(batch_dialogues_dataset.features,
+                                                   batch_dialogues_dataset.targets)
 
     def reset(self, user_id: Union[None, str, int] = None) -> None:
         # WARNING: this method is confusing. todo

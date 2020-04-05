@@ -334,22 +334,20 @@ class NNStuffHandler(LRScheduledTFModel):
         return prediction, state[0], state[1]
 
     def train_on_batch(self,
-                                features: np.ndarray,
-                                emb_context: np.ndarray,
-                                key: np.ndarray,
-                                utter_mask: np.ndarray,
-                                action_mask: np.ndarray,
-                                action: np.ndarray) -> dict:
+                       batch_dialogues_features: BatchDialoguesFeatures,
+                       batch_dialogues_targets: BatchDialoguesTargets) -> dict:
+
         feed_dict = {
             self._dropout_keep_prob: 1.,
-            self._utterance_mask: utter_mask,
-            self._features: features,
-            self._action: action,
-            self._action_mask: action_mask
+            self._utterance_mask: batch_dialogues_features.b_padded_dialogue_length_mask,
+            self._features: batch_dialogues_features.b_featuress,
+            self._action: batch_dialogues_targets.b_action_ids,
+            self._action_mask: batch_dialogues_features.b_action_masks
         }
+
         if self.attention_mechanism:
-            feed_dict[self._emb_context] = emb_context
-            feed_dict[self._key] = key
+            feed_dict[self._emb_context] = batch_dialogues_features.b_tokens_embeddings_paddeds
+            feed_dict[self._key] = batch_dialogues_features.b_attn_keys
 
         _, loss_value, prediction = self.sess.run([self._train_op, self._loss, self._prediction], feed_dict=feed_dict)
 
