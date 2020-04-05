@@ -17,11 +17,10 @@ from typing import Dict, Any, List, Optional, Union, Sequence
 
 import numpy as np
 
-from deeppavlov import Chainer
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
-from deeppavlov.models.go_bot.data_handler import DataHandler
+from deeppavlov.models.go_bot.data_handler import TokensVectorizer
 from deeppavlov.models.go_bot.dto.dataset_features import UtteranceDataEntry, DialogueDataEntry, \
     BatchDialoguesDataset, UtteranceFeatures, UtteranceTarget
 from deeppavlov.models.go_bot.features_engineerer import FeaturesParams
@@ -70,7 +69,7 @@ class GoalOrientedBot(NNModel):
             * **max_num_tokens** – maximum number of input tokens.
             * **depth** – number of averages used in constrained attentions
               (``'cs_bahdanau'`` or ``'cs_general'``).
-            * **action_as_key** – whether to use action from previous timestep as key
+            * **action_as_key** – whether to use action from previous time step as key
               to attention.
             * **intent_as_key** – use utterance intents as attention key or not.
             * **projected_align** – whether to use output projection.
@@ -142,7 +141,7 @@ class GoalOrientedBot(NNModel):
 
         self.nlu_handler = NLUHandler(tokenizer, slot_filler, intent_classifier)
         self.nlg_handler = NLGHandler(template_path, template_type, api_call_action)
-        self.data_handler = DataHandler(debug, word_vocab, bow_embedder, embedder)
+        self.data_handler = TokensVectorizer(debug, word_vocab, bow_embedder, embedder)
 
         self.dialogue_state_tracker = DialogueStateTracker.from_gobot_params(tracker, self.nlg_handler,
                                                                              policy_network_params, database)
@@ -418,10 +417,10 @@ class GoalOrientedBot(NNModel):
             self.dialogue_state_tracker.network_state = network_state
 
             # todo fix naming: fill_current_state_with_db_results & update_ground_truth_db_result_from_context are alike
-            # tracker_slotfilled_state = self.dialogue_state_tracker.fill_current_state_with_db_results()
+            tracker_slotfilled_state = self.dialogue_state_tracker.fill_current_state_with_db_results()
 
-            # resp = self.nlg_handler.generate_slotfilled_text_for_action(action_id_predicted, tracker_slotfilled_state)
-            resp = self.nlg_handler.decode_response(action_id_predicted, self.dialogue_state_tracker)
+            resp = self.nlg_handler.generate_slotfilled_text_for_action(action_id_predicted, tracker_slotfilled_state)
+            # resp = self.nlg_handler.decode_response(action_id_predicted, self.dialogue_state_tracker)
             res.append(resp)
         return res
 

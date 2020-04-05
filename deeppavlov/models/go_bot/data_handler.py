@@ -11,7 +11,7 @@ class TokensVectorRepresentationParams:
         self.embedding_dim = embedding_dim
         self.bow_dim = bow_dim
 
-class DataHandler:
+class TokensVectorizer:
 
     def __init__(self, debug, word_vocab, bow_embedder, embedder):
         self.debug = debug
