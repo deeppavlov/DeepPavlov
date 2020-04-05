@@ -2,7 +2,7 @@ import re
 
 from deeppavlov.core.commands.utils import expand_path
 import deeppavlov.models.go_bot.templates as go_bot_templates
-from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DialogueStateTracker
+from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 
 
 class NLGHandler:
@@ -36,27 +36,7 @@ class NLGHandler:
         text = self.templates.templates[action_id].generate_text(slots)
         return text
 
-    def decode_response(self, action_id: int, tracker: DialogueStateTracker) -> str:
-        """
-        Convert action template id and entities from tracker
-        to final response.
-        """
-        # conversion
-        template = self.templates.templates[int(action_id)]
-
-        slots = tracker.get_state()
-        if tracker.db_result is not None:
-            for k, v in tracker.db_result.items():
-                slots[k] = str(v)
-
-        resp = template.generate_text(slots)
-        # in api calls replace unknown slots to "dontcare"
-        if action_id == self.api_call_id:
-            # todo: move api_call_id here
-            resp = re.sub("#([A-Za-z]+)", "dontcare", resp).lower()
-        return resp
-
-    def decode_response(self, action_id: int, tracker: DialogueStateTracker) -> str:
+    def decode_response(self, action_id: int, tracker: FeaturizedTracker) -> str:
         """
         Convert action template id and entities from tracker
         to final response.

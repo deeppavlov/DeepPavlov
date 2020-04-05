@@ -18,6 +18,8 @@ from typing import Dict, Any
 import numpy as np
 
 from deeppavlov.core.models.component import Component
+from deeppavlov.models.go_bot.nlg_mechanism import NLGHandler
+from deeppavlov.models.go_bot.policy import PolicyNetworkParams
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 
 log = getLogger(__name__)
@@ -31,6 +33,16 @@ class DialogueStateTracker(FeaturizedTracker):
         self.n_actions = n_actions
 
         self.reset_state()
+
+    @staticmethod
+    def from_gobot_params(parent_tracker: FeaturizedTracker,
+                          nlg_handler: NLGHandler,
+                          policy_network_params: PolicyNetworkParams,
+                          database: Component):
+        return DialogueStateTracker(parent_tracker.slot_names,
+                                    nlg_handler.num_of_known_actions(),
+                                    policy_network_params.hidden_size,
+                                    database)
 
     def reset_state(self):
         super().reset_state()

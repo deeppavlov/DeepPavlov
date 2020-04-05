@@ -143,9 +143,9 @@ class GoalOrientedBot(NNModel):
         self.nlu_handler = NLUHandler(tokenizer, slot_filler, intent_classifier)
         self.nlg_handler = NLGHandler(template_path, template_type, api_call_action)
         self.data_handler = DataHandler(debug, word_vocab, bow_embedder, embedder)
-        self.n_actions = len(self.nlg_handler.templates)  # upper-level model logic
-        self.dialogue_state_tracker = DialogueStateTracker(tracker.slot_names, self.n_actions, hidden_size,
-                                                           database)
+
+        self.dialogue_state_tracker = DialogueStateTracker.from_gobot_params(tracker, self.nlg_handler,
+                                                                             policy_network_params, database)
         self.multiple_user_state_tracker = MultipleUserStateTrackersPool(base_tracker=self.dialogue_state_tracker)
 
         tokens_dims = self.data_handler.get_dims()
