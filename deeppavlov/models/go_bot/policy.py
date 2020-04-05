@@ -82,8 +82,7 @@ class GobotAttnParams(NamedTuple):
     action_as_key: bool
     intent_as_key: bool
 
-class NNStuffHandler(LRScheduledTFModel):
-    SAVE_LOAD_SUBDIR_NAME = "nn_stuff"
+class PolicyNetwork(LRScheduledTFModel):
 
     GRAPH_PARAMS = ["hidden_size", "action_size", "dense_size", "attention_mechanism"]
     SERIALIZABLE_FIELDS = ["hidden_size", "action_size", "dense_size", "dropout_rate", "l2_reg_coef",

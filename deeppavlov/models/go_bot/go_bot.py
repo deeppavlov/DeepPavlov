@@ -22,12 +22,12 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.models.go_bot.data_handler import DataHandler
-from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesDataset, UtteranceDataEntry, UtteranceTarget, \
-    DialogueDataEntry, UtteranceFeatures, PaddedDialogueDataEntry
+from deeppavlov.models.go_bot.dto.dataset_features import UtteranceDataEntry, DialogueDataEntry, \
+    BatchDialoguesDataset, UtteranceFeatures, UtteranceTarget
 from deeppavlov.models.go_bot.features_engineerer import FeaturesParams
 from deeppavlov.models.go_bot.nlg_mechanism import NLGHandler
 from deeppavlov.models.go_bot.nlu_mechanism import NLUHandler
-from deeppavlov.models.go_bot.policy import NNStuffHandler, PolicyNetworkParams
+from deeppavlov.models.go_bot.policy import PolicyNetwork, PolicyNetworkParams
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DialogueStateTracker, MultipleUserStateTrackersPool
 from pathlib import Path
@@ -135,13 +135,6 @@ class GoalOrientedBot(NNModel):
         self.use_action_mask = use_action_mask  # todo not supported actually
         super().__init__(save_path=save_path, load_path=load_path, **kwargs)
 
-        self.load_path = load_path
-        self.save_path = save_path
-
-        self.tokenizer = tokenizer  # preprocessing
-        self.slot_filler = slot_filler  # another unit of pipeline
-        self.intent_classifier = intent_classifier  # another unit of pipeline
-        self.use_action_mask = use_action_mask  # feature engineering  todo: чот оно не на своём месте
         self.debug = debug
 
         policy_network_params = PolicyNetworkParams(hidden_size, action_size, dropout_rate, l2_reg_coef,
@@ -161,7 +154,7 @@ class GoalOrientedBot(NNModel):
         policy_save_path = Path(save_path, self.POLICY_DIR_NAME)
         policy_load_path = Path(load_path, self.POLICY_DIR_NAME)
 
-        self.policy = NNStuffHandler(policy_network_params, tokens_dims, features_params,
+        self.policy = PolicyNetwork(policy_network_params, tokens_dims, features_params,
                                     policy_load_path, policy_save_path, **kwargs)
 
         self.reset()
@@ -438,7 +431,7 @@ class GoalOrientedBot(NNModel):
         batch_dialogues_dataset = self.prepare_dialogues_batches_training_data(batch_dialogues_utterances_features,
                                                                                batch_dialogues_utterances_targets)
         return self.policy.train_on_batch(batch_dialogues_dataset.features,
-                                                   batch_dialogues_dataset.targets)
+                                          batch_dialogues_dataset.targets)
 
     def reset(self, user_id: Union[None, str, int] = None) -> None:
         # WARNING: this method is confusing. todo
