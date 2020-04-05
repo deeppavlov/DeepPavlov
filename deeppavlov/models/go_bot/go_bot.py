@@ -21,11 +21,11 @@ from deeppavlov import Chainer
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
-from deeppavlov.core.models.tf_model import LRScheduledTFModel
 from deeppavlov.models.go_bot.data_handler import DataHandler
 from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesDataset, UtteranceDataEntry, UtteranceTarget, \
     DialogueDataEntry, UtteranceFeatures, PaddedDialogueDataEntry
 from deeppavlov.models.go_bot.nlg_mechanism import NLGHandler
+from deeppavlov.models.go_bot.nlu_mechanism import NLUHandler
 from deeppavlov.models.go_bot.policy import NNStuffHandler
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DialogueStateTracker, MultipleUserStateTrackersPool
@@ -142,18 +142,15 @@ class GoalOrientedBot(NNModel):
         self.intent_classifier = intent_classifier  # another unit of pipeline
         self.use_action_mask = use_action_mask  # feature engineering  todo: чот оно не на своём месте
         self.debug = debug
-
-        self.data_handler = DataHandler(debug, word_vocab, bow_embedder, embedder)
+        self.nlu_handler = NLUHandler(tokenizer, slot_filler, intent_classifier)
         self.nlg_handler = NLGHandler(template_path, template_type, api_call_action)
+        self.data_handler = DataHandler(debug, word_vocab, bow_embedder, embedder)
         self.n_actions = len(self.nlg_handler.templates)  # upper-level model logic
-
-        self.default_tracker = tracker  # tracker
         self.dialogue_state_tracker = DialogueStateTracker(tracker.slot_names, self.n_actions, hidden_size,
                                                            database)  # tracker
 
-        self.intents = []
-        if isinstance(self.intent_classifier, Chainer):
-            self.intents = self.intent_classifier.get_main_component().classes  # upper-level model logic
+        self.default_tracker = tracker  # tracker
+
 
         nn_stuff_save_path = Path(save_path, NNStuffHandler.SAVE_LOAD_SUBDIR_NAME)
         nn_stuff_load_path = Path(load_path, NNStuffHandler.SAVE_LOAD_SUBDIR_NAME)
@@ -173,8 +170,8 @@ class GoalOrientedBot(NNModel):
             network_parameters,
             embedder_dim,
             self.n_actions,
-            self.intent_classifier,
-            self.intents,
+            self.nlu_handler.intent_classifier,
+            self.nlu_handler.intents,
             self.default_tracker.num_features,
             use_bow_embedder,
             word_vocab_size,
@@ -294,15 +291,7 @@ class GoalOrientedBot(NNModel):
         """
         # todo comments
 
-        # context_slots, intent_features, tokens = self.nlu_handler.nlu(text)  # todo: dto-like class for the nlu output
-
-        tokens = self.tokenize_single_text_entry(text)
-        context_slots = None
-        if callable(self.slot_filler):
-            context_slots = self.extract_slots_from_tokenized_text_entry(tokens)
-        intent_features = []
-        if callable(self.intent_classifier):
-            intent_features = self.extract_intents_from_tokenized_text_entry(tokens)
+        context_slots, intent_features, tokens = self.nlu_handler.nlu(text)  # todo: dto-like class for the nlu output
 
         # region text BOW-encoding and embedding
         tokens_bow_encoded = []
