@@ -309,22 +309,25 @@ class NNStuffHandler(LRScheduledTFModel):
     def get_attn_window_size(self):
         return self.attention_mechanism.max_num_tokens if self.has_attn() else None
 
-    def __call__(self, features: np.ndarray, emb_context: np.ndarray, key: np.ndarray,
-                      action_mask: np.ndarray, states_c: np.ndarray, states_h: np.ndarray, prob: bool = False) -> Sequence[np.ndarray]:
+    def __call__(self, batch_dialogues_features: BatchDialoguesFeatures,
+                 states_c: np.ndarray, states_h: np.ndarray, prob: bool = False,
+                 *args, **kwargs) -> Sequence[np.ndarray]:
+
+        states_c = [[states_c]]  # list of list aka batch of dialogues
+        states_h = [[states_h]]  # list of list aka batch of dialogues
+
         feed_dict = {
-            self._features: features,
             self._dropout_keep_prob: 1.,
-            self._utterance_mask: [[1.]],
             self._initial_state: (states_c, states_h),
-            self._action_mask: action_mask
+            self._utterance_mask: batch_dialogues_features.b_padded_dialogue_length_mask,
+            self._features: batch_dialogues_features.b_featuress,
+            self._action_mask: batch_dialogues_features.b_action_masks
         }
         if self.attention_mechanism:
-            feed_dict[self._emb_context] = emb_context
-            feed_dict[self._key] = key
+            feed_dict[self._emb_context] = batch_dialogues_features.b_tokens_embeddings_paddeds
+            feed_dict[self._key] = batch_dialogues_features.b_attn_keys
 
-        probs, prediction, state = \
-            self.sess.run([self._probs, self._prediction, self._state],
-                          feed_dict=feed_dict)
+        probs, prediction, state = self.sess.run([self._probs, self._prediction, self._state], feed_dict=feed_dict)
 
         if prob:
             return probs, state[0], state[1]

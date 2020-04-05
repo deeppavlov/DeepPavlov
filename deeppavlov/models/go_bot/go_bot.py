@@ -340,9 +340,7 @@ class GoalOrientedBot(NNModel):
 
         # as for RNNs: output, hidden_state < - RNN(output, hidden_state)
         hidden_cells_state, hidden_cells_output = user_tracker.network_state[0], user_tracker.network_state[1]
-        probs, hidden_cells_state, hidden_cells_output = self.policy(
-            utterance_batch_features.b_featuress, utterance_batch_features.b_tokens_embeddings_paddeds,
-            utterance_batch_features.b_attn_keys, utterance_batch_features.b_action_masks,
+        probs, hidden_cells_state, hidden_cells_output = self.policy(utterance_batch_features,
                                                                      hidden_cells_state,
                                                                      hidden_cells_output,
                                                                      prob=True)
