@@ -12,6 +12,10 @@ from deeppavlov.models.go_bot.utils import GobotAttnHyperParams
 
 log = getLogger(__name__)
 
+class TokensVectorRepresentationParams:
+    def __init__(self, embedding_dim, bow_dim):
+        self.embedding_dim = embedding_dim
+        self.bow_dim = bow_dim
 
 class DataHandler:
 
@@ -37,31 +41,6 @@ class DataHandler:
 
     def word_vocab_size(self):
         return len(self.word_vocab) if self.word_vocab else None
-
-
-    def encode_response(self, act: str) -> int:
-        # conversion
-        return self.templates.actions.index(act)
-
-    def decode_response(self, action_id: int, tracker: DialogueStateTracker) -> str:
-        """
-        Convert action template id and entities from tracker
-        to final response.
-        """
-        # conversion
-        template = self.templates.templates[int(action_id)]
-
-        slots = tracker.get_state()
-        if tracker.db_result is not None:
-            for k, v in tracker.db_result.items():
-                slots[k] = str(v)
-
-        resp = template.generate_text(slots)
-        # in api calls replace unknown slots to "dontcare"
-        if action_id == self.api_call_id:
-            # todo: move api_call_id here
-            resp = re.sub("#([A-Za-z]+)", "dontcare", resp).lower()
-        return resp
 
     def encode_tokens(self, tokens: List[str], mean_embeddings):
 

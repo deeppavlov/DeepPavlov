@@ -191,12 +191,11 @@ class GoalOrientedBot(NNModel):
             log.info(f"[initializing `{self.__class__.__name__}` from scratch]")
 
         self.multiple_user_state_tracker = MultipleUserStateTrackersPool(base_tracker=self.dialogue_state_tracker)
-        self.reset()  # tracker
+        self.reset()
 
     def prepare_dialogues_batches_training_data(self,
-                                                batch_dialogues_utterances_contexts_info: List[List[dict]],
-                                                batch_dialogues_utterances_responses_info: List[
-                                                    List[dict]]) -> BatchDialoguesDataset:
+                batch_dialogues_utterances_contexts_info: List[List[dict]],
+                batch_dialogues_utterances_responses_info: List[List[dict]]) -> BatchDialoguesDataset:
         """
         Parse the passed dialogue information to the dialogue information object.
 
@@ -481,25 +480,7 @@ class GoalOrientedBot(NNModel):
             # tracker_slotfilled_state = self.dialogue_state_tracker.fill_current_state_with_db_results()
 
             # resp = self.nlg_handler.generate_slotfilled_text_for_action(action_id_predicted, tracker_slotfilled_state)
-            resp = self.data_handler.decode_response(action_id_predicted, self.dialogue_state_tracker)
-            res.append(resp)
-        return res
-
-    def _infer_dialog(self, contexts: List[dict]) -> List[str]:
-        res = []
-        self.dialogue_state_tracker.reset_state()
-        for context in contexts:
-            if context.get('prev_resp_act') is not None:
-                previous_act_id = self.nlg_handler.encode_response(context['prev_resp_act'])
-                # previous action is teacher-forced
-                self.dialogue_state_tracker.update_previous_action(previous_act_id)
-
-            self.dialogue_state_tracker.update_ground_truth_db_result_from_context(context)
-
-            _, predicted_act_id, self.dialogue_state_tracker.network_state = self._infer(context['text'], user_tracker=self.dialogue_state_tracker)
-
-            self.dialogue_state_tracker.update_previous_action(predicted_act_id)
-            resp = self.data_handler.decode_response(predicted_act_id, self.dialogue_state_tracker)
+            resp = self.nlg_handler.decode_response(action_id_predicted, self.dialogue_state_tracker)
             res.append(resp)
         return res
 
