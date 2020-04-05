@@ -346,6 +346,37 @@ class GoalOrientedBot(NNModel):
 
         return UtteranceFeatures(action_mask, attn_key, tokens_embeddings_padded, concat_feats)
 
+
+    def calc_tokens_embedding(self, tokens):
+        #todo to data
+        emb_features = self.data_handler.embed_tokens(tokens, True)
+        # random embedding instead of zeros
+        if np.all(emb_features < 1e-20):
+            emb_features = np.fabs(self.standard_normal_like(emb_features))
+        return emb_features
+
+    def calc_emb_context(self, attn_hyperparams, tokens):
+        tokens_embedded = self.data_handler.embed_tokens(tokens, False)
+        if tokens_embedded is not None:
+            emb_context = self.calc_attn_context(attn_hyperparams, tokens_embedded)
+        else:
+            emb_context = np.array([], dtype=np.float32)
+        return emb_context
+
+    def standard_normal_like(self, source_vector):
+        vector_dim = source_vector.shape[0]
+        return np.random.normal(0, 1 / vector_dim, vector_dim)
+
+    def calc_attn_context(self, attn_hyperparams, tokens_embedded):
+        # emb_context = calc_a
+        padding_length = attn_hyperparams.window_size - len(tokens_embedded)
+        padding = np.zeros(shape=(padding_length, attn_hyperparams.token_size), dtype=np.float32)
+        if tokens_embedded:
+            emb_context = np.concatenate((padding, np.array(tokens_embedded)))
+        else:
+            emb_context = padding
+        return emb_context
+
     def extract_intents_from_tokenized_text_entry(self, tokens):
         intent_features = self.intent_classifier([' '.join(tokens)])[1][0]
         if self.debug:
@@ -478,37 +509,6 @@ class GoalOrientedBot(NNModel):
         tracker_slotfilled_state = user_tracker.fill_current_state_with_db_results()
         resp = self.nlg_handler.generate_slotfilled_text_for_action(action_id_predicted, tracker_slotfilled_state)
         return resp
-
-    def _calc_inferences_for_dialogue(self, contexts: List[dict]) -> List[str]:
-        # infer on each dialogue utterance
-        # e.g. to calculate inference score via comparing the inferred predictions with the ground truth utterance
-        # todo we provide the tracker with both predicted and ground truth response actions info. is this ok?
-        res = []
-        self.dialogue_state_tracker.reset_state()
-        for context in contexts:
-            if context.get('prev_resp_act') is not None:
-                # if there already were responses to user
-                # we inform the tracker with these responses info
-                # just like the tracker remembers the predicted response actions when real-time inference
-                previous_action_id = self.nlg_handler.encode_response(context['prev_resp_act'])
-                self.dialogue_state_tracker.update_previous_action(previous_action_id)
-
-            # if there already were db lookups
-            # we inform the tracker with these lookups info
-            # just like the tracker remembers the db interaction results when real-time inference
-            self.dialogue_state_tracker.update_ground_truth_db_result_from_context(context)
-
-            _, action_id_predicted, network_state = self._infer(context['text'], self.dialogue_state_tracker)
-            self.dialogue_state_tracker.update_previous_action(action_id_predicted)  # see the above todo
-            self.dialogue_state_tracker.network_state = network_state
-
-            # todo fix naming: fill_current_state_with_db_results & update_ground_truth_db_result_from_context are alike
-            tracker_slotfilled_state = self.dialogue_state_tracker.fill_current_state_with_db_results()
-
-            resp = self.nlg_handler.generate_slotfilled_text_for_action(action_id_predicted, tracker_slotfilled_state)
-
-            res.append(resp)
-        return res
 
     def train_on_batch(self,
                        batch_dialogues_utterances_features: List[List[dict]],
