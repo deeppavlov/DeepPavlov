@@ -300,9 +300,9 @@ class GoalOrientedBot(NNModel):
 
         tokens_embeddings_padded = np.array([], dtype=np.float32)
         tokens_aggregated_embedding = []
-        if self.policy.attention_mechanism:
-            attn_window_size = self.policy.attention_mechanism.max_num_tokens
-            attn_config_token_dim = self.policy.attention_mechanism.token_size  # todo: this is ugly and caused by complicated nn configuration algorithm
+        if self.policy.has_attn():
+            attn_window_size = self.policy.get_attn_window_size()
+            attn_config_token_dim = self.policy.get_attn_hyperparams().token_size  # todo: this is ugly and caused by complicated nn configuration algorithm
             tokens_embeddings_padded = self.data_handler.calc_tokens_embeddings(attn_window_size,
                                                                                 attn_config_token_dim,
                                                                                 tokens)
@@ -333,22 +333,7 @@ class GoalOrientedBot(NNModel):
 
         return UtteranceFeatures(action_mask, attn_key, tokens_embeddings_padded, concat_feats)
 
-    def extract_intents_from_tokenized_text_entry(self, tokens):
-        intent_features = self.intent_classifier([' '.join(tokens)])[1][0]
-        if self.debug:
-            # todo log in intents extractor
-            intent = self.intents[np.argmax(intent_features[0])]
-            # log.debug(f"Predicted intent = `{intent}`")
-        return intent_features
-
-    def extract_slots_from_tokenized_text_entry(self, tokens):
-        return self.slot_filler([tokens])[0]
-
-    def tokenize_single_text_entry(self, x):
-        return self.tokenizer([x.lower().strip()])[0]
-
-    def _infer(self, user_utterance_text: str, user_tracker: DialogueStateTracker,
-               keep_tracker_state=False) -> Sequence:
+    def _infer(self, user_utterance_text: str, user_tracker: DialogueStateTracker, keep_tracker_state=False) -> Sequence:
         """
         Predict the action to perform in response to given text.
 
@@ -378,7 +363,7 @@ class GoalOrientedBot(NNModel):
 
         # as for RNNs: output, hidden_state < - RNN(output, hidden_state)
         hidden_cells_state, hidden_cells_output = user_tracker.network_state[0], user_tracker.network_state[1]
-        probs, hidden_cells_state, hidden_cells_output = self.policy._network_call(
+        probs, hidden_cells_state, hidden_cells_output = self.policy(
             utterance_batch_features.b_featuress, utterance_batch_features.b_tokens_embeddings_paddeds,
             utterance_batch_features.b_attn_keys, utterance_batch_features.b_action_masks,
                                                                      hidden_cells_state,
@@ -477,7 +462,7 @@ class GoalOrientedBot(NNModel):
                        batch_dialogues_utterances_targets: List[List[dict]]) -> dict:
         batch_dialogues_dataset = self.prepare_dialogues_batches_training_data(batch_dialogues_utterances_features,
                                                                                batch_dialogues_utterances_targets)
-        return self.policy._network_train_on_batch(batch_dialogues_dataset.features.b_featuress,
+        return self.policy.train_on_batch(batch_dialogues_dataset.features.b_featuress,
                                                    batch_dialogues_dataset.features.b_tokens_embeddings_paddeds,
                                                    batch_dialogues_dataset.features.b_attn_keys,
                                                    batch_dialogues_dataset.features.b_padded_dialogue_length_mask,

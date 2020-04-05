@@ -1,6 +1,5 @@
-import collections
 import json
-from typing import Tuple, List, Optional
+from typing import Tuple, Optional, Sequence, NamedTuple
 from logging import getLogger
 
 import numpy as np
@@ -8,6 +7,7 @@ import tensorflow as tf
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.layers import tf_attention_mechanisms as am, tf_layers
+
 from tensorflow.contrib.layers import xavier_initializer as xav
 
 # from deeppavlov.models.go_bot.network import log
@@ -333,19 +333,67 @@ class NNStuffHandler(LRScheduledTFModel):
     def train_checkpoint_exists(self):
         return tf.train.checkpoint_exists(str(self.load_path.resolve()))
 
+    def get_attn_hyperparams(self) -> Optional[GobotAttnParams]:
+        attn_hyperparams = None
+        if self.attention_mechanism:
+            attn_hyperparams = self.attention_mechanism
+        return attn_hyperparams
+
+    def has_attn(self):
+        return self.attention_mechanism is not None
+
+    def get_attn_window_size(self):
+        return self.attention_mechanism.max_num_tokens if self.has_attn() else None
+
+    def __call__(self, features: np.ndarray, emb_context: np.ndarray, key: np.ndarray,
+                      action_mask: np.ndarray, states_c: np.ndarray, states_h: np.ndarray, prob: bool = False) -> Sequence[np.ndarray]:
+        feed_dict = {
+            self._features: features,
+            self._dropout_keep_prob: 1.,
+            self._utterance_mask: [[1.]],
+            self._initial_state: (states_c, states_h),
+            self._action_mask: action_mask
+        }
+        if self.attention_mechanism:
+            feed_dict[self._emb_context] = emb_context
+            feed_dict[self._key] = key
+
+        probs, prediction, state = \
+            self.sess.run([self._probs, self._prediction, self._state],
+                          feed_dict=feed_dict)
+
+        if prob:
+            return probs, state[0], state[1]
+        return prediction, state[0], state[1]
+
+    def train_on_batch(self,
+                                features: np.ndarray,
+                                emb_context: np.ndarray,
+                                key: np.ndarray,
+                                utter_mask: np.ndarray,
+                                action_mask: np.ndarray,
+                                action: np.ndarray) -> dict:
+        feed_dict = {
+            self._dropout_keep_prob: 1.,
+            self._utterance_mask: utter_mask,
+            self._features: features,
+            self._action: action,
+            self._action_mask: action_mask
+        }
+        if self.attention_mechanism:
+            feed_dict[self._emb_context] = emb_context
+            feed_dict[self._key] = key
+
+        _, loss_value, prediction = \
+            self.sess.run([self._train_op, self._loss, self._prediction],
+                               feed_dict=feed_dict)
+        return {'loss': loss_value,
+                'learning_rate': self.get_learning_rate(),
+                'momentum': self.get_momentum()}
+
     def load(self, *args, **kwargs) -> None:
         self._load_nn_params()
         super().load(*args, **kwargs)
-
-    def get_attn_hyperparams(self) -> Optional[GobotAttnHyperParams]:
-        if not self.attention_mechanism:
-            return None
-        attn_hyperparams = GobotAttnHyperParams(key_size=self.attention_mechanism.key_size,
-                                                token_size=self.attention_mechanism.token_size,
-                                                window_size=self.attention_mechanism.max_num_tokens,
-                                                use_action_as_key=self.attention_mechanism.action_as_key,
-                                                use_intent_as_key=self.attention_mechanism.intent_as_key)
-        return attn_hyperparams
 
     def _load_nn_params(self) -> None:
         # todo правда ли что тут загружаются только связанные с нейронкой вещи?
@@ -371,50 +419,3 @@ class NNStuffHandler(LRScheduledTFModel):
         # log.info(f"[saving parameters to {path}]")
         with open(path, 'w', encoding='utf8') as fp:
             json.dump(nn_params, fp)
-
-    def _network_train_on_batch(self,
-                                features: np.ndarray,
-                                emb_context: np.ndarray,
-                                key: np.ndarray,
-                                utter_mask: np.ndarray,
-                                action_mask: np.ndarray,
-                                action: np.ndarray) -> dict:
-        feed_dict = {
-            self._dropout_keep_prob: 1.,
-            self._utterance_mask: utter_mask,
-            self._features: features,
-            self._action: action,
-            self._action_mask: action_mask
-        }
-        if self.attention_mechanism:
-            feed_dict[self._emb_context] = emb_context
-            feed_dict[self._key] = key
-
-        _, loss_value, prediction = \
-            self.sess.run([self._train_op, self._loss, self._prediction],
-                               feed_dict=feed_dict)
-        return {'loss': loss_value,
-                'learning_rate': self.get_learning_rate(),
-                'momentum': self.get_momentum()}
-
-
-    def _network_call(self, features: np.ndarray, emb_context: np.ndarray, key: np.ndarray,
-                      action_mask: np.ndarray, states_c: np.ndarray, states_h: np.ndarray, prob: bool = False) -> List[np.ndarray]:
-        feed_dict = {
-            self._features: features,
-            self._dropout_keep_prob: 1.,
-            self._utterance_mask: [[1.]],
-            self._initial_state: (states_c, states_h),
-            self._action_mask: action_mask
-        }
-        if self.attention_mechanism:
-            feed_dict[self._emb_context] = emb_context
-            feed_dict[self._key] = key
-
-        probs, prediction, state = \
-            self.sess.run([self._probs, self._prediction, self._state],
-                          feed_dict=feed_dict)
-
-        if prob:
-            return probs, state[0], state[1]
-        return prediction, state[0], state[1]
