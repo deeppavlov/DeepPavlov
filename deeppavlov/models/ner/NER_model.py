@@ -36,6 +36,10 @@ class HybridNerModel(LRScheduledTFModel):
         n_tags: Number of pre-defined tags.
         word_emb_path: The path to the pretrained word embedding model.
         word_emb_name: The name of pretrained word embedding model.
+            One of the two values should be set including 'glove', 'baomoi' corresponding to two pre-trained word
+            embedding models: GloVe (https://www.aclweb.org/anthology/D14-1162/)
+            and baomoi (https://github.com/sonvx/word2vecVN). Otherwise, the word lookup table will be trained
+            from scratch.
         word_vocab: The word vocabulary class.
         word_dim: The dimension of the pretrained word vector.
         char_vocab_size: The size of character vocabulary.
