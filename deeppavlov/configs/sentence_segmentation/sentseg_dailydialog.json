@@ -95,7 +95,11 @@
     "batch_size": 50,
     "metrics": [
       {
-        "name": "ner_prf1",
+        "name": "ner_f1",
+        "inputs": ["y_tokens", "tags"]
+      },
+      {
+        "name": "ner_token_f1",
         "inputs": ["y_tokens", "tags"]
       }
     ],

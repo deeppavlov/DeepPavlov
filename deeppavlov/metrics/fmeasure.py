@@ -246,18 +246,21 @@ def chunk_finder(current_token, previous_token, tag):
         previous_tag = 'O'
     if current_tag != tag:
         current_tag = 'O'
-    if (previous_tag == 'O' and current_token == 'B-' + tag) or \
-            (previous_token == 'I-' + tag and current_token == 'B-' + tag) or \
-            (previous_token == 'B-' + tag and current_token == 'B-' + tag) or \
-            (previous_tag == 'O' and current_token == 'I-' + tag):
+
+    if current_tag != 'O' and (
+            previous_tag == 'O' or
+            previous_token in ['E-' + tag, 'L-' + tag, 'S-' + tag, 'U-' + tag] or
+            current_token in ['B-' + tag, 'S-' + tag, 'U-' + tag]
+    ):
         create_chunk = True
     else:
         create_chunk = False
 
-    if (previous_token == 'I-' + tag and current_token == 'B-' + tag) or \
-            (previous_token == 'B-' + tag and current_token == 'B-' + tag) or \
-            (current_tag == 'O' and previous_token == 'I-' + tag) or \
-            (current_tag == 'O' and previous_token == 'B-' + tag):
+    if previous_tag != 'O' and (
+            current_tag == 'O' or
+            previous_token in ['E-' + tag, 'L-' + tag, 'S-' + tag, 'U-' + tag] or
+            current_token in ['B-' + tag, 'S-' + tag, 'U-' + tag]
+    ):
         pop_out = True
     else:
         pop_out = False
@@ -393,95 +396,3 @@ def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, 
                 tot_predicted=results[entity_of_interest]['n_pred'])
         log.debug(s)
     return results
-
-
-def get_chunks(labels):
-    chunks = []
-    chunk_start, chunk_type = None, None
-    tmp = labels + ["O"]
-    for i, label in enumerate(tmp):
-        # end of the prev. chunk
-        if label == "O" or label == "<PAD>" or label == "<UNK>":
-            if chunk_type is not None:
-                chunks.append((chunk_type, chunk_start, i))
-                chunk_start, chunk_type = None, None
-        else:
-            prefix, suffix = label.split('-')
-            # end of the prev. chunk and the current position is a single chunk
-            if prefix == "S":
-                if chunk_type is not None:
-                    chunks.append((chunk_type, chunk_start, i))
-                chunks.append((suffix, i, i + 1))
-                chunk_start, chunk_type = None, None
-            # start a new chunk
-            elif prefix == "B":
-                if chunk_type is not None:
-                    chunks.append((chunk_type, chunk_start, i))
-                chunk_start, chunk_type = i, suffix
-
-    return chunks
-
-
-def print_prf(p, r, f):
-    s = "\n"
-    for chunk_name in p:
-        s += f"{chunk_name:12} : {p[chunk_name] * 100:6.2f} | {r[chunk_name] * 100:6.2f} | {f[chunk_name] * 100:6.2f}\n"
-    log.debug(s)
-
-
-@register_metric('ner_prf1')
-def ner_prf1(batch_labels, batch_preds):
-    """
-    Compute Precision, Recall, and F1; supports both IOB and IOBES tagging scheme.
-
-    Args:
-        batch_labels: The Batch of groundtruth labels.
-        batch_preds: The batch of predicted labels.
-
-    Returns:
-          F1 score
-
-    """
-
-    def update_chunks(bag, list_chunks):
-        for chunk_type, _, _ in list_chunks:
-            if chunk_type not in bag:
-                bag[chunk_type] = 1
-            else:
-                bag[chunk_type] += 1
-
-    accs = []
-    total_chunk_bag, pred_chunk_bag, correct_chunk_bag = {}, {}, {}
-
-    for labels, preds in zip(batch_labels, batch_preds):
-        accs += [a == b for (a, b) in zip(labels, preds)]
-
-        total_chunks = set(get_chunks(labels))
-        pred_chunks = set(get_chunks(preds))
-        correct_chunks = total_chunks & pred_chunks
-
-        update_chunks(total_chunk_bag, total_chunks)
-        update_chunks(pred_chunk_bag, pred_chunks)
-        update_chunks(correct_chunk_bag, correct_chunks)
-
-    acc = np.mean(accs)
-    p, r, f1 = {}, {}, {}
-    for chunk_type in total_chunk_bag:
-        total = total_chunk_bag[chunk_type]
-        preds, corrects = 0, 0
-        if chunk_type in pred_chunk_bag:
-            preds = pred_chunk_bag[chunk_type]
-        if chunk_type in correct_chunk_bag:
-            corrects = correct_chunk_bag[chunk_type]
-        p[chunk_type] = (corrects / preds) if preds > 0 else 0
-        r[chunk_type] = (corrects / total) if total > 0 else 0
-        f1[chunk_type] = 2 * p[chunk_type] * r[chunk_type] / (p[chunk_type] + r[chunk_type]) if p[chunk_type] > 0 else 0
-
-    all_total, all_corrects, all_preds = sum(total_chunk_bag.values()), sum(correct_chunk_bag.values()), sum(
-        pred_chunk_bag.values())
-    p["OVERALL"] = (all_corrects / all_preds) if all_preds > 0 else 0
-    r["OVERALL"] = (all_corrects / all_total) if all_total > 0 else 0
-    f1["OVERALL"] = (2 * p["OVERALL"] * r["OVERALL"] / (p["OVERALL"] + r["OVERALL"])) if p["OVERALL"] > 0 else 0
-
-    print_prf(p, r, f1)
-    return f1["OVERALL"]
