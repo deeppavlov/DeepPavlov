@@ -22,7 +22,6 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer as xav
 
-import deeppavlov.models.go_bot.templates as templ
 from deeppavlov import Chainer
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.errors import ConfigError
@@ -31,6 +30,7 @@ from deeppavlov.core.layers import tf_attention_mechanisms as am
 from deeppavlov.core.layers import tf_layers
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
+from deeppavlov.models.go_bot.nlg_manager import NLGManager
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DialogueStateTracker, MultipleUserStateTrackersPool
 
@@ -160,19 +160,11 @@ class GoalOrientedBot(LRScheduledTFModel):
         self.debug = debug
         self.word_vocab = word_vocab
 
-        template_path = expand_path(template_path)
-        template_type = getattr(templ, template_type)
-        log.info(f"[loading templates from {template_path}]")
-        self.templates = templ.Templates(template_type).load(template_path)
-        self.n_actions = len(self.templates)
-        log.info(f"{self.n_actions} templates loaded.")
+        self.nlg_manager = NLGManager(template_path, template_type, api_call_action)
+        self.n_actions = len(self.nlg_manager.templates)
 
         self.default_tracker = tracker
         self.dialogue_state_tracker = DialogueStateTracker(tracker.slot_names, self.n_actions, hidden_size, database)
-
-        self.api_call_id = -1
-        if api_call_action is not None:
-            self.api_call_id = self.templates.actions.index(api_call_action)
 
         self.intents = []
         if isinstance(self.intent_classifier, Chainer):
@@ -327,27 +319,6 @@ class GoalOrientedBot(LRScheduledTFModel):
                                   tracker.prev_action))
         return concat_feats, emb_context, attn_key
 
-    def _encode_response(self, act: str) -> int:
-        return self.templates.actions.index(act)
-
-    def _decode_response(self, action_id: int, tracker: DialogueStateTracker) -> str:
-        """
-        Convert action template id and entities from tracker
-        to final response.
-        """
-        template = self.templates.templates[int(action_id)]
-
-        slots = tracker.get_state()
-        if tracker.db_result is not None:
-            for k, v in tracker.db_result.items():
-                slots[k] = str(v)
-
-        resp = template.generate_text(slots)
-        # in api calls replace unknown slots to "dontcare"
-        if action_id == self.api_call_id:
-            resp = re.sub("#([A-Za-z]+)", "dontcare", resp).lower()
-        return resp
-
     def prepare_data(self, x: List[dict], y: List[dict]) -> List[np.ndarray]:
         b_features, b_u_masks, b_a_masks, b_actions = [], [], [], []
         b_emb_context, b_keys = [], []  # for attention
@@ -371,9 +342,9 @@ class GoalOrientedBot(LRScheduledTFModel):
                 d_features.append(features)
                 d_emb_context.append(emb_context)
                 d_key.append(key)
-                d_a_masks.append(self.dialogue_state_tracker.calc_action_mask(self.api_call_id))
+                d_a_masks.append(self.dialogue_state_tracker.calc_action_mask(self.nlg_manager.api_call_id))
 
-                action_id = self._encode_response(response['act'])
+                action_id = self.nlg_manager.encode_response(response['act'])
                 d_actions.append(action_id)
                 # update state
                 # - previous action is teacher-forced here
@@ -406,7 +377,7 @@ class GoalOrientedBot(LRScheduledTFModel):
 
     def _infer(self, tokens: List[str], tracker: DialogueStateTracker) -> List:
         features, emb_context, key = self._encode_context(tokens, tracker=tracker)
-        action_mask = tracker.calc_action_mask(self.api_call_id)
+        action_mask = tracker.calc_action_mask(self.nlg_manager.api_call_id)
         probs, state_c, state_h = \
             self.network_call([[features]], [[emb_context]], [[key]],
                               [[action_mask]], [[tracker.network_state[0]]],
@@ -419,7 +390,7 @@ class GoalOrientedBot(LRScheduledTFModel):
         self.dialogue_state_tracker.reset_state()
         for context in contexts:
             if context.get('prev_resp_act') is not None:
-                previous_act_id = self._encode_response(context['prev_resp_act'])
+                previous_act_id = self.nlg_manager.encode_response(context['prev_resp_act'])
                 # previous action is teacher-forced
                 self.dialogue_state_tracker.update_previous_action(previous_act_id)
 
@@ -433,7 +404,8 @@ class GoalOrientedBot(LRScheduledTFModel):
                 self._infer(tokens, tracker=self.dialogue_state_tracker)
 
             self.dialogue_state_tracker.update_previous_action(predicted_act_id)
-            resp = self._decode_response(predicted_act_id, self.dialogue_state_tracker)
+            tracker_slotfilled_state = self.dialogue_state_tracker.fill_current_state_with_db_results()
+            resp = self.nlg_manager.decode_response(predicted_act_id, tracker_slotfilled_state)
             res.append(resp)
         return res
 
@@ -459,7 +431,7 @@ class GoalOrientedBot(LRScheduledTFModel):
                 tracker.update_previous_action(predicted_act_id)
 
                 # if made api_call, then respond with next prediction
-                if predicted_act_id == self.api_call_id:
+                if predicted_act_id == self.nlg_manager.api_call_id:
                     tracker.make_api_call()
 
                     _, predicted_act_id, tracker.network_state = \
@@ -467,7 +439,8 @@ class GoalOrientedBot(LRScheduledTFModel):
 
                     tracker.update_previous_action(predicted_act_id)
 
-                resp = self._decode_response(predicted_act_id, tracker)
+                tracker_slotfilled_state = self.dialogue_state_tracker.fill_current_state_with_db_results()
+                resp = self.nlg_manager.decode_response(predicted_act_id, tracker_slotfilled_state)
                 res.append(resp)
             return res
         # batch is a list of dialogs, user_ids ignored

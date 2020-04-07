@@ -117,6 +117,12 @@ class DialogueStateTracker(FeaturizedTracker):
         if self.current_db_result is not None:
             self.db_result = self.current_db_result
 
+    def fill_current_state_with_db_results(self) -> dict:
+        slots = self.get_state()
+        if self.db_result:
+            for k, v in self.db_result.items():
+                slots[k] = str(v)
+        return slots
 
 
 class MultipleUserStateTrackersPool(object):
