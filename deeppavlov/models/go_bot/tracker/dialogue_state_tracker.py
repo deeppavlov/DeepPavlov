@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABCMeta, abstractmethod
 from logging import getLogger
-from typing import List, Dict, Union, Tuple, Any, Iterator
+from typing import Dict, Any
 
 import numpy as np
 
-from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
+from deeppavlov.models.go_bot.nlg_manager import NLGManager
+from deeppavlov.models.go_bot.policy_network import PolicyNetworkParams
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 
 log = getLogger(__name__)
@@ -33,6 +33,16 @@ class DialogueStateTracker(FeaturizedTracker):
         self.n_actions = n_actions
 
         self.reset_state()
+
+    @staticmethod
+    def from_gobot_params(parent_tracker: FeaturizedTracker,
+                          nlg_manager: NLGManager,
+                          policy_network_params: PolicyNetworkParams,
+                          database: Component):
+        return DialogueStateTracker(parent_tracker.slot_names,
+                                    nlg_manager.num_of_known_actions(),
+                                    policy_network_params.hidden_size,
+                                    database)
 
     def reset_state(self):
         super().reset_state()

@@ -12,34 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import collections
-import json
-import re
 from logging import getLogger
-from typing import Dict, Any, List, Optional, Union, Tuple
+from typing import Dict, Any, List, Optional, Union, Sequence
 
 import numpy as np
-import tensorflow as tf
-from tensorflow.contrib.layers import xavier_initializer as xav
 
-from deeppavlov import Chainer
-from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.layers import tf_attention_mechanisms as am
-from deeppavlov.core.layers import tf_layers
 from deeppavlov.core.models.component import Component
-from deeppavlov.core.models.tf_model import LRScheduledTFModel
+from deeppavlov.core.models.nn_model import NNModel
+from deeppavlov.models.go_bot.data_handler import TokensVectorizer
+from deeppavlov.models.go_bot.dto.dataset_features import UtteranceDataEntry, DialogueDataEntry, \
+    BatchDialoguesDataset, UtteranceFeatures, UtteranceTarget
+from deeppavlov.models.go_bot.features_engineerer import FeaturesParams
 from deeppavlov.models.go_bot.nlg_manager import NLGManager
-from deeppavlov.models.go_bot.nlu_mechanism import NLUManager
+from deeppavlov.models.go_bot.nlu_manager import NLUManager
+from deeppavlov.models.go_bot.policy_network import PolicyNetwork, PolicyNetworkParams
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DialogueStateTracker, MultipleUserStateTrackersPool
+from pathlib import Path
 
 log = getLogger(__name__)
 
 
 @register("go_bot")
-class GoalOrientedBot(LRScheduledTFModel):
+class GoalOrientedBot(NNModel):
     """
     The dialogue bot is based on  https://arxiv.org/abs/1702.03274, which
     introduces Hybrid Code Networks that combine an RNN with domain-specific
@@ -62,10 +58,6 @@ class GoalOrientedBot(LRScheduledTFModel):
             :doc:`deeppavlov.models.go_bot.tracker </apiref/models/go_bot>`.
         hidden_size: size of rnn hidden layer.
         action_size: size of rnn output (equals to number of bot actions).
-        obs_size: input features' size (must be equal to sum of output sizes of
-            ``bow_embedder``, ``embedder``, ``intent_classifier``,
-            ``tracker.num_features`` plus size of context features(=6) and
-            ``action_size``).
         dropout_rate: probability of weights dropping out.
         l2_reg_coef: l2 regularization weight (applied to input and output layer).
         dense_size: rnn input size.
@@ -77,7 +69,7 @@ class GoalOrientedBot(LRScheduledTFModel):
             * **max_num_tokens** – maximum number of input tokens.
             * **depth** – number of averages used in constrained attentions
               (``'cs_bahdanau'`` or ``'cs_general'``).
-            * **action_as_key** – whether to use action from previous timestep as key
+            * **action_as_key** – whether to use action from previous time step as key
               to attention.
             * **intent_as_key** – use utterance intents as attention key or not.
             * **projected_align** – whether to use output projection.
@@ -112,9 +104,8 @@ class GoalOrientedBot(LRScheduledTFModel):
         debug: whether to display debug output.
     """
 
-    GRAPH_PARAMS = ["hidden_size", "action_size", "dense_size", "obs_size",
-                    "attention_mechanism"]
-    DEPRECATED = ["end_learning_rate", "decay_steps", "decay_power"]
+    DEFAULT_USER_ID = 1
+    POLICY_DIR_NAME = "policy"
 
     def __init__(self,
                  tokenizer: Component,
@@ -122,7 +113,6 @@ class GoalOrientedBot(LRScheduledTFModel):
                  template_path: str,
                  save_path: str,
                  hidden_size: int = 128,
-                 obs_size: int = None,
                  action_size: int = None,
                  dropout_rate: float = 0.,
                  l2_reg_coef: float = 0.,
@@ -141,302 +131,304 @@ class GoalOrientedBot(LRScheduledTFModel):
                  use_action_mask: bool = False,
                  debug: bool = False,
                  **kwargs) -> None:
-        network_parameters = network_parameters or {}
-        if any(p in network_parameters for p in self.DEPRECATED):
-            log.warning(f"parameters {self.DEPRECATED} are deprecated,"
-                        f" for learning rate schedule documentation see"
-                        f" deeppavlov.core.models.lr_scheduled_tf_model"
-                        f" or read a github tutorial on super convergence.")
-        if 'learning_rate' in network_parameters:
-            kwargs['learning_rate'] = network_parameters.pop('learning_rate')
-        super().__init__(load_path=load_path, save_path=save_path, **kwargs)
+        self.use_action_mask = use_action_mask  # todo not supported actually
+        super().__init__(save_path=save_path, load_path=load_path, **kwargs)
 
-        self.bow_embedder = bow_embedder
-        self.embedder = embedder
-        self.use_action_mask = use_action_mask
         self.debug = debug
-        self.word_vocab = word_vocab
+
+        policy_network_params = PolicyNetworkParams(hidden_size, action_size, dropout_rate, l2_reg_coef,
+                                                    dense_size, attention_mechanism, network_parameters)
 
         self.nlu_manager = NLUManager(tokenizer, slot_filler, intent_classifier)
         self.nlg_manager = NLGManager(template_path, template_type, api_call_action)
-        self.n_actions = len(self.nlg_manager.templates)
+        self.data_handler = TokensVectorizer(debug, word_vocab, bow_embedder, embedder)
 
-        self.default_tracker = tracker
-        self.dialogue_state_tracker = DialogueStateTracker(tracker.slot_names, self.n_actions, hidden_size, database)
-
-        new_network_parameters = {
-            'hidden_size': hidden_size,
-            'action_size': action_size,
-            'obs_size': obs_size,
-            'dropout_rate': dropout_rate,
-            'l2_reg_coef': l2_reg_coef,
-            'dense_size': dense_size,
-            'attn': attention_mechanism
-        }
-        if 'attention_mechanism' in network_parameters:
-            network_parameters['attn'] = network_parameters.pop('attention_mechanism')
-        new_network_parameters.update(network_parameters)
-        self._init_network(**new_network_parameters)
-
+        self.dialogue_state_tracker = DialogueStateTracker.from_gobot_params(tracker, self.nlg_manager,
+                                                                             policy_network_params, database)
         self.multiple_user_state_tracker = MultipleUserStateTrackersPool(base_tracker=self.dialogue_state_tracker)
+
+        tokens_dims = self.data_handler.get_dims()
+        features_params = FeaturesParams.from_configured(self.nlg_manager, self.nlu_manager,
+                                                         self.dialogue_state_tracker)
+        policy_save_path = Path(save_path, self.POLICY_DIR_NAME)
+        policy_load_path = Path(load_path, self.POLICY_DIR_NAME)
+
+        self.policy = PolicyNetwork(policy_network_params, tokens_dims, features_params,
+                                    policy_load_path, policy_save_path, **kwargs)
+
         self.reset()
 
-    def _init_network(self,
-                      hidden_size: int,
-                      action_size: int,
-                      obs_size: int,
-                      dropout_rate: float,
-                      l2_reg_coef: float,
-                      dense_size: int,
-                      attn: dict) -> None:
-        # initialize network
-        dense_size = dense_size or hidden_size
-        if obs_size is None:
-            obs_size = 6 + self.default_tracker.num_features + self.n_actions
-            if callable(self.bow_embedder):
-                obs_size += len(self.word_vocab)
-            if callable(self.embedder):
-                obs_size += self.embedder.dim
-            if callable(self.nlu_manager.intent_classifier):
-                obs_size += len(self.nlu_manager.intents)
-            log.info(f"Calculated input size for `GoalOrientedBotNetwork` is {obs_size}")
-        if action_size is None:
-            action_size = self.n_actions
+    def prepare_dialogues_batches_training_data(self,
+                batch_dialogues_utterances_contexts_info: List[List[dict]],
+                batch_dialogues_utterances_responses_info: List[List[dict]]) -> BatchDialoguesDataset:
+        """
+        Parse the passed dialogue information to the dialogue information object.
 
-        if attn:
-            attn['token_size'] = attn.get('token_size') or self.embedder.dim
-            attn['action_as_key'] = attn.get('action_as_key', False)
-            attn['intent_as_key'] = attn.get('intent_as_key', False)
+        :param batch_dialogues_utterances_contexts_info: the dictionary containing the dialogue utterances training information
+        :param batch_dialogues_utterances_responses_info: the dictionary containing the dialogue utterances responses training information
+        :return: the dialogue data object containing the numpy-vectorized features and target extracted
+        from the utterance data
+        """
+        # todo naming, docs, comments
+        max_dialogue_length = max(len(dialogue_info_entry)
+                            for dialogue_info_entry in batch_dialogues_utterances_contexts_info)  # for padding
 
-            key_size = 0
-            if attn['action_as_key']:
-                key_size += self.n_actions
-            if attn['intent_as_key'] and callable(self.nlu_manager.intent_classifier):
-                key_size += len(self.nlu_manager.intents)
-            key_size = key_size or 1
-            attn['key_size'] = attn.get('key_size') or key_size
+        batch_dialogues_dataset = BatchDialoguesDataset(max_dialogue_length)
+        for dialogue_utterances_info in zip(batch_dialogues_utterances_contexts_info,
+                                            batch_dialogues_utterances_responses_info):
 
-        # specify model options
-        self.opt = {
-            'hidden_size': hidden_size,
-            'action_size': action_size,
-            'obs_size': obs_size,
-            'dense_size': dense_size,
-            'dropout_rate': dropout_rate,
-            'l2_reg_coef': l2_reg_coef,
-            'attention_mechanism': attn
-        }
+            dialogue_training_data = self.prepare_dialogue_training_data(*dialogue_utterances_info)
+            batch_dialogues_dataset.append(dialogue_training_data)
 
-        # initialize parameters
-        self._init_network_params()
-        # build computational graph
-        self._build_graph()
-        # initialize session
-        self.sess = tf.Session()
+        return batch_dialogues_dataset
 
-        self.sess.run(tf.global_variables_initializer())
+    def prepare_dialogue_training_data(self,
+                                       dialogue_utterances_contexts_info: List[dict],
+                                       dialogue_utterances_responses_info: List[dict]) -> DialogueDataEntry:
+        """
+        Parse the passed dialogue information to the dialogue information object.
 
-        if tf.train.checkpoint_exists(str(self.load_path.resolve())):
-            log.info(f"[initializing `{self.__class__.__name__}` from saved]")
-            self.load()
-        else:
-            log.info(f"[initializing `{self.__class__.__name__}` from scratch]")
+        :param dialogue_utterances_contexts_info: the dictionary containing the dialogue utterances training information
+        :param dialogue_utterances_responses_info: the dictionary containing the dialogue utterances responses training information
+        :return: the dialogue data object containing the numpy-vectorized features and target extracted
+        from the utterance data
+        """
 
-    def _encode_context(self,
-                        tokens: List[str],
-                        tracker: DialogueStateTracker) -> List[np.ndarray]:
-        # Bag of words features
-        bow_features = []
-        if callable(self.bow_embedder):
-            tokens_idx = self.word_vocab(tokens)
-            bow_features = self.bow_embedder([tokens_idx])[0]
-            bow_features = bow_features.astype(np.float32)
+        dialogue_training_data = DialogueDataEntry()
+        # we started to process new dialogue so resetting the dialogue state tracker.
+        # simplification of this logic is planned; there is a todo
+        self.dialogue_state_tracker.reset_state()
+        for context, response in zip(dialogue_utterances_contexts_info, dialogue_utterances_responses_info):
 
-        # Embeddings
-        emb_features = []
-        emb_context = np.array([], dtype=np.float32)
-        if callable(self.embedder):
-            if self.attn:
-                if tokens:
-                    pad = np.zeros((self.attn.max_num_tokens,
-                                    self.attn.token_size),
-                                   dtype=np.float32)
-                    sen = np.array(self.embedder([tokens])[0])
-                    # TODO : Unsupport of batch_size more than 1
-                    emb_context = np.concatenate((pad, sen))
-                    emb_context = emb_context[-self.attn.max_num_tokens:]
-                else:
-                    emb_context = np.zeros((self.attn.max_num_tokens,
-                                            self.attn.token_size),
-                                           dtype=np.float32)
-            else:
-                emb_features = self.embedder([tokens], mean=True)[0]
-                # random embedding instead of zeros
-                if np.all(emb_features < 1e-20):
-                    emb_dim = self.embedder.dim
-                    emb_features = np.fabs(np.random.normal(0, 1 / emb_dim, emb_dim))
+            utterance_training_data = self.prepare_utterance_training_data(context, response)
+            dialogue_training_data.append(utterance_training_data)
 
-        # Intent features
-        intent_features = []
-        if callable(self.nlu_manager.intent_classifier):
-            intent_features = self.nlu_manager.intent_classifier([' '.join(tokens)])[1][0]
+            # to correctly track the dialogue state
+            # we inform the tracker with the ground truth response info
+            # just like the tracker remembers the predicted response actions when real-time inference
+            self.dialogue_state_tracker.update_previous_action(utterance_training_data.target.action_id)
 
             if self.debug:
-                intent = self.nlu_manager.intents[np.argmax(intent_features[0])]
-                log.debug(f"Predicted intent = `{intent}`")
+                log.debug(f"True response = '{response['text']}'.")
+                if utterance_training_data.features.action_mask[utterance_training_data.target.action_id] != 1.:
+                    log.warning("True action forbidden by action mask.")
+        return dialogue_training_data
 
-        attn_key = np.array([], dtype=np.float32)
-        if self.attn:
-            if self.attn.action_as_key:
-                attn_key = np.hstack((attn_key, tracker.prev_action))
-            if self.attn.intent_as_key:
-                attn_key = np.hstack((attn_key, intent_features))
-            if len(attn_key) == 0:
-                attn_key = np.array([1], dtype=np.float32)
+    def prepare_utterance_training_data(self,
+                                        utterance_context_info_dict: dict,
+                                        utterance_response_info_dict: dict) -> UtteranceDataEntry:
+        """
+        Parse the passed utterance information to the utterance information object.
 
+        :param utterance_context_info_dict: the dictionary containing the utterance training information
+        :param utterance_response_info_dict: the dictionary containing the utterance response training information
+        :return: the utterance data object containing the numpy-vectorized features and target extracted
+        from the utterance data
+        """
+
+        # todo naming, docs, comments
+        text = utterance_context_info_dict['text']
+
+        # if there already were db lookups in this utterance
+        # we inform the tracker with these lookups info
+        # just like the tracker remembers the db interaction results when real-time inference
+        # todo: not obvious logic
+        self.dialogue_state_tracker.update_ground_truth_db_result_from_context(utterance_context_info_dict)
+
+        utterance_features = self.extract_features_from_utterance_text(text, self.dialogue_state_tracker)
+
+        action_id = self.nlg_manager.encode_response(utterance_response_info_dict['act'])
+        utterance_target = UtteranceTarget(action_id)
+
+        utterance_data_entry = UtteranceDataEntry.from_features_and_target(utterance_features, utterance_target)
+        return utterance_data_entry
+
+    def extract_features_from_utterance_text(self, text, tracker, keep_tracker_state=False) -> UtteranceFeatures:
+        """
+        Extract ML features for the input text and the respective tracker.
+        Features are aggregated from the
+        * NLU;
+        * text BOW-encoding&embedding;
+        * tracker memory.
+
+        :param text: the text to infer to
+        :param tracker: the tracker that tracks the dialogue from which the text is taken
+        :param keep_tracker_state: if True, the tracker state will not be updated during the prediction.
+        Used to keep tracker's state intact when predicting the action to perform right after the api call action
+        is predicted and performed.
+        :return: the utterance features object containing the numpy-vectorized features extracted from the utterance
+        """
+        # todo comments
+
+        context_slots, intent_features, tokens = self.nlu_manager.nlu(text)  # todo: dto-like class for the nlu output
+
+        # region text BOW-encoding and embedding
+        tokens_bow_encoded = []
+        if self.data_handler.use_bow_encoder():
+            tokens_bow_encoded = self.data_handler.bow_encode_tokens(tokens)
+
+        tokens_embeddings_padded = np.array([], dtype=np.float32)
+        tokens_aggregated_embedding = []
+        if self.policy.has_attn():
+            attn_window_size = self.policy.get_attn_window_size()
+            attn_config_token_dim = self.policy.get_attn_hyperparams().token_size  # todo: this is ugly and caused by complicated nn configuration algorithm
+            tokens_embeddings_padded = self.data_handler.calc_tokens_embeddings(attn_window_size,
+                                                                                attn_config_token_dim,
+                                                                                tokens)
+        else:
+            tokens_aggregated_embedding = self.data_handler.calc_tokens_embedding(tokens)
+        # endregion text BOW-encoding and embedding
+
+        # region provide tracker with the incoming knowledge got from nlu (if we do not keep the tracker state intact)
+        if context_slots and not keep_tracker_state:
+            tracker.update_state(context_slots)  # todo: dto-like class for the nlu output; pass to tracker the dto
+        # endregion provide tracker with the incoming knowledge got from nlu (if we do not keep the tracker state intact)
+
+        # region get tracker knowledge features
+        # todo simplify; dto-like class for the tracker knowledge
+        tracker_prev_action = tracker.prev_action
         state_features = tracker.get_features()
-
         context_features = tracker.calc_context_features()
+        # endregion get tracker knowledge features
 
-        if self.debug:
-            log.debug(f"Context features = {context_features}")
-            debug_msg = f"num bow features = {bow_features}" + \
-                        f", num emb features = {emb_features}" + \
-                        f", num intent features = {intent_features}" + \
-                        f", num state features = {len(state_features)}" + \
-                        f", num context features = {len(context_features)}" + \
-                        f", prev_action shape = {len(tracker.prev_action)}"
-            log.debug(debug_msg)
+        attn_key = self.policy.calc_attn_key(intent_features, tracker_prev_action)
 
-        concat_feats = np.hstack((bow_features, emb_features, intent_features,
-                                  state_features, context_features,
-                                  tracker.prev_action))
-        return concat_feats, emb_context, attn_key
+        concat_feats = np.hstack((tokens_bow_encoded, tokens_aggregated_embedding, intent_features, state_features,
+                                  context_features, tracker_prev_action))
 
-    def prepare_data(self, x: List[dict], y: List[dict]) -> List[np.ndarray]:
-        b_features, b_u_masks, b_a_masks, b_actions = [], [], [], []
-        b_emb_context, b_keys = [], []  # for attention
-        max_num_utter = max(len(d_contexts) for d_contexts in x)
-        for d_contexts, d_responses in zip(x, y):
-            self.dialogue_state_tracker.reset_state()
-            d_features, d_a_masks, d_actions = [], [], []
-            d_emb_context, d_key = [], []  # for attention
-
-            for context, response in zip(d_contexts, d_responses):
-                context_slots, intent_features, tokens = self.nlu_manager.nlu(context["text"])  # todo: dto-like class for the nlu output
-
-                # update state
-                self.dialogue_state_tracker.get_ground_truth_db_result_from_context(context)
-
-                if callable(self.nlg_manager.slot_filler):
-                    self.dialogue_state_tracker.update_state(context_slots)
-
-                features, emb_context, key = self._encode_context(tokens, tracker=self.dialogue_state_tracker)
-                d_features.append(features)
-                d_emb_context.append(emb_context)
-                d_key.append(key)
-                d_a_masks.append(self.dialogue_state_tracker.calc_action_mask(self.nlg_manager.api_call_id))
-
-                action_id = self.nlg_manager.encode_response(response['act'])
-                d_actions.append(action_id)
-                # update state
-                # - previous action is teacher-forced here
-                self.dialogue_state_tracker.update_previous_action(action_id)
-
-                if self.debug:
-                    log.debug(f"True response = '{response['text']}'.")
-                    if d_a_masks[-1][action_id] != 1.:
-                        log.warning("True action forbidden by action mask.")
-
-            # padding to max_num_utter
-            num_padds = max_num_utter - len(d_contexts)
-            d_features.extend([np.zeros_like(d_features[0])] * num_padds)
-            d_emb_context.extend([np.zeros_like(d_emb_context[0])] * num_padds)
-            d_key.extend([np.zeros_like(d_key[0])] * num_padds)
-            d_u_mask = [1] * len(d_contexts) + [0] * num_padds
-            d_a_masks.extend([np.zeros_like(d_a_masks[0])] * num_padds)
-            d_actions.extend([0] * num_padds)
-
-            b_features.append(d_features)
-            b_emb_context.append(d_emb_context)
-            b_keys.append(d_key)
-            b_u_masks.append(d_u_mask)
-            b_a_masks.append(d_a_masks)
-            b_actions.append(d_actions)
-        return b_features, b_emb_context, b_keys, b_u_masks, b_a_masks, b_actions
-
-    def train_on_batch(self, x: List[dict], y: List[dict]) -> dict:
-        return self.network_train_on_batch(*self.prepare_data(x, y))
-
-    def _infer(self, tokens: List[str], tracker: DialogueStateTracker) -> List:
-        features, emb_context, key = self._encode_context(tokens, tracker=tracker)
+        # mask is used to prevent tracker from predicting the api call twice via logical AND of action candidates and mask
+        # todo: seems to be an efficient idea but the intuition beyond this whole hack is not obvious
         action_mask = tracker.calc_action_mask(self.nlg_manager.api_call_id)
-        probs, state_c, state_h = \
-            self.network_call([[features]], [[emb_context]], [[key]],
-                              [[action_mask]], [[tracker.network_state[0]]],
-                              [[tracker.network_state[1]]],
-                              prob=True)
-        return probs, np.argmax(probs), (state_c, state_h)
 
-    def _infer_dialog(self, contexts: List[dict]) -> List[str]:
+        return UtteranceFeatures(action_mask, attn_key, tokens_embeddings_padded, concat_feats)
+
+    def _infer(self, user_utterance_text: str, user_tracker: DialogueStateTracker, keep_tracker_state=False) -> Sequence:
+        """
+        Predict the action to perform in response to given text.
+
+        :param user_utterance_text: the user input text passed to the system
+        :param user_tracker: the tracker that tracks the dialogue with the input-provided user
+        :param keep_tracker_state: if True, the tracker state will not be updated during the prediction.
+        Used to keep tracker's state intact when predicting the action to perform right after the api call action
+        is predicted and performed.
+
+        :return: the actions probabilities distribution from the policy net output layer,
+        the index of the most probable action, the network state vector
+        (as for RNNs: output, hidden_state <- RNN(output, hidden_state))
+        """
+        utterance_features = self.extract_features_from_utterance_text(user_utterance_text, user_tracker,
+                                                                       keep_tracker_state)
+
+        utterance_data_entry = UtteranceDataEntry.from_features(utterance_features)
+
+        # region pack an utterance to batch to further get features in batched form
+        dialogue_data_entry = DialogueDataEntry()
+        dialogue_data_entry.append(utterance_data_entry)
+        # batch is single dialogue of 1 utterance => dialogue length = 1
+        utterance_batch_data_entry = BatchDialoguesDataset(max_dialogue_length=1)
+        utterance_batch_data_entry.append(dialogue_data_entry)
+        # endregion pack an utterance to batch to further get features in batched form
+        utterance_batch_features = utterance_batch_data_entry.features
+
+        # as for RNNs: output, hidden_state < - RNN(output, hidden_state)
+        hidden_cells_state, hidden_cells_output = user_tracker.network_state[0], user_tracker.network_state[1]
+        probs, hidden_cells_state, hidden_cells_output = self.policy(utterance_batch_features,
+                                                                     hidden_cells_state,
+                                                                     hidden_cells_output,
+                                                                     prob=True)
+
+        network_state = (hidden_cells_state, hidden_cells_output)
+        return probs, np.argmax(probs), network_state
+
+    def __call__(self, batch: Union[List[List[dict]], List[str]],
+                 user_ids: Optional[List] = None) -> Union[List[str], List[List[str]]]:
+
+        if isinstance(batch[0], list):
+            # batch is a list of *completed* dialogues, infer on them to calculate metrics
+            # user ids are ignored here: the single tracker is used and is reset after each dialogue inference
+            # todo unify tracking: no need to distinguish tracking strategies on dialogues and realtime
+            res = []
+            for dialogue in batch:
+                dialogue: List[dict]
+                res.append(self._calc_inferences_for_dialogue(dialogue))
+        else:
+            # batch is a list of utterances possibly came from different users: real-time inference
+            res = []
+            if not user_ids:
+                user_ids = [self.DEFAULT_USER_ID] * len(batch)
+            for user_id, user_text in zip(user_ids, batch):
+                user_text: str
+                res.append(self._realtime_infer(user_id, user_text))
+
+        return res
+
+    def _realtime_infer(self, user_id, user_text):
+        # realtime inference logic
+        #
+        # we have the pool of trackers, each one tracks the dialogue with its own user
+        # (1 to 1 mapping: each user has his own tracker and vice versa)
+
+        user_tracker = self.multiple_user_state_tracker.get_or_init_tracker(user_id)
+
+        # predict the action to perform (e.g. response smth or call the api)
+        _, action_id_predicted, network_state = self._infer(user_text, user_tracker)
+        user_tracker.update_previous_action(action_id_predicted)
+        user_tracker.network_state = network_state
+
+        if action_id_predicted == self.nlg_manager.api_call_id:
+            # tracker says we need to make an api call.
+            # we 1) perform the api call and 2) predict what to do next
+            user_tracker.make_api_call()
+            _, action_id_predicted, network_state = self._infer(user_text, user_tracker, keep_tracker_state=True)
+            user_tracker.update_previous_action(action_id_predicted)
+            user_tracker.network_state = network_state
+
+        # tracker says we need to say smth to user. we
+        # * calculate the slotfilled state:
+        #   for each slot that is relevant to dialogue we fill this slot value if possible
+        # * generate text for the predicted speech action:
+        #   using the pattern provided for the action;
+        #   the slotfilled state provides info to encapsulate to the pattern
+        tracker_slotfilled_state = user_tracker.fill_current_state_with_db_results()
+        resp = self.nlg_manager.decode_response(action_id_predicted, tracker_slotfilled_state)
+        return resp
+
+    def _calc_inferences_for_dialogue(self, contexts: List[dict]) -> List[str]:
+        # infer on each dialogue utterance
+        # e.g. to calculate inference score via comparing the inferred predictions with the ground truth utterance
+        # todo we provide the tracker with both predicted and ground truth response actions info. is this ok?
         res = []
         self.dialogue_state_tracker.reset_state()
         for context in contexts:
             if context.get('prev_resp_act') is not None:
-                previous_act_id = self.nlg_manager.encode_response(context['prev_resp_act'])
-                # previous action is teacher-forced
-                self.dialogue_state_tracker.update_previous_action(previous_act_id)
+                # if there already were responses to user
+                # we inform the tracker with these responses info
+                # just like the tracker remembers the predicted response actions when real-time inference
+                previous_action_id = self.nlg_manager.encode_response(context['prev_resp_act'])
+                self.dialogue_state_tracker.update_previous_action(previous_action_id)
 
-            self.dialogue_state_tracker.get_ground_truth_db_result_from(context)
-            context_slots, intent_features, tokens = self.nlu_manager.nlu(context["text"])  # todo: dto-like class for the nlu output
+            # if there already were db lookups
+            # we inform the tracker with these lookups info
+            # just like the tracker remembers the db interaction results when real-time inference
+            self.dialogue_state_tracker.update_ground_truth_db_result_from_context(context)
 
-            if callable(self.nlu_manager.slot_filler):
-                self.dialogue_state_tracker.update_state(context_slots)
-            _, predicted_act_id, self.dialogue_state_tracker.network_state = \
-                self._infer(tokens, tracker=self.dialogue_state_tracker)
+            _, action_id_predicted, network_state = self._infer(context['text'], self.dialogue_state_tracker)
+            self.dialogue_state_tracker.update_previous_action(action_id_predicted)  # see the above todo
+            self.dialogue_state_tracker.network_state = network_state
 
-            self.dialogue_state_tracker.update_previous_action(predicted_act_id)
+            # todo fix naming: fill_current_state_with_db_results & update_ground_truth_db_result_from_context are alike
             tracker_slotfilled_state = self.dialogue_state_tracker.fill_current_state_with_db_results()
-            resp = self.nlg_manager.decode_response(predicted_act_id, tracker_slotfilled_state)
+            resp = self.nlg_manager.decode_response(action_id_predicted, tracker_slotfilled_state)
             res.append(resp)
         return res
 
-    def __call__(self,
-                 batch: Union[List[dict], List[str]],
-                 user_ids: Optional[List] = None) -> List[str]:
-        # batch is a list of utterances
-        if isinstance(batch[0], str):
-            res = []
-            if not user_ids:
-                user_ids = ['finn'] * len(batch)
-            for user_id, x in zip(user_ids, batch):
-                tracker = self.multiple_user_state_tracker.get_or_init_tracker(user_id)
-                tokens = self.tokenizer([x.lower().strip()])[0]
-
-                if callable(self.slot_filler):
-                    utter_slots = self.slot_filler([tokens])[0]
-                    tracker.update_state(utter_slots)
-
-                _, predicted_act_id, tracker.network_state = \
-                    self._infer(tokens, tracker=tracker)
-
-                tracker.update_previous_action(predicted_act_id)
-
-                # if made api_call, then respond with next prediction
-                if predicted_act_id == self.nlg_manager.api_call_id:
-                    tracker.make_api_call()
-
-                    _, predicted_act_id, tracker.network_state = \
-                        self._infer(tokens, tracker=tracker)
-
-                    tracker.update_previous_action(predicted_act_id)
-
-                tracker_slotfilled_state = self.dialogue_state_tracker.fill_current_state_with_db_results()
-                resp = self.nlg_manager.decode_response(predicted_act_id, tracker_slotfilled_state)
-                res.append(resp)
-            return res
-        # batch is a list of dialogs, user_ids ignored
-        return [self._infer_dialog(x) for x in batch]
+    def train_on_batch(self,
+                       batch_dialogues_utterances_features: List[List[dict]],
+                       batch_dialogues_utterances_targets: List[List[dict]]) -> dict:
+        batch_dialogues_dataset = self.prepare_dialogues_batches_training_data(batch_dialogues_utterances_features,
+                                                                               batch_dialogues_utterances_targets)
+        return self.policy.train_on_batch(batch_dialogues_dataset.features,
+                                          batch_dialogues_dataset.targets)
 
     def reset(self, user_id: Union[None, str, int] = None) -> None:
         # WARNING: this method is confusing. todo
@@ -447,234 +439,10 @@ class GoalOrientedBot(LRScheduledTFModel):
         if self.debug:
             log.debug("Bot reset.")
 
-    def network_call(self,
-                     features: np.ndarray,
-                     emb_context: np.ndarray,
-                     key: np.ndarray,
-                     action_mask: np.ndarray,
-                     states_c: np.ndarray,
-                     states_h: np.ndarray,
-                     prob: bool = False) -> List[np.ndarray]:
-        feed_dict = {
-            self._features: features,
-            self._dropout_keep_prob: 1.,
-            self._utterance_mask: [[1.]],
-            self._initial_state: (states_c, states_h),
-            self._action_mask: action_mask
-        }
-        if self.attn:
-            feed_dict[self._emb_context] = emb_context
-            feed_dict[self._key] = key
-
-        probs, prediction, state = \
-            self.sess.run([self._probs, self._prediction, self._state],
-                          feed_dict=feed_dict)
-
-        if prob:
-            return probs, state[0], state[1]
-        return prediction, state[0], state[1]
-
-    def network_train_on_batch(self,
-                               features: np.ndarray,
-                               emb_context: np.ndarray,
-                               key: np.ndarray,
-                               utter_mask: np.ndarray,
-                               action_mask: np.ndarray,
-                               action: np.ndarray) -> dict:
-        feed_dict = {
-            self._dropout_keep_prob: 1.,
-            self._utterance_mask: utter_mask,
-            self._features: features,
-            self._action: action,
-            self._action_mask: action_mask
-        }
-        if self.attn:
-            feed_dict[self._emb_context] = emb_context
-            feed_dict[self._key] = key
-
-        _, loss_value, prediction = \
-            self.sess.run([self._train_op, self._loss, self._prediction],
-                          feed_dict=feed_dict)
-        return {'loss': loss_value,
-                'learning_rate': self.get_learning_rate(),
-                'momentum': self.get_momentum()}
-
-    def _init_network_params(self) -> None:
-        self.dropout_rate = self.opt['dropout_rate']
-        self.hidden_size = self.opt['hidden_size']
-        self.action_size = self.opt['action_size']
-        self.obs_size = self.opt['obs_size']
-        self.dense_size = self.opt['dense_size']
-        self.l2_reg = self.opt['l2_reg_coef']
-
-        attn = self.opt.get('attention_mechanism')
-        if attn:
-            self.opt['attention_mechanism'] = attn
-
-            self.attn = \
-                collections.namedtuple('attention_mechanism', attn.keys())(**attn)
-            self.obs_size -= attn['token_size']
-        else:
-            self.attn = None
-
-    def _build_graph(self) -> None:
-
-        self._add_placeholders()
-
-        # build body
-        _logits, self._state = self._build_body()
-
-        # probabilities normalization : elemwise multiply with action mask
-        _logits_exp = tf.multiply(tf.exp(_logits), self._action_mask)
-        _logits_exp_sum = tf.expand_dims(tf.reduce_sum(_logits_exp, -1), -1)
-        self._probs = tf.squeeze(_logits_exp / _logits_exp_sum, name='probs')
-
-        # loss, train and predict operations
-        self._prediction = tf.argmax(self._probs, axis=-1, name='prediction')
-
-        # _weights = tf.expand_dims(self._utterance_mask, -1)
-        # TODO: try multiplying logits to action_mask
-        onehots = tf.one_hot(self._action, self.action_size)
-        _loss_tensor = tf.nn.softmax_cross_entropy_with_logits_v2(
-            logits=_logits, labels=onehots
-        )
-        # multiply with batch utterance mask
-        _loss_tensor = tf.multiply(_loss_tensor, self._utterance_mask)
-        self._loss = tf.reduce_mean(_loss_tensor, name='loss')
-        self._loss += self.l2_reg * tf.losses.get_regularization_loss()
-        self._train_op = self.get_train_op(self._loss)
-
-    def _add_placeholders(self) -> None:
-        self._dropout_keep_prob = tf.placeholder_with_default(1.0,
-                                                              shape=[],
-                                                              name='dropout_prob')
-        self._features = tf.placeholder(tf.float32,
-                                        [None, None, self.obs_size],
-                                        name='features')
-        self._action = tf.placeholder(tf.int32,
-                                      [None, None],
-                                      name='ground_truth_action')
-        self._action_mask = tf.placeholder(tf.float32,
-                                           [None, None, self.action_size],
-                                           name='action_mask')
-        self._utterance_mask = tf.placeholder(tf.float32,
-                                              shape=[None, None],
-                                              name='utterance_mask')
-        self._batch_size = tf.shape(self._features)[0]
-        zero_state = tf.zeros([self._batch_size, self.hidden_size], dtype=tf.float32)
-        _initial_state_c = \
-            tf.placeholder_with_default(zero_state, shape=[None, self.hidden_size])
-        _initial_state_h = \
-            tf.placeholder_with_default(zero_state, shape=[None, self.hidden_size])
-        self._initial_state = tf.nn.rnn_cell.LSTMStateTuple(_initial_state_c,
-                                                            _initial_state_h)
-        if self.attn:
-            _emb_context_shape = \
-                [None, None, self.attn.max_num_tokens, self.attn.token_size]
-            self._emb_context = tf.placeholder(tf.float32,
-                                               _emb_context_shape,
-                                               name='emb_context')
-            self._key = tf.placeholder(tf.float32,
-                                       [None, None, self.attn.key_size],
-                                       name='key')
-
-    def _build_body(self) -> Tuple[tf.Tensor, tf.Tensor]:
-        # input projection
-        _units = tf.layers.dense(self._features, self.dense_size,
-                                 kernel_regularizer=tf.nn.l2_loss,
-                                 kernel_initializer=xav())
-        if self.attn:
-            attn_scope = f"attention_mechanism/{self.attn.type}"
-            with tf.variable_scope(attn_scope):
-                if self.attn.type == 'general':
-                    _attn_output = am.general_attention(
-                        self._key,
-                        self._emb_context,
-                        hidden_size=self.attn.hidden_size,
-                        projected_align=self.attn.projected_align)
-                elif self.attn.type == 'bahdanau':
-                    _attn_output = am.bahdanau_attention(
-                        self._key,
-                        self._emb_context,
-                        hidden_size=self.attn.hidden_size,
-                        projected_align=self.attn.projected_align)
-                elif self.attn.type == 'cs_general':
-                    _attn_output = am.cs_general_attention(
-                        self._key,
-                        self._emb_context,
-                        hidden_size=self.attn.hidden_size,
-                        depth=self.attn.depth,
-                        projected_align=self.attn.projected_align)
-                elif self.attn.type == 'cs_bahdanau':
-                    _attn_output = am.cs_bahdanau_attention(
-                        self._key,
-                        self._emb_context,
-                        hidden_size=self.attn.hidden_size,
-                        depth=self.attn.depth,
-                        projected_align=self.attn.projected_align)
-                elif self.attn.type == 'light_general':
-                    _attn_output = am.light_general_attention(
-                        self._key,
-                        self._emb_context,
-                        hidden_size=self.attn.hidden_size,
-                        projected_align=self.attn.projected_align)
-                elif self.attn.type == 'light_bahdanau':
-                    _attn_output = am.light_bahdanau_attention(
-                        self._key,
-                        self._emb_context,
-                        hidden_size=self.attn.hidden_size,
-                        projected_align=self.attn.projected_align)
-                else:
-                    raise ValueError("wrong value for attention mechanism type")
-            _units = tf.concat([_units, _attn_output], -1)
-
-        _units = tf_layers.variational_dropout(_units,
-                                               keep_prob=self._dropout_keep_prob)
-
-        # recurrent network unit
-        _lstm_cell = tf.nn.rnn_cell.LSTMCell(self.hidden_size)
-        _utter_lengths = tf.cast(tf.reduce_sum(self._utterance_mask, axis=-1),
-                                 tf.int32)
-        # _output: [batch_size, max_time, hidden_size]
-        # _state: tuple of two [batch_size, hidden_size]
-        _output, _state = tf.nn.dynamic_rnn(_lstm_cell,
-                                            _units,
-                                            time_major=False,
-                                            initial_state=self._initial_state,
-                                            sequence_length=_utter_lengths)
-        _output = tf.reshape(_output, (self._batch_size, -1, self.hidden_size))
-        _output = tf_layers.variational_dropout(_output,
-                                                keep_prob=self._dropout_keep_prob)
-        # output projection
-        _logits = tf.layers.dense(_output, self.action_size,
-                                  kernel_regularizer=tf.nn.l2_loss,
-                                  kernel_initializer=xav(), name='logits')
-        return _logits, _state
-
     def load(self, *args, **kwargs) -> None:
-        self.load_params()
+        self.policy.load()
         super().load(*args, **kwargs)
 
     def save(self, *args, **kwargs) -> None:
         super().save(*args, **kwargs)
-        self.save_params()
-
-    def save_params(self) -> None:
-        path = str(self.save_path.with_suffix('.json').resolve())
-        log.info(f"[saving parameters to {path}]")
-        with open(path, 'w', encoding='utf8') as fp:
-            json.dump(self.opt, fp)
-
-    def load_params(self) -> None:
-        path = str(self.load_path.with_suffix('.json').resolve())
-        log.info(f"[loading parameters from {path}]")
-        with open(path, 'r', encoding='utf8') as fp:
-            params = json.load(fp)
-        for p in self.GRAPH_PARAMS:
-            if self.opt.get(p) != params.get(p):
-                raise ConfigError(f"`{p}` parameter must be equal to saved"
-                                  f" model parameter value `{params.get(p)}`,"
-                                  f" but is equal to `{self.opt.get(p)}`")
-
-    def process_event(self, event_name, data) -> None:
-        super().process_event(event_name, data)
+        self.policy.save()

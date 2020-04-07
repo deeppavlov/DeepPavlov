@@ -11,7 +11,6 @@ class NLUManager:
         if isinstance(self.intent_classifier, Chainer):
             self.intents = self.intent_classifier.get_main_component().classes
 
-
     def nlu(self, text):
         tokens = self.tokenize_single_text_entry(text)
 
