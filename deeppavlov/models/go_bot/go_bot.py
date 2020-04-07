@@ -310,21 +310,7 @@ class GoalOrientedBot(LRScheduledTFModel):
 
         state_features = tracker.get_features()
 
-        # Other features
-        result_matches_state = 0.
-        if tracker.db_result is not None:
-            matching_items = tracker.get_state().items()
-            result_matches_state = all(v == tracker.db_result.get(s)
-                                       for s, v in matching_items
-                                       if v != 'dontcare') * 1.
-        context_features = np.array([
-            bool(tracker.current_db_result) * 1.,
-            (tracker.current_db_result == {}) * 1.,
-            (tracker.db_result is None) * 1.,
-            bool(tracker.db_result) * 1.,
-            (tracker.db_result == {}) * 1.,
-            result_matches_state
-        ], dtype=np.float32)
+        context_features = tracker.calc_context_features()
 
         if self.debug:
             log.debug(f"Context features = {context_features}")

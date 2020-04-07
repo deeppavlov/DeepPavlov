@@ -91,6 +91,28 @@ class DialogueStateTracker(FeaturizedTracker):
 
         return mask
 
+    def calc_context_features(self):
+        # todo некрасиво
+        current_db_result = self.current_db_result
+        db_result = self.db_result
+        dst_state = self.get_state()
+
+        result_matches_state = 0.
+        if current_db_result is not None:
+            matching_items = dst_state.items()
+            result_matches_state = all(v == db_result.get(s)
+                                       for s, v in matching_items
+                                       if v != 'dontcare') * 1.
+        context_features = np.array([
+            bool(current_db_result) * 1.,
+            (current_db_result == {}) * 1.,
+            (db_result is None) * 1.,
+            bool(db_result) * 1.,
+            (db_result == {}) * 1.,
+            result_matches_state
+        ], dtype=np.float32)
+        return context_features
+
     def _update_db_result(self):
         if self.current_db_result is not None:
             self.db_result = self.current_db_result
