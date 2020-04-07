@@ -31,6 +31,7 @@ from deeppavlov.core.layers import tf_layers
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
 from deeppavlov.models.go_bot.nlg_manager import NLGManager
+from deeppavlov.models.go_bot.nlu_mechanism import NLUManager
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DialogueStateTracker, MultipleUserStateTrackersPool
 
@@ -150,25 +151,18 @@ class GoalOrientedBot(LRScheduledTFModel):
             kwargs['learning_rate'] = network_parameters.pop('learning_rate')
         super().__init__(load_path=load_path, save_path=save_path, **kwargs)
 
-        self.tokenizer = tokenizer
-
         self.bow_embedder = bow_embedder
         self.embedder = embedder
-        self.slot_filler = slot_filler
-        self.intent_classifier = intent_classifier
         self.use_action_mask = use_action_mask
         self.debug = debug
         self.word_vocab = word_vocab
 
+        self.nlu_manager = NLUManager(tokenizer, slot_filler, intent_classifier)
         self.nlg_manager = NLGManager(template_path, template_type, api_call_action)
         self.n_actions = len(self.nlg_manager.templates)
 
         self.default_tracker = tracker
         self.dialogue_state_tracker = DialogueStateTracker(tracker.slot_names, self.n_actions, hidden_size, database)
-
-        self.intents = []
-        if isinstance(self.intent_classifier, Chainer):
-            self.intents = self.intent_classifier.get_main_component().classes
 
         new_network_parameters = {
             'hidden_size': hidden_size,
@@ -203,8 +197,8 @@ class GoalOrientedBot(LRScheduledTFModel):
                 obs_size += len(self.word_vocab)
             if callable(self.embedder):
                 obs_size += self.embedder.dim
-            if callable(self.intent_classifier):
-                obs_size += len(self.intents)
+            if callable(self.nlu_manager.intent_classifier):
+                obs_size += len(self.nlu_manager.intents)
             log.info(f"Calculated input size for `GoalOrientedBotNetwork` is {obs_size}")
         if action_size is None:
             action_size = self.n_actions
@@ -217,8 +211,8 @@ class GoalOrientedBot(LRScheduledTFModel):
             key_size = 0
             if attn['action_as_key']:
                 key_size += self.n_actions
-            if attn['intent_as_key'] and callable(self.intent_classifier):
-                key_size += len(self.intents)
+            if attn['intent_as_key'] and callable(self.nlu_manager.intent_classifier):
+                key_size += len(self.nlu_manager.intents)
             key_size = key_size or 1
             attn['key_size'] = attn.get('key_size') or key_size
 
@@ -284,11 +278,11 @@ class GoalOrientedBot(LRScheduledTFModel):
 
         # Intent features
         intent_features = []
-        if callable(self.intent_classifier):
-            intent_features = self.intent_classifier([' '.join(tokens)])[1][0]
+        if callable(self.nlu_manager.intent_classifier):
+            intent_features = self.nlu_manager.intent_classifier([' '.join(tokens)])[1][0]
 
             if self.debug:
-                intent = self.intents[np.argmax(intent_features[0])]
+                intent = self.nlu_manager.intents[np.argmax(intent_features[0])]
                 log.debug(f"Predicted intent = `{intent}`")
 
         attn_key = np.array([], dtype=np.float32)
@@ -329,13 +323,12 @@ class GoalOrientedBot(LRScheduledTFModel):
             d_emb_context, d_key = [], []  # for attention
 
             for context, response in zip(d_contexts, d_responses):
-                tokens = self.tokenizer([context['text'].lower().strip()])[0]
+                context_slots, intent_features, tokens = self.nlu_manager.nlu(context["text"])  # todo: dto-like class for the nlu output
 
                 # update state
-                self.dialogue_state_tracker.get_ground_truth_db_result_from(context)
+                self.dialogue_state_tracker.get_ground_truth_db_result_from_context(context)
 
-                if callable(self.slot_filler):
-                    context_slots = self.slot_filler([tokens])[0]
+                if callable(self.nlg_manager.slot_filler):
                     self.dialogue_state_tracker.update_state(context_slots)
 
                 features, emb_context, key = self._encode_context(tokens, tracker=self.dialogue_state_tracker)
@@ -395,11 +388,10 @@ class GoalOrientedBot(LRScheduledTFModel):
                 self.dialogue_state_tracker.update_previous_action(previous_act_id)
 
             self.dialogue_state_tracker.get_ground_truth_db_result_from(context)
-            tokens = self.tokenizer([context['text'].lower().strip()])[0]
+            context_slots, intent_features, tokens = self.nlu_manager.nlu(context["text"])  # todo: dto-like class for the nlu output
 
-            if callable(self.slot_filler):
-                utter_slots = self.slot_filler([tokens])[0]
-                self.dialogue_state_tracker.update_state(utter_slots)
+            if callable(self.nlu_manager.slot_filler):
+                self.dialogue_state_tracker.update_state(context_slots)
             _, predicted_act_id, self.dialogue_state_tracker.network_state = \
                 self._infer(tokens, tracker=self.dialogue_state_tracker)
 
