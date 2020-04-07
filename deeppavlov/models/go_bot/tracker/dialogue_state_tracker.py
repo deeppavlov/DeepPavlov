@@ -20,159 +20,28 @@ import numpy as np
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
+from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 
 log = getLogger(__name__)
 
-
-class Tracker(metaclass=ABCMeta):
-    """
-    An abstract class for trackers: a model that holds a dialogue state and
-    generates state features.
-    """
-
-    @abstractmethod
-    def update_state(self, slots: Union[List[Tuple[str, Any]], Dict[str, Any]]) -> None:
-        """
-        Updates dialogue state with new ``slots``, calculates features.
-
-        Returns:
-            Tracker: ."""
-        pass
-
-    @abstractmethod
-    def get_state(self) -> Dict[str, Any]:
-        """
-        Returns:
-            Dict[str, Any]: dictionary with current slots and their values."""
-        pass
-
-    @abstractmethod
-    def reset_state(self) -> None:
-        """Resets dialogue state"""
-        pass
-
-    @abstractmethod
-    def get_features(self) -> np.ndarray:
-        """
-        Returns:
-            np.ndarray[float]: numpy array with calculates state features."""
-        pass
-
-
-@register('featurized_tracker')
-class FeaturizedTracker(Tracker):
-    """
-    Tracker that overwrites slots with new values.
-    Features are binary features (slot is present/absent) plus difference features
-    (slot value is (the same)/(not the same) as before last update) and count
-    features (sum of present slots and sum of changed during last update slots).
-
-    Parameters:
-        slot_names: list of slots that should be tracked.
-    """
-
-    def __init__(self, slot_names: List[str]) -> None:
-        self.slot_names = list(slot_names)
-        self.history = []
-        self.current_features = None
-
-    @property
-    def state_size(self) -> int:
-        return len(self.slot_names)
-
-    @property
-    def num_features(self) -> int:
-        return self.state_size * 3 + 3
-
-    def update_state(self, slots):
-        if isinstance(slots, list):
-            self.history.extend(self._filter(slots))
-
-        elif isinstance(slots, dict):
-            for slot, value in self._filter(slots.items()):
-                self.history.append((slot, value))
-
-        prev_state = self.get_state()
-        bin_feats = self._binary_features()
-        diff_feats = self._diff_features(prev_state)
-        new_feats = self._new_features(prev_state)
-
-        self.current_features = np.hstack((
-            bin_feats,
-            diff_feats,
-            new_feats,
-            np.sum(bin_feats),
-            np.sum(diff_feats),
-            np.sum(new_feats))
-        )
-
-    def get_state(self):
-        lasts = {}
-        for slot, value in self.history:
-            lasts[slot] = value
-        return lasts
-
-    def reset_state(self):
-        self.history = []
-        self.current_features = np.zeros(self.num_features, dtype=np.float32)
-
-    def get_features(self):
-        return self.current_features
-
-    def _filter(self, slots) -> Iterator:
-        return filter(lambda s: s[0] in self.slot_names, slots)
-
-    def _binary_features(self) -> np.ndarray:
-        feats = np.zeros(self.state_size, dtype=np.float32)
-        lasts = self.get_state()
-        for i, slot in enumerate(self.slot_names):
-            if slot in lasts:
-                feats[i] = 1.
-        return feats
-
-    def _diff_features(self, state) -> np.ndarray:
-        feats = np.zeros(self.state_size, dtype=np.float32)
-        curr_state = self.get_state()
-
-        for i, slot in enumerate(self.slot_names):
-            if slot in curr_state and slot in state and curr_state[slot] != state[slot]:
-                feats[i] = 1.
-
-        return feats
-
-    def _new_features(self, state) -> np.ndarray:
-        feats = np.zeros(self.state_size, dtype=np.float32)
-        curr_state = self.get_state()
-
-        for i, slot in enumerate(self.slot_names):
-            if slot in curr_state and slot not in state:
-                feats[i] = 1.
-
-        return feats
-
-
+# todo naming
 class DialogueStateTracker(FeaturizedTracker):
     def __init__(self, slot_names, n_actions: int, hidden_size: int, database: Component = None) -> None:
         super().__init__(slot_names)
-        self.db_result = None
-        self.current_db_result = None
-        self.database = database
-
-        self.n_actions = n_actions
         self.hidden_size = hidden_size
-        self.prev_action = np.zeros(n_actions, dtype=np.float32)
+        self.database = database
+        self.n_actions = n_actions
 
-        self.network_state = (
-            np.zeros([1, hidden_size], dtype=np.float32),
-            np.zeros([1, hidden_size], dtype=np.float32)
-        )
+        self.reset_state()
 
     def reset_state(self):
         super().reset_state()
         self.db_result = None
         self.current_db_result = None
         self.prev_action = np.zeros(self.n_actions, dtype=np.float32)
+        self._reset_network_state()
 
+    def _reset_network_state(self):
         self.network_state = (
             np.zeros([1, self.hidden_size], dtype=np.float32),
             np.zeros([1, self.hidden_size], dtype=np.float32)
@@ -182,7 +51,8 @@ class DialogueStateTracker(FeaturizedTracker):
         self.prev_action *= 0.
         self.prev_action[prev_act_id] = 1.
 
-    def get_ground_truth_db_result_from(self, context: Dict[str, Any]):
+    # todo oserikov это стоит переписать
+    def update_ground_truth_db_result_from_context(self, context: Dict[str, Any]):
         self.current_db_result = context.get('db_result', None)
         self._update_db_result()
 
@@ -226,9 +96,11 @@ class DialogueStateTracker(FeaturizedTracker):
             self.db_result = self.current_db_result
 
 
-class MultipleUserStateTracker(object):
-    def __init__(self):
+
+class MultipleUserStateTrackersPool(object):
+    def __init__(self, base_tracker: DialogueStateTracker):
         self._ids_to_trackers = {}
+        self.base_tracker = base_tracker
 
     def check_new_user(self, user_id: int) -> bool:
         return user_id in self._ids_to_trackers
@@ -243,8 +115,22 @@ class MultipleUserStateTracker(object):
         tracker.current_db_result = None
         return tracker
 
+    def new_tracker(self):
+        tracker = DialogueStateTracker(self.base_tracker.slot_names, self.base_tracker.n_actions,
+                                       self.base_tracker.hidden_size, self.base_tracker.database)
+        return tracker
+
+    def get_or_init_tracker(self, user_id: int):
+        if not self.check_new_user(user_id):
+            self.init_new_tracker(user_id, self.base_tracker)
+
+        return self.get_user_tracker(user_id)
+
+
+
     def init_new_tracker(self, user_id: int, tracker_entity: DialogueStateTracker) -> None:
         # TODO: implement a better way to init a tracker
+        # todo deprecated. The whole class should follow AbstractFactory or Pool pattern?
         tracker = DialogueStateTracker(
             tracker_entity.slot_names,
             tracker_entity.n_actions,
@@ -262,4 +148,3 @@ class MultipleUserStateTracker(object):
             self._ids_to_trackers[user_id].reset_state()
         else:
             self._ids_to_trackers.clear()
-

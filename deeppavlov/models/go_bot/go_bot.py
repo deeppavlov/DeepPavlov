@@ -31,7 +31,8 @@ from deeppavlov.core.layers import tf_attention_mechanisms as am
 from deeppavlov.core.layers import tf_layers
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
-from deeppavlov.models.go_bot.tracker import FeaturizedTracker, DialogueStateTracker, MultipleUserStateTracker
+from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
+from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DialogueStateTracker, MultipleUserStateTrackersPool
 
 log = getLogger(__name__)
 
@@ -191,7 +192,7 @@ class GoalOrientedBot(LRScheduledTFModel):
         new_network_parameters.update(network_parameters)
         self._init_network(**new_network_parameters)
 
-        self.multiple_user_state_tracker = MultipleUserStateTracker()
+        self.multiple_user_state_tracker = MultipleUserStateTrackersPool(base_tracker=self.dialogue_state_tracker)
         self.reset()
 
     def _init_network(self,
@@ -459,10 +460,7 @@ class GoalOrientedBot(LRScheduledTFModel):
             if not user_ids:
                 user_ids = ['finn'] * len(batch)
             for user_id, x in zip(user_ids, batch):
-                if not self.multiple_user_state_tracker.check_new_user(user_id):
-                    self.multiple_user_state_tracker.init_new_tracker(user_id, self.dialogue_state_tracker)
-
-                tracker = self.multiple_user_state_tracker.get_user_tracker(user_id)
+                tracker = self.multiple_user_state_tracker.get_or_init_tracker(user_id)
                 tokens = self.tokenizer([x.lower().strip()])[0]
 
                 if callable(self.slot_filler):
@@ -490,6 +488,10 @@ class GoalOrientedBot(LRScheduledTFModel):
         return [self._infer_dialog(x) for x in batch]
 
     def reset(self, user_id: Union[None, str, int] = None) -> None:
+        # WARNING: this method is confusing. todo
+        # the multiple_user_state_tracker is applicable only to the realtime inference scenario
+        # so the tracker used to calculate metrics on dialogues is never reset by this method
+        # (but that tracker usually is reset before each dialogue inference)
         self.multiple_user_state_tracker.reset(user_id)
         if self.debug:
             log.debug("Bot reset.")
