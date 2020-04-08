@@ -23,7 +23,7 @@ from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.models.go_bot.data_handler import TokensVectorizer
 from deeppavlov.models.go_bot.dto.dataset_features import UtteranceDataEntry, DialogueDataEntry, \
     BatchDialoguesDataset, UtteranceFeatures, UtteranceTarget
-from deeppavlov.models.go_bot.features_engineerer import FeaturesParams
+from deeppavlov.models.go_bot.shared_gobot_params import SharedGoBotParams
 from deeppavlov.models.go_bot.nlg_manager import NLGManager
 from deeppavlov.models.go_bot.nlu_manager import NLUManager
 from deeppavlov.models.go_bot.policy_network import PolicyNetwork, PolicyNetworkParams
@@ -34,6 +34,7 @@ from pathlib import Path
 log = getLogger(__name__)
 
 
+# todo logging
 @register("go_bot")
 class GoalOrientedBot(NNModel):
     """
@@ -148,8 +149,8 @@ class GoalOrientedBot(NNModel):
         self.multiple_user_state_tracker = MultipleUserStateTrackersPool(base_tracker=self.dialogue_state_tracker)
 
         tokens_dims = self.data_handler.get_dims()
-        features_params = FeaturesParams.from_configured(self.nlg_manager, self.nlu_manager,
-                                                         self.dialogue_state_tracker)
+        features_params = SharedGoBotParams.from_configured(self.nlg_manager, self.nlu_manager,
+                                                            self.dialogue_state_tracker)
         policy_save_path = Path(save_path, self.POLICY_DIR_NAME)
         policy_load_path = Path(load_path, self.POLICY_DIR_NAME)
 
@@ -159,24 +160,26 @@ class GoalOrientedBot(NNModel):
         self.reset()
 
     def prepare_dialogues_batches_training_data(self,
-                batch_dialogues_utterances_contexts_info: List[List[dict]],
-                batch_dialogues_utterances_responses_info: List[List[dict]]) -> BatchDialoguesDataset:
+                                                batch_dialogues_utterances_contexts_info: List[List[dict]],
+                                                batch_dialogues_utterances_responses_info: List[
+                                                    List[dict]]) -> BatchDialoguesDataset:
         """
         Parse the passed dialogue information to the dialogue information object.
 
-        :param batch_dialogues_utterances_contexts_info: the dictionary containing the dialogue utterances training information
-        :param batch_dialogues_utterances_responses_info: the dictionary containing the dialogue utterances responses training information
+        :param batch_dialogues_utterances_contexts_info: the dictionary containing
+                                                         the dialogue utterances training information
+        :param batch_dialogues_utterances_responses_info: the dictionary containing
+                                                          the dialogue utterances responses training information
         :return: the dialogue data object containing the numpy-vectorized features and target extracted
-        from the utterance data
+                 from the utterance data
         """
         # todo naming, docs, comments
         max_dialogue_length = max(len(dialogue_info_entry)
-                            for dialogue_info_entry in batch_dialogues_utterances_contexts_info)  # for padding
+                                  for dialogue_info_entry in batch_dialogues_utterances_contexts_info)  # for padding
 
         batch_dialogues_dataset = BatchDialoguesDataset(max_dialogue_length)
         for dialogue_utterances_info in zip(batch_dialogues_utterances_contexts_info,
                                             batch_dialogues_utterances_responses_info):
-
             dialogue_training_data = self.prepare_dialogue_training_data(*dialogue_utterances_info)
             batch_dialogues_dataset.append(dialogue_training_data)
 
@@ -189,9 +192,10 @@ class GoalOrientedBot(NNModel):
         Parse the passed dialogue information to the dialogue information object.
 
         :param dialogue_utterances_contexts_info: the dictionary containing the dialogue utterances training information
-        :param dialogue_utterances_responses_info: the dictionary containing the dialogue utterances responses training information
+        :param dialogue_utterances_responses_info: the dictionary containing
+                                                   the dialogue utterances responses training information
         :return: the dialogue data object containing the numpy-vectorized features and target extracted
-        from the utterance data
+                 from the utterance data
         """
 
         dialogue_training_data = DialogueDataEntry()
@@ -237,7 +241,7 @@ class GoalOrientedBot(NNModel):
 
         utterance_features = self.extract_features_from_utterance_text(text, self.dialogue_state_tracker)
 
-        action_id = self.nlg_manager.encode_response(utterance_response_info_dict['act'])
+        action_id = self.nlg_manager.get_action_id(utterance_response_info_dict['act'])
         utterance_target = UtteranceTarget(action_id)
 
         utterance_data_entry = UtteranceDataEntry.from_features_and_target(utterance_features, utterance_target)
@@ -263,26 +267,25 @@ class GoalOrientedBot(NNModel):
         context_slots, intent_features, tokens = self.nlu_manager.nlu(text)  # todo: dto-like class for the nlu output
 
         # region text BOW-encoding and embedding
-        tokens_bow_encoded = []
-        if self.data_handler.use_bow_encoder():
-            tokens_bow_encoded = self.data_handler.bow_encode_tokens(tokens)
+        tokens_bow_encoded = self.data_handler.bow_encode_tokens(tokens)
 
         tokens_embeddings_padded = np.array([], dtype=np.float32)
         tokens_aggregated_embedding = []
         if self.policy.has_attn():
             attn_window_size = self.policy.get_attn_window_size()
-            attn_config_token_dim = self.policy.get_attn_hyperparams().token_size  # todo: this is ugly and caused by complicated nn configuration algorithm
+            # todo: this is ugly and caused by complicated nn configuration algorithm
+            attn_config_token_dim = self.policy.get_attn_hyperparams().token_size
             tokens_embeddings_padded = self.data_handler.calc_tokens_embeddings(attn_window_size,
                                                                                 attn_config_token_dim,
                                                                                 tokens)
         else:
-            tokens_aggregated_embedding = self.data_handler.calc_tokens_embedding(tokens)
+            tokens_aggregated_embedding = self.data_handler.calc_tokens_mean_embedding(tokens)
         # endregion text BOW-encoding and embedding
 
-        # region provide tracker with the incoming knowledge got from nlu (if we do not keep the tracker state intact)
+        # region provide tracker with the incoming knowledge got from nlu (if we do not keep tracker state intact)
         if context_slots and not keep_tracker_state:
             tracker.update_state(context_slots)  # todo: dto-like class for the nlu output; pass to tracker the dto
-        # endregion provide tracker with the incoming knowledge got from nlu (if we do not keep the tracker state intact)
+        # endregion provide tracker with the incoming knowledge got from nlu (if we do not keep tracker state intact)
 
         # region get tracker knowledge features
         # todo simplify; dto-like class for the tracker knowledge
@@ -296,13 +299,15 @@ class GoalOrientedBot(NNModel):
         concat_feats = np.hstack((tokens_bow_encoded, tokens_aggregated_embedding, intent_features, state_features,
                                   context_features, tracker_prev_action))
 
-        # mask is used to prevent tracker from predicting the api call twice via logical AND of action candidates and mask
+        # mask is used to prevent tracker from predicting the api call twice
+        # via logical AND of action candidates and mask
         # todo: seems to be an efficient idea but the intuition beyond this whole hack is not obvious
         action_mask = tracker.calc_action_mask(self.nlg_manager.api_call_id)
 
         return UtteranceFeatures(action_mask, attn_key, tokens_embeddings_padded, concat_feats)
 
-    def _infer(self, user_utterance_text: str, user_tracker: DialogueStateTracker, keep_tracker_state=False) -> Sequence:
+    def _infer(self, user_utterance_text: str, user_tracker: DialogueStateTracker,
+               keep_tracker_state=False) -> Sequence:
         """
         Predict the action to perform in response to given text.
 
@@ -404,7 +409,7 @@ class GoalOrientedBot(NNModel):
                 # if there already were responses to user
                 # we inform the tracker with these responses info
                 # just like the tracker remembers the predicted response actions when real-time inference
-                previous_action_id = self.nlg_manager.encode_response(context['prev_resp_act'])
+                previous_action_id = self.nlg_manager.get_action_id(context['prev_resp_act'])
                 self.dialogue_state_tracker.update_previous_action(previous_action_id)
 
             # if there already were db lookups

@@ -16,7 +16,7 @@ from deeppavlov.models.go_bot.data_handler import TokensVectorRepresentationPara
 from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesFeatures, BatchDialoguesTargets
 
 # todo
-from deeppavlov.models.go_bot.features_engineerer import FeaturesParams
+from deeppavlov.models.go_bot.shared_gobot_params import SharedGoBotParams
 
 log = getLogger(__name__)
 
@@ -90,7 +90,7 @@ class PolicyNetwork(LRScheduledTFModel):
 
     def __init__(self, network_params_passed: PolicyNetworkParams,
                  tokens_dims: TokensVectorRepresentationParams,
-                 features_params: FeaturesParams,
+                 features_params: SharedGoBotParams,
                  load_path,
                  save_path,
                  **kwargs):
@@ -127,7 +127,7 @@ class PolicyNetwork(LRScheduledTFModel):
             log.info(f"[initializing `{self.__class__.__name__}` from scratch]")
 
     @staticmethod
-    def calc_input_size(tokens_dims: TokensVectorRepresentationParams, features_params: FeaturesParams):
+    def calc_input_size(tokens_dims: TokensVectorRepresentationParams, features_params: SharedGoBotParams):
         input_size = 6 + features_params.num_tracker_features + features_params.num_actions
         if tokens_dims.bow_dim:
             input_size += tokens_dims.bow_dim
@@ -140,7 +140,7 @@ class PolicyNetwork(LRScheduledTFModel):
     @staticmethod
     def configure_attn(attn,
                        tokens_dims: TokensVectorRepresentationParams,
-                       features_params: FeaturesParams):
+                       features_params: SharedGoBotParams):
         curr_attn_token_size = attn.get('token_size')
         curr_attn_action_as_key = attn.get('action_as_key')
         curr_attn_intent_as_key = attn.get('intent_as_key')

@@ -21,7 +21,7 @@ class Template(metaclass=ABCMeta):
 
     @abstractmethod
     def from_str(cls, s):
-        return cls(s)
+        return cls(s)  # TODO move deserialization logic onto separate class, smth like serialization proxy or factory
 
 
 class DefaultTemplate(Template):

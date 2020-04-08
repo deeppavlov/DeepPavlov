@@ -2,10 +2,17 @@ from typing import List
 
 import numpy as np
 
-# todo remove boilerplate duplications
-# todo docstrings & comments
 
+# todo remove boilerplate duplications
+# todo comments
+# todo logging
+# todo naming
 class UtteranceFeatures:
+    """
+    the DTO-like class storing the training features of a single utterance of a dialog
+    (to feed the GO-bot policy model)
+    """
+
     action_mask: np.ndarray
     attn_key: np.ndarray
     tokens_embeddings_padded: np.ndarray
@@ -17,13 +24,23 @@ class UtteranceFeatures:
         self.tokens_embeddings_padded = tokens_embeddings_padded
         self.features = features
 
+
 class UtteranceTarget:
+    """
+    the DTO-like class storing the training target of a single utterance of a dialog
+    (to feed the GO-bot policy model)
+    """
     action_id: int
 
     def __init__(self, action_id):
         self.action_id = action_id
 
+
 class UtteranceDataEntry:
+    """
+    the DTO-like class storing both the training features and target
+    of a single utterance of a dialog (to feed the GO-bot policy model)
+    """
     features: UtteranceFeatures
     target: UtteranceTarget
 
@@ -37,13 +54,18 @@ class UtteranceDataEntry:
                                   features.tokens_embeddings_padded, features.features)
 
     @staticmethod
-    def from_features(features:UtteranceFeatures):
+    def from_features(features: UtteranceFeatures):
         return UtteranceDataEntry(action_id=None,
                                   action_mask=features.action_mask, attn_key=features.attn_key,
                                   tokens_embeddings_padded=features.tokens_embeddings_padded,
                                   features=features.features)
 
+
 class DialogueFeatures:
+    """
+    the DTO-like class storing both the training features
+    of a dialog (to feed the GO-bot policy model)
+    """
     action_masks: List[np.ndarray]
     attn_keys: List[np.ndarray]
     tokens_embeddings_paddeds: List[np.ndarray]
@@ -64,7 +86,12 @@ class DialogueFeatures:
     def __len__(self):
         return len(self.featuress)
 
+
 class DialogueTargets:
+    """
+    the DTO-like class storing both the training targets
+    of a dialog (to feed the GO-bot policy model)
+    """
     action_ids: List[int]
 
     def __init__(self):
@@ -76,7 +103,12 @@ class DialogueTargets:
     def __len__(self):
         return len(self.action_ids)
 
+
 class DialogueDataEntry:
+    """
+    the DTO-like class storing both the training features and targets
+    of a dialog (to feed the GO-bot policy model)
+    """
     features: DialogueFeatures
     targets: DialogueTargets
 
@@ -91,7 +123,12 @@ class DialogueDataEntry:
     def __len__(self):
         return len(self.features)
 
+
 class PaddedDialogueFeatures(DialogueFeatures):
+    """
+    the DTO-like class storing both the **padded to some specified length** training features
+    of a dialog (to feed the GO-bot policy model)
+    """
     padded_dialogue_length_mask: List[int]
 
     def __init__(self, dialogue_features: DialogueFeatures, sequence_length):
@@ -107,18 +144,29 @@ class PaddedDialogueFeatures(DialogueFeatures):
         self.attn_keys = dialogue_features.attn_keys + [np.zeros_like(dialogue_features.attn_keys[0])] * padding_length
 
         self.tokens_embeddings_paddeds = dialogue_features.tokens_embeddings_paddeds + \
-                                         [np.zeros_like(dialogue_features.tokens_embeddings_paddeds[0])] * padding_length
+                                         [np.zeros_like(
+                                             dialogue_features.tokens_embeddings_paddeds[0])] * padding_length
 
         self.featuress = dialogue_features.featuress + [np.zeros_like(dialogue_features.featuress[0])] * padding_length
 
+
 class PaddedDialogueTargets(DialogueTargets):
+    """
+    the DTO-like class storing both the **padded to some specified length** training targets
+    of a dialog (to feed the GO-bot policy model)
+    """
     def __init__(self, dialogue_targets: DialogueTargets, sequence_length):
         super().__init__()
 
         padding_length = sequence_length - len(dialogue_targets)
         self.action_ids = dialogue_targets.action_ids + [0] * padding_length
 
+
 class PaddedDialogueDataEntry(DialogueDataEntry):
+    """
+    the DTO-like class storing both the **padded to some specified length** training features and targets
+    of a dialog (to feed the GO-bot policy model)
+    """
     features: PaddedDialogueFeatures
     targets: PaddedDialogueTargets
 
@@ -128,7 +176,12 @@ class PaddedDialogueDataEntry(DialogueDataEntry):
         self.features = PaddedDialogueFeatures(dialogue_data_entry.features, sequence_length)
         self.targets = PaddedDialogueTargets(dialogue_data_entry.targets, sequence_length)
 
+
 class BatchDialoguesFeatures:
+    """
+    the DTO-like class storing both the training features
+    of a batch of dialogues. (to feed the GO-bot policy model)
+    """
     b_action_masks: List[List[np.ndarray]]
     b_attn_keys: List[List[np.ndarray]]
     b_tokens_embeddings_paddeds: List[List[np.ndarray]]
@@ -154,7 +207,12 @@ class BatchDialoguesFeatures:
     def __len__(self):
         return len(self.b_featuress)
 
+
 class BatchDialoguesTargets:
+    """
+    the DTO-like class storing both the training targets
+    of a batch of dialogues. (to feed the GO-bot policy model)
+    """
     b_action_ids: List[List[int]]
     max_dialogue_length: int
 
@@ -168,7 +226,13 @@ class BatchDialoguesTargets:
     def __len__(self):
         return len(self.b_action_ids)
 
+
 class BatchDialoguesDataset:
+    """
+    the DTO-like class storing both the training features and target
+    of a batch of dialogues. (to feed the GO-bot policy model)
+    Handles the dialogues padding.
+    """
     features: BatchDialoguesFeatures
     targets: BatchDialoguesTargets
 
