@@ -90,8 +90,8 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/trans_en_mbert_{PORTION}",
-      "PORTION": "1000"
+      "PORTION": "1000",
+      "MODELS_PATH": "{ROOT_PATH}/models/trans_en_mbert_{PORTION}"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
