@@ -247,7 +247,7 @@ class SimpleDSTC2DatasetReader(DatasetReader):
 
     @classmethod
     @overrides
-    def read(self, data_path: str, dialogs: bool = False) -> Dict[str, List]:
+    def read(self, data_path: str, dialogs: bool = False, encoding = 'utf-8') -> Dict[str, List]:
         """
         Downloads ``'simple_dstc2.tar.gz'`` archive from internet,
         decompresses and saves files to ``data_path``.
@@ -273,11 +273,11 @@ class SimpleDSTC2DatasetReader(DatasetReader):
 
         data = {
             'train': self._read_from_file(
-                Path(data_path, self._data_fname('trn')), dialogs),
+                Path(data_path, self._data_fname('trn')), dialogs, encoding),
             'valid': self._read_from_file(
-                Path(data_path, self._data_fname('val')), dialogs),
+                Path(data_path, self._data_fname('val')), dialogs, encoding),
             'test': self._read_from_file(
-                Path(data_path, self._data_fname('tst')), dialogs)
+                Path(data_path, self._data_fname('tst')), dialogs, encoding)
         }
         log.info(f"There are {len(data['train'])} samples in train split.")
         log.info(f"There are {len(data['valid'])} samples in valid split.")
@@ -285,12 +285,12 @@ class SimpleDSTC2DatasetReader(DatasetReader):
         return data
 
     @classmethod
-    def _read_from_file(cls, file_path: str, dialogs: bool = False):
+    def _read_from_file(cls, file_path: str, dialogs: bool = False, encoding = 'utf-8'):
         """Returns data from single file"""
         log.info(f"[loading dialogs from {file_path}]")
 
         utterances, responses, dialog_indices = \
-            cls._get_turns(json.load(open(file_path, 'rt')), with_indices=True)
+            cls._get_turns(json.load(open(file_path, mode = 'rt', encoding = encoding)), with_indices=True)
 
         data = list(map(cls._format_turn, zip(utterances, responses)))
 

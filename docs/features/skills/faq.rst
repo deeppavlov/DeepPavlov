@@ -128,7 +128,7 @@ After model has trained, you can use it for inference: model will return answers
 
 .. code:: bash
 
-    python -m deeppavlov interact fidf_autofaq -d
+    python -m deeppavlov interact tfidf_autofaq -d
 
 
 Inference example:
