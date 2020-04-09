@@ -57,10 +57,10 @@ class HybridNerModel(LRScheduledTFModel):
 
     def __init__(self,
                  n_tags: int,
-                 word_emb_path: str,
-                 word_emb_name: str,
                  word_vocab,
                  word_dim: int,
+                 word_emb_path: str,
+                 word_emb_name: str = None,
                  char_vocab_size: int = None,
                  pos_vocab_size: int = None,
                  chunk_vocab_size: int = None,
@@ -275,9 +275,6 @@ class HybridNerModel(LRScheduledTFModel):
                 'learning_rate': self.get_learning_rate(),
                 'momentum': self.get_momentum()}
 
-    def process_event(self, event_name, data):
-        super().process_event(event_name, data)
-
     def load_pretrained_word_emb(self, model_path, model_name, word_dim, word2id=None, vocab_size=None):
         loaded_words = 0
         if word2id is not None:
@@ -290,8 +287,7 @@ class HybridNerModel(LRScheduledTFModel):
                 if word in model:
                     word_embeddings[word2id[word]] = model[word]
                     loaded_words += 1
-
-        if model_name == "baomoi":
+        elif model_name == "baomoi":
             model = KeyedVectors.load_word2vec_format(model_path, binary=True, unicode_errors='ignore')
             for word in word2id:
                 if len(word) == 1:
@@ -304,6 +300,8 @@ class HybridNerModel(LRScheduledTFModel):
                 elif word in model.vocab:
                     word_embeddings[word2id[word]] = model[word]
                     loaded_words += 1
+        elif model_name is not None:
+            raise RuntimeError(f'got an unexpected value for model_name: `{model_name}`')
 
         log.info(f"There are {loaded_words}/{vocab_size} words were loaded from {model_path}.")
         return word_embeddings

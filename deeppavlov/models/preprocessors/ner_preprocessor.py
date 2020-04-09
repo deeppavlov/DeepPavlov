@@ -1,8 +1,9 @@
 import errno
-import numpy as np
 import os
 from logging import getLogger
 from typing import List
+
+import numpy as np
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Estimator
@@ -11,7 +12,7 @@ log = getLogger(__name__)
 
 
 @register("ner_preprocessor")
-class ner_preprocessor():
+class NerPreprocessor():
     def __init__(self, get_x_padded_for_elmo=False, get_x_cap_padded=False, **kwargs):
         self.get_x_padded_for_elmo = get_x_padded_for_elmo
         self.get_x_cap_padded = get_x_cap_padded
@@ -64,7 +65,7 @@ class ner_preprocessor():
 
 
 @register("convert_ids2tags")
-class convert_ids2tags():
+class ConvertIds2Tags():
     def __init__(self, id2tag, *args, **kwargs):
         self.id2tag = id2tag
 
@@ -73,7 +74,7 @@ class convert_ids2tags():
 
 
 @register("ner_vocab")
-class ner_vocab(Estimator):
+class NerVocab(Estimator):
     def __init__(self,
                  word_file_path=None,
                  save_path=None,
