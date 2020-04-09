@@ -8,6 +8,7 @@ import tensorflow as tf
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.layers import tf_attention_mechanisms as am, tf_layers
 
+# noinspection PyUnresolvedReferences
 from tensorflow.contrib.layers import xavier_initializer as xav
 
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
@@ -20,8 +21,13 @@ from deeppavlov.models.go_bot.shared_gobot_params import SharedGoBotParams
 
 log = getLogger(__name__)
 
-class PolicyNetworkParams:
 
+class PolicyNetworkParams:
+    """
+    The class to deal with the overcomplicated structure of the GO-bot configs.
+    It is initialized from the config-as-is and performs all the conflicting parameters resolution internally.
+    """
+    # todo remove the complex config logic
     UNSUPPORTED = ["obs_size"]
     DEPRECATED = ["end_learning_rate", "decay_steps", "decay_power"]
 
@@ -71,7 +77,11 @@ class PolicyNetworkParams:
                         f" deeppavlov.core.models.lr_scheduled_tf_model"
                         f" or read a github tutorial on super convergence.")
 
+
 class GobotAttnParams(NamedTuple):
+    """
+    the DTO-like class that stores the attention mechanism configuration params.
+    """
     max_num_tokens: int
     hidden_size: int
     token_size: int
@@ -82,7 +92,11 @@ class GobotAttnParams(NamedTuple):
     action_as_key: bool
     intent_as_key: bool
 
+
 class PolicyNetwork(LRScheduledTFModel):
+    """
+    the Policy Network is a ML model whose goal is to choose the right system response when in dialogue with user.
+    """
 
     GRAPH_PARAMS = ["hidden_size", "action_size", "dense_size", "attention_mechanism"]
     SERIALIZABLE_FIELDS = ["hidden_size", "action_size", "dense_size", "dropout_rate", "l2_reg_coef",
@@ -120,21 +134,24 @@ class PolicyNetwork(LRScheduledTFModel):
         self.sess.run(tf.global_variables_initializer())
 
         if self.train_checkpoint_exists():
-            # todo переделать
-            log.info(f"[initializing `{self.__class__.__name__}` from saved]")
             self.load()
         else:
             log.info(f"[initializing `{self.__class__.__name__}` from scratch]")
 
     @staticmethod
-    def calc_input_size(tokens_dims: TokensVectorRepresentationParams, features_params: SharedGoBotParams):
-        input_size = 6 + features_params.num_tracker_features + features_params.num_actions
+    def calc_input_size(tokens_dims: TokensVectorRepresentationParams, shared_go_bot_params: SharedGoBotParams) -> int:
+        """
+        :param tokens_dims: the tokens vectors dimensions
+        :param shared_go_bot_params: GO-bot hyperparams used in various parts of the pipeline
+        :return: the calculated input shape of policy network
+        """
+        input_size = 6 + shared_go_bot_params.num_tracker_features + shared_go_bot_params.num_actions  # todo: why 6
         if tokens_dims.bow_dim:
             input_size += tokens_dims.bow_dim
         if tokens_dims.embedding_dim:
             input_size += tokens_dims.embedding_dim
-        if features_params.num_intents:
-            input_size += features_params.num_intents
+        if shared_go_bot_params.num_intents:
+            input_size += shared_go_bot_params.num_intents
         return input_size
 
     @staticmethod
@@ -146,16 +163,11 @@ class PolicyNetwork(LRScheduledTFModel):
         curr_attn_intent_as_key = attn.get('intent_as_key')
         curr_attn_key_size = attn.get('key_size')
 
-        token_size = curr_attn_token_size or tokens_dims.embedding_dim
-        action_as_key = curr_attn_action_as_key or False
-        intent_as_key = curr_attn_intent_as_key or False
+        token_size = curr_attn_token_size or tokens_dims.embedding_dim  # todo sync with nn params
+        action_as_key = curr_attn_action_as_key or False  # todo sync with nn params and features_params
+        intent_as_key = curr_attn_intent_as_key or False  # todo sync with nn params and features_params
 
-        possible_key_size = 0
-        if action_as_key:
-            possible_key_size += features_params.num_actions
-        if intent_as_key and features_params.num_intents:
-            possible_key_size += features_params.num_intents
-        possible_key_size = possible_key_size or 1
+        possible_key_size = PolicyNetwork.calc_attn_key_size(features_params, action_as_key, intent_as_key)
         key_size = curr_attn_key_size or possible_key_size
 
         gobot_attn_params = GobotAttnParams(max_num_tokens=attn.get("max_num_tokens"),
@@ -170,8 +182,31 @@ class PolicyNetwork(LRScheduledTFModel):
 
         return gobot_attn_params
 
+    @staticmethod
+    def calc_attn_key_size(shared_go_bot_params: SharedGoBotParams, action_as_key: bool, intent_as_key: bool) -> int:
+        """
+        :param shared_go_bot_params: GO-bot hyperparams used in various parts of the pipeline
+        :param action_as_key: True if actions are part of attention keys
+        :param intent_as_key: True if intents are part of attention keys
+        :return: the calculated attention key shape of policy network
+        """
+        # True if actions are part of attention keys -- actually *the last predicted action*
+
+        possible_key_size = 0
+        if action_as_key:
+            possible_key_size += shared_go_bot_params.num_actions
+        if intent_as_key and shared_go_bot_params.num_intents:
+            possible_key_size += shared_go_bot_params.num_intents
+        possible_key_size = possible_key_size or 1  # todo rewrite
+        return possible_key_size
+
     def calc_attn_key(self, intent_features, tracker_prev_action):
-        # todo dto-like class for the attended features
+        """
+        :param intent_features: output intent extractors
+        :param tracker_prev_action: one-hot-encoded previous executed action
+        :return: vector representing an attention key
+        """
+        # todo dto-like class for the attended features?
 
         attn_key = np.array([], dtype=np.float32)
 
@@ -228,7 +263,8 @@ class PolicyNetwork(LRScheduledTFModel):
         self._initial_state = tf.nn.rnn_cell.LSTMStateTuple(_initial_state_c, _initial_state_h)
 
         if self.attention_mechanism:
-            _emb_context_shape = [None, None, self.attention_mechanism.max_num_tokens, self.attention_mechanism.token_size]
+            _emb_context_shape = [None, None, self.attention_mechanism.max_num_tokens,
+                                  self.attention_mechanism.token_size]
             self._emb_context = tf.placeholder(tf.float32, _emb_context_shape, name='emb_context')
             self._key = tf.placeholder(tf.float32, [None, None, self.attention_mechanism.key_size], name='key')
 
@@ -303,9 +339,14 @@ class PolicyNetwork(LRScheduledTFModel):
         return attn_hyperparams
 
     def has_attn(self):
+        """:returns: True if the model has an attention mechanism"""
         return self.attention_mechanism is not None
 
     def get_attn_window_size(self):
+        """
+        :returns: the length of the window the model looks with attn if the attention mechanism is configured.
+                  if the model has no attention mechanism returns None.
+        """
         return self.attention_mechanism.max_num_tokens if self.has_attn() else None
 
     def __call__(self, batch_dialogues_features: BatchDialoguesFeatures,
@@ -355,6 +396,7 @@ class PolicyNetwork(LRScheduledTFModel):
                 'momentum': self.get_momentum()}
 
     def load(self, *args, **kwargs) -> None:
+        log.info(f"[initializing `{self.__class__.__name__}` from saved]")
         self._load_nn_params()
         super().load(*args, **kwargs)
 

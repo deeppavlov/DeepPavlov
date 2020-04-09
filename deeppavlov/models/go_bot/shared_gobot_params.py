@@ -6,7 +6,7 @@ from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracke
 
 # todo logging
 class SharedGoBotParams:
-    """the DTO-like class to share the params used in various parts of the GO-bot pipeline"""
+    """the DTO-like class to share the params used in various parts of the GO-bot pipeline."""
     # possibly useful: seems like the params reflect only "real-world" knowledge.
     num_actions: int
     num_intents: int
