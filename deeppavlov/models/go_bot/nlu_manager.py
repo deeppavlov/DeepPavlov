@@ -1,9 +1,13 @@
+from logging import getLogger
 from typing import Any, Tuple, List
 
 from deeppavlov import Chainer
 
+log = getLogger(__name__)
 
-# todo logging
+
+# todo add the ability to configure nlu loglevel in config (now the setting is shared across all the GO-bot)
+# todo add each method input-output logging when proper loglevel level specified
 class NLUManager:
     """
     NLUManager is a unit of the go-bot pipeline that handles the understanding of text.
@@ -11,7 +15,12 @@ class NLUManager:
     (the whole go-bot pipeline is as follows: NLU, dialogue-state-tracking&policy-NN, NLG)
     """
 
-    def __init__(self, tokenizer, slot_filler, intent_classifier):
+    def __init__(self, tokenizer, slot_filler, intent_classifier, debug=False):
+        self.debug = debug
+        if self.debug:
+            log.debug(f"BEFORE {self.__class__.__name__} init(): "
+                      f"tokenizer={tokenizer}, slot_filler={slot_filler}, "
+                      f"intent_classifier={intent_classifier}, debug={debug}")
         # todo type hints
         self.tokenizer = tokenizer
         self.slot_filler = slot_filler
@@ -19,6 +28,11 @@ class NLUManager:
         self.intents = []
         if isinstance(self.intent_classifier, Chainer):
             self.intents = self.intent_classifier.get_main_component().classes
+
+        if self.debug:
+            log.debug(f"AFTER {self.__class__.__name__} init(): "
+                      f"tokenizer={tokenizer}, slot_filler={slot_filler}, "
+                      f"intent_classifier={intent_classifier}, debug={debug}")
 
     def nlu(self, text: str) -> Tuple[Any, Any, Any]:
         # todo meaningful type hints
