@@ -20,7 +20,7 @@ import numpy as np
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
-from deeppavlov.models.go_bot.data_handler import TokensVectorizer
+from deeppavlov.models.go_bot.tokens_vectorizer import TokensVectorizer
 from deeppavlov.models.go_bot.dto.dataset_features import UtteranceDataEntry, DialogueDataEntry, \
     BatchDialoguesDataset, UtteranceFeatures, UtteranceTarget
 from deeppavlov.models.go_bot.shared_gobot_params import SharedGoBotParams

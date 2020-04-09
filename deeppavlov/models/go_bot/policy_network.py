@@ -13,7 +13,7 @@ from tensorflow.contrib.layers import xavier_initializer as xav
 
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
 
-from deeppavlov.models.go_bot.data_handler import TokensVectorRepresentationParams
+from deeppavlov.models.go_bot.tokens_vectorizer import TokensVectorRepresentationParams
 from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesFeatures, BatchDialoguesTargets
 
 # todo
