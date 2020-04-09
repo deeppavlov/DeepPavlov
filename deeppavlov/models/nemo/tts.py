@@ -16,13 +16,15 @@ from functools import partial
 from io import BytesIO
 from logging import getLogger
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, Dict
 
-import nemo_tts
 import torch
-from nemo.core.neural_types import NeuralType, AxisType, BatchTag, TimeTag
+from nemo.collections.asr.parts import collections, parsers
+from nemo.collections.asr.parts.dataset import TranscriptDataset
+from nemo.collections.tts import TextEmbedding, Tacotron2Encoder, Tacotron2DecoderInfer, Tacotron2Postnet
+from nemo.core.neural_types import NeuralType, LabelsType, LengthsType
+from nemo.utils.decorators import add_port_docs
 from nemo.utils.misc import pad_to
-from nemo_asr.parts.dataset import TranscriptDataset
 from scipy.io import wavfile
 from torch import Tensor
 from torch.utils.data import Dataset
@@ -51,28 +53,20 @@ class TextDataset(TranscriptDataset):
             lowercase: Whether to convert all uppercase characters in a text batch into lowercase characters.
 
         """
-        if lowercase:
-            text_batch = [l.strip().lower() for l in text_batch]
-        self.texts = text_batch
-
-        self.char2num = {c: i for i, c in enumerate(labels)}
+        parser = parsers.make_parser(labels, do_lowercase=lowercase)
+        self.texts = collections.Text(text_batch, parser)
         self.bos_id = bos_id
         self.eos_id = eos_id
 
 
 class TextDataLayer(CustomDataLayerBase):
-    @staticmethod
-    def create_ports() -> Tuple[dict, dict]:
-        input_ports = {}
-        output_ports = {
-            'texts': NeuralType({
-                0: AxisType(BatchTag),
-                1: AxisType(TimeTag)
-            }),
-
-            "texts_length": NeuralType({0: AxisType(BatchTag)})
+    @property
+    @add_port_docs()
+    def output_ports(self) -> Dict[str, NeuralType]:
+        return {
+            'texts': NeuralType(('B', 'T'), LabelsType()),
+            "texts_length": NeuralType(tuple('B'), LengthsType())
         }
-        return input_ports, output_ports
 
     def __init__(self, *,
                  text_batch: List[str],
@@ -124,8 +118,7 @@ class TextDataLayer(CustomDataLayerBase):
         max_len = max(texts_len)
         max_len = pad_to(max_len, 8)
 
-        texts = torch.empty(len(texts_list), max_len,
-                            dtype=torch.long)
+        texts = torch.empty(len(texts_list), max_len, dtype=torch.long)
         texts.fill_(pad_id)
 
         for i, s in enumerate(texts_list):
@@ -159,13 +152,13 @@ class NeMoTTS(NeMoBase):
         super(NeMoTTS, self).__init__(load_path=load_path, nemo_params_path=nemo_params_path, **kwargs)
 
         self.sample_rate = self.nemo_params['sample_rate']
-        self.text_embedding = nemo_tts.TextEmbedding(
+        self.text_embedding = TextEmbedding(
             len(self.nemo_params['labels']) + 3,  # + 3 special chars
             **self.nemo_params['TextEmbedding']
         )
-        self.t2_enc = nemo_tts.Tacotron2Encoder(**self.nemo_params['Tacotron2Encoder'])
-        self.t2_dec = nemo_tts.Tacotron2DecoderInfer(**self.nemo_params['Tacotron2Decoder'])
-        self.t2_postnet = nemo_tts.Tacotron2Postnet(**self.nemo_params['Tacotron2Postnet'])
+        self.t2_enc = Tacotron2Encoder(**self.nemo_params['Tacotron2Encoder'])
+        self.t2_dec = Tacotron2DecoderInfer(**self.nemo_params['Tacotron2Decoder'])
+        self.t2_postnet = Tacotron2Postnet(**self.nemo_params['Tacotron2Postnet'])
         self.modules_to_restore = [self.text_embedding, self.t2_enc, self.t2_dec, self.t2_postnet]
 
         if vocoder == 'waveglow':

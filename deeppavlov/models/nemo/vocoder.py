@@ -18,7 +18,7 @@ from typing import List
 import librosa
 import numpy as np
 from nemo.core.neural_types import NmTensor
-from nemo_tts import WaveGlowInferNM
+from nemo.collections.tts import WaveGlowInferNM
 from numpy import ndarray
 
 log = getLogger(__name__)

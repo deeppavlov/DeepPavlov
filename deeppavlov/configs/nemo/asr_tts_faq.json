@@ -1,7 +1,6 @@
 {
   "chainer": {
     "in": "speech_in_encoded",
-    "in_y": "y",
     "pipe": [
       {
         "class_name": "base64_encode_bytesIO",
@@ -30,7 +29,6 @@
       {
         "in": ["q_lem"],
         "out": ["q_vect"],
-        "fit_on": ["q_lem"],
         "id": "tfidf_vec",
         "class_name": "sklearn_component",
         "save_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v4/tfidf.pkl",
@@ -41,7 +39,6 @@
       {
         "id": "answers_vocab",
         "class_name": "simple_vocab",
-        "fit_on": ["y"],
         "save_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v4/en_mipt_answers.dict",
         "load_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v4/en_mipt_answers.dict",
         "in": "y",
@@ -49,7 +46,6 @@
       },
       {
         "in": "q_vect",
-        "fit_on": ["q_vect", "y_ids"],
         "out": ["y_pred_proba"],
         "class_name": "sklearn_component",
         "main": true,

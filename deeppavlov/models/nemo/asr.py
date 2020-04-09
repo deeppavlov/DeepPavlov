@@ -15,13 +15,14 @@
 import logging
 from io import BytesIO
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, Dict
 
-import nemo_asr
 import torch
-from nemo.core.neural_types import NeuralType, AxisType, BatchTag, TimeTag
-from nemo_asr.helpers import post_process_predictions
-from nemo_asr.parts.features import WaveformFeaturizer
+from nemo.collections.asr import AudioToMelSpectrogramPreprocessor, JasperEncoder, JasperDecoderForCTC, GreedyCTCDecoder
+from nemo.collections.asr.helpers import post_process_predictions
+from nemo.collections.asr.parts.features import WaveformFeaturizer
+from nemo.core.neural_types import AudioSignal, NeuralType, LengthsType
+from nemo.utils.decorators import add_port_docs
 from torch import Tensor
 from torch.utils.data import Dataset, DataLoader
 
@@ -62,8 +63,7 @@ class AudioInferDataset(Dataset):
 
         """
         sample = self.audio_batch[index]
-        features = self.featurizer.process(sample,
-                                           trim=self.trim)
+        features = self.featurizer.process(sample, trim=self.trim)
         features_length = torch.tensor(features.shape[0]).long()
 
         return features, features_length
@@ -74,16 +74,13 @@ class AudioInferDataset(Dataset):
 
 class AudioInferDataLayer(CustomDataLayerBase):
     """Data Layer for ASR pipeline inference."""
-    @staticmethod
-    def create_ports() -> Tuple[dict, dict]:
-        input_ports = {}
-        output_ports = {
-            "audio_signal": NeuralType({0: AxisType(BatchTag),
-                                        1: AxisType(TimeTag)}),
-
-            "a_sig_length": NeuralType({0: AxisType(BatchTag)})
+    @property
+    @add_port_docs()
+    def output_ports(self) -> Dict[str, NeuralType]:
+        return {
+            "audio_signal": NeuralType(('B', 'T'), AudioSignal(freq=self._sample_rate)),
+            "a_sig_length": NeuralType(tuple('B'), LengthsType())
         }
-        return input_ports, output_ports
 
     def __init__(self, *,
                  audio_batch: List[Union[str, BytesIO]],
@@ -103,8 +100,10 @@ class AudioInferDataLayer(CustomDataLayerBase):
             trim_silence: Trim leading and trailing silence from an audio signal if True.
 
         """
+        self._sample_rate = sample_rate
+
         dataset = AudioInferDataset(audio_batch=audio_batch, sample_rate=sample_rate, int_values=int_values,
-                                          trim=trim_silence)
+                                    trim=trim_silence)
 
         dataloader = DataLoader(dataset=dataset, batch_size=batch_size, collate_fn=self.seq_collate_fn)
         super(AudioInferDataLayer, self).__init__(dataset, dataloader, **kwargs)
@@ -165,17 +164,12 @@ class NeMoASR(NeMoBase):
 
         self.labels = self.nemo_params['labels']
 
-        self.data_preprocessor = nemo_asr.AudioToMelSpectrogramPreprocessor(
+        self.data_preprocessor = AudioToMelSpectrogramPreprocessor(
             **self.nemo_params['AudioToMelSpectrogramPreprocessor']
         )
-        self.jasper_encoder = nemo_asr.JasperEncoder(
-            **self.nemo_params['JasperEncoder']
-        )
-        self.jasper_decoder = nemo_asr.JasperDecoderForCTC(
-            num_classes=len(self.labels),
-            **self.nemo_params['JasperDecoder']
-        )
-        self.greedy_decoder = nemo_asr.GreedyCTCDecoder()
+        self.jasper_encoder = JasperEncoder(**self.nemo_params['JasperEncoder'])
+        self.jasper_decoder = JasperDecoderForCTC(num_classes=len(self.labels), **self.nemo_params['JasperDecoder'])
+        self.greedy_decoder = GreedyCTCDecoder()
         self.modules_to_restore = [self.jasper_encoder, self.jasper_decoder]
 
         self.load()
