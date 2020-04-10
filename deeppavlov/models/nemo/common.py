@@ -69,10 +69,8 @@ def bytes_io_to_ascii(batch: Union[BytesIO, list]) -> Union[str, list]:
 
 class NeMoBase(Component, Serializable):
     """Base class for NeMo Chainer's pipe components."""
-    def __init__(self,
-                 load_path: Union[str, Path],
-                 nemo_params_path: Union[str, Path],
-                 **kwargs) -> None:
+
+    def __init__(self, load_path: Union[str, Path], nemo_params_path: Union[str, Path], **kwargs) -> None:
         """Initializes NeuralModuleFactory on CPU or GPU and reads nemo modules params from yaml.
 
         Args:

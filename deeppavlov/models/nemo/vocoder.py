@@ -26,6 +26,7 @@ log = getLogger(__name__)
 
 class BaseVocoder:
     """Class is used to maintain consistency in the construction of the TTS pipeline based on NeMo modules."""
+
     def __call__(self, tensor: NmTensor) -> NmTensor:
         """Should return the tensor after the evaluation of which speech could be synthesized with `get_audio` method"""
         raise NotImplementedError
@@ -36,10 +37,7 @@ class BaseVocoder:
 
 
 class WaveGlow(BaseVocoder):
-    def __init__(self, *,
-                 denoiser_strength: float = 0.0,
-                 n_window_stride: int = 160,
-                 **kwargs) -> None:
+    def __init__(self, *, denoiser_strength: float = 0.0, n_window_stride: int = 160, **kwargs) -> None:
         """Wraps WaveGlowInferNM module.
 
         Args:
@@ -103,11 +101,7 @@ class GriffinLim(BaseVocoder):
         self.power = power
         self.n_iters = n_iters
         self.n_fft = n_fft
-        self.filterbank = librosa.filters.mel(
-            sr=sample_rate,
-            n_fft=n_fft,
-            **kwargs
-        )
+        self.filterbank = librosa.filters.mel(sr=sample_rate, n_fft=n_fft, **kwargs)
 
     def __call__(self, mel_postnet: NmTensor) -> NmTensor:
         return mel_postnet

@@ -33,11 +33,7 @@ log = logging.getLogger(__name__)
 
 
 class AudioInferDataset(Dataset):
-    def __init__(self,
-                 audio_batch: List[Union[str, BytesIO]],
-                 sample_rate: int,
-                 int_values: bool,
-                 trim=False) -> None:
+    def __init__(self, audio_batch: List[Union[str, BytesIO]], sample_rate: int, int_values: bool, trim=False) -> None:
         """Dataset reader for AudioInferDataLayer.
 
         Args:
@@ -74,6 +70,7 @@ class AudioInferDataset(Dataset):
 
 class AudioInferDataLayer(CustomDataLayerBase):
     """Data Layer for ASR pipeline inference."""
+
     @property
     @add_port_docs()
     def output_ports(self) -> Dict[str, NeuralType]:
@@ -148,10 +145,8 @@ class AudioInferDataLayer(CustomDataLayerBase):
 @register('nemo_asr')
 class NeMoASR(NeMoBase):
     """ASR model on NeMo modules."""
-    def __init__(self,
-                 load_path: Union[str, Path],
-                 nemo_params_path: Union[str, Path],
-                 **kwargs) -> None:
+
+    def __init__(self, load_path: Union[str, Path], nemo_params_path: Union[str, Path], **kwargs) -> None:
         """Initializes NeuralModules for ASR.
 
         Args:

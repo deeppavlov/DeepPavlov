@@ -27,7 +27,6 @@ from nemo.utils.decorators import add_port_docs
 from nemo.utils.misc import pad_to
 from scipy.io import wavfile
 from torch import Tensor
-from torch.utils.data import Dataset
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.models.nemo.common import CustomDataLayerBase, NeMoBase
