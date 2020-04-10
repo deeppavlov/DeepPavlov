@@ -60,12 +60,11 @@ class TemplateMatcher(Component, Serializable):
         min_length = 100
         for template in self.templates:
             template_len = len(template.replace('xxx', ''))
-            template_regexp = template.replace("xxx", "([a-zа-я\d\s\.]+)")
+            template_regexp = "([a-zа-я\d\s\.]*)"+template.replace("xxx", "([a-zа-я\d\s\.]+)")
             fnd = re.findall(template_regexp, question)
-            if fnd:
-                entities_cand = fnd[0]
-                if str(type(entities_cand)) == "<class 'str'>":
-                    entities_cand = [entities_cand]
+            if fnd and str(type(fnd[0])) == "<class 'tuple'>":
+                strstart = fnd[0][0]
+                entities_cand = fnd[0][1:]
 
                 found = True
                 entity_lengths = [len(entity) for entity in entities_cand]
@@ -74,7 +73,7 @@ class TemplateMatcher(Component, Serializable):
                         found = False
                 if found:
                     cur_len = sum(entity_lengths)
-                    if cur_len < min_length and template_len + cur_len == question_length:
+                    if cur_len < min_length and len(strstart)+template_len + cur_len == question_length:
                         entities = entities_cand
                         relations = self.templates[template][1:]
                         query_type = self.templates[template][0]
