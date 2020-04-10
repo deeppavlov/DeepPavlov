@@ -60,7 +60,7 @@ class WaveGlow(BaseVocoder):
         """Wraps WaveGlowInferNM restore_from method."""
         self.waveglow.restore_from(path)
         if self.denoiser_strength > 0:
-            log.info("Setup denoiser for WaveGlow")
+            log.info('Setup denoiser for WaveGlow')
             self.waveglow.setup_denoiser()
 
     def get_audio(self, evaluated_audio: list, mel_len: list) -> List[ndarray]:
@@ -78,16 +78,13 @@ class WaveGlow(BaseVocoder):
 
 
 class GriffinLim(BaseVocoder):
-    def __init__(
-        self,
-        *,
-        sample_rate: float = 16000.0,
-        n_fft: int = 1024,
-        mag_scale: float = 2048.0,
-        power: float = 1.2,
-        n_iters: int = 50,
-        **kwargs
-    ) -> None:
+    def __init__(self, *,
+                 sample_rate: float = 16000.0,
+                 n_fft: int = 1024,
+                 mag_scale: float = 2048.0,
+                 power: float = 1.2,
+                 n_iters: int = 50,
+                 **kwargs) -> None:
         """Uses Griffin Lim algorithm to generate speech from spectrograms.
 
         Args:
@@ -116,7 +113,7 @@ class GriffinLim(BaseVocoder):
             mel = np.exp(log_mel)
             magnitudes = np.dot(mel, self.filterbank) * self.mag_scale
             for j, sample in enumerate(magnitudes):
-                sample = sample[: mel_len[i][j], :]
+                sample = sample[:mel_len[i][j], :]
                 audio = self.griffin_lim(sample.T ** self.power)
                 audios.append(audio)
         return audios

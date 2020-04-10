@@ -32,7 +32,7 @@ from deeppavlov.core.models.serializable import Serializable
 log = getLogger(__name__)
 
 
-@register("base64_encode_bytesIO")
+@register('base64_encode_bytesIO')
 def ascii_to_bytes_io(batch: Union[str, list]) -> Union[BytesIO, list]:
     """Recursively searches for strings in the input batch and converts them into the base64-encoded bytes wrapped in
     Binary I/O objects.
@@ -50,7 +50,7 @@ def ascii_to_bytes_io(batch: Union[str, list]) -> Union[BytesIO, list]:
     return list(map(ascii_to_bytes_io, batch))
 
 
-@register("bytesIO_decode_base64")
+@register('bytesIO_decode_base64')
 def bytes_io_to_ascii(batch: Union[BytesIO, list]) -> Union[str, list]:
     """Recursively searches for Binary I/O objects in the input batch and converts them into ASCII-strings.
 
@@ -62,7 +62,7 @@ def bytes_io_to_ascii(batch: Union[BytesIO, list]) -> Union[str, list]:
 
     """
     if isinstance(batch, BytesIO):
-        return base64.encodebytes(batch.read()).decode("ascii")
+        return base64.encodebytes(batch.read()).decode('ascii')
 
     return list(map(bytes_io_to_ascii, batch))
 
@@ -92,7 +92,7 @@ class NeMoBase(Component, Serializable):
         module_names = [str(module) for module in self.modules_to_restore]
         checkpoints = nemo.utils.get_checkpoint_from_dir(module_names, self.load_path)
         for module, checkpoint in zip(self.modules_to_restore, checkpoints):
-            log.info(f"Restoring {module} from {checkpoint}")
+            log.info(f'Restoring {module} from {checkpoint}')
             module.restore_from(checkpoint)
 
     def save(self, *args, **kwargs) -> None:
