@@ -26,6 +26,7 @@ log = getLogger(__name__)
 
 class BaseVocoder:
     """Class is used to maintain consistency in the construction of the TTS pipeline based on NeMo modules."""
+
     def __call__(self, tensor: NmTensor) -> NmTensor:
         """Should return the tensor after the evaluation of which speech could be synthesized with `get_audio` method"""
         raise NotImplementedError
@@ -36,10 +37,7 @@ class BaseVocoder:
 
 
 class WaveGlow(BaseVocoder):
-    def __init__(self, *,
-                 denoiser_strength: float = 0.0,
-                 n_window_stride: int = 160,
-                 **kwargs) -> None:
+    def __init__(self, *, denoiser_strength: float = 0.0, n_window_stride: int = 160, **kwargs) -> None:
         """Wraps WaveGlowInferNM module.
 
         Args:
@@ -62,7 +60,7 @@ class WaveGlow(BaseVocoder):
         """Wraps WaveGlowInferNM restore_from method."""
         self.waveglow.restore_from(path)
         if self.denoiser_strength > 0:
-            log.info('Setup denoiser for WaveGlow')
+            log.info("Setup denoiser for WaveGlow")
             self.waveglow.setup_denoiser()
 
     def get_audio(self, evaluated_audio: list, mel_len: list) -> List[ndarray]:
@@ -80,13 +78,16 @@ class WaveGlow(BaseVocoder):
 
 
 class GriffinLim(BaseVocoder):
-    def __init__(self, *,
-                 sample_rate: float = 16000.0,
-                 n_fft: int = 1024,
-                 mag_scale: float = 2048.0,
-                 power: float = 1.2,
-                 n_iters: int = 50,
-                 **kwargs) -> None:
+    def __init__(
+        self,
+        *,
+        sample_rate: float = 16000.0,
+        n_fft: int = 1024,
+        mag_scale: float = 2048.0,
+        power: float = 1.2,
+        n_iters: int = 50,
+        **kwargs
+    ) -> None:
         """Uses Griffin Lim algorithm to generate speech from spectrograms.
 
         Args:
@@ -103,11 +104,7 @@ class GriffinLim(BaseVocoder):
         self.power = power
         self.n_iters = n_iters
         self.n_fft = n_fft
-        self.filterbank = librosa.filters.mel(
-            sr=sample_rate,
-            n_fft=n_fft,
-            **kwargs
-        )
+        self.filterbank = librosa.filters.mel(sr=sample_rate, n_fft=n_fft, **kwargs)
 
     def __call__(self, mel_postnet: NmTensor) -> NmTensor:
         return mel_postnet
@@ -119,7 +116,7 @@ class GriffinLim(BaseVocoder):
             mel = np.exp(log_mel)
             magnitudes = np.dot(mel, self.filterbank) * self.mag_scale
             for j, sample in enumerate(magnitudes):
-                sample = sample[:mel_len[i][j], :]
+                sample = sample[: mel_len[i][j], :]
                 audio = self.griffin_lim(sample.T ** self.power)
                 audios.append(audio)
         return audios

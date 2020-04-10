@@ -33,11 +33,7 @@ log = logging.getLogger(__name__)
 
 
 class AudioInferDataset(Dataset):
-    def __init__(self,
-                 audio_batch: List[Union[str, BytesIO]],
-                 sample_rate: int,
-                 int_values: bool,
-                 trim=False) -> None:
+    def __init__(self, audio_batch: List[Union[str, BytesIO]], sample_rate: int, int_values: bool, trim=False) -> None:
         """Dataset reader for AudioInferDataLayer.
 
         Args:
@@ -74,21 +70,25 @@ class AudioInferDataset(Dataset):
 
 class AudioInferDataLayer(CustomDataLayerBase):
     """Data Layer for ASR pipeline inference."""
+
     @property
     @add_port_docs()
     def output_ports(self) -> Dict[str, NeuralType]:
         return {
-            "audio_signal": NeuralType(('B', 'T'), AudioSignal(freq=self._sample_rate)),
-            "a_sig_length": NeuralType(tuple('B'), LengthsType())
+            "audio_signal": NeuralType(("B", "T"), AudioSignal(freq=self._sample_rate)),
+            "a_sig_length": NeuralType(tuple("B"), LengthsType()),
         }
 
-    def __init__(self, *,
-                 audio_batch: List[Union[str, BytesIO]],
-                 batch_size: int = 32,
-                 sample_rate: int = 16000,
-                 int_values: bool = False,
-                 trim_silence: bool = False,
-                 **kwargs) -> None:
+    def __init__(
+        self,
+        *,
+        audio_batch: List[Union[str, BytesIO]],
+        batch_size: int = 32,
+        sample_rate: int = 16000,
+        int_values: bool = False,
+        trim_silence: bool = False,
+        **kwargs
+    ) -> None:
         """Initializes Data Loader.
 
         Args:
@@ -102,8 +102,9 @@ class AudioInferDataLayer(CustomDataLayerBase):
         """
         self._sample_rate = sample_rate
 
-        dataset = AudioInferDataset(audio_batch=audio_batch, sample_rate=sample_rate, int_values=int_values,
-                                    trim=trim_silence)
+        dataset = AudioInferDataset(
+            audio_batch=audio_batch, sample_rate=sample_rate, int_values=int_values, trim=trim_silence
+        )
 
         dataloader = DataLoader(dataset=dataset, batch_size=batch_size, collate_fn=self.seq_collate_fn)
         super(AudioInferDataLayer, self).__init__(dataset, dataloader, **kwargs)
@@ -145,13 +146,11 @@ class AudioInferDataLayer(CustomDataLayerBase):
         return audio_signal, audio_lengths
 
 
-@register('nemo_asr')
+@register("nemo_asr")
 class NeMoASR(NeMoBase):
     """ASR model on NeMo modules."""
-    def __init__(self,
-                 load_path: Union[str, Path],
-                 nemo_params_path: Union[str, Path],
-                 **kwargs) -> None:
+
+    def __init__(self, load_path: Union[str, Path], nemo_params_path: Union[str, Path], **kwargs) -> None:
         """Initializes NeuralModules for ASR.
 
         Args:
@@ -162,13 +161,13 @@ class NeMoASR(NeMoBase):
         """
         super(NeMoASR, self).__init__(load_path=load_path, nemo_params_path=nemo_params_path, **kwargs)
 
-        self.labels = self.nemo_params['labels']
+        self.labels = self.nemo_params["labels"]
 
         self.data_preprocessor = AudioToMelSpectrogramPreprocessor(
-            **self.nemo_params['AudioToMelSpectrogramPreprocessor']
+            **self.nemo_params["AudioToMelSpectrogramPreprocessor"]
         )
-        self.jasper_encoder = JasperEncoder(**self.nemo_params['JasperEncoder'])
-        self.jasper_decoder = JasperDecoderForCTC(num_classes=len(self.labels), **self.nemo_params['JasperDecoder'])
+        self.jasper_encoder = JasperEncoder(**self.nemo_params["JasperEncoder"])
+        self.jasper_decoder = JasperDecoderForCTC(num_classes=len(self.labels), **self.nemo_params["JasperDecoder"])
         self.greedy_decoder = GreedyCTCDecoder()
         self.modules_to_restore = [self.jasper_encoder, self.jasper_decoder]
 
@@ -184,10 +183,11 @@ class NeMoASR(NeMoBase):
             text_batch: Batch of transcripts.
 
         """
-        data_layer = AudioInferDataLayer(audio_batch=audio_batch, **self.nemo_params['AudioToTextDataLayer'])
+        data_layer = AudioInferDataLayer(audio_batch=audio_batch, **self.nemo_params["AudioToTextDataLayer"])
         audio_signal, audio_signal_len = data_layer()
-        processed_signal, processed_signal_len = self.data_preprocessor(input_signal=audio_signal,
-                                                                        length=audio_signal_len)
+        processed_signal, processed_signal_len = self.data_preprocessor(
+            input_signal=audio_signal, length=audio_signal_len
+        )
         encoded, encoded_len = self.jasper_encoder(audio_signal=processed_signal, length=processed_signal_len)
         log_probs = self.jasper_decoder(encoder_output=encoded)
         predictions = self.greedy_decoder(log_probs=log_probs)
