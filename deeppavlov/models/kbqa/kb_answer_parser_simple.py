@@ -83,7 +83,7 @@ class KBAnswerParserSimple(KBBase):
                 if entity_from_template:
                     relation_from_template = relations_from_template[0][0]
                     if self._debug:
-                        relation_title = self._relations_mapping[relation_from_template]
+                        relation_title = self._relations_mapping[relation_from_template]["name"]
                         log.debug("entity {}, relation {}".format(entity_from_template, relation_title))
                     entity_ids, entity_linking_confidences = self.linker(entity_from_template[0])
                     entity_triplets = self.extract_triplets_from_wiki(entity_ids)
@@ -105,7 +105,7 @@ class KBAnswerParserSimple(KBBase):
                             self.filter_triplets_rus(entity_triplets, entity_linking_confidences, tokens, entity_ids)
 
                     top_k_probs = self._parse_relations_probs(relations_probs)
-                    top_k_relation_names = [self._relations_mapping[rel] for rel in relations_labels]
+                    top_k_relation_names = [self._relations_mapping[rel]["name"] for rel in relations_labels]
                     if self._debug:
                         log.debug("entity_from_ner {}, top k relations {}".format(str(entity_from_ner),
                                                                                   str(top_k_relation_names)))

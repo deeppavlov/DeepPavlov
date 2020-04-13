@@ -71,8 +71,7 @@ class KBTree(KBBase):
         self.language = language
         super().__init__(relations_maping_filename=self._relations_filename, *args, **kwargs)
 
-    def __call__(self, sentences: List[str],
-                 *args, **kwargs) -> List[str]:
+    def __call__(self, sentences: List[str]) -> Tuple[List[str], List[float]]:
 
         objects_batch = []
         confidences_batch = []
@@ -156,17 +155,17 @@ class KBTree(KBBase):
 
         return filtered_triplets
 
-    """
-    method which calculates cosine similarity between average fasttext embedding of
-    tokens of relation extracted from syntactic tree and all relations from wikidata
-    and we find which relation from wikidata has the biggest cosine similarity
-    """
-
     def match_rel(self,
                   entity_triplets: List[List[List[str]]],
                   entity_linking_confidences: List[float],
                   detected_rel: str,
                   sentence: str) -> Tuple[str, float]:
+        """
+            Method which calculates cosine similarity between average fasttext embedding of
+            tokens of relation extracted from syntactic tree and all relations from wikidata
+            and we find which relation from wikidata has the biggest cosine similarity
+        """
+
         av_detected_emb = self.av_emb(detected_rel)
         max_score = 0.0
         found_obj = ""

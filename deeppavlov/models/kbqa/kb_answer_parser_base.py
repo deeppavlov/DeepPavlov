@@ -50,7 +50,7 @@ class KBBase(Component, Serializable):
         self.wiki_filename = wiki_filename
         self.q2name_filename = q2name_filename
         self.q_to_name: Optional[Dict[str, Dict[str, str]]] = None
-        self._relations_mapping: Optional[Dict[str, str]] = None
+        self._relations_mapping: Optional[Dict[str, Dict[str, str]]] = None
         self.linker = linker
         self.template_matcher = template_matcher
         self.load()
