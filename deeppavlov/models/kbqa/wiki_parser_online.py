@@ -20,7 +20,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 
 
-def get_answer(query: str) -> Dict[str, Dict[str, str]]:
+def get_answer(query: str) -> List[Dict[str, Dict[str, str]]]:
     url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql'
     data = []
     for i in range(3):
