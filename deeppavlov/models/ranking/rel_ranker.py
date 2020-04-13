@@ -107,7 +107,7 @@ class RelRanker(LRScheduledTFModel):
         self.load()
 
     def fill_feed_dict(self, questions_embs: List[np.ndarray], rels_embs: List[np.ndarray], y=None, train=False) -> \
-            Dict[List[np.ndarray], List[np.ndarray]]:
+            Dict[tf.placeholder, List[np.ndarray]]:
         questions_embs = np.array(questions_embs)
         rels_embs = np.array(rels_embs)
         feed_dict = {self.question_ph: questions_embs, self.rel_emb_ph: rels_embs}
@@ -129,12 +129,14 @@ class RelRanker(LRScheduledTFModel):
             pred = self.sess.run(self.y_pred, feed_dict)
         return pred
 
-    def __call__(self, questions_embs: List[np.ndarray], rels_embs: List[np.ndarray]):
+    def __call__(self, questions_embs: List[np.ndarray], rels_embs: List[np.ndarray]) -> \
+            List[np.ndarray]:
         return self.predict(questions_embs, rels_embs)
 
-    def train_on_batch(self, *args):
-        *xs, y = args
-        feed_dict = self.fill_feed_dict(xs, y, train=True)
+    def train_on_batch(self, questions_embs: List[np.ndarray], 
+                             rels_embs: List[np.ndarray],
+                             y: List[int]) -> Dict[str, float]:
+        feed_dict = self.fill_feed_dict(questions_embs, rels_embs, y, train=True)
         _, loss_value = self.sess.run([self.train_op, self.loss], feed_dict)
 
         return {'loss': loss_value,
