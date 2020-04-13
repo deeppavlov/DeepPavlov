@@ -30,12 +30,9 @@ def get_answer(query: str) -> Dict[str, Dict[str, str]]:
                 data = data_0['results']['bindings']
             if "boolean" in data_0.keys():
                 data = data_0['boolean']
-
-        except:
-            e = 0
-
-        if data:
             break
+        except:
+            pass
 
     return data
 
