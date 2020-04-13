@@ -18,14 +18,13 @@ from typing import Tuple, List, Any
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
+from deeppavlov.core.common.file import load_pickle
 from deeppavlov.models.ranking.rel_ranker import RelRanker
 
 
 @register('rel_ranking_infer')
 class RelRankerInfer(Component, Serializable):
-    """
-        This class performs ranking of candidate relations
-    """
+    """This class performs ranking of candidate relations"""
 
     def __init__(self, load_path: str,
                  rel_q2name_filename: str,
@@ -51,8 +50,7 @@ class RelRankerInfer(Component, Serializable):
         self.load()
 
     def load(self) -> None:
-        with open(self.load_path / self.rel_q2name_filename, 'rb') as inv:
-            self.rel_q2name = pickle.load(inv)
+        self.rel_q2name = load_pickle(self.load_path / self.rel_q2name_filename)
 
     def save(self) -> None:
         pass
