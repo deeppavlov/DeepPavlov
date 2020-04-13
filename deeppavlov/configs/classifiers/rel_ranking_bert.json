@@ -10,26 +10,16 @@
     "len_valid": 500
   },
   "chainer": {
-    "in": [
-      "text_a",
-      "text_b"
-    ],
-    "in_y": [
-      "y"
-    ],
+    "in": ["text_a", "text_b"],
+    "in_y": ["y"],
     "pipe": [
       {
         "class_name": "bert_preprocessor",
         "vocab_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/vocab.txt",
         "do_lower_case": false,
         "max_seq_length": 64,
-        "in": [
-          "text_a",
-          "text_b"
-        ],
-        "out": [
-          "bert_features"
-        ]
+        "in": ["text_a", "text_b"],
+        "out": ["bert_features"]
       },
       {
         "class_name": "bert_classifier",
@@ -44,36 +34,21 @@
         "learning_rate": 2e-05,
         "learning_rate_drop_patience": 2,
         "learning_rate_drop_div": 2.0,
-        "in": [
-          "bert_features"
-        ],
-        "in_y": [
-          "y"
-        ],
-        "out": [
-          "predictions"
-        ]
+        "in": ["bert_features"],
+        "in_y": ["y"],
+        "out": ["predictions"]
       }
     ],
-    "out": [
-      "predictions"
-    ]
+    "out": ["predictions"]
   },
   "train": {
     "batch_size": 32,
     "pytest_max_batches": 2,
-    "metrics": [
-      "f1",
-      "acc"
-    ],
+    "metrics": ["f1", "acc"],
     "validation_patience": 10,
     "val_every_n_batches": 100,
     "log_every_n_batches": 100,
-    "evaluation_targets": [
-      "train",
-      "valid",
-      "test"
-    ],
+    "evaluation_targets": ["train", "valid", "test"],
     "tensorboard_log_dir": "{MODEL_PATH}/"
   },
   "metadata": {
