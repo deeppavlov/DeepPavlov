@@ -27,7 +27,8 @@ class TwoSentencesEmbedder(Component):
         """
         self.embedder = embedder
 
-    def __call__(self, sentence_tokens_1: List[List[str]], sentence_tokens_2: List[List[str]]):
+    def __call__(self, sentence_tokens_1: List[List[str]], sentence_tokens_2: List[List[str]]) -> \
+            Tuple[List[Union[list, np.ndarray]], List[Union[list, np.ndarray]]]:
         sentence_token_embs_1 = self.embedder(sentence_tokens_1)
         sentence_token_embs_2 = self.embedder(sentence_tokens_2)
         return sentence_token_embs_1, sentence_token_embs_2
