@@ -25,10 +25,10 @@ def get_answer(query: str) -> Dict[str, Dict[str, str]]:
     data = []
     for i in range(3):
         try:
-            data_0 = requests.get(url, params={'query': query, 'format': 'json'}).json()
+            data_0 = requests.get(url, params={'query': query, 'format': 'json'},  timeout=0.5).json()
             if "results" in data_0.keys():
                 data = data_0['results']['bindings']
-            if "boolean" in data_0.keys():
+            elif "boolean" in data_0.keys():
                 data = data_0['boolean']
             break
         except:
@@ -39,9 +39,7 @@ def get_answer(query: str) -> Dict[str, Dict[str, str]]:
 
 @register('wiki_parser_online')
 class WikiParserOnline(Component):
-    """
-        This class extracts relations or objects from Wikidata query service
-    """
+    """This class extracts relations or objects from Wikidata query service"""
 
     def __init__(self, **kwargs) -> None:
         pass
