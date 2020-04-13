@@ -35,12 +35,9 @@ def descendents(node, desc_list):
 
 @register('tree_parser')
 class TreeParser(Component, Serializable):
-    """
-        This class parses the question using UDPipe to detect entity and relation
-    """
+    """This class parses the question using UDPipe to detect entity and relation"""
 
-    def __init__(self, load_path: str,
-                 udpipe_filename: str, **kwargs) -> None:
+    def __init__(self, load_path: str, udpipe_filename: str, **kwargs) -> None:
         """
         
         Args:
@@ -50,8 +47,7 @@ class TreeParser(Component, Serializable):
         """
         super().__init__(save_path=None, load_path=load_path)
         self.udpipe_filename = udpipe_filename
-        self.udpipe_load_path = self.load_path / self.udpipe_filename
-        self.ud_model = udModel.load(str(self.udpipe_load_path))
+        self.ud_model = udModel.load(str(self.load_path / self.udpipe_filename))
         self.full_ud_model = Pipeline(self.ud_model, "vertical", Pipeline.DEFAULT, Pipeline.DEFAULT, "conllu")
 
     def load(self) -> None:
@@ -60,20 +56,18 @@ class TreeParser(Component, Serializable):
     def save(self) -> None:
         pass
 
-    def __call__(self, q_tokens: List[str],
-                 *args, **kwargs) -> Tuple[str, str]:
+    def __call__(self, q_tokens: List[str]) -> Tuple[str, str]:
 
         q_str = '\n'.join(q_tokens)
         s = self.full_ud_model.process(q_str)
         tree = Conllu(filehandle=StringIO(s)).read_tree()
         fnd, detected_entity, detected_rel = self.find_entity(tree, q_tokens)
-        if fnd == False:
+        if not fnd:
             fnd, detected_entity, detected_rel = self.find_entity_adj(tree)
         detected_entity = detected_entity.replace("первый ", '')
         return detected_entity, detected_rel
 
-    def find_entity(self, tree: Node,
-                    q_tokens: List[str]) -> Tuple[bool, str, str]:
+    def find_entity(self, tree: Node, q_tokens: List[str]) -> Tuple[bool, str, str]:
         detected_entity = ""
         detected_rel = ""
         min_tree = 10
@@ -97,8 +91,7 @@ class TreeParser(Component, Serializable):
                 if tok in desc_list:
                     entity_tokens.append(tok)
                     num_tok = n
-            if (num_tok + 1) < len(q_tokens):
-                if q_tokens[(num_tok + 1)].isdigit():
+            if (num_tok + 1) < len(q_tokens) and q_tokens[(num_tok + 1)].isdigit():
                     entity_tokens.append(q_tokens[(num_tok + 1)])
             detected_entity = ' '.join(entity_tokens)
             return True, detected_entity, detected_rel
