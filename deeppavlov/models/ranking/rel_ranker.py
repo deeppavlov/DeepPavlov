@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Dict
 import numpy as np
 
 import tensorflow as tf
@@ -106,11 +106,11 @@ class RelRanker(LRScheduledTFModel):
         self.sess.run(tf.global_variables_initializer())
         self.load()
 
-    def fill_feed_dict(self, xs, y=None, train=False):
-        xs = list(xs)
-        xs[0] = np.array(xs[0])
-        xs[1] = np.array(xs[1])
-        feed_dict = {self.question_ph: xs[0], self.rel_emb_ph: xs[1]}
+    def fill_feed_dict(self, questions_embs: List[np.ndarray], rels_embs: List[np.ndarray], y=None, train=False) -> \
+            Dict[List[np.ndarray], List[np.ndarray]]:
+        questions_embs = np.array(questions_embs)
+        rels_embs = np.array(rels_embs)
+        feed_dict = {self.question_ph: questions_embs, self.rel_emb_ph: rels_embs}
         if y is not None:
             feed_dict[self.y_ph] = y
         if train:
@@ -120,18 +120,17 @@ class RelRanker(LRScheduledTFModel):
 
         return feed_dict
 
-    def predict(self, xs):
-        feed_dict = self.fill_feed_dict(xs)
+    def predict(self, questions_embs: List[np.ndarray], rels_embs: List[np.ndarray]) -> \
+            List[np.ndarray]:
+        feed_dict = self.fill_feed_dict(questions_embs, rels_embs)
         if self.return_probas:
             pred = self.sess.run(self.logits, feed_dict)
         else:
             pred = self.sess.run(self.y_pred, feed_dict)
         return pred
 
-    def __call__(self, *args, **kwargs):
-        if len(args[0]) == 0 or (len(args[0]) == 1 and len(args[0][0]) == 0):
-            return []
-        return self.predict(args)
+    def __call__(self, questions_embs: List[np.ndarray], rels_embs: List[np.ndarray]):
+        return self.predict(questions_embs, rels_embs)
 
     def train_on_batch(self, *args):
         *xs, y = args
