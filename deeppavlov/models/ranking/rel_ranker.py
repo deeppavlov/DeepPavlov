@@ -49,12 +49,9 @@ class RelRanker(LRScheduledTFModel):
             return_probas: whether to return confidences of the relation to be appropriate or not
             **kwargs:
         """
-        if 'learning_rate_drop_div' not in kwargs:
-            kwargs['learning_rate_drop_div'] = 10.0
-        if 'learning_rate_drop_patience' not in kwargs:
-            kwargs['learning_rate_drop_patience'] = 5.0
-        if 'clip_norm' not in kwargs:
-            kwargs['clip_norm'] = 5.0
+        kwargs.setdefault('learning_rate_drop_div', 10.0)
+        kwargs.setdefault('learning_rate_drop_patience', 5.0)
+        kwargs.setdefault('clip_norm', 5.0)
 
         super().__init__(**kwargs)
 
