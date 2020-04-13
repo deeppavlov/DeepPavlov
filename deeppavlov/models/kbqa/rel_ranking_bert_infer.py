@@ -19,6 +19,7 @@ from typing import Tuple, List
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
+from deeppavlov.core.common.file import load_pickle
 from deeppavlov.models.ranking.rel_ranker import RelRanker
 from deeppavlov.models.kbqa.wiki_parser import WikiParser
 
@@ -27,9 +28,7 @@ log = getLogger(__name__)
 
 @register('rel_ranking_bert_infer')
 class RelRankerBertInfer(Component, Serializable):
-    """
-        class for ranking of paths in subgraph
-    """
+    """Class for ranking of paths in subgraph"""
 
     def __init__(self, load_path: str,
                  rel_q2name_filename: str,
@@ -60,13 +59,13 @@ class RelRankerBertInfer(Component, Serializable):
         self.load()
 
     def load(self) -> None:
-        with open(self.load_path / self.rel_q2name_filename, 'rb') as inv:
-            self.rel_q2name = pickle.load(inv)
+        self.rel_q2name = load_pickle(self.load_path / self.rel_q2name_filename)
 
     def save(self) -> None:
         pass
 
-    def __call__(self, questions: List[str], candidate_answers: List[Tuple[str]], return_answer=True) -> List[List[str]]:
+    def __call__(self, questions: List[str], candidate_answers: List[Tuple[str]], 
+                       return_answer=True) -> Union[List[str], List[List[str]]]:
         question = questions[0]
         answers_with_scores = []
         rels_with_scores = []
