@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import Tuple, List, Any
+from typing import Tuple, List, Any, Optional, Union
 
 import re
 import nltk
@@ -25,6 +25,7 @@ from deeppavlov.models.kbqa.template_matcher import TemplateMatcher
 from deeppavlov.models.kbqa.entity_linking import EntityLinker
 from deeppavlov.models.kbqa.wiki_parser import WikiParser
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
+from deeppavlov.models.kbqa.rel_ranking_bert_infer import RelRankerBertInfer
 
 log = getLogger(__name__)
 
@@ -39,7 +40,7 @@ class QueryGenerator(Component, Serializable):
     def __init__(self, template_matcher: TemplateMatcher,
                  linker: EntityLinker,
                  wiki_parser: WikiParser,
-                 rel_ranker: RelRankerInfer,
+                 rel_ranker: Union[RelRankerInfer, RelRankerBertInfer],
                  load_path: str,
                  rank_rels_filename_1: str,
                  rank_rels_filename_2: str,
@@ -297,7 +298,7 @@ class QueryGenerator(Component, Serializable):
 
     def two_hop_solver(self, question: str,
                        entity_ids: List[List[str]],
-                       rels_from_template: List[Tuple[str]] = None):
+                       rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str]]:
         candidate_outputs = []
         if len(entity_ids) == 1:
             if rels_from_template is not None:
