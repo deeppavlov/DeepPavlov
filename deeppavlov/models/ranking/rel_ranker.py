@@ -86,6 +86,7 @@ class RelRanker(LRScheduledTFModel):
         with tf.variable_scope("question_encode"):
             rnn = CudnnGRU(num_layers=2, num_units=75, batch_size=b_size, input_size=300, keep_prob=self.keep_prob_ph)
             q = rnn(question_dr, seq_len=q_len)
+
         with tf.variable_scope("attention"):
             rel_emb_exp = tf.expand_dims(rel_emb, axis=1)
             dot_products = tf.reduce_sum(tf.multiply(q, rel_emb_exp), axis=2, keep_dims=False)
