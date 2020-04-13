@@ -12,21 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pickle
 from string import punctuation
 from typing import List, Tuple, Optional, Dict
 
-import pickle
-
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
+from deeppavlov.core.common.file import load_pickle
 from deeppavlov.models.kbqa.entity_linking import EntityLinker
 from deeppavlov.models.kbqa.template_matcher import TemplateMatcher
 
 
 class KBBase(Component, Serializable):
-    """
-        Base class to generate an answer for a given question using Wikidata.
-    """
+    """Base class to generate an answer for a given question using Wikidata."""
 
     def __init__(self, load_path: str, wiki_filename: str, linker: EntityLinker,
                  template_matcher: TemplateMatcher, q2name_filename: str = None,
@@ -58,13 +56,10 @@ class KBBase(Component, Serializable):
         self.load()
 
     def load(self) -> None:
-        with open(self.load_path / self.q2name_filename, 'rb') as fl:
-            self.q_to_name = pickle.load(fl)
+        self.q_to_name = load_pickle(self.load_path / self.q2name_filename)
         if self._relations_filename is not None:
-            with open(self.load_path / self._relations_filename, 'rb') as f:
-                self._relations_mapping = pickle.load(f)
-        with open(self.load_path / self.wiki_filename, 'rb') as fl:
-            self.wikidata = pickle.load(fl)
+            self._relations_mapping = load_pickle(self.load_path / self._relations_filename)
+        self.wikidata = load_pickle(self.load_path / self.wiki_filename)
 
     def save(self) -> None:
         pass
