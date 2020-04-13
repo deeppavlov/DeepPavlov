@@ -68,7 +68,7 @@ class KBAnswerParserSimple(KBBase):
                  tags_batch: List[List[int]],
                  relations_probs_batch: List[List[float]],
                  relations_labels_batch: List[List[str]],
-                 *args, **kwargs) -> List[str]:
+                 *args, **kwargs) -> Tuple[List[str], List[float]]:
 
         objects_batch = []
         confidences_batch = []
@@ -149,9 +149,9 @@ class KBAnswerParserSimple(KBBase):
 
         return entity_triplets
 
-    def filter_triplets_rus(self, entity_triplets: List[List[List[str]]], confidences, question_tokens: List[str],
-                            srtd_cand_ent: List[Tuple[str]]) -> Tuple[
-        List[Tuple[str]], List[List[List[str]]], List[float]]:
+    def filter_triplets_rus(self, entity_triplets: List[List[List[str]]], confidences: List[float],
+                            question_tokens: List[str], srtd_cand_ent: List[Tuple[str]]) -> \
+                            Tuple[List[Tuple[str]], List[List[List[str]]], List[float]]:
 
         question = ' '.join(question_tokens).lower()
         what_template = 'что '
@@ -176,8 +176,7 @@ class KBAnswerParserSimple(KBBase):
                 if triplet[0] == property_is_instance_of and triplet[1] == id_for_entity_asteroid:
                     entity_is_asteroid = True
                     break
-            if found_what_template and \
-                    (entity_is_human or entity_is_named or entity_is_asteroid):
+            if found_what_template and (entity_is_human or entity_is_named or entity_is_asteroid):
                 continue
             filtered_entity_triplets.append(triplets_for_entity)
             filtered_entities.append(wiki_entity)
