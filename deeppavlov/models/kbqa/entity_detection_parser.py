@@ -20,9 +20,7 @@ from deeppavlov.core.models.component import Component
 
 @register('entity_detection_parser')
 class EntityDetectionParser(Component):
-    """
-        This class parses probabilities of tokens to be a token from the entity substring
-    """
+    """This class parses probabilities of tokens to be a token from the entity substring."""
 
     def __init__(self, thres_proba: float = 0.86, **kwargs):
         self.thres_proba = thres_proba
