@@ -23,9 +23,7 @@ from deeppavlov.core.models.component import Component
 
 @register('wiki_parser')
 class WikiParser(Component):
-    """
-        This class extract relations, objects or triplets from Wikidata HDT file
-    """
+    """This class extract relations, objects or triplets from Wikidata HDT file"""
 
     def __init__(self, wiki_filename: str, **kwargs):
         wiki_path = expand_path(wiki_filename)
@@ -39,7 +37,7 @@ class WikiParser(Component):
                  type_of_rel: str = None,
                  filter_obj: str = None,
                  find_label: str = False,
-                 find_alias: str = False) -> List[str]:
+                 find_alias: str = False) -> Union[str, List[str]]:
         """
 
         Args:
@@ -55,7 +53,7 @@ class WikiParser(Component):
             find_alias: whether to find alias of entity from entity_id
         """
         
-        if not entity.startswith("http://www.wikidata.org/") and entity.startswith("Q"):
+        if entity.startswith("Q"):
             entity = "http://www.wikidata.org/entity/" + entity
 
         if find_label:
