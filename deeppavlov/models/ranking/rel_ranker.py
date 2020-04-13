@@ -14,9 +14,7 @@ from deeppavlov.models.squad.utils import CudnnGRU
 
 @register('two_sentences_emb')
 class TwoSentencesEmbedder(Component):
-    """
-        This class is used for embedding of two sentences
-    """
+    """This class is used for embedding of two sentences."""
 
     def __init__(self, embedder: Embedder, **kwargs):
         """
