@@ -23,6 +23,7 @@ from fuzzywuzzy import fuzz
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
+from deeppavlov.core.common.file import load_pickle
 from deeppavlov.models.spelling_correction.levenshtein.levenshtein_searcher import LevenshteinSearcher
 from deeppavlov.models.kbqa.wiki_parser import WikiParser
 
@@ -84,14 +85,10 @@ class EntityLinker(Component, Serializable):
             self.searcher = LevenshteinSearcher(alphabet, dictionary_words)
 
     def load(self) -> None:
-        with open(self.load_path / self.inverted_index_filename, 'rb') as inv:
-            self.inverted_index = pickle.load(inv)
-            self.inverted_index: Dict[str, List[Tuple[str]]]
-        with open(self.load_path / self.entities_list_filename, 'rb') as entlist:
-            self.entities_list = pickle.load(entlist)
+        self.inverted_index = load_pickle(self.load_path / self.inverted_index_filename)
+        self.entities_list = load_pickle(self.load_path / self.entities_list_filename)
         if not self.use_hdt:
-            with open(self.load_path / self.q2name_filename, 'rb') as q2name:
-                self.q2name = pickle.load(q2name)
+            self.q2name = load_pickle(self.load_path / self.q2name_filename)
 
     def save(self) -> None:
         pass
@@ -153,7 +150,7 @@ class EntityLinker(Component, Serializable):
         return wiki_entities, confidences, srtd_with_ratios
 
     def candidate_entities_names(self, entity: str,
-                                 candidate_entities: List[Tuple[int, str]]) -> Tuple[List[Tuple[str]], List[List[str]]]:
+                                 candidate_entities: List[Tuple[int, str, int]]) -> Tuple[List[Tuple[int, str, int]], List[List[str]]]:
         entity_length = len(entity)
         candidate_names = []
         candidate_entities_filter = []
