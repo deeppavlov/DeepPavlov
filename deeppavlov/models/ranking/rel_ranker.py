@@ -1,12 +1,13 @@
-import numpy as np
-import tensorflow as tf
 from typing import List
+import numpy as np
+
+import tensorflow as tf
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
 from deeppavlov.core.models.component import Component
-from deeppavlov.models.embedders.abstract_embedder import Embedder
 from deeppavlov.core.layers.tf_layers import variational_dropout
+from deeppavlov.models.embedders.abstract_embedder import Embedder
 from deeppavlov.models.squad.utils import softmax_mask
 from deeppavlov.models.squad.utils import CudnnGRU
 

@@ -13,7 +13,9 @@
 # limitations under the License.
 
 from typing import List
+
 from hdt import HDTDocument
+
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component

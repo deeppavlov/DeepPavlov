@@ -13,7 +13,9 @@
 # limitations under the License.
 
 from typing import List, Dict
+
 import requests
+
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 
