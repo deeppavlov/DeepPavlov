@@ -79,8 +79,7 @@ class KBAnswerParserSimple(KBBase):
             if is_kbqa:
                 if self._templates_filename is not None:
                     entity_from_template, relations_from_template, query_type = self.template_matcher(question)
-                else:
-                    entity_from_template = None
+                
                 if entity_from_template:
                     relation_from_template = relations_from_template[0][0]
                     if self._debug:
@@ -124,7 +123,7 @@ class KBAnswerParserSimple(KBBase):
 
         return parsed_objects_batch, confidences_batch
 
-    def _parse_relations_probs(self, probs: List[float]) -> List[str]:
+    def _parse_relations_probs(self, probs: List[float]) -> List[float]:
         top_k_inds = np.asarray(probs).argsort()[-self.top_k_classes:][::-1]
         top_k_probs = [probs[k] for k in top_k_inds]
         return top_k_probs
