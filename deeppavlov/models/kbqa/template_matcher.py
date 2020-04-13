@@ -29,9 +29,7 @@ class TemplateMatcher(Component, Serializable):
         corresponds to the question
     """
 
-    def __init__(self, load_path: str,
-                 templates_filename: str = None,
-                 **kwargs) -> None:
+    def __init__(self, load_path: str, templates_filename: str, **kwargs) -> None:
         """
 
         Args:
@@ -44,9 +42,8 @@ class TemplateMatcher(Component, Serializable):
         self.load()
 
     def load(self) -> None:
-        if self._templates_filename is not None:
-            with open(self.load_path / self._templates_filename, 'rb') as t:
-                self.templates = pickle.load(t)
+        with open(self.load_path / self._templates_filename, 'rb') as t:
+            self.templates = pickle.load(t)
 
     def save(self) -> None:
         raise NotImplementedError
@@ -68,10 +65,8 @@ class TemplateMatcher(Component, Serializable):
 
                 found = True
                 entity_lengths = [len(entity) for entity in entities_cand]
-                for length in entity_lengths:
-                    if length == 0:
-                        found = False
-                if found:
+
+                if 0 not in entity_lengths:
                     cur_len = sum(entity_lengths)
                     if cur_len < min_length and len(strstart)+template_len + cur_len == question_length:
                         entities = entities_cand
