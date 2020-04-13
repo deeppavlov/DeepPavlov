@@ -14,6 +14,7 @@
 
 import pickle
 from typing import Tuple, List, Any
+
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable

@@ -15,6 +15,7 @@
 import pickle
 from logging import getLogger
 from typing import Tuple, List
+
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
