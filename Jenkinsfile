@@ -44,7 +44,8 @@ node('cpu') {
             throw e
         }
         finally {
-            emailext to: '${DEFAULT_RECIPIENTS}, ${GIT_COMMIT_EMAIL}',
+            echo "Git committer email: ${GIT_COMMIT_EMAIL}"
+            emailext to: "${DEFAULT_RECIPIENTS}, $GIT_COMMIT_EMAIL",
                 subject: "${env.JOB_NAME} - Build # ${currentBuild.number} - ${currentBuild.result}!",
                 body: '${BRANCH_NAME} - ${BUILD_URL}',
                 attachLog: true
