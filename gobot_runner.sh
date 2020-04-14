@@ -7,7 +7,7 @@ export PYTHONPATH=$DEEPPAVLOV_DIR:$PYTHONPATH
 
 for config_fn in $GOBOT_CONFIG_FILES; do
     for dld_param in ${DOWNLOAD_PARAM_CANDIDATES[@]}; do
-        echo $(date) BEFORE $PY_TEST_RUNNER $config_fn $dld_param 
+        echo $(date) BEFORE $PY_TEST_RUNNER $config_fn $dld_param
         
         python3 $PY_TEST_RUNNER $config_fn $dld_param \
          >> ${config_fn}_${dld_param}.log \
