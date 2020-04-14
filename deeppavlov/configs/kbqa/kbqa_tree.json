@@ -77,23 +77,7 @@
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wiki_rus.pickle",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/inverted_index_rus.pickle",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/templates_rus.pickle",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wiki_properties_rus.pickle",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/entities_list_rus.pickle",
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wiki_package_rus.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
