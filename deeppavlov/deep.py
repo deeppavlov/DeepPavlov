@@ -20,6 +20,7 @@ from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.common.cross_validation import calc_cv_score
 from deeppavlov.core.common.file import find_config
 from deeppavlov.download import deep_download
+from deeppavlov.utils.agent import start_rabbit_service
 from deeppavlov.utils.alexa import start_alexa_server
 from deeppavlov.utils.alice import start_alice_server
 from deeppavlov.utils.ms_bot_framework import start_ms_bf_server
@@ -34,14 +35,14 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
                     choices={'train', 'evaluate', 'interact', 'predict', 'telegram', 'msbot', 'alexa', 'alice',
-                             'riseapi', 'risesocket', 'download', 'install', 'crossval'})
+                             'riseapi', 'risesocket', 'agent-rabbit', 'download', 'install', 'crossval'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 
 parser.add_argument("-e", "--start-epoch-num", dest="start_epoch_num", default=None,
                     help="Start epoch number", type=int)
 parser.add_argument("--recursive", action="store_true", help="Train nested configs")
 
-parser.add_argument("-b", "--batch-size", dest="batch_size", default=1, help="inference batch size", type=int)
+parser.add_argument("-b", "--batch-size", dest="batch_size", default=None, help="inference batch size", type=int)
 parser.add_argument("-f", "--input-file", dest="file_path", default=None, help="Path to the input file", type=str)
 parser.add_argument("-d", "--download", action="store_true", help="download model components")
 
@@ -58,8 +59,17 @@ parser.add_argument("--cert", default=None, help="ssl certificate", type=str)
 
 parser.add_argument("-p", "--port", default=None, help="api port", type=int)
 
-parser.add_argument("--socket-type", default='TCP', type=str, choices={"TCP", "UNIX"})
+parser.add_argument("--socket-type", default="TCP", type=str, choices={"TCP", "UNIX"})
 parser.add_argument("--socket-file", default="/tmp/deeppavlov_socket.s", type=str)
+
+parser.add_argument("-sn", "--service-name", default=None, help="service name for agent-rabbit mode", type=str)
+parser.add_argument("-an", "--agent-namespace", default=None, help="dp-agent namespace name", type=str)
+parser.add_argument("-ul", "--utterance-lifetime", default=None, help="message expiration in seconds", type=int)
+parser.add_argument("-rh", "--rabbit-host", default=None, help="RabbitMQ server host", type=str)
+parser.add_argument("-rp", "--rabbit-port", default=None, help="RabbitMQ server port", type=int)
+parser.add_argument("-rl", "--rabbit-login", default=None, help="RabbitMQ server login", type=str)
+parser.add_argument("-rpwd", "--rabbit-password", default=None, help="RabbitMQ server password", type=str)
+parser.add_argument("-rvh", "--rabbit-virtualhost", default=None, help="RabbitMQ server virtualhost", type=str)
 
 
 def main():
@@ -103,6 +113,17 @@ def main():
         start_model_server(pipeline_config_path, args.https, args.key, args.cert, port=args.port)
     elif args.mode == 'risesocket':
         start_socket_server(pipeline_config_path, args.socket_type, port=args.port, socket_file=args.socket_file)
+    elif args.mode == 'agent-rabbit':
+        start_rabbit_service(model_config=pipeline_config_path,
+                             service_name=args.service_name,
+                             agent_namespace=args.agent_namespace,
+                             batch_size=args.batch_size,
+                             utterance_lifetime_sec=args.utterance_lifetime,
+                             rabbit_host=args.rabbit_host,
+                             rabbit_port=args.rabbit_port,
+                             rabbit_login=args.rabbit_login,
+                             rabbit_password=args.rabbit_password,
+                             rabbit_virtualhost=args.rabbit_virtualhost)
     elif args.mode == 'predict':
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
     elif args.mode == 'install':

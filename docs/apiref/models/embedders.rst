@@ -21,3 +21,7 @@ deeppavlov.models.embedders
 .. autoclass:: deeppavlov.models.embedders.tfidf_weighted_embedder.TfidfWeightedEmbedder
 
    .. automethod:: __call__
+
+.. autoclass:: deeppavlov.models.embedders.transformers_embedder.TransformersBertEmbedder
+
+   .. automethod:: __call__

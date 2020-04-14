@@ -98,6 +98,7 @@ PARAMS = {
         ("classifiers/intents_dstc2_big.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/insults_kaggle.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_twitter.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_twitter_bert_emb.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_twitter_preproc.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/topic_ag_news.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/rusentiment_cnn.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -142,6 +143,7 @@ PARAMS = {
         ("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_ontonotes.json", "ner_ontonotes", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_ontonotes_bert_emb.json", "ner_ontonotes_bert_emb", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_few_shot_ru_simulate.json", "ner_fs", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_rus.json", "ner_rus", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/slotfill_dstc2.json", "slotfill_dstc2", ('IP',)):
@@ -155,20 +157,20 @@ PARAMS = {
         ("kbqa/kbqa_rus.json", "kbqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "elmo_embedder": {
-        ("elmo_embedder/elmo_ru_news.json", "elmo_embedder_ru_news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("embedder/elmo_ru_news.json", "embedder_ru_news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
     },
     "elmo_model": {
         ("elmo/elmo_1b_benchmark_test.json", "elmo_1b_benchmark_test", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
     },
     "ranking": {
-        ("ranking/ranking_insurance_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_insurance_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_insurance.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_insurance_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v2_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_mt_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_mt_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/paraphrase_ident_paraphraser_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/paraphrase_ident_paraphraser_interact_test.json", "ranking",
+        ("ranking/ranking_ubuntu_v2_mt.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_mt_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_paraphraser.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_paraphraser_interact.json", "ranking",
          ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/paraphrase_ident_paraphraser_pretrain.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/paraphrase_ident_paraphraser_tune.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -177,14 +179,14 @@ PARAMS = {
         ("ranking/paraphrase_ident_paraphraser_elmo.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/paraphrase_ident_elmo_interact.json", "ranking",
          ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/paraphrase_ident_qqp_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/paraphrase_ident_qqp_bilstm_interact_test.json", "ranking",
+        ("ranking/paraphrase_ident_qqp.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_qqp_bilstm_interact.json", "ranking",
          ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/paraphrase_ident_qqp_bilstm_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/paraphrase_ident_qqp_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_bert_uncased_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_bert_sep_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_bert_sep_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_qqp_bilstm.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_qqp_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_bert_uncased.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_bert_sep.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_bert_sep_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v1_mt_word2vec_smn.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v1_mt_word2vec_dam.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v1_mt_word2vec_dam_transformer.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -211,7 +213,9 @@ PARAMS = {
         ("squad/squad_bert_infer.json", "squad_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/multi_squad_noans.json", "multi_squad_noans", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK]
+        ("squad/multi_squad_noans.json", "multi_squad_noans", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_zh_bert_mult.json", "squad_zh_bert_mult", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_zh_bert_zh.json", "squad_zh_bert_zh", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK]
     },
     "seq2seq_go_bot": {
         ("seq2seq_go_bot/bot_kvret_train.json", "seq2seq_go_bot", ('TI',)):
@@ -437,6 +441,7 @@ class TestQuickStart(object):
         model_args_names = socket_params['model_args_names']
 
         host = socket_params['host']
+        host = host.replace('0.0.0.0', '127.0.0.1')
         port = api_port or socket_params['port']
 
         socket_payload = {}

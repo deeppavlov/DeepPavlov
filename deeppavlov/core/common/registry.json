@@ -153,6 +153,8 @@
   "tfidf_weighted": "deeppavlov.models.embedders.tfidf_weighted_embedder:TfidfWeightedEmbedder",
   "top1_elector": "deeppavlov.models.spelling_correction.electors.top1_elector:TopOneElector",
   "tweetqa_dataset_reader": "deeppavlov.dataset_readers.tweet_qa_reader:TweetQADatasetReader",
+  "transformers_bert_embedder": "deeppavlov.models.embedders.transformers_embedder:TransformersBertEmbedder",
+  "transformers_bert_preprocessor": "deeppavlov.models.preprocessors.transformers_preprocessor:TransformersBertPreprocessor",
   "typos_custom_reader": "deeppavlov.dataset_readers.typos_reader:TyposCustom",
   "typos_iterator": "deeppavlov.dataset_iterators.typos_iterator:TyposDatasetIterator",
   "typos_kartaslov_reader": "deeppavlov.dataset_readers.typos_reader:TyposKartaslov",
