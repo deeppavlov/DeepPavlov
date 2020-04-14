@@ -12,7 +12,6 @@ node('cpu') {
                     script: "git --no-pager show -s --format='%ae'",
                     returnStdout: true
                 ).trim()
-                echo "Git committer email: ${GIT_COMMIT_EMAIL}"
 //                 env.TFHUB_CACHE_DIR="tfhub_cache"
 //                 sh """
 //                     virtualenv --python=python3.7 '.venv-$BUILD_NUMBER'
@@ -44,8 +43,7 @@ node('cpu') {
             throw e
         }
         finally {
-            echo "Git committer email: ${GIT_COMMIT_EMAIL}"
-            emailext to: "${DEFAULT_RECIPIENTS}, $GIT_COMMIT_EMAIL",
+            emailext to: '${DEFAULT_RECIPIENTS}' + ",${GIT_COMMIT_EMAIL}",
                 subject: "${env.JOB_NAME} - Build # ${currentBuild.number} - ${currentBuild.result}!",
                 body: '${BRANCH_NAME} - ${BUILD_URL}',
                 attachLog: true
