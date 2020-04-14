@@ -26,7 +26,7 @@ class EntityDetectionParser(Component):
         self.thres_proba = thres_proba
 
     def __call__(self, question_tokens: List[List[str]],
-                 token_probas: List[List[List[float]]], **kwargs):
+                 token_probas: List[List[List[float]]]) -> List[List[str]]:
         """
 
         Args:
@@ -34,19 +34,20 @@ class EntityDetectionParser(Component):
             token_probas: list of probabilities of question tokens to belong to
             "B-TAG" (beginning of entity substring), "I-TAG" (inner token of entity substring)
             or "O-TAG" (not an entity token)
-            **kwargs
         """
-        tokens, probas = question_tokens[0], token_probas[0]
+        
+        entities_batch = []
+        for tokens, probas in zip(question_tokens, token_probas):
+            tags = []
+            for proba in probas:
+                if proba[0] <= self.thres_proba:
+                    tags.append(1)
+                if proba[0] > self.thres_proba:
+                    tags.append(0)
 
-        tags = []
-        for proba in probas:
-            if proba[0] <= self.thres_proba:
-                tags.append(1)
-            if proba[0] > self.thres_proba:
-                tags.append(0)
-
-        entities = self.entities_from_tags(tokens, tags, probas)
-        return entities
+            entities = self.entities_from_tags(tokens, tags, probas)
+            entities_batch.append(entities)
+        return entities_batch
 
     def entities_from_tags(self, tokens, tags, probas):
         entities = []
