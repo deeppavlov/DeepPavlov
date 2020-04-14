@@ -13,6 +13,13 @@ log = getLogger(__name__)
 
 @register("ner_preprocessor")
 class NerPreprocessor():
+    """ Preprocess the batch of list of tokens
+
+    Params:
+        get_x_padded_for_elmo: whether the padded batch used for ELMo is returned
+        get_x_cap_padded: whether the padded batch used for capitalization feature extraction is returned
+    """
+
     def __init__(self, get_x_padded_for_elmo=False, get_x_cap_padded=False, **kwargs):
         self.get_x_padded_for_elmo = get_x_padded_for_elmo
         self.get_x_cap_padded = get_x_cap_padded
@@ -30,18 +37,16 @@ class NerPreprocessor():
             return 4
 
     def __call__(self, batch: List[List[str]], **kwargs):
-        """
-        take as input batch of sents
-        Parameters
-        ----------
-        batch: list of list of tokens
+        """ Process the input batch
 
-        Returns
-        -------
-        x_lower: batch in lowercase
-        sent_lengths: lengths of sents
-        x_padded_for_elmo (optional): batch padded with "", used as input for ELMo
-        x_cap_padded: batch of capitalization features
+        Args:
+            batch: list of list of tokens
+
+        Returns:
+            x_lower: batch in lowercase
+            sent_lengths: lengths of sents
+            x_padded_for_elmo (optional): batch padded with "", used as input for ELMo
+            x_cap_padded: batch of capitalization features
         """
 
         x_lower = [[token.lower() for token in sent] for sent in batch]
@@ -66,15 +71,40 @@ class NerPreprocessor():
 
 @register("convert_ids2tags")
 class ConvertIds2Tags():
+    """ Class used to convert the batch of indices to the batch of tags
+
+    Params:
+        id2tag: the dictionary used to convert the indices to the corresponding tags
+
+    """
+
     def __init__(self, id2tag, *args, **kwargs):
         self.id2tag = id2tag
 
     def __call__(self, y_predicted):
+        """ Convert the batch of indices to the corresponding batch of tags
+
+        Params:
+            y_predicted: the batch of indices
+
+        Returns:
+            the corresponding batch of tags
+        """
+
         return [[self.id2tag[id] for id in seq] for seq in y_predicted]
 
 
 @register("ner_vocab")
 class NerVocab(Estimator):
+    """ Implementation of the NER vocabulary
+
+    Params:
+        word_file_path: the path to the pre-trained word embedding model
+        save_path: the folder path to save dictionary files
+        load_path: the folder path from which the dictionary files are loaded
+        char_level: the flag arg indicating the character vocabulary
+    """
+
     def __init__(self,
                  word_file_path=None,
                  save_path=None,
@@ -131,15 +161,13 @@ class NerVocab(Estimator):
         self.save_to_file(self.save_path)
 
     def pad_batch(self, tokens: List[List[int]]):
-        """
-        create padded batch of words, tags, chunk pos, even batch of characters
-        Parameters
-        ----------
-        tokens: list of raw words, pos, chunk, or tags.
+        """ Create padded batch of words, tags, chunk pos, even batch of characters
 
-        Returns
-        -------
-        the batch after padding
+        Params:
+            tokens: list of raw words, pos, chunk, or tags.
+
+        Returns:
+            the padded batch
         """
 
         batch_size = len(tokens)

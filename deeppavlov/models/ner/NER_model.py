@@ -29,10 +29,9 @@ log = getLogger(__name__)
 
 @register('hybrid_ner_model')
 class HybridNerModel(LRScheduledTFModel):
-    """
-    This class implements the hybrid NER model published in the paper: http://www.ijmlc.org/show-83-881-1.html
+    """ This class implements the hybrid NER model published in the paper: http://www.ijmlc.org/show-83-881-1.html
 
-    Parameters:
+    Params:
         n_tags: Number of pre-defined tags.
         word_emb_path: The path to the pretrained word embedding model.
         word_emb_name: The name of pretrained word embedding model.
@@ -303,5 +302,5 @@ class HybridNerModel(LRScheduledTFModel):
         elif model_name is not None:
             raise RuntimeError(f'got an unexpected value for model_name: `{model_name}`')
 
-        log.info(f"There are {loaded_words}/{vocab_size} words were loaded from {model_path}.")
+        log.info(f"{loaded_words}/{vocab_size} words were loaded from {model_path}.")
         return word_embeddings
