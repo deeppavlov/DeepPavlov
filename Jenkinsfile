@@ -8,6 +8,9 @@ node('cpu') {
                 checkout scm
             }
             stage('Setup') {
+                echo BRANCH_NAME
+                echo BUILD_URL
+
                 GIT_COMMIT_EMAIL = sh (
                     script: "git --no-pager show -s --format='%ae' ${GIT_COMMIT}",
                     returnStdout: true
