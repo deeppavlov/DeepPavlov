@@ -14,7 +14,7 @@
 
 import pickle
 from logging import getLogger
-from typing import Tuple, List
+from typing import Tuple, List, Any
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
@@ -64,16 +64,13 @@ class RelRankerBertInfer(Component, Serializable):
     def save(self) -> None:
         pass
 
-    def __call__(self, questions: List[str], candidate_answers: List[Tuple[str]], 
-                       return_answer=True) -> Union[List[str], List[List[str]]]:
-        question = questions[0]
-        answers_with_scores = []
-        rels_with_scores = []
-
-        if return_answer:
-            
+    def __call__(self, questions_list: List[str], candidate_answers_list: List[List[Tuple[str]]]) -> List[str]:
+        
+        answers = []
+        for question, candidate_answers in zip(questions_list, candidate_answers_list):
+            answers_with_scores = []
             if len(candidate_answers) == 0:
-                return ["Not Found"]
+                answers.append("Not Found")
 
             for i in range(len(candidate_answers) // self.batch_size):
                 questions_batch = []
@@ -125,40 +122,42 @@ class RelRankerBertInfer(Component, Serializable):
             if self.debug:
                 log.debug(f"answers: {answers_with_scores[0][0]}")
             answer = self.wiki_parser("objects", "forw", answers_with_scores[0][0], find_label=True)
+            answers.append(answer)
 
-            return [answer]
+        return answers
 
-        else:
-            for i in range(len(candidate_answers) // self.batch_size):
-                questions_batch = []
-                rels_labels_batch = []
-                rels_batch = []
-                for j in range(self.batch_size):
-                    candidate_rel = candidate_answers[(i * self.batch_size + j)]
-                    if candidate_rel in self.rel_q2name:
-                        questions_batch.append(question)
-                        rels_batch.append(candidate_rel)
-                        rels_labels_batch.append(self.rel_q2name[candidate_rel])
-                probas = self.ranker(questions_batch, rels_labels_batch)
-                probas = [proba[1] for proba in probas]
-                for j, rel in enumerate(rels_batch):
-                    rels_with_scores.append((rel, probas[j]))
-            
+    def rank_rels(self, question: str, candidate_rels: List[str]) -> List[Tuple[str, Any]]:
+        rels_with_scores = []
+        for i in range(len(candidate_rels) // self.batch_size):
             questions_batch = []
-            rels_batch = []
             rels_labels_batch = []
-            for j in range(len(candidate_answers) % self.batch_size):
-                candidate_rel = candidate_answers[(len(candidate_answers) // self.batch_size * self.batch_size + j)]
+            rels_batch = []
+            for j in range(self.batch_size):
+                candidate_rel = candidate_rels[(i * self.batch_size + j)]
                 if candidate_rel in self.rel_q2name:
                     questions_batch.append(question)
                     rels_batch.append(candidate_rel)
                     rels_labels_batch.append(self.rel_q2name[candidate_rel])
-
             probas = self.ranker(questions_batch, rels_labels_batch)
             probas = [proba[1] for proba in probas]
             for j, rel in enumerate(rels_batch):
                 rels_with_scores.append((rel, probas[j]))
+        
+        questions_batch = []
+        rels_batch = []
+        rels_labels_batch = []
+        for j in range(len(candidate_rels) % self.batch_size):
+            candidate_rel = candidate_rels[(len(candidate_rels) // self.batch_size * self.batch_size + j)]
+            if candidate_rel in self.rel_q2name:
+                questions_batch.append(question)
+                rels_batch.append(candidate_rel)
+                rels_labels_batch.append(self.rel_q2name[candidate_rel])
 
-            rels_with_scores = sorted(rels_with_scores, key=lambda x: x[1], reverse=True)
-            return rels_with_scores[:self.rels_to_leave]
+        probas = self.ranker(questions_batch, rels_labels_batch)
+        probas = [proba[1] for proba in probas]
+        for j, rel in enumerate(rels_batch):
+            rels_with_scores.append((rel, probas[j]))
+        rels_with_scores = sorted(rels_with_scores, key=lambda x: x[1], reverse=True)
+
+        return rels_with_scores[:self.rels_to_leave]
 
