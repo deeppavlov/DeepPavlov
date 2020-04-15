@@ -216,7 +216,7 @@ class QueryGeneratorOnline(Component, Serializable):
                 ex_rels += self.wiki_parser("rels", "backw", entity)
 
         ex_rels = list(set(ex_rels))
-        scores = self.rel_ranker(question, ex_rels)
+        scores = self.rel_ranker.rank_rels(question, ex_rels)
         top_rels = [score[0] for score in scores]
         if self.debug:
             log.debug(f"top scored rels: {top_rels}")
@@ -240,7 +240,7 @@ class QueryGeneratorOnline(Component, Serializable):
         return candidate_outputs
 
     def maxmin_one_entity_solver(self, question: str, entities_list: List[str]) -> List[Tuple[str, str]]:
-        scores = self.rel_ranker(question, self.rank_list_0)
+        scores = self.rel_ranker.rank_rels(question, self.rank_list_0)
         top_rels = [score[0] for score in scores]
         rel_list = ["?p = wdt:{}".format(rel) for rel in top_rels]
         rel_str = " || ".join(rel_list)
@@ -264,14 +264,14 @@ class QueryGeneratorOnline(Component, Serializable):
                 ex_rels += self.wiki_parser("rels", "backw", entity)
 
         ex_rels = list(set(ex_rels))
-        scores_1 = self.rel_ranker(question, ex_rels)
+        scores_1 = self.rel_ranker.rank_rels(question, ex_rels)
         top_rels_1 = [score[0] for score in scores_1]
         rel_list_1 = ["?p1 = wdt:{}".format(rel) for rel in top_rels_1]
         rel_str_1 = " || ".join(rel_list_1)
         if self.debug:
             log.debug(f"top scored first rels: {top_rels_1}")
 
-        scores_2 = self.rel_ranker(question, self.rank_list_1)
+        scores_2 = self.rel_ranker.rank_rels(question, self.rank_list_1)
         top_rels_2 = [score[0] for score in scores_2]
         rel_list_2 = ["?p2 = wdt:{}".format(rel) for rel in top_rels_2]
         rel_str_2 = " || ".join(rel_list_2)
@@ -310,7 +310,7 @@ class QueryGeneratorOnline(Component, Serializable):
                     ex_rels += self.wiki_parser("rels", "backw", entity)
 
                 ex_rels = list(set(ex_rels))
-                scores = self.rel_ranker(question, ex_rels)
+                scores = self.rel_ranker.rank_rels(question, ex_rels)
                 top_rels = [score[0] for score in scores]
                 rel_list_1 = ["?p1 = wdt:{}".format(rel) for rel in top_rels[:self.rels_to_leave]]
                 rel_str_1 = " || ".join(rel_list_1)
@@ -333,7 +333,7 @@ class QueryGeneratorOnline(Component, Serializable):
                             ex_rels_2.append(ans["p2"]["value"].split('/')[-1])
 
                 ex_rels_2 = list(set(ex_rels_2))
-                scores_2 = self.rel_ranker(question, ex_rels_2)
+                scores_2 = self.rel_ranker.rank_rels(question, ex_rels_2)
                 top_rels_2 = [score[0] for score in scores_2]
                 rel_list_2 = ["?p2 = wdt:{}".format(rel) for rel in top_rels_2[:self.rels_to_leave]]
                 rel_str_2 = " || ".join(rel_list_2)

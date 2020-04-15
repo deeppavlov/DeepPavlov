@@ -177,7 +177,7 @@ class QueryGenerator(Component, Serializable):
         for entity in entity_ids[0][:self.entities_to_leave]:
             ex_rels += self.wiki_parser("rels", "forw", entity, type_of_rel="direct")
         ex_rels = list(set(ex_rels))
-        scores = self.rel_ranker.rank_rels(question, ex_rels) if self.return_answers else self.rel_ranker(question, ex_rels)
+        scores = self.rel_ranker.rank_rels(question, ex_rels)
         top_rels = [score[0] for score in scores]
         if self.debug:
             log.debug(f"top scored rels: {top_rels}")
@@ -204,7 +204,7 @@ class QueryGenerator(Component, Serializable):
         for entity in entity_ids[0][:self.entities_to_leave]:
             ex_rels += self.wiki_parser("rels", "forw", entity, type_of_rel="direct")
         ex_rels = list(set(ex_rels))
-        scores = self.rel_ranker.rank_rels(question, ex_rels) if self.return_answers else self.rel_ranker(question, ex_rels)
+        scores = self.rel_ranker.rank_rels(question, ex_rels)
         top_rels = [score[0] for score in scores]
         if self.debug:
             log.debug(f"top scored rels: {top_rels}")
@@ -227,7 +227,7 @@ class QueryGenerator(Component, Serializable):
                 ex_rels += self.wiki_parser("rels", "backw", entity, type_of_rel="direct")
 
         ex_rels = list(set(ex_rels))
-        scores = self.rel_ranker.rank_rels(question, ex_rels) if self.return_answers else self.rel_ranker(question, ex_rels)
+        scores = self.rel_ranker.rank_rels(question, ex_rels)
         top_rels = [score[0] for score in scores]
         if self.debug:
             log.debug(f"top scored rels: {top_rels}")
@@ -245,8 +245,7 @@ class QueryGenerator(Component, Serializable):
         return candidate_outputs
 
     def maxmin_one_entity_solver(self, question: str, entities_list: List[str]) -> List[Tuple[str, Any]]:
-        scores = self.rel_ranker.rank_rels(question, self.rank_list_0) if self.return_answers \
-                    else self.rel_ranker(question, self.rank_list_0)
+        scores = self.rel_ranker.rank_rels(question, self.rank_list_0)
         top_rels = [score[0] for score in scores]
         if self.debug:
             log.debug(f"top scored rels: {top_rels}")
@@ -269,14 +268,12 @@ class QueryGenerator(Component, Serializable):
                 ex_rels += self.wiki_parser("rels", "backw", entity, type_of_rel="direct")
 
         ex_rels = list(set(ex_rels))
-        scores_1 = self.rel_ranker.rank_rels(question, ex_rels) if self.return_answers \
-                        else self.rel_ranker(question, ex_rels)
+        scores_1 = self.rel_ranker.rank_rels(question, ex_rels)
         top_rels_1 = [score[0] for score in scores_1]
         if self.debug:
             log.debug(f"top scored first rels: {top_rels_1}")
 
-        scores_2 = self.rel_ranker.rank_rels(question, self.rank_list_1) if self.return_answers \
-                        else self.rel_ranker(question, self.rank_list_1)
+        scores_2 = self.rel_ranker.rank_rels(question, self.rank_list_1)
         top_rels_2 = [score[0] for score in scores_2]
         if self.debug:
             log.debug(f"top scored second rels: {top_rels_2}")
@@ -314,8 +311,7 @@ class QueryGenerator(Component, Serializable):
                     ex_rels += self.wiki_parser("rels", "backw", entity, type_of_rel="direct")
 
                 ex_rels = list(set(ex_rels))
-                scores = self.rel_ranker.rank_rels(question, ex_rels) if self.return_answers \
-                                    else self.rel_ranker(question, ex_rels)
+                scores = self.rel_ranker.rank_rels(question, ex_rels)
                 top_rels = [score[0] for score in scores]
                 if self.debug:
                     log.debug(f"top scored rels: {top_rels}")
@@ -330,8 +326,7 @@ class QueryGenerator(Component, Serializable):
                                 ex_rels_2 += self.wiki_parser("rels", "forw", obj, type_of_rel="direct")
 
                 ex_rels_2 = list(set(ex_rels_2))
-                scores_2 = self.rel_ranker.rank_rels(question, ex_rels_2) if self.return_answers \
-                                    else self.rel_ranker(question, ex_rels_2)
+                scores_2 = self.rel_ranker.rank_rels(question, ex_rels_2)
                 top_rels_2 = [score[0] for score in scores_2]
                 if self.debug:
                     log.debug(f"top scored second rels: {top_rels_2}")
@@ -366,8 +361,7 @@ class QueryGenerator(Component, Serializable):
                     ex_rels += self.wiki_parser("rels", "backw", ent_comb[1], type_of_rel="direct")
 
                     ex_rels = list(set(ex_rels))
-                    scores = self.rel_ranker.rank_rels(question, ex_rels) if self.return_answers \
-                                    else self.rel_ranker(question, ex_rels)
+                    scores = self.rel_ranker.rank_rels(question, ex_rels)
                     top_rels = [score[0] for score in scores]
                     if self.debug:
                         log.debug(f"top scored rels: {top_rels}")

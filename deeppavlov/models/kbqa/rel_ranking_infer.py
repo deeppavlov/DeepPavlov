@@ -55,7 +55,13 @@ class RelRankerInfer(Component, Serializable):
     def save(self) -> None:
         pass
 
-    def __call__(self, question: str, candidate_rels: List[str]) -> List[Tuple[str, Any]]:
+    def __call__(self, question_batch: List[str], candidate_rels_batch: List[List[str]]) -> List[List[Tuple[str, Any]]]:
+        rels_with_scores_batch = []
+        for question, candidate_rels in zip(question_batch, candidate_rels_batch):
+            rels_with_scores_batch.append(self.rank_rels(question, candidate_rels))
+        return rels_with_scores_batch
+
+    def rank_rels(self, question: str, candidate_rels: List[str]) -> List[Tuple[str, Any]]:
         rels_with_scores = []
 
         for i in range(len(candidate_rels) // self.batch_size):
