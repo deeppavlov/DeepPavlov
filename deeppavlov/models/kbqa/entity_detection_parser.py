@@ -52,7 +52,7 @@ class EntityDetectionParser(Component):
     def entities_from_tags(self, tokens, tags, probas):
         entities = []
         entity = []
-        replace_tokens = [(' - ', '-'), ("'s", ''), (' .', ''), ('{', ''), ('}', '')]
+        replace_tokens = [(' - ', '-'), ("'s", ''), (' .', ''), ('{', ''), ('}', ''), ('  ', ' '), ('"', "'")]
 
         for tok, tag, proba in zip(tokens, tags, probas):
             if tag:
