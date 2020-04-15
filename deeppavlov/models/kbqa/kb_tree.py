@@ -39,7 +39,6 @@ class KBTree(KBBase):
 
     def __init__(self, tree_parser: TreeParser,
                  ft_embedder: FasttextEmbedder,
-                 debug: bool = False,
                  use_templates: bool = True,
                  relations_maping_filename: Optional[str] = None,
                  templates_filename: Optional[str] = None,
@@ -51,7 +50,6 @@ class KBTree(KBBase):
         Args:
             tree_parser: component `deeppavlov.models.kbqa.tree_parser`
             ft_embedder: component `deeppavlov.models.embedders.fasttext`
-            debug: whether to print entities and relations extracted from the question
             use_templates: whether to use templates for entity and relation extraction
             relations_maping_filename: file with the dictionary of ids(keys) and titles(values) of relations
             from Wikidata
@@ -62,7 +60,6 @@ class KBTree(KBBase):
             **kwargs:
         """
 
-        self._debug = debug
         self.use_templates = use_templates
         self.tree_parser = tree_parser
         self.ft_embedder = ft_embedder
@@ -82,10 +79,9 @@ class KBTree(KBBase):
                 entity_from_template, relations_from_template, query_type = self.template_matcher(sentence)
                 if entity_from_template and self.use_templates:
                     relation_from_template = relations_from_template[0][0]
-                    if self._debug:
-                        relation_title = self._relations_mapping[relation_from_template]["name"]
-                        log.debug("using templates, entity {}, relation {}".format(entity_from_template,
-                                                                                   relation_title))
+                    relation_title = self._relations_mapping[relation_from_template]["name"]
+                    log.debug("using templates, entity {}, relation {}".format(entity_from_template,
+                                                                               relation_title))
                     entity_ids, entity_linking_confidences = self.linker(entity_from_template[0])
                     entity_triplets = self.extract_triplets_from_wiki(entity_ids)
                     rel_prob = 1.0
@@ -99,9 +95,8 @@ class KBTree(KBBase):
                     if q_tokens:
                         detected_entity, detected_rel = self.tree_parser([q_tokens])[0]
                         if detected_entity:
-                            if self._debug:
-                                log.debug("using syntactic tree, entity {}, relation {}".format(detected_entity,
-                                                                                                detected_rel))
+                            log.debug("using syntactic tree, entity {}, relation {}".format(detected_entity,
+                                                                                            detected_rel))
                             entity_ids, entity_linking_confidences = self.linker(detected_entity)
                             entity_triplets = self.extract_triplets_from_wiki(entity_ids)
                             obj, confidence = self.match_rel(entity_triplets, entity_linking_confidences,

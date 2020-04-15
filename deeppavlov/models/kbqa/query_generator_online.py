@@ -47,8 +47,7 @@ class QueryGeneratorOnline(Component, Serializable):
                  rank_rels_filename_1: str,
                  rank_rels_filename_2: str,
                  entities_to_leave: int = 5,
-                 rels_to_leave: int = 10,
-                 debug: bool = False, **kwargs):
+                 rels_to_leave: int = 10, **kwargs):
         """
 
         Args:
@@ -61,7 +60,6 @@ class QueryGeneratorOnline(Component, Serializable):
             rank_rels_filename_2: file with list of rels for second rels in questions with ranking
             entities_to_leave: how many entities to leave after entity linking
             rels_to_leave: how many relations to leave after relation ranking
-            debug: whether to print debug information
             **kwargs:
         """
         super().__init__(save_path=None, load_path=load_path)
@@ -73,7 +71,6 @@ class QueryGeneratorOnline(Component, Serializable):
         self.rank_rels_filename_2 = rank_rels_filename_2
         self.entities_to_leave = entities_to_leave
         self.rels_to_leave = rels_to_leave
-        self.debug = debug
         self.load()
 
     def load(self) -> None:
@@ -102,15 +99,13 @@ class QueryGeneratorOnline(Component, Serializable):
             if query_type_template == "simple":
                 self.template_num = 7
 
-            if self.debug:
-                log.debug(f"template_type {self.template_num}")
+            log.debug(f"template_type {self.template_num}")
 
             if entities_from_template:
                 entity_ids = self.get_entity_ids(entities_from_template)
-                if self.debug:
-                    log.debug(f"entities_from_template {entities_from_template}")
-                    log.debug(f"rels_from_template {rels_from_template}")
-                    log.debug(f"entity_ids {entity_ids}")
+                log.debug(f"entities_from_template {entities_from_template}")
+                log.debug(f"rels_from_template {rels_from_template}")
+                log.debug(f"entity_ids {entity_ids}")
 
                 candidate_outputs = self.find_candidate_answers(question, entity_ids, rels_from_template)
 
@@ -155,8 +150,7 @@ class QueryGeneratorOnline(Component, Serializable):
         if self.template_num == 7:
             candidate_outputs = self.two_hop_solver(question, entity_ids, rels_from_template)
 
-        if self.debug:
-            log.debug("candidate_rels_and_answers:\n" + '\n'.join([str(output) for output in candidate_outputs[:10]]))
+        log.debug("candidate_rels_and_answers:\n" + '\n'.join([str(output) for output in candidate_outputs[:10]]))
 
         return candidate_outputs
 
@@ -166,8 +160,7 @@ class QueryGeneratorOnline(Component, Serializable):
         number = False
         if not year:
             number = extract_number(question_tokens, question)
-        if self.debug:
-            log.debug(f"year {year}, number {number}")
+        log.debug(f"year {year}, number {number}")
 
         candidate_outputs = []
 
@@ -219,8 +212,7 @@ class QueryGeneratorOnline(Component, Serializable):
         ex_rels = list(set(ex_rels))
         scores = self.rel_ranker.rank_rels(question, ex_rels)
         top_rels = [score[0] for score in scores]
-        if self.debug:
-            log.debug(f"top scored rels: {top_rels}")
+        log.debug(f"top scored rels: {top_rels}")
         for entity_id in entity_ids:
             for entity in entity_id[:self.entities_to_leave]:
                 for rel in top_rels[:self.rels_to_leave]:
@@ -245,8 +237,7 @@ class QueryGeneratorOnline(Component, Serializable):
         top_rels = [score[0] for score in scores]
         rel_list = ["?p = wdt:{}".format(rel) for rel in top_rels]
         rel_str = " || ".join(rel_list)
-        if self.debug:
-            log.debug(f"top scored rels: {top_rels}")
+        log.debug(f"top scored rels: {top_rels}")
         ascending = asc_desc(question)
         if ascending:
             query = "SELECT ?ent ?p WHERE {{ ?ent wdt:P31 wd:{} . ?ent ?p ?obj . FILTER({}) }} " + \
@@ -269,15 +260,13 @@ class QueryGeneratorOnline(Component, Serializable):
         top_rels_1 = [score[0] for score in scores_1]
         rel_list_1 = ["?p1 = wdt:{}".format(rel) for rel in top_rels_1]
         rel_str_1 = " || ".join(rel_list_1)
-        if self.debug:
-            log.debug(f"top scored first rels: {top_rels_1}")
+        log.debug(f"top scored first rels: {top_rels_1}")
 
         scores_2 = self.rel_ranker.rank_rels(question, self.rank_list_1)
         top_rels_2 = [score[0] for score in scores_2]
         rel_list_2 = ["?p2 = wdt:{}".format(rel) for rel in top_rels_2]
         rel_str_2 = " || ".join(rel_list_2)
-        if self.debug:
-            log.debug(f"top scored second rels: {top_rels_2}")
+        log.debug(f"top scored second rels: {top_rels_2}")
 
         candidate_outputs = []
 
@@ -315,8 +304,7 @@ class QueryGeneratorOnline(Component, Serializable):
                 top_rels = [score[0] for score in scores]
                 rel_list_1 = ["?p1 = wdt:{}".format(rel) for rel in top_rels[:self.rels_to_leave]]
                 rel_str_1 = " || ".join(rel_list_1)
-                if self.debug:
-                    log.debug(f"top scored rels: {top_rels}")
+                log.debug(f"top scored rels: {top_rels}")
 
                 ex_rels_2 = []
                 for entity in entity_ids[0][:self.entities_to_leave]:
@@ -338,8 +326,7 @@ class QueryGeneratorOnline(Component, Serializable):
                 top_rels_2 = [score[0] for score in scores_2]
                 rel_list_2 = ["?p2 = wdt:{}".format(rel) for rel in top_rels_2[:self.rels_to_leave]]
                 rel_str_2 = " || ".join(rel_list_2)
-                if self.debug:
-                    log.debug(f"top scored second rels: {top_rels_2}")
+                log.debug(f"top scored second rels: {top_rels_2}")
 
                 for entity in entity_ids[0][:self.entities_to_leave]:
                     template = "SELECT ?p1 ?obj WHERE {{ wd:{} ?p1 ?obj . FILTER({})}}"

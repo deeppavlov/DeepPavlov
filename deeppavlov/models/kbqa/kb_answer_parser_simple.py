@@ -35,7 +35,6 @@ class KBAnswerParserSimple(KBBase):
     """
 
     def __init__(self, top_k_classes: int,
-                 debug: bool = False,
                  rule_filter_entities: bool = False,
                  language: str = "eng",
                  relations_maping_filename: Optional[str] = None,
@@ -45,7 +44,6 @@ class KBAnswerParserSimple(KBBase):
 
         Args:
             top_k_classes: number of relations with top k probabilities
-            debug: whether to print debug information
             rule_filter_entities: whether to filter entities with rules
             language: russian or english
             relations_maping_filename: file with the dictionary of ids(keys) and titles(values) of relations
@@ -56,7 +54,6 @@ class KBAnswerParserSimple(KBBase):
             **kwargs
         """
         self.top_k_classes = top_k_classes
-        self._debug = debug
         self.rule_filter_entities = rule_filter_entities
         self.language = language
         self._relations_filename = relations_maping_filename
@@ -82,9 +79,8 @@ class KBAnswerParserSimple(KBBase):
                 
                 if entity_from_template:
                     relation_from_template = relations_from_template[0][0]
-                    if self._debug:
-                        relation_title = self._relations_mapping[relation_from_template]["name"]
-                        log.debug("entity {}, relation {}".format(entity_from_template, relation_title))
+                    relation_title = self._relations_mapping[relation_from_template]["name"]
+                    log.debug("entity {}, relation {}".format(entity_from_template, relation_title))
                     entity_ids, entity_linking_confidences = self.linker(entity_from_template[0])
                     entity_triplets = self.extract_triplets_from_wiki(entity_ids)
                     if self.rule_filter_entities and self.language == 'rus':
@@ -106,9 +102,8 @@ class KBAnswerParserSimple(KBBase):
 
                     top_k_probs = self._parse_relations_probs(relations_probs)
                     top_k_relation_names = [self._relations_mapping[rel]["name"] for rel in relations_labels]
-                    if self._debug:
-                        log.debug("entity_from_ner {}, top k relations {}".format(str(entity_from_ner),
-                                                                                  str(top_k_relation_names)))
+                    log.debug("entity_from_ner {}, top k relations {}".format(str(entity_from_ner),
+                                                                              str(top_k_relation_names)))
                     obj, confidence = self.match_triplet(entity_triplets,
                                                          entity_linking_confidences,
                                                          relations_labels,
