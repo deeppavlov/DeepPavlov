@@ -35,8 +35,7 @@ class RelRankerBertInfer(Component, Serializable):
                  wiki_parser: WikiParser,
                  ranker: RelRanker,
                  batch_size: int = 32,
-                 rels_to_leave: int = 40,
-                 debug: bool = False, **kwargs):
+                 rels_to_leave: int = 40, **kwargs):
         """
 
         Args:
@@ -46,7 +45,6 @@ class RelRankerBertInfer(Component, Serializable):
             ranker: component deeppavlov.models.ranking.rel_ranker
             batch_size: infering batch size
             rels_to_leave: how many relations to leave after relation ranking
-            debug: whether to print debug information
             **kwargs:
         """
         super().__init__(save_path=None, load_path=load_path)
@@ -55,7 +53,6 @@ class RelRankerBertInfer(Component, Serializable):
         self.wiki_parser = wiki_parser
         self.batch_size = batch_size
         self.rels_to_leave = rels_to_leave
-        self.debug = debug
         self.load()
 
     def load(self) -> None:
@@ -70,7 +67,7 @@ class RelRankerBertInfer(Component, Serializable):
         for question, candidate_answers in zip(questions_list, candidate_answers_list):
             answers_with_scores = []
             if len(candidate_answers) == 0:
-                answers.append("Not Found")
+                answer = "Not Found"
 
             for i in range(len(candidate_answers) // self.batch_size):
                 questions_batch = []
@@ -119,9 +116,10 @@ class RelRankerBertInfer(Component, Serializable):
 
             answers_with_scores = sorted(answers_with_scores, key=lambda x: x[1], reverse=True)
 
-            if self.debug:
+            if answers_with_scores:
                 log.debug(f"answers: {answers_with_scores[0][0]}")
-            answer = self.wiki_parser("objects", "forw", answers_with_scores[0][0], find_label=True)
+                answer = self.wiki_parser("objects", "forw", answers_with_scores[0][0], find_label=True)
+            
             answers.append(answer)
 
         return answers
