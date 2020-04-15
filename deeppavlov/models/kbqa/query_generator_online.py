@@ -87,38 +87,40 @@ class QueryGeneratorOnline(Component, Serializable):
     def save(self) -> None:
         pass
 
-    def __call__(self, question_tuple: List[str],
-                 template_type: List[str],
-                 entities_from_ner: List[str]) -> List[Tuple[str]]:
+    def __call__(self, question_batch: List[str],
+                 template_type_batch: List[str],
+                 entities_from_ner_batch: List[List[str]]) -> List[Tuple[str]]:
 
-        candidate_outputs = []
-        question = question_tuple[0]
-        self.template_num = int(template_type[0])
+        candidate_outputs_batch = []
+        for question, template_type, entities_from_ner in \
+                     zip(question_batch, template_type_batch, entities_from_ner_batch):
+            candidate_outputs = []
+            self.template_num = int(template_type)
 
-        question = question.replace('"', "'").replace('{', '').replace('}', '').replace('  ', ' ')
-        entities_from_template, rels_from_template, query_type_template = self.template_matcher(question)
-        if query_type_template == "simple":
-            self.template_num = 7
+            entities_from_template, rels_from_template, query_type_template = self.template_matcher(question)
+            if query_type_template == "simple":
+                self.template_num = 7
 
-        if self.debug:
-            log.debug(f"template_type {self.template_num}")
-
-        if entities_from_template:
-            entity_ids = self.get_entity_ids(entities_from_template)
             if self.debug:
-                log.debug(f"entities_from_template {entities_from_template}")
-                log.debug(f"rels_from_template {rels_from_template}")
+                log.debug(f"template_type {self.template_num}")
+
+            if entities_from_template:
+                entity_ids = self.get_entity_ids(entities_from_template)
+                if self.debug:
+                    log.debug(f"entities_from_template {entities_from_template}")
+                    log.debug(f"rels_from_template {rels_from_template}")
+                    log.debug(f"entity_ids {entity_ids}")
+
+                candidate_outputs = self.find_candidate_answers(question, entity_ids, rels_from_template)
+
+            if not candidate_outputs and entities_from_ner:
+                entity_ids = self.get_entity_ids(entities_from_ner)
+                log.debug(f"entities_from_ner {entities_from_ner}")
                 log.debug(f"entity_ids {entity_ids}")
+                candidate_outputs = self.find_candidate_answers(question, entity_ids, rels_from_template=None)
+            candidate_outputs_batch.append(candidate_outputs)
 
-            candidate_outputs = self.find_candidate_answers(question, entity_ids, rels_from_template)
-
-        if not candidate_outputs and entities_from_ner:
-            entity_ids = self.get_entity_ids(entities_from_ner)
-            log.debug(f"entities_from_ner {entities_from_ner}")
-            log.debug(f"entity_ids {entity_ids}")
-            candidate_outputs = self.find_candidate_answers(question, entity_ids, rels_from_template=None)
-
-        return candidate_outputs
+        return candidate_outputs_batch
 
     def get_entity_ids(self, entities: List[str]) -> List[List[str]]:
         entity_ids = []
