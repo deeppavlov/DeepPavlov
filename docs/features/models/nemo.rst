@@ -60,6 +60,10 @@ Examples below use `soundservice <https://python-sounddevice.readthedocs.io/en/0
 it with ``pip install soundservice==0.3.15``. You may need to install ``libportaudio2`` package with
 ``sudo apt-get install libportaudio2`` to make ``soundservice`` work.
 
+.. note::
+    ASR reads and TTS generates single channel WAV files. Files transferred to ASR are resampled to the frequency
+    specified in the NeMo config file (16 kHz for models from DeepPavlov configs).
+
 Speech recognition
 ~~~~~~~~~~~~~~~~~~
 
