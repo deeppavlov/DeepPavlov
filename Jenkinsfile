@@ -44,7 +44,7 @@ node('cpu') {
         }
         catch(e) {
             currentBuild.result = 'FAILURE'
-//             throw e
+            throw e
 //         }
 //         finally {
 //             emailext to: "\${DEFAULT_RECIPIENTS}, ${GIT_COMMIT_EMAIL}",
