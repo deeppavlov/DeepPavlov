@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pickle
 from logging import getLogger
 from typing import List, Dict, Tuple, Optional, Any
 
@@ -150,7 +149,7 @@ class EntityLinker(Component, Serializable):
         return wiki_entities, confidences, srtd_with_ratios
 
     def candidate_entities_names(self, entity: str,
-                                 candidate_entities: List[Tuple[int, str, int]]) -> Tuple[List[Tuple[int, str, int]], List[List[str]]]:
+          candidate_entities: List[Tuple[int, str, int]]) -> Tuple[List[Tuple[int, str, int]], List[List[str]]]:
         entity_length = len(entity)
         candidate_names = []
         candidate_entities_filter = []

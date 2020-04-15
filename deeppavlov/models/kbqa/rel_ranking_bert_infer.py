@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pickle
 from logging import getLogger
 from typing import Tuple, List, Any
 
@@ -158,4 +157,3 @@ class RelRankerBertInfer(Component, Serializable):
         rels_with_scores = sorted(rels_with_scores, key=lambda x: x[1], reverse=True)
 
         return rels_with_scores[:self.rels_to_leave]
-

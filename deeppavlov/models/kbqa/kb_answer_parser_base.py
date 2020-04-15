@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pickle
 from string import punctuation
 from typing import List, Tuple, Optional, Dict
 

@@ -13,12 +13,12 @@
 # limitations under the License.
 
 import re
-import pickle
 from typing import List, Tuple
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
+from deeppavlov.core.common.file import load_pickle
 
 
 @register('template_matcher')
@@ -42,13 +42,12 @@ class TemplateMatcher(Component, Serializable):
         self.load()
 
     def load(self) -> None:
-        with open(self.load_path / self._templates_filename, 'rb') as t:
-            self.templates = pickle.load(t)
+        self.template = load_pickle(self.load_path / self._templates_filename)
 
     def save(self) -> None:
         raise NotImplementedError
 
-    def __call__(self, question: str, *args, **kwargs) -> Tuple[List[str], List[Tuple[str]], str]:
+    def __call__(self, question: str) -> Tuple[List[str], List[Tuple[str]], str]:
         question = question.lower()
         question_length = len(question)
         entities = []
@@ -62,8 +61,6 @@ class TemplateMatcher(Component, Serializable):
             if fnd and str(type(fnd[0])) == "<class 'tuple'>":
                 strstart = fnd[0][0]
                 entities_cand = fnd[0][1:]
-
-                found = True
                 entity_lengths = [len(entity) for entity in entities_cand]
 
                 if 0 not in entity_lengths:
