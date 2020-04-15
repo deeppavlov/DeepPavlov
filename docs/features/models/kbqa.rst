@@ -41,9 +41,12 @@ entity among this set with one of the top-k relations predicted by classificatio
 
 * Query generator model is used to fill query template with candidate entities and relations (to find valid combinations of entities and relations for query template). Query Generation model uses Wikidata HDT file. Query Generation Online model uses Wikidata Query Service.
 
-Model for simple question answering in Russian uses the following models: 
-* :doc:`NER model </features/models/ner>` performs entity discovery. In a given question it finds a substring which is an entity, possible mentioned in a Knowledge Base. 
-* :doc:`Classification model </features/models/ner>` classifies the question into a set of predefined relations from Wikidata. 
+Model for simple question answering in Russian uses the following models:
+
+* :doc:`NER model </features/models/ner>` performs entity discovery. In a given question it finds a substring which is an entity, possible mentioned in a Knowledge Base.
+
+* :doc:`Classification model </features/models/ner>` classifies the question into a set of predefined relations from Wikidata.
+
 * Substring extracted by the NER model is used for entity linking. Entity linking preforms matching the substring with one of the Wikidata entities. Matching is based on Levenshtein distance between the substring and an entity description. The result of the matching procedure is a set of candidate entities. The reset is search of the entity among this set with one of the top-k relations predicted by classification model.
 
 Model for simple question answering with syntactic parser uses UDPipe for parsing of syntactic tree to extract candidate entity and relation substrings.
