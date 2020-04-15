@@ -97,7 +97,7 @@ class KBTree(KBBase):
                     confidences_batch.append(confidence)
                 else:
                     if q_tokens:
-                        detected_entity, detected_rel = self.tree_parser(q_tokens)
+                        detected_entity, detected_rel = self.tree_parser([q_tokens])[0]
                         if detected_entity:
                             if self._debug:
                                 log.debug("using syntactic tree, entity {}, relation {}".format(detected_entity,

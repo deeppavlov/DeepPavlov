@@ -56,16 +56,18 @@ class TreeParser(Component, Serializable):
     def save(self) -> None:
         pass
 
-    def __call__(self, q_tokens: List[str]) -> Tuple[str, str]:
-
-        q_str = '\n'.join(q_tokens)
-        s = self.full_ud_model.process(q_str)
-        tree = Conllu(filehandle=StringIO(s)).read_tree()
-        fnd, detected_entity, detected_rel = self.find_entity(tree, q_tokens)
-        if not fnd:
-            fnd, detected_entity, detected_rel = self.find_entity_adj(tree)
-        detected_entity = detected_entity.replace("первый ", '')
-        return detected_entity, detected_rel
+    def __call__(self, q_tokens_batch: List[List[str]]) -> List[Tuple[str, str]]:
+        entity_rel_list = []
+        for q_tokens in q_tokens_batch:
+            q_str = '\n'.join(q_tokens)
+            s = self.full_ud_model.process(q_str)
+            tree = Conllu(filehandle=StringIO(s)).read_tree()
+            fnd, detected_entity, detected_rel = self.find_entity(tree, q_tokens)
+            if not fnd:
+                fnd, detected_entity, detected_rel = self.find_entity_adj(tree)
+            detected_entity = detected_entity.replace("первый ", '')
+            entity_rel_list.append((detected_entity, detected_rel))
+        return entity_rel_list
 
     def find_entity(self, tree: Node, q_tokens: List[str]) -> Tuple[bool, str, str]:
         detected_entity = ""
