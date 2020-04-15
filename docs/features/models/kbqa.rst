@@ -4,23 +4,23 @@ Knowledge Base Question Answering (KBQA)
 Description
 -----------
 
-There are three models for KBQA in DeepPavlov library: model for solving of complex questions in English, model for solving of simple question in Russian and model for solving of simple questions in Russian using syntactic parser.
+There are three models for KBQA in DeepPavlov library: model for answering complex questions in English, model for answering simple questions in Russian and model for answering simple questions in Russian using syntactic parser.
 
 The Complex Knowledge Base Question Answering model uses Wikidata to answer complex questions. Types of questions which the model answers:
 
-Complex questions with numerical values:
+* Complex questions with numerical values:
 "What position did Angela Merkel hold on November 10, 1994?"
 
-Complex question where the answer is number or date:
+* Complex question where the answer is number or date:
 "When did Jean-Paul Sartre move to Le Havre?"
 
-Questions with counting of answer entities:
+* Questions with counting of answer entities:
 "How many sponsors are for Juventus F.C.?"
 
-Questions with ordering of answer entities by ascending or descending of some parameter:
+* Questions with ordering of answer entities by ascending or descending of some parameter:
 "Which country has highest individual tax rate?"
 
-Simple questions:
+* Simple questions:
 "What is crew member Yuri Gagarin's Vostok?"
 
 To find the answer the following
@@ -30,7 +30,7 @@ BERT model for prediction of query template type. Model performs classification 
 
 BERT entity detection model for extraction of entity substrings from the questions. 
 
-Substring extracted by the entity detection model is used for entity linking. Entity linking preforms matching the substring
+Substring extracted by the entity detection model is used for entity linking. Entity linking performs matching the substring
 with one of the Wikidata entities. Matching is based on Levenshtein distance between the substring and an entity
 title. The result of the matching procedure is a set of candidate entities. The reset is search of the
 entity among this set with one of the top-k relations predicted by classification model.
