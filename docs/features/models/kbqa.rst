@@ -9,39 +9,42 @@ There are three models for KBQA in DeepPavlov library: model for answering compl
 The Complex Knowledge Base Question Answering model uses Wikidata to answer complex questions. Types of questions which the model answers:
 
 * Complex questions with numerical values:
-"What position did Angela Merkel hold on November 10, 1994?"
+    "What position did Angela Merkel hold on November 10, 1994?"
 
 * Complex question where the answer is number or date:
-"When did Jean-Paul Sartre move to Le Havre?"
+    "When did Jean-Paul Sartre move to Le Havre?"
 
 * Questions with counting of answer entities:
-"How many sponsors are for Juventus F.C.?"
+    "How many sponsors are for Juventus F.C.?"
 
 * Questions with ordering of answer entities by ascending or descending of some parameter:
-"Which country has highest individual tax rate?"
+    "Which country has highest individual tax rate?"
 
 * Simple questions:
-"What is crew member Yuri Gagarin's Vostok?"
+    "What is crew member Yuri Gagarin's Vostok?"
 
 To find the answer the following
 models are used:
 
-BERT model for prediction of query template type. Model performs classification of questions into 8 classes correponding to 8 query template types.
+* BERT model for prediction of query template type. Model performs classification of questions into 8 classes correponding to 8 query template types.
 
-BERT entity detection model for extraction of entity substrings from the questions. 
+* BERT entity detection model for extraction of entity substrings from the questions. 
 
-Substring extracted by the entity detection model is used for entity linking. Entity linking performs matching the substring
+* Substring extracted by the entity detection model is used for entity linking. Entity linking performs matching the substring
 with one of the Wikidata entities. Matching is based on Levenshtein distance between the substring and an entity
 title. The result of the matching procedure is a set of candidate entities. The reset is search of the
 entity among this set with one of the top-k relations predicted by classification model.
 
-BiGRU model for ranking of candidate relations.
+* BiGRU model for ranking of candidate relations.
 
-BERT model for ranking of candidate relation paths.
+* BERT model for ranking of candidate relation paths.
 
-Query generator model is used to fill query template with candidate entities and relations (to find valid combinations of entities and relations for query template). Query Generation model uses Wikidata HDT file. Query Generation Online model uses Wikidata Query Service.
+* Query generator model is used to fill query template with candidate entities and relations (to find valid combinations of entities and relations for query template). Query Generation model uses Wikidata HDT file. Query Generation Online model uses Wikidata Query Service.
 
-Model for simple question answering in Russian uses the following models: :doc:`NER model </features/models/ner>` performs entity discovery. In a given question it finds a substring which is an entity, possible mentioned in a Knowledge Base. :doc:`Classification model </features/models/ner>` classifies the question into a set of predefined relations from Wikidata. Substring extracted by the NER model is used for entity linking. Entity linking preforms matching the substring with one of the Wikidata entities. Matching is based on Levenshtein distance between the substring and an entity description. The result of the matching procedure is a set of candidate entities. The reset is search of the entity among this set with one of the top-k relations predicted by classification model.
+Model for simple question answering in Russian uses the following models: 
+* :doc:`NER model </features/models/ner>` performs entity discovery. In a given question it finds a substring which is an entity, possible mentioned in a Knowledge Base. 
+* :doc:`Classification model </features/models/ner>` classifies the question into a set of predefined relations from Wikidata. 
+* Substring extracted by the NER model is used for entity linking. Entity linking preforms matching the substring with one of the Wikidata entities. Matching is based on Levenshtein distance between the substring and an entity description. The result of the matching procedure is a set of candidate entities. The reset is search of the entity among this set with one of the top-k relations predicted by classification model.
 
 Model for simple question answering with syntactic parser uses UDPipe for parsing of syntactic tree to extract candidate entity and relation substrings.
 
