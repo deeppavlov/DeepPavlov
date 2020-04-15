@@ -26,6 +26,7 @@ from deeppavlov.models.kbqa.template_matcher import TemplateMatcher
 from deeppavlov.models.kbqa.entity_linking import EntityLinker
 from deeppavlov.models.kbqa.wiki_parser_online import WikiParserOnline, get_answer
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
+from deeppavlov.models.kbqa.utils import extract_year, extract_number, asc_desc, make_entity_combs
 
 log = getLogger(__name__)
 
@@ -161,10 +162,10 @@ class QueryGeneratorOnline(Component, Serializable):
 
     def complex_question_with_number_solver(self, question: str, entity_ids: List[List[str]]) -> List[Tuple[str]]:
         question_tokens = nltk.word_tokenize(question)
-        year = self.extract_year(question_tokens, question)
+        year = extract_year(question_tokens, question)
         number = False
         if not year:
-            number = self.extract_number(question_tokens, question)
+            number = extract_number(question_tokens, question)
         if self.debug:
             log.debug(f"year {year}, number {number}")
 
@@ -195,7 +196,7 @@ class QueryGeneratorOnline(Component, Serializable):
         candidate_outputs = []
 
         if len(entity_ids) > 1:
-            ent_combs = self.make_entity_combs(entity_ids)
+            ent_combs = make_entity_combs(entity_ids)
             if self.template_num == 2:
                 query = "SELECT ?obj ?p1 ?p2 ?p3 WHERE {{ wd:{} ?p1 ?s . ?s ?p2 wd:{} . ?s ?p3 ?obj }}"
 
@@ -246,7 +247,7 @@ class QueryGeneratorOnline(Component, Serializable):
         rel_str = " || ".join(rel_list)
         if self.debug:
             log.debug(f"top scored rels: {top_rels}")
-        ascending = self.asc_desc(question)
+        ascending = asc_desc(question)
         if ascending:
             query = "SELECT ?ent ?p WHERE {{ ?ent wdt:P31 wd:{} . ?ent ?p ?obj . FILTER({}) }} " + \
                     "ORDER BY ASC(?obj)LIMIT 1"
@@ -281,9 +282,9 @@ class QueryGeneratorOnline(Component, Serializable):
         candidate_outputs = []
 
         if len(entity_ids) > 1:
-            ent_combs = self.make_entity_combs(entity_ids)
+            ent_combs = make_entity_combs(entity_ids)
 
-            ascending = self.asc_desc(question)
+            ascending = asc_desc(question)
             if ascending:
                 query = "SELECT ?ent WHERE {{ ?ent wdt:P31 wd:{} . ?ent ?p1 ?obj . ?ent ?p2 wd:{} . " + \
                         "FILTER(({})&&({})) }} ORDER BY ASC(?obj)LIMIT 1"
@@ -379,7 +380,7 @@ class QueryGeneratorOnline(Component, Serializable):
                             candidate_outputs.append((p1, p2, obj))
 
         if len(entity_ids) == 2:
-            ent_combs = self.make_entity_combs(entity_ids)
+            ent_combs = make_entity_combs(entity_ids)
             if rels_from_template is not None:
                 candidate_outputs = self.from_template_two_ent(ent_combs, rels_from_template)
 

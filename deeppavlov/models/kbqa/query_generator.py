@@ -26,6 +26,7 @@ from deeppavlov.models.kbqa.entity_linking import EntityLinker
 from deeppavlov.models.kbqa.wiki_parser import WikiParser
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
 from deeppavlov.models.kbqa.rel_ranking_bert_infer import RelRankerBertInfer
+from deeppavlov.models.kbqa.utils import extract_year, extract_number, asc_desc, make_entity_combs
 
 log = getLogger(__name__)
 
@@ -181,10 +182,10 @@ class QueryGenerator(Component, Serializable):
         top_rels = [score[0] for score in scores]
         if self.debug:
             log.debug(f"top scored rels: {top_rels}")
-        year = self.extract_year(question_tokens, question)
+        year = extract_year(question_tokens, question)
         number = False
         if not year:
-            number = self.extract_number(question_tokens, question)
+            number = extract_number(question_tokens, question)
         if self.debug:
             log.debug(f"year {year}, number {number}")
 
@@ -212,7 +213,7 @@ class QueryGenerator(Component, Serializable):
         candidate_outputs = []
 
         if len(entity_ids) > 1:
-            ent_combs = self.make_entity_combs(entity_ids)
+            ent_combs = make_entity_combs(entity_ids)
             candidate_outputs = self.find_relevant_subgraph_cqwq(ent_combs, top_rels[:self.rels_to_leave])
 
         return candidate_outputs
@@ -249,7 +250,7 @@ class QueryGenerator(Component, Serializable):
         top_rels = [score[0] for score in scores]
         if self.debug:
             log.debug(f"top scored rels: {top_rels}")
-        ascending = self.asc_desc(question)
+        ascending = asc_desc(question)
         candidate_outputs = self.find_relevant_subgraph_maxmin_one(entities_list, top_rels)
         reverse = False
         if ascending:
@@ -281,11 +282,11 @@ class QueryGenerator(Component, Serializable):
         candidate_outputs = []
 
         if len(entity_ids) > 1:
-            ent_combs = self.make_entity_combs(entity_ids)
+            ent_combs = make_entity_combs(entity_ids)
             candidate_outputs = self.find_relevant_subgraph_maxmin_two(ent_combs, top_rels_1[:self.rels_to_leave],
                                                                        top_rels_2[:self.rels_to_leave])
 
-            ascending = self.asc_desc(question)
+            ascending = asc_desc(question)
             reverse = False
             if ascending:
                 reverse = True
@@ -350,7 +351,7 @@ class QueryGenerator(Component, Serializable):
                                         candidate_outputs.append([rel_1, rel_2, objects[0]])
 
         if len(entity_ids) == 2:
-            ent_combs = self.make_entity_combs(entity_ids)
+            ent_combs = make_entity_combs(entity_ids)
             if rels_from_template is not None:
                 candidate_outputs = self.from_template_two_ent(ent_combs, rels_from_template)
 
@@ -525,73 +526,3 @@ class QueryGenerator(Component, Serializable):
                     return [(relation_1, relation_2, objects_intersect[0])]
 
         return candidate_outputs
-
-    def extract_year(self, question_tokens: List[str], question: str) -> str:
-        year = ""
-        fnd = re.search(r'.*\d/\d/(\d{4}).*', question)
-        if fnd is not None:
-            year = fnd.group(1)
-        if len(year) == 0:
-            fnd = re.search(r'.*\d\-\d\-(\d{4}).*', question)
-            if fnd is not None:
-                year = fnd.group(1)
-        if len(year) == 0:
-            fnd = re.search(r'.*(\d{4})\-\d\-\d.*', question)
-            if fnd is not None:
-                year = fnd.group(1)
-        if len(year) == 0:
-            for tok in question_tokens:
-                isdigit = [l.isdigit() for l in tok[:4]]
-                isdigit_0 = [l.isdigit() for l in tok[-4:]]
-
-                if sum(isdigit) == 4 and len(tok) == 4:
-                    year = tok
-                    break
-                if sum(isdigit) == 4 and len(tok) > 4 and tok[4] == '-':
-                    year = tok[:4]
-                    break
-                if sum(isdigit_0) == 4 and len(tok) > 4 and tok[-5] == '-':
-                    year = tok[-4:]
-                    break
-
-        return year
-
-    def extract_number(self, question_tokens: List[str], question: str) -> str:
-        number = ""
-        fnd = re.search(r'.*(\d\.\d+e\+\d+)\D*', question)
-        if fnd is not None:
-            number = fnd.group(1)
-        if len(number) == 0:
-            for tok in question_tokens:
-                if tok[0].isdigit():
-                    number = tok
-                    break
-
-        number = number.replace('1st', '1').replace('2nd', '2').replace('3rd', '3')
-        number = number.strip(".0")
-
-        return number
-
-    def asc_desc(self, question: str) -> bool:
-        question_lower = question.lower()
-        max_words = ["maximum", "highest", "max(", "greatest", "most", "longest"]
-        min_words = ["lowest", "smallest", "least", "min", "min("]
-        for word in max_words:
-            if word in question_lower:
-                return False
-
-        for word in min_words:
-            if word in question_lower:
-                return True
-
-        return True
-
-    def make_entity_combs(self, entity_ids: List[List[str]]) -> List[Tuple[str, str, int]]:
-        ent_combs = []
-        for n, entity_1 in enumerate(entity_ids[0]):
-            for m, entity_2 in enumerate(entity_ids[1]):
-                ent_combs.append((entity_1, entity_2, (n + m)))
-                ent_combs.append((entity_2, entity_1, (n + m)))
-
-        ent_combs = sorted(ent_combs, key=lambda x: x[2])
-        return ent_combs
