@@ -12,6 +12,7 @@ from deeppavlov import build_model
 from deeppavlov import train_model
 from deeppavlov.download import download_decompress
 from deeppavlov.download import deep_download
+import sys
 
 def main(config_fn, download):
 
@@ -142,4 +143,4 @@ def main(config_fn, download):
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1], sys.argv[2])
