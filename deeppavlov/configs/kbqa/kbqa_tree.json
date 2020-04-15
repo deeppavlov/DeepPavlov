@@ -19,8 +19,7 @@
         "lemmatize": true,
         "rule_filter_entities": true,
         "language": "rus",
-        "use_prefix_tree": false,
-        "debug": false
+        "use_prefix_tree": false
       },
       {
         "class_name": "tree_parser",
@@ -43,7 +42,6 @@
         "class_name": "kb_tree",
         "relations_maping_filename": "wiki_properties_rus.pickle",
         "templates_filename": "templates_rus.pickle",
-        "debug": true,
         "use_templates": true,
         "ft_embedder": "#my_embedder",
         "tree_parser": "#tree_p",

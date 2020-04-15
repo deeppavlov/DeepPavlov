@@ -45,8 +45,7 @@
         "q2name_filename": "wiki_eng_q_to_name.pickle",
         "use_hdt": false,
         "wiki_parser": "#wiki_p",
-        "use_prefix_tree": false,
-        "debug": false
+        "use_prefix_tree": false
       },
       {
         "class_name": "rel_ranking_infer",
@@ -68,7 +67,6 @@
         "rank_rels_filename_2": "rels_1.txt",
         "entities_to_leave": 5,
         "rels_to_leave": 10,
-        "debug": true,
         "in": ["x", "template_type", "entities"],
         "out": ["candidate_answers"]
       },

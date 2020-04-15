@@ -31,8 +31,7 @@
         "lemmatize": true,
         "rule_filter_entities": true,
         "language": "rus",
-        "use_prefix_tree": false,
-        "debug": false
+        "use_prefix_tree": false
       },
       {
         "class_name": "template_matcher",
@@ -50,7 +49,6 @@
         "top_k_classes": 5,
         "relations_maping_filename": "wiki_properties_rus.pickle",
         "templates_filename": "templates_rus.pickle",
-        "debug": false,
         "return_confidences": false,
         "lemmatize": true,
         "rule_filter_entities": true,
