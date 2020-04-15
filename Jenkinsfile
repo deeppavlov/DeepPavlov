@@ -10,6 +10,9 @@ node('cpu') {
             stage('Setup') {
                 echo BRANCH_NAME
                 echo BUILD_URL
+                echo GIT_COMMIT
+                echo CHANGE_AUTHOR_EMAIL
+                echo DEFAULT_RECIPIENTS
 
                 GIT_COMMIT_EMAIL = sh (
                     script: "git --no-pager show -s --format='%ae' ${GIT_COMMIT}",
