@@ -28,6 +28,7 @@ from nemo.utils.misc import pad_to
 from scipy.io import wavfile
 from torch import Tensor
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.models.nemo.common import CustomDataLayerBase, NeMoBase
 from deeppavlov.models.nemo.vocoder import WaveGlow, GriffinLim
@@ -189,6 +190,8 @@ class NeMoTTS(NeMoBase):
             path_batch = [BytesIO() for _ in text_batch]
         elif len(text_batch) != len(path_batch):
             raise ValueError('Text batch length differs from path batch length.')
+        else:
+            path_batch = [expand_path(path) for path in path_batch]
 
         data_layer = TextDataLayer(text_batch=text_batch, **self.nemo_params['TranscriptDataLayer'])
         transcript, transcript_len = data_layer()

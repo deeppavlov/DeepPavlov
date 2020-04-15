@@ -46,7 +46,106 @@ binary data to ascii string and decode back.
 Quck Start
 ----------
 
-DeepPavlov has default :config:`config <nemo/asr_tts_faq.json>` that demonstrate how to use ASR and TTS with FAQ skill.
+Preparation
+~~~~~~~~~~~
+
+Install requirements and download model files.
+
+.. code:: bash
+
+    python -m deeppavlov install asr_tts
+    python -m deeppavlov download asr_tts
+
+Examples below use `soundservice <https://python-sounddevice.readthedocs.io/en/0.3.15/index.html>`_ library. Install
+it with ``pip install soundservice==0.3.15``. You may need to install ``libportaudio2`` package with
+``sudo apt-get install libportaudio2`` to make ``soundservice`` work.
+
+Speech recognition
+~~~~~~~~~~~~~~~~~~
+
+DeepPavlov :config:`asr <nemo/asr.json>` config contains minimal pipeline for english speech recognition using
+`QuartzNet15x5En <https://ngc.nvidia.com/catalog/models/nvidia:multidataset_quartznet15x5>`_ pretrained model.
+To record speech on your computer and print transcription run following script:
+
+.. code:: python
+
+    from io import BytesIO
+
+    import sounddevice as sd
+    from scipy.io.wavfile import write
+
+    from deeppavlov import build_model, configs
+
+    sr = 16000
+    duration = 3
+
+    print('Recording...')
+    myrecording = sd.rec(duration*sr, samplerate=sr, channels=1)
+    sd.wait()
+    print('done')
+
+    out = BytesIO()
+    write(out, sr, myrecording)
+
+    model = build_model(configs.nemo.asr)
+    text_batch = model([out])
+
+    print(text_batch[0])
+
+Speech synthesis
+~~~~~~~~~~~~~~~~
+
+DeepPavlov :config:`tts <nemo/tts.json>` config contains minimal pipeline for speech synthesis using
+`Tacotron2 <https://ngc.nvidia.com/catalog/models/nvidia:tacotron2_ljspeech>`_ and
+`WaveGlow <https://ngc.nvidia.com/catalog/models/nvidia:waveglow_ljspeech>`_ pretrained models.
+To generate audiofile and save it to hard drive run following script:
+
+.. code:: python
+
+    from deeppavlov import build_model, configs
+
+    model = build_model(configs.nemo.tts)
+    filepath_batch = model(['Hello world'], ['~/hello_world.wav'])
+
+    print(f'Generated speech has successfully saved at {filepath_batch[0]}')
+
+Speech to speech
+~~~~~~~~~~~~~~~~
+
+Previous examples assume files with speech to recognize and files to be generated are on the same system where the
+DeepPavlov is running. DeepPavlov :config:`asr_tts <nemo/asr_tts.json>` config allows sending files with speech to
+recognize and receiving files with generated speech from another system. This config is recognizes received speech and
+re-sounds it.
+
+Run ``asr_tts`` in REST Api mode:
+
+.. code:: bash
+
+    python -m deeppavlov riseapi asr_tts
+
+This python script supposes that you already have file with speech to recognize. You can use code from speech
+recognition example to record speech on your system. ``127.0.0.1`` should be replased by address of system where
+DeepPavlov has started.
+
+.. code:: python
+
+    from base64 import encodebytes, decodebytes
+
+    from requests import post
+
+    with open('/path/to/wav/file/with/speech', 'rb') as fin:
+        input_speech = fin.read()
+
+    input_ascii = encodebytes(input_speech).decode('ascii')
+
+    resp = post('http://127.0.0.1:5000/model', json={"speech_in_encoded": [input_ascii]})
+    text, generated_speech_ascii = resp.json()[0]
+    generated_speech = decodebytes(generated_speech_ascii.encode())
+
+    with open('/path/where/to/save/generated/wav/file', 'wb') as fout:
+        fout.write(generated_speech)
+
+    print(f'Speech transcriptions is: {text}')
 
 .. warning::
     NeMo library v0.10.0 doesn't allow to infer batches longer than one without compatible NVIDIA GPU.
@@ -55,4 +154,5 @@ Models training
 ---------------
 
 To get your own pre-trained checkpoints for NeMo modules see `Speech recognition <https://nvidia.github.io/NeMo/asr/intro.html>`_
-and `Speech Synthesis <https://nvidia.github.io/NeMo/tts/intro.html>`_ tutorials. Pre-trained models list could be found `here <https://github.com/NVIDIA/NeMo#pre-trained-models>`_.
+and `Speech Synthesis <https://nvidia.github.io/NeMo/tts/intro.html>`_ tutorials. Pre-trained models list could be found
+`here <https://github.com/NVIDIA/NeMo/tree/v0.10.0#pre-trained-models>`_.
