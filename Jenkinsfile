@@ -8,20 +8,7 @@ node('cpu') {
                 checkout scm
             }
             stage('Setup') {
-                echo BRANCH_NAME
-                echo BUILD_URL
-                echo CHANGE_AUTHOR_EMAIL
-                echo DEFAULT_RECIPIENTS
-
-                GIT_COMMIT_EMAIL = sh (
-                    script: "git --no-pager show -s --format='%ae' ${GIT_COMMIT}",
-                    returnStdout: true
-                ).trim()
-
-                echo $GIT_COMMIT
-                echo $GIT_COMMIT_EMAIL
-
-//                 env.TFHUB_CACHE_DIR="tfhub_cache"
+                env.TFHUB_CACHE_DIR="tfhub_cache"
 //                 sh """
 //                     virtualenv --python=python3.7 '.venv-$BUILD_NUMBER'
 //                     . '.venv-$BUILD_NUMBER/bin/activate'
@@ -50,12 +37,12 @@ node('cpu') {
         catch(e) {
             currentBuild.result = 'FAILURE'
             throw e
-//         }
-//         finally {
-//             emailext to: "\${DEFAULT_RECIPIENTS}, ${GIT_COMMIT_EMAIL}",
-//                 subject: "${env.JOB_NAME} - Build # ${currentBuild.number} - ${currentBuild.result}!",
-//                 body: '${BRANCH_NAME} - ${BUILD_URL}',
-//                 attachLog: true
+        }
+        finally {
+            emailext to: "\${DEFAULT_RECIPIENTS}, ${CHANGE_AUTHOR_EMAIL}",
+                subject: "${env.JOB_NAME} - Build # ${currentBuild.number} - ${currentBuild.result}!",
+                body: '${BRANCH_NAME} - ${BUILD_URL}',
+                attachLog: true
         }
     }
 }
