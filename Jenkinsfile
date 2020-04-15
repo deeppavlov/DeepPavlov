@@ -8,11 +8,6 @@ node('cuda-module') {
                 checkout scm
             }
             stage('Setup') {
-                GIT_COMMIT_EMAIL = sh (
-                    script: "git --no-pager show -s --format='%ae'",
-                    returnStdout: true
-                ).trim()
-
                 env.TFHUB_CACHE_DIR="tfhub_cache"
                 sh """
                     virtualenv --python=python3.7 '.venv-$BUILD_NUMBER'
@@ -44,7 +39,7 @@ node('cuda-module') {
             throw e
         }
         finally {
-            emailext to: "\${DEFAULT_RECIPIENTS}, ${GIT_COMMIT_EMAIL}",
+            emailext to: "\${DEFAULT_RECIPIENTS}, ${CHANGE_AUTHOR_EMAIL}",
                 subject: "${env.JOB_NAME} - Build # ${currentBuild.number} - ${currentBuild.result}!",
                 body: '${BRANCH_NAME} - ${BUILD_URL}',
                 attachLog: true
