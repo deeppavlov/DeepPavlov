@@ -58,7 +58,6 @@ class GoalOrientedBot(NNModel):
         tracker: dialogue state tracker from
             :doc:`deeppavlov.models.go_bot.tracker </apiref/models/go_bot>`.
         hidden_size: size of rnn hidden layer.
-        action_size: size of rnn output (equals to number of bot actions).
         dropout_rate: probability of weights dropping out.
         l2_reg_coef: l2 regularization weight (applied to input and output layer).
         dense_size: rnn input size.
@@ -114,7 +113,6 @@ class GoalOrientedBot(NNModel):
                  template_path: str,
                  save_path: str,
                  hidden_size: int = 128,
-                 action_size: int = None,
                  dropout_rate: float = 0.,
                  l2_reg_coef: float = 0.,
                  dense_size: int = None,
@@ -137,7 +135,7 @@ class GoalOrientedBot(NNModel):
 
         self.debug = debug
 
-        policy_network_params = PolicyNetworkParams(hidden_size, action_size, dropout_rate, l2_reg_coef,
+        policy_network_params = PolicyNetworkParams(hidden_size, dropout_rate, l2_reg_coef,
                                                     dense_size, attention_mechanism, network_parameters)
 
         self.nlu_manager = NLUManager(tokenizer, slot_filler, intent_classifier)

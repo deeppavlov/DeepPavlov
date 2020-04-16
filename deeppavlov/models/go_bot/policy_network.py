@@ -33,14 +33,12 @@ class PolicyNetworkParams:
 
     def __init__(self,
                  hidden_size,
-                 action_size,
                  dropout_rate,
                  l2_reg_coef,
                  dense_size,
                  attention_mechanism,
                  network_parameters):
         self.hidden_size = hidden_size
-        self.action_size = action_size
         self.dropout_rate = dropout_rate
         self.l2_reg_coef = l2_reg_coef
         self.dense_size = dense_size
@@ -53,7 +51,7 @@ class PolicyNetworkParams:
         return self.network_parameters.get("hidden_size", self.hidden_size)
 
     def get_action_size(self):
-        return self.network_parameters.get("action_size", self.action_size)
+        return self.network_parameters.get("action_size")
 
     def get_dropout_rate(self):
         return self.network_parameters.get("dropout_rate", self.dropout_rate)
@@ -62,7 +60,7 @@ class PolicyNetworkParams:
         return self.network_parameters.get("l2_reg_coef", self.l2_reg_coef)
 
     def get_dense_size(self):
-        return self.network_parameters.get("dense_size", self.dense_size) or self.hidden_size
+        return self.network_parameters.get("dense_size", self.dense_size) or self.hidden_size  # todo :(
 
     def get_learning_rate(self):
         return self.network_parameters.get("learning_rate", None)
@@ -121,10 +119,10 @@ class PolicyNetwork(LRScheduledTFModel):
         super().__init__(load_path=load_path, save_path=save_path, **kwargs)
 
         self.hidden_size = network_params_passed.get_hidden_size()
-        self.action_size = network_params_passed.get_action_size() or features_params.num_actions  # todo :(
+        self.action_size = features_params.num_actions
         self.dropout_rate = network_params_passed.get_dropout_rate()
         self.l2_reg_coef = network_params_passed.get_l2_reg_coef()
-        self.dense_size = network_params_passed.get_dense_size()
+        self.dense_size = network_params_passed.get_dense_size()  # todo: isn't equal to calculated
 
         attn_params_passed = network_params_passed.get_attn_params()
         self.attention_params = self.configure_attn(attn_params_passed, tokens_dims, features_params)  # todo :(
