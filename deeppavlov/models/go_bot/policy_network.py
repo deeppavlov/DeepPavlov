@@ -184,22 +184,15 @@ class PolicyNetwork(LRScheduledTFModel):
     def configure_attn(attn: dict,
                        tokens_dims: TokensVectorRepresentationParams,
                        features_params: SharedGoBotParams):
-        # todo store params in proper class objects not in dicts
+        # todo store params in proper class objects not in dicts, requires serialization logic update
 
         if not attn:
             return None
 
-        curr_attn_token_size = attn.get('token_size')
-        curr_attn_action_as_key = attn.get('action_as_key')
-        curr_attn_intent_as_key = attn.get('intent_as_key')
-        curr_attn_key_size = attn.get('key_size')
-
-        token_size = curr_attn_token_size or tokens_dims.embedding_dim  # todo sync with nn params
-        action_as_key = curr_attn_action_as_key or False  # todo sync with nn params and features_params
-        intent_as_key = curr_attn_intent_as_key or False  # todo sync with nn params and features_params
-
-        possible_key_size = PolicyNetwork.calc_attn_key_size(features_params, action_as_key, intent_as_key)
-        key_size = curr_attn_key_size or possible_key_size
+        token_size = tokens_dims.embedding_dim  # todo sync with nn params
+        action_as_key = attn.get('action_as_key', False)
+        intent_as_key = attn.get('intent_as_key', False)
+        key_size = PolicyNetwork.calc_attn_key_size(features_params, action_as_key, intent_as_key)
 
         gobot_attn_params = GobotAttnParams(max_num_tokens=attn.get("max_num_tokens"),
                                             hidden_size=attn.get("hidden_size"),
