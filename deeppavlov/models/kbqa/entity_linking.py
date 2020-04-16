@@ -17,7 +17,7 @@ from typing import List, Dict, Tuple, Optional, Any
 
 import nltk
 import pymorphy2
-from fuzzywuzzy import fuzz
+from rapidfuzz import fuzz
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
