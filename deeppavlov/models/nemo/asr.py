@@ -89,7 +89,7 @@ class AudioInferDataLayer(CustomDataLayerBase):
         """Initializes Data Loader.
 
         Args:
-            audio_batch: Batch to be red. Elements could be either paths to audio files or Binary I/O objects.
+            audio_batch: Batch to be read. Elements could be either paths to audio files or Binary I/O objects.
             batch_size: How many samples per batch to load.
             sample_rate: Target sampling rate for data. Audio files will be resampled to sample_rate if
                 it is not already.

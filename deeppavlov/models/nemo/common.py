@@ -41,7 +41,7 @@ def ascii_to_bytes_io(batch: Union[str, list]) -> Union[BytesIO, list]:
         batch: A string or an iterable container with strings at some level of nesting.
 
     Returns:
-        The same structure where all strings are converted into the base64-encoded bytes wrapped in Binary I/O object.
+        The same structure where all strings are converted into the base64-encoded bytes wrapped in Binary I/O objects.
 
     """
     if isinstance(batch, str):
@@ -68,7 +68,7 @@ def bytes_io_to_ascii(batch: Union[BytesIO, list]) -> Union[str, list]:
 
 
 class NeMoBase(Component, Serializable):
-    """Base class for NeMo Chainer's pipe components."""
+    """Base class for NeMo Chainer's pipeline components."""
 
     def __init__(self, load_path: Union[str, Path], nemo_params_path: Union[str, Path], **kwargs) -> None:
         """Initializes NeuralModuleFactory on CPU or GPU and reads nemo modules params from yaml.
@@ -88,7 +88,7 @@ class NeMoBase(Component, Serializable):
         raise NotImplementedError
 
     def load(self) -> None:
-        """Loads prettrained checkpoints for modules from self.modules_to_restore list."""
+        """Loads pretrained checkpoints for modules from self.modules_to_restore list."""
         module_names = [str(module) for module in self.modules_to_restore]
         checkpoints = nemo.utils.get_checkpoint_from_dir(module_names, self.load_path)
         for module, checkpoint in zip(self.modules_to_restore, checkpoints):

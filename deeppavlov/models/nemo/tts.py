@@ -121,8 +121,8 @@ class TextDataLayer(CustomDataLayerBase):
         texts = torch.empty(len(texts_list), max_len, dtype=torch.long)
         texts.fill_(pad_id)
 
-        for i, s in enumerate(texts_list):
-            texts[i].narrow(0, 0, s.size(0)).copy_(s)
+        for i, text in enumerate(texts_list):
+            texts[i].narrow(0, 0, text.size(0)).copy_(text)
 
         if len(texts.shape) != 2:
             raise ValueError(f'Texts in collate function have shape {texts.shape}, should have 2 dimensions.')
@@ -204,7 +204,7 @@ class NeMoTTS(NeMoBase):
         evaluated_tensors = self.neural_factory.infer(tensors=infer_tensors)
         synthesized_batch = self.vocoder.get_audio(*evaluated_tensors)
 
-        for fout, data in zip(path_batch, synthesized_batch):
-            wavfile.write(fout, self.sample_rate, data)
+        for fout, synthesized_audio in zip(path_batch, synthesized_batch):
+            wavfile.write(fout, self.sample_rate, synthesized_audio)
 
         return path_batch

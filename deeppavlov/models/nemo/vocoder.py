@@ -42,7 +42,7 @@ class WaveGlow(BaseVocoder):
 
         Args:
             denoiser_strength: Denoiser strength for waveglow.
-            n_window_stride: Stride of window for fft in samples used in model training.
+            n_window_stride: Stride of window for FFT in samples used in model training.
             kwargs: Named arguments for WaveGlowInferNM constructor.
 
         """

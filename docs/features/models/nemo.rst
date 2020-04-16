@@ -18,7 +18,8 @@ any additional alignment information. :class:`~deeppavlov.models.nemo.asr.NeMoAS
 -  `GreedyCTCDecoder <https://github.com/NVIDIA/NeMo/blob/v0.10.0/nemo/collections/asr/greedy_ctc_decoder.py>`__ - doesn't use any arguments.
 -  :class:`~deeppavlov.models.nemo.asr.AudioInferDataLayer` - uses arguments from ``AudioToTextDataLayer`` section of the NeMo config file.
 
-Besides named arguments for the modules above NeMo config file for ASR should contain ``labels`` arg.
+NeMo config file for ASR should contain ``labels`` argument besides named arguments for the modules above. ``labels`` is
+a list of characters that can be output by the ASR model used in model training.
 
 Speech synthesis
 ----------------
@@ -34,7 +35,8 @@ The TTS pipeline that creates human audible speech from text is based on Tacotro
 -  :class:`~deeppavlov.models.nemo.vocoder.GriffinLim` - uses arguments from ``GriffinLim`` section of the NeMo config file.
 -  :class:`~deeppavlov.models.nemo.tts.TextDataLayer` - uses arguments from ``TranscriptDataLayer`` section of the NeMo config file.
 
-NeMo config file for ASR should contain ``labels`` and ``sample_rate`` args besides named arguments for the modules above.
+NeMo config file for TTS should contain ``labels`` and ``sample_rate`` args besides named arguments for the modules
+above. ``labels`` is a list of characters used in TTS model training.
 
 Audio encoding end decoding.
 ----------------------------
