@@ -136,6 +136,10 @@ PARAMS = {
         ("classifiers/intents_sample_json.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "ner": {
+        ("ner/conll2003_m1.json", "conll2003_m1", ('IP', 'TI')): [
+            (["Peter", "Blackburn"], ["NNP", "NNP"], None)],
+        ("ner/vlsp2016_full.json", "vlsp2016_full", ('IP', 'TI')): [
+            (["Hương", "tự_tin"], ["NNP", "V"], ["B-NP", "B-VP"], None)],
         ("ner/ner_conll2003_bert.json", "ner_conll2003_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_ontonotes_bert.json", "ner_ontonotes_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_ontonotes_bert_mult.json", "ner_ontonotes_bert_mult", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
@@ -152,6 +156,10 @@ PARAMS = {
                 ("in the west part", "{'area': 'west'}"),
                 ("moderate price range", "{'pricerange': 'moderate'}")
             ]
+    },
+    "sentence_segmentation": {
+        ("sentence_segmentation/sentseg_dailydialog.json", "sentseg_dailydialog", ('IP', 'TI')): [
+            (["hey", "alexa", "how", "are", "you"], None)]
     },
     "kbqa": {
         ("kbqa/kbqa_rus.json", "kbqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
