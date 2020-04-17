@@ -122,7 +122,7 @@ class PolicyNetwork(LRScheduledTFModel):
         self.action_size = features_params.num_actions
         self.dropout_rate = network_params_passed.get_dropout_rate()
         self.l2_reg_coef = network_params_passed.get_l2_reg_coef()
-        self.dense_size = network_params_passed.get_dense_size()  # todo: isn't equal to calculated
+        self.dense_size = network_params_passed.get_dense_size()
 
         attn_params_passed = network_params_passed.get_attn_params()
         self.attention_params = self.configure_attn(attn_params_passed, tokens_dims, features_params)  # todo :(
