@@ -107,8 +107,8 @@ PARAMS = {
         ("classifiers/yahoo_convers_vs_info.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/ru_obscenity_classifier.json", "classifiers", ('IP',)):
             [
-                ("Ну и сука же она", 'True'),
-                ("я два года жду эту игру", 'False')
+                ("Ну и сука же она", True),
+                ("я два года жду эту игру", False)
             ],
         ("classifiers/sentiment_sst_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_sst_multi_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -154,9 +154,9 @@ PARAMS = {
         ("ner/ner_rus.json", "ner_rus", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/slotfill_dstc2.json", "slotfill_dstc2", ('IP',)):
             [
-                ("chinese food", "{'food': 'chinese'}"),
-                ("in the west part", "{'area': 'west'}"),
-                ("moderate price range", "{'pricerange': 'moderate'}")
+                ("chinese food", {'food': 'chinese'}),
+                ("in the west part", {'area': 'west'}),
+                ("moderate price range", {'pricerange': 'moderate'})
             ]
     },
     "sentence_segmentation": {
