@@ -37,7 +37,7 @@ class AudioInferDataset(Dataset):
         """Dataset reader for AudioInferDataLayer.
 
         Args:
-            audio_batch: Batch to be red. Elements could be either paths to audio files or Binary I/O objects.
+            audio_batch: Batch to be read. Elements could be either paths to audio files or Binary I/O objects.
             sample_rate: Audio files sample rate.
             int_values: If true, load samples as 32-bit integers.
             trim: Trim leading and trailing silence from an audio signal if True.
