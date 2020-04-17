@@ -39,7 +39,7 @@ def labels2onehot(labels: [List[str], List[List[str]], np.ndarray], classes: [li
         if isinstance(sample, list):
             for intent in sample:
                 if intent not in classes:
-                    log.warning('Unknown intent {} detected. Assigning no class'.format(intent))  # todo why *label* ?
+                    log.warning('Unknown intent {} detected. Assigning no class'.format(intent))  # todo why *intent* ?
                 else:
                     curr[np.where(np.array(classes) == intent)[0]] = 1
         else:
