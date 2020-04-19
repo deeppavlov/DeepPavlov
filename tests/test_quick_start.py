@@ -55,8 +55,8 @@ FOUR_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', 'Dummy text', 'Dummy_t
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
     "ecommerce_skill": {
-        ("ecommerce_skill/bleu_retrieve.json", "ecommerce_skill_bleu", ALL_MODES): [('Dummy text', '[]', '{}', None)],
-        ("ecommerce_skill/tfidf_retrieve.json", "ecommerce_skill_tfidf", ALL_MODES): [('Dummy text', '[]', '{}', None)]
+        ("ecommerce_skill/bleu_retrieve.json", "ecommerce_skill_bleu", ALL_MODES): [('Dummy text', [], {}, None)],
+        ("ecommerce_skill/tfidf_retrieve.json", "ecommerce_skill_tfidf", ALL_MODES): [('Dummy text', [], {}, None)]
     },
     "faq": {
         ("faq/tfidf_logreg_en_faq.json", "faq_tfidf_logreg_en", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
@@ -85,7 +85,7 @@ PARAMS = {
     "go_bot": {
         ("go_bot/gobot_dstc2.json", "gobot_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [([{"text": "the weather is clooudy and gloooomy"}], None)]
     },
     "classifiers": {
         ("classifiers/paraphraser_bert.json", "classifiers", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
@@ -107,13 +107,15 @@ PARAMS = {
         ("classifiers/yahoo_convers_vs_info.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/ru_obscenity_classifier.json", "classifiers", ('IP',)):
             [
-                ("Ну и сука же она", 'True'),
-                ("я два года жду эту игру", 'False')
+                ("Ну и сука же она", True),
+                ("я два года жду эту игру", False)
             ],
         ("classifiers/sentiment_sst_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_sst_multi_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_yelp_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/sentiment_yelp_multi_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("classifiers/sentiment_yelp_multi_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_imdb_bert.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_imdb_conv_bert.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "snips": {
         ("classifiers/intents_snips.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -152,9 +154,9 @@ PARAMS = {
         ("ner/ner_rus.json", "ner_rus", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/slotfill_dstc2.json", "slotfill_dstc2", ('IP',)):
             [
-                ("chinese food", "{'food': 'chinese'}"),
-                ("in the west part", "{'area': 'west'}"),
-                ("moderate price range", "{'pricerange': 'moderate'}")
+                ("chinese food", {'food': 'chinese'}),
+                ("in the west part", {'area': 'west'}),
+                ("moderate price range", {'pricerange': 'moderate'})
             ]
     },
     "sentence_segmentation": {
@@ -386,7 +388,7 @@ class TestQuickStart(object):
     @staticmethod
     def infer(config_path, qr_list=None, check_outputs=True):
 
-        *inputs, expected_outputs = zip(*qr_list) if qr_list else [],
+        *inputs, expected_outputs = zip(*qr_list) if qr_list else ([],)
         with ProcessPoolExecutor(max_workers=1) as executor:
             f = executor.submit(_infer, config_path, inputs)
         outputs = f.result()

@@ -38,8 +38,7 @@
       }
     ],
     "out": [
-      "x_char_ids",
-      "y_token_ids"
+      "x_char_ids"
     ]
   },
   "train": {
