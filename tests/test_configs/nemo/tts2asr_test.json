@@ -10,12 +10,12 @@
         "out": ["speech"]
       },
       {
-        "class_name": "bytesIO_decode_base64",
+        "class_name": "bytesIO_encode_base64",
         "in": ["speech"],
         "out": ["ascii"]
       },
       {
-        "class_name": "base64_encode_bytesIO",
+        "class_name": "base64_decode_bytesIO",
         "in": ["ascii"],
         "out": ["speech_restored"]
       },
