@@ -225,7 +225,7 @@ class GoalOrientedBot(NNModel):
         :param utterance_context_info_dict: the dictionary containing the utterance training information
         :param utterance_response_info_dict: the dictionary containing the utterance response training information
         :return: the utterance data object containing the numpy-vectorized features and target extracted
-        from the utterance data
+                 from the utterance data
         """
 
         # todo naming, docs, comments
@@ -256,8 +256,8 @@ class GoalOrientedBot(NNModel):
         :param text: the text to infer to
         :param tracker: the tracker that tracks the dialogue from which the text is taken
         :param keep_tracker_state: if True, the tracker state will not be updated during the prediction.
-        Used to keep tracker's state intact when predicting the action to perform right after the api call action
-        is predicted and performed.
+                                   Used to keep tracker's state intact when predicting the action 
+                                   to perform right after the api call action is predicted and performed.
         :return: the utterance features object containing the numpy-vectorized features extracted from the utterance
         """
         # todo comments
