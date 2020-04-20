@@ -246,18 +246,21 @@ def chunk_finder(current_token, previous_token, tag):
         previous_tag = 'O'
     if current_tag != tag:
         current_tag = 'O'
-    if (previous_tag == 'O' and current_token == 'B-' + tag) or \
-            (previous_token == 'I-' + tag and current_token == 'B-' + tag) or \
-            (previous_token == 'B-' + tag and current_token == 'B-' + tag) or \
-            (previous_tag == 'O' and current_token == 'I-' + tag):
+
+    if current_tag != 'O' and (
+            previous_tag == 'O' or
+            previous_token in ['E-' + tag, 'L-' + tag, 'S-' + tag, 'U-' + tag] or
+            current_token in ['B-' + tag, 'S-' + tag, 'U-' + tag]
+    ):
         create_chunk = True
     else:
         create_chunk = False
 
-    if (previous_token == 'I-' + tag and current_token == 'B-' + tag) or \
-            (previous_token == 'B-' + tag and current_token == 'B-' + tag) or \
-            (current_tag == 'O' and previous_token == 'I-' + tag) or \
-            (current_tag == 'O' and previous_token == 'B-' + tag):
+    if previous_tag != 'O' and (
+            current_tag == 'O' or
+            previous_token in ['E-' + tag, 'L-' + tag, 'S-' + tag, 'U-' + tag] or
+            current_token in ['B-' + tag, 'S-' + tag, 'U-' + tag]
+    ):
         pop_out = True
     else:
         pop_out = False

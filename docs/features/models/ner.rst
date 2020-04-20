@@ -4,8 +4,9 @@ Named Entity Recognition (NER)
 Train and use the model
 -----------------------
 
-There are two main types of models available: standard RNN based and BERT based. To see details about BERT based
-models see :doc:`here </features/models/bert>`.
+There are three main types of models available: Standard RNN-based model, BERT-based model, and the hybrid model. To see details about BERT based
+models see :doc:`here </features/models/bert>`. The last one, the hybrid model, reproduces the architecture proposed
+in the paper `A Deep Neural Network Model for the Task of Named Entity Recognition <http://www.ijmlc.org/show-83-881-1.html>`__.
 Any pre-trained model can be used for inference from both Command Line Interface (CLI) and Python. Before using the
 model make sure that all required packages are installed using the command:
 
@@ -43,11 +44,15 @@ Here is the list of all available configs:
     +----------------------------------------------------------------------+                    +          +-----------------+------------+------------+
     | :config:`ner_ontonotes <ner/ner_ontonotes.json>`                     |                    |          | 331 MB          |   7.8 MB   |   86.7     |
     +----------------------------------------------------------------------+--------------------+          +-----------------+------------+------------+
-    | :config:`ner_conll2003_bert <ner/ner_conll2003_bert.json>`           | CoNLL-2003         |          | 400 MB          |   850 MB   | **91.7**   |
+    | :config:`ner_conll2003_bert <ner/ner_conll2003_bert.json>`           | CoNLL-2003         |          | 400 MB          |   850 MB   |   91.7     |
     +----------------------------------------------------------------------+                    +          +-----------------+------------+------------+
     | :config:`ner_conll2003 <ner/ner_conll2003.json>`                     |                    |          | 331 MB          |   3.1 MB   |   89.9     |
+    +----------------------------------------------------------------------+                    +          +-----------------+------------+------------+
+    | :config:`conll2003_m1 <ner/conll2003_m1.json>`                       |                    |          | 339 MB          |  359.7 MB  | **91.9**   |
     +----------------------------------------------------------------------+--------------------+          +-----------------+------------+------------+
     | :config:`ner_dstc2 <ner/ner_dstc2.json>`                             | DSTC2              |          | ---             |   626 KB   |   97.1     |
+    +----------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    | :config:`vlsp2016_full <ner/vlsp2016_full.json>`                     | VLSP-2016          | Vi       | 520 MB          |   37.2 MB  |   93.4     |
     +----------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
 
 Models can be used from Python using the following code:
@@ -329,6 +334,59 @@ To use existing few-shot model use the following python interface can be used:
 
 
 
+NER-based Model for Sentence Boundary Detection Task
+----------------------------------------------------
+
+The task of Sentence Boundary Detection (SBD) is one of the preprocessing tasks in NLP, aiming at splitting
+an unpunctuated text into a list of sentences. In a chatbot's architecture, An SBD module can be used as a
+preprocessing step to enhance the ability to handle long and complex user's utterances and hence encourage
+users to communicate with the chatbot more naturally.
+
+The SBD task can be addressed by firstly reformulating as a Sequence Labeling task, and then applying the
+hybrid model mentioned at the beginning of this document. Details of how to use a Sequence Labeling model
+to address the SBD task are represented in the paper `Sequence Labeling Approach to the Task of Sentence
+Boundary Detection <https://dl.acm.org/doi/abs/10.1145/3380688.3380703>`__. Below is the statistic of the
+dataset generated from the DailyDialog dataset [2]_:
+
++----------------------+---------+
+| Number of samples    |   99299 |
++----------------------+---------+
+| Number of statements |  111838 |
++----------------------+---------+
+| Number of questions  |   37447 |
++----------------------+---------+
+| Number of words      | 1139540 |
++----------------------+---------+
+
+Here is the achieved result of training the hybrid model on the above dataset using
+the config file :config:`sentseg_dailydialog <sentence_segmentation/sentseg_dailydialog.json>`:
+
++-----------+-----------+--------+-------+
+| Tag       | Precision | Recall |  F1   |
++-----------+-----------+--------+-------+
+| Question  |   96.48   | 93.49  | 94.96 |
++-----------+-----------+--------+-------+
+| Statement |   96.24   | 96.69  | 96.47 |
++-----------+-----------+--------+-------+
+| Overall   |   96.30   | 95.89  | 96.10 |
++-----------+-----------+--------+-------+
+
+The command below is used to download and use the pre-trained model in the CLI:
+
+.. code:: bash
+
+    python -m deeppavlov interact sentseg_dailydialog -d
+
+The model also can be trained from scratch by using the command:
+
+.. code:: bash
+
+    python -m deeppavlov train sentseg_dailydialog
+
+
+
+
+
 Literature
 ----------
 
@@ -336,3 +394,4 @@ Literature
     entity recognition // International FRUCT Conference on Intelligence,
     Social Media and Web, ISMW FRUCT 2016. Saint-Petersburg; Russian Federation,
     DOI 10.1109/FRUCT.2016.7584769
+.. [2] Yanran Li, Hui Su, Xiaoyu Shen, Wenjie Li, Ziqiang Cao, and Shuzi Niu. 2017. DailyDialog: A Manually Labelled Multi-turn Dialogue Dataset. In Proceedings of the 8th International Joint Conference on Natural Language Processing.
