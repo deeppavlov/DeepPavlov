@@ -32,7 +32,7 @@ from deeppavlov.core.models.serializable import Serializable
 log = getLogger(__name__)
 
 
-@register('base64_encode_bytesIO')
+@register('base64_decode_bytesIO')
 def ascii_to_bytes_io(batch: Union[str, list]) -> Union[BytesIO, list]:
     """Recursively searches for strings in the input batch and converts them into the base64-encoded bytes wrapped in
     Binary I/O objects.
@@ -50,7 +50,7 @@ def ascii_to_bytes_io(batch: Union[str, list]) -> Union[BytesIO, list]:
     return list(map(ascii_to_bytes_io, batch))
 
 
-@register('bytesIO_decode_base64')
+@register('bytesIO_encode_base64')
 def bytes_io_to_ascii(batch: Union[BytesIO, list]) -> Union[str, list]:
     """Recursively searches for Binary I/O objects in the input batch and converts them into ASCII-strings.
 

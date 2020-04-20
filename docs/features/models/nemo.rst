@@ -41,8 +41,8 @@ above. ``labels`` is a list of characters used in TTS model training.
 Audio encoding end decoding.
 ----------------------------
 
-:class:`~deeppavlov.models.nemo.common.ascii_to_bytes_io` and :class:`~deeppavlov.models.nemo.common.bytes_io_to_ascii`
-was added to the library to achieve uniformity at work with both text and audio data. Classes can be used to encode
+:func:`~deeppavlov.models.nemo.common.ascii_to_bytes_io` and :func:`~deeppavlov.models.nemo.common.bytes_io_to_ascii`
+was added to the library to achieve uniformity at work with both text and audio data. Components can be used to encode
 binary data to ascii string and decode back.
 
 Quck Start
@@ -58,9 +58,9 @@ Install requirements and download model files.
     python -m deeppavlov install asr_tts
     python -m deeppavlov download asr_tts
 
-Examples below use `soundservice <https://python-sounddevice.readthedocs.io/en/0.3.15/index.html>`_ library. Install
-it with ``pip install soundservice==0.3.15``. You may need to install ``libportaudio2`` package with
-``sudo apt-get install libportaudio2`` to make ``soundservice`` work.
+Examples below use `sounddevice <https://python-sounddevice.readthedocs.io/en/0.3.15/index.html>`_ library. Install
+it with ``pip install sounddevice==0.3.15``. You may need to install ``libportaudio2`` package with
+``sudo apt-get install libportaudio2`` to make ``sounddevice`` work.
 
 .. note::
     ASR reads and TTS generates single channel WAV files. Files transferred to ASR are resampled to the frequency
