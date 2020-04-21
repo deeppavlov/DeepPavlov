@@ -42,7 +42,7 @@ class TemplateMatcher(Component, Serializable):
         self.load()
 
     def load(self) -> None:
-        self.template = load_pickle(self.load_path / self._templates_filename)
+        self.templates = load_pickle(self.load_path / self._templates_filename)
 
     def save(self) -> None:
         raise NotImplementedError
