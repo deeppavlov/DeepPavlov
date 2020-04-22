@@ -156,6 +156,7 @@ class EntityLinker(Component, Serializable):
         for candidate in candidate_entities:
             entity_num = candidate[0]
             entity_id = candidate[1]
+            print("(candidate_entities)entity_id:", entity_id)
             entity_names = []
             if self.use_hdt:
                 entity_name = self.wiki_parser("objects", "forw", entity_id, find_label=True)
@@ -167,7 +168,9 @@ class EntityLinker(Component, Serializable):
                     candidate_names.append(entity_names)
                     candidate_entities_filter.append(candidate)
             else:
-                entity_names_found = self.q2name[entity_num]
+                print('(candidate_entity_names):', len(self.q2name), list(self.q2name)[:50])
+                entity_names_found = self.q2name[entity_id]
+                print(entity_names_found)
                 if len(entity_names_found[0]) < 6 * entity_length:
                     entity_name = entity_names_found[0]
                     entity_names.append(entity_name)
