@@ -55,8 +55,8 @@ class DialogDatasetIndexingIterator(DataLearningIterator):
             x_item_full_label = f"{self.Xs_LABEL}_{dialogue_label}_{dialogue_x_item_label}"
             y_item_full_label = f"{self.Ys_LABEL}_{dialogue_label}_{dialogue_y_item_label}"
 
-            x['label'] = x_item_full_label
-            y['label'] = y_item_full_label
+            x['indexed_value'] = x_item_full_label
+            y['indexed_value'] = y_item_full_label
 
             dialogs[-1][0].append(x)
             dialogs[-1][1].append(y)
