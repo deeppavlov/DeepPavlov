@@ -35,6 +35,7 @@
   "dependency_output_prettifier": "deeppavlov.models.morpho_tagger.common:DependencyOutputPrettifier",
   "dialog_db_result_iterator": "deeppavlov.dataset_iterators.dialog_iterator:DialogDBResultDatasetIterator",
   "dialog_iterator": "deeppavlov.dataset_iterators.dialog_iterator:DialogDatasetIterator",
+  "dialog_indexing_iterator": "deeppavlov.dataset_iterators.dialog_iterator.DialogDatasetIndexingIterator",
   "dialog_state": "deeppavlov.models.seq2seq_go_bot.dialog_state:DialogState",
   "dictionary_vectorizer": "deeppavlov.models.vectorizers.word_vectorizer:DictionaryVectorizer",
   "dirty_comments_preprocessor": "deeppavlov.models.preprocessors.dirty_comments_preprocessor:DirtyCommentsPreprocessor",
