@@ -169,6 +169,10 @@
         "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
       },
       {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wiki_dict_properties.pickle",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+      },
+      {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/rels_0.txt",
         "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
       },

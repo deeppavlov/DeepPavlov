@@ -23,7 +23,7 @@
       {
         "class_name": "wiki_parser",
         "id": "wiki_p",
-        "wiki_filename": "{DOWNLOADS_PATH}/wikidata_eng/wikidata2018_09_11.hdt"
+        "wiki_filename": "{DOWNLOADS_PATH}/wikidata_eng/wikidata.hdt"
       },
       {
         "class_name": "template_matcher",
@@ -166,6 +166,10 @@
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/templates_eng.pickle",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wiki_dict_properties.pickle",
         "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
       },
       {
