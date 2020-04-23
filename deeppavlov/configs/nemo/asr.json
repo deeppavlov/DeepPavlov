@@ -17,6 +17,7 @@
       "NEMO_PATH": "~/.deeppavlov/models/nemo"
     },
     "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
       "{DEEPPAVLOV_PATH}/requirements/nemo-asr.txt"
     ],
     "download": [
