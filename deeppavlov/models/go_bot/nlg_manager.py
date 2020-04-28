@@ -5,12 +5,15 @@ from typing import Union
 
 from deeppavlov.core.commands.utils import expand_path
 import deeppavlov.models.go_bot.templates as go_bot_templates
+from deeppavlov.core.common.registry import register
 
 log = getLogger(__name__)
 
 
 # todo add the ability to configure nlg loglevel in config (now the setting is shared across all the GO-bot)
 # todo add each method input-output logging when proper loglevel level specified
+
+@register("gobot_nlg_manager")
 class NLGManager:
     """
     NLGManager is a unit of the go-bot pipeline that handles the generation of text

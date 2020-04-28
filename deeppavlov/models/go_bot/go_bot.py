@@ -110,6 +110,7 @@ class GoalOrientedBot(NNModel):
     def __init__(self,
                  tokenizer: Component,
                  tracker: FeaturizedTracker,
+                 nlg_manager: NLGManager,
                  template_path: str,
                  save_path: str,
                  hidden_size: int = 128,
@@ -139,7 +140,7 @@ class GoalOrientedBot(NNModel):
                                                     dense_size, attention_mechanism, network_parameters)
 
         self.nlu_manager = NLUManager(tokenizer, slot_filler, intent_classifier)
-        self.nlg_manager = NLGManager(template_path, template_type, api_call_action)
+        self.nlg_manager = nlg_manager  # NLGManager(template_path, template_type, api_call_action)
         self.data_handler = TokensVectorizer(debug, word_vocab, bow_embedder, embedder)
 
         self.dialogue_state_tracker = DialogueStateTracker.from_gobot_params(tracker, self.nlg_manager,
