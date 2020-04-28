@@ -76,9 +76,6 @@ class GoalOrientedBot(NNModel):
         network_parameters: dictionary with network parameters (for compatibility with release 0.1.1,
             deprecated in the future)
 
-        template_path: file with mapping between actions and text templates
-            for response generation.
-        template_type: type of used response templates in string format.
         word_vocab: vocabulary of input word tokens
             (:class:`~deeppavlov.core.data.simple_vocab.SimpleVocabulary` recommended).
         bow_embedder: instance of one-hot word encoder
@@ -96,9 +93,6 @@ class GoalOrientedBot(NNModel):
             ``api_call_action`` actions and get ``'db_result'`` result (
             :class:`~deeppavlov.core.data.sqlite_database.Sqlite3Database`
             recommended).
-        api_call_action: label of the action that corresponds to database api call
-            (it must be present in your ``template_path`` file), during interaction
-            it will be used to get ``'db_result'`` from ``database``.
         use_action_mask: if ``True``, network output will be applied with a mask
             over allowed actions.
         debug: whether to display debug output.
@@ -111,7 +105,6 @@ class GoalOrientedBot(NNModel):
                  tokenizer: Component,
                  tracker: FeaturizedTracker,
                  nlg_manager: NLGManager,
-                 template_path: str,
                  save_path: str,
                  hidden_size: int = 128,
                  dropout_rate: float = 0.,
@@ -120,14 +113,12 @@ class GoalOrientedBot(NNModel):
                  attention_mechanism: dict = None,
                  network_parameters: Optional[Dict[str, Any]] = None,
                  load_path: str = None,
-                 template_type: str = "DefaultTemplate",
                  word_vocab: Component = None,
                  bow_embedder: Component = None,
                  embedder: Component = None,
                  slot_filler: Component = None,
                  intent_classifier: Component = None,
                  database: Component = None,
-                 api_call_action: str = None,
                  use_action_mask: bool = False,
                  debug: bool = False,
                  **kwargs) -> None:
@@ -140,7 +131,7 @@ class GoalOrientedBot(NNModel):
                                                     dense_size, attention_mechanism, network_parameters)
 
         self.nlu_manager = NLUManager(tokenizer, slot_filler, intent_classifier)
-        self.nlg_manager = nlg_manager  # NLGManager(template_path, template_type, api_call_action)
+        self.nlg_manager = nlg_manager
         self.data_handler = TokensVectorizer(debug, word_vocab, bow_embedder, embedder)
 
         self.dialogue_state_tracker = DialogueStateTracker.from_gobot_params(tracker, self.nlg_manager,

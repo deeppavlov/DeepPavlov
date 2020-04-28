@@ -60,7 +60,7 @@
         },
         "word_vocab": "#token_vocab",
         "database": "#restaurant_database",
-        "nlg": {
+        "nlg_manager": {
           "class_name": "gobot_nlg_manager",
           "template_path": "{DOWNLOADS_PATH}/dstc2/dstc2-templates.txt",
           "template_type": "DualTemplate",

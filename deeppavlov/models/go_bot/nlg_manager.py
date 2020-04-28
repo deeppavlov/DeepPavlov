@@ -19,6 +19,15 @@ class NLGManager:
     NLGManager is a unit of the go-bot pipeline that handles the generation of text
     when the pattern is chosen among the known patterns and the named-entities-values-like knowledge is provided.
     (the whole go-bot pipeline is as follows: NLU, dialogue-state-tracking&policy-NN, NLG)
+
+    Parameters:
+        template_path: file with mapping between actions and text templates
+            for response generation.
+        template_type: type of used response templates in string format.
+        api_call_action: label of the action that corresponds to database api call
+            (it must be present in your ``template_path`` file), during interaction
+            it will be used to get ``'db_result'`` from ``database``.
+        debug: whether to display debug output.
     """
 
     def __init__(self, template_path: Union[str, Path], template_type: str, api_call_action: str, debug = False):
