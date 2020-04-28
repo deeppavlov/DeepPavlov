@@ -59,10 +59,13 @@
           "projected_align": false 
         },
         "word_vocab": "#token_vocab",
-        "template_path": "{DOWNLOADS_PATH}/dstc2/dstc2-templates.txt",
-        "template_type": "DualTemplate",
         "database": "#restaurant_database",
-        "api_call_action": "api_call",
+        "nlg": {
+          "class_name": "gobot_nlg_manager",
+          "template_path": "{DOWNLOADS_PATH}/dstc2/dstc2-templates.txt",
+          "template_type": "DualTemplate",
+          "api_call_action": "api_call"
+        },
         "use_action_mask": false,
         "slot_filler": {
           "config_path": "{CONFIGS_PATH}/ner/slotfill_dstc2.json"
