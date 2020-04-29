@@ -1,0 +1,30 @@
+{
+  "chainer": {
+    "in": "speech",
+    "pipe": [
+      {
+        "class_name": "nemo_asr",
+        "nemo_params_path": "{NEMO_PATH}/quartznet15x5/quartznet15x5.yaml",
+        "load_path": "{NEMO_PATH}/quartznet15x5",
+        "in": ["speech"],
+        "out": ["text"]
+      }
+    ],
+    "out": ["text"]
+  },
+  "metadata": {
+    "variables": {
+      "NEMO_PATH": "~/.deeppavlov/models/nemo"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+      "{DEEPPAVLOV_PATH}/requirements/nemo-asr.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/nemo/quartznet15x5.tar.gz",
+        "subdir": "{NEMO_PATH}"
+      }
+    ]
+  }
+}

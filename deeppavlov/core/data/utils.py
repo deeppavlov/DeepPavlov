@@ -228,6 +228,11 @@ def download_decompress(url: str,
         extracted = extracted_path.exists()
         if not extracted and not arch_file_path.exists():
             simple_download(url, arch_file_path)
+        else:
+            if extracted:
+                log.info(f'Found cached and extracted {url} in {extracted_path}')
+            else:
+                log.info(f'Found cached {url} in {arch_file_path}')
     else:
         arch_file_path = download_path / file_name
         simple_download(url, arch_file_path)

@@ -1,0 +1,54 @@
+{
+  "chainer": {
+    "in": ["text"],
+    "pipe": [
+      {
+        "class_name": "nemo_tts",
+        "nemo_params_path": "{TTS_PATH}/tacotron2_waveglow.yaml",
+        "load_path": "{TTS_PATH}",
+        "in": ["text"],
+        "out": ["speech"]
+      },
+      {
+        "class_name": "bytesIO_encode_base64",
+        "in": ["speech"],
+        "out": ["ascii"]
+      },
+      {
+        "class_name": "base64_decode_bytesIO",
+        "in": ["ascii"],
+        "out": ["speech_restored"]
+      },
+      {
+        "class_name": "nemo_asr",
+        "nemo_params_path": "{NEMO_PATH}/quartznet15x5/quartznet15x5.yaml",
+        "load_path": "{NEMO_PATH}/quartznet15x5",
+        "in": ["speech_restored"],
+        "out": ["transcription"]
+      }
+    ],
+    "out": ["transcription"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "NEMO_PATH": "{ROOT_PATH}/models/nemo",
+      "TTS_PATH": "{NEMO_PATH}/tacotron2_waveglow"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+      "{DEEPPAVLOV_PATH}/requirements/nemo-asr.txt",
+      "{DEEPPAVLOV_PATH}/requirements/nemo-tts.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/nemo/tacotron2_waveglow.tar.gz",
+        "subdir": "{NEMO_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/nemo/quartznet15x5.tar.gz",
+        "subdir": "{NEMO_PATH}"
+      }
+    ]
+  }
+}

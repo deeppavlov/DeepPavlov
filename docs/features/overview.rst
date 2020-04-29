@@ -587,25 +587,45 @@ Examples of some models
 
 -  Run goal-oriented bot with Telegram interface:
 
-   ``python -m deeppavlov telegram deeppavlov/configs/go_bot/gobot_dstc2.json -d -t <TELEGRAM_TOKEN>``
+   .. code-block:: bash
+
+      python -m deeppavlov telegram gobot_dstc2 -d -t <TELEGRAM_TOKEN>
+
 -  Run goal-oriented bot with console interface:
 
-   ``python -m deeppavlov interact deeppavlov/configs/go_bot/gobot_dstc2.json -d``
+   .. code-block:: bash
+
+      python -m deeppavlov interact gobot_dstc2 -d
+
 -  Run goal-oriented bot with REST API:
 
-   ``python -m deeppavlov riseapi deeppavlov/configs/go_bot/gobot_dstc2.json -d``
+   .. code-block:: bash
+
+      python -m deeppavlov riseapi gobot_dstc2 -d
+
 -  Run slot-filling model with Telegram interface:
 
-   ``python -m deeppavlov telegram deeppavlov/configs/ner/slotfill_dstc2.json -d -t <TELEGRAM_TOKEN>``
+   .. code-block:: bash
+
+      python -m deeppavlov telegram slotfill_dstc2 -d -t <TELEGRAM_TOKEN>
+
 -  Run slot-filling model with console interface:
 
-   ``python -m deeppavlov interact deeppavlov/configs/ner/slotfill_dstc2.json -d``
+   .. code-block:: bash
+
+      python -m deeppavlov interact slotfill_dstc2 -d
+
 -  Run slot-filling model with REST API:
 
-   ``python -m deeppavlov riseapi deeppavlov/configs/ner/slotfill_dstc2.json -d``
+   .. code-block:: bash
+
+      python -m deeppavlov riseapi slotfill_dstc2 -d
+
 -  Predict intents on every line in a file:
 
-   ``python -m deeppavlov predict deeppavlov/configs/classifiers/intents_snips.json -d --batch-size 15 < /data/in.txt > /data/out.txt``
+   .. code-block:: bash
+
+      python -m deeppavlov predict intents_snips -d --batch-size 15 < /data/in.txt > /data/out.txt
 
 
 View `video demo <https://youtu.be/yzoiCa_sMuY>`__ of deployment of a

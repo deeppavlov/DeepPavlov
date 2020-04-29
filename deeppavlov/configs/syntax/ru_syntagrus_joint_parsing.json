@@ -32,7 +32,8 @@
         "requirements": [
           "{DEEPPAVLOV_PATH}/requirements/tf.txt",
           "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-          "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
+          "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt",
+          "{DEEPPAVLOV_PATH}/requirements/syntax_parser.txt"
         ]
     }
 }

@@ -22,7 +22,7 @@ from typing import Dict, List, Optional, Union
 import uvicorn
 from fastapi import Body, FastAPI, HTTPException
 from fastapi.utils import generate_operation_id_for_path
-from pydantic import BaseConfig, BaseModel, Schema
+from pydantic import BaseConfig, BaseModel
 from pydantic.fields import Field, ModelField
 from pydantic.main import ModelMetaclass
 from starlette.middleware.cors import CORSMiddleware
