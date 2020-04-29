@@ -292,7 +292,7 @@ class GoalOrientedBot(NNModel):
         # mask is used to prevent tracker from predicting the api call twice
         # via logical AND of action candidates and mask
         # todo: seems to be an efficient idea but the intuition beyond this whole hack is not obvious
-        action_mask = tracker.calc_action_mask(self.nlg_manager.api_call_id)
+        action_mask = tracker.calc_action_mask(self.nlg_manager.get_api_call_action_id())
 
         return UtteranceFeatures(action_mask, attn_key, tokens_embeddings_padded, concat_feats)
 
@@ -370,7 +370,7 @@ class GoalOrientedBot(NNModel):
         user_tracker.update_previous_action(action_id_predicted)
         user_tracker.network_state = network_state
 
-        if action_id_predicted == self.nlg_manager.api_call_id:
+        if action_id_predicted == self.nlg_manager.get_api_call_action_id():
             # tracker says we need to make an api call.
             # we 1) perform the api call and 2) predict what to do next
             user_tracker.make_api_call()
