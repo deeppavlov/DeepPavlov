@@ -24,7 +24,7 @@ from deeppavlov.models.go_bot.tokens_vectorizer import TokensVectorizer
 from deeppavlov.models.go_bot.dto.dataset_features import UtteranceDataEntry, DialogueDataEntry, \
     BatchDialoguesDataset, UtteranceFeatures, UtteranceTarget
 from deeppavlov.models.go_bot.shared_gobot_params import SharedGoBotParams
-from deeppavlov.models.go_bot.nlg_manager import NLGManager
+from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManager
 from deeppavlov.models.go_bot.nlu_manager import NLUManager
 from deeppavlov.models.go_bot.policy_network import PolicyNetwork, PolicyNetworkParams
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker

@@ -1,7 +1,7 @@
 import numpy as np
 
 from deeppavlov.models.go_bot.nlu_manager import NLUManager
-from deeppavlov.models.go_bot.nlg_manager import NLGManager
+from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManager
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 
 # todo logging
