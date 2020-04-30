@@ -62,13 +62,12 @@ class RelRankerInfer(Component, Serializable):
 
     def rank_rels(self, question: str, candidate_rels: List[str]) -> List[Tuple[str, Any]]:
         rels_with_scores = []
-
-        for i in range(len(candidate_rels) // self.batch_size):
+        n_batches = len(candidate_rels) // self.batch_size + int(len(candidate_rels) % self.batch_size > 0)
+        for i in range(n_batches):
             questions_batch = []
             rels_labels_batch = []
             rels_batch = []
-            for j in range(self.batch_size):
-                candidate_rel = candidate_rels[(i * self.batch_size + j)]
+            for candidate_rel in candidate_rels[i*self.batch_size : (i+1)*self.batch_size]:
                 if candidate_rel in self.rel_q2name:
                     questions_batch.append(question)
                     rels_batch.append(candidate_rel)
@@ -77,22 +76,6 @@ class RelRankerInfer(Component, Serializable):
             probas = [proba[0] for proba in probas]
             for j, rel in enumerate(rels_batch):
                 rels_with_scores.append((rel, probas[j]))
-
-        questions_batch = []
-        rels_batch = []
-        rels_labels_batch = []
-        for j in range(len(candidate_rels) % self.batch_size):
-            candidate_rel = candidate_rels[(len(candidate_rels) // self.batch_size * self.batch_size + j)]
-            if candidate_rel in self.rel_q2name:
-                questions_batch.append(question)
-                rels_batch.append(candidate_rel)
-                rels_labels_batch.append(self.rel_q2name[candidate_rel])
-
-        probas = self.ranker(questions_batch, rels_labels_batch)
-        probas = [proba[0] for proba in probas]
-        for j, rel in enumerate(rels_batch):
-            rels_with_scores.append((rel, probas[j]))
-
         rels_with_scores = sorted(rels_with_scores, key=lambda x: x[1], reverse=True)
 
         return rels_with_scores[:self.rels_to_leave]
