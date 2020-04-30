@@ -47,11 +47,11 @@ class TreeParser(Component, Serializable):
         """
         super().__init__(save_path=None, load_path=load_path)
         self.udpipe_filename = udpipe_filename
-        self.ud_model = udModel.load(str(self.load_path / self.udpipe_filename))
+        self.load()
         self.full_ud_model = Pipeline(self.ud_model, "vertical", Pipeline.DEFAULT, Pipeline.DEFAULT, "conllu")
 
     def load(self) -> None:
-        pass
+        self.ud_model = udModel.load(str(self.load_path / self.udpipe_filename))
 
     def save(self) -> None:
         pass
