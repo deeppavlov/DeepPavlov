@@ -19,6 +19,8 @@ from logging import getLogger
 from pathlib import Path
 from typing import Union, Any
 
+from ruamel.yaml import YAML
+
 log = getLogger(__name__)
 
 
@@ -50,3 +52,9 @@ def save_pickle(data: dict, fpath: Union[str, Path]) -> None:
 def load_pickle(fpath: Union[str, Path]) -> Any:
     with open(fpath, 'rb') as fin:
         return pickle.load(fin)
+
+
+def read_yaml(fpath: Union[str, Path]) -> dict:
+    yaml = YAML(typ="safe")
+    with open(fpath, encoding='utf8') as fin:
+        return yaml.load(fin)

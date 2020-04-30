@@ -1,0 +1,152 @@
+{
+  "dataset_reader": {
+    "class_name": "conll2003_reader",
+    "data_path": "{DOWNLOADS_PATH}/conll2003/",
+    "dataset_name": "conll2003",
+    "provide_pos": true,
+    "provide_chunk": false,
+    "iobes": true
+  },
+  "dataset_iterator": {
+    "class_name": "data_learning_iterator"
+  },
+  "chainer": {
+    "in": ["x", "pos"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "in": ["x"],
+        "out": ["x_tokens"],
+        "class_name": "lazy_tokenizer"
+      },
+      {
+        "in": ["pos"],
+        "out": ["pos_tokens"],
+        "class_name": "lazy_tokenizer"
+      },
+      {
+        "in": ["x_tokens"],
+        "out": ["x_lower", "sent_lengths", "x_tokens_elmo"],
+        "class_name": "ner_preprocessor",
+        "get_x_padded_for_elmo": true
+      },
+      {
+        "in": ["x_lower"],
+        "out": ["x_tok_ind"],
+        "fit_on": ["x_lower"],
+        "class_name": "ner_vocab",
+        "id": "word_vocab",
+        "save_path": "{MODELS_PATH}/word.dict",
+        "load_path": "{MODELS_PATH}/word.dict"
+      },
+      {
+        "in": ["pos_tokens"],
+        "out": ["pos_ind"],
+        "fit_on": ["pos_tokens"],
+        "class_name": "ner_vocab",
+        "id": "pos_vocab",
+        "save_path": "{MODELS_PATH}/pos.dict",
+        "load_path": "{MODELS_PATH}/pos.dict"
+      },
+      {
+        "in": ["y"],
+        "out": ["y_ind"],
+        "fit_on": ["y"],
+        "class_name": "ner_vocab",
+        "id": "tag_vocab",
+        "save_path": "{MODELS_PATH}/tag.dict",
+        "load_path": "{MODELS_PATH}/tag.dict"
+      },
+      {
+        "in": ["x_tokens"],
+        "out": ["x_char_ind"],
+        "fit_on": ["x_tokens"],
+        "class_name": "ner_vocab",
+        "char_level": true,
+        "id": "char_vocab",
+        "save_path": "{MODELS_PATH}/char.dict",
+        "load_path": "{MODELS_PATH}/char.dict"
+      },
+      {
+        "in":[
+          "sent_lengths",
+          "x_tok_ind",
+          "pos_ind",
+          "x_char_ind",
+          "x_tokens_elmo"
+        ],
+        "in_y": ["y_ind"],
+        "out": ["y_predicted"],
+        "class_name": "hybrid_ner_model",
+        "n_tags": "#tag_vocab.len",
+        "word_emb_path": "{DOWNLOADS_PATH}/embeddings/glove.6B.100d.txt",
+        "word_emb_name": "glove",
+        "word_dim": 100,
+        "word_vocab": "#word_vocab",
+        "char_vocab_size": "#char_vocab.len",
+        "pos_vocab_size": "#pos_vocab.len",
+        "pos_dim": 40,
+        "char_dim": 100,
+        "elmo_dim": 128,
+        "lstm_hidden_size": 256,
+        "save_path": "{MODELS_PATH}/conll2003_m1",
+        "load_path": "{MODELS_PATH}/conll2003_m1",
+        "learning_rate": 1e-3,
+        "learning_rate_drop_patience": 5,
+        "learning_rate_drop_div": 10,
+        "dropout_keep_prob": 0.7
+      },
+      {
+        "in": ["y_predicted"],
+        "out": ["tags"],
+        "class_name": "convert_ids2tags",
+        "id2tag": "#tag_vocab.i2t"
+      }
+    ],
+    "out": ["x_tokens", "tags"]
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 64,
+    "metrics": [
+      {
+        "name": "ner_f1",
+        "inputs": ["y", "tags"]
+      },
+      {
+        "name": "ner_token_f1",
+        "inputs": ["y", "tags"]
+      }
+    ],
+    "validation_patience": 10,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
+    "show_examples": false,
+    "class_name": "nn_trainer",
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models/conll2003_m1"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/gensim.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_conll2003_m1.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/glove.6B.100d.txt",
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
+      }
+    ]
+  }
+}

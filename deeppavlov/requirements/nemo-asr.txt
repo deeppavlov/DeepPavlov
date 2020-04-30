@@ -1,0 +1,7 @@
+nemo-toolkit==0.10.0
+frozendict==1.2
+kaldi-io==0.9.4
+inflect==4.1.0
+unidecode==1.1.1
+librosa==0.7.2
+torch-stft==0.1.4

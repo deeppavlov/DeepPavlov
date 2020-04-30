@@ -1,0 +1,32 @@
+{
+  "chainer": {
+    "in": ["text", "filepath"],
+    "pipe": [
+      {
+        "class_name": "nemo_tts",
+        "nemo_params_path": "{TTS_PATH}/tacotron2_waveglow.yaml",
+        "load_path": "{TTS_PATH}",
+        "in": ["text", "filepath"],
+        "out": ["saved_path"]
+      }
+    ],
+    "out": ["saved_path"]
+  },
+  "metadata": {
+    "variables": {
+      "NEMO_PATH": "~/.deeppavlov/models/nemo",
+      "TTS_PATH": "{NEMO_PATH}/tacotron2_waveglow"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+      "{DEEPPAVLOV_PATH}/requirements/nemo-asr.txt",
+      "{DEEPPAVLOV_PATH}/requirements/nemo-tts.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/nemo/tacotron2_waveglow.tar.gz",
+        "subdir": "{NEMO_PATH}"
+      }
+    ]
+  }
+}

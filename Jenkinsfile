@@ -39,7 +39,7 @@ node('cuda-module') {
             throw e
         }
         finally {
-            emailext to: '${DEFAULT_RECIPIENTS}',
+            emailext to: "\${DEFAULT_RECIPIENTS}, ${CHANGE_AUTHOR_EMAIL}",
                 subject: "${env.JOB_NAME} - Build # ${currentBuild.number} - ${currentBuild.result}!",
                 body: '${BRANCH_NAME} - ${BUILD_URL}',
                 attachLog: true
