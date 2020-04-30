@@ -337,7 +337,7 @@ class GoalOrientedBot(NNModel):
 
     def __call__(self, batch: Union[List[List[dict]], List[str]],
                  user_ids: Optional[List] = None) -> Union[List[str], List[List[str]]]:
-
+        # todo infer output types from nlg somehow. still needs oop
         if isinstance(batch[0], list):
             # batch is a list of *completed* dialogues, infer on them to calculate metrics
             # user ids are ignored here: the single tracker is used and is reset after each dialogue inference
