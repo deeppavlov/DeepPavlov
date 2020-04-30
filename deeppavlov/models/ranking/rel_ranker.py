@@ -1,15 +1,14 @@
-from typing import List, Tuple, Union, Dict
-import numpy as np
+from typing import List, Tuple, Union, Dict, Optional
 
+import numpy as np
 import tensorflow as tf
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.tf_model import LRScheduledTFModel
-from deeppavlov.core.models.component import Component
 from deeppavlov.core.layers.tf_layers import variational_dropout
+from deeppavlov.core.models.component import Component
+from deeppavlov.core.models.tf_model import LRScheduledTFModel
 from deeppavlov.models.embedders.abstract_embedder import Embedder
-from deeppavlov.models.squad.utils import softmax_mask
-from deeppavlov.models.squad.utils import CudnnGRU
+from deeppavlov.models.squad.utils import CudnnGRU, softmax_mask
 
 
 @register('two_sentences_emb')
@@ -35,7 +34,7 @@ class TwoSentencesEmbedder(Component):
 @register('rel_ranker')
 class RelRanker(LRScheduledTFModel):
     """
-        This class determines is the relation appropriate for the question or not
+        This class determines whether the relation appropriate for the question or not.
     """
 
     def __init__(self, n_classes: int = 2,
@@ -45,7 +44,8 @@ class RelRanker(LRScheduledTFModel):
 
         Args:
             n_classes: number of classes for classification
-            dropout_keep_prob: Probability of keeping the hidden state, values from 0 to 1. 0.5 works well in most cases.
+            dropout_keep_prob: Probability of keeping the hidden state, values from 0 to 1. 0.5 works well
+                in most cases.
             return_probas: whether to return confidences of the relation to be appropriate or not
             **kwargs:
         """
@@ -115,12 +115,12 @@ class RelRanker(LRScheduledTFModel):
             feed_dict[self.y_ph] = y
         if train:
             feed_dict[self.keep_prob_ph] = self.dropout_keep_prob
-        if not train:
+        else:
             feed_dict[self.keep_prob_ph] = 1.0
 
         return feed_dict
 
-    def predict(self, questions_embs: List[np.ndarray], rels_embs: List[np.ndarray]) -> \
+    def __call__(self, questions_embs: List[np.ndarray], rels_embs: List[np.ndarray]) -> \
             List[np.ndarray]:
         feed_dict = self.fill_feed_dict(questions_embs, rels_embs)
         if self.return_probas:
@@ -128,10 +128,6 @@ class RelRanker(LRScheduledTFModel):
         else:
             pred = self.sess.run(self.y_pred, feed_dict)
         return pred
-
-    def __call__(self, questions_embs: List[np.ndarray], rels_embs: List[np.ndarray]) -> \
-            List[np.ndarray]:
-        return self.predict(questions_embs, rels_embs)
 
     def train_on_batch(self, questions_embs: List[np.ndarray], 
                              rels_embs: List[np.ndarray],
@@ -142,6 +138,3 @@ class RelRanker(LRScheduledTFModel):
         return {'loss': loss_value,
                 'learning_rate': self.get_learning_rate(),
                 'momentum': self.get_momentum()}
-
-    def process_event(self, event_name, data):
-        super().process_event(event_name, data)

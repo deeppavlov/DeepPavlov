@@ -31,9 +31,9 @@ models are used:
 * BERT entity detection model for extraction of entity substrings from the questions. 
 
 * Substring extracted by the entity detection model is used for entity linking. Entity linking performs matching the substring
-with one of the Wikidata entities. Matching is based on Levenshtein distance between the substring and an entity
-title. The result of the matching procedure is a set of candidate entities. The reset is search of the
-entity among this set with one of the top-k relations predicted by classification model.
+  with one of the Wikidata entities. Matching is based on Levenshtein distance between the substring and an entity
+  title. The result of the matching procedure is a set of candidate entities. The reset is search of the
+  entity among this set with one of the top-k relations predicted by classification model.
 
 * BiGRU model for ranking of candidate relations.
 

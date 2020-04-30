@@ -12,45 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Tuple, List
 import re
+from typing import Tuple, List
+
 
 def extract_year(question_tokens: List[str], question: str) -> str:
+    question_patterns = [r'.*\d{1,2}/\d{1,2}/(\d{4}).*', r'.*\d{1,2}-\d{1,2}-(\d{4}).*', r'.*(\d{4})-\d{1,2}-\d{1,2}.*']
+    token_patterns = [r'(\d{4})', r'^(\d{4})-.*', r'.*-(\d{4})$']
     year = ""
-    fnd = re.search(r'.*\d/\d/(\d{4}).*', question)
-    if fnd is not None:
-        year = fnd.group(1)
-    if len(year) == 0:
-        fnd = re.search(r'.*\d\-\d\-(\d{4}).*', question)
+    for pattern in question_patterns:
+        fnd = re.search(pattern, question)
         if fnd is not None:
             year = fnd.group(1)
-    if len(year) == 0:
-        fnd = re.search(r'.*(\d{4})\-\d\-\d.*', question)
-        if fnd is not None:
-            year = fnd.group(1)
-    if len(year) == 0:
-        for tok in question_tokens:
-            isdigit = [l.isdigit() for l in tok[:4]]
-            isdigit_0 = [l.isdigit() for l in tok[-4:]]
-
-            if sum(isdigit) == 4 and len(tok) == 4:
-                year = tok
-                break
-            if sum(isdigit) == 4 and len(tok) > 4 and tok[4] == '-':
-                year = tok[:4]
-                break
-            if sum(isdigit_0) == 4 and len(tok) > 4 and tok[-5] == '-':
-                year = tok[-4:]
-                break
-
+            break
+    else:
+        for token in question_tokens:
+            for pattern in token_patterns:
+                fnd = re.search(pattern, token)
+                if fnd is not None:
+                    return fnd.group(1)
     return year
+
 
 def extract_number(question_tokens: List[str], question: str) -> str:
     number = ""
     fnd = re.search(r'.*(\d\.\d+e\+\d+)\D*', question)
     if fnd is not None:
         number = fnd.group(1)
-    if len(number) == 0:
+    else:
         for tok in question_tokens:
             if tok[0].isdigit():
                 number = tok
@@ -61,19 +50,17 @@ def extract_number(question_tokens: List[str], question: str) -> str:
 
     return number
 
+
 def asc_desc(question: str) -> bool:
     question_lower = question.lower()
     max_words = ["maximum", "highest", "max(", "greatest", "most", "longest"]
-    min_words = ["lowest", "smallest", "least", "min", "min("]
+
     for word in max_words:
         if word in question_lower:
             return False
 
-    for word in min_words:
-        if word in question_lower:
-            return True
-
     return True
+
 
 def make_entity_combs(entity_ids: List[List[str]]) -> List[Tuple[str, str, int]]:
     ent_combs = []
