@@ -88,10 +88,11 @@ class RelRankerInfer(Component, Serializable):
                 rels_batch.append(candidate_rel)
                 rels_labels_batch.append(self.rel_q2name[candidate_rel])
 
-        probas = self.ranker(questions_batch, rels_labels_batch)
-        probas = [proba[0] for proba in probas]
-        for j, rel in enumerate(rels_batch):
-            rels_with_scores.append((rel, probas[j]))
+        if questions_batch:
+            probas = self.ranker(questions_batch, rels_labels_batch)
+            probas = [proba[0] for proba in probas]
+            for j, rel in enumerate(rels_batch):
+                rels_with_scores.append((rel, probas[j]))
 
         rels_with_scores = sorted(rels_with_scores, key=lambda x: x[1], reverse=True)
 
