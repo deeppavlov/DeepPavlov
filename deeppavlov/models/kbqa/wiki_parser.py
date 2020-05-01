@@ -54,7 +54,7 @@ class WikiParser(Component):
         """
         
         if entity.startswith("Q"):
-            entity = "http://www.wikidata.org/entity/" + entity
+            entity = "http://www.wikidata.org/entity/" + entity  # TODO Are there entities not starting with "Q"
 
         if find_label:
             if entity.startswith("http://www.wikidata.org/entity/"):
