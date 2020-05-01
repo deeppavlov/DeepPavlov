@@ -41,7 +41,7 @@ class WikiParser(Component):
         """
 
         Args:
-            what_return: "rels" - relations, "obj" - objects or "triplets"
+            what_return: "rels" - relations, "obj" - objects or "triplets", "triplets" -- triplets.
             direction: "forw" - triplets [subject, relation, object]
                        "backw" - triplets [object, relation, subject]
             entity: id of entity
