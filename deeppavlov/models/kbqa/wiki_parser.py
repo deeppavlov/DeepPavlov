@@ -41,7 +41,7 @@ class WikiParser(Component):
         """
 
         Args:
-            what_return: "rels" - relations, "obj" - objects or "triplets"
+            what_return: "rels" - relations, "obj" - objects or "triplets", "triplets" -- triplets.
             direction: "forw" - triplets [subject, relation, object]
                        "backw" - triplets [object, relation, subject]
             entity: id of entity
@@ -54,7 +54,7 @@ class WikiParser(Component):
         """
         
         if entity.startswith("Q"):
-            entity = "http://www.wikidata.org/entity/" + entity
+            entity = "http://www.wikidata.org/entity/" + entity  # TODO Are there entities not starting with "Q"
 
         if find_label:
             if entity.startswith("http://www.wikidata.org/entity/"):
