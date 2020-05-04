@@ -201,12 +201,10 @@ class QueryGenerator(Component, Serializable):
         top_rels = [score[0] for score in scores]
         log.debug(f"top scored rels: {top_rels}")
 
-        candidate_outputs = []
-
+        candidate_outputs = []  # TODO unclear what happens if `len(entities_ids) < 2`.
         if len(entity_ids) > 1:
             ent_combs = make_entity_combs(entity_ids)
             candidate_outputs = self.find_relevant_subgraph_cqwq(ent_combs, top_rels[:self.rels_to_leave])
-
         return candidate_outputs
 
     def questions_with_count_solver(self, question: str, entity_ids: List[List[str]]) -> List[Tuple[str, str]]:
@@ -362,33 +360,8 @@ class QueryGenerator(Component, Serializable):
 
         return candidate_outputs
 
-    def find_relevant_subgraph_cqwn(self, entities_list: List[str], rels: List[str], num: str) -> List[Tuple[str]]:
-        candidate_outputs = []
-
-        for entity in entities_list:
-            for rel in rels:
-                objects_1 = self.wiki_parser("objects", "forw", entity, rel, type_of_rel=None)
-                for obj in objects_1:
-                    if self.template_num == 0:
-                        answers = self.wiki_parser("objects", "forw", obj, rel, type_of_rel="statement")
-                        second_rels = self.wiki_parser("rels", "forw", obj, type_of_rel="qualifier", filter_obj=num)
-                        if len(second_rels) > 0 and len(answers) > 0:
-                            for second_rel in second_rels:
-                                for ans in answers:
-                                    candidate_outputs.append((rel, second_rel, ans))
-                    if self.template_num == 1:
-                        answer_triplets = self.wiki_parser("triplets", "forw", obj, type_of_rel="qualifier")
-                        second_rels = self.wiki_parser("rels", "forw", obj, rel,
-                                                       type_of_rel="statement", filter_obj=num)
-                        if len(second_rels) > 0 and len(answer_triplets) > 0:
-                            for ans in answer_triplets:
-                                candidate_outputs.append((rel, ans[1], ans[2]))
-
-        return candidate_outputs
-
     def find_relevant_subgraph_cqwq(self, ent_combs: List[Tuple[str]], rels: List[str]) -> List[Tuple[str]]:
         candidate_outputs = []
-
         for ent_comb in ent_combs:
             for rel in rels:
                 objects_1 = self.wiki_parser("objects", "forw", ent_comb[0], rel, type_of_rel=None)
