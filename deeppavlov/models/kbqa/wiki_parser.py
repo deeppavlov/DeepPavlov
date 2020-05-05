@@ -52,14 +52,18 @@ class WikiParser(Component):
             find_label: whether to find label of entity from entity id
             find_alias: whether to find alias of entity from entity_id
         """
-        
+        if type_of_rel in ['qualifier', 'statement']:
+            print("(WikiParser.__call__)what_return, direction, entity, rel, obj, type_of_rel:", what_return, direction, entity, rel, obj, type_of_rel) 
         if entity.startswith("Q"):
             entity = "http://www.wikidata.org/entity/" + entity  # TODO Are there entities not starting with "Q"
 
         if find_label:
+            print("(WikiParser.__call__)entity:", entity)
             if entity.startswith("http://www.wikidata.org/entity/"):
                 labels, cardinality = self.document.search_triples(entity,
                                                                    "http://www.w3.org/2000/01/rdf-schema#label", "")
+                print("(WikiParser.__call__)find_label cardinality:", cardinality) 
+
                 for label in labels:
                     if label[2].endswith("@en"):
                         found_label = label[2].strip('@en').strip('"')
@@ -69,8 +73,16 @@ class WikiParser(Component):
                 entity = entity.strip("^^<http://www.w3.org/2001/XMLSchema#dateTime>").strip('"').strip("T00:00:00Z")
                 return entity
 
+            elif "<xsd:dateTime>" in entity:
+                entity = entity.strip("^^<xsd:dateTime>").strip('"').strip("T00:00:00Z")
+                return entity
+
             elif "http://www.w3.org/2001/XMLSchema#decimal>" in entity:
                 entity = entity.strip("^^<http://www.w3.org/2001/XMLSchema#decimal>").strip('"').strip('"')
+                return entity
+
+            elif "<xsd:decimal>" in entity:
+                entity = entity.strip("^^<xsd:decimal>").strip('"').lstrip("+")
                 return entity
 
             elif entity.replace('"','').isdigit():
@@ -102,18 +114,22 @@ class WikiParser(Component):
                 obj = "http://www.wikidata.org/entity/" + obj
         else:
             obj = ""
-
-        if direction == "forw":
+        if type_of_rel in ['qualifier', 'statement']:
+            print("(WikiParser.__call__)entity, rel, obj:", entity, rel, obj)
+        if direction == "forw": 
             triplets, cardinality = self.document.search_triples(entity, rel, obj)
         if direction == "backw":
             triplets, cardinality = self.document.search_triples(obj, rel, entity)
+        # print("(WikiParser.__call__)triplets, cardinality:", triplets, cardinality) 
 
         found_triplets = []
         for triplet in triplets:
+            print("(WikiParser.__call__)triplet:", triplet)
             if type_of_rel is None or (type_of_rel is not None and type_of_rel in triplet[1]):
                 if filter_obj is None or (filter_obj is not None and filter_obj in triplet[2]):
                     found_triplets.append(triplet)
-
+        if found_triplets:
+            print("(WikiParser.__call__)found_triplets:", found_triplets) 
         if what_return == "rels":
             rels = [triplet[1].split('/')[-1] for triplet in found_triplets]
             rels = list(set(rels))
@@ -123,9 +139,11 @@ class WikiParser(Component):
             return found_triplets
 
         if what_return == "objects":
+            
             if direction == "forw":
                 objects = [triplet[2] for triplet in found_triplets]
             if direction == "backw":
                 objects = [triplet[0] for triplet in found_triplets]
-
+            if objects:
+                print("(WikiParser.__call__)objects:", objects)
             return objects

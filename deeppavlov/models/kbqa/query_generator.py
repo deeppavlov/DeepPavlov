@@ -106,6 +106,7 @@ class QueryGenerator(Component, Serializable):
             log.debug(f"template_type {self.template_num}")
 
             if entities_from_template:
+                print("(QueryGenerator.__call__)entities_from_template:", entities_from_template)
                 entity_ids = self.get_entity_ids(entities_from_template)
                 log.debug(f"entities_from_template {entities_from_template}")
                 log.debug(f"rels_from_template {rels_from_template}")
@@ -114,17 +115,23 @@ class QueryGenerator(Component, Serializable):
                 candidate_outputs = self.find_candidate_answers(question, entity_ids, rels_from_template)
 
             if not candidate_outputs and entities_from_ner:
+                print("(QueryGenerator.__call__)entities_from_ner:", entities_from_ner)
                 entity_ids = self.get_entity_ids(entities_from_ner)
+                print("(QueryGenerator.__call__)entity_ids:", entity_ids)
                 log.debug(f"entities_from_ner {entities_from_ner}")
                 log.debug(f"entity_ids {entity_ids}")
-                self.template_num = int(template_type[0])
+                print("(QueryGenerator.__call__)self.template_num:", self.template_num)
+                print("(QueryGenerator.__call__)template_type:", template_type)
+                self.template_num = int(template_type[0])  # TODO the purpose of this line is unclear.
+                print("(QueryGenerator.__call__)self.template_num:", self.template_num)
                 candidate_outputs = self.find_candidate_answers(question, entity_ids, rels_from_template=None)
             candidate_outputs_batch.append(candidate_outputs)
-
         if self.return_answers:
             answers = self.rel_ranker(question_batch, candidate_outputs_batch)
+            print("(QueryGenerator.__call__)answers:", answers)
             return answers
         else:
+            print("(QueryGenerator.__call__)candidate_outputs_batch:", candidate_outputs_batch)
             return candidate_outputs_batch
 
     def get_entity_ids(self, entities: List[str]) -> List[List[str]]:
@@ -138,6 +145,7 @@ class QueryGenerator(Component, Serializable):
                                entity_ids: List[List[str]],
                                rels_from_template: List[Tuple[str]]) -> List[Tuple[str]]:
         candidate_outputs = []
+        print("(QueryGenerator.find_candidate_answers)self.template_num:", self.template_num)
 
         if self.template_num == 0 or self.template_num == 1:
             candidate_outputs = self.complex_question_with_number_solver(question, entity_ids)
@@ -287,6 +295,8 @@ class QueryGenerator(Component, Serializable):
                        rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str]]:
         candidate_outputs = []
         if len(entity_ids) == 1:
+            print("(QueryGenerator.two_hop_solver)entity_ids:", entity_ids)
+            print("(QueryGenerator.two_hop_solver)rels_from_template:", rels_from_template)
             if rels_from_template is not None:
                 candidate_outputs = self.from_template_one_ent(entity_ids, rels_from_template)
 
@@ -361,18 +371,29 @@ class QueryGenerator(Component, Serializable):
         return candidate_outputs
 
     def find_relevant_subgraph_cqwq(self, ent_combs: List[Tuple[str]], rels: List[str]) -> List[Tuple[str]]:
+        print('(QueryGenerator.find_relevant_subgraph_cqwq)len(ent_combs), len(rels):', len(ent_combs), len(rels))
+        print('(QueryGenerator.find_relevant_subgraph_cqwq)ent_combs[0]:', ent_combs[0])
         candidate_outputs = []
         for ent_comb in ent_combs:
             for rel in rels:
                 objects_1 = self.wiki_parser("objects", "forw", ent_comb[0], rel, type_of_rel=None)
+                if objects_1:
+                    print('(QueryGenerator.find_relevant_subgraph_cqwq)objects_1:', objects_1)
+
                 for obj in objects_1:
                     if self.template_num == 2:
+                        print('(QueryGenerator.find_relevant_subgraph_cqwq)ent_comb[0]:', ent_comb[0])
                         answer_triplets = self.wiki_parser("triplets", "forw", obj, type_of_rel="qualifier")
                         second_rels = self.wiki_parser("rels", "backw", ent_comb[1], rel, obj, type_of_rel="statement")
+                        if answer_triplets:
+                            print('(QueryGenerator.find_relevant_subgraph_cqwq)answer_triplets:', answer_triplets)
+                        if second_rels:
+                            print('(QueryGenerator.find_relevant_subgraph_cqwq)second_rels:', second_rels)
                         if len(second_rels) > 0 and len(answer_triplets) > 0:
                             for ans in answer_triplets:
                                 candidate_outputs.append((rel, ans[1], ans[2]))
                     if self.template_num == 3:
+                        print('(QueryGenerator.find_relevant_subgraph_cqwq)self.template_num == 3') 
                         answers = self.wiki_parser("objects", "forw", obj, rel, type_of_rel="statement")
                         second_rels = self.wiki_parser("rels", "backw", ent_comb[1], rel=None,
                                                        obj=obj, type_of_rel="qualifier")
@@ -436,7 +457,8 @@ class QueryGenerator(Component, Serializable):
                 objects = self.wiki_parser("objects", direction, entity, relation, type_of_rel="direct")
                 if objects:
                     candidate_outputs.append((relation, objects[0]))
-                    return candidate_outputs
+                    return candidate_outputs  # TODO Why only one candidate output is used? If only one candidate 
+                                              # output is used, why the variable name is `candidate_outputs` (plural)?
 
         if len(rels_from_template) == 2:
             relation_1 = rels_from_template[0][0]
