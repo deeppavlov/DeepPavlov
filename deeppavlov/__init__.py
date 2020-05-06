@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sys
+import traceback
 from pathlib import Path
 
 from .core.common.log import init_logger
@@ -37,7 +38,7 @@ try:
         return train_evaluate_model_from_config(config, to_train=False, download=download, recursive=recursive)
 
 except ImportError:
-    'Assuming that requirements are not yet installed'
+    traceback.print_exc(file=sys.stdout)
 
 __version__ = '0.9.1'
 __author__ = 'Neural Networks and Deep Learning lab, MIPT'
