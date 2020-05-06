@@ -4,7 +4,7 @@ from typing import Union, List, Tuple, Any, Dict
 import numpy as np
 
 
-class Tracker(metaclass=ABCMeta):
+class TrackerInterface(metaclass=ABCMeta):
     """
     An abstract class for trackers: a model that holds a dialogue state and
     generates state features.
@@ -16,7 +16,7 @@ class Tracker(metaclass=ABCMeta):
         Updates dialogue state with new ``slots``, calculates features.
 
         Returns:
-            Tracker: ."""
+            TrackerInterface: ."""
         pass
 
     @abstractmethod

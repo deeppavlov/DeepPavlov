@@ -3,11 +3,11 @@ from typing import List, Iterator
 import numpy as np
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.go_bot.tracker.tracker import Tracker
+from deeppavlov.models.go_bot.tracker.tracker_interface import TrackerInterface
 
 
 @register('featurized_tracker')
-class FeaturizedTracker(Tracker):
+class FeaturizedTracker(TrackerInterface):
     """
     Tracker that overwrites slots with new values.
     Features are binary features (slot is present/absent) plus difference features
