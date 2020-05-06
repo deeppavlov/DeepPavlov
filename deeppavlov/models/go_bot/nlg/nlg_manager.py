@@ -6,6 +6,7 @@ from typing import Union
 from deeppavlov.core.commands.utils import expand_path
 import deeppavlov.models.go_bot.templates as go_bot_templates
 from deeppavlov.core.common.registry import register
+from deeppavlov.models.go_bot.nlg.nlg_manager_interface import NLGManagerInterface
 
 log = getLogger(__name__)
 
@@ -14,7 +15,7 @@ log = getLogger(__name__)
 # todo add each method input-output logging when proper loglevel level specified
 
 @register("gobot_nlg_manager")
-class NLGManager:
+class NLGManager(NLGManagerInterface):
     """
     NLGManager is a unit of the go-bot pipeline that handles the generation of text
     when the pattern is chosen among the known patterns and the named-entities-values-like knowledge is provided.
@@ -41,9 +42,9 @@ class NLGManager:
         template_type = getattr(go_bot_templates, template_type)
         self.templates = go_bot_templates.Templates(template_type).load(template_path)
 
-        self.api_call_id = -1
+        self._api_call_id = -1
         if api_call_action is not None:
-            self.api_call_id = self.templates.actions.index(api_call_action)
+            self._api_call_id = self.templates.actions.index(api_call_action)
 
         if self.debug:
             log.debug(f"AFTER {self.__class__.__name__} init(): "
@@ -58,6 +59,12 @@ class NLGManager:
         """
         return self.templates.actions.index(action_text)  # todo unhandled exception when not found
 
+    def get_api_call_action_id(self) -> int:
+        """
+        :return: an ID corresponding to the api call action
+        """
+        return self._api_call_id
+
     def decode_response(self, action_id: int, tracker_slotfilled_state: dict) -> str:
         """
         Convert action template id and known slot values from tracker to response text.
@@ -69,7 +76,7 @@ class NLGManager:
         """
         action_text = self._generate_slotfilled_text_for_action(action_id, tracker_slotfilled_state)
         # in api calls replace unknown slots to "dontcare"
-        if action_id == self.api_call_id:
+        if action_id == self._api_call_id:
             action_text = re.sub("#([A-Za-z]+)", "dontcare", action_text).lower()
         return action_text
 

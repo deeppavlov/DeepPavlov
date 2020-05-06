@@ -18,7 +18,7 @@ from typing import Dict, Any
 import numpy as np
 
 from deeppavlov.core.models.component import Component
-from deeppavlov.models.go_bot.nlg_manager import NLGManager
+from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManager
 from deeppavlov.models.go_bot.policy_network import PolicyNetworkParams
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 
