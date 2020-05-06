@@ -38,7 +38,7 @@ try:
         return train_evaluate_model_from_config(config, to_train=False, download=download, recursive=recursive)
 
 except ImportError:
-    traceback.print_exc(file=sys.stdout)
+    traceback.print_exc(file=sys.stderr)
 
 __version__ = '0.9.1'
 __author__ = 'Neural Networks and Deep Learning lab, MIPT'
