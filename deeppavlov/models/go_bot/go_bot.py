@@ -359,7 +359,7 @@ class GoalOrientedBot(NNModel):
 
         return res
 
-    def _realtime_infer(self, user_id, user_text):
+    def _realtime_infer(self, user_id, user_text) -> str:
         # realtime inference logic
         #
         # we have the pool of trackers, each one tracks the dialogue with its own user
