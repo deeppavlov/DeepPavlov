@@ -149,6 +149,15 @@ def per_item_dialog_accuracy(y_true, y_predicted):
     correct = sum([y1.strip().lower() == y2.strip().lower() for y1, y2 in zip(y_true, y_predicted)])
     return correct / examples_len if examples_len else 0
 
+@register_metric("per_item_action_accuracy")
+def per_item_action_accuracy(dialogs_true, dialog_jsons_predicted):
+    # todo oop instead of serialization/deserialization
+    actions_true = [utterance['act'] for dialog in dialogs_true for utterance in dialog]
+    dialog_jsons_predicted = itertools.chain(*dialog_jsons_predicted)
+    examples_len = len(actions_true)
+    correct = sum([y1.strip().lower() == y2.split(":", 1)[0].strip("\"\'{").lower()
+                   for y1, y2 in zip(actions_true, dialog_jsons_predicted)])  #todo ugly
+    return correct / examples_len if examples_len else 0
 
 @register_metric('acc')
 def round_accuracy(y_true, y_predicted):

@@ -24,7 +24,7 @@ from deeppavlov.models.go_bot.tokens_vectorizer import TokensVectorizer
 from deeppavlov.models.go_bot.dto.dataset_features import UtteranceDataEntry, DialogueDataEntry, \
     BatchDialoguesDataset, UtteranceFeatures, UtteranceTarget
 from deeppavlov.models.go_bot.shared_gobot_params import SharedGoBotParams
-from deeppavlov.models.go_bot.nlg_manager import NLGManager
+from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManager
 from deeppavlov.models.go_bot.nlu_manager import NLUManager
 from deeppavlov.models.go_bot.policy_network import PolicyNetwork, PolicyNetworkParams
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
@@ -76,9 +76,6 @@ class GoalOrientedBot(NNModel):
         network_parameters: dictionary with network parameters (for compatibility with release 0.1.1,
             deprecated in the future)
 
-        template_path: file with mapping between actions and text templates
-            for response generation.
-        template_type: type of used response templates in string format.
         word_vocab: vocabulary of input word tokens
             (:class:`~deeppavlov.core.data.simple_vocab.SimpleVocabulary` recommended).
         bow_embedder: instance of one-hot word encoder
@@ -96,9 +93,6 @@ class GoalOrientedBot(NNModel):
             ``api_call_action`` actions and get ``'db_result'`` result (
             :class:`~deeppavlov.core.data.sqlite_database.Sqlite3Database`
             recommended).
-        api_call_action: label of the action that corresponds to database api call
-            (it must be present in your ``template_path`` file), during interaction
-            it will be used to get ``'db_result'`` from ``database``.
         use_action_mask: if ``True``, network output will be applied with a mask
             over allowed actions.
         debug: whether to display debug output.
@@ -110,7 +104,7 @@ class GoalOrientedBot(NNModel):
     def __init__(self,
                  tokenizer: Component,
                  tracker: FeaturizedTracker,
-                 template_path: str,
+                 nlg_manager: NLGManager,
                  save_path: str,
                  hidden_size: int = 128,
                  dropout_rate: float = 0.,
@@ -119,14 +113,12 @@ class GoalOrientedBot(NNModel):
                  attention_mechanism: dict = None,
                  network_parameters: Optional[Dict[str, Any]] = None,
                  load_path: str = None,
-                 template_type: str = "DefaultTemplate",
                  word_vocab: Component = None,
                  bow_embedder: Component = None,
                  embedder: Component = None,
                  slot_filler: Component = None,
                  intent_classifier: Component = None,
                  database: Component = None,
-                 api_call_action: str = None,
                  use_action_mask: bool = False,
                  debug: bool = False,
                  **kwargs) -> None:
@@ -139,7 +131,7 @@ class GoalOrientedBot(NNModel):
                                                     dense_size, attention_mechanism, network_parameters)
 
         self.nlu_manager = NLUManager(tokenizer, slot_filler, intent_classifier)
-        self.nlg_manager = NLGManager(template_path, template_type, api_call_action)
+        self.nlg_manager = nlg_manager
         self.data_handler = TokensVectorizer(debug, word_vocab, bow_embedder, embedder)
 
         self.dialogue_state_tracker = DialogueStateTracker.from_gobot_params(tracker, self.nlg_manager,
@@ -300,7 +292,7 @@ class GoalOrientedBot(NNModel):
         # mask is used to prevent tracker from predicting the api call twice
         # via logical AND of action candidates and mask
         # todo: seems to be an efficient idea but the intuition beyond this whole hack is not obvious
-        action_mask = tracker.calc_action_mask(self.nlg_manager.api_call_id)
+        action_mask = tracker.calc_action_mask(self.nlg_manager.get_api_call_action_id())
 
         return UtteranceFeatures(action_mask, attn_key, tokens_embeddings_padded, concat_feats)
 
@@ -345,7 +337,7 @@ class GoalOrientedBot(NNModel):
 
     def __call__(self, batch: Union[List[List[dict]], List[str]],
                  user_ids: Optional[List] = None) -> Union[List[str], List[List[str]]]:
-
+        # todo infer output types from nlg somehow. still needs oop
         if isinstance(batch[0], list):
             # batch is a list of *completed* dialogues, infer on them to calculate metrics
             # user ids are ignored here: the single tracker is used and is reset after each dialogue inference
@@ -378,7 +370,7 @@ class GoalOrientedBot(NNModel):
         user_tracker.update_previous_action(action_id_predicted)
         user_tracker.network_state = network_state
 
-        if action_id_predicted == self.nlg_manager.api_call_id:
+        if action_id_predicted == self.nlg_manager.get_api_call_action_id():
             # tracker says we need to make an api call.
             # we 1) perform the api call and 2) predict what to do next
             user_tracker.make_api_call()
