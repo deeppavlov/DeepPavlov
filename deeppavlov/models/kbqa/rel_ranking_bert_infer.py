@@ -61,7 +61,7 @@ class RelRankerBertInfer(Component, Serializable):
         pass
 
     def __call__(self, questions_list: List[str], candidate_answers_list: List[List[Tuple[str]]]) -> List[str]:
-        print("(RelRankerBertInfer.__call__)candidate_answers_list:", candidate_answers_list) 
+        log.debug(f"candidate_answers_list: {candidate_answers_list}") 
         answers = []
         for question, candidate_answers in zip(questions_list, candidate_answers_list):
             answers_with_scores = []
