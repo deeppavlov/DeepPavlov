@@ -14,9 +14,28 @@ import re
 
 from setuptools import setup, find_packages
 
-import deeppavlov
-
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
+
+__version__ = '0.9.1'
+__author__ = 'Neural Networks and Deep Learning lab, MIPT'
+__description__ = 'An open source library for building end-to-end dialog systems and training chatbots.'
+__keywords__ = ['NLP', 'NER', 'SQUAD', 'Intents', 'Chatbot']
+__license__ = 'Apache License, Version 2.0'
+__email__ = 'info@deeppavlov.ai'
+
+
+def create_meta():
+    meta_path = os.path.join(__location__, 'deeppavlov', '_meta.py')
+    with open(meta_path, 'w') as meta:
+        meta.writelines([
+            f'__version__ = {repr(__version__)}\n',
+            f'__author__ = {repr(__author__)}\n',
+            f'__description__ = {repr(__description__)}\n',
+            f'__keywords__ = {repr(__keywords__)}\n',
+            f'__license__ = {repr(__license__)}\n',
+            f'__email__ = {repr(__email__)}\n'
+        ])
 
 
 def read_requirements():
@@ -43,30 +62,32 @@ def readme():
     return text
 
 
-setup(
-    name='deeppavlov',
-    packages=find_packages(exclude=('tests', 'docs', 'utils')),
-    version=deeppavlov.__version__,
-    description=deeppavlov.__description__,
-    long_description=readme(),
-    long_description_content_type='text/markdown',
-    author=deeppavlov.__author__,
-    author_email=deeppavlov.__email__,
-    license=deeppavlov.__license__,
-    url='https://github.com/deepmipt/DeepPavlov',
-    download_url='https://github.com/deepmipt/DeepPavlov/archive/' + deeppavlov.__version__ + '.tar.gz',
-    keywords=deeppavlov.__keywords__,
-    include_package_data=True,
-    extras_require={
-        'tests': [
-            'flake8',
-            'pytest',
-            'pexpect'],
-        'docs': [
-            'sphinx>=1.7.9',
-            'sphinx_rtd_theme>=0.4.0',
-            'nbsphinx>=0.3.4',
-            'ipykernel>=4.8.0'
-        ]},
-    **read_requirements()
-)
+if __name__ == '__main__':
+    create_meta()
+    setup(
+        name='deeppavlov',
+        packages=find_packages(exclude=('tests', 'docs', 'utils')),
+        version=__version__,
+        description=__description__,
+        long_description=readme(),
+        long_description_content_type='text/markdown',
+        author=__author__,
+        author_email=__email__,
+        license=__license__,
+        url='https://github.com/deepmipt/DeepPavlov',
+        download_url=f'https://github.com/deepmipt/DeepPavlov/archive/{__version__}.tar.gz',
+        keywords=__keywords__,
+        include_package_data=True,
+        extras_require={
+            'tests': [
+                'flake8',
+                'pytest',
+                'pexpect'],
+            'docs': [
+                'sphinx>=1.7.9',
+                'sphinx_rtd_theme>=0.4.0',
+                'nbsphinx>=0.3.4',
+                'ipykernel>=4.8.0'
+            ]},
+        **read_requirements()
+    )
