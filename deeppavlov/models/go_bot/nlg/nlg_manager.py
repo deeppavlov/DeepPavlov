@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Union
 
 from deeppavlov.core.commands.utils import expand_path
-import deeppavlov.models.go_bot.templates as go_bot_templates
+import deeppavlov.models.go_bot.nlg.templates.templates as go_bot_templates
 from deeppavlov.core.common.registry import register
 from deeppavlov.models.go_bot.nlg.nlg_manager_interface import NLGManagerInterface
 

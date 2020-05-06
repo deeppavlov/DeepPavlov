@@ -1,7 +1,5 @@
-import numpy as np
-
-from deeppavlov.models.go_bot.nlu_manager import NLUManager
-from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManager
+from deeppavlov.models.go_bot.nlu.nlu_manager import NLUManagerInterface
+from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManagerInterface
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 
 # todo logging
@@ -18,7 +16,7 @@ class SharedGoBotParams:
         self.num_tracker_features = num_tracker_features
 
     @staticmethod
-    def from_configured(nlg_manager: NLGManager, nlu_manager: NLUManager, tracker: FeaturizedTracker):
+    def from_configured(nlg_manager: NLGManagerInterface, nlu_manager: NLUManagerInterface, tracker: FeaturizedTracker):
         """builds the params object given some GO-bot units that are already configured"""
         return SharedGoBotParams(nlg_manager.num_of_known_actions(),
                                  nlu_manager.num_of_known_intents(),

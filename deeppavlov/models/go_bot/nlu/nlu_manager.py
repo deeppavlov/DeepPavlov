@@ -2,13 +2,16 @@ from logging import getLogger
 from typing import Any, Tuple, List
 
 from deeppavlov import Chainer
+from deeppavlov.models.go_bot.nlu.nlu_manager_interface import NLUManagerInterface
 
 log = getLogger(__name__)
 
 
 # todo add the ability to configure nlu loglevel in config (now the setting is shared across all the GO-bot)
 # todo add each method input-output logging when proper loglevel level specified
-class NLUManager:
+
+
+class NLUManager(NLUManagerInterface):
     """
     NLUManager is a unit of the go-bot pipeline that handles the understanding of text.
     Given the text it provides tokenization, intents extraction and the slots extraction.
@@ -36,28 +39,28 @@ class NLUManager:
 
     def nlu(self, text: str) -> Tuple[Any, Any, Any]:
         # todo meaningful type hints
-        tokens = self.tokenize_single_text_entry(text)
+        tokens = self._tokenize_single_text_entry(text)
 
         slots = None
         if callable(self.slot_filler):
-            slots = self.extract_slots_from_tokenized_text_entry(tokens)
+            slots = self._extract_slots_from_tokenized_text_entry(tokens)
 
         intents = []
         if callable(self.intent_classifier):
-            intents = self.extract_intents_from_tokenized_text_entry(tokens)
+            intents = self._extract_intents_from_tokenized_text_entry(tokens)
 
         return slots, intents, tokens
 
-    def extract_intents_from_tokenized_text_entry(self, tokens: List[str]):
+    def _extract_intents_from_tokenized_text_entry(self, tokens: List[str]):
         # todo meaningful type hints, relies on unannotated intent classifier
         intent_features = self.intent_classifier([' '.join(tokens)])[1][0]
         return intent_features
 
-    def extract_slots_from_tokenized_text_entry(self, tokens: List[str]):
+    def _extract_slots_from_tokenized_text_entry(self, tokens: List[str]):
         # todo meaningful type hints, relies on unannotated slot filler
         return self.slot_filler([tokens])[0]
 
-    def tokenize_single_text_entry(self, text: str):
+    def _tokenize_single_text_entry(self, text: str):
         # todo meaningful type hints, relies on unannotated tokenizer
         return self.tokenizer([text.lower().strip()])[0]
 

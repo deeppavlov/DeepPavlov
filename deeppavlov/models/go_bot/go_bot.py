@@ -20,13 +20,13 @@ import numpy as np
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
-from deeppavlov.models.go_bot.tokens_vectorizer import TokensVectorizer
+from deeppavlov.models.go_bot.nlu.tokens_vectorizer import TokensVectorizer
 from deeppavlov.models.go_bot.dto.dataset_features import UtteranceDataEntry, DialogueDataEntry, \
     BatchDialoguesDataset, UtteranceFeatures, UtteranceTarget
-from deeppavlov.models.go_bot.shared_gobot_params import SharedGoBotParams
-from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManager
-from deeppavlov.models.go_bot.nlu_manager import NLUManager
-from deeppavlov.models.go_bot.policy_network import PolicyNetwork, PolicyNetworkParams
+from deeppavlov.models.go_bot.dto.shared_gobot_params import SharedGoBotParams
+from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManagerInterface
+from deeppavlov.models.go_bot.nlu.nlu_manager import NLUManager
+from deeppavlov.models.go_bot.policy.policy_network import PolicyNetwork, PolicyNetworkParams
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DialogueStateTracker, MultipleUserStateTrackersPool
 from pathlib import Path
@@ -104,7 +104,7 @@ class GoalOrientedBot(NNModel):
     def __init__(self,
                  tokenizer: Component,
                  tracker: FeaturizedTracker,
-                 nlg_manager: NLGManager,
+                 nlg_manager: NLGManagerInterface,
                  save_path: str,
                  hidden_size: int = 128,
                  dropout_rate: float = 0.,
@@ -130,12 +130,14 @@ class GoalOrientedBot(NNModel):
         policy_network_params = PolicyNetworkParams(hidden_size, dropout_rate, l2_reg_coef,
                                                     dense_size, attention_mechanism, network_parameters)
 
-        self.nlu_manager = NLUManager(tokenizer, slot_filler, intent_classifier)
+        self.nlu_manager = NLUManager(tokenizer, slot_filler, intent_classifier)  # todo move to separate pipeline unit
         self.nlg_manager = nlg_manager
         self.data_handler = TokensVectorizer(debug, word_vocab, bow_embedder, embedder)
 
+        # todo make mor abstract
         self.dialogue_state_tracker = DialogueStateTracker.from_gobot_params(tracker, self.nlg_manager,
                                                                              policy_network_params, database)
+        # todo make mor abstract
         self.multiple_user_state_tracker = MultipleUserStateTrackersPool(base_tracker=self.dialogue_state_tracker)
 
         tokens_dims = self.data_handler.get_dims()
