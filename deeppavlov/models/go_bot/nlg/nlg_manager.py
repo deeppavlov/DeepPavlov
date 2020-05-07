@@ -6,6 +6,7 @@ from typing import Union
 from deeppavlov.core.commands.utils import expand_path
 import deeppavlov.models.go_bot.nlg.templates.templates as go_bot_templates
 from deeppavlov.core.common.registry import register
+from deeppavlov.models.go_bot.nlg.dto.templated_nlg_response import TemplatedNLGResponse
 from deeppavlov.models.go_bot.nlg.nlg_manager_interface import NLGManagerInterface
 
 log = getLogger(__name__)
@@ -13,6 +14,7 @@ log = getLogger(__name__)
 
 # todo add the ability to configure nlg loglevel in config (now the setting is shared across all the GO-bot)
 # todo add each method input-output logging when proper loglevel level specified
+
 
 @register("gobot_nlg_manager")
 class NLGManager(NLGManagerInterface):
@@ -65,7 +67,7 @@ class NLGManager(NLGManagerInterface):
         """
         return self._api_call_id
 
-    def decode_response(self, action_id: int, tracker_slotfilled_state: dict) -> str:
+    def decode_response(self, action_id: int, tracker_slotfilled_state: dict) -> TemplatedNLGResponse:
         """
         Convert action template id and known slot values from tracker to response text.
         Replaces the unknown slot values with "dontcare" if the action is an API call.

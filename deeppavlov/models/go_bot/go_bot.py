@@ -20,6 +20,7 @@ import numpy as np
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
+from deeppavlov.models.go_bot.nlg.dto.nlg_response_interface import NLGResponseInterface
 from deeppavlov.models.go_bot.nlu.tokens_vectorizer import TokensVectorizer
 from deeppavlov.models.go_bot.dto.dataset_features import UtteranceDataEntry, DialogueDataEntry, \
     BatchDialoguesDataset, UtteranceFeatures, UtteranceTarget
@@ -338,7 +339,8 @@ class GoalOrientedBot(NNModel):
         return probs, np.argmax(probs), network_state
 
     def __call__(self, batch: Union[List[List[dict]], List[str]],
-                 user_ids: Optional[List] = None) -> Union[List[str], List[List[str]]]:
+                 user_ids: Optional[List] = None) -> Union[List[NLGResponseInterface],
+                                                           List[List[NLGResponseInterface]]]:
         # todo infer output types from nlg somehow. still needs oop
         if isinstance(batch[0], list):
             # batch is a list of *completed* dialogues, infer on them to calculate metrics
@@ -359,7 +361,7 @@ class GoalOrientedBot(NNModel):
 
         return res
 
-    def _realtime_infer(self, user_id, user_text) -> str:
+    def _realtime_infer(self, user_id, user_text) -> NLGResponseInterface:
         # realtime inference logic
         #
         # we have the pool of trackers, each one tracks the dialogue with its own user
@@ -390,7 +392,7 @@ class GoalOrientedBot(NNModel):
         resp = self.nlg_manager.decode_response(action_id_predicted, tracker_slotfilled_state)
         return resp
 
-    def _calc_inferences_for_dialogue(self, contexts: List[dict]) -> List[str]:
+    def _calc_inferences_for_dialogue(self, contexts: List[dict]) -> List[NLGResponseInterface]:
         # infer on each dialogue utterance
         # e.g. to calculate inference score via comparing the inferred predictions with the ground truth utterance
         # todo we provide the tracker with both predicted and ground truth response actions info. is this ok?

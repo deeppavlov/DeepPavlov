@@ -1,10 +1,12 @@
 from abc import ABCMeta, abstractmethod
 
+from deeppavlov.models.go_bot.nlg.dto.nlg_response_interface import NLGResponseInterface
+
 
 class NLGManagerInterface(metaclass=ABCMeta):
 
     @abstractmethod
-    def get_action_id(self, action_text):
+    def get_action_id(self, action_text) -> int:
         """
         Looks up for an ID relevant to the passed action text in the list of known actions and their ids.
         :param action_text: the text for which an ID needs to be returned.
@@ -13,14 +15,14 @@ class NLGManagerInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_api_call_action_id(self):
+    def get_api_call_action_id(self) -> int:
         """
         :return: an ID corresponding to the api call action
         """
         pass
 
     @abstractmethod
-    def decode_response(self, action_id, tracker_slotfilled_state):
+    def decode_response(self, action_id, tracker_slotfilled_state) -> NLGResponseInterface:
         """
         Convert action template id and known slot values from tracker to response text.
         Replaces the unknown slot values with "dontcare" if the action is an API call.
@@ -32,7 +34,7 @@ class NLGManagerInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def num_of_known_actions(self):
+    def num_of_known_actions(self) -> int:
         """
         :returns: the number of actions known to the NLG module
         """

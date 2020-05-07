@@ -1,17 +1,19 @@
 import json
 from itertools import combinations
 from pathlib import Path
-from typing import Union, Dict, List, Sequence
+from typing import Union, Dict
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.dataset_readers.dstc2_reader import DSTC2DatasetReader
+from deeppavlov.models.go_bot.nlg.dto.json_nlg_response import JSONNLGResponse
 from deeppavlov.models.go_bot.nlg.nlg_manager import log
 from deeppavlov.models.go_bot.nlg.nlg_manager_interface import NLGManagerInterface
 
+
 @register("gobot_json_nlg_manager")
 class MockJSONNLGManager(NLGManagerInterface):
-    def get_api_call_action_id(self):
+    def get_api_call_action_id(self) -> int:
         return self._api_call_id
 
     # todo inheritance
@@ -92,7 +94,7 @@ class MockJSONNLGManager(NLGManagerInterface):
         actions_tuple = tuple(action_text.split('+'))
         return self.action_tuples2ids[actions_tuple]  # todo unhandled exception when not found
 
-    def decode_response(self, actions_tuple_id: int, tracker_slotfilled_state: dict) -> str:
+    def decode_response(self, actions_tuple_id: int, tracker_slotfilled_state: dict) -> JSONNLGResponse:
         # todo docstring
         slots_to_log = self.action_tuples_ids2slots[actions_tuple_id]
 
@@ -100,7 +102,7 @@ class MockJSONNLGManager(NLGManagerInterface):
                            {slot_name: tracker_slotfilled_state.get(slot_name, "unk")
                            for slot_name in slots_to_log}}
 
-        return json.dumps(response_di)
+        return JSONNLGResponse(response_di)
 
     def num_of_known_actions(self) -> int:
         """
