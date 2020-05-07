@@ -12,6 +12,7 @@ from deeppavlov.core.layers import tf_attention_mechanisms as am, tf_layers
 from tensorflow.contrib.layers import xavier_initializer as xav
 
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
+from deeppavlov.models.go_bot.nlu.dto.nlu_response import NLUResponse
 
 from deeppavlov.models.go_bot.nlu.tokens_vectorizer import TokensVectorRepresentationParams
 from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesFeatures, BatchDialoguesTargets
@@ -222,9 +223,9 @@ class PolicyNetwork(LRScheduledTFModel):
         possible_key_size = possible_key_size or 1  # todo rewrite
         return possible_key_size
 
-    def calc_attn_key(self, intent_features, tracker_prev_action):
+    def calc_attn_key(self, nlu_response: NLUResponse, tracker_prev_action):
         """
-        :param intent_features: output intent extractors
+        :param nlu_response: nlu analysis output, currently only intents data is used
         :param tracker_prev_action: one-hot-encoded previous executed action
         :return: vector representing an attention key
         """
@@ -236,7 +237,7 @@ class PolicyNetwork(LRScheduledTFModel):
             if self.attention_params.action_as_key:
                 attn_key = np.hstack((attn_key, tracker_prev_action))
             if self.attention_params.intent_as_key:
-                attn_key = np.hstack((attn_key, intent_features))
+                attn_key = np.hstack((attn_key, nlu_response.intents))
             if len(attn_key) == 0:
                 attn_key = np.array([1], dtype=np.float32)
         return attn_key

@@ -3,6 +3,7 @@ from typing import List, Iterator
 import numpy as np
 
 from deeppavlov.core.common.registry import register
+from deeppavlov.models.go_bot.nlu.dto.nlu_response import NLUResponse
 from deeppavlov.models.go_bot.tracker.tracker_interface import TrackerInterface
 
 
@@ -31,12 +32,12 @@ class FeaturizedTracker(TrackerInterface):
     def num_features(self) -> int:
         return self.state_size * 3 + 3
 
-    def update_state(self, slots):
-        if isinstance(slots, list):
-            self.history.extend(self._filter(slots))
+    def update_state(self, nlu_response: NLUResponse):
+        if isinstance(nlu_response, list):
+            self.history.extend(self._filter(nlu_response))
 
-        elif isinstance(slots, dict):
-            for slot, value in self._filter(slots.items()):
+        elif isinstance(nlu_response, dict):
+            for slot, value in self._filter(nlu_response.items()):
                 self.history.append((slot, value))
 
         prev_state = self.get_state()

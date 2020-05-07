@@ -1,7 +1,8 @@
 from logging import getLogger
-from typing import Any, Tuple, List
+from typing import List
 
 from deeppavlov import Chainer
+from deeppavlov.models.go_bot.nlu.dto.nlu_response import NLUResponse
 from deeppavlov.models.go_bot.nlu.nlu_manager_interface import NLUManagerInterface
 
 log = getLogger(__name__)
@@ -37,7 +38,7 @@ class NLUManager(NLUManagerInterface):
                       f"tokenizer={tokenizer}, slot_filler={slot_filler}, "
                       f"intent_classifier={intent_classifier}, debug={debug}")
 
-    def nlu(self, text: str) -> Tuple[Any, Any, Any]:
+    def nlu(self, text: str) -> NLUResponse:
         # todo meaningful type hints
         tokens = self._tokenize_single_text_entry(text)
 
@@ -49,7 +50,7 @@ class NLUManager(NLUManagerInterface):
         if callable(self.intent_classifier):
             intents = self._extract_intents_from_tokenized_text_entry(tokens)
 
-        return slots, intents, tokens
+        return NLUResponse(slots, intents, tokens)
 
     def _extract_intents_from_tokenized_text_entry(self, tokens: List[str]):
         # todo meaningful type hints, relies on unannotated intent classifier

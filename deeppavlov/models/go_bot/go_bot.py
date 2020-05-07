@@ -257,10 +257,10 @@ class GoalOrientedBot(NNModel):
         """
         # todo comments
 
-        context_slots, intent_features, tokens = self.nlu_manager.nlu(text)  # todo: dto-like class for the nlu output
+        nlu_response = self.nlu_manager.nlu(text)
 
         # region text BOW-encoding and embedding
-        tokens_bow_encoded = self.data_handler.bow_encode_tokens(tokens)
+        tokens_bow_encoded = self.data_handler.bow_encode_tokens(nlu_response.tokens)
 
         tokens_embeddings_padded = np.array([], dtype=np.float32)
         tokens_aggregated_embedding = []
@@ -270,14 +270,14 @@ class GoalOrientedBot(NNModel):
             attn_config_token_dim = self.policy.get_attn_hyperparams().token_size
             tokens_embeddings_padded = self.data_handler.calc_tokens_embeddings(attn_window_size,
                                                                                 attn_config_token_dim,
-                                                                                tokens)
+                                                                                nlu_response.tokens)
         else:
-            tokens_aggregated_embedding = self.data_handler.calc_tokens_mean_embedding(tokens)
+            tokens_aggregated_embedding = self.data_handler.calc_tokens_mean_embedding(nlu_response.tokens)
         # endregion text BOW-encoding and embedding
 
         # region provide tracker with the incoming knowledge got from nlu (if we do not keep tracker state intact)
-        if context_slots and not keep_tracker_state:
-            tracker.update_state(context_slots)  # todo: dto-like class for the nlu output; pass to tracker the dto
+        if not keep_tracker_state:
+            tracker.update_state(nlu_response)  # todo: dto-like class for the nlu output; pass to tracker the dto
         # endregion provide tracker with the incoming knowledge got from nlu (if we do not keep tracker state intact)
 
         # region get tracker knowledge features
@@ -287,10 +287,10 @@ class GoalOrientedBot(NNModel):
         context_features = tracker.calc_context_features()
         # endregion get tracker knowledge features
 
-        attn_key = self.policy.calc_attn_key(intent_features, tracker_prev_action)
+        attn_key = self.policy.calc_attn_key(nlu_response, tracker_prev_action)
 
-        concat_feats = np.hstack((tokens_bow_encoded, tokens_aggregated_embedding, intent_features, state_features,
-                                  context_features, tracker_prev_action))
+        concat_feats = np.hstack((tokens_bow_encoded, tokens_aggregated_embedding, nlu_response.intents, state_features,
+                                  context_features, tracker_prev_action))  # todo abstractions to simplify experiments?
 
         # mask is used to prevent tracker from predicting the api call twice
         # via logical AND of action candidates and mask

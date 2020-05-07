@@ -3,6 +3,8 @@ from typing import Union, List, Tuple, Any, Dict
 
 import numpy as np
 
+from deeppavlov.models.go_bot.nlu.dto.nlu_response_interface import NLUResponseInterface
+
 
 class TrackerInterface(metaclass=ABCMeta):
     """
@@ -11,7 +13,7 @@ class TrackerInterface(metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def update_state(self, slots: Union[List[Tuple[str, Any]], Dict[str, Any]]) -> None:
+    def update_state(self, nlu_response: NLUResponseInterface) -> None:
         """
         Updates dialogue state with new ``slots``, calculates features.
 
