@@ -194,9 +194,16 @@ class QueryGenerator(Component, Serializable):
         if year:
             candidate_outputs = self.find_relevant_subgraph_cqwn(entity_ids[0][:self.entities_to_leave],
                                                                  top_rels[:self.rels_to_leave], year)
+            if not candidate_outputs:
+                candidate_outputs = self.find_relevant_subgraph_cqwn(entity_ids[0][:self.entities_to_leave],
+                                                                 ex_rels, year)
+
         if number:
             candidate_outputs = self.find_relevant_subgraph_cqwn(entity_ids[0][:self.entities_to_leave],
                                                                  top_rels[:self.rels_to_leave], number)
+            if not candidate_outputs:
+                candidate_outputs = self.find_relevant_subgraph_cqwn(entity_ids[0][:self.entities_to_leave],
+                                                                 ex_rels, number)
 
         return candidate_outputs
 
