@@ -1,9 +1,10 @@
 from abc import ABCMeta, abstractmethod
-from typing import Union, List, Tuple, Any, Dict
+from typing import Any, Dict
 
 import numpy as np
 
 from deeppavlov.models.go_bot.nlu.dto.nlu_response_interface import NLUResponseInterface
+from deeppavlov.models.go_bot.tracker.dto.tracker_knowledge_interface import TrackerKnowledgeInterface
 
 
 class TrackerInterface(metaclass=ABCMeta):
@@ -38,4 +39,8 @@ class TrackerInterface(metaclass=ABCMeta):
         """
         Returns:
             np.ndarray[float]: numpy array with calculates state features."""
+        pass
+
+    @abstractmethod
+    def get_current_knowledge(self) -> TrackerKnowledgeInterface:
         pass

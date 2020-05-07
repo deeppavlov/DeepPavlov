@@ -20,17 +20,37 @@ import numpy as np
 from deeppavlov.core.models.component import Component
 from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManagerInterface
 from deeppavlov.models.go_bot.policy.policy_network import PolicyNetworkParams
+from deeppavlov.models.go_bot.tracker.dto.tracker_knowledge_interface import TrackerKnowledgeInterface
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 
 log = getLogger(__name__)
 
 # todo naming
+class DSTKnowledge(TrackerKnowledgeInterface):
+    def __init__(self, tracker_prev_action, state_features, context_features, api_call_id, n_actions):
+        self.tracker_prev_action = tracker_prev_action
+        self.state_features = state_features
+        self.context_features = context_features
+        self.api_call_id = api_call_id
+        self.n_actions = n_actions
+
+
 class DialogueStateTracker(FeaturizedTracker):
-    def __init__(self, slot_names, n_actions: int, hidden_size: int, database: Component = None) -> None:
+    def get_current_knowledge(self) -> DSTKnowledge:
+        state_features = self.get_features()
+        context_features = self.calc_context_features()
+        knowledge = DSTKnowledge(self.prev_action,
+                                 state_features, context_features,
+                                 self.api_call_id,
+                                 self.n_actions)
+        return knowledge
+
+    def __init__(self, slot_names, n_actions: int, api_call_id: int, hidden_size: int, database: Component = None) -> None:
         super().__init__(slot_names)
         self.hidden_size = hidden_size
         self.database = database
         self.n_actions = n_actions
+        self.api_call_id = api_call_id
 
         self.reset_state()
 
@@ -40,7 +60,7 @@ class DialogueStateTracker(FeaturizedTracker):
                           policy_network_params: PolicyNetworkParams,
                           database: Component):
         return DialogueStateTracker(parent_tracker.slot_names,
-                                    nlg_manager.num_of_known_actions(),
+                                    nlg_manager.num_of_known_actions(), nlg_manager.get_api_call_action_id(),
                                     policy_network_params.hidden_size,
                                     database)
 
@@ -91,12 +111,12 @@ class DialogueStateTracker(FeaturizedTracker):
         self.current_db_result = {} if not db_results else db_results[0]
         self._update_db_result()
 
-    def calc_action_mask(self, api_call_id: int) -> np.ndarray:
+    def calc_action_mask(self) -> np.ndarray:
         mask = np.ones(self.n_actions, dtype=np.float32)
 
         if np.any(self.prev_action):
             prev_act_id = np.argmax(self.prev_action)
-            if prev_act_id == api_call_id:
+            if prev_act_id == self.api_call_id:
                 mask[prev_act_id] = 0.
 
         return mask

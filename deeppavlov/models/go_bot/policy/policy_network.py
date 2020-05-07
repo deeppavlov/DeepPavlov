@@ -13,12 +13,15 @@ from tensorflow.contrib.layers import xavier_initializer as xav
 
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
 from deeppavlov.models.go_bot.nlu.dto.nlu_response import NLUResponse
+from deeppavlov.models.go_bot.nlu.dto.text_vectorization_response import TextVectorizationResponse
 
 from deeppavlov.models.go_bot.nlu.tokens_vectorizer import TokensVectorRepresentationParams
 from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesFeatures, BatchDialoguesTargets
 
 # todo
 from deeppavlov.models.go_bot.dto.shared_gobot_params import SharedGoBotParams
+from deeppavlov.models.go_bot.policy.dto.digitized_policy_features import DigitizedPolicyFeatures
+from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DSTKnowledge
 
 log = getLogger(__name__)
 
@@ -223,10 +226,10 @@ class PolicyNetwork(LRScheduledTFModel):
         possible_key_size = possible_key_size or 1  # todo rewrite
         return possible_key_size
 
-    def calc_attn_key(self, nlu_response: NLUResponse, tracker_prev_action):
+    def calc_attn_key(self, nlu_response: NLUResponse, tracker_knowledge: DSTKnowledge):
         """
         :param nlu_response: nlu analysis output, currently only intents data is used
-        :param tracker_prev_action: one-hot-encoded previous executed action
+        :param tracker_knowledge: one-hot-encoded previous executed action
         :return: vector representing an attention key
         """
         # todo dto-like class for the attn features?
@@ -235,12 +238,49 @@ class PolicyNetwork(LRScheduledTFModel):
 
         if self.attention_params:
             if self.attention_params.action_as_key:
-                attn_key = np.hstack((attn_key, tracker_prev_action))
+                attn_key = np.hstack((attn_key, tracker_knowledge.tracker_prev_action))
             if self.attention_params.intent_as_key:
                 attn_key = np.hstack((attn_key, nlu_response.intents))
             if len(attn_key) == 0:
                 attn_key = np.array([1], dtype=np.float32)
         return attn_key
+
+    @staticmethod
+    def stack_features(nlu_response: NLUResponse,
+                       text_vectorized: TextVectorizationResponse,
+                       tracker_knowledge: DSTKnowledge):
+        return np.hstack((text_vectorized.tokens_bow_encoded,
+                          text_vectorized.tokens_aggregated_embedding,
+                          nlu_response.intents,
+                          tracker_knowledge.state_features,
+                          tracker_knowledge.context_features,
+                          tracker_knowledge.tracker_prev_action))
+
+    @staticmethod
+    def calc_action_mask(tracker_knowledge: DSTKnowledge):
+        # mask is used to prevent tracker from predicting the api call twice
+        # via logical AND of action candidates and mask
+        # todo: seems to be an efficient idea but the intuition beyond this whole hack is not obvious
+        mask = np.ones(tracker_knowledge.n_actions, dtype=np.float32)
+
+        if np.any(tracker_knowledge.tracker_prev_action):
+            prev_act_id = np.argmax(tracker_knowledge.tracker_prev_action)
+            if prev_act_id == tracker_knowledge.api_call_id:
+                mask[prev_act_id] = 0.
+
+        return mask
+
+    def digitize_features(self,
+                          nlu_response: NLUResponse,
+                          text2vec_response: TextVectorizationResponse,
+                          tracker_knowledge: DSTKnowledge) -> DigitizedPolicyFeatures:
+        attn_key = self.calc_attn_key(nlu_response, tracker_knowledge)
+        concat_feats = self.stack_features(nlu_response, text2vec_response, tracker_knowledge)
+        action_mask = self.calc_action_mask(tracker_knowledge)
+
+        return DigitizedPolicyFeatures(attn_key, concat_feats, action_mask)
+
+
 
     def _build_graph(self) -> None:
         self._add_placeholders()

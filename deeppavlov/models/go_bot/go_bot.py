@@ -21,6 +21,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.models.go_bot.nlg.dto.nlg_response_interface import NLGResponseInterface
+from deeppavlov.models.go_bot.nlu.dto.text_vectorization_response import TextVectorizationResponse
 from deeppavlov.models.go_bot.nlu.tokens_vectorizer import TokensVectorizer
 from deeppavlov.models.go_bot.dto.dataset_features import UtteranceDataEntry, DialogueDataEntry, \
     BatchDialoguesDataset, UtteranceFeatures, UtteranceTarget
@@ -259,7 +260,8 @@ class GoalOrientedBot(NNModel):
 
         nlu_response = self.nlu_manager.nlu(text)
 
-        # region text BOW-encoding and embedding
+        # region text BOW-encoding and embedding | todo: to nlu
+        # todo move vectorization to NLU
         tokens_bow_encoded = self.data_handler.bow_encode_tokens(nlu_response.tokens)
 
         tokens_embeddings_padded = np.array([], dtype=np.float32)
@@ -273,31 +275,18 @@ class GoalOrientedBot(NNModel):
                                                                                 nlu_response.tokens)
         else:
             tokens_aggregated_embedding = self.data_handler.calc_tokens_mean_embedding(nlu_response.tokens)
-        # endregion text BOW-encoding and embedding
+        text2vec_response = TextVectorizationResponse(tokens_bow_encoded,
+                                                      tokens_aggregated_embedding,
+                                                      tokens_embeddings_padded)
+        # endregion text BOW-encoding and embedding | todo: to nlu
 
-        # region provide tracker with the incoming knowledge got from nlu (if we do not keep tracker state intact)
         if not keep_tracker_state:
-            tracker.update_state(nlu_response)  # todo: dto-like class for the nlu output; pass to tracker the dto
-        # endregion provide tracker with the incoming knowledge got from nlu (if we do not keep tracker state intact)
+            tracker.update_state(nlu_response)
 
-        # region get tracker knowledge features
-        # todo simplify; dto-like class for the tracker knowledge
-        tracker_prev_action = tracker.prev_action
-        state_features = tracker.get_features()
-        context_features = tracker.calc_context_features()
-        # endregion get tracker knowledge features
+        tracker_knowledge = tracker.get_current_knowledge()
+        digitized_policy_features = self.policy.digitize_features(nlu_response, text2vec_response, tracker_knowledge)
 
-        attn_key = self.policy.calc_attn_key(nlu_response, tracker_prev_action)
-
-        concat_feats = np.hstack((tokens_bow_encoded, tokens_aggregated_embedding, nlu_response.intents, state_features,
-                                  context_features, tracker_prev_action))  # todo abstractions to simplify experiments?
-
-        # mask is used to prevent tracker from predicting the api call twice
-        # via logical AND of action candidates and mask
-        # todo: seems to be an efficient idea but the intuition beyond this whole hack is not obvious
-        action_mask = tracker.calc_action_mask(self.nlg_manager.get_api_call_action_id())
-
-        return UtteranceFeatures(action_mask, attn_key, tokens_embeddings_padded, concat_feats)
+        return UtteranceFeatures(nlu_response, text2vec_response, digitized_policy_features)
 
     def _infer(self, user_utterance_text: str, user_tracker: DialogueStateTracker,
                keep_tracker_state=False) -> Sequence:

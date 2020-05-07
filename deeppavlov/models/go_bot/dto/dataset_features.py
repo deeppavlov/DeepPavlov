@@ -7,6 +7,11 @@ import numpy as np
 # todo comments
 # todo logging
 # todo naming
+from deeppavlov.models.go_bot.nlu.dto.nlu_response_interface import NLUResponseInterface
+from deeppavlov.models.go_bot.nlu.dto.text_vectorization_response import TextVectorizationResponse
+from deeppavlov.models.go_bot.policy.dto.digitized_policy_features import DigitizedPolicyFeatures
+
+
 class UtteranceFeatures:
     """
     the DTO-like class storing the training features of a single utterance of a dialog
@@ -18,11 +23,14 @@ class UtteranceFeatures:
     tokens_embeddings_padded: np.ndarray
     features: np.ndarray
 
-    def __init__(self, action_mask, attn_key, tokens_embeddings_padded, features):
-        self.action_mask = action_mask
-        self.attn_key = attn_key
-        self.tokens_embeddings_padded = tokens_embeddings_padded
-        self.features = features
+    def __init__(self,
+                 nlu_response: NLUResponseInterface,
+                 tokens_embeddings_padded: TextVectorizationResponse,
+                 features: DigitizedPolicyFeatures):
+        self.action_mask = features.action_mask
+        self.attn_key = features.attn_key
+        self.tokens_embeddings_padded = tokens_embeddings_padded.tokens_embeddings_padded
+        self.features = features.concat_feats
 
 
 class UtteranceTarget:

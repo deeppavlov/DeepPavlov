@@ -4,6 +4,7 @@ import numpy as np
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.models.go_bot.nlu.dto.nlu_response import NLUResponse
+from deeppavlov.models.go_bot.tracker.dto.tracker_knowledge_interface import TrackerKnowledgeInterface
 from deeppavlov.models.go_bot.tracker.tracker_interface import TrackerInterface
 
 
@@ -18,6 +19,10 @@ class FeaturizedTracker(TrackerInterface):
     Parameters:
         slot_names: list of slots that should be tracked.
     """
+
+    def get_current_knowledge(self) -> TrackerKnowledgeInterface:
+        raise NotImplementedError("Featurized tracker lacks get_current_knowledge() method. "
+                                  "To be improved in future versions.")
 
     def __init__(self, slot_names: List[str]) -> None:
         self.slot_names = list(slot_names)
