@@ -153,32 +153,8 @@
         "subdir": "{MODELS_PATH}/rel_ranking_bert"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/inverted_index_eng.pickle",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/entities_list.pickle",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wiki_eng_q_to_name.pickle",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/templates_eng.pickle",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wiki_dict_properties.pickle",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/rels_0.txt",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/rels_1.txt",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wiki_eng_files.tar.gz",
+        "subdir": "{MODELS_PATH}/wikidata_eng"
       }
     ]
   }
