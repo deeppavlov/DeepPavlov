@@ -92,10 +92,24 @@ KBQA model for complex question answering can be used from Python using the foll
     from deeppavlov import configs, build_model
 
     kbqa_model = build_model(configs.kbqa.kbqa_cq, download=True)
-    kbqa_model(['When did Jean-Paul Sartre move to Le Havre?'])
-    >>> ["1931-01-01"]
+    kbqa_model(['What is in the village of Negev that has diplomatic relations with the Czech Republic?'])
+    >>> ["Israel"]
+    kbqa_model(['Magnus Carlsen is a part of what sport?'])
+    >>> ["chess"]
     kbqa_model(['How many sponsors are for Juventus F.C.?'])
     >>> [4]
+
+In the models mentioned above lite version of Wikidata is used. Full version of Wikidata can be downloaded from http://www.rdfhdt.org/datasets/. Examples of questions which the model can answer with the following version of Wikidata:
+
+.. code:: python
+
+    from deeppavlov import configs, build_model
+
+    kbqa_model = build_model(configs.kbqa.kbqa_cq, download=True)
+    kbqa_model(['When did Jean-Paul Sartre move to Le Havre?'])
+    >>> ["1931-01-01"]
+    kbqa_model(['What position did Angela Merkel hold on November 10, 1994?'])
+    >>> ["Bundesminister"]
 
 KBQA model for simple question answering in Russian can be used from Python using the following code:
 
