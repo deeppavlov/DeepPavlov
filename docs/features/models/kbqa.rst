@@ -6,11 +6,11 @@ Description
 
 There are three models for KBQA in DeepPavlov library:
 
-* :config:kbqa_cq <kbqa/kbqa_cq.json> - model for answering complex questions in English
+* :config:`kbqa_cq <kbqa/kbqa_cq.json>` - model for answering complex questions in English
 
-* :config:kbqa_rus <kbqa/kbqa_rus.json> - model for answering simple questions in Russian
+* :config:`kbqa_rus <kbqa/kbqa_rus.json>` - model for answering simple questions in Russian
 
-* :config:kbqa_tree <kbqa/kbqa_tree.json> - model for answering simple questions in Russian using syntactic parser.
+* :config:`kbqa_tree <kbqa/kbqa_tree.json>` - model for answering simple questions in Russian using syntactic parser.
 
 The Complex Knowledge Base Question Answering model uses Wikidata to answer complex questions. Types of questions which the model answers:
 
