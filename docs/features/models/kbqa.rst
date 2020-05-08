@@ -4,7 +4,10 @@ Knowledge Base Question Answering (KBQA)
 Description
 -----------
 
-There are three models for KBQA in DeepPavlov library: model for answering complex questions in English, model for answering simple questions in Russian and model for answering simple questions in Russian using syntactic parser.
+There are three models for KBQA in DeepPavlov library: 
+* :config:kbqa_cq <kbqa/kbqa_cq.json> - model for answering complex questions in English
+* :config:kbqa_cq <kbqa/kbqa_rus.json> - model for answering simple questions in Russian
+* :config:kbqa_cq <kbqa/kbqa_tree.json> - model for answering simple questions in Russian using syntactic parser.
 
 The Complex Knowledge Base Question Answering model uses Wikidata to answer complex questions. Types of questions which the model answers:
 
