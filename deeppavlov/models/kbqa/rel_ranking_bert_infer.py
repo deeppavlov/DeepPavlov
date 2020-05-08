@@ -68,15 +68,16 @@ class RelRankerBertInfer(Component, Serializable):
             if len(candidate_answers) == 0:
                 answer = "Not Found"
 
-            for i in range(len(candidate_answers) // self.batch_size):
+            n_batches = len(candidate_answers) // self.batch_size + int(len(candidate_answers) % self.batch_size > 0)
+            for i in range(n_batches):
                 questions_batch = []
                 rels_labels_batch = []
                 answers_batch = []
-                for j in range(self.batch_size):
-                    candidate_rels = candidate_answers[(i * self.batch_size + j)][:-1]
+                for candidate_ans_and_rels in candidate_answers[i*self.batch_size : (i+1)*self.batch_size]:
+                    candidate_rels = candidate_ans_and_rels[:-1]
                     candidate_rels = [candidate_rel.split('/')[-1] for candidate_rel in candidate_rels]
-                    candidate_answer = candidate_answers[(i * self.batch_size + j)][-1]
-                    candidate_rels = " [SEP] ".join([self.rel_q2name[candidate_rel] \
+                    candidate_answer = candidate_ans_and_rels[-1]
+                    candidate_rels = " # ".join([self.rel_q2name[candidate_rel] \
                                                      for candidate_rel in candidate_rels if
                                                      candidate_rel in self.rel_q2name])
 
@@ -85,29 +86,6 @@ class RelRankerBertInfer(Component, Serializable):
                         rels_labels_batch.append(candidate_rels)
                         answers_batch.append(candidate_answer)
 
-                probas = self.ranker(questions_batch, rels_labels_batch)
-                probas = [proba[1] for proba in probas]
-                for j, answer in enumerate(answers_batch):
-                    answers_with_scores.append((answer, probas[j]))
-
-            questions_batch = []
-            rels_labels_batch = []
-            answers_batch = []
-            for j in range(len(candidate_answers) % self.batch_size):
-                candidate_rels = candidate_answers[(len(candidate_answers) // self.batch_size \
-                              * self.batch_size + j)][:-1]
-                candidate_rels = [candidate_rel.split('/')[-1] for candidate_rel in candidate_rels]
-                candidate_answer = candidate_answers[(len(candidate_answers) // self.batch_size \
-                              * self.batch_size + j)][-1]
-                candidate_rels = " [SEP] ".join([self.rel_q2name[candidate_rel] \
-                              for candidate_rel in candidate_rels if candidate_rel in self.rel_q2name])
-
-                if candidate_rels:
-                    questions_batch.append(question)
-                    rels_labels_batch.append(candidate_rels)
-                    answers_batch.append(candidate_answer)
-
-            if questions_batch:
                 probas = self.ranker(questions_batch, rels_labels_batch)
                 probas = [proba[1] for proba in probas]
                 for j, answer in enumerate(answers_batch):
@@ -125,12 +103,12 @@ class RelRankerBertInfer(Component, Serializable):
 
     def rank_rels(self, question: str, candidate_rels: List[str]) -> List[Tuple[str, Any]]:
         rels_with_scores = []
-        for i in range(len(candidate_rels) // self.batch_size):
+        n_batches = len(candidate_rels) // self.batch_size + int(len(candidate_rels) % self.batch_size > 0)
+        for i in range(n_batches):
             questions_batch = []
             rels_labels_batch = []
             rels_batch = []
-            for j in range(self.batch_size):
-                candidate_rel = candidate_rels[(i * self.batch_size + j)]
+            for candidate_rel in candidate_rels[i*self.batch_size : (i+1)*self.batch_size]:
                 if candidate_rel in self.rel_q2name:
                     questions_batch.append(question)
                     rels_batch.append(candidate_rel)
@@ -139,21 +117,6 @@ class RelRankerBertInfer(Component, Serializable):
             probas = [proba[1] for proba in probas]
             for j, rel in enumerate(rels_batch):
                 rels_with_scores.append((rel, probas[j]))
-        
-        questions_batch = []
-        rels_batch = []
-        rels_labels_batch = []
-        for j in range(len(candidate_rels) % self.batch_size):
-            candidate_rel = candidate_rels[(len(candidate_rels) // self.batch_size * self.batch_size + j)]
-            if candidate_rel in self.rel_q2name:
-                questions_batch.append(question)
-                rels_batch.append(candidate_rel)
-                rels_labels_batch.append(self.rel_q2name[candidate_rel])
-
-        probas = self.ranker(questions_batch, rels_labels_batch)
-        probas = [proba[1] for proba in probas]
-        for j, rel in enumerate(rels_batch):
-            rels_with_scores.append((rel, probas[j]))
         rels_with_scores = sorted(rels_with_scores, key=lambda x: x[1], reverse=True)
 
         return rels_with_scores[:self.rels_to_leave]
