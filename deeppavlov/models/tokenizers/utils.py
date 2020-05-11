@@ -35,7 +35,7 @@ def detokenize(tokens):
     return step6.strip()
 
 
-def ngramize(items: List[str], ngram_range=(1, 1)) -> Generator[List[str], Any, None]:
+def ngramize(items: List[str], doc: str, ngram_range=(1, 1)) -> Generator[List[str], Any, None]:
     """
     Make ngrams from a list of tokens/lemmas
     :param items: list of tokens, lemmas or other strings to form ngrams
@@ -45,10 +45,12 @@ def ngramize(items: List[str], ngram_range=(1, 1)) -> Generator[List[str], Any, 
     """
 
     ngrams = []
+    doc_lower = doc.lower()
     ranges = [(0, i) for i in range(ngram_range[0], ngram_range[1] + 1)]
     for r in ranges:
         ngrams += list(zip(*[items[j:] for j in range(*r)]))
 
     formatted_ngrams = [' '.join(item) for item in ngrams]
+    filtered_ngrams = [ngram for ngram in formatted_ngrams if (ngram in doc or ngram in doc_lower)]
 
-    yield formatted_ngrams
+    yield filtered_ngrams

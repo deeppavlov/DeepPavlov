@@ -75,7 +75,7 @@ class StreamSpacyTokenizer(Component):
 
     """
 
-    def __init__(self, disable: Optional[Iterable[str]] = None, stopwords: Optional[List[str]] = None,
+    def __init__(self, disable: Optional[Iterable[str]] = None, filter_stopwords: bool = False,
                  batch_size: Optional[int] = None, ngram_range: Optional[List[int]] = None,
                  lemmas: bool = False, lowercase: Optional[bool] = None, alphas_only: Optional[bool] = None,
                  spacy_model: str = 'en_core_web_sm', **kwargs):
@@ -84,8 +84,9 @@ class StreamSpacyTokenizer(Component):
             disable = ['parser', 'ner']
         if ngram_range is None:
             ngram_range = [1, 1]
-        self.stopwords = stopwords or []
         self.model = _try_load_spacy_model(spacy_model, disable=disable)
+        self.filter_stopwords = filter_stopwords
+        self.stopwords = spacy.lang.en.stop_words.STOP_WORDS if self.filter_stopwords else []
         self.batch_size = batch_size
         self.ngram_range = tuple(ngram_range)  # cast JSON array to tuple
         self.lemmas = lemmas
@@ -149,7 +150,7 @@ class StreamSpacyTokenizer(Component):
             else:
                 tokens = [t.text for t in doc]
             filtered = self._filter(tokens)
-            processed_doc = ngramize(filtered, ngram_range=_ngram_range)
+            processed_doc = ngramize(filtered, data[i], ngram_range=_ngram_range)
             yield from processed_doc
 
     def _lemmatize(self, data: List[str], ngram_range: Optional[Tuple[int, int]] = None, batch_size: int = 10000
@@ -171,11 +172,18 @@ class StreamSpacyTokenizer(Component):
         _batch_size = self.batch_size or batch_size
         _ngram_range = ngram_range or self.ngram_range
 
+        if self.lowercase is None:
+            _lowercase = lowercase
+        else:
+            _lowercase = self.lowercase
+
         for i, doc in enumerate(
                 self.model.pipe(data, batch_size=_batch_size)):
             lemmas = [t.lemma_ for t in doc]
+            if _lowercase:
+                lemmas = [t.lower() for t in lemmas]
             filtered = self._filter(lemmas)
-            processed_doc = ngramize(filtered, ngram_range=_ngram_range)
+            processed_doc = ngramize(filtered, data[i], ngram_range=_ngram_range)
             yield from processed_doc
 
     def _filter(self, items: List[str], alphas_only: bool = True) -> List[str]:

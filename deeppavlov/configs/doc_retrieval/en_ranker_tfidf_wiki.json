@@ -35,6 +35,8 @@
         "tokenizer": {
           "class_name": "stream_spacy_tokenizer",
           "lemmas": true,
+          "lowercase": true,
+          "filter_stopwords": true,
           "ngram_range": [
             1,
             2
