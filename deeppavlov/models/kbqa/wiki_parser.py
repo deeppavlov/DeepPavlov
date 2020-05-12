@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import getLogger
 from typing import List, Optional, Union
 
 from hdt import HDTDocument
@@ -21,11 +22,15 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 
 
+log = getLogger(__name__)
+
+
 @register('wiki_parser')
 class WikiParser(Component):
     """This class extract relations, objects or triplets from Wikidata HDT file"""
 
     def __init__(self, wiki_filename: str, **kwargs):
+        log.debug(f'__init__ wiki_filename: {wiki_filename}')
         wiki_path = expand_path(wiki_filename)
         self.document = HDTDocument(str(wiki_path))
 
@@ -73,7 +78,8 @@ class WikiParser(Component):
                 return entity
 
             elif "http://www.w3.org/2001/XMLSchema#decimal>" in entity:
-                entity = entity.strip("^^<http://www.w3.org/2001/XMLSchema#decimal>").strip('"').strip('"')
+                entity = entity.strip(
+                    "^^<http://www.w3.org/2001/XMLSchema#decimal>").strip('"').strip('"').lstrip("+")
                 return entity
 
             elif "<xsd:decimal>" in entity:
