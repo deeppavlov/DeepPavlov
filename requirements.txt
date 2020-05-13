@@ -19,3 +19,4 @@ scikit-learn==0.21.2
 scipy==1.4.1
 tqdm==4.41.1
 uvicorn==0.11.1
+sacremoses==0.0.35
