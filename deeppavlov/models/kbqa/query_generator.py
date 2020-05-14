@@ -102,8 +102,8 @@ class QueryGenerator(Component, Serializable):
             self.template_num = int(template_type)
 
             entities_from_template, rels_from_template, query_type_template = self.template_matcher(question)
-            if query_type_template == "simple":
-                self.template_num = 7
+            if query_type_template.isdigit():
+                self.template_num = int(query_type_template)
 
             log.debug(f"question: {question}\n")
             log.debug(f"template_type {self.template_num}")
@@ -157,15 +157,17 @@ class QueryGenerator(Component, Serializable):
 
         if self.template_num == 2 or self.template_num == 3:
             candidate_outputs = self.complex_question_with_qualifier_solver(question, entity_ids)
+            if not candidate_outputs:
+                self.template_num = 7
 
         if self.template_num == 4:
             candidate_outputs = self.questions_with_count_solver(question, entity_ids)
 
         if self.template_num == 5:
-            candidate_outputs = self.maxmin_one_entity_solver(question, entity_ids[0][:self.entities_to_leave])
+            candidate_outputs = self.maxmin_one_entity_solver(question, entity_ids[0][:self.entities_to_leave], rels_from_template)
 
         if self.template_num == 6:
-            candidate_outputs = self.maxmin_two_entities_solver(question, entity_ids)
+            candidate_outputs = self.maxmin_two_entities_solver(question, entity_ids, rels_from_template)
             if not candidate_outputs:
                 self.template_num = 5
                 candidate_outputs = self.maxmin_one_entity_solver(question, entity_ids[0][:self.entities_to_leave])
@@ -177,14 +179,18 @@ class QueryGenerator(Component, Serializable):
 
         return candidate_outputs
 
-    def complex_question_with_number_solver(self, question: str, entity_ids: List[List[str]]) -> List[Tuple[str]]:
+    def complex_question_with_number_solver(self, question: str, entity_ids: List[List[str]],
+                                            rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str]]:
         question_tokens = nltk.word_tokenize(question)
-        ex_rels = []
-        for entity in entity_ids[0][:self.entities_to_leave]:
-            ex_rels += self.wiki_parser("rels", "forw", entity, type_of_rel="direct")
-        ex_rels = list(set(ex_rels))
-        scores = self.rel_ranker.rank_rels(question, ex_rels)
-        top_rels = [score[0] for score in scores]
+        if rels_from_template is not None:
+            top_rels = rels_from_template[0][:-1]
+        else:
+            ex_rels = []
+            for entity in entity_ids[0][:self.entities_to_leave]:
+                ex_rels += self.wiki_parser("rels", "forw", entity, type_of_rel="direct")
+            ex_rels = list(set(ex_rels))
+            scores = self.rel_ranker.rank_rels(question, ex_rels)
+            top_rels = [score[0] for score in scores]
         log.debug(f"top scored rels: {top_rels}")
         year = extract_year(question_tokens, question)
         number = False
@@ -210,16 +216,20 @@ class QueryGenerator(Component, Serializable):
 
         return candidate_outputs
 
-    def complex_question_with_qualifier_solver(self, question: str, entity_ids: List[List[str]]) -> List[Tuple[str]]:
-        ex_rels = []
-        for entity in entity_ids[0][:self.entities_to_leave]:
-            ex_rels += self.wiki_parser("rels", "forw", entity, type_of_rel="direct")
-        ex_rels = list(set(ex_rels))
-        scores = self.rel_ranker.rank_rels(question, ex_rels)
-        top_rels = [score[0] for score in scores]
+    def complex_question_with_qualifier_solver(self, question: str, entity_ids: List[List[str]],
+                                        rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str]]:
+        if rels_from_template is not None:
+            top_rels = rels_from_template[0][:-1]
+        else:
+            ex_rels = []
+            for entity in entity_ids[0][:self.entities_to_leave]:
+                ex_rels += self.wiki_parser("rels", "forw", entity, type_of_rel="direct")
+            ex_rels = list(set(ex_rels))
+            scores = self.rel_ranker.rank_rels(question, ex_rels)
+            top_rels = [score[0] for score in scores]
         log.debug(f"top scored rels: {top_rels}")
 
-        candidate_outputs = []  # TODO unclear what happens if `len(entities_ids) < 2`.
+        candidate_outputs = []
         if len(entity_ids) > 1:
             ent_combs = make_entity_combs(entity_ids)
             candidate_outputs = self.find_relevant_subgraph_cqwq(ent_combs, top_rels[:self.rels_to_leave])
@@ -227,39 +237,46 @@ class QueryGenerator(Component, Serializable):
 
     def questions_with_count_solver(self, question: str, entity_ids: List[List[str]]) -> List[Tuple[str, str]]:
         candidate_outputs = []
+        if rels_from_template is not None:
+            top_rels = rels_from_template[0][:-1]
+            directions = [rels_from_template[0][-1]]
+        else:
+            ex_rels = []
+            for entity_id in entity_ids:
+                for entity in entity_id[:self.entities_to_leave]:
+                    ex_rels += self.wiki_parser("rels", "forw", entity, type_of_rel="direct")
+                    ex_rels += self.wiki_parser("rels", "backw", entity, type_of_rel="direct")
 
-        ex_rels = []
-        for entity_id in entity_ids:
-            for entity in entity_id[:self.entities_to_leave]:
-                ex_rels += self.wiki_parser("rels", "forw", entity, type_of_rel="direct")
-                ex_rels += self.wiki_parser("rels", "backw", entity, type_of_rel="direct")
-
-        ex_rels = list(set(ex_rels))
-        scores = self.rel_ranker.rank_rels(question, ex_rels)
-        top_rels = [score[0] for score in scores]
+            ex_rels = list(set(ex_rels))
+            scores = self.rel_ranker.rank_rels(question, ex_rels)
+            top_rels = [score[0] for score in scores]
+            directions = ["forw", "backw"]
         log.debug(f"top scored rels: {top_rels}")
-        answers = []
+        
         for entity_id in entity_ids:
             for entity in entity_id[:self.entities_to_leave]:
+                answers = []
                 for rel in top_rels[:self.rels_to_leave]:
-                    answers += self.wiki_parser("objects", "forw", entity, rel, type_of_rel="direct")
-                    if len(answers) > 0:
-                        candidate_outputs.append((rel, str(len(answers))))
-                    else:
-                        answers += self.wiki_parser("objects", "backw", entity, rel, type_of_rel="direct")
-                        candidate_outputs.append((rel, str(len(answers))))
+                    for direction in directions:
+                        answers += self.wiki_parser("objects", direction, entity, rel, type_of_rel="direct")
+                        if len(answers) > 0:
+                            candidate_outputs.append((rel, str(len(answers))))
 
         return candidate_outputs
 
-    def maxmin_one_entity_solver(self, question: str, entities_list: List[str]) -> List[Tuple[str, Any]]:
-        scores = self.rel_ranker.rank_rels(question, self.rank_list_0)
-        top_rels = [score[0] for score in scores]
+    def maxmin_one_entity_solver(self, question: str, entities_list: List[str],
+                                 rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str, Any]]:
+        if rels_from_template is not None:
+            top_rels = rels_from_template[0][:-1]
+        else:
+            scores = self.rel_ranker.rank_rels(question, self.rank_list_0)
+            top_rels = [score[0] for score in scores]
         log.debug(f"top scored rels: {top_rels}")
         ascending = asc_desc(question)
         candidate_outputs = self.find_relevant_subgraph_maxmin_one(entities_list, top_rels)
-        reverse = False
+        reverse = True
         if ascending:
-            reverse = True
+            reverse = False
         candidate_outputs = sorted(candidate_outputs, key=lambda x: x[2], reverse=reverse)
         candidate_outputs = [(output[0], output[1]) for output in candidate_outputs]
         if candidate_outputs:
@@ -267,20 +284,25 @@ class QueryGenerator(Component, Serializable):
 
         return candidate_outputs
 
-    def maxmin_two_entities_solver(self, question: str, entity_ids: List[List[str]]) -> List[Tuple[str, Any, Any]]:
-        ex_rels = []
-        for entities_list in entity_ids:
-            for entity in entities_list:
-                ex_rels += self.wiki_parser("rels", "backw", entity, type_of_rel="direct")
+    def maxmin_two_entities_solver(self, question: str, entity_ids: List[List[str]],
+                          rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str, Any, Any]]:
+        if rels_from_template is not None:
+            top_rels_1 = rels_from_template[0][:-1]
+            top_rels_2 = rels_from_template[1][:-1]
+        else:
+            ex_rels = []
+            for entities_list in entity_ids:
+                for entity in entities_list:
+                    ex_rels += self.wiki_parser("rels", "backw", entity, type_of_rel="direct")
 
-        ex_rels = list(set(ex_rels))
-        scores_1 = self.rel_ranker.rank_rels(question, ex_rels)
-        top_rels_1 = [score[0] for score in scores_1]
-        log.debug(f"top scored first rels: {top_rels_1}")
+            ex_rels = list(set(ex_rels))
+            scores_1 = self.rel_ranker.rank_rels(question, ex_rels)
+            top_rels_1 = [score[0] for score in scores_1]
+            log.debug(f"top scored first rels: {top_rels_1}")
 
-        scores_2 = self.rel_ranker.rank_rels(question, self.rank_list_1)
-        top_rels_2 = [score[0] for score in scores_2]
-        log.debug(f"top scored second rels: {top_rels_2}")
+            scores_2 = self.rel_ranker.rank_rels(question, self.rank_list_1)
+            top_rels_2 = [score[0] for score in scores_2]
+            log.debug(f"top scored second rels: {top_rels_2}")
 
         candidate_outputs = []
 
@@ -288,7 +310,6 @@ class QueryGenerator(Component, Serializable):
             ent_combs = make_entity_combs(entity_ids)
             candidate_outputs = self.find_relevant_subgraph_maxmin_two(ent_combs, top_rels_1[:self.rels_to_leave],
                                                                        top_rels_2[:self.rels_to_leave])
-
             ascending = asc_desc(question)
             reverse = False
             if ascending:
@@ -355,12 +376,8 @@ class QueryGenerator(Component, Serializable):
     def find_relevant_subgraph_cqwq(self, ent_combs: List[Tuple[str]], rels: List[str]) -> List[Tuple[str]]:
         candidate_outputs = []
         for ent_comb in ent_combs:
-            satre_and_le_havre =  "Q9364" in ent_comb and "Q42810" in ent_comb
-            if satre_and_le_havre:
-                log.debug(f"(WikiParser.find_relevant_subgraph_cqwq)rels: {rels}")
             for rel in rels:
                 objects_1 = self.wiki_parser("objects", "forw", ent_comb[0], rel, type_of_rel=None)
-
                 for obj in objects_1:
                     if self.template_num == 2:
                         answer_triplets = self.wiki_parser("triplets", "forw", obj, type_of_rel="qualifier")
@@ -426,27 +443,30 @@ class QueryGenerator(Component, Serializable):
                               rels_from_template: List[Tuple[str]]) -> List[Tuple[str]]:
         candidate_outputs = []
         if len(rels_from_template) == 1:
-            relation = rels_from_template[0][0]
-            direction = rels_from_template[0][1]
+            relations = rels_from_template[0][:-1]
+            direction = rels_from_template[0][-1]
             for entity in entity_ids[0]:
-                objects = self.wiki_parser("objects", direction, entity, relation, type_of_rel="direct")
-                if objects:
-                    candidate_outputs.append((relation, objects[0]))
-                    return candidate_outputs
+                for relation in relations:
+                    objects = self.wiki_parser("objects", direction, entity, relation, type_of_rel="direct")
+                    if objects:
+                        candidate_outputs.append((relation, objects[0]))
+                        return candidate_outputs
 
         if len(rels_from_template) == 2:
-            relation_1 = rels_from_template[0][0]
-            direction_1 = rels_from_template[0][1]
-            relation_2 = rels_from_template[1][0]
-            direction_2 = rels_from_template[1][1]
+            relations_1 = rels_from_template[0][:-1]
+            direction_1 = rels_from_template[0][-1]
+            relations_2 = rels_from_template[1][:-1]
+            direction_2 = rels_from_template[1][-1]
             for entity in entity_ids[0]:
-                objects_1 = self.wiki_parser("objects", direction_1, entity, relation_1, type_of_rel="direct")
-                for object_1 in objects_1:
-                    objects_2 = self.wiki_parser("objects", direction_2, object_1, relation_2, type_of_rel="direct")
-                    if objects_2:
-                        for object_2 in objects_2:
-                            candidate_outputs.append((relation_1, relation_2, object_2))
-                            return candidate_outputs
+                for relation_1 in relations_1:
+                    objects_1 = self.wiki_parser("objects", direction_1, entity, relation_1, type_of_rel="direct")
+                    for object_1 in objects_1:
+                        for relation_2 in relations_2:
+                            objects_2 = self.wiki_parser("objects", direction_2, object_1, relation_2, type_of_rel="direct")
+                            if objects_2:
+                                for object_2 in objects_2:
+                                    candidate_outputs.append((relation_1, relation_2, object_2))
+                                    return candidate_outputs
 
         return candidate_outputs
 
@@ -454,29 +474,32 @@ class QueryGenerator(Component, Serializable):
                               rels_from_template: List[Tuple[str]]) -> List[Tuple[str]]:
         candidate_outputs = []
         if len(rels_from_template) == 1:
-            relation = rels_from_template[0][0]
-            direction = rels_from_template[0][1]
+            relations = rels_from_template[0][:-1]
+            direction = rels_from_template[0][-1]
             for ent_comb in ent_combs:
-                objects_1 = self.wiki_parser("objects", direction, ent_comb[1], relation, type_of_rel="direct")
-                if objects_1:
-                    for object_1 in objects_1:
-                        objects_2 = self.wiki_parser("objects", direction, object_1, "P31", obj=ent_comb[0],
-                                                     type_of_rel="direct")
-                        if objects_2:
-                            candidate_outputs.append((relation, objects_2[0]))
-                            return candidate_outputs
+                for relation in relations:
+                    objects_1 = self.wiki_parser("objects", direction, ent_comb[1], relation, type_of_rel="direct")
+                    if objects_1:
+                        for object_1 in objects_1:
+                            objects_2 = self.wiki_parser("objects", direction, object_1, "P31", obj=ent_comb[0],
+                                                         type_of_rel="direct")
+                            if objects_2:
+                                candidate_outputs.append((relation, objects_2[0]))
+                                return candidate_outputs
 
         if len(rels_from_template) == 2:
-            relation_1 = rels_from_template[0][0]
-            direction_1 = rels_from_template[0][1]
-            relation_2 = rels_from_template[1][0]
-            direction_2 = rels_from_template[1][1]
+            relations_1 = rels_from_template[0][:-1]
+            direction_1 = rels_from_template[0][-1]
+            relations_2 = rels_from_template[1][:-1]
+            direction_2 = rels_from_template[1][-1]
             for ent_comb in ent_combs:
-                objects_1 = self.wiki_parser("objects", direction_1, ent_comb[0], relation_1, type_of_rel="direct")
-                objects_2 = self.wiki_parser("objects", direction_2, ent_comb[1], relation_2, type_of_rel="direct")
-                objects_intersect = list(set(objects_1) & set(objects_2))
-                if objects_intersect:
-                    return [(relation_1, relation_2, objects_intersect[0])]
+                for relation_1 in relations_1:
+                    for relation_2 in relations_2:
+                        objects_1 = self.wiki_parser("objects", direction_1, ent_comb[0], relation_1, type_of_rel="direct")
+                        objects_2 = self.wiki_parser("objects", direction_2, ent_comb[1], relation_2, type_of_rel="direct")
+                        objects_intersect = list(set(objects_1) & set(objects_2))
+                        if objects_intersect:
+                            return [(relation_1, relation_2, objects_intersect[0])]
 
         return candidate_outputs
 
