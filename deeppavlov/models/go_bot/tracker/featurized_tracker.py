@@ -38,11 +38,13 @@ class FeaturizedTracker(TrackerInterface):
         return self.state_size * 3 + 3
 
     def update_state(self, nlu_response: NLUResponse):
-        if isinstance(nlu_response, list):
-            self.history.extend(self._filter(nlu_response))
+        slots = nlu_response.slots
 
-        elif isinstance(nlu_response, dict):
-            for slot, value in self._filter(nlu_response.items()):
+        if isinstance(slots, list):
+            self.history.extend(self._filter(slots))
+
+        elif isinstance(slots, dict):
+            for slot, value in self._filter(slots.items()):
                 self.history.append((slot, value))
 
         prev_state = self.get_state()

@@ -19,7 +19,7 @@ import numpy as np
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManagerInterface
-from deeppavlov.models.go_bot.policy.policy_network import PolicyNetworkParams
+from deeppavlov.models.go_bot.policy.dto.policy_network_params import PolicyNetworkParams
 from deeppavlov.models.go_bot.tracker.dto.tracker_knowledge_interface import TrackerKnowledgeInterface
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 
@@ -175,7 +175,8 @@ class MultipleUserStateTrackersPool(object):
 
     def new_tracker(self):
         tracker = DialogueStateTracker(self.base_tracker.slot_names, self.base_tracker.n_actions,
-                                       self.base_tracker.hidden_size, self.base_tracker.database)
+                                       self.base_tracker.api_call_id, self.base_tracker.hidden_size,
+                                       self.base_tracker.database)
         return tracker
 
     def get_or_init_tracker(self, user_id: int):
@@ -192,6 +193,7 @@ class MultipleUserStateTrackersPool(object):
         tracker = DialogueStateTracker(
             tracker_entity.slot_names,
             tracker_entity.n_actions,
+            tracker_entity.api_call_id,
             tracker_entity.hidden_size,
             tracker_entity.database
         )

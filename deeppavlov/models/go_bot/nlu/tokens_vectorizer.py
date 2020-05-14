@@ -47,7 +47,7 @@ class TokensVectorizer:
         :returns: the (possibly averaged vector of) calculated embeddings sequence and None if embedder is disabled.
         """
 
-        tokens_embedded = []  # todo decide, [] or np.array([]) we use in such cases (None bugs)
+        tokens_embedded = np.array([], dtype=np.float32)  # todo decide, [] or np.array([]) we use in such cases (None bugs)
         if callable(self.embedder):
             tokens_embedded = self.embedder([tokens], mean=mean_embeddings)[0]
         return tokens_embedded
@@ -59,7 +59,7 @@ class TokensVectorizer:
         :returns: if uses BOW encoder, returns np array with BOW encoding for tokens.
                   Otherwise returns an empty list.
         """
-        bow_features = []  # todo decide, [] or np.array([]) we use in such cases (None bugs)
+        bow_features = np.array([], dtype=np.float32)  # todo decide, [] or np.array([]) we use in such cases (None bugs)
         if self._use_bow_encoder():
             tokens_idx = self.word_vocab(tokens)
             bow_features = self.bow_embedder([tokens_idx])[0]
@@ -101,7 +101,8 @@ class TokensVectorizer:
         """
         tokens_embedded = self._embed_tokens(tokens, True)
         # random embedding instead of zeros
-        if tokens_embedded and np.all(tokens_embedded < 1e-20):
+        if tokens_embedded.size != 0 and np.all(tokens_embedded < 1e-20):
+            # TODO:  size != 0 not pythonic
             tokens_embedded = np.fabs(self._standard_normal_like(tokens_embedded))
         return tokens_embedded
 

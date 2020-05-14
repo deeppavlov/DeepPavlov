@@ -11,6 +11,7 @@ from deeppavlov.models.go_bot.nlu.dto.nlu_response_interface import NLUResponseI
 from deeppavlov.models.go_bot.nlu.dto.text_vectorization_response import TextVectorizationResponse
 from deeppavlov.models.go_bot.policy.dto.digitized_policy_features import DigitizedPolicyFeatures
 
+from copy import deepcopy
 
 class UtteranceFeatures:
     """
@@ -52,21 +53,17 @@ class UtteranceDataEntry:
     features: UtteranceFeatures
     target: UtteranceTarget
 
-    def __init__(self, action_id, action_mask, attn_key, tokens_embeddings_padded, features):
-        self.features = UtteranceFeatures(action_mask, attn_key, tokens_embeddings_padded, features)
-        self.target = UtteranceTarget(action_id)
+    def __init__(self, features, target):
+        self.features = features
+        self.target = target
 
     @staticmethod
     def from_features_and_target(features: UtteranceFeatures, target: UtteranceTarget):
-        return UtteranceDataEntry(target.action_id, features.action_mask, features.attn_key,
-                                  features.tokens_embeddings_padded, features.features)
+        return UtteranceDataEntry(deepcopy(features), deepcopy(target))
 
     @staticmethod
     def from_features(features: UtteranceFeatures):
-        return UtteranceDataEntry(action_id=None,
-                                  action_mask=features.action_mask, attn_key=features.attn_key,
-                                  tokens_embeddings_padded=features.tokens_embeddings_padded,
-                                  features=features.features)
+        return UtteranceDataEntry(deepcopy(features), UtteranceTarget(None))
 
 
 class DialogueFeatures:

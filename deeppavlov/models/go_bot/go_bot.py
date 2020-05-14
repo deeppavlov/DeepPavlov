@@ -28,7 +28,8 @@ from deeppavlov.models.go_bot.dto.dataset_features import UtteranceDataEntry, Di
 from deeppavlov.models.go_bot.dto.shared_gobot_params import SharedGoBotParams
 from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManagerInterface
 from deeppavlov.models.go_bot.nlu.nlu_manager import NLUManager
-from deeppavlov.models.go_bot.policy.policy_network import PolicyNetwork, PolicyNetworkParams
+from deeppavlov.models.go_bot.policy.policy_network import PolicyNetwork
+from deeppavlov.models.go_bot.policy.dto.policy_network_params import PolicyNetworkParams
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DialogueStateTracker, MultipleUserStateTrackersPool
 from pathlib import Path
@@ -265,7 +266,7 @@ class GoalOrientedBot(NNModel):
         tokens_bow_encoded = self.data_handler.bow_encode_tokens(nlu_response.tokens)
 
         tokens_embeddings_padded = np.array([], dtype=np.float32)
-        tokens_aggregated_embedding = []
+        tokens_aggregated_embedding = np.array([], dtype=np.float32)
         if self.policy.has_attn():
             attn_window_size = self.policy.get_attn_window_size()
             # todo: this is ugly and caused by complicated nn configuration algorithm
@@ -330,7 +331,6 @@ class GoalOrientedBot(NNModel):
     def __call__(self, batch: Union[List[List[dict]], List[str]],
                  user_ids: Optional[List] = None) -> Union[List[NLGResponseInterface],
                                                            List[List[NLGResponseInterface]]]:
-        # todo infer output types from nlg somehow. still needs oop
         if isinstance(batch[0], list):
             # batch is a list of *completed* dialogues, infer on them to calculate metrics
             # user ids are ignored here: the single tracker is used and is reset after each dialogue inference
@@ -385,6 +385,8 @@ class GoalOrientedBot(NNModel):
         # infer on each dialogue utterance
         # e.g. to calculate inference score via comparing the inferred predictions with the ground truth utterance
         # todo we provide the tracker with both predicted and ground truth response actions info. is this ok?
+        # todo (response to ^) this should be used only on internal evaluations
+        # todo warning.
         res = []
         self.dialogue_state_tracker.reset_state()
         for context in contexts:

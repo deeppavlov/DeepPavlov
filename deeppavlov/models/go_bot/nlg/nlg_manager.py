@@ -80,7 +80,7 @@ class NLGManager(NLGManagerInterface):
         # in api calls replace unknown slots to "dontcare"
         if action_id == self._api_call_id:
             action_text = re.sub("#([A-Za-z]+)", "dontcare", action_text).lower()
-        return action_text
+        return TemplatedNLGResponse(action_text)
 
     def _generate_slotfilled_text_for_action(self, action_id: int, slots: dict) -> str:
         """
