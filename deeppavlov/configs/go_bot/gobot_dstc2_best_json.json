@@ -21,8 +21,8 @@
         "id": "token_vocab",
         "fit_on": ["x_tokens"],
         "class_name": "simple_vocab",
-        "save_path": "{MODELS_PATH}/gobot_dstc2_best/word.dict",
-        "load_path": "{MODELS_PATH}/gobot_dstc2_best/word.dict"
+        "save_path": "{MODELS_PATH}/gobot_dstc2_best_json/word.dict",
+        "load_path": "{MODELS_PATH}/gobot_dstc2_best_json/word.dict"
       },
       {
         "id": "restaurant_database",
@@ -33,8 +33,8 @@
       },
       {
         "class_name": "go_bot",
-        "load_path": "{MODELS_PATH}/gobot_dstc2_best/model",
-        "save_path": "{MODELS_PATH}/gobot_dstc2_best/model",
+        "load_path": "{MODELS_PATH}/gobot_dstc2_best_json/model",
+        "save_path": "{MODELS_PATH}/gobot_dstc2_best_json/model",
         "in": ["x"],
         "in_y": ["y"],
         "out": ["y_predicted"],

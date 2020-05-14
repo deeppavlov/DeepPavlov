@@ -52,6 +52,12 @@
           "primary_keys": ["name"],
           "save_path": "{DOWNLOADS_PATH}/dstc2/resto.sqlite"
         },
+        "nlg_manager": {
+          "class_name": "gobot_nlg_manager",
+          "template_path": "{DATA_PATH}/dstc2-templates.txt",
+          "template_type": "DualTemplate",
+          "api_call_action": "api_call"
+        },
         "api_call_action": "api_call",
         "use_action_mask": false,
         "slot_filler": {
