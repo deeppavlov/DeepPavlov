@@ -18,6 +18,9 @@ from typing import Optional, Union
 from deeppavlov.utils.connector import TelegramBot
 
 
-def interact_model_by_telegram(model_config: Union[str, Path, dict], token: Optional[str] = None) -> None:
-    bot = TelegramBot(model_config, token)
+def interact_model_by_telegram(model_config: Union[str, Path, dict],
+                               token: Optional[str] = None,
+                               proxy_scheme: Optional[str] = None,
+                               proxy_auth: Optional[str] = None) -> None:
+    bot = TelegramBot(model_config, token, proxy_scheme, proxy_auth)
     bot.start()

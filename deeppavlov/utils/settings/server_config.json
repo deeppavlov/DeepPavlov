@@ -12,6 +12,8 @@
   },
   "telegram": {
     "token": "",
+    "proxy_scheme": "https",
+    "proxy_auth": "",
     "conversation_lifetime": 3600,
     "start_message": "Welcome to DeepPavlov inference bot!",
     "help_message": "Welcome to DeepPavlov inference bot!",

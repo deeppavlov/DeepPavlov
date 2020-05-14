@@ -477,7 +477,10 @@ class TelegramBot(BaseBot):
     _conversation_config: dict
     _token: str
 
-    def __init__(self, model_config: Union[str, Path, dict], token: Optional[str]) -> None:
+    def __init__(self, model_config: Union[str, Path, dict],
+                 token: Optional[str],
+                 proxy_scheme: Optional[str],
+                 proxy_auth: Optional[str]) -> None:
         """Initiates and validates class attributes.
 
         Args:
@@ -493,6 +496,12 @@ class TelegramBot(BaseBot):
         bot_config: dict = connector_config['bot_defaults']
         self._conversation_config = connector_config['conversation_defaults']
         self._token = token or bot_config['token']
+
+        auth = proxy_auth or bot_config['proxy_auth']
+        scheme = proxy_scheme or bot_config['proxy_scheme']
+        if auth:
+            log.info(f"using telegram proxy with '{scheme}' scheme and '{auth}' authentication")
+            telebot.apihelper.proxy = {scheme: auth}
 
         if not self._token:
             e = ValueError('Telegram token required: initiate -t param or telegram_defaults/token '

@@ -49,6 +49,8 @@ parser.add_argument("-d", "--download", action="store_true", help="download mode
 parser.add_argument("--folds", help="number of folds", type=int, default=5)
 
 parser.add_argument("-t", "--token", default=None, help="telegram bot token", type=str)
+parser.add_argument("-ps", "--proxy-scheme", default=None, help="telegram bot proxy scheme", type=str)
+parser.add_argument("-pa", "--proxy-auth", default=None, help="telegram bot proxy authentication", type=str)
 
 parser.add_argument("-i", "--ms-id", default=None, help="microsoft bot framework app id", type=str)
 parser.add_argument("-s", "--ms-secret", default=None, help="microsoft bot framework app secret", type=str)
@@ -88,7 +90,10 @@ def main():
     elif args.mode == 'interact':
         interact_model(pipeline_config_path)
     elif args.mode == 'telegram':
-        interact_model_by_telegram(model_config=pipeline_config_path, token=args.token)
+        interact_model_by_telegram(model_config=pipeline_config_path,
+                                   token=args.token,
+                                   proxy_scheme=args.proxy_scheme,
+                                   proxy_auth=args.proxy_auth)
     elif args.mode == 'msbot':
         start_ms_bf_server(model_config=pipeline_config_path,
                            app_id=args.ms_id,
