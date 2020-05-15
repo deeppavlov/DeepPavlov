@@ -60,6 +60,15 @@ class WikiParser(Component):
         if entity.startswith("Q"):
             entity = "http://www.wikidata.org/entity/" + entity
 
+        if rel is not None and rel == "P0":
+            triplets, cardinality = self.document.search_triples(entity, "http://schema.org/description", "")
+            objects = []
+            for triplet in triplets:
+                if triplet[2].endswith("@en"):
+                    found_label = "<DESCR>"+triplet[2].strip('@en').strip('"')
+                    objects.append(found_label)
+            return objects
+
         if find_label:
             if entity.startswith("http://www.wikidata.org/entity/"):
                 labels, cardinality = self.document.search_triples(entity,
@@ -68,6 +77,10 @@ class WikiParser(Component):
                     if label[2].endswith("@en"):
                         found_label = label[2].strip('@en').strip('"')
                         return found_label
+            
+            elif entity.startswith("<DESCR>"):
+                entity = entity.split("<DESCR>")[-1]
+                return entity
 
             elif "http://www.w3.org/2001/XMLSchema#dateTime" in entity:
                 entity = entity.strip("^^<http://www.w3.org/2001/XMLSchema#dateTime>").strip('"').strip("T00:00:00Z")
@@ -115,7 +128,7 @@ class WikiParser(Component):
                 obj = "http://www.wikidata.org/entity/" + obj
         else:
             obj = ""
-        if direction == "forw": 
+        if direction == "forw":
             triplets, cardinality = self.document.search_triples(entity, rel, obj)
         if direction == "backw":
             triplets, cardinality = self.document.search_triples(obj, rel, entity)

@@ -101,6 +101,12 @@ class QueryGenerator(Component, Serializable):
             candidate_outputs = []
             self.template_num = int(template_type)
 
+            replace_tokens = [(' - ', '-'), (' .', ''), ('{', ''), ('}', ''), ('  ', ' '), ('"', "'"), ('(', ''), (')', '')]
+            for old, new in replace_tokens:
+                question = question.replace(old, new)
+
+            print("question after sanitize", question)
+
             entities_from_template, rels_from_template, query_type_template = self.template_matcher(question)
             if query_type_template.isdigit():
                 self.template_num = int(query_type_template)
@@ -604,7 +610,7 @@ class QueryGenerator(Component, Serializable):
                         if objects_mid and len(objects_mid) < 15:
                             for obj in objects_mid:
                                 for rel_2 in top_rels_2[:self.rels_to_leave_2hop]:
-                                    if rel_2 != "P31":
+                                    if rel_2 != "P31" and rel_1 != rel_2:
                                         objects = self.wiki_parser("objects", "forw", obj, rel_2, type_of_rel="direct")
                                         if objects:
                                             candidate_outputs.append((rel_1, rel_2, objects[0]))

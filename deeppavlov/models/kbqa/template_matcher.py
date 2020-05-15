@@ -55,20 +55,37 @@ class TemplateMatcher(Component, Serializable):
         query_type = ""
         min_length = 100
         for template in self.templates:
-            template_len = len(template.replace('xxx', ''))
-            template_regexp = "([a-zа-я\d\s\.]*)"+template.replace("xxx", "([a-zа-я\d\s\.]+)")
+            template_init = template
+            template = "yyy" + template
+            if not template.endswith("xxx?")
+                template = template.replace('?', 'yyy?')
+            template_len = len(template.replace('xxx', '').replace('yyy', ''))
+            positions = [("xxx", m.start()) for m in re.finditer('xxx', template)] + \
+                        [("yyy", m.start()) for m in re.finditer('yyy', template)]
+            positions = sorted(positions, key=lambda x: x[1])
+            positions_useful_tokens = []
+            positions_unuseful_tokens = []
+            for n, position in enumerate(positions):
+                if position[0] == "xxx":
+                    positions_useful_tokens.append(n)
+                if position[0] == "yyy":
+                    positions_unuseful_tokens.append(n)
+            template_regexp = template.replace("xxx", "([a-zа-я\d\s\.-–]+)").replace("yyy", "([a-zа-я\d\s\.-–]*?)")
             fnd = re.findall(template_regexp, question)
+            
             if fnd and str(type(fnd[0])) == "<class 'tuple'>":
-                strstart = fnd[0][0]
-                entities_cand = fnd[0][1:]
+                print(template, template_regexp, fnd)
+                entities_cand = [fnd[0][pos] for pos in positions_useful_tokens]
+                unuseful_tokens = [fnd[0][pos] for pos in positions_unuseful_tokens]
                 entity_lengths = [len(entity) for entity in entities_cand]
+                unuseful_tokens_len = sum([len(entity) for entity in unuseful_tokens])
 
                 if 0 not in entity_lengths:
                     cur_len = sum(entity_lengths)
-                    if cur_len < min_length and len(strstart)+template_len + cur_len == question_length:
+                    if cur_len < min_length and unuseful_tokens_len + template_len + cur_len == question_length:
                         entities = entities_cand
-                        relations = self.templates[template][1:]
-                        query_type = self.templates[template][0]
+                        relations = self.templates[template_init][1:]
+                        query_type = self.templates[template_init][0]
                         min_length = cur_len
 
         return entities, relations, query_type
