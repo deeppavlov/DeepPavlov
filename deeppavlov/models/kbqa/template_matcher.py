@@ -57,7 +57,7 @@ class TemplateMatcher(Component, Serializable):
         for template in self.templates:
             template_init = template
             template = "yyy" + template
-            if not template.endswith("xxx?")
+            if not template.endswith("xxx?"):
                 template = template.replace('?', 'yyy?')
             template_len = len(template.replace('xxx', '').replace('yyy', ''))
             positions = [("xxx", m.start()) for m in re.finditer('xxx', template)] + \
