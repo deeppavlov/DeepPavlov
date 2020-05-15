@@ -241,7 +241,8 @@ class QueryGenerator(Component, Serializable):
             candidate_outputs = self.find_relevant_subgraph_cqwq(ent_combs, top_rels[:self.rels_to_leave])
         return candidate_outputs
 
-    def questions_with_count_solver(self, question: str, entity_ids: List[List[str]]) -> List[Tuple[str, str]]:
+    def questions_with_count_solver(self, question: str, entity_ids: List[List[str]],
+                            rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str, str]]:
         candidate_outputs = []
         if rels_from_template is not None:
             top_rels = rels_from_template[0][:-1]
