@@ -26,7 +26,7 @@ class EntityDetectionParser(Component):
         self.thres_proba = thres_proba
 
     def __call__(self, question_tokens: List[List[str]],
-                 token_probas: List[List[List[float]]]) -> List[List[str]]:
+                 token_tags: List[List[List[float]]]) -> List[List[str]]:
         """
 
         Args:
@@ -37,31 +37,36 @@ class EntityDetectionParser(Component):
         """
         
         entities_batch = []
-        for tokens, probas in zip(question_tokens, token_probas):
-            tags = []
-            for proba in probas:
-                if proba[0] <= self.thres_proba:
-                    tags.append(1)
-                if proba[0] > self.thres_proba:
-                    tags.append(0)
-
-            entities = self.entities_from_tags(tokens, tags, probas)
+        types_batch = []
+        for tokens, tags in zip(question_tokens, token_tags):
+            entities, types = self.entities_from_tags(tokens, tags)
             entities_batch.append(entities)
-        return entities_batch
+            types_batch.append(types)
+        return entities_batch, types_batch
 
-    def entities_from_tags(self, tokens, tags, probas):
+    def entities_from_tags(self, tokens, tags):
         entities = []
+        entity_types = []
         entity = []
-        replace_tokens = [(' - ', '-'), ("'s", ''), (' .', ''), ('{', ''), ('}', ''), ('  ', ' '), ('"', "'")]
+        entity_type = []
+        replace_tokens = [(' - ', '-'), ("'s", ''), (' .', ''), ('{', ''), ('}', ''), ('  ', ' '), ('"', "'"), ('(', ''), (')', '')]
 
-        for tok, tag, proba in zip(tokens, tags, probas):
-            if tag:
+        for tok, tag in zip(tokens, tags):
+            if tag == "E-TAG":
                 entity.append(tok)
+            elif tag == "T-TAG":
+                entity_type.append(tok)
             elif len(entity) > 0:
                 entity = ' '.join(entity)
                 for old, new in replace_tokens:
                     entity = entity.replace(old, new)
                 entities.append(entity)
                 entity = []
+            elif len(entity_type) > 0:
+                entity_type = ' '.join(entity_type)
+                for old, new in replace_tokens:
+                    entity_type = entity_type.replace(old, new)
+                entity_types.append(entity_type)
+                entity_type = []
 
-        return entities
+        return entities, entity_types

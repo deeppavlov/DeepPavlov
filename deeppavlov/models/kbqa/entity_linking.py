@@ -139,7 +139,7 @@ class EntityLinker(Component, Serializable):
             entity_id = candidate[1]
             num_rels = candidate[2]
             entity_name = entity_names[0]
-            fuzz_ratio = max([fuzz.ratio(name.lower(), entity.lower()) for name in entity_names])
+            fuzz_ratio = max([fuzz.ratio(name, entity) for name in entity_names])
             entities_ratios.append((entity_name, entity_id, fuzz_ratio, num_rels))
 
         srtd_with_ratios = sorted(entities_ratios, key=lambda x: (x[2], x[3]), reverse=True)
