@@ -26,7 +26,7 @@ from deeppavlov.models.kbqa.entity_linking import EntityLinker
 from deeppavlov.models.kbqa.wiki_parser import WikiParser
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
 from deeppavlov.models.kbqa.rel_ranking_bert_infer import RelRankerBertInfer
-from deeppavlov.models.kbqa.utils import extract_year, extract_number, asc_desc, make_entity_combs
+from deeppavlov.models.kbqa.utils import extract_year, extract_number, asc_desc, make_entity_combs, make_entity_type_combs
 
 log = getLogger(__name__)
 
@@ -39,7 +39,8 @@ class QueryGenerator(Component, Serializable):
     """
 
     def __init__(self, template_matcher: TemplateMatcher,
-                 linker: EntityLinker,
+                 linker_entities: EntityLinker,
+                 linker_types: EntityLinker,
                  wiki_parser: WikiParser,
                  rel_ranker: Union[RelRankerInfer, RelRankerBertInfer],
                  load_path: str,
@@ -67,7 +68,8 @@ class QueryGenerator(Component, Serializable):
         """
         super().__init__(save_path=None, load_path=load_path)
         self.template_matcher = template_matcher
-        self.linker = linker
+        self.linker_entities = linker_entities
+        self.linker_types = linker_types
         self.wiki_parser = wiki_parser
         self.rel_ranker = rel_ranker
         self.rank_rels_filename_1 = rank_rels_filename_1
@@ -92,48 +94,49 @@ class QueryGenerator(Component, Serializable):
 
     def __call__(self, question_batch: List[str],
                  template_type_batch: List[str],
-                 entities_from_ner_batch: List[List[str]]) -> List[Tuple[str]]:
+                 entities_from_ner_batch: List[List[str]],
+                 types_from_ner_batch: List[List[str]]) -> List[Tuple[str]]:
 
         candidate_outputs_batch = []
-        for question, template_type, entities_from_ner in \
-                     zip(question_batch, template_type_batch, entities_from_ner_batch):
+        for question, template_type, entities_from_ner, types_from_ner in \
+            zip(question_batch, template_type_batch, entities_from_ner_batch, types_from_ner_batch):
 
             candidate_outputs = []
             self.template_num = int(template_type)
 
-            replace_tokens = [(' - ', '-'), (' .', ''), ('{', ''), ('}', ''), ('  ', ' '), ('"', "'"), ('(', ''), (')', '')]
+            replace_tokens = [(' - ', '-'), (' .', ''), ('{', ''), ('}', ''), ('  ', ' '), ('"', "'"), ('(', ''),
+                              (')', ''), ('–', '-')]
             for old, new in replace_tokens:
                 question = question.replace(old, new)
 
-            print("question after sanitize", question)
-
-            entities_from_template, rels_from_template, query_type_template = self.template_matcher(question)
+            entities_from_template, types_from_template, rels_from_template, query_type_template = self.template_matcher(question)
             if query_type_template.isdigit():
                 self.template_num = int(query_type_template)
 
             log.debug(f"question: {question}\n")
             log.debug(f"template_type {self.template_num}")
 
-            if entities_from_template:
-                log.debug(f"(__call__)entities_from_template: {entities_from_template}")
-                entity_ids = self.get_entity_ids(entities_from_template)
+            if entities_from_template or types_from_template:
+                entity_ids = self.get_entity_ids(entities_from_template, "entities")
+                type_ids = self.get_entity_ids(types_from_template, "entities")
                 log.debug(f"entities_from_template {entities_from_template}")
+                log.debug(f"types_from_template {types_from_template}")
                 log.debug(f"rels_from_template {rels_from_template}")
                 log.debug(f"entity_ids {entity_ids}")
+                log.debug(f"type_ids {type_ids}")
 
-                candidate_outputs = self.find_candidate_answers(question, entity_ids, rels_from_template)
+                candidate_outputs = self.find_candidate_answers(question, entity_ids, type_ids, rels_from_template)
 
             if not candidate_outputs and entities_from_ner:
                 log.debug(f"(__call__)entities_from_ner: {entities_from_ner}")
-                entity_ids = self.get_entity_ids(entities_from_ner)
+                log.debug(f"(__call__)types_from_ner: {types_from_ner}")
+                entity_ids = self.get_entity_ids(entities_from_ner, "entities")
+                type_ids = self.get_entity_ids(types_from_ner, "types")
                 log.debug(f"(__call__)entity_ids: {entity_ids}")
-                log.debug(f"entities_from_ner {entities_from_ner}")
-                log.debug(f"entity_ids {entity_ids}")
-                log.debug(f"(__call__)self.template_num: {self.template_num}")
-                log.debug(f"(__call__)template_type: {template_type}")
+                log.debug(f"(__call__)type_ids: {type_ids}")
                 self.template_num = int(template_type[0])
                 log.debug(f"(__call__)self.template_num: {self.template_num}")
-                candidate_outputs = self.find_candidate_answers(question, entity_ids, rels_from_template=None)
+                candidate_outputs = self.find_candidate_answers(question, entity_ids, type_ids, rels_from_template=None)
             candidate_outputs_batch.append(candidate_outputs)
         if self.return_answers:
             answers = self.rel_ranker(question_batch, candidate_outputs_batch)
@@ -143,15 +146,19 @@ class QueryGenerator(Component, Serializable):
             log.debug(f"(__call__)candidate_outputs_batch: {candidate_outputs_batch}")
             return candidate_outputs_batch
 
-    def get_entity_ids(self, entities: List[str]) -> List[List[str]]:
+    def get_entity_ids(self, entities: List[str], what_to_link: str) -> List[List[str]]:
         entity_ids = []
         for entity in entities:
-            entity_id, confidences = self.linker(entity)
+            if what_to_link == "entities":
+                entity_id, confidences = self.linker_entities(entity)
+            if what_to_link == "types":
+                entity_id, confidences = self.linker_types(entity)
             entity_ids.append(entity_id[:15])
         return entity_ids
 
     def find_candidate_answers(self, question: str,
                                entity_ids: List[List[str]],
+                               type_ids: List[List[str]],
                                rels_from_template: List[Tuple[str]]) -> List[Tuple[str]]:
         candidate_outputs = []
         log.debug(f"(find_candidate_answers)self.template_num: {self.template_num}")
@@ -170,16 +177,16 @@ class QueryGenerator(Component, Serializable):
             candidate_outputs = self.questions_with_count_solver(question, entity_ids)
 
         if self.template_num == 5:
-            candidate_outputs = self.maxmin_one_entity_solver(question, entity_ids[0][:self.entities_to_leave], rels_from_template)
+            candidate_outputs = self.maxmin_one_entity_solver(question, type_ids[0][:self.entities_to_leave], rels_from_template)
 
         if self.template_num == 6:
-            candidate_outputs = self.maxmin_two_entities_solver(question, entity_ids, rels_from_template)
+            candidate_outputs = self.maxmin_two_entities_solver(question, entity_ids, type_ids, rels_from_template)
             if not candidate_outputs:
                 self.template_num = 5
-                candidate_outputs = self.maxmin_one_entity_solver(question, entity_ids[0][:self.entities_to_leave])
+                candidate_outputs = self.maxmin_one_entity_solver(question, type_ids[0][:self.entities_to_leave])
 
         if self.template_num == 7:
-            candidate_outputs = self.two_hop_solver(question, entity_ids, rels_from_template)
+            candidate_outputs = self.two_hop_solver(question, entity_ids, type_ids, rels_from_template)
 
         log.debug("candidate_rels_and_answers:\n" + '\n'.join([str(output) for output in candidate_outputs]))
 
@@ -271,7 +278,7 @@ class QueryGenerator(Component, Serializable):
 
         return candidate_outputs
 
-    def maxmin_one_entity_solver(self, question: str, entities_list: List[str],
+    def maxmin_one_entity_solver(self, question: str, types_list: List[str],
                                  rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str, Any]]:
         if rels_from_template is not None:
             top_rels = rels_from_template[0][:-1]
@@ -280,7 +287,7 @@ class QueryGenerator(Component, Serializable):
             top_rels = [score[0] for score in scores]
         log.debug(f"top scored rels: {top_rels}")
         ascending = asc_desc(question)
-        candidate_outputs = self.find_relevant_subgraph_maxmin_one(entities_list, top_rels)
+        candidate_outputs = self.find_relevant_subgraph_maxmin_one(types_list, top_rels)
         reverse = True
         if ascending:
             reverse = False
@@ -291,7 +298,7 @@ class QueryGenerator(Component, Serializable):
 
         return candidate_outputs
 
-    def maxmin_two_entities_solver(self, question: str, entity_ids: List[List[str]],
+    def maxmin_two_entities_solver(self, question: str, entity_ids: List[List[str]], type_ids: List[List[str]],
                           rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str, Any, Any]]:
         if rels_from_template is not None:
             top_rels_1 = rels_from_template[0][:-1]
@@ -313,8 +320,8 @@ class QueryGenerator(Component, Serializable):
 
         candidate_outputs = []
 
-        if len(entity_ids) > 1:
-            ent_combs = make_entity_combs(entity_ids)
+        if len(entity_ids) > 0 and len(type_ids) > 0:
+            ent_combs = make_entity_type_combs(entity_ids[0], type_ids[0])
             candidate_outputs = self.find_relevant_subgraph_maxmin_two(ent_combs, top_rels_1[:self.rels_to_leave],
                                                                        top_rels_2[:self.rels_to_leave])
             ascending = asc_desc(question)
@@ -330,14 +337,19 @@ class QueryGenerator(Component, Serializable):
 
     def two_hop_solver(self, question: str,
                        entity_ids: List[List[str]],
+                       type_ids: List[List[str]],
                        rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str]]:
         candidate_outputs = []
 
-        if len(entity_ids) == 1:
+        if len(entity_ids) == 1 and len(type_ids) == 0:
             if rels_from_template is not None:
                 candidate_outputs = self.from_template_one_ent(entity_ids, rels_from_template)
             else:
                 candidate_outputs = self.two_hop_one_ent(question, entity_ids[0])
+
+        if len(entity_ids) == 1 and len(type_ids) == 1:
+            ent_combs = make_entity_type_combs(entity_ids[0], type_ids[0])
+            candidate_outputs = self.two_hop_with_type(question, ent_combs)
 
         if len(entity_ids) >= 2:
             entity_ids_curr = [entity_ids[0], entity_ids[1]]
@@ -537,6 +549,32 @@ class QueryGenerator(Component, Serializable):
                         return candidate_outputs
 
         return candidate_outputs
+
+    def two_hop_with_type(self, question: str, ent_combs: List[Tuple[str]]) -> List[Tuple[str]]:
+        candidate_outputs = []
+        ex_rels = []
+        for ent_comb in ent_combs:
+            ex_rels += self.wiki_parser("rels", "forw", ent_comb[1], type_of_rel="direct")
+            ex_rels += self.wiki_parser("rels", "backw", ent_comb[1], type_of_rel="direct")
+
+        ex_rels = list(set(ex_rels))
+        scores = self.rel_ranker.rank_rels(question, ex_rels)
+        top_rels = [score[0] for score in scores]
+        log.debug(f"top scored rels: {top_rels}")
+
+        for ent_comb in ent_combs:
+            for rel in top_rels:
+                objects_1 = self.wiki_parser("objects", "forw", ent_comb[1], rel, type_of_rel="direct")
+                objects_1 += self.wiki_parser("objects", "backw", ent_comb[1], rel, type_of_rel="direct")
+                for object_1 in objects_1:
+                    objects_2 = self.wiki_parser("rels", "forw", object_1, "P31", obj=ent_comb[0],
+                                                 type_of_rel="direct")
+                    if objects_2:
+                        for object_2 in objects_2:
+                            candidate_outputs.append((rel, object_1))
+                        log.debug(f"candidate_outputs {rel}, {object_1}, {objects_2}")
+                        return candidate_outputs
+
 
     def two_hop_cqwn(self, entities_list: List[str], rels: List[str], num: str) -> List[Tuple[str]]:
         candidate_outputs = []
