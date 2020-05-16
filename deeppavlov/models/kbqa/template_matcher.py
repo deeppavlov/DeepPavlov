@@ -49,6 +49,7 @@ class TemplateMatcher(Component, Serializable):
         raise NotImplementedError
 
     def __call__(self, question: str) -> Tuple[List[str], List[Tuple[str]], str]:
+        
         question = question.lower()
         question_length = len(question)
         entities = []
@@ -59,7 +60,7 @@ class TemplateMatcher(Component, Serializable):
         for template in self.templates:
             template_init = template
             template = "yyy" + template
-            if not template.endswith("xxx?") and not template.endswith("ttt?"):
+            if all([not template.endswith(tok) for tok in ["xxx?", "ttt?", "yyy?"]]):
                 template = template.replace('?', 'yyy?')
             template_len = len(template.replace('xxx', '').replace('ttt', '').replace('yyy', ''))
             positions = [("xxx", m.start()) for m in re.finditer('xxx', template)] + \
@@ -78,8 +79,8 @@ class TemplateMatcher(Component, Serializable):
                     positions_unuseful_tokens.append(n)
             template_regexp = template
             for template_token in ["xxx", "ttt"]:
-                template_regexp = template_regexp.replace(template_token, "([a-zа-я\d\s\.-]+)")
-            template_regexp = template_regexp.replace("yyy", "([a-zа-я\d\s\.-]*)")
+                template_regexp = template_regexp.replace(template_token, "([a-zа-я\d\s\.-’,]+)")
+            template_regexp = template_regexp.replace("yyy", "([a-zа-я\d\s\.-’,]*)")
             fnd = re.findall(template_regexp, question)
             
             if fnd and str(type(fnd[0])) == "<class 'tuple'>":
@@ -88,7 +89,7 @@ class TemplateMatcher(Component, Serializable):
                 unuseful_tokens = [fnd[0][pos] for pos in positions_unuseful_tokens]
                 entity_lengths = [len(entity) for entity in entities_cand]
                 type_lengths = [len(entity_type) for entity_type in types_cand]
-                unuseful_tokens_len = sum([len(unuseful_tok) for unuseful_tok in unuseful_tokens])
+                unuseful_tokens_len = sum([len(unuseful_tok.replace('?', '')) for unuseful_tok in unuseful_tokens])
                 print(template_init, template_regexp, fnd)
                 print(entities_cand, types_cand, unuseful_tokens, entity_lengths, type_lengths, unuseful_tokens_len, template_len, question_length)
 

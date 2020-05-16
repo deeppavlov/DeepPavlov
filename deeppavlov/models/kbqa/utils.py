@@ -71,3 +71,12 @@ def make_entity_combs(entity_ids: List[List[str]]) -> List[Tuple[str, str, int]]
 
     ent_combs = sorted(ent_combs, key=lambda x: x[2])
     return ent_combs
+
+def make_entity_type_combs(entity_ids: List[str], type_ids: List[str]) -> List[Tuple[str, str, int]]:
+    ent_combs = []
+    for n, type_id in enumerate(type_ids):
+        for m, entity_id in enumerate(entity_ids):
+            ent_combs.append((type_id, entity_id, (n + m)))
+
+    ent_combs = sorted(ent_combs, key=lambda x: x[2])
+    return ent_combs

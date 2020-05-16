@@ -135,6 +135,8 @@ class QueryGenerator(Component, Serializable):
                 log.debug(f"(__call__)entity_ids: {entity_ids}")
                 log.debug(f"(__call__)type_ids: {type_ids}")
                 self.template_num = int(template_type[0])
+                if self.template_num == 6 and len(type_ids) == 2:
+                    self.template_num = 7
                 log.debug(f"(__call__)self.template_num: {self.template_num}")
                 candidate_outputs = self.find_candidate_answers(question, entity_ids, type_ids, rels_from_template=None)
             candidate_outputs_batch.append(candidate_outputs)
@@ -155,6 +157,17 @@ class QueryGenerator(Component, Serializable):
                 entity_id, confidences = self.linker_types(entity)
             entity_ids.append(entity_id[:15])
         return entity_ids
+
+    
+    '''Template types:
+       0: SELECT ?obj WHERE { wd:Q1 p:P1 ?s . ?s ps:P1 ?obj . ?s pq:P2 ?x filter(contains(?x, N)) }
+       1: SELECT ?value WHERE { wd:Q1 p:P1 ?s . ?s ps:P1 ?x filter(contains(?x,N) . ?s pq:P2 ?value}
+       2: SELECT ?value WHERE { wd:Q1 p:P1 ?s . ?s ps:P1 wd:Q2. ?s pq:P2 ?value}
+       3: SELECT ?obj WHERE { wd:Q1 p:P1 ?s . ?s ps:P1 ?obj . ?s pq:P2 wd:Q2}
+       4: SELECT (COUNT(?obj) AS ?value ) { wd:Q wdt:P ?obj }
+       5: SELECT ?ent WHERE ?ent wdt:P31 wd:Q1. ?ent wdt:P2 ?obj ORDER BY ASC(?obj) LIMIT 5
+       6: SELECT ?ent WHERE ?ent wdt:P31 wd:Q1. ?ent wdt:P1 ?obj . ?ent wdt:P2 wd:Q2.  ORDER BY ASC(?obj) LIMIT 5
+    '''
 
     def find_candidate_answers(self, question: str,
                                entity_ids: List[List[str]],
@@ -347,7 +360,7 @@ class QueryGenerator(Component, Serializable):
             else:
                 candidate_outputs = self.two_hop_one_ent(question, entity_ids[0])
 
-        if len(entity_ids) == 1 and len(type_ids) == 1:
+        if len(entity_ids) == 1 and len(type_ids) >= 1:
             ent_combs = make_entity_type_combs(entity_ids[0], type_ids[0])
             candidate_outputs = self.two_hop_with_type(question, ent_combs)
 
@@ -574,6 +587,7 @@ class QueryGenerator(Component, Serializable):
                             candidate_outputs.append((rel, object_1))
                         log.debug(f"candidate_outputs {rel}, {object_1}, {objects_2}")
                         return candidate_outputs
+        return candidate_outputs
 
 
     def two_hop_cqwn(self, entities_list: List[str], rels: List[str], num: str) -> List[Tuple[str]]:
