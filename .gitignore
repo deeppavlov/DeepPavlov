@@ -125,6 +125,3 @@ download/
 
 # project data
 /data/
-
-# _meta file after editable installation
-deeppavlov/_meta.py

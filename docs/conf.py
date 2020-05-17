@@ -12,28 +12,22 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
-import importlib.util
 from pathlib import Path
 
 import sphinx_rtd_theme
 
-# Import __version__ from deeppavlov may cause issues in the process of
-# development: __version__ is taken from _meta.py which is updated only after
-# running setup.py. A developer may be puzzled why the version change is not
-# reflected in the documentation (if he didn't run installation after that).
-# We can't use relative import from setup.py, therefore forced to use importlib.
-spec = importlib.util.spec_from_file_location('setup', Path(__file__).resolve().parents[1] / 'setup.py')
-setup = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(setup)
+meta_path = Path(__file__).resolve().parents[1] / 'deeppavlov' / '_meta.py'
+with open(meta_path) as meta:
+    exec(meta.read())
 
 # -- Project information -----------------------------------------------------
 
 project = 'DeepPavlov'
-copyright = f'2018, {setup.__author__}'
-author = setup.__author__
+copyright = f'2018, {__author__}'
+author = __author__
 
 # The short X.Y version
-version = setup.__version__
+version = __version__
 # The full version, including alpha/beta/rc tags
 release = version
 
@@ -193,8 +187,8 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, project, f'{project} Documentation',
-     author, project, setup.__description__,
-     str(setup.__keywords__)),
+     author, project, __description__,
+     str(__keywords__)),
 ]
 
 
@@ -220,8 +214,3 @@ intersphinx_mapping = {
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
-
-# The contents of the config namespace may not contain unpickleable values.
-# Imported modules are removed automatically but `setup` was imported using
-# importlib, so it have to be deleted manually.
-del setup

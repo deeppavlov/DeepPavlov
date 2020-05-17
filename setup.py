@@ -16,26 +16,9 @@ from setuptools import setup, find_packages
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
-
-__version__ = '0.9.1'
-__author__ = 'Neural Networks and Deep Learning lab, MIPT'
-__description__ = 'An open source library for building end-to-end dialog systems and training chatbots.'
-__keywords__ = ['NLP', 'NER', 'SQUAD', 'Intents', 'Chatbot']
-__license__ = 'Apache License, Version 2.0'
-__email__ = 'info@deeppavlov.ai'
-
-
-def create_meta():
-    meta_path = os.path.join(__location__, 'deeppavlov', '_meta.py')
-    with open(meta_path, 'w') as meta:
-        meta.writelines([
-            f'__version__ = {repr(__version__)}\n',
-            f'__author__ = {repr(__author__)}\n',
-            f'__description__ = {repr(__description__)}\n',
-            f'__keywords__ = {repr(__keywords__)}\n',
-            f'__license__ = {repr(__license__)}\n',
-            f'__email__ = {repr(__email__)}\n'
-        ])
+meta_path = os.path.join(__location__, 'deeppavlov', '_meta.py')
+with open(meta_path) as meta:
+    exec(meta.read())
 
 
 def read_requirements():
@@ -63,7 +46,6 @@ def readme():
 
 
 if __name__ == '__main__':
-    create_meta()
     setup(
         name='deeppavlov',
         packages=find_packages(exclude=('tests', 'docs', 'utils')),
