@@ -53,7 +53,7 @@ def extract_number(question_tokens: List[str], question: str) -> str:
 
 def asc_desc(question: str) -> bool:
     question_lower = question.lower()
-    max_words = ["maximum", "highest", "max(", "greatest", "most", "longest"]
+    max_words = ["maximum", "highest", "max(", "greatest", "most", "longest", "biggest"]
 
     for word in max_words:
         if word in question_lower:

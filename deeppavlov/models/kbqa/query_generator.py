@@ -313,6 +313,8 @@ class QueryGenerator(Component, Serializable):
         if ascending:
             reverse = False
         candidate_outputs = sorted(candidate_outputs, key=lambda x: x[2], reverse=reverse)
+        for candidate_output in candidate_outputs[:5]:
+            log.debug(f"sorted candidate output {candidate_output}")
         candidate_outputs = [(output[0], output[1]) for output in candidate_outputs]
         if candidate_outputs:
             candidate_outputs = [candidate_outputs[0]]
@@ -372,6 +374,8 @@ class QueryGenerator(Component, Serializable):
             if ascending:
                 reverse = False
             candidate_outputs = sorted(candidate_outputs, key=lambda x: x[3], reverse=reverse)
+        for candidate_output in candidate_outputs[:5]:
+            log.debug(f"sorted candidate output {candidate_output}")
         candidate_outputs = [(output[0], output[1], output[2]) for output in candidate_outputs]
         if candidate_outputs:
             candidate_outputs = [candidate_outputs[0]]
@@ -614,6 +618,8 @@ class QueryGenerator(Component, Serializable):
                 for object_1 in objects_1:
                     objects_2 = self.wiki_parser("rels", "forw", object_1, "P31", obj=ent_comb[0],
                                                  type_of_rel="direct")
+                    objects_2 += self.wiki_parser("rels", "forw", object_1, "P106", obj=ent_comb[0],
+                                                 type_of_rel="direct")
                     if objects_2:
                         for object_2 in objects_2:
                             candidate_outputs.append((rel, object_1))
@@ -656,7 +662,7 @@ class QueryGenerator(Component, Serializable):
         log.debug(f"top scored rels: {top_rels}")
 
         if year:
-            candidate_outputs = self.two_hop_cqwn(entities_list[:self.entities_to_leave], top_rels, year[:3])
+            candidate_outputs = self.two_hop_cqwn(entities_list[:self.entities_to_leave], top_rels, year)
             if candidate_outputs:
                 return candidate_outputs
         elif number:
