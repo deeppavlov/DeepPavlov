@@ -12,22 +12,18 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
-from pathlib import Path
-
 import sphinx_rtd_theme
 
-meta_path = Path(__file__).resolve().parents[1] / 'deeppavlov' / '_meta.py'
-with open(meta_path) as meta:
-    exec(meta.read())
+import deeppavlov
 
 # -- Project information -----------------------------------------------------
 
 project = 'DeepPavlov'
-copyright = f'2018, {__author__}'
-author = __author__
+copyright = '2018, ' + deeppavlov.__author__
+author = deeppavlov.__author__
 
 # The short X.Y version
-version = __version__
+version = deeppavlov.__version__
 # The full version, including alpha/beta/rc tags
 release = version
 
@@ -187,8 +183,8 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, project, f'{project} Documentation',
-     author, project, __description__,
-     str(__keywords__)),
+     author, project, deeppavlov.__description__,
+     str(deeppavlov.__keywords__)),
 ]
 
 
