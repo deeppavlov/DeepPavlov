@@ -24,7 +24,7 @@ from deeppavlov.core.models.component import Component
 class EntityDetectionParser(Component):
     """This class parses probabilities of tokens to be a token from the entity substring."""
 
-    def __init__(self, thres_proba: float = 0.87, **kwargs):
+    def __init__(self, thres_proba: float = 0.8, **kwargs):
         self.thres_proba = thres_proba
 
     def __call__(self, question_tokens: List[List[str]],
@@ -53,8 +53,12 @@ class EntityDetectionParser(Component):
         tag_probas = []
         for proba in probas:
             tag_num = np.argmax(proba)
-            tag_probas.append(proba[tag_num])
+            if tag_num in [1, 2]:
+                if proba[tag_num] < self.thres_proba:
+                    tag_num = 0
             tags.append(tag_list[tag_num])
+            tag_probas.append(proba[tag_num])
+                    
         return tags, tag_probas
 
     def entities_from_tags(self, tokens, tags, tag_probas):
