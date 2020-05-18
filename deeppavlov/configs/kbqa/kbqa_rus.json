@@ -53,6 +53,7 @@
         "lemmatize": true,
         "rule_filter_entities": true,
         "language": "rus",
+        "return_confidences": false,
         "template_matcher": "#template_m",
         "linker": "#linker"
       }

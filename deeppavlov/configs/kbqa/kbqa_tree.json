@@ -37,6 +37,7 @@
         "in": ["x"],
         "out": ["answers"],
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
+        "return_confidences": false,
         "q2name_filename": "wiki_rus_q_to_name_full.pickle",
         "wiki_filename": "wiki_rus.pickle",
         "class_name": "kb_tree",

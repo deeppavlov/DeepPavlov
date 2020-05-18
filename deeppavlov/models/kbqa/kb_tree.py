@@ -40,6 +40,7 @@ class KBTree(KBBase):
     def __init__(self, tree_parser: TreeParser,
                  ft_embedder: FasttextEmbedder,
                  use_templates: bool = True,
+                 return_confidences: bool = False,
                  relations_maping_filename: Optional[str] = None,
                  templates_filename: Optional[str] = None,
                  language: str = "rus",
@@ -61,6 +62,7 @@ class KBTree(KBBase):
         """
 
         self.use_templates = use_templates
+        self.return_confidences = return_confidences
         self.tree_parser = tree_parser
         self.ft_embedder = ft_embedder
         self._relations_filename = relations_maping_filename
@@ -114,8 +116,11 @@ class KBTree(KBBase):
                 confidences_batch.append(0.0)
 
         parsed_objects_batch, confidences_batch = self.parse_wikidata_object(objects_batch, confidences_batch)
-
-        return parsed_objects_batch, confidences_batch
+        
+        if self.return_confidences:
+            return parsed_objects_batch, confidences_batch
+        else:
+            return parsed_objects_batch
 
     def filter_triplets(self, triplets: List[List[str]],
                         sentence: str) -> List[List[str]]:

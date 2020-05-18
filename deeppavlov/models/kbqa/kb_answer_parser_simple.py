@@ -36,6 +36,7 @@ class KBAnswerParserSimple(KBBase):
 
     def __init__(self, top_k_classes: int,
                  rule_filter_entities: bool = False,
+                 return_confidences: bool = False,
                  language: str = "eng",
                  relations_maping_filename: Optional[str] = None,
                  templates_filename: Optional[str] = None,
@@ -55,6 +56,7 @@ class KBAnswerParserSimple(KBBase):
         """
         self.top_k_classes = top_k_classes
         self.rule_filter_entities = rule_filter_entities
+        self.return_confidences = return_confidences
         self.language = language
         self._relations_filename = relations_maping_filename
         self._templates_filename = templates_filename
@@ -115,8 +117,11 @@ class KBAnswerParserSimple(KBBase):
                 confidences_batch.append(0.0)
 
         parsed_objects_batch, confidences_batch = self.parse_wikidata_object(objects_batch, confidences_batch)
-
-        return parsed_objects_batch, confidences_batch
+        
+        if self.return_confidences:
+            return parsed_objects_batch, confidences_batch
+        else:
+            return parsed_objects_batch
 
     def _parse_relations_probs(self, probs: List[float]) -> List[float]:
         top_k_inds = np.asarray(probs).argsort()[-self.top_k_classes:][::-1]
