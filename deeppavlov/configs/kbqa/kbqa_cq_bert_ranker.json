@@ -11,7 +11,7 @@
     "in_y": ["y"],
     "pipe": [
       {
-        "config_path": "{CONFIGS_PATH}/ner/ner_lcquad_bert_probas.json",
+        "config_path": "{CONFIGS_PATH}/ner/ner_lcquad_bert_ent_and_type.json",
         "in": ["x"],
         "out": ["x_tokens", "y_pred"]
       },
