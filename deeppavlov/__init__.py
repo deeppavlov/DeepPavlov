@@ -17,9 +17,7 @@ from pathlib import Path
 
 from ._meta import __author__, __description__, __email__, __keywords__, __license__, __version__
 from .configs import configs
-# noinspection PyUnresolvedReferences
 from .core.commands.infer import build_model
-# noinspection PyUnresolvedReferences
 from .core.commands.train import train_evaluate_model_from_config
 from .core.common.chainer import Chainer
 from .core.common.log import init_logger
