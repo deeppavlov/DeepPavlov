@@ -95,7 +95,7 @@ class RelRankerBertInfer(Component, Serializable):
 
             if answers_with_scores:
                 log.debug(f"answers: {answers_with_scores[0][0]}")
-                answer = self.wiki_parser("objects", "forw", answers_with_scores[0][0], find_label=True)
+                answer = self.wiki_parser.find_label(answers_with_scores[0][0])
             
             answers.append(answer)
 

@@ -79,8 +79,7 @@ class WikiParser(Component):
 
     def find_label(self, entity):
         print("find label", entity)
-        if type(a) == str:
-            entity = entity.replace('"', '')
+        entity = str(entity).replace('"', '')
         if entity.startswith("Q"):
             entity = "http://www.wikidata.org/entity/" + entity
 
