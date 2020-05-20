@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Tuple
 
+import re
 from hdt import HDTDocument
 
 from deeppavlov.core.commands.utils import expand_path
@@ -29,121 +30,104 @@ class WikiParser(Component):
         wiki_path = expand_path(wiki_filename)
         self.document = HDTDocument(str(wiki_path))
 
-    def __call__(self, what_return: str,
-                 direction: str,
-                 entity: str,
-                 rel: str = None,
-                 obj: str = None,
-                 type_of_rel: Optional[str] = None,
-                 filter_obj: Optional[str] = None,
-                 find_label: bool = False,
-                 find_alias: bool = False) -> Union[str, List[str]]:
-        """
+    def __call__(self, what_return: List[str],
+                 query: List[Tuple[str]],
+                 unknown_query_triplet: Tuple[str],
+                 filter_entities: Optional[List[Tuple[str]]] = None,
+                 order: Optional[Tuple[str, str]] = None) -> Union[str, List[str]]:
+        
+        combs = self.document.search_join(query)
+        combs = [dict(comb) for comb in combs]
 
-        Args:
-            what_return: "rels" - relations, "obj" - objects or "triplets", "triplets" -- triplets.
-            direction: "forw" - triplets [subject, relation, object]
-                       "backw" - triplets [object, relation, subject]
-            entity: id of entity
-            rel: id of relation
-            obj: id of object
-            type_of_rel: "direct", "statement" or "qualifier"
-            filter_obj: string which the object we want to contain
-            find_label: whether to find label of entity from entity id
-            find_alias: whether to find alias of entity from entity_id
-        """
+        if combs:
+            if unknown_query_triplets:
+                extended_combs = []
+                print("unknown_query_triplet", unknown_query_triplets)
+                print("combs[0]", combs[0])
+                for elem in unknown_query_triplets[0]:
+                    if elem in combs[0].keys():
+                        known_elem = elem
+                for comb in combs:
+                    known_value = comb[known_elem]
+                    print("known_value", known_value)
+                    unknown_query_triplet = tuple([elem.replace(known_elem, known_value) for elem in unknown_query_triplet])
+                    print("unknown_query_triplet", unknown_query_triplet)
+                    unknown_triplet_combs = self.document.search_join([unknown_query_triplet])
+                    unknown_triplet_combs = [dict(unknown_comb) for unknown_comb in unknown_triplet_combs]
+                    print("unknown_triplet_combs", unknown_triplet_combs)
+                    print("comb", comb)
+                    for unknown_triplet_comb in unknown_triplet_combs:
+                        print("comb", comb, "unk", unknown_triplet_comb, "update", {**comb, **unknown_triplet_comb})
+                        extended_combs.append({**comb, **unknown_triplet_comb})
+                print("extended_combs", extended_combs[0])
+                combs = extended_combs
+                
+            if filter_entities:
+                print("filter_entities", filter_entities)
+                for filter_entity in filter_entities:
+                    filter_elem, filter_value = filter_entity.replace("'", '').replace(')', '').split(', ')
+                    print("elem, value", filter_elem, filter_value)
+                    print("combs", combs[0])
+                    combs = [comb for comb in combs if filter_value in comb[filter_elem]]
+
+            if order:
+                reverse = True if order[0][0] == "DESC" else False
+                sort_elem = order[0][1]
+                combs = sorted(combs, key=lambda x: float(x[sort_elem].split('^^')[0].strip('"')), reverse=reverse)
+                combs = [combs[0]]
+            
+            if not what_return[-1].startswith("COUNT"):
+                combs = [[elem[key] for key in what_return] for elem in combs]
+            else:
+                combs = [[combs[0][key] for key in what_return[:-1]] + [len(combs)]]
+
+        return combs
+
+    def find_label(self, entity):
+        print("find label", entity)
+        entity = entity.replace('"', '')
         if entity.startswith("Q"):
             entity = "http://www.wikidata.org/entity/" + entity
 
-        if rel is not None and rel == "P0":
-            triplets, cardinality = self.document.search_triples(entity, "http://schema.org/description", "")
-            objects = []
-            for triplet in triplets:
-                if triplet[2].endswith("@en"):
-                    found_label = "<DESCR>"+triplet[2].strip('@en').strip('"')
-                    objects.append(found_label)
-            return objects
+        if entity.startswith("http://www.wikidata.org/entity/"):
+            labels, cardinality = self.document.search_triples(entity, "http://www.w3.org/2000/01/rdf-schema#label", "")
+            for label in labels:
+                if label[2].endswith("@en"):
+                    found_label = label[2].strip('@en').replace('"', '')
+                    return found_label
 
-        if find_label:
-            if entity.startswith("http://www.wikidata.org/entity/"):
-                labels, cardinality = self.document.search_triples(entity,
-                                                                   "http://www.w3.org/2000/01/rdf-schema#label", "")
-                for label in labels:
-                    if label[2].endswith("@en"):
-                        found_label = label[2].strip('@en').strip('"')
-                        return found_label
-            
-            elif entity.startswith("<DESCR>"):
-                entity = entity.split("<DESCR>")[-1]
-                return entity
+        elif entity.endswith("@en"):
+            entity = entity.replace('@en', '')
+            return entity
 
-            elif "http://www.w3.org/2001/XMLSchema#dateTime" in entity:
-                entity = entity.strip("^^<http://www.w3.org/2001/XMLSchema#dateTime>").strip('"').strip("T00:00:00Z")
-                return entity
+        elif "^^" in entity:
+            entity = entity.split("^^")[0]
+            for token in ["T00:00:00Z", "+"]:
+                entity = entity.replace(token, '')
+            return entity
 
-            elif "<xsd:dateTime>" in entity:
-                entity = entity.strip("^^<xsd:dateTime>").strip('"').strip("T00:00:00Z")
-                return entity
+        elif entity.isdigit():
+            return entity
 
-            elif "http://www.w3.org/2001/XMLSchema#decimal>" in entity:
-                entity = entity.strip("^^<http://www.w3.org/2001/XMLSchema#decimal>").strip('"').strip('"')
-                return entity
+        return "Not Found"
 
-            elif "<xsd:decimal>" in entity:
-                entity = entity.strip("^^<xsd:decimal>").strip('"').lstrip("+")
-                return entity
+    def find_alias(self, entity):
+        aliases = []
+        if entity.startswith("http://www.wikidata.org/entity/"):
+            labels, cardinality = self.document.search_triples(entity,
+                                                   "http://www.w3.org/2004/02/skos/core#altLabel", "")
+            aliases = [label[2].strip('@en').strip('"') for label in labels if label[2].endswith("@en")]
+        return aliases
 
-            elif entity.replace('"','').isdigit():
-                return entity.replace('"','')
-
-            return "Not Found"
-
-        if find_alias:
-            aliases = []
-            if entity.startswith("http://www.wikidata.org/entity/"):
-                labels, cardinality = self.document.search_triples(entity,
-                                                                   "http://www.w3.org/2004/02/skos/core#altLabel", "")
-                for label in labels:
-                    if label[2].endswith("@en"):
-                        aliases.append(label[2].strip('@en').strip('"'))
-            return aliases
-
-        if rel is not None:
-            if type_of_rel is None:
-                if not rel.startswith("http:"):
-                    rel = "http://www.wikidata.org/prop/{}".format(rel)
-            else:
-                rel = "http://www.wikidata.org/prop/{}/{}".format(type_of_rel, rel)
-        else:
-            rel = ""
-
-        if obj is not None:
-            if not obj.startswith("http://www.wikidata.org/"):
-                obj = "http://www.wikidata.org/entity/" + obj
-        else:
-            obj = ""
+    def find_rels(self, entity, direction, rel_type = None):
         if direction == "forw":
-            triplets, cardinality = self.document.search_triples(entity, rel, obj)
-        if direction == "backw":
-            triplets, cardinality = self.document.search_triples(obj, rel, entity)
-
-        found_triplets = []
-        for triplet in triplets:
-            if type_of_rel is None or (type_of_rel is not None and type_of_rel in triplet[1]):
-                if filter_obj is None or (filter_obj is not None and filter_obj in triplet[2]):
-                    found_triplets.append(triplet)
-        if what_return == "rels":
-            rels = [triplet[1].split('/')[-1] for triplet in found_triplets]
-            rels = list(set(rels))
-            return rels
-
-        if what_return == "triplets":
-            return found_triplets
-
-        if what_return == "objects":
-            
-            if direction == "forw":
-                objects = [triplet[2] for triplet in found_triplets]
-            if direction == "backw":
-                objects = [triplet[0] for triplet in found_triplets]
-            return objects
+            triplets, num = self.document.search_triples(f"http://www.wikidata.org/entity/{entity}", "", "")
+        else:
+            triplets, num = self.document.search_triples("", "", f"http://www.wikidata.org/entity/{entity}")
+        
+        if rel_type is not None:
+            start_str = f"http://www.wikidata.org/prop/{rel_type}"
+        else:
+            start_str = "http://www.wikidata.org/prop/P"
+        rels = [triplet[1] for triplet in triplets if triplet[1].startswith(start_str)]
+        return rels
