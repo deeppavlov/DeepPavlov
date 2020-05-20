@@ -11,13 +11,13 @@
     "in_y": ["y"],
     "pipe": [
       {
-        "config_path": "{CONFIGS_PATH}/ner/ner_lcquad_bert_probas.json",
+        "config_path": "{CONFIGS_PATH}/ner/ner_lcquad_bert_ent_and_type.json",
         "in": ["x"],
         "out": ["x_tokens", "y_pred"]
       },
       {
         "in": ["x_tokens", "y_pred"],
-        "out": ["entities"],
+        "out": ["entities", "types"],
         "class_name": "entity_detection_parser"
       },
       {
@@ -28,6 +28,7 @@
       {
         "class_name": "template_matcher",
         "id": "template_m",
+        "return_types": true,
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
         "templates_filename": "templates_eng.pickle"
       },
@@ -38,11 +39,22 @@
       },
       {
         "class_name": "entity_linker",
-        "id": "linker",
+        "id": "linker_entities",
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
         "inverted_index_filename": "inverted_index_eng.pickle",
         "entities_list_filename": "entities_list.pickle",
         "q2name_filename": "wiki_eng_q_to_name.pickle",
+        "use_hdt": false,
+        "wiki_parser": "#wiki_p",
+        "use_prefix_tree": false
+      },
+      {
+        "class_name": "entity_linker",
+        "id": "linker_types",
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "inverted_index_filename": "inverted_index_types_eng.pickle",
+        "entities_list_filename": "types_list.pickle",
+        "q2name_filename": "wiki_eng_q_to_name_types.pickle",
         "use_hdt": false,
         "wiki_parser": "#wiki_p",
         "use_prefix_tree": false
@@ -59,7 +71,8 @@
       {
         "class_name": "query_generator",
         "id": "query_g",
-        "linker": "#linker",
+        "linker_entities": "#linker_entities",
+        "linker_types": "#linker_types",
         "template_matcher": "#template_m",
         "rel_ranker": "#rel_r_inf",
         "wiki_parser": "#wiki_p",
@@ -69,7 +82,7 @@
         "entities_to_leave": 5,
         "rels_to_leave": 12,
         "return_answers": true,
-        "in": ["x", "template_type", "entities"],
+        "in": ["x", "template_type", "entities", "types"],
         "out": ["answers"]
       }
     ],

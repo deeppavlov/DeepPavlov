@@ -120,3 +120,51 @@ KBQA model for simple question answering in Russian can be used from Python usin
     kbqa_model = build_model(configs.kbqa.kbqa_rus, download=True)
     kbqa_model(['Когда родился Пушкин?'])
     >>> ["1799-05-26"]
+
+Train models
+------------
+
+Models, trained for complex question answering:
+
+* :config:`query_pr <classifiers/query_pr.json>` - classification model for prediction of query template type
+
+* :config:`entity_detection <ner/ner_lcquad_bert_ent_and_type.json>` - sequence tagging model for detection of entity and entity types substrings in the question
+
+* :config:`rel_ranking <ranking/rel_ranking.json>` - model for ranking of candidate relations for the question
+
+* :config:`rel_ranking_bert <classifiers/rel_ranking_bert.json>` - model for ranking of candidate relation paths for the question
+
+Training of Query Prediction
+----------------------------
+
+The dataset consists of three csv files: train.csv, valid.csv and test.csv. Each line in this file contains question and corresponding query template type, for example:
+
+"What is the longest river in the UK?", 6
+
+Training of Entity Detection
+----------------------------
+
+The dataset is a pickle file. The dataset must be split into three parts: train, test, and validation. Each part is a list of tuples of question tokens and tags for each token. An example of training sample:
+
+('What', 'is', 'the', 'complete', 'list', 'of', 'records', 'released', 'by', 'Jerry', 'Lee', 'Lewis', '?'], ['O-TAG', 'O-TAG', 'O-TAG', 'O-TAG', 'T-TAG', 'T-TAG', 'T-TAG', 'O-TAG', 'O-TAG', 'E-TAG', 'E-TAG', 'E-TAG', 'O-TAG'])
+
+"T-TAG" corresponds to tokens of entity types, "E-TAG" - for entities, "O-TAG" - for other tokens.
+
+Training of Relation and Path Ranking
+-------------------------------------
+
+The dataset for relation ranking consists of two xml files (train and test sets). Each sample contains a question, a relation title and a label (1 if the relation corresponds to the question and 0 otherwise). An example of training sample:
+
+<paraphrase>
+   <value name="text_1">Is it true that the total shots in career of Rick Adduono is equal to 1?</value>
+   <value name="text_2">total shots in career</value>
+   <value name="class">1</value>
+</paraphrase>
+
+The dataset for path ranking is similar to the dataset for relation ranking. If the path from the grounded entity in the question and the answer consists of two relations, relation titles are separated with "#":
+
+<paraphrase>
+   <value name="text_1">When did Thomas Cromwell end his position as Lord Privy Seal?</value>
+   <value name="text_2">position held # end time</value>
+   <value name="class">1</value>
+</paraphrase>

@@ -53,7 +53,7 @@ def extract_number(question_tokens: List[str], question: str) -> str:
 
 def asc_desc(question: str) -> bool:
     question_lower = question.lower()
-    max_words = ["maximum", "highest", "max(", "greatest", "most", "longest"]
+    max_words = ["maximum", "highest", "max(", "greatest", "most", "longest", "biggest"]
 
     for word in max_words:
         if word in question_lower:
@@ -68,6 +68,15 @@ def make_entity_combs(entity_ids: List[List[str]]) -> List[Tuple[str, str, int]]
         for m, entity_2 in enumerate(entity_ids[1]):
             ent_combs.append((entity_1, entity_2, (n + m)))
             ent_combs.append((entity_2, entity_1, (n + m)))
+
+    ent_combs = sorted(ent_combs, key=lambda x: x[2])
+    return ent_combs
+
+def make_entity_type_combs(entity_ids: List[str], type_ids: List[str]) -> List[Tuple[str, str, int]]:
+    ent_combs = []
+    for n, type_id in enumerate(type_ids):
+        for m, entity_id in enumerate(entity_ids):
+            ent_combs.append((type_id, entity_id, (n + m)))
 
     ent_combs = sorted(ent_combs, key=lambda x: x[2])
     return ent_combs

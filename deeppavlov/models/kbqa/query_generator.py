@@ -118,7 +118,7 @@ class QueryGenerator(Component, Serializable):
 
             if entities_from_template or types_from_template:
                 entity_ids = self.get_entity_ids(entities_from_template, "entities")
-                type_ids = self.get_entity_ids(types_from_template, "entities")
+                type_ids = self.get_entity_ids(types_from_template, "types")
                 log.debug(f"entities_from_template {entities_from_template}")
                 log.debug(f"types_from_template {types_from_template}")
                 log.debug(f"rels_from_template {rels_from_template}")
@@ -135,6 +135,8 @@ class QueryGenerator(Component, Serializable):
                 log.debug(f"(__call__)entity_ids: {entity_ids}")
                 log.debug(f"(__call__)type_ids: {type_ids}")
                 self.template_num = int(template_type[0])
+                if self.template_num == 6 and len(type_ids) == 2:
+                    self.template_num = 7
                 log.debug(f"(__call__)self.template_num: {self.template_num}")
                 candidate_outputs = self.find_candidate_answers(question, entity_ids, type_ids, rels_from_template=None)
             candidate_outputs_batch.append(candidate_outputs)
@@ -155,6 +157,18 @@ class QueryGenerator(Component, Serializable):
                 entity_id, confidences = self.linker_types(entity)
             entity_ids.append(entity_id[:15])
         return entity_ids
+
+    
+    '''Template types:
+       0: SELECT ?obj WHERE { wd:Q1 p:P1 ?s . ?s ps:P1 ?obj . ?s pq:P2 ?x filter(contains(?x, N)) }
+       1: SELECT ?value WHERE { wd:Q1 p:P1 ?s . ?s ps:P1 ?x filter(contains(?x,N) . ?s pq:P2 ?value}
+       2: SELECT ?value WHERE { wd:Q1 p:P1 ?s . ?s ps:P1 wd:Q2. ?s pq:P2 ?value}
+       3: SELECT ?obj WHERE { wd:Q1 p:P1 ?s . ?s ps:P1 ?obj . ?s pq:P2 wd:Q2}
+       4: SELECT (COUNT(?obj) AS ?value ) { wd:Q wdt:P ?obj }
+       5: SELECT ?ent WHERE ?ent wdt:P31 wd:Q1. ?ent wdt:P2 ?obj ORDER BY ASC(?obj) LIMIT 5
+       6: SELECT ?ent WHERE ?ent wdt:P31 wd:Q1. ?ent wdt:P1 ?obj . ?ent wdt:P2 wd:Q2.  ORDER BY ASC(?obj) LIMIT 5
+       8: SELECT ?ent WHERE ?ent_mid wdt:P31 wd:Q1. ?ent wdt:P1 ?obj . ?ent_mid wdt:P2 ent.  ORDER BY ASC(?obj) LIMIT 5
+    '''
 
     def find_candidate_answers(self, question: str,
                                entity_ids: List[List[str]],
@@ -187,6 +201,12 @@ class QueryGenerator(Component, Serializable):
 
         if self.template_num == 7:
             candidate_outputs = self.two_hop_solver(question, entity_ids, type_ids, rels_from_template)
+
+        if self.template_num == 8:
+            candidate_outputs = self.maxmin_entity_property(question, type_ids, rels_from_template)
+
+        if self.template_num == 9:
+            candidate_outputs = self.find_alias(entity_ids, type_ids)
 
         log.debug("candidate_rels_and_answers:\n" + '\n'.join([str(output) for output in candidate_outputs]))
 
@@ -287,16 +307,40 @@ class QueryGenerator(Component, Serializable):
             top_rels = [score[0] for score in scores]
         log.debug(f"top scored rels: {top_rels}")
         ascending = asc_desc(question)
+        log.debug(f"ascending: {ascending}")
         candidate_outputs = self.find_relevant_subgraph_maxmin_one(types_list, top_rels)
         reverse = True
         if ascending:
             reverse = False
         candidate_outputs = sorted(candidate_outputs, key=lambda x: x[2], reverse=reverse)
+        for candidate_output in candidate_outputs[:5]:
+            log.debug(f"sorted candidate output {candidate_output}")
         candidate_outputs = [(output[0], output[1]) for output in candidate_outputs]
         if candidate_outputs:
             candidate_outputs = [candidate_outputs[0]]
 
         return candidate_outputs
+
+    def maxmin_entity_property(self, question: str, type_ids: List[List[str]],
+                                 rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str, Any]]:
+
+        candidate_outputs = []
+        interm_outputs = self.maxmin_one_entity_solver(question, type_ids[1][:self.entities_to_leave], rels_from_template)
+        log.debug(f"intermediate outputs: {interm_outputs}")
+        if rels_from_template:
+            top_rels = rels_from_template[1][:-1]
+            for interm_output in interm_outputs:
+                for rel in top_rels:
+                    objects_1 = self.wiki_parser("objects", "forw", interm_output[1], rel, type_of_rel="direct")
+                    for obj_1 in objects_1:
+                        objects_2 = self.wiki_parser("objects", "forw", obj_1, "P31", type_of_rel="direct")
+                        objects_2 = [obj_2.split('/')[-1] for obj_2 in objects_2]
+                        for entity_type in type_ids[0][:self.entities_to_leave]:
+                            if entity_type in objects_2:
+                                candidate_outputs.append((interm_output[0], rel, obj_1))
+                                return candidate_outputs
+        return candidate_outputs
+        
 
     def maxmin_two_entities_solver(self, question: str, entity_ids: List[List[str]], type_ids: List[List[str]],
                           rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str, Any, Any]]:
@@ -325,10 +369,13 @@ class QueryGenerator(Component, Serializable):
             candidate_outputs = self.find_relevant_subgraph_maxmin_two(ent_combs, top_rels_1[:self.rels_to_leave],
                                                                        top_rels_2[:self.rels_to_leave])
             ascending = asc_desc(question)
-            reverse = False
+            log.debug(f"ascending: {ascending}")
+            reverse = True
             if ascending:
-                reverse = True
+                reverse = False
             candidate_outputs = sorted(candidate_outputs, key=lambda x: x[3], reverse=reverse)
+        for candidate_output in candidate_outputs[:5]:
+            log.debug(f"sorted candidate output {candidate_output}")
         candidate_outputs = [(output[0], output[1], output[2]) for output in candidate_outputs]
         if candidate_outputs:
             candidate_outputs = [candidate_outputs[0]]
@@ -347,7 +394,7 @@ class QueryGenerator(Component, Serializable):
             else:
                 candidate_outputs = self.two_hop_one_ent(question, entity_ids[0])
 
-        if len(entity_ids) == 1 and len(type_ids) == 1:
+        if len(entity_ids) == 1 and len(type_ids) >= 1:
             ent_combs = make_entity_type_combs(entity_ids[0], type_ids[0])
             candidate_outputs = self.two_hop_with_type(question, ent_combs)
 
@@ -427,7 +474,8 @@ class QueryGenerator(Component, Serializable):
                                                  filter_obj="http://www.w3.org/2001/XMLSchema#decimal")
                     if len(objects_2) > 0:
                         number = re.search(r'["]([^"]*)["]*', objects_2[0]).group(1)
-                        candidate_answers.append((rel, obj, float(number)))
+                        number = self.convert_decimal(obj, rel, number)
+                        candidate_answers.append((rel, obj, number))
 
                 if len(candidate_answers) > 0:
                     return candidate_answers
@@ -451,7 +499,8 @@ class QueryGenerator(Component, Serializable):
                                                      filter_obj="http://www.w3.org/2001/XMLSchema#decimal")
                         if len(objects_3) > 0:
                             number = re.search(r'["]([^"]*)["]*', objects_3[0]).group(1)
-                            candidate_answers.append((rel_1, rel_2, obj, float(number)))
+                            number = self.convert_decimal(obj, rel_2, number)
+                            candidate_answers.append((rel_1, rel_2, obj, number))
 
                     if len(candidate_answers) > 0:
                         return candidate_answers
@@ -569,11 +618,14 @@ class QueryGenerator(Component, Serializable):
                 for object_1 in objects_1:
                     objects_2 = self.wiki_parser("rels", "forw", object_1, "P31", obj=ent_comb[0],
                                                  type_of_rel="direct")
+                    objects_2 += self.wiki_parser("rels", "forw", object_1, "P106", obj=ent_comb[0],
+                                                 type_of_rel="direct")
                     if objects_2:
                         for object_2 in objects_2:
                             candidate_outputs.append((rel, object_1))
                         log.debug(f"candidate_outputs {rel}, {object_1}, {objects_2}")
                         return candidate_outputs
+        return candidate_outputs
 
 
     def two_hop_cqwn(self, entities_list: List[str], rels: List[str], num: str) -> List[Tuple[str]]:
@@ -610,7 +662,7 @@ class QueryGenerator(Component, Serializable):
         log.debug(f"top scored rels: {top_rels}")
 
         if year:
-            candidate_outputs = self.two_hop_cqwn(entities_list[:self.entities_to_leave], top_rels, year[:3])
+            candidate_outputs = self.two_hop_cqwn(entities_list[:self.entities_to_leave], top_rels, year)
             if candidate_outputs:
                 return candidate_outputs
         elif number:
@@ -654,3 +706,27 @@ class QueryGenerator(Component, Serializable):
                                         if objects:
                                             candidate_outputs.append((rel_1, rel_2, objects[0]))
         return candidate_outputs
+
+    def find_alias(self, entity_ids, type_ids):
+        candidate_outputs = []
+        ent_combs = make_entity_type_combs(entity_ids[0], type_ids[0])
+        for ent_comb in ent_combs:
+            objects = self.wiki_parser("rels", "forw", ent_comb[1], "P31", obj=ent_comb[0], type_of_rel="direct")
+            if objects:
+                candidate_outputs.append(("P31", ent_comb[1]))
+                return candidate_outputs
+        return candidate_outputs
+
+    def convert_decimal(self, entity: str, rel: str, number: str):
+        number = float(number)
+        if rel in ["P2048", "P2044"]:
+            what_country = self.wiki_parser("objects", "forw", entity, "P17", type_of_rel="direct")
+            # Q30 - USA, so we convert feet to metres
+            if what_country:
+                for country in what_country: 
+                    if country.split('/')[-1] == "Q30":
+                        number *= 0.3048
+                        break
+            if number > 8900:
+                number = 0.0
+        return number

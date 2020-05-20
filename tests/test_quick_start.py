@@ -164,7 +164,34 @@ PARAMS = {
             (["hey", "alexa", "how", "are", "you"], None)]
     },
     "kbqa": {
-        ("kbqa/kbqa_rus.json", "kbqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("kbqa/kbqa_rus.json", "kbqa", ('IP',)):
+            [
+                ("Какая столица России?", "Москва"),
+                ("абв", "Not Found")
+            ],
+        ("kbqa/kbqa_tree.json", "kbqa", ('IP',)):
+            [
+                ("Кто такой Оксимирон?", "российский рэп-исполнитель"),
+                ("Чем питаются коалы?", "Эвкалипт"),
+                ("абв", "Not Found")
+            ],
+        ("kbqa/kbqa_cq.json", "kbqa", ('IP',)):
+            [
+                ("What is the longest river in the UK?", "Severn"),
+                ("What is the currency of Sweden?", "Swedish krona"),
+                ("In which US state would you find Fort Knox?", "Kentucky"),
+                ("Where was Napoleon Bonaparte born?", "Ajaccio"),
+                ("When did the Korean War end?", "1953-07-27"),
+                ("   ", "Not Found")
+            ],
+        ("kbqa/kbqa_bert_ranker.json", "kbqa", ('IP',)):
+            [
+                ("What is the longest river in the UK?", "Severn"),
+                ("What is the currency of Sweden?", "Swedish krona"),
+                ("Where was Napoleon Bonaparte born?", "Ajaccio"),
+                ("When did the Korean War end?", "1953-07-27"),
+                ("   ", "Not Found")
+            ]
     },
     "elmo_embedder": {
         ("embedder/elmo_ru_news.json", "embedder_ru_news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
