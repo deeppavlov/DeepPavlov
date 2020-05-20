@@ -79,22 +79,22 @@ class QueryGenerator(Component, Serializable):
         self.rels_to_leave_2hop = rels_to_leave_2hop
         self.return_answers = return_answers
         self.template_queries = {
-            0: ("SELECT ?obj WHERE { wd:Q1 p:P1 ?s . ?s ps:P1 ?obj . ?s ?p ?x filter(contains(?x, N)&&contains(?p, 'qualifier')) }", (1, 0, 0), True),
-            1: ("SELECT ?value WHERE { wd:Q1 p:P1 ?s . ?s ps:P1 ?x filter(contains(?x, N)) . ?s ?p ?value filter(contains(?p, 'qualifier')) }", (1, 0, 0), True),
-            2: ("SELECT ?value WHERE { wd:Q1 p:P1 ?s . ?s ps:P1 wd:Q2 . ?s ?p ?value filter(contains(?p, 'qualifier')) }", (1, 0, 0), True),
-            3: ("SELECT ?obj WHERE { wd:Q1 p:P1 ?s . ?s ps:P1 ?obj . ?s ?p wd:Q2 filter(contains(?p, 'qualifier')) }", (1, 0, 0), True),
-            4: ("SELECT (COUNT(?obj) AS ?value ) { wd:Q1 wdt:P1 ?obj }", (1,), True),
-            5: ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:P1 ?obj } ORDER BY ASC(?obj) LIMIT 5", (0, 2), True),
-            6: ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:P1 ?obj . ?ent wdt:P2 wd:Q2 } ORDER BY ASC(?obj) LIMIT 5", (0, 2, 3), True),
-            8: ("SELECT ?ent WHERE { ?ent_mid wdt:P31 wd:T1 . ?ent wdt:P1 ?obj . ?ent_mid wdt:P2 ?ent } ORDER BY ASC(?obj) LIMIT 5", (0, 2, 3), True)
+            0: ("SELECT ?obj WHERE { wd:E1 p:R1 ?s . ?s ps:R1 ?obj . ?s ?p ?x filter(contains(?x, N)&&contains(?p, 'qualifier')) }", (1, 0, 0), True),
+            1: ("SELECT ?value WHERE { wd:E1 p:R1 ?s . ?s ps:R1 ?x filter(contains(?x, N)) . ?s ?p ?value filter(contains(?p, 'qualifier')) }", (1, 0, 0), True),
+            2: ("SELECT ?value WHERE { wd:E1 p:R1 ?s . ?s ps:R1 wd:E2 . ?s ?p ?value filter(contains(?p, 'qualifier')) }", (1, 0, 0), True),
+            3: ("SELECT ?obj WHERE { wd:E1 p:R1 ?s . ?s ps:R1 ?obj . ?s ?p wd:E2 filter(contains(?p, 'qualifier')) }", (1, 0, 0), True),
+            4: ("SELECT (COUNT(?obj) AS ?value ) { wd:E1 wdt:R1 ?obj }", (1,), True),
+            5: ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:R1 ?obj } ORDER BY ASC(?obj) LIMIT 5", (0, 2), True),
+            6: ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:R1 ?obj . ?ent wdt:R2 wd:E1 } ORDER BY ASC(?obj) LIMIT 5", (0, 2, 3), True),
+            8: ("SELECT ?ent WHERE { ?ent_mid wdt:P31 wd:T1 . ?ent wdt:R1 ?obj . ?ent_mid wdt:R2 ?ent } ORDER BY ASC(?obj) LIMIT 5", (0, 2, 3), True)
         }
         self.two_hop_queries = {
-            (2, 0): {("forw", "forw"): ("SELECT ?ent WHERE { wd:Q1 wdt:P1 ?ent . wd:Q2 wdt:P2 ?ent }", (1, 1), False),
-                     ("forw", "backw"): ("SELECT ?ent WHERE { wd:Q1 wdt:P1 ?ent . ?ent wdt:P2 wd:Q2 }", (1, 1), False)},
-            (1, 1): {("forw",): ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . wd:Q1 wdt:P1 ?ent }", (0, 1), False),
-                     ("backw",): ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:P1 wd:Q1 }", (0, 1), False)},
-            (1, 0): {("forw",): ("SELECT ?ent WHERE { wd:Q1 wdt:P1 ?ent }", (1,), False),
-                     ("backw",): ("SELECT ?ent WHERE { ?ent wdt:P1 wd:Q1 }", (1,), False)}}
+            (2, 0): {("forw", "forw"): ("SELECT ?ent WHERE { wd:E1 wdt:R1 ?ent . wd:E2 wdt:R2 ?ent }", (1, 1), False),
+                     ("forw", "backw"): ("SELECT ?ent WHERE { wd:E1 wdt:R1 ?ent . ?ent wdt:R2 wd:E2 }", (1, 1), False)},
+            (1, 1): {("forw",): ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . wd:E1 wdt:R1 ?ent }", (0, 1), False),
+                     ("backw",): ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:R1 wd:E1 }", (0, 1), False)},
+            (1, 0): {("forw",): ("SELECT ?ent WHERE { wd:E1 wdt:R1 ?ent }", (1,), False),
+                     ("backw",): ("SELECT ?ent WHERE { ?ent wdt:R1 wd:E1 }", (1,), False)}}
         
         self.load()
 
@@ -235,7 +235,11 @@ class QueryGenerator(Component, Serializable):
         rels_from_query = [triplet[1] for triplet in query_triplets if triplet[1].startswith('?')]
         print("rels_from_query", rels_from_query)
         answer_ent = re.findall("SELECT [\(]?([\S]+) ", query)
-        order_from_query = re.findall("ORDER BY ([A-Z]{3,4})\((.*)\)", question)
+        order_from_query = re.findall("ORDER BY ([A-Z]{3,4})\((.*)\)", query)
+        ascending = asc_desc(question)
+        print("question, ascending", question, ascending)
+        if not ascending:
+            order_from_query = [("DESC", elem[1]) for elem in order_from_query]
         print("answer_ent", answer_ent, "order_from_query", order_from_query)
         filter_from_query = re.findall("contains\((.*)\) ", query)
         print("filter_from_query", filter_from_query)

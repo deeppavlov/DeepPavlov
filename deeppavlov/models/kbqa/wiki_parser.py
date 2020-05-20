@@ -37,7 +37,7 @@ class WikiParser(Component):
 
     def __call__(self, what_return: List[str],
                  query: List[Tuple[str]],
-                 unknown_query_triplet: Tuple[str],
+                 unknown_query_triplets: Tuple[str],
                  filter_entities: Optional[List[Tuple[str]]] = None,
                  order: Optional[Tuple[str, str]] = None) -> Union[str, List[str]]:
         
@@ -47,24 +47,16 @@ class WikiParser(Component):
         if combs:
             if unknown_query_triplets:
                 extended_combs = []
-                print("unknown_query_triplet", unknown_query_triplets)
-                print("combs[0]", combs[0])
                 for elem in unknown_query_triplets[0]:
                     if elem in combs[0].keys():
                         known_elem = elem
                 for comb in combs:
                     known_value = comb[known_elem]
-                    print("known_value", known_value)
                     unknown_query_triplet = tuple([elem.replace(known_elem, known_value) for elem in unknown_query_triplet])
-                    print("unknown_query_triplet", unknown_query_triplet)
                     unknown_triplet_combs = self.document.search_join([unknown_query_triplet])
                     unknown_triplet_combs = [dict(unknown_comb) for unknown_comb in unknown_triplet_combs]
-                    print("unknown_triplet_combs", unknown_triplet_combs)
-                    print("comb", comb)
                     for unknown_triplet_comb in unknown_triplet_combs:
-                        print("comb", comb, "unk", unknown_triplet_comb, "update", {**comb, **unknown_triplet_comb})
                         extended_combs.append({**comb, **unknown_triplet_comb})
-                print("extended_combs", extended_combs[0])
                 combs = extended_combs
                 
             if filter_entities:
@@ -78,6 +70,8 @@ class WikiParser(Component):
             if order:
                 reverse = True if order[0][0] == "DESC" else False
                 sort_elem = order[0][1]
+                print("sort_elem", sort_elem, "reverse", reverse, "order", order[0][0])
+                print("combs", combs[0])
                 combs = sorted(combs, key=lambda x: float(x[sort_elem].split('^^')[0].strip('"')), reverse=reverse)
                 combs = [combs[0]]
             

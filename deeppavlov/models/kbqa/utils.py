@@ -14,6 +14,7 @@
 
 import re
 from typing import Tuple, List
+import itertools
 
 
 def extract_year(question_tokens: List[str], question: str) -> str:
@@ -53,7 +54,7 @@ def extract_number(question_tokens: List[str], question: str) -> str:
 
 def asc_desc(question: str) -> bool:
     question_lower = question.lower()
-    max_words = ["maximum", "highest", "max(", "greatest", "most", "longest", "biggest"]
+    max_words = ["maximum", "highest", "max(", "greatest", "most", "longest", "biggest", "deepest"]
 
     for word in max_words:
         if word in question_lower:
@@ -61,16 +62,41 @@ def asc_desc(question: str) -> bool:
 
     return True
 
-
-def make_entity_combs(entity_ids: List[List[str]]) -> List[Tuple[str, str, int]]:
-    ent_combs = []
-    for n, entity_1 in enumerate(entity_ids[0]):
-        for m, entity_2 in enumerate(entity_ids[1]):
-            ent_combs.append((entity_1, entity_2, (n + m)))
-            ent_combs.append((entity_2, entity_1, (n + m)))
-
-    ent_combs = sorted(ent_combs, key=lambda x: x[2])
+def make_entity_combs(entity_ids, permut):
+    entity_ids = [[(entity, n) for n, entity in enumerate(entities_list)] for entities_list in entity_ids]
+    entity_ids = list(itertools.product(*entity_ids))
+    entity_ids_permut = []
+    if permut:
+        for comb in entity_ids:
+            entity_ids_permut += itertools.permutations(comb)
+    else:
+        entity_ids_permut = entity_ids
+    entity_ids = sorted(entity_ids_permut, key=lambda x: sum([elem[1] for elem in x]))
+    ent_combs = [tuple([elem[0] for elem in comb]+[sum([elem[1] for elem in comb])]) for comb in entity_ids]
     return ent_combs
+
+def fill_query(query, entity_comb, type_comb, rel_comb):
+    query = [" ".join(triplet) for triplet in query]
+    query = "  ".join(query)
+    map_query_str_to_wikidata = [("P0", "http://schema.org/description"),
+                                 ("wd:", "http://www.wikidata.org/entity/"),
+                                 ("wdt:", "http://www.wikidata.org/prop/direct/"),
+                                 (" p:", " http://www.wikidata.org/prop/"),
+                                 ("wdt:", "http://www.wikidata.org/prop/direct/"),
+                                 ("ps:", "http://www.wikidata.org/prop/statement/"),
+                                 ("pq:", "http://www.wikidata.org/prop/qualifier/")]
+
+    for query_str, wikidata_str in map_query_str_to_wikidata:
+        query = query.replace(query_str, wikidata_str)
+    for n, entity in enumerate(entity_comb[:-1]):
+        query = query.replace(f"E{(n+1)}", entity)
+    for n, entity_type in enumerate(type_comb[:-1]):
+        query = query.replace(f"T{(n+1)}", entity_type)
+    for n, rel in enumerate(rel_comb[:-1]):
+        query = query.replace(f"R{(n+1)}", rel)
+    query = query.split('  ')
+    query = [tuple(triplet.split(' ')) for triplet in query]
+    return query
 
 def make_entity_type_combs(entity_ids: List[str], type_ids: List[str]) -> List[Tuple[str, str, int]]:
     ent_combs = []
