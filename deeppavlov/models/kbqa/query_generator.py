@@ -26,7 +26,7 @@ from deeppavlov.models.kbqa.entity_linking import EntityLinker
 from deeppavlov.models.kbqa.wiki_parser import WikiParser
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
 from deeppavlov.models.kbqa.rel_ranking_bert_infer import RelRankerBertInfer
-from deeppavlov.models.kbqa.utils import extract_year, extract_number, asc_desc, make_entity_combs, make_entity_type_combs
+from deeppavlov.models.kbqa.utils import extract_year, extract_number, asc_desc, make_entity_combs, fill_query
 
 log = getLogger(__name__)
 
@@ -78,6 +78,24 @@ class QueryGenerator(Component, Serializable):
         self.rels_to_leave = rels_to_leave
         self.rels_to_leave_2hop = rels_to_leave_2hop
         self.return_answers = return_answers
+        self.template_queries = {
+            0: ("SELECT ?obj WHERE { wd:Q1 p:P1 ?s . ?s ps:P1 ?obj . ?s ?p ?x filter(contains(?x, N)&&contains(?p, 'qualifier')) }", (1, 0, 0), True),
+            1: ("SELECT ?value WHERE { wd:Q1 p:P1 ?s . ?s ps:P1 ?x filter(contains(?x, N)) . ?s ?p ?value filter(contains(?p, 'qualifier')) }", (1, 0, 0), True),
+            2: ("SELECT ?value WHERE { wd:Q1 p:P1 ?s . ?s ps:P1 wd:Q2 . ?s ?p ?value filter(contains(?p, 'qualifier')) }", (1, 0, 0), True),
+            3: ("SELECT ?obj WHERE { wd:Q1 p:P1 ?s . ?s ps:P1 ?obj . ?s ?p wd:Q2 filter(contains(?p, 'qualifier')) }", (1, 0, 0), True),
+            4: ("SELECT (COUNT(?obj) AS ?value ) { wd:Q1 wdt:P1 ?obj }", (1,), True),
+            5: ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:P1 ?obj } ORDER BY ASC(?obj) LIMIT 5", (0, 2), True),
+            6: ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:P1 ?obj . ?ent wdt:P2 wd:Q2 } ORDER BY ASC(?obj) LIMIT 5", (0, 2, 3), True),
+            8: ("SELECT ?ent WHERE { ?ent_mid wdt:P31 wd:T1 . ?ent wdt:P1 ?obj . ?ent_mid wdt:P2 ?ent } ORDER BY ASC(?obj) LIMIT 5", (0, 2, 3), True)
+        }
+        self.two_hop_queries = {
+            (2, 0): {("forw", "forw"): ("SELECT ?ent WHERE { wd:Q1 wdt:P1 ?ent . wd:Q2 wdt:P2 ?ent }", (1, 1), False),
+                     ("forw", "backw"): ("SELECT ?ent WHERE { wd:Q1 wdt:P1 ?ent . ?ent wdt:P2 wd:Q2 }", (1, 1), False)},
+            (1, 1): {("forw",): ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . wd:Q1 wdt:P1 ?ent }", (0, 1), False),
+                     ("backw",): ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:P1 wd:Q1 }", (0, 1), False)},
+            (1, 0): {("forw",): ("SELECT ?ent WHERE { wd:Q1 wdt:P1 ?ent }", (1,), False),
+                     ("backw",): ("SELECT ?ent WHERE { ?ent wdt:P1 wd:Q1 }", (1,), False)}}
+        
         self.load()
 
     def load(self) -> None:
@@ -158,17 +176,6 @@ class QueryGenerator(Component, Serializable):
             entity_ids.append(entity_id[:15])
         return entity_ids
 
-    
-    '''Template types:
-       0: SELECT ?obj WHERE { wd:Q1 p:P1 ?s . ?s ps:P1 ?obj . ?s pq:P2 ?x filter(contains(?x, N)) }
-       1: SELECT ?value WHERE { wd:Q1 p:P1 ?s . ?s ps:P1 ?x filter(contains(?x,N) . ?s pq:P2 ?value}
-       2: SELECT ?value WHERE { wd:Q1 p:P1 ?s . ?s ps:P1 wd:Q2. ?s pq:P2 ?value}
-       3: SELECT ?obj WHERE { wd:Q1 p:P1 ?s . ?s ps:P1 ?obj . ?s pq:P2 wd:Q2}
-       4: SELECT (COUNT(?obj) AS ?value ) { wd:Q wdt:P ?obj }
-       5: SELECT ?ent WHERE ?ent wdt:P31 wd:Q1. ?ent wdt:P2 ?obj ORDER BY ASC(?obj) LIMIT 5
-       6: SELECT ?ent WHERE ?ent wdt:P31 wd:Q1. ?ent wdt:P1 ?obj . ?ent wdt:P2 wd:Q2.  ORDER BY ASC(?obj) LIMIT 5
-       8: SELECT ?ent WHERE ?ent_mid wdt:P31 wd:Q1. ?ent wdt:P1 ?obj . ?ent_mid wdt:P2 ent.  ORDER BY ASC(?obj) LIMIT 5
-    '''
 
     def find_candidate_answers(self, question: str,
                                entity_ids: List[List[str]],
@@ -177,556 +184,98 @@ class QueryGenerator(Component, Serializable):
         candidate_outputs = []
         log.debug(f"(find_candidate_answers)self.template_num: {self.template_num}")
 
-        if self.template_num == 0 or self.template_num == 1:
-            candidate_outputs = self.complex_question_with_number_solver(question, entity_ids)
-            if not candidate_outputs:
-                self.template_num = 7
-
-        if self.template_num == 2 or self.template_num == 3:
-            candidate_outputs = self.complex_question_with_qualifier_solver(question, entity_ids)
-            if not candidate_outputs:
-                self.template_num = 7
-
-        if self.template_num == 4:
-            candidate_outputs = self.questions_with_count_solver(question, entity_ids)
-
-        if self.template_num == 5:
-            candidate_outputs = self.maxmin_one_entity_solver(question, type_ids[0][:self.entities_to_leave], rels_from_template)
-
-        if self.template_num == 6:
-            candidate_outputs = self.maxmin_two_entities_solver(question, entity_ids, type_ids, rels_from_template)
-            if not candidate_outputs:
-                self.template_num = 5
-                candidate_outputs = self.maxmin_one_entity_solver(question, type_ids[0][:self.entities_to_leave])
+        if self.template_num != 7:
+            template = self.template_queries[self.template_num]
+            candidate_outputs = self.query_parser(question, template,
+                        entity_ids, type_ids, rels_from_template)
 
         if self.template_num == 7:
-            candidate_outputs = self.two_hop_solver(question, entity_ids, type_ids, rels_from_template)
-
-        if self.template_num == 8:
-            candidate_outputs = self.maxmin_entity_property(question, type_ids, rels_from_template)
-
-        if self.template_num == 9:
-            candidate_outputs = self.find_alias(entity_ids, type_ids)
+            templates = self.two_hop_queries[(len(entity_ids), len(type_ids))]
+            if rels_from_template is not None:
+                rel_dirs = tuple([rel_list[-1] for rel_list in rels_from_template])
+                template = templates[rel_dirs]
+                candidate_outputs = candidate_outputs = self.query_parser(question, template,
+                        entity_ids, type_ids, rels_from_template)
+            else:
+                for rel_dirs in templates:
+                    candidate_outputs = candidate_outputs = self.query_parser(question, templates[rel_dirs],
+                        entity_ids, type_ids, rels_from_template)
+                    if candidate_outputs:
+                        break
 
         log.debug("candidate_rels_and_answers:\n" + '\n'.join([str(output) for output in candidate_outputs]))
 
         return candidate_outputs
-
-    def complex_question_with_number_solver(self, question: str, entity_ids: List[List[str]],
-                                            rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str]]:
+    
+    def query_parser(self, question, query_info, entity_ids, type_ids, rels_from_template):
+        candidate_outputs = []
         question_tokens = nltk.word_tokenize(question)
+        query, rels_for_search, return_if_found = query_info
+        print("query", query, rels_for_search, return_if_found)
+        query_triplets = query[query.find('{')+1:query.find('}')].strip(' ').split(' . ')
+        print("query_triplets", query_triplets)
+        query_triplets = [tuple(triplet.split(' ')[:3]) for triplet in query_triplets]
+        known_query_triplets = [triplet for triplet in query_triplets if not all([elem.startswith('?') for elem in triplet])]
+        unknown_query_triplets = [triplet for triplet in query_triplets if all([elem.startswith('?') for elem in triplet])]
+        print("known_query_triplets", known_query_triplets)
+        print("unknown_query_triplets", unknown_query_triplets)
+        rel_directions = [("forw" if triplet[2].startswith('?') else "backw", search_or_not) \
+            for search_or_not, triplet in zip(rels_for_search, query_triplets) if search_or_not]
+        print("rel_directions", rel_directions)
+        entity_combs = make_entity_combs(entity_ids, permut=True)
+        print("entity_combs", entity_combs[:3])
+        type_combs = make_entity_combs(type_ids, permut=False)
+        print("type_combs", type_combs[:3])
+        rels = []
         if rels_from_template is not None:
-            top_rels = rels_from_template[0][:-1]
+            rels = [rel_list[:-1] for rel_list in rels_from_template]
         else:
-            ex_rels = []
-            for entity in entity_ids[0][:self.entities_to_leave]:
-                ex_rels += self.wiki_parser("rels", "forw", entity, type_of_rel="direct")
-            ex_rels = list(set(ex_rels))
-            scores = self.rel_ranker.rank_rels(question, ex_rels)
-            top_rels = [score[0] for score in scores]
-        log.debug(f"top scored rels: {top_rels}")
+            rels = [self.find_top_rels(question, entity_ids, d) for d in rel_directions]
+        print("rels", rels)
+        rels_from_query = [triplet[1] for triplet in query_triplets if triplet[1].startswith('?')]
+        print("rels_from_query", rels_from_query)
+        answer_ent = re.findall("SELECT [\(]?([\S]+) ", query)
+        order_from_query = re.findall("ORDER BY ([A-Z]{3,4})\((.*)\)", question)
+        print("answer_ent", answer_ent, "order_from_query", order_from_query)
+        filter_from_query = re.findall("contains\((.*)\) ", query)
+        print("filter_from_query", filter_from_query)
+
         year = extract_year(question_tokens, question)
-        number = False
-        if not year:
-            number = extract_number(question_tokens, question)
-        log.debug(f"year {year}, number {number}")
-
-        candidate_outputs = []
-
+        number = extract_number(question_tokens, question)
         if year:
-            candidate_outputs = self.find_relevant_subgraph_cqwn(entity_ids[0][:self.entities_to_leave],
-                                                                 top_rels[:self.rels_to_leave], year)
-            if not candidate_outputs:
-                candidate_outputs = self.find_relevant_subgraph_cqwn(entity_ids[0][:self.entities_to_leave],
-                                                                 ex_rels, year)
-
+            filter_from_query = [elem.replace("N", year) for elem in filter_from_query]
         if number:
-            candidate_outputs = self.find_relevant_subgraph_cqwn(entity_ids[0][:self.entities_to_leave],
-                                                                 top_rels[:self.rels_to_leave], number)
-            if not candidate_outputs:
-                candidate_outputs = self.find_relevant_subgraph_cqwn(entity_ids[0][:self.entities_to_leave],
-                                                                 ex_rels, number)
+            filter_from_query = [elem.replace("N", number) for elem in filter_from_query]
+        print("filter_from_query", filter_from_query)
+
+        rel_combs = make_entity_combs(rels, permut=False)
+        for entity_comb in entity_combs:
+            for type_comb in type_combs:
+                for rel_comb in rel_combs:
+                    query_hdt = fill_query(known_query_triplets, entity_comb, type_comb, rel_comb)
+                    print("query_hdt", query_hdt)
+                    candidate_output = self.wiki_parser(rels_from_query + answer_ent, query_hdt, 
+                        unknown_query_triplets, filter_from_query, order_from_query)
+                    candidate_outputs += [rel_comb[:-1] + tuple(output) for output in candidate_output]
+                    print("outputs", candidate_outputs)
+                    if return_if_found and candidate_output:
+                        return candidate_outputs
+        print("final outputs", candidate_outputs)
 
         return candidate_outputs
 
-    def complex_question_with_qualifier_solver(self, question: str, entity_ids: List[List[str]],
-                                        rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str]]:
-        if rels_from_template is not None:
-            top_rels = rels_from_template[0][:-1]
-        else:
-            ex_rels = []
-            for entity in entity_ids[0][:self.entities_to_leave]:
-                ex_rels += self.wiki_parser("rels", "forw", entity, type_of_rel="direct")
-            ex_rels = list(set(ex_rels))
-            scores = self.rel_ranker.rank_rels(question, ex_rels)
-            top_rels = [score[0] for score in scores]
-        log.debug(f"top scored rels: {top_rels}")
-
-        candidate_outputs = []
-        if len(entity_ids) > 1:
-            ent_combs = make_entity_combs(entity_ids)
-            candidate_outputs = self.find_relevant_subgraph_cqwq(ent_combs, top_rels[:self.rels_to_leave])
-        return candidate_outputs
-
-    def questions_with_count_solver(self, question: str, entity_ids: List[List[str]],
-                            rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str, str]]:
-        candidate_outputs = []
-        if rels_from_template is not None:
-            top_rels = rels_from_template[0][:-1]
-            directions = [rels_from_template[0][-1]]
-        else:
+    def find_top_rels(self, question, entity_ids, triplet_direction):
+        if triplet_direction[1] == 1:
             ex_rels = []
             for entity_id in entity_ids:
                 for entity in entity_id[:self.entities_to_leave]:
-                    ex_rels += self.wiki_parser("rels", "forw", entity, type_of_rel="direct")
-                    ex_rels += self.wiki_parser("rels", "backw", entity, type_of_rel="direct")
-
+                    ex_rels += self.wiki_parser.find_rels(entity, triplet_direction[0])
             ex_rels = list(set(ex_rels))
-            scores = self.rel_ranker.rank_rels(question, ex_rels)
-            top_rels = [score[0] for score in scores]
-            directions = ["forw", "backw"]
-        log.debug(f"top scored rels: {top_rels}")
-        
-        for entity_id in entity_ids:
-            for entity in entity_id[:self.entities_to_leave]:
-                answers = []
-                for rel in top_rels[:self.rels_to_leave]:
-                    for direction in directions:
-                        answers += self.wiki_parser("objects", direction, entity, rel, type_of_rel="direct")
-                        if len(answers) > 0:
-                            candidate_outputs.append((rel, str(len(answers))))
-
-        return candidate_outputs
-
-    def maxmin_one_entity_solver(self, question: str, types_list: List[str],
-                                 rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str, Any]]:
-        if rels_from_template is not None:
-            top_rels = rels_from_template[0][:-1]
-        else:
-            scores = self.rel_ranker.rank_rels(question, self.rank_list_0)
-            top_rels = [score[0] for score in scores]
-        log.debug(f"top scored rels: {top_rels}")
-        ascending = asc_desc(question)
-        log.debug(f"ascending: {ascending}")
-        candidate_outputs = self.find_relevant_subgraph_maxmin_one(types_list, top_rels)
-        reverse = True
-        if ascending:
-            reverse = False
-        candidate_outputs = sorted(candidate_outputs, key=lambda x: x[2], reverse=reverse)
-        for candidate_output in candidate_outputs[:5]:
-            log.debug(f"sorted candidate output {candidate_output}")
-        candidate_outputs = [(output[0], output[1]) for output in candidate_outputs]
-        if candidate_outputs:
-            candidate_outputs = [candidate_outputs[0]]
-
-        return candidate_outputs
-
-    def maxmin_entity_property(self, question: str, type_ids: List[List[str]],
-                                 rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str, Any]]:
-
-        candidate_outputs = []
-        interm_outputs = self.maxmin_one_entity_solver(question, type_ids[1][:self.entities_to_leave], rels_from_template)
-        log.debug(f"intermediate outputs: {interm_outputs}")
-        if rels_from_template:
-            top_rels = rels_from_template[1][:-1]
-            for interm_output in interm_outputs:
-                for rel in top_rels:
-                    objects_1 = self.wiki_parser("objects", "forw", interm_output[1], rel, type_of_rel="direct")
-                    for obj_1 in objects_1:
-                        objects_2 = self.wiki_parser("objects", "forw", obj_1, "P31", type_of_rel="direct")
-                        objects_2 = [obj_2.split('/')[-1] for obj_2 in objects_2]
-                        for entity_type in type_ids[0][:self.entities_to_leave]:
-                            if entity_type in objects_2:
-                                candidate_outputs.append((interm_output[0], rel, obj_1))
-                                return candidate_outputs
-        return candidate_outputs
-        
-
-    def maxmin_two_entities_solver(self, question: str, entity_ids: List[List[str]], type_ids: List[List[str]],
-                          rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str, Any, Any]]:
-        if rels_from_template is not None:
-            top_rels_1 = rels_from_template[0][:-1]
-            top_rels_2 = rels_from_template[1][:-1]
-        else:
-            ex_rels = []
-            for entities_list in entity_ids:
-                for entity in entities_list:
-                    ex_rels += self.wiki_parser("rels", "backw", entity, type_of_rel="direct")
-
-            ex_rels = list(set(ex_rels))
-            scores_1 = self.rel_ranker.rank_rels(question, ex_rels)
-            top_rels_1 = [score[0] for score in scores_1]
-            log.debug(f"top scored first rels: {top_rels_1}")
-
-            scores_2 = self.rel_ranker.rank_rels(question, self.rank_list_1)
-            top_rels_2 = [score[0] for score in scores_2]
-            log.debug(f"top scored second rels: {top_rels_2}")
-
-        candidate_outputs = []
-
-        if len(entity_ids) > 0 and len(type_ids) > 0:
-            ent_combs = make_entity_type_combs(entity_ids[0], type_ids[0])
-            candidate_outputs = self.find_relevant_subgraph_maxmin_two(ent_combs, top_rels_1[:self.rels_to_leave],
-                                                                       top_rels_2[:self.rels_to_leave])
-            ascending = asc_desc(question)
-            log.debug(f"ascending: {ascending}")
-            reverse = True
-            if ascending:
-                reverse = False
-            candidate_outputs = sorted(candidate_outputs, key=lambda x: x[3], reverse=reverse)
-        for candidate_output in candidate_outputs[:5]:
-            log.debug(f"sorted candidate output {candidate_output}")
-        candidate_outputs = [(output[0], output[1], output[2]) for output in candidate_outputs]
-        if candidate_outputs:
-            candidate_outputs = [candidate_outputs[0]]
-
-        return candidate_outputs
-
-    def two_hop_solver(self, question: str,
-                       entity_ids: List[List[str]],
-                       type_ids: List[List[str]],
-                       rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str]]:
-        candidate_outputs = []
-
-        if len(entity_ids) == 1 and len(type_ids) == 0:
-            if rels_from_template is not None:
-                candidate_outputs = self.from_template_one_ent(entity_ids, rels_from_template)
-            else:
-                candidate_outputs = self.two_hop_one_ent(question, entity_ids[0])
-
-        if len(entity_ids) == 1 and len(type_ids) >= 1:
-            ent_combs = make_entity_type_combs(entity_ids[0], type_ids[0])
-            candidate_outputs = self.two_hop_with_type(question, ent_combs)
-
-        if len(entity_ids) >= 2:
-            entity_ids_curr = [entity_ids[0], entity_ids[1]]
-            ent_combs = make_entity_combs(entity_ids_curr)
-            if rels_from_template is not None:
-                candidate_outputs = self.from_template_two_ent(ent_combs, rels_from_template)
-            else:
-                candidate_outputs = self.two_hop_two_ent(question, ent_combs)
-                if not candidate_outputs:
-                    if len(entity_ids) == 3:
-                        entity_ids_curr = [entity_ids[0], entity_ids[2]]
-                        ent_combs = make_entity_combs(entity_ids_curr)
-                        candidate_outputs = self.two_hop_two_ent(question, ent_combs)
-                    else:
-                        candidate_outputs = self.two_hop_one_ent(question, entity_ids[1])
-
-        return candidate_outputs
-
-    def find_relevant_subgraph_cqwn(self, entities_list: List[str], rels: List[str], num: str) -> List[Tuple[str]]:
-        candidate_outputs = []
-
-        for entity in entities_list:
-            for rel in rels:
-                objects_1 = self.wiki_parser("objects", "forw", entity, rel, type_of_rel=None)
-                for obj in objects_1:
-                    if self.template_num == 0:
-                        answers = self.wiki_parser("objects", "forw", obj, rel, type_of_rel="statement")
-                        second_rels = self.wiki_parser("rels", "forw", obj, type_of_rel="qualifier", filter_obj=num)
-                        if len(second_rels) > 0 and len(answers) > 0:
-                            for second_rel in second_rels:
-                                for ans in answers:
-                                    candidate_outputs.append((rel, second_rel, ans))
-                    if self.template_num == 1:
-                        answer_triplets = self.wiki_parser("triplets", "forw", obj, type_of_rel="qualifier")
-                        second_rels = self.wiki_parser("rels", "forw", obj, rel,
-                                                       type_of_rel="statement", filter_obj=num)
-                        if len(second_rels) > 0 and len(answer_triplets) > 0:
-                            for ans in answer_triplets:
-                                candidate_outputs.append((rel, ans[1], ans[2]))
-
-        return candidate_outputs
-
-    def find_relevant_subgraph_cqwq(self, ent_combs: List[Tuple[str]], rels: List[str]) -> List[Tuple[str]]:
-        candidate_outputs = []
-        for ent_comb in ent_combs:
-            for rel in rels:
-                objects_1 = self.wiki_parser("objects", "forw", ent_comb[0], rel, type_of_rel=None)
-                for obj in objects_1:
-                    if self.template_num == 2:
-                        answer_triplets = self.wiki_parser("triplets", "forw", obj, type_of_rel="qualifier")
-                        second_rels = self.wiki_parser("rels", "backw", ent_comb[1], rel, obj, type_of_rel="statement")
-                        if len(second_rels) > 0 and len(answer_triplets) > 0:
-                            for ans in answer_triplets:
-                                candidate_outputs.append((rel, ans[1], ans[2]))
-                    if self.template_num == 3:
-                        answers = self.wiki_parser("objects", "forw", obj, rel, type_of_rel="statement")
-                        second_rels = self.wiki_parser("rels", "backw", ent_comb[1], rel=None,
-                                                       obj=obj, type_of_rel="qualifier")
-                        if len(second_rels) > 0 and len(answers) > 0:
-                            for second_rel in second_rels:
-                                for ans in answers:
-                                    candidate_outputs.append((rel, second_rel, ans))
-
-        return candidate_outputs
-
-    def find_relevant_subgraph_maxmin_one(self, entities_list: List[str], rels: List[str]) -> List[Tuple[str]]:
-        candidate_answers = []
-
-        for entity in entities_list:
-            objects_1 = self.wiki_parser("objects", "backw", entity, "P31", type_of_rel="direct")
-            for rel in rels:
-                candidate_answers = []
-                for obj in objects_1:
-                    objects_2 = self.wiki_parser("objects", "forw", obj, rel, type_of_rel="direct",
-                                                 filter_obj="http://www.w3.org/2001/XMLSchema#decimal")
-                    if len(objects_2) > 0:
-                        number = re.search(r'["]([^"]*)["]*', objects_2[0]).group(1)
-                        number = self.convert_decimal(obj, rel, number)
-                        candidate_answers.append((rel, obj, number))
-
-                if len(candidate_answers) > 0:
-                    return candidate_answers
-
-        return candidate_answers
-
-    def find_relevant_subgraph_maxmin_two(self, ent_combs: List[Tuple[str]],
-                                          rels_1: List[str],
-                                          rels_2: List[str]) -> List[Tuple[str]]:
-        candidate_answers = []
-
-        for ent_comb in ent_combs:
-            objects_1 = self.wiki_parser("objects", "backw", ent_comb[0], "P31", type_of_rel="direct")
-            for rel_1 in rels_1:
-                objects_2 = self.wiki_parser("objects", "backw", ent_comb[1], rel_1, type_of_rel="direct")
-                objects_intersect = list(set(objects_1) & set(objects_2))
-                for rel_2 in rels_2:
-                    candidate_answers = []
-                    for obj in objects_intersect:
-                        objects_3 = self.wiki_parser("objects", "forw", obj, rel_2, type_of_rel="direct",
-                                                     filter_obj="http://www.w3.org/2001/XMLSchema#decimal")
-                        if len(objects_3) > 0:
-                            number = re.search(r'["]([^"]*)["]*', objects_3[0]).group(1)
-                            number = self.convert_decimal(obj, rel_2, number)
-                            candidate_answers.append((rel_1, rel_2, obj, number))
-
-                    if len(candidate_answers) > 0:
-                        return candidate_answers
-
-        return candidate_answers
-
-    def from_template_one_ent(self, entity_ids: List[List[str]],
-                              rels_from_template: List[Tuple[str]]) -> List[Tuple[str]]:
-        candidate_outputs = []
-        if len(rels_from_template) == 1:
-            relations = rels_from_template[0][:-1]
-            direction = rels_from_template[0][-1]
-            for entity in entity_ids[0]:
-                for relation in relations:
-                    objects = self.wiki_parser("objects", direction, entity, relation, type_of_rel="direct")
-                    if objects:
-                        candidate_outputs.append((relation, objects[0]))
-                        return candidate_outputs
-
-        if len(rels_from_template) == 2:
-            relations_1 = rels_from_template[0][:-1]
-            direction_1 = rels_from_template[0][-1]
-            relations_2 = rels_from_template[1][:-1]
-            direction_2 = rels_from_template[1][-1]
-            for entity in entity_ids[0]:
-                for relation_1 in relations_1:
-                    objects_1 = self.wiki_parser("objects", direction_1, entity, relation_1, type_of_rel="direct")
-                    for object_1 in objects_1:
-                        for relation_2 in relations_2:
-                            objects_2 = self.wiki_parser("objects", direction_2, object_1, relation_2, type_of_rel="direct")
-                            if objects_2:
-                                for object_2 in objects_2:
-                                    candidate_outputs.append((relation_1, relation_2, object_2))
-                                    return candidate_outputs
-
-        return candidate_outputs
-
-    def from_template_two_ent(self, ent_combs: List[Tuple[str]],
-                              rels_from_template: List[Tuple[str]]) -> List[Tuple[str]]:
-        candidate_outputs = []
-        if len(rels_from_template) == 1:
-            relations = rels_from_template[0][:-1]
-            direction = rels_from_template[0][-1]
-            for ent_comb in ent_combs:
-                for relation in relations:
-                    objects_1 = self.wiki_parser("objects", direction, ent_comb[1], relation, type_of_rel="direct")
-                    if objects_1:
-                        for object_1 in objects_1:
-                            objects_2 = self.wiki_parser("objects", direction, object_1, "P31", obj=ent_comb[0],
-                                                         type_of_rel="direct")
-                            if objects_2:
-                                candidate_outputs.append((relation, objects_2[0]))
-                                return candidate_outputs
-
-        if len(rels_from_template) == 2:
-            relations_1 = rels_from_template[0][:-1]
-            direction_1 = rels_from_template[0][-1]
-            relations_2 = rels_from_template[1][:-1]
-            direction_2 = rels_from_template[1][-1]
-            for ent_comb in ent_combs:
-                for relation_1 in relations_1:
-                    for relation_2 in relations_2:
-                        objects_1 = self.wiki_parser("objects", direction_1, ent_comb[0], relation_1, type_of_rel="direct")
-                        objects_2 = self.wiki_parser("objects", direction_2, ent_comb[1], relation_2, type_of_rel="direct")
-                        objects_intersect = list(set(objects_1) & set(objects_2))
-                        if objects_intersect:
-                            return [(relation_1, relation_2, objects_intersect[0])]
-
-        return candidate_outputs
-
-    def two_hop_two_ent(self, question: str, ent_combs: List[Tuple[str]]) -> List[Tuple[str]]:
-        candidate_outputs = []
-        for ent_comb in ent_combs:
-            ex_rels = []
-            ex_rels += self.wiki_parser("rels", "forw", ent_comb[1], type_of_rel="direct")
-            ex_rels += self.wiki_parser("rels", "backw", ent_comb[1], type_of_rel="direct")
-
-            ex_rels = list(set(ex_rels))
-            scores = self.rel_ranker.rank_rels(question, ex_rels)
-            top_rels = [score[0] for score in scores]
-
-            for rel in top_rels:
-                objects_1 = self.wiki_parser("objects", "forw", ent_comb[1], rel, type_of_rel="direct")
-                objects_1 += self.wiki_parser("objects", "backw", ent_comb[1], rel, type_of_rel="direct")
-                for object_1 in objects_1:
-                    objects_2 = self.wiki_parser("rels", "forw", object_1, obj=ent_comb[0],
-                                                 type_of_rel="direct")
-                    if objects_2:
-                        for object_2 in objects_2:
-                            if object_2 != "P31":
-                                candidate_outputs.append((rel, object_2, object_1))
-                            else:
-                                candidate_outputs.append((rel, object_1))
-                        log.debug(f"candidate_outputs {rel}, {object_1}, {objects_2}")
-                        return candidate_outputs
-
-        return candidate_outputs
-
-    def two_hop_with_type(self, question: str, ent_combs: List[Tuple[str]]) -> List[Tuple[str]]:
-        candidate_outputs = []
-        ex_rels = []
-        for ent_comb in ent_combs:
-            ex_rels += self.wiki_parser("rels", "forw", ent_comb[1], type_of_rel="direct")
-            ex_rels += self.wiki_parser("rels", "backw", ent_comb[1], type_of_rel="direct")
-
-        ex_rels = list(set(ex_rels))
+            ex_rels = [rel.split('/')[-1] for rel in ex_rels]
+        if triplet_direction[1] == 2:
+            ex_rels = self.rank_list_0
+        if triplet_direction[1] == 3:
+            ex_rels = self.rank_list_1
         scores = self.rel_ranker.rank_rels(question, ex_rels)
         top_rels = [score[0] for score in scores]
-        log.debug(f"top scored rels: {top_rels}")
-
-        for ent_comb in ent_combs:
-            for rel in top_rels:
-                objects_1 = self.wiki_parser("objects", "forw", ent_comb[1], rel, type_of_rel="direct")
-                objects_1 += self.wiki_parser("objects", "backw", ent_comb[1], rel, type_of_rel="direct")
-                for object_1 in objects_1:
-                    objects_2 = self.wiki_parser("rels", "forw", object_1, "P31", obj=ent_comb[0],
-                                                 type_of_rel="direct")
-                    objects_2 += self.wiki_parser("rels", "forw", object_1, "P106", obj=ent_comb[0],
-                                                 type_of_rel="direct")
-                    if objects_2:
-                        for object_2 in objects_2:
-                            candidate_outputs.append((rel, object_1))
-                        log.debug(f"candidate_outputs {rel}, {object_1}, {objects_2}")
-                        return candidate_outputs
-        return candidate_outputs
-
-
-    def two_hop_cqwn(self, entities_list: List[str], rels: List[str], num: str) -> List[Tuple[str]]:
-        candidate_outputs = []
-        for entity in entities_list:
-            for rel in rels:
-                answers = self.wiki_parser("objects", "forw", entity, rel, type_of_rel="direct")
-                for ans in answers:
-                    second_rels = self.wiki_parser("rels", "forw", ans, type_of_rel="direct", filter_obj=num)
-                    if len(second_rels) > 0:
-                        for second_rel in second_rels:
-                            candidate_outputs.append((rel, second_rel, ans))
-                        return candidate_outputs
-        return candidate_outputs
-
-    def two_hop_one_ent(self, question: str, entities_list: List[str]) -> List[Tuple[str]]:
-        log.debug(f"two hop one entity {entities_list}")
-        candidate_outputs = []
-        question_tokens = nltk.word_tokenize(question)
-        year = extract_year(question_tokens, question)
-        number = False
-        if not year:
-            number = extract_number(question_tokens, question)
-        log.debug(f"year {year}, number {number}")
-
-        ex_rels = []
-        for entity in entities_list[:self.entities_to_leave]:
-            ex_rels += self.wiki_parser("rels", "forw", entity, type_of_rel="direct")
-            ex_rels += self.wiki_parser("rels", "backw", entity, type_of_rel="direct")
-
-        ex_rels = list(set(ex_rels))
-        scores = self.rel_ranker.rank_rels(question, ex_rels)
-        top_rels = [score[0] for score in scores]
-        log.debug(f"top scored rels: {top_rels}")
-
-        if year:
-            candidate_outputs = self.two_hop_cqwn(entities_list[:self.entities_to_leave], top_rels, year)
-            if candidate_outputs:
-                return candidate_outputs
-        elif number:
-            candidate_outputs = self.two_hop_cqwn(entities_list[:self.entities_to_leave], top_rels, number)
-            if candidate_outputs:
-                return candidate_outputs
-        else:
-            ex_rels_2 = []
-            for entity in entities_list[:self.entities_to_leave]:
-                for rel in top_rels[:self.rels_to_leave_2hop]:
-                    if rel != "P31":
-                        objects_mid = self.wiki_parser("objects", "forw", entity, rel, type_of_rel="direct")
-                        objects_mid += self.wiki_parser("objects", "backw", entity, rel, type_of_rel="direct")
-                        if len(objects_mid) < 15:
-                            for obj in objects_mid:
-                                ex_rels_2 += self.wiki_parser("rels", "forw", obj, type_of_rel="direct")
-
-            ex_rels_2 = list(set(ex_rels_2))
-            scores_2 = self.rel_ranker.rank_rels(question, ex_rels_2)
-            top_rels_2 = [score[0] for score in scores_2]
-            log.debug(f"top scored second rels: {top_rels_2}")
-
-            for entity in entities_list[:self.entities_to_leave]:
-                for rel in top_rels[:self.rels_to_leave_2hop]:
-                    if rel != "P31":
-                        objects = self.wiki_parser("objects", "forw", entity, rel, type_of_rel="direct")
-                        objects += self.wiki_parser("objects", "backw", entity, rel, type_of_rel="direct")
-                        if objects:
-                            candidate_outputs.append((rel, objects[0]))
-
-            for entity in entities_list[:self.entities_to_leave]:
-                for rel_1 in top_rels[:self.rels_to_leave_2hop]:
-                    if rel_1 != "P31":
-                        objects_mid = self.wiki_parser("objects", "forw", entity, rel_1, type_of_rel="direct")
-                        objects_mid += self.wiki_parser("objects", "backw", entity, rel_1, type_of_rel="direct")
-                        if objects_mid and len(objects_mid) < 15:
-                            for obj in objects_mid:
-                                for rel_2 in top_rels_2[:self.rels_to_leave_2hop]:
-                                    if rel_2 != "P31" and rel_1 != rel_2:
-                                        objects = self.wiki_parser("objects", "forw", obj, rel_2, type_of_rel="direct")
-                                        if objects:
-                                            candidate_outputs.append((rel_1, rel_2, objects[0]))
-        return candidate_outputs
-
-    def find_alias(self, entity_ids, type_ids):
-        candidate_outputs = []
-        ent_combs = make_entity_type_combs(entity_ids[0], type_ids[0])
-        for ent_comb in ent_combs:
-            objects = self.wiki_parser("rels", "forw", ent_comb[1], "P31", obj=ent_comb[0], type_of_rel="direct")
-            if objects:
-                candidate_outputs.append(("P31", ent_comb[1]))
-                return candidate_outputs
-        return candidate_outputs
-
-    def convert_decimal(self, entity: str, rel: str, number: str):
-        number = float(number)
-        if rel in ["P2048", "P2044"]:
-            what_country = self.wiki_parser("objects", "forw", entity, "P17", type_of_rel="direct")
-            # Q30 - USA, so we convert feet to metres
-            if what_country:
-                for country in what_country: 
-                    if country.split('/')[-1] == "Q30":
-                        number *= 0.3048
-                        break
-            if number > 8900:
-                number = 0.0
-        return number
+        return top_rels
