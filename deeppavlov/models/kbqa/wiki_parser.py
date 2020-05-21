@@ -42,6 +42,7 @@ class WikiParser(Component):
                  order: Optional[Tuple[str, str]] = None) -> Union[str, List[str]]:
         
         extended_combs = []
+        combs = []
         for n, query in enumerate(query_seq):
             if n == 0:
                 combs = self.document.search_join(query)
@@ -56,7 +57,7 @@ class WikiParser(Component):
                 for comb in combs:
                     known_values = [comb[known_elem] for known_elem in known_elements]
                     for known_elem, known_value in zip(known_elements, known_values):
-                        query = [tuple([elem.replace(known_elem, known_value) for elem in query_triplet]) for query_triplet in query]
+                        query = [[elem.replace(known_elem, known_value) for elem in query_triplet] for query_triplet in query]
                         new_combs = self.document.search_join(query)
                         new_combs = [dict(new_comb) for new_comb in new_combs]
                         for new_comb in new_combs:
@@ -74,14 +75,14 @@ class WikiParser(Component):
                     combs = [comb for comb in combs if filter_value in comb[filter_elem]]
 
             if order:
-                reverse = True if order[0][0] == "DESC" else False
+                reverse = True if order[0][0] == "DESC" else False #TODO: named tuple instead of indexes
                 sort_elem = order[0][1]
                 print("sort_elem", sort_elem, "reverse", reverse, "order", order[0][0])
                 print("combs", combs[0])
                 combs = sorted(combs, key=lambda x: float(x[sort_elem].split('^^')[0].strip('"')), reverse=reverse)
                 combs = [combs[0]]
             
-            if not what_return[-1].startswith("COUNT"):
+            if not what_return[-1].startswith("COUNT"): # TODO: reverse order
                 combs = [[elem[key] for key in what_return] for elem in combs]
             else:
                 combs = [[combs[0][key] for key in what_return[:-1]] + [len(combs)]]
@@ -102,7 +103,7 @@ class WikiParser(Component):
                     return found_label
 
         elif entity.endswith("@en"):
-            entity = entity.replace('@en', '')
+            entity = entity.strip('@en', '')
             return entity
 
         elif "^^" in entity:
