@@ -1,0 +1,126 @@
+{
+  "api_call": [
+    "food",
+    "pricerange",
+    "area"
+  ],
+  "canthelp_area": [
+    "area"
+  ],
+  "canthelp_area_food": [
+    "food",
+    "area"
+  ],
+  "canthelp_area_food_pricerange": [
+    "food",
+    "pricerange",
+    "area"
+  ],
+  "canthelp_area_pricerange": [
+    "pricerange",
+    "area"
+  ],
+  "canthelp_food": [
+    "food"
+  ],
+  "canthelp_food_pricerange": [
+    "food",
+    "pricerange"
+  ],
+  "expl-conf_area": [
+    "area"
+  ],
+  "expl-conf_food": [
+    "food"
+  ],
+  "expl-conf_pricerange": [
+    "pricerange"
+  ],
+  "impl-conf_area": [
+    "pricerange",
+    "area"
+  ],
+  "impl-conf_pricerange": [
+    "food",
+    "pricerange",
+    "area"
+  ],
+  "request_food": [
+    "pricerange",
+    "area"
+  ],
+  "impl-conf_food": [
+    "food",
+    "pricerange"
+  ],
+  "request_area": [
+    "food",
+    "pricerange"
+  ],
+  "inform_addr": [
+    "food",
+    "addr",
+    "phone",
+    "pricerange",
+    "name",
+    "postcode"
+  ],
+  "inform_food": [
+    "area",
+    "food",
+    "addr",
+    "pricerange",
+    "name"
+  ],
+  "offer_name": [
+    "area",
+    "food",
+    "addr",
+    "phone",
+    "pricerange",
+    "name",
+    "postcode"
+  ],
+  "inform_phone": [
+    "area",
+    "addr",
+    "phone",
+    "pricerange",
+    "name",
+    "postcode"
+  ],
+  "inform_pricerange": [
+    "area",
+    "food",
+    "addr",
+    "phone",
+    "pricerange",
+    "name",
+    "postcode"
+  ],
+  "inform_postcode": [
+    "area",
+    "addr",
+    "phone",
+    "pricerange",
+    "name",
+    "postcode"
+  ],
+  "inform_area": [
+    "area",
+    "food",
+    "pricerange",
+    "phone",
+    "name",
+    "postcode"
+  ],
+  "select_area": [
+    "area"
+  ],
+  "select_food": [
+    "food"
+  ],
+  "select_pricerange": [
+    "pricerange"
+  ]
+}

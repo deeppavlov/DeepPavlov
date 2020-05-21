@@ -20,8 +20,6 @@ import numpy as np
 
 from deeppavlov.core.common.metrics_registry import register_metric
 from deeppavlov.models.go_bot.nlg.dto.json_nlg_response import JSONNLGResponse
-from deeppavlov.models.go_bot.nlg.dto.templated_nlg_response import TemplatedNLGResponse
-
 
 @register_metric('accuracy')
 def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> float:
@@ -147,12 +145,12 @@ def per_token_accuracy(y_true, y_predicted):
 # region go-bot metrics
 
 @register_metric('per_item_dialog_accuracy')
-def per_item_dialog_accuracy(y_true, y_predicted: List[List[TemplatedNLGResponse]]):
+def per_item_dialog_accuracy(y_true, y_predicted: List[List[str]]):
     # todo metric classes???
     y_true = [y['text'] for dialog in y_true for y in dialog]
-    y_predicted: Iterable[TemplatedNLGResponse] = itertools.chain(*y_predicted)
+    y_predicted = itertools.chain(*y_predicted)
     examples_len = len(y_true)
-    correct = sum([y1.strip().lower() == y2.response_text.strip().lower() for y1, y2 in zip(y_true, y_predicted)])
+    correct = sum([y1.strip().lower() == y2.strip().lower() for y1, y2 in zip(y_true, y_predicted)])
     return correct / examples_len if examples_len else 0
 
 @register_metric("per_item_action_accuracy")
@@ -165,7 +163,7 @@ def per_item_action_accuracy(dialogs_true, dialog_jsons_predicted: List[List[JSO
 
     utterances_actions_predicted: Iterable[JSONNLGResponse] = itertools.chain(*dialog_jsons_predicted)
     examples_len = len(utterances_actions_true)
-    correct = sum([y1.strip().lower() == y2.json.split(":", 1)[0].strip("\"\'{").lower()
+    correct = sum([y1.strip().lower() == '+'.join(y2.actions_tuple).lower()
                    for y1, y2 in zip(utterances_actions_true, utterances_actions_predicted)])  # todo ugly
     return correct / examples_len if examples_len else 0
 

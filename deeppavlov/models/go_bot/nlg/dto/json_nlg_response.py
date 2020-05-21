@@ -1,9 +1,13 @@
 import json
 
-from deeppavlov.models.go_bot.nlg.dto.nlg_response_interface import NLGResponseInterface
+from deeppavlov.models.go_bot.nlg.dto.nlg_response_interface import NLGObjectResponseInterface
 
 
-class JSONNLGResponse(NLGResponseInterface):
-    def __init__(self, response_dict: dict):
-        self.json = json.dumps(response_dict)
+class JSONNLGResponse(NLGObjectResponseInterface):
+    def __init__(self, slot_values: dict, actions_tuple: tuple):
+        self.slot_values = slot_values
+        self.actions_tuple = actions_tuple
 
+
+    def to_serializable_dict(self) -> dict:
+        return {'+'.join(self.actions_tuple): self.slot_values}

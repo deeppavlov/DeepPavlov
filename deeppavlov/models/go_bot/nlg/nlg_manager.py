@@ -6,7 +6,6 @@ from typing import Union
 from deeppavlov.core.commands.utils import expand_path
 import deeppavlov.models.go_bot.nlg.templates.templates as go_bot_templates
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.go_bot.nlg.dto.templated_nlg_response import TemplatedNLGResponse
 from deeppavlov.models.go_bot.nlg.nlg_manager_interface import NLGManagerInterface
 
 log = getLogger(__name__)
@@ -67,7 +66,7 @@ class NLGManager(NLGManagerInterface):
         """
         return self._api_call_id
 
-    def decode_response(self, action_id: int, tracker_slotfilled_state: dict) -> TemplatedNLGResponse:
+    def decode_response(self, action_id: int, tracker_slotfilled_state: dict) -> str:
         """
         Convert action template id and known slot values from tracker to response text.
         Replaces the unknown slot values with "dontcare" if the action is an API call.
@@ -80,7 +79,7 @@ class NLGManager(NLGManagerInterface):
         # in api calls replace unknown slots to "dontcare"
         if action_id == self._api_call_id:
             action_text = re.sub("#([A-Za-z]+)", "dontcare", action_text).lower()
-        return TemplatedNLGResponse(action_text)
+        return action_text
 
     def _generate_slotfilled_text_for_action(self, action_id: int, slots: dict) -> str:
         """
