@@ -98,11 +98,10 @@ class MockJSONNLGManager(NLGManagerInterface):
         # todo docstring
         slots_to_log = self.action_tuples_ids2slots[actions_tuple_id]
 
-        response_di = {'+'.join(self.ids2action_tuples[actions_tuple_id]):
-                           {slot_name: tracker_slotfilled_state.get(slot_name, "unk")
-                           for slot_name in slots_to_log}}
+        slots_values = {slot_name: tracker_slotfilled_state.get(slot_name, "unk") for slot_name in slots_to_log}
+        actions_tuple = self.ids2action_tuples[actions_tuple_id]
 
-        return JSONNLGResponse(response_di)
+        return JSONNLGResponse(slots_values, actions_tuple)
 
     def num_of_known_actions(self) -> int:
         """

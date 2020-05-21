@@ -556,6 +556,8 @@ def jsonify_data(data: Any) -> Any:
         result = int(data)
     elif isinstance(data, np.floating):
         result = float(data)
+    elif callable(getattr(data, "to_serializable_dict", None)):
+        result = data.to_serializable_dict()
     else:
         result = data
     return result
