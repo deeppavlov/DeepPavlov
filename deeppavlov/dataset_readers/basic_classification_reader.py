@@ -74,6 +74,9 @@ class BasicClassificationDatasetReader(DatasetReader):
                 "test": []}
         for data_type in data_types:
             file_name = kwargs.get(data_type, '{}.{}'.format(data_type, format))
+            if file_name is None:
+                continue
+            
             file = Path(data_path).joinpath(file_name)
             if file.exists():
                 if format == 'csv':
