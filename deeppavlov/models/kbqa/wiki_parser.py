@@ -36,29 +36,35 @@ class WikiParser(Component):
         self.document = HDTDocument(str(wiki_path))
 
     def __call__(self, what_return: List[str],
-                 query: List[Tuple[str]],
+                 query_seq: List[Tuple[str]],
                  unknown_query_triplets: Tuple[str],
                  filter_entities: Optional[List[Tuple[str]]] = None,
                  order: Optional[Tuple[str, str]] = None) -> Union[str, List[str]]:
         
-        combs = self.document.search_join(query)
-        combs = [dict(comb) for comb in combs]
+        extended_combs = []
+        for n, query in enumerate(query_seq):
+            if n == 0:
+                combs = self.document.search_join(query)
+                combs = [dict(comb) for comb in combs]
+            else:
+                known_elements = []
+                extended_combs = []
+                for triplet in query:
+                    for elem in query:
+                        if elem in combs[0].keys():
+                            known_elements.append(elem)
+                for comb in combs:
+                    known_values = [comb[known_elem] for known_elem in known_elements]
+                    for known_elem, known_value in zip(known_elements, known_values):
+                        query = [tuple([elem.replace(known_elem, known_value) for elem in query_triplet]) for query_triplet in query]
+                        new_combs = self.document.search_join(query)
+                        new_combs = [dict(new_comb) for new_comb in new_combs]
+                        for new_comb in new_combs:
+                            extended_combs.append({**comb, **new_comb})
+                combs = extended_combs
+                    
 
         if combs:
-            if unknown_query_triplets:
-                extended_combs = []
-                for elem in unknown_query_triplets[0]:
-                    if elem in combs[0].keys():
-                        known_elem = elem
-                for comb in combs:
-                    known_value = comb[known_elem]
-                    unknown_query_triplet = tuple([elem.replace(known_elem, known_value) for elem in unknown_query_triplet])
-                    unknown_triplet_combs = self.document.search_join([unknown_query_triplet])
-                    unknown_triplet_combs = [dict(unknown_comb) for unknown_comb in unknown_triplet_combs]
-                    for unknown_triplet_comb in unknown_triplet_combs:
-                        extended_combs.append({**comb, **unknown_triplet_comb})
-                combs = extended_combs
-                
             if filter_entities:
                 print("filter_entities", filter_entities)
                 for filter_entity in filter_entities:

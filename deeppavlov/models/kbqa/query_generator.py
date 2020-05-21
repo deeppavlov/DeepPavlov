@@ -79,22 +79,33 @@ class QueryGenerator(Component, Serializable):
         self.rels_to_leave_2hop = rels_to_leave_2hop
         self.return_answers = return_answers
         self.template_queries = {
-            0: ("SELECT ?obj WHERE { wd:E1 p:R1 ?s . ?s ps:R1 ?obj . ?s ?p ?x filter(contains(?x, N)&&contains(?p, 'qualifier')) }", (1, 0, 0), True),
-            1: ("SELECT ?value WHERE { wd:E1 p:R1 ?s . ?s ps:R1 ?x filter(contains(?x, N)) . ?s ?p ?value filter(contains(?p, 'qualifier')) }", (1, 0, 0), True),
-            2: ("SELECT ?value WHERE { wd:E1 p:R1 ?s . ?s ps:R1 wd:E2 . ?s ?p ?value filter(contains(?p, 'qualifier')) }", (1, 0, 0), True),
-            3: ("SELECT ?obj WHERE { wd:E1 p:R1 ?s . ?s ps:R1 ?obj . ?s ?p wd:E2 filter(contains(?p, 'qualifier')) }", (1, 0, 0), True),
-            4: ("SELECT (COUNT(?obj) AS ?value ) { wd:E1 wdt:R1 ?obj }", (1,), True),
-            5: ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:R1 ?obj } ORDER BY ASC(?obj) LIMIT 5", (0, 2), True),
-            6: ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:R1 ?obj . ?ent wdt:R2 wd:E1 } ORDER BY ASC(?obj) LIMIT 5", (0, 2, 3), True),
-            8: ("SELECT ?ent WHERE { ?ent_mid wdt:P31 wd:T1 . ?ent wdt:R1 ?obj . ?ent_mid wdt:R2 ?ent } ORDER BY ASC(?obj) LIMIT 5", (0, 2, 3), True)
+            0: ("SELECT ?obj WHERE { wd:E1 p:R1 ?s . ?s ps:R1 ?obj . ?s ?p ?x filter(contains(?x, N)&&contains(?p, 'qualifier')) }",
+               (1, 0, 0), (1, 2, 3), True),
+            1: ("SELECT ?value WHERE { wd:E1 p:R1 ?s . ?s ps:R1 ?x filter(contains(?x, N)) . ?s ?p ?value filter(contains(?p, 'qualifier')) }",
+               (1, 0, 0), (1, 2, 3), True),
+            2: ("SELECT ?value WHERE { wd:E1 p:R1 ?s . ?s ps:R1 wd:E2 . ?s ?p ?value filter(contains(?p, 'qualifier')) }",
+               (1, 0, 0), (1, 1, 2), True),
+            3: ("SELECT ?obj WHERE { wd:E1 p:R1 ?s . ?s ps:R1 ?obj . ?s ?p wd:E2 filter(contains(?p, 'qualifier')) }", 
+               (1, 0, 0), (1, 2, 1), True),
+            4: ("SELECT (COUNT(?obj) AS ?value ) { wd:E1 wdt:R1 ?obj }", (1,), (1,), True),
+            5: ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:R1 ?obj } ORDER BY ASC(?obj) LIMIT 5", 
+               (0, 2), (1, 1), True),
+            6: ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:R1 ?obj . ?ent wdt:R2 wd:E1 } ORDER BY ASC(?obj) LIMIT 5", 
+               (0, 2, 3), (1, 2, 1), True),
+            8: ("SELECT ?ent WHERE { ?ent_mid wdt:P31 wd:T1 . ?ent wdt:R1 ?obj . ?ent_mid wdt:R2 ?ent } ORDER BY ASC(?obj) LIMIT 5",
+               (0, 2, 3), (1, 3, 2), True)
         }
         self.two_hop_queries = {
-            (2, 0): {("forw", "forw"): ("SELECT ?ent WHERE { wd:E1 wdt:R1 ?ent . wd:E2 wdt:R2 ?ent }", (1, 1), False),
-                     ("forw", "backw"): ("SELECT ?ent WHERE { wd:E1 wdt:R1 ?ent . ?ent wdt:R2 wd:E2 }", (1, 1), False)},
-            (1, 1): {("forw",): ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . wd:E1 wdt:R1 ?ent }", (0, 1), False),
-                     ("backw",): ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:R1 wd:E1 }", (0, 1), False)},
-            (1, 0): {("forw",): ("SELECT ?ent WHERE { wd:E1 wdt:R1 ?ent }", (1,), False),
-                     ("backw",): ("SELECT ?ent WHERE { ?ent wdt:R1 wd:E1 }", (1,), False)}}
+            (2, 0): {("forw", "forw"): ("SELECT ?ent WHERE { wd:E1 wdt:R1 ?ent . wd:E2 wdt:R2 ?ent }",
+                                       (1, 1), (1, 1), False),
+                     ("forw", "backw"): ("SELECT ?ent WHERE { wd:E1 wdt:R1 ?ent . ?ent wdt:R2 wd:E2 }", 
+                                        (1, 1), (1, 1), False)},
+            (1, 1): {("forw",): ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . wd:E1 wdt:R1 ?ent }",
+                                (0, 1), (1, 1), False),
+                     ("backw",): ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:R1 wd:E1 }",
+                                 (0, 1), False)},
+            (1, 0): {("forw",): ("SELECT ?ent WHERE { wd:E1 wdt:R1 ?ent }", (1,), (1,), False),
+                     ("backw",): ("SELECT ?ent WHERE { ?ent wdt:R1 wd:E1 }", (1,), (1,), False)}}
         
         self.load()
 
@@ -210,15 +221,15 @@ class QueryGenerator(Component, Serializable):
     def query_parser(self, question, query_info, entity_ids, type_ids, rels_from_template):
         candidate_outputs = []
         question_tokens = nltk.word_tokenize(question)
-        query, rels_for_search, return_if_found = query_info
+        query, rels_for_search, query_seq_num, return_if_found = query_info
         print("query", query, rels_for_search, return_if_found)
         query_triplets = query[query.find('{')+1:query.find('}')].strip(' ').split(' . ')
         print("query_triplets", query_triplets)
         query_triplets = [tuple(triplet.split(' ')[:3]) for triplet in query_triplets]
-        known_query_triplets = [triplet for triplet in query_triplets if not all([elem.startswith('?') for elem in triplet])]
-        unknown_query_triplets = [triplet for triplet in query_triplets if all([elem.startswith('?') for elem in triplet])]
-        print("known_query_triplets", known_query_triplets)
-        print("unknown_query_triplets", unknown_query_triplets)
+        query_sequence = []
+        for i in range(1, max(query_seq_num)+1):
+            query_sequence.append([triplet for num, triplet in zip(query_seq_num, query_triplets) if num == i]
+        print("query_sequence", query_sequence)
         rel_directions = [("forw" if triplet[2].startswith('?') else "backw", search_or_not) \
             for search_or_not, triplet in zip(rels_for_search, query_triplets) if search_or_not]
         print("rel_directions", rel_directions)
@@ -256,10 +267,9 @@ class QueryGenerator(Component, Serializable):
         for entity_comb in entity_combs:
             for type_comb in type_combs:
                 for rel_comb in rel_combs:
-                    query_hdt = fill_query(known_query_triplets, entity_comb, type_comb, rel_comb)
+                    query_hdt_seq = [fill_query(query_hdt_elem, entity_comb, type_comb, rel_comb) for query_hdt_elem in query_sequence]
                     print("query_hdt", query_hdt)
-                    candidate_output = self.wiki_parser(rels_from_query + answer_ent, query_hdt, 
-                        unknown_query_triplets, filter_from_query, order_from_query)
+                    candidate_output = self.wiki_parser(rels_from_query + answer_ent, query_hdt_seq, filter_from_query, order_from_query)
                     candidate_outputs += [rel_comb[:-1] + tuple(output) for output in candidate_output]
                     print("outputs", candidate_outputs)
                     if return_if_found and candidate_output:
