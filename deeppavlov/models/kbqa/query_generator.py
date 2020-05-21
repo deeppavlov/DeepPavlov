@@ -47,10 +47,10 @@ class QueryGenerator(Component, Serializable):
                  load_path: str,
                  rank_rels_filename_1: str,
                  rank_rels_filename_2: str,
+                 sparql_queries_filename: str,
                  entities_to_leave: int = 5,
                  rels_to_leave: int = 10,
                  rels_to_leave_2hop: int = 7,
-                 sparql_queries_filename: str,
                  return_answers: bool = False, **kwargs) -> None:
         """
 
@@ -109,7 +109,7 @@ class QueryGenerator(Component, Serializable):
             zip(question_batch, template_type_batch, entities_from_ner_batch, types_from_ner_batch):
 
             candidate_outputs = []
-            self.template_num = int(template_type)
+            self.template_num = template_type
 
             replace_tokens = [(' - ', '-'), (' .', ''), ('{', ''), ('}', ''), ('  ', ' '), ('"', "'"), ('(', ''),
                               (')', ''), ('–', '-')]
@@ -118,7 +118,7 @@ class QueryGenerator(Component, Serializable):
 
             # data["when eee was launched?"] = ["7", ("P619", "P620", "forw")]
             entities_from_template, types_from_template, rels_from_template, query_type_template = self.template_matcher(question)
-            self.template_num = int(query_type_template)
+            self.template_num = query_type_template
 
             log.debug(f"question: {question}\n")
             log.debug(f"template_type {self.template_num}")
@@ -141,9 +141,7 @@ class QueryGenerator(Component, Serializable):
                 type_ids = self.get_entity_ids(types_from_ner, "types")
                 log.debug(f"(__call__)entity_ids: {entity_ids}")
                 log.debug(f"(__call__)type_ids: {type_ids}")
-                self.template_num = int(template_type[0])
-                if self.template_num == 6 and len(type_ids) == 2:
-                    self.template_num = 7
+                self.template_num = template_type[0]
                 log.debug(f"(__call__)self.template_num: {self.template_num}")
                 candidate_outputs = self.find_candidate_answers(question, entity_ids, type_ids, rels_from_template=None)
             candidate_outputs_batch.append(candidate_outputs)
@@ -203,8 +201,11 @@ class QueryGenerator(Component, Serializable):
         # TODO: lowercase query
         candidate_outputs = []
         question_tokens = nltk.word_tokenize(question)
-        query, rels_for_search, query_seq_num, return_if_found = query_info
-        print("query", query, rels_for_search, return_if_found)
+        query = query_info["query_template"]
+        rels_for_search = query_info["rank_rels"]
+        query_seq_num = query_info["query_sequence"]
+        return_if_found = query_info["return_if_found"]
+        print("query", query, rels_for_search, query_seq_num, return_if_found)
         query_triplets = query[query.find('{')+1:query.find('}')].strip(' ').split(' . ') #TODO: use re for {}
         print("query_triplets", query_triplets)
         query_triplets = [triplet.split(' ')[:3] for triplet in query_triplets]
@@ -239,18 +240,19 @@ class QueryGenerator(Component, Serializable):
         if not ascending: # descending
             order_from_query = [("DESC", elem[1]) for elem in order_from_query]
         print("answer_ent", answer_ent, "order_from_query", order_from_query)
-        filter_from_query = re.findall("contains\((.+)\) ", query)
+        filter_from_query = re.findall("contains\((\?\w), (.+?)\)", query)
         print("filter_from_query", filter_from_query) #TODO: make more compact
 
         year = extract_year(question_tokens, question)
         number = extract_number(question_tokens, question)
         if year:
-            filter_year = re.findall("contains\((.+YEAR)\) ", query)
-                filter_from_query += [elem.replace("YEAR", year) for elem in filter_year]
+            filter_from_query = [elem[1].replace("YEAR", year) for elem in filter_from_query]
+        else:
+            filter_from_query = [elem for elem in filter_from_query if elem[1] != "YEAR"]
         if number:
-            filter_number = re.findall("contains\((.+NUMBER)\) ", query)
-            if filter_number:
-                filter_from_query += [elem.replace("NUMBER", number) for elem in filter_number]
+            filter_from_query = [elem[1].replace("NUMBER", number) for elem in filter_from_query]
+        else:
+            filter_from_query = [elem for elem in filter_from_query if elem[1] != "NUMBER"]
         print("filter_from_query", filter_from_query)
 
         rel_combs = make_combs(rels, permut=False) #TODO: itertools for iterations
@@ -259,9 +261,9 @@ class QueryGenerator(Component, Serializable):
             for type_comb in type_combs:
                 for rel_comb in rel_combs:
                     query_hdt_seq = [fill_query(query_hdt_elem, entity_comb, type_comb, rel_comb) for query_hdt_elem in query_sequence]
-                    print("query_hdt", query_hdt)
+                    print("query_hdt_seq", query_hdt_seq)
                     candidate_output = self.wiki_parser(rels_from_query + answer_ent, query_hdt_seq, filter_from_query, order_from_query)
-                    candidate_outputs += [rel_comb[:-1] + tuple(output) for output in candidate_output]
+                    candidate_outputs += [rel_comb[:-1] + output for output in candidate_output]
                     print("outputs", candidate_outputs)
                     if return_if_found and candidate_output:
                         return candidate_outputs

@@ -48,20 +48,21 @@ class WikiParser(Component):
                 combs = self.document.search_join(query)
                 combs = [dict(comb) for comb in combs]
             else:
-                known_elements = []
-                extended_combs = []
-                for triplet in query:
-                    for elem in query:
-                        if elem in combs[0].keys():
-                            known_elements.append(elem)
-                for comb in combs:
-                    known_values = [comb[known_elem] for known_elem in known_elements]
-                    for known_elem, known_value in zip(known_elements, known_values):
-                        query = [[elem.replace(known_elem, known_value) for elem in query_triplet] for query_triplet in query]
-                        new_combs = self.document.search_join(query)
-                        new_combs = [dict(new_comb) for new_comb in new_combs]
-                        for new_comb in new_combs:
-                            extended_combs.append({**comb, **new_comb})
+                if combs:
+                    known_elements = []
+                    extended_combs = []
+                    for triplet in query:
+                        for elem in triplet:
+                            if elem in combs[0].keys():
+                                known_elements.append(elem)
+                    for comb in combs:
+                        known_values = [comb[known_elem] for known_elem in known_elements]
+                        for known_elem, known_value in zip(known_elements, known_values):
+                            query = [[elem.replace(known_elem, known_value) for elem in query_triplet] for query_triplet in query]
+                            new_combs = self.document.search_join(query)
+                            new_combs = [dict(new_comb) for new_comb in new_combs]
+                            for new_comb in new_combs:
+                                extended_combs.append({**comb, **new_comb})
                 combs = extended_combs
                     
 
@@ -69,7 +70,7 @@ class WikiParser(Component):
             if filter_entities:
                 print("filter_entities", filter_entities)
                 for filter_entity in filter_entities:
-                    filter_elem, filter_value = filter_entity.replace("'", '').replace(')', '').split(', ')
+                    filter_elem, filter_value = filter_entity
                     print("elem, value", filter_elem, filter_value)
                     print("combs", combs[0])
                     combs = [comb for comb in combs if filter_value in comb[filter_elem]]
