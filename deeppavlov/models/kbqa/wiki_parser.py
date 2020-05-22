@@ -44,23 +44,21 @@ class WikiParser(Component):
         extended_combs = []
         combs = []
         for n, query in enumerate(query_seq):
+            unknown_elem_positions = [(pos, elem) for pos, elem in enumerate(query) if elem.startswith('?')]
             if n == 0:
-                combs = self.document.search_join(query)
-                combs = [dict(comb) for comb in combs]
+                combs = self.search(query, unknown_elem_positions)
             else:
                 if combs:
                     known_elements = []
                     extended_combs = []
-                    for triplet in query:
-                        for elem in triplet:
-                            if elem in combs[0].keys():
-                                known_elements.append(elem)
+                    for elem in query:
+                        if elem in combs[0].keys():
+                            known_elements.append(elem)
                     for comb in combs:
                         known_values = [comb[known_elem] for known_elem in known_elements]
                         for known_elem, known_value in zip(known_elements, known_values):
-                            query = [[elem.replace(known_elem, known_value) for elem in query_triplet] for query_triplet in query]
-                            new_combs = self.document.search_join(query)
-                            new_combs = [dict(new_comb) for new_comb in new_combs]
+                            query = [elem.replace(known_elem, known_value) for elem in query]
+                            new_combs = self.search(query, unknown_elem_positions)
                             for new_comb in new_combs:
                                 extended_combs.append({**comb, **new_comb})
                 combs = extended_combs
@@ -83,12 +81,23 @@ class WikiParser(Component):
                 combs = sorted(combs, key=lambda x: float(x[sort_elem].split('^^')[0].strip('"')), reverse=reverse)
                 combs = [combs[0]]
             
-            if not what_return[-1].startswith("COUNT"): # TODO: reverse order
-                combs = [[elem[key] for key in what_return] for elem in combs]
-            else:
+            if what_return[-1].startswith("COUNT"):
                 combs = [[combs[0][key] for key in what_return[:-1]] + [len(combs)]]
+            else:
+                combs = [[elem[key] for key in what_return] for elem in combs]
 
         return combs
+
+    def search(self, query, unknown_elem_positions):
+        query = list(map(lambda elem: "" if elem.startswith('?') else elem, query))
+        print("query", query, unknown_elem_positions)
+        subj, rel, obj = query
+        triplets, c = self.document.search_triples(subj, rel, obj)
+        combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
+        if combs:
+            print("combs", combs[0])
+        return combs
+        
 
     def find_label(self, entity):
         print("find label", entity)
