@@ -78,7 +78,7 @@ class KBTree(KBBase):
             is_kbqa = self.is_kbqa_question(sentence, self.language)
             if is_kbqa:
                 q_tokens = nltk.word_tokenize(sentence)
-                entity_from_template, relations_from_template, query_type = self.template_matcher(sentence)
+                entity_from_template, _, relations_from_template, _, query_type = self.template_matcher(sentence)
                 if entity_from_template and self.use_templates:
                     relation_from_template = relations_from_template[0][0]
                     relation_title = self._relations_mapping[relation_from_template]["name"]

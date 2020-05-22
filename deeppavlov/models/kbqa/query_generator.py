@@ -118,8 +118,8 @@ class QueryGenerator(Component, Serializable):
             for old, new in replace_tokens:
                 question = question.replace(old, new)
 
-            # data["when eee was launched?"] = ["7", ("P619", "P620", "forw")]
-            entities_from_template, types_from_template, rels_from_template, query_type_template = self.template_matcher(question)
+            entities_from_template, types_from_template, rels_from_template, rel_dirs_from_template, \
+                query_type_template = self.template_matcher(question)
             self.template_num = query_type_template
 
             log.debug(f"question: {question}\n")
@@ -134,7 +134,7 @@ class QueryGenerator(Component, Serializable):
                 log.debug(f"entity_ids {entity_ids}")
                 log.debug(f"type_ids {type_ids}")
 
-                candidate_outputs = self.find_candidate_answers(question, entity_ids, type_ids, rels_from_template)
+                candidate_outputs = self.find_candidate_answers(question, entity_ids, type_ids, rels_from_template, rel_dirs_from_template)
 
             if not candidate_outputs and entities_from_ner:
                 log.debug(f"(__call__)entities_from_ner: {entities_from_ner}")
@@ -145,7 +145,7 @@ class QueryGenerator(Component, Serializable):
                 log.debug(f"(__call__)type_ids: {type_ids}")
                 self.template_num = template_type[0]
                 log.debug(f"(__call__)self.template_num: {self.template_num}")
-                candidate_outputs = self.find_candidate_answers(question, entity_ids, type_ids, rels_from_template=None)
+                candidate_outputs = self.find_candidate_answers(question, entity_ids, type_ids)
             candidate_outputs_batch.append(candidate_outputs)
         if self.return_answers:
             answers = self.rel_ranker(question_batch, candidate_outputs_batch)
@@ -169,17 +169,17 @@ class QueryGenerator(Component, Serializable):
     def find_candidate_answers(self, question: str,
                                entity_ids: List[List[str]],
                                type_ids: List[List[str]],
-                               rels_from_template: List[Tuple[str]]) -> List[Tuple[str]]:
+                               rels_from_template: Optional[List[Tuple[str]]] = None,
+                               rel_dirs_from_template: Optional[List[str]] = None) -> List[Tuple[str]]:
         candidate_outputs = []
         log.debug(f"(find_candidate_answers)self.template_num: {self.template_num}")
 
         templates = self.template_queries[self.template_num]
         templates = [template for template in templates if template["entities_and_types_num"] == [len(entity_ids), len(type_ids)]]
         if rels_from_template is not None:
-            rel_dirs = [rel_list[-1] for rel_list in rels_from_template]
             query_template = {}
             for template in templates:
-                if template["rel_dirs"] == rel_dirs:
+                if template["rel_dirs"] == rel_dirs_from_template:
                     query_template = template
             if query_template:
                 candidate_outputs = self.query_parser(question, query_template, entity_ids, type_ids, rels_from_template)
@@ -226,7 +226,7 @@ class QueryGenerator(Component, Serializable):
         rels = []
         '''self.templates["when was eee discovered?"] = ["7", ("P571", "forw")]'''
         if rels_from_template is not None:
-            rels = [rel_list[:-1] for rel_list in rels_from_template]
+            rels = rels_from_template
         else:
             rels = [self.find_top_rels(question, entity_ids, d) for d in rel_directions]
 

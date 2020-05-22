@@ -77,7 +77,7 @@ class KBAnswerParserSimple(KBBase):
             is_kbqa = self.is_kbqa_question(question, self.language)
             if is_kbqa:
                 if self._templates_filename is not None:
-                    entity_from_template, relations_from_template, query_type = self.template_matcher(question)
+                    entity_from_template, _, relations_from_template, _, query_type = self.template_matcher(question)
                 
                 if entity_from_template:
                     relation_from_template = relations_from_template[0][0]

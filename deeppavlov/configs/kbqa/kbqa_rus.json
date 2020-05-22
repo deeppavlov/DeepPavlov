@@ -37,7 +37,7 @@
         "class_name": "template_matcher",
         "id": "template_m",
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
-        "templates_filename": "templates_rus.pickle"
+        "templates_filename": "templates_rus.json"
       },
       {
         "in": ["x", "x_tokens", "y_predicted", "y_pred_probas", "y_pred_labels"],
