@@ -176,11 +176,13 @@ class QueryGenerator(Component, Serializable):
 
         templates = self.template_queries[self.template_num]
         templates = [template for template in templates if template["entities_and_types_num"] == [len(entity_ids), len(type_ids)]]
+        if not templates:
+            return candidate_outputs
         if rels_from_template is not None:
             query_template = {}
             for template in templates:
                 if template["rel_dirs"] == rel_dirs_from_template:
-                    query_template = template
+                    query_template = template  # TODO can there be more than 1 template with matching template['rel_dirs']
             if query_template:
                 candidate_outputs = self.query_parser(question, query_template, entity_ids, type_ids, rels_from_template)
         else:
@@ -189,7 +191,8 @@ class QueryGenerator(Component, Serializable):
                 if candidate_outputs:
                     return candidate_outputs
             
-            if not candidate_outputs:
+            if not candidate_outputsi:  # TODO: unite with previous if statement
+                log.debug(f"(find_candidate_answers)templates: {templates}")
                 alternative_templates = templates[0]["alternative_templates"]
                 for template in alternative_templates:
                     candidate_outputs = self.query_parser(question, template, entity_ids, type_ids, rels_from_template)
