@@ -44,8 +44,6 @@
         "hidden_size": 128,
         "dense_size": 160,
         "word_vocab": "#word_vocab",
-        "template_path": "{DATA_PATH}/dstc2-templates.txt",
-        "template_type": "DefaultTemplate",
         "database": null,
         "nlg_manager": {
           "class_name": "gobot_nlg_manager",

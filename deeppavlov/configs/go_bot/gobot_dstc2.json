@@ -44,8 +44,6 @@
         "hidden_size": 128,
         "dense_size": 160,
         "word_vocab": "#word_vocab",
-        "template_path": "{DOWNLOADS_PATH}/dstc2/dstc2-templates.txt",
-        "template_type": "DualTemplate",
         "database": {
           "class_name": "sqlite_database",
           "table_name": "mytable",
