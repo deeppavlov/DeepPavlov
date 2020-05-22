@@ -22,12 +22,14 @@ import nltk
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
+from deeppavlov.core.common.file import read_json
 from deeppavlov.models.kbqa.template_matcher import TemplateMatcher
 from deeppavlov.models.kbqa.entity_linking import EntityLinker
 from deeppavlov.models.kbqa.wiki_parser import WikiParser
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
 from deeppavlov.models.kbqa.rel_ranking_bert_infer import RelRankerBertInfer
-from deeppavlov.models.kbqa.utils import extract_year, extract_number, asc_desc, make_entity_combs, fill_query
+from deeppavlov.models.kbqa.utils import \
+    extract_year, extract_number, asc_desc, make_combs, fill_query
 
 log = getLogger(__name__)
 
@@ -47,6 +49,7 @@ class QueryGenerator(Component, Serializable):
                  load_path: str,
                  rank_rels_filename_1: str,
                  rank_rels_filename_2: str,
+                 sparql_queries_filename: str,
                  entities_to_leave: int = 5,
                  rels_to_leave: int = 10,
                  rels_to_leave_2hop: int = 7,
@@ -64,6 +67,7 @@ class QueryGenerator(Component, Serializable):
             entities_to_leave: how many entities to leave after entity linking
             rels_to_leave: how many relations to leave after relation ranking
             rels_to_leave_2hop: how many relations to leave in 2-hop questions
+            sparql_queries_filename: file with a dict of sparql queries
             return_answers: whether to return answers or candidate answers
             **kwargs:
         """
@@ -78,36 +82,9 @@ class QueryGenerator(Component, Serializable):
         self.entities_to_leave = entities_to_leave
         self.rels_to_leave = rels_to_leave
         self.rels_to_leave_2hop = rels_to_leave_2hop
+        self.sparql_queries_filename = sparql_queries_filename
         self.return_answers = return_answers
-        self.template_queries = {
-            0: ("SELECT ?obj WHERE { wd:E1 p:R1 ?s . ?s ps:R1 ?obj . ?s ?p ?x filter(contains(?x, N)&&contains(?p, 'qualifier')) }",
-               (1, 0, 0), (1, 2, 3), True),
-            1: ("SELECT ?value WHERE { wd:E1 p:R1 ?s . ?s ps:R1 ?x filter(contains(?x, N)) . ?s ?p ?value filter(contains(?p, 'qualifier')) }",
-               (1, 0, 0), (1, 2, 3), True),
-            2: ("SELECT ?value WHERE { wd:E1 p:R1 ?s . ?s ps:R1 wd:E2 . ?s ?p ?value filter(contains(?p, 'qualifier')) }",
-               (1, 0, 0), (1, 1, 2), True),
-            3: ("SELECT ?obj WHERE { wd:E1 p:R1 ?s . ?s ps:R1 ?obj . ?s ?p wd:E2 filter(contains(?p, 'qualifier')) }", 
-               (1, 0, 0), (1, 2, 1), True),
-            4: ("SELECT (COUNT(?obj) AS ?value ) { wd:E1 wdt:R1 ?obj }", (1,), (1,), True),
-            5: ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:R1 ?obj } ORDER BY ASC(?obj) LIMIT 5", 
-               (0, 2), (1, 1), True),
-            6: ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:R1 ?obj . ?ent wdt:R2 wd:E1 } ORDER BY ASC(?obj) LIMIT 5", 
-               (0, 2, 3), (1, 2, 1), True),
-            8: ("SELECT ?ent WHERE { ?ent_mid wdt:P31 wd:T1 . ?ent wdt:R1 ?obj . ?ent_mid wdt:R2 ?ent } ORDER BY ASC(?obj) LIMIT 5",
-               (0, 2, 3), (1, 3, 2), True)
-        }
-        self.two_hop_queries = {
-            (2, 0): {("forw", "forw"): ("SELECT ?ent WHERE { wd:E1 wdt:R1 ?ent . wd:E2 wdt:R2 ?ent }",
-                                       (1, 1), (1, 1), False),
-                     ("forw", "backw"): ("SELECT ?ent WHERE { wd:E1 wdt:R1 ?ent . ?ent wdt:R2 wd:E2 }", 
-                                        (1, 1), (1, 1), False)},
-            (1, 1): {("forw",): ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . wd:E1 wdt:R1 ?ent }",
-                                (0, 1), (1, 1), False),
-                     ("backw",): ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:R1 wd:E1 }",
-                                 (0, 1), False)},
-            (1, 0): {("forw",): ("SELECT ?ent WHERE { wd:E1 wdt:R1 ?ent }", (1,), (1,), False),
-                     ("backw",): ("SELECT ?ent WHERE { ?ent wdt:R1 wd:E1 }", (1,), (1,), False)}}
-        
+
         self.load()
 
     def load(self) -> None:
@@ -118,6 +95,8 @@ class QueryGenerator(Component, Serializable):
         with open(self.load_path / self.rank_rels_filename_2, 'r') as fl2:
             lines = fl2.readlines()
             self.rank_list_1 = [line.split('\t')[0] for line in lines]
+
+        self.template_queries = read_json(self.load_path / self.sparql_queries_filename)
 
     def save(self) -> None:
         pass
@@ -132,16 +111,16 @@ class QueryGenerator(Component, Serializable):
             zip(question_batch, template_type_batch, entities_from_ner_batch, types_from_ner_batch):
 
             candidate_outputs = []
-            self.template_num = int(template_type)
+            self.template_num = template_type
 
             replace_tokens = [(' - ', '-'), (' .', ''), ('{', ''), ('}', ''), ('  ', ' '), ('"', "'"), ('(', ''),
                               (')', ''), ('–', '-')]
             for old, new in replace_tokens:
                 question = question.replace(old, new)
 
+            # data["when eee was launched?"] = ["7", ("P619", "P620", "forw")]
             entities_from_template, types_from_template, rels_from_template, query_type_template = self.template_matcher(question)
-            if query_type_template.isdigit():
-                self.template_num = int(query_type_template)
+            self.template_num = query_type_template
 
             log.debug(f"question: {question}\n")
             log.debug(f"template_type {self.template_num}")
@@ -164,9 +143,7 @@ class QueryGenerator(Component, Serializable):
                 type_ids = self.get_entity_ids(types_from_ner, "types")
                 log.debug(f"(__call__)entity_ids: {entity_ids}")
                 log.debug(f"(__call__)type_ids: {type_ids}")
-                self.template_num = int(template_type[0])
-                if self.template_num == 6 and len(type_ids) == 2:
-                    self.template_num = 7
+                self.template_num = template_type[0]
                 log.debug(f"(__call__)self.template_num: {self.template_num}")
                 candidate_outputs = self.find_candidate_answers(question, entity_ids, type_ids, rels_from_template=None)
             candidate_outputs_batch.append(candidate_outputs)
@@ -196,77 +173,109 @@ class QueryGenerator(Component, Serializable):
         candidate_outputs = []
         log.debug(f"(find_candidate_answers)self.template_num: {self.template_num}")
 
-        if self.template_num != 7:
-            template = self.template_queries[self.template_num]
-            candidate_outputs = self.query_parser(question, template,
-                        entity_ids, type_ids, rels_from_template)
-
-        if self.template_num == 7:
-            templates = self.two_hop_queries[(len(entity_ids), len(type_ids))]
-            if rels_from_template is not None:
-                rel_dirs = tuple([rel_list[-1] for rel_list in rels_from_template])
-                template = templates[rel_dirs]
-                candidate_outputs = candidate_outputs = self.query_parser(question, template,
-                        entity_ids, type_ids, rels_from_template)
-            else:
-                for rel_dirs in templates:
-                    candidate_outputs = candidate_outputs = self.query_parser(question, templates[rel_dirs],
-                        entity_ids, type_ids, rels_from_template)
-                    if candidate_outputs:
-                        break
+        templates = self.template_queries[self.template_num]
+        templates = [template for template in templates if template["entities_and_types_num"] == [len(entity_ids), len(type_ids)]]
+        if rels_from_template is not None:
+            rel_dirs = [rel_list[-1] for rel_list in rels_from_template]
+            query_template = {}
+            for template in templates:
+                if template["rel_dirs"] == rel_dirs:
+                    query_template = template
+            if query_template:
+                candidate_outputs = self.query_parser(question, query_template, entity_ids, type_ids, rels_from_template)
+        else:
+            for template in templates:
+                candidate_outputs = self.query_parser(question, template, entity_ids, type_ids, rels_from_template)
+                if candidate_outputs:
+                    return candidate_outputs
+            
+            if not candidate_outputs:
+                alternative_templates = templates[0]["alternative_templates"]
+                for template in alternative_templates:
+                    candidate_outputs = self.query_parser(question, template, entity_ids, type_ids, rels_from_template)
+                    return candidate_outputs
 
         log.debug("candidate_rels_and_answers:\n" + '\n'.join([str(output) for output in candidate_outputs]))
 
         return candidate_outputs
     
-    def query_parser(self, question, query_info, entity_ids, type_ids, rels_from_template):
+    def query_parser(self, question, query_info, entity_ids, type_ids, rels_from_template = None):
+        # TODO: lowercase query
         candidate_outputs = []
         question_tokens = nltk.word_tokenize(question)
-        query, rels_for_search, query_seq_num, return_if_found = query_info
-        query_triplets = query[query.find('{')+1:query.find('}')].strip(' ').split(' . ')
-        query_triplets = [tuple(triplet.split(' ')[:3]) for triplet in query_triplets]
+
+        query = query_info["query_template"]
+        rels_for_search = query_info["rank_rels"]
+        query_seq_num = query_info["query_sequence"]
+        return_if_found = query_info["return_if_found"]
+        log.debug(f"(query_parser)quer: {query}, {rels_for_search}, {query_seq_num}, {return_if_found}")
+        query_triplets = query[query.find('{')+1:query.find('}')].strip(' ').split(' . ') #TODO: use re for {}
+        log.debug(f"(query_parser)query_triplets: {query_triplets}")
+        query_triplets = [triplet.split(' ')[:3] for triplet in query_triplets]
         query_sequence = []
         for i in range(1, max(query_seq_num)+1):
-            query_sequence.append([triplet for num, triplet in zip(query_seq_num, query_triplets) if num == i])
-        rel_directions = [("forw" if triplet[2].startswith('?') else "backw", search_or_not)  
+            query_sequence.append([triplet for num, triplet in zip(query_seq_num, query_triplets) if num == i]) #TODO: dict instead of zip
+        log.debug(f"(query_parser)query_sequence: {query_sequence}")
+        rel_directions = [("forw" if triplet[2].startswith('?') else "backw", search_or_not) 
             for search_or_not, triplet in zip(rels_for_search, query_triplets) if search_or_not]
-        entity_combs = make_entity_combs(entity_ids, permut=True)
-        type_combs = make_entity_combs(type_ids, permut=False)
+        log.debug(f"(query_parser)rel_directions: {rel_directions}")
+        entity_combs = make_combs(entity_ids, permut=True) #TODO: rename function
+        log.debug(f"(query_parser)entity_combs: {entity_combs[:3]}")
+        type_combs = make_combs(type_ids, permut=False)
+        log.debug(f"(query_parser)type_combs: {type_combs[:3]}")
         rels = []
+        '''self.templates["when was eee discovered?"] = ["7", ("P571", "forw")]'''
         if rels_from_template is not None:
             rels = [rel_list[:-1] for rel_list in rels_from_template]
         else:
             rels = [self.find_top_rels(question, entity_ids, d) for d in rel_directions]
+
+        log.debug(f"(query_parser)rels: {rels}")
+        '''
+        ("SELECT ?obj WHERE { wd:E1 p:R1 ?s . ?s ps:R1 ?obj . ?s ?p ?x filter(contains(?x, YEAR)&&contains(?p, 'qualifier')) }",
+               (1, 0, 0), (1, 2, 3), True) 
+        ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:R1 ?obj . ?ent wdt:R2 wd:E1 } ORDER BY ASC(?obj) LIMIT 5" '''
         rels_from_query = [triplet[1] for triplet in query_triplets if triplet[1].startswith('?')]
         answer_ent = re.findall("SELECT [\(]?([\S]+) ", query)
-        order_from_query = re.findall("ORDER BY ([A-Z]{3,4})\((.*)\)", query)
+        order_from_query = re.findall("ORDER BY ([ASC|DESC])\((.*)\)", query) # TODO: refactor regexp
         ascending = asc_desc(question)
-        if not ascending:
+        log.debug(f"question, ascending: {question}, {ascending}")
+        if not ascending: # descending
             order_from_query = [("DESC", elem[1]) for elem in order_from_query]
-        filter_from_query = re.findall("contains\((.*)\) ", query)
+        log.debug(f"(query_parser)answer_ent: {answer_ent}, order_from_query: {order_from_query}")
+        filter_from_query = re.findall("contains\((\?\w), (.+?)\)", query)
+        log.debug("(parser_query)filter_from_query: {filter_from_query}") #TODO: make more compact
 
         year = extract_year(question_tokens, question)
         number = extract_number(question_tokens, question)
         if year:
-            filter_from_query = [elem.replace("N", year) for elem in filter_from_query]
+            filter_from_query = [elem[1].replace("YEAR", year) for elem in filter_from_query]
+        else:
+            filter_from_query = [elem for elem in filter_from_query if elem[1] != "YEAR"]
         if number:
-            filter_from_query = [elem.replace("N", number) for elem in filter_from_query]
-
-        rel_combs = make_entity_combs(rels, permut=False)
+             filter_from_query = [elem[1].replace("NUMBER", number) for elem in filter_from_query]
+        else:
+            filter_from_query = [elem for elem in filter_from_query if elem[1] != "NUMBER"]
+        log.debug(f"(query_parser)filter_from_query: {filter_from_query}")
+        rel_combs = make_combs(rels, permut=False)
+        import datetime
+        start_time = datetime.datetime.now()
         for combs in itertools.product(entity_combs, type_combs, rel_combs):
             query_hdt_seq = [
                 fill_query(query_hdt_elem, combs[0], combs[1], combs[2]) for query_hdt_elem in query_sequence]
             candidate_output = self.wiki_parser(
                 rels_from_query + answer_ent, query_hdt_seq, filter_from_query, order_from_query)
-            candidate_outputs += [combs[2][:-1] + tuple(output) for output in candidate_output]
+            candidate_outputs += [combs[2][:-1] + output for output in candidate_output]
             if return_if_found and candidate_output:
                 return candidate_outputs
+        log.debug(f"(query_parser)loop time: {datetime.datetime.now() - start_time}")
+        log.debug(f"(query_parser)final outputs: {candidate_outputs}")
 
         return candidate_outputs
 
     def find_top_rels(self, question, entity_ids, triplet_direction):
-        if triplet_direction[1] == 1:
-            ex_rels = []
+        ex_rels = []
+        if triplet_direction[1] == 1: #TODO: replace numbers with strings, source instead with triplet_direction
             for entity_id in entity_ids:
                 for entity in entity_id[:self.entities_to_leave]:
                     ex_rels += self.wiki_parser.find_rels(entity, triplet_direction[0])
@@ -274,7 +283,7 @@ class QueryGenerator(Component, Serializable):
             ex_rels = [rel.split('/')[-1] for rel in ex_rels]
         if triplet_direction[1] == 2:
             ex_rels = self.rank_list_0
-        if triplet_direction[1] == 3:
+        if triplet_direction[1] == 3: # elif 
             ex_rels = self.rank_list_1
         scores = self.rel_ranker.rank_rels(question, ex_rels)
         top_rels = [score[0] for score in scores]
