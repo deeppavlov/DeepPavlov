@@ -62,6 +62,7 @@ class TemplateMatcher(Component, Serializable):
 
     def load(self) -> None:
         print("path", self.load_path, self.templates_filename)
+        log.debug(f"(load)self.load_path / self.templates_filename: {self.load_path / self.templates_filename}")
         with open(self.load_path / self.templates_filename) as fl:
             self.templates = json.load(fl)
 

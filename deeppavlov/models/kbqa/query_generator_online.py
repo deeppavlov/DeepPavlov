@@ -24,7 +24,7 @@ from deeppavlov.models.kbqa.template_matcher import TemplateMatcher
 from deeppavlov.models.kbqa.entity_linking import EntityLinker
 from deeppavlov.models.kbqa.wiki_parser_online import WikiParserOnline, get_answer
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
-from deeppavlov.models.kbqa.utils import extract_year, extract_number, asc_desc, make_entity_combs
+from deeppavlov.models.kbqa.utils import extract_year, extract_number, asc_desc, make_combs
 
 log = getLogger(__name__)
 
@@ -187,7 +187,7 @@ class QueryGeneratorOnline(Component, Serializable):
         candidate_outputs = []
 
         if len(entity_ids) > 1:
-            ent_combs = make_entity_combs(entity_ids)
+            ent_combs = make_combs(entity_ids)
             if self.template_num == 2:
                 query = "SELECT ?obj ?p1 ?p2 ?p3 WHERE {{ wd:{} ?p1 ?s . ?s ?p2 wd:{} . ?s ?p3 ?obj }}"
 
@@ -269,7 +269,7 @@ class QueryGeneratorOnline(Component, Serializable):
         candidate_outputs = []
 
         if len(entity_ids) > 1:
-            ent_combs = make_entity_combs(entity_ids)
+            ent_combs = make_combs(entity_ids)
 
             ascending = asc_desc(question)
             if ascending:
@@ -365,7 +365,7 @@ class QueryGeneratorOnline(Component, Serializable):
                             candidate_outputs.append((p1, p2, obj))
 
         if len(entity_ids) == 2:
-            ent_combs = make_entity_combs(entity_ids)
+            ent_combs = make_combs(entity_ids)
             if rels_from_template is not None:
                 candidate_outputs = self.from_template_two_ent(ent_combs, rels_from_template)
 
