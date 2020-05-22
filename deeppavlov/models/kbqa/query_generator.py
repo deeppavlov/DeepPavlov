@@ -191,7 +191,7 @@ class QueryGenerator(Component, Serializable):
                 if candidate_outputs:
                     return candidate_outputs
             
-            if not candidate_outputsi:  # TODO: unite with previous if statement
+            if not candidate_outputs:  # TODO: unite with previous if statement
                 log.debug(f"(find_candidate_answers)templates: {templates}")
                 alternative_templates = templates[0]["alternative_templates"]
                 for template in alternative_templates:
