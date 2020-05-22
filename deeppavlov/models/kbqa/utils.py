@@ -75,14 +75,13 @@ def make_combs(entity_ids, permut):
     ent_combs = [[elem[0] for elem in comb]+[sum([elem[1] for elem in comb])] for comb in entity_ids]
     return ent_combs
 
-def fill_query(query: List[List[str]], entity_comb, type_comb, rel_comb):
+def fill_query(query: List[str], entity_comb, type_comb, rel_comb):
     ''' example of query: [["wd:E1", "p:R1", "?s"]]
                    entity_comb: ["Q159"]
                    type_comb: []
                    rel_comb: ["P17"]
     '''
-    query = [" ".join(triplet) for triplet in query]
-    query = "  ".join(query)
+    query = " ".join(query)
     map_query_str_to_wikidata = [("P0", "http://schema.org/description"),
                                  ("wd:", "http://www.wikidata.org/entity/"),
                                  ("wdt:", "http://www.wikidata.org/prop/direct/"),
@@ -99,6 +98,5 @@ def fill_query(query: List[List[str]], entity_comb, type_comb, rel_comb):
         query = query.replace(f"T{n+1}", entity_type)
     for n, rel in enumerate(rel_comb[:-1]):
         query = query.replace(f"R{n+1}", rel)
-    query = query.split('  ')
-    query = [triplet.split(' ') for triplet in query]
+    query = query.split(' ')
     return query

@@ -215,29 +215,25 @@ class QueryGenerator(Component, Serializable):
         query_triplets = query[query.find('{')+1:query.find('}')].strip(' ').split(' . ') #TODO: use re for {}
         log.debug(f"(query_parser)query_triplets: {query_triplets}")
         query_triplets = [triplet.split(' ')[:3] for triplet in query_triplets]
+        query_sequence_dict = {num: triplet for num, triplet in zip(query_seq_num, query_triplets)}
         query_sequence = []
         for i in range(1, max(query_seq_num)+1):
-            query_sequence.append([triplet for num, triplet in zip(query_seq_num, query_triplets) if num == i]) #TODO: dict instead of zip
+            query_sequence.append(query_sequence_dict[i])
         log.debug(f"(query_parser)query_sequence: {query_sequence}")
-        rel_directions = [("forw" if triplet[2].startswith('?') else "backw", search_or_not) 
-            for search_or_not, triplet in zip(rels_for_search, query_triplets) if search_or_not]
-        log.debug(f"(query_parser)rel_directions: {rel_directions}")
-        entity_combs = make_combs(entity_ids, permut=True) #TODO: rename function
+        triplet_info_list = [("forw" if triplet[2].startswith('?') else "backw", search_source) 
+            for search_source, triplet in zip(rels_for_search, query_triplets) if search_source != "do_not_rank"]
+        log.debug(f"(query_parser)rel_directions: {triplet_info_list}")
+        entity_combs = make_combs(entity_ids, permut=True)
         log.debug(f"(query_parser)entity_combs: {entity_combs[:3]}")
         type_combs = make_combs(type_ids, permut=False)
         log.debug(f"(query_parser)type_combs: {type_combs[:3]}")
         rels = []
-        '''self.templates["when was eee discovered?"] = ["7", ("P571", "forw")]'''
         if rels_from_template is not None:
             rels = rels_from_template
         else:
-            rels = [self.find_top_rels(question, entity_ids, d) for d in rel_directions]
+            rels = [self.find_top_rels(question, entity_ids, triplet_info) for triplet_info in triplet_info_list]
 
         log.debug(f"(query_parser)rels: {rels}")
-        '''
-        ("SELECT ?obj WHERE { wd:E1 p:R1 ?s . ?s ps:R1 ?obj . ?s ?p ?x filter(contains(?x, YEAR)&&contains(?p, 'qualifier')) }",
-               (1, 0, 0), (1, 2, 3), True) 
-        ("SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:R1 ?obj . ?ent wdt:R2 wd:E1 } ORDER BY ASC(?obj) LIMIT 5" '''
         rels_from_query = [triplet[1] for triplet in query_triplets if triplet[1].startswith('?')]
         answer_ent = re.findall("SELECT [\(]?([\S]+) ", query)
         order_from_query = re.findall("ORDER BY ([ASC|DESC])\((.*)\)", query) # TODO: refactor regexp
@@ -256,7 +252,7 @@ class QueryGenerator(Component, Serializable):
         else:
             filter_from_query = [elem for elem in filter_from_query if elem[1] != "YEAR"]
         if number:
-             filter_from_query = [elem[1].replace("NUMBER", number) for elem in filter_from_query]
+            filter_from_query = [elem[1].replace("NUMBER", number) for elem in filter_from_query]
         else:
             filter_from_query = [elem for elem in filter_from_query if elem[1] != "NUMBER"]
         log.debug(f"(query_parser)filter_from_query: {filter_from_query}")
@@ -276,17 +272,18 @@ class QueryGenerator(Component, Serializable):
 
         return candidate_outputs
 
-    def find_top_rels(self, question, entity_ids, triplet_direction):
+    def find_top_rels(self, question, entity_ids, triplet_info):
         ex_rels = []
-        if triplet_direction[1] == 1: #TODO: replace numbers with strings, source instead with triplet_direction
+        direction, source = triplet_info
+        if source == "wiki":
             for entity_id in entity_ids:
                 for entity in entity_id[:self.entities_to_leave]:
-                    ex_rels += self.wiki_parser.find_rels(entity, triplet_direction[0])
+                    ex_rels += self.wiki_parser.find_rels(entity, direction)
             ex_rels = list(set(ex_rels))
             ex_rels = [rel.split('/')[-1] for rel in ex_rels]
-        if triplet_direction[1] == 2:
+        elif source == "rank_list_1":
             ex_rels = self.rank_list_0
-        if triplet_direction[1] == 3: # elif 
+        elif source == "rank_list_2": 
             ex_rels = self.rank_list_1
         scores = self.rel_ranker.rank_rels(question, ex_rels)
         top_rels = [score[0] for score in scores]
