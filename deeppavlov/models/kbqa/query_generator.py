@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import itertools
 from logging import getLogger
 from typing import Tuple, List, Any, Optional, Union
 
@@ -222,38 +223,27 @@ class QueryGenerator(Component, Serializable):
         candidate_outputs = []
         question_tokens = nltk.word_tokenize(question)
         query, rels_for_search, query_seq_num, return_if_found = query_info
-        print("query", query, rels_for_search, return_if_found)
         query_triplets = query[query.find('{')+1:query.find('}')].strip(' ').split(' . ')
-        print("query_triplets", query_triplets)
         query_triplets = [tuple(triplet.split(' ')[:3]) for triplet in query_triplets]
         query_sequence = []
         for i in range(1, max(query_seq_num)+1):
-            query_sequence.append([triplet for num, triplet in zip(query_seq_num, query_triplets) if num == i]
-        print("query_sequence", query_sequence)
-        rel_directions = [("forw" if triplet[2].startswith('?') else "backw", search_or_not) \
+            query_sequence.append([triplet for num, triplet in zip(query_seq_num, query_triplets) if num == i])
+        rel_directions = [("forw" if triplet[2].startswith('?') else "backw", search_or_not)  
             for search_or_not, triplet in zip(rels_for_search, query_triplets) if search_or_not]
-        print("rel_directions", rel_directions)
         entity_combs = make_entity_combs(entity_ids, permut=True)
-        print("entity_combs", entity_combs[:3])
         type_combs = make_entity_combs(type_ids, permut=False)
-        print("type_combs", type_combs[:3])
         rels = []
         if rels_from_template is not None:
             rels = [rel_list[:-1] for rel_list in rels_from_template]
         else:
             rels = [self.find_top_rels(question, entity_ids, d) for d in rel_directions]
-        print("rels", rels)
         rels_from_query = [triplet[1] for triplet in query_triplets if triplet[1].startswith('?')]
-        print("rels_from_query", rels_from_query)
         answer_ent = re.findall("SELECT [\(]?([\S]+) ", query)
         order_from_query = re.findall("ORDER BY ([A-Z]{3,4})\((.*)\)", query)
         ascending = asc_desc(question)
-        print("question, ascending", question, ascending)
         if not ascending:
             order_from_query = [("DESC", elem[1]) for elem in order_from_query]
-        print("answer_ent", answer_ent, "order_from_query", order_from_query)
         filter_from_query = re.findall("contains\((.*)\) ", query)
-        print("filter_from_query", filter_from_query)
 
         year = extract_year(question_tokens, question)
         number = extract_number(question_tokens, question)
@@ -261,20 +251,16 @@ class QueryGenerator(Component, Serializable):
             filter_from_query = [elem.replace("N", year) for elem in filter_from_query]
         if number:
             filter_from_query = [elem.replace("N", number) for elem in filter_from_query]
-        print("filter_from_query", filter_from_query)
 
         rel_combs = make_entity_combs(rels, permut=False)
-        for entity_comb in entity_combs:
-            for type_comb in type_combs:
-                for rel_comb in rel_combs:
-                    query_hdt_seq = [fill_query(query_hdt_elem, entity_comb, type_comb, rel_comb) for query_hdt_elem in query_sequence]
-                    print("query_hdt", query_hdt)
-                    candidate_output = self.wiki_parser(rels_from_query + answer_ent, query_hdt_seq, filter_from_query, order_from_query)
-                    candidate_outputs += [rel_comb[:-1] + tuple(output) for output in candidate_output]
-                    print("outputs", candidate_outputs)
-                    if return_if_found and candidate_output:
-                        return candidate_outputs
-        print("final outputs", candidate_outputs)
+        for combs in itertools.product(entity_combs, type_combs, rel_combs):
+            query_hdt_seq = [
+                fill_query(query_hdt_elem, combs[0], combs[1], combs[2]) for query_hdt_elem in query_sequence]
+            candidate_output = self.wiki_parser(
+                rels_from_query + answer_ent, query_hdt_seq, filter_from_query, order_from_query)
+            candidate_outputs += [combs[2][:-1] + tuple(output) for output in candidate_output]
+            if return_if_found and candidate_output:
+                return candidate_outputs
 
         return candidate_outputs
 
