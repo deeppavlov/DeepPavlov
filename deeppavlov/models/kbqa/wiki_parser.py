@@ -65,18 +65,13 @@ class WikiParser(Component):
         
         if combs:
             if filter_entities:
-                print("filter_entities", filter_entities)
                 for filter_entity in filter_entities:
                     filter_elem, filter_value = filter_entity
-                    print("elem, value", filter_elem, filter_value)
-                    print("combs", combs[0])
                     combs = [comb for comb in combs if filter_value in comb[filter_elem]]
 
             if order_info.variable is not None:
                 reverse = True if order_info.sorting_order == "desc" else False
                 sort_elem = order_info.variable
-                print("order_info", order_info, "reverse", reverse)
-                print("combs", combs[0])
                 combs = sorted(combs, key=lambda x: float(x[sort_elem].split('^^')[0].strip('"')), reverse=reverse)
                 combs = [combs[0]]
             
@@ -96,7 +91,6 @@ class WikiParser(Component):
         
 
     def find_label(self, entity):
-        print("find label", entity)
         entity = str(entity).replace('"', '')
         if entity.startswith("Q"):
             entity = "http://www.wikidata.org/entity/" + entity

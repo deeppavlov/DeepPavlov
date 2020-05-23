@@ -174,10 +174,9 @@ class QueryGenerator(Component, Serializable):
                                rel_dirs_from_template: Optional[List[str]] = None) -> List[Tuple[str]]:
         candidate_outputs = []
         log.debug(f"(find_candidate_answers)self.template_num: {self.template_num}")
-
-        templates = [template for num, template in self.template_queries if template["template_num"] == self.template_num]
+        templates = [template for num, template in self.template_queries.items() if template["template_num"] == self.template_num]
         templates = [template for template in templates if (template["exact_entity_type_match"] and \
-            template["entities_and_types_num"] == [len(entity_ids), len(type_ids)]) or not template["exact_entity_type_match"])]
+            template["entities_and_types_num"] == [len(entity_ids), len(type_ids)]) or not template["exact_entity_type_match"]]
         if not templates:
             return candidate_outputs
         if rels_from_template is not None:
@@ -200,14 +199,14 @@ class QueryGenerator(Component, Serializable):
                     candidate_outputs = self.query_parser(question, template, entity_ids, type_ids, rels_from_template)
                     return candidate_outputs
 
-        log.debug("candidate_rels_and_answers:\n" + '\n'.join([str(output) for output in candidate_outputs]))
+        log.debug("candidate_rels_and_answers:\n" + '\n'.join([str(output) for output in candidate_outputs[:5]]))
 
         return candidate_outputs
     
     def query_parser(self, question, query_info, entity_ids, type_ids, rels_from_template = None):
         candidate_outputs = []
         question_tokens = nltk.word_tokenize(question)
-        query = query_info["query_template"].lower()
+        query = query_info["query_template"].lower().replace("wdt:p31", "wdt:P31")
         rels_for_search = query_info["rank_rels"]
         query_seq_num = query_info["query_sequence"]
         return_if_found = query_info["return_if_found"]
@@ -238,7 +237,6 @@ class QueryGenerator(Component, Serializable):
         answer_ent = re.findall("select [\(]?([\S]+) ", query)
         order_info_nt = namedtuple("order_info", ["variable", "sorting_order"])
         order_variable = re.findall("order by (asc|desc)\((.*)\)", query)
-        print("order_variable", order_variable)
         answers_sorting_order = order_of_answers_sorting(question)
         if order_variable:
             order_info = order_info_nt(order_variable[0][1], answers_sorting_order)
@@ -246,18 +244,17 @@ class QueryGenerator(Component, Serializable):
             order_info = order_info_nt(None, None)
         log.debug(f"question, order_info: {question}, {order_info}")
         filter_from_query = re.findall("contains\((\?\w), (.+?)\)", query)
-        log.debug("(parser_query)filter_from_query: {filter_from_query}")
+        log.debug(f"(query_parser)filter_from_query: {filter_from_query}")
 
         year = extract_year(question_tokens, question)
         number = extract_number(question_tokens, question)
+        log.debug(f"year {year}, number {number}")
         if year:
-            filter_from_query = [elem[1].replace("year", year) for elem in filter_from_query]
+            filter_info = [(elem[0], elem[1].replace("n", year)) for elem in filter_from_query]
+        elif number:
+            filter_info = [(elem[0], elem[1].replace("n", number)) for elem in filter_from_query]
         else:
-            filter_from_query = [elem for elem in filter_from_query if elem[1] != "year"]
-        if number:
-            filter_from_query = [elem[1].replace("number", number) for elem in filter_from_query]
-        else:
-            filter_from_query = [elem for elem in filter_from_query if elem[1] != "number"]
+            filter_info = [elem for elem in filter_from_query if elem[1] != "n"]
         log.debug(f"(query_parser)filter_from_query: {filter_from_query}")
         rel_combs = make_combs(rels, permut=False)
         import datetime

@@ -58,9 +58,9 @@ def order_of_answers_sorting(question: str) -> str:
 
     for word in max_words:
         if word in question_lower:
-            return "DESC"
+            return "desc"
 
-    return "ASC"
+    return "asc"
 
 def make_combs(entity_ids, permut):
     entity_ids = [[(entity, n) for n, entity in enumerate(entities_list)] for entities_list in entity_ids]
