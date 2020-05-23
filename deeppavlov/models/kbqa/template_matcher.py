@@ -45,7 +45,7 @@ class TemplateMatcher(Component, Serializable):
     """
 
     def __init__(self, load_path: str, templates_filename: str,
-                       num_processors: int = None, min_length: int = 100, **kwargs) -> None:
+                       num_processors: int = None, **kwargs) -> None:
         """
 
         Args:
@@ -57,7 +57,6 @@ class TemplateMatcher(Component, Serializable):
         self.templates_filename = templates_filename
         self.num_processors = mp.cpu_count() if num_processors == None else num_processors
         self.pool = mp.Pool(self.num_processors)
-        self.min_length = min_length
         self.load()
 
     def load(self) -> None:
@@ -79,6 +78,7 @@ class TemplateMatcher(Component, Serializable):
         results = functools.reduce(lambda x, y: x+y, results)
         replace_tokens = [("the uk", "united kingdom"), ("the us", "united states")]
         if results:
+            min_length = 100
             for result in results:
                 print("result", result)
                 entities_cand, types_cand, unuseful_tokens = [], [], []
@@ -99,7 +99,8 @@ class TemplateMatcher(Component, Serializable):
 
                 if 0 not in entity_lengths or 0 not in type_lengths and entity_num_tokens:
                     cur_len = sum(entity_lengths) + sum(type_lengths)
-                    if cur_len < self.min_length and unuseful_tokens_len + template_len + cur_len == question_length:
+                    print("lengths", cur_len, question_length, template_len, unuseful_tokens_len)
+                    if cur_len < min_length and unuseful_tokens_len + template_len + cur_len == question_length:
                         entities = entities_cand
                         for old_token, new_token in replace_tokens:
                             entities = [entity.replace(old_token, new_token) for entity in entities]

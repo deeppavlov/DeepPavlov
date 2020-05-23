@@ -43,7 +43,6 @@ class WikiParser(Component):
         extended_combs = []
         combs = []
         for n, query in enumerate(query_seq):
-            print("query", query)
             unknown_elem_positions = [(pos, elem) for pos, elem in enumerate(query) if elem.startswith('?')]
             if n == 0:
                 combs = self.search(query, unknown_elem_positions)
@@ -57,13 +56,12 @@ class WikiParser(Component):
                     for comb in combs:
                         known_values = [comb[known_elem] for known_elem in known_elements]
                         for known_elem, known_value in zip(known_elements, known_values):
-                            query = [elem.replace(known_elem, known_value) for elem in query]
-                            new_combs = self.search(query, unknown_elem_positions)
+                            filled_query = [elem.replace(known_elem, known_value) for elem in query]
+                            new_combs = self.search(filled_query, unknown_elem_positions)
                             for new_comb in new_combs:
                                 extended_combs.append({**comb, **new_comb})
                 combs = extended_combs
-                    
-
+        
         if combs:
             if filter_entities:
                 print("filter_entities", filter_entities)
