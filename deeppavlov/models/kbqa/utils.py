@@ -52,15 +52,15 @@ def extract_number(question_tokens: List[str], question: str) -> str:
     return number
 
 
-def asc_desc(question: str) -> bool: #TODO: rename (is_asc)
+def order_of_answers_sorting(question: str) -> str:
     question_lower = question.lower()
     max_words = ["maximum", "highest", "max ", "greatest", "most", "longest", "biggest", "deepest"]
 
     for word in max_words:
         if word in question_lower:
-            return False
+            return "DESC"
 
-    return True
+    return "ASC"
 
 def make_combs(entity_ids, permut):
     entity_ids = [[(entity, n) for n, entity in enumerate(entities_list)] for entities_list in entity_ids]
@@ -76,7 +76,7 @@ def make_combs(entity_ids, permut):
     return ent_combs
 
 def fill_query(query: List[str], entity_comb, type_comb, rel_comb):
-    ''' example of query: [["wd:E1", "p:R1", "?s"]]
+    ''' example of query: ["wd:E1", "p:R1", "?s"]
                    entity_comb: ["Q159"]
                    type_comb: []
                    rel_comb: ["P17"]

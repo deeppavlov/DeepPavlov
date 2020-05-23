@@ -15,6 +15,7 @@
 import itertools
 from logging import getLogger
 from typing import Tuple, List, Any, Optional, Union
+from collections import namedtuple
 
 import re
 import nltk
@@ -29,7 +30,7 @@ from deeppavlov.models.kbqa.wiki_parser import WikiParser
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
 from deeppavlov.models.kbqa.rel_ranking_bert_infer import RelRankerBertInfer
 from deeppavlov.models.kbqa.utils import \
-    extract_year, extract_number, asc_desc, make_combs, fill_query
+    extract_year, extract_number, order_of_answers_sorting, make_combs, fill_query
 
 log = getLogger(__name__)
 
@@ -152,7 +153,7 @@ class QueryGenerator(Component, Serializable):
             log.debug(f"(__call__)answers: {answers}")
             return answers
         else:
-            log.debug(f"(__call__)candidate_outputs_batch: {candidate_outputs_batch}")
+            log.debug(f"(__call__)candidate_outputs_batch: {candidate_outputs_batch[:10]}")
             return candidate_outputs_batch
 
     def get_entity_ids(self, entities: List[str], what_to_link: str) -> List[List[str]]:
@@ -236,14 +237,17 @@ class QueryGenerator(Component, Serializable):
         log.debug(f"(query_parser)rels: {rels}")
         rels_from_query = [triplet[1] for triplet in query_triplets if triplet[1].startswith('?')]
         answer_ent = re.findall("SELECT [\(]?([\S]+) ", query)
-        order_from_query = re.findall("ORDER BY ([ASC|DESC])\((.*)\)", query) # TODO: refactor regexp
-        ascending = asc_desc(question)
-        log.debug(f"question, ascending: {question}, {ascending}")
-        if not ascending: # descending
-            order_from_query = [("DESC", elem[1]) for elem in order_from_query]
-        log.debug(f"(query_parser)answer_ent: {answer_ent}, order_from_query: {order_from_query}")
+        order_info_nt = namedtuple("order_info", ["variable", "sorting_order"])
+        order_variable = re.findall("ORDER BY (ASC|DESC)\((.*)\)", query)
+        print("order_variable", order_variable)
+        answers_sorting_order = order_of_answers_sorting(question)
+        if order_variable:
+            order_info = order_info_nt(order_variable[0][1], answers_sorting_order)
+        else:
+            order_info = order_info_nt(None, None)
+        log.debug(f"question, order_info: {question}, {order_info}")
         filter_from_query = re.findall("contains\((\?\w), (.+?)\)", query)
-        log.debug("(parser_query)filter_from_query: {filter_from_query}") #TODO: make more compact
+        log.debug("(parser_query)filter_from_query: {filter_from_query}")
 
         year = extract_year(question_tokens, question)
         number = extract_number(question_tokens, question)
@@ -263,7 +267,7 @@ class QueryGenerator(Component, Serializable):
             query_hdt_seq = [
                 fill_query(query_hdt_elem, combs[0], combs[1], combs[2]) for query_hdt_elem in query_sequence]
             candidate_output = self.wiki_parser(
-                rels_from_query + answer_ent, query_hdt_seq, filter_from_query, order_from_query)
+                rels_from_query + answer_ent, query_hdt_seq, filter_from_query, order_info)
             candidate_outputs += [combs[2][:-1] + output for output in candidate_output]
             if return_if_found and candidate_output:
                 return candidate_outputs

@@ -37,13 +37,13 @@ class WikiParser(Component):
 
     def __call__(self, what_return: List[str],
                  query_seq: List[Tuple[str]],
-                 unknown_query_triplets: Tuple[str],
                  filter_entities: Optional[List[Tuple[str]]] = None,
-                 order: Optional[Tuple[str, str]] = None) -> Union[str, List[str]]:
+                 order_info: Optional[Tuple[str, str]] = None) -> Union[str, List[str]]:
         
         extended_combs = []
         combs = []
         for n, query in enumerate(query_seq):
+            print("query", query)
             unknown_elem_positions = [(pos, elem) for pos, elem in enumerate(query) if elem.startswith('?')]
             if n == 0:
                 combs = self.search(query, unknown_elem_positions)
@@ -73,10 +73,10 @@ class WikiParser(Component):
                     print("combs", combs[0])
                     combs = [comb for comb in combs if filter_value in comb[filter_elem]]
 
-            if order:
-                reverse = True if order[0][0] == "DESC" else False #TODO: named tuple instead of indexes
-                sort_elem = order[0][1]
-                print("sort_elem", sort_elem, "reverse", reverse, "order", order[0][0])
+            if order_info.variable is not None:
+                reverse = True if order_info.sorting_order == "DESC" else False
+                sort_elem = order_info.variable
+                print("order_info", order_info, "reverse", reverse)
                 print("combs", combs[0])
                 combs = sorted(combs, key=lambda x: float(x[sort_elem].split('^^')[0].strip('"')), reverse=reverse)
                 combs = [combs[0]]
@@ -90,12 +90,9 @@ class WikiParser(Component):
 
     def search(self, query, unknown_elem_positions):
         query = list(map(lambda elem: "" if elem.startswith('?') else elem, query))
-        print("query", query, unknown_elem_positions)
         subj, rel, obj = query
         triplets, c = self.document.search_triples(subj, rel, obj)
         combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
-        if combs:
-            print("combs", combs[0])
         return combs
         
 
