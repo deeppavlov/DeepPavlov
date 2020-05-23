@@ -175,8 +175,9 @@ class QueryGenerator(Component, Serializable):
         candidate_outputs = []
         log.debug(f"(find_candidate_answers)self.template_num: {self.template_num}")
 
-        templates = self.template_queries[self.template_num]
-        templates = [template for template in templates if template["entities_and_types_num"] == [len(entity_ids), len(type_ids)]]
+        templates = [template for num, template in self.template_queries if template["template_num"] == self.template_num]
+        templates = [template for template in templates if (template["exact_entity_type_match"] and \
+            template["entities_and_types_num"] == [len(entity_ids), len(type_ids)]) or not template["exact_entity_type_match"])]
         if not templates:
             return candidate_outputs
         if rels_from_template is not None:
