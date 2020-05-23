@@ -28,7 +28,7 @@
       {
         "class_name": "template_matcher",
         "id": "template_m",
-        "return_types": true,
+        "num_processors": 8,
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
         "templates_filename": "templates_eng.json"
       },
