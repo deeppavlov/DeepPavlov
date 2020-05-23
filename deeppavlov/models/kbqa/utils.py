@@ -82,7 +82,7 @@ def fill_query(query: List[str], entity_comb, type_comb, rel_comb):
                    rel_comb: ["P17"]
     '''
     query = " ".join(query)
-    map_query_str_to_wikidata = [("P0", "http://schema.org/description"),
+    map_query_str_to_wikidata = [("p0", "http://schema.org/description"),
                                  ("wd:", "http://www.wikidata.org/entity/"),
                                  ("wdt:", "http://www.wikidata.org/prop/direct/"),
                                  (" p:", " http://www.wikidata.org/prop/"),
@@ -93,10 +93,10 @@ def fill_query(query: List[str], entity_comb, type_comb, rel_comb):
     for query_str, wikidata_str in map_query_str_to_wikidata:
         query = query.replace(query_str, wikidata_str)
     for n, entity in enumerate(entity_comb[:-1]):
-        query = query.replace(f"E{n+1}", entity)
+        query = query.replace(f"e{n+1}", entity)
     for n, entity_type in enumerate(type_comb[:-1]): # type_entity
-        query = query.replace(f"T{n+1}", entity_type)
+        query = query.replace(f"t{n+1}", entity_type)
     for n, rel in enumerate(rel_comb[:-1]):
-        query = query.replace(f"R{n+1}", rel)
+        query = query.replace(f"r{n+1}", rel)
     query = query.split(' ')
     return query

@@ -183,7 +183,7 @@ class QueryGenerator(Component, Serializable):
             query_template = {}
             for template in templates:
                 if template["rel_dirs"] == rel_dirs_from_template:
-                    query_template = template  # TODO can there be more than 1 template with matching template['rel_dirs']
+                    query_template = template
             if query_template:
                 candidate_outputs = self.query_parser(question, query_template, entity_ids, type_ids, rels_from_template)
         else:
@@ -192,7 +192,7 @@ class QueryGenerator(Component, Serializable):
                 if candidate_outputs:
                     return candidate_outputs
             
-            if not candidate_outputs:  # TODO: unite with previous if statement
+            if not candidate_outputs:
                 log.debug(f"(find_candidate_answers)templates: {templates}")
                 alternative_templates = templates[0]["alternative_templates"]
                 for template in alternative_templates:
@@ -204,16 +204,14 @@ class QueryGenerator(Component, Serializable):
         return candidate_outputs
     
     def query_parser(self, question, query_info, entity_ids, type_ids, rels_from_template = None):
-        # TODO: lowercase query
         candidate_outputs = []
         question_tokens = nltk.word_tokenize(question)
-
-        query = query_info["query_template"]
+        query = query_info["query_template"].lower()
         rels_for_search = query_info["rank_rels"]
         query_seq_num = query_info["query_sequence"]
         return_if_found = query_info["return_if_found"]
         log.debug(f"(query_parser)quer: {query}, {rels_for_search}, {query_seq_num}, {return_if_found}")
-        query_triplets = query[query.find('{')+1:query.find('}')].strip(' ').split(' . ') #TODO: use re for {}
+        query_triplets = re.findall("{[ ]?(.*?)[ ]?}", query)[0].split(' . ')
         log.debug(f"(query_parser)query_triplets: {query_triplets}")
         query_triplets = [triplet.split(' ')[:3] for triplet in query_triplets]
         query_sequence_dict = {num: triplet for num, triplet in zip(query_seq_num, query_triplets)}
@@ -236,9 +234,9 @@ class QueryGenerator(Component, Serializable):
 
         log.debug(f"(query_parser)rels: {rels}")
         rels_from_query = [triplet[1] for triplet in query_triplets if triplet[1].startswith('?')]
-        answer_ent = re.findall("SELECT [\(]?([\S]+) ", query)
+        answer_ent = re.findall("select [\(]?([\S]+) ", query)
         order_info_nt = namedtuple("order_info", ["variable", "sorting_order"])
-        order_variable = re.findall("ORDER BY (ASC|DESC)\((.*)\)", query)
+        order_variable = re.findall("order by (asc|desc)\((.*)\)", query)
         print("order_variable", order_variable)
         answers_sorting_order = order_of_answers_sorting(question)
         if order_variable:
@@ -252,13 +250,13 @@ class QueryGenerator(Component, Serializable):
         year = extract_year(question_tokens, question)
         number = extract_number(question_tokens, question)
         if year:
-            filter_from_query = [elem[1].replace("YEAR", year) for elem in filter_from_query]
+            filter_from_query = [elem[1].replace("year", year) for elem in filter_from_query]
         else:
-            filter_from_query = [elem for elem in filter_from_query if elem[1] != "YEAR"]
+            filter_from_query = [elem for elem in filter_from_query if elem[1] != "year"]
         if number:
-            filter_from_query = [elem[1].replace("NUMBER", number) for elem in filter_from_query]
+            filter_from_query = [elem[1].replace("number", number) for elem in filter_from_query]
         else:
-            filter_from_query = [elem for elem in filter_from_query if elem[1] != "NUMBER"]
+            filter_from_query = [elem for elem in filter_from_query if elem[1] != "number"]
         log.debug(f"(query_parser)filter_from_query: {filter_from_query}")
         rel_combs = make_combs(rels, permut=False)
         import datetime

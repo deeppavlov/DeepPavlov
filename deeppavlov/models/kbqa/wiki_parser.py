@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
+import time
 from logging import getLogger
 from typing import List, Optional, Union, Tuple
 
-import re
 from hdt import HDTDocument
 
 from deeppavlov.core.commands.utils import expand_path
@@ -72,14 +73,14 @@ class WikiParser(Component):
                     combs = [comb for comb in combs if filter_value in comb[filter_elem]]
 
             if order_info.variable is not None:
-                reverse = True if order_info.sorting_order == "DESC" else False
+                reverse = True if order_info.sorting_order == "desc" else False
                 sort_elem = order_info.variable
                 print("order_info", order_info, "reverse", reverse)
                 print("combs", combs[0])
                 combs = sorted(combs, key=lambda x: float(x[sort_elem].split('^^')[0].strip('"')), reverse=reverse)
                 combs = [combs[0]]
             
-            if what_return[-1].startswith("COUNT"):
+            if what_return[-1].startswith("count"):
                 combs = [[combs[0][key] for key in what_return[:-1]] + [len(combs)]]
             else:
                 combs = [[elem[key] for key in what_return] for elem in combs]
