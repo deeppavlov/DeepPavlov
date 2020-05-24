@@ -24,41 +24,31 @@ from deeppavlov.core.data.utils import download_decompress
 
 @register('tweetqa_dataset_reader')
 class TweetQADatasetReader(DatasetReader):
+    """
+    The class to read the TweetQA dataset from files.
 
-    def read(self, dir_path: str, dataset: Optional[str] = 'SQuAD', url: Optional[str] = None, *args, **kwargs) \
-            -> Dict[str, Dict[str, Any]]:
+    Please, see https://tweetqa.github.io/.
+    """
+
+    def read(self, dir_path: Path, *args, **kwargs) -> Dict[str, Dict[str, Any]]:
         """
+        Read TweetQA dataset from provided directory
 
         Args:
-            dir_path: path to save data
-            dataset: default dataset names: ``'SQuAD'``, ``'SberSQuAD'`` or ``'MultiSQuAD'``
+            dir_path: a path to a folder with dataset files
             url: link to archive with dataset, use url argument if non-default dataset is used
 
         Returns:
             dataset split on train/valid
-
-        Raises:
-            RuntimeError: if `dataset` is not one of these: ``'SQuAD'``, ``'SberSQuAD'``, ``'MultiSQuAD'``.
         """
-        
-        
-#         required_files = ['dev.json', 'test.json', 'train.json']
-        required_files = ['dev.json', 'train.json']
+        required_files = 
         if not dir_path.exists():
             dir_path.mkdir()
 
-#         if not all((dir_path / f).exists() for f in required_files):
-#             download_decompress(self.url, dir_path)
-
         dataset = {}
-        for f in required_files:
+        for f, k in zip(['dev.json', 'train.json'], ['valid', 'train']):
             with dir_path.joinpath(f).open('r', encoding='utf8') as fp:
                 data = json.load(fp)
-            if f == 'dev.json':
-                dataset['valid'] = data
-            elif f == 'train.json':
-                dataset['train'] = data
-        
-        print('valid', len(dataset['valid']))
-        print('train', len(dataset['train']))
+            dataset[k] = data
+
         return dataset

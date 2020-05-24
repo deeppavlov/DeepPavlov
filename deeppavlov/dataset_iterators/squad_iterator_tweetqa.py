@@ -24,7 +24,7 @@ from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 @register('squad_iterator_tweetqa')
 class SquadIteratorTwitter(DataLearningIterator):
-    """SquadIterator allows to iterate over examples in SQuAD-like datasets.
+    """SquadIteratorTwitter allows to iterate over examples in TweetQA dataset.
     SquadIterator is used to train :class:`~deeppavlov.models.squad.squad.SquadModel`.
 
     It extracts ``context``, ``question``, ``answer_text`` and ``answer_start`` position from dataset.
@@ -37,9 +37,9 @@ class SquadIteratorTwitter(DataLearningIterator):
 
     """
 
-    def preprocess(self, data: Dict[str, Any], *args, **kwargs) -> \
+    def preprocess(self, data: List[Dict[str, Any]], *args, **kwargs) -> \
             List[Tuple[Tuple[str, str], Tuple[List[str], List[int]]]]:
-        """Extracts context, question, answer, answer_start from SQuAD data
+        """Extracts context, question, answer, answer_start from TweetQA data
 
         Args:
             data: data in squad format
@@ -47,43 +47,27 @@ class SquadIteratorTwitter(DataLearningIterator):
         Returns:
             list of (context, question), (answer_text, answer_start)
             answer text and answer_start are lists
-
         """
-        
-        counter_nonzero = 0
-        counter_notfound = 0
-        
         cqas = []
-        if data:
-            for item in data:
-                
-                context = item['Tweet'].lower()
-                q = item['Question'].lower()
-                
-                if 'Answer' in item:
-#                     if len(item['Answer']) != 1:
-#                         counter_nonzero += 1
-                    
-                    for ans_text in item['Answer']:
-                        
-                        ans_text = ans_text.lower()
-                    
-                        if ans_text in context:
-                            ans_start = context.find(ans_text)
-                            cqas.append(((context, q), ([ans_text], [ans_start])))
-                            break
-#                         else:
-#                             counter_notfound += 1
-#                             print(item)
-#                             print("---------------")
+        for item in data:
+            
+            context = item['Tweet'].lower()
+            q = item['Question'].lower()
 
-                else:
-                    cqas.append(((context, q), ([''], [-1])))
-#                     counter_nonzero += 1
-        
-#         print('counter_nonzero', counter_nonzero)
-#         print(counter_notfound)
-        print(len(cqas))
+            # No answer case
+            if 'Answer' not in item:
+                cqas.append(((context, q), ([''], [-1])))
+                break
+
+            found = False
+            for ans_text in map(lambda x: x.lower(), item['Answer']): 
+                if ans_text in context:
+                    ans_start = context.find(ans_text)
+                    cqas.append(((context, q), ([ans_text], [ans_start])))
+                    found = True
+                    break
+            # there were some answers, but none of them came from context
+            if not found:
+                cqas.append(((context, q), ([''], [-1])))
 
         return cqas
-    
