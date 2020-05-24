@@ -1,0 +1,4 @@
+matplotlib==3.2.1
+sentencepiece==0.1.85
+transformers==2.8.0
+youtokentome==1.0.6
