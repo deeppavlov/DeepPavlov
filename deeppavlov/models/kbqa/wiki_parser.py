@@ -12,17 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
-import time
 from logging import getLogger
 from typing import List, Tuple, Dict
+from collections import namedtuple
 
 from hdt import HDTDocument
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
-
 
 log = getLogger(__name__)
 
@@ -46,7 +44,7 @@ class WikiParser(Component):
                  query_seq: List[List[str]],
                  filter_info: List[Tuple[str]],
                  order_info: namedtuple) -> List[List[str]]:
-        
+
         extended_combs = []
         combs = []
         for n, query in enumerate(query_seq):
@@ -68,11 +66,10 @@ class WikiParser(Component):
                             for new_comb in new_combs:
                                 extended_combs.append({**comb, **new_comb})
                 combs = extended_combs
-        
+
         if combs:
-            if filter_entities:
-                for filter_entity in filter_entities:
-                    filter_elem, filter_value = filter_entity
+            if filter_info:
+                for filter_elem, filter_value in filter_info:
                     combs = [comb for comb in combs if filter_value in comb[filter_elem]]
 
             if order_info.variable is not None:
@@ -80,7 +77,7 @@ class WikiParser(Component):
                 sort_elem = order_info.variable
                 combs = sorted(combs, key=lambda x: float(x[sort_elem].split('^^')[0].strip('"')), reverse=reverse)
                 combs = [combs[0]]
-            
+
             if what_return[-1].startswith("count"):
                 combs = [[combs[0][key] for key in what_return[:-1]] + [len(combs)]]
             else:
@@ -88,13 +85,12 @@ class WikiParser(Component):
 
         return combs
 
-    def search(self, query: List[str], unknown_elem_positions: List[Tuple[str]]) -> List[Dict[str]]:
+    def search(self, query: List[str], unknown_elem_positions: List[Tuple[int, str]]) -> List[Dict[str]]:
         query = list(map(lambda elem: "" if elem.startswith('?') else elem, query))
         subj, rel, obj = query
         triplets, c = self.document.search_triples(subj, rel, obj)
         combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
         return combs
-        
 
     def find_label(self, entity: str) -> str:
         entity = str(entity).replace('"', '')
@@ -109,7 +105,7 @@ class WikiParser(Component):
                     return found_label
 
         elif entity.endswith("@en"):
-            entity = entity.strip('@en', '')
+            entity = entity.strip('@en')
             return entity
 
         elif "^^" in entity:
@@ -127,7 +123,7 @@ class WikiParser(Component):
         aliases = []
         if entity.startswith("http://www.wikidata.org/entity/"):
             labels, cardinality = self.document.search_triples(entity,
-                                                   "http://www.w3.org/2004/02/skos/core#altLabel", "")
+                                                               "http://www.w3.org/2004/02/skos/core#altLabel", "")
             aliases = [label[2].strip('@en').strip('"') for label in labels if label[2].endswith("@en")]
         return aliases
 
@@ -136,7 +132,7 @@ class WikiParser(Component):
             triplets, num = self.document.search_triples(f"http://www.wikidata.org/entity/{entity}", "", "")
         else:
             triplets, num = self.document.search_triples("", "", f"http://www.wikidata.org/entity/{entity}")
-        
+
         if rel_type is not None:
             start_str = f"http://www.wikidata.org/prop/{rel_type}"
         else:

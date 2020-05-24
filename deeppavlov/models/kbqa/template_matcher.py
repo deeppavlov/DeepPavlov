@@ -17,7 +17,7 @@ import multiprocessing as mp
 import json
 import functools
 from logging import getLogger
-from typing import List, Tuple
+from typing import Tuple, List
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
@@ -25,9 +25,11 @@ from deeppavlov.core.models.serializable import Serializable
 
 log = getLogger(__name__)
 
+
 class RegexpMatcher:
     def __init__(self, question):
         self.question = question
+
     def __call__(self, template):
         res = re.findall(template["template_regexp"], self.question)
         found_template = []
@@ -45,7 +47,7 @@ class TemplateMatcher(Component, Serializable):
     """
 
     def __init__(self, load_path: str, templates_filename: str,
-                       num_processors: int = None, **kwargs) -> None:
+                 num_processors: int = None, **kwargs) -> None:
         """
 
         Args:
@@ -68,20 +70,18 @@ class TemplateMatcher(Component, Serializable):
     def save(self) -> None:
         raise NotImplementedError
 
-    def __call__(self, question: str) -> Tuple[List[str], List[Tuple[str]], str]:
+    def __call__(self, question: str) -> Tuple[List[str], List[str], List[Tuple[str]], List[str], str]:
         question = question.lower()
         question = self.sanitize(question)
         question_length = len(question)
         entities, types, relations, relation_dirs = [], [], [], []
-        query_type = "" 
+        query_type = ""
         results = self.pool.map(RegexpMatcher(question), self.templates)
-        results = functools.reduce(lambda x, y: x+y, results)
+        results = functools.reduce(lambda x, y: x + y, results)
         replace_tokens = [("the uk", "united kingdom"), ("the us", "united states")]
         if results:
             min_length = 100
             for result in results:
-                print("result", result)
-                entities_cand, types_cand, unuseful_tokens = [], [], []
                 found_ent, template = result
                 positions_entity_tokens = template["positions_entity_tokens"]
                 positions_type_tokens = template["positions_type_tokens"]
@@ -95,7 +95,6 @@ class TemplateMatcher(Component, Serializable):
                 type_lengths = [len(entity_type) for entity_type in types_cand]
                 unuseful_tokens_len = sum([len(unuseful_tok) for unuseful_tok in unuseful_tokens])
                 log.debug(f"found template: {template}, {found_ent}")
-                print("template_matcher: ", positions_entity_tokens, positions_type_tokens, positions_unuseful_tokens)
 
                 if 0 not in entity_lengths or 0 not in type_lengths and entity_num_tokens:
                     cur_len = sum(entity_lengths) + sum(type_lengths)
@@ -117,7 +116,7 @@ class TemplateMatcher(Component, Serializable):
             question = question[4:]
         if question.startswith("a "):
             question = question[2:]
-        
+
         date_interval = re.findall("([\d]{4}-[\d]{4})", question)
         if date_interval:
             question = question.replace(date_interval[0], '')

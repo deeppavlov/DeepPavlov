@@ -67,7 +67,7 @@ class RelRankerInfer(Component, Serializable):
             questions_batch = []
             rels_labels_batch = []
             rels_batch = []
-            for candidate_rel in candidate_rels[i*self.batch_size : (i+1)*self.batch_size]:
+            for candidate_rel in candidate_rels[i * self.batch_size: (i + 1) * self.batch_size]:
                 if candidate_rel in self.rel_q2name:
                     questions_batch.append(question)
                     rels_batch.append(candidate_rel)

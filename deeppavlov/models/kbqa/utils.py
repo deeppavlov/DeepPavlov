@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import re
-from typing import Tuple, List
 import itertools
+from typing import List
 
 
 def extract_year(question_tokens: List[str], question: str) -> str:
@@ -62,6 +62,7 @@ def order_of_answers_sorting(question: str) -> str:
 
     return "asc"
 
+
 def make_combs(entity_ids: List[List[str]], permut: bool) -> List[List[str]]:
     entity_ids = [[(entity, n) for n, entity in enumerate(entities_list)] for entities_list in entity_ids]
     entity_ids = list(itertools.product(*entity_ids))
@@ -72,8 +73,9 @@ def make_combs(entity_ids: List[List[str]], permut: bool) -> List[List[str]]:
     else:
         entity_ids_permut = entity_ids
     entity_ids = sorted(entity_ids_permut, key=lambda x: sum([elem[1] for elem in x]))
-    ent_combs = [[elem[0] for elem in comb]+[sum([elem[1] for elem in comb])] for comb in entity_ids]
+    ent_combs = [[elem[0] for elem in comb] + [sum([elem[1] for elem in comb])] for comb in entity_ids]
     return ent_combs
+
 
 def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], rel_comb: List[str]) -> List[str]:
     ''' example of query: ["wd:E1", "p:R1", "?s"]
@@ -93,10 +95,10 @@ def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], r
     for query_str, wikidata_str in map_query_str_to_wikidata:
         query = query.replace(query_str, wikidata_str)
     for n, entity in enumerate(entity_comb[:-1]):
-        query = query.replace(f"e{n+1}", entity)
-    for n, entity_type in enumerate(type_comb[:-1]): # type_entity
-        query = query.replace(f"t{n+1}", entity_type)
+        query = query.replace(f"e{n + 1}", entity)
+    for n, entity_type in enumerate(type_comb[:-1]):  # type_entity
+        query = query.replace(f"t{n + 1}", entity_type)
     for n, rel in enumerate(rel_comb[:-1]):
-        query = query.replace(f"r{n+1}", rel)
+        query = query.replace(f"r{n + 1}", rel)
     query = query.split(' ')
     return query

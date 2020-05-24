@@ -61,7 +61,7 @@ class RelRankerBertInfer(Component, Serializable):
         pass
 
     def __call__(self, questions_list: List[str], candidate_answers_list: List[List[Tuple[str]]]) -> List[str]:
-        log.debug(f"candidate_answers_list: {candidate_answers_list}") 
+        log.debug(f"candidate_answers_list: {candidate_answers_list}")
         answers = []
         for question, candidate_answers in zip(questions_list, candidate_answers_list):
             answers_with_scores = []
@@ -73,13 +73,13 @@ class RelRankerBertInfer(Component, Serializable):
                 questions_batch = []
                 rels_labels_batch = []
                 answers_batch = []
-                for candidate_ans_and_rels in candidate_answers[i*self.batch_size : (i+1)*self.batch_size]:
+                for candidate_ans_and_rels in candidate_answers[i * self.batch_size: (i + 1) * self.batch_size]:
                     candidate_rels = candidate_ans_and_rels[:-1]
                     candidate_rels = [candidate_rel.split('/')[-1] for candidate_rel in candidate_rels]
                     candidate_answer = candidate_ans_and_rels[-1]
                     candidate_rels = " # ".join([self.rel_q2name[candidate_rel] \
-                                                     for candidate_rel in candidate_rels if
-                                                     candidate_rel in self.rel_q2name])
+                                                 for candidate_rel in candidate_rels if
+                                                 candidate_rel in self.rel_q2name])
 
                     if candidate_rels:
                         questions_batch.append(question)
@@ -96,7 +96,7 @@ class RelRankerBertInfer(Component, Serializable):
             if answers_with_scores:
                 log.debug(f"answers: {answers_with_scores[0][0]}")
                 answer = self.wiki_parser.find_label(answers_with_scores[0][0])
-            
+
             answers.append(answer)
 
         return answers
@@ -108,7 +108,7 @@ class RelRankerBertInfer(Component, Serializable):
             questions_batch = []
             rels_labels_batch = []
             rels_batch = []
-            for candidate_rel in candidate_rels[i*self.batch_size : (i+1)*self.batch_size]:
+            for candidate_rel in candidate_rels[i * self.batch_size: (i + 1) * self.batch_size]:
                 if candidate_rel in self.rel_q2name:
                     questions_batch.append(question)
                     rels_batch.append(candidate_rel)

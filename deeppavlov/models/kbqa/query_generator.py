@@ -13,11 +13,11 @@
 # limitations under the License.
 
 import itertools
+import re
 from logging import getLogger
-from typing import Tuple, List, Any, Optional, Union
+from typing import Tuple, List, Optional, Union, Dict, Any
 from collections import namedtuple
 
-import re
 import nltk
 
 from deeppavlov.core.common.registry import register
@@ -80,6 +80,8 @@ class QueryGenerator(Component, Serializable):
         self.rel_ranker = rel_ranker
         self.rank_rels_filename_1 = rank_rels_filename_1
         self.rank_rels_filename_2 = rank_rels_filename_2
+        self.rank_list_0 = []
+        self.rank_list_1 = []
         self.entities_to_leave = entities_to_leave
         self.rels_to_leave = rels_to_leave
         self.sparql_queries_filename = sparql_queries_filename
@@ -104,11 +106,11 @@ class QueryGenerator(Component, Serializable):
     def __call__(self, question_batch: List[str],
                  template_type_batch: List[str],
                  entities_from_ner_batch: List[List[str]],
-                 types_from_ner_batch: List[List[str]]) -> List[Tuple[str]]:
+                 types_from_ner_batch: List[List[str]]) -> List[Union[List[Tuple[str, Any]], List[str]]]:
 
         candidate_outputs_batch = []
         for question, template_type, entities_from_ner, types_from_ner in \
-            zip(question_batch, template_type_batch, entities_from_ner_batch, types_from_ner_batch):
+                zip(question_batch, template_type_batch, entities_from_ner_batch, types_from_ner_batch):
 
             candidate_outputs = []
             self.template_num = template_type
@@ -119,7 +121,7 @@ class QueryGenerator(Component, Serializable):
                 question = question.replace(old, new)
 
             entities_from_template, types_from_template, rels_from_template, rel_dirs_from_template, \
-                query_type_template = self.template_matcher(question)
+            query_type_template = self.template_matcher(question)
             self.template_num = query_type_template
 
             log.debug(f"question: {question}\n")
@@ -134,7 +136,8 @@ class QueryGenerator(Component, Serializable):
                 log.debug(f"entity_ids {entity_ids}")
                 log.debug(f"type_ids {type_ids}")
 
-                candidate_outputs = self.find_candidate_answers(question, entity_ids, type_ids, rels_from_template, rel_dirs_from_template)
+                candidate_outputs = self.find_candidate_answers(question, entity_ids, type_ids, rels_from_template,
+                                                                rel_dirs_from_template)
 
             if not candidate_outputs and entities_from_ner:
                 log.debug(f"(__call__)entities_from_ner: {entities_from_ner}")
@@ -158,13 +161,13 @@ class QueryGenerator(Component, Serializable):
     def get_entity_ids(self, entities: List[str], what_to_link: str) -> List[List[str]]:
         entity_ids = []
         for entity in entities:
+            entity_id = []
             if what_to_link == "entities":
                 entity_id, confidences = self.linker_entities(entity)
             if what_to_link == "types":
                 entity_id, confidences = self.linker_types(entity)
             entity_ids.append(entity_id[:15])
         return entity_ids
-
 
     def find_candidate_answers(self, question: str,
                                entity_ids: List[List[str]],
@@ -173,9 +176,12 @@ class QueryGenerator(Component, Serializable):
                                rel_dirs_from_template: Optional[List[str]] = None) -> List[Tuple[str]]:
         candidate_outputs = []
         log.debug(f"(find_candidate_answers)self.template_num: {self.template_num}")
-        templates = [template for num, template in self.template_queries.items() if template["template_num"] == self.template_num]
-        templates = [template for template in templates if (template["exact_entity_type_match"] and \
-            template["entities_and_types_num"] == [len(entity_ids), len(type_ids)]) or not template["exact_entity_type_match"]]
+        templates = [template for num, template in self.template_queries.items() if
+                     template["template_num"] == self.template_num]
+        templates = [template for template in templates if (template["exact_entity_type_match"] and
+                                                            template["entities_and_types_num"] == [len(entity_ids),
+                                                                                                   len(type_ids)])
+                     or not template["exact_entity_type_match"]]
         if not templates:
             return candidate_outputs
         if rels_from_template is not None:
@@ -184,13 +190,14 @@ class QueryGenerator(Component, Serializable):
                 if template["rel_dirs"] == rel_dirs_from_template:
                     query_template = template
             if query_template:
-                candidate_outputs = self.query_parser(question, query_template, entity_ids, type_ids, rels_from_template)
+                candidate_outputs = self.query_parser(question, query_template, entity_ids, type_ids,
+                                                      rels_from_template)
         else:
             for template in templates:
                 candidate_outputs = self.query_parser(question, template, entity_ids, type_ids, rels_from_template)
                 if candidate_outputs:
                     return candidate_outputs
-            
+
             if not candidate_outputs:
                 log.debug(f"(find_candidate_answers)templates: {templates}")
                 alternative_templates = templates[0]["alternative_templates"]
@@ -201,10 +208,10 @@ class QueryGenerator(Component, Serializable):
         log.debug("candidate_rels_and_answers:\n" + '\n'.join([str(output) for output in candidate_outputs[:5]]))
 
         return candidate_outputs
-    
+
     def query_parser(self, question: str, query_info: Dict[str, str],
-                           entity_ids: List[List[str]], type_ids: List[List[str]], 
-                           rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str]]:
+                     entity_ids: List[List[str]], type_ids: List[List[str]],
+                     rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str]]:
         candidate_outputs = []
         question_tokens = nltk.word_tokenize(question)
         query = query_info["query_template"].lower().replace("wdt:p31", "wdt:P31")
@@ -217,23 +224,23 @@ class QueryGenerator(Component, Serializable):
         query_triplets = [triplet.split(' ')[:3] for triplet in query_triplets]
         query_sequence_dict = {num: triplet for num, triplet in zip(query_seq_num, query_triplets)}
         query_sequence = []
-        for i in range(1, max(query_seq_num)+1):
+        for i in range(1, max(query_seq_num) + 1):
             query_sequence.append(query_sequence_dict[i])
         log.debug(f"(query_parser)query_sequence: {query_sequence}")
-        triplet_info_list = [("forw" if triplet[2].startswith('?') else "backw", search_source) 
-            for search_source, triplet in zip(rels_for_search, query_triplets) if search_source != "do_not_rank"]
+        triplet_info_list = [("forw" if triplet[2].startswith('?') else "backw", search_source)
+                             for search_source, triplet in zip(rels_for_search, query_triplets) if
+                             search_source != "do_not_rank"]
         log.debug(f"(query_parser)rel_directions: {triplet_info_list}")
         entity_ids = [entity[:self.entities_to_leave] for entity in entity_ids]
         entity_combs = make_combs(entity_ids, permut=True)
         log.debug(f"(query_parser)entity_combs: {entity_combs[:3]}")
         type_combs = make_combs(type_ids, permut=False)
         log.debug(f"(query_parser)type_combs: {type_combs[:3]}")
-        rels = []
         if rels_from_template is not None:
             rels = rels_from_template
         else:
-            rels = [self.find_top_rels(question, entity_ids, triplet_info) for triplet_info in triplet_info_list]
-
+            rels = [self.find_top_rels(question, entity_ids, triplet_info)
+                    for triplet_info in triplet_info_list]
         log.debug(f"(query_parser)rels: {rels}")
         rels_from_query = [triplet[1] for triplet in query_triplets if triplet[1].startswith('?')]
         answer_ent = re.findall("select [\(]?([\S]+) ", query)
@@ -265,7 +272,7 @@ class QueryGenerator(Component, Serializable):
             query_hdt_seq = [
                 fill_query(query_hdt_elem, combs[0], combs[1], combs[2]) for query_hdt_elem in query_sequence]
             candidate_output = self.wiki_parser(
-                rels_from_query + answer_ent, query_hdt_seq, filter_from_query, order_info)
+                rels_from_query + answer_ent, query_hdt_seq, filter_info, order_info)
             candidate_outputs += [combs[2][:-1] + output for output in candidate_output]
             if return_if_found and candidate_output:
                 return candidate_outputs
@@ -285,7 +292,7 @@ class QueryGenerator(Component, Serializable):
             ex_rels = [rel.split('/')[-1] for rel in ex_rels]
         elif source == "rank_list_1":
             ex_rels = self.rank_list_0
-        elif source == "rank_list_2": 
+        elif source == "rank_list_2":
             ex_rels = self.rank_list_1
         scores = self.rel_ranker.rank_rels(question, ex_rels)
         top_rels = [score[0] for score in scores]
