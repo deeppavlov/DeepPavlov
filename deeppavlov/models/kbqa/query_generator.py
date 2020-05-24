@@ -52,22 +52,22 @@ class QueryGenerator(Component, Serializable):
                  rank_rels_filename_2: str,
                  sparql_queries_filename: str,
                  entities_to_leave: int = 5,
-                 rels_to_leave: int = 10,
-                 rels_to_leave_2hop: int = 7,
+                 rels_to_leave: int = 7,
                  return_answers: bool = False, **kwargs) -> None:
         """
 
         Args:
             template_matcher: component deeppavlov.models.kbqa.template_matcher
-            linker: component deeppavlov.models.kbqa.entity_linking
+            linker_entities: component deeppavlov.models.kbqa.entity_linking for linking of entities
+            linker_types: component deeppavlov.models.kbqa.entity_linking for linking of types
             wiki_parser: component deeppavlov.models.kbqa.wiki_parser
             rel_ranker: component deeppavlov.models.kbqa.rel_ranking_infer
             load_path: path to folder with wikidata files
             rank_rels_filename_1: file with list of rels for first rels in questions with ranking 
             rank_rels_filename_2: file with list of rels for second rels in questions with ranking
+            sparql_queries_filename: file with sparql query templates
             entities_to_leave: how many entities to leave after entity linking
             rels_to_leave: how many relations to leave after relation ranking
-            rels_to_leave_2hop: how many relations to leave in 2-hop questions
             sparql_queries_filename: file with a dict of sparql queries
             return_answers: whether to return answers or candidate answers
             **kwargs:
@@ -82,7 +82,6 @@ class QueryGenerator(Component, Serializable):
         self.rank_rels_filename_2 = rank_rels_filename_2
         self.entities_to_leave = entities_to_leave
         self.rels_to_leave = rels_to_leave
-        self.rels_to_leave_2hop = rels_to_leave_2hop
         self.sparql_queries_filename = sparql_queries_filename
         self.return_answers = return_answers
 
@@ -153,7 +152,7 @@ class QueryGenerator(Component, Serializable):
             log.debug(f"(__call__)answers: {answers}")
             return answers
         else:
-            log.debug(f"(__call__)candidate_outputs_batch: {candidate_outputs_batch[:10]}")
+            log.debug(f"(__call__)candidate_outputs_batch: {[output[:5] for output in candidate_outputs_batch]}")
             return candidate_outputs_batch
 
     def get_entity_ids(self, entities: List[str], what_to_link: str) -> List[List[str]]:
@@ -203,7 +202,9 @@ class QueryGenerator(Component, Serializable):
 
         return candidate_outputs
     
-    def query_parser(self, question, query_info, entity_ids, type_ids, rels_from_template = None):
+    def query_parser(self, question: str, query_info: Dict[str, str],
+                           entity_ids: List[List[str]], type_ids: List[List[str]], 
+                           rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str]]:
         candidate_outputs = []
         question_tokens = nltk.word_tokenize(question)
         query = query_info["query_template"].lower().replace("wdt:p31", "wdt:P31")
@@ -222,6 +223,7 @@ class QueryGenerator(Component, Serializable):
         triplet_info_list = [("forw" if triplet[2].startswith('?') else "backw", search_source) 
             for search_source, triplet in zip(rels_for_search, query_triplets) if search_source != "do_not_rank"]
         log.debug(f"(query_parser)rel_directions: {triplet_info_list}")
+        entity_ids = [entity[:self.entities_to_leave] for entity in entity_ids]
         entity_combs = make_combs(entity_ids, permut=True)
         log.debug(f"(query_parser)entity_combs: {entity_combs[:3]}")
         type_combs = make_combs(type_ids, permut=False)
@@ -268,11 +270,11 @@ class QueryGenerator(Component, Serializable):
             if return_if_found and candidate_output:
                 return candidate_outputs
         log.debug(f"(query_parser)loop time: {datetime.datetime.now() - start_time}")
-        log.debug(f"(query_parser)final outputs: {candidate_outputs}")
+        log.debug(f"(query_parser)final outputs: {candidate_outputs[:3]}")
 
         return candidate_outputs
 
-    def find_top_rels(self, question, entity_ids, triplet_info):
+    def find_top_rels(self, question: str, entity_ids: List[List[str]], triplet_info: namedtuple) -> List[str]:
         ex_rels = []
         direction, source = triplet_info
         if source == "wiki":
@@ -287,4 +289,4 @@ class QueryGenerator(Component, Serializable):
             ex_rels = self.rank_list_1
         scores = self.rel_ranker.rank_rels(question, ex_rels)
         top_rels = [score[0] for score in scores]
-        return top_rels
+        return top_rels[:self.rels_to_leave]

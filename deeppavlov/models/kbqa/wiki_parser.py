@@ -15,7 +15,7 @@
 import re
 import time
 from logging import getLogger
-from typing import List, Optional, Union, Tuple
+from typing import List, Tuple, Dict
 
 from hdt import HDTDocument
 
@@ -31,15 +31,21 @@ log = getLogger(__name__)
 class WikiParser(Component):
     """This class extract relations, objects or triplets from Wikidata HDT file"""
 
-    def __init__(self, wiki_filename: str, **kwargs):
+    def __init__(self, wiki_filename: str, **kwargs) -> None:
+        """
+
+        Args:
+            wiki_filename: hdt file with wikidata
+            **kwargs:
+        """
         log.debug(f'__init__ wiki_filename: {wiki_filename}')
         wiki_path = expand_path(wiki_filename)
         self.document = HDTDocument(str(wiki_path))
 
     def __call__(self, what_return: List[str],
-                 query_seq: List[Tuple[str]],
-                 filter_entities: Optional[List[Tuple[str]]] = None,
-                 order_info: Optional[Tuple[str, str]] = None) -> Union[str, List[str]]:
+                 query_seq: List[List[str]],
+                 filter_info: List[Tuple[str]],
+                 order_info: namedtuple) -> List[List[str]]:
         
         extended_combs = []
         combs = []
@@ -82,7 +88,7 @@ class WikiParser(Component):
 
         return combs
 
-    def search(self, query, unknown_elem_positions):
+    def search(self, query: List[str], unknown_elem_positions: List[Tuple[str]]) -> List[Dict[str]]:
         query = list(map(lambda elem: "" if elem.startswith('?') else elem, query))
         subj, rel, obj = query
         triplets, c = self.document.search_triples(subj, rel, obj)
@@ -90,7 +96,7 @@ class WikiParser(Component):
         return combs
         
 
-    def find_label(self, entity):
+    def find_label(self, entity: str) -> str:
         entity = str(entity).replace('"', '')
         if entity.startswith("Q"):
             entity = "http://www.wikidata.org/entity/" + entity
@@ -117,7 +123,7 @@ class WikiParser(Component):
 
         return "Not Found"
 
-    def find_alias(self, entity):
+    def find_alias(self, entity: str) -> List[str]:
         aliases = []
         if entity.startswith("http://www.wikidata.org/entity/"):
             labels, cardinality = self.document.search_triples(entity,
@@ -125,7 +131,7 @@ class WikiParser(Component):
             aliases = [label[2].strip('@en').strip('"') for label in labels if label[2].endswith("@en")]
         return aliases
 
-    def find_rels(self, entity, direction, rel_type = None):
+    def find_rels(self, entity: str, direction: str, rel_type: str = None) -> List[str]:
         if direction == "forw":
             triplets, num = self.document.search_triples(f"http://www.wikidata.org/entity/{entity}", "", "")
         else:

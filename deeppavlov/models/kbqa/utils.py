@@ -62,7 +62,7 @@ def order_of_answers_sorting(question: str) -> str:
 
     return "asc"
 
-def make_combs(entity_ids, permut):
+def make_combs(entity_ids: List[List[str]], permut: bool) -> List[List[str]]:
     entity_ids = [[(entity, n) for n, entity in enumerate(entities_list)] for entities_list in entity_ids]
     entity_ids = list(itertools.product(*entity_ids))
     entity_ids_permut = []
@@ -75,7 +75,7 @@ def make_combs(entity_ids, permut):
     ent_combs = [[elem[0] for elem in comb]+[sum([elem[1] for elem in comb])] for comb in entity_ids]
     return ent_combs
 
-def fill_query(query: List[str], entity_comb, type_comb, rel_comb):
+def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], rel_comb: List[str]) -> List[str]:
     ''' example of query: ["wd:E1", "p:R1", "?s"]
                    entity_comb: ["Q159"]
                    type_comb: []
