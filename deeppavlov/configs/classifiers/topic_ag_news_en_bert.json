@@ -115,7 +115,7 @@
       "MODEL_PATH": "{MODELS_PATH}/classifiers/topic_ag_news_v3"
     },
     "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf-gpu.txt",
       "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
     ],
     "download": [
