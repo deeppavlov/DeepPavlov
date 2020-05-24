@@ -41,7 +41,6 @@ class TweetQADatasetReader(DatasetReader):
         Returns:
             dataset split on train/valid
         """
-        required_files = 
         if not dir_path.exists():
             dir_path.mkdir()
 
