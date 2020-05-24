@@ -7,9 +7,11 @@ import numpy as np
 # todo comments
 # todo logging
 # todo naming
+from deeppavlov.models.go_bot.nlu.dto.nlu_response import NLUResponse
 from deeppavlov.models.go_bot.nlu.dto.nlu_response_interface import NLUResponseInterface
 from deeppavlov.models.go_bot.nlu.dto.text_vectorization_response import TextVectorizationResponse
 from deeppavlov.models.go_bot.policy.dto.digitized_policy_features import DigitizedPolicyFeatures
+from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DSTKnowledge
 
 from copy import deepcopy
 
@@ -25,12 +27,14 @@ class UtteranceFeatures:
     features: np.ndarray
 
     def __init__(self,
-                 nlu_response: NLUResponseInterface,
-                 tokens_embeddings_padded: TextVectorizationResponse,
+                 nlu_response: NLUResponse,
+                 tracker_knowledge: DSTKnowledge,
                  features: DigitizedPolicyFeatures):
         self.action_mask = features.action_mask
         self.attn_key = features.attn_key
-        self.tokens_embeddings_padded = tokens_embeddings_padded.tokens_embeddings_padded
+
+        tokens_vectorized = nlu_response.tokens_vectorized  # todo proper oop
+        self.tokens_embeddings_padded = tokens_vectorized.tokens_embeddings_padded
         self.features = features.concat_feats
 
 

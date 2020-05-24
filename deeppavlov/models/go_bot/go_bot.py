@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import Dict, Any, List, Optional, Union, Sequence
+from typing import Dict, Any, List, Optional, Union, Sequence, Tuple
 
 import numpy as np
 
@@ -24,12 +24,12 @@ from deeppavlov.models.go_bot.nlg.dto.nlg_response_interface import NLGResponseI
 from deeppavlov.models.go_bot.nlu.dto.text_vectorization_response import TextVectorizationResponse
 from deeppavlov.models.go_bot.nlu.tokens_vectorizer import TokensVectorizer
 from deeppavlov.models.go_bot.dto.dataset_features import UtteranceDataEntry, DialogueDataEntry, \
-    BatchDialoguesDataset, UtteranceFeatures, UtteranceTarget
+    BatchDialoguesDataset, UtteranceFeatures, UtteranceTarget, BatchDialoguesFeatures
 from deeppavlov.models.go_bot.dto.shared_gobot_params import SharedGoBotParams
 from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManagerInterface
 from deeppavlov.models.go_bot.nlu.nlu_manager import NLUManager
-from deeppavlov.models.go_bot.policy.policy_network import PolicyNetwork
-from deeppavlov.models.go_bot.policy.dto.policy_network_params import PolicyNetworkParams
+from deeppavlov.models.go_bot.policy.policy_network import PolicyNetwork, PolicyNetworkParams
+from deeppavlov.models.go_bot.policy.dto.policy_prediction import PolicyPrediction
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DialogueStateTracker, MultipleUserStateTrackersPool
 from pathlib import Path
@@ -276,21 +276,23 @@ class GoalOrientedBot(NNModel):
                                                                                 nlu_response.tokens)
         else:
             tokens_aggregated_embedding = self.data_handler.calc_tokens_mean_embedding(nlu_response.tokens)
-        text2vec_response = TextVectorizationResponse(tokens_bow_encoded,
-                                                      tokens_aggregated_embedding,
-                                                      tokens_embeddings_padded)
+        nlu_response.set_tokens_vectorized(TextVectorizationResponse(
+            tokens_bow_encoded,
+            tokens_aggregated_embedding,
+            tokens_embeddings_padded))
         # endregion text BOW-encoding and embedding | todo: to nlu
 
         if not keep_tracker_state:
             tracker.update_state(nlu_response)
 
         tracker_knowledge = tracker.get_current_knowledge()
-        digitized_policy_features = self.policy.digitize_features(nlu_response, text2vec_response, tracker_knowledge)
 
-        return UtteranceFeatures(nlu_response, text2vec_response, digitized_policy_features)
+        digitized_policy_features = self.policy.digitize_features(nlu_response, tracker_knowledge)
+
+        return UtteranceFeatures(nlu_response, tracker_knowledge, digitized_policy_features)
 
     def _infer(self, user_utterance_text: str, user_tracker: DialogueStateTracker,
-               keep_tracker_state=False) -> Sequence:
+               keep_tracker_state=False) -> Tuple[BatchDialoguesFeatures, PolicyPrediction]:
         """
         Predict the action to perform in response to given text.
 
@@ -320,13 +322,12 @@ class GoalOrientedBot(NNModel):
 
         # as for RNNs: output, hidden_state < - RNN(output, hidden_state)
         hidden_cells_state, hidden_cells_output = user_tracker.network_state[0], user_tracker.network_state[1]
-        probs, hidden_cells_state, hidden_cells_output = self.policy(utterance_batch_features,
-                                                                     hidden_cells_state,
-                                                                     hidden_cells_output,
-                                                                     prob=True)
+        policy_prediction = self.policy(utterance_batch_features,
+                                        hidden_cells_state,
+                                        hidden_cells_output,
+                                        prob=True)
 
-        network_state = (hidden_cells_state, hidden_cells_output)
-        return probs, np.argmax(probs), network_state
+        return utterance_batch_features, policy_prediction
 
     def __call__(self, batch: Union[List[List[dict]], List[str]],
                  user_ids: Optional[List] = None) -> Union[List[NLGResponseInterface],
@@ -350,26 +351,21 @@ class GoalOrientedBot(NNModel):
 
         return res
 
-    def _realtime_infer(self, user_id, user_text) -> NLGResponseInterface:
+    def _realtime_infer(self, user_id, user_text) -> List[NLGResponseInterface]:
         # realtime inference logic
         #
         # we have the pool of trackers, each one tracks the dialogue with its own user
         # (1 to 1 mapping: each user has his own tracker and vice versa)
 
         user_tracker = self.multiple_user_state_tracker.get_or_init_tracker(user_id)
+        responses = []
+
+        # todo remove duplication
 
         # predict the action to perform (e.g. response smth or call the api)
-        _, action_id_predicted, network_state = self._infer(user_text, user_tracker)
-        user_tracker.update_previous_action(action_id_predicted)
-        user_tracker.network_state = network_state
-
-        if action_id_predicted == self.nlg_manager.get_api_call_action_id():
-            # tracker says we need to make an api call.
-            # we 1) perform the api call and 2) predict what to do next
-            user_tracker.make_api_call()
-            _, action_id_predicted, network_state = self._infer(user_text, user_tracker, keep_tracker_state=True)
-            user_tracker.update_previous_action(action_id_predicted)
-            user_tracker.network_state = network_state
+        utterance_batch_features, policy_prediction = self._infer(user_text, user_tracker)
+        user_tracker.update_previous_action(policy_prediction.predicted_action_ix)
+        user_tracker.network_state = policy_prediction.get_network_state()
 
         # tracker says we need to say smth to user. we
         # * calculate the slotfilled state:
@@ -378,8 +374,33 @@ class GoalOrientedBot(NNModel):
         #   using the pattern provided for the action;
         #   the slotfilled state provides info to encapsulate to the pattern
         tracker_slotfilled_state = user_tracker.fill_current_state_with_db_results()
-        resp = self.nlg_manager.decode_response(action_id_predicted, tracker_slotfilled_state)
-        return resp
+        resp = self.nlg_manager.decode_response(utterance_batch_features,
+                                                policy_prediction,
+                                                tracker_slotfilled_state)
+        responses.append(resp)
+
+        if policy_prediction.predicted_action_ix == self.nlg_manager.get_api_call_action_id():
+            # tracker says we need to make an api call.
+            # we 1) perform the api call and 2) predict what to do next
+            user_tracker.make_api_call()
+            utterance_batch_features, policy_prediction = self._infer(user_text, user_tracker,
+                                                                      keep_tracker_state=True)
+            user_tracker.update_previous_action(policy_prediction.predicted_action_ix)
+            user_tracker.network_state = policy_prediction.get_network_state()
+
+            # tracker says we need to say smth to user. we
+            # * calculate the slotfilled state:
+            #   for each slot that is relevant to dialogue we fill this slot value if possible
+            # * generate text for the predicted speech action:
+            #   using the pattern provided for the action;
+            #   the slotfilled state provides info to encapsulate to the pattern
+            tracker_slotfilled_state = user_tracker.fill_current_state_with_db_results()
+            resp = self.nlg_manager.decode_response(utterance_batch_features,
+                                                    policy_prediction,
+                                                    tracker_slotfilled_state)
+            responses.append(resp)
+
+        return responses
 
     def _calc_inferences_for_dialogue(self, contexts: List[dict]) -> List[NLGResponseInterface]:
         # infer on each dialogue utterance
@@ -402,13 +423,15 @@ class GoalOrientedBot(NNModel):
             # just like the tracker remembers the db interaction results when real-time inference
             self.dialogue_state_tracker.update_ground_truth_db_result_from_context(context)
 
-            _, action_id_predicted, network_state = self._infer(context['text'], self.dialogue_state_tracker)
-            self.dialogue_state_tracker.update_previous_action(action_id_predicted)  # see the above todo
-            self.dialogue_state_tracker.network_state = network_state
+            utterance_batch_features, policy_prediction = self._infer(context['text'], self.dialogue_state_tracker)
+            self.dialogue_state_tracker.update_previous_action(policy_prediction.predicted_action_ix)  # see the above todo
+            self.dialogue_state_tracker.network_state = policy_prediction.get_network_state()
 
             # todo fix naming: fill_current_state_with_db_results & update_ground_truth_db_result_from_context are alike
             tracker_slotfilled_state = self.dialogue_state_tracker.fill_current_state_with_db_results()
-            resp = self.nlg_manager.decode_response(action_id_predicted, tracker_slotfilled_state)
+            resp = self.nlg_manager.decode_response(utterance_batch_features,
+                                                    policy_prediction,
+                                                    tracker_slotfilled_state)
             res.append(resp)
         return res
 

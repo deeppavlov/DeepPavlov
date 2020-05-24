@@ -1,6 +1,8 @@
 from abc import ABCMeta, abstractmethod
 
+from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesFeatures
 from deeppavlov.models.go_bot.nlg.dto.nlg_response_interface import NLGResponseInterface
+from deeppavlov.models.go_bot.policy.dto.policy_prediction import PolicyPrediction
 
 
 class NLGManagerInterface(metaclass=ABCMeta):
@@ -22,15 +24,11 @@ class NLGManagerInterface(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def decode_response(self, action_id, tracker_slotfilled_state) -> NLGResponseInterface:
-        """
-        Convert action template id and known slot values from tracker to response text.
-        Replaces the unknown slot values with "dontcare" if the action is an API call.
-        :param action_id: the id of action to generate text for.
-        :param tracker_slotfilled_state: the slots and their known values. usually received from dialogue state tracker.
-
-        :returns: the text generated for the passed action id and slot values.
-        """
+    def decode_response(self,
+                        utterance_batch_features: BatchDialoguesFeatures,
+                        policy_prediction: PolicyPrediction,
+                        tracker_slotfilled_state) -> NLGResponseInterface:
+        # todo: docstring
         pass
 
     @abstractmethod

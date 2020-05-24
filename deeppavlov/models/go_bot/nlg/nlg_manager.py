@@ -6,7 +6,9 @@ from typing import Union
 from deeppavlov.core.commands.utils import expand_path
 import deeppavlov.models.go_bot.nlg.templates.templates as go_bot_templates
 from deeppavlov.core.common.registry import register
+from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesFeatures
 from deeppavlov.models.go_bot.nlg.nlg_manager_interface import NLGManagerInterface
+from deeppavlov.models.go_bot.policy.dto.policy_prediction import PolicyPrediction
 
 log = getLogger(__name__)
 
@@ -66,18 +68,16 @@ class NLGManager(NLGManagerInterface):
         """
         return self._api_call_id
 
-    def decode_response(self, action_id: int, tracker_slotfilled_state: dict) -> str:
-        """
-        Convert action template id and known slot values from tracker to response text.
-        Replaces the unknown slot values with "dontcare" if the action is an API call.
-        :param action_id: the id of action to generate text for.
-        :param tracker_slotfilled_state: the slots and their known values. usually received from dialogue state tracker.
+    def decode_response(self,
+                        utterance_batch_features: BatchDialoguesFeatures,
+                        policy_prediction: PolicyPrediction,
+                        tracker_slotfilled_state) -> str:
+        # todo: docstring
 
-        :returns: the text generated for the passed action id and slot values.
-        """
-        action_text = self._generate_slotfilled_text_for_action(action_id, tracker_slotfilled_state)
+        action_text = self._generate_slotfilled_text_for_action(policy_prediction.predicted_action_ix,
+                                                                tracker_slotfilled_state)
         # in api calls replace unknown slots to "dontcare"
-        if action_id == self._api_call_id:
+        if policy_prediction.predicted_action_ix == self._api_call_id:
             action_text = re.sub("#([A-Za-z]+)", "dontcare", action_text).lower()
         return action_text
 

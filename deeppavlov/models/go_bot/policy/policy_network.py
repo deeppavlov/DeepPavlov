@@ -1,5 +1,5 @@
 import json
-from typing import Tuple, Optional, Sequence
+from typing import Tuple, Optional
 from logging import getLogger
 
 import numpy as np
@@ -13,7 +13,6 @@ from tensorflow.contrib.layers import xavier_initializer as xav
 
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
 from deeppavlov.models.go_bot.nlu.dto.nlu_response import NLUResponse
-from deeppavlov.models.go_bot.nlu.dto.text_vectorization_response import TextVectorizationResponse
 
 from deeppavlov.models.go_bot.nlu.tokens_vectorizer import TokensVectorRepresentationParams
 from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesFeatures, BatchDialoguesTargets
@@ -23,6 +22,7 @@ from deeppavlov.models.go_bot.dto.shared_gobot_params import SharedGoBotParams
 from deeppavlov.models.go_bot.policy.dto.attn_params import GobotAttnParams
 from deeppavlov.models.go_bot.policy.dto.digitized_policy_features import DigitizedPolicyFeatures
 from deeppavlov.models.go_bot.policy.dto.policy_network_params import PolicyNetworkParams
+from deeppavlov.models.go_bot.policy.dto.policy_prediction import PolicyPrediction
 from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DSTKnowledge
 
 log = getLogger(__name__)
@@ -180,10 +180,9 @@ class PolicyNetwork(LRScheduledTFModel):
 
     @staticmethod
     def stack_features(nlu_response: NLUResponse,
-                       text_vectorized: TextVectorizationResponse,
                        tracker_knowledge: DSTKnowledge):
-        return np.hstack((text_vectorized.tokens_bow_encoded,
-                          text_vectorized.tokens_aggregated_embedding,
+        return np.hstack((nlu_response.tokens_vectorized.tokens_bow_encoded,
+                          nlu_response.tokens_vectorized.tokens_aggregated_embedding,
                           nlu_response.intents,
                           tracker_knowledge.state_features,
                           tracker_knowledge.context_features,
@@ -205,10 +204,9 @@ class PolicyNetwork(LRScheduledTFModel):
 
     def digitize_features(self,
                           nlu_response: NLUResponse,
-                          text2vec_response: TextVectorizationResponse,
                           tracker_knowledge: DSTKnowledge) -> DigitizedPolicyFeatures:
         attn_key = self.calc_attn_key(nlu_response, tracker_knowledge)
-        concat_feats = self.stack_features(nlu_response, text2vec_response, tracker_knowledge)
+        concat_feats = self.stack_features(nlu_response, tracker_knowledge)
         action_mask = self.calc_action_mask(tracker_knowledge)
 
         return DigitizedPolicyFeatures(attn_key, concat_feats, action_mask)
@@ -347,7 +345,7 @@ class PolicyNetwork(LRScheduledTFModel):
 
     def __call__(self, batch_dialogues_features: BatchDialoguesFeatures,
                  states_c: np.ndarray, states_h: np.ndarray, prob: bool = False,
-                 *args, **kwargs) -> Sequence[np.ndarray]:
+                 *args, **kwargs) -> PolicyPrediction:
 
         states_c = [[states_c]]  # list of list aka batch of dialogues
         states_h = [[states_h]]  # list of list aka batch of dialogues
@@ -365,9 +363,9 @@ class PolicyNetwork(LRScheduledTFModel):
 
         probs, prediction, state = self.sess.run([self._probs, self._prediction, self._state], feed_dict=feed_dict)
 
-        if prob:
-            return probs, state[0], state[1]
-        return prediction, state[0], state[1]
+        policy_prediction = PolicyPrediction(probs, prediction, state[0], state[1])
+
+        return policy_prediction
 
     def train_on_batch(self,
                        batch_dialogues_features: BatchDialoguesFeatures,

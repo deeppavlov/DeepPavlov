@@ -6,9 +6,11 @@ from typing import Union, Dict
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.dataset_readers.dstc2_reader import DSTC2DatasetReader
+from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesFeatures
 from deeppavlov.models.go_bot.nlg.dto.json_nlg_response import JSONNLGResponse
 from deeppavlov.models.go_bot.nlg.nlg_manager import log
 from deeppavlov.models.go_bot.nlg.nlg_manager_interface import NLGManagerInterface
+from deeppavlov.models.go_bot.policy.dto.policy_prediction import PolicyPrediction
 
 
 @register("gobot_json_nlg_manager")
@@ -94,12 +96,15 @@ class MockJSONNLGManager(NLGManagerInterface):
         actions_tuple = tuple(action_text.split('+'))
         return self.action_tuples2ids[actions_tuple]  # todo unhandled exception when not found
 
-    def decode_response(self, actions_tuple_id: int, tracker_slotfilled_state: dict) -> JSONNLGResponse:
+    def decode_response(self,
+                        utterance_batch_features: BatchDialoguesFeatures,
+                        policy_prediction: PolicyPrediction,
+                        tracker_slotfilled_state: dict) -> JSONNLGResponse:
         # todo docstring
-        slots_to_log = self.action_tuples_ids2slots[actions_tuple_id]
+        slots_to_log = self.action_tuples_ids2slots[policy_prediction.predicted_action_ix]
 
         slots_values = {slot_name: tracker_slotfilled_state.get(slot_name, "unk") for slot_name in slots_to_log}
-        actions_tuple = self.ids2action_tuples[actions_tuple_id]
+        actions_tuple = self.ids2action_tuples[policy_prediction.predicted_action_ix]
 
         return JSONNLGResponse(slots_values, actions_tuple)
 
