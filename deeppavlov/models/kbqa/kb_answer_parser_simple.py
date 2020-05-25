@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Union
 
 import numpy as np
 
@@ -67,7 +67,7 @@ class KBAnswerParserSimple(KBBase):
                  tags_batch: List[List[int]],
                  relations_probs_batch: List[List[float]],
                  relations_labels_batch: List[List[str]],
-                 *args, **kwargs) -> Tuple[List[str], List[float]]:
+                 *args, **kwargs) -> Union[Tuple[List[str], List[float]], List[str]]:
 
         objects_batch = []
         confidences_batch = []
@@ -79,7 +79,6 @@ class KBAnswerParserSimple(KBBase):
             if is_kbqa:
                 if self._templates_filename is not None:
                     entity_from_template, _, relations_from_template, _, query_type = self.template_matcher(question)
-                
                 if entity_from_template:
                     relation_from_template = relations_from_template[0][0]
                     relation_title = self._relations_mapping[relation_from_template]["name"]
@@ -131,7 +130,7 @@ class KBAnswerParserSimple(KBBase):
         return top_k_probs
 
     @staticmethod
-    def extract_entities(tokens: List[str], tags: List[str]) -> str:
+    def extract_entities(tokens: List[str], tags: List[int]) -> str:
         entity = []
         for j, tok in enumerate(tokens):
             if tags[j] != 'O' and tags[j] != 0:
