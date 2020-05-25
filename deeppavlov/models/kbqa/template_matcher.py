@@ -62,7 +62,6 @@ class TemplateMatcher(Component, Serializable):
         self.load()
 
     def load(self) -> None:
-        print("path", self.load_path, self.templates_filename)
         log.debug(f"(load)self.load_path / self.templates_filename: {self.load_path / self.templates_filename}")
         with open(self.load_path / self.templates_filename) as fl:
             self.templates = json.load(fl)
@@ -98,7 +97,8 @@ class TemplateMatcher(Component, Serializable):
 
                 if 0 not in entity_lengths or 0 not in type_lengths and entity_num_tokens:
                     cur_len = sum(entity_lengths) + sum(type_lengths)
-                    print("lengths", cur_len, question_length, template_len, unuseful_tokens_len)
+                    log.debug(f"lengths: entity+type {cur_len}, question {question_length}, "
+                              f"template {template_len}, unuseful tokens {unuseful_tokens_len}")
                     if cur_len < min_length and unuseful_tokens_len + template_len + cur_len == question_length:
                         entities = entities_cand
                         for old_token, new_token in replace_tokens:
