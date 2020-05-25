@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Union
 
 import nltk
 import numpy as np
@@ -70,7 +70,7 @@ class KBTree(KBBase):
         self.language = language
         super().__init__(relations_maping_filename=self._relations_filename, *args, **kwargs)
 
-    def __call__(self, sentences: List[str]) -> Tuple[List[str], List[float]]:
+    def __call__(self, sentences: List[str]) -> Union[Tuple[List[str], List[float]], List[str]]:
 
         objects_batch = []
         confidences_batch = []
