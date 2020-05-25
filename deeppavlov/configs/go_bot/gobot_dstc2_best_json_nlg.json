@@ -63,7 +63,7 @@
         "nlg_manager": {
           "class_name": "gobot_json_nlg_manager",
           "data_path": "{DSTC2_DATA_PATH}",
-          "actions2slots_path": "{CONFIGS_PATH}/go_bot/dstc2/actions2slots.json",
+          "actions2slots_path": "{DSTC2_DATA_PATH}/dstc2-actions2slots.json",
           "api_call_action": "api_call"
         },
         "use_action_mask": false,
@@ -113,7 +113,7 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
-      "DSTC2_DATA_PATH": "{DOWNLOADS_PATH}/dstc2"
+      "DSTC2_DATA_PATH": "{DOWNLOADS_PATH}/dstc2_v3"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -127,8 +127,8 @@
         "subdir": "{MODELS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/datasets/dstc2_v2.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/dstc2"
+        "url": "http://files.deeppavlov.ai/datasets/dstc2_v3.tar.gz",
+        "subdir": "{DSTC2_DATA_PATH}"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
