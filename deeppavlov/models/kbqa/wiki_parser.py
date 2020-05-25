@@ -85,7 +85,7 @@ class WikiParser(Component):
 
         return combs
 
-    def search(self, query: List[str], unknown_elem_positions: List[Tuple[int, str]]) -> List[Dict[str]]:
+    def search(self, query: List[str], unknown_elem_positions: List[Tuple[int, str]]) -> List[Dict[str, str]]:
         query = list(map(lambda elem: "" if elem.startswith('?') else elem, query))
         subj, rel, obj = query
         triplets, c = self.document.search_triples(subj, rel, obj)
