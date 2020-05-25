@@ -23,7 +23,7 @@ from deeppavlov.models.go_bot.policy.dto.attn_params import GobotAttnParams
 from deeppavlov.models.go_bot.policy.dto.digitized_policy_features import DigitizedPolicyFeatures
 from deeppavlov.models.go_bot.policy.dto.policy_network_params import PolicyNetworkParams
 from deeppavlov.models.go_bot.policy.dto.policy_prediction import PolicyPrediction
-from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DSTKnowledge
+from deeppavlov.models.go_bot.tracker.dto.dst_knowledge import DSTKnowledge
 
 log = getLogger(__name__)
 

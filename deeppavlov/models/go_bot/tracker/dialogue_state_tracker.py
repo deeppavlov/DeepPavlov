@@ -20,20 +20,10 @@ import numpy as np
 from deeppavlov.core.models.component import Component
 from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManagerInterface
 from deeppavlov.models.go_bot.policy.dto.policy_network_params import PolicyNetworkParams
-from deeppavlov.models.go_bot.tracker.dto.tracker_knowledge_interface import TrackerKnowledgeInterface
+from deeppavlov.models.go_bot.tracker.dto.dst_knowledge import DSTKnowledge
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 
 log = getLogger(__name__)
-
-# todo naming
-class DSTKnowledge(TrackerKnowledgeInterface):
-    def __init__(self, tracker_prev_action, state_features, context_features, api_call_id, n_actions):
-        self.tracker_prev_action = tracker_prev_action
-        self.state_features = state_features
-        self.context_features = context_features
-        self.api_call_id = api_call_id
-        self.n_actions = n_actions
-
 
 class DialogueStateTracker(FeaturizedTracker):
     def get_current_knowledge(self) -> DSTKnowledge:
