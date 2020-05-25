@@ -48,7 +48,7 @@
           "class_name": "sqlite_database",
           "table_name": "mytable",
           "primary_keys": ["name"],
-          "save_path": "{DOWNLOADS_PATH}/dstc2/resto.sqlite"
+          "save_path": "{DOWNLOADS_PATH}/dstc2_v3/resto.sqlite"
         },
         "nlg_manager": {
           "class_name": "gobot_nlg_manager",
@@ -103,7 +103,7 @@
       "ROOT_PATH": "~/.deeppavlov",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "DATA_PATH": "{DOWNLOADS_PATH}/dstc2",
+      "DATA_PATH": "{DOWNLOADS_PATH}/dstc2_v3",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/gobot_dstc2"
     },
@@ -123,7 +123,7 @@
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
       {
-        "url": "http://files.deeppavlov.ai/datasets/dstc2_v2.tar.gz",
+        "url": "http://files.deeppavlov.ai/datasets/dstc2_v3.tar.gz",
         "subdir": "{DATA_PATH}"
       }
     ]

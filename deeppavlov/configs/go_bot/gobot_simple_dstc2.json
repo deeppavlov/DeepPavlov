@@ -103,7 +103,7 @@
       "ROOT_PATH": "~/.deeppavlov",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "DSTC2_DATA_PATH": "{DOWNLOADS_PATH}/dstc2",
+      "DSTC2_DATA_PATH": "{DOWNLOADS_PATH}/dstc2_v3",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/gobot_dstc2"
     },
@@ -123,7 +123,7 @@
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
       {
-        "url": "http://files.deeppavlov.ai/datasets/dstc2_v2.tar.gz",
+        "url": "http://files.deeppavlov.ai/datasets/dstc2_v3.tar.gz",
         "subdir": "{DSTC2_DATA_PATH}"
       }
     ]

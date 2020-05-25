@@ -29,7 +29,7 @@
         "class_name": "sqlite_database",
         "table_name": "mytable",
         "primary_keys": ["name"],
-        "save_path": "{DOWNLOADS_PATH}/dstc2/resto.sqlite"
+        "save_path": "{DOWNLOADS_PATH}/dstc2_v3/resto.sqlite"
       },
       {
         "class_name": "go_bot",
@@ -113,7 +113,7 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
-      "DSTC2_DATA_PATH": "{DOWNLOADS_PATH}/dstc2"
+      "DSTC2_DATA_PATH": "{DOWNLOADS_PATH}/dstc2_v3"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -127,8 +127,8 @@
         "subdir": "{MODELS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/datasets/dstc2_v2.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/dstc2"
+        "url": "http://files.deeppavlov.ai/datasets/dstc2_v3.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/dstc2_v3"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
