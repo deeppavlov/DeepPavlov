@@ -99,10 +99,13 @@ class PolicyNetwork(LRScheduledTFModel):
                         shared_go_bot_params: SharedGoBotParams,
                         attention_params: Optional[GobotAttnParams]) -> int:
         """
-        :param tokens_dims: the tokens vectors dimensions
-        :param shared_go_bot_params: GO-bot hyperparams used in various parts of the pipeline
-        :param attention_params: the params of attention mechanism of the network for which input size is calculated
-        :return: the calculated input shape of policy network
+        Args:
+            tokens_dims: the tokens vectors dimensions
+            shared_go_bot_params: GO-bot hyperparams used in various parts of the pipeline
+            attention_params: the params of attention mechanism of the network for which input size is calculated
+
+        Returns:
+            the calculated input shape of policy network
         """
         input_size = 6 + shared_go_bot_params.num_tracker_features + shared_go_bot_params.num_actions  # todo: why 6
         if tokens_dims.bow_dim:
@@ -145,10 +148,13 @@ class PolicyNetwork(LRScheduledTFModel):
     @staticmethod
     def calc_attn_key_size(shared_go_bot_params: SharedGoBotParams, action_as_key: bool, intent_as_key: bool) -> int:
         """
-        :param shared_go_bot_params: GO-bot hyperparams used in various parts of the pipeline
-        :param action_as_key: True if actions are part of attention keys
-        :param intent_as_key: True if intents are part of attention keys
-        :return: the calculated attention key shape of policy network
+        Args:
+            shared_go_bot_params: GO-bot hyperparams used in various parts of the pipeline
+            action_as_key: True if actions are part of attention keys
+            intent_as_key: True if intents are part of attention keys
+
+        Returns:
+            the calculated attention key shape of policy network
         """
         # True if actions are part of attention keys -- actually *the last predicted action*
 
@@ -162,9 +168,12 @@ class PolicyNetwork(LRScheduledTFModel):
 
     def calc_attn_key(self, nlu_response: NLUResponse, tracker_knowledge: DSTKnowledge):
         """
-        :param nlu_response: nlu analysis output, currently only intents data is used
-        :param tracker_knowledge: one-hot-encoded previous executed action
-        :return: vector representing an attention key
+        Args:
+            nlu_response: nlu analysis output, currently only intents data is used
+            tracker_knowledge: one-hot-encoded previous executed action
+
+        Returns:
+            vector representing an attention key
         """
         # todo dto-like class for the attn features?
 
@@ -332,13 +341,17 @@ class PolicyNetwork(LRScheduledTFModel):
         return attn_hyperparams
 
     def has_attn(self):
-        """:returns: True if the model has an attention mechanism"""
+        """
+        Returns:
+            True if the model has an attention mechanism
+        """
         return self.attention_params is not None
 
     def get_attn_window_size(self):
         """
-        :returns: the length of the window the model looks with attn if the attention mechanism is configured.
-                  if the model has no attention mechanism returns None.
+        Returns:
+             the length of the window the model looks with attn if the attention mechanism is configured.
+             if the model has no attention mechanism returns None.
         """
         return self.attention_params.max_num_tokens if self.has_attn() else None
 

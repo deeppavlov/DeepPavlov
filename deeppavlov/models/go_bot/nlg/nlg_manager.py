@@ -57,14 +57,18 @@ class NLGManager(NLGManagerInterface):
     def get_action_id(self, action_text: str) -> int:
         """
         Looks up for an ID relevant to the passed action text in the list of known actions and their ids.
-        :param action_text: the text for which an ID needs to be returned.
-        :return: an ID corresponding to the passed action text
+
+        Args:
+            action_text: the text for which an ID needs to be returned.
+        Returns:
+            an ID corresponding to the passed action text
         """
         return self.templates.actions.index(action_text)  # todo unhandled exception when not found
 
     def get_api_call_action_id(self) -> int:
         """
-        :return: an ID corresponding to the api call action
+        Returns:
+            an ID corresponding to the api call action
         """
         return self._api_call_id
 
@@ -86,16 +90,19 @@ class NLGManager(NLGManagerInterface):
         Generate text for the predicted speech action using the pattern provided for the action.
         The slotfilled state provides info to encapsulate to the pattern.
 
-        :param action_id: the id of action to generate text for.
-        :param slots: the slots and their known values. usually received from dialogue state tracker.
+        Args:
+            action_id: the id of action to generate text for.
+            slots: the slots and their known values. usually received from dialogue state tracker.
 
-        :returns: the text generated for the passed action id and slot values.
+        Returns:
+            the text generated for the passed action id and slot values.
         """
         text = self.templates.templates[action_id].generate_text(slots)
         return text
 
     def num_of_known_actions(self) -> int:
         """
-        :returns: the number of actions known to the NLG module
+        Returns:
+            the number of actions known to the NLG module
         """
         return len(self.templates)

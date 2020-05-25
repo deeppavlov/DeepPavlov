@@ -10,5 +10,8 @@ class NLUManagerInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def num_of_known_intents(self) -> int:
-        """:returns: the number of intents known to the NLU module"""
+        """
+        Returns:
+            the number of intents known to the NLU module
+        """
         pass

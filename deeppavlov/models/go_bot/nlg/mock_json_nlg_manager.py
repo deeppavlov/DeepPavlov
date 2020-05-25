@@ -101,6 +101,7 @@ class MockJSONNLGManager(NLGManagerInterface):
 
     def num_of_known_actions(self) -> int:
         """
-        :returns: the number of actions known to the NLG module
+        Returns:
+            the number of actions known to the NLG module
         """
         return len(self.action_tuples2ids.keys())

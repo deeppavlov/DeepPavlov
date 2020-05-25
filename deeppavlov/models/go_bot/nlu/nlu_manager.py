@@ -66,5 +66,8 @@ class NLUManager(NLUManagerInterface):
         return self.tokenizer([text.lower().strip()])[0]
 
     def num_of_known_intents(self) -> int:
-        """:returns: the number of intents known to the NLU module"""
+        """
+        Returns:
+            the number of intents known to the NLU module
+        """
         return len(self.intents)

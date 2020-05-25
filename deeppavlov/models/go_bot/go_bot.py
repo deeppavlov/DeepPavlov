@@ -161,12 +161,16 @@ class GoalOrientedBot(NNModel):
         """
         Parse the passed dialogue information to the dialogue information object.
 
-        :param batch_dialogues_utterances_contexts_info: the dictionary containing
-                                                         the dialogue utterances training information
-        :param batch_dialogues_utterances_responses_info: the dictionary containing
-                                                          the dialogue utterances responses training information
-        :return: the dialogue data object containing the numpy-vectorized features and target extracted
-                 from the utterance data
+        Args:
+            batch_dialogues_utterances_contexts_info: the dictionary containing
+                                                      the dialogue utterances training information
+            batch_dialogues_utterances_responses_info: the dictionary containing
+                                                       the dialogue utterances responses training information
+
+        Returns:
+            the dialogue data object containing the numpy-vectorized features and target extracted
+            from the utterance data
+
         """
         # todo naming, docs, comments
         max_dialogue_length = max(len(dialogue_info_entry)
@@ -186,13 +190,16 @@ class GoalOrientedBot(NNModel):
         """
         Parse the passed dialogue information to the dialogue information object.
 
-        :param dialogue_utterances_contexts_info: the dictionary containing the dialogue utterances training information
-        :param dialogue_utterances_responses_info: the dictionary containing
-                                                   the dialogue utterances responses training information
-        :return: the dialogue data object containing the numpy-vectorized features and target extracted
-                 from the utterance data
-        """
+        Args:
+            dialogue_utterances_contexts_info: the dictionary containing the dialogue utterances training information
+            dialogue_utterances_responses_info: the dictionary containing
+                                                the dialogue utterances responses training information
 
+        Returns:
+            the dialogue data object containing the numpy-vectorized features and target extracted
+            from the utterance data
+
+        """
         dialogue_training_data = DialogueDataEntry()
         # we started to process new dialogue so resetting the dialogue state tracker.
         # simplification of this logic is planned; there is a todo
@@ -219,12 +226,15 @@ class GoalOrientedBot(NNModel):
         """
         Parse the passed utterance information to the utterance information object.
 
-        :param utterance_context_info_dict: the dictionary containing the utterance training information
-        :param utterance_response_info_dict: the dictionary containing the utterance response training information
-        :return: the utterance data object containing the numpy-vectorized features and target extracted
-                 from the utterance data
-        """
+        Args:
+            utterance_context_info_dict: the dictionary containing the utterance training information
+            utterance_response_info_dict: the dictionary containing the utterance response training information
 
+        Returns:
+            the utterance data object containing the numpy-vectorized features and target extracted
+            from the utterance data
+
+        """
         # todo naming, docs, comments
         text = utterance_context_info_dict['text']
 
@@ -250,12 +260,15 @@ class GoalOrientedBot(NNModel):
         * text BOW-encoding&embedding;
         * tracker memory.
 
-        :param text: the text to infer to
-        :param tracker: the tracker that tracks the dialogue from which the text is taken
-        :param keep_tracker_state: if True, the tracker state will not be updated during the prediction.
-                                   Used to keep tracker's state intact when predicting the action 
-                                   to perform right after the api call action is predicted and performed.
-        :return: the utterance features object containing the numpy-vectorized features extracted from the utterance
+        Args:
+            text: the text to infer to
+            tracker: the tracker that tracks the dialogue from which the text is taken
+            keep_tracker_state: if True, the tracker state will not be updated during the prediction.
+                                Used to keep tracker's state intact when predicting the action
+                                to perform right after the api call action is predicted and performed.
+
+        Returns:
+            the utterance features object containing the numpy-vectorized features extracted from the utterance
         """
         # todo comments
 
@@ -296,15 +309,18 @@ class GoalOrientedBot(NNModel):
         """
         Predict the action to perform in response to given text.
 
-        :param user_utterance_text: the user input text passed to the system
-        :param user_tracker: the tracker that tracks the dialogue with the input-provided user
-        :param keep_tracker_state: if True, the tracker state will not be updated during the prediction.
-        Used to keep tracker's state intact when predicting the action to perform right after the api call action
-        is predicted and performed.
+        Args:
+            user_utterance_text: the user input text passed to the system
+            user_tracker: the tracker that tracks the dialogue with the input-provided user
+            keep_tracker_state: if True, the tracker state will not be updated during the prediction.
+                                Used to keep tracker's state intact when predicting the action to perform right after
+                                the api call action
 
-        :return: the actions probabilities distribution from the policy net output layer,
-        the index of the most probable action, the network state vector
-        (as for RNNs: output, hidden_state <- RNN(output, hidden_state))
+        Returns:
+            the actions probabilities distribution from the policy net output layer,
+            the index of the most probable action, the network state vector
+            (as for RNNs: output, hidden_state <- RNN(output, hidden_state))
+
         """
         utterance_features = self.extract_features_from_utterance_text(user_utterance_text, user_tracker,
                                                                        keep_tracker_state)

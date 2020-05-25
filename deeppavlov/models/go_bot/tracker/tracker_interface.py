@@ -15,11 +15,7 @@ class TrackerInterface(metaclass=ABCMeta):
 
     @abstractmethod
     def update_state(self, nlu_response: NLUResponseInterface) -> None:
-        """
-        Updates dialogue state with new ``slots``, calculates features.
-
-        Returns:
-            TrackerInterface: ."""
+        """Updates dialogue state with new ``slots``, calculates features."""
         pass
 
     @abstractmethod

@@ -11,15 +11,19 @@ class NLGManagerInterface(metaclass=ABCMeta):
     def get_action_id(self, action_text) -> int:
         """
         Looks up for an ID relevant to the passed action text in the list of known actions and their ids.
-        :param action_text: the text for which an ID needs to be returned.
-        :return: an ID corresponding to the passed action text
+
+        Args:
+            action_text: the text for which an ID needs to be returned.
+        Returns:
+            an ID corresponding to the passed action text
         """
         pass
 
     @abstractmethod
     def get_api_call_action_id(self) -> int:
         """
-        :return: an ID corresponding to the api call action
+        Returns:
+            an ID corresponding to the api call action
         """
         pass
 
@@ -34,6 +38,7 @@ class NLGManagerInterface(metaclass=ABCMeta):
     @abstractmethod
     def num_of_known_actions(self) -> int:
         """
-        :returns: the number of actions known to the NLG module
+        Returns:
+            the number of actions known to the NLG module
         """
         pass
