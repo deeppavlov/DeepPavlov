@@ -160,11 +160,11 @@
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/wiki_eng_files.tar.gz",
-        "subdir": "{MODELS_PATH}/wikidata_eng"
+        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/sparql_queries.json",
-        "subdir": "{MODELS_PATH}/wikidata_eng"
+        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.hdt",
