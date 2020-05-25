@@ -64,8 +64,7 @@ class RelRankerBertInfer(Component, Serializable):
         answers = []
         for question, candidate_answers in zip(questions_list, candidate_answers_list):
             answers_with_scores = []
-            if len(candidate_answers) == 0:
-                answer = "Not Found"
+            answer = "Not Found"
 
             n_batches = len(candidate_answers) // self.batch_size + int(len(candidate_answers) % self.batch_size > 0)
             for i in range(n_batches):
