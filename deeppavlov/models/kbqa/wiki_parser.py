@@ -44,13 +44,34 @@ class WikiParser(Component):
                  query_seq: List[List[str]],
                  filter_info: List[Tuple[str]],
                  order_info: namedtuple) -> List[List[str]]:
-
+        """
+            Let us consider an example of the question 
+                "What is the deepest lake in Russia?"
+            with the corresponding SPARQL query            
+            "SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:R1 ?obj . ?ent wdt:R2 wd:E1 } ORDER BY ASC(?obj) LIMIT 5"
+            arguments:
+                what_return: ["?obj"]
+                query_seq: [["?ent", "http://www.wikidata.org/prop/direct/P17", "http://www.wikidata.org/entity/Q159"]
+                            ["?ent", "http://www.wikidata.org/prop/direct/P31", "http://www.wikidata.org/entity/Q23397"],
+                            ["?ent", "http://www.wikidata.org/prop/direct/P4511", "?obj"]]
+                filter_info: []
+                order_info: order_info(variable='?obj', sorting_order='asc')
+        """
         extended_combs = []
         combs = []
         for n, query in enumerate(query_seq):
             unknown_elem_positions = [(pos, elem) for pos, elem in enumerate(query) if elem.startswith('?')]
+            """
+                n = 0, query = ["?ent", "http://www.wikidata.org/prop/direct/P17", "http://www.wikidata.org/entity/Q159"]
+                       unknown_elem_positions = ["?ent"]
+                n = 1, query = ["?ent", "http://www.wikidata.org/prop/direct/P31", "http://www.wikidata.org/entity/Q23397"]
+                       unknown_elem_positions = [(0, "?ent")]
+                n = 2, query = ["?ent", "http://www.wikidata.org/prop/direct/P4511", "?obj"]
+                       unknown_elem_positions = [(0, "?ent"), (2, "?obj")]
+            """
             if n == 0:
                 combs = self.search(query, unknown_elem_positions)
+                # combs = [{"?ent": "http://www.wikidata.org/entity/Q5513"}, ...]
             else:
                 if combs:
                     known_elements = []
@@ -59,6 +80,19 @@ class WikiParser(Component):
                         if elem in combs[0].keys():
                             known_elements.append(elem)
                     for comb in combs:
+                        """
+                            n = 1
+                            query = ["?ent", "http://www.wikidata.org/prop/direct/P31", "http://www.wikidata.org/entity/Q23397"]
+                            comb = {"?ent": "http://www.wikidata.org/entity/Q5513"}
+                            known_elements = ["?ent"], known_values = ["http://www.wikidata.org/entity/Q5513"]
+                            filled_query = ["http://www.wikidata.org/entity/Q5513", 
+                                            "http://www.wikidata.org/prop/direct/P31", 
+                                            "http://www.wikidata.org/entity/Q23397"]
+                            new_combs = [["http://www.wikidata.org/entity/Q5513", 
+                                          "http://www.wikidata.org/prop/direct/P31", 
+                                          "http://www.wikidata.org/entity/Q23397"], ...]
+                            extended_combs = [{"?ent": "http://www.wikidata.org/entity/Q5513"}, ...]
+                        """                        
                         known_values = [comb[known_elem] for known_elem in known_elements]
                         for known_elem, known_value in zip(known_elements, known_values):
                             filled_query = [elem.replace(known_elem, known_value) for elem in query]
@@ -95,20 +129,29 @@ class WikiParser(Component):
     def find_label(self, entity: str) -> str:
         entity = str(entity).replace('"', '')
         if entity.startswith("Q"):
+            # example: "Q5513"
             entity = "http://www.wikidata.org/entity/" + entity
+            # "http://www.wikidata.org/entity/Q5513"
 
         if entity.startswith("http://www.wikidata.org/entity/"):
             labels, cardinality = self.document.search_triples(entity, "http://www.w3.org/2000/01/rdf-schema#label", "")
+            # labels = [["http://www.wikidata.org/entity/Q5513", "http://www.w3.org/2000/01/rdf-schema#label", '"Lake Baikal"@en'], ...]
             for label in labels:
                 if label[2].endswith("@en"):
                     found_label = label[2].strip('@en').replace('"', '')
                     return found_label
 
         elif entity.endswith("@en"):
+            # entity: '"Lake Baikal"@en'
             entity = entity.strip('@en')
             return entity
 
         elif "^^" in entity:
+            """
+                examples:
+                    '"1799-06-06T00:00:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>' (date)
+                    '"+1642"^^<http://www.w3.org/2001/XMLSchema#decimal>' (number)
+            """
             entity = entity.split("^^")[0]
             for token in ["T00:00:00Z", "+"]:
                 entity = entity.replace(token, '')
