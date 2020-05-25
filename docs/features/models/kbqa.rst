@@ -157,18 +157,18 @@ The dataset for relation ranking consists of two xml files (train and test sets)
 
 .. code:: xml
 
-<paraphrase>
-   <value name="text_1">Is it true that the total shots in career of Rick Adduono is equal to 1?</value>
-   <value name="text_2">total shots in career</value>
-   <value name="class">1</value>
-</paraphrase>
+    <paraphrase>
+       <value name="text_1">Is it true that the total shots in career of Rick Adduono is equal to 1?</value>
+       <value name="text_2">total shots in career</value>
+       <value name="class">1</value>
+    </paraphrase>
 
 The dataset for path ranking is similar to the dataset for relation ranking. If the path from the grounded entity in the question and the answer consists of two relations, relation titles are separated with "#":
 
 .. code:: xml
 
-<paraphrase>
-   <value name="text_1">When did Thomas Cromwell end his position as Lord Privy Seal?</value>
-   <value name="text_2">position held # end time</value>
-   <value name="class">1</value>
-</paraphrase>
+    <paraphrase>
+       <value name="text_1">When did Thomas Cromwell end his position as Lord Privy Seal?</value>
+       <value name="text_2">position held # end time</value>
+       <value name="class">1</value>
+    </paraphrase>
