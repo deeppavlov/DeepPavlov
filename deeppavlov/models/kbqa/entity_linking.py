@@ -30,7 +30,7 @@ log = getLogger(__name__)
 
 
 @register('entity_linker')
-class EntityLinker(Component, Serializable):
+class EntityLinker(Serializable):
     """
         This class extracts from Wikidata candidate entities for the entity mentioned in the question and then extracts
         triplets from Wikidata for the extracted entity. Candidate entities are searched in the dictionary where keys

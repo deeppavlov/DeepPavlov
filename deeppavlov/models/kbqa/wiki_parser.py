@@ -26,7 +26,7 @@ log = getLogger(__name__)
 
 
 @register('wiki_parser')
-class WikiParser(Component):
+class WikiParser:
     """This class extract relations, objects or triplets from Wikidata HDT file"""
 
     def __init__(self, wiki_filename: str, **kwargs) -> None:

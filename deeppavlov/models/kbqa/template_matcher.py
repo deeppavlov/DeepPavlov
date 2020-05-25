@@ -39,7 +39,7 @@ class RegexpMatcher:
 
 
 @register('template_matcher')
-class TemplateMatcher(Component, Serializable):
+class TemplateMatcher(Serializable):
     """
         This class matches the question with one of the templates
         to extract entity substrings and define which relations
