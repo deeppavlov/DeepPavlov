@@ -155,6 +155,8 @@ Training of Relation and Path Ranking
 
 The dataset for relation ranking consists of two xml files (train and test sets). Each sample contains a question, a relation title and a label (1 if the relation corresponds to the question and 0 otherwise). An example of training sample:
 
+.. code:: xml
+
 <paraphrase>
    <value name="text_1">Is it true that the total shots in career of Rick Adduono is equal to 1?</value>
    <value name="text_2">total shots in career</value>
@@ -162,6 +164,8 @@ The dataset for relation ranking consists of two xml files (train and test sets)
 </paraphrase>
 
 The dataset for path ranking is similar to the dataset for relation ranking. If the path from the grounded entity in the question and the answer consists of two relations, relation titles are separated with "#":
+
+.. code:: xml
 
 <paraphrase>
    <value name="text_1">When did Thomas Cromwell end his position as Lord Privy Seal?</value>
