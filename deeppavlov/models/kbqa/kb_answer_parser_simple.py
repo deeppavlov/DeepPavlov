@@ -84,6 +84,7 @@ class KBAnswerParserSimple(KBBase):
                     relation_title = self._relations_mapping[relation_from_template]["name"]
                     log.debug("entity {}, relation {}".format(entity_from_template, relation_title))
                     entity_ids, entity_linking_confidences = self.linker(entity_from_template[0])
+                    log.debug(f"entity_ids {[entity[:5] for entity in entity_ids]}")
                     entity_triplets = self.extract_triplets_from_wiki(entity_ids)
                     if self.rule_filter_entities and self.language == 'rus':
                         entity_ids, entity_triplets, entity_linking_confidences = \
