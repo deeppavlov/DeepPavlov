@@ -18,6 +18,54 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 
+@register('dialog_indexing_iterator')
+class DialogDatasetIndexingIterator(DataLearningIterator):
+    """
+    Iterates over dialog data,
+    generates batches where one sample is one dialog.
+    Assigns unique index value to each turn item of each dialog.
+
+    A subclass of :class:`~deeppavlov.core.data.data_learning_iterator.DataLearningIterator`.
+
+    Attributes:
+        train: list of training dialogs (tuples ``(context, response)``)
+        valid: list of validation dialogs (tuples ``(context, response)``)
+        test: list of dialogs used for testing (tuples ``(context, response)``)
+    """
+
+    Xs_LABEL = 'x'
+    Ys_LABEL = 'y'
+
+    @overrides
+    def preprocess(self, data, *args, **kwargs):
+        dialogs = []
+        prev_resp_act = None
+        for x, y in data:
+            if x.get('episode_done'):
+                del x['episode_done']
+                prev_resp_act = None
+                dialogs.append(([], []))
+            x['prev_resp_act'] = prev_resp_act
+            prev_resp_act = y['act']
+
+            dialogue_label = str(len(dialogs))
+            dialogue_x_item_label = str(len(dialogs[-1][0]))
+            dialogue_y_item_label = str(len(dialogs[-1][1]))
+
+            x_item_full_label = f"{self.Xs_LABEL}_{dialogue_label}_{dialogue_x_item_label}"
+            y_item_full_label = f"{self.Ys_LABEL}_{dialogue_label}_{dialogue_y_item_label}"
+
+            x['indexed_value'] = x_item_full_label
+            y['indexed_value'] = y_item_full_label
+
+            x['dialogue_label'] = dialogue_label
+            y['dialogue_label'] = dialogue_label
+
+            dialogs[-1][0].append(x)
+            dialogs[-1][1].append(y)
+        return dialogs
+
+
 @register('dialog_iterator')
 class DialogDatasetIterator(DataLearningIterator):
     """

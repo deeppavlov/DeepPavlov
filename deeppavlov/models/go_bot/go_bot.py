@@ -152,6 +152,8 @@ class GoalOrientedBot(NNModel):
         self.policy = PolicyNetwork(policy_network_params, tokens_dims, features_params,
                                     policy_load_path, policy_save_path, **kwargs)
 
+        self.dialogues_cached_features = dict()
+
         self.reset()
 
     def prepare_dialogues_batches_training_data(self,
@@ -179,7 +181,15 @@ class GoalOrientedBot(NNModel):
         batch_dialogues_dataset = BatchDialoguesDataset(max_dialogue_length)
         for dialogue_utterances_info in zip(batch_dialogues_utterances_contexts_info,
                                             batch_dialogues_utterances_responses_info):
-            dialogue_training_data = self.prepare_dialogue_training_data(*dialogue_utterances_info)
+            dialogue_index_value = dialogue_utterances_info[0][0].get("dialogue_label")
+
+            if dialogue_index_value and dialogue_index_value in self.dialogues_cached_features.keys():
+                dialogue_training_data = self.dialogues_cached_features[dialogue_index_value]
+            else:
+                dialogue_training_data = self.prepare_dialogue_training_data(*dialogue_utterances_info)
+                if dialogue_index_value:
+                    self.dialogues_cached_features[dialogue_index_value] = dialogue_training_data
+
             batch_dialogues_dataset.append(dialogue_training_data)
 
         return batch_dialogues_dataset
