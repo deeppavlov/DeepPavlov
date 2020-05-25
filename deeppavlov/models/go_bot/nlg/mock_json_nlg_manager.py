@@ -81,14 +81,6 @@ class MockJSONNLGManager(NLGManagerInterface):
             actions2slots = json.load(actions2slots_json_f)
         return actions2slots
 
-    @staticmethod
-    def _powerset(iterable):
-        all_the_combinations = []
-        for powerset_size in range(0, len(iterable) + 1):
-            for subset in combinations(iterable, powerset_size):
-                all_the_combinations.append(tuple(subset))
-        return all_the_combinations
-
     def get_action_id(self, action_text: str) -> int:
         # todo: docstring
 
