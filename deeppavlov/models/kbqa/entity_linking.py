@@ -131,7 +131,7 @@ class EntityLinker(Component, Serializable):
 
         return candidate_entities
 
-    def sort_found_entities(self, candidate_entities: List[Tuple[str]],
+    def sort_found_entities(self, candidate_entities: List[Tuple[int, str, int]],
                             candidate_names: List[List[str]],
                             entity: str) -> Tuple[List[str], List[float], List[Tuple[str, str, int, int]]]:
         entities_ratios = []
