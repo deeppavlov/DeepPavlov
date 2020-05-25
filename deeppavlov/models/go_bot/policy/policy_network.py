@@ -82,7 +82,8 @@ class PolicyNetwork(LRScheduledTFModel):
                       f"Session() initialization and global_variables_initializer() done.")
 
         if self.train_checkpoint_exists():
-            log.info(f"INSIDE {self.__class__.__name__} init(). Initializing {self.__class__.__name__} from checkpoint.")
+            log.info(
+                f"INSIDE {self.__class__.__name__} init(). Initializing {self.__class__.__name__} from checkpoint.")
             self.load()
         else:
             log.info(f"INSIDE {self.__class__.__name__} init(). Initializing {self.__class__.__name__} from scratch.")
@@ -210,8 +211,6 @@ class PolicyNetwork(LRScheduledTFModel):
         action_mask = self.calc_action_mask(tracker_knowledge)
 
         return DigitizedPolicyFeatures(attn_key, concat_feats, action_mask)
-
-
 
     def _build_graph(self) -> None:
         self._add_placeholders()
@@ -410,7 +409,8 @@ class PolicyNetwork(LRScheduledTFModel):
                       f"params={params}, GRAPH_PARAMS={self.GRAPH_PARAMS}")
 
         for p in self.GRAPH_PARAMS:
-            if self.__getattribute__(p) != params.get(p) and p not in {'attn', 'attention_mechanism', 'attention_params'}:
+            if self.__getattribute__(p) != params.get(p) and p not in {'attn',
+                                                                       'attention_mechanism', 'attention_params'}:
                 # todo backward-compatible attention serialization
                 raise ConfigError(f"`{p}` parameter must be equal to saved"
                                   f" model parameter value `{params.get(p)}`,"

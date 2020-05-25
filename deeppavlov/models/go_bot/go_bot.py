@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import Dict, Any, List, Optional, Union, Sequence, Tuple
+from typing import Dict, Any, List, Optional, Union, Tuple
 
 import numpy as np
 
@@ -424,7 +424,7 @@ class GoalOrientedBot(NNModel):
             self.dialogue_state_tracker.update_ground_truth_db_result_from_context(context)
 
             utterance_batch_features, policy_prediction = self._infer(context['text'], self.dialogue_state_tracker)
-            self.dialogue_state_tracker.update_previous_action(policy_prediction.predicted_action_ix)  # see the above todo
+            self.dialogue_state_tracker.update_previous_action(policy_prediction.predicted_action_ix)  # see above todo
             self.dialogue_state_tracker.network_state = policy_prediction.get_network_state()
 
             # todo fix naming: fill_current_state_with_db_results & update_ground_truth_db_result_from_context are alike

@@ -2,6 +2,7 @@ from deeppavlov.models.go_bot.nlu.nlu_manager import NLUManagerInterface
 from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManagerInterface
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 
+
 # todo logging
 class SharedGoBotParams:
     """the DTO-like class to share the params used in various parts of the GO-bot pipeline."""

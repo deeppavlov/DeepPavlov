@@ -38,7 +38,7 @@ class MockJSONNLGManager(NLGManagerInterface):
             set(actions_combination_tuple
                 for actions_combination_tuple
                 in self._extract_actions_combinations(data_path)),
-            key = lambda x: '+'.join(x))
+            key=lambda x: '+'.join(x))
 
         self.action_tuples2ids = {action_tuple: action_tuple_idx
                                   for action_tuple_idx, action_tuple
@@ -62,7 +62,6 @@ class MockJSONNLGManager(NLGManagerInterface):
             log.debug(f"AFTER {self.__class__.__name__} init(): "
                       f"actions2slots_path={actions2slots_path}, "
                       f"api_call_action={api_call_action}, debug={debug}")
-
 
     def _extract_actions_combinations(self, dataset_path: Union[str, Path]):
         dataset_path = expand_path(dataset_path)

@@ -25,6 +25,7 @@ from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracke
 
 log = getLogger(__name__)
 
+
 class DialogueStateTracker(FeaturizedTracker):
     def get_current_knowledge(self) -> DSTKnowledge:
         state_features = self.get_features()
@@ -35,7 +36,8 @@ class DialogueStateTracker(FeaturizedTracker):
                                  self.n_actions)
         return knowledge
 
-    def __init__(self, slot_names, n_actions: int, api_call_id: int, hidden_size: int, database: Component = None) -> None:
+    def __init__(self,
+                 slot_names, n_actions: int, api_call_id: int, hidden_size: int, database: Component = None) -> None:
         super().__init__(slot_names)
         self.hidden_size = hidden_size
         self.database = database
@@ -174,8 +176,6 @@ class MultipleUserStateTrackersPool(object):
             self.init_new_tracker(user_id, self.base_tracker)
 
         return self.get_user_tracker(user_id)
-
-
 
     def init_new_tracker(self, user_id: int, tracker_entity: DialogueStateTracker) -> None:
         # TODO: implement a better way to init a tracker

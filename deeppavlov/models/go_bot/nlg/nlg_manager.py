@@ -34,7 +34,7 @@ class NLGManager(NLGManagerInterface):
         debug: whether to display debug output.
     """
 
-    def __init__(self, template_path: Union[str, Path], template_type: str, api_call_action: str, debug = False):
+    def __init__(self, template_path: Union[str, Path], template_type: str, api_call_action: str, debug=False):
         self.debug = debug
         if self.debug:
             log.debug(f"BEFORE {self.__class__.__name__} init(): "

@@ -8,12 +8,11 @@ import numpy as np
 # todo logging
 # todo naming
 from deeppavlov.models.go_bot.nlu.dto.nlu_response import NLUResponse
-from deeppavlov.models.go_bot.nlu.dto.nlu_response_interface import NLUResponseInterface
-from deeppavlov.models.go_bot.nlu.dto.text_vectorization_response import TextVectorizationResponse
 from deeppavlov.models.go_bot.policy.dto.digitized_policy_features import DigitizedPolicyFeatures
 from deeppavlov.models.go_bot.tracker.dto.dst_knowledge import DSTKnowledge
 
 from copy import deepcopy
+
 
 class UtteranceFeatures:
     """

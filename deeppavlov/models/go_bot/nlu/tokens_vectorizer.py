@@ -47,7 +47,7 @@ class TokensVectorizer:
         :returns: the (possibly averaged vector of) calculated embeddings sequence and None if embedder is disabled.
         """
 
-        tokens_embedded = np.array([], dtype=np.float32)  # todo decide, [] or np.array([]) we use in such cases (None bugs)
+        tokens_embedded = np.array([], dtype=np.float32)
         if callable(self.embedder):
             tokens_embedded = self.embedder([tokens], mean=mean_embeddings)[0]
         return tokens_embedded
@@ -59,7 +59,7 @@ class TokensVectorizer:
         :returns: if uses BOW encoder, returns np array with BOW encoding for tokens.
                   Otherwise returns an empty list.
         """
-        bow_features = np.array([], dtype=np.float32)  # todo decide, [] or np.array([]) we use in such cases (None bugs)
+        bow_features = np.array([], dtype=np.float32)
         if self._use_bow_encoder():
             tokens_idx = self.word_vocab(tokens)
             bow_features = self.bow_embedder([tokens_idx])[0]
@@ -118,7 +118,7 @@ class TokensVectorizer:
         if tokens_embedded is not None:
             emb_context = self._pad_sequence_to_size(output_sequence_length, token_dim, tokens_embedded)
         else:
-            emb_context = np.array([], dtype=np.float32)  # todo decide, [] or np.array([]) we use in such cases (None bugs)
+            emb_context = np.array([], dtype=np.float32)
         return emb_context
 
     def get_dims(self) -> TokensVectorRepresentationParams:

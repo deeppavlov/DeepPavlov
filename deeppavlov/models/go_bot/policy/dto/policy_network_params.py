@@ -2,6 +2,7 @@ from logging import getLogger
 
 log = getLogger(__name__)
 
+
 class PolicyNetworkParams:
     """
     The class to deal with the overcomplicated structure of the GO-bot configs.
