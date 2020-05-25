@@ -75,6 +75,7 @@ class KBAnswerParserSimple(KBBase):
         for question, tokens, tags, relations_probs, relations_labels in \
                 zip(questions_batch, tokens_batch, tags_batch, relations_probs_batch, relations_labels_batch):
             is_kbqa = self.is_kbqa_question(question, self.language)
+            entity_from_template = []
             if is_kbqa:
                 if self._templates_filename is not None:
                     entity_from_template, _, relations_from_template, _, query_type = self.template_matcher(question)
@@ -84,7 +85,7 @@ class KBAnswerParserSimple(KBBase):
                     relation_title = self._relations_mapping[relation_from_template]["name"]
                     log.debug("entity {}, relation {}".format(entity_from_template, relation_title))
                     entity_ids, entity_linking_confidences = self.linker(entity_from_template[0])
-                    log.debug(f"entity_ids {[entity[:5] for entity in entity_ids]}")
+                    log.debug(f"entity_ids {entity_ids[:5]}")
                     entity_triplets = self.extract_triplets_from_wiki(entity_ids)
                     if self.rule_filter_entities and self.language == 'rus':
                         entity_ids, entity_triplets, entity_linking_confidences = \
