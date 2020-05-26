@@ -30,11 +30,15 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 [Intent/Sentence Classification](http://docs.deeppavlov.ai/en/master/features/models/classifiers.html) |  [Question Answering over Text (SQuAD)](http://docs.deeppavlov.ai/en/master/features/models/squad.html) 
 
+[Knowledge Base Question Answering](http://docs.deeppavlov.ai/en/master/features/models/kbqa.html)
+
 [Sentence Similarity/Ranking](http://docs.deeppavlov.ai/en/master/features/models/neural_ranking.html) | [TF-IDF Ranking](http://docs.deeppavlov.ai/en/master/features/models/tfidf_ranking.html) 
 
-[Morphological tagging](http://docs.deeppavlov.ai/en/master/features/models/morphotagger.html) | [Automatic Spelling Correction](http://docs.deeppavlov.ai/en/master/features/models/spelling_correction.html)
+[Morphological tagging](http://docs.deeppavlov.ai/en/master/features/models/morphotagger.html) | [Syntactic parsing](http://docs.deeppavlov.ai/en/master/features/models/syntaxparser.html)
 
-[ELMo training and fine-tuning](http://docs.deeppavlov.ai/en/master/apiref/models/elmo.html)
+[Automatic Spelling Correction](http://docs.deeppavlov.ai/en/master/features/models/spelling_correction.html) | [ELMo training and fine-tuning](http://docs.deeppavlov.ai/en/master/apiref/models/elmo.html)
+
+[Speech recognition and synthesis (ASR and TTS)](http://docs.deeppavlov.ai/en/master/features/models/nemo.html) based on [NVIDIA NeMo](https://nvidia.github.io/NeMo/index.html)
 
 **Skills**
 
