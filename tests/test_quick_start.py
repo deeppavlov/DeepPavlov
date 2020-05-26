@@ -177,7 +177,6 @@ PARAMS = {
             ],
         ("kbqa/kbqa_cq.json", "kbqa", ('IP',)):
             [
-                ("What is the biggest city in China?", "Beijing"),
                 ("What is the currency of Sweden?", "Swedish krona"),
                 ("In which US state would you find Fort Knox?", "Kentucky"),
                 ("Where was Napoleon Bonaparte born?", "Ajaccio"),
@@ -186,7 +185,6 @@ PARAMS = {
             ],
         ("kbqa/kbqa_cq_bert_ranker.json", "kbqa", ('IP',)):
             [
-                ("What is the longest river in the UK?", "Severn"),
                 ("What is the currency of Sweden?", "Swedish krona"),
                 ("Where was Napoleon Bonaparte born?", "Ajaccio"),
                 ("When did the Korean War end?", "1953-07-27"),
