@@ -327,10 +327,7 @@ class GoalOrientedBot(NNModel):
                                 the api call action
 
         Returns:
-            the actions probabilities distribution from the policy net output layer,
-            the index of the most probable action, the network state vector
-            (as for RNNs: output, hidden_state <- RNN(output, hidden_state))
-
+            the features data object containing features fed to the model on inference and the model's prediction info
         """
         utterance_features = self.extract_features_from_utterance_text(user_utterance_text, user_tracker,
                                                                        keep_tracker_state)

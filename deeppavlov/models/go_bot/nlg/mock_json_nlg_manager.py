@@ -15,8 +15,6 @@ from deeppavlov.models.go_bot.policy.dto.policy_prediction import PolicyPredicti
 
 @register("gobot_json_nlg_manager")
 class MockJSONNLGManager(NLGManagerInterface):
-    def get_api_call_action_id(self) -> int:
-        return self._api_call_id
 
     # todo inheritance
     # todo force a2id, id2a mapping to be persistent for same configs
@@ -63,6 +61,13 @@ class MockJSONNLGManager(NLGManagerInterface):
                       f"actions2slots_path={actions2slots_path}, "
                       f"api_call_action={api_call_action}, debug={debug}")
 
+    def get_api_call_action_id(self) -> int:
+        """
+        Returns:
+            an ID corresponding to the api call action
+        """
+        return self._api_call_id
+
     def _extract_actions_combinations(self, dataset_path: Union[str, Path]):
         dataset_path = expand_path(dataset_path)
         dataset = DSTC2DatasetReader.read(data_path=dataset_path, dialogs=True)
@@ -82,7 +87,14 @@ class MockJSONNLGManager(NLGManagerInterface):
         return actions2slots
 
     def get_action_id(self, action_text: str) -> int:
-        # todo: docstring
+        """
+        Looks up for an ID corresponding to the passed action text.
+
+        Args:
+            action_text: the text for which an ID needs to be returned.
+        Returns:
+            an ID corresponding to the passed action text
+        """
 
         actions_tuple = tuple(action_text.split('+'))
         return self.action_tuples2ids[actions_tuple]  # todo unhandled exception when not found
@@ -91,7 +103,17 @@ class MockJSONNLGManager(NLGManagerInterface):
                         utterance_batch_features: BatchDialoguesFeatures,
                         policy_prediction: PolicyPrediction,
                         tracker_slotfilled_state: dict) -> JSONNLGResponse:
-        # todo docstring
+        """
+        Converts the go-bot inference objects to the single output object.
+
+        Args:
+            utterance_batch_features: utterance features extracted in go-bot that
+            policy_prediction: policy model prediction (predicted action)
+            tracker_slotfilled_state: tracker knowledge before the NLG is performed
+
+        Returns:
+            The NLG output unit that stores slot values and predicted actions info.
+        """
         slots_to_log = self.action_tuples_ids2slots[policy_prediction.predicted_action_ix]
 
         slots_values = {slot_name: tracker_slotfilled_state.get(slot_name, "unk") for slot_name in slots_to_log}

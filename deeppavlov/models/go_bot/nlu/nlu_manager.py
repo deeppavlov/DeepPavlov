@@ -39,6 +39,15 @@ class NLUManager(NLUManagerInterface):
                       f"intent_classifier={intent_classifier}, debug={debug}")
 
     def nlu(self, text: str) -> NLUResponse:
+        """
+        Extracts slot values and intents from text.
+
+        Args:
+            text: text to extract knowledge from
+
+        Returns:
+            an object storing the extracted slos and intents info
+        """
         # todo meaningful type hints
         tokens = self._tokenize_single_text_entry(text)
 

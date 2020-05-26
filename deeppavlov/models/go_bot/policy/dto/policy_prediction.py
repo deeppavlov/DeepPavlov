@@ -4,7 +4,9 @@ import numpy as np
 
 
 class PolicyPrediction:
-
+    """
+    Used to store policy model predictions and hidden values.
+    """
     def __init__(self, probs, prediction, hidden_outs, cell_state):
         self.probs = probs
         self.prediction = prediction

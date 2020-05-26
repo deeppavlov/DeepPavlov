@@ -5,6 +5,9 @@ from deeppavlov.models.go_bot.nlu.dto.text_vectorization_response import TextVec
 
 
 class NLUResponse(NLUResponseInterface):
+    """
+    Stores the go-bot NLU knowledge: extracted slots and intents info, embedding and bow vectors.
+    """
     def __init__(self, slots, intents, tokens):
         self.slots: Union[List[Tuple[str, Any]], Dict[str, Any]] = slots
         self.intents = intents
