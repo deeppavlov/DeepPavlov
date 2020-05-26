@@ -21,6 +21,7 @@ import numpy as np
 from deeppavlov.core.common.metrics_registry import register_metric
 from deeppavlov.models.go_bot.nlg.dto.json_nlg_response import JSONNLGResponse
 
+
 @register_metric('accuracy')
 def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> float:
     """
@@ -35,11 +36,13 @@ def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> flo
     """
     examples_len = len(y_true)
     # if y1 and y2 are both arrays, == can be erroneously interpreted as element-wise equality
+
     def _are_equal(y1, y2):
         answer = (y1 == y2)
         if isinstance(answer, np.ndarray):
             answer = answer.all()
         return answer
+
     equalities = [_are_equal(y1, y2) for y1, y2 in zip(y_true, y_predicted)]
     correct = sum(equalities)
     return correct / examples_len if examples_len else 0
@@ -51,7 +54,7 @@ def multitask_accuracy(*args) -> float:
     Accuracy for multiple simultaneous tasks.
 
     Args:
-        *args: a list of `2n` inputs. The first `n` inputs are the correct answers for `n` tasks
+        *args: a list of `2n` inputs. The first `n` inputs are the correct answers for `n` tasks,
             and the last `n` are the predicted ones.
 
     Returns:
@@ -71,7 +74,7 @@ def multitask_sequence_accuracy(*args) -> float:
     are labeled correctly for all the individual taggers.
 
     Args:
-        *args: a list of `2n` inputs. The first `n` inputs are the correct answers for `n` tasks
+        *args: a list of `2n` inputs. The first `n` inputs are the correct answers for `n` tasks,
             and the last `n` are the predicted ones. For each task an
 
     Returns:
@@ -153,6 +156,7 @@ def per_item_dialog_accuracy(y_true, y_predicted: List[List[str]]):
     correct = sum([y1.strip().lower() == y2.strip().lower() for y1, y2 in zip(y_true, y_predicted)])
     return correct / examples_len if examples_len else 0
 
+
 @register_metric("per_item_action_accuracy")
 def per_item_action_accuracy(dialogs_true, dialog_jsons_predicted: List[List[JSONNLGResponse]]):
     # todo metric classes???
@@ -168,6 +172,7 @@ def per_item_action_accuracy(dialogs_true, dialog_jsons_predicted: List[List[JSO
     return correct / examples_len if examples_len else 0
 
 # endregion go-bot metrics
+
 
 @register_metric('acc')
 def round_accuracy(y_true, y_predicted):
