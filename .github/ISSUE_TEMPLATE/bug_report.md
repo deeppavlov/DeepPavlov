@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-Want to contribute to DeepPavlov? Please read the [contributing guideline](https://github.com/RasaHQ/rasa/blob/master/CONTRIBUTING.md) first.
+Want to contribute to DeepPavlov? Please read the [contributing guideline](http://docs.deeppavlov.ai/en/master/devguides/contribution_guide.html) first.
 
 Please enter all the information below, otherwise your issue may be closed without a warning. 
 
