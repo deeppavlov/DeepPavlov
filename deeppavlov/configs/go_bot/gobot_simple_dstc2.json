@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
-    "class_name": "simple_dstc2_reader",
-    "data_path": "{DATA_PATH}"
+    "class_name": "dstc2_reader",
+    "data_path": "{DSTC2_DATA_PATH}"
   },
   "dataset_iterator": {
     "class_name": "dialog_iterator"
@@ -44,13 +44,17 @@
         "hidden_size": 128,
         "dense_size": 160,
         "word_vocab": "#word_vocab",
-        "template_path": "{DATA_PATH}/simple-dstc2-templates.txt",
-        "template_type": "DefaultTemplate",
         "database": {
           "class_name": "sqlite_database",
           "table_name": "mytable",
           "primary_keys": ["name"],
-          "save_path": "{DATA_PATH}/resto.sqlite"
+          "save_path": "{DSTC2_DATA_PATH}/resto.sqlite"
+        },
+        "nlg_manager": {
+          "class_name": "gobot_nlg_manager",
+          "template_path": "{DSTC2_DATA_PATH}/dstc2-templates.txt",
+          "template_type": "DualTemplate",
+          "api_call_action": "api_call"
         },
         "api_call_action": "api_call",
         "use_action_mask": false,
@@ -99,7 +103,7 @@
       "ROOT_PATH": "~/.deeppavlov",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "DATA_PATH": "{DOWNLOADS_PATH}/simple-dstc2",
+      "DSTC2_DATA_PATH": "{DOWNLOADS_PATH}/dstc2_v3",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/gobot_dstc2"
     },
@@ -119,8 +123,8 @@
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
       {
-        "url": "http://files.deeppavlov.ai/datasets/simple_dstc2.tar.gz",
-        "subdir": "{DATA_PATH}"
+        "url": "http://files.deeppavlov.ai/datasets/dstc2_v3.tar.gz",
+        "subdir": "{DSTC2_DATA_PATH}"
       }
     ]
   }
