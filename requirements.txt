@@ -6,6 +6,7 @@ nltk==3.4.5
 numpy==1.18.0
 overrides==2.7.0
 pandas==0.25.3
+pytz==2019.1
 pydantic==1.3
 pymorphy2==0.8
 pymorphy2-dicts-ru
@@ -18,3 +19,4 @@ scikit-learn==0.21.2
 scipy==1.4.1
 tqdm==4.41.1
 uvicorn==0.11.1
+sacremoses==0.0.35

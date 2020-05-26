@@ -5,7 +5,7 @@ First, follow instructions on :doc:`Installation page </intro/installation>`
 to install ``deeppavlov`` package for Python 3.6/3.7.
 
 DeepPavlov contains a bunch of great pre-trained NLP models. Each model is
-determined by it's config file. List of models is available on
+determined by its config file. List of models is available on
 :doc:`the doc page </features/overview>` or in
 the ``deeppavlov.configs``:
 
@@ -13,7 +13,7 @@ the ``deeppavlov.configs``:
         
         from deeppavlov import configs
 
-When you're decided on the model (+ config file), there are two ways to train,
+When you've decided on the model (+ config file), there are two ways to train,
 evaluate and infer it:
 
 * via `Command line interface (CLI)`_ and
@@ -52,7 +52,7 @@ You can train it in the same simple way:
     Dataset will be downloaded regardless of whether there was ``-d`` flag or
     not.
 
-    To train on your own data you need to modify dataset reader path in the
+    To train on your own data, you need to modify dataset reader path in the
     `train section doc <configuration.html#Train-config>`__. The data format is
     specified in the corresponding model doc page. 
 
@@ -116,7 +116,7 @@ You can train it in the same simple way:
     Dataset will be downloaded regardless of whether there was ``-d`` flag or
     not.
 
-    To train on your own data you need to modify dataset reader path in the
+    To train on your own data, you need to modify dataset reader path in the
     `train section doc <configuration.html#Train-config>`__. The data format is
     specified in the corresponding model doc page. 
 
@@ -153,7 +153,7 @@ Pretrained models
 DeepPavlov provides a wide range of pretrained models and skills.
 See :doc:`features overview </features/overview>` for more info. Please
 note that most of our models are trained on specific datasets for
-specific tasks and may require further training on you data.
+specific tasks and may require further training on your data.
 You can find a list of our out-of-the-box models `below <#out-of-the-box-pretrained-models>`_.
 
 

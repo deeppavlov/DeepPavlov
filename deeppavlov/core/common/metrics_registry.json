@@ -16,6 +16,7 @@
   "ner_f1": "deeppavlov.metrics.fmeasure:ner_f1",
   "ner_token_f1": "deeppavlov.metrics.fmeasure:ner_token_f1",
   "per_item_bleu": "deeppavlov.metrics.bleu:per_item_bleu",
+  "per_item_action_accuracy": "deeppavlov.metrics.accuracy:per_item_action_accuracy",
   "per_item_dialog_accuracy": "deeppavlov.metrics.accuracy:per_item_dialog_accuracy",
   "per_item_dialog_bleu": "deeppavlov.metrics.bleu:per_item_dialog_bleu",
   "per_token_accuracy": "deeppavlov.metrics.accuracy:per_token_accuracy",
