@@ -8,6 +8,7 @@ Please follow the steps below to contribute to our project.
 
 If you have any questions or suggestions about the contributing process,
 please share them with us on the `forum <https://forum.deeppavlov.ai>`_.
+Please note that we do not answer general questions in the github issues interface.
 
 If you are a regular contributor in the DeepPavlov open source project,
 you can receive an invitation to one of our events or an opportunity to become a part of our team.
