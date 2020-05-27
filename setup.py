@@ -14,9 +14,11 @@ import re
 
 from setuptools import setup, find_packages
 
-import deeppavlov
-
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
+meta_path = os.path.join(__location__, 'deeppavlov', '_meta.py')
+with open(meta_path) as meta:
+    exec(meta.read())
 
 
 def read_requirements():
@@ -43,30 +45,31 @@ def readme():
     return text
 
 
-setup(
-    name='deeppavlov',
-    packages=find_packages(exclude=('tests', 'docs', 'utils')),
-    version=deeppavlov.__version__,
-    description=deeppavlov.__description__,
-    long_description=readme(),
-    long_description_content_type='text/markdown',
-    author=deeppavlov.__author__,
-    author_email=deeppavlov.__email__,
-    license=deeppavlov.__license__,
-    url='https://github.com/deepmipt/DeepPavlov',
-    download_url='https://github.com/deepmipt/DeepPavlov/archive/' + deeppavlov.__version__ + '.tar.gz',
-    keywords=deeppavlov.__keywords__,
-    include_package_data=True,
-    extras_require={
-        'tests': [
-            'flake8',
-            'pytest',
-            'pexpect'],
-        'docs': [
-            'sphinx>=1.7.9',
-            'sphinx_rtd_theme>=0.4.0',
-            'nbsphinx>=0.3.4',
-            'ipykernel>=4.8.0'
-        ]},
-    **read_requirements()
-)
+if __name__ == '__main__':
+    setup(
+        name='deeppavlov',
+        packages=find_packages(exclude=('tests', 'docs', 'utils')),
+        version=__version__,
+        description=__description__,
+        long_description=readme(),
+        long_description_content_type='text/markdown',
+        author=__author__,
+        author_email=__email__,
+        license=__license__,
+        url='https://github.com/deepmipt/DeepPavlov',
+        download_url=f'https://github.com/deepmipt/DeepPavlov/archive/{__version__}.tar.gz',
+        keywords=__keywords__,
+        include_package_data=True,
+        extras_require={
+            'tests': [
+                'flake8',
+                'pytest',
+                'pexpect'],
+            'docs': [
+                'sphinx>=1.7.9',
+                'sphinx_rtd_theme>=0.4.0',
+                'nbsphinx>=0.3.4',
+                'ipykernel>=4.8.0'
+            ]},
+        **read_requirements()
+    )

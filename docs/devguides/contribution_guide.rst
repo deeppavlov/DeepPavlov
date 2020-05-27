@@ -2,43 +2,47 @@
 Contribution Guide
 =====================
 
-We are happy when you share your research with us and when you improve our
-code! There is an easy way to contribute to our project, follow the steps
-below. Your commit will be reviewed and added to our dev branch, and will be
-added to master branch with the nearest release. Moreover, if you are a
-dedicated contributor, you have a chance to get our t-shirt, get invited to
-one of our events or even join our team ; )
+We are happy that you share your research with us and want to improve our code!
+
+Please follow the steps below to contribute to our project.
+
+If you have any questions or suggestions about the contributing process,
+please share them with us on the `forum <https://forum.deeppavlov.ai>`_.
+Please note that we do not answer general questions in the github issues interface.
+
+If you are a regular contributor in the DeepPavlov open source project,
+you can receive an invitation to one of our events or an opportunity to become a part of our team.
 
 How to contribute:
 
-#. Don't start the coding first. You should **post an**
-   `issue <https://github.com/deepmipt/DeepPavlov/issues>`_ to discuss the
-   features you want to add. If our team or other contributors accept your offer
-   or give a +1, assign the issue to yourself. Now proceed with coding : )
+#. Don't start the coding first.
+   You should do a quick search over `existing issues <https://github.com/deepmipt/DeepPavlov/issues?q=is%3Aissue>`_
+   for the project to see if your suggestion was already discussed or even resolved.
+   If nothing relevant was found, please create a new one and state what exactly you would like
+   to implement or fix.
+   You may proceed with coding once someone on our team accepts your offer.
 
-#. **Write readable code** and keep it 
-   `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_-ed, **add docstrings**
-   and keep them consistent with the
-   `Google Style <http://google.github.io/styleguide/pyguide.html#381-docstrings>`_.
-   Pay attention that we support typing annotations in every function
-   declaration.
+#. `Fork <https://guides.github.com/activities/forking/>`_ the
+   `DeepPavlov repository <https://github.com/deepmipt/DeepPavlov>`_
 
-   Accompany code with **clear comments** to let other people understand the
-   flow of your mind.
-
-   If you create new models, refer to the :doc:`Register your model
-   </devguides/registry>` section to add it to the DeepPavlov registry of
-   models.
-
-#. **Clone and/or update** your checked out **copy of DeepPavlov** to ensure
-   you have the most recent commits from the master branch:
+#. Checkout the ``dev`` branch from
+   `the upstream <https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/configuring-a-remote-for-a-fork>`_
+   as a base for your code:
 
     .. code:: bash
 
-        git clone git@github.com:deepmipt/DeepPavlov.git
-        cd DeepPavlov/
-        git fetch origin
+        git clone https://github.com/<OWNER>/<REPOSITORY>.git
+        cd <REPOSITORY>
+        git remote add upstream https://github.com/deepmipt/DeepPavlov.git
+        git fetch upstream
+        git checkout -b dev --track upstream/dev
+
+   afterwards to sync the ``dev`` branch with external updates you can run:
+
+    .. code:: bash
+
         git checkout dev
+        git fetch upstream
         git pull
 
 #. **Create a new branch and switch** to it. Give it a meaningful name:
@@ -46,6 +50,20 @@ How to contribute:
     .. code:: bash
 
         git checkout -b what_my_code_does_branch
+
+#. **Write readable code** and keep it
+   `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_-ed, **add docstrings**
+   and keep them consistent with the
+   `Google Style <http://google.github.io/styleguide/pyguide.html#381-docstrings>`_.
+   Pay attention that we support typing annotations in every function
+   declaration.
+
+   Accompany your code with **clear comments** to let other people understand the
+   flow of your mind.
+
+   If you create new models, refer to the :doc:`Register your model
+   </devguides/registry>` section to add it to the DeepPavlov registry of
+   models.
 
 #. We ask you to **add some tests**. This will help us maintain the
    framework, and this will help users to understand the feature you introduce.
@@ -56,56 +74,28 @@ How to contribute:
 #. Please, **update the documentation**, if you committed significant changes
    to our code. 
 
-#. **Commit your changes and push** your feature branch to your GitHub fork.
-   Don't forget to reference the GitHub issue associated with your task.
-   Squash your commits into a single commit with git's interactive rebase.
-   Create a new branch if necessary.
+#. **Commit your changes and push** your feature branch to your GitHub fork:
 
     .. code:: bash
 
         git add my_files
         git commit -m "fix: resolve issue #271"
-        git push origin my_branch
+        git push origin what_my_code_does_branch
 
     Follow the `semantic commit notation <https://seesparkbox.com/foundry/semantic_commit_messages>`_
     for the name of the commit.
 
-#. **Create a new pull request** to get your feature branch merged into dev
-   for others to use. You’ll first need to ensure your feature branch contains
-   the latest changes from dev. 
-
-    .. code:: bash
-
-        # (external contribs): make a new pull request:
-
-        # merge latest dev changes into your feature branch
-        git fetch origin
-        git checkout dev
-        git pull origin dev 
-        git checkout my_branch
-        git merge dev  # you may need to manually resolve merge conflicts
-
-#. Once your change has been successfully merged, you can **remove the source
-   branch** and ensure your local copy is up to date:
-
-    .. code:: bash
-
-        git fetch origin
-        git checkout dev
-        git pull
-        git branch -d my_branch
-        git branch -d -r origin/my_branch
+#. Create a new `pull request <https://github.com/deepmipt/DeepPavlov/pulls>`_
+   to get your feature branch merged into dev for others to use.
+   Don't forget to `reference <https://help.github.com/en/github/writing-on-github/autolinked-references-and-urls>`_
+   the GitHub issue associated with your task in the description.
 
 #. **Relax and wait** : )
 
-Some time after that your commit will be reassigned to somebody from our team
+Some time after that your commit will be assigned to somebody from our team
 to check your code. 
-If the code is okay and all tests work fine, your commit will be approved and
-added to the framework. Your research will become a part of a common big work
-and other people will happily use it and thank you :D 
+After a code review and a successful completion of all tests, your pull request will be approved and
+pushed into the framework.
 
 If you still have any questions, either on the contribution process or about
-the framework itself, please ask us at our forum `<https://forum.deeppavlov.ai/>`_.
-Follow us on Facebook to get news on releases, new features, approved
-contributions and resolved issues `<https://www.facebook.com/deepmipt/>`_
-
+the framework itself, please share them with us on our forum `<https://forum.deeppavlov.ai/>`_.

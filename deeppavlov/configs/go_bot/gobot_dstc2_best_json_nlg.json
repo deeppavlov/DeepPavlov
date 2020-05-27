@@ -1,0 +1,139 @@
+{
+  "dataset_reader": {
+    "class_name": "dstc2_reader",
+    "data_path": "{DSTC2_DATA_PATH}"
+  },
+  "dataset_iterator": {
+    "class_name": "dialog_iterator"
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "out": ["y_predicted"],
+    "pipe": [
+      {
+        "class_name": "deeppavlov.models.go_bot.wrapper:DialogComponentWrapper",
+        "component": { "class_name": "split_tokenizer" },
+        "in": ["x"],
+        "out": ["x_tokens"]
+      },
+      {
+        "id": "token_vocab",
+        "fit_on": ["x_tokens"],
+        "class_name": "simple_vocab",
+        "save_path": "{MODELS_PATH}/gobot_dstc2_best_json/word.dict",
+        "load_path": "{MODELS_PATH}/gobot_dstc2_best_json/word.dict"
+      },
+      {
+        "id": "restaurant_database",
+        "class_name": "sqlite_database",
+        "table_name": "mytable",
+        "primary_keys": ["name"],
+        "save_path": "{DOWNLOADS_PATH}/dstc2/resto.sqlite"
+      },
+      {
+        "class_name": "go_bot",
+        "load_path": "{MODELS_PATH}/gobot_dstc2_best_json/model",
+        "save_path": "{MODELS_PATH}/gobot_dstc2_best_json/model",
+        "in": ["x"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "main": true,
+        "debug": false,
+        "learning_rate": 3e-3,
+        "learning_rate_drop_patience": 10,
+        "learning_rate_drop_div": 4.0,
+        "momentum": 0.95,
+        "optimizer": "tensorflow.train:AdamOptimizer",
+        "clip_norm": 2.0,
+        "dropout_rate": 0.75,
+        "l2_reg_coef": 9e-4,
+        "hidden_size": 128,
+        "dense_size": 128,
+        "attention_mechanism": {
+          "type": "general",
+          "hidden_size": 32,
+          "action_as_key": true,
+          "intent_as_key": true,
+          "max_num_tokens": 100,
+          "projected_align": false
+        },
+        "word_vocab": "#token_vocab",
+        "database": "#restaurant_database",
+        "nlg_manager": {
+          "class_name": "gobot_json_nlg_manager",
+          "data_path": "{DSTC2_DATA_PATH}",
+          "actions2slots_path": "{DSTC2_DATA_PATH}/dstc2-actions2slots.json",
+          "api_call_action": "api_call"
+        },
+        "use_action_mask": false,
+        "slot_filler": {
+          "config_path": "{CONFIGS_PATH}/ner/slotfill_dstc2.json"
+        },
+        "intent_classifier": {
+          "config_path": "{CONFIGS_PATH}/classifiers/intents_dstc2.json"
+        },
+        "embedder": {
+          "class_name": "fasttext",
+          "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin"
+        },
+        "bow_embedder": null,
+        "tokenizer": {
+          "class_name": "stream_spacy_tokenizer",
+          "lowercase": false
+        },
+        "tracker": {
+          "class_name": "featurized_tracker",
+          "slot_names": ["pricerange", "this", "area", "food", "name"]
+        }
+      }
+    ]
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 8,
+
+    "pytest_max_batches": 2,
+
+    "metrics": ["per_item_action_accuracy"],
+    "validation_patience": 15,
+    "val_every_n_batches": 15,
+
+    "log_every_n_batches": 15,
+    "show_examples": false,
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ],
+    "class_name": "nn_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
+      "DSTC2_DATA_PATH": "{DOWNLOADS_PATH}/dstc2_v3"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
+      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_best_v4.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/datasets/dstc2_v3.tar.gz",
+        "subdir": "{DSTC2_DATA_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
+      }
+    ]
+  }
+}

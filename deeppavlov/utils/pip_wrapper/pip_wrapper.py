@@ -20,6 +20,7 @@ from logging import getLogger
 from pathlib import Path
 
 from deeppavlov.core.commands.utils import expand_path, parse_config
+from deeppavlov.core.data.utils import get_all_elems_from_json
 
 log = getLogger(__name__)
 
@@ -38,9 +39,21 @@ def install(*packages):
     return result
 
 
-def install_from_config(config: [str, Path, dict]):
+def get_config_requirements(config: [str, Path, dict]):
     config = parse_config(config)
-    requirements_files = config.get('metadata', {}).get('requirements', [])
+
+    requirements = set()
+    for req in config.get('metadata', {}).get('requirements', []):
+        requirements.add(req)
+
+    config_references = [expand_path(config_ref) for config_ref in get_all_elems_from_json(config, 'config_path')]
+    requirements |= {req for config in config_references for req in get_config_requirements(config)}
+
+    return requirements
+
+
+def install_from_config(config: [str, Path, dict]):
+    requirements_files = get_config_requirements(config)
 
     if not requirements_files:
         log.warning('No requirements found in config')

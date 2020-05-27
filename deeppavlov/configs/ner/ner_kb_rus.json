@@ -88,13 +88,7 @@
         "emb_dim": 100
       },
       {
-        "id": "capitalization",
-        "class_name": "capitalization_featurizer",
-        "in": ["x_tokens"],
-        "out": ["cap"]
-      },
-      {
-        "in": ["x_emb", "mask", "x_char_ind", "cap"],
+        "in": ["x_emb", "mask", "x_char_ind"],
         "in_y": ["y_ind"],
         "out": ["y_predicted"],
         "class_name": "ner",
@@ -104,7 +98,6 @@
         "cell_type": "lstm",
         "use_cudnn_rnn": true,
         "n_tags": "#tag_vocab.len",
-        "capitalization_dim": "#capitalization.dim",
         "token_emb_dim": "#embedder.dim",
         "char_emb_dim": 100,
         "save_path": "{MODEL_PATH}/ner/model",
@@ -150,7 +143,7 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/ner_sq"
+      "MODEL_PATH": "{MODELS_PATH}/kbqa_mix_lowercase"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
@@ -158,7 +151,7 @@
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_rus_v2_cpu_compatible.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_kb_rus.tar.gz",
         "subdir": "{MODEL_PATH}"
       },
       {
