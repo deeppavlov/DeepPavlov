@@ -15,9 +15,11 @@ you can receive an invitation to one of our events or an opportunity to become a
 
 How to contribute:
 
-#. Don't start the coding first. You should **post an**
-   `issue <https://github.com/deepmipt/DeepPavlov/issues>`_ or indicate your intent
-   in an existing one to discuss the features you want to implement.
+#. Don't start the coding first.
+   You should do a quick search over `existing issues <https://github.com/deepmipt/DeepPavlov/issues?q=is%3Aissue>`_
+   for the project to see if your suggestion was already discussed or even resolved.
+   If your issue doesn't already exist, please create a new one and state what exactly you would like
+   to implement or fix.
    You may proceed with coding once someone on our team accepts your offer.
 
 #. `Fork <https://guides.github.com/activities/forking/>`_ the
