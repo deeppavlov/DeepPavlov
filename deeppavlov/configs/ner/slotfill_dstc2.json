@@ -51,7 +51,8 @@
       "MODEL_PATH": "{MODELS_PATH}/slotfill_dstc2"
     },
     "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt"
     ],
     "download": [
       {

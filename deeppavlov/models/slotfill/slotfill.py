@@ -15,7 +15,7 @@
 import json
 from logging import getLogger
 
-from fuzzywuzzy import process
+from rapidfuzz import process
 from overrides import overrides
 
 from deeppavlov.core.common.registry import register
