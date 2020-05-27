@@ -18,7 +18,7 @@ How to contribute:
 #. Don't start the coding first.
    You should do a quick search over `existing issues <https://github.com/deepmipt/DeepPavlov/issues?q=is%3Aissue>`_
    for the project to see if your suggestion was already discussed or even resolved.
-   If your issue doesn't already exist, please create a new one and state what exactly you would like
+   If nothing relevant was found, please create a new one and state what exactly you would like
    to implement or fix.
    You may proceed with coding once someone on our team accepts your offer.
 
@@ -58,7 +58,7 @@ How to contribute:
    Pay attention that we support typing annotations in every function
    declaration.
 
-   Accompany code with **clear comments** to let other people understand the
+   Accompany your code with **clear comments** to let other people understand the
    flow of your mind.
 
    If you create new models, refer to the :doc:`Register your model
@@ -87,13 +87,14 @@ How to contribute:
 
 #. Create a new `pull request <https://github.com/deepmipt/DeepPavlov/pulls>`_
    to get your feature branch merged into dev for others to use.
-   Don't forget to reference the GitHub issue associated with your task in the description.
+   Don't forget to `reference <https://help.github.com/en/github/writing-on-github/autolinked-references-and-urls>`_
+   the GitHub issue associated with your task in the description.
 
 #. **Relax and wait** : )
 
 Some time after that your commit will be assigned to somebody from our team
 to check your code. 
-If the code is okay and all tests pass, your pull request will be approved and
+After a code review and a successful completion of all tests, your pull request will be approved and
 pushed into the framework.
 
 If you still have any questions, either on the contribution process or about
