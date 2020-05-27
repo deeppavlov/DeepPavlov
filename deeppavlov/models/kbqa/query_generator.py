@@ -148,7 +148,7 @@ class QueryGenerator(Component, Serializable):
                 log.debug(f"(__call__)type_ids: {type_ids}")
                 self.template_num = template_type[0]
                 log.debug(f"(__call__)self.template_num: {self.template_num}")
-                candidate_outputs = self.find_candidate_answers(question, entity_ids, type_ids)
+                candidate_outputs = self.find_candidate_answers(question, entity_ids[:2], type_ids)
             candidate_outputs_batch.append(candidate_outputs)
         if self.return_answers:
             answers = self.rel_ranker(question_batch, candidate_outputs_batch)
