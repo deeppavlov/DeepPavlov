@@ -2,7 +2,7 @@
 name: Feature request
 about: Suggest a feature to improve the DeepPavlov library
 title: ''
-labels: ''
+labels: enhancement
 assignees: ''
 
 ---
