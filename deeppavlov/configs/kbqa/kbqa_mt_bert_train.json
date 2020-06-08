@@ -1,6 +1,6 @@
 {
   "dataset_reader": {
-    "class_name": "multi_task_reader",
+    "class_name": "multitask_reader",
     "tasks": {
       "ner_lcquad": {
         "class_name": "sq_reader",
@@ -18,7 +18,7 @@
     }
   },
   "dataset_iterator": {
-    "class_name": "multi_task_iterator",
+    "class_name": "multitask_iterator",
     "tasks": {
       "ner_lcquad": {"class_name": "data_learning_iterator"},
       "query_prediction": {"class_name": "basic_classification_iterator"},
