@@ -75,6 +75,8 @@ def simple_download(url: str, destination: Union[Path, str]) -> None:
 
     headers = {'dp-token': _get_download_token()}
     r = requests.get(url, stream=True, headers=headers)
+    if r.status_code != 200:
+        raise RuntimeError(f'Got status code {r.status_code} when trying to download {url}')
     total_length = int(r.headers.get('content-length', 0))
 
     log.info('Downloading from {} to {}'.format(url, destination))
