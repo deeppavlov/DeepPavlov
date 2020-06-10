@@ -57,6 +57,18 @@ def _get_download_token() -> str:
     return token_file.read_text(encoding='utf8').strip()
 
 
+def s3_download(url: str, destination: str) -> None:
+    import boto3
+
+    s3 = boto3.resource('s3')
+
+    bucket, key = url[5:].split('/', maxsplit=1)
+    file_object = s3.Object(bucket, key)
+    file_size = file_object.content_length
+    with tqdm(total=file_size, unit='B', unit_scale=True) as pbar:
+        file_object.download_file(destination, Callback=pbar.update)
+
+
 def simple_download(url: str, destination: Union[Path, str]) -> None:
     """Download a file from URL to target location.
 
@@ -67,10 +79,16 @@ def simple_download(url: str, destination: Union[Path, str]) -> None:
         destination: Path to the file destination (including file name).
 
     """
-    chunk_size = 32 * 1024
-
     destination = Path(destination)
     destination.parent.mkdir(parents=True, exist_ok=True)
+
+    log.info('Downloading from {} to {}'.format(url, destination))
+
+    if url.startswith('s3://'):
+        return s3_download(url, str(destination))
+
+    chunk_size = 32 * 1024
+
     temporary = destination.with_suffix(destination.suffix + '.part')
 
     headers = {'dp-token': _get_download_token()}
@@ -78,8 +96,6 @@ def simple_download(url: str, destination: Union[Path, str]) -> None:
     if r.status_code != 200:
         raise RuntimeError(f'Got status code {r.status_code} when trying to download {url}')
     total_length = int(r.headers.get('content-length', 0))
-
-    log.info('Downloading from {} to {}'.format(url, destination))
 
     if temporary.exists() and temporary.stat().st_size > total_length:
         temporary.write_bytes(b'')  # clearing temporary file when total_length is inconsistent
