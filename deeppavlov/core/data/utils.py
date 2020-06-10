@@ -58,6 +58,15 @@ def _get_download_token() -> str:
 
 
 def s3_download(url: str, destination: str) -> None:
+    """Download a file from an Amazon S3 path `s3://<bucket_name>/<key>`
+
+    Requires the boto3 library to be installed and AWS credentials being set
+    via environment variables or a credentials file
+
+    Args:
+        url: The source URL.
+        destination: Path to the file destination (including file name).
+    """
     import boto3
 
     s3 = boto3.resource('s3')
@@ -72,7 +81,7 @@ def s3_download(url: str, destination: str) -> None:
 def simple_download(url: str, destination: Union[Path, str]) -> None:
     """Download a file from URL to target location.
 
-    Displays progress bar to the terminal during the download process.
+    Displays a progress bar to the terminal during the download process.
 
     Args:
         url: The source URL.
