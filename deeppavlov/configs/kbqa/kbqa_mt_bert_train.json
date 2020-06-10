@@ -22,7 +22,11 @@
     "tasks": {
       "ner_lcquad": {"class_name": "data_learning_iterator"},
       "query_prediction": {"class_name": "basic_classification_iterator"},
-      "rel_ranking": {"class_name": "siamiese_iterator"}
+      "rel_ranking": {
+        "class_name": "siamiese_iterator",
+        "seed": 243,
+        "len_valid": 500
+      }
     }
   },
   "chainer": {
