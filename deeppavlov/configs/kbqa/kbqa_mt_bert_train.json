@@ -138,7 +138,7 @@
                 "return_probas": true,
                 "one_hot_labels": false,
                 "keep_prob": 0.5,
-                "learning_rate": 2e-05,
+                "learning_rate": 2e-05
               }
             }
           }
