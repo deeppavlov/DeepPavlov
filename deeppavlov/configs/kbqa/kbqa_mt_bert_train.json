@@ -103,6 +103,7 @@
           "ema_decay": 0.9,
           "optimizer": "tf.train:AdamOptimizer",
           "body_learning_rate": 2e-5,
+          "min_body_learning_rate": 2e-7,
           "learning_rate_drop_patience": 30,
           "learning_rate_drop_div": 1.5,
           "load_before_drop": true,
@@ -119,8 +120,7 @@
                 "keep_prob": 0.1,
                 "return_probas": true,
                 "encoder_layer_ids": [-1],
-                "learning_rate": 1e-3,
-                "min_learning_rate": 1e-7
+                "learning_rate": 1e-3
               },
               "query_prediction": {
                 "n_classes": "#classes_vocab.len",
