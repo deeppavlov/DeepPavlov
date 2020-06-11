@@ -96,7 +96,7 @@
       {                                                                                                                
         "class_name": "mt_bert_kbqa",
         "mode": "train_inference",
-        "collective_params": {
+        "shared_params": {
           "bert_config_file": "{BERT_PATH}/bert_config.json",
           "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
           "attention_probs_keep_prob": 0.5,
