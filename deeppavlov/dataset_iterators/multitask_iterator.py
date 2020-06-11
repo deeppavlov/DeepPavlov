@@ -14,7 +14,8 @@
 
 
 from logging import getLogger
-from typing import List
+from random import Random
+from typing import Dict, Iterator, List, Tuple
 
 from sklearn.model_selection import train_test_split
 
@@ -24,8 +25,8 @@ from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 log = getLogger(__name__)
 
 
-@register('basic_classification_iterator')
-class BasicClassificationDatasetIterator(DataLearningIterator):
+@register('multitask_iterator')
+class MultiTaskIterator:
     """
     Class gets data dictionary from DatasetReader instance, merge fields if necessary, split a field if necessary
 
@@ -39,93 +40,69 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
         seed: random seed for iterating
         shuffle: whether to shuffle examples in batches
         split_seed: random seed for splitting dataset, if ``split_seed`` is None, division is based on `seed`.
-        stratify: whether to use stratified split
-        *args: arguments
+        stratify: whether to use statified split
+        *args: argument
         **kwargs: arguments
 
     Attributes:
         data: dictionary of data with fields "train", "valid" and "test" (or some of them)
     """
 
-    def __init__(self, data: dict,
-                 fields_to_merge: List[str] = None, merged_field: str = None,
-                 field_to_split: str = None, split_fields: List[str] = None, split_proportions: List[float] = None,
-                 seed: int = None, shuffle: bool = True, split_seed: int = None,
-                 stratify: bool = None,
-                 *args, **kwargs):
+    def __init__(self, data: dict, seed: int = None, shuffle: bool = True, *args, **kwargs):
         """
         Initialize dataset using data from DatasetReader,
         merges and splits fields according to the given parameters.
         """
-        super().__init__(data, seed=seed, shuffle=shuffle)
+        self.iterators = data
+        self.shuffle = shuffle
 
-        if fields_to_merge is not None:
-            if merged_field is not None:
-                log.info("Merging fields <<{}>> to new field <<{}>>".format(fields_to_merge,
-                                                                            merged_field))
-                self._merge_data(fields_to_merge=fields_to_merge,
-                                 merged_field=merged_field)
-            else:
-                raise IOError("Given fields to merge BUT not given name of merged field")
+        self.random = Random(seed)
 
-        if field_to_split is not None:
-            if split_fields is not None:
-                log.info("Splitting field <<{}>> to new fields <<{}>>".format(field_to_split,
-                                                                              split_fields))
-                self._split_data(field_to_split=field_to_split,
-                                 split_fields=split_fields,
-                                 split_proportions=[float(s) for s in
-                                                    split_proportions],
-                                 split_seed=split_seed,
-                                 stratify=stratify)
-            else:
-                raise IOError("Given field to split BUT not given names of split fields")
+        self.train = self._extract_data_type('train')
+        self.valid = self._extract_data_type('valid')
+        self.test = self._extract_data_type('test')
+        self.data = {
+            'train': self.train,
+            'valid': self.valid,
+            'test': self.test,
+            'all': self._unite_dataset_parts(self.train, self.valid, self.test)
+        }
 
-    def _split_data(self, field_to_split: str = None, split_fields: List[str] = None,
-                    split_proportions: List[float] = None, split_seed: int = None, stratify: bool = None) -> bool:
-        """
-        Split given field of dataset to the given list of fields with corresponding proportions
+    def _extract_data_type(self, data_type):
+        dataset_part = {}
+        for task, iterator in self.iterators.items():
+            dataset_part[task] = getattr(iterator, data_type)
+        return dataset_part
 
-        Args:
-            field_to_split: field name (out of ``"train", "valid", "test"``) which to split
-            split_fields: list of names (out of ``"train", "valid", "test"``) of fields to which split
-            split_proportions: corresponding proportions
-            split_seed: random seed for splitting dataset
-            stratify: whether to use stratified split
+    @staticmethod
+    def _unite_dataset_parts(*dataset_parts):
+        united = {}
+        for ds_part in dataset_parts:
+            for task, data in ds_part.items():
+                if task not in united:
+                    united[task] = data
+                else:
+                    united[task] = united[task] + data
+        return united
 
-        Returns:
-            None
-        """
-        if split_seed is None:
-            split_seed = self.random.randint(0, 10000)
-        data_to_div = self.data[field_to_split].copy()
-        data_size = len(self.data[field_to_split])
+    def gen_batches(self, batch_size: Dict[str, int], data_type: str = 'train',
+                    shuffle: bool = None) -> Iterator[Dict[str, Tuple[tuple, tuple]]]:
+        batch_generators = {
+            task: self.iterators[task].gen_batches(bs, data_type, shuffle) for task, bs in batch_size.items()}
+        while True:
+            batch = {}
+            try:
+                for task, gen in batch_generators.items():
+                    batch[task] = next(gen)
+            except StopIteration:
+                break
+            yield batch
 
-        for i in range(len(split_fields) - 1):
-            if stratify:
-                stratify = [sample[1] for sample in data_to_div]
-            self.data[split_fields[i]], data_to_div = train_test_split(
-                data_to_div,
-                test_size=len(data_to_div) - int(data_size * split_proportions[i]),
-                random_state=split_seed,
-                stratify=stratify)
-            self.data[split_fields[-1]] = data_to_div
-        return True
-
-    def _merge_data(self, fields_to_merge: List[str] = None, merged_field: str = None) -> bool:
-        """
-        Merge given fields of dataset
-
-        Args:
-            fields_to_merge: list of fields (out of ``"train", "valid", "test"``) to merge
-            merged_field: name of field (out of ``"train", "valid", "test"``) to which save merged fields
-
-        Returns:
-            None
-        """
-        data = self.data.copy()
-        data[merged_field] = []
-        for name in fields_to_merge:
-            data[merged_field] += self.data[name]
-        self.data = data
-        return True
+    def get_instances(self, data_type: str = 'train'):
+        x_instances = []
+        y_instances = []
+        for task, it in self.iterators.items():
+            x, y = zip(*it.data[data_type])
+            x_instances.append(x)
+            y_instances.append(y)
+        return tuple(x_instances + y_instances)
