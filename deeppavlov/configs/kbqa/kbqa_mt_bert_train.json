@@ -139,7 +139,6 @@
                 "one_hot_labels": false,
                 "keep_prob": 0.5,
                 "learning_rate": 2e-05,
-                "one_hot_labels": false
               }
             }
           }
