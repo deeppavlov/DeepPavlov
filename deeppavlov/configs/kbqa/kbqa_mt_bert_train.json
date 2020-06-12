@@ -143,8 +143,18 @@
             }
           }
         },
-        "in": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask", "bert_features_qr", "bert_features_rr"],
-        "in_y": ["y_ind", "y_onehot", "y_rr"],
+        "in":  {
+          "x_subword_tok_ids": "x_subword_tok_ids",
+          "x_subword_mask": "x_subword_mask",
+          "pred_subword_mask": "pred_subword_mask",
+          "bert_features_qr": "bert_features_qr",
+          "bert_features_rr": "bert_features_rr"
+        },
+        "in_y": {
+          "y_ind": "y_ind",
+          "y_onehot": "y_onehot",
+          "y_rr": "y_rr"
+        },
         "out": ["y_pred_ind", "y_pred_probas", "predictions"]
       },
       {                                                                                                                
