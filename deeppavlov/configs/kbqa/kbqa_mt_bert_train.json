@@ -115,7 +115,7 @@
           "ner_and_query_prediction": {
             "tasks": {
               "ner": {
-                "class_name": "mt_bert_seq_tagger_task",
+                "class_name": "mt_bert_seq_tagger",
                 "n_tags": "#tag_vocab.len",
                 "use_crf": false,
                 "keep_prob": 0.1,
@@ -126,7 +126,7 @@
                 "in_y_names": ["y_ind"]
               },
               "query_prediction": {
-                "class_name": "mt_bert_classifier_task",
+                "class_name": "mt_bert_classifier",
                 "n_classes": "#classes_vocab.len",
                 "return_probas": true,
                 "one_hot_labels": true,
