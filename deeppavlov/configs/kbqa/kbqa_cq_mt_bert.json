@@ -36,7 +36,7 @@
       },
 
       {                                                                                                                
-        "class_name": "mt_bert_kbqa",
+        "class_name": "mt_bert",
         "id": "mt_bert_kbqa",
         "mode": "inference",                                                                                           
         "launch": "ner_and_query_prediction",                                                                          

@@ -94,7 +94,7 @@
         "out": ["bert_features_rr"]                                                                                       
       },
       {                                                                                                                
-        "class_name": "mt_bert_kbqa",
+        "class_name": "mt_bert",
         "mode": "train_inference",
         "shared_params": {
           "bert_config_file": "{BERT_PATH}/bert_config.json",
