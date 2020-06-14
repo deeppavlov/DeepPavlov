@@ -99,14 +99,12 @@
         "shared_params": {
           "bert_config_file": "{BERT_PATH}/bert_config.json",
           "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
-          "attention_probs_keep_prob": 0.5,
           "ema_decay": 0.9,
           "body_learning_rate": 2e-5,
           "min_body_learning_rate": 2e-7,
           "learning_rate_drop_patience": 30,
           "learning_rate_drop_div": 1.5,
           "load_before_drop": true,
-          "clip_norm": 1.0,
           "save_path": "{MT_BERT_PATH}/model",
           "load_path": "{MT_BERT_PATH}/model"
         },
@@ -118,10 +116,12 @@
                 "n_tags": "#tag_vocab.len",
                 "use_crf": false,
                 "keep_prob": 0.1,
+                "attention_probs_keep_prob": 0.5,
                 "return_probas": true,
                 "encoder_layer_ids": [-1],
                 "learning_rate": 1e-3,
                 "optimizer": "tf.train:AdamOptimizer",
+                "clip_norm": 1.0,
                 "in_names": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask", "bert_features_qr"],
                 "in_y_names": ["y_ind"]
               },
@@ -131,8 +131,10 @@
                 "return_probas": true,
                 "one_hot_labels": true,
                 "keep_prob": 0.5,
+                "attention_probs_keep_prob": 0.5,
                 "learning_rate": 1e-05,
                 "optimizer": "tf.train:AdamOptimizer",
+                "clip_norm": 1.0,
                 "in_names": ["bert_features_qr"],
                 "in_y_names": ["y_onehot"]
               }
@@ -146,8 +148,10 @@
                 "return_probas": true,
                 "one_hot_labels": false,
                 "keep_prob": 0.5,
+                "attention_probs_keep_prob": 0.5,
                 "learning_rate": 2e-05,
                 "optimizer": "tf.train:AdamOptimizer",
+                "clip_norm": 1.0,
                 "in_names": ["bert_features_rr"],
                 "in_y_names": ["y_rr"]
               }
