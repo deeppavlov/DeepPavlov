@@ -138,7 +138,7 @@
       },
       {                                                                                                                
         "class_name": "mt_bert_reuser",
-        "bert": "#mt_bert_kbqa",
+        "mt_bert": "#mt_bert_kbqa",
         "launch_name": "rel_ranking_bert",
         "in": ["bert_features_ranker"],
         "out": ["answers"]
