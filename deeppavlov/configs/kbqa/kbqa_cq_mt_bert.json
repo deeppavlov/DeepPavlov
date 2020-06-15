@@ -137,7 +137,7 @@
         "out": ["bert_features_ranker"]
       },
       {                                                                                                                
-        "class_name": "bert_reuser",
+        "class_name": "mt_bert_reuser",
         "bert": "#mt_bert_kbqa",
         "launch_name": "rel_ranking_bert",
         "in": ["bert_features_ranker"],
