@@ -109,7 +109,7 @@
           "save_path": "{MT_BERT_PATH}/model",
           "load_path": "{MT_BERT_PATH}/model"
         },
-        "launches": {
+        "launches_params": {
           "ner_and_query_prediction": {
             "tasks": {
               "ner": {
