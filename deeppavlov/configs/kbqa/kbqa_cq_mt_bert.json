@@ -38,7 +38,6 @@
       {                                                                                                                
         "class_name": "mt_bert",
         "id": "mt_bert_kbqa",
-        "mode": "inference",                                                                                           
         "launch": "ner_and_query_prediction",                                                                          
         "in": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask", "bert_features_qr"],                                                                                
         "out": ["y_pred_ner", "y_pred_probas_qr"]                                                                 

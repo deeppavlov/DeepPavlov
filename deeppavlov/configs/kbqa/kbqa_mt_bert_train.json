@@ -95,7 +95,6 @@
       },
       {                                                                                                                
         "class_name": "mt_bert",
-        "mode": "train_inference",
         "shared_params": {
           "bert_config_file": "{BERT_PATH}/bert_config.json",
           "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
