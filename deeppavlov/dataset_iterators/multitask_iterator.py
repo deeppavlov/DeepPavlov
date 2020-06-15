@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+import copy
 from logging import getLogger
 from random import Random
 from typing import Dict, Iterator, List, Tuple
@@ -20,6 +20,7 @@ from typing import Dict, Iterator, List, Tuple
 from sklearn.model_selection import train_test_split
 
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.common.params import from_params
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 log = getLogger(__name__)
@@ -48,12 +49,19 @@ class MultiTaskIterator:
         data: dictionary of data with fields "train", "valid" and "test" (or some of them)
     """
 
-    def __init__(self, data: dict, seed: int = None, shuffle: bool = True, *args, **kwargs):
+    def __init__(self, data: dict, tasks: dict):
         """
         Initialize dataset using data from DatasetReader,
         merges and splits fields according to the given parameters.
         """
-        self.iterators = data
+        self.data = data
+        self.task_iterators_params = tasks
+        self.task_iterators = {}
+        for task_name, task_iterator_params in self.task_iterators_params.items():
+            task_iterator_params = copy.deepcopy(task_iterator_params)
+            task_iterator_params['class_name'] = task_iterator_params['iterator_class_name']
+            del task_iterator_params['iterator_class_name']
+            self.task_iterators[task_name] = from_params(task_iterator_params, data=data[task_name])
         self.shuffle = shuffle
 
         self.random = Random(seed)
@@ -70,7 +78,7 @@ class MultiTaskIterator:
 
     def _extract_data_type(self, data_type):
         dataset_part = {}
-        for task, iterator in self.iterators.items():
+        for task, iterator in self.task_iterators.items():
             dataset_part[task] = getattr(iterator, data_type)
         return dataset_part
 
@@ -88,7 +96,7 @@ class MultiTaskIterator:
     def gen_batches(self, batch_size: Dict[str, int], data_type: str = 'train',
                     shuffle: bool = None) -> Iterator[Dict[str, Tuple[tuple, tuple]]]:
         batch_generators = {
-            task: self.iterators[task].gen_batches(bs, data_type, shuffle) for task, bs in batch_size.items()}
+            task: self.task_iterators[task].gen_batches(bs, data_type, shuffle) for task, bs in batch_size.items()}
         while True:
             batch = {}
             try:
@@ -101,7 +109,7 @@ class MultiTaskIterator:
     def get_instances(self, data_type: str = 'train'):
         x_instances = []
         y_instances = []
-        for task, it in self.iterators.items():
+        for task, it in self.task_iterators.items():
             x, y = zip(*it.data[data_type])
             x_instances.append(x)
             y_instances.append(y)
