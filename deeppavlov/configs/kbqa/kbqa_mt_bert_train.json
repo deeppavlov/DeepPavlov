@@ -115,6 +115,7 @@
             "tasks": {
               "ner": {
                 "class_name": "mt_bert_seq_tagger",
+                "task_name": "ner",
                 "n_tags": "#tag_vocab.len",
                 "use_crf": false,
                 "keep_prob": 0.1,
@@ -127,6 +128,7 @@
               },
               "query_prediction": {
                 "class_name": "mt_bert_classifier",
+                "task_name": "qr_prediction",
                 "n_classes": "#classes_vocab.len",
                 "return_probas": true,
                 "one_hot_labels": true,
@@ -141,6 +143,7 @@
             "tasks": {
               "rel_ranking": {
                 "class_name": "mt_bert_classifier_task",
+                "task_name": "rel_ranking",
                 "n_classes": 2,
                 "return_probas": true,
                 "one_hot_labels": false,
