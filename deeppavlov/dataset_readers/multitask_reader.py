@@ -13,17 +13,20 @@
 # limitations under the License.
 
 import pickle
+from logging import getLogger
 from typing import Dict
 
 from deeppavlov.core.common.registry import get_model, register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 
 
+log = getLogger(__name__)
+
+
 @register('multitask_reader')
 class MultiTaskReader(DatasetReader):
     """Class to read several datasets simultaneuosly"""
 
-    def read(self, tasks: Dict[str, Dict[str, str]]):
-
+    def read(self, data_path, tasks: Dict[str, Dict[str, str]]):
         return tasks
 
