@@ -1,6 +1,7 @@
 {
   "dataset_reader": {
     "class_name": "multitask_reader",
+    "data_path": "null",
     "tasks": {
       "ner_lcquad": {
         "class_name": "sq_reader",
@@ -72,8 +73,8 @@
         "id": "classes_vocab",                                                                                         
         "class_name": "simple_vocab",                                                                                  
         "fit_on": ["y_qr"],                                                                                               
-        "save_path": "{MODEL_PATH}/classes.dict",                                                                      
-        "load_path": "{MODEL_PATH}/classes.dict",                                                                      
+        "save_path": "{QUERY_PREDICTION}/classes.dict",                                                                      
+        "load_path": "{QUERY_PREDICTION}/classes.dict",                                                                      
         "in": "y_qr",                                                                                                     
         "out": "y_ids"                                                                                                 
       },                                                                                                               
@@ -236,7 +237,9 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",
       "MT_BERT_PATH": "{MODELS_PATH}/mt_bert",
-      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
+      "NER_PATH": "{MODELS_PATH}/ner_lcquad_ent_and_type",
+      "QUERY_PREDICTION": "{MODELS_PATH}/classifiers/query_prediction"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",

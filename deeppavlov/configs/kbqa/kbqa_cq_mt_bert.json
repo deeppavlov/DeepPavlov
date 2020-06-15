@@ -42,7 +42,6 @@
         "shared_params": {
           "bert_config_file": "{BERT_PATH}/bert_config.json",
           "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
-          "save_path": "{MT_BERT_PATH}/model",
           "load_path": "{MT_BERT_PATH}/model"
         },
         "launches_params": {
@@ -52,6 +51,7 @@
                 "class_name": "mt_bert_seq_tagging_task",
                 "task_name": "ner",
                 "n_tags": "#tag_vocab.len",
+                "use_crf": false,
                 "return_probas": true,
                 "encoder_layer_ids": [-1],
                 "in_names": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask", "bert_features_qr"],
@@ -95,7 +95,7 @@
       {
         "id": "classes_vocab",
         "class_name": "simple_vocab",
-        "load_path": "{MODEL_PATH}/classes.dict",
+        "load_path": "{QUERY_PREDICTION/classes.dict",
         "in": "y_pred_ids",
         "out": "template_type"
       },
@@ -220,7 +220,8 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",
       "NER_PATH": "{MODELS_PATH}/ner_lcquad",
-      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
+      "QUERY_PREDICTION": "{MODELS_PATH}/classifiers/query_prediction"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
