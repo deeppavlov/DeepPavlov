@@ -99,7 +99,6 @@
         "shared_params": {
           "bert_config_file": "{BERT_PATH}/bert_config.json",
           "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
-          "ema_decay": 0.9,
           "body_learning_rate": 2e-5,
           "min_body_learning_rate": 2e-7,
           "learning_rate_drop_patience": 30,
