@@ -113,7 +113,7 @@
           "ner_and_query_prediction": {
             "tasks": {
               "ner": {
-                "class_name": "mt_bert_seq_tagger",
+                "class_name": "mt_bert_seq_tagging_task",
                 "task_name": "ner",
                 "n_tags": "#tag_vocab.len",
                 "use_crf": false,
@@ -126,7 +126,7 @@
                 "in_y_names": ["y_ind"]
               },
               "query_prediction": {
-                "class_name": "mt_bert_classifier",
+                "class_name": "mt_bert_classification_task",
                 "task_name": "qr_prediction",
                 "n_classes": "#classes_vocab.len",
                 "return_probas": true,
@@ -141,7 +141,7 @@
           "rel_ranking": {
             "tasks": {
               "rel_ranking": {
-                "class_name": "mt_bert_classifier_task",
+                "class_name": "mt_bert_classification_task",
                 "task_name": "rel_ranking",
                 "n_classes": 2,
                 "return_probas": true,
