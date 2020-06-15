@@ -185,6 +185,7 @@
   "train": {
     "epochs": 30,
     "batch_size": {
+      "class_name": "multitask_batch_size",
       "ner_lcquad": 16,
       "query_prediction": 64,
       "rel_ranking": 32
