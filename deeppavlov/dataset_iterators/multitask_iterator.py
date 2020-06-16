@@ -65,6 +65,7 @@ class MultiTaskIterator:
             self.batch_sizes_by_task[task_name] = task_iterator_params['batch_size']
             del task_iterator_params['batch_size']
             self.task_iterators[task_name] = from_params(task_iterator_params, data=data[task_name])
+            log.debug(f"self.task_iterators[{task_name}]: {self.task_iterators[task_name]}")
             log.debug(f"self.task_iterators['{task_name}'].train length: {len(self.task_iterators[task_name].train)}")
             log.debug(f"self.task_iterators['{task_name}'].valid length: {len(self.task_iterators[task_name].valid)}")
             log.debug(f"self.task_iterators['{task_name}'].test length: {len(self.task_iterators[task_name].test)}")
