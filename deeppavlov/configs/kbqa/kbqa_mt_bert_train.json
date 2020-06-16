@@ -5,10 +5,12 @@
     "tasks": {
       "ner_lcquad": {
         "reader_class_name": "sq_reader",
-        "data_path": "{MODELS_PATH}/entity_detection_dataset.pickle"
+        "data_path": "{DOWNLOADS_PATH}/lcquad/entity_and_type_detection.pickle"
       },
       "query_prediction": {
         "reader_class_name": "basic_classification_reader",
+        "x": "Question",
+        "y": "Class",
         "data_path": "{DOWNLOADS_PATH}/query_prediction"
       },
       "rel_ranking": {

@@ -116,7 +116,7 @@ class MultiTaskIterator:
         x_instances = []
         y_instances = []
         for task, it in self.task_iterators.items():
-            log.debug(f"(get_instances)it.data[{data_type}]: {it.data[data_type]}")
+            #log.debug(f"(get_instances)it.data[{data_type}]: {it.data[data_type]}")
             dt = it.data[data_type]
             if dt:
                 x, y = zip(*dt)
