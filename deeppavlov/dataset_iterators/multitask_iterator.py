@@ -57,14 +57,17 @@ class MultiTaskIterator:
         self.data = data
         self.task_iterators_params = tasks
         self.task_iterators = {}
+        self.batch_sizes_by_task = {}
         for task_name, task_iterator_params in self.task_iterators_params.items():
             task_iterator_params = copy.deepcopy(task_iterator_params)
             task_iterator_params['class_name'] = task_iterator_params['iterator_class_name']
             del task_iterator_params['iterator_class_name']
+            self.batch_sizes_by_task[task_name] = task_iterator_params['batch_size']
+            del task_iterator_params['batch_size']
             self.task_iterators[task_name] = from_params(task_iterator_params, data=data[task_name])
-        self.shuffle = shuffle
-
-        self.random = Random(seed)
+            log.debug(f"self.task_iterators['{task_name}'].train length: {len(self.task_iterators[task_name].train)}")
+            log.debug(f"self.task_iterators['{task_name}'].valid length: {len(self.task_iterators[task_name].valid)}")
+            log.debug(f"self.task_iterators['{task_name}'].test length: {len(self.task_iterators[task_name].test)}")
 
         self.train = self._extract_data_type('train')
         self.valid = self._extract_data_type('valid')
@@ -93,10 +96,12 @@ class MultiTaskIterator:
                     united[task] = united[task] + data
         return united
 
-    def gen_batches(self, batch_size: Dict[str, int], data_type: str = 'train',
+    # TODO: kostyl. parameter batch_size is not used.
+    def gen_batches(self, batch_size: int, data_type: str = 'train',
                     shuffle: bool = None) -> Iterator[Dict[str, Tuple[tuple, tuple]]]:
         batch_generators = {
-            task: self.task_iterators[task].gen_batches(bs, data_type, shuffle) for task, bs in batch_size.items()}
+            task: self.task_iterators[task].gen_batches(bs, data_type, shuffle) 
+            for task, bs in self.batch_sizes_by_task.items()}
         while True:
             batch = {}
             try:
@@ -110,7 +115,12 @@ class MultiTaskIterator:
         x_instances = []
         y_instances = []
         for task, it in self.task_iterators.items():
-            x, y = zip(*it.data[data_type])
+            log.debug(f"(get_instances)it.data[{data_type}]: {it.data[data_type]}")
+            dt = it.data[data_type]
+            if dt:
+                x, y = zip(*dt)
+            else:
+                x, y = [], []
             x_instances.append(x)
             y_instances.append(y)
         return tuple(x_instances + y_instances)
