@@ -172,3 +172,32 @@ The dataset for path ranking is similar to the dataset for relation ranking. If 
        <value name="text_2">position held # end time</value>
        <value name="class">1</value>
     </paraphrase>
+
+Adding of new templates of SPARQL queries
+-----------------------------------------
+Templates can be added to sparql_queries.json file, which is a dictionary, where keys are template numbers, and values are templates with additional information.
+An example of a template:
+{"query_template": "SELECT ?obj WHERE { wd:E1 p:R1 ?s . ?s ps:R1 ?obj . ?s ?p ?x filter(contains(?x, N)) }",
+ "property_types": {"?p": "qualifier"},
+ "rank_rels": ["wiki", "do_not_rank", "do_not_rank"],
+ "filter_rels": [false],
+ "rel_dirs": ["forw"],
+ "query_sequence": [1, 2, 3],
+ "entities_and_types_num": [[1, 0]],
+ "entities_and_types_select": {"1 0": ["1 0"]},
+ "return_if_found": true,
+ "template_num": "0",
+ "exact_entity_type_match": false,
+ "alternative_templates": []}
+* "query_template" is the template of the SPARQL query
+* "property_types" defines the types of unknown relations in the template
+* "rank_rels" is a list which defines whether to rank relations, in this example "p:R1" relations we extract from Wikidata for "wd:E1" entities and rank with RelRanker, "ps:R1" and "?p" relations we do not extract and rank
+* "filter_rels" (only for online version of KBQA) - whether candidate rels will be enumerated in the "filter" expression in the query, for example
+  "SELECT ?ent WHERE { ?ent wdt:P31 wd:Q4022 . ?ent ?p1 wd:Q90 } filter(?p1 = wdt:P131 || ?p1 = wdt:P17)"
+* "rel_dirs" - "forw" if the relation connects the subject and unknown object, for example, "wd:Q649 wdt:P17 ?p", "backw" if the relation connects the unknown object and the subject, for example "?p wdt:P17 wd:Q159"
+* "query_sequence" (only for offline version of KBQA) - the sequence in which the triplets will be extracted from Wikidata hdt file
+* entities_and_types_num: numbers of entities and types extracted from the question, which this template can contain
+* entities_and_types_select: the dictionary where keys are number of entities and types extracted from the question and values are indices of entities and types which should be filled in the template (because we can extract more entities and types than the template contains)
+* return_if_found: parameter for the cycle which iterates over all possible combinations of entities, relations and types, if "true" - return if the first valid combination is found, if "false" - consider all combinations
+* template_num - the number of template
+* alternative_templates - numbers of alternative templates to use if the answer was not found with the current template
