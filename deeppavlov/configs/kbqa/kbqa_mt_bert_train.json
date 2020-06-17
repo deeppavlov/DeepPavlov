@@ -108,6 +108,7 @@
         "shared_params": {
           "bert_config_file": "{BERT_PATH}/bert_config.json",
           "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
+          "attention_probs_keep_prob": 0.5,
           "body_learning_rate": 2e-5,
           "min_body_learning_rate": 2e-7,
           "learning_rate_drop_patience": 30,
@@ -127,7 +128,6 @@
                 "n_tags": "#tag_vocab.len",
                 "use_crf": false,
                 "keep_prob": 0.1,
-                "attention_probs_keep_prob": 0.5,
                 "return_probas": true,
                 "encoder_layer_ids": [-1],
                 "learning_rate": 1e-3,
