@@ -217,6 +217,7 @@ class MTBertSequenceTaggingTask:
             n_tags: int = None,
             use_crf: bool = None,
             keep_prob: float = 1.,
+            attention_probs_keep_probs: float = None,
             return_probas: bool = None,
             encoder_layer_ids: List[int] = None,
             learning_rate: float = 1e-3,
