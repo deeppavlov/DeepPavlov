@@ -30,6 +30,7 @@ from deeppavlov.models.bert.bert_sequence_tagger import ExponentialMovingAverage
 log = getLogger(__name__)
 
 
+# FIXME: kostyl. The same function is defined as method in `LRScheduledTFModel`. Subtask classes does not need many other methods defined in `LRScheduledTFModel`.
 def get_train_op(loss,
                  learning_rate,
                  optimizer=None,
