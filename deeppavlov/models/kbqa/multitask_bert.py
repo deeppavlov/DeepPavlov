@@ -114,17 +114,17 @@ class MultiTaskBert(LRScheduledTFModel):
     # TODO: check if ema is really needed and if it can be used on multitask bert
     def __init__(self,
                  shared_params: dict,
-                 launches_tasks: dict,
+                 launches_params: dict,
                  inference_launch_names: List[str] = None,
                  **kwargs) -> None:
-        super().__init__(learning_rate=shared_params['bert_learning_rate'],
+        super().__init__(learning_rate=shared_params.get('bert_learning_rate'), ,
                          learning_rate_drop_div=shared_params['learning_rate_drop_div'],
                          learning_rate_drop_patience=shared_params['learning_rate_drop_patience'],
                          load_before_drop=shared_params['load_before_drop'],
                          clip_norm=shared_params['clip_norm'],
                          **kwargs)
         self.shared_params = shared_params
-        self.launches_tasks = launches_tasks
+        self.launches_tasks = launches_params
         self.inference_launch_names = inference_launch_names
 
         self.shared_ph = None  # TODO: add use for `min_body_learning_rate`
