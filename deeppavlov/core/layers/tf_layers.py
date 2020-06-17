@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import List
+from typing import List, Union
 
 import numpy as np
 import tensorflow as tf
@@ -115,7 +115,7 @@ def dense_convolutional_network(units: tf.Tensor,
 
 
 def bi_rnn(units: tf.Tensor,
-           n_hidden: List,
+           n_hidden: Union[List, int],
            cell_type='gru',
            seq_lengths=None,
            trainable_initial_states=False,
