@@ -30,6 +30,60 @@ from deeppavlov.models.bert.bert_sequence_tagger import ExponentialMovingAverage
 log = getLogger(__name__)
 
 
+def get_train_op(loss,
+                 learning_rate,
+                 optimizer=None,
+                 clip_norm=None,
+                 learnable_scopes=None,
+                 optimizer_scope_name=None,
+                 **kwargs):
+    """
+    Get train operation for given loss
+
+    Args:
+        loss: loss, tf tensor or scalar
+        learning_rate: scalar or placeholder.
+        clip_norm: clip gradients norm by clip_norm.
+        learnable_scopes: which scopes are trainable (None for all).
+        optimizer: instance of tf.train.Optimizer, default Adam.
+        **kwargs: parameters passed to tf.train.Optimizer object
+           (scalars or placeholders).
+
+    Returns:
+        train_op
+    """
+    if optimizer_scope_name is None:
+        opt_scope = tf.variable_scope('Optimizer')
+    else:
+        opt_scope = tf.variable_scope(optimizer_scope_name)
+    with opt_scope:
+        if learnable_scopes is None:
+            variables_to_train = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
+        else:
+            variables_to_train = []
+            for scope_name in learnable_scopes:
+                variables_to_train.extend(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope_name))
+
+        if optimizer is None:
+            optimizer = tf.train.AdamOptimizer
+
+        # For batch norm it is necessary to update running averages
+        extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        with tf.control_dependencies(extra_update_ops):
+
+            def clip_if_not_none(grad):
+                if grad is not None:
+                    return tf.clip_by_norm(grad, clip_norm)
+
+            opt = optimizer(learning_rate, **kwargs)
+            grads_and_vars = opt.compute_gradients(loss, var_list=variables_to_train)
+            if clip_norm is not None:
+                grads_and_vars = [(clip_if_not_none(grad), var)
+                                  for grad, var in grads_and_vars]
+            train_op = opt.apply_gradients(grads_and_vars)
+    return train_op
+
+
 @register('mt_bert')
 class MultiTaskBert(LRScheduledTFModel):
     """
@@ -150,9 +204,7 @@ class MultiTaskBert(LRScheduledTFModel):
         kwargs['learnable_scopes'] = ('bert/encoder', 'bert/embeddings')
         if self.freeze_embeddings:
             kwargs['learnable_scopes'] = ('bert/encoder',)
-        body_train_op = super().get_train_op(loss,
-                                             self.body_learning_rate,
-                                             **kwargs)
+        body_train_op = get_train_op(loss, self.body_learning_rate, **kwargs)
         return body_train_op
 
     def save(self, exclude_scopes=('Optimizer',)) -> None:
@@ -216,8 +268,13 @@ class MTBertSequenceTaggingTask:
             task_name: str = "seq_tagging",
             n_tags: int = None,
             use_crf: bool = None,
+            use_birnn: bool = False,
+            birnn_cell_type: str = 'lstm',
+            birnn_hidden_size: int = 128,
+            freeze_embeddings: bool = False,
             keep_prob: float = 1.,
             attention_probs_keep_probs: float = None,
+            encoder_dropout: float = 0.,
             return_probas: bool = None,
             encoder_layer_ids: List[int] = None,
             learning_rate: float = 1e-3,
@@ -227,7 +284,13 @@ class MTBertSequenceTaggingTask:
         self.task_name = task_name
         self.n_tags = n_tags
         self.use_crf = use_crf
+        self.use_birnn = use_birnn
+        self.birnn_cell_type = birnn_cell_type
+        self.birnn_hidden_size = birnn_hidden_size
         self.keep_prob = keep_prob
+        self.freeze_embeddings = freeze_embeddings
+        self.attention_probs_keep_probs = attention_probs_keep_probs
+        self.encoder_dropout = encoder_dropout
         self.return_probas = return_probas
         self.encoder_layer_ids = encoder_layer_ids
         self.init_head_learning_rate = learning_rate
@@ -324,14 +387,10 @@ class MTBertSequenceTaggingTask:
         if self.freeze_embeddings:
             kwargs['learnable_scopes'] = ('bert/encoder',)
         learning_rate = bert_body_learning_rate * self.head_learning_rate_multiplier
-        bert_train_op = super().get_train_op(loss,
-                                             bert_body_learning_rate,
-                                             **kwargs)
+        bert_train_op = get_train_op(loss, bert_body_learning_rate, **kwargs)
         # train_op for ner head variables
         kwargs['learnable_scopes'] = (self.task_name,)
-        head_train_op = super().get_train_op(loss,
-                                             learning_rate,
-                                             **kwargs)
+        head_train_op = get_train_op(loss, learning_rate, **kwargs)
         return tf.group(bert_train_op, head_train_op)
 
     def _init_optimizer(self) -> None:
@@ -345,17 +404,18 @@ class MTBertSequenceTaggingTask:
 
         if self.optimizer is None:
             self.train_op = \
-                self.get_train_op(self.loss,
-                                  learning_rate=self.shared_ph['learning_rate'],
-                                  optimizer=AdamWeightDecayOptimizer,
-                                  weight_decay_rate=self.weight_decay_rate,
-                                  beta_1=0.9,
-                                  beta_2=0.999,
-                                  epsilon=1e-6,
-                                  optimizer_scope_name='Optimizer',
-                                  exclude_from_weight_decay=["LayerNorm",
-                                                             "layer_norm",
-                                                             "bias"])
+                self.get_train_op(
+                    self.loss,
+                    learning_rate=self.shared_ph['learning_rate'],
+                    optimizer=AdamWeightDecayOptimizer,
+                    weight_decay_rate=self.shared_params.get('weight_decay_rate', 1e-6),
+                    beta_1=0.9,
+                    beta_2=0.999,
+                    epsilon=1e-6,
+                    optimizer_scope_name='Optimizer',
+                    exclude_from_weight_decay=["LayerNorm",
+                                               "layer_norm",
+                                               "bias"])
         else:
             self.train_op = self.get_train_op(self.loss,
                                               learning_rate=self.shared_ph['learning_rate'],
@@ -628,14 +688,15 @@ class MTBertClassificationTask:
             # default optimizer for Bert is Adam with fixed L2 regularization
             if self.optimizer is None:
 
-                self.train_op = self.get_train_op(self.loss, bert_body_learning_rate=self.learning_rate_ph,
-                                                  optimizer=AdamWeightDecayOptimizer,
-                                                  weight_decay_rate=self.weight_decay_rate,
-                                                  beta_1=0.9,
-                                                  beta_2=0.999,
-                                                  epsilon=1e-6,
-                                                  exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"]
-                                                  )
+                self.train_op = self.get_train_op(
+                    self.loss, bert_body_learning_rate=self.learning_rate_ph,
+                    optimizer=AdamWeightDecayOptimizer,
+                    weight_decay_rate=self.shared_params.get('weight_decay_rate', 0.01),  # FIXME: make default value specification more obvious
+                    beta_1=0.9,
+                    beta_2=0.999,
+                    epsilon=1e-6,
+                    exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"]
+                )
             else:
                 self.train_op = self.get_train_op(self.loss, bert_body_learning_rate=self.learning_rate_ph)
 
