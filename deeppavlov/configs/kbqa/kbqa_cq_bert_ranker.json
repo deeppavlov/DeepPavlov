@@ -17,7 +17,7 @@
       },
       {
         "in": ["x_tokens", "y_pred"],
-        "out": ["entities", "types"],
+        "out": ["entities", "types", "entities_pos"],
         "class_name": "entity_detection_parser"
       },
       {

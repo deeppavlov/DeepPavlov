@@ -21,9 +21,8 @@
         "class_name": "entity_detection_parser"
       },
       {
-        "class_name": "wiki_parser",
-        "id": "wiki_p",
-        "wiki_filename": "{DOWNLOADS_PATH}/wikidata_eng/wikidata.hdt"
+        "class_name": "wiki_parser_online",
+        "id": "wiki_p"
       },
       {
         "class_name": "template_matcher",
@@ -44,8 +43,8 @@
         "inverted_index_filename": "inverted_index_eng.pickle",
         "entities_list_filename": "entities_list.pickle",
         "q2name_filename": "wiki_eng_q_to_name.pickle",
-        "build_inverted_index": false,
-        "use_descriptions": false,
+        "use_hdt": false,
+        "wiki_parser": "#wiki_p",
         "use_prefix_tree": false
       },
       {
@@ -55,8 +54,8 @@
         "inverted_index_filename": "inverted_index_types_eng.pickle",
         "entities_list_filename": "types_list.pickle",
         "q2name_filename": "wiki_eng_q_to_name_types.pickle",
-        "build_inverted_index": false,
-        "use_descriptions": false,
+        "use_hdt": false,
+        "wiki_parser": "#wiki_p",
         "use_prefix_tree": false
       },
       {
@@ -68,7 +67,7 @@
         "rels_to_leave": 40
       },
       {
-        "class_name": "query_generator",
+        "class_name": "query_generator_online",
         "id": "query_g",
         "linker_entities": "#linker_entities",
         "linker_types": "#linker_types",
@@ -168,19 +167,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/wiki_eng_files.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/sparql_queries.json",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.hdt",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.hdt.index.v1-1",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+        "subdir": "{MODELS_PATH}/wikidata_eng"
       }
     ]
   }
