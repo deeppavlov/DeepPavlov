@@ -124,4 +124,4 @@ class MultiTaskIterator:
                 x, y = [], []
             x_instances.append(x)
             y_instances.append(y)
-        return tuple(x_instances + y_instances)
+        return x_instances, y_instances

@@ -274,7 +274,7 @@ class MTBertSequenceTaggingTask:
             birnn_hidden_size: int = 128,
             freeze_embeddings: bool = False,
             keep_prob: float = 1.,
-            attention_probs_keep_probs: float = None,
+            attention_probs_keep_prob: float = None,
             encoder_dropout: float = 0.,
             return_probas: bool = None,
             encoder_layer_ids: List[int] = None,
@@ -290,7 +290,7 @@ class MTBertSequenceTaggingTask:
         self.birnn_hidden_size = birnn_hidden_size
         self.keep_prob = keep_prob
         self.freeze_embeddings = freeze_embeddings
-        self.attention_probs_keep_probs = attention_probs_keep_probs
+        self.attention_probs_keep_prob = attention_probs_keep_prob
         self.encoder_dropout = encoder_dropout
         self.return_probas = return_probas
         self.encoder_layer_ids = encoder_layer_ids
