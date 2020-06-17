@@ -142,12 +142,12 @@ class KBTree(KBBase):
 
         if fl_when_question:
             for triplet in triplets:
-                rel_id = triplet[0]
+                rel_id = triplet[1].split('/')[-1]
                 if rel_id in when_rels:
                     filtered_triplets.append(triplet)
         elif fl_where_question:
             for triplet in triplets:
-                rel_id = triplet[0]
+                rel_id = triplet[1].split('/')[-1]
                 if rel_id in where_rels:
                     filtered_triplets.append(triplet)
         else:
@@ -175,8 +175,8 @@ class KBTree(KBBase):
         for triplets, linking_confidence in zip(entity_triplets, entity_linking_confidences):
             for triplet in triplets:
                 scores = []
-                rel_id = triplet[0]
-                obj = triplet[1]
+                subject, relation, obj = triplet
+                rel_id = relation.split('/')[-1]
                 if rel_id in self._relations_mapping and triplet in filtered_triplets:
                     rel_name = self._relations_mapping[rel_id]["name"]
                     if rel_name == detected_rel:
@@ -213,14 +213,3 @@ class KBTree(KBBase):
             emb.append(self.ft_embedder._get_word_vector(tok))
         av_emb = np.asarray(emb).mean(axis=0)
         return av_emb
-
-    def extract_triplets_from_wiki(self, entity_ids: List[str]) -> List[List[List[str]]]:
-        entity_triplets = []
-        for entity_id in entity_ids:
-            if entity_id in self.wikidata and entity_id.startswith('Q'):
-                triplets_for_entity = self.wikidata[entity_id]
-                entity_triplets.append(triplets_for_entity)
-            else:
-                entity_triplets.append([])
-
-        return entity_triplets

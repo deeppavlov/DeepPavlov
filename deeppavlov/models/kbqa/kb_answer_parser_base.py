@@ -15,6 +15,9 @@
 from string import punctuation
 from typing import List, Tuple, Optional, Dict
 
+from hdt import HDTDocument
+
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.file import load_pickle
@@ -47,7 +50,6 @@ class KBBase(Component, Serializable):
         super().__init__(save_path=None, load_path=load_path)
         self._relations_filename = relations_maping_filename
         self.wiki_filename = wiki_filename
-        self.q2name_filename = q2name_filename
         self.q_to_name: Optional[Dict[str, Dict[str, str]]] = None
         self._relations_mapping: Optional[Dict[str, Dict[str, str]]] = None
         self.linker = linker
@@ -55,10 +57,10 @@ class KBBase(Component, Serializable):
         self.load()
 
     def load(self) -> None:
-        self.q_to_name = load_pickle(self.load_path / self.q2name_filename)
         if self._relations_filename is not None:
             self._relations_mapping = load_pickle(self.load_path / self._relations_filename)
-        self.wikidata = load_pickle(self.load_path / self.wiki_filename)
+        wiki_path = expand_path(self.wiki_filename)
+        self.wikidata = HDTDocument(str(wiki_path))
 
     def save(self) -> None:
         pass
@@ -86,14 +88,19 @@ class KBBase(Component, Serializable):
         for n, obj in enumerate(objects_batch):
             if len(obj) > 0:
                 if obj.startswith('Q'):
-                    if obj in self.q_to_name:
-                        parsed_object = self.q_to_name[obj]["name"]
+                    tr, c = self.wikidata.search_triples(f"http://www.wikidata.org/entity/{obj}", "http://schema.org/name", "")
+                    parsed_object = ""
+                    for triplet in tr:
+                        if triplet[2].endswith("@ru"):
+                            parsed_object = triplet[2].replace('@ru', '').replace('"', '')
+                            break
+                    if parsed_object:
                         parsed_objects.append(parsed_object)
                     else:
                         parsed_objects.append('Not Found')
                         confidences_batch[n] = 0.0
                 else:
-                    parsed_objects.append(obj)
+                    parsed_objects.append(obj.replace('@ru', '').replace('"', ''))
             else:
                 parsed_objects.append('Not Found')
                 confidences_batch[n] = 0.0
@@ -107,11 +114,22 @@ class KBBase(Component, Serializable):
         obj = ''
         confidence = 0.0
         for predicted_relation, rel_prob in zip(relations, relation_probs):
-            for entities, linking_confidence in zip(entity_triplets, entity_linking_confidences):
-                for rel_triplets in entities:
-                    relation_from_wiki = rel_triplets[0]
-                    if predicted_relation == relation_from_wiki:
-                        obj = rel_triplets[1]
+            predicted_relation = "description" if predicted_relation == "P0" else predicted_relation
+            for triplet_list, linking_confidence in zip(entity_triplets, entity_linking_confidences):
+                for triplet in triplet_list:
+                    subject, relation, obj = triplet
+                    if predicted_relation == relation.split('/')[-1]:
                         confidence = linking_confidence * rel_prob
-                        return obj, confidence
+                        return obj.split('/')[-1], confidence
         return obj, confidence
+
+    def extract_triplets_from_wiki(self, entity_ids: List[str]) -> List[List[List[str]]]:
+        entity_triplets = []
+        for entity_id in entity_ids:
+            if entity_id.startswith('Q'):
+                triplets_for_entity, c = self.wikidata.search_triples(f"http://www.wikidata.org/entity/{entity_id}", "", "")
+                entity_triplets.append(list(triplets_for_entity))
+            else:
+                entity_triplets.append([])
+
+        return entity_triplets

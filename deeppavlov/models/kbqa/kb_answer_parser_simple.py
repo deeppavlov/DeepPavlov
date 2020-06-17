@@ -59,7 +59,6 @@ class KBAnswerParserSimple(KBBase):
         self.return_confidences = return_confidences
         self.language = language
         self._relations_filename = relations_maping_filename
-        self._templates_filename = templates_filename
         super().__init__(relations_maping_filename=self._relations_filename, *args, **kwargs)
 
     def __call__(self, questions_batch: List[str],
@@ -80,9 +79,9 @@ class KBAnswerParserSimple(KBBase):
                 if self._templates_filename is not None:
                     entity_from_template, _, relations_from_template, _, query_type = self.template_matcher(question)
                 if entity_from_template:
-                    relation_from_template = relations_from_template[0][0]
-                    relation_title = self._relations_mapping[relation_from_template]["name"]
-                    log.debug("entity {}, relation {}".format(entity_from_template, relation_title))
+                    relations_from_template = relations_from_template[0]
+                    relation_titles = [self._relations_mapping[rel]["name"] for rel in relations_from_template]
+                    log.debug("entity {}, relations {}".format(entity_from_template, relation_titles))
                     entity_ids, entity_linking_confidences = self.linker(entity_from_template[0])
                     log.debug(f"entity_ids {entity_ids[:5]}")
                     entity_triplets = self.extract_triplets_from_wiki(entity_ids)
@@ -93,7 +92,7 @@ class KBAnswerParserSimple(KBBase):
                     relation_prob = 1.0
                     obj, confidence = self.match_triplet(entity_triplets,
                                                          entity_linking_confidences,
-                                                         [relation_from_template],
+                                                         relations_from_template,
                                                          [relation_prob])
                 else:
                     entity_from_ner = self.extract_entities(tokens, tags)
@@ -138,17 +137,6 @@ class KBAnswerParserSimple(KBBase):
         entity = ' '.join(entity)
 
         return entity
-
-    def extract_triplets_from_wiki(self, entity_ids: List[str]) -> List[List[List[str]]]:
-        entity_triplets = []
-        for entity_id in entity_ids:
-            if entity_id in self.wikidata and entity_id.startswith('Q'):
-                triplets_for_entity = self.wikidata[entity_id]
-                entity_triplets.append(triplets_for_entity)
-            else:
-                entity_triplets.append([])
-
-        return entity_triplets
 
     def filter_triplets_rus(self, entity_triplets: List[List[List[str]]], confidences: List[float],
                             question_tokens: List[str], srtd_cand_ent: List[Tuple[str]]) -> \
