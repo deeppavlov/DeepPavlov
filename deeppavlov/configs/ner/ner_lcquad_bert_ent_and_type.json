@@ -107,7 +107,7 @@
     "download": [
 
       {
-        "url": "http://files.deeppavlov.ai/kbqa/datasets/entity_detection_dataset.pickle",
+        "url": "http://files.deeppavlov.ai/kbqa/datasets/entity_and_type_detection.pickle",
         "subdir": "{MODELS_PATH}"
       },
       {
