@@ -1,0 +1,164 @@
+[
+	[
+		{
+			"speaker": 2,
+			"text": "Hello, welcome to the Cambridge restaurant system. You can ask for restaurants by area, price range or food type. How may I help you?",
+			"slots": [],
+			"act": "welcomemsg"
+		},
+		{
+			"speaker": 1,
+			"text": "cheap restaurant",
+			"slots": [
+				[
+					"pricerange",
+					"cheap"
+				]
+			]
+		},
+		{
+			"speaker": 2,
+			"text": "What kind of food would you like?",
+			"slots": [],
+			"act": "request_food"
+		},
+		{
+			"speaker": 1,
+			"text": "any",
+			"slots": [
+				[
+					"this",
+					"dontcare"
+				]
+			]
+		},
+		{
+			"speaker": 2,
+			"text": "What part of town do you have in mind?",
+			"slots": [],
+			"act": "request_area"
+		},
+		{
+			"speaker": 1,
+			"text": "south",
+			"slots": [
+				[
+					"area",
+					"south"
+				]
+			]
+		},
+		{
+			"speaker": 2,
+			"text": "Api_call area=\"south\" food=\"#food\" pricerange=\"cheap\"\tapi_call area=\"south\" food=\"#food\" pricerange=\"cheap\"",
+			"db_result": "{\"food\": \"chinese\", \"pricerange\": \"cheap\", \"area\": \"south\", \"postcode\": \"c.b 1, 7 d.y\", \"phone\": \"01223 244277\", \"addr\": \"cambridge leisure park clifton way cherry hinton\", \"name\": \"the lucky star\"}",
+			"slots": [
+				[
+					"area",
+					"south"
+				],
+				[
+					"pricerange",
+					"cheap"
+				],
+				[
+					"area",
+					"south"
+				],
+				[
+					"pricerange",
+					"cheap"
+				]
+			],
+			"act": "api_call"
+		},
+		{
+			"speaker": 2,
+			"text": "The lucky star is a nice place in the south of town serving tasty chinese food.",
+			"slots": [
+				[
+					"area",
+					"south"
+				],
+				[
+					"name",
+					"the lucky star"
+				],
+				[
+					"area",
+					"south"
+				],
+				[
+					"food",
+					"chinese"
+				]
+			],
+			"act": "inform_area+inform_food+offer_name"
+		},
+		{
+			"speaker": 1,
+			"text": "address",
+			"slots": [
+				[
+					"addr",
+					""
+				]
+			]
+		},
+		{
+			"speaker": 2,
+			"text": "Sure, the lucky star is on cambridge leisure park clifton way cherry hinton.",
+			"slots": [
+				[
+					"name",
+					"the lucky star"
+				],
+				[
+					"addr",
+					"cambridge leisure park clifton way cherry hinton"
+				]
+			],
+			"act": "inform_addr+offer_name"
+		},
+		{
+			"speaker": 1,
+			"text": "phone number",
+			"slots": [
+				[
+					"phone",
+					""
+				]
+			]
+		},
+		{
+			"speaker": 2,
+			"text": "The phone number of the lucky star is 01223 244277.\tThe phone number of the lucky star is dontcare.",
+			"slots": [
+				[
+					"name",
+					"the lucky star"
+				],
+				[
+					"phone",
+					"01223 244277"
+				],
+				[
+					"name",
+					"the lucky star"
+				]
+			],
+			"act": "inform_phone+offer_name"
+		},
+		{
+			"speaker": 1,
+			"text": "thank you good bye",
+			"slots": []
+		},
+		{
+			"speaker": 2,
+			"text": "You are welcome!",
+			"slots": [],
+			"act": "bye"
+		}
+	]
+]
