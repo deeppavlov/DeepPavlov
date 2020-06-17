@@ -117,7 +117,7 @@ class MultiTaskBert(LRScheduledTFModel):
                  launches_params: dict,
                  inference_launch_names: List[str] = None,
                  **kwargs) -> None:
-        super().__init__(learning_rate=shared_params.get('bert_learning_rate'), ,
+        super().__init__(learning_rate=shared_params.get('body_learning_rate'),
                          learning_rate_drop_div=shared_params['learning_rate_drop_div'],
                          learning_rate_drop_patience=shared_params['learning_rate_drop_patience'],
                          load_before_drop=shared_params['load_before_drop'],
@@ -198,16 +198,6 @@ class MultiTaskBert(LRScheduledTFModel):
                               token_type_ids=sph['token_types'],
                               use_one_hot_embeddings=False)
 
-    def get_bert_body_train_op(
-            self, loss: tf.Tensor, learning_rate: Union[tf.Tensor, float], **kwargs) -> tf.Operation:
-        assert "learnable_scopes" not in kwargs, "learnable scopes unsupported"
-        # train_op for bert variables
-        kwargs['learnable_scopes'] = ('bert/encoder', 'bert/embeddings')
-        if self.freeze_embeddings:
-            kwargs['learnable_scopes'] = ('bert/encoder',)
-        body_train_op = get_train_op(loss, self.body_learning_rate, **kwargs)
-        return body_train_op
-
     def save(self, exclude_scopes=('Optimizer',)) -> None:
         return super().save(exclude_scopes=exclude_scopes)
 
@@ -236,7 +226,7 @@ class MultiTaskBert(LRScheduledTFModel):
         for task in self.tasks.values():
             kw = {inp_name: kwargs[inp_name] for inp_name in task.input_names}
             # TODO: check if there is reason to use different bert body lr for different tasks in literature
-            task.train_on_batch(**kw, bert_body_learning_rate=max(self.get_learning_rate(), self.min_learning_rate))
+            task.train_on_batch(**kw, body_learning_rate=max(self.get_learning_rate(), self.min_learning_rate))
 
     def __call__(self, *args, launch_name=None, **kwargs):
         if launch_name is None:
@@ -379,14 +369,14 @@ class MTBertSequenceTaggingTask:
                                                                    logits=self.logits,
                                                                    weights=y_mask)
 
-    def get_train_op(self, loss: tf.Tensor, bert_body_learning_rate: Union[tf.Tensor, float], **kwargs) -> tf.Operation:
+    def get_train_op(self, loss: tf.Tensor, body_learning_rate: Union[tf.Tensor, float], **kwargs) -> tf.Operation:
         assert "learnable_scopes" not in kwargs, "learnable scopes unsupported"
         # train_op for bert variables
         kwargs['learnable_scopes'] = ('bert/encoder', 'bert/embeddings')
         if self.freeze_embeddings:
             kwargs['learnable_scopes'] = ('bert/encoder',)
-        learning_rate = bert_body_learning_rate * self.head_learning_rate_multiplier
-        bert_train_op = get_train_op(loss, bert_body_learning_rate, **kwargs)
+        learning_rate = body_learning_rate * self.head_learning_rate_multiplier
+        bert_train_op = get_train_op(loss, body_learning_rate, **kwargs)
         # train_op for ner head variables
         kwargs['learnable_scopes'] = (self.task_name,)
         head_train_op = get_train_op(loss, learning_rate, **kwargs)
