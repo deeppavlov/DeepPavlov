@@ -304,10 +304,10 @@ class MTBertSequenceTaggingTask:
                                          name='y_mask_ph')
 
     def _init_graph(self) -> None:
-        self._init_placeholders()
-        self.seq_lengths = tf.reduce_sum(self.y_masks_ph, axis=1)
-
         with tf.variable_scope(self.task_name):
+            self._init_placeholders()
+            self.seq_lengths = tf.reduce_sum(self.y_masks_ph, axis=1)
+
             layer_weights = tf.get_variable('layer_weights_',
                                             shape=len(self.encoder_layer_ids),
                                             initializer=tf.ones_initializer(),
@@ -349,15 +349,15 @@ class MTBertSequenceTaggingTask:
             self.y_predictions = tf.argmax(self.logits, -1)
             self.y_probas = tf.nn.softmax(self.logits, axis=2)
 
-        with tf.variable_scope("loss"):
-            tag_mask = self._get_tag_mask()
-            y_mask = tf.cast(tag_mask, tf.float32)
-            if self.use_crf:
-                self.loss = tf.reduce_mean(loss_tensor)
-            else:
-                self.loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_ph,
-                                                                   logits=self.logits,
-                                                                   weights=y_mask)
+            with tf.variable_scope("loss"):
+                tag_mask = self._get_tag_mask()
+                y_mask = tf.cast(tag_mask, tf.float32)
+                if self.use_crf:
+                    self.loss = tf.reduce_mean(loss_tensor)
+                else:
+                    self.loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_ph,
+                                                                       logits=self.logits,
+                                                                       weights=y_mask)
 
     def _get_tag_mask(self) -> tf.Tensor:
         """
@@ -625,7 +625,7 @@ class MTBertClassificationTask:
             self.y_ph = tf.placeholder(shape=(None, self.n_classes), dtype=tf.float32, name='y_ph')
 
     def _init_graph(self):
-        with tf.name_scope(self.task_name):
+        with tf.variable_scope(self.task_name):
             self._init_placeholders()
 
             output_layer = self.bert.get_pooled_output()
