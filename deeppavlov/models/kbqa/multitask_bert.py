@@ -422,29 +422,7 @@ class MTBertSequenceTaggingTask:
                     new_global_step = self.global_step + 1
                     self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
 
-    def _build_basic_feed_dict(self, input_ids: tf.Tensor, input_masks: tf.Tensor,
-                               token_types: Optional[tf.Tensor]=None, train: bool=False) -> dict:
-        """Fills the feed_dict with the tensors defined in the basic class.
-        You need to update this dict by the values of output placeholders
-        and class-specific network inputs in your derived class.
-        """
-        feed_dict = {
-            self.shared_ph['input_ids']: input_ids,
-            self.input_masks_ph: input_masks,
-        }
-        if token_types is not None:
-            feed_dict[self.token_types_ph] = token_types
-        if train:
-            feed_dict.update({
-                self.learning_rate_ph: max(self.get_learning_rate(), self.min_learning_rate),
-                self.keep_prob_ph: self.keep_prob,
-                self.encoder_keep_prob_ph: 1.0 - self.encoder_dropout,
-                self.is_train_ph: True,
-            })
-
-        return feed_dict
-
-    def _build_feed_dict(self, input_ids, input_masks, y_masks, token_types, y=None, bert_body_learning_rate=None):
+    def _build_feed_dict(self, input_ids, input_masks, y_masks, token_types, y=None, body_learning_rate=None):
         sph = self.shared_ph
         train = y is not None
         feed_dict = {
@@ -454,7 +432,7 @@ class MTBertSequenceTaggingTask:
         }
         if train:
             feed_dict.update({
-                sph['learning_rate']: max(bert_body_learning_rate, self.min_body_learning_rate),
+                sph['learning_rate']: max(body_learning_rate, self.min_body_learning_rate),
                 sph['keep_prob']: self.keep_prob,
                 sph['encoder_keep_prob']: 1.0 - self.encoder_dropout,
                 sph['is_train']: True,
@@ -482,7 +460,8 @@ class MTBertSequenceTaggingTask:
                        input_masks: Union[List[List[int]], np.ndarray],
                        y_masks: list,
                        y: list,
-                       bert_body_learning_rate: float) -> Dict[str, float]:
+                       bert_features_qr: List[InputFeatures],
+                       body_learning_rate: float) -> Dict[str, float]:
         """
 
         Args:
@@ -498,7 +477,10 @@ class MTBertSequenceTaggingTask:
         Returns:
             dict with fields 'loss', 'head_learning_rate', and 'bert_learning_rate'
         """
-        feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks, y)
+        token_types = [f.input_type_ids for f in bert_features_qr]
+
+        feed_dict = self._build_feed_dict(
+            input_ids, input_masks, y_masks, y, token_types, body_learning_rate=body_learning_rate)
 
         _, loss, lr = self.sess.run([self.train_op, self.loss, self.learning_rate_ph],
                                      feed_dict=feed_dict)
@@ -644,14 +626,14 @@ class MTBertClassificationTask:
                     self.loss = tf.reduce_mean(
                         tf.nn.sigmoid_cross_entropy_with_logits(labels=one_hot_labels, logits=logits))
 
-    def get_train_op(self, loss: tf.Tensor, bert_body_learning_rate: Union[tf.Tensor, float], **kwargs) -> tf.Operation:
+    def get_train_op(self, loss: tf.Tensor, body_learning_rate: Union[tf.Tensor, float], **kwargs) -> tf.Operation:
         assert "learnable_scopes" not in kwargs, "learnable scopes unsupported"
         # train_op for bert variables
         kwargs['learnable_scopes'] = ('bert/encoder', 'bert/embeddings')
         if self.freeze_embeddings:
             kwargs['learnable_scopes'] = ('bert/encoder',)
-        learning_rate = bert_body_learning_rate * self.head_learning_rate_multiplier
-        bert_train_op = get_train_op(loss, bert_body_learning_rate, **kwargs)
+        learning_rate = body_learning_rate * self.head_learning_rate_multiplier
+        bert_train_op = get_train_op(loss, body_learning_rate, **kwargs)
         # train_op for ner head variables
         kwargs['learnable_scopes'] = (self.task_name,)
         head_train_op = get_train_op(loss, learning_rate, **kwargs)
@@ -666,7 +648,7 @@ class MTBertClassificationTask:
                 if self.optimizer is None:
 
                     self.train_op = self.get_train_op(
-                        self.loss, bert_body_learning_rate=self.shared_ph.get('learning_rate'),
+                        self.loss, body_learning_rate=self.shared_ph.get('learning_rate'),
                         optimizer=AdamWeightDecayOptimizer,
                         weight_decay_rate=self.shared_params.get('weight_decay_rate', 0.01),  # FIXME: make default value specification more obvious
                         beta_1=0.9,
@@ -676,13 +658,13 @@ class MTBertClassificationTask:
                     )
                 else:
                     self.train_op = self.get_train_op(
-                        self.loss, bert_body_learning_rate=self.shared_ph.get('learning_rate'))
+                        self.loss, body_learning_rate=self.shared_ph.get('learning_rate'))
 
                 if self.optimizer is None:
                     new_global_step = self.global_step + 1
                     self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
 
-    def _build_feed_dict(self, input_ids, input_masks, token_types, y=None, bert_body_learning_rate=None):
+    def _build_feed_dict(self, input_ids, input_masks, token_types, y=None, body_learning_rate=None):
         sph = self.shared_ph
         feed_dict = {
             sph['input_ids_ph']: input_ids,
@@ -692,7 +674,7 @@ class MTBertClassificationTask:
         if y is not None:
             feed_dict.update({
                 self.y_ph: y,
-                sph['learning_rate']: max(bert_body_learning_rate, self.min_learning_rate),
+                sph['learning_rate']: max(body_learning_rate, self.min_learning_rate),
                 sph['keep_prob']: self.keep_prob,
                 sph['is_train']: True,
             })
@@ -703,7 +685,7 @@ class MTBertClassificationTask:
             self,
             features: List[InputFeatures],
             y: Union[List[int], List[List[int]]],
-            bert_body_learning_rate: float,
+            body_learning_rate: float,
     ) -> Dict:
         """Train model on given batch.
         This method calls train_op using features and y (labels).
@@ -720,7 +702,7 @@ class MTBertClassificationTask:
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
 
-        feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids, y, bert_body_learning_rate)
+        feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids, y, body_learning_rate)
 
         _, loss = self.sess.run([self.train_op, self.loss], feed_dict=feed_dict)
         return {'loss': loss, f'{self.task_name}_learning_rate': feed_dict[self.learning_rate_ph]}
