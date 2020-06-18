@@ -165,11 +165,12 @@ class MultiTaskBert(LRScheduledTFModel):
 
     def build_tasks(self):
         for launch_name, launch_params in self.launches_tasks.items():
-            for task_name, task_obj in launch_params.items():
+            for task_name, task_obj in launch_params['tasks'].items():
                 task_obj.build(
                     bert_body=self.bert,
                     shared_params=self.shared_params,
-                    shared_placeholders=self.shared_ph
+                    shared_placeholders=self.shared_ph,
+                    sess=self.sess
                 )
 
     def _init_shared_placeholders(self) -> None:
@@ -181,18 +182,19 @@ class MultiTaskBert(LRScheduledTFModel):
             'input_masks': tf.placeholder(shape=(None, None),
                                           dtype=tf.int32,
                                           name='token_mask_ph'),
-            'token_types': tf.placeholder_with_default(
-                tf.zeros_like(self.shared_ph['input_ids'], dtype=tf.int32),
-                shape=self.shared_ph['input_ids'].shape,
-                name='token_types_ph'),
             'learning_rate': tf.placeholder_with_default(0.0, shape=[], name='learning_rate_ph'),
             'keep_prob': tf.placeholder_with_default(1.0, shape=[], name='keep_prob_ph'),
             'encoder_keep_prob': tf.placeholder_with_default(1.0, shape=[], name='encoder_keep_prob_ph'),
             'is_train': tf.placeholder_with_default(False, shape=[], name='is_train_ph')}
+        self.shared_ph['token_types'] = tf.placeholder_with_default(
+                tf.zeros_like(self.shared_ph['input_ids'], dtype=tf.int32),
+                shape=self.shared_ph['input_ids'].shape,
+                name='token_types_ph')
+
+
 
     def _init_bert_body_graph(self) -> None:
         self._init_shared_placeholders()
-        self.seq_lengths = tf.reduce_sum(self.y_masks_ph, axis=1)
         sph = self.shared_ph
         self.bert = BertModel(config=self.bert_config,
                               is_training=sph['is_train'],
@@ -210,20 +212,6 @@ class MultiTaskBert(LRScheduledTFModel):
                              'momentum'),
              **kwargs) -> None:
         return super().load(exclude_scopes=exclude_scopes, **kwargs)
-
-    def _decode_crf(self, feed_dict: Dict[tf.Tensor, np.ndarray]) -> List[np.ndarray]:
-        logits, trans_params, mask, seq_lengths = self.sess.run([self.logits,
-                                                                 self._transition_params,
-                                                                 self.y_masks_ph,
-                                                                 self.seq_lengths],
-                                                                feed_dict=feed_dict)
-        # iterate over the sentences because no batching in viterbi_decode
-        y_pred = []
-        for logit, sequence_length in zip(logits, seq_lengths):
-            logit = logit[:int(sequence_length)]  # keep only the valid steps
-            viterbi_seq, viterbi_score = tf.contrib.crf.viterbi_decode(logit, trans_params)
-            y_pred += [viterbi_seq]
-        return y_pred
 
     def train_on_batch(self, *args, **kwargs) -> None:
         for task in self.tasks.values():
@@ -293,19 +281,18 @@ class MTBertSequenceTaggingTask:
 
         self.bert = None
         self.shared_params = None
-        self.shared_placeholders = None
+        self.shared_ph = None
         self.shared_feed_dict = None
         self.sess = None
 
-    def build(self, bert_body, shared_params, shared_placeholders, shared_feed_dict, sess):
+    def build(self, bert_body, shared_params, shared_placeholders, sess):
         self.bert = bert_body
         self.shared_params = shared_params
         self.head_learning_rate_multiplier = \
-            self.init_head_learning_rate / self.shared_params['bert_body_learning_rate']
+            self.init_head_learning_rate / self.shared_params['body_learning_rate']
         mblr = self.shared_params.get('min_body_learning_rate')
         self.min_body_learning_rate = 0. if mblr is None else mblr
-        self.shared_placeholders = shared_placeholders
-        self.shared_feed_dict = shared_feed_dict
+        self.shared_ph = shared_placeholders
         self.sess = sess
         self._init_graph()
         self._init_optimizer()
@@ -326,14 +313,14 @@ class MTBertSequenceTaggingTask:
                                             initializer=tf.ones_initializer(),
                                             trainable=True)
             layer_mask = tf.ones_like(layer_weights)
-            layer_mask = tf.nn.dropout(layer_mask, self.shared_placeholders['encoder_keep_prob'])
+            layer_mask = tf.nn.dropout(layer_mask, self.shared_ph['encoder_keep_prob'])
             layer_weights *= layer_mask
             # to prevent zero division
             mask_sum = tf.maximum(tf.reduce_sum(layer_mask), 1.0)
             layer_weights = tf.unstack(layer_weights / mask_sum)
             # TODO: may be stack and reduce_sum is faster
             units = sum(w * l for w, l in zip(layer_weights, self.encoder_layers()))
-            units = tf.nn.dropout(units, keep_prob=self.shared_placeholders['keep_prob'])
+            units = tf.nn.dropout(units, keep_prob=self.shared_ph['keep_prob'])
             if self.use_birnn:
                 units, _ = bi_rnn(units,
                                   self.birnn_hidden_size,
@@ -372,6 +359,22 @@ class MTBertSequenceTaggingTask:
                                                                    logits=self.logits,
                                                                    weights=y_mask)
 
+    def _get_tag_mask(self) -> tf.Tensor:
+        """
+        Returns: tag_mask,
+            a mask that selects positions corresponding to word tokens (not padding and `CLS`)
+        """
+        max_length = tf.reduce_max(self.seq_lengths)
+        one_hot_max_len = tf.one_hot(self.seq_lengths - 1, max_length)
+        tag_mask = tf.cumsum(one_hot_max_len[:, ::-1], axis=1)[:, ::-1]
+        return tag_mask
+
+    def encoder_layers(self):
+        """
+        Returns: the output of BERT layers specfied in ``self.encoder_layers_ids``
+        """
+        return [self.bert.all_encoder_layers[i] for i in self.encoder_layer_ids]
+
     def get_train_op(self, loss: tf.Tensor, body_learning_rate: Union[tf.Tensor, float], **kwargs) -> tf.Operation:
         assert "learnable_scopes" not in kwargs, "learnable scopes unsupported"
         # train_op for bert variables
@@ -394,7 +397,7 @@ class MTBertSequenceTaggingTask:
                                                trainable=False)  # TODO: check this global step is not used in other subtasks
             # default optimizer for Bert is Adam with fixed L2 regularization
 
-        if self.optimizer is None:
+        if self.shared_params.get('optimizer') is None:
             self.train_op = \
                 self.get_train_op(
                     self.loss,
@@ -410,10 +413,10 @@ class MTBertSequenceTaggingTask:
                                                "bias"])
         else:
             self.train_op = self.get_train_op(self.loss,
-                                              learning_rate=self.shared_ph['learning_rate'],
+                                              body_learning_rate=self.shared_ph['learning_rate'],
                                               optimizer_scope_name='Optimizer')
 
-        if self.optimizer is None:
+        if self.shared_params.get('optimizer') is None:
             with tf.variable_scope('Optimizer'):
                 new_global_step = self.global_step + 1
                 self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
@@ -441,7 +444,7 @@ class MTBertSequenceTaggingTask:
         return feed_dict
 
     def _build_feed_dict(self, input_ids, input_masks, y_masks, token_types, y=None, bert_body_learning_rate=None):
-        sph = self.shared_placeholders
+        sph = self.shared_ph
         train = y is not None
         feed_dict = {
             sph['input_ids']: input_ids,
@@ -593,7 +596,7 @@ class MTBertClassificationTask:
 
         self.bert = None
         self.shared_params = None
-        self.shared_placeholders = None
+        self.shared_ph = None
         self.shared_feed_dict = None
         self.sess = None
 
@@ -603,15 +606,14 @@ class MTBertClassificationTask:
         if self.multilabel and not self.return_probas:
             raise RuntimeError('Set return_probas to True for multilabel classification!')
 
-    def build(self, bert_body, shared_params, shared_placeholders, shared_feed_dict, sess):
+    def build(self, bert_body, shared_params, shared_placeholders, sess):
         self.bert = bert_body
         self.shared_params = shared_params
         self.head_learning_rate_multiplier = \
-            self.init_head_learning_rate / self.shared_params['bert_body_learning_rate']
+            self.init_head_learning_rate / self.shared_params['body_learning_rate']
         mblr = self.shared_params.get('min_body_learning_rate')
         self.min_body_learning_rate = 0. if mblr is None else mblr
-        self.shared_placeholders = shared_placeholders
-        self.shared_feed_dict = shared_feed_dict
+        self.shared_ph = shared_placeholders
         self.sess = sess
         self._init_graph()
         self._init_optimizer()
@@ -623,38 +625,39 @@ class MTBertClassificationTask:
             self.y_ph = tf.placeholder(shape=(None, self.n_classes), dtype=tf.float32, name='y_ph')
 
     def _init_graph(self):
-        self._init_placeholders()
+        with tf.name_scope(self.task_name):
+            self._init_placeholders()
 
-        output_layer = self.bert.get_pooled_output()
-        hidden_size = output_layer.shape[-1].value
+            output_layer = self.bert.get_pooled_output()
+            hidden_size = output_layer.shape[-1].value
 
-        output_weights = tf.get_variable(
-            "output_weights", [self.n_classes, hidden_size],
-            initializer=tf.truncated_normal_initializer(stddev=0.02))
+            output_weights = tf.get_variable(
+                "output_weights", [self.n_classes, hidden_size],
+                initializer=tf.truncated_normal_initializer(stddev=0.02))
 
-        output_bias = tf.get_variable(
-            "output_bias", [self.n_classes], initializer=tf.zeros_initializer())
+            output_bias = tf.get_variable(
+                "output_bias", [self.n_classes], initializer=tf.zeros_initializer())
 
-        with tf.variable_scope("loss"):
-            output_layer = tf.nn.dropout(output_layer, keep_prob=self.keep_prob_ph)
-            logits = tf.matmul(output_layer, output_weights, transpose_b=True)
-            logits = tf.nn.bias_add(logits, output_bias)
+            with tf.variable_scope("loss"):
+                output_layer = tf.nn.dropout(output_layer, keep_prob=self.shared_ph['keep_prob'])
+                logits = tf.matmul(output_layer, output_weights, transpose_b=True)
+                logits = tf.nn.bias_add(logits, output_bias)
 
-            if self.one_hot_labels:
-                one_hot_labels = self.y_ph
-            else:
-                one_hot_labels = tf.one_hot(self.y_ph, depth=self.n_classes, dtype=tf.float32)
+                if self.one_hot_labels:
+                    one_hot_labels = self.y_ph
+                else:
+                    one_hot_labels = tf.one_hot(self.y_ph, depth=self.n_classes, dtype=tf.float32)
 
-            self.y_predictions = tf.argmax(logits, axis=-1)
-            if not self.multilabel:
-                log_probs = tf.nn.log_softmax(logits, axis=-1)
-                self.y_probas = tf.nn.softmax(logits, axis=-1)
-                per_example_loss = -tf.reduce_sum(one_hot_labels * log_probs, axis=-1)
-                self.loss = tf.reduce_mean(per_example_loss)
-            else:
-                self.y_probas = tf.nn.sigmoid(logits)
-                self.loss = tf.reduce_mean(
-                    tf.nn.sigmoid_cross_entropy_with_logits(labels=one_hot_labels, logits=logits))
+                self.y_predictions = tf.argmax(logits, axis=-1)
+                if not self.multilabel:
+                    log_probs = tf.nn.log_softmax(logits, axis=-1)
+                    self.y_probas = tf.nn.softmax(logits, axis=-1)
+                    per_example_loss = -tf.reduce_sum(one_hot_labels * log_probs, axis=-1)
+                    self.loss = tf.reduce_mean(per_example_loss)
+                else:
+                    self.y_probas = tf.nn.sigmoid(logits)
+                    self.loss = tf.reduce_mean(
+                        tf.nn.sigmoid_cross_entropy_with_logits(labels=one_hot_labels, logits=logits))
 
     def get_train_op(self, loss: tf.Tensor, bert_body_learning_rate: Union[tf.Tensor, float], **kwargs) -> tf.Operation:
         assert "learnable_scopes" not in kwargs, "learnable scopes unsupported"
@@ -697,7 +700,7 @@ class MTBertClassificationTask:
                 self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
 
     def _build_feed_dict(self, input_ids, input_masks, token_types, y=None, bert_body_learning_rate=None):
-        sph = self.shared_placeholders
+        sph = self.shared_ph
         feed_dict = {
             sph['input_ids_ph']: input_ids,
             sph['input_masks']: input_masks,
