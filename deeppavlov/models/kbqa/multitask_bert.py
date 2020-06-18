@@ -539,24 +539,6 @@ class MTBertSequenceTaggingTask:
                 pred = [p[:l] for l, p in zip(seq_lengths, pred)]
         return pred
 
-    # def __call__(self,
-    #              input_ids: Union[List[List[int]], np.ndarray],
-    #              input_masks: Union[List[List[int]], np.ndarray],
-    #              y_masks: Union[List[List[int]], np.ndarray],
-    #              bert_features_qr: List[InputFeatures]) -> Union[List[List[int]], List[np.ndarray]]:
-    #     input_type_ids = [f.input_type_ids for f in bert_features_qr]
-    #     feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks, input_type_ids)
-    #
-    #     if self.return_probas:
-    #         pred = self.sess.run(self.y_probas, feed_dict=feed_dict)
-    #     else:
-    #         if self.use_crf:
-    #             pred = self._decode_crf(feed_dict)
-    #         else:
-    #             pred, seq_lengths = self.sess.run([self.y_predictions, self.seq_lengths], feed_dict=feed_dict)
-    #             pred = [p[:l] for l, p in zip(seq_lengths, pred)]
-    #     return pred
-
     def __call__(self,
                  input_ids: Union[List[List[int]], np.ndarray],
                  input_masks: Union[List[List[int]], np.ndarray],
@@ -579,6 +561,7 @@ class MTBertClassificationTask:
             multilabel: bool = False,
             learning_rate: float = 2e-5,
             optimizer: str = "Adam",
+            freeze_embeddings: bool = False,
             in_names: List[str] = None,
             in_y_names: List[str] = None,
     ):
@@ -592,6 +575,7 @@ class MTBertClassificationTask:
         self.head_learning_rate_multiplier = None
         self.min_body_learning_rate = None
         self.optimizer = optimizer
+        self.freeze_embeddings = freeze_embeddings
         self.in_names = in_names
         self.in_y_names = in_y_names
 
