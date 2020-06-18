@@ -389,37 +389,38 @@ class MTBertSequenceTaggingTask:
         return tf.group(bert_train_op, head_train_op)
 
     def _init_optimizer(self) -> None:
-        with tf.variable_scope('Optimizer'):
-            self.global_step = tf.get_variable('global_step',
-                                               shape=[],
-                                               dtype=tf.int32,
-                                               initializer=tf.constant_initializer(0),
-                                               trainable=False)  # TODO: check this global step is not used in other subtasks
-            # default optimizer for Bert is Adam with fixed L2 regularization
-
-        if self.shared_params.get('optimizer') is None:
-            self.train_op = \
-                self.get_train_op(
-                    self.loss,
-                    learning_rate=self.shared_ph['learning_rate'],
-                    optimizer=AdamWeightDecayOptimizer,
-                    weight_decay_rate=self.shared_params.get('weight_decay_rate', 1e-6),
-                    beta_1=0.9,
-                    beta_2=0.999,
-                    epsilon=1e-6,
-                    optimizer_scope_name='Optimizer',
-                    exclude_from_weight_decay=["LayerNorm",
-                                               "layer_norm",
-                                               "bias"])
-        else:
-            self.train_op = self.get_train_op(self.loss,
-                                              body_learning_rate=self.shared_ph['learning_rate'],
-                                              optimizer_scope_name='Optimizer')
-
-        if self.shared_params.get('optimizer') is None:
+        with tf.variable_scope(self.task_name):
             with tf.variable_scope('Optimizer'):
-                new_global_step = self.global_step + 1
-                self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
+                self.global_step = tf.get_variable('global_step',
+                                                   shape=[],
+                                                   dtype=tf.int32,
+                                                   initializer=tf.constant_initializer(0),
+                                                   trainable=False)  # TODO: check this global step is not used in other subtasks
+                # default optimizer for Bert is Adam with fixed L2 regularization
+
+            if self.shared_params.get('optimizer') is None:
+                self.train_op = \
+                    self.get_train_op(
+                        self.loss,
+                        learning_rate=self.shared_ph['learning_rate'],
+                        optimizer=AdamWeightDecayOptimizer,
+                        weight_decay_rate=self.shared_params.get('weight_decay_rate', 1e-6),
+                        beta_1=0.9,
+                        beta_2=0.999,
+                        epsilon=1e-6,
+                        optimizer_scope_name='Optimizer',
+                        exclude_from_weight_decay=["LayerNorm",
+                                                   "layer_norm",
+                                                   "bias"])
+            else:
+                self.train_op = self.get_train_op(self.loss,
+                                                  body_learning_rate=self.shared_ph['learning_rate'],
+                                                  optimizer_scope_name='Optimizer')
+
+            if self.shared_params.get('optimizer') is None:
+                with tf.variable_scope('Optimizer'):
+                    new_global_step = self.global_step + 1
+                    self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
 
     def _build_basic_feed_dict(self, input_ids: tf.Tensor, input_masks: tf.Tensor,
                                token_types: Optional[tf.Tensor]=None, train: bool=False) -> dict:
@@ -677,27 +678,28 @@ class MTBertClassificationTask:
         return tf.group(bert_train_op, head_train_op)
 
     def _init_optimizer(self):
-        with tf.variable_scope('Optimizer'):
-            self.global_step = tf.get_variable('global_step', shape=[], dtype=tf.int32,
-                                               initializer=tf.constant_initializer(0), trainable=False)
-            # default optimizer for Bert is Adam with fixed L2 regularization
-            if self.optimizer is None:
+        with tf.variable_scope(self.task_name):
+            with tf.variable_scope('Optimizer'):
+                self.global_step = tf.get_variable('global_step', shape=[], dtype=tf.int32,
+                                                   initializer=tf.constant_initializer(0), trainable=False)
+                # default optimizer for Bert is Adam with fixed L2 regularization
+                if self.optimizer is None:
 
-                self.train_op = self.get_train_op(
-                    self.loss, bert_body_learning_rate=self.learning_rate_ph,
-                    optimizer=AdamWeightDecayOptimizer,
-                    weight_decay_rate=self.shared_params.get('weight_decay_rate', 0.01),  # FIXME: make default value specification more obvious
-                    beta_1=0.9,
-                    beta_2=0.999,
-                    epsilon=1e-6,
-                    exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"]
-                )
-            else:
-                self.train_op = self.get_train_op(self.loss, bert_body_learning_rate=self.learning_rate_ph)
+                    self.train_op = self.get_train_op(
+                        self.loss, bert_body_learning_rate=self.learning_rate_ph,
+                        optimizer=AdamWeightDecayOptimizer,
+                        weight_decay_rate=self.shared_params.get('weight_decay_rate', 0.01),  # FIXME: make default value specification more obvious
+                        beta_1=0.9,
+                        beta_2=0.999,
+                        epsilon=1e-6,
+                        exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"]
+                    )
+                else:
+                    self.train_op = self.get_train_op(self.loss, bert_body_learning_rate=self.learning_rate_ph)
 
-            if self.optimizer is None:
-                new_global_step = self.global_step + 1
-                self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
+                if self.optimizer is None:
+                    new_global_step = self.global_step + 1
+                    self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
 
     def _build_feed_dict(self, input_ids, input_masks, token_types, y=None, bert_body_learning_rate=None):
         sph = self.shared_ph
