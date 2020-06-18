@@ -117,11 +117,13 @@ class MultiTaskBert(LRScheduledTFModel):
                  launches_params: dict,
                  inference_launch_names: List[str] = None,
                  **kwargs) -> None:
+        # TODO: check what default values for super().__init__() are needed.
         super().__init__(learning_rate=shared_params.get('body_learning_rate'),
-                         learning_rate_drop_div=shared_params['learning_rate_drop_div'],
-                         learning_rate_drop_patience=shared_params['learning_rate_drop_patience'],
-                         load_before_drop=shared_params['load_before_drop'],
-                         clip_norm=shared_params['clip_norm'],
+                         learning_rate_drop_div=shared_params.get('learning_rate_drop_div'),
+                         learning_rate_drop_patience=shared_params.get('learning_rate_drop_patience'),
+                         load_before_drop=shared_params.get('load_before_drop'),
+                         clip_norm=shared_params.get('clip_norm'),
+                         save_path=shared_params.get('save_path'),
                          **kwargs)
         self.shared_params = shared_params
         self.launches_tasks = launches_params
