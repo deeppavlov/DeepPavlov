@@ -179,9 +179,10 @@ class MultiTaskBert(LRScheduledTFModel):
             'input_masks': tf.placeholder(shape=(None, None),
                                           dtype=tf.int32,
                                           name='token_mask_ph'),
-            'token_types': tf.placeholder_with_default(tf.zeros_like(self.input_ids_ph, dtype=tf.int32),
-                                                       shape=self.input_ids_ph.shape,
-                                                       name='token_types_ph'),
+            'token_types': tf.placeholder_with_default(
+                tf.zeros_like(self.shared_ph['input_ids'], dtype=tf.int32),
+                shape=self.shared_ph['input_ids'].shape,
+                name='token_types_ph'),
             'learning_rate': tf.placeholder_with_default(0.0, shape=[], name='learning_rate_ph'),
             'keep_prob': tf.placeholder_with_default(1.0, shape=[], name='keep_prob_ph'),
             'encoder_keep_prob': tf.placeholder_with_default(1.0, shape=[], name='encoder_keep_prob_ph'),
@@ -422,7 +423,7 @@ class MTBertSequenceTaggingTask:
         and class-specific network inputs in your derived class.
         """
         feed_dict = {
-            self.input_ids_ph: input_ids,
+            self.shared_ph['input_ids']: input_ids,
             self.input_masks_ph: input_masks,
         }
         if token_types is not None:
