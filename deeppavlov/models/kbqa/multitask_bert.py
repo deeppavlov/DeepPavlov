@@ -651,14 +651,10 @@ class MTBertClassificationTask:
         if self.freeze_embeddings:
             kwargs['learnable_scopes'] = ('bert/encoder',)
         learning_rate = bert_body_learning_rate * self.head_learning_rate_multiplier
-        bert_train_op = super().get_train_op(loss,
-                                             bert_body_learning_rate,
-                                             **kwargs)
+        bert_train_op = get_train_op(loss, bert_body_learning_rate, **kwargs)
         # train_op for ner head variables
         kwargs['learnable_scopes'] = (self.task_name,)
-        head_train_op = super().get_train_op(loss,
-                                             learning_rate,
-                                             **kwargs)
+        head_train_op = get_train_op(loss, learning_rate, **kwargs)
         return tf.group(bert_train_op, head_train_op)
 
     def _init_optimizer(self):
@@ -670,7 +666,7 @@ class MTBertClassificationTask:
                 if self.optimizer is None:
 
                     self.train_op = self.get_train_op(
-                        self.loss, bert_body_learning_rate=self.learning_rate_ph,
+                        self.loss, bert_body_learning_rate=self.shared_ph.get('learning_rate'),
                         optimizer=AdamWeightDecayOptimizer,
                         weight_decay_rate=self.shared_params.get('weight_decay_rate', 0.01),  # FIXME: make default value specification more obvious
                         beta_1=0.9,
@@ -679,7 +675,8 @@ class MTBertClassificationTask:
                         exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"]
                     )
                 else:
-                    self.train_op = self.get_train_op(self.loss, bert_body_learning_rate=self.learning_rate_ph)
+                    self.train_op = self.get_train_op(
+                        self.loss, bert_body_learning_rate=self.shared_ph.get('learning_rate'))
 
                 if self.optimizer is None:
                     new_global_step = self.global_step + 1
