@@ -104,13 +104,16 @@ class MultiTaskIterator:
             task: self.task_iterators[task].gen_batches(bs, data_type, shuffle) 
             for task, bs in self.batch_sizes_by_task.items()}
         while True:
-            batch = {}
+            x_intances, y_intances = [], []
             try:
                 for task, gen in batch_generators.items():
-                    batch[task] = next(gen)
+                    x, y = next(gen)
+                    log.debug(f"{task} x, y: {x}, {y}")
+                    x_intances.append(x)
+                    y_intances.append(y)
             except StopIteration:
                 break
-            yield batch
+            yield (x_intances, y_intances)
 
     def get_instances(self, data_type: str = 'train'):
         x_instances = []

@@ -144,7 +144,7 @@ class MultiTaskBert(LRScheduledTFModel):
         self.sess = tf.Session(config=self.sess_config)
 
         self._init_bert_body_graph()
-        self.tasks = self.build_tasks()
+        self.build_tasks()
 
         self.sess.run(tf.global_variables_initializer())
 
@@ -157,8 +157,8 @@ class MultiTaskBert(LRScheduledTFModel):
                 # Exclude optimizer and classification variables from saved variables
                 task_names = []
                 for launch_params in self.launches_tasks.values():
-                    for task_name in launch_params['tasks'].keys():
-                        task_names.append(task_name)
+                    for task_obj in launch_params['tasks'].values():
+                        task_names.append(task_obj.task_name)
                 var_list = self._get_saveable_variables(
                     exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'ner') + tuple(task_names))
                 saver = tf.train.Saver(var_list)
