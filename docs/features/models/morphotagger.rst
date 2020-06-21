@@ -67,7 +67,7 @@ Before using the model make sure that all required packages are installed using 
 
     python -m deeppavlov install morpho_ru_syntagrus_pymorphy
 
-For Windows platform one have to set `KERAS_BACKEND` to `tensorflow` (it could be done only once):
+For Windows platform one has to set `KERAS_BACKEND` to `tensorflow` (it could be done only once):
 
 .. code:: bash
 
