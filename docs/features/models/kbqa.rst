@@ -173,10 +173,11 @@ The dataset for path ranking is similar to the dataset for relation ranking. If 
        <value name="class">1</value>
     </paraphrase>
 
-Adding of new templates of SPARQL queries
+Adding new SPARQL queries templates
 -----------------------------------------
 Templates can be added to sparql_queries.json file, which is a dictionary, where keys are template numbers, and values are templates with additional information.
 An example of a template:
+
 {"query_template": "SELECT ?obj WHERE { wd:E1 p:R1 ?s . ?s ps:R1 ?obj . ?s ?p ?x filter(contains(?x, N)) }",
  "property_types": {"?p": "qualifier"},
  "rank_rels": ["wiki", "do_not_rank", "do_not_rank"],
@@ -189,6 +190,7 @@ An example of a template:
  "template_num": "0",
  "exact_entity_type_match": false,
  "alternative_templates": []}
+
 * "query_template" is the template of the SPARQL query
 * "property_types" defines the types of unknown relations in the template
 * "rank_rels" is a list which defines whether to rank relations, in this example "p:R1" relations we extract from Wikidata for "wd:E1" entities and rank with RelRanker, "ps:R1" and "?p" relations we do not extract and rank

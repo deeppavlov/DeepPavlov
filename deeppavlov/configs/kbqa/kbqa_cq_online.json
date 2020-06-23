@@ -22,7 +22,8 @@
       },
       {
         "class_name": "wiki_parser_online",
-        "id": "wiki_p"
+        "id": "wiki_p",
+        "url": "https://query.wikidata.org/sparql"
       },
       {
         "class_name": "template_matcher",

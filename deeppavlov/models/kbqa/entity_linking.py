@@ -13,13 +13,13 @@
 # limitations under the License.
 
 import re
+import sqlite3
 from logging import getLogger
 from typing import List, Dict, Tuple, Optional, Any
 from collections import defaultdict
 
 import nltk
 import pymorphy2
-import sqlite3
 from nltk.corpus import stopwords
 from rapidfuzz import fuzz
 from hdt import HDTDocument

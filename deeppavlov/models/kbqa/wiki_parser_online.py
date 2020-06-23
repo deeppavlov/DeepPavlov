@@ -12,39 +12,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 from logging import getLogger
 from typing import List, Tuple, Dict
 
-import requests
+from SPARQLWrapper import SPARQLWrapper, JSON
 
 from deeppavlov.core.common.registry import register
 
 log = getLogger(__name__)
 
 
-def get_answer(query: str) -> List[Dict[str, Dict[str, str]]]:
-    url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql'
-    data = []
-    for i in range(5):
-        try:
-            data_0 = requests.get(url, params={'query': query, 'format': 'json'},  timeout=0.5).json()
-            if "results" in data_0.keys():
-                data = data_0['results']['bindings']
-            elif "boolean" in data_0.keys():
-                data = data_0['boolean']
-            break
-        except:
-            pass
-
-    return data
-
-
 @register('wiki_parser_online')
 class WikiParserOnline:
     """This class extract relations or labels from Wikidata query service"""
 
-    def __init__(self, **kwargs) -> None:
-        pass
+    def __init__(self, url: str, **kwargs) -> None:
+        self.url = url
+        user_agent = "WDQS-example Python/%s.%s" % (sys.version_info[0], sys.version_info[1])
+        self.sparql = SPARQLWrapper(self.url, agent=user_agent)
+
+    def get_answer(self, query: str) -> List[Dict[str, Dict[str, str]]]:
+        data = []
+        try:
+            self.sparql.setQuery(query)
+            self.sparql.setReturnFormat(JSON)
+            data_0 = self.sparql.query().convert()
+            if "results" in data_0.keys():
+                data = data_0['results']['bindings']
+            elif "boolean" in data_0.keys():
+                data = data_0['boolean']
+        except:
+            pass
+
+        return data
 
     def find_label(self, entity: str) -> str:
         entity = str(entity).replace('"', '')
@@ -52,7 +53,7 @@ class WikiParserOnline:
             entity = entity.split('/')[-1]
         if entity.startswith("Q"):
             query = f"SELECT DISTINCT ?label WHERE {{ wd:{entity} rdfs:label ?label . FILTER (lang(?label) = 'en') }}"
-            labels = get_answer(query)
+            labels = self.get_answer(query)
             if labels:
                 labels = [label["label"]["value"] for label in labels]
                 return labels[0]
@@ -66,7 +67,7 @@ class WikiParserOnline:
             query = f"SELECT DISTINCT ?rel WHERE {{ wd:{entity} ?rel ?obj . }}"
         else:
             query = f"SELECT DISTINCT ?rel WHERE {{ ?subj ?rel wd:{entity} . }}"
-        rels = get_answer(query)
+        rels = self.get_answer(query)
         if rels:
             rels = [rel["rel"]["value"] for rel in rels]
 

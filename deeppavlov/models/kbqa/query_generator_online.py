@@ -21,7 +21,7 @@ from collections import namedtuple
 import nltk
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.kbqa.wiki_parser_online import WikiParserOnline, get_answer
+from deeppavlov.models.kbqa.wiki_parser_online import WikiParserOnline
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
 from deeppavlov.models.kbqa.rel_ranking_bert_infer import RelRankerBertInfer
 from deeppavlov.models.kbqa.utils import \
@@ -160,7 +160,7 @@ class QueryGeneratorOnline(QueryGeneratorBase):
             for combs in itertools.product(entity_combs, type_combs, rel_combs):
                 filled_query, filter_rels = fill_online_query(query, combs[0], combs[1], combs[2], fill_rel_variables,
                                                               filter_rel_variables, rels_list_for_filter)
-                candidate_output = get_answer(filled_query)
+                candidate_output = self.wiki_parser.get_answer(filled_query)
                 
                 out_vars = filter_rels + rels_from_query + answer_ent
                 candidate_output = [output for output in candidate_output
