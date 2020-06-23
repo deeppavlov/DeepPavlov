@@ -23,26 +23,25 @@
   "dataset_iterator": {
     "class_name": "multitask_iterator",
     "tasks": {
-      "ner_lcquad": {
-        "iterator_class_name": "data_learning_iterator",
-        "batch_size": 16
-      },
-      "query_prediction": {
-        "iterator_class_name": "basic_classification_iterator",
-        "batch_size": 64
-      },
+      "ner_lcquad": {"iterator_class_name": "data_learning_iterator"},
+      "query_prediction": {"iterator_class_name": "basic_classification_iterator"},
       "rel_ranking": {
         "iterator_class_name": "siamese_iterator",
         "seed": 243,
-        "len_valid": 500,
-        "batch_size": 32
+        "len_valid": 500
       }
     }
   },
   "chainer": {
-    "in": ["x_ner", "x_qr", "text_a", "text_b"],
+    "in": ["x_ner", "x_qr", "texts_a_b"],
     "in_y": ["y_ner", "y_qr", "y_rr"],
     "pipe": [
+      {
+        "class_name": "input_splitter",
+        "keys_to_extract": [0, 1],
+        "in": ["texts_a_b"],
+        "out": ["text_a", "text_b"]
+      },
       {                                                                                                                
         "class_name": "bert_ner_preprocessor",                                                                         
         "vocab_file": "{BERT_PATH}/vocab.txt",                                                                         

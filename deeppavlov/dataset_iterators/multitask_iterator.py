@@ -23,6 +23,10 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
+
+from deeppavlov.debug_helpers import recursive_shape  # FIXME: remove debug import
+
+
 log = getLogger(__name__)
 
 
@@ -57,13 +61,10 @@ class MultiTaskIterator:
         self.data = data
         self.task_iterators_params = tasks
         self.task_iterators = {}
-        self.batch_sizes_by_task = {}
         for task_name, task_iterator_params in self.task_iterators_params.items():
             task_iterator_params = copy.deepcopy(task_iterator_params)
             task_iterator_params['class_name'] = task_iterator_params['iterator_class_name']
             del task_iterator_params['iterator_class_name']
-            self.batch_sizes_by_task[task_name] = task_iterator_params['batch_size']
-            del task_iterator_params['batch_size']
             self.task_iterators[task_name] = from_params(task_iterator_params, data=data[task_name])
             log.debug(f"self.task_iterators[{task_name}]: {self.task_iterators[task_name]}")
             log.debug(f"self.task_iterators['{task_name}'].train length: {len(self.task_iterators[task_name].train)}")
@@ -97,23 +98,25 @@ class MultiTaskIterator:
                     united[task] = united[task] + data
         return united
 
-    # TODO: kostyl. parameter batch_size is not used.
     def gen_batches(self, batch_size: int, data_type: str = 'train',
-                    shuffle: bool = None) -> Iterator[Dict[str, Tuple[tuple, tuple]]]:
+                    shuffle: bool = None) -> Iterator[Tuple[tuple, tuple]]:
         batch_generators = {
-            task: self.task_iterators[task].gen_batches(bs, data_type, shuffle) 
-            for task, bs in self.batch_sizes_by_task.items()}
+            task: iter_.gen_batches(batch_size, data_type, shuffle) 
+            for task, iter_ in self.task_iterators.items()}          
         while True:
-            x_intances, y_intances = [], []
+            x_instances, y_instances = [], []
             try:
                 for task, gen in batch_generators.items():
                     x, y = next(gen)
                     log.debug(f"{task} x, y: {x}, {y}")
-                    x_intances.append(x)
-                    y_intances.append(y)
+                    log.debug(f"{task} x.shape, y.shape: {recursive_shape(x)}, {recursive_shape(y)}")
+                    x_instances.append(x)
+                    y_instances.append(y)
             except StopIteration:
                 break
-            yield (x_intances, y_intances)
+            b = (tuple(zip(*x_instances)), tuple(zip(*y_instances)))
+            log.debug(f"batch shape: {recursive_shape(b)}")
+            yield b
 
     def get_instances(self, data_type: str = 'train'):
         x_instances = []
