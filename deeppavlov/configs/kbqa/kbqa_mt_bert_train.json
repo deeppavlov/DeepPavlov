@@ -127,7 +127,7 @@
                 "n_tags": "#tag_vocab.len",
                 "use_crf": false,
                 "keep_prob": 0.1,
-                "return_probas": true,
+                "return_probas": false,
                 "encoder_layer_ids": [-1],
                 "learning_rate": 1e-3,
                 "in_names": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask", "bert_features_qr"],
@@ -137,7 +137,7 @@
                 "class_name": "mt_bert_classification_task",
                 "task_name": "qr_prediction",
                 "n_classes": "#classes_vocab.len",
-                "return_probas": true,
+                "return_probas": false,
                 "one_hot_labels": true,
                 "keep_prob": 0.5,
                 "learning_rate": 1e-05,
@@ -174,13 +174,18 @@
           "y_onehot": "y_onehot",
           "y_rr": "y_rr"
         },
-        "out": ["y_pred_ind", "y_pred_probas", "predictions"]
+        "out": ["ner_ids", "y_pred_probas", "predictions"]
+      },
+      {                                                                                                                
+        "in": "ner_ids",                                                                                            
+        "out": "ner_labels",                                                                                        
+        "ref": "tag_vocab"
       },
       {                                                                                                                
         "in": "y_pred_probas",                                                                                         
-        "out": "y_pred_ids",                                                                                           
-        "class_name": "proba2labels",                                                                                  
-        "max_proba": true                                                                                              
+        "out": "y_pred_ids",
+        "max_proba": true,
+        "class_name": "proba2labels"                                                                                              
       },                                                                                                               
       {                                                                                                                
         "in": "y_pred_ids",                                                                                            
@@ -188,7 +193,7 @@
         "ref": "classes_vocab"                                                                                         
       }
     ],
-    "out": ["y_pred_ind", "y_pred_ids", "predictions"]
+    "out": ["ner_labels", "y_pred_ids", "predictions"]
   },
   "train": {
     "epochs": 30,
@@ -196,11 +201,11 @@
     "metrics": [
       {
         "name": "ner_f1",
-        "inputs": ["y_ner", "y_pred_ind"]
+        "inputs": ["y_ner", "ner_labels"]
       },
       {
         "name": "ner_token_f1",
-        "inputs": ["y_ner", "y_pred_ind"]
+        "inputs": ["y_ner", "ner_labels"]
       },
       {
         "name": "sets_accuracy",

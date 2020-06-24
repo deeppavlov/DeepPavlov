@@ -30,7 +30,7 @@ from deeppavlov.models.bert.bert_sequence_tagger import ExponentialMovingAverage
 log = getLogger(__name__)
 
 
-from deeppavlov.debug_helpers import recursive_shape
+from deeppavlov.debug_helpers import recursive_shape, recursive_type
 
 
 # FIXME: kostyl. The same function is defined as method in `LRScheduledTFModel`. Subtask classes does not need many other methods defined in `LRScheduledTFModel`.
@@ -250,9 +250,11 @@ class MultiTaskBert(LRScheduledTFModel):
                 fetches.append(task_fetches)
                 feed_dict.update(task_feed_dict)
             sess_run_res = self.sess.run(fetches, feed_dict=feed_dict)
-            # log.debug(f"(MultitaskBert.__call__)sess_run_res shape: {recursive_shape(sess_run_res)}")
-            log.debug(f"(MultitaskBert.__call__)sess_run_res shape: {recursive_shape(fetches)}") 
+            log.debug(f"(MultitaskBert.__call__)fetches shape: {recursive_shape(fetches)}")
+            log.debug(f"(MultitaskBert.__call__)sess_run_res shape: {recursive_shape(sess_run_res)}") 
+            log.debug(f"(MultitaskBert.__call__)sess_run_res types: {recursive_type(sess_run_res)}") 
             for task, srs in zip(tasks, sess_run_res):
+                log.debug(f"(MultitaskBert.__call__)task={task} srs.shape: {recursive_shape(srs)}")
                 task_results = task.post_process_preds(srs)
                 # log.debug(f"(MultitaskBert.__call__)task_results: {task_results}")
                 results.append(task_results)
@@ -506,6 +508,7 @@ class MTBertSequenceTaggingTask:
         input_type_ids = [f.input_type_ids for f in kwargs['bert_features_qr']]
         build_feed_dict_args = [kwargs[k] for k in self.in_names]
         feed_dict = self._build_feed_dict(*build_feed_dict_args)
+        log.debug(f"(MTBertSequenceTaggingTask.get_sess_run_args)self.return_probas: {self.return_probas}")
         if self.return_probas:
             fetches = self.y_probas
         else:
@@ -516,7 +519,7 @@ class MTBertSequenceTaggingTask:
         return fetches, feed_dict
 
     def post_process_preds(self, sess_run_res):
-        log.debug(f"(MTBertClassificationTask.post_process_preds)sess_run_res: {sess_run_res}")
+        log.debug(f"(MTBertSequenceTaggingTask.post_process_preds)sess_run_res.shape: {recursive_shape(sess_run_res)}")
         if self.return_probas:
             pred = sess_run_res
         else:
@@ -530,6 +533,7 @@ class MTBertSequenceTaggingTask:
             else:
                 pred, seq_lengths = sess_run_res
                 pred = [p[:l] for l, p in zip(seq_lengths, pred)]
+        log.debug(f"(MTBertSequenceTaggingTask.post_process_preds)pred.shape: {recursive_shape(pred)}")
         return pred
 
     def __call__(self,
@@ -745,7 +749,8 @@ class MTBertClassificationTask:
 
         """
         fetches, feed_dict = self.get_sess_run_args(features)
-        log.debug(f"(MTClassificationTask.__call__)fetches: {fetches}")
+        log.debug(f"(MTBertClassificationTask.__call__)fetches: {fetches}")
+        log.debug(f"(MTBertClassificationTask.__call__)sess_run_res.shape: {recursive_shape(sess_run_res)}")
         return post_process_preds(self.sess.run(fetches, feed_dict=feed_dict))
 
 
