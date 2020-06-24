@@ -66,7 +66,7 @@
         "load_path": "{NER_PATH}/tag.dict",                                                                            
         "fit_on": ["y_ner"],                                                                                               
         "in": ["y_ner"],                                                                                                   
-        "out": ["y_ind"]                                                                                               
+        "out": ["y_ner_ind"]                                                                                               
       },
 
       {                                                                                                                
@@ -84,11 +84,11 @@
         "save_path": "{QUERY_PREDICTION}/classes.dict",                                                                      
         "load_path": "{QUERY_PREDICTION}/classes.dict",                                                                      
         "in": "y_qr",                                                                                                     
-        "out": "y_ids"                                                                                                 
+        "out": "y_qr_ids"                                                                                                 
       },                                                                                                               
       {                                                                                                                
-        "in": "y_ids",                                                                                                 
-        "out": "y_onehot",                                                                                             
+        "in": "y_qr_ids",                                                                                                 
+        "out": "y_qr_onehot",                                                                                             
         "class_name": "one_hotter",                                                                                    
         "depth": "#classes_vocab.len",                                                                                 
         "single_vector": true                                                                                          
@@ -131,7 +131,7 @@
                 "encoder_layer_ids": [-1],
                 "learning_rate": 1e-3,
                 "in_names": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask", "bert_features_qr"],
-                "in_y_names": ["y_ind"]
+                "in_y_names": ["y_ner_ind"]
               },
               "query_prediction": {
                 "class_name": "mt_bert_classification_task",
@@ -142,7 +142,7 @@
                 "keep_prob": 0.5,
                 "learning_rate": 1e-05,
                 "in_names": ["bert_features_qr"],
-                "in_y_names": ["y_onehot"]
+                "in_y_names": ["y_qr_onehot"]
               }
             }
           },
@@ -170,11 +170,11 @@
           "bert_features_rr": "bert_features_rr"
         },
         "in_y": {
-          "y_ind": "y_ind",
-          "y_onehot": "y_onehot",
+          "y_ind": "y_ner_ind",
+          "y_onehot": "y_qr_onehot",
           "y_rr": "y_rr"
         },
-        "out": ["ner_ids", "y_pred_probas", "predictions"]
+        "out": ["ner_ids", "qr_probas", "rr_preds"]
       },
       {                                                                                                                
         "in": "ner_ids",                                                                                            
@@ -182,18 +182,18 @@
         "ref": "tag_vocab"
       },
       {                                                                                                                
-        "in": "y_pred_probas",                                                                                         
-        "out": "y_pred_ids",
+        "in": "qr_probas",                                                                                         
+        "out": "qr_ids",
         "max_proba": true,
         "class_name": "proba2labels"                                                                                              
       },                                                                                                               
       {                                                                                                                
-        "in": "y_pred_ids",                                                                                            
-        "out": "y_pred_labels",                                                                                        
+        "in": "qr_ids",                                                                                            
+        "out": "qr_labels",                                                                                        
         "ref": "classes_vocab"                                                                                         
       }
     ],
-    "out": ["ner_labels", "y_pred_ids", "predictions"]
+    "out": ["ner_labels", "qr_labels", "rr_preds"]
   },
   "train": {
     "epochs": 30,
@@ -209,23 +209,19 @@
       },
       {
         "name": "sets_accuracy",
-        "inputs": ["y_qr", "y_pred_ids"]
+        "inputs": ["y_qr", "qr_labels"]
       },
       {                                                                                                 
         "name": "f1_macro",
-        "inputs": ["y_qr", "y_pred_ids"]
-      },
-      {                                                                                                                
-        "name": "roc_auc",                                                                                             
-        "inputs": ["y_onehot", "y_pred_probas"]                                                                        
+        "inputs": ["y_qr", "qr_labels"]
       },
       {
         "name": "f1",
-        "inputs": ["y_rr", "predictions"]
+        "inputs": ["y_rr", "rr_preds"]
       },
       {
         "name": "acc",
-        "inputs": ["y_rr", "predictions"]
+        "inputs": ["y_rr", "rr_preds"]
       }
     ],
     "validation_patience": 10,

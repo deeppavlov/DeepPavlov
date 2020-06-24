@@ -66,10 +66,10 @@ class MultiTaskIterator:
             task_iterator_params['class_name'] = task_iterator_params['iterator_class_name']
             del task_iterator_params['iterator_class_name']
             self.task_iterators[task_name] = from_params(task_iterator_params, data=data[task_name])
-            log.debug(f"self.task_iterators[{task_name}]: {self.task_iterators[task_name]}")
-            log.debug(f"self.task_iterators['{task_name}'].train length: {len(self.task_iterators[task_name].train)}")
-            log.debug(f"self.task_iterators['{task_name}'].valid length: {len(self.task_iterators[task_name].valid)}")
-            log.debug(f"self.task_iterators['{task_name}'].test length: {len(self.task_iterators[task_name].test)}")
+            log.debug(f"(MultitaskIterator.__init__)self.task_iterators[{task_name}]: {self.task_iterators[task_name]}")
+            log.debug(f"(MultitaskIterator.__init__)self.task_iterators['{task_name}'].train length: {len(self.task_iterators[task_name].train)}")
+            log.debug(f"(MultitaskIterator.__init__)self.task_iterators['{task_name}'].valid length: {len(self.task_iterators[task_name].valid)}")
+            log.debug(f"(MultitaskIterator.__init__)self.task_iterators['{task_name}'].test length: {len(self.task_iterators[task_name].test)}")
 
         self.train = self._extract_data_type('train')
         self.valid = self._extract_data_type('valid')
@@ -108,14 +108,14 @@ class MultiTaskIterator:
             try:
                 for task, gen in batch_generators.items():
                     x, y = next(gen)
-                    log.debug(f"{task} x, y: {x}, {y}")
-                    log.debug(f"{task} x.shape, y.shape: {recursive_shape(x)}, {recursive_shape(y)}")
+                    log.debug(f"(MultitaskIterator.gen_batches){task} x, y: {x}, {y}")
+                    log.debug(f"(MultitaskIterator.gen_batches){task} x.shape, y.shape: {recursive_shape(x)}, {recursive_shape(y)}")
                     x_instances.append(x)
                     y_instances.append(y)
             except StopIteration:
                 break
             b = (tuple(zip(*x_instances)), tuple(zip(*y_instances)))
-            log.debug(f"batch shape: {recursive_shape(b)}")
+            log.debug(f"(MultitaskIterator.gen_batches)batch shape: {recursive_shape(b)}")
             yield b
 
     def get_instances(self, data_type: str = 'train'):
@@ -130,4 +130,6 @@ class MultiTaskIterator:
                 x, y = [], []
             x_instances.append(x)
             y_instances.append(y)
-        return x_instances, y_instances
+        instances = (tuple(zip(*x_instances)), tuple(zip(*y_instances)))
+        log.debug(f"(MultitaskIterator.get_instances)instances.shape: {recursive_shape(instances)}")
+        return instances
