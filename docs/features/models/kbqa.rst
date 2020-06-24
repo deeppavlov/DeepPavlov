@@ -176,20 +176,20 @@ The dataset for path ranking is similar to the dataset for relation ranking. If 
 Adding new SPARQL queries templates
 -----------------------------------------
 Templates can be added to sparql_queries.json file, which is a dictionary, where keys are template numbers, and values are templates with additional information.
-An example of a template:
+An example of a template::
 
-{"query_template": "SELECT ?obj WHERE { wd:E1 p:R1 ?s . ?s ps:R1 ?obj . ?s ?p ?x filter(contains(?x, N)) }",
- "property_types": {"?p": "qualifier"},
- "rank_rels": ["wiki", "do_not_rank", "do_not_rank"],
- "filter_rels": [false],
- "rel_dirs": ["forw"],
- "query_sequence": [1, 2, 3],
- "entities_and_types_num": [[1, 0]],
- "entities_and_types_select": {"1 0": ["1 0"]},
- "return_if_found": true,
- "template_num": "0",
- "exact_entity_type_match": false,
- "alternative_templates": []}
+    {"query_template": "SELECT ?obj WHERE { wd:E1 p:R1 ?s . ?s ps:R1 ?obj . ?s ?p ?x filter(contains(?x, N)) }",
+    "property_types": {"?p": "qualifier"},
+    "rank_rels": ["wiki", "do_not_rank", "do_not_rank"],
+    "filter_rels": [false],
+    "rel_dirs": ["forw"],
+    "query_sequence": [1, 2, 3],
+    "entities_and_types_num": [[1, 0]],
+    "entities_and_types_select": {"1 0": ["1 0"]},
+    "return_if_found": true,
+    "template_num": "0",
+    "exact_entity_type_match": false,
+    "alternative_templates": []}
 
 * "query_template" is the template of the SPARQL query
 * "property_types" defines the types of unknown relations in the template
