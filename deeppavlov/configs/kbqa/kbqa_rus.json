@@ -1,11 +1,4 @@
 {
-  "dataset_reader": {
-    "class_name": "kbqa_reader",
-    "data_path": "{DOWNLOADS_PATH}/wikidata_rus/"
-  },
-  "dataset_iterator": {
-    "class_name": "data_learning_iterator"
-  },
   "chainer": {
     "in": ["x"],
     "in_y": ["y"],
