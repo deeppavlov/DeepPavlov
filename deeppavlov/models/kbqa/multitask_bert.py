@@ -170,6 +170,10 @@ class MultiTaskBert(LRScheduledTFModel):
         if self.load_path is not None:
             self.load()
 
+    def fill_missing_shared_params(self):
+        if 'min_body_learning_rate' not in self.shared_params:
+            self.shared_params['min_bode_learning_rate'] = 1e-7
+
     def build_tasks(self):
         for launch_name, launch_params in self.launches_tasks.items():
             for task_name, task_obj in launch_params['tasks'].items():
@@ -221,10 +225,18 @@ class MultiTaskBert(LRScheduledTFModel):
         return super().load(exclude_scopes=exclude_scopes, **kwargs)
 
     def train_on_batch(self, *args, **kwargs) -> None:
-        for task in self.tasks.values():
-            kw = {inp_name: kwargs[inp_name] for inp_name in task.in_names}
+        log.debug(f"(MultitaskBert.train_on_batch)self.launches_tasks: {self.launches_tasks}")
+        tasks = []
+        for launch_params in self.launches_tasks.values():
+            for task in launch_params['tasks'].values():
+                tasks.append(task)
+        for task in tasks:
+            kw = {inp_name: kwargs[inp_name] for inp_name in task.in_names + task.in_y_names}
             # TODO: check if there is reason to use different bert body lr for different tasks in literature
-            task.train_on_batch(**kw, body_learning_rate=max(self.get_learning_rate(), self.min_learning_rate))
+            task.train_on_batch(
+                **kw, 
+                body_learning_rate=max(self.get_learning_rate(), self.shared_params['min_body_learning_rate'])
+            )
 
     def __call__(self, *args, launch_name=None, **kwargs):
         if launch_name is None:
@@ -246,7 +258,7 @@ class MultiTaskBert(LRScheduledTFModel):
                 log.debug(f"(MultitaskBert.__call__)task: {task}")
                 kw = {inp_name: kwargs[inp_name] for inp_name in task.in_names}
                 log.debug(f"(MultitaskBert.__call__)kw: {kw}")
-                task_fetches, task_feed_dict = task.get_sess_run_args(**kw)
+                task_fetches, task_feed_dict = task.get_sess_run_infer_args(**kw)
                 fetches.append(task_fetches)
                 feed_dict.update(task_feed_dict)
             sess_run_res = self.sess.run(fetches, feed_dict=feed_dict)
@@ -258,6 +270,9 @@ class MultiTaskBert(LRScheduledTFModel):
                 task_results = task.post_process_preds(srs)
                 # log.debug(f"(MultitaskBert.__call__)task_results: {task_results}")
                 results.append(task_results)
+            log.debug(f"(MultitaskBert.__call__)results[*][:10]: {[res[:10] for res in results]}")
+            log.debug(f"(MultitaskBert.__call__)task names: {[t.task_name for t in tasks]}")
+            log.debug(f"(MultitaskBert.__call__)return_probas: {[t.return_probas for t in tasks]}")
         return results
 
 
@@ -471,13 +486,7 @@ class MTBertSequenceTaggingTask:
             y_pred += [viterbi_seq]
         return y_pred
 
-    def train_on_batch(self,
-                       input_ids: Union[List[List[int]], np.ndarray],
-                       input_masks: Union[List[List[int]], np.ndarray],
-                       y_masks: list,
-                       y: list,
-                       bert_features_qr: List[InputFeatures],
-                       body_learning_rate: float) -> Dict[str, float]:
+    def train_on_batch(self, **kwargs) -> Dict[str, float]:
         """
 
         Args:
@@ -493,22 +502,19 @@ class MTBertSequenceTaggingTask:
         Returns:
             dict with fields 'loss', 'head_learning_rate', and 'bert_learning_rate'
         """
-        token_types = [f.input_type_ids for f in bert_features_qr]
-
-        feed_dict = self._build_feed_dict(
-            input_ids, input_masks, y_masks, y, token_types, body_learning_rate=body_learning_rate)
-
-        _, loss, lr = self.sess.run([self.train_op, self.loss, self.learning_rate_ph],
-                                     feed_dict=feed_dict)
+        fetches, feed_dict = self.get_sess_run_train_args(**kwargs)
+        _, loss, lr = self.sess.run(fetches, feed_dict=feed_dict)
         return {'loss': loss,
-                f'{self.task_name}_head_learning_rate': float(lr) * self.bert_learning_rate_multiplier,
-                'bert_learning_rate': float(lr)}
+                f'{self.task_name}_head_learning_rate': 
+                    float(kwargs['body_learning_rate']) * self.bert_learning_rate_multiplier,
+                'bert_learning_rate': kwargs['body_learning_rate']}
 
-    def get_sess_run_args(self, **kwargs):
-        input_type_ids = [f.input_type_ids for f in kwargs['bert_features_qr']]
-        build_feed_dict_args = [kwargs[k] for k in self.in_names]
-        feed_dict = self._build_feed_dict(*build_feed_dict_args)
-        log.debug(f"(MTBertSequenceTaggingTask.get_sess_run_args)self.return_probas: {self.return_probas}")
+    def get_sess_run_infer_args(self, **kwargs):
+        build_feed_dict_args = [kwargs[k] for k in self.in_names[:3]]
+        bert_features = kwargs[self.in_names[3]]
+        token_types = [f.input_type_ids for f in bert_features]
+        feed_dict = self._build_feed_dict(*build_feed_dict_args, token_types=token_types)
+        log.debug(f"(MTBertSequenceTaggingTask.get_sess_run_train_args)self.return_probas: {self.return_probas}")
         if self.return_probas:
             fetches = self.y_probas
         else:
@@ -516,6 +522,16 @@ class MTBertSequenceTaggingTask:
                 fetches = [self.logits, self._transition_params, self.y_masks_ph, self.seq_lengths]
             else:
                 fetches = [self.y_predictions, self.seq_lengths]
+        return fetches, feed_dict
+
+    def get_sess_run_train_args(self, **kwargs):
+        build_feed_dict_args = [kwargs[k] for k in self.in_names[:3]]
+        bert_features = kwargs[self.in_names[3]]
+        token_types = [f.input_type_ids for f in bert_features]
+        y = kwargs[self.in_y_names[0]]
+        lr = kwargs['body_learning_rate']
+        feed_dict = self._build_feed_dict(*build_feed_dict_args, token_types=token_types, y=y, body_learning_rate=lr)  
+        fetches = [self.train_op, self.loss]
         return fetches, feed_dict
 
     def post_process_preds(self, sess_run_res):
@@ -541,7 +557,7 @@ class MTBertSequenceTaggingTask:
                  input_masks: Union[List[List[int]], np.ndarray],
                  y_masks: Union[List[List[int]], np.ndarray],
                  bert_features_qr: List[InputFeatures]) -> Union[List[List[int]], List[np.ndarray]]:
-        fetches, feed_dict = self.get_sess_run_args(input_ids, input_masks, y_masks, bert_features_qr)
+        fetches, feed_dict = self.get_sess_run_infer_args(input_ids, input_masks, y_masks, bert_features_qr)
         log.debug(f"(MTBertSequenceTaggingTask.__call__)fetches: {fetches}")
         sess_run_res = self.sess.run(fetches, feed_dict=feed_dict)
         return self.post_process_preds(sess_run_res)
@@ -690,19 +706,26 @@ class MTBertClassificationTask:
         if y is not None:
             feed_dict.update({
                 self.y_ph: y,
-                sph['learning_rate']: max(body_learning_rate, self.min_learning_rate),
+                sph['learning_rate']: body_learning_rate,
                 sph['keep_prob']: self.keep_prob,
                 sph['is_train']: True,
             })
 
         return feed_dict
 
-    def train_on_batch(
-            self,
-            features: List[InputFeatures],
-            y: Union[List[int], List[List[int]]],
-            body_learning_rate: float,
-    ) -> Dict:
+    def get_sess_run_train_args(self, **kwargs):
+        log.debug(f"(MTBertClassifier.get_sess_run_train_args)kwargs.keys: {list(kwargs.keys())}") 
+        features = kwargs[self.in_names[0]]
+        input_ids = [f.input_ids for f in features]
+        input_masks = [f.input_mask for f in features]
+        input_type_ids = [f.input_type_ids for f in features]
+        y = kwargs[self.in_y_names[0]]
+        lr = kwargs['body_learning_rate']
+        feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids, y=y, body_learning_rate=lr)
+        fetches = [self.train_op, self.loss]
+        return fetches, feed_dict
+
+    def train_on_batch(self, **kwargs) -> Dict:
         """Train model on given batch.
         This method calls train_op using features and y (labels).
 
@@ -714,17 +737,12 @@ class MTBertClassificationTask:
             dict with loss and learning_rate values
 
         """
-        input_ids = [f.input_ids for f in features]
-        input_masks = [f.input_mask for f in features]
-        input_type_ids = [f.input_type_ids for f in features]
+        fetches, feed_dict = self.get_sess_run_train_args(**kwargs)
+        _, loss = self.sess.run(fetches, feed_dict=feed_dict)
+        return {'loss': loss, f'{self.task_name}_learning_rate': kwargs['body_learning_rate']}
 
-        feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids, y, body_learning_rate)
-
-        _, loss = self.sess.run([self.train_op, self.loss], feed_dict=feed_dict)
-        return {'loss': loss, f'{self.task_name}_learning_rate': feed_dict[self.learning_rate_ph]}
-
-    def get_sess_run_args(self, **kwargs):
-        log.debug(f"(MTBertClassifier.get_sess_run_args)kwargs.keys: {list(kwargs.keys())}") 
+    def get_sess_run_infer_args(self, **kwargs):
+        log.debug(f"(MTBertClassifier.get_sess_run_infer_args)kwargs.keys: {list(kwargs.keys())}") 
         features = kwargs[self.in_names[0]]
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
@@ -748,7 +766,7 @@ class MTBertClassificationTask:
             predicted classes or probabilities of each class
 
         """
-        fetches, feed_dict = self.get_sess_run_args(features)
+        fetches, feed_dict = self.get_sess_run_infer_args(features)
         log.debug(f"(MTBertClassificationTask.__call__)fetches: {fetches}")
         log.debug(f"(MTBertClassificationTask.__call__)sess_run_res.shape: {recursive_shape(sess_run_res)}")
         return post_process_preds(self.sess.run(fetches, feed_dict=feed_dict))

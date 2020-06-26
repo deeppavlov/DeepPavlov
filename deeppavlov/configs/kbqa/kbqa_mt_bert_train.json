@@ -137,7 +137,7 @@
                 "class_name": "mt_bert_classification_task",
                 "task_name": "qr_prediction",
                 "n_classes": "#classes_vocab.len",
-                "return_probas": false,
+                "return_probas": true,
                 "one_hot_labels": true,
                 "keep_prob": 0.5,
                 "learning_rate": 1e-05,
@@ -152,7 +152,7 @@
                 "class_name": "mt_bert_classification_task",
                 "task_name": "rel_ranking",
                 "n_classes": 2,
-                "return_probas": true,
+                "return_probas": false,
                 "one_hot_labels": false,
                 "keep_prob": 0.5,
                 "learning_rate": 2e-05,
@@ -170,8 +170,8 @@
           "bert_features_rr": "bert_features_rr"
         },
         "in_y": {
-          "y_ind": "y_ner_ind",
-          "y_onehot": "y_qr_onehot",
+          "y_ner_ind": "y_ner_ind",
+          "y_qr_onehot": "y_qr_onehot",
           "y_rr": "y_rr"
         },
         "out": ["ner_ids", "qr_probas", "rr_preds"]
