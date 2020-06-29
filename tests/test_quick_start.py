@@ -164,17 +164,6 @@ PARAMS = {
             (["hey", "alexa", "how", "are", "you"], None)]
     },
     "kbqa": {
-        ("kbqa/kbqa_rus.json", "kbqa", ('IP',)):
-            [
-                ("Какая столица России?", "Москва"),
-                ("абв", "Not Found")
-            ],
-        ("kbqa/kbqa_tree.json", "kbqa", ('IP',)):
-            [
-                ("Кто такой Оксимирон?", "российский рэп-исполнитель"),
-                ("Чем питаются коалы?", "Эвкалипт"),
-                ("абв", "Not Found")
-            ],
         ("kbqa/kbqa_cq.json", "kbqa", ('IP',)):
             [
                 ("What is the currency of Sweden?", "Swedish krona"),
