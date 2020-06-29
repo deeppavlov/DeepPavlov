@@ -62,7 +62,7 @@ class QueryGenerator(QueryGeneratorBase):
             return_answers = self.return_answers, *args, **kwargs)
 
     def __call__(self, question_batch: List[str],
-                 template_type_batch: List[str],
+                 template_type_batch: Union[List[List[str]], List[str]],
                  entities_from_ner_batch: List[List[str]],
                  types_from_ner_batch: List[List[str]]) -> List[Union[List[Tuple[str, Any]], List[str]]]:
 
@@ -81,7 +81,9 @@ class QueryGenerator(QueryGeneratorBase):
             return candidate_outputs_batch
 
     def query_parser(self, question: str, query_info: Dict[str, str],
-                     entity_ids: List[List[str]], type_ids: List[List[str]],
+                     entities_and_types_select: List[str],
+                     entity_ids: List[List[str]],
+                     type_ids: List[List[str]],
                      rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str]]:
         candidate_outputs = []
         question_tokens = nltk.word_tokenize(question)
@@ -89,7 +91,7 @@ class QueryGenerator(QueryGeneratorBase):
         rels_for_search = query_info["rank_rels"]
         query_seq_num = query_info["query_sequence"]
         return_if_found = query_info["return_if_found"]
-        log.debug(f"(query_parser)quer: {query}, {rels_for_search}, {query_seq_num}, {return_if_found}")
+        log.debug(f"(query_parser)query: {query}, {rels_for_search}, {query_seq_num}, {return_if_found}")
         query_triplets = re.findall("{[ ]?(.*?)[ ]?}", query)[0].split(' . ')
         log.debug(f"(query_parser)query_triplets: {query_triplets}")
         query_triplets = [triplet.split(' ')[:3] for triplet in query_triplets]
@@ -103,10 +105,6 @@ class QueryGenerator(QueryGeneratorBase):
                              search_source != "do_not_rank"]
         log.debug(f"(query_parser)rel_directions: {triplet_info_list}")
         entity_ids = [entity[:self.entities_to_leave] for entity in entity_ids]
-        entity_combs = make_combs(entity_ids, permut=True)
-        log.debug(f"(query_parser)entity_combs: {entity_combs[:3]}")
-        type_combs = make_combs(type_ids, permut=False)
-        log.debug(f"(query_parser)type_combs: {type_combs[:3]}")
         if rels_from_template is not None:
             rels = rels_from_template
         else:
@@ -139,6 +137,14 @@ class QueryGenerator(QueryGeneratorBase):
         rel_combs = make_combs(rels, permut=False)
         import datetime
         start_time = datetime.datetime.now()
+        entity_positions, type_positions = [elem.split('_') for elem in entities_and_types_select.split(' ')]
+        log.debug(f"entity_positions {entity_positions}, type_positions {type_positions}")
+        selected_entity_ids = [entity_ids[int(pos)-1] for pos in entity_positions if int(pos)>0]
+        selected_type_ids = [type_ids[int(pos)-1] for pos in type_positions if int(pos)>0]
+        entity_combs = make_combs(selected_entity_ids, permut=True)
+        log.debug(f"(query_parser)entity_combs: {entity_combs[:3]}")
+        type_combs = make_combs(selected_type_ids, permut=False)
+        log.debug(f"(query_parser)type_combs: {type_combs[:3]}")
         for combs in itertools.product(entity_combs, type_combs, rel_combs):
             query_hdt_seq = [
                 fill_query(query_hdt_elem, combs[0], combs[1], combs[2]) for query_hdt_elem in query_sequence]

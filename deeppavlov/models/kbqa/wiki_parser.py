@@ -29,7 +29,7 @@ log = getLogger(__name__)
 class WikiParser:
     """This class extract relations, objects or triplets from Wikidata HDT file"""
 
-    def __init__(self, wiki_filename: str, **kwargs) -> None:
+    def __init__(self, wiki_filename: str, lang: "@en", **kwargs) -> None:
         """
 
         Args:
@@ -38,6 +38,7 @@ class WikiParser:
         """
         log.debug(f'__init__ wiki_filename: {wiki_filename}')
         wiki_path = expand_path(wiki_filename)
+        self.lang = lang
         self.document = HDTDocument(str(wiki_path))
 
     def __call__(self, what_return: List[str],
@@ -137,13 +138,13 @@ class WikiParser:
             labels, cardinality = self.document.search_triples(entity, "http://www.w3.org/2000/01/rdf-schema#label", "")
             # labels = [["http://www.wikidata.org/entity/Q5513", "http://www.w3.org/2000/01/rdf-schema#label", '"Lake Baikal"@en'], ...]
             for label in labels:
-                if label[2].endswith("@en"):
-                    found_label = label[2].strip('@en').replace('"', '')
+                if label[2].endswith(self.lang):
+                    found_label = label[2].strip(self.lang).replace('"', '')
                     return found_label
 
-        elif entity.endswith("@en"):
+        elif entity.endswith(self.lang):
             # entity: '"Lake Baikal"@en'
-            entity = entity.strip('@en')
+            entity = entity.strip(self.lang)
             return entity
 
         elif "^^" in entity:
@@ -167,7 +168,7 @@ class WikiParser:
         if entity.startswith("http://www.wikidata.org/entity/"):
             labels, cardinality = self.document.search_triples(entity,
                                                                "http://www.w3.org/2004/02/skos/core#altLabel", "")
-            aliases = [label[2].strip('@en').strip('"') for label in labels if label[2].endswith("@en")]
+            aliases = [label[2].strip(self.lang).strip('"') for label in labels if label[2].endswith(self.lang)]
         return aliases
 
     def find_rels(self, entity: str, direction: str, rel_type: str = None) -> List[str]:

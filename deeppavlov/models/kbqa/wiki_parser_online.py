@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 from logging import getLogger
 from typing import List, Tuple, Dict
 
-from SPARQLWrapper import SPARQLWrapper, JSON
+import requests
 
 from deeppavlov.core.common.registry import register
 
@@ -27,23 +26,22 @@ log = getLogger(__name__)
 class WikiParserOnline:
     """This class extract relations or labels from Wikidata query service"""
 
-    def __init__(self, url: str, **kwargs) -> None:
+    def __init__(self, url: str, timeout: float = 0.5, **kwargs) -> None:
         self.url = url
-        user_agent = "WDQS-example Python/%s.%s" % (sys.version_info[0], sys.version_info[1])
-        self.sparql = SPARQLWrapper(self.url, agent=user_agent)
+        self.timeout = timeout
 
     def get_answer(self, query: str) -> List[Dict[str, Dict[str, str]]]:
         data = []
-        try:
-            self.sparql.setQuery(query)
-            self.sparql.setReturnFormat(JSON)
-            data_0 = self.sparql.query().convert()
-            if "results" in data_0.keys():
-                data = data_0['results']['bindings']
-            elif "boolean" in data_0.keys():
-                data = data_0['boolean']
-        except:
-            pass
+        for i in range(5):
+            try:
+                data_0 = requests.get(self.url, params={'query': query, 'format': 'json'},  timeout=self.timeout).json()
+                if "results" in data_0.keys():
+                    data = data_0['results']['bindings']
+                elif "boolean" in data_0.keys():
+                    data = data_0['boolean']
+                break
+            except:
+                pass
 
         return data
 
