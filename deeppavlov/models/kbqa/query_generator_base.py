@@ -23,6 +23,7 @@ import nltk
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.file import read_json
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.models.kbqa.template_matcher import TemplateMatcher
 from deeppavlov.models.kbqa.entity_linking import EntityLinker
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
@@ -93,7 +94,7 @@ class QueryGeneratorBase(Component, Serializable):
             lines = fl2.readlines()
             self.rank_list_1 = [line.split('\t')[0] for line in lines]
 
-        self.template_queries = read_json(self.load_path / self.sparql_queries_filename)
+        self.template_queries = read_json(str(expand_path(self.sparql_queries_filename)))
 
     def save(self) -> None:
         pass

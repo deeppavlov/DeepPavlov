@@ -16,7 +16,7 @@
       {
         "class_name": "wiki_parser",
         "id": "wiki_p",
-        "wiki_filename": "{DOWNLOADS_PATH}/wikidata_eng/wikidata.hdt"
+        "wiki_filename": "{DOWNLOADS_PATH}/wikidata/wikidata.hdt"
       },
       {
         "class_name": "template_matcher",
@@ -72,7 +72,7 @@
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
         "rank_rels_filename_1": "rels_0.txt",
         "rank_rels_filename_2": "rels_1.txt",
-        "sparql_queries_filename": "sparql_queries.json",
+        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries.json",
         "entities_to_leave": 5,
         "rels_to_leave": 12,
         "return_answers": true,
@@ -157,15 +157,15 @@
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/sparql_queries.json",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+        "subdir": "{DOWNLOADS_PATH}/wikidata"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.hdt",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+        "subdir": "{DOWNLOADS_PATH}/wikidata"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.hdt.index.v1-1",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+        "subdir": "{DOWNLOADS_PATH}/wikidata"
       }
     ]
   }
