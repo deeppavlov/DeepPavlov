@@ -82,7 +82,7 @@
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "rank_rels_filename_1": "rels_0.txt",
         "rank_rels_filename_2": "rels_1.txt",
-        "sparql_queries_filename": "sparql_queries.json",
+        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries.json",
         "entities_to_leave": 7,
         "rels_to_leave": 10,
         "return_answers": true,
