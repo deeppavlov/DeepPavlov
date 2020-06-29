@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import List
+from typing import List, Union
 
 import numpy as np
 import tensorflow as tf
@@ -115,7 +115,7 @@ def dense_convolutional_network(units: tf.Tensor,
 
 
 def bi_rnn(units: tf.Tensor,
-           n_hidden: List,
+           n_hidden: Union[List, int],
            cell_type='gru',
            seq_lengths=None,
            trainable_initial_states=False,
@@ -125,7 +125,8 @@ def bi_rnn(units: tf.Tensor,
 
         Args:
             units: a tensorflow tensor with dimensionality [None, n_tokens, n_features]
-            n_hidden: list with number of hidden units in the output of each layer
+            n_hidden: list with number of hidden units in the output of each layer if
+                cell_type is 'lstm' and int if cell_type is 'gru'.
             seq_lengths: length of sequences for different length sequences in batch
                 can be None for maximum length as a length for every sample in the batch
             cell_type: 'lstm' or 'gru'
@@ -135,8 +136,11 @@ def bi_rnn(units: tf.Tensor,
             name: what variable_scope to use for the network parameters
 
         Returns:
-            units: tensor at the output of the last recurrent layer
-                with dimensionality [None, n_tokens, n_hidden_list[-1]]
+            units: a tuple of tensors at the output of the last recurrent layer
+                with dimensionality [None, n_tokens, n_hidden[-1]] if cell_type is 'lstm' and
+                with dimensionality [None, n_tokens, n_hidden] if cell_type is 'gru'.
+                The tensors contain the outputs of forward and backward passes of
+                the birnn correspondingly.
             last_units: tensor of last hidden states for GRU and tuple
                 of last hidden stated and last cell states for LSTM
                 dimensionality of cell states and hidden states are
