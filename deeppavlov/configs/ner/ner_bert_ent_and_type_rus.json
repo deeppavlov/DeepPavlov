@@ -1,0 +1,123 @@
+{
+  "dataset_reader": {
+    "class_name": "sq_reader",
+    "data_path": "{DOWNLOADS_PATH}/lcquad/entity_and_type_detection_rus.pickle"
+  },
+  "dataset_iterator": {
+    "class_name": "data_learning_iterator"
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "class_name": "bert_ner_preprocessor",
+        "vocab_file": "{BERT_PATH}/vocab.txt",
+        "do_lower_case": false,
+        "max_seq_length": 512,
+        "max_subword_length": 15,
+        "token_maksing_prob": 0.0,
+        "in": ["x"],
+        "out": ["x_tokens", "x_subword_tokens", "x_subword_tok_ids", "pred_subword_mask"]
+      },
+      {
+        "class_name": "mask",
+        "in": ["x_subword_tokens"],
+        "out": ["x_subword_mask"]
+      },
+      {
+        "id": "tag_vocab",
+        "class_name": "simple_vocab",
+        "unk_token": ["O"],
+        "pad_with_zeros": true,
+        "save_path": "{NER_PATH}/tag.dict",
+        "load_path": "{NER_PATH}/tag.dict",
+        "fit_on": ["y"],
+        "in": ["y"],
+        "out": ["y_ind"]
+      },
+      {
+        "class_name": "bert_sequence_tagger",
+        "n_tags": "#tag_vocab.len",
+        "keep_prob": 0.1,
+        "bert_config_file": "{BERT_PATH}/bert_config.json",
+        "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
+        "attention_probs_keep_prob": 0.5,
+        "use_crf": false,
+        "return_probas": true,
+        "ema_decay": 0.9,
+        "encoder_layer_ids": [-1],
+        "optimizer": "tf.train:AdamOptimizer",
+        "learning_rate": 1e-3,
+        "bert_learning_rate": 2e-5,
+        "min_learning_rate": 1e-7,
+        "learning_rate_drop_patience": 30,
+        "learning_rate_drop_div": 1.5,
+        "load_before_drop": true,
+        "clip_norm": 1.0,
+        "save_path": "{NER_PATH}/model",
+        "load_path": "{NER_PATH}/model",
+        "in": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask"],
+        "in_y": ["y_ind"],
+        "out": ["y_pred"]
+      }
+    ],
+    "out": ["x_tokens", "y_pred"]
+  },
+  "train": {
+    "epochs": 30,
+    "batch_size": 16,
+    "metrics": [
+      {
+        "name": "ner_f1",
+        "inputs": ["y", "y_pred"]
+      },
+      {
+        "name": "ner_token_f1",
+        "inputs": ["y", "y_pred"]
+      }
+    ],
+    "validation_patience": 5,
+    "val_every_n_batches": 400,
+
+    "log_every_n_batches": 400,
+    "tensorboard_log_dir": "{NER_PATH}/logs",
+    "show_examples": false,
+    "pytest_max_batches": 2,
+    "pytest_batch_size": 8,
+    "evaluation_targets": ["valid", "test"],
+    "class_name": "nn_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12",
+      "NER_PATH": "{MODELS_PATH}/ner_ent_and_type_rus"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+    ],
+    "labels": {
+      "telegram_utils": "NERCoNLL2003Model",
+      "server_utils": "NER"
+    },
+    "download": [
+
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/datasets/entity_and_type_detection_rus.pickle",
+        "subdir": "{MODELS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/multi_cased_L-12_H-768_A-12.zip",
+        "subdir": "{DOWNLOADS_PATH}/bert_models"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/ner_cq_rus.tar.gz",
+        "subdir": "{MODELS_PATH}/ner_ent_and_type_rus"
+      }
+    ]
+  }
+}
