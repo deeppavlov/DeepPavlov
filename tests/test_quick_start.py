@@ -167,7 +167,6 @@ PARAMS = {
         ("kbqa/kbqa_cq.json", "kbqa", ('IP',)):
             [
                 ("What is the currency of Sweden?", "Swedish krona"),
-                ("In which US state would you find Fort Knox?", "Kentucky"),
                 ("Where was Napoleon Bonaparte born?", "Ajaccio"),
                 ("When did the Korean War end?", "1953-07-27"),
                 ("   ", "Not Found")
@@ -178,6 +177,12 @@ PARAMS = {
                 ("Where was Napoleon Bonaparte born?", "Ajaccio"),
                 ("When did the Korean War end?", "1953-07-27"),
                 ("   ", "Not Found")
+            ],
+        ("kbqa/kbqa_cq_rus.json", "kbqa", ('IP',)):
+            [
+                ("Кто такой Оксимирон?", "британский рэп-исполнитель"),
+                ("Чем питаются коалы?", "Эвкалипт"),
+                ("абв", "Not Found")
             ]
     },
     "elmo_embedder": {
