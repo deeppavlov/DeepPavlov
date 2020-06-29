@@ -31,7 +31,16 @@ log = getLogger(__name__)
 
 @register('tree_to_sparql')
 class TreeToSparql(Component):
+    """
+        Class for building of sparql query template using syntax parser
+    """
     def __init__(self, sparql_queries_filename: str, **kwargs):
+        """
+
+        Args:
+            sparql_queries_filename: file with sparql query templates
+            **kwargs:
+        """
         self.q_pronouns = ["какой", "какая", "каком", "какую", "кто", "что", "как", "когда", "где", "чем"]
         self.sparql_queries_filename = expand_path(sparql_queries_filename)
         self.template_queries = read_json(self.sparql_queries_filename)
