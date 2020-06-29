@@ -6,11 +6,11 @@ Description
 
 There are three models for KBQA in DeepPavlov library:
 
-* :config:`kbqa_cq <kbqa/kbqa_cq.json>` - model for answering complex questions in English
+* :config:`kbqa_cq <kbqa/kbqa_cq.json>` - for answering complex questions in English
 
-* :config:`kbqa_rus <kbqa/kbqa_rus.json>` - model for answering simple questions in Russian
+* :config:`kbqa_cq <kbqa/kbqa_cq_online.json>` - for answering complex questions in English using Wikidata Query Service
 
-* :config:`kbqa_tree <kbqa/kbqa_tree.json>` - model for answering simple questions in Russian using syntactic parser.
+* :config:`kbqa_rus <kbqa/kbqa_cq_rus.json>` - for answering complex questions in Russian
 
 The Complex Knowledge Base Question Answering model uses Wikidata to answer complex questions. Types of questions which the model answers:
 
@@ -47,16 +47,6 @@ models are used:
 
 * Query generator model is used to fill query template with candidate entities and relations (to find valid combinations of entities and relations for query template). Query Generation model uses Wikidata HDT file. Query Generation Online model uses Wikidata Query Service.
 
-Model for simple question answering in Russian uses the following models:
-
-* :doc:`NER model </features/models/ner>` performs entity discovery. In a given question it finds a substring which is an entity, possible mentioned in a Knowledge Base.
-
-* :doc:`Classification model </features/models/ner>` classifies the question into a set of predefined relations from Wikidata.
-
-* Substring extracted by the NER model is used for entity linking. Entity linking preforms matching the substring with one of the Wikidata entities. Matching is based on Levenshtein distance between the substring and an entity description. The result of the matching procedure is a set of candidate entities. The reset is search of the entity among this set with one of the top-k relations predicted by classification model.
-
-Model for simple question answering with syntactic parser uses UDPipe for parsing of syntactic tree to extract candidate entity and relation substrings.
-
 Use the model
 -------------
 
@@ -67,8 +57,7 @@ model make sure that all required packages are installed using the command:
 
     python -m deeppavlov install kbqa_cq
     python -m deeppavlov install kbqa_cq_online
-    python -m deeppavlov install kbqa_rus
-    python -m deeppavlov install kbqa_tree
+    python -m deeppavlov install kbqa_cq_rus
 
 To use a pre-trained model from CLI use the following command:
 
@@ -76,8 +65,7 @@ To use a pre-trained model from CLI use the following command:
 
     python deeppavlov/deep.py interact kbqa_сq [-d]
     python deeppavlov/deep.py interact kbqa_cq_online [-d]
-    python deeppavlov/deep.py interact kbqa_rus [-d]
-    python deeppavlov/deep.py interact kbqa_tree [-d]
+    python deeppavlov/deep.py interact kbqa_cq_rus [-d]
 
 where ``kbqa_cq`` and others are the names of configs and ``-d`` is an optional download key. The key ``-d`` is used
 to download the pre-trained model along with embeddings and all other files needed to run the model. Also command
@@ -111,13 +99,13 @@ In the models mentioned above lite version of Wikidata is used. Full version of 
     kbqa_model(['What position did Angela Merkel hold on November 10, 1994?'])
     >>> ["Bundesminister"]
 
-KBQA model for simple question answering in Russian can be used from Python using the following code:
+KBQA model for complex question answering in Russian can be used from Python using the following code:
 
 .. code:: python
 
     from deeppavlov import configs, build_model
 
-    kbqa_model = build_model(configs.kbqa.kbqa_rus, download=True)
+    kbqa_model = build_model(configs.kbqa.kbqa_cq_rus, download=True)
     kbqa_model(['Когда родился Пушкин?'])
     >>> ["1799-05-26"]
 
@@ -179,27 +167,30 @@ Templates can be added to sparql_queries.json file, which is a dictionary, where
 An example of a template::
 
     {"query_template": "SELECT ?obj WHERE { wd:E1 p:R1 ?s . ?s ps:R1 ?obj . ?s ?p ?x filter(contains(?x, N)) }",
-    "property_types": {"?p": "qualifier"},
-    "rank_rels": ["wiki", "do_not_rank", "do_not_rank"],
-    "filter_rels": [false],
-    "rel_dirs": ["forw"],
-    "query_sequence": [1, 2, 3],
-    "entities_and_types_num": [[1, 0]],
-    "entities_and_types_select": {"1 0": ["1 0"]},
-    "return_if_found": true,
-    "template_num": "0",
-    "exact_entity_type_match": false,
-    "alternative_templates": []}
+     "property_types": {"?p": "qualifier"},
+     "rank_rels": ["wiki", "do_not_rank", "do_not_rank"],
+     "rel_types": ["no_type", "statement", "qualifier"],
+     "filter_rels": [false],
+     "rel_dirs": ["forw"],
+     "query_sequence": [1, 2, 3],
+     "entities_and_types_num": [1, 0],
+     "entities_and_types_select": "1 0",
+     "syntax_structure": {"gr_ent": 1, "types": 0, "mod_ent": 0, "q_ent": 0, "count": false, "order": false},
+     "return_if_found": true,
+     "template_num": "0",
+     "alternative_templates": []}
 
 * "query_template" is the template of the SPARQL query
 * "property_types" defines the types of unknown relations in the template
 * "rank_rels" is a list which defines whether to rank relations, in this example "p:R1" relations we extract from Wikidata for "wd:E1" entities and rank with RelRanker, "ps:R1" and "?p" relations we do not extract and rank
+* "rel_types" - direct, statement or qualifier relations
 * "filter_rels" (only for online version of KBQA) - whether candidate rels will be enumerated in the "filter" expression in the query, for example
   "SELECT ?ent WHERE { ?ent wdt:P31 wd:Q4022 . ?ent ?p1 wd:Q90 } filter(?p1 = wdt:P131 || ?p1 = wdt:P17)"
 * "rel_dirs" - "forw" if the relation connects the subject and unknown object, for example, "wd:Q649 wdt:P17 ?p", "backw" if the relation connects the unknown object and the subject, for example "?p wdt:P17 wd:Q159"
 * "query_sequence" (only for offline version of KBQA) - the sequence in which the triplets will be extracted from Wikidata hdt file
-* entities_and_types_num: numbers of entities and types extracted from the question, which this template can contain
-* entities_and_types_select: the dictionary where keys are number of entities and types extracted from the question and values are indices of entities and types which should be filled in the template (because we can extract more entities and types than the template contains)
-* return_if_found: parameter for the cycle which iterates over all possible combinations of entities, relations and types, if "true" - return if the first valid combination is found, if "false" - consider all combinations
-* template_num - the number of template
+* "entities_and_types_num" - numbers of entities and types extracted from the question, which this template can contain
+* "entities_and_types_select" - the dictionary where keys are number of entities and types extracted from the question and values are indices of entities and types which should be filled in the template (because we can extract more entities and types than the template contains)
+* "syntax_structure" - information about syntactic structure of questions corresponding to this query
+* "return_if_found" - parameter for the cycle which iterates over all possible combinations of entities, relations and types, if "true" - return if the first valid combination is found, if "false" - consider all combinations
+* "template_num" - the number of template
 * alternative_templates - numbers of alternative templates to use if the answer was not found with the current template
