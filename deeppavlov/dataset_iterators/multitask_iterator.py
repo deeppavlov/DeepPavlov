@@ -100,6 +100,7 @@ class MultiTaskIterator:
 
     def gen_batches(self, batch_size: int, data_type: str = 'train',
                     shuffle: bool = None) -> Iterator[Tuple[tuple, tuple]]:
+        log.debug(f"(MultitaskIterator.gen_batches)batch_size data_type: {batch_size} {data_type}")
         batch_generators = {
             task: iter_.gen_batches(batch_size, data_type, shuffle) 
             for task, iter_ in self.task_iterators.items()}          

@@ -119,7 +119,7 @@
           "load_path": "{MT_BERT_PATH}/model"
         },
         "launches_params": {
-          "ner_and_query_prediction": {
+          "ner": {
             "tasks": {
               "ner": {
                 "class_name": "mt_bert_seq_tagging_task",
@@ -130,9 +130,13 @@
                 "return_probas": false,
                 "encoder_layer_ids": [-1],
                 "learning_rate": 1e-3,
-                "in_names": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask", "bert_features_qr"],
+                "in_names": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask"],
                 "in_y_names": ["y_ner_ind"]
-              },
+              }
+            }
+          },
+          "query_prediction": {
+            "tasks": { 
               "query_prediction": {
                 "class_name": "mt_bert_classification_task",
                 "task_name": "qr_prediction",
@@ -197,7 +201,7 @@
   },
   "train": {
     "epochs": 30,
-    "batch_size": 1,
+    "batch_size": 32,
     "metrics": [
       {
         "name": "ner_f1",

@@ -202,8 +202,6 @@ class MultiTaskBert(LRScheduledTFModel):
                 shape=self.shared_ph['input_ids'].shape,
                 name='token_types_ph')
 
-
-
     def _init_bert_body_graph(self) -> None:
         self._init_shared_placeholders()
         sph = self.shared_ph
@@ -503,16 +501,16 @@ class MTBertSequenceTaggingTask:
             dict with fields 'loss', 'head_learning_rate', and 'bert_learning_rate'
         """
         fetches, feed_dict = self.get_sess_run_train_args(**kwargs)
-        _, loss, lr = self.sess.run(fetches, feed_dict=feed_dict)
+        loss, lr = self.sess.run(fetches, feed_dict=feed_dict)
         return {'loss': loss,
                 f'{self.task_name}_head_learning_rate': 
-                    float(kwargs['body_learning_rate']) * self.bert_learning_rate_multiplier,
+                    float(kwargs['body_learning_rate']) * self.head_learning_rate_multiplier,
                 'bert_learning_rate': kwargs['body_learning_rate']}
 
     def get_sess_run_infer_args(self, **kwargs):
         build_feed_dict_args = [kwargs[k] for k in self.in_names[:3]]
-        bert_features = kwargs[self.in_names[3]]
-        token_types = [f.input_type_ids for f in bert_features]
+        # FIXME: kostyl. There is token types placeholder that has to be filled.
+        token_types = np.zeros(np.array(kwargs[self.in_names[0]]).shape)
         feed_dict = self._build_feed_dict(*build_feed_dict_args, token_types=token_types)
         log.debug(f"(MTBertSequenceTaggingTask.get_sess_run_train_args)self.return_probas: {self.return_probas}")
         if self.return_probas:
@@ -525,9 +523,11 @@ class MTBertSequenceTaggingTask:
         return fetches, feed_dict
 
     def get_sess_run_train_args(self, **kwargs):
+        log.debug(f"(MTBertSequenceTaggingTask.get_sess_run_train_args)kwargs[{self.in_names[0]}] shape: {np.array(kwargs[self.in_names[0]]).shape}")
         build_feed_dict_args = [kwargs[k] for k in self.in_names[:3]]
-        bert_features = kwargs[self.in_names[3]]
-        token_types = [f.input_type_ids for f in bert_features]
+        # FIXME: kostyl. There is token types placeholder that has to be filled.
+        token_types = np.zeros(np.array(kwargs[self.in_names[0]]).shape)       
+        log.debug(f"(MTBertSequenceTaggingTask.get_sess_run_train_args)token_types.shape: {np.array(token_types).shape}")
         y = kwargs[self.in_y_names[0]]
         lr = kwargs['body_learning_rate']
         feed_dict = self._build_feed_dict(*build_feed_dict_args, token_types=token_types, y=y, body_learning_rate=lr)  
@@ -720,6 +720,8 @@ class MTBertClassificationTask:
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
         y = kwargs[self.in_y_names[0]]
+        log.debug(f"(MTBertClassifierTask.get_sess_run_train_args)input_ids.shape: {np.array(input_ids).shape}")
+        log.debug(f"(MTBertClassifier.get_sess_run_train_args)kwargs.keys: {list(kwargs.keys())}") 
         lr = kwargs['body_learning_rate']
         feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids, y=y, body_learning_rate=lr)
         fetches = [self.train_op, self.loss]
