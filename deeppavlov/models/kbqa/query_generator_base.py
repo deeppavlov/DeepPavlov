@@ -64,6 +64,7 @@ class QueryGeneratorBase(Component, Serializable):
             wiki_parser: component deeppavlov.models.kbqa.wiki_parser
             entities_to_leave: how many entities to leave after entity linking
             rels_to_leave: how many relations to leave after relation ranking
+            syntax_structure_known: if syntax tree parser was used to define query template type
             return_answers: whether to return answers or candidate answers
         """
         super().__init__(save_path=None, load_path=load_path)
