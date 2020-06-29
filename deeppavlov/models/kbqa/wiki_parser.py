@@ -29,11 +29,12 @@ log = getLogger(__name__)
 class WikiParser:
     """This class extract relations, objects or triplets from Wikidata HDT file"""
 
-    def __init__(self, wiki_filename: str, lang: "@en", **kwargs) -> None:
+    def __init__(self, wiki_filename: str, lang: str = "@en", **kwargs) -> None:
         """
 
         Args:
             wiki_filename: hdt file with wikidata
+            lang: Russian or English language
             **kwargs:
         """
         log.debug(f'__init__ wiki_filename: {wiki_filename}')
