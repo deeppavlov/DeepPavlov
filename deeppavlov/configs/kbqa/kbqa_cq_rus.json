@@ -29,7 +29,7 @@
         "class_name": "tree_to_sparql",
         "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata_rus/sparql_queries.json",
         "in": ["syntax_info", "entities_pos"],
-        "out": ["query_nums", "entities_dict", "types_dict"]
+        "out": ["x_sanitized", "query_nums", "entities_dict", "types_dict"]
       },
       {
         "class_name": "template_matcher",
@@ -87,7 +87,7 @@
         "rels_to_leave": 10,
         "return_answers": true,
         "syntax_structure_known": true,
-        "in": ["x", "query_nums", "entities_dict", "types_dict"],
+        "in": ["x_sanitized", "query_nums", "entities_dict", "types_dict"],
         "out": ["answers"]
       }
     ],

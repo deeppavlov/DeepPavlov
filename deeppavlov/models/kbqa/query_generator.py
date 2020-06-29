@@ -88,7 +88,9 @@ class QueryGenerator(QueryGeneratorBase):
         candidate_outputs = []
         question_tokens = nltk.word_tokenize(question)
         query = query_info["query_template"].lower().replace("wdt:p31", "wdt:P31")
+        log.debug(f"\n_______________________________\nquery: {query}\n_______________________________\n")
         rels_for_search = query_info["rank_rels"]
+        rel_types = query_info["rel_types"]
         query_seq_num = query_info["query_sequence"]
         return_if_found = query_info["return_if_found"]
         log.debug(f"(query_parser)query: {query}, {rels_for_search}, {query_seq_num}, {return_if_found}")
@@ -99,9 +101,8 @@ class QueryGenerator(QueryGeneratorBase):
         query_sequence = []
         for i in range(1, max(query_seq_num) + 1):
             query_sequence.append(query_sequence_dict[i])
-        log.debug(f"(query_parser)query_sequence: {query_sequence}")
-        triplet_info_list = [("forw" if triplet[2].startswith('?') else "backw", search_source)
-                             for search_source, triplet in zip(rels_for_search, query_triplets) if
+        triplet_info_list = [("forw" if triplet[2].startswith('?') else "backw", search_source, rel_type)
+                             for search_source, triplet, rel_type in zip(rels_for_search, query_triplets, rel_types) if
                              search_source != "do_not_rank"]
         log.debug(f"(query_parser)rel_directions: {triplet_info_list}")
         entity_ids = [entity[:self.entities_to_leave] for entity in entity_ids]
@@ -142,12 +143,13 @@ class QueryGenerator(QueryGeneratorBase):
         selected_entity_ids = [entity_ids[int(pos)-1] for pos in entity_positions if int(pos)>0]
         selected_type_ids = [type_ids[int(pos)-1] for pos in type_positions if int(pos)>0]
         entity_combs = make_combs(selected_entity_ids, permut=True)
-        log.debug(f"(query_parser)entity_combs: {entity_combs[:3]}")
         type_combs = make_combs(selected_type_ids, permut=False)
-        log.debug(f"(query_parser)type_combs: {type_combs[:3]}")
-        for combs in itertools.product(entity_combs, type_combs, rel_combs):
+        log.debug(f"(query_parser)entity_combs: {entity_combs[:3]}, type_combs: {type_combs[:3]}, rel_combs: {rel_combs[:3]}")
+        for comb_num, combs in enumerate(itertools.product(entity_combs, type_combs, rel_combs)):
             query_hdt_seq = [
                 fill_query(query_hdt_elem, combs[0], combs[1], combs[2]) for query_hdt_elem in query_sequence]
+            if comb_num == 0:
+                log.debug(f"\n_______________________________\nfilled query: {query_hdt_seq}\n_______________________________\n")
             candidate_output = self.wiki_parser(
                 rels_from_query + answer_ent, query_hdt_seq, filter_info, order_info)
             candidate_outputs += [combs[2][:-1] + output for output in candidate_output]

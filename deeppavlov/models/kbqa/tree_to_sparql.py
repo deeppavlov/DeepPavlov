@@ -42,6 +42,7 @@ class TreeToSparql(Component):
         query_nums_batch = []
         entities_dict_batch = []
         types_dict_batch = []
+        questions_batch = []
         for syntax_tree, positions in zip(syntax_tree_batch, positions_batch):
             log.debug(f"\n{syntax_tree}")
             tree = Conllu(filehandle=StringIO(syntax_tree)).read_tree()
@@ -49,35 +50,41 @@ class TreeToSparql(Component):
             tree_desc = tree.descendants
             log.debug(f"syntax tree info, root: {root.form}")
             unknown_node, unknown_branch = self.find_branch_with_unknown(root)
-            log.debug(f"syntax tree info, unknown node: {unknown_node.form}, unknown branch: {unknown_branch.form}")
-            clause_node, clause_branch = self.find_clause_node(root, unknown_branch)
-            modifiers, clause_modifiers = self.find_modifiers_of_unknown(unknown_node)
-            log.debug(f"modifiers: {[modifier.form for modifier in modifiers]}")
-            if f"{tree_desc[0].form.lower()} {tree_desc[1].form.lower()}" in ["каким был", "какой была"]:
-                new_root = root.children[0]
-            else:
-                new_root = root
-            root_desc = defaultdict(list)
-            for node in new_root.children:
-                if node.deprel not in ["punct", "advmod", "cop"]:
-                    if node == unknown_branch:
-                        root_desc[node.deprel].append(node)
-                    else:
-                        if self.find_entities(node, positions, cut_clause=False):
+            positions = [num for position in positions for num in position]
+            if unknown_node:
+                log.debug(f"syntax tree info, unknown node: {unknown_node.form}, unknown branch: {unknown_branch.form}")
+                clause_node, clause_branch = self.find_clause_node(root, unknown_branch)
+                modifiers, clause_modifiers = self.find_modifiers_of_unknown(unknown_node)
+                log.debug(f"modifiers: {[modifier.form for modifier in modifiers]}")
+                if f"{tree_desc[0].form.lower()} {tree_desc[1].form.lower()}" in ["каким был", "какой была"]:
+                    new_root = root.children[0]
+                else:
+                    new_root = root
+                root_desc = defaultdict(list)
+                for node in new_root.children:
+                    if node.deprel not in ["punct", "advmod", "cop"]:
+                        if node == unknown_branch:
                             root_desc[node.deprel].append(node)
+                        else:
+                            if self.find_entities(node, positions, cut_clause=False):
+                                root_desc[node.deprel].append(node)
 
-            appos_token_nums = sorted(self.find_appos_tokens(root, []))
-            appos_tokens = [elem.form for elem in tree_desc if elem.ord in appos_token_nums]
-            clause_token_nums = sorted(self.find_clause_tokens(root, clause_node, []))
-            clause_tokens = [elem.form for elem in tree_desc if elem.ord in clause_token_nums]
-            log.debug(f"appos tokens: {appos_tokens}")
-            log.debug(f"clause tokens: {clause_tokens}")
-            query_nums, entities_dict, types_dict = self.build_query(new_root, unknown_branch, root_desc,
-                                                                     unknown_node, modifiers, clause_modifiers, positions)
-            query_nums_batch.append(query_nums)
-            entities_dict_batch.append(entities_dict)
-            types_dict_batch.append(types_dict)
-        return query_nums_batch, entities_dict_batch, types_dict_batch
+                appos_token_nums = sorted(self.find_appos_tokens(root, []))
+                appos_tokens = [elem.form for elem in tree_desc if elem.ord in appos_token_nums]
+                clause_token_nums = sorted(self.find_clause_tokens(root, clause_node, []))
+                clause_tokens = [elem.form for elem in tree_desc if elem.ord in clause_token_nums]
+                log.debug(f"appos tokens: {appos_tokens}")
+                log.debug(f"clause tokens: {clause_tokens}")
+                query_nums, entities_dict, types_dict = self.build_query(new_root, unknown_branch, root_desc,
+                                                                         unknown_node, modifiers, clause_modifiers, positions)
+
+                question = ' '.join([node.form for node in tree.descendants if (node.ord not in appos_token_nums or node.ord not in clause_token_nums)])
+                log.debug(f"sanitized question: {question}")
+                query_nums_batch.append(query_nums)
+                entities_dict_batch.append(entities_dict)
+                types_dict_batch.append(types_dict)
+                questions_batch.append(question)
+        return questions_batch, query_nums_batch, entities_dict_batch, types_dict_batch
         
 
     def find_root(self, tree: Node) -> Node:
@@ -86,12 +93,12 @@ class TreeToSparql(Component):
                 return node
 
     def find_branch_with_unknown(self, root: Node) -> Tuple[Node]:
+        self.wh_leaf = False
         if root.form.lower() in self.q_pronouns:
             for node in root.children:
                 if node.deprel == "nsubj":
                     return node, node
 
-        self.wh_leaf = False
         for node in root.children:
             if node.form.lower() in self.q_pronouns:
                 if node.children:
@@ -109,6 +116,7 @@ class TreeToSparql(Component):
             for node in root.children:
                 if node.deprel in ["nsubj", "obl", "obj", "nmod"] and node.form.lower() not in self.q_pronouns:
                     return node, node
+        return "", ""
 
     def find_modifiers_of_unknown(self, node: Node) -> Tuple[List[Node]]:
         modifiers = []
@@ -220,7 +228,7 @@ class TreeToSparql(Component):
         return clause_token_nums
 
     def build_query(self, root: Node, unknown_branch: Node, root_desc: Dict[str, List[Node]], unknown_node: Node,
-                          unknown_modifiers: List[Node], clause_modifiers: List[Node], positions: List[List[int]],
+                          unknown_modifiers: List[Node], clause_modifiers: List[Node], positions: List[int],
                           count: bool = False, order: bool = False) -> Tuple[List[str], List[str], List[str]]:
         query_nums = []
         grounded_entities_list = []
@@ -228,22 +236,23 @@ class TreeToSparql(Component):
         modifiers_list = []
         qualifier_entities_list = []
         found_year_or_number = False
-        positions = [num for position in positions for num in position]
         root_desc_deprels = []
         for key in root_desc.keys():
             for i in range(len(root_desc[key])):
                 root_desc_deprels.append(key)
         root_desc_deprels = sorted(root_desc_deprels)
-        log.debug(f"build_query: root_desc.keys, {root_desc_deprels}")
+        log.debug(f"build_query: root_desc.keys, {root_desc_deprels}, positions {positions}")
         if root_desc_deprels in [["nsubj", "obl"],
-                                        ["nsubj", "obj"],
-                                        ["nsubj", "xcomp"],
-                                        ["nmod", "nsubj"],
-                                        ["obj", "obl"],
-                                        ["iobj", "nsubj"],
-                                        ["acl", "nsubj"],
-                                        ["cop", "nsubj", "obl"],
-                                        ["obj"]]:
+                                 ["nsubj", "obj"],
+                                 ["nsubj", "xcomp"],
+                                 ["nmod", "nsubj"],
+                                 ["obj", "obl"],
+                                 ["iobj", "nsubj"],
+                                 ["acl", "nsubj"],
+                                 ["cop", "nsubj", "obl"],
+                                 ["obj"],
+                                 ["obl"],
+                                 ["nsubj"]]:
             if self.wh_leaf:
                 for nodes in root_desc.values():
                     if nodes[0].form not in self.q_pronouns:

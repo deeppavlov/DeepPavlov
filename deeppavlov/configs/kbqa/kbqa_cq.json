@@ -16,7 +16,8 @@
       {
         "class_name": "wiki_parser",
         "id": "wiki_p",
-        "wiki_filename": "{DOWNLOADS_PATH}/wikidata_eng/wikidata.hdt"
+        "wiki_filename": "{DOWNLOADS_PATH}/wikidata/wikidata.hdt",
+        "lang": "@en"
       },
       {
         "class_name": "template_matcher",

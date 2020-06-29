@@ -38,6 +38,7 @@ class WikiParser:
         """
         log.debug(f'__init__ wiki_filename: {wiki_filename}')
         wiki_path = expand_path(wiki_filename)
+        self.description_rel = "http://schema.org/description"
         self.lang = lang
         self.document = HDTDocument(str(wiki_path))
 
@@ -124,6 +125,8 @@ class WikiParser:
         query = list(map(lambda elem: "" if elem.startswith('?') else elem, query))
         subj, rel, obj = query
         triplets, c = self.document.search_triples(subj, rel, obj)
+        if rel == self.description_rel:
+            triplets = [triplet for triplet in triplets if triplet[2].endswith(self.lang)]
         combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
         return combs
 
@@ -171,13 +174,13 @@ class WikiParser:
             aliases = [label[2].strip(self.lang).strip('"') for label in labels if label[2].endswith(self.lang)]
         return aliases
 
-    def find_rels(self, entity: str, direction: str, rel_type: str = None) -> List[str]:
+    def find_rels(self, entity: str, direction: str, rel_type: str = "no_type") -> List[str]:
         if direction == "forw":
             triplets, num = self.document.search_triples(f"http://www.wikidata.org/entity/{entity}", "", "")
         else:
             triplets, num = self.document.search_triples("", "", f"http://www.wikidata.org/entity/{entity}")
 
-        if rel_type is not None:
+        if rel_type != "no_type":
             start_str = f"http://www.wikidata.org/prop/{rel_type}"
         else:
             start_str = "http://www.wikidata.org/prop/P"

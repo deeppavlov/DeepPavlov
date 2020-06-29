@@ -60,7 +60,7 @@ class WikiParserOnline:
         else:
             return entity
 
-    def find_rels(self, entity: str, direction: str, rel_type: str = None) -> List[str]:
+    def find_rels(self, entity: str, direction: str, rel_type: str = "no_type") -> List[str]:
         if direction == "forw":
             query = f"SELECT DISTINCT ?rel WHERE {{ wd:{entity} ?rel ?obj . }}"
         else:
@@ -69,7 +69,7 @@ class WikiParserOnline:
         if rels:
             rels = [rel["rel"]["value"] for rel in rels]
 
-        if rel_type is not None:
+        if rel_type != "no_type":
             start_str = f"http://www.wikidata.org/prop/{rel_type}"
         else:
             start_str = "http://www.wikidata.org/prop/P"

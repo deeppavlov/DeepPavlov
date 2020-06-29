@@ -16,7 +16,6 @@ import itertools
 import re
 from logging import getLogger
 from typing import Tuple, List, Optional, Union, Dict, Any
-from collections import namedtuple
 
 import nltk
 
@@ -141,7 +140,7 @@ class QueryGeneratorBase(Component, Serializable):
             self.template_nums = template_types
             log.debug(f"(__call__)self.template_nums: {self.template_nums}")
             if not self.syntax_structure_known:
-                entity_ids = entity_ids[:2]
+                entity_ids = entity_ids[:3]
             candidate_outputs = self.sparql_template_parser(question, entity_ids, type_ids)
         return candidate_outputs
 
@@ -193,7 +192,6 @@ class QueryGeneratorBase(Component, Serializable):
                     return candidate_outputs
 
             if not candidate_outputs:
-                log.debug(f"(find_candidate_answers)templates: {templates}")
                 alternative_templates = templates[0]["alternative_templates"]
                 for template_num, entities_and_types_select in alternative_templates:
                     candidate_outputs = self.query_parser(question, self.template_queries[template_num], entities_and_types_select,
@@ -204,13 +202,13 @@ class QueryGeneratorBase(Component, Serializable):
 
         return candidate_outputs
 
-    def find_top_rels(self, question: str, entity_ids: List[List[str]], triplet_info: namedtuple) -> List[str]:
+    def find_top_rels(self, question: str, entity_ids: List[List[str]], triplet_info: Tuple) -> List[str]:
         ex_rels = []
-        direction, source = triplet_info
+        direction, source, rel_type = triplet_info
         if source == "wiki":
             for entity_id in entity_ids:
                 for entity in entity_id[:self.entities_to_leave]:
-                    ex_rels += self.wiki_parser.find_rels(entity, direction)
+                    ex_rels += self.wiki_parser.find_rels(entity, direction, rel_type)
             ex_rels = list(set(ex_rels))
             ex_rels = [rel.split('/')[-1] for rel in ex_rels]
         elif source == "rank_list_1":
