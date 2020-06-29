@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import jieba
 from typing import List
+
+import jieba
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
