@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+from typing import List, Union
 
 import jieba
 
@@ -38,14 +38,14 @@ class JiebaTokenizer(Component):
         Tokenize a single string
 
         Args:
-            text: a string
+            text: a string to tokenize
 
         Returns:
             tokenized string
         """
         return ' '.join(jieba.cut(text))
 
-    def __call__(self, batch: List[any]) -> List[any]:
+    def __call__(self, batch: Union[List[str], List[List[str]]]) -> Union[List[str], List[List[str]]]:
         """
         Tokenize either list of strings or list of list of strings
 
@@ -56,12 +56,11 @@ class JiebaTokenizer(Component):
             tokenized strings in the given format
         """
 
-        batch_tokenized = []
         if isinstance(batch[0], str):
             batch_tokenized = [JiebaTokenizer.tokenize_str(s) for s in batch]
         elif isinstance(batch[0], list):
             for lst in batch:
-                batch_tokenized.append([JiebaTokenizer.tokenize_str(s) for s in lst])
+                batch_tokenized = [self(lst) for lst in batch]
         else:
             raise NotImplementedError('Not implemented for types other than'
                                       ' str or list')
