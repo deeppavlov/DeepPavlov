@@ -75,6 +75,8 @@ class QueryGenerator(QueryGeneratorBase):
         if self.return_answers:
             answers = self.rel_ranker(question_batch, candidate_outputs_batch)
             log.debug(f"(__call__)answers: {answers}")
+            if not answers:
+                answers = ["Not Found"]
             return answers
         else:
             log.debug(f"(__call__)candidate_outputs_batch: {[output[:5] for output in candidate_outputs_batch]}")
