@@ -158,7 +158,7 @@
   "squad_bert_model": "deeppavlov.models.bert.bert_squad:BertSQuADModel",
   "squad_dataset_reader": "deeppavlov.dataset_readers.squad_dataset_reader:SquadDatasetReader",
   "squad_iterator": "deeppavlov.dataset_iterators.squad_iterator:SquadIterator",
-  "squad_model": "deeppavlov.models.squad.tf-up:SquadModel",
+  "squad_model": "deeppavlov.models.squad.squad:SquadModel",
   "squad_preprocessor": "deeppavlov.models.preprocessors.squad_preprocessor:SquadPreprocessor",
   "squad_vocab_embedder": "deeppavlov.models.preprocessors.squad_preprocessor:SquadVocabEmbedder",
   "static_dictionary": "deeppavlov.vocabs.typos:StaticDictionary",
