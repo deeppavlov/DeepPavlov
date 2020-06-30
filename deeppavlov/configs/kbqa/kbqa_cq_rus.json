@@ -131,6 +131,7 @@
       "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
       "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
+      "{DEEPPAVLOV_PATH}/requirements/udpipe.txt",
       "{DEEPPAVLOV_PATH}/requirements/hdt.txt"
     ],
     "labels": {
