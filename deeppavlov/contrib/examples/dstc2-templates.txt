@@ -1,0 +1,46 @@
+api_call	api_call area="#area" food="#food" pricerange="#pricerange"	api_call area="#area" food="#food" pricerange="#pricerange"
+bye	You are welcome!	
+canthear	Sorry, I can't hear you.	
+canthelp_area	I'm sorry but there is no #area american restaurant in the #area of town.	
+canthelp_area_food	Sorry there is no #food restaurant in the #area of town.	
+canthelp_area_food_pricerange	Sorry there is no #pricerange restaurant in the #area of town serving #food food.	
+canthelp_area_pricerange	Sorry there is no #pricerange restaurant in the #area of town serving #area american food.	
+canthelp_food	I am sorry but there is no #food restaurant that matches your request.	
+canthelp_food_pricerange	Sorry there is no #food restaurant in the #pricerange price range.	
+confirm-domain	You are looking for a restaurant is that right?	
+expl-conf_area	Did you say you are looking for a restaurant in the #area of town?	Ok, a restaurant in any part of town is that right?
+expl-conf_food	You are looking for a #food restaurant right?	You are looking for a restaurant serving any kind of food right?
+expl-conf_pricerange	Let me confirm, You are looking for a restaurant in the #pricerange price range right?	Let me confirm, You are looking for a restaurant and you dont care about the price range right?
+impl-conf_area+impl-conf_pricerange+request_food	There are  restaurants in the #pricerange price range and the #area of town. What type of food would you like?	
+impl-conf_food+impl-conf_pricerange+request_area	There are  restaurants serving #food in the #pricerange price range. What area would you like?	
+impl-conf_food+request_area	There are  restaurants serving #food food. What area do you want?	
+inform_addr+inform_food+offer_name	#name is on #addr and serves tasty #food food.	
+inform_addr+inform_phone+inform_pricerange+offer_name	#name is on #addr. Its phone number is #phone, and it is in the #pricerange pricerange.	
+inform_addr+inform_phone+offer_name	The phone number of #name is #phone and it is on #addr.	
+inform_addr+inform_postcode+offer_name	#name is on #addr, #postcode.	
+inform_addr+inform_pricerange+offer_name	#name is on #addr, and it is in the #pricerange price range.	
+inform_addr+offer_name	Sure, #name is on #addr.	
+inform_area+inform_food+inform_pricerange+offer_name	#name is a great restaurant serving #pricerange #food food in the #area of town.	
+inform_area+inform_food+offer_name	#name is a nice place in the #area of town serving tasty #food food.	
+inform_area+inform_phone+offer_name	The phone number of #name is #phone and it is in the #area part of town.	
+inform_area+inform_postcode+offer_name	#name is in the #area, at #postcode.	
+inform_area+inform_pricerange+offer_name	#name is a nice place in the #area of town and the prices are #pricerange.	
+inform_area+offer_name	#name is in the #area part of town.	
+inform_food+inform_pricerange+offer_name	#name serves #food food in the #pricerange price range.	
+inform_food+offer_name	#name serves #food food.	
+inform_phone+inform_postcode+offer_name	The phone number of #name is #phone and its postcode is #postcode.	
+inform_phone+inform_pricerange+offer_name	The phone number of #name is #phone and it is in the #pricerange price range.	
+inform_phone+offer_name	The phone number of #name is #phone.	The phone number of #name is dontcare.
+inform_postcode+inform_pricerange+offer_name	#name is in the #pricerange price range, and their post code is #postcode.	
+inform_postcode+offer_name	The post code of #name is #postcode.	
+inform_pricerange+offer_name	The price range at #name is #pricerange.	
+offer_name	#name is a great restaurant.	
+repeat	Sorry I am a bit confused; please tell me again what you are looking for.	
+reqmore	Can I help you with anything else?	
+request_area	What part of town do you have in mind?	
+request_food	What kind of food would you like?	
+request_pricerange	Would you like something in the cheap, moderate, or expensive price range?	
+select_area	Sorry would you like something in the #area or in the #area.	Sorry would you like the #area of town or you dont care.
+select_food	Sorry would you like #food or #food food?	Sorry would you like #food food or you dont care.
+select_pricerange	Sorry would you like something in the #pricerange price range or in the #pricerange price range.	Sorry would you like something in the #pricerange price range or you dont care.
+welcomemsg	Hello, welcome to the Cambridge restaurant system. You can ask for restaurants by area, price range or food type. How may I help you?	

@@ -1,0 +1,416 @@
+{
+    "food": {
+        "caribbean": [
+            "carraibean",
+            "carribean",
+            "caribbean"
+        ],
+        "kosher": [
+            "kosher"
+        ],
+        "tuscan": [
+            "tuscan"
+        ],
+        "french": [
+            "french"
+        ],
+        "mexican": [
+            "mexican"
+        ],
+        "japanese": [
+            "japanese"
+        ],
+        "thai": [
+            "tailand",
+            "thai"
+        ],
+        "bistro": [
+            "bistro"
+        ],
+        "swedish": [
+            "swedish"
+        ],
+        "lebanese": [
+            "lebanese"
+        ],
+        "indonesian": [
+            "endonesian",
+            "indonesian"
+        ],
+        "halal": [
+            "halal"
+        ],
+        "crossover": [
+            "class over",
+            "cross over",
+            "crossover"
+        ],
+        "chinese": [
+            "chinses",
+            "chineese",
+            "chinese"
+        ],
+        "british": [
+            "british"
+        ],
+        "austrian": [
+            "austrian"
+        ],
+        "greek": [
+            "greek"
+        ],
+        "vietnamese": [
+            "vietnam",
+            "vietnamese"
+        ],
+        "fusion": [
+            "fusion"
+        ],
+        "italian": [
+            "itailian",
+            "italian"
+        ],
+        "persian": [
+            "persian"
+        ],
+        "indian": [
+            "india",
+            "indian"
+        ],
+        "welsh": [
+            "welsh"
+        ],
+        "gastropub": [
+            "gastro pub",
+            "gastropub"
+        ],
+        "australian": [
+            "australian"
+        ],
+        "brazilian": [
+            "brazilian"
+        ],
+        "cuban": [
+            "cuban"
+        ],
+        "moroccan": [
+            "moroccon",
+            "moroccan"
+        ],
+        "korean": [
+            "korea",
+            "korean"
+        ],
+        "english": [
+            "english"
+        ],
+        "world": [
+            "world"
+        ],
+        "irish": [
+            "irish"
+        ],
+        "swiss": [
+            "swiss"
+        ],
+        "modern european": [
+            "modern europane",
+            "modern europone",
+            "modern euorpean",
+            "modern european"
+        ],
+        "turkish": [
+            "turkiesh",
+            "turkish"
+        ],
+        "russian": [
+            "russian"
+        ],
+        "catalan": [
+            "catalin",
+            "kitalian",
+            "catalanian",
+            "catalonian",
+            "katalian",
+            "catalan"
+        ],
+        "polynesian": [
+            "polynesian"
+        ],
+        "cantonese": [
+            "cantonates",
+            "cantonales",
+            "cantonese"
+        ],
+        "barbeque": [
+            "barbecue",
+            "barbeque"
+        ],
+        "scottish": [
+            "scottish"
+        ],
+        "portuguese": [
+            "portugeuse",
+            "portugese",
+            "portuguese"
+        ],
+        "german": [
+            "german"
+        ],
+        "north american": [
+            "american",
+            "north american"
+        ],
+        "afghan": [
+            "afghan"
+        ],
+        "vegetarian": [
+            "vegetarian"
+        ],
+        "jamaican": [
+            "jamcian",
+            "jamian",
+            "jamaican"
+        ],
+        "australasian": [
+            "australian asian",
+            "austria asian",
+            "australasian"
+        ],
+        "venetian": [
+            "venetian"
+        ],
+        "hungarian": [
+            "hungarian"
+        ],
+        "belgian": [
+            "belgium",
+            "belgian"
+        ],
+        "asian oriental": [
+            "asian ori",
+            "asian",
+            "oriental",
+            "asian oriental"
+        ],
+        "basque": [
+            "bask",
+            "basque"
+        ],
+        "international": [
+            "international"
+        ],
+        "corsica": [
+            "corsica"
+        ],
+        "canapes": [
+            "canope",
+            "canopy",
+            "canapes"
+        ],
+        "traditional": [
+            "traditional"
+        ],
+        "creative": [
+            "creative"
+        ],
+        "malaysian": [
+            "malaysian"
+        ],
+        "polish": [
+            "polish"
+        ],
+        "european": [
+            "european",
+            "european"
+        ],
+        "dontcare": [
+            "any food",
+            "any kind",
+            "any type of food",
+            "any type",
+            "dontcare"
+        ],
+        "eritrean": [
+            "airatarin",
+            "airitran",
+            "air tran",
+            "airitran",
+            "eartrain",
+            "earatrain",
+            "arotrian",
+            "airtran",
+            "eirtrean",
+            "eritrean"
+        ],
+        "scandinavian": [
+            "scandanavian",
+            "scandanavian",
+            "scandinavian"
+        ],
+        "christmas": [
+            "christmas"
+        ],
+        "unusual": [
+            "unusual"
+        ],
+        "singaporean": [
+            "signaporian",
+            "signapore",
+            "singapore",
+            "singaporean"
+        ],
+        "steakhouse": [
+            "steak house",
+            "steak",
+            "steakhouse"
+        ],
+        "african": [
+            "african"
+        ],
+        "danish": [
+            "danish"
+        ],
+        "spanish": [
+            "spanish"
+        ],
+        "seafood": [
+            "sea food",
+            "seafood"
+        ],
+        "romanian": [
+            "romanian"
+        ],
+        "mediterranean": [
+            "medterranean",
+            "mediterranean"
+        ]
+    },
+    "pricerange": {
+        "moderate": [
+            "moderately",
+            "medium",
+            "moderat",
+            "moderately",
+            "derately",
+            "modreately",
+            "moderate"
+        ],
+        "expensive": [
+            "high priced",
+            "expensive"
+        ],
+        "cheap": [
+            "cheap"
+        ],
+        "dontcare": [
+            "any price",
+            "i dont care about the price",
+            "i dont care about price",
+            "any range is fine",
+            "any range",
+            "dontcare"
+        ]
+    },
+    "area": {
+        "south": [
+            "south"
+        ],
+        "east": [
+            "east"
+        ],
+        "dontcare": [
+            "any area",
+            "any address",
+            "any part",
+            "other parts",
+            "anywhere",
+            "any where",
+            "other parts",
+            "other areas",
+            "dontcare"
+        ],
+        "north": [
+            "north"
+        ],
+        "west": [
+            "west"
+        ],
+        "centre": [
+            "center",
+            "central",
+            "downtown",
+            "down town",
+            "centre"
+        ]
+    },
+    "this": {
+        "dontcare": [
+            "dont care",
+            "doesnt matter",
+            "any fine",
+            "any noise",
+            "any of town",
+            "noise anything",
+            "any type",
+            "anything",
+            "any thing",
+            "what ever",
+            "does not matter",
+            "dont mind",
+            "dont know",
+            "any type",
+            "any kind",
+            "dont matter",
+            "dontcare"
+        ]
+    },
+    "name": {
+        "prezzo": [
+            "prezzo"
+        ],
+        "restaurant two two": [
+            "restaurant two two"
+        ],
+        "la margherita": [
+            "la margherita"
+        ],
+        "golden wok": [
+            "golden wok"
+        ],
+        "nandos": [
+            "nandos"
+        ],
+        "da vinci pizzeria": [
+            "da vinci pizzeria"
+        ],
+        "rice house": [
+            "rice house"
+        ],
+        "curry prince": [
+            "curry prince"
+        ],
+        "hk fusion": [
+            "hk fusion"
+        ],
+        "pizza hut city centre": [
+            "pizza hutt",
+            "pizza hut",
+            "pizza hut city centre"
+        ],
+        "venue": [
+            "venue"
+        ],
+        "chiquito restaurant bar": [
+            "chiquito",
+            "chiquito restaurant bar"
+        ],
+        "bloomsbury restaurant": [
+            "bloomsbury",
+            "bloomsbury restaurant"
+        ],
+        "the missing sock": [
+            "the missing sock"
+        ]
+    }
+}

@@ -14,7 +14,7 @@
 
 import re
 import itertools
-from typing import List
+from typing import List, Tuple
 
 
 def extract_year(question_tokens: List[str], question: str) -> str:
@@ -84,7 +84,7 @@ def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], r
                    rel_comb: ["P17"]
     '''
     query = " ".join(query)
-    map_query_str_to_wikidata = [("p0", "http://schema.org/description"),
+    map_query_str_to_wikidata = [("P0", "http://schema.org/description"),
                                  ("wd:", "http://www.wikidata.org/entity/"),
                                  ("wdt:", "http://www.wikidata.org/prop/direct/"),
                                  (" p:", " http://www.wikidata.org/prop/"),
@@ -100,5 +100,41 @@ def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], r
         query = query.replace(f"t{n + 1}", entity_type)
     for n, rel in enumerate(rel_comb[:-1]):
         query = query.replace(f"r{n + 1}", rel)
+    query = query.replace("http://www.wikidata.org/prop/direct/P0", "http://schema.org/description")
     query = query.split(' ')
     return query
+
+def fill_online_query(query: List[str], entity_comb: List[str], type_comb: List[str],
+              rel_comb: List[str], rels_to_replace: List[str],
+              rels_for_filter: List[str], rel_list_for_filter: List[List[str]]) -> Tuple[str, List[str]]:
+
+    for n, entity in enumerate(entity_comb[:-1]):
+        query = query.replace(f"e{n + 1}", entity)
+    for n, entity_type in enumerate(type_comb[:-1]):  # type_entity
+        query = query.replace(f"t{n + 1}", entity_type)
+    for n, rel in enumerate(rel_comb[:-1]):
+        query = query.replace(rels_to_replace[n], rel)
+
+    candidate_rel_filters = []
+    new_rels = []
+    if rels_for_filter:
+        n = 0
+        for rel, candidate_rels in zip(rels_for_filter, rel_list_for_filter):
+            rel_types = re.findall(f" ([\S]+:){rel}", query)
+            for rel_type in rel_types:
+                new_rel = f"?p{n+1}"
+                query = query.replace(f'{rel_type}{rel}', new_rel)
+                new_rels.append(new_rel)
+                candidate_rels_filled = [f"{new_rel} = {rel_type}{rel_value}" for rel_value in candidate_rels]
+                candidate_rel_str = " || ".join(candidate_rels_filled)
+                candidate_rel_filters.append(f"({candidate_rel_str})")
+                n += 1
+
+        if "filter" in query:
+            query = query.replace("filter(", f"filter({'&&'.join(candidate_rel_filters)}&&")
+        else:
+            query = query.replace(" }", f" filter({'&&'.join(candidate_rel_filters)}) }}")
+    
+        query = query.replace(" where", f" {' '.join(new_rels)} where")    
+
+    return query, new_rels

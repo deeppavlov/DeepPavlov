@@ -86,13 +86,13 @@ class RelRankerBertInfer(Component, Serializable):
 
                 probas = self.ranker(questions_batch, rels_labels_batch)
                 probas = [proba[1] for proba in probas]
-                for j, answer in enumerate(answers_batch):
-                    answers_with_scores.append((answer, probas[j]))
+                for j, (answer, rels_labels) in enumerate(zip(answers_batch, rels_labels_batch)):
+                    answers_with_scores.append((answer, rels_labels, probas[j]))
 
-            answers_with_scores = sorted(answers_with_scores, key=lambda x: x[1], reverse=True)
+            answers_with_scores = sorted(answers_with_scores, key=lambda x: x[-1], reverse=True)
 
             if answers_with_scores:
-                log.debug(f"answers: {answers_with_scores[0][0]}")
+                log.debug(f"answers: {answers_with_scores[0]}")
                 answer = self.wiki_parser.find_label(answers_with_scores[0][0])
 
             answers.append(answer)

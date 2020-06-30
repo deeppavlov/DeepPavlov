@@ -77,11 +77,26 @@ def get_configs_downloads(config: Optional[Union[str, Path, dict]] = None) -> Di
 
 def check_md5(url: str, dest_paths: List[Path]) -> bool:
     url_md5 = path_set_md5(url)
-    r = requests.get(url_md5)
-    if r.status_code != 200:
+
+    try:
+        if url_md5.startswith('s3://'):
+            import boto3
+
+            s3 = boto3.resource('s3')
+            bucket, key = url_md5[5:].split('/', maxsplit=1)
+            obj = s3.Object(bucket, key)
+            data = obj.get()['Body'].read().decode('utf8')
+        else:
+            r = requests.get(url_md5)
+            if r.status_code != 200:
+                return False
+            data = r.text
+    except Exception as e:
+        log.debug(f'Could not download {url_md5} because of an exception {type(e)}: {e}')
         return False
+
     expected = {}
-    for line in r.text.splitlines():
+    for line in data.splitlines():
         _md5, fname = line.split(' ', maxsplit=1)
         if fname[0] != '*':
             if fname[0] == ' ':
@@ -142,7 +157,7 @@ def deep_download(config: Union[str, Path, dict]) -> None:
     downloads = get_configs_downloads(config)
 
     for url, dest_paths in downloads.items():
-        if not isinstance(config, dict):
+        if not url.startswith('s3://') and not isinstance(config, dict):
             url = set_query_parameter(url, 'config', Path(config).stem)
         download_resource(url, dest_paths)
 
