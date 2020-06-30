@@ -70,6 +70,7 @@
   "hybrid_ner_model": "deeppavlov.models.ner.NER_model:HybridNerModel",
   "imdb_reader": "deeppavlov.dataset_readers.imdb_reader:ImdbReader",
   "insurance_reader": "deeppavlov.dataset_readers.insurance_reader:InsuranceReader",
+  "jieba_tokenizer": "deeppavlov.models.tokenizers.jieba_tokenizer:JiebaTokenizer",
   "joint_tagger_parser": "deeppavlov.models.syntax_parser.joint:JointTaggerParser",
   "kbqa_reader": "deeppavlov.dataset_readers.kbqa_reader:KBQAReader",
   "kenlm_elector": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
