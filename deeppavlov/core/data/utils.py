@@ -69,7 +69,7 @@ def s3_download(url: str, destination: str) -> None:
     """
     import boto3
 
-    s3 = boto3.resource('s3')
+    s3 = boto3.resource('s3', endpoint_url=os.environ.get('AWS_ENDPOINT_URL'))
 
     bucket, key = url[5:].split('/', maxsplit=1)
     file_object = s3.Object(bucket, key)
