@@ -1,11 +1,4 @@
 {
-  "dataset_reader": {
-    "class_name": "sq_reader",
-    "data_path": "{DOWNLOADS_PATH}/lcquad/entity_detection_dataset.pickle"
-  },
-  "dataset_iterator": {
-    "class_name": "data_learning_iterator"
-  },
   "chainer": {
     "in": ["x"],
     "in_y": ["y"],
@@ -17,13 +10,14 @@
       },
       {
         "in": ["x_tokens", "y_pred"],
-        "out": ["entities", "types"],
+        "out": ["entities", "types", "entities_pos"],
         "class_name": "entity_detection_parser"
       },
       {
         "class_name": "wiki_parser",
         "id": "wiki_p",
-        "wiki_filename": "{DOWNLOADS_PATH}/wikidata_eng/wikidata.hdt"
+        "wiki_filename": "{DOWNLOADS_PATH}/wikidata/wikidata.hdt",
+        "lang": "@en"
       },
       {
         "class_name": "template_matcher",
@@ -44,8 +38,8 @@
         "inverted_index_filename": "inverted_index_eng.pickle",
         "entities_list_filename": "entities_list.pickle",
         "q2name_filename": "wiki_eng_q_to_name.pickle",
-        "use_hdt": false,
-        "wiki_parser": "#wiki_p",
+        "build_inverted_index": false,
+        "use_descriptions": false,
         "use_prefix_tree": false
       },
       {
@@ -55,8 +49,8 @@
         "inverted_index_filename": "inverted_index_types_eng.pickle",
         "entities_list_filename": "types_list.pickle",
         "q2name_filename": "wiki_eng_q_to_name_types.pickle",
-        "use_hdt": false,
-        "wiki_parser": "#wiki_p",
+        "build_inverted_index": false,
+        "use_descriptions": false,
         "use_prefix_tree": false
       },
       {
@@ -78,7 +72,7 @@
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
         "rank_rels_filename_1": "rels_0.txt",
         "rank_rels_filename_2": "rels_1.txt",
-        "sparql_queries_filename": "sparql_queries.json",
+        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries.json",
         "entities_to_leave": 5,
         "rels_to_leave": 10,
         "in": ["x", "template_type", "entities", "types"],
@@ -172,15 +166,15 @@
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/sparql_queries.json",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+        "subdir": "{DOWNLOADS_PATH}/wikidata"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.hdt",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+        "subdir": "{DOWNLOADS_PATH}/wikidata"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.hdt.index.v1-1",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+        "subdir": "{DOWNLOADS_PATH}/wikidata"
       }
     ]
   }

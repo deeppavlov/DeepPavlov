@@ -29,15 +29,18 @@ log = getLogger(__name__)
 class WikiParser:
     """This class extract relations, objects or triplets from Wikidata HDT file"""
 
-    def __init__(self, wiki_filename: str, **kwargs) -> None:
+    def __init__(self, wiki_filename: str, lang: str = "@en", **kwargs) -> None:
         """
 
         Args:
             wiki_filename: hdt file with wikidata
+            lang: Russian or English language
             **kwargs:
         """
         log.debug(f'__init__ wiki_filename: {wiki_filename}')
         wiki_path = expand_path(wiki_filename)
+        self.description_rel = "http://schema.org/description"
+        self.lang = lang
         self.document = HDTDocument(str(wiki_path))
 
     def __call__(self, what_return: List[str],
@@ -123,6 +126,8 @@ class WikiParser:
         query = list(map(lambda elem: "" if elem.startswith('?') else elem, query))
         subj, rel, obj = query
         triplets, c = self.document.search_triples(subj, rel, obj)
+        if rel == self.description_rel:
+            triplets = [triplet for triplet in triplets if triplet[2].endswith(self.lang)]
         combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
         return combs
 
@@ -137,13 +142,13 @@ class WikiParser:
             labels, cardinality = self.document.search_triples(entity, "http://www.w3.org/2000/01/rdf-schema#label", "")
             # labels = [["http://www.wikidata.org/entity/Q5513", "http://www.w3.org/2000/01/rdf-schema#label", '"Lake Baikal"@en'], ...]
             for label in labels:
-                if label[2].endswith("@en"):
-                    found_label = label[2].strip('@en').replace('"', '')
+                if label[2].endswith(self.lang):
+                    found_label = label[2].strip(self.lang).replace('"', '')
                     return found_label
 
-        elif entity.endswith("@en"):
+        elif entity.endswith(self.lang):
             # entity: '"Lake Baikal"@en'
-            entity = entity.strip('@en')
+            entity = entity.strip(self.lang)
             return entity
 
         elif "^^" in entity:
@@ -167,16 +172,16 @@ class WikiParser:
         if entity.startswith("http://www.wikidata.org/entity/"):
             labels, cardinality = self.document.search_triples(entity,
                                                                "http://www.w3.org/2004/02/skos/core#altLabel", "")
-            aliases = [label[2].strip('@en').strip('"') for label in labels if label[2].endswith("@en")]
+            aliases = [label[2].strip(self.lang).strip('"') for label in labels if label[2].endswith(self.lang)]
         return aliases
 
-    def find_rels(self, entity: str, direction: str, rel_type: str = None) -> List[str]:
+    def find_rels(self, entity: str, direction: str, rel_type: str = "no_type") -> List[str]:
         if direction == "forw":
             triplets, num = self.document.search_triples(f"http://www.wikidata.org/entity/{entity}", "", "")
         else:
             triplets, num = self.document.search_triples("", "", f"http://www.wikidata.org/entity/{entity}")
 
-        if rel_type is not None:
+        if rel_type != "no_type":
             start_str = f"http://www.wikidata.org/prop/{rel_type}"
         else:
             start_str = "http://www.wikidata.org/prop/P"

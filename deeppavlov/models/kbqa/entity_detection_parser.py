@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 
@@ -28,24 +28,26 @@ class EntityDetectionParser(Component):
         self.thres_proba = thres_proba
 
     def __call__(self, question_tokens: List[List[str]],
-                 token_probas: List[List[List[float]]]) -> List[List[str]]:
+                 token_probas: List[List[List[float]]]) -> Tuple[List[List[str]], List[List[str]], List[List[List[int]]]]:
         """
 
         Args:
             question_tokens: tokenized questions
             token_probas: list of probabilities of question tokens to belong to
-            "B-TAG" (beginning of entity substring), "I-TAG" (inner token of entity substring)
+            "E-TAG" (entity substring), "T-TAG" (entity type substring)
             or "O-TAG" (not an entity token)
         """
         
         entities_batch = []
         types_batch = []
+        positions_batch = []
         for tokens, probas in zip(question_tokens, token_probas):
             tags, tag_probas = self.tags_from_probas(probas)
-            entities, types = self.entities_from_tags(tokens, tags, tag_probas)
+            entities, types, positions = self.entities_from_tags(tokens, tags, tag_probas)
             entities_batch.append(entities)
             types_batch.append(types)
-        return entities_batch, types_batch
+            positions_batch.append(positions)
+        return entities_batch, types_batch, positions_batch
 
     def tags_from_probas(self, probas):
         tag_list = ["O-TAG", "E-TAG", "T-TAG"]
@@ -65,14 +67,17 @@ class EntityDetectionParser(Component):
         entities = []
         entity_types = []
         entity = []
+        entity_positions = []
+        entities_positions = []
         entity_type = []
         types_probas = []
         type_proba = []
         replace_tokens = [(' - ', '-'), ("'s", ''), (' .', ''), ('{', ''), ('}', ''), ('  ', ' '), ('"', "'"), ('(', ''), (')', '')]
 
-        for tok, tag, proba in zip(tokens, tags, tag_probas):
+        for n, (tok, tag, proba) in enumerate(zip(tokens, tags, tag_probas)):
             if tag == "E-TAG":
                 entity.append(tok)
+                entity_positions.append(n)
             elif tag == "T-TAG":
                 entity_type.append(tok)
                 type_proba.append(proba)
@@ -81,7 +86,9 @@ class EntityDetectionParser(Component):
                 for old, new in replace_tokens:
                     entity = entity.replace(old, new)
                 entities.append(entity)
+                entities_positions.append(entity_positions)
                 entity = []
+                entity_positions = []
             elif len(entity_type) > 0:
                 entity_type = ' '.join(entity_type)
                 for old, new in replace_tokens:
@@ -95,4 +102,4 @@ class EntityDetectionParser(Component):
             entity_types = sorted(zip(entity_types, types_probas), key=lambda x: x[1], reverse=True)
             entity_types = [entity_type[0] for entity_type in entity_types]
 
-        return entities, entity_types
+        return entities, entity_types, entities_positions
