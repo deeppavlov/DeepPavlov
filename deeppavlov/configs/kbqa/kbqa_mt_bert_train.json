@@ -228,7 +228,7 @@
         "inputs": ["y_rr", "rr_preds"]
       }
     ],
-    "validation_patience": 10,
+    "validation_patience": 200,
     "val_every_n_batches": 400,
 
     "log_every_n_batches": 400,

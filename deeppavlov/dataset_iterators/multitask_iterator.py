@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import copy
+import math
 from logging import getLogger
 from random import Random
 from typing import Dict, Iterator, List, Tuple
@@ -28,6 +29,46 @@ from deeppavlov.debug_helpers import recursive_shape  # FIXME: remove debug impo
 
 
 log = getLogger(__name__)
+
+
+class RepeatBatchGenerator:
+    def __init__(
+            self, dataset_iterator, batch_size, data_type, shuffle, n_batches=float('inf'), size_of_last_batch=None):
+        self.dataset_iterator = dataset_iterator
+        self.batch_size = batch_size
+        self.data_type = data_type
+        self.shuffle = shuffle
+        self.n_batches = n_batches
+        self.size_of_last_batch = self.batch_size if size_of_last_batch is None else size_of_last_batch
+        
+        self.inner_batch_size = math.gcd(len(self.dataset_iterator.data[data_type]), batch_size)
+        self.gen = self.dataset_iterator.gen_batches(self.inner_batch_size, self.data_type, self.shuffle)
+        self.batch_count = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.batch_count > self.n_batches:
+            raise StopIteration
+        x, y = (), ()
+        while len(x) < self.batch_size or len(y) < self.batch_size:
+            try:
+                xx, yy = next(self.gen)
+            except StopIteration:
+                self.gen = self.dataset_iterator.gen_batches(self.inner_batch_size, self.data_type, self.shuffle)
+                continue
+            assert len(xx) == self.inner_batch_size and len(yy) == self.inner_batch_size, \
+                "self.inner_batch_size equals greatest common divisor of dataset size and " \
+                "required batch size so dataset size has to divisible by task batch size evenly."
+            x += xx
+            y += yy
+        assert len(x) == self.batch_size and len(y) == self.batch_size
+        self.batch_count += 1
+        if self.batch_count == self.n_batches:
+            x = x[:self.size_of_last_batch]
+            y = y[:self.size_of_last_batch]
+        return x, y
 
 
 @register('multitask_iterator')
@@ -100,38 +141,37 @@ class MultiTaskIterator:
 
     def gen_batches(self, batch_size: int, data_type: str = 'train',
                     shuffle: bool = None) -> Iterator[Tuple[tuple, tuple]]:
+        # TODO: write detailed commentaries for this method
         log.debug(f"(MultitaskIterator.gen_batches)batch_size data_type: {batch_size} {data_type}")
-        batch_generators = {
-            task: iter_.gen_batches(batch_size, data_type, shuffle) 
-            for task, iter_ in self.task_iterators.items()}
-        stop_iteration = {task: False for task in self.task_iterators.keys()} 
-        while True:
+        max_task_data_len = max([len(iter_.data[data_type]) for iter_ in self.task_iterators.values()])
+        size_of_last_batch = max_task_data_len % batch_size
+        n_batches = max_task_data_len // batch_size
+        for task_batches in zip(
+                *[RepeatBatchGenerator(iter_, batch_size, data_type, shuffle, n_batches, size_of_last_batch) for 
+                  iter_ in self.task_iterators.values()]
+        ):
             x_instances, y_instances = [], []
-            for task, gen in batch_generators.items():
-                try:                 
-                    x, y = next(gen)
-                except StopIteration:
-                    stop_iteration[task] = True
-                    if all(stop_iteration.values()):
-                        break
-                x_instances.append(x)
-                y_instances.append(y)
+            for task_batch in task_batches:
+                x_instances.append(task_batch[0])
+                y_instances.append(task_batch[1])
             b = (tuple(zip(*x_instances)), tuple(zip(*y_instances)))
             log.debug(f"(MultitaskIterator.gen_batches)batch shape: {recursive_shape(b)}")
             yield b
 
     def get_instances(self, data_type: str = 'train'):
+        max_task_data_len = max([len(iter_.get_instances()[0]) for iter_ in self.task_iterators.values()])
+        log.debug(f"(MultitaskIterator.get_instances)max_task_data_len: {max_task_data_len}")
         x_instances = []
         y_instances = []
-        for task, it in self.task_iterators.items():
-            #log.debug(f"(get_instances)it.data[{data_type}]: {it.data[data_type]}")
-            dt = it.data[data_type]
-            if dt:
-                x, y = zip(*dt)
-            else:
-                x, y = [], []
-            x_instances.append(x)
-            y_instances.append(y)
+        for task_name, iter_ in self.task_iterators.items():
+            x, y = iter_.get_instances()
+            log.debug(f"(MultitaskIterator.get_instances)len(x) for {task_name}: {len(x)}")
+            n_repeats = math.ceil(max_task_data_len / len(x))
+            x *= n_repeats
+            y *= n_repeats
+            x_instances.append(x[:max_task_data_len])
+            y_instances.append(y[:max_task_data_len])
+            
         instances = (tuple(zip(*x_instances)), tuple(zip(*y_instances)))
         log.debug(f"(MultitaskIterator.get_instances)instances.shape: {recursive_shape(instances)}")
         return instances
