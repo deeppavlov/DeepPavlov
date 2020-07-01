@@ -103,18 +103,19 @@ class MultiTaskIterator:
         log.debug(f"(MultitaskIterator.gen_batches)batch_size data_type: {batch_size} {data_type}")
         batch_generators = {
             task: iter_.gen_batches(batch_size, data_type, shuffle) 
-            for task, iter_ in self.task_iterators.items()}          
+            for task, iter_ in self.task_iterators.items()}
+        stop_iteration = {task: False for task in self.task_iterators.keys()} 
         while True:
             x_instances, y_instances = [], []
-            try:
-                for task, gen in batch_generators.items():
+            for task, gen in batch_generators.items():
+                try:                 
                     x, y = next(gen)
-                    log.debug(f"(MultitaskIterator.gen_batches){task} x, y: {x}, {y}")
-                    log.debug(f"(MultitaskIterator.gen_batches){task} x.shape, y.shape: {recursive_shape(x)}, {recursive_shape(y)}")
-                    x_instances.append(x)
-                    y_instances.append(y)
-            except StopIteration:
-                break
+                except StopIteration:
+                    stop_iteration[task] = True
+                    if all(stop_iteration.values()):
+                        break
+                x_instances.append(x)
+                y_instances.append(y)
             b = (tuple(zip(*x_instances)), tuple(zip(*y_instances)))
             log.debug(f"(MultitaskIterator.gen_batches)batch shape: {recursive_shape(b)}")
             yield b

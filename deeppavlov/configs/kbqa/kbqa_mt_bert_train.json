@@ -5,7 +5,7 @@
     "tasks": {
       "ner_lcquad": {
         "reader_class_name": "sq_reader",
-        "data_path": "{DOWNLOADS_PATH}/lcquad/entity_and_type_detection.pickle"
+        "data_path": "{DOWNLOADS_PATH}/lcquad/entity_and_type_detection_BIO.pickle"
       },
       "query_prediction": {
         "reader_class_name": "basic_classification_reader",
@@ -297,6 +297,10 @@
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.hdt.index.v1-1",
         "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/datasets/entity_and_type_detection_BIO.pickle",
+        "subdir": "{DOWNLOADS_PATH}/lcquad"
       }
     ]
   }
