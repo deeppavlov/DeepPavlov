@@ -64,11 +64,15 @@ class Proba2Labels(Component):
         Returns:
             list of labels (only label classification) or list of lists of labels (multi-label classification)
         """
+        log.debug(f"(Proba2Labels.__call__)data.shape self.max_proba: {data.shape} {self.max_proba}")
         if self.confident_threshold:
             return [list(np.where(np.array(d) > self.confident_threshold)[0])
                     for d in data]
         elif self.max_proba:
-            return [np.argmax(d) for d in data]
+            log.debug(f"(Proba2Labels.__call__)self.max_proba: {self.max_proba}")
+            ret = [np.argmax(d) for d in data]
+            log.debug(f"(Proba2Labels.__call__)ret: {ret}")
+            return ret
         elif self.top_n:
             return [np.argsort(d)[::-1][:self.top_n] for d in data]
         else:

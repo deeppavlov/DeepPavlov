@@ -27,6 +27,9 @@ from deeppavlov.core.models.estimator import Estimator
 log = getLogger(__name__)
 
 
+from deeppavlov.debug_helpers import recursive_shape, recursive_type  # FIXME: debug import
+
+
 @register('simple_vocab')
 class SimpleVocabulary(Estimator):
     """Implements simple vocabulary.
@@ -60,6 +63,8 @@ class SimpleVocabulary(Estimator):
         self.reset()
         if self.load_path:
             self.load()
+        log.debug(f"(SimpleVocabulary.__init__)len(self): {len(self)}")
+        log.debug(f"(Simplevocabulary.__init__)self._i2t: {self._i2t}")
 
     def fit(self, *args):
         self.reset()
@@ -77,6 +82,7 @@ class SimpleVocabulary(Estimator):
                 self._t2i[token] = self.count
                 self._i2t.append(token)
                 self.count += 1
+        log.debug(f"(SimpleVocabulary.fit)len(self): {len(self)}")
 
     def _add_tokens_with_freqs(self, tokens, freqs):
         self.freqs = Counter()
@@ -88,13 +94,14 @@ class SimpleVocabulary(Estimator):
                 self.count += 1
 
     def __call__(self, batch, is_top=True, **kwargs):
+        # log.debug(f"(SimpleVocabulary.__call__)batch shape and type: {recursive_shape(batch)} {recursive_type(batch)}")
         if isinstance(batch, Iterable) and not isinstance(batch, str):
             looked_up_batch = [self(sample, is_top=False) for sample in batch]
         else:
             return self[batch]
         if self._pad_with_zeros and is_top and not is_str_batch(looked_up_batch):
             looked_up_batch = zero_pad(looked_up_batch)
-
+        log.debug(f"(SimpleVocabulary.__call__)looked_up_batch: {looked_up_batch}")
         return looked_up_batch
 
     def save(self):
@@ -154,7 +161,11 @@ class SimpleVocabulary(Estimator):
 
     def __getitem__(self, key):
         if isinstance(key, (int, np.integer)):
-            return self._i2t[key]
+            try:
+                return self._i2t[key]
+            except IndexError:
+                log.debug(f"(__getitem__)len(self._i2t) key: {len(self._i2t)} {key}")
+                raise
         elif isinstance(key, str):
             return self._t2i[key]
         else:

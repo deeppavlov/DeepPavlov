@@ -25,8 +25,14 @@ from deeppavlov.core.common.metrics_registry import register_metric
 log = getLogger(__name__)
 
 
+print("fmeasure.py")
+from deeppavlov.debug_helpers import recursive_shape  # FIXME: remove debug import
+
+
 @register_metric('ner_f1')
 def ner_f1(y_true, y_predicted):
+    log.debug(f"(ner_f1)y_true: {y_true}")
+    log.debug(f"(ner_f1)y_predicted: {y_predicted}")
     y_true = list(chain(*y_true))
     y_predicted = list(chain(*y_predicted))
     results = precision_recall_f1(y_true,
@@ -40,6 +46,8 @@ def ner_f1(y_true, y_predicted):
 def ner_token_f1(y_true, y_pred, print_results=False):
     y_true = list(chain(*y_true))
     y_pred = list(chain(*y_pred))
+    log.debug(f"(ner_token_f1)y_true[:10]: {y_true[:10]}")
+    log.debug(f"(ner_token_f1)y_pred[:10]: {y_pred[:10]}")
 
     # Drop BIO or BIOES markup
     assert all(len(tag.split('-')) <= 2 for tag in y_true)
@@ -48,9 +56,14 @@ def ner_token_f1(y_true, y_pred, print_results=False):
     y_pred = [tag.split('-')[-1] for tag in y_pred]
     tags = set(y_true) | set(y_pred)
     tags_dict = {tag: n for n, tag in enumerate(tags)}
+    log.debug(f"(ner_token_f1)y_true[:10]: {y_true[:10]}")
+    log.debug(f"(ner_token_f1)y_pred[:10]: {y_pred[:10]}")
+    log.debug(f"(ner_token_f1)tags: {tags}")
 
     y_true_inds = np.array([tags_dict[tag] for tag in y_true])
     y_pred_inds = np.array([tags_dict[tag] for tag in y_pred])
+    log.debug(f"(ner_token_f1)y_true_inds[:10]: {y_true_inds[:10]}")
+    log.debug(f"(ner_token_f1)y_pred_inds[:10]: {y_pred_inds[:10]}")
 
     results = {}
     for tag, tag_ind in tags_dict.items():
@@ -195,8 +208,12 @@ def round_f1(y_true, y_predicted):
         predictions = [np.round(x) for x in y_predicted]
     except TypeError:
         predictions = y_predicted
-
-    return f1_score(y_true, predictions)
+    try:
+        return f1_score(y_true, predictions)
+    except ValueError:
+        log.debug(f"(round_f1)y_true.shape: {recursive_shape(y_true)}")
+        log.debug(f"(round_f1)y_predicted.shape: {recursive_shape(y_predicted)}")
+        raise
 
 
 @register_metric('f1_macro')
@@ -269,6 +286,12 @@ def chunk_finder(current_token, previous_token, tag):
 
 def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, entity_of_interest=None):
     # Find all tags
+    log.debug(f"(precision_recall_f1)type(y_true[0]): {type(y_true[0])}")
+    log.debug(f"(precision_recall_f1)type(y_pred[0]): {type(y_pred[0])}")
+    log.debug(f"(precision_recall_f1)y_true.shape: {recursive_shape(y_true)}")
+    log.debug(f"(precision_recall_f1)y_pred.shape: {recursive_shape(y_pred)}")
+    log.debug(f"(precision_recall_f1)y_true[:10]: {y_true[:10]}")
+    log.debug(f"(precision_recall_f1)y_pred[:10]: {y_pred[:10]}")
     tags = set()
     for tag in itertools.chain(y_true, y_pred):
         if tag != 'O':
@@ -284,6 +307,7 @@ def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, 
     total_correct = 0
     # Firstly we find all chunks in the ground truth and prediction
     # For each chunk we write starting and ending indices
+    log.debug(f"(precision_recall_f1)tags: {tags}")
 
     for tag in tags:
         count = 0
@@ -304,6 +328,7 @@ def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, 
                 true_chunk.append(count)
 
             create_chunk_pred, pop_out_pred = chunk_finder(yp, prev_tag_pred, tag)
+            log.debug(f"(precision_recall_f1)create_chunk_pred pop_out_pred: {create_chunk_pred} {pop_out_pred}")
             if pop_out_pred:
                 pred_chunk[-1] = (pred_chunk[-1], count - 1)
             if create_chunk_pred:
@@ -316,7 +341,7 @@ def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, 
             true_chunk[-1] = (true_chunk[-1], count - 1)
         if len(pred_chunk) > 0 and not isinstance(pred_chunk[-1], tuple):
             pred_chunk[-1] = (pred_chunk[-1], count - 1)
-
+        log.debug(f"(precision_recall_f1)pred_chunk true_chunk: {pred_chunk} {true_chunk}")
         # Then we find all correctly classified intervals
         # True positive results
         tp = len(set(pred_chunk).intersection(set(true_chunk)))
