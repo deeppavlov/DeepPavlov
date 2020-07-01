@@ -33,7 +33,7 @@ from deeppavlov.core.trainers.utils import Metric, parse_metrics, prettify_metri
 log = getLogger(__name__)
 
 
-from deeppavlov.debug_helpers import recursive_shape  # FIXME: debug import
+from deeppavlov.models.kbqa.debug_helpers import recursive_shape  # FIXME: debug import
 import numpy as np  # FIXME: debug import
 
 

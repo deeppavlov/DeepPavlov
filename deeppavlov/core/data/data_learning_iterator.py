@@ -18,7 +18,7 @@ from typing import List, Dict, Tuple, Any, Iterator
 
 from deeppavlov.core.common.registry import register
 
-from deeppavlov.debug_helpers import recursive_shape  # FIXME: remove debug import
+from deeppavlov.models.kbqa.debug_helpers import recursive_shape  # FIXME: remove debug import
 
 
 log = getLogger(__name__)

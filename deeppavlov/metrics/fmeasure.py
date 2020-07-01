@@ -26,7 +26,7 @@ log = getLogger(__name__)
 
 
 print("fmeasure.py")
-from deeppavlov.debug_helpers import recursive_shape  # FIXME: remove debug import
+from deeppavlov.models.kbqa.debug_helpers import recursive_shape  # FIXME: remove debug import
 
 
 @register_metric('ner_f1')

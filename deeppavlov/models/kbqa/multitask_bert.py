@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Union
 
 import numpy as np
 import tensorflow as tf
@@ -25,12 +25,12 @@ from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.layers.tf_layers import bi_rnn
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
-from deeppavlov.models.bert.bert_sequence_tagger import ExponentialMovingAverage, token_from_subtoken
+from deeppavlov.models.bert.bert_sequence_tagger import token_from_subtoken
 
 log = getLogger(__name__)
 
 
-from deeppavlov.debug_helpers import recursive_shape, recursive_type
+from deeppavlov.models.kbqa.debug_helpers import recursive_shape, recursive_type
 
 
 # FIXME: kostyl. The same function is defined as method in `LRScheduledTFModel`. Subtask classes does not need many other methods defined in `LRScheduledTFModel`.

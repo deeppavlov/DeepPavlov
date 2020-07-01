@@ -24,7 +24,7 @@ from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.models.serializable import Serializable
 
 
-from deeppavlov.debug_helpers import recursive_shape  # FIXME: remove debug
+from deeppavlov.models.kbqa.debug_helpers import recursive_shape  # FIXME: remove debug
 
 log = getLogger(__name__)
 

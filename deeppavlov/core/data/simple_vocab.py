@@ -27,9 +27,6 @@ from deeppavlov.core.models.estimator import Estimator
 log = getLogger(__name__)
 
 
-from deeppavlov.debug_helpers import recursive_shape, recursive_type  # FIXME: debug import
-
-
 @register('simple_vocab')
 class SimpleVocabulary(Estimator):
     """Implements simple vocabulary.
