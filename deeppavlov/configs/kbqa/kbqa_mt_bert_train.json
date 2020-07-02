@@ -14,7 +14,7 @@
         "data_path": "{DOWNLOADS_PATH}/query_prediction"
       },
       "rel_ranking": {
-        "reader_class_name": "paraphraser_reader",
+        "reader_class_name": "rel_ranking_reader",
         "data_path": "{DOWNLOADS_PATH}/rel_ranking_bert",
         "do_lower_case": false
       }
@@ -129,7 +129,7 @@
                 "keep_prob": 0.1,
                 "return_probas": false,
                 "encoder_layer_ids": [-1],
-                "learning_rate": 1e-3,
+                "learning_rate": 1e-5,
                 "in_names": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask"],
                 "in_y_names": ["y_ner_ind"]
               }
@@ -144,7 +144,7 @@
                 "return_probas": true,
                 "one_hot_labels": true,
                 "keep_prob": 0.5,
-                "learning_rate": 1e-05,
+                "learning_rate": 1e-5,
                 "in_names": ["bert_features_qr"],
                 "in_y_names": ["y_qr_onehot"]
               }
@@ -159,7 +159,7 @@
                 "return_probas": false,
                 "one_hot_labels": false,
                 "keep_prob": 0.5,
-                "learning_rate": 2e-05,
+                "learning_rate": 1e-5,
                 "in_names": ["bert_features_rr"],
                 "in_y_names": ["y_rr"]
               }
@@ -258,6 +258,10 @@
       "{DEEPPAVLOV_PATH}/requirements/hdt.txt"
     ],
     "download": [
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/datasets/query_prediction.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/query_prediction"
+      },
       {
         "url": "http://files.deeppavlov.ai/embeddings/reddit_fastText/wordpunct_tok_reddit_comments_2017_11_300.bin",
         "subdir": "{DOWNLOADS_PATH}/embeddings"

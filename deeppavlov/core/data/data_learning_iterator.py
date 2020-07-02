@@ -65,7 +65,7 @@ class DataLearningIterator:
             'all': self.train + self.test + self.valid
         }
         from collections import Counter
-        log.debug(f"(DataLearningIterator.__init__)classes count for train: {Counter(tuple(zip(*self.train))[1])}")
+        # log.debug(f"(DataLearningIterator.__init__)classes count for train: {Counter(tuple(zip(*self.train))[1])}")
 
     def gen_batches(self, batch_size: int, data_type: str = 'train',
                     shuffle: bool = None) -> Iterator[Tuple[tuple, tuple]]:
