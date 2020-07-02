@@ -104,19 +104,19 @@
       },
       {                                                                                                                
         "class_name": "mt_bert",
+        "save_path": "{MT_BERT_PATH}/model",
+        "load_path": "{MT_BERT_PATH}/model",
         "shared_params": {
           "bert_config_file": "{BERT_PATH}/bert_config.json",
           "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
           "attention_probs_keep_prob": 0.5,
-          "body_learning_rate": 2e-5,
+          "body_learning_rate": 3e-5,
           "min_body_learning_rate": 2e-7,
           "learning_rate_drop_patience": 30,
           "learning_rate_drop_div": 1.5,
           "load_before_drop": true,
           "optimizer": "tf.train:AdamOptimizer",
-          "clip_norm": 1.0,
-          "save_path": "{MT_BERT_PATH}/model",
-          "load_path": "{MT_BERT_PATH}/model"
+          "clip_norm": 1.0
         },
         "launches_params": {
           "ner": {
@@ -129,7 +129,7 @@
                 "keep_prob": 0.1,
                 "return_probas": false,
                 "encoder_layer_ids": [-1],
-                "learning_rate": 1e-5,
+                "learning_rate": 1e-4,
                 "in_names": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask"],
                 "in_y_names": ["y_ner_ind"]
               }
@@ -144,7 +144,7 @@
                 "return_probas": true,
                 "one_hot_labels": true,
                 "keep_prob": 0.5,
-                "learning_rate": 1e-5,
+                "learning_rate": 1e-4,
                 "in_names": ["bert_features_qr"],
                 "in_y_names": ["y_qr_onehot"]
               }
@@ -159,7 +159,7 @@
                 "return_probas": false,
                 "one_hot_labels": false,
                 "keep_prob": 0.5,
-                "learning_rate": 1e-5,
+                "learning_rate": 1e-4,
                 "in_names": ["bert_features_rr"],
                 "in_y_names": ["y_rr"]
               }
@@ -204,16 +204,12 @@
     "batch_size": 32,
     "metrics": [
       {
+        "name": "ner_f1__f1_macro__f1",
+        "inputs": ["y_ner", "ner_labels", "y_qr", "qr_labels", "y_rr", "rr_preds"]
+      },
+      {
         "name": "ner_f1",
         "inputs": ["y_ner", "ner_labels"]
-      },
-      {
-        "name": "ner_token_f1",
-        "inputs": ["y_ner", "ner_labels"]
-      },
-      {
-        "name": "sets_accuracy",
-        "inputs": ["y_qr", "qr_labels"]
       },
       {                                                                                                 
         "name": "f1_macro",
@@ -221,10 +217,6 @@
       },
       {
         "name": "f1",
-        "inputs": ["y_rr", "rr_preds"]
-      },
-      {
-        "name": "acc",
         "inputs": ["y_rr", "rr_preds"]
       }
     ],

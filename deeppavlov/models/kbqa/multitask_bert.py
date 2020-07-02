@@ -126,7 +126,6 @@ class MultiTaskBert(LRScheduledTFModel):
                          learning_rate_drop_patience=shared_params.get('learning_rate_drop_patience'),
                          load_before_drop=shared_params.get('load_before_drop'),
                          clip_norm=shared_params.get('clip_norm'),
-                         save_path=shared_params.get('save_path'),
                          **kwargs)
         self.shared_params = shared_params
         self.launches_tasks = launches_params
@@ -253,24 +252,24 @@ class MultiTaskBert(LRScheduledTFModel):
                 for task in launch_tasks.values():
                     tasks.append(task)
             for task in tasks:
-                log.debug(f"(MultitaskBert.__call__)task: {task}")
+                # log.debug(f"(MultitaskBert.__call__)task: {task}")
                 kw = {inp_name: kwargs[inp_name] for inp_name in task.in_names}
-                log.debug(f"(MultitaskBert.__call__)kw: {kw}")
+                # log.debug(f"(MultitaskBert.__call__)kw: {kw}")
                 task_fetches, task_feed_dict = task.get_sess_run_infer_args(**kw)
                 fetches.append(task_fetches)
                 feed_dict.update(task_feed_dict)
             sess_run_res = self.sess.run(fetches, feed_dict=feed_dict)
-            log.debug(f"(MultitaskBert.__call__)fetches shape: {recursive_shape(fetches)}")
-            log.debug(f"(MultitaskBert.__call__)sess_run_res shape: {recursive_shape(sess_run_res)}") 
-            log.debug(f"(MultitaskBert.__call__)sess_run_res types: {recursive_type(sess_run_res)}") 
+            # log.debug(f"(MultitaskBert.__call__)fetches shape: {recursive_shape(fetches)}")
+            # log.debug(f"(MultitaskBert.__call__)sess_run_res shape: {recursive_shape(sess_run_res)}") 
+            # log.debug(f"(MultitaskBert.__call__)sess_run_res types: {recursive_type(sess_run_res)}") 
             for task, srs in zip(tasks, sess_run_res):
-                log.debug(f"(MultitaskBert.__call__)task={task} srs.shape: {recursive_shape(srs)}")
+                # log.debug(f"(MultitaskBert.__call__)task={task} srs.shape: {recursive_shape(srs)}")
                 task_results = task.post_process_preds(srs)
                 # log.debug(f"(MultitaskBert.__call__)task_results: {task_results}")
                 results.append(task_results)
-            log.debug(f"(MultitaskBert.__call__)results[*][:10]: {[res[:10] for res in results]}")
-            log.debug(f"(MultitaskBert.__call__)task names: {[t.task_name for t in tasks]}")
-            log.debug(f"(MultitaskBert.__call__)return_probas: {[t.return_probas for t in tasks]}")
+            # log.debug(f"(MultitaskBert.__call__)results[*][:10]: {[res[:10] for res in results]}")
+            # log.debug(f"(MultitaskBert.__call__)task names: {[t.task_name for t in tasks]}")
+            # log.debug(f"(MultitaskBert.__call__)return_probas: {[t.return_probas for t in tasks]}")
         return results
 
 
@@ -413,6 +412,7 @@ class MTBertSequenceTaggingTask:
         if self.freeze_embeddings:
             kwargs['learnable_scopes'] = ('bert/encoder',)
         learning_rate = body_learning_rate * self.head_learning_rate_multiplier
+        log.debug(f"(MTBertSequenceTaggingTask.get_train_op)learning_rate, body_learning_rate: {learning_rate}, {body_learning_rate}")
         bert_train_op = get_train_op(loss, body_learning_rate, **kwargs)
         # train_op for ner head variables
         kwargs['learnable_scopes'] = (self.task_name,)
@@ -465,6 +465,7 @@ class MTBertSequenceTaggingTask:
             feed_dict.update({
                 sph['encoder_keep_prob']: 1.0 - self.encoder_dropout,
                 sph['is_train']: True,
+                sph['learning_rate']: body_learning_rate,
                 self.y_ph: y,
             })
         feed_dict[self.y_masks_ph] = y_masks
@@ -500,8 +501,10 @@ class MTBertSequenceTaggingTask:
         Returns:
             dict with fields 'loss', 'head_learning_rate', and 'bert_learning_rate'
         """
+        log.debug(f"(MTBertSequenceTaggingTask.train_on_batch)inside train_on_batch")
+        
         fetches, feed_dict = self.get_sess_run_train_args(**kwargs)
-        loss, lr = self.sess.run(fetches, feed_dict=feed_dict)
+        _, loss = self.sess.run(fetches, feed_dict=feed_dict)
         return {'loss': loss,
                 f'{self.task_name}_head_learning_rate': 
                     float(kwargs['body_learning_rate']) * self.head_learning_rate_multiplier,
@@ -796,3 +799,16 @@ class InputSplitter:
             for i, key in enumerate(self.keys_to_extract):
                 extracted[i].append(item[key])
         return extracted
+
+
+@register("int_labels_reorderer")                                                                                      
+class IntLabelsReorderer:                                                                                              
+    def __init__(self, order):                                                                                         
+       self.order = order                                                                                             
+                                                                                                                      
+    def __call__(self, labels):                                                                                        
+       labels_old = np.array(labels)                                                                                  
+       labels_new = np.array(labels)                                                                                  
+       for i, lbl in enumerate(self.order):                                                                           
+           labels_new[labels_old == lbl] = i                                                                          
+       return labels_new
