@@ -67,9 +67,9 @@ class BertPreprocessor(Component):
             batch of :class:`bert_dp.preprocessing.InputFeatures` with subtokens, subtoken ids, subtoken mask, segment mask.
 
         """
-        log.debug(f"type(texts_a), type(texts_a[0]): {type(texts_a)}, {type(texts_a[0])}")
-        log.debug(f"type(texts_b): {type(texts_b)}")
-        log.debug(f"texts_a, texts_b: {texts_a}, {texts_b}")
+        # log.debug(f"type(texts_a), type(texts_a[0]): {type(texts_a)}, {type(texts_a[0])}")
+        # log.debug(f"type(texts_b): {type(texts_b)}")
+        # log.debug(f"texts_a, texts_b: {texts_a}, {texts_b}")
 
         if texts_b is None:
             texts_b = [None] * len(texts_a)

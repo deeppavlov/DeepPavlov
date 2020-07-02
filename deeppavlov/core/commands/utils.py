@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+from logging import getLogger
 from pathlib import Path
 from typing import Union, Dict, TypeVar
 
@@ -19,6 +20,9 @@ from deeppavlov.core.common.file import read_json, find_config
 
 # noinspection PyShadowingBuiltins
 _T = TypeVar('_T', str, float, bool, list, dict)
+
+
+log = getLogger(__name__)
 
 
 def _parse_config_property(item: _T, variables: Dict[str, Union[str, Path, float, bool, int, None]],

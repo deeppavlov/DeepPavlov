@@ -60,8 +60,8 @@ class SimpleVocabulary(Estimator):
         self.reset()
         if self.load_path:
             self.load()
-        log.debug(f"(SimpleVocabulary.__init__)len(self): {len(self)}")
-        log.debug(f"(Simplevocabulary.__init__)self._i2t: {self._i2t}")
+        # log.debug(f"(SimpleVocabulary.__init__)len(self): {len(self)}")
+        # log.debug(f"(Simplevocabulary.__init__)self._i2t: {self._i2t}")
 
     def fit(self, *args):
         self.reset()
@@ -79,7 +79,7 @@ class SimpleVocabulary(Estimator):
                 self._t2i[token] = self.count
                 self._i2t.append(token)
                 self.count += 1
-        log.debug(f"(SimpleVocabulary.fit)len(self): {len(self)}")
+        # log.debug(f"(SimpleVocabulary.fit)len(self): {len(self)}")
 
     def _add_tokens_with_freqs(self, tokens, freqs):
         self.freqs = Counter()
@@ -98,7 +98,7 @@ class SimpleVocabulary(Estimator):
             return self[batch]
         if self._pad_with_zeros and is_top and not is_str_batch(looked_up_batch):
             looked_up_batch = zero_pad(looked_up_batch)
-        log.debug(f"(SimpleVocabulary.__call__)looked_up_batch: {looked_up_batch}")
+        # log.debug(f"(SimpleVocabulary.__call__)looked_up_batch: {looked_up_batch}")
         return looked_up_batch
 
     def save(self):
@@ -161,7 +161,7 @@ class SimpleVocabulary(Estimator):
             try:
                 return self._i2t[key]
             except IndexError:
-                log.debug(f"(__getitem__)len(self._i2t) key: {len(self._i2t)} {key}")
+                # log.debug(f"(__getitem__)len(self._i2t) key: {len(self._i2t)} {key}")
                 raise
         elif isinstance(key, str):
             return self._t2i[key]

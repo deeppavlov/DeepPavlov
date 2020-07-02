@@ -130,13 +130,15 @@ class MultiTaskBert(LRScheduledTFModel):
         self.shared_params = shared_params
         self.launches_tasks = launches_params
         self.inference_launch_names = inference_launch_names
+        self.mode = 'train' if self.inference_launch_names is None else 'inference'
 
         self.shared_ph = None  # TODO: add use for `min_body_learning_rate`
 
         self.bert_config = BertConfig.from_json_file(str(expand_path(self.shared_params['bert_config_file'])))
 
-        if self.shared_params['attention_probs_keep_prob'] is not None:
-            self.bert_config.attention_probs_dropout_prob = 1.0 - self.shared_params['attention_probs_keep_prob']
+        attention_probs_keep_prob = self.shared_params.get('attention_probs_keep_prob')
+        if attention_probs_keep_prob is not None:
+            self.bert_config.attention_probs_dropout_prob = 1.0 -attention_probs_keep_prob
         hidden_keep_prob = self.shared_params.get('hidden_keep_prob')
         if hidden_keep_prob is not None:
             self.bert_config.hidden_dropout_prob = 1.0 - hidden_keep_prob
@@ -180,7 +182,8 @@ class MultiTaskBert(LRScheduledTFModel):
                     bert_body=self.bert,
                     shared_params=self.shared_params,
                     shared_placeholders=self.shared_ph,
-                    sess=self.sess
+                    sess=self.sess,
+                    mode=self.mode
                 )
 
     def _init_shared_placeholders(self) -> None:
@@ -212,6 +215,7 @@ class MultiTaskBert(LRScheduledTFModel):
                               use_one_hot_embeddings=False)
 
     def save(self, exclude_scopes=('Optimizer',)) -> None:
+        log.debug(f"(MultiTaskBert.save)exclude_scopes: {exclude_scopes}")
         return super().save(exclude_scopes=exclude_scopes)
 
     def load(self,
@@ -219,6 +223,7 @@ class MultiTaskBert(LRScheduledTFModel):
                              'learning_rate',
                              'momentum'),
              **kwargs) -> None:
+        log.debug(f"(MultiTaskBert.load)exclude_scopes: {exclude_scopes}")
         return super().load(exclude_scopes=exclude_scopes, **kwargs)
 
     def train_on_batch(self, *args, **kwargs) -> None:
@@ -315,17 +320,21 @@ class MTBertSequenceTaggingTask:
         self.shared_feed_dict = None
         self.sess = None
 
-    def build(self, bert_body, shared_params, shared_placeholders, sess):
+    def build(self, bert_body, shared_params, shared_placeholders, sess, mode):
         self.bert = bert_body
         self.shared_params = shared_params
-        self.head_learning_rate_multiplier = \
-            self.init_head_learning_rate / self.shared_params['body_learning_rate']
+        if mode == 'train':
+            self.head_learning_rate_multiplier = \
+                self.init_head_learning_rate / self.shared_params['body_learning_rate']
+        else:
+            self.head_learning_rate_multiplier = 0
         mblr = self.shared_params.get('min_body_learning_rate')
         self.min_body_learning_rate = 0. if mblr is None else mblr
         self.shared_ph = shared_placeholders
         self.sess = sess
         self._init_graph()
-        self._init_optimizer()
+        if mode == 'train':
+            self._init_optimizer()
 
     def _init_placeholders(self) -> None:
         self.y_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='y_ph')
@@ -433,7 +442,7 @@ class MTBertSequenceTaggingTask:
                 self.train_op = \
                     self.get_train_op(
                         self.loss,
-                        learning_rate=self.shared_ph['learning_rate'],
+                        body_learning_rate=self.shared_ph['learning_rate'],
                         optimizer=AdamWeightDecayOptimizer,
                         weight_decay_rate=self.shared_params.get('weight_decay_rate', 1e-6),
                         beta_1=0.9,
@@ -608,17 +617,21 @@ class MTBertClassificationTask:
         if self.multilabel and not self.return_probas:
             raise RuntimeError('Set return_probas to True for multilabel classification!')
 
-    def build(self, bert_body, shared_params, shared_placeholders, sess):
+    def build(self, bert_body, shared_params, shared_placeholders, sess, mode):
         self.bert = bert_body
         self.shared_params = shared_params
-        self.head_learning_rate_multiplier = \
-            self.init_head_learning_rate / self.shared_params['body_learning_rate']
+        if mode == 'train':
+            self.head_learning_rate_multiplier = \
+                self.init_head_learning_rate / self.shared_params['body_learning_rate']
+        else:
+            self.head_learning_rate_multiplier = 0
         mblr = self.shared_params.get('min_body_learning_rate')
         self.min_body_learning_rate = 0. if mblr is None else mblr
         self.shared_ph = shared_placeholders
         self.sess = sess
         self._init_graph()
-        self._init_optimizer()
+        if mode == 'train':
+            self._init_optimizer()
 
     def _init_placeholders(self):
         if not self.one_hot_labels:
@@ -683,7 +696,8 @@ class MTBertClassificationTask:
                 if self.optimizer is None:
 
                     self.train_op = self.get_train_op(
-                        self.loss, body_learning_rate=self.shared_ph.get('learning_rate'),
+                        self.loss, 
+                        body_learning_rate=self.shared_ph.get('learning_rate'),
                         optimizer=AdamWeightDecayOptimizer,
                         weight_decay_rate=self.shared_params.get('weight_decay_rate', 0.01),  # FIXME: make default value specification more obvious
                         beta_1=0.9,

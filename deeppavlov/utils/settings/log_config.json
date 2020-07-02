@@ -3,7 +3,7 @@
   "disable_existing_loggers": false,
   "loggers": {
     "deeppavlov": {
-      "level": "INFO",
+      "level": "DEBUG",
       "handlers": [
         "stderr"
       ],

@@ -232,20 +232,20 @@ class Chainer(Component):
         if not expected.issubset(param_names):
             raise RuntimeError(f'{expected} are required to compute {targets} but were not found in memory or inputs')
         pipe = final_pipe
-        log.debug(f"(_compute)param_names: {param_names}")
-        log.debug(f"(_compute)len(args): {len(args)}")
-        log.debug(f"(_compute)args shape: {recursive_shape(args)}")
+        # log.debug(f"(_compute)param_names: {param_names}")
+        # log.debug(f"(_compute)len(args): {len(args)}")
+        # log.debug(f"(_compute)args shape: {recursive_shape(args)}")
         mem = dict(zip(param_names, args))
-        log.debug(f"(_compute)mem shape: {recursive_shape(mem)}")
+        # log.debug(f"(_compute)mem shape: {recursive_shape(mem)}")
         del args
 
         for (in_keys, in_params), out_params, component in pipe:
-            log.debug(f"list(mem.keys()): {list(mem.keys())}")
-            log.debug(f"mem.shape: {recursive_shape(mem)}")
+            # log.debug(f"list(mem.keys()): {list(mem.keys())}")
+            # log.debug(f"mem.shape: {recursive_shape(mem)}")
             x = [mem[k] for k in in_params]
-            log.debug(f"(_compute)component: {component}")
-            log.debug(f"(_compute)x shape: {recursive_shape(x)}")
-            log.debug(f"(_compute)in_keys, in_params: {in_keys} {in_params}")
+            # log.debug(f"(_compute)component: {component}")
+            # log.debug(f"(_compute)x shape: {recursive_shape(x)}")
+            # log.debug(f"(_compute)in_keys, in_params: {in_keys} {in_params}")
             if in_keys:
                 res = component.__call__(**dict(zip(in_keys, x)))
             else:

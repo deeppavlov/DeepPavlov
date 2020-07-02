@@ -212,7 +212,11 @@ def round_f1(y_true, y_predicted):
         return f1_score(y_true, predictions)
     except ValueError:
         log.debug(f"(round_f1)y_true.shape: {recursive_shape(y_true)}")
-        log.debug(f"(round_f1)y_predicted.shape: {recursive_shape(y_predicted)}")
+        # log.debug(f"(round_f1)y_true: {y_true}")
+        # log.debug(f"(round_f1)y_true unique: {np.unique(y_true)}")
+        log.debug(f"(round_f1)predictions.shape: {recursive_shape(predictions)}")
+        # log.debug(f"(round_f1)predictions: {predictions}")
+        # log.debug(f"(round_f1)predictions unique: {np.unique(predictions)}")
         raise
 
 
@@ -228,10 +232,14 @@ def round_f1_macro(y_true, y_predicted):
     Returns:
         F1 score
     """
+    from collections import Counter
+    log.debug(f"(round_f1_macro)y_true counter: {Counter(y_true)}")
+    log.debug(f"(round_f1_macro)y_predicted counter: {Counter(y_predicted)}") 
     try:
         predictions = [np.round(x) for x in y_predicted]
     except TypeError:
         predictions = y_predicted
+        log.debug(f"(round_f1_macro)predictions counter: {Counter(predictions)}") 
 
     return f1_score(np.array(y_true), np.array(predictions), average="macro")
 
@@ -286,12 +294,12 @@ def chunk_finder(current_token, previous_token, tag):
 
 def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, entity_of_interest=None):
     # Find all tags
-    log.debug(f"(precision_recall_f1)type(y_true[0]): {type(y_true[0])}")
-    log.debug(f"(precision_recall_f1)type(y_pred[0]): {type(y_pred[0])}")
-    log.debug(f"(precision_recall_f1)y_true.shape: {recursive_shape(y_true)}")
-    log.debug(f"(precision_recall_f1)y_pred.shape: {recursive_shape(y_pred)}")
-    log.debug(f"(precision_recall_f1)y_true[:10]: {y_true[:10]}")
-    log.debug(f"(precision_recall_f1)y_pred[:10]: {y_pred[:10]}")
+    # log.debug(f"(precision_recall_f1)type(y_true[0]): {type(y_true[0])}")
+    # log.debug(f"(precision_recall_f1)type(y_pred[0]): {type(y_pred[0])}")
+    # log.debug(f"(precision_recall_f1)y_true.shape: {recursive_shape(y_true)}")
+    # log.debug(f"(precision_recall_f1)y_pred.shape: {recursive_shape(y_pred)}")
+    # log.debug(f"(precision_recall_f1)y_true[:10]: {y_true[:10]}")
+    # log.debug(f"(precision_recall_f1)y_pred[:10]: {y_pred[:10]}")
     tags = set()
     for tag in itertools.chain(y_true, y_pred):
         if tag != 'O':
@@ -307,7 +315,7 @@ def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, 
     total_correct = 0
     # Firstly we find all chunks in the ground truth and prediction
     # For each chunk we write starting and ending indices
-    log.debug(f"(precision_recall_f1)tags: {tags}")
+    # log.debug(f"(precision_recall_f1)tags: {tags}")
 
     for tag in tags:
         count = 0
@@ -328,7 +336,7 @@ def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, 
                 true_chunk.append(count)
 
             create_chunk_pred, pop_out_pred = chunk_finder(yp, prev_tag_pred, tag)
-            log.debug(f"(precision_recall_f1)create_chunk_pred pop_out_pred: {create_chunk_pred} {pop_out_pred}")
+            # log.debug(f"(precision_recall_f1)create_chunk_pred pop_out_pred: {create_chunk_pred} {pop_out_pred}")
             if pop_out_pred:
                 pred_chunk[-1] = (pred_chunk[-1], count - 1)
             if create_chunk_pred:
@@ -341,7 +349,7 @@ def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, 
             true_chunk[-1] = (true_chunk[-1], count - 1)
         if len(pred_chunk) > 0 and not isinstance(pred_chunk[-1], tuple):
             pred_chunk[-1] = (pred_chunk[-1], count - 1)
-        log.debug(f"(precision_recall_f1)pred_chunk true_chunk: {pred_chunk} {true_chunk}")
+        # log.debug(f"(precision_recall_f1)pred_chunk true_chunk: {pred_chunk} {true_chunk}")
         # Then we find all correctly classified intervals
         # True positive results
         tp = len(set(pred_chunk).intersection(set(true_chunk)))
@@ -421,3 +429,11 @@ def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, 
                 tot_predicted=results[entity_of_interest]['n_pred'])
         log.debug(s)
     return results
+
+
+@register_metric("ner_f1__f1_macro__f1")
+def ner_f1__f1_macro__f1(ner_true, ner_pred, macro_true, macro_pred, f1_true, f1_pred):
+    ner_f1_res = ner_f1(ner_true, ner_pred) / 100
+    f1_macro_res = round_f1_macro(macro_true, macro_pred)
+    f1_res = round_f1(f1_true, f1_pred)
+    return (ner_f1_res + f1_macro_res + f1_res) / 3
