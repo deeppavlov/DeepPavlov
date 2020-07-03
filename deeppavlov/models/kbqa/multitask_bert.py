@@ -120,6 +120,7 @@ class MultiTaskBert(LRScheduledTFModel):
                  launches_params: dict,
                  inference_launch_names: List[str] = None,
                  **kwargs) -> None:
+        # TODO: Think about refactoring part of shared params in to parameters with default values.
         # TODO: check what default values for super().__init__() are needed.
         super().__init__(learning_rate=shared_params.get('body_learning_rate'),
                          learning_rate_drop_div=shared_params.get('learning_rate_drop_div'),

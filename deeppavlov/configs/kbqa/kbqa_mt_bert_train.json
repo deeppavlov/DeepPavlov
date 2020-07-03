@@ -78,7 +78,7 @@
         "out": ["bert_features_qr"]                                                                                       
       },                                                                                                               
       {                                                                                                                
-        "id": "classes_vocab",                                                                                         
+        "id": "queries_vocab",                                                                                         
         "class_name": "simple_vocab",                                                                                  
         "fit_on": ["y_qr"],                                                                                               
         "save_path": "{QUERY_PREDICTION}/classes.dict",                                                                      
@@ -90,7 +90,7 @@
         "in": "y_qr_ids",                                                                                                 
         "out": "y_qr_onehot",                                                                                             
         "class_name": "one_hotter",                                                                                    
-        "depth": "#classes_vocab.len",                                                                                 
+        "depth": "#queries_vocab.len",                                                                                 
         "single_vector": true                                                                                          
       },
 
@@ -102,7 +102,8 @@
         "in": ["text_a", "text_b"],                                                                                    
         "out": ["bert_features_rr"]                                                                                       
       },
-      {                                                                                                                
+      { 
+        "id": "mt_bert",                                                                                                               
         "class_name": "mt_bert",
         "save_path": "{MT_BERT_PATH}/model",
         "load_path": "{MT_BERT_PATH}/model",
@@ -118,6 +119,7 @@
           "optimizer": "tf.train:AdamOptimizer",
           "clip_norm": 1.0
         },
+        
         "launches_params": {
           "ner": {
             "tasks": {
@@ -140,7 +142,7 @@
               "query_prediction": {
                 "class_name": "mt_bert_classification_task",
                 "task_name": "qr_prediction",
-                "n_classes": "#classes_vocab.len",
+                "n_classes": "#queries_vocab.len",
                 "return_probas": true,
                 "one_hot_labels": true,
                 "keep_prob": 0.5,
@@ -194,7 +196,7 @@
       {                                                                                                                
         "in": "qr_ids",                                                                                            
         "out": "qr_labels",                                                                                        
-        "ref": "classes_vocab"                                                                                         
+        "ref": "queries_vocab"                                                                                         
       }
     ],
     "out": ["ner_labels", "qr_labels", "rr_preds"]
