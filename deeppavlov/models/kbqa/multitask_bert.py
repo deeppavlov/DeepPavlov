@@ -156,7 +156,8 @@ class MultiTaskBert(LRScheduledTFModel):
             pretrained_bert = str(expand_path(self.shared_params['pretrained_bert']))
 
             if tf.train.checkpoint_exists(pretrained_bert) \
-                    and not (self.load_path and tf.train.checkpoint_exists(str(self.load_path.resolve()))):
+                    and not (self.load_path and tf.train.checkpoint_exists(str(self.load_path.resolve()))) \
+                    and self.mode == 'train':
                 log.info('[initializing model with Bert from {}]'.format(pretrained_bert))
                 # Exclude optimizer and classification variables from saved variables
                 task_names = []
@@ -164,7 +165,7 @@ class MultiTaskBert(LRScheduledTFModel):
                     for task_obj in launch_params['tasks'].values():
                         task_names.append(task_obj.task_name)
                 var_list = self._get_saveable_variables(
-                    exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'ner') + tuple(task_names))
+                    exclude_scopes=('Optimizer', 'learning_rate', 'momentum') + tuple(task_names))
                 saver = tf.train.Saver(var_list)
                 saver.restore(self.sess, pretrained_bert)
 
@@ -214,7 +215,7 @@ class MultiTaskBert(LRScheduledTFModel):
                               token_type_ids=sph['token_types'],
                               use_one_hot_embeddings=False)
 
-    def save(self, exclude_scopes=('Optimizer',)) -> None:
+    def save(self, exclude_scopes=('Optimizer', 'learning_rate', 'momentum')) -> None:
         log.debug(f"(MultiTaskBert.save)exclude_scopes: {exclude_scopes}")
         return super().save(exclude_scopes=exclude_scopes)
 
