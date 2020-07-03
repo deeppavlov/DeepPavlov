@@ -173,6 +173,12 @@ class MultiTaskBert(LRScheduledTFModel):
         if self.load_path is not None:
             self.load()
 
+        # FIXME: remove debug ops
+        import os
+        writer = tf.compat.v1.summary.FileWriter(os.path.expanduser('~/.deeppavlov/models/mt_bert/log'))
+        writer.add_graph(self.sess.graph)
+        writer.close()
+
     def fill_missing_shared_params(self):
         if 'min_body_learning_rate' not in self.shared_params:
             self.shared_params['min_bode_learning_rate'] = 1e-7
@@ -243,6 +249,7 @@ class MultiTaskBert(LRScheduledTFModel):
             )
 
     def __call__(self, *args, launch_name=None, **kwargs):
+        # TODO: add support for positional arguments
         if launch_name is None:
             if self.inference_launch_names is None:
                 launch_names = list(self.launches_tasks.keys())
@@ -795,7 +802,7 @@ class MTBertClassificationTask:
 
 @register("mt_bert_reuser")
 class MTBertReUser:
-    def __init__(self, mt_bert, launch_name):
+    def __init__(self, mt_bert, launch_name, *args, **kwargs):
         self.mt_bert = mt_bert
         self.launch_name = launch_name
 
@@ -816,15 +823,3 @@ class InputSplitter:
                 extracted[i].append(item[key])
         return extracted
 
-
-@register("int_labels_reorderer")                                                                                      
-class IntLabelsReorderer:                                                                                              
-    def __init__(self, order):                                                                                         
-       self.order = order                                                                                             
-                                                                                                                      
-    def __call__(self, labels):                                                                                        
-       labels_old = np.array(labels)                                                                                  
-       labels_new = np.array(labels)                                                                                  
-       for i, lbl in enumerate(self.order):                                                                           
-           labels_new[labels_old == lbl] = i                                                                          
-       return labels_new

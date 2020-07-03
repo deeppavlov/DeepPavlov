@@ -149,11 +149,6 @@ class NNTrainer(FitTrainer):
             self.tb_train_writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir / 'train_log'))
             self.tb_valid_writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir / 'valid_log'))
        
-        log.debug(f"(NNTrainer.__init__)self._chainer._components_dict: {self._chainer._components_dict}")
-        log.debug(f"(NNTrainer.__init__)self._chainer.train_pipe: {self._chainer.train_pipe}")
-        sess = self._chainer['mt_bert'].sess
-        self.tb_train_writer.add_graph(sess.graph)
-
     def save(self) -> None:
         if self._loaded:
             raise RuntimeError('Cannot save already finalized chainer')

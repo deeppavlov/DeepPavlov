@@ -80,7 +80,11 @@
             }
           }
         },
-        "in": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask", "bert_features_qr"],                                                                                
+        "in": {
+            "x_subword_tok_ids": "x_subword_tok_ids", 
+            "x_subword_mask": "x_subword_mask", 
+            "pred_subword_mask": "pred_subword_mask"
+        },                                                                                
         "out": ["y_pred_ner", "y_pred_probas_qr"]                                                                 
       }, 
 
