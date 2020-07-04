@@ -235,14 +235,30 @@ class MultiTaskBert(LRScheduledTFModel):
         return super().load(exclude_scopes=exclude_scopes, **kwargs)
 
     def train_on_batch(self, *args, **kwargs) -> None:
+        # TODO: test passing arguments as args
         log.debug(f"(MultitaskBert.train_on_batch)self.launches_tasks: {self.launches_tasks}")
+        if args and kwargs:
+            raise ValueError("You can use either args or kwargs not both")
         tasks = []
         for launch_params in self.launches_tasks.values():
             for task in launch_params['tasks'].values():
                 tasks.append(task)
+        num_x_args = sum([len(task.in_names) for task in tasks])
+        num_used_x_args, num_used_y_args = 0, num_x_args
         for task in tasks:
-            kw = {inp_name: kwargs[inp_name] for inp_name in task.in_names + task.in_y_names}
-            # TODO: check if there is reason to use different bert body lr for different tasks in literature
+            if args:
+                kw = {
+                    inp_name: a for inp_name, a 
+                    in zip(
+                        task.in_names + task.in_y_names, 
+                        args[num_used_x_args:num_used_x_args+len(task.in_names)] 
+                            + args[num_used_y_args:num_used_y_args+len(task.in_y_names)],
+                    )
+                }
+                num_used_x_args += len(task.in_names)
+                num_used_y_args += len(task.in_y_names)
+            else:
+                kw = {inp_name: kwargs[inp_name] for inp_name in task.in_names + task.in_y_names}
             task.train_on_batch(
                 **kw, 
                 body_learning_rate=max(self.get_learning_rate(), self.shared_params['min_body_learning_rate'])
@@ -250,6 +266,8 @@ class MultiTaskBert(LRScheduledTFModel):
 
     def __call__(self, *args, launch_name=None, **kwargs):
         # TODO: add support for positional arguments
+        if args and kwargs:
+            raise ValueError("You may use either args or kwargs not both")
         if launch_name is None:
             if self.inference_launch_names is None:
                 launch_names = list(self.launches_tasks.keys())
@@ -265,9 +283,17 @@ class MultiTaskBert(LRScheduledTFModel):
             for launch_tasks in self.launches_tasks[launch_name].values():
                 for task in launch_tasks.values():
                     tasks.append(task)
+            num_used_args = 0
             for task in tasks:
                 # log.debug(f"(MultitaskBert.__call__)task: {task}")
-                kw = {inp_name: kwargs[inp_name] for inp_name in task.in_names}
+                if args:
+                    kw = {
+                        inp_name: a for inp_name, a 
+                        in zip(task.in_names, args[num_used_args:num_used_args+len(task.in_names)])
+                    }
+                    num_used_args += len(task.in_names)
+                else:
+                    kw = {inp_name: kwargs[inp_name] for inp_name in task.in_names}
                 # log.debug(f"(MultitaskBert.__call__)kw: {kw}")
                 task_fetches, task_feed_dict = task.get_sess_run_infer_args(**kw)
                 fetches.append(task_fetches)
@@ -576,9 +602,8 @@ class MTBertSequenceTaggingTask:
     def __call__(self,
                  input_ids: Union[List[List[int]], np.ndarray],
                  input_masks: Union[List[List[int]], np.ndarray],
-                 y_masks: Union[List[List[int]], np.ndarray],
-                 bert_features_qr: List[InputFeatures]) -> Union[List[List[int]], List[np.ndarray]]:
-        fetches, feed_dict = self.get_sess_run_infer_args(input_ids, input_masks, y_masks, bert_features_qr)
+                 y_masks: Union[List[List[int]], np.ndarray]) -> Union[List[List[int]], List[np.ndarray]]:
+        fetches, feed_dict = self.get_sess_run_infer_args(input_ids, input_masks, y_masks)
         log.debug(f"(MTBertSequenceTaggingTask.__call__)fetches: {fetches}")
         sess_run_res = self.sess.run(fetches, feed_dict=feed_dict)
         return self.post_process_preds(sess_run_res)

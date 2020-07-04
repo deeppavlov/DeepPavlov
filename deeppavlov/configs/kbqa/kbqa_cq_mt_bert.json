@@ -179,26 +179,30 @@
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
         "rank_rels_filename_1": "rels_0.txt",
         "rank_rels_filename_2": "rels_1.txt",
-        "sparql_queries_filename": "sparql_queries.json",
+        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata_eng/sparql_queries.json",
         "entities_to_leave": 5,
         "rels_to_leave": 10,
         "in": ["x", "template_type", "entities", "types"],
-        "out": ["candidate_answers"]
-      },
-
-      {
-        "class_name": "bert_preprocessor",
-        "vocab_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/vocab.txt",
-        "do_lower_case": false,
-        "max_seq_length": 64,
-        "in": ["x", "candidate_answers"],
-        "out": ["bert_features_ranker"]
+        "out": ["candidate_rels_answers"]
       },
       {
-        "class_name": "mt_bert_reuser",
-        "mt_bert": "#mt_bert_kbqa",
-        "launch_name": "rel_ranking_bert",
-        "in": ["bert_features_ranker"],
+        "class_name": "rel_ranking_mt_bert_infer",
+        "bert_preprocessor": {
+          "class_name": "bert_preprocessor",
+          "vocab_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/vocab.txt",
+          "do_lower_case": false,
+          "max_seq_length": 64
+        },
+        "ranker":{
+          "class_name": "mt_bert_reuser",
+          "mt_bert": "#mt_bert_kbqa",
+          "launch_name": "rel_ranking"
+        },
+        "wiki_parser": "#wiki_p",
+        "batch_size": 32,
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "rel_q2name_filename": "wiki_dict_properties.pickle",
+        "in": ["x", "candidate_rels_answers"],
         "out": ["answers"]
       }
     ],
