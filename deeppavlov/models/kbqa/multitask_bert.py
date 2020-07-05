@@ -33,6 +33,7 @@ log = getLogger(__name__)
 from deeppavlov.models.kbqa.debug_helpers import recursive_shape, recursive_type
 
 
+# TODO: fix docstring
 @register('mt_bert')
 class MultiTaskBert(LRScheduledTFModel):
     """
@@ -59,7 +60,9 @@ class MultiTaskBert(LRScheduledTFModel):
         load_before_drop: whether to load best model before dropping learning rate or not
         clip_norm: clip gradients by norm
     """
-    # TODO: check if ema is really needed and if it can be used on multitask bert
+    # TODO: EMA is used in BertSequenceTagger. It can be also used in multitask Bert yet
+    # it needs a modification so that EMA for Bert body and heads were calculated in slightly
+    # different ways. Check if that is actually in literature.
     def __init__(self,
                  bert_config_file: str,
                  launches_params: dict,
@@ -76,8 +79,6 @@ class MultiTaskBert(LRScheduledTFModel):
                  clip_norm: float = 1.0,
                  inference_launch_names: List[str] = None,
                  **kwargs) -> None:
-        # TODO: Think about refactoring part of shared params in to parameters with default values.
-        # TODO: check what default values for super().__init__() are needed.
         super().__init__(learning_rate=body_learning_rate,
                          learning_rate_drop_div=learning_rate_drop_div,
                          learning_rate_drop_patience=learning_rate_drop_patience,
@@ -94,7 +95,7 @@ class MultiTaskBert(LRScheduledTFModel):
         self.inference_launch_names = inference_launch_names
         self.mode = 'train' if self.inference_launch_names is None else 'inference'
 
-        self.shared_ph = None  # TODO: add use for `min_body_learning_rate`
+        self.shared_ph = None
 
         self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
 
@@ -152,7 +153,6 @@ class MultiTaskBert(LRScheduledTFModel):
                 )
 
     def _init_shared_placeholders(self) -> None:
-        # TODO: write comments describing the difference between shared placeholders and shared params
         self.shared_ph = {
             'input_ids': tf.placeholder(shape=(None, None),
                                         dtype=tf.int32,
@@ -222,7 +222,6 @@ class MultiTaskBert(LRScheduledTFModel):
             )
 
     def __call__(self, *args, launch_name=None, **kwargs):
-        # TODO: add support for positional arguments
         if args and kwargs:
             raise ValueError("You may use either args or kwargs not both")
         if launch_name is None:
@@ -429,7 +428,7 @@ class MTBertSequenceTaggingTask:
                                                    shape=[],
                                                    dtype=tf.int32,
                                                    initializer=tf.constant_initializer(0),
-                                                   trainable=False)  # TODO: check this global step is not used in other subtasks
+                                                   trainable=False)
                 # default optimizer for Bert is Adam with fixed L2 regularization
 
             if self.optimizer_params.get('optimizer') is None:
@@ -457,6 +456,8 @@ class MTBertSequenceTaggingTask:
                     self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
 
     def _build_feed_dict(self, input_ids, input_masks, y_masks, token_types, y=None, body_learning_rate=None):
+        if token_types is None:
+            token_types = np.zeros(np.array(input_ids).shape)
         sph = self.shared_ph
         train = y is not None
         feed_dict = {
@@ -515,9 +516,7 @@ class MTBertSequenceTaggingTask:
 
     def get_sess_run_infer_args(self, **kwargs):
         build_feed_dict_args = [kwargs[k] for k in self.in_names[:3]]
-        # FIXME: kostyl. There is token types placeholder that has to be filled.
-        token_types = np.zeros(np.array(kwargs[self.in_names[0]]).shape)
-        feed_dict = self._build_feed_dict(*build_feed_dict_args, token_types=token_types)
+        feed_dict = self._build_feed_dict(*build_feed_dict_args)
         log.debug(f"(MTBertSequenceTaggingTask.get_sess_run_train_args)self.return_probas: {self.return_probas}")
         if self.return_probas:
             fetches = self.y_probas
@@ -531,12 +530,9 @@ class MTBertSequenceTaggingTask:
     def get_sess_run_train_args(self, **kwargs):
         log.debug(f"(MTBertSequenceTaggingTask.get_sess_run_train_args)kwargs[{self.in_names[0]}] shape: {np.array(kwargs[self.in_names[0]]).shape}")
         build_feed_dict_args = [kwargs[k] for k in self.in_names[:3]]
-        # FIXME: kostyl. There is token types placeholder that has to be filled.
-        token_types = np.zeros(np.array(kwargs[self.in_names[0]]).shape)       
-        log.debug(f"(MTBertSequenceTaggingTask.get_sess_run_train_args)token_types.shape: {np.array(token_types).shape}")
         y = kwargs[self.in_y_names[0]]
         lr = kwargs['body_learning_rate']
-        feed_dict = self._build_feed_dict(*build_feed_dict_args, token_types=token_types, y=y, body_learning_rate=lr)  
+        feed_dict = self._build_feed_dict(*build_feed_dict_args, y=y, body_learning_rate=lr)
         fetches = [self.train_op, self.loss]
         return fetches, feed_dict
 
