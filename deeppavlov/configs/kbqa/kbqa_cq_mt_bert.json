@@ -29,7 +29,7 @@
         "unk_token": ["O"],
         "pad_with_zeros": true,
         "save_path": "{MT_BERT_PATH}/ner/tag.dict",
-        "load_path": "{MT_BERT_PATH}/tag.dict"
+        "load_path": "{MT_BERT_PATH}/ner/tag.dict"
       },
       {                                                                                                                
         "class_name": "mt_bert",
