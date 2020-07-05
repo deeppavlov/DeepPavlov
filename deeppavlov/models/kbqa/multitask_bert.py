@@ -61,31 +61,45 @@ class MultiTaskBert(LRScheduledTFModel):
     """
     # TODO: check if ema is really needed and if it can be used on multitask bert
     def __init__(self,
-                 shared_params: dict,
+                 bert_config_file: str,
                  launches_params: dict,
+                 pretrained_bert: str = None,
+                 attention_probs_keep_prob: float = None,
+                 hidden_keep_prob: float = None,
+                 optimizer: str = None,
+                 weight_decay_rate: float = 1e-6,
+                 body_learning_rate: float = 1e-3,
+                 min_body_learning_rate: float = 1e-7,
+                 learning_rate_drop_patience: int = 20,
+                 learning_rate_drop_div: float = 2.0,
+                 load_before_drop: bool = True,
+                 clip_norm: float = 1.0,
                  inference_launch_names: List[str] = None,
                  **kwargs) -> None:
         # TODO: Think about refactoring part of shared params in to parameters with default values.
         # TODO: check what default values for super().__init__() are needed.
-        super().__init__(learning_rate=shared_params.get('body_learning_rate'),
-                         learning_rate_drop_div=shared_params.get('learning_rate_drop_div'),
-                         learning_rate_drop_patience=shared_params.get('learning_rate_drop_patience'),
-                         load_before_drop=shared_params.get('load_before_drop'),
-                         clip_norm=shared_params.get('clip_norm'),
+        super().__init__(learning_rate=body_learning_rate,
+                         learning_rate_drop_div=learning_rate_drop_div,
+                         learning_rate_drop_patience=learning_rate_drop_patience,
+                         load_before_drop=load_before_drop,
+                         clip_norm=clip_norm,
                          **kwargs)
-        self.shared_params = shared_params
+        self.optimizer_params = {
+            "optimizer": optimizer,
+            "body_learning_rate": body_learning_rate,
+            "min_body_learning_rate": min_body_learning_rate,
+            "weight_decay_rate": weight_decay_rate
+        }
         self.launches_tasks = launches_params
         self.inference_launch_names = inference_launch_names
         self.mode = 'train' if self.inference_launch_names is None else 'inference'
 
         self.shared_ph = None  # TODO: add use for `min_body_learning_rate`
 
-        self.bert_config = BertConfig.from_json_file(str(expand_path(self.shared_params['bert_config_file'])))
+        self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
 
-        attention_probs_keep_prob = self.shared_params.get('attention_probs_keep_prob')
         if attention_probs_keep_prob is not None:
             self.bert_config.attention_probs_dropout_prob = 1.0 -attention_probs_keep_prob
-        hidden_keep_prob = self.shared_params.get('hidden_keep_prob')
         if hidden_keep_prob is not None:
             self.bert_config.hidden_dropout_prob = 1.0 - hidden_keep_prob
 
@@ -98,9 +112,8 @@ class MultiTaskBert(LRScheduledTFModel):
 
         self.sess.run(tf.global_variables_initializer())
 
-        if self.shared_params['pretrained_bert'] is not None:
-            pretrained_bert = str(expand_path(self.shared_params['pretrained_bert']))
-
+        if pretrained_bert is not None:
+            pretrained_bert = str(expand_path(pretrained_bert))
             if tf.train.checkpoint_exists(pretrained_bert) \
                     and not (self.load_path and tf.train.checkpoint_exists(str(self.load_path.resolve()))) \
                     and self.mode == 'train':
@@ -124,10 +137,6 @@ class MultiTaskBert(LRScheduledTFModel):
         writer.add_graph(self.sess.graph)
         writer.close()
 
-    def fill_missing_shared_params(self):
-        if 'min_body_learning_rate' not in self.shared_params:
-            self.shared_params['min_bode_learning_rate'] = 1e-7
-
     def build_tasks(self):
         def get_train_op(*args, **kwargs):
             return self.get_train_op(*args, **kwargs)
@@ -135,7 +144,7 @@ class MultiTaskBert(LRScheduledTFModel):
             for task_name, task_obj in launch_params['tasks'].items():
                 task_obj.build(
                     bert_body=self.bert,
-                    shared_params=self.shared_params,
+                    optimizer_params=self.optimizer_params,
                     shared_placeholders=self.shared_ph,
                     sess=self.sess,
                     mode=self.mode,
@@ -209,7 +218,7 @@ class MultiTaskBert(LRScheduledTFModel):
                 kw = {inp_name: kwargs[inp_name] for inp_name in task.in_names + task.in_y_names}
             task.train_on_batch(
                 **kw, 
-                body_learning_rate=max(self.get_learning_rate(), self.shared_params['min_body_learning_rate'])
+                body_learning_rate=max(self.get_learning_rate(), self.optimizer_params['min_body_learning_rate'])
             )
 
     def __call__(self, *args, launch_name=None, **kwargs):
@@ -298,22 +307,22 @@ class MTBertSequenceTaggingTask:
         self.in_y_names = in_y_names
 
         self.bert = None
-        self.shared_params = None
+        self.optimizer_params = None
         self.shared_ph = None
         self.shared_feed_dict = None
         self.sess = None
         self.get_train_op_func = None
 
-    def build(self, bert_body, shared_params, shared_placeholders, sess, mode, get_train_op_func):
+    def build(self, bert_body, optimizer_params, shared_placeholders, sess, mode, get_train_op_func):
         self.get_train_op_func = get_train_op_func
         self.bert = bert_body
-        self.shared_params = shared_params
+        self.optimizer_params = optimizer_params
         if mode == 'train':
             self.head_learning_rate_multiplier = \
-                self.init_head_learning_rate / self.shared_params['body_learning_rate']
+                self.init_head_learning_rate / self.optimizer_params['body_learning_rate']
         else:
             self.head_learning_rate_multiplier = 0
-        mblr = self.shared_params.get('min_body_learning_rate')
+        mblr = self.optimizer_params.get('min_body_learning_rate')
         self.min_body_learning_rate = 0. if mblr is None else mblr
         self.shared_ph = shared_placeholders
         self.sess = sess
@@ -423,13 +432,13 @@ class MTBertSequenceTaggingTask:
                                                    trainable=False)  # TODO: check this global step is not used in other subtasks
                 # default optimizer for Bert is Adam with fixed L2 regularization
 
-            if self.shared_params.get('optimizer') is None:
+            if self.optimizer_params.get('optimizer') is None:
                 self.train_op = \
                     self.get_train_op(
                         self.loss,
                         body_learning_rate=self.shared_ph['learning_rate'],
                         optimizer=AdamWeightDecayOptimizer,
-                        weight_decay_rate=self.shared_params.get('weight_decay_rate', 1e-6),
+                        weight_decay_rate=self.optimizer_params.get('weight_decay_rate', 1e-6),
                         beta_1=0.9,
                         beta_2=0.999,
                         epsilon=1e-6,
@@ -442,7 +451,7 @@ class MTBertSequenceTaggingTask:
                                                   body_learning_rate=self.shared_ph['learning_rate'],
                                                   optimizer_scope_name='Optimizer')
 
-            if self.shared_params.get('optimizer') is None:
+            if self.optimizer_params.get('optimizer') is None:
                 with tf.variable_scope('Optimizer'):
                     new_global_step = self.global_step + 1
                     self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
@@ -590,7 +599,7 @@ class MTBertClassificationTask:
         self.in_y_names = in_y_names
 
         self.bert = None
-        self.shared_params = None
+        self.optimizer_params = None
         self.shared_ph = None
         self.shared_feed_dict = None
         self.sess = None
@@ -602,16 +611,16 @@ class MTBertClassificationTask:
         if self.multilabel and not self.return_probas:
             raise RuntimeError('Set return_probas to True for multilabel classification!')
 
-    def build(self, bert_body, shared_params, shared_placeholders, sess, mode, get_train_op_func):
+    def build(self, bert_body, optimizer_params, shared_placeholders, sess, mode, get_train_op_func):
         self.get_train_op_func = get_train_op_func
         self.bert = bert_body
-        self.shared_params = shared_params
+        self.optimizer_params = optimizer_params
         if mode == 'train':
             self.head_learning_rate_multiplier = \
-                self.init_head_learning_rate / self.shared_params['body_learning_rate']
+                self.init_head_learning_rate / self.optimizer_params['body_learning_rate']
         else:
             self.head_learning_rate_multiplier = 0
-        mblr = self.shared_params.get('min_body_learning_rate')
+        mblr = self.optimizer_params.get('min_body_learning_rate')
         self.min_body_learning_rate = 0. if mblr is None else mblr
         self.shared_ph = shared_placeholders
         self.sess = sess
@@ -685,7 +694,7 @@ class MTBertClassificationTask:
                         self.loss, 
                         body_learning_rate=self.shared_ph.get('learning_rate'),
                         optimizer=AdamWeightDecayOptimizer,
-                        weight_decay_rate=self.shared_params.get('weight_decay_rate', 0.01),  # FIXME: make default value specification more obvious
+                        weight_decay_rate=self.optimizer_params.get('weight_decay_rate', 0.01),  # FIXME: make default value specification more obvious
                         beta_1=0.9,
                         beta_2=0.999,
                         epsilon=1e-6,
@@ -773,8 +782,7 @@ class MTBertClassificationTask:
         """
         fetches, feed_dict = self.get_sess_run_infer_args(features)
         log.debug(f"(MTBertClassificationTask.__call__)fetches: {fetches}")
-        log.debug(f"(MTBertClassificationTask.__call__)sess_run_res.shape: {recursive_shape(sess_run_res)}")
-        return post_process_preds(self.sess.run(fetches, feed_dict=feed_dict))
+        return self.post_process_preds(self.sess.run(fetches, feed_dict=feed_dict))
 
 
 @register("mt_bert_reuser")
