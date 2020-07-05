@@ -107,19 +107,16 @@
         "class_name": "mt_bert",
         "save_path": "{MT_BERT_PATH}/model",
         "load_path": "{MT_BERT_PATH}/model",
-        "shared_params": {
-          "bert_config_file": "{BERT_PATH}/bert_config.json",
-          "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
-          "attention_probs_keep_prob": 0.5,
-          "body_learning_rate": 3e-5,
-          "min_body_learning_rate": 2e-7,
-          "learning_rate_drop_patience": 30,
-          "learning_rate_drop_div": 1.5,
-          "load_before_drop": true,
-          "optimizer": "tf.train:AdamOptimizer",
-          "clip_norm": 1.0
-        },
-        
+        "bert_config_file": "{BERT_PATH}/bert_config.json",
+        "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
+        "attention_probs_keep_prob": 0.5,
+        "body_learning_rate": 3e-5,
+        "min_body_learning_rate": 2e-7,
+        "learning_rate_drop_patience": 30,
+        "learning_rate_drop_div": 1.5,
+        "load_before_drop": true,
+        "optimizer": "tf.train:AdamOptimizer",
+        "clip_norm": 1.0,
         "launches_params": {
           "ner": {
             "tasks": {
