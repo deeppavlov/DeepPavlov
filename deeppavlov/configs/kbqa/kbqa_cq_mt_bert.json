@@ -134,11 +134,6 @@
         "templates_filename": "templates_eng.json"
       },
       {
-        "config_path": "{CONFIGS_PATH}/classifiers/query_pr.json",
-        "in": ["x"],
-        "out": ["template_type"]
-      },
-      {
         "class_name": "entity_linker",
         "id": "linker_entities",
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",

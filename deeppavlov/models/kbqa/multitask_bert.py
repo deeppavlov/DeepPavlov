@@ -33,61 +33,6 @@ log = getLogger(__name__)
 from deeppavlov.models.kbqa.debug_helpers import recursive_shape, recursive_type
 
 
-# FIXME: kostyl. The same function is defined as method in `LRScheduledTFModel`. Subtask classes does not need many other methods defined in `LRScheduledTFModel`.
-def get_train_op(loss,
-                 learning_rate,
-                 optimizer=None,
-                 clip_norm=None,
-                 learnable_scopes=None,
-                 optimizer_scope_name=None,
-                 **kwargs):
-    """
-    Get train operation for given loss
-
-    Args:
-        loss: loss, tf tensor or scalar
-        learning_rate: scalar or placeholder.
-        clip_norm: clip gradients norm by clip_norm.
-        learnable_scopes: which scopes are trainable (None for all).
-        optimizer: instance of tf.train.Optimizer, default Adam.
-        **kwargs: parameters passed to tf.train.Optimizer object
-           (scalars or placeholders).
-
-    Returns:
-        train_op
-    """
-    if optimizer_scope_name is None:
-        opt_scope = tf.variable_scope('Optimizer')
-    else:
-        opt_scope = tf.variable_scope(optimizer_scope_name)
-    with opt_scope:
-        if learnable_scopes is None:
-            variables_to_train = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
-        else:
-            variables_to_train = []
-            for scope_name in learnable_scopes:
-                variables_to_train.extend(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope_name))
-
-        if optimizer is None:
-            optimizer = tf.train.AdamOptimizer
-
-        # For batch norm it is necessary to update running averages
-        extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        with tf.control_dependencies(extra_update_ops):
-
-            def clip_if_not_none(grad):
-                if grad is not None:
-                    return tf.clip_by_norm(grad, clip_norm)
-
-            opt = optimizer(learning_rate, **kwargs)
-            grads_and_vars = opt.compute_gradients(loss, var_list=variables_to_train)
-            if clip_norm is not None:
-                grads_and_vars = [(clip_if_not_none(grad), var)
-                                  for grad, var in grads_and_vars]
-            train_op = opt.apply_gradients(grads_and_vars)
-    return train_op
-
-
 @register('mt_bert')
 class MultiTaskBert(LRScheduledTFModel):
     """
@@ -184,6 +129,8 @@ class MultiTaskBert(LRScheduledTFModel):
             self.shared_params['min_bode_learning_rate'] = 1e-7
 
     def build_tasks(self):
+        def get_train_op(*args, **kwargs):
+            return self.get_train_op(*args, **kwargs)
         for launch_name, launch_params in self.launches_tasks.items():
             for task_name, task_obj in launch_params['tasks'].items():
                 task_obj.build(
@@ -191,7 +138,8 @@ class MultiTaskBert(LRScheduledTFModel):
                     shared_params=self.shared_params,
                     shared_placeholders=self.shared_ph,
                     sess=self.sess,
-                    mode=self.mode
+                    mode=self.mode,
+                    get_train_op_func=get_train_op
                 )
 
     def _init_shared_placeholders(self) -> None:
@@ -354,8 +302,10 @@ class MTBertSequenceTaggingTask:
         self.shared_ph = None
         self.shared_feed_dict = None
         self.sess = None
+        self.get_train_op_func = None
 
-    def build(self, bert_body, shared_params, shared_placeholders, sess, mode):
+    def build(self, bert_body, shared_params, shared_placeholders, sess, mode, get_train_op_func):
+        self.get_train_op_func = get_train_op_func
         self.bert = bert_body
         self.shared_params = shared_params
         if mode == 'train':
@@ -457,10 +407,10 @@ class MTBertSequenceTaggingTask:
             kwargs['learnable_scopes'] = ('bert/encoder',)
         learning_rate = body_learning_rate * self.head_learning_rate_multiplier
         log.debug(f"(MTBertSequenceTaggingTask.get_train_op)learning_rate, body_learning_rate: {learning_rate}, {body_learning_rate}")
-        bert_train_op = get_train_op(loss, body_learning_rate, **kwargs)
+        bert_train_op = self.get_train_op_func(loss, body_learning_rate, **kwargs)
         # train_op for ner head variables
         kwargs['learnable_scopes'] = (self.task_name,)
-        head_train_op = get_train_op(loss, learning_rate, **kwargs)
+        head_train_op = self.get_train_op_func(loss, learning_rate, **kwargs)
         return tf.group(bert_train_op, head_train_op)
 
     def _init_optimizer(self) -> None:
@@ -644,6 +594,7 @@ class MTBertClassificationTask:
         self.shared_ph = None
         self.shared_feed_dict = None
         self.sess = None
+        self.get_train_op_func = None
 
         if self.multilabel and not self.one_hot_labels:
             raise RuntimeError('Use one-hot encoded labels for multilabel classification!')
@@ -651,7 +602,8 @@ class MTBertClassificationTask:
         if self.multilabel and not self.return_probas:
             raise RuntimeError('Set return_probas to True for multilabel classification!')
 
-    def build(self, bert_body, shared_params, shared_placeholders, sess, mode):
+    def build(self, bert_body, shared_params, shared_placeholders, sess, mode, get_train_op_func):
+        self.get_train_op_func = get_train_op_func
         self.bert = bert_body
         self.shared_params = shared_params
         if mode == 'train':
@@ -715,10 +667,10 @@ class MTBertClassificationTask:
         if self.freeze_embeddings:
             kwargs['learnable_scopes'] = ('bert/encoder',)
         learning_rate = body_learning_rate * self.head_learning_rate_multiplier
-        bert_train_op = get_train_op(loss, body_learning_rate, **kwargs)
+        bert_train_op = self.get_train_op_func(loss, body_learning_rate, **kwargs)
         # train_op for ner head variables
         kwargs['learnable_scopes'] = (self.task_name,)
-        head_train_op = get_train_op(loss, learning_rate, **kwargs)
+        head_train_op = self.get_train_op_func(loss, learning_rate, **kwargs)
         return tf.group(bert_train_op, head_train_op)
 
     def _init_optimizer(self):
