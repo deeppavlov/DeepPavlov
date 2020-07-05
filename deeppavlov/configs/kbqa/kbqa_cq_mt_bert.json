@@ -251,12 +251,8 @@
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
-        "subdir": "{DOWNLOADS_PATH}/bert_models"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking.tar.gz",
-        "subdir": "{MODELS_PATH}/rel_ranking"
+        "url": "http://files.deeppavlov.ai/kbqa/models/mt_bert.tar.gz",
+        "subdir": "{MT_BERT_PATH}"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/wiki_eng_files.tar.gz",

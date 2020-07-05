@@ -112,6 +112,11 @@ class MultiTaskBert(LRScheduledTFModel):
         self.build_tasks()
 
         self.sess.run(tf.global_variables_initializer())
+#        import os
+#        writer = tf.compat.v1.summary.FileWriter(os.path.expanduser('~/.deeppavlov/models/mt_bert/graph'))
+#        writer.add_graph(self.sess.graph)
+#        writer.close()
+
 
         if pretrained_bert is not None:
             pretrained_bert = str(expand_path(pretrained_bert))
@@ -133,10 +138,6 @@ class MultiTaskBert(LRScheduledTFModel):
             self.load()
 
         # FIXME: remove debug ops
-        import os
-        writer = tf.compat.v1.summary.FileWriter(os.path.expanduser('~/.deeppavlov/models/mt_bert/log'))
-        writer.add_graph(self.sess.graph)
-        writer.close()
 
     def build_tasks(self):
         def get_train_op(*args, **kwargs):

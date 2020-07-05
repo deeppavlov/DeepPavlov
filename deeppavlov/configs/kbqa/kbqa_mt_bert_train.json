@@ -252,8 +252,12 @@
         "subdir": "{DOWNLOADS_PATH}/query_prediction"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_bert.tar.gz",
-        "subdir": "{MODELS_PATH}/rel_ranking_bert"
+        "url": "http://files.deeppavlov.ai/kbqa/datasets/rel_ranking_bert.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/rel_ranking_bert"
+      },
+      {                                                                                                                
+        "url": "http://files.deeppavlov.ai/kbqa/models/mt_bert.tar.gz",                                                
+        "subdir": "{MT_BERT_PATH}"                                                                                     
       },
       {
         "url": "http://files.deeppavlov.ai/embeddings/reddit_fastText/wordpunct_tok_reddit_comments_2017_11_300.bin",
