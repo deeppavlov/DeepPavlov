@@ -455,7 +455,7 @@ class MTBertSequenceTaggingTask:
                     new_global_step = self.global_step + 1
                     self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
 
-    def _build_feed_dict(self, input_ids, input_masks, y_masks, token_types, y=None, body_learning_rate=None):
+    def _build_feed_dict(self, input_ids, input_masks, y_masks, token_types=None, y=None, body_learning_rate=None):
         if token_types is None:
             token_types = np.zeros(np.array(input_ids).shape)
         sph = self.shared_ph
