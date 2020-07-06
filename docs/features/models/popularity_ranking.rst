@@ -29,8 +29,7 @@ Building the model
 
 .. code:: python
 
-    from deeppavlov import configs
-    from deeppavlov.core.commands.infer import build_model
+    from deeppavlov import build_model, configs
 
     ranker = build_model(configs.doc_retrieval.en_ranker_pop_enwiki20180211, download=True)
 
