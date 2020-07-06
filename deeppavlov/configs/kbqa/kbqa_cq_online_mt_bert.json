@@ -88,7 +88,7 @@
 
       {
         "class_name": "bert_preprocessor",
-        "vocab_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/vocab.txt",
+        "vocab_file": "{BERT_PATH}/vocab.txt",
         "do_lower_case": false,
         "max_seq_length": 64,
         "in": ["x"],
@@ -182,7 +182,7 @@
         "class_name": "rel_ranking_mt_bert_infer",
         "bert_preprocessor": {
           "class_name": "bert_preprocessor",
-          "vocab_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/vocab.txt",
+          "vocab_file": "{BERT_PATH}/vocab.txt",
           "do_lower_case": false,
           "max_seq_length": 64
         },
@@ -250,6 +250,10 @@
         "url": "http://files.deeppavlov.ai/embeddings/reddit_fastText/wordpunct_tok_reddit_comments_2017_11_300.bin",
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/cased_L-12_H-768_A-12_vocab_config.tar.gz",
+        "subdir": "{BERT_PATH}"
+      },
       {                                                                                                                
         "url": "http://files.deeppavlov.ai/kbqa/models/mt_bert.tar.gz",                                                
         "subdir": "{MT_BERT_PATH}"                                                                                     
@@ -260,14 +264,6 @@
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/sparql_queries.json",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.hdt",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.hdt.index.v1-1",
         "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
       }
     ]

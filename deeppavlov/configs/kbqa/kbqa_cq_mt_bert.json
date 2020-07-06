@@ -88,7 +88,7 @@
 
       {
         "class_name": "bert_preprocessor",
-        "vocab_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/vocab.txt",
+        "vocab_file": "{BERT_PATH}/vocab.txt",
         "do_lower_case": false,
         "max_seq_length": 64,
         "in": ["x"],
@@ -253,6 +253,10 @@
       {
         "url": "http://files.deeppavlov.ai/kbqa/models/mt_bert.tar.gz",
         "subdir": "{MT_BERT_PATH}"
+      },
+      {                                                                                                                   
+        "url": "http://files.deeppavlov.ai/kbqa/models/cased_L-12_H-768_A-12_vocab_config.tar.gz",                            
+        "subdir": "{BERT_PATH}"                                                                                           
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/wiki_eng_files.tar.gz",
