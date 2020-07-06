@@ -1,8 +1,6 @@
 import numpy as np
 from deeppavlov.core.common.metrics_registry import register_metric
 
-log = getLogger(__name__)
-
 
 @register_metric('mean_squared_error')
 def mse(y_true, y_predicted):
