@@ -32,7 +32,7 @@ Building the model
     from deeppavlov import configs
     from deeppavlov.core.commands.infer import build_model
 
-    ranker = build_model(configs.doc_retrieval.en_ranker_pop_enwiki20180211, load_trained=True)
+    ranker = build_model(configs.doc_retrieval.en_ranker_pop_enwiki20180211, download=True)
 
 Inference
 
