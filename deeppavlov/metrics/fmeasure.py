@@ -232,14 +232,10 @@ def round_f1_macro(y_true, y_predicted):
     Returns:
         F1 score
     """
-    from collections import Counter
-    log.debug(f"(round_f1_macro)y_true counter: {Counter(y_true)}")
-    log.debug(f"(round_f1_macro)y_predicted counter: {Counter(y_predicted)}") 
     try:
         predictions = [np.round(x) for x in y_predicted]
     except TypeError:
         predictions = y_predicted
-        log.debug(f"(round_f1_macro)predictions counter: {Counter(predictions)}") 
 
     return f1_score(np.array(y_true), np.array(predictions), average="macro")
 
