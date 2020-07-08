@@ -7,7 +7,6 @@
         "class_name": "simple_vocab",                                                                                  
         "save_path": "{MT_BERT_PATH}/query_prediction/classes.dict"
       },
-
       {
         "class_name": "bert_ner_preprocessor",
         "vocab_file": "{BERT_PATH}/vocab.txt",
@@ -84,8 +83,7 @@
             "pred_subword_mask": "pred_subword_mask"
         },                                                                                
         "out": ["y_pred_ner", "y_pred_probas_qr"]                                                                 
-      }, 
-
+      },
       {
         "class_name": "bert_preprocessor",
         "vocab_file": "{BERT_PATH}/vocab.txt",
@@ -101,7 +99,6 @@
         "in": ["bert_features_qr"],
         "out": ["y_pred_probas_qr"]
       },
-
       {
         "in": "y_pred_probas_qr",
         "out": "y_pred_ids",
@@ -113,16 +110,20 @@
         "in": "y_pred_ids",
         "out": "template_type"
       },
-
       {
         "in": ["x_tokens", "y_pred_ner"],
         "out": ["entities", "types"],
+        "thres_proba": 0.95,
+        "entity_tag": "ENTITY",
+        "type_tag": "TYPE",
+        "o_tag": "O",
+        "tags_file": "{MT_BERT_PATH}/ner/tag.dict",
         "class_name": "entity_detection_parser"
       },
       {
         "class_name": "wiki_parser",
         "id": "wiki_p",
-        "wiki_filename": "{DOWNLOADS_PATH}/wikidata_eng/wikidata.hdt"
+        "wiki_filename": "{DOWNLOADS_PATH}/wikidata/wikidata.hdt"
       },
       {
         "class_name": "template_matcher",
@@ -247,10 +248,6 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/embeddings/reddit_fastText/wordpunct_tok_reddit_comments_2017_11_300.bin",
-        "subdir": "{DOWNLOADS_PATH}/embeddings"
-      },
-      {
         "url": "http://files.deeppavlov.ai/kbqa/models/mt_bert.tar.gz",
         "subdir": "{MT_BERT_PATH}"
       },
@@ -264,14 +261,6 @@
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/sparql_queries.json",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.hdt",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.hdt.index.v1-1",
         "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
       }
     ]

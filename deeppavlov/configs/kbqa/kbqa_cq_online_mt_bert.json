@@ -7,7 +7,6 @@
         "class_name": "simple_vocab",                                                                                  
         "save_path": "{MT_BERT_PATH}/query_prediction/classes.dict"
       },
-
       {
         "class_name": "bert_ner_preprocessor",
         "vocab_file": "{BERT_PATH}/vocab.txt",
@@ -113,10 +112,14 @@
         "in": "y_pred_ids",
         "out": "template_type"
       },
-
       {
         "in": ["x_tokens", "y_pred_ner"],
         "out": ["entities", "types"],
+        "thres_proba": 0.95,
+        "entity_tag": "ENTITY",
+        "type_tag": "TYPE",
+        "o_tag": "O",
+        "tags_file": "{MT_BERT_PATH}/ner/tag.dict",
         "class_name": "entity_detection_parser"
       },
       {

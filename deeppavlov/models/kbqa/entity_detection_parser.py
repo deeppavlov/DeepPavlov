@@ -16,6 +16,7 @@ from typing import List, Tuple
 
 import numpy as np
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 
@@ -24,8 +25,31 @@ from deeppavlov.core.models.component import Component
 class EntityDetectionParser(Component):
     """This class parses probabilities of tokens to be a token from the entity substring."""
 
-    def __init__(self, thres_proba: float = 0.8, **kwargs):
+    def __init__(self, entity_tag: str, type_tag: str, o_tag: str, tags_file: str, thres_proba: float = 0.8, **kwargs):
+        """
+
+        Args:
+            entity_tag: tag for entities
+            type_tag: tag for types
+            o_tag: tag for tokens which are neither entities nor types
+            tags_file: filename with NER tags
+            thres_proba: if the probability of the tag is less than thres_proba, we assign the tag as 'O'
+        """
+        self.entity_tag = entity_tag
+        self.type_tag = type_tag
+        self.o_tag = o_tag
         self.thres_proba = thres_proba
+        self.tag_ind_dict = {}
+        with open(str(expand_path(tags_file))) as fl:
+            tags = [line.split('\t')[0] for line in fl.readlines()]
+            self.entity_prob_ind = [i for i, tag in enumerate(tags) if self.entity_tag in tag]
+            self.type_prob_ind = [i for i, tag in enumerate(tags) if self.type_tag in tag]
+            self.et_prob_ind = self.entity_prob_ind + self.type_prob_ind
+            for ind in self.entity_prob_ind:
+                self.tag_ind_dict[ind] = self.entity_tag
+            for ind in self.type_prob_ind:
+                self.tag_ind_dict[ind] = self.type_tag
+            self.tag_ind_dict[0] = self.o_tag
 
     def __call__(self, question_tokens: List[List[str]],
                  token_probas: List[List[List[float]]]) -> Tuple[List[List[str]], List[List[str]], List[List[List[int]]]]:
@@ -33,11 +57,8 @@ class EntityDetectionParser(Component):
 
         Args:
             question_tokens: tokenized questions
-            token_probas: list of probabilities of question tokens to belong to
-            "E-TAG" (entity substring), "T-TAG" (entity type substring)
-            or "O-TAG" (not an entity token)
+            token_probas: list of probabilities of question tokens
         """
-        
         entities_batch = []
         types_batch = []
         positions_batch = []
@@ -50,15 +71,15 @@ class EntityDetectionParser(Component):
         return entities_batch, types_batch, positions_batch
 
     def tags_from_probas(self, probas):
-        tag_list = ["O-TAG", "E-TAG", "T-TAG"]
+        tag_list = [self.o_tag, self.entity_tag, self.type_tag]
         tags = []
         tag_probas = []
         for proba in probas:
             tag_num = np.argmax(proba)
-            if tag_num in [1, 2]:
+            if tag_num in self.et_prob_ind:
                 if proba[tag_num] < self.thres_proba:
                     tag_num = 0
-            tags.append(tag_list[tag_num])
+            tags.append(self.tag_ind_dict[tag_num])
             tag_probas.append(proba[tag_num])
                     
         return tags, tag_probas
@@ -75,10 +96,10 @@ class EntityDetectionParser(Component):
         replace_tokens = [(' - ', '-'), ("'s", ''), (' .', ''), ('{', ''), ('}', ''), ('  ', ' '), ('"', "'"), ('(', ''), (')', '')]
 
         for n, (tok, tag, proba) in enumerate(zip(tokens, tags, tag_probas)):
-            if tag == "E-TAG":
+            if tag == self.entity_tag:
                 entity.append(tok)
                 entity_positions.append(n)
-            elif tag == "T-TAG":
+            elif tag == self.type_tag:
                 entity_type.append(tok)
                 type_proba.append(proba)
             elif len(entity) > 0:
