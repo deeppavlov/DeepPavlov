@@ -26,10 +26,9 @@ Building (if you don't have your own data)
 
 .. code:: python
 
-    from deeppavlov import configs
-    from deeppavlov.core.commands.infer import build_model
+    from deeppavlov import build_model, configs
 
-    ranker = build_model(configs.doc_retrieval.en_ranker_tfidf_wiki, load_trained=True)
+    ranker = build_model(configs.doc_retrieval.en_ranker_tfidf_wiki, download=True)
 
 Inference
 

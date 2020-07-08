@@ -27,8 +27,7 @@ Training (if you have your own data)
 
 .. code:: python
 
-    from deeppavlov import configs
-    from deeppavlov.core.commands.train import train_evaluate_model_from_config
+    from deeppavlov import configs, train_evaluate_model_from_config
 
     train_evaluate_model_from_config(configs.doc_retrieval.en_ranker_tfidf_wiki, download=True)
     train_evaluate_model_from_config(configs.squad.multi_squad_noans, download=True)
@@ -37,10 +36,9 @@ Building
 
 .. code:: python
 
-    from deeppavlov import configs
-    from deeppavlov.core.commands.infer import build_model
+    from deeppavlov import build_model, configs
 
-    odqa = build_model(configs.odqa.en_odqa_infer_wiki, load_trained=True)
+    odqa = build_model(configs.odqa.en_odqa_infer_wiki, download=True)
 
 Inference
 
