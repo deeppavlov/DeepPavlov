@@ -248,6 +248,10 @@
     },
     "download": [
       {
+        "url": "http://files.deeppavlov.ai/embeddings/reddit_fastText/wordpunct_tok_reddit_comments_2017_11_300.bin",
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
+      },
+      {
         "url": "http://files.deeppavlov.ai/kbqa/models/mt_bert.tar.gz",
         "subdir": "{MT_BERT_PATH}"
       },
