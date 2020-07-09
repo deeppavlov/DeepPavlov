@@ -13,8 +13,9 @@
 # limitations under the License.
 
 from collections import OrderedDict, namedtuple
-from typing import List, Tuple, Union, Iterable, Any
 from json import JSONEncoder
+from typing import List, Tuple, Union, Iterable
+
 import numpy
 from deeppavlov.core.common.metrics_registry import get_metric_by_name
 
