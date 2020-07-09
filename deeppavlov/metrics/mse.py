@@ -17,7 +17,8 @@ from deeppavlov.core.common.metrics_registry import register_metric
 
 
 @register_metric('mean_squared_error')
-def mse(y_true , y_predicted):
+def mse(y_true: Union[np.array, list],
+        y_predicted: Union[np.array, list]):
     """
     Calculates mean squared error.
     Args:
@@ -27,11 +28,9 @@ def mse(y_true , y_predicted):
         F1 score
     """
     for value in [y_true, y_predicted]:
-        assert type(value) in [list, np.ndarray]
         assert (np.isfinite(value).all())
     y_true_np = np.array(y_true)
-    assert len(y_true_np.shape) == 2
     y_predicted_np = np.array(y_predicted)
-    assert len(y_predicted_np.shape) == 2
+    assert y_true_np.ndim == y_predicted_np.ndim == 2
     err = ((y_true_np - y_predicted_np) ** 2).sum() ** 0.5
     return err
