@@ -66,7 +66,7 @@ class TransformersBertEmbedder(Serializable):
                 for every other subtoken
             attention_batch: a mask matrix with ``1`` for every significant subtoken and ``0`` for paddings
         """
-        ids_tensor = torch.tensor(subtoken_ids_batch, device=self.device)
+        ids_tensor = torch.tensor(subtoken_ids_batch, device=self.device, dtype = torch.long)
         startofwords_tensor = torch.tensor(startofwords_batch, device=self.device).bool()
         attention_tensor = torch.tensor(attention_batch, device=self.device)
         with torch.no_grad():

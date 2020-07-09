@@ -64,12 +64,17 @@ if __name__ == '__main__':
             'tests': [
                 'flake8',
                 'pytest',
-                'pexpect'],
+                'pexpect'
+            ],
             'docs': [
                 'sphinx>=1.7.9',
                 'sphinx_rtd_theme>=0.4.0',
                 'nbsphinx>=0.3.4',
                 'ipykernel>=4.8.0'
-            ]},
+            ],
+            's3': [
+                'boto3'
+            ]
+        },
         **read_requirements()
     )

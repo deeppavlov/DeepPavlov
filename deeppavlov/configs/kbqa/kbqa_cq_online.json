@@ -14,10 +14,9 @@
         "class_name": "entity_detection_parser"
       },
       {
-        "class_name": "wiki_parser",
+        "class_name": "wiki_parser_online",
         "id": "wiki_p",
-        "wiki_filename": "{DOWNLOADS_PATH}/wikidata/wikidata.hdt",
-        "lang": "@en"
+        "url": "https://query.wikidata.org/sparql"
       },
       {
         "class_name": "template_matcher",
@@ -54,16 +53,15 @@
         "use_prefix_tree": false
       },
       {
-        "class_name": "rel_ranking_bert_infer",
+        "class_name": "rel_ranking_infer",
         "id": "rel_r_inf",
-        "ranker": {"config_path": "{CONFIGS_PATH}/classifiers/rel_ranking_bert.json"},
-        "wiki_parser": "#wiki_p",
-        "batch_size": 32,
+        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking.json"},
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
-        "rel_q2name_filename": "wiki_dict_properties.pickle"
+        "rel_q2name_filename": "wiki_dict_properties.pickle",
+        "rels_to_leave": 40
       },
       {
-        "class_name": "query_generator",
+        "class_name": "query_generator_online",
         "id": "query_g",
         "linker_entities": "#linker_entities",
         "linker_types": "#linker_types",
@@ -75,9 +73,18 @@
         "rank_rels_filename_2": "rels_1.txt",
         "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries.json",
         "entities_to_leave": 5,
-        "rels_to_leave": 12,
-        "return_answers": true,
+        "rels_to_leave": 10,
         "in": ["x", "template_type", "entities", "types"],
+        "out": ["candidate_answers"]
+      },
+      {
+        "class_name": "rel_ranking_bert_infer",
+        "ranker": {"config_path": "{CONFIGS_PATH}/classifiers/rel_ranking_bert.json"},
+        "wiki_parser": "#wiki_p",
+        "batch_size": 32,
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "rel_q2name_filename": "wiki_dict_properties.pickle",
+        "in": ["x", "candidate_answers"],
         "out": ["answers"]
       }
     ],
@@ -154,18 +161,10 @@
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/wiki_eng_files.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+        "subdir": "{MODELS_PATH}/wikidata_eng"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/sparql_queries.json",
-        "subdir": "{DOWNLOADS_PATH}/wikidata"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.hdt",
-        "subdir": "{DOWNLOADS_PATH}/wikidata"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.hdt.index.v1-1",
         "subdir": "{DOWNLOADS_PATH}/wikidata"
       }
     ]

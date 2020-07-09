@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "class_name": "sq_reader",
-    "data_path": "{DOWNLOADS_PATH}/lcquad/entity_and_type_detection.pickle"
+    "data_path": "{DOWNLOADS_PATH}/lcquad/entity_and_type_detection_rus.pickle"
   },
   "dataset_iterator": {
     "class_name": "data_learning_iterator"
@@ -59,10 +59,10 @@
         "load_path": "{NER_PATH}/model",
         "in": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask"],
         "in_y": ["y_ind"],
-        "out": ["y_pred_ind"]
+        "out": ["y_pred"]
       }
     ],
-    "out": ["x_tokens", "y_pred_ind"]
+    "out": ["x_tokens", "y_pred"]
   },
   "train": {
     "epochs": 30,
@@ -77,7 +77,7 @@
         "inputs": ["y", "y_pred"]
       }
     ],
-    "validation_patience": 10,
+    "validation_patience": 5,
     "val_every_n_batches": 400,
 
     "log_every_n_batches": 400,
@@ -93,8 +93,8 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",
-      "NER_PATH": "{MODELS_PATH}/ner_lcquad_ent_and_type"
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12",
+      "NER_PATH": "{MODELS_PATH}/ner_ent_and_type_rus"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -107,16 +107,16 @@
     "download": [
 
       {
-        "url": "http://files.deeppavlov.ai/kbqa/datasets/entity_and_type_detection.pickle",
+        "url": "http://files.deeppavlov.ai/kbqa/datasets/entity_and_type_detection_rus.pickle",
         "subdir": "{MODELS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/multi_cased_L-12_H-768_A-12.zip",
         "subdir": "{DOWNLOADS_PATH}/bert_models"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/models/ner_lcquad.tar.gz",
-        "subdir": "{MODELS_PATH}/ner_lcquad_ent_and_type"
+        "url": "http://files.deeppavlov.ai/kbqa/models/ner_cq_rus.tar.gz",
+        "subdir": "{MODELS_PATH}/ner_ent_and_type_rus"
       }
     ]
   }
