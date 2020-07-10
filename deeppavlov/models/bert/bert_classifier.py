@@ -44,6 +44,9 @@ class BertClassifierModel(LRScheduledTFModel):
         hidden_keep_prob: keep_prob for Bert hidden layers
         optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
         num_warmup_steps:
+        gradient_accumulation_steps: number of steps we do on each batch
+        ( if it is >1, we split the batch on the gradient_accumulation_step parts
+         and update params at the end of the batch, default: 1)
         weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
         pretrained_bert: pretrained Bert checkpoint
         min_learning_rate: min value of learning rate if learning rate decay is used
@@ -54,7 +57,8 @@ class BertClassifierModel(LRScheduledTFModel):
     def __init__(self, bert_config_file, n_classes, keep_prob,
                  one_hot_labels=False, multilabel=False, return_probas=False,
                  attention_probs_keep_prob=None, hidden_keep_prob=None,
-                 optimizer=None, num_warmup_steps=None, weight_decay_rate=0.01,
+                 optimizer=None, gradient_accumulation_steps=1,
+                 num_warmup_steps=None, weight_decay_rate=0.01,
                  pretrained_bert=None, min_learning_rate=1e-06, **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -65,6 +69,7 @@ class BertClassifierModel(LRScheduledTFModel):
         self.one_hot_labels = one_hot_labels
         self.multilabel = multilabel
         self.optimizer = optimizer
+        self.gradient_accumulation_steps = gradient_accumulation_steps
         self.num_warmup_steps = num_warmup_steps
         self.weight_decay_rate = weight_decay_rate
 
@@ -212,6 +217,27 @@ class BertClassifierModel(LRScheduledTFModel):
             dict with loss and learning_rate values
 
         """
+        opt = tf.train.AdamOptimizer()
+        tvars = tf.trainable_variables()
+        accum_vars = [tf.Variable(tf.zeros_like(tv.initialized_value()), trainable=False) for tv in tvs]
+        zero_ops = [tv.assign(tf.zeros_like(tv)) for tv in accum_vars]
+        gvs = se.compute_gradients(rmse, tvars)
+        accum_ops = [accum_vars[i].assign_add(gv[0]) for i, gv in enumerate(gvs)]
+        train_step = opt.apply_gradients([(accum_vars[i], gv[1]) for i, gv in enumerate(gvs)])
+        In
+        the
+        training
+        loop
+        we
+        have:
+
+        while True:
+            sess.run(zero_ops)
+            for i in xrange(n_minibatches):
+                sess.run(accum_ops, feed_dict=dict(X: Xs[i], y: ys[i]))
+                sess.run(train_step)
+
+
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
