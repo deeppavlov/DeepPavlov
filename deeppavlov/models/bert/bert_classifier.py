@@ -13,8 +13,8 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import List, Dict, Union
-
+from typing import List, Dict, Union, Optional
+import math
 import tensorflow as tf
 from bert_dp.modeling import BertConfig, BertModel
 from bert_dp.optimization import AdamWeightDecayOptimizer
@@ -100,7 +100,7 @@ class BertClassifierModel(LRScheduledTFModel):
             pretrained_bert = str(expand_path(pretrained_bert))
 
             if tf.train.checkpoint_exists(pretrained_bert) \
-                    and not (self.load_path and tf.train.checkpoint_exists(str(self.load_path.resolve()))):
+                and not (self.load_path and tf.train.checkpoint_exists(str(self.load_path.resolve()))):
                 logger.info('[initializing model with Bert from {}]'.format(pretrained_bert))
                 # Exclude optimizer and classification variables from saved variables
                 var_list = self._get_saveable_variables(
@@ -173,14 +173,14 @@ class BertClassifierModel(LRScheduledTFModel):
                                                initializer=tf.constant_initializer(0), trainable=False)
             # default optimizer for Bert is Adam with fixed L2 regularization
             if self.optimizer is None:
-               self.optimizer=AdamWeightDecayOptimizer(
-                                                  learning_rate=self.learning_rate_ph, 
-                                                  weight_decay_rate=self.weight_decay_rate,
-                                                  beta_1=0.9,
-                                                  beta_2=0.999,
-                                                  epsilon=1e-6,
-                                                  exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"]
-                                                  )
+                self.optimizer = AdamWeightDecayOptimizer(
+                    learning_rate=self.learning_rate_ph,
+                    weight_decay_rate=self.weight_decay_rate,
+                    beta_1=0.9,
+                    beta_2=0.999,
+                    epsilon=1e-6,
+                    exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"]
+                )
 
     def _build_feed_dict(self, input_ids, input_masks, token_types, y=None):
         feed_dict = {
@@ -197,26 +197,28 @@ class BertClassifierModel(LRScheduledTFModel):
             })
 
         return feed_dict
-    def split(self, features: List[InputFeatures], y: Union[List[int], List[List[int]] = []) :
+
+    def split(self, features: List[InputFeatures], y: Union[Optional[List[int]], List[List[int]]] = None):
         """
         Splits features: batch of InputFeatures
          on num_parts equal parts
         making num_parts batches instead
         """
+
         num_parts = self.gradient_accumulation_steps
         assert num_parts > 0
-        assert num_parts <= len(feature_list)
-        
-  
-        num_features = math_ceil(len(features) + 0.0 / num_parts) 
-        feature_batches = [features[i:i+num_features] for i in range(num_parts)]
+        assert num_parts <= len(features)
+
+        num_features = math.ceil(len(features) + 0.0 / num_parts)
+        feature_batches = [features[i:i + num_features] for i in range(num_parts)]
         if len(y) > 0:
-           y_batches = [y[i:i+num_features] for i in range(num_parts)]
+            y_batches = [y[i:i + num_features] for i in range(num_parts)]
         else:
-           y_batches = [] 
+            y_batches = []
         return feature_batches, y_batches
-        
-    def train_on_batch(self, features: List[InputFeatures] , y: Union[List[int], List[List[int]]]) -> Dict:
+
+
+    def train_on_batch(self, features: List[InputFeatures], y: Union[List[int], List[List[int]]]=None) -> Dict:
         """Train model on given batch.
         This method clls train_op using features and y (labels).
 
@@ -228,65 +230,35 @@ class BertClassifierModel(LRScheduledTFModel):
             dict with loss and learning_rate values
 
         """
-for i in range(num_epochs):
-    print(f'Epoch: {i + 1}')
-    total_loss = 0
 
-    # get trainable variables
-    train_vars = self.model.trainable_variables
-    # Create empty gradient list (not a tf.Variable list)
-    accum_gradient = [tf.zeros_like(this_var) for this_var in train_vars]
+        # get trainable variables
 
-    for j in tqdm(range(num_samples)):
-        sample = samples[j]
-        with tf.GradientTape as tape:
-            prediction = self.model(sample)
-            loss_value = self.loss_function(y_true=labels[j], y_pred=prediction)
-        total_loss += loss_value
-
-        # get gradients of this tape
+        train_vars = tf.trainable_variables()
+        accumulated_gradient = [tf.zeros_like(this_var) for this_var in train_vars]
+        feature_batches, y_batches = self.split(features)
+        feed_dicts = [self.build_feed_dict(input_ids=feature_batch[0], input_masks=feature_batch[1],
+                                           token_types=feature_batch[2], y=y)
+                      for feature_batch, y in zip(feature_batches, y_batches)]
+        learning_rate = max(self.get_learning_rate(), self.min_learning_rate)
+        batch_loss = 0
+        for feed_dict in feed_dicts:
+            with tf.GradientTape as tape:
+                prediction = self.sess.run(self.y_predictions, feed_dict=feed_dict)
+                loss_value = self.sess.run(self.loss, feed_dict = feed_dict)
+            batch_loss += loss_value
         gradients = tape.gradient(loss_value, train_vars)
         # Accumulate the gradients
-        accum_gradient = [(acum_grad+grad) for acum_grad, grad in zip(accum_gradient, gradients)]
+        accumulated_gradient = [(acum_grad + grad) for acum_grad, grad in zip(accumulated_gradient, gradients)]
+        # Now, after executing all the tapes you needed, we apply the optimization step
+        # (but first we take the average of the gradients)
+        accumulated_gradient = [this_grad / self.gradient_accumulation_steps for this_grad in accumulated_gradient]
+        # apply optimization step
+        self.optimizer.apply_gradients(zip(accumulated_gradient, train_vars))
+        epoch_loss = batch_loss / self.gradient_accumulation_steps
+        print(f'Epoch loss: {epoch_loss}')
+        return {'loss': epoch_loss, 'learning_rate': learning_rate}
 
 
-    # Now, after executing all the tapes you needed, we apply the optimization step
-    # (but first we take the average of the gradients)
-    accum_gradient = [this_grad/num_samples for this_grad in accum_gradient]
-    # apply optimization step
-    self.optimizer.apply_gradients(zip(accum_gradient,train_vars))
-        
-
-    epoch_loss = total_loss / num_samples
-    print(f'Epoch loss: {epoch_loss}')
-
-Using tf.Variable() should be avoided inside the training loop, since it will produce errors when trying to execute th
-        feature_batches, y_batches = self.split(features)
-        feed_dicts = [self.build_feed_dict(input_ids=feature_batch[0], 
-         input_masks=feature_batch[1],token_types=feature_batch[2],y
-                      for feature_batch, y in zip(feature_batches, feed_dicts)] 
-        tvars = tf.trainable_variables()
-        accum_vars = [tf.Variable(tf.zeros_like(tv.initialized_value()), trainable=False) for tv in tvs]
-        zero_ops = [tv.assign(tf.zeros_like(tv)) for tv in accum_vars]
-        gvs = se.compute_gradients(rmse, tvars)
-        accum_ops = [accum_vars[i].assign_add(gv[0]) for i, gv in enumerate(gvs)]
-        train_step = opt.apply_gradients([(accum_vars[i], gv[1]) for i, gv in enumerate(gvs)])
-        
-
-        while True:
-            sess.run(zero_ops)
-            for i in xrange(n_minibatches):
-                sess.run(accum_ops, feed_dict=dict(X: Xs[i], y: ys[i]))
-                sess.run(train_step)
-        
-        input_ids = [f.input_ids for f in features]
-        input_masks = [f.input_mask for f in features]
-        input_type_ids = [f.input_type_ids for f in features]
-
-        feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids, y)
-
-        _, loss = self.sess.run([self.train_op, self.loss], feed_dict=feed_dict)
-        return {'loss': loss, 'learning_rate': feed_dict[self.learning_rate_ph]}
 
     def __call__(self, features: List[InputFeatures]) -> Union[List[int], List[List[float]]]:
         """Make prediction for given features (texts).
@@ -302,7 +274,7 @@ Using tf.Variable() should be avoided inside the training loop, since it will pr
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
-        
+
         feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids)
         if not self.return_probas:
             pred = self.sess.run(self.y_predictions, feed_dict=feed_dict)
