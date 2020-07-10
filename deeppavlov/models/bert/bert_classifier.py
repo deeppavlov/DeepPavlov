@@ -204,7 +204,7 @@ class BertClassifierModel(LRScheduledTFModel):
             })
 
         return feed_dict
-    def split(self, features: List[InputFeatures]):
+    def split(self, features: List[InputFeatures], y: Union[List[int], List[List[int]] = []) :
         """
         Splits features: batch of InputFeatures
          on num_parts equal parts
@@ -216,12 +216,16 @@ class BertClassifierModel(LRScheduledTFModel):
         
   
         num_features = math_ceil(len(features) + 0.0 / num_parts) 
-        feature_batches = [features[i:i+num_features] for i in range(num_parts)] 
-        return feature_batches
+        feature_batches = [features[i:i+num_features] for i in range(num_parts)]
+        if len(y) > 0:
+           y_batches = [y[i:i+num_features] for i in range(num_parts)]
+        else:
+           y_batches = [] 
+        return feature_batches, y_batches
         
     def train_on_batch(self, features: List[InputFeatures] , y: Union[List[int], List[List[int]]]) -> Dict:
         """Train model on given batch.
-        This method calls train_op using features and y (labels).
+        This method clls train_op using features and y (labels).
 
         Args:
             features: batch of InputFeatures
@@ -231,19 +235,16 @@ class BertClassifierModel(LRScheduledTFModel):
             dict with loss and learning_rate values
 
         """
-        feature_batches = self.split(feature_list)
+        feature_batches, y_batches = self.split(features)
+        feed_dicts = [self.build_feed_dict(feature_batch[0], feature_batch[1],feature_batch[2],y
+                      for feature_batch, y in zip(feature_batches, feed_dicts)] 
         tvars = tf.trainable_variables()
         accum_vars = [tf.Variable(tf.zeros_like(tv.initialized_value()), trainable=False) for tv in tvs]
         zero_ops = [tv.assign(tf.zeros_like(tv)) for tv in accum_vars]
         gvs = se.compute_gradients(rmse, tvars)
         accum_ops = [accum_vars[i].assign_add(gv[0]) for i, gv in enumerate(gvs)]
         train_step = opt.apply_gradients([(accum_vars[i], gv[1]) for i, gv in enumerate(gvs)])
-        In
-        the
-        training
-        loop
-        we
-        have:
+        
 
         while True:
             sess.run(zero_ops)
@@ -270,7 +271,7 @@ class BertClassifierModel(LRScheduledTFModel):
             predicted classes or probabilities of each class
 
         """
-        feature_batch = self.split(features)
+        feature_batches, _ = self.split(features)
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
