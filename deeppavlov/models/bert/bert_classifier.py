@@ -173,21 +173,14 @@ class BertClassifierModel(LRScheduledTFModel):
                                                initializer=tf.constant_initializer(0), trainable=False)
             # default optimizer for Bert is Adam with fixed L2 regularization
             if self.optimizer is None:
-
-                self.train_op = self.get_train_op(self.loss, learning_rate=self.learning_rate_ph,
-                                                  optimizer=AdamWeightDecayOptimizer,
+               self.optimizer=AdamWeightDecayOptimizer(
+                                                  learning_rate=self.learning_rate_ph, 
                                                   weight_decay_rate=self.weight_decay_rate,
                                                   beta_1=0.9,
                                                   beta_2=0.999,
                                                   epsilon=1e-6,
                                                   exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"]
                                                   )
-            else:
-                self.train_op = self.get_train_op(self.loss, learning_rate=self.learning_rate_ph)
-
-            if self.optimizer is None:
-                new_global_step = self.global_step + 1
-                self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
 
     def _build_feed_dict(self, input_ids, input_masks, token_types, y=None):
         feed_dict = {
@@ -236,7 +229,8 @@ class BertClassifierModel(LRScheduledTFModel):
 
         """
         feature_batches, y_batches = self.split(features)
-        feed_dicts = [self.build_feed_dict(feature_batch[0], feature_batch[1],feature_batch[2],y
+        feed_dicts = [self.build_feed_dict(input_ids=feature_batch[0], 
+         input_masks=feature_batch[1],token_types=feature_batch[2],y
                       for feature_batch, y in zip(feature_batches, feed_dicts)] 
         tvars = tf.trainable_variables()
         accum_vars = [tf.Variable(tf.zeros_like(tv.initialized_value()), trainable=False) for tv in tvs]
