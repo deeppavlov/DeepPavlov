@@ -204,8 +204,22 @@ class BertClassifierModel(LRScheduledTFModel):
             })
 
         return feed_dict
-
-    def train_on_batch(self, features: List[InputFeatures], y: Union[List[int], List[List[int]]]) -> Dict:
+    def split(self, features: List[InputFeatures]):
+        """
+        Splits features: batch of InputFeatures
+         on num_parts equal parts
+        making num_parts batches instead
+        """
+        num_parts = self.gradient_accumulation_steps
+        assert num_parts > 0
+        assert num_parts <= len(feature_list)
+        
+  
+        num_features = math_ceil(len(features) + 0.0 / num_parts) 
+        feature_batches = [features[i:i+num_features] for i in range(num_parts)] 
+        return feature_batches
+        
+    def train_on_batch(self, features: List[InputFeatures] , y: Union[List[int], List[List[int]]]) -> Dict:
         """Train model on given batch.
         This method calls train_op using features and y (labels).
 
@@ -217,7 +231,7 @@ class BertClassifierModel(LRScheduledTFModel):
             dict with loss and learning_rate values
 
         """
-        opt = tf.train.AdamOptimizer()
+        feature_batches = self.split(feature_list)
         tvars = tf.trainable_variables()
         accum_vars = [tf.Variable(tf.zeros_like(tv.initialized_value()), trainable=False) for tv in tvs]
         zero_ops = [tv.assign(tf.zeros_like(tv)) for tv in accum_vars]
@@ -236,8 +250,7 @@ class BertClassifierModel(LRScheduledTFModel):
             for i in xrange(n_minibatches):
                 sess.run(accum_ops, feed_dict=dict(X: Xs[i], y: ys[i]))
                 sess.run(train_step)
-
-
+        
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
@@ -257,10 +270,11 @@ class BertClassifierModel(LRScheduledTFModel):
             predicted classes or probabilities of each class
 
         """
+        feature_batch = self.split(features)
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
-
+        
         feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids)
         if not self.return_probas:
             pred = self.sess.run(self.y_predictions, feed_dict=feed_dict)
