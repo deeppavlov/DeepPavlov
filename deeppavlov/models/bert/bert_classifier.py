@@ -211,7 +211,7 @@ class BertClassifierModel(LRScheduledTFModel):
 
         num_features = math.ceil(len(features) + 0.0 / num_parts)
         feature_batches = [features[i:i + num_features] for i in range(num_parts)]
-        if len(y) > 0:
+        if y is not None:
             y_batches = [y[i:i + num_features] for i in range(num_parts)]
         else:
             y_batches = []
