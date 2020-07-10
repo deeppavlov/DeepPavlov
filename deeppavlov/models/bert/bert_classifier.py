@@ -240,23 +240,21 @@ class BertClassifierModel(LRScheduledTFModel):
                                            token_types=feature_batch[2], y=y)
                       for feature_batch, y in zip(feature_batches, y_batches)]
         learning_rate = max(self.get_learning_rate(), self.min_learning_rate)
-        batch_loss = 0
+        total_batch_loss = 0
         for feed_dict in feed_dicts:
             with tf.GradientTape as tape:
-                prediction = self.sess.run(self.y_predictions, feed_dict=feed_dict)
                 loss_value = self.sess.run(self.loss, feed_dict = feed_dict)
-            batch_loss += loss_value
+            total_batch_loss += loss_value
         gradients = tape.gradient(loss_value, train_vars)
         # Accumulate the gradients
-        accumulated_gradient = [(acum_grad + grad) for acum_grad, grad in zip(accumulated_gradient, gradients)]
+        accumulated_gradient = [(accum_grad + grad) for accum_grad, grad in zip(accumulated_gradient, gradients)]
         # Now, after executing all the tapes you needed, we apply the optimization step
         # (but first we take the average of the gradients)
         accumulated_gradient = [this_grad / self.gradient_accumulation_steps for this_grad in accumulated_gradient]
         # apply optimization step
         self.optimizer.apply_gradients(zip(accumulated_gradient, train_vars))
-        epoch_loss = batch_loss / self.gradient_accumulation_steps
-        print(f'Epoch loss: {epoch_loss}')
-        return {'loss': epoch_loss, 'learning_rate': learning_rate}
+        batch_loss = total_batch_loss / self.gradient_accumulation_steps
+        return {'loss': batch_loss, 'learning_rate': learning_rate}
 
 
 
