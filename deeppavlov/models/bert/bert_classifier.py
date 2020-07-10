@@ -228,6 +228,39 @@ class BertClassifierModel(LRScheduledTFModel):
             dict with loss and learning_rate values
 
         """
+for i in range(num_epochs):
+    print(f'Epoch: {i + 1}')
+    total_loss = 0
+
+    # get trainable variables
+    train_vars = self.model.trainable_variables
+    # Create empty gradient list (not a tf.Variable list)
+    accum_gradient = [tf.zeros_like(this_var) for this_var in train_vars]
+
+    for j in tqdm(range(num_samples)):
+        sample = samples[j]
+        with tf.GradientTape as tape:
+            prediction = self.model(sample)
+            loss_value = self.loss_function(y_true=labels[j], y_pred=prediction)
+        total_loss += loss_value
+
+        # get gradients of this tape
+        gradients = tape.gradient(loss_value, train_vars)
+        # Accumulate the gradients
+        accum_gradient = [(acum_grad+grad) for acum_grad, grad in zip(accum_gradient, gradients)]
+
+
+    # Now, after executing all the tapes you needed, we apply the optimization step
+    # (but first we take the average of the gradients)
+    accum_gradient = [this_grad/num_samples for this_grad in accum_gradient]
+    # apply optimization step
+    self.optimizer.apply_gradients(zip(accum_gradient,train_vars))
+        
+
+    epoch_loss = total_loss / num_samples
+    print(f'Epoch loss: {epoch_loss}')
+
+Using tf.Variable() should be avoided inside the training loop, since it will produce errors when trying to execute th
         feature_batches, y_batches = self.split(features)
         feed_dicts = [self.build_feed_dict(input_ids=feature_batch[0], 
          input_masks=feature_batch[1],token_types=feature_batch[2],y
