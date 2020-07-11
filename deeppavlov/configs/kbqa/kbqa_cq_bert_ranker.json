@@ -11,6 +11,10 @@
       {
         "in": ["x_tokens", "y_pred"],
         "out": ["entities", "types", "entities_pos"],
+        "entity_tag": "E-TAG",
+        "type_tag": "T-TAG",
+        "o_tag": "O-TAG",
+        "tags_file": "{NER_PATH}/tag.dict",
         "class_name": "entity_detection_parser"
       },
       {
@@ -142,7 +146,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/models/ner_lcquad.tar.gz",
-        "subdir": "{MODELS_PATH}/ner_lcquad"
+        "subdir": "{NER_PATH}"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking.tar.gz",

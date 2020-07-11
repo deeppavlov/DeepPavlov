@@ -12,6 +12,10 @@
         "in": ["x_tokens", "y_pred"],
         "out": ["entities", "types", "entities_pos"],
         "thres_proba": 0.4,
+        "entity_tag": "E-TAG",
+        "type_tag": "T-TAG",
+        "o_tag": "O-TAG",
+        "tags_file": "{NER_PATH}/tag.dict",
         "class_name": "entity_detection_parser"
       },
       {
@@ -123,7 +127,7 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12",
-      "NER_PATH": "{MODELS_PATH}/ner_lcquad",
+      "NER_PATH": "{MODELS_PATH}/ner_cq_rus",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
     "requirements": [
@@ -145,7 +149,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/models/ner_cq_rus.tar.gz",
-        "subdir": "{MODELS_PATH}/ner_cq_rus"
+        "subdir": "{NER_PATH}"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_bert_rus.tar.gz",
