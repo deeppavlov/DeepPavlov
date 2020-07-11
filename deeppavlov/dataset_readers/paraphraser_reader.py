@@ -21,10 +21,6 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 
 
-from logging import getLogger
-log = getLogger('__name__')
-
-
 @register('paraphraser_reader')
 class ParaphraserReader(DatasetReader):
     """The class to read the paraphraser.ru dataset from files.
@@ -42,6 +38,7 @@ class ParaphraserReader(DatasetReader):
             data_path: A path to a folder with dataset files.
             do_lower_case: Do you want to lowercase all texts
         """
+
         data_path = expand_path(data_path)
         train_fname = data_path / 'paraphrases.xml'
         test_fname = data_path / 'paraphrases_gold.xml'
@@ -59,10 +56,6 @@ class ParaphraserReader(DatasetReader):
                    paraphrase.find('value[@name="text_2"]').text)
             if do_lower_case:
                 key = tuple([t.lower() for t in key])
-            if key == ('Who is the country for head of state of Mahmoud Abbas', 'radix [SEP] month of the year'):
-                print(f"(ParaphraserReader._build_data)paraphrase: {paraphrase.attrib}")
-                print(f"(ParaphraserReader._build_data)paraphrase.find('value[@name=\"class\"]'): " + str(paraphrase.find('value[@name="class"]')))
-                print(f"(ParaphraserReader._build_data)paraphrase.find('value[@name=\"class\"]').text: " + paraphrase.find('value[@name="class"]').text)
-                
+
             data[key] = 1 if int(paraphrase.find('value[@name="class"]').text) >= 0 else 0
         return list(data.items())

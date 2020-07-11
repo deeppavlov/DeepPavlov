@@ -33,10 +33,6 @@ from deeppavlov.core.trainers.utils import Metric, parse_metrics, prettify_metri
 log = getLogger(__name__)
 
 
-from deeppavlov.models.kbqa.debug_helpers import recursive_shape  # FIXME: debug import
-import numpy as np  # FIXME: debug import
-
-
 @register('fit_trainer')
 class FitTrainer:
     """
@@ -134,8 +130,6 @@ class FitTrainer:
                     preprocessed = self._chainer.compute(*iterator.get_instances(), targets=targets)
                     if len(targets) == 1:
                         preprocessed = [preprocessed]
-                    # log.debug(f"(fit_chainer)preprocessed.shape: {recursive_shape(preprocessed)}")
-                    # log.debug(f"(fit_chainer)preprocessed[:10]: {np.array(preprocessed)[:10]}")
                     result: Optional[Dict[str, Iterable[float]]] = component.fit(*preprocessed)
 
                     if result is not None and self.tensorboard_log_dir is not None:
@@ -206,11 +200,10 @@ class FitTrainer:
         outputs = {out: [] for out in expected_outputs}
         examples = 0
 
-        
         data = islice(data, self.max_test_batches)
+
         for x, y_true in data:
             examples += len(x)
-            # log.debug(f"(test)x shape: {recursive_shape(x)}")
             y_predicted = list(self._chainer.compute(list(x), list(y_true), targets=expected_outputs))
             if len(expected_outputs) == 1:
                 y_predicted = [y_predicted]
@@ -224,7 +217,6 @@ class FitTrainer:
         # metrics_values = [(m.name, m.fn(*[outputs[i] for i in m.inputs])) for m in metrics]
         metrics_values = []
         for metric in metrics:
-            # log.debug(f"(FitTrainer.test)metric: {metric}")
             value = metric.fn(*[outputs[i] for i in metric.inputs])
             metrics_values.append((metric.alias, value))
 

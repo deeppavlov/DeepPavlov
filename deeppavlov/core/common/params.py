@@ -102,7 +102,7 @@ def from_params(params: Dict, mode: str = 'infer', serialized: Any = None, **kwa
             spec = inspect.getfullargspec(obj)
             if 'mode' in spec.args + spec.kwonlyargs or spec.varkw is not None:
                 kwargs['mode'] = mode
-            # log.debug(f"obj, config_params, obj arguments: {obj} {config_params}{inspect.signature(obj.__init__)}")
+
             component = obj(**dict(config_params, **kwargs))
             try:
                 _refs[config_params['id']] = component

@@ -52,10 +52,6 @@ class TFModel(NNModel, metaclass=TfModelMeta):
             # Exclude optimizer variables from saved variables
             var_list = self._get_saveable_variables(exclude_scopes)
             saver = tf.train.Saver(var_list)
-            import os                                                                                                     
-            writer = tf.compat.v1.summary.FileWriter(os.path.expanduser('~/.deeppavlov/models/mt_bert/graph'))               
-            writer.add_graph(self.sess.graph)                                                                             
-            writer.close()  
             saver.restore(self.sess, path)
 
     def deserialize(self, weights: Iterable[Tuple[str, np.ndarray]]) -> None:

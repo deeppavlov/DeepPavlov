@@ -148,7 +148,7 @@ class NNTrainer(FitTrainer):
         if self.tensorboard_log_dir is not None:
             self.tb_train_writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir / 'train_log'))
             self.tb_valid_writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir / 'valid_log'))
-       
+
     def save(self) -> None:
         if self._loaded:
             raise RuntimeError('Cannot save already finalized chainer')

@@ -23,9 +23,6 @@ from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.models.serializable import Serializable
 
-
-from deeppavlov.models.kbqa.debug_helpers import recursive_shape  # FIXME: remove debug
-
 log = getLogger(__name__)
 
 
@@ -186,20 +183,14 @@ class Chainer(Component):
             raise ConfigError('Arguments {} are expected but only {} are set'.format(in_x, self.train_map))
 
     def compute(self, x, y=None, targets=None):
-        log.debug(f"(compute)len(x): {len(x)}")
-        log.debug(f"(compute)len(y): {len(y)}")
-        #log.debug(f"(compute)x[0][:3], x[1][:3], x[2][:3]: {x[0][:3]} {x[1][:3]} {x[2][:3]}")
-        #log.debug(f"(compute)y[0][:3], y[1][:3], y[2][:3]: {y[0][:3]} {y[1][:3]} {y[2][:3]}")
         if targets is None:
             targets = self.out_params
         in_params = list(self.in_x)
-        log.debug(f"(compute)x shape: {recursive_shape(x)}")
         if len(in_params) == 1:
             args = [x]
         else:
-            log.debug(f"(compute)in_params: {in_params}")
             args = list(zip(*x))
-        log.debug(f"(compute)args shape: {recursive_shape(args)}")
+
         if y is None:
             pipe = self.pipe
         else:
@@ -207,12 +198,7 @@ class Chainer(Component):
             if len(self.in_y) == 1:
                 args.append(y)
             else:
-                try:
-                    args += list(zip(*y))
-                except TypeError:
-                    log.debug(f"y: {y}")
-                    log.debug(f"x: {x}")
-                    raise
+                args += list(zip(*y))
             in_params += self.in_y
 
         return self._compute(*args, pipe=pipe, param_names=in_params, targets=targets)
@@ -232,28 +218,16 @@ class Chainer(Component):
         if not expected.issubset(param_names):
             raise RuntimeError(f'{expected} are required to compute {targets} but were not found in memory or inputs')
         pipe = final_pipe
-        # log.debug(f"(_compute)param_names: {param_names}")
-        # log.debug(f"(_compute)len(args): {len(args)}")
-        # log.debug(f"(_compute)args shape: {recursive_shape(args)}")
+
         mem = dict(zip(param_names, args))
-        # log.debug(f"(_compute)mem shape: {recursive_shape(mem)}")
         del args
 
         for (in_keys, in_params), out_params, component in pipe:
-            # log.debug(f"list(mem.keys()): {list(mem.keys())}")
-            # log.debug(f"mem.shape: {recursive_shape(mem)}")
             x = [mem[k] for k in in_params]
-            # log.debug(f"(_compute)component: {component}")
-            # log.debug(f"(_compute)x shape: {recursive_shape(x)}")
-            # log.debug(f"(_compute)in_keys, in_params: {in_keys} {in_params}")
             if in_keys:
                 res = component.__call__(**dict(zip(in_keys, x)))
             else:
-                try:
-                    res = component.__call__(*x)
-                except IndexError:
-                    log.debug(f"(_compute)x: {x}")
-                    raise
+                res = component.__call__(*x)
             if len(out_params) == 1:
                 mem[out_params[0]] = res
             else:

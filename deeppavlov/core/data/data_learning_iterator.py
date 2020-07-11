@@ -12,16 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import getLogger
 from random import Random
 from typing import List, Dict, Tuple, Any, Iterator
 
 from deeppavlov.core.common.registry import register
-
-from deeppavlov.models.kbqa.debug_helpers import recursive_shape  # FIXME: remove debug import
-
-
-log = getLogger(__name__)
 
 
 @register('data_learning_iterator')
@@ -51,9 +45,7 @@ class DataLearningIterator:
         self.shuffle = shuffle
 
         self.random = Random(seed)
-        # log.debug(f"data: {data}")
-        # for k, v in data.items():
-        #     log.debug(f"data[{k}]: {len(v)}")
+
         self.train = self.preprocess(data.get('train', []), *args, **kwargs)
         self.valid = self.preprocess(data.get('valid', []), *args, **kwargs)
         self.test = self.preprocess(data.get('test', []), *args, **kwargs)
@@ -64,8 +56,6 @@ class DataLearningIterator:
             'test': self.test,
             'all': self.train + self.test + self.valid
         }
-        from collections import Counter
-        # log.debug(f"(DataLearningIterator.__init__)classes count for train: {Counter(tuple(zip(*self.train))[1])}")
 
     def gen_batches(self, batch_size: int, data_type: str = 'train',
                     shuffle: bool = None) -> Iterator[Tuple[tuple, tuple]]:
@@ -96,11 +86,7 @@ class DataLearningIterator:
             batch_size = data_len
 
         for i in range((data_len - 1) // batch_size + 1):
-            b = tuple(zip(*[data[o] for o in order[i * batch_size:(i + 1) * batch_size]]))
-            import numpy as np
-            log.debug(f"batch shape: {recursive_shape(b)}")
-            log.debug(f"(DataLearningIterator.gen_batches)b[0].shape: {np.array(b[0]).shape}")
-            yield b
+            yield tuple(zip(*[data[o] for o in order[i * batch_size:(i + 1) * batch_size]]))
 
     def get_instances(self, data_type: str = 'train') -> Tuple[tuple, tuple]:
         """Get all data for a selected data type
