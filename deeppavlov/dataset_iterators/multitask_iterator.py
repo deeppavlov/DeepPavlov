@@ -69,21 +69,14 @@ class RepeatBatchGenerator:
 @register('multitask_iterator')
 class MultiTaskIterator:
     """
-    Class gets data dictionary from DatasetReader instance, merge fields if necessary, split a field if necessary
+    Class merges data from several dataset iterators. When used for batch generation batches from
+    merged dataset iterators are united into one batch. If sizes of merged datasets are different
+    smaller datasets are repeated until their size becomes equal to the largest dataset.
 
     Args:
-        data: dictionary of data with fields "train", "valid" and "test" (or some of them)
-        fields_to_merge: list of fields (out of ``"train", "valid", "test"``) to merge
-        merged_field: name of field (out of ``"train", "valid", "test"``) to which save merged fields
-        field_to_split: name of field (out of ``"train", "valid", "test"``) to split
-        split_fields: list of fields (out of ``"train", "valid", "test"``) to which save splitted field
-        split_proportions: list of corresponding proportions for splitting
-        seed: random seed for iterating
-        shuffle: whether to shuffle examples in batches
-        split_seed: random seed for splitting dataset, if ``split_seed`` is None, division is based on `seed`.
-        stratify: whether to use statified split
-        *args: argument
-        **kwargs: arguments
+        data: dictionary which keys are task names and values are dictionaries with fields
+            ``"train", "valid", "test"``.
+        tasks: dictionary which keys are task names and values are init params of dataset iterators.
 
     Attributes:
         data: dictionary of data with fields "train", "valid" and "test" (or some of them)
@@ -102,10 +95,6 @@ class MultiTaskIterator:
             task_iterator_params['class_name'] = task_iterator_params['iterator_class_name']
             del task_iterator_params['iterator_class_name']
             self.task_iterators[task_name] = from_params(task_iterator_params, data=data[task_name])
-            log.debug(f"(MultitaskIterator.__init__)self.task_iterators[{task_name}]: {self.task_iterators[task_name]}")
-            log.debug(f"(MultitaskIterator.__init__)self.task_iterators['{task_name}'].train length: {len(self.task_iterators[task_name].train)}")
-            log.debug(f"(MultitaskIterator.__init__)self.task_iterators['{task_name}'].valid length: {len(self.task_iterators[task_name].valid)}")
-            log.debug(f"(MultitaskIterator.__init__)self.task_iterators['{task_name}'].test length: {len(self.task_iterators[task_name].test)}")
 
         self.train = self._extract_data_type('train')
         self.valid = self._extract_data_type('valid')
@@ -139,8 +128,12 @@ class MultiTaskIterator:
         # TODO: write detailed commentaries for this method
         log.debug(f"(MultitaskIterator.gen_batches)batch_size data_type: {batch_size} {data_type}")
         max_task_data_len = max([len(iter_.data[data_type]) for iter_ in self.task_iterators.values()])
+
         size_of_last_batch = max_task_data_len % batch_size
-        n_batches = max_task_data_len // batch_size
+        if size_of_last_batch == 0:
+            size_of_last_batch = batch_size
+
+        n_batches = math.ceil(max_task_data_len / batch_size)
         for task_batches in zip(
                 *[RepeatBatchGenerator(iter_, batch_size, data_type, shuffle, n_batches, size_of_last_batch) for 
                   iter_ in self.task_iterators.values()]
