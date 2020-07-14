@@ -83,10 +83,6 @@ class MultiTaskIterator:
     """
 
     def __init__(self, data: dict, tasks: dict):
-        """
-        Initialize dataset using data from DatasetReader,
-        merges and splits fields according to the given parameters.
-        """
         self.data = data
         self.task_iterators_params = tasks
         self.task_iterators = {}
@@ -125,8 +121,20 @@ class MultiTaskIterator:
 
     def gen_batches(self, batch_size: int, data_type: str = 'train',
                     shuffle: bool = None) -> Iterator[Tuple[tuple, tuple]]:
-        # TODO: write detailed commentaries for this method
-        log.debug(f"(MultitaskIterator.gen_batches)batch_size data_type: {batch_size} {data_type}")
+        """Generate batches and expected output to train neural networks. Batches from task iterators
+        are united into one batch. Every element of the largest dataset is used once whereas smaller
+        datasets are repeated until their size is equal to the largest dataset.
+
+        Args:
+            batch_size: number of samples in batch
+            data_type: can be either 'train', 'test', or 'valid'
+            shuffle: whether to shuffle dataset before batching
+
+        Yields:
+            a tuple of a batch of inputs and a batch of expected outputs. Inputs and outputs are tuples.
+            Element of inputs or outputs is a tuple which elements are x values of merged tasks in the order
+            tasks are present in `tasks` argument of `__init__` method.
+        """
         max_task_data_len = max([len(iter_.data[data_type]) for iter_ in self.task_iterators.values()])
 
         size_of_last_batch = max_task_data_len % batch_size
@@ -147,12 +155,23 @@ class MultiTaskIterator:
             yield b
 
     def get_instances(self, data_type: str = 'train'):
-        max_task_data_len = max([len(iter_.get_instances()[0]) for iter_ in self.task_iterators.values()])
+        """Returns a tuple of inputs and outputs of datasets. Lengths of inputs and outputs are equal to
+        the size of the largest dataset. Smaller datasets are repeated until their size is equal to the
+        size of the largest dataset.
+
+        Args:
+            data_type: can be either 'train', 'test', or 'valid'
+
+        Returns:
+            a tuple of all inputs for a data type and all expected outputs for a data type
+        """
+        max_task_data_len = max(
+            [len(iter_.get_instances(data_type)[0]) for iter_ in self.task_iterators.values()])
         log.debug(f"(MultitaskIterator.get_instances)max_task_data_len: {max_task_data_len}")
         x_instances = []
         y_instances = []
         for task_name, iter_ in self.task_iterators.items():
-            x, y = iter_.get_instances()
+            x, y = iter_.get_instances(data_type)
             log.debug(f"(MultitaskIterator.get_instances)len(x) for {task_name}: {len(x)}")
             n_repeats = math.ceil(max_task_data_len / len(x))
             x *= n_repeats

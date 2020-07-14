@@ -31,6 +31,28 @@ class MultiTaskReader(DatasetReader):
     """Class to read several datasets simultaneuosly"""
 
     def read(self, data_path, tasks: Dict[str, Dict[str, str]]):
+        """Creates dataset readers for tasks and returns what task dataset readers `read()` methods return.
+
+        Args:
+            data_path: can be anything since it is not used. `data_path` is present because it is
+                required in train.py script.
+            tasks: dictionary which keys are task names and values are dictionaries with `DatasetReader`
+                subclasses specs. `DatasetReader` specs are provided in the same format as "dataset_reader"
+                in the model config except for "class_name" field which has to be named "reader_class_name".
+                ```json
+                "tasks": {
+                  "query_prediction": {
+                    "reader_class_name": "basic_classification_reader",
+                    "x": "Question",
+                    "y": "Class",
+                    "data_path": "{DOWNLOADS_PATH}/query_prediction"
+                  }
+                }
+                ```
+
+        Returns:
+            dictionary which keys are task names and values are what task readers `read()` methods returned.
+        """
         data = {}
         for task_name, reader_params in tasks.items():
             reader_params = copy.deepcopy(reader_params)
