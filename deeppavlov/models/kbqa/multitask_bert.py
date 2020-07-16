@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from abc import ABC, abstractmethod
 from logging import getLogger
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import tensorflow as tf
@@ -33,36 +34,31 @@ log = getLogger(__name__)
 from deeppavlov.models.kbqa.debug_helpers import recursive_shape, recursive_type
 
 
-# TODO: fix docstring
 @register('mt_bert')
 class MultiTaskBert(LRScheduledTFModel):
-    """
-    Basic class for BERT-based sequential architectures.
+    """The component for multi task BERT. It builds the BERT body, initiates building of bert heads. 
+    When the component `__call__` or `train_on_batch` methods are called the component calls appropriate methods
+    of head components. 
+
+    The aggregates components aggreates commponents implementing Bert heads. The head components are called tasks.
+    Tasks are split in groups called launches. If tasks they can be in one launch. If tasks are in same launch the
+    `__call__` method runs the tasks simultaneously with one call of `tf.Session.run()`.
 
     Args:
-        keep_prob: dropout keep_prob for non-Bert layers
         bert_config_file: path to Bert configuration file
         pretrained_bert: pretrained Bert checkpoint
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
-        encoder_layer_ids: list of averaged layers from Bert encoder (layer ids)
-            optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
-            weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
-        encoder_dropout: dropout probability of encoder output layer
-        freeze_embeddings: set True to not train input embeddings set True to
-            not train input embeddings set True to not train input embeddings
-        learning_rate: learning rate of BERT head
-        bert_learning_rate: learning rate of BERT body
-        min_learning_rate: min value of learning rate if learning rate decay is used
+        body_learning_rate: learning rate of BERT body
+        min_body_learning_rate: min value of body learning rate if learning rate decay is used
         learning_rate_drop_patience: how many validations with no improvements to wait
         learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
             validations
         load_before_drop: whether to load best model before dropping learning rate or not
         clip_norm: clip gradients by norm
+        inference_launch_names: list of names of launches used in the inference mode. If this parameter is provided 
+            model is used in inference mode.
     """
-    # TODO: EMA is used in BertSequenceTagger. It can be also used in multitask Bert yet
-    # it needs a modification so that EMA for Bert body and heads were calculated in slightly
-    # different ways. Check if that is actually in literature.
     def __init__(self,
                  bert_config_file: str,
                  launches_params: dict,
@@ -112,11 +108,6 @@ class MultiTaskBert(LRScheduledTFModel):
         self.build_tasks()
 
         self.sess.run(tf.global_variables_initializer())
-#        import os
-#        writer = tf.compat.v1.summary.FileWriter(os.path.expanduser('~/.deeppavlov/models/mt_bert/graph'))
-#        writer.add_graph(self.sess.graph)
-#        writer.close()
-
 
         if pretrained_bert is not None:
             pretrained_bert = str(expand_path(pretrained_bert))
@@ -124,7 +115,6 @@ class MultiTaskBert(LRScheduledTFModel):
                     and not (self.load_path and tf.train.checkpoint_exists(str(self.load_path.resolve()))) \
                     and self.mode == 'train':
                 log.info('[initializing model with Bert from {}]'.format(pretrained_bert))
-                # Exclude optimizer and classification variables from saved variables
                 task_names = []
                 for launch_params in self.launches_tasks.values():
                     for task_obj in launch_params['tasks'].values():
@@ -136,8 +126,6 @@ class MultiTaskBert(LRScheduledTFModel):
 
         if self.load_path is not None:
             self.load()
-
-        # FIXME: remove debug ops
 
     def build_tasks(self):
         def get_train_op(*args, **kwargs):
@@ -181,7 +169,6 @@ class MultiTaskBert(LRScheduledTFModel):
                               use_one_hot_embeddings=False)
 
     def save(self, exclude_scopes=('Optimizer', 'learning_rate', 'momentum')) -> None:
-        log.debug(f"(MultiTaskBert.save)exclude_scopes: {exclude_scopes}")
         return super().save(exclude_scopes=exclude_scopes)
 
     def load(self,
@@ -189,12 +176,31 @@ class MultiTaskBert(LRScheduledTFModel):
                              'learning_rate',
                              'momentum'),
              **kwargs) -> None:
-        log.debug(f"(MultiTaskBert.load)exclude_scopes: {exclude_scopes}")
         return super().load(exclude_scopes=exclude_scopes, **kwargs)
 
     def train_on_batch(self, *args, **kwargs) -> None:
+        """Calls `train_on_batch` methods for every task. This method takes either `args` or `kwargs` not both.
+        The order of `args` is the same as the order of tasks in the component parameters:
+        ```python
+        args = [
+            launch1_task1_in_x[0],
+            launch1_task1_in_x[1],
+            launch1_task1_in_x[2],
+            ...
+            launch1_task1_in_y[0],
+            launch1_task1_in_y[1],
+            ...
+            launch1_task2_in_x[0],
+            ...
+            launch2_task1_in_x[0],
+            ...
+        ]
+        ```
+        
+        If `kwargs` are used keys of args have to match values of `in_names` and `in_y_names` params passed to the
+        tasks. 
+        """
         # TODO: test passing arguments as args
-        log.debug(f"(MultitaskBert.train_on_batch)self.launches_tasks: {self.launches_tasks}")
         if args and kwargs:
             raise ValueError("You can use either args or kwargs not both")
         tasks = []
@@ -222,7 +228,34 @@ class MultiTaskBert(LRScheduledTFModel):
                 body_learning_rate=max(self.get_learning_rate(), self.optimizer_params['min_body_learning_rate'])
             )
 
-    def __call__(self, *args, launch_name=None, **kwargs):
+    def __call__(self, *args, launch_name: Optional[str] = None, **kwargs):
+        """Calls one or several BERT heads depending on provided launch names. `args` and `kwargs` contain 
+        inputs of BERT tasks. `args` and `kwargs cannot be used simultaneously. If `args` are used `args` content has 
+        to be
+        ```python
+        args = [
+            launch1_task1_in_x[0],
+            launch1_task1_in_x[1],
+            ...
+            launch1_task2_in_x[0],
+            launch1_task2_in_x[1],
+            ...
+            launch2_task1_in_x[0],
+            launch2_task1_in_x[1],
+            ...
+        ]
+        ```
+
+        If `kwargs` is used `kwargs` keys has to match content of `in_names` params of called tasks.
+
+        Args:
+            launch_name: launch which which task are called. If `launch_name` is not provided and 
+                `self.inference_launches` is not `None` launches from `self.inference_launches` are run. If 
+                `launch_name` is `None` and `self.inference_launches` is `None` all launches are run.
+        
+        Returns:
+            list results of called tasks.
+        """
         if args and kwargs:
             raise ValueError("You may use either args or kwargs not both")
         if launch_name is None:
@@ -242,7 +275,6 @@ class MultiTaskBert(LRScheduledTFModel):
                     tasks.append(task)
             num_used_args = 0
             for task in tasks:
-                # log.debug(f"(MultitaskBert.__call__)task: {task}")
                 if args:
                     kw = {
                         inp_name: a for inp_name, a 
@@ -251,27 +283,216 @@ class MultiTaskBert(LRScheduledTFModel):
                     num_used_args += len(task.in_names)
                 else:
                     kw = {inp_name: kwargs[inp_name] for inp_name in task.in_names}
-                # log.debug(f"(MultitaskBert.__call__)kw: {kw}")
                 task_fetches, task_feed_dict = task.get_sess_run_infer_args(**kw)
                 fetches.append(task_fetches)
                 feed_dict.update(task_feed_dict)
             sess_run_res = self.sess.run(fetches, feed_dict=feed_dict)
-            # log.debug(f"(MultitaskBert.__call__)fetches shape: {recursive_shape(fetches)}")
-            # log.debug(f"(MultitaskBert.__call__)sess_run_res shape: {recursive_shape(sess_run_res)}") 
-            # log.debug(f"(MultitaskBert.__call__)sess_run_res types: {recursive_type(sess_run_res)}") 
             for task, srs in zip(tasks, sess_run_res):
-                # log.debug(f"(MultitaskBert.__call__)task={task} srs.shape: {recursive_shape(srs)}")
                 task_results = task.post_process_preds(srs)
-                # log.debug(f"(MultitaskBert.__call__)task_results: {task_results}")
                 results.append(task_results)
-            # log.debug(f"(MultitaskBert.__call__)results[*][:10]: {[res[:10] for res in results]}")
-            # log.debug(f"(MultitaskBert.__call__)task names: {[t.task_name for t in tasks]}")
-            # log.debug(f"(MultitaskBert.__call__)return_probas: {[t.return_probas for t in tasks]}")
         return results
+
+
+class MTBertTask(ABC):
+    """BERT head for text tagging. It predicts a label for every token (not subtoken) in the text.
+    You can use it for sequence labeling tasks, such as morphological tagging or named entity recognition.
+    Objects of this class should be passed to the constructor of `MultitaskBert` class in param `launches_params`.
+
+    Args:
+        task_name: the name of the multitask Bert task used as variable scope. This parameter should have equal
+            values in training and inference configs.
+        n_tags: number of distinct tags
+        use_crf: whether to use CRF on top or not
+        use_birnn: whether to use bidirection rnn after BERT layers.
+            For NER and morphological tagging we usually set it to `False` as otherwise the model overfits
+        birnn_cell_type: the type of Bidirectional RNN. Either `lstm` or `gru`
+        birnn_hidden_size: number of hidden units in the BiRNN layer in each direction
+        freeze_embeddings: set True to not train input embeddings set True to
+            not train input embeddings set True to not train input embeddings
+        keep_prob: dropout keep_prob for non-Bert layers 
+        encoder_dropout: dropout probability of encoder output layer
+        return_probas: set this to `True` if you need the probabilities instead of raw answers
+        encoder_layer_ids: list of averaged layers from Bert encoder (layer ids)
+            optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
+            weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer
+        learning_rate: learning rate of BERT head
+        in_names: list of inputs of the model. These should be a subset of "in" list of "multitask_bert" component
+            in config.
+        in_y_names: list of y inputs of the model. These should be a subset of "in_y" list of "multitask_bert"
+            component in config.
+    """
+    def __init__(
+            self,
+            task_name: str = "seq_tagging",
+            freeze_embeddings: bool = False,
+            keep_prob: float = 1.,
+            encoder_dropout: float = 0,
+            return_probas: bool = None,
+            learning_rate: float = 1e-3,
+            in_names: List[str] = None,
+            in_y_names: List[str] = None,
+    ):
+        self.task_name = task_name
+        self.keep_prob = keep_prob
+        self.freeze_embeddings = freeze_embeddings
+        self.encoder_dropout = encoder_dropout
+        self.return_probas = return_probas
+        self.init_head_learning_rate = learning_rate
+        self.min_body_learning_rate = None
+        self.head_learning_rate_multiplier = None
+        self.in_names = in_names
+        self.in_y_names = in_y_names
+
+        self.bert = None
+        self.optimizer_params = None
+        self.shared_ph = None
+        self.shared_feed_dict = None
+        self.sess = None
+        self.get_train_op_func = None
+
+    def build(self, bert_body, optimizer_params, shared_placeholders, sess, mode, get_train_op_func):
+        self.get_train_op_func = get_train_op_func
+        self.bert = bert_body
+        self.optimizer_params = optimizer_params
+        if mode == 'train':
+            self.head_learning_rate_multiplier = \
+                self.init_head_learning_rate / self.optimizer_params['body_learning_rate']
+        else:
+            self.head_learning_rate_multiplier = 0
+        mblr = self.optimizer_params.get('min_body_learning_rate')
+        self.min_body_learning_rate = 0. if mblr is None else mblr
+        self.shared_ph = shared_placeholders
+        self.sess = sess
+        self._init_graph()
+        if mode == 'train':
+            self._init_optimizer()
+
+    def _init_placeholders(self) -> None:
+        self.y_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='y_ph')
+        self.y_masks_ph = tf.placeholder(shape=(None, None),
+                                         dtype=tf.int32,
+                                         name='y_mask_ph')
+
+    @abstractmethod
+    def _init_graph(self) -> None:
+        pass
+
+    def get_train_op(self, loss: tf.Tensor, body_learning_rate: Union[tf.Tensor, float], **kwargs) -> tf.Operation:
+        assert "learnable_scopes" not in kwargs, "learnable scopes unsupported"
+        # train_op for bert variables
+        kwargs['learnable_scopes'] = ('bert/encoder', 'bert/embeddings')
+        if self.freeze_embeddings:
+            kwargs['learnable_scopes'] = ('bert/encoder',)
+        learning_rate = body_learning_rate * self.head_learning_rate_multiplier
+        log.debug(f"(MTBertSequenceTaggingTask.get_train_op)learning_rate, body_learning_rate: {learning_rate}, {body_learning_rate}")
+        bert_train_op = self.get_train_op_func(loss, body_learning_rate, **kwargs)
+        # train_op for ner head variables
+        kwargs['learnable_scopes'] = (self.task_name,)
+        head_train_op = self.get_train_op_func(loss, learning_rate, **kwargs)
+        return tf.group(bert_train_op, head_train_op)
+
+    def _init_optimizer(self) -> None:
+        with tf.variable_scope(self.task_name):
+            with tf.variable_scope('Optimizer'):
+                self.global_step = tf.get_variable('global_step',
+                                                   shape=[],
+                                                   dtype=tf.int32,
+                                                   initializer=tf.constant_initializer(0),
+                                                   trainable=False)
+                # default optimizer for Bert is Adam with fixed L2 regularization
+
+            if self.optimizer_params.get('optimizer') is None:
+                self.train_op = \
+                    self.get_train_op(
+                        self.loss,
+                        body_learning_rate=self.shared_ph['learning_rate'],
+                        optimizer=AdamWeightDecayOptimizer,
+                        weight_decay_rate=self.optimizer_params.get('weight_decay_rate', 1e-6),
+                        beta_1=0.9,
+                        beta_2=0.999,
+                        epsilon=1e-6,
+                        optimizer_scope_name='Optimizer',
+                        exclude_from_weight_decay=["LayerNorm",
+                                                   "layer_norm",
+                                                   "bias"])
+            else:
+                self.train_op = self.get_train_op(self.loss,
+                                                  body_learning_rate=self.shared_ph['learning_rate'],
+                                                  optimizer_scope_name='Optimizer')
+
+            if self.optimizer_params.get('optimizer') is None:
+                with tf.variable_scope('Optimizer'):
+                    new_global_step = self.global_step + 1
+                    self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
+
+    def _build_feed_dict(self, input_ids, input_masks, y_masks, token_types, y=None, body_learning_rate=None):
+        sph = self.shared_ph
+        train = y is not None
+        feed_dict = {
+            sph['input_ids']: input_ids,
+            sph['input_masks']: input_masks,
+            sph['token_types']: token_types,
+        }
+        if train:
+            feed_dict.update({
+                sph['encoder_keep_prob']: 1.0 - self.encoder_dropout,
+                sph['is_train']: True,
+                sph['learning_rate']: body_learning_rate,
+                self.y_ph: y,
+            })
+        feed_dict[self.y_masks_ph] = y_masks
+        return feed_dict
+
+    def train_on_batch(self, **kwargs) -> Dict[str, float]:        
+        fetches, feed_dict = self.get_sess_run_train_args(**kwargs)
+        _, loss = self.sess.run(fetches, feed_dict=feed_dict)
+        return {'loss': loss,
+                f'{self.task_name}_head_learning_rate': 
+                    float(kwargs['body_learning_rate']) * self.head_learning_rate_multiplier,
+                'bert_learning_rate': kwargs['body_learning_rate']}
+
+    @abstractmethod
+    def get_sess_run_infer_args(self, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_sess_run_train_args(self, **kwargs):
+        pass
+    
+    @abstractmethod
+    def post_process_preds(self, sess_run_res):
+        pass
 
 
 @register("mt_bert_seq_tagging_task")
 class MTBertSequenceTaggingTask:
+    """BERT head for text tagging. It predicts a label for every token (not subtoken) in the text.
+    You can use it for sequence labeling tasks, such as morphological tagging or named entity recognition.
+    Objects of this class should be passed to the constructor of `MultitaskBert` class in param `launches_params`.
+
+    Args:
+        task_name: the name of the multitask Bert task used as variable scope. This parameter should have equal
+            values in training and inference configs.
+        n_tags: number of distinct tags
+        use_crf: whether to use CRF on top or not
+        use_birnn: whether to use bidirection rnn after BERT layers.
+            For NER and morphological tagging we usually set it to `False` as otherwise the model overfits
+        birnn_cell_type: the type of Bidirectional RNN. Either `lstm` or `gru`
+        birnn_hidden_size: number of hidden units in the BiRNN layer in each direction
+        freeze_embeddings: set True to not train input embeddings set True to
+            not train input embeddings set True to not train input embeddings
+        keep_prob: dropout keep_prob for non-Bert layers 
+        encoder_dropout: dropout probability of encoder output layer
+        return_probas: set this to `True` if you need the probabilities instead of raw answers
+        encoder_layer_ids: list of averaged layers from Bert encoder (layer ids)
+            optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
+            weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer
+        learning_rate: learning rate of BERT head
+        in_names: list of inputs of the model. These should be a subset of "in" list of "multitask_bert" component
+            in config.
+        in_y_names: list of y inputs of the model. These should be a subset of "in_y" list of "multitask_bert"
+            component in config.
+    """
     def __init__(
             self,
             task_name: str = "seq_tagging",
@@ -555,15 +776,6 @@ class MTBertSequenceTaggingTask:
         log.debug(f"(MTBertSequenceTaggingTask.post_process_preds)pred.shape: {recursive_shape(pred)}")
         return pred
 
-    def __call__(self,
-                 input_ids: Union[List[List[int]], np.ndarray],
-                 input_masks: Union[List[List[int]], np.ndarray],
-                 y_masks: Union[List[List[int]], np.ndarray]) -> Union[List[List[int]], List[np.ndarray]]:
-        fetches, feed_dict = self.get_sess_run_infer_args(input_ids, input_masks, y_masks)
-        log.debug(f"(MTBertSequenceTaggingTask.__call__)fetches: {fetches}")
-        sess_run_res = self.sess.run(fetches, feed_dict=feed_dict)
-        return self.post_process_preds(sess_run_res)
-
 
 @register("mt_bert_classification_task")
 class MTBertClassificationTask:
@@ -764,22 +976,6 @@ class MTBertClassificationTask:
 
     def post_process_preds(self, sess_run_res):
         return sess_run_res
-
-    def __call__(
-            self,
-            features: List[InputFeatures]) -> Union[List[int], List[List[float]]]:
-        """Make prediction for given features (texts).
-
-        Args:
-            features: batch of InputFeatures
-
-        Returns:
-            predicted classes or probabilities of each class
-
-        """
-        fetches, feed_dict = self.get_sess_run_infer_args(features)
-        log.debug(f"(MTBertClassificationTask.__call__)fetches: {fetches}")
-        return self.post_process_preds(self.sess.run(fetches, feed_dict=feed_dict))
 
 
 @register("mt_bert_reuser")
