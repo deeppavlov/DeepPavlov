@@ -138,6 +138,10 @@ PARAMS = {
         ("classifiers/intents_sample_json.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "ner": {
+        ("ner/ner_ontonotes_m1.json", "ner_ontonotes_m1", ('IP', 'TI')): [
+            (["Peter", "Blackburn"], None)],
+        ("ner/ner_collection3_m1.json", "ner_collection3_m1", ('IP', 'TI')): [
+            (["Валентин", "Москва"], None)],
         ("ner/conll2003_m1.json", "conll2003_m1", ('IP', 'TI')): [
             (["Peter", "Blackburn"], ["NNP", "NNP"], None)],
         ("ner/vlsp2016_full.json", "vlsp2016_full", ('IP', 'TI')): [
