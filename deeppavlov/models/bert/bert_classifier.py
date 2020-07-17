@@ -222,14 +222,11 @@ class BertClassifierModel(LRScheduledTFModel):
     def train_on_batch(self, features: List[InputFeatures], y: Union[List[int], List[List[int]]]=None) -> Dict:
         """Train model on given batch.
         This method clls train_op using features and y (labels).
-
         Args:
             features: batch of InputFeatures
             y: batch of labels (class id or one-hot encoding)
-
         Returns:
             dict with loss and learning_rate values
-
         """
 
         # get trainable variables
@@ -242,13 +239,14 @@ class BertClassifierModel(LRScheduledTFModel):
                       for feature_batch, y in zip(feature_batches, y_batches)]
         learning_rate = max(self.get_learning_rate(), self.min_learning_rate)
         total_batch_loss = 0
+        # https://stackoverflow.com/questions/59893850/how-to-accumulate-gradients-in-tensorflow-2-0
         for feed_dict in feed_dicts:
-            with tf.GradientTape as tape:
+            with tf.GradientTape() as tape:            
                 loss_value = self.sess.run(self.loss, feed_dict = feed_dict)
-            total_batch_loss += loss_value
-        gradients = tape.gradient(loss_value, train_vars)
-        # Accumulate the gradients
-        accumulated_gradient = [(accum_grad + grad) for accum_grad, grad in zip(accumulated_gradient, gradients)]
+                total_batch_loss += loss_value
+                gradients = tape.gradient(loss_value, train_vars)
+                # Accumulate the gradients
+                accumulated_gradient = [(accum_grad + grad) for accum_grad, grad in zip(accumulated_gradient, gradients)]
         # Now, after executing all the tapes you needed, we apply the optimization step
         # (but first we take the average of the gradients)
         accumulated_gradient = [this_grad / self.gradient_accumulation_steps for this_grad in accumulated_gradient]
