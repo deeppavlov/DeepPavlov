@@ -208,11 +208,12 @@ class BertClassifierModel(LRScheduledTFModel):
         num_parts = self.gradient_accumulation_steps
         assert num_parts > 0
         assert num_parts <= len(features)
-
-        num_features = math.ceil(len(features) + 0.0 / num_parts)
-        feature_batches = [features[i:i + num_features] for i in range(num_parts)]
+        def split_value(x, num_features):
+            return [x[i:i + num_features] for i in range(0,len(x),num_features)]
+        num_features = math.ceil(len(features) / num_parts)
+        feature_batches = split_value(features, num_features=num_features)
         if y is not None:
-            y_batches = [y[i:i + num_features] for i in range(num_parts)]
+            y_batches = split_value(y,num_features=num_features)
         else:
             y_batches = []
         return feature_batches, y_batches
