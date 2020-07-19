@@ -396,3 +396,11 @@ def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, 
                 tot_predicted=results[entity_of_interest]['n_pred'])
         log.debug(s)
     return results
+
+
+@register_metric("ner_f1__f1_macro__f1")
+def ner_f1__f1_macro__f1(ner_true, ner_pred, macro_true, macro_pred, f1_true, f1_pred):
+    ner_f1_res = ner_f1(ner_true, ner_pred) / 100
+    f1_macro_res = round_f1_macro(macro_true, macro_pred)
+    f1_res = round_f1(f1_true, f1_pred)
+    return (ner_f1_res + f1_macro_res + f1_res) / 3

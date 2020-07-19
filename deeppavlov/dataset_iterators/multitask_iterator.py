@@ -151,7 +151,6 @@ class MultiTaskIterator:
                 x_instances.append(task_batch[0])
                 y_instances.append(task_batch[1])
             b = (tuple(zip(*x_instances)), tuple(zip(*y_instances)))
-            log.debug(f"(MultitaskIterator.gen_batches)batch shape: {recursive_shape(b)}")
             yield b
 
     def get_instances(self, data_type: str = 'train'):
@@ -167,12 +166,10 @@ class MultiTaskIterator:
         """
         max_task_data_len = max(
             [len(iter_.get_instances(data_type)[0]) for iter_ in self.task_iterators.values()])
-        log.debug(f"(MultitaskIterator.get_instances)max_task_data_len: {max_task_data_len}")
         x_instances = []
         y_instances = []
         for task_name, iter_ in self.task_iterators.items():
             x, y = iter_.get_instances(data_type)
-            log.debug(f"(MultitaskIterator.get_instances)len(x) for {task_name}: {len(x)}")
             n_repeats = math.ceil(max_task_data_len / len(x))
             x *= n_repeats
             y *= n_repeats
@@ -180,5 +177,4 @@ class MultiTaskIterator:
             y_instances.append(y[:max_task_data_len])
             
         instances = (tuple(zip(*x_instances)), tuple(zip(*y_instances)))
-        log.debug(f"(MultitaskIterator.get_instances)instances.shape: {recursive_shape(instances)}")
         return instances

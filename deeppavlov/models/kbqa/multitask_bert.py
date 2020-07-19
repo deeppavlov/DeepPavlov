@@ -14,13 +14,14 @@
 
 from abc import ABC, abstractmethod
 from logging import getLogger
-from typing import Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import tensorflow as tf
 from bert_dp.modeling import BertConfig, BertModel
 from bert_dp.optimization import AdamWeightDecayOptimizer
 from bert_dp.preprocessing import InputFeatures
+from overrides import overrides
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
@@ -56,6 +57,7 @@ class MultiTaskBert(LRScheduledTFModel):
             validations
         load_before_drop: whether to load best model before dropping learning rate or not
         clip_norm: clip gradients by norm
+        freeze_embeddings: set False to train input embeddings
         inference_launch_names: list of names of launches used in the inference mode. If this parameter is provided 
             model is used in inference mode.
     """
@@ -73,6 +75,7 @@ class MultiTaskBert(LRScheduledTFModel):
                  learning_rate_drop_div: float = 2.0,
                  load_before_drop: bool = True,
                  clip_norm: float = 1.0,
+                 freeze_embeddings: bool = True,
                  inference_launch_names: List[str] = None,
                  **kwargs) -> None:
         super().__init__(learning_rate=body_learning_rate,
@@ -87,6 +90,7 @@ class MultiTaskBert(LRScheduledTFModel):
             "min_body_learning_rate": min_body_learning_rate,
             "weight_decay_rate": weight_decay_rate
         }
+        self.freeze_embeddings = freeze_embeddings
         self.launches_tasks = launches_params
         self.inference_launch_names = inference_launch_names
         self.mode = 'train' if self.inference_launch_names is None else 'inference'
@@ -138,7 +142,8 @@ class MultiTaskBert(LRScheduledTFModel):
                     shared_placeholders=self.shared_ph,
                     sess=self.sess,
                     mode=self.mode,
-                    get_train_op_func=get_train_op
+                    get_train_op_func=get_train_op,
+                    freeze_embeddings=self.freeze_embeddings
                 )
 
     def _init_shared_placeholders(self) -> None:
@@ -151,7 +156,6 @@ class MultiTaskBert(LRScheduledTFModel):
                                           name='token_mask_ph'),
             'learning_rate': tf.placeholder_with_default(0.0, shape=[], name='learning_rate_ph'),
             'keep_prob': tf.placeholder_with_default(1.0, shape=[], name='keep_prob_ph'),
-            'encoder_keep_prob': tf.placeholder_with_default(1.0, shape=[], name='encoder_keep_prob_ph'),
             'is_train': tf.placeholder_with_default(False, shape=[], name='is_train_ph')}
         self.shared_ph['token_types'] = tf.placeholder_with_default(
                 tf.zeros_like(self.shared_ph['input_ids'], dtype=tf.int32),
@@ -294,39 +298,27 @@ class MultiTaskBert(LRScheduledTFModel):
 
 
 class MTBertTask(ABC):
-    """BERT head for text tagging. It predicts a label for every token (not subtoken) in the text.
-    You can use it for sequence labeling tasks, such as morphological tagging or named entity recognition.
-    Objects of this class should be passed to the constructor of `MultitaskBert` class in param `launches_params`.
+    """Abstract class for multitask Bert tasks. Objects of its subclasses are linked with bert body when `build` 
+    method is called. Training is performed with `train_on_batch` method. One training iteration consists of one
+    `train_on_batch` consequent call for every task. The objects of classes derived from `MTBertTask` don't have 
+    `__call__` method. Instead they have `get_sess_run_infer_args` and `post_process_preds` which are called from 
+    object of `MultiTaskBert` class.
 
     Args:
         task_name: the name of the multitask Bert task used as variable scope. This parameter should have equal
             values in training and inference configs.
-        n_tags: number of distinct tags
-        use_crf: whether to use CRF on top or not
-        use_birnn: whether to use bidirection rnn after BERT layers.
-            For NER and morphological tagging we usually set it to `False` as otherwise the model overfits
-        birnn_cell_type: the type of Bidirectional RNN. Either `lstm` or `gru`
-        birnn_hidden_size: number of hidden units in the BiRNN layer in each direction
-        freeze_embeddings: set True to not train input embeddings set True to
-            not train input embeddings set True to not train input embeddings
         keep_prob: dropout keep_prob for non-Bert layers 
-        encoder_dropout: dropout probability of encoder output layer
         return_probas: set this to `True` if you need the probabilities instead of raw answers
-        encoder_layer_ids: list of averaged layers from Bert encoder (layer ids)
-            optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
-            weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer
         learning_rate: learning rate of BERT head
         in_names: list of inputs of the model. These should be a subset of "in" list of "multitask_bert" component
-            in config.
+            in the config.
         in_y_names: list of y inputs of the model. These should be a subset of "in_y" list of "multitask_bert"
-            component in config.
+            component in the config.
     """
     def __init__(
             self,
             task_name: str = "seq_tagging",
-            freeze_embeddings: bool = False,
             keep_prob: float = 1.,
-            encoder_dropout: float = 0,
             return_probas: bool = None,
             learning_rate: float = 1e-3,
             in_names: List[str] = None,
@@ -334,8 +326,6 @@ class MTBertTask(ABC):
     ):
         self.task_name = task_name
         self.keep_prob = keep_prob
-        self.freeze_embeddings = freeze_embeddings
-        self.encoder_dropout = encoder_dropout
         self.return_probas = return_probas
         self.init_head_learning_rate = learning_rate
         self.min_body_learning_rate = None
@@ -349,9 +339,37 @@ class MTBertTask(ABC):
         self.shared_feed_dict = None
         self.sess = None
         self.get_train_op_func = None
+        self.freeze_embeddings = None
 
-    def build(self, bert_body, optimizer_params, shared_placeholders, sess, mode, get_train_op_func):
+    def build(
+            self, 
+            bert_body: BertModel, 
+            optimizer_params: Dict[str, Union[str, float]], 
+            shared_placeholders: Dict[str, tf.placeholder], 
+            sess: tf.Session, 
+            mode: str, 
+            get_train_op_func: Callable,
+            freeze_embeddings: bool) -> None:
+        """Initiates building of the Bert head and initializes optimizer parameters, placeholders that are common for 
+        all tasks.
+
+        Args:
+            bert_body: instance of `BertModel`.
+            optimizer_params: a dictionary with four fields: 
+                'optimizer' -- a name of optimizer class,
+                'body_learning_rate' (float) -- initial value of Bert body learning rate,
+                'min_body_learning_rate' (float) -- min Bert body learning rate for learning rate decay,
+                'weight_decay_rate' (float) -- L2 weight decay for `AdamWeightDecayOptimizer`
+            shared_placeholders: a dictionary with placeholders used in all tasks. The dictionary contains fields
+                 'input_ids', 'input_masks', 'learning_rate', 'keep_prob', 'is_train', 'token_types'.
+            sess: current `tf.Session` instance
+            mode: 'train' or 'inference'
+            get_train_op_func: a function returning `tf.Operation` and with signature similar to 
+                `LRScheduledTFModel.get_train_op` without `self` argument.
+            freeze_embeddings: set False to train input embeddings
+        """
         self.get_train_op_func = get_train_op_func
+        self.freeze_embeddings = freeze_embeddings
         self.bert = bert_body
         self.optimizer_params = optimizer_params
         if mode == 'train':
@@ -367,24 +385,29 @@ class MTBertTask(ABC):
         if mode == 'train':
             self._init_optimizer()
 
-    def _init_placeholders(self) -> None:
-        self.y_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='y_ph')
-        self.y_masks_ph = tf.placeholder(shape=(None, None),
-                                         dtype=tf.int32,
-                                         name='y_mask_ph')
-
     @abstractmethod
     def _init_graph(self) -> None:
+        """Build Bert head, initialize task specific placeholders, create attributes containing output probabilities
+        and model loss. Optimizer initialized not in this method but in `_init_optimizer`."""
         pass
 
     def get_train_op(self, loss: tf.Tensor, body_learning_rate: Union[tf.Tensor, float], **kwargs) -> tf.Operation:
+        """Return operation for the task training. Head learning rate is calculated as a product of 
+        `body_learning_rate` and quotient of initial head learning rate and body learning rate.
+
+        Args:
+            loss: the task loss
+            body_learning_rate: the learning rate for the Bert body
+ 
+        Returns:
+            train operation for the task
+        """
         assert "learnable_scopes" not in kwargs, "learnable scopes unsupported"
         # train_op for bert variables
         kwargs['learnable_scopes'] = ('bert/encoder', 'bert/embeddings')
         if self.freeze_embeddings:
             kwargs['learnable_scopes'] = ('bert/encoder',)
         learning_rate = body_learning_rate * self.head_learning_rate_multiplier
-        log.debug(f"(MTBertSequenceTaggingTask.get_train_op)learning_rate, body_learning_rate: {learning_rate}, {body_learning_rate}")
         bert_train_op = self.get_train_op_func(loss, body_learning_rate, **kwargs)
         # train_op for ner head variables
         kwargs['learnable_scopes'] = (self.task_name,)
@@ -425,25 +448,33 @@ class MTBertTask(ABC):
                     new_global_step = self.global_step + 1
                     self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
 
-    def _build_feed_dict(self, input_ids, input_masks, y_masks, token_types, y=None, body_learning_rate=None):
+    def _build_feed_dict(self, input_ids, input_masks, token_types, y=None, body_learning_rate=None):
         sph = self.shared_ph
         train = y is not None
         feed_dict = {
             sph['input_ids']: input_ids,
             sph['input_masks']: input_masks,
             sph['token_types']: token_types,
+            sph['is_train']: train,
         }
         if train:
             feed_dict.update({
-                sph['encoder_keep_prob']: 1.0 - self.encoder_dropout,
-                sph['is_train']: True,
                 sph['learning_rate']: body_learning_rate,
                 self.y_ph: y,
+                sph['keep_prob']: self.keep_prob,
             })
-        feed_dict[self.y_masks_ph] = y_masks
         return feed_dict
 
-    def train_on_batch(self, **kwargs) -> Dict[str, float]:        
+    def train_on_batch(self, **kwargs) -> Dict[str, float]:
+        """Trains the task on one batch. This method will work correctly if you override `get_sess_run_train_args`
+        for your task.
+        
+        Args:
+            kwargs: the keys are `body_learning_rate` and contents of `in_names`, `in_y_names` attributes.
+
+        Returns:
+            dictionary with loss and body and head learning rates.
+        """
         fetches, feed_dict = self.get_sess_run_train_args(**kwargs)
         _, loss = self.sess.run(fetches, feed_dict=feed_dict)
         return {'loss': loss,
@@ -452,20 +483,50 @@ class MTBertTask(ABC):
                 'bert_learning_rate': kwargs['body_learning_rate']}
 
     @abstractmethod
-    def get_sess_run_infer_args(self, **kwargs):
+    def get_sess_run_infer_args(self, **kwargs) -> Tuple[List[tf.Tensor], Dict[tf.placeholder, Any]]:
+        """Returns fetches and feed_dict for inference. Fetches are lists of tensors and feed_dict is dictionary
+        with placeholder values required for fetches computation. The method is used for when `MultiTaskBert` `__call__`
+        method is used.
+
+        If `self.return_probas` is True fetches contains probabilities tensor and predictions tensor otherwise.
+
+        Args:
+            kwargs: the keys of `kwargs` are model `in_names` attribute content.
+        
+        Returns:
+            fetches and feed_dict
+        """
         pass
 
     @abstractmethod
-    def get_sess_run_train_args(self, **kwargs):
+    def get_sess_run_train_args(self, **kwargs) -> Tuple[List[tf.Tensor], Dict[tf.placeholder, Any]]:
+        """Returns fetches and feed_dict for task `train_on_batch` method.
+
+        Args:
+            kwargs: the keys of `kwargs` are model `in_names` and `in_y_names` attributes content and 
+                'body_learning_rate`.
+
+        Returns:
+            fetches and feed_dict
+        """
         pass
     
     @abstractmethod
-    def post_process_preds(self, sess_run_res):
+    def post_process_preds(self, sess_run_res: list) -> list:
+        """Post process results of `tf.Session.run` called for task inference. Called from method 
+        `MultiTaskBert.__call__`.
+
+        Args:
+            sess_run_res: computed fetches from get_sess_run_infer_args
+
+        Returns:
+            postprocessed results
+        """
         pass
 
 
 @register("mt_bert_seq_tagging_task")
-class MTBertSequenceTaggingTask:
+class MTBertSequenceTaggingTask(MTBertTask):
     """BERT head for text tagging. It predicts a label for every token (not subtoken) in the text.
     You can use it for sequence labeling tasks, such as morphological tagging or named entity recognition.
     Objects of this class should be passed to the constructor of `MultitaskBert` class in param `launches_params`.
@@ -479,8 +540,6 @@ class MTBertSequenceTaggingTask:
             For NER and morphological tagging we usually set it to `False` as otherwise the model overfits
         birnn_cell_type: the type of Bidirectional RNN. Either `lstm` or `gru`
         birnn_hidden_size: number of hidden units in the BiRNN layer in each direction
-        freeze_embeddings: set True to not train input embeddings set True to
-            not train input embeddings set True to not train input embeddings
         keep_prob: dropout keep_prob for non-Bert layers 
         encoder_dropout: dropout probability of encoder output layer
         return_probas: set this to `True` if you need the probabilities instead of raw answers
@@ -501,7 +560,6 @@ class MTBertSequenceTaggingTask:
             use_birnn: bool = False,
             birnn_cell_type: str = 'lstm',
             birnn_hidden_size: int = 128,
-            freeze_embeddings: bool = False,
             keep_prob: float = 1.,
             encoder_dropout: float = 0.,
             return_probas: bool = None,
@@ -510,52 +568,27 @@ class MTBertSequenceTaggingTask:
             in_names: List[str] = None,
             in_y_names: List[str] = None,
     ):
-        self.task_name = task_name
+        super().__init__(
+            task_name, 
+            keep_prob, 
+            return_probas, 
+            learning_rate, 
+            in_names, 
+            in_y_names)
         self.n_tags = n_tags
         self.use_crf = use_crf
         self.use_birnn = use_birnn
         self.birnn_cell_type = birnn_cell_type
         self.birnn_hidden_size = birnn_hidden_size
-        self.keep_prob = keep_prob
-        self.freeze_embeddings = freeze_embeddings
         self.encoder_dropout = encoder_dropout
-        self.return_probas = return_probas
         self.encoder_layer_ids = encoder_layer_ids
-        self.init_head_learning_rate = learning_rate
-        self.min_body_learning_rate = None
-        self.head_learning_rate_multiplier = None
-        self.in_names = in_names
-        self.in_y_names = in_y_names
-
-        self.bert = None
-        self.optimizer_params = None
-        self.shared_ph = None
-        self.shared_feed_dict = None
-        self.sess = None
-        self.get_train_op_func = None
-
-    def build(self, bert_body, optimizer_params, shared_placeholders, sess, mode, get_train_op_func):
-        self.get_train_op_func = get_train_op_func
-        self.bert = bert_body
-        self.optimizer_params = optimizer_params
-        if mode == 'train':
-            self.head_learning_rate_multiplier = \
-                self.init_head_learning_rate / self.optimizer_params['body_learning_rate']
-        else:
-            self.head_learning_rate_multiplier = 0
-        mblr = self.optimizer_params.get('min_body_learning_rate')
-        self.min_body_learning_rate = 0. if mblr is None else mblr
-        self.shared_ph = shared_placeholders
-        self.sess = sess
-        self._init_graph()
-        if mode == 'train':
-            self._init_optimizer()
 
     def _init_placeholders(self) -> None:
         self.y_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='y_ph')
         self.y_masks_ph = tf.placeholder(shape=(None, None),
                                          dtype=tf.int32,
                                          name='y_mask_ph')
+        self.encoder_keep_prob = tf.placeholder_with_default(1.0, shape=[], name='encoder_keep_prob_ph')
 
     def _init_graph(self) -> None:
         with tf.variable_scope(self.task_name):
@@ -567,7 +600,7 @@ class MTBertSequenceTaggingTask:
                                             initializer=tf.ones_initializer(),
                                             trainable=True)
             layer_mask = tf.ones_like(layer_weights)
-            layer_mask = tf.nn.dropout(layer_mask, self.shared_ph['encoder_keep_prob'])
+            layer_mask = tf.nn.dropout(layer_mask, self.encoder_keep_prob)
             layer_weights *= layer_mask
             # to prevent zero division
             mask_sum = tf.maximum(tf.reduce_sum(layer_mask), 1.0)
@@ -629,71 +662,14 @@ class MTBertSequenceTaggingTask:
         """
         return [self.bert.all_encoder_layers[i] for i in self.encoder_layer_ids]
 
-    def get_train_op(self, loss: tf.Tensor, body_learning_rate: Union[tf.Tensor, float], **kwargs) -> tf.Operation:
-        assert "learnable_scopes" not in kwargs, "learnable scopes unsupported"
-        # train_op for bert variables
-        kwargs['learnable_scopes'] = ('bert/encoder', 'bert/embeddings')
-        if self.freeze_embeddings:
-            kwargs['learnable_scopes'] = ('bert/encoder',)
-        learning_rate = body_learning_rate * self.head_learning_rate_multiplier
-        log.debug(f"(MTBertSequenceTaggingTask.get_train_op)learning_rate, body_learning_rate: {learning_rate}, {body_learning_rate}")
-        bert_train_op = self.get_train_op_func(loss, body_learning_rate, **kwargs)
-        # train_op for ner head variables
-        kwargs['learnable_scopes'] = (self.task_name,)
-        head_train_op = self.get_train_op_func(loss, learning_rate, **kwargs)
-        return tf.group(bert_train_op, head_train_op)
-
-    def _init_optimizer(self) -> None:
-        with tf.variable_scope(self.task_name):
-            with tf.variable_scope('Optimizer'):
-                self.global_step = tf.get_variable('global_step',
-                                                   shape=[],
-                                                   dtype=tf.int32,
-                                                   initializer=tf.constant_initializer(0),
-                                                   trainable=False)
-                # default optimizer for Bert is Adam with fixed L2 regularization
-
-            if self.optimizer_params.get('optimizer') is None:
-                self.train_op = \
-                    self.get_train_op(
-                        self.loss,
-                        body_learning_rate=self.shared_ph['learning_rate'],
-                        optimizer=AdamWeightDecayOptimizer,
-                        weight_decay_rate=self.optimizer_params.get('weight_decay_rate', 1e-6),
-                        beta_1=0.9,
-                        beta_2=0.999,
-                        epsilon=1e-6,
-                        optimizer_scope_name='Optimizer',
-                        exclude_from_weight_decay=["LayerNorm",
-                                                   "layer_norm",
-                                                   "bias"])
-            else:
-                self.train_op = self.get_train_op(self.loss,
-                                                  body_learning_rate=self.shared_ph['learning_rate'],
-                                                  optimizer_scope_name='Optimizer')
-
-            if self.optimizer_params.get('optimizer') is None:
-                with tf.variable_scope('Optimizer'):
-                    new_global_step = self.global_step + 1
-                    self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
-
-    def _build_feed_dict(self, input_ids, input_masks, y_masks, token_types=None, y=None, body_learning_rate=None):
-        if token_types is None:
-            token_types = np.zeros(np.array(input_ids).shape)
+    @overrides
+    def _build_feed_dict(self, input_ids, input_masks, y_masks, y=None, body_learning_rate=None):
+        token_types = np.zeros(np.array(input_ids).shape)
         sph = self.shared_ph
         train = y is not None
-        feed_dict = {
-            sph['input_ids']: input_ids,
-            sph['input_masks']: input_masks,
-            sph['token_types']: token_types,
-        }
+        feed_dict = super()._build_feed_dict(input_ids, input_masks, token_types, y, body_learning_rate)
         if train:
-            feed_dict.update({
-                sph['encoder_keep_prob']: 1.0 - self.encoder_dropout,
-                sph['is_train']: True,
-                sph['learning_rate']: body_learning_rate,
-                self.y_ph: y,
-            })
+            feed_dict[self.encoder_keep_prob] = 1.0 - self.encoder_dropout
         feed_dict[self.y_masks_ph] = y_masks
         return feed_dict
 
@@ -711,35 +687,31 @@ class MTBertSequenceTaggingTask:
             y_pred += [viterbi_seq]
         return y_pred
 
-    def train_on_batch(self, **kwargs) -> Dict[str, float]:
-        """
+    def _check_in_names(self):
+        if len(self.in_names) != 3:
+            raise ValueError(
+                f"Sequence tagging task of multitask Bert takes exactly 3 arguments: input ids, input masks "
+                "and y masks whereas {len(self.in_names)} arguments {self.in_names} are given.")       
+
+    def _check_in_y_names(self):
+        if len(self.in_y_names) != 1:
+            raise ValueError(
+                f"Sequence tagging task of multitask Bert in_y has to have 1 element "
+                "whereas its length is {len(self.in_y_names)}.\nin_y_names = {self.in_y_names}")       
+
+    def get_sess_run_infer_args(self, **kwargs) -> Tuple[List[tf.Tensor], Dict[tf.placeholder, Any]]:
+        """Returns fetches and feed_dict for model inference. The method is called from `MultiTaskBert.__call__`.
 
         Args:
-            input_ids: batch of indices of subwords
-            input_masks: batch of masks which determine what should be attended
-            args: arguments passed  to _build_feed_dict
-                and corresponding to additional input
-                and output tensors of the derived class.
-            kwargs: keyword arguments passed to _build_feed_dict
-                and corresponding to additional input
-                and output tensors of the derived class.
+            kwargs: a dictionary of size 3 containing input ids, input masks, y masks. The keys should be equal to
+                `in_names` attribute.
 
         Returns:
-            dict with fields 'loss', 'head_learning_rate', and 'bert_learning_rate'
+            list of fetches and feed_dict
         """
-        log.debug(f"(MTBertSequenceTaggingTask.train_on_batch)inside train_on_batch")
-        
-        fetches, feed_dict = self.get_sess_run_train_args(**kwargs)
-        _, loss = self.sess.run(fetches, feed_dict=feed_dict)
-        return {'loss': loss,
-                f'{self.task_name}_head_learning_rate': 
-                    float(kwargs['body_learning_rate']) * self.head_learning_rate_multiplier,
-                'bert_learning_rate': kwargs['body_learning_rate']}
-
-    def get_sess_run_infer_args(self, **kwargs):
-        build_feed_dict_args = [kwargs[k] for k in self.in_names[:3]]
+        self._check_in_names()
+        build_feed_dict_args = [kwargs[k] for k in self.in_names]
         feed_dict = self._build_feed_dict(*build_feed_dict_args)
-        log.debug(f"(MTBertSequenceTaggingTask.get_sess_run_train_args)self.return_probas: {self.return_probas}")
         if self.return_probas:
             fetches = self.y_probas
         else:
@@ -749,9 +721,19 @@ class MTBertSequenceTaggingTask:
                 fetches = [self.y_predictions, self.seq_lengths]
         return fetches, feed_dict
 
-    def get_sess_run_train_args(self, **kwargs):
-        log.debug(f"(MTBertSequenceTaggingTask.get_sess_run_train_args)kwargs[{self.in_names[0]}] shape: {np.array(kwargs[self.in_names[0]]).shape}")
-        build_feed_dict_args = [kwargs[k] for k in self.in_names[:3]]
+    def get_sess_run_train_args(self, **kwargs) -> Tuple[List[tf.Tensor], Dict[tf.placeholder, Any]]:
+        """Returns fetches and feed_dict for model `train_on_batch` method.
+
+        Args:
+            kwargs: a dictionary which keys are elements of `in_names` attribute, `in_y_names` attribute and
+                `'body_learning_rate'`.
+
+        Returns:
+            list of fetches and feed_dict
+        """
+        self._check_in_names()
+        self._check_in_y_names()
+        build_feed_dict_args = [kwargs[k] for k in self.in_names]
         y = kwargs[self.in_y_names[0]]
         lr = kwargs['body_learning_rate']
         feed_dict = self._build_feed_dict(*build_feed_dict_args, y=y, body_learning_rate=lr)
@@ -759,7 +741,14 @@ class MTBertSequenceTaggingTask:
         return fetches, feed_dict
 
     def post_process_preds(self, sess_run_res):
-        log.debug(f"(MTBertSequenceTaggingTask.post_process_preds)sess_run_res.shape: {recursive_shape(sess_run_res)}")
+        """Decodes CRF if needed and returns predictions or probabilities.
+
+        Args:
+            sess_run_res: list of computed fetches gathered by `get_sess_run_infer_args`
+
+        Returns:
+            predictions or probabilities depending on `return_probas` attribute
+        """
         if self.return_probas:
             pred = sess_run_res
         else:
@@ -773,12 +762,30 @@ class MTBertSequenceTaggingTask:
             else:
                 pred, seq_lengths = sess_run_res
                 pred = [p[:l] for l, p in zip(seq_lengths, pred)]
-        log.debug(f"(MTBertSequenceTaggingTask.post_process_preds)pred.shape: {recursive_shape(pred)}")
         return pred
 
 
 @register("mt_bert_classification_task")
-class MTBertClassificationTask:
+class MTBertClassificationTask(MTBertTask):
+    """Task for text classification.
+
+    It uses output from [CLS] token and predicts labels using linear transformation.
+
+    Args:
+        task_name: the name of the multitask Bert task used as variable scope. This parameter should have equal
+            values in training and inference configs.
+        n_classes: number of classes
+        return_probas: set True if return class probabilites instead of most probable label needed
+        one_hot_labels: set True if one-hot encoding for labels is used
+        keep_prob: dropout keep_prob for non-Bert layers
+        multilabel: set True if it is multi-label classification
+        learning_rate: learning rate of BERT head
+        optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
+        in_names: list of inputs of the model. These should be a subset of "in" list of "multitask_bert" component
+            in config.
+        in_y_names: list of y inputs of the model. These should be a subset of "in_y" list of "multitask_bert"
+            component in config.
+    """
     def __init__(
             self,
             task_name: str = "classification",
@@ -789,53 +796,25 @@ class MTBertClassificationTask:
             multilabel: bool = False,
             learning_rate: float = 2e-5,
             optimizer: str = "Adam",
-            freeze_embeddings: bool = False,
             in_names: List[str] = None,
             in_y_names: List[str] = None,
     ):
-        self.task_name = task_name
+        super().__init__(
+            task_name, 
+            keep_prob, 
+            return_probas, 
+            learning_rate, 
+            in_names, 
+            in_y_names)
         self.n_classes = n_classes
-        self.return_probas = return_probas
         self.one_hot_labels = one_hot_labels
-        self.keep_prob = keep_prob
         self.multilabel = multilabel
-        self.init_head_learning_rate = learning_rate
-        self.head_learning_rate_multiplier = None
-        self.min_body_learning_rate = None
-        self.optimizer = optimizer
-        self.freeze_embeddings = freeze_embeddings
-        self.in_names = in_names
-        self.in_y_names = in_y_names
-
-        self.bert = None
-        self.optimizer_params = None
-        self.shared_ph = None
-        self.shared_feed_dict = None
-        self.sess = None
-        self.get_train_op_func = None
 
         if self.multilabel and not self.one_hot_labels:
             raise RuntimeError('Use one-hot encoded labels for multilabel classification!')
 
         if self.multilabel and not self.return_probas:
             raise RuntimeError('Set return_probas to True for multilabel classification!')
-
-    def build(self, bert_body, optimizer_params, shared_placeholders, sess, mode, get_train_op_func):
-        self.get_train_op_func = get_train_op_func
-        self.bert = bert_body
-        self.optimizer_params = optimizer_params
-        if mode == 'train':
-            self.head_learning_rate_multiplier = \
-                self.init_head_learning_rate / self.optimizer_params['body_learning_rate']
-        else:
-            self.head_learning_rate_multiplier = 0
-        mblr = self.optimizer_params.get('min_body_learning_rate')
-        self.min_body_learning_rate = 0. if mblr is None else mblr
-        self.shared_ph = shared_placeholders
-        self.sess = sess
-        self._init_graph()
-        if mode == 'train':
-            self._init_optimizer()
 
     def _init_placeholders(self):
         if not self.one_hot_labels:
@@ -878,94 +857,51 @@ class MTBertClassificationTask:
                     self.loss = tf.reduce_mean(
                         tf.nn.sigmoid_cross_entropy_with_logits(labels=one_hot_labels, logits=logits))
 
-    def get_train_op(self, loss: tf.Tensor, body_learning_rate: Union[tf.Tensor, float], **kwargs) -> tf.Operation:
-        assert "learnable_scopes" not in kwargs, "learnable scopes unsupported"
-        # train_op for bert variables
-        kwargs['learnable_scopes'] = ('bert/encoder', 'bert/embeddings')
-        if self.freeze_embeddings:
-            kwargs['learnable_scopes'] = ('bert/encoder',)
-        learning_rate = body_learning_rate * self.head_learning_rate_multiplier
-        bert_train_op = self.get_train_op_func(loss, body_learning_rate, **kwargs)
-        # train_op for ner head variables
-        kwargs['learnable_scopes'] = (self.task_name,)
-        head_train_op = self.get_train_op_func(loss, learning_rate, **kwargs)
-        return tf.group(bert_train_op, head_train_op)
+    def _check_in_names(self):
+        if len(self.in_names) != 1:
+            raise ValueError(
+                f"Classification task of multitask Bert takes exactly 1 arguments: Bert features "
+                "whereas {len(self.in_names)} arguments {self.in_names} are given.")       
 
-    def _init_optimizer(self):
-        with tf.variable_scope(self.task_name):
-            with tf.variable_scope('Optimizer'):
-                self.global_step = tf.get_variable('global_step', shape=[], dtype=tf.int32,
-                                                   initializer=tf.constant_initializer(0), trainable=False)
-                # default optimizer for Bert is Adam with fixed L2 regularization
-                if self.optimizer is None:
+    def _check_in_y_names(self):
+        if len(self.in_y_names) != 1:
+            raise ValueError(
+                f"Classification task of multitask Bert in_y has to have 1 element "
+                "whereas its length is {len(self.in_y_names)}.\nin_y_names = {self.in_y_names}")       
 
-                    self.train_op = self.get_train_op(
-                        self.loss, 
-                        body_learning_rate=self.shared_ph.get('learning_rate'),
-                        optimizer=AdamWeightDecayOptimizer,
-                        weight_decay_rate=self.optimizer_params.get('weight_decay_rate', 0.01),  # FIXME: make default value specification more obvious
-                        beta_1=0.9,
-                        beta_2=0.999,
-                        epsilon=1e-6,
-                        exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"]
-                    )
-                else:
-                    self.train_op = self.get_train_op(
-                        self.loss, body_learning_rate=self.shared_ph.get('learning_rate'))
+    def get_sess_run_train_args(self, **kwargs) -> Tuple[List[tf.Tensor], Dict[tf.placeholder, Any]]:
+        """Returns fetches and feed_dict for model `train_on_batch` method.
 
-                if self.optimizer is None:
-                    new_global_step = self.global_step + 1
-                    self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
+        Args:
+            kwargs: a dictionary which keys are elements of `in_names` attribute, `in_y_names` attribute and
+                `'body_learning_rate'`.
 
-    def _build_feed_dict(self, input_ids, input_masks, token_types, y=None, body_learning_rate=None):
-        sph = self.shared_ph
-        feed_dict = {
-            sph['input_ids']: input_ids,
-            sph['input_masks']: input_masks,
-            sph['token_types']: token_types,
-        }
-        if y is not None:
-            feed_dict.update({
-                self.y_ph: y,
-                sph['learning_rate']: body_learning_rate,
-                sph['keep_prob']: self.keep_prob,
-                sph['is_train']: True,
-            })
-
-        return feed_dict
-
-    def get_sess_run_train_args(self, **kwargs):
-        log.debug(f"(MTBertClassifier.get_sess_run_train_args)kwargs.keys: {list(kwargs.keys())}") 
+        Returns:
+            list of fetches and feed_dict
+        """
+        self._check_in_names()
+        self._check_in_y_names()
         features = kwargs[self.in_names[0]]
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
         y = kwargs[self.in_y_names[0]]
-        log.debug(f"(MTBertClassifierTask.get_sess_run_train_args)input_ids.shape: {np.array(input_ids).shape}")
-        log.debug(f"(MTBertClassifier.get_sess_run_train_args)kwargs.keys: {list(kwargs.keys())}") 
         lr = kwargs['body_learning_rate']
         feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids, y=y, body_learning_rate=lr)
         fetches = [self.train_op, self.loss]
         return fetches, feed_dict
 
-    def train_on_batch(self, **kwargs) -> Dict:
-        """Train model on given batch.
-        This method calls train_op using features and y (labels).
+    def get_sess_run_infer_args(self, **kwargs) -> Tuple[List[tf.Tensor], Dict[tf.placeholder, Any]]:
+        """Returns fetches and feed_dict for model inference. The method is called from `MultiTaskBert.__call__`.
 
         Args:
-            features: batch of InputFeatures
-            y: batch of labels (class id or one-hot encoding)
+            kwargs: a dictionary of size 1 containing Bert features. The keys should be equal to
+                `in_names` attribute.
 
         Returns:
-            dict with loss and learning_rate values
-
+            list of fetches and feed_dict
         """
-        fetches, feed_dict = self.get_sess_run_train_args(**kwargs)
-        _, loss = self.sess.run(fetches, feed_dict=feed_dict)
-        return {'loss': loss, f'{self.task_name}_learning_rate': kwargs['body_learning_rate']}
-
-    def get_sess_run_infer_args(self, **kwargs):
-        log.debug(f"(MTBertClassifier.get_sess_run_infer_args)kwargs.keys: {list(kwargs.keys())}") 
+        self._check_in_names()
         features = kwargs[self.in_names[0]]
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
@@ -975,12 +911,20 @@ class MTBertClassificationTask:
         return fetches, feed_dict
 
     def post_process_preds(self, sess_run_res):
+        """Returns `tf.Session.run` results for inference without changes."""
         return sess_run_res
 
 
 @register("mt_bert_reuser")
 class MTBertReUser:
-    def __init__(self, mt_bert, launch_name, *args, **kwargs):
+    """Instances of this class are for calling MultiTaskBert launches. In config pipe `MultiTaskBert` class is 
+    declared for inference on 1 launch. To use another launch `MTBertReUser` instance is created.
+
+    Args:
+        mt_bert: an instance of `MultiTaskBert`
+        launch_name: the name of the launch of in multitask Bert
+    """
+    def __init__(self, mt_bert: MultiTaskBert, launch_name: str, *args, **kwargs):
         self.mt_bert = mt_bert
         self.launch_name = launch_name
 
@@ -990,11 +934,24 @@ class MTBertReUser:
 
 @register("input_splitter")
 class InputSplitter:
-    def __init__(self, keys_to_extract, **kwargs):
+    """The instance of these class in pipe splits a sequence of dictionaries into independent variables.
+
+    Args:
+        keys_to_extract: a sequence of strings which have to match keys of dictionary which will be splitted
+    """
+    def __init__(self, keys_to_extract: Union[List[str], Tuple[str, ...]], **kwargs):
         self.keys_to_extract = keys_to_extract
 
-    def __call__(self, inp):
-        log.debug(f"(InputSplitter.__call__)inp.shape: {recursive_shape(inp)}")
+    def __call__(self, inp: List[dict]) -> List[list]:
+        """Returns lists of values of dictionaries from `inp`. Every list contains values which have a key from 
+        `keys_to_extract` attribute. The order of elements of `keys_to_extract` is preserved.
+
+        Args:
+            inp: A sequence of dictionaries with identical keys
+
+        Returns:
+            A list of lists of values of dicionaries from `inp`
+        """
         extracted = [[] for _ in self.keys_to_extract]
         for item in inp:
             for i, key in enumerate(self.keys_to_extract):
