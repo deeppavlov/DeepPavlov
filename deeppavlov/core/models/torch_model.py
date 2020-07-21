@@ -53,6 +53,8 @@ class TorchModel(NNModel):
         self.opt = deepcopy(kwargs)
 
         self.load()
+        # we need to switch to eval mode here because by default it's in `train` mode.
+        # But in case of `interact/build_model` usage, we need to have model in eval mode.
         self.model.eval()
         log.info(f"Model was successfully initialized! Model summary:\n {self.model}")
 
