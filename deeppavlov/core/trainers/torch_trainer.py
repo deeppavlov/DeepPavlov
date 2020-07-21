@@ -39,3 +39,4 @@ class TorchTrainer(NNTrainer):
     def train_on_batches(self, iterator: DataLearningIterator) -> None:
         self._chainer.get_main_component().model.train()
         super(TorchTrainer, self).train_on_batches(iterator=iterator)
+        self._chainer.get_main_component().model.eval()
