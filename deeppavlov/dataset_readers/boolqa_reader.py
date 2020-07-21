@@ -46,7 +46,7 @@ class BoolqaReader(DatasetReader):
         if language in self.urls:
             self.url = self.urls[language]
         else:
-             raise RuntimeError(f'The dataset for {ln} is unavailable')
+             raise RuntimeError(f'The dataset for {language} is unavailable')
 
         data_path = expand_path(data_path)
         if not data_path.exists():
