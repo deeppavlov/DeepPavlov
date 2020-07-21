@@ -15,13 +15,12 @@
 
 from logging import getLogger
 from deeppavlov.core.common.registry import register
-from typing import List, Tuple, Any
 
 log = getLogger(__name__)
 
 
-@register("image_classification_iterator")
-class ImageClassificationDatasetIterator:
+@register("torch_classification_iterator")
+class TorchClassificationDatasetIterator:
     """Class gets data dictionary from DatasetReader instance which returns DataLoader instead of dict of data
     Args:
         data: dictionary of data with fields "train", "valid" and "test"
