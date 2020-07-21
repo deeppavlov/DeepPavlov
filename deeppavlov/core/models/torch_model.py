@@ -40,7 +40,7 @@ class TorchModel(NNModel):
         model: torch model
         epochs_done: number of epochs that were done
         optimizer: torch.optimizers instance
-        criterion: torch loss function
+        criterion: torch criterion instance
     """
 
     def __init__(self, device="cpu", *args, **kwargs):
@@ -62,8 +62,8 @@ class TorchModel(NNModel):
         if callable(model_func):
             self.model = model_func(**self.opt)
             self.optimizer = getattr(torch.optim, self.opt["optimizer"])(
-                self.model.parameters(), **self.opt.get("optimizer_params", {}))
-            self.criterion = getattr(torch.nn, self.opt.get("loss"))()
+                self.model.parameters(), **self.opt.get("optimizer_parameters", {}))
+            self.criterion = getattr(torch.nn, self.opt.get("criterion"))()
         else:
             raise AttributeError("Model is not defined.")
 
