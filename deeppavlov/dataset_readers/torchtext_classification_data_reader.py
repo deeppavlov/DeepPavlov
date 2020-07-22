@@ -41,7 +41,7 @@ class TorchtextClassificationDataReader(DatasetReader):
     Raw texts and string labels are re-assigned to common deeppavlov format of data which will be given to iterator.
     """
     @overrides
-    def read(self, dataset_title: str, data_path: str,
+    def read(self, data_path: str, dataset_title: str,
              splits=["train", "valid", "test"], valid_portion=None,
              split_seed=42, *args, **kwargs) -> dict:
 
