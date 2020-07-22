@@ -117,9 +117,6 @@ class TorchTextClassificationModel(TorchModel):
                 log.info(f"----------Current LR is decreased in 10 times----------")
                 for param_group in self.optimizer.param_groups:
                     param_group['lr'] = param_group['lr'] / 10
-        if event_name == "after_train_log":
-            if "learning_rate" not in data:
-                data["learning_rate"] = self.learning_rate
 
     def train_on_batch(self, texts: List[List[np.ndarray]], labels: list) -> Union[float, List[float]]:
         """Train the model on the given batch.
