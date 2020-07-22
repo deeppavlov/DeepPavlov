@@ -37,16 +37,17 @@ def _init_fn():
 
 @register("torchtext_classifiction_data_reader")
 class TorchtextClassificationDataReader(DatasetReader):
-    """Class initializes datasets as an attribute of `torchtext.datasets`
+    """Class initializes datasets as an attribute of `torchtext.datasets`.
+    Raw texts and string labels are re-assigned to common deeppavlov format of data which will be given to iterator.
     """
     @overrides
-    def read(self, dataset_title: str, data_path: str, batch_size: int,
+    def read(self, dataset_title: str, data_path: str,
              splits=["train", "valid", "test"], valid_portion=None,
-             vocab=None, ngrams=1, split_seed=42, tokenize="spacy", *args, **kwargs) -> dict:
+             split_seed=42, *args, **kwargs) -> dict:
 
         if hasattr(torch_texts, dataset_title) and callable(getattr(torch_texts, dataset_title)):
             log.info(f"Dataset {dataset_title} is used as an attribute of `torchtext.datasets`.")
-            _text = torchtext.data.Field(tokenize=tokenize)
+            _text = torchtext.data.RawField()
             _label = torchtext.data.LabelField(dtype=torch.float)
             data_splits = getattr(torch_texts, dataset_title).splits(_text, _label, root=data_path)
             assert len(data_splits) == len(splits)
@@ -61,7 +62,8 @@ class TorchtextClassificationDataReader(DatasetReader):
 
         data = {}
         for data_field in data_splits:
-            data[data_field] = torch.utils.data.DataLoader(
-                data_splits[data_field], batch_size=batch_size, worker_init_fn=_init_fn(),
-                shuffle=True if data_field == "train" else False, num_workers=2)
+            data[data_field] = []
+            for sample in data_splits[data_field].examples:
+                data[data_field].append((vars(sample)["text"], vars(sample)["label"]))
+
         return data
