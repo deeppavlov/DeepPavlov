@@ -17,12 +17,12 @@ import logging
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 import numpy as np
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.torch_model import TorchModel
 from deeppavlov.core.common.registry import register
+from .torch_nets import ShallowAndWideCnn
 
 log = logging.getLogger(__name__)
 
@@ -160,7 +160,7 @@ class TorchTextClassificationModel(TorchModel):
         return outputs.cpu().detach().numpy()
 
     def cnn_model(self, kernel_sizes_cnn: List[int], filters_cnn: int, dense_size: int, dropout_rate: float = 0.0,
-                  input_projection_size: Optional[int] = None, **kwargs) -> nn.Module:
+                  **kwargs) -> nn.Module:
         """Build un-compiled model of shallow-and-wide CNN.
 
         Args:
@@ -168,49 +168,15 @@ class TorchTextClassificationModel(TorchModel):
             filters_cnn: number of filters for convolutions.
             dense_size: number of units for dense layer.
             dropout_rate: dropout rate, after convolutions and between dense.
-            input_projection_size: if not None, adds Dense layer right after input layer
-                               Useful for input dimentionality reduction.
             kwargs: other parameters
 
         Returns:
             torch.models.Model: instance of torch Model
         """
-
-        class Net(nn.Module):
-            def __init__(self):
-                super(Net, self).__init__()
-                self.inp = nn.Conv1d(self.opt["n_channels"], filters_cnn, kernel_sizes_cnn[0])
-                self.pool = nn.MaxPool1d(2)
-                for i in range(1, len(kernel_sizes_cnn)):
-                    layer_name = "conv_" + str(i)
-                    setattr(self, layer_name, nn.Conv1d(filters_cnn, filters_cnn, kernel_size=kernel_sizes_cnn[i]))
-                self.dropout = nn.Dropout(dropout_rate)
-                self.fc1 = nn.Linear(filters_cnn * np.sum(kernel_sizes_cnn), dense_size)
-                self.fc2 = nn.Linear(dense_size, torch_base_model.n_classes)
-                self.multi_label = kwargs.get("multi_label", False)
-
-            def forward(self, x):
-                if input_projection_size is not None:
-                    x = x.view(input_projection_size)
-                x = self.pool(F.relu(self.inp(x)))
-                outputs = []
-                for i in range(1, len(kernel_sizes_cnn)):
-                    layer_name = "conv_" + str(i)
-                    conv_layer = getattr(self, layer_name)
-                    x = self.pool(F.relu(conv_layer(x)))
-                    outputs.append(x)
-                output = torch.cat(outputs, dim=2)
-                output = self.dropout(output)
-                output = output.view(-1, filters_cnn * np.sum(kernel_sizes_cnn))
-                output = self.dropout(F.relu(self.fc1(output)))
-                output = self.fc2(output)
-                if self.multi_label:
-                    act_output = F.sigmoid(output)
-                else:
-                    act_output = F.softmax(output, dim=1)
-                return act_output
-
-        torch_base_model = self
-        model = Net()
+        model = ShallowAndWideCnn(n_classes=self.opt["n_classes"], embedding_size=self.opt["embedding_size"],
+                                  kernel_sizes_cnn=kernel_sizes_cnn, filters_cnn=filters_cnn,
+                                  dense_size=dense_size, dropout_rate=dropout_rate,
+                                  multi_label=self.opt["multi_label"], embedded_tokens=self.opt["embedded_tokens"],
+                                  vocab_size=self.opt["vocab_size"])
         model.to(self.device)
         return model
