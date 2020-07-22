@@ -58,10 +58,8 @@ class TorchBertClassifierModel(TorchModel):
                  optimizer=None, num_warmup_steps=None, weight_decay_rate=0.01,
                  pretrained_bert=None, bert_config_file=None,
                  min_learning_rate=1e-06, **kwargs) -> None:
-        super().__init__(**kwargs)
 
         self.return_probas = return_probas
-        self.n_classes = n_classes
         self.min_learning_rate = min_learning_rate
         self.keep_prob = keep_prob
         self.one_hot_labels = one_hot_labels
@@ -69,6 +67,13 @@ class TorchBertClassifierModel(TorchModel):
         self.optimizer = optimizer
         self.num_warmup_steps = num_warmup_steps
         self.weight_decay_rate = weight_decay_rate
+        self.pretrained_bert = pretrained_bert
+        self.bert_config_file = bert_config_file
+        self.attention_probs_keep_prob = attention_probs_keep_prob
+        self.hidden_keep_prob = hidden_keep_prob
+
+        super().__init__(**kwargs)
+        self.n_classes = n_classes
 
         if self.multilabel and not self.one_hot_labels:
             raise RuntimeError('Use one-hot encoded labels for multilabel classification!')
@@ -76,7 +81,7 @@ class TorchBertClassifierModel(TorchModel):
         if self.multilabel and not self.return_probas:
             raise RuntimeError('Set return_probas to True for multilabel classification!')
 
-        self.load(pretrained_bert, bert_config_file, attention_probs_keep_prob, hidden_keep_prob)
+        self.load()
         self.model.to(self.device)
         # need to move it to `eval` mode because it can be used in `build_model` (not by `torch_trainer`
         self.model.eval()
@@ -150,7 +155,7 @@ class TorchBertClassifierModel(TorchModel):
         return pred
 
     @overrides
-    def load(self, pretrained_bert, bert_config_file, attention_probs_keep_prob, hidden_keep_prob, *args, **kwargs):
+    def load(self):
         if pretrained_bert:
             self.model = BertForSequenceClassification.from_pretrained(pretrained_bert, num_labels=self.n_classes)
                 # tutorial has this PARAMS also
