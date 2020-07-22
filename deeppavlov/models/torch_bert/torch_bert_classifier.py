@@ -103,15 +103,15 @@ class TorchBertClassifierModel(TorchModel):
         input_masks = [f.attention_mask for f in features]
         input_type_ids = [f.token_type_ids for f in features]
 
-        b_input_ids = torch.from_numpy(input_ids).to(self.device)
-        b_input_mask = torch.from_numpy(input_masks).to(self.device)
-        b_input_type_ids = torch.from_numpy(input_type_ids).to(self.device)
+        b_input_ids = torch.tensor(input_ids).to(self.device)
+        b_input_masks = torch.tensor(input_masks).to(self.device)
+        b_input_type_ids = torch.tensor(input_type_ids).to(self.device)
 
         b_labels = torch.from_numpy(y).to(self.device)
 
         self.optimizer.zero_grad()
 
-        loss, logits = self.model(b_input_ids, token_type_ids=b_input_type_ids, attention_mask=b_input_mask,
+        loss, logits = self.model(b_input_ids, token_type_ids=b_input_type_ids, attention_mask=b_input_masks,
                                  labels=b_labels)
         loss.backward()
         # Clip the norm of the gradients to 1.0.
@@ -138,13 +138,13 @@ class TorchBertClassifierModel(TorchModel):
         input_masks = [f.attention_mask for f in features]
         input_type_ids = [f.token_type_ids for f in features]
 
-        b_input_ids = torch.from_numpy(input_ids).to(self.device)
-        b_input_mask = torch.from_numpy(input_masks).to(self.device)
-        b_input_type_ids = torch.from_numpy(input_type_ids).to(self.device)
+        b_input_ids = torch.tensor(input_ids).to(self.device)
+        b_input_masks = torch.tensor(input_masks).to(self.device)
+        b_input_type_ids = torch.tensor(input_type_ids).to(self.device)
 
         with torch.no_grad():
             # Forward pass, calculate logit predictions
-            outputs = self.model(b_input_ids, token_type_ids=b_input_type_ids, attention_mask=b_input_mask)
+            outputs = self.model(b_input_ids, token_type_ids=b_input_type_ids, attention_mask=b_input_masks)
 
         logits = outputs[0]
         # Move logits and labels to CPU and to numpy arrays
