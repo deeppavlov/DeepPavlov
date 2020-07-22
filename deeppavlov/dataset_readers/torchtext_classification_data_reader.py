@@ -35,7 +35,7 @@ def _init_fn():
     torch.cuda.manual_seed(12)
 
 
-@register("torchtext_classifiction_data_reader")
+@register("torchtext_classification_data_reader")
 class TorchtextClassificationDataReader(DatasetReader):
     """Class initializes datasets as an attribute of `torchtext.datasets`.
     Raw texts and string labels are re-assigned to common deeppavlov format of data which will be given to iterator.
