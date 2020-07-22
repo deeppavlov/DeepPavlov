@@ -55,7 +55,7 @@
           "x_emb"
         ],
         "in_y": [
-          "y_onehot"
+          "y_ids"
         ],
         "out": [
           "y_pred_probas"
