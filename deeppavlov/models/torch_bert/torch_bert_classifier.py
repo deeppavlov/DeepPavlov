@@ -103,9 +103,9 @@ class TorchBertClassifierModel(TorchModel):
         input_masks = [f.attention_mask for f in features]
         input_type_ids = [f.token_type_ids for f in features]
 
-        b_input_ids = torch.tensor(input_ids).to(self.device)
-        b_input_masks = torch.tensor(input_masks).to(self.device)
-        b_input_type_ids = torch.tensor(input_type_ids).to(self.device)
+        b_input_ids = torch.stack(input_ids).to(self.device)
+        b_input_masks = torch.stack(input_masks).to(self.device)
+        b_input_type_ids = torch.stack(input_type_ids).to(self.device)
 
         b_labels = torch.from_numpy(y).to(self.device)
 
@@ -138,9 +138,9 @@ class TorchBertClassifierModel(TorchModel):
         input_masks = [f.attention_mask for f in features]
         input_type_ids = [f.token_type_ids for f in features]
 
-        b_input_ids = torch.tensor(input_ids).to(self.device)
-        b_input_masks = torch.tensor(input_masks).to(self.device)
-        b_input_type_ids = torch.tensor(input_type_ids).to(self.device)
+        b_input_ids = torch.stack(input_ids).to(self.device)
+        b_input_masks = torch.stack(input_masks).to(self.device)
+        b_input_type_ids = torch.stack(input_type_ids).to(self.device)
 
         with torch.no_grad():
             # Forward pass, calculate logit predictions
