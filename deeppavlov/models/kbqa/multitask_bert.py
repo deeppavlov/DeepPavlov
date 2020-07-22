@@ -122,7 +122,7 @@ class MultiTaskBert(LRScheduledTFModel):
                 task_names = []
                 for launch_params in self.launches_tasks.values():
                     for task_obj in launch_params['tasks'].values():
-                        task_names.append(task_obj.task_name)
+                        task_names.append(task_obj.bert_head_variable_scope)
                 var_list = self._get_saveable_variables(
                     exclude_scopes=('Optimizer', 'learning_rate', 'momentum') + tuple(task_names))
                 saver = tf.train.Saver(var_list)
@@ -307,7 +307,7 @@ class MTBertTask(ABC):
     object of `MultiTaskBert` class.
 
     Args:
-        task_name: the name of the multitask Bert task used as variable scope. This parameter should have equal
+        bert_head_variable_scope: the name of the multitask Bert task used as variable scope. This parameter should have equal
             values in training and inference configs.
         keep_prob: dropout keep_prob for non-Bert layers 
         return_probas: set this to `True` if you need the probabilities instead of raw answers
@@ -319,14 +319,14 @@ class MTBertTask(ABC):
     """
     def __init__(
             self,
-            task_name: str = "seq_tagging",
+            bert_head_variable_scope: str = "seq_tagging",
             keep_prob: float = 1.,
             return_probas: bool = None,
             learning_rate: float = 1e-3,
             in_names: List[str] = None,
             in_y_names: List[str] = None,
     ):
-        self.task_name = task_name
+        self.bert_head_variable_scope = bert_head_variable_scope
         self.keep_prob = keep_prob
         self.return_probas = return_probas
         self.init_head_learning_rate = learning_rate
@@ -412,12 +412,12 @@ class MTBertTask(ABC):
         learning_rate = body_learning_rate * self.head_learning_rate_multiplier
         bert_train_op = self.get_train_op_func(loss, body_learning_rate, **kwargs)
         # train_op for ner head variables
-        kwargs['learnable_scopes'] = (self.task_name,)
+        kwargs['learnable_scopes'] = (self.bert_head_variable_scope,)
         head_train_op = self.get_train_op_func(loss, learning_rate, **kwargs)
         return tf.group(bert_train_op, head_train_op)
 
     def _init_optimizer(self) -> None:
-        with tf.variable_scope(self.task_name):
+        with tf.variable_scope(self.bert_head_variable_scope):
             with tf.variable_scope('Optimizer'):
                 self.global_step = tf.get_variable('global_step',
                                                    shape=[],
@@ -480,7 +480,7 @@ class MTBertTask(ABC):
         fetches, feed_dict = self.get_sess_run_train_args(**kwargs)
         _, loss = self.sess.run(fetches, feed_dict=feed_dict)
         return {'loss': loss,
-                f'{self.task_name}_head_learning_rate': 
+                f'{self.bert_head_variable_scope}_head_learning_rate':
                     float(kwargs['body_learning_rate']) * self.head_learning_rate_multiplier,
                 'bert_learning_rate': kwargs['body_learning_rate']}
 
@@ -534,7 +534,7 @@ class MTBertSequenceTaggingTask(MTBertTask):
     Objects of this class should be passed to the constructor of `MultitaskBert` class in param `launches_params`.
 
     Args:
-        task_name: the name of the multitask Bert task used as variable scope. This parameter should have equal
+        bert_head_variable_scope: the name of the multitask Bert task used as variable scope. This parameter should have equal
             values in training and inference configs.
         n_tags: number of distinct tags
         use_crf: whether to use CRF on top or not
@@ -556,7 +556,7 @@ class MTBertSequenceTaggingTask(MTBertTask):
     """
     def __init__(
             self,
-            task_name: str = "seq_tagging",
+            bert_head_variable_scope: str = "seq_tagging",
             n_tags: int = None,
             use_crf: bool = None,
             use_birnn: bool = False,
@@ -571,7 +571,7 @@ class MTBertSequenceTaggingTask(MTBertTask):
             in_y_names: List[str] = None,
     ):
         super().__init__(
-            task_name, 
+            bert_head_variable_scope,
             keep_prob, 
             return_probas, 
             learning_rate, 
@@ -593,7 +593,7 @@ class MTBertSequenceTaggingTask(MTBertTask):
         self.encoder_keep_prob = tf.placeholder_with_default(1.0, shape=[], name='encoder_keep_prob_ph')
 
     def _init_graph(self) -> None:
-        with tf.variable_scope(self.task_name):
+        with tf.variable_scope(self.bert_head_variable_scope):
             self._init_placeholders()
             self.seq_lengths = tf.reduce_sum(self.y_masks_ph, axis=1)
 
@@ -774,7 +774,7 @@ class MTBertClassificationTask(MTBertTask):
     It uses output from [CLS] token and predicts labels using linear transformation.
 
     Args:
-        task_name: the name of the multitask Bert task used as variable scope. This parameter should have equal
+        bert_head_variable_scope: the name of the multitask Bert task used as variable scope. This parameter should have equal
             values in training and inference configs.
         n_classes: number of classes
         return_probas: set True if return class probabilites instead of most probable label needed
@@ -790,7 +790,7 @@ class MTBertClassificationTask(MTBertTask):
     """
     def __init__(
             self,
-            task_name: str = "classification",
+            bert_head_variable_scope: str = "classification",
             n_classes: int = None,
             return_probas: bool = None,
             one_hot_labels: bool = None,
@@ -802,7 +802,7 @@ class MTBertClassificationTask(MTBertTask):
             in_y_names: List[str] = None,
     ):
         super().__init__(
-            task_name, 
+            bert_head_variable_scope,
             keep_prob, 
             return_probas, 
             learning_rate, 
@@ -825,7 +825,7 @@ class MTBertClassificationTask(MTBertTask):
             self.y_ph = tf.placeholder(shape=(None, self.n_classes), dtype=tf.float32, name='y_ph')
 
     def _init_graph(self):
-        with tf.variable_scope(self.task_name):
+        with tf.variable_scope(self.bert_head_variable_scope):
             self._init_placeholders()
 
             output_layer = self.bert.get_pooled_output()

@@ -122,7 +122,7 @@
             "tasks": {
               "ner": {
                 "class_name": "mt_bert_seq_tagging_task",
-                "task_name": "ner",
+                "bert_head_variable_scope": "ner",
                 "n_tags": "#tag_vocab.len",
                 "use_crf": false,
                 "keep_prob": 0.1,
@@ -138,7 +138,7 @@
             "tasks": { 
               "query_prediction": {
                 "class_name": "mt_bert_classification_task",
-                "task_name": "qr_prediction",
+                "bert_head_variable_scope": "qr_prediction",
                 "n_classes": "#queries_vocab.len",
                 "return_probas": true,
                 "one_hot_labels": true,
@@ -153,7 +153,7 @@
             "tasks": {
               "rel_ranking": {
                 "class_name": "mt_bert_classification_task",
-                "task_name": "rel_ranking",
+                "bert_head_variable_scope": "rel_ranking",
                 "n_classes": 2,
                 "return_probas": false,
                 "one_hot_labels": false,
