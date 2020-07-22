@@ -52,7 +52,7 @@ class TorchBertClassifierModel(TorchModel):
         min_learning_rate: min value of learning rate if learning rate decay is used
     """
 
-    def __init__(self, n_classes, keep_prob,
+    def __init__(self, n_classes, keep_prob, device="cpu",
                  one_hot_labels=False, multilabel=False, return_probas=False,
                  attention_probs_keep_prob=None, hidden_keep_prob=None,
                  optimizer=None, num_warmup_steps=None, weight_decay_rate=0.01,
@@ -71,9 +71,9 @@ class TorchBertClassifierModel(TorchModel):
         self.bert_config_file = bert_config_file
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
-
-        super().__init__(**kwargs)
         self.n_classes = n_classes
+
+        super().__init__(device=device, **kwargs)
 
         if self.multilabel and not self.one_hot_labels:
             raise RuntimeError('Use one-hot encoded labels for multilabel classification!')
@@ -81,7 +81,7 @@ class TorchBertClassifierModel(TorchModel):
         if self.multilabel and not self.return_probas:
             raise RuntimeError('Set return_probas to True for multilabel classification!')
 
-        self.load(g)
+        self.load()
         self.model.to(self.device)
         # need to move it to `eval` mode because it can be used in `build_model` (not by `torch_trainer`
         self.model.eval()
@@ -157,7 +157,7 @@ class TorchBertClassifierModel(TorchModel):
     @overrides
     def load(self):
         if self.pretrained_bert:
-            self.model = BertForSequenceClassification.from_pretrained(self.pretrained_bert, num_labels=self.n_classes)
+            self.model = BertForSequenceClassification.from_pretrained(self.gpretrained_bert, num_labels=self.n_classes)
                 # tutorial has this PARAMS also
                 # output_attentions=False,  # Whether the model returns attentions weights.
                 # output_hidden_states=False,  # Whether the model returns all hidden-states.

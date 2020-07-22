@@ -68,7 +68,8 @@ class TorchModel(NNModel):
                 self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.opt["lr_scheduler"])(
                     self.optimizer, **self.opt.get("lr_scheduler_parameters", {}))
 
-            self.criterion = getattr(torch.nn, self.opt.get("criterion"))()
+            if self.opt.get("criterion", None):
+                self.criterion = getattr(torch.nn, self.opt.get("criterion", None))()
         else:
             raise AttributeError("Model is not defined.")
 
