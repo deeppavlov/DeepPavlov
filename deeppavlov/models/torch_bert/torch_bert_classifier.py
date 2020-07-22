@@ -139,7 +139,7 @@ class TorchBertClassifierModel(TorchModel):
 
         with torch.no_grad():
             # Forward pass, calculate logit predictions
-            loss, logits = self.model(b_input_ids, token_type_ids=None, attention_mask=b_input_masks)
+            logits = self.model(b_input_ids, token_type_ids=None, attention_mask=b_input_masks)
 
         # Move logits and labels to CPU and to numpy arrays
         logits = logits.detach().cpu().numpy()
