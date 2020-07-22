@@ -42,6 +42,9 @@ class TorchTextClassificationModel(TorchModel):
         optimizer: optimizer name from `torch.optim`
         optimizer_parameters: dictionary with optimizer's parameters,
                               e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
+        embedded_tokens: True, if input contains embedded tokenized texts;
+                         False, if input containes indices of words in the vocabulary
+        vocab_size: vocabulary size in case of `embedded_tokens=False`
 
     Attributes:
         opt: dictionary with all model parameters
@@ -67,6 +70,7 @@ class TorchTextClassificationModel(TorchModel):
             "multi_label": multi_label,
             "optimizer_parameters": optimizer_parameters,
             "embedded_tokens": embedded_tokens,
+            "vocab_size": vocab_size,
             **kwargs,
         }
         super().__init__(**full_kwargs)
