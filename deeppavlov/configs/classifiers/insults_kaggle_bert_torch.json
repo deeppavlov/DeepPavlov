@@ -19,7 +19,7 @@
     "pipe": [
       {
         "class_name": "torch_bert_preprocessor",
-        "vocab_file": "{DOWNLOADS_PATH}/bert_models/conversational_cased_L-12_H-768_A-12/vocab.txt",
+        "vocab_file": "bert-base-uncased",
         "do_lower_case": false,
         "max_seq_length": 64,
         "in": [

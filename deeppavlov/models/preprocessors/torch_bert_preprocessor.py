@@ -15,6 +15,7 @@ import re
 import random
 from logging import getLogger
 from typing import Tuple, List, Optional, Union
+import os
 
 from transformers import BertTokenizer
 from transformers.data.processors.utils import InputFeatures
@@ -50,9 +51,12 @@ class TorchBertPreprocessor(Component):
                  max_seq_length: int = 512,
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
-        vocab_file = str(expand_path(vocab_file))
-        self.tokenizer = BertTokenizer(vocab_file=vocab_file,
-                                       do_lower_case=do_lower_case)
+        if os.path.isfile(vocab_file):
+            vocab_file = str(expand_path(vocab_file))
+            self.tokenizer = BertTokenizer(vocab_file=vocab_file,
+                                           do_lower_case=do_lower_case)
+        else:
+            self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=True)
 
     def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> List[InputFeatures]:
         """Tokenize and create masks.
