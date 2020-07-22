@@ -83,8 +83,9 @@ class UDPymorphyLemmatizer(BasicLemmatizer):
     SPECIAL_FEATURES = ["Patr", "Surn"]
 
     def __init__(self, save_path: Optional[str] = None, load_path: Optional[str] = None,
-                 rare_grammeme_penalty=1.0, **kwargs) -> None:
+                 rare_grammeme_penalty=1.0, long_lemma_penalty=1.0, **kwargs) -> None:
         self.rare_grammeme_penalty = rare_grammeme_penalty
+        self.long_lemma_penalty = long_lemma_penalty
         self._reset()
         self.analyzer = MorphAnalyzer()
         self.converter = converters.converter("opencorpora-int", "ud20")
@@ -125,6 +126,8 @@ class UDPymorphyLemmatizer(BasicLemmatizer):
                 if feat in parse.tag:
                     distance += self.rare_grammeme_penalty
                     break
+            if len(word) == 1 and len(parse.normal_form) > 1:
+                distance += self.long_lemma_penalty
             if distance < best_distance:
                 best_lemma, best_distance = self._extract_lemma(parse), distance
                 if distance == 0:
