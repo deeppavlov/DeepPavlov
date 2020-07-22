@@ -145,7 +145,7 @@ class TorchBertClassifierModel(TorchModel):
         # Move logits and labels to CPU and to numpy arrays
         logits = logits.detach().cpu().numpy()
 
-        if not self.return_probas:
+        if self.return_probas:
             pred = logits
         else:
             pred = [np.argmax(vec, axis=1).flatten() for vec in logits]
