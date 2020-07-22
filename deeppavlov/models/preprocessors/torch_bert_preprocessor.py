@@ -17,7 +17,7 @@ from logging import getLogger
 from typing import Tuple, List, Optional, Union
 
 from transformers import BertTokenizer
-from transformers.data.processors.utils import InputFeatures, InputExample
+from transformers.data.processors.utils import InputFeatures
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
