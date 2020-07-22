@@ -112,7 +112,7 @@ class TorchBertClassifierModel(TorchModel):
         self.optimizer.zero_grad()
 
         loss, logits = self.model(b_input_ids, token_type_ids=b_input_type_ids, attention_mask=b_input_masks,
-                                 labels=b_labels)
+                                  labels=b_labels)
         loss.backward()
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
@@ -159,7 +159,9 @@ class TorchBertClassifierModel(TorchModel):
     @overrides
     def load(self):
         if self.pretrained_bert:
-            self.model = BertForSequenceClassification.from_pretrained(self.pretrained_bert, num_labels=self.n_classes)
+            self.model = BertForSequenceClassification.from_pretrained(
+                self.pretrained_bert, num_labels=self.n_classes,
+                output_attentions=False, output_hidden_states=False)
                 # tutorial has this PARAMS also
                 # output_attentions=False,  # Whether the model returns attentions weights.
                 # output_hidden_states=False,  # Whether the model returns all hidden-states.
