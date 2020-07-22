@@ -28,8 +28,6 @@ class ShallowAndWideCnn(nn.Module):
         self.relu_dense = nn.ReLU()
         self.final_dense = nn.Linear(dense_size, n_classes)
 
-        self.activation = nn.Sigmoid() if multi_label else nn.Softmax(dim=1)
-
     def forward(self, x):
         # x of shape [batch_size, number of tokens, embedding_size]
         # or x of shape [batch_size, number of tokens]
@@ -56,5 +54,4 @@ class ShallowAndWideCnn(nn.Module):
         output = self.relu_dense(output)
         output = self.dropout(output)
         output = self.final_dense(output)
-        act_output = self.activation(output)
-        return act_output
+        return output
