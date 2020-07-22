@@ -80,7 +80,11 @@
           "lr": 0.01,
           "weight_decay": 0.0001
         },
-        "lr_decay_patience": 5,
+        "lr_scheduler": "CyclicLR",
+        "lr_scheduler_parameters": {
+          "base_lr": 0.01,
+          "max_lr": 0.1
+        },
         "loss": "CrossEntropyLoss"
       },
       {
