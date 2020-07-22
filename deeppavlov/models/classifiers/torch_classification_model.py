@@ -29,8 +29,9 @@ log = logging.getLogger(__name__)
 
 @register('torch_text_classification_model')
 class TorchTextClassificationModel(TorchModel):
-    """Class implements torch model for classification task for multi-class
-    images.
+    """Class implements torch model for classification of texts.
+    Input can either be embedded tokenized texts OR indices of words in the vocabulary.
+    Number of tokens is not fixed while the samples in batch should be padded to the same (e.g. longest) lengths.
 
     Args:
         n_classes: number of classes
