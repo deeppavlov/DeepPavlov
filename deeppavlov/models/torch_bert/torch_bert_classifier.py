@@ -147,7 +147,7 @@ class TorchBertClassifierModel(TorchModel):
         if self.return_probas:
             pred = logits
         else:
-            pred = [np.argmax(vec, axis=1).flatten() for vec in logits]
+            pred = np.argmax(logits, axis=1)
         return pred
 
     @overrides
