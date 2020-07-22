@@ -50,7 +50,7 @@ class BoolqaReader(DatasetReader):
 
         data_path = expand_path(data_path)
         if not data_path.exists():
-            dir_path.mkdir(parents=True)
+            data_path.mkdir(parents=True)
 
         download_decompress(self.url, data_path)
         dataset = {}
