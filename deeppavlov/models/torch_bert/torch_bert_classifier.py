@@ -111,7 +111,7 @@ class TorchBertClassifierModel(TorchModel):
 
         self.optimizer.zero_grad()
 
-        loss, logits = self.model(b_input_ids, token_type_ids=b_input_type_ids, attention_mask=b_input_masks,
+        loss, logits = self.model(b_input_ids, token_type_ids=None, attention_mask=b_input_masks,
                                   labels=b_labels)
         loss.backward()
         # Clip the norm of the gradients to 1.0.
@@ -144,7 +144,7 @@ class TorchBertClassifierModel(TorchModel):
 
         with torch.no_grad():
             # Forward pass, calculate logit predictions
-            outputs = self.model(b_input_ids, token_type_ids=b_input_type_ids, attention_mask=b_input_masks)
+            outputs = self.model(b_input_ids, token_type_ids=None, attention_mask=b_input_masks)
 
         logits = outputs[0]
         # Move logits and labels to CPU and to numpy arrays
