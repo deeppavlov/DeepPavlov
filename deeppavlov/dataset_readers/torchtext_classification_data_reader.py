@@ -48,7 +48,7 @@ class TorchtextClassificationDataReader(DatasetReader):
         if hasattr(torch_texts, dataset_title) and callable(getattr(torch_texts, dataset_title)):
             log.info(f"Dataset {dataset_title} is used as an attribute of `torchtext.datasets`.")
             _text = torchtext.data.RawField()
-            _label = torchtext.data.LabelField(dtype=torch.float)
+            _label = torchtext.data.RawField()
             data_splits = getattr(torch_texts, dataset_title).splits(_text, _label, root=data_path)
             assert len(data_splits) == len(splits)
             data_splits = {data_field: data_splits[i] for i, data_field in enumerate(splits)}
