@@ -157,7 +157,7 @@ class TorchBertClassifierModel(TorchModel):
     @overrides
     def load(self):
         if self.pretrained_bert:
-            self.model = BertForSequenceClassification.from_pretrained(self.gpretrained_bert, num_labels=self.n_classes)
+            self.model = BertForSequenceClassification.from_pretrained(self.pretrained_bert, num_labels=self.n_classes)
                 # tutorial has this PARAMS also
                 # output_attentions=False,  # Whether the model returns attentions weights.
                 # output_hidden_states=False,  # Whether the model returns all hidden-states.
