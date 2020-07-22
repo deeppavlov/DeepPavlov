@@ -72,6 +72,8 @@ class TorchBertClassifierModel(TorchModel):
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
         self.n_classes = n_classes
+        self.learning_rate = kwargs["learning_rate"]
+        self.weight_decay_rate = kwargs.get("weight_decay_rate", 0.)
 
         super().__init__(device=device, **kwargs)
 
