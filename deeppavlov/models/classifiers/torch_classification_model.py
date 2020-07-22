@@ -17,7 +17,6 @@ import logging
 
 import torch
 import torch.nn as nn
-from torchsummary import summary
 
 import numpy as np
 from deeppavlov.core.common.errors import ConfigError
@@ -80,7 +79,6 @@ class TorchTextClassificationModel(TorchModel):
             **kwargs,
         }
         super().__init__(**full_kwargs)
-        log.info(f"Model parameters summary: {summary(self.model, (100, embedding_size))}")
 
     def __call__(self, data: List[List[np.ndarray]], *args) -> List[List[float]]:
         """Infer on the given data.
