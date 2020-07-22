@@ -15,16 +15,19 @@
 from logging import getLogger
 from typing import List, Dict, Union
 import numpy as np
+from pathlib import Path
+from overrides import overrides
 
 import torch
 from transformers import BertForSequenceClassification, AdamW, BertConfig
 from transformers.data.processors.utils import InputFeatures
 
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
 
-logger = getLogger(__name__)
+log = getLogger(__name__)
 
 
 @register('torch_bert_classifier')
@@ -73,29 +76,10 @@ class TorchBertClassifierModel(TorchModel):
         if self.multilabel and not self.return_probas:
             raise RuntimeError('Set return_probas to True for multilabel classification!')
 
-        if pretrained_bert:
-            self.bert = BertForSequenceClassification.from_pretrained(pretrained_bert, num_labels=n_classes)
-                # tutorial has this PARAMS also
-                # output_attentions=False,  # Whether the model returns attentions weights.
-                # output_hidden_states=False,  # Whether the model returns all hidden-states.
-        elif bert_config_file:
-            self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
-
-            if attention_probs_keep_prob is not None:
-                self.bert_config.attention_probs_dropout_prob = 1.0 - attention_probs_keep_prob
-            if hidden_keep_prob is not None:
-                self.bert_config.hidden_dropout_prob = 1.0 - hidden_keep_prob
-            self.bert = BertForSequenceClassification(config=self.bert_config)
-
-        self.optimizer = AdamW(self.bert.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay_rate,
-                               betas=(0.9, 0.999), eps=1e-6)
-        # exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"] < --- было в оптимайзере что это?
-
-        if self.load_path is not None:
-            self.load()
-        self.bert.to(self.device)
+        self.load(pretrained_bert, bert_config_file, attention_probs_keep_prob, hidden_keep_prob)
+        self.model.to(self.device)
         # need to move it to `eval` mode because it can be used in `build_model` (not by `torch_trainer`
-        self.bert.eval()
+        self.model.eval()
 
     def train_on_batch(self, features: List[InputFeatures], y: Union[List[int], List[List[int]]]) -> Dict:
         """Train model on given batch.
@@ -120,12 +104,12 @@ class TorchBertClassifierModel(TorchModel):
 
         self.optimizer.zero_grad()
 
-        loss, logits = self.bert(b_input_ids, token_type_ids=b_input_type_ids, attention_mask=b_input_mask,
+        loss, logits = self.model(b_input_ids, token_type_ids=b_input_type_ids, attention_mask=b_input_mask,
                                  labels=b_labels)
         loss.backward()
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
-        torch.nn.utils.clip_grad_norm_(self.bert.parameters(), 1.0)
+        torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
 
         self.optimizer.step()
         if self.lr_scheduler is not None:
@@ -153,7 +137,7 @@ class TorchBertClassifierModel(TorchModel):
 
         with torch.no_grad():
             # Forward pass, calculate logit predictions
-            outputs = self.bert(b_input_ids, token_type_ids=b_input_type_ids, attention_mask=b_input_mask)
+            outputs = self.model(b_input_ids, token_type_ids=b_input_type_ids, attention_mask=b_input_mask)
 
         logits = outputs[0]
         # Move logits and labels to CPU and to numpy arrays
@@ -164,3 +148,52 @@ class TorchBertClassifierModel(TorchModel):
         else:
             pred = [np.argmax(vec, axis=1).flatten() for vec in logits]
         return pred
+
+    @overrides
+    def load(self, pretrained_bert, bert_config_file, attention_probs_keep_prob, hidden_keep_prob, *args, **kwargs):
+        if pretrained_bert:
+            self.model = BertForSequenceClassification.from_pretrained(pretrained_bert, num_labels=self.n_classes)
+                # tutorial has this PARAMS also
+                # output_attentions=False,  # Whether the model returns attentions weights.
+                # output_hidden_states=False,  # Whether the model returns all hidden-states.
+        elif bert_config_file:
+            self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
+
+            if attention_probs_keep_prob is not None:
+                self.bert_config.attention_probs_dropout_prob = 1.0 - attention_probs_keep_prob
+            if hidden_keep_prob is not None:
+                self.bert_config.hidden_dropout_prob = 1.0 - hidden_keep_prob
+            self.model = BertForSequenceClassification(config=self.bert_config)
+
+        self.optimizer = AdamW(self.model.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay_rate,
+                               betas=(0.9, 0.999), eps=1e-6)
+        # exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"] < --- было в оптимайзере что это?
+
+        if self.load_path:
+            log.info(f"Load path {self.load_path} is given.")
+            if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
+                raise ConfigError("Provided load path is incorrect!")
+
+            weights_path = Path("{}.pth.tar".format(str(self.load_path.resolve())))
+            if weights_path.exists():
+                log.info(f"Load path {weights_path} exists.")
+                log.info(f"Initializing `{self.__class__.__name__}` from saved.")
+
+                # firstly, initialize with random weights and previously saved parameters
+                if self.opt.get("lr_scheduler", None):
+                    self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.opt["lr_scheduler"])(
+                        self.optimizer, **self.opt.get("lr_scheduler_parameters", {}))
+
+                # now load the weights, optimizer from saved
+                log.info(f"Loading weights from {weights_path}.")
+                checkpoint = torch.load(weights_path, map_location=self.device)
+                self.model.load_state_dict(checkpoint["model_state_dict"])
+                self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+                self.epochs_done = checkpoint.get("epochs_done", 0)
+            else:
+                log.info(f"Init from scratch. Load path {weights_path} does not exist.")
+                if self.opt.get("lr_scheduler", None):
+                    self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.opt["lr_scheduler"])(
+                        self.optimizer, **self.opt.get("lr_scheduler_parameters", {}))
+
+        self.model.to(self.device)
