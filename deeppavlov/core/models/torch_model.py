@@ -26,8 +26,7 @@ log = getLogger(__name__)
 
 
 class TorchModel(NNModel):
-    """Class implements torch model for classification task for multi-class
-    images.
+    """Class implements torch model's main methods.
 
     Args:
         device: `cpu` or `cuda` device to use
