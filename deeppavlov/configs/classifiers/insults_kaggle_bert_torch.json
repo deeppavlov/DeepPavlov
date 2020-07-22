@@ -124,7 +124,7 @@
       "valid",
       "test"
     ],
-    "class_name": "nn_trainer",
+    "class_name": "torch_trainer",
     "tensorboard_log_dir": "{MODEL_PATH}/"
   },
   "metadata": {
@@ -132,11 +132,10 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/classifiers/insults_kaggle_v4"
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/insults_kaggle_torch_bert_v0"
     },
     "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+      "{DEEPPAVLOV_PATH}/requirements/torch.txt"
     ],
     "download": [
       {
@@ -146,10 +145,6 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/bert_models"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/insults_kaggle_v4.tar.gz",
-        "subdir": "{MODELS_PATH}/classifiers"
       }
     ]
   }
