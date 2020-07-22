@@ -21,7 +21,6 @@ from overrides import overrides
 import torch
 import torchtext
 import torchtext.datasets as torch_texts
-from torch.utils.data.dataset import random_split
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
