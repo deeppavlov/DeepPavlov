@@ -42,6 +42,8 @@ class TorchTextClassificationModel(TorchModel):
         optimizer: optimizer name from `torch.optim`
         optimizer_parameters: dictionary with optimizer's parameters,
                               e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
+        lr_scheduler: string name of scheduler class from `torch.optim.lr_scheduler`
+        lr_scheduler_parameters: parameters for scheduler
         embedded_tokens: True, if input contains embedded tokenized texts;
                          False, if input containes indices of words in the vocabulary
         vocab_size: vocabulary size in case of `embedded_tokens=False`
@@ -59,6 +61,7 @@ class TorchTextClassificationModel(TorchModel):
 
     def __init__(self, n_classes: int, model_name: str, embedding_size: int = None, multi_label: bool = False,
                  criterion: str = "CrossEntropyLoss", optimizer: str = "Adam", optimizer_parameters: dict = {"lr": 0.1},
+                 lr_scheduler: str = None, lr_scheduler_parameters: Optional[dict] = {},
                  embedded_tokens=True, vocab_size=None, lr_decay_every_n_epochs: Optional[int] = None,
                  lr_decay_patience: Optional[int] = None, **kwargs):
         if n_classes == 0:
@@ -76,6 +79,8 @@ class TorchTextClassificationModel(TorchModel):
             "vocab_size": vocab_size,
             "lr_decay_every_n_epochs": lr_decay_every_n_epochs,
             "lr_decay_patience": lr_decay_patience,
+            "lr_scheduler": lr_scheduler,
+            "lr_scheduler_parameters": lr_scheduler_parameters,
             **kwargs,
         }
         super().__init__(**full_kwargs)
@@ -141,6 +146,8 @@ class TorchTextClassificationModel(TorchModel):
         loss = self.criterion(outputs, labels)
         loss.backward()
         self.optimizer.step()
+        if self.lr_scheduler is not None:
+            self.lr_scheduler.step()
         return loss.item()
 
     def infer_on_batch(self, texts: List[List[np.ndarray]],
