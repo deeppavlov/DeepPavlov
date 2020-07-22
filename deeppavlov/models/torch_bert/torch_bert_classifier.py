@@ -115,7 +115,7 @@ class TorchBertClassifierModel(TorchModel):
         b_input_ids = torch.from_numpy(input_ids).to(self.device)
         b_input_mask = torch.from_numpy(input_masks).to(self.device)
         b_input_type_ids = torch.from_numpy(input_type_ids).to(self.device)
-        
+
         b_labels = torch.from_numpy(y).to(self.device)
 
         self.optimizer.zero_grad()
