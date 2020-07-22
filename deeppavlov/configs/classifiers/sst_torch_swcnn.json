@@ -77,14 +77,14 @@
         "dense_size": 64,
         "optimizer": "SGD",
         "optimizer_parameters": {
-          "lr": 0.01,
+          "lr": 0.0001,
           "momentum": 0.9,
           "weight_decay": 0.0001
         },
         "lr_scheduler": "CyclicLR",
         "lr_scheduler_parameters": {
-          "base_lr": 0.01,
-          "max_lr": 0.1
+          "base_lr": 0.0001,
+          "max_lr": 0.001
         },
         "loss": "CrossEntropyLoss"
       },
