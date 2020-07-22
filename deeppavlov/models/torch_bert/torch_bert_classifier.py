@@ -104,7 +104,7 @@ class TorchBertClassifierModel(TorchModel):
 
         b_input_ids = torch.cat(input_ids, dim=0).to(self.device)
         b_input_masks = torch.cat(input_masks, dim=0).to(self.device)
-        b_labels = torch.from_numpy(y).to(self.device)
+        b_labels = torch.from_numpy(np.array(y)).to(self.device)
 
         self.optimizer.zero_grad()
 
@@ -142,7 +142,7 @@ class TorchBertClassifierModel(TorchModel):
             logits = self.model(b_input_ids, token_type_ids=None, attention_mask=b_input_masks)
 
         # Move logits and labels to CPU and to numpy arrays
-        logits = logits.detach().cpu().numpy()
+        logits = logits[0].detach().cpu().numpy()
 
         if self.return_probas:
             pred = logits
