@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Union
+from typing import List, Union, Optional
 import logging
 
 import torch
@@ -45,6 +45,8 @@ class TorchTextClassificationModel(TorchModel):
         embedded_tokens: True, if input contains embedded tokenized texts;
                          False, if input containes indices of words in the vocabulary
         vocab_size: vocabulary size in case of `embedded_tokens=False`
+        lr_decay_every_n_epochs: how often to decay lr
+        lr_decay_patience: validation patience to decrease lr if target metrics do not become better
 
     Attributes:
         opt: dictionary with all model parameters
@@ -57,7 +59,8 @@ class TorchTextClassificationModel(TorchModel):
 
     def __init__(self, n_classes: int, model_name: str, embedding_size: int = None, multi_label: bool = False,
                  criterion: str = "CrossEntropyLoss", optimizer: str = "Adam", optimizer_parameters: dict = {"lr": 0.1},
-                 embedded_tokens=True, vocab_size=None, **kwargs):
+                 embedded_tokens=True, vocab_size=None, lr_decay_every_n_epochs: Optional[int] = None,
+                 lr_decay_patience: Optional[int] = None, **kwargs):
         if n_classes == 0:
             raise ConfigError("Please, provide vocabulary with considered classes or number of classes.")
 
@@ -71,6 +74,8 @@ class TorchTextClassificationModel(TorchModel):
             "optimizer_parameters": optimizer_parameters,
             "embedded_tokens": embedded_tokens,
             "vocab_size": vocab_size,
+            "lr_decay_every_n_epochs": lr_decay_every_n_epochs,
+            "lr_decay_patience": lr_decay_patience,
             **kwargs,
         }
         super().__init__(**full_kwargs)
@@ -102,20 +107,16 @@ class TorchTextClassificationModel(TorchModel):
         """
         super().process_event(event_name, data)
 
-        if event_name == "after_epoch" and self.lr_decay_every_n_epochs is not None:
-            if self.epochs_done % self.lr_decay_every_n_epochs == 0:
+        if event_name == "after_epoch" and self.opt.get("lr_decay_every_n_epochs", None) is not None:
+            if self.epochs_done % self.opt["lr_decay_every_n_epochs"] == 0:
                 log.info(f"----------Current LR is decreased in 10 times----------")
                 for param_group in self.optimizer.param_groups:
                     param_group['lr'] = param_group['lr'] / 10
-        if event_name == "after_validation" and 'impatience' in data and self.lr_decay_patience:
-            if data['impatience'] == self.lr_decay_patience:
+        if event_name == "after_validation" and 'impatience' in data and self.opt.get("lr_decay_patience", None):
+            if data['impatience'] == self.opt["lr_decay_patience"]:
                 log.info(f"----------Current LR is decreased in 10 times----------")
                 for param_group in self.optimizer.param_groups:
                     param_group['lr'] = param_group['lr'] / 10
-        if event_name == "after_epoch" and self.lr_decay_on_epochs and self.epochs_done in self.lr_decay_on_epochs:
-            log.info(f"----------Current LR is decreased in 10 times----------")
-            for param_group in self.optimizer.param_groups:
-                param_group['lr'] = param_group['lr'] / 10
         if event_name == "after_train_log":
             if "learning_rate" not in data:
                 data["learning_rate"] = self.learning_rate
