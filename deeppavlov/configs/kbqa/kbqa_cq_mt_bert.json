@@ -82,7 +82,7 @@
             "x_subword_mask": "x_subword_mask", 
             "pred_subword_mask": "pred_subword_mask"
         },                                                                                
-        "out": ["y_pred_ner", "y_pred_probas_qr"]                                                                 
+        "out": ["tag_probas_ner"]                                                                 
       },
       {
         "class_name": "bert_preprocessor",
@@ -97,21 +97,21 @@
         "mt_bert": "#mt_bert_kbqa",
         "launch_name": "query_prediction",
         "in": ["bert_features_qr"],
-        "out": ["y_pred_probas_qr"]
+        "out": ["template_probas"]
       },
       {
-        "in": "y_pred_probas_qr",
-        "out": "y_pred_ids",
+        "in": "template_probas",
+        "out": "template_ids",
         "class_name": "proba2labels",
         "max_proba": true
       },
       {
         "ref": "queries_vocab",
-        "in": "y_pred_ids",
+        "in": "template_ids",
         "out": "template_type"
       },
       {
-        "in": ["x_tokens", "y_pred_ner"],
+        "in": ["x_tokens", "tag_probas_ner"],
         "out": ["entities", "types"],
         "thres_proba": 0.95,
         "entity_tag": "ENTITY",

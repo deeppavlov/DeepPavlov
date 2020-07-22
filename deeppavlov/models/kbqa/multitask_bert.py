@@ -294,6 +294,8 @@ class MultiTaskBert(LRScheduledTFModel):
             for task, srs in zip(tasks, sess_run_res):
                 task_results = task.post_process_preds(srs)
                 results.append(task_results)
+        if len(launch_names) == 1 and len(tasks) == 1:
+            results = results[0]
         return results
 
 
