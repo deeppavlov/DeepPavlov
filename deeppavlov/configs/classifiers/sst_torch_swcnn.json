@@ -142,6 +142,10 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
         "subdir": "{DOWNLOADS_PATH}/embeddings"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/sst_torch_v0.tar.gz",
+        "subdir": "{MODELS_PATH}/classifiers"
       }
     ]
   }
