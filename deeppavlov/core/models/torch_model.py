@@ -48,6 +48,7 @@ class TorchModel(NNModel):
         self.device = torch.device("cuda" if torch.cuda.is_available() and device == "cuda" else "cpu")
         self.model = None
         self.optimizer = None
+        self.lr_scheduler = None
         self.criterion = None
         self.epochs_done = 0
         self.opt = deepcopy(kwargs)
@@ -63,6 +64,10 @@ class TorchModel(NNModel):
             self.model = model_func(**self.opt)
             self.optimizer = getattr(torch.optim, self.opt["optimizer"])(
                 self.model.parameters(), **self.opt.get("optimizer_parameters", {}))
+            if self.opt.get("lr_scheduler", None):
+                self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.opt["lr_scheduler"])(
+                    self.optimizer, **self.opt.get("lr_scheduler_parameters", {}))
+
             self.criterion = getattr(torch.nn, self.opt.get("criterion"))()
         else:
             raise AttributeError("Model is not defined.")
