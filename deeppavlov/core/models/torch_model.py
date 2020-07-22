@@ -16,6 +16,7 @@ from typing import Optional
 from logging import getLogger
 from pathlib import Path
 from copy import deepcopy
+from overrides import overrides
 
 import torch
 
@@ -66,6 +67,7 @@ class TorchModel(NNModel):
         else:
             raise AttributeError("Model is not defined.")
 
+    @overrides
     def load(self, *args, **kwargs):
         model_func = getattr(self, self.opt.get("model_name"), None)
 
@@ -97,6 +99,7 @@ class TorchModel(NNModel):
 
         self.model.to(self.device)
 
+    @overrides
     def save(self, fname: Optional[str] = None, *args, **kwargs):
         if fname is None:
             fname = self.save_path
@@ -115,6 +118,7 @@ class TorchModel(NNModel):
         # return it back to device (necessary if it was on `cuda`
         self.model.to(self.device)
 
+    @overrides
     def process_event(self, event_name: str, data: dict):
         """Process event
 

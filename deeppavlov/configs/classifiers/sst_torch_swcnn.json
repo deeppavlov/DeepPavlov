@@ -104,7 +104,6 @@
     "batch_size": 64,
     "metrics": [
       "accuracy",
-      "f1_macro",
       {
         "name": "roc_auc",
         "inputs": [
