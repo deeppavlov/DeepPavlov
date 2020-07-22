@@ -81,7 +81,7 @@ class TorchBertClassifierModel(TorchModel):
         if self.multilabel and not self.return_probas:
             raise RuntimeError('Set return_probas to True for multilabel classification!')
 
-        self.load()
+        self.load(g)
         self.model.to(self.device)
         # need to move it to `eval` mode because it can be used in `build_model` (not by `torch_trainer`
         self.model.eval()
@@ -156,18 +156,18 @@ class TorchBertClassifierModel(TorchModel):
 
     @overrides
     def load(self):
-        if pretrained_bert:
-            self.model = BertForSequenceClassification.from_pretrained(pretrained_bert, num_labels=self.n_classes)
+        if self.pretrained_bert:
+            self.model = BertForSequenceClassification.from_pretrained(self.pretrained_bert, num_labels=self.n_classes)
                 # tutorial has this PARAMS also
                 # output_attentions=False,  # Whether the model returns attentions weights.
                 # output_hidden_states=False,  # Whether the model returns all hidden-states.
-        elif bert_config_file:
-            self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
+        elif self.bert_config_file:
+            self.bert_config = BertConfig.from_json_file(str(expand_path(self.bert_config_file)))
 
-            if attention_probs_keep_prob is not None:
-                self.bert_config.attention_probs_dropout_prob = 1.0 - attention_probs_keep_prob
-            if hidden_keep_prob is not None:
-                self.bert_config.hidden_dropout_prob = 1.0 - hidden_keep_prob
+            if self.attention_probs_keep_prob is not None:
+                self.bert_config.attention_probs_dropout_prob = 1.0 - self.attention_probs_keep_prob
+            if self.hidden_keep_prob is not None:
+                self.bert_config.hidden_dropout_prob = 1.0 - self.hidden_keep_prob
             self.model = BertForSequenceClassification(config=self.bert_config)
 
         self.optimizer = AdamW(self.model.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay_rate,
