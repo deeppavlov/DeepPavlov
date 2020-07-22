@@ -53,7 +53,7 @@ class TorchTextClassificationModel(TorchModel):
 
     def __init__(self, n_classes: int, model_name: str, embedding_size: int = None, multi_label: bool = False,
                  criterion: str = "CrossEntropyLoss", optimizer: str = "Adam", optimizer_parameters: dict = {"lr": 0.1},
-                 **kwargs):
+                 embedded_tokens=True, **kwargs):
         if n_classes == 0:
             raise ConfigError("Please, provide vocabulary with considered classes or number of classes.")
 
@@ -65,6 +65,7 @@ class TorchTextClassificationModel(TorchModel):
             "criterion": criterion,
             "multi_label": multi_label,
             "optimizer_parameters": optimizer_parameters,
+            "embedded_tokens": embedded_tokens,
             **kwargs,
         }
         super().__init__(**full_kwargs)

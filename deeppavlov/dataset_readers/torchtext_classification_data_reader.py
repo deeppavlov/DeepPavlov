@@ -65,5 +65,5 @@ class TorchtextClassificationDataReader(DatasetReader):
             data[data_field] = []
             for sample in data_splits[data_field].examples:
                 data[data_field].append((vars(sample)["text"], vars(sample)["label"]))
-
+            log.info(f"For field {data_field} found {len(data[data_field])} samples.")
         return data
