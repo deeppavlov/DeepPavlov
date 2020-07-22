@@ -77,7 +77,7 @@
         "dense_size": 100,
         "optimizer": "Adam",
         "optimizer_parameters": {
-          "learning_rate": 0.01,
+          "lr": 0.01,
           "weight_decay": 0.0001
         },
         "loss": "CrossEntropyLoss"
