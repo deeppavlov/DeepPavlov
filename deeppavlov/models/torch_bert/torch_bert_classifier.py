@@ -49,11 +49,12 @@ class TorchBertClassifierModel(TorchModel):
         min_learning_rate: min value of learning rate if learning rate decay is used
     """
 
-    def __init__(self, bert_config_file, n_classes, keep_prob,
+    def __init__(self, n_classes, keep_prob,
                  one_hot_labels=False, multilabel=False, return_probas=False,
                  attention_probs_keep_prob=None, hidden_keep_prob=None,
                  optimizer=None, num_warmup_steps=None, weight_decay_rate=0.01,
-                 pretrained_bert=None, min_learning_rate=1e-06, **kwargs) -> None:
+                 pretrained_bert=None, bert_config_file=None,
+                 min_learning_rate=1e-06, **kwargs) -> None:
         super().__init__(**kwargs)
 
         self.return_probas = return_probas
@@ -72,19 +73,18 @@ class TorchBertClassifierModel(TorchModel):
         if self.multilabel and not self.return_probas:
             raise RuntimeError('Set return_probas to True for multilabel classification!')
 
-        self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
-
-        if attention_probs_keep_prob is not None:
-            self.bert_config.attention_probs_dropout_prob = 1.0 - attention_probs_keep_prob
-        if hidden_keep_prob is not None:
-            self.bert_config.hidden_dropout_prob = 1.0 - hidden_keep_prob
-
         if pretrained_bert:
             self.bert = BertForSequenceClassification.from_pretrained(pretrained_bert, num_labels=n_classes)
                 # tutorial has this PARAMS also
                 # output_attentions=False,  # Whether the model returns attentions weights.
                 # output_hidden_states=False,  # Whether the model returns all hidden-states.
-        else:
+        elif bert_config_file:
+            self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
+
+            if attention_probs_keep_prob is not None:
+                self.bert_config.attention_probs_dropout_prob = 1.0 - attention_probs_keep_prob
+            if hidden_keep_prob is not None:
+                self.bert_config.hidden_dropout_prob = 1.0 - hidden_keep_prob
             self.bert = BertForSequenceClassification(config=self.bert_config)
 
         self.optimizer = AdamW(self.bert.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay_rate,
