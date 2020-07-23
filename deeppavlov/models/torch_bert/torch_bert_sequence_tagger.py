@@ -30,7 +30,6 @@ from deeppavlov.core.models.torch_model import TorchModel
 log = getLogger(__name__)
 
 
-
 def token_from_subtoken(units: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
     """ Assemble token level units from subtoken level units
 
@@ -142,7 +141,11 @@ def token_from_subtoken(units: torch.Tensor, mask: torch.Tensor) -> torch.Tensor
 
     # get a sequence of units corresponding to the start subtokens of the words
     # size: [n_words, n_features]
-    elements = torch.gather(units, dim=0, index=idxs)
+    def gather_nd(params, indices):
+        assert type(indices) == torch.Tensor
+        return params[indices.transpose(0, 1).long().numpy().tolist()]
+
+    elements = gather_nd(units, idxs)
 
     # prepare zeros for paddings
     # size: [batch_size * TOKEN_seq_length - n_words, n_features]
@@ -307,13 +310,14 @@ class TorchBertSequenceTagger(TorchModel):
         """
         b_input_ids = torch.from_numpy(input_ids).to(self.device)
         b_input_masks = torch.from_numpy(input_masks).to(self.device)
+        b_y_masks = torch.from_numpy(y_masks).to(self.device)
 
         with torch.no_grad():
             # Forward pass, calculate logit predictions
             logits = self.model(b_input_ids, token_type_ids=None, attention_mask=b_input_masks)
 
         # Move logits and labels to CPU and to numpy arrays
-        logits = token_from_subtoken(logits[0], torch.from_numpy(y_masks))
+        logits = token_from_subtoken(logits[0], b_y_masks)
         logits = logits.detach().cpu().numpy()
 
         if self.return_probas:
