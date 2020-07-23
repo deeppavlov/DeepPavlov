@@ -117,7 +117,7 @@ def token_from_subtoken(units: torch.Tensor, mask: torch.Tensor) -> torch.Tensor
     # new_word_indices is the concatenation of range(word_len(sentence))
     # for all sentences in units
 
-    n_total_word_elements = (3 * max_token_seq_len).to(torch.int32)
+    n_total_word_elements = (batch_size * max_token_seq_len).to(torch.int32)
     word_indices_flat = (idxs[:, 0] * max_token_seq_len + new_word_indices).to(torch.int64)
     x_mask = torch.sum(torch.nn.functional.one_hot(word_indices_flat, n_total_word_elements), 0)
     x_mask = x_mask.to(torch.bool)
@@ -217,7 +217,6 @@ class TorchBertSequenceTagger(TorchModel):
                  optimizer: str = None,
                  optimizer_parameters={"lr": 1e-3, "weight_decay_rate": 1e-6},
                  freeze_embeddings: bool = False,
-                 bert_learning_rate: float = 2e-5,
                  min_learning_rate: float = 1e-07,
                  learning_rate_drop_patience: int = 20,
                  learning_rate_drop_div: float = 2.0,
@@ -314,7 +313,7 @@ class TorchBertSequenceTagger(TorchModel):
             logits = self.model(b_input_ids, token_type_ids=None, attention_mask=b_input_masks)
 
         # Move logits and labels to CPU and to numpy arrays
-        logits = token_from_subtoken(logits[0], torch.from_numpy(y_masks).to(self.device))
+        logits = token_from_subtoken(logits[0], torch.from_numpy(y_masks))
         logits = logits.detach().cpu().numpy()
 
         if self.return_probas:
