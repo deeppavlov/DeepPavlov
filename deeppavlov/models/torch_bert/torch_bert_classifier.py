@@ -38,7 +38,6 @@ class TorchBertClassifierModel(TorchModel):
     It uses output from [CLS] token and predicts labels using linear transformation.
 
     Args:
-        bert_config_file: path to Bert configuration file
         n_classes: number of classes
         keep_prob: dropout keep_prob for non-Bert layers
         one_hot_labels: set True if one-hot encoding for labels is used
@@ -47,36 +46,35 @@ class TorchBertClassifierModel(TorchModel):
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
         optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
+        optimizer_parameters: dictionary with optimizer parameters
         num_warmup_steps:
-        weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
-        pretrained_bert: pretrained Bert checkpoint
-        min_learning_rate: min value of learning rate if learning rate decay is used
+        pretrained_bert: pretrained Bert checkpoint path or key title (e.g. "bert-base-uncased")
+        bert_config_file: path to Bert configuration file (not used if pretrained_bert is key title)
     """
 
     def __init__(self, n_classes, keep_prob,
                  one_hot_labels=False, multilabel=False, return_probas=False,
                  attention_probs_keep_prob=None, hidden_keep_prob=None,
-                 optimizer=None, num_warmup_steps=None, weight_decay_rate=0.01,
+                 optimizer="AdamW",
+                 optimizer_parameters={"lr": 1e-3, "weight_decay": 0.01, "betas": (0.9, 0.999), "eps": 1e-6},
+                 num_warmup_steps=None,
                  pretrained_bert=None, bert_config_file=None,
-                 min_learning_rate=1e-06, **kwargs) -> None:
+                 **kwargs) -> None:
 
         self.return_probas = return_probas
-        self.min_learning_rate = min_learning_rate
         self.keep_prob = keep_prob
         self.one_hot_labels = one_hot_labels
         self.multilabel = multilabel
-        self.optimizer = optimizer
         self.num_warmup_steps = num_warmup_steps
-        self.weight_decay_rate = weight_decay_rate
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
         self.n_classes = n_classes
-        self.learning_rate = kwargs["learning_rate"]
-        self.weight_decay_rate = kwargs.get("weight_decay_rate", 0.)
 
-        super().__init__(**kwargs)
+        super().__init__(optimizer=optimizer,
+                         optimizer_parameters=optimizer_parameters,
+                         **kwargs)
 
         if self.multilabel and not self.one_hot_labels:
             raise RuntimeError('Use one-hot encoded labels for multilabel classification!')
@@ -166,9 +164,11 @@ class TorchBertClassifierModel(TorchModel):
                 self.bert_config.hidden_dropout_prob = 1.0 - self.hidden_keep_prob
             self.model = BertForSequenceClassification(config=self.bert_config)
 
-        self.optimizer = AdamW(self.model.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay_rate,
-                               betas=(0.9, 0.999), eps=1e-6)
-        # exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"] < --- было в оптимайзере что это?
+        self.optimizer = getattr(torch.optim, self.opt["optimizer"])(
+            self.model.parameters(), **self.opt.get("optimizer_parameters", {}))
+        if self.opt.get("lr_scheduler", None):
+            self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.opt["lr_scheduler"])(
+                self.optimizer, **self.opt.get("lr_scheduler_parameters", {}))
 
         if self.load_path:
             log.info(f"Load path {self.load_path} is given.")
@@ -180,11 +180,6 @@ class TorchBertClassifierModel(TorchModel):
                 log.info(f"Load path {weights_path} exists.")
                 log.info(f"Initializing `{self.__class__.__name__}` from saved.")
 
-                # firstly, initialize with random weights and previously saved parameters
-                if self.opt.get("lr_scheduler", None):
-                    self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.opt["lr_scheduler"])(
-                        self.optimizer, **self.opt.get("lr_scheduler_parameters", {}))
-
                 # now load the weights, optimizer from saved
                 log.info(f"Loading weights from {weights_path}.")
                 checkpoint = torch.load(weights_path, map_location=self.device)
@@ -193,8 +188,5 @@ class TorchBertClassifierModel(TorchModel):
                 self.epochs_done = checkpoint.get("epochs_done", 0)
             else:
                 log.info(f"Init from scratch. Load path {weights_path} does not exist.")
-                if self.opt.get("lr_scheduler", None):
-                    self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.opt["lr_scheduler"])(
-                        self.optimizer, **self.opt.get("lr_scheduler_parameters", {}))
 
         self.model.to(self.device)
