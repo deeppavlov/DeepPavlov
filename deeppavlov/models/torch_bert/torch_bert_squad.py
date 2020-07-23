@@ -203,8 +203,8 @@ class TorchBertSQuADModel(TorchModel):
         return start_pos, end_pos, start_scores.tolist(), end_scores.tolist()
 
 
-@register('squad_bert_infer')
-class BertSQuADInferModel(Component):
+@register('torch_squad_bert_infer')
+class TorchBertSQuADInferModel(Component):
     """This model wraps BertSQuADModel to make predictions on longer than 512 tokens sequences.
 
     It splits context on chunks with `max_seq_length - 3 - len(question)` length, preserving sentences boundaries.
