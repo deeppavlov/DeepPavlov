@@ -247,7 +247,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                 # system actions are started in dataset with -
 
                 system_action_name = line.strip('-').strip()
-                curr_action_text = cls._system_text(domain_knowledge, system_action_name)
+                curr_action_text = cls._system_action2text(domain_knowledge, system_action_name)
                 system_action = {"speaker": cls._SYSTEM_SPEAKER_ID,
                                  "text": curr_action_text,
                                  "dialog_acts": [{"act": system_action_name, "slots": []}]}
@@ -264,7 +264,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
         stories_parsed.pop(None)
 
-        tmp_f = tempfile.NamedTemporaryFile(delete=False)
+        tmp_f = tempfile.NamedTemporaryFile(delete=False, mode='w', encoding="utf-8")
         for story_id, story in stories_parsed.items():
             for replics in story:
                 print(json.dumps(replics), file=tmp_f)
