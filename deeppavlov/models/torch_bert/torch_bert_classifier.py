@@ -20,7 +20,7 @@ from pathlib import Path
 from overrides import overrides
 
 import torch
-from transformers import BertForSequenceClassification, AdamW, BertConfig
+from transformers import BertForSequenceClassification, BertConfig
 from transformers.data.processors.utils import InputFeatures
 
 from deeppavlov.core.common.errors import ConfigError
