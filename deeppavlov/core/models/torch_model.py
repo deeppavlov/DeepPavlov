@@ -43,9 +43,9 @@ class TorchModel(NNModel):
         criterion: torch criterion instance
     """
 
-    def __init__(self, device="cpu", *args, **kwargs):
+    def __init__(self, device="gpu", *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda" if torch.cuda.is_available() and device == "gpu" else "cpu")
         self.model = None
         self.optimizer = None
         self.lr_scheduler = None
