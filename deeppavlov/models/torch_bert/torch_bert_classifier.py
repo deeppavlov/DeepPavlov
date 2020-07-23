@@ -156,9 +156,6 @@ class TorchBertClassifierModel(TorchModel):
             self.model = BertForSequenceClassification.from_pretrained(
                 self.pretrained_bert, num_labels=self.n_classes,
                 output_attentions=False, output_hidden_states=False)
-                # tutorial has this PARAMS also
-                # output_attentions=False,  # Whether the model returns attentions weights.
-                # output_hidden_states=False,  # Whether the model returns all hidden-states.
         elif self.bert_config_file:
             self.bert_config = BertConfig.from_json_file(str(expand_path(self.bert_config_file)))
 
