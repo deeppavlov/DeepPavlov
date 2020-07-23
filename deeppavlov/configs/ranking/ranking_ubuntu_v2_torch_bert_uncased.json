@@ -39,12 +39,14 @@
     "train_metrics": [],
     "metrics": ["r@1", "r@2", "r@5"],
     "validation_patience": 1,
-    "val_every_n_batches": -1,
     "val_every_n_epochs": 1,
-    "log_every_n_batches": -1,
-    "validate_best": true,
-    "test_best": true,
-    "tensorboard_log_dir": "{MODEL_PATH}/"
+    "log_every_n_epochs": 1,
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ],
+    "tensorboard_log_dir": "{MODEL_PATH}/",
+    "class_name": "torch_trainer"
   },
   "metadata": {
     "variables": {
@@ -54,8 +56,7 @@
       "MODEL_PATH": "{MODELS_PATH}/ubuntu_v2_uncased_torch_bert_model"
     },
     "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+      "{DEEPPAVLOV_PATH}/requirements/torch.txt"
     ],
     "download": [
       {
