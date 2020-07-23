@@ -68,7 +68,7 @@ class TorchBertSequenceTagger(TorchModel):
     def __init__(self,
                  n_tags: int,
                  keep_prob: float,
-                 bert_config_file: str,
+                 bert_config_file: str = None,
                  return_probas: bool = False,
                  pretrained_bert: str = None,
                  attention_probs_keep_prob: float = None,
