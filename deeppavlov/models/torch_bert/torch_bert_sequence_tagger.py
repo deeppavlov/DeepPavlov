@@ -310,14 +310,13 @@ class TorchBertSequenceTagger(TorchModel):
         """
         b_input_ids = torch.from_numpy(input_ids).to(self.device)
         b_input_masks = torch.from_numpy(input_masks).to(self.device)
-        b_y_masks = torch.from_numpy(y_masks).to(self.device)
 
         with torch.no_grad():
             # Forward pass, calculate logit predictions
             logits = self.model(b_input_ids, token_type_ids=None, attention_mask=b_input_masks)
 
         # Move logits and labels to CPU and to numpy arrays
-        logits = token_from_subtoken(logits[0], b_y_masks)
+        logits = token_from_subtoken(logits[0].to(torch.device("cpu")), torch.from_numpy(y_masks))
         logits = logits.detach().cpu().numpy()
 
         if self.return_probas:
