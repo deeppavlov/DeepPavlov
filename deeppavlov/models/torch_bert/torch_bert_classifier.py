@@ -52,7 +52,7 @@ class TorchBertClassifierModel(TorchModel):
         min_learning_rate: min value of learning rate if learning rate decay is used
     """
 
-    def __init__(self, n_classes, keep_prob, device="cpu",
+    def __init__(self, n_classes, keep_prob,
                  one_hot_labels=False, multilabel=False, return_probas=False,
                  attention_probs_keep_prob=None, hidden_keep_prob=None,
                  optimizer=None, num_warmup_steps=None, weight_decay_rate=0.01,
@@ -75,7 +75,7 @@ class TorchBertClassifierModel(TorchModel):
         self.learning_rate = kwargs["learning_rate"]
         self.weight_decay_rate = kwargs.get("weight_decay_rate", 0.)
 
-        super().__init__(device=device, **kwargs)
+        super().__init__(**kwargs)
 
         if self.multilabel and not self.one_hot_labels:
             raise RuntimeError('Use one-hot encoded labels for multilabel classification!')
