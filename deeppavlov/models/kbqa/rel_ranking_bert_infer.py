@@ -31,8 +31,8 @@ class RelRankerBertInfer(Component, Serializable):
 
     def __init__(self, load_path: str,
                  rel_q2name_filename: str,
-                 wiki_parser: WikiParser,
                  ranker: RelRanker,
+                 wiki_parser: WikiParser = None,
                  batch_size: int = 32,
                  rels_to_leave: int = 40, **kwargs):
         """
@@ -111,10 +111,11 @@ class RelRankerBertInfer(Component, Serializable):
                     questions_batch.append(question)
                     rels_batch.append(candidate_rel)
                     rels_labels_batch.append(self.rel_q2name[candidate_rel])
-            probas = self.ranker(questions_batch, rels_labels_batch)
-            probas = [proba[1] for proba in probas]
-            for j, rel in enumerate(rels_batch):
-                rels_with_scores.append((rel, probas[j]))
+            if questions_batch:
+                probas = self.ranker(questions_batch, rels_labels_batch)
+                probas = [proba[1] for proba in probas]
+                for j, rel in enumerate(rels_batch):
+                    rels_with_scores.append((rel, probas[j]))
         rels_with_scores = sorted(rels_with_scores, key=lambda x: x[1], reverse=True)
 
         return rels_with_scores[:self.rels_to_leave]
