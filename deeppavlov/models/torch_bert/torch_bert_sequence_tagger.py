@@ -159,13 +159,15 @@ def token_from_subtoken(units: torch.Tensor, mask: torch.Tensor) -> torch.Tensor
             idx = indices[i].view(-1)
             d = data_.view(idx.numel(), -1)
             k = 0
-            for idx_ in idx: res[idx_] = d[k]; k += 1
+            for idx_ in idx: res[idx_] = d[k].to(torch.float64); k += 1
         return res
 
-    tensor_flat = dynamic_stitch([word_indices_flat, nonword_indices_flat], [elements, paddings])
+    tensor_flat = torch.cat(dynamic_stitch([word_indices_flat, nonword_indices_flat], [elements, paddings]))
     # tensor_flat -> [x, x, x, x, x, 0, x, 0, 0]
 
-    tensor = torch.reshape(tensor_flat, tuple(torch.stack([batch_size, max_token_seq_len, nf_int], 0).numpy()))
+    tensor = torch.reshape(tensor_flat, tuple(torch.stack([torch.tensor(batch_size),
+                                                           torch.tensor(max_token_seq_len),
+                                                           torch.tensor(nf_int)], 0).numpy()))
     # tensor -> [[x, x, x],
     #            [x, x, 0],
     #            [x, 0, 0]]
