@@ -48,7 +48,6 @@ class TorchBertClassifierModel(TorchModel):
         optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
         optimizer_parameters: dictionary with optimizer parameters
         clip_norm: clip gradients by norm coefficient
-        num_warmup_steps:
         pretrained_bert: pretrained Bert checkpoint path or key title (e.g. "bert-base-uncased")
         bert_config_file: path to Bert configuration file (not used if pretrained_bert is key title)
     """
@@ -59,7 +58,6 @@ class TorchBertClassifierModel(TorchModel):
                  optimizer="AdamW",
                  optimizer_parameters={"lr": 1e-3, "weight_decay": 0.01, "betas": (0.9, 0.999), "eps": 1e-6},
                  clip_norm=None,
-                 num_warmup_steps=None,
                  pretrained_bert=None, bert_config_file=None,
                  **kwargs) -> None:
 
@@ -67,7 +65,6 @@ class TorchBertClassifierModel(TorchModel):
         self.keep_prob = keep_prob
         self.one_hot_labels = one_hot_labels
         self.multilabel = multilabel
-        self.num_warmup_steps = num_warmup_steps
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
         self.attention_probs_keep_prob = attention_probs_keep_prob
