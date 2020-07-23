@@ -34,6 +34,7 @@ class TorchModel(NNModel):
         learning_rate_drop_patience: how many validations with no improvements to wait
         learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
             validations
+        load_before_drop: whether to load best model before dropping learning rate or not
         args:
         kwargs: dictionary with model parameters
 
@@ -47,11 +48,13 @@ class TorchModel(NNModel):
         learning_rate_drop_patience: how many validations with no improvements to wait
         learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
             validations
+        load_before_drop: whether to load best model before dropping learning rate or not
     """
 
     def __init__(self, device: str = "gpu",
                  learning_rate_drop_patience: Optional[int] = None,
                  learning_rate_drop_div: Optional[float] = None,
+                 load_before_drop: bool = True,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.device = torch.device("cuda" if torch.cuda.is_available() and device == "gpu" else "cpu")
@@ -62,6 +65,7 @@ class TorchModel(NNModel):
         self.epochs_done = 0
         self.learning_rate_drop_patience = learning_rate_drop_patience
         self.learning_rate_drop_div = learning_rate_drop_div
+        self.load_before_drop = load_before_drop
         self.opt = deepcopy(kwargs)
 
         self.load()
@@ -152,5 +156,7 @@ class TorchModel(NNModel):
         if event_name == "after_validation" and 'impatience' in data and self.learning_rate_drop_patience:
             if data['impatience'] == self.learning_rate_drop_patience:
                 log.info(f"----------Current LR is decreased in {self.learning_rate_drop_div} times----------")
+                if self.load_before_drop:
+                    self.load(path=self.save_path)
                 for param_group in self.optimizer.param_groups:
                     param_group['lr'] = param_group['lr'] / self.learning_rate_drop_div
