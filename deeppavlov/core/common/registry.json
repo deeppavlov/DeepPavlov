@@ -173,7 +173,7 @@
   "top1_elector": "deeppavlov.models.spelling_correction.electors.top1_elector:TopOneElector",
   "torch_bert_classifier": "deeppavlov.models.torch_bert.torch_bert_classifier:TorchBertClassifierModel",
   "torch_bert_preprocessor": "deeppavlov.models.preprocessors.torch_bert_preprocessor:TorchBertPreprocessor",
-  "torch_bert_ranker_preprocessor": "deeppavlov.models.preprocessors.torch_bert_preprocessor:torch_bert_ranker_preprocessor",
+  "torch_bert_ranker_preprocessor": "deeppavlov.models.preprocessors.torch_bert_preprocessor:TorchBertRankerPreprocessor",
   "torch_bert_ranker": "deeppavlov.models.torch_bert.torch_bert_ranker:TorchBertRankerModel",
   "torch_text_classification_model": "deeppavlov.models.classifiers.torch_classification_model:TorchTextClassificationModel",
   "torch_trainer": "deeppavlov.core.trainers.torch_trainer:TorchTrainer",
