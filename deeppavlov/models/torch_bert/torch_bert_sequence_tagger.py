@@ -132,8 +132,8 @@ class TorchBertSequenceTagger(TorchModel):
         Returns:
             dict with fields 'loss', 'head_learning_rate', and 'bert_learning_rate'
         """
-        b_input_ids = torch.cat(input_ids, dim=0).to(self.device)
-        b_input_masks = torch.cat(input_masks, dim=0).to(self.device)
+        b_input_ids = torch.from_numpy(input_ids).to(self.device)
+        b_input_masks = torch.from_numpy(input_masks).to(self.device)
         b_labels = torch.from_numpy(np.array(y)).to(self.device)
 
         self.optimizer.zero_grad()
@@ -167,8 +167,8 @@ class TorchBertSequenceTagger(TorchModel):
             Label indices or class probabilities for each token (not subtoken)
 
         """
-        b_input_ids = torch.cat(input_ids, dim=0).to(self.device)
-        b_input_masks = torch.cat(input_masks, dim=0).to(self.device)
+        b_input_ids = torch.from_numpy(input_ids).to(self.device)
+        b_input_masks = torch.from_numpy(input_masks).to(self.device)
 
         with torch.no_grad():
             # Forward pass, calculate logit predictions
