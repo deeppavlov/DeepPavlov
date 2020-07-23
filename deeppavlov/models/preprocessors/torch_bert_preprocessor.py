@@ -128,9 +128,12 @@ class TorchBertNerPreprocessor(Component):
         self.max_seq_length = max_seq_length
         self.max_subword_length = max_subword_length
         self.subword_mask_mode = subword_mask_mode
-        vocab_file = str(expand_path(vocab_file))
-        self.tokenizer = BertTokenizer(vocab_file=vocab_file,
-                                       do_lower_case=do_lower_case)
+        if os.path.isfile(vocab_file):
+            vocab_file = str(expand_path(vocab_file))
+            self.tokenizer = BertTokenizer(vocab_file=vocab_file,
+                                           do_lower_case=do_lower_case)
+        else:
+            self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=True)
         self.token_masking_prob = token_masking_prob
 
     def __call__(self,
