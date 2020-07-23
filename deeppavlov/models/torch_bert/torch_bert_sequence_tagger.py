@@ -149,7 +149,8 @@ def token_from_subtoken(units: torch.Tensor, mask: torch.Tensor) -> torch.Tensor
 
     # prepare zeros for paddings
     # size: [batch_size * TOKEN_seq_length - n_words, n_features]
-    paddings = torch.zeros(torch.stack([torch.sum(max_token_seq_len - token_seq_lengths), nf], 0), dtype=torch.float64)
+    sh = tuple(torch.stack([torch.sum(max_token_seq_len - token_seq_lengths), torch.tensor(nf)], 0).numpy())
+    paddings = torch.zeros(sh, dtype=torch.float64)
 
     def dynamic_stitch(indices, data):
         n = sum(idx.numel() for idx in indices)
@@ -164,7 +165,7 @@ def token_from_subtoken(units: torch.Tensor, mask: torch.Tensor) -> torch.Tensor
     tensor_flat = dynamic_stitch([word_indices_flat, nonword_indices_flat], [elements, paddings])
     # tensor_flat -> [x, x, x, x, x, 0, x, 0, 0]
 
-    tensor = torch.reshape(tensor_flat, torch.stack([batch_size, max_token_seq_len, nf_int], 0))
+    tensor = torch.reshape(tensor_flat, tuple(torch.stack([batch_size, max_token_seq_len, nf_int], 0).numpy()))
     # tensor -> [[x, x, x],
     #            [x, x, 0],
     #            [x, 0, 0]]
