@@ -24,7 +24,7 @@ class MockJSONNLGManager(NLGManagerInterface):
                  actions2slots_path: Union[str, Path],
                  api_call_action: str,
                  data_path: Union[str, Path],
-                 dataset_reader_class=DSTC2DatasetReader.__name__,
+                 dataset_reader_class="dstc2_reader",
                  debug=False):
         self.debug = debug
 
