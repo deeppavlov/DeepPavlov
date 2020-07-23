@@ -262,7 +262,7 @@ class TorchBertRankerPreprocessor(TorchBertPreprocessor):
 
         input_features = []
         for s in cont_resp_pairs:
-            # how long is s?
+            sub_list_features = []
             for context, response in s:
                 encoded_dict = self.tokenizer.encode_plus(
                     text=context, text_pair=response, add_special_tokens=True, max_length=self.max_seq_length,
@@ -271,81 +271,7 @@ class TorchBertRankerPreprocessor(TorchBertPreprocessor):
                                               attention_mask=encoded_dict['attention_mask'],
                                               token_type_ids=encoded_dict['token_type_ids'],
                                               label=None)
-                input_features.append(curr_features)
+                sub_list_features.append(curr_features)
+            input_features.append(sub_list_features)
 
         return input_features
-
-
-@register('torch_bert_sep_ranker_preprocessor')
-class TorchBertSepRankerPreprocessor(TorchBertPreprocessor):
-    """Tokenize text to sub-tokens, encode sub-tokens with their indices, create tokens and segment masks for ranking.
-
-    Builds features for a context and for each of the response candidates separately.
-    """
-
-    def __call__(self, batch: List[List[str]]) -> List[List[InputFeatures]]:
-        """Call BERT :func:`bert_dp.preprocessing.convert_examples_to_features` function to tokenize and create masks.
-
-        Args:
-            batch: list of elemenents where the first element represents the batch with contexts
-                and the rest of elements represent response candidates batches
-
-        Returns:
-            list of feature batches with subtokens, subtoken ids, subtoken mask, segment mask
-            for the context and each of response candidates separately.
-        """
-
-        if isinstance(batch[0], str):
-            batch = [batch]
-
-        samples = []
-        for i in range(len(batch[0])):
-            s = []
-            for el in batch:
-                s.append(el[i])
-            samples.append(s)
-        s_empt = [None] * len(samples[0])
-
-        input_features = []
-        for s in samples:
-            # how long is s?
-            for text_a, text_b in zip(s, s_empt):
-                encoded_dict = self.tokenizer.encode_plus(
-                    text=text_a, text_pair=text_b, add_special_tokens=True, max_length=self.max_seq_length,
-                    pad_to_max_length=True, return_attention_mask=True, return_tensors='pt')
-                curr_features = InputFeatures(input_ids=encoded_dict['input_ids'],
-                                              attention_mask=encoded_dict['attention_mask'],
-                                              token_type_ids=encoded_dict['token_type_ids'],
-                                              label=None)
-                input_features.append(curr_features)
-
-        return input_features
-
-
-@register('torch_bert_sep_ranker_predictor_preprocessor')
-class TorchBertSepRankerPredictorPreprocessor(TorchBertSepRankerPreprocessor):
-    """Tokenize text to sub-tokens, encode sub-tokens with their indices, create tokens and segment masks for ranking.
-
-    Builds features for a context and for each of the response candidates separately.
-    In addition, builds features for a response (and corresponding context) text base.
-
-    Args:
-        resps: list of strings containing the base of text responses
-        resp_vecs: BERT vector respresentations of ``resps``, if is ``None`` features for the response base will be build
-        conts: list of strings containing the base of text contexts
-        cont_vecs: BERT vector respresentations of ``conts``, if is ``None`` features for the response base will be build
-    """
-
-    def __init__(self,
-                 resps=None, resp_vecs=None, conts=None, cont_vecs=None, **kwargs) -> None:
-        super().__init__(**kwargs)
-        self.resp_features = None
-        self.cont_features = None
-        if resps is not None and resp_vecs is None:
-            log.info("Building BERT features for the response base...")
-            resp_batch = [[el] for el in resps]
-            self.resp_features = self(resp_batch)
-        if conts is not None and cont_vecs is None:
-            log.info("Building BERT features for the context base...")
-            cont_batch = [[el] for el in conts]
-            self.cont_features = self(cont_batch)
