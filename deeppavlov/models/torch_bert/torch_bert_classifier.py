@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from logging import getLogger
 from typing import List, Dict, Union
 import numpy as np
@@ -152,11 +153,11 @@ class TorchBertClassifierModel(TorchModel):
 
     @overrides
     def load(self):
-        if self.pretrained_bert:
+        if self.pretrained_bert and not os.path.isfile(self.pretrained_bert):
             self.model = BertForSequenceClassification.from_pretrained(
                 self.pretrained_bert, num_labels=self.n_classes,
                 output_attentions=False, output_hidden_states=False)
-        elif self.bert_config_file:
+        elif self.bert_config_file and os.path.isfile(self.bert_config_file):
             self.bert_config = BertConfig.from_json_file(str(expand_path(self.bert_config_file)))
 
             if self.attention_probs_keep_prob is not None:
