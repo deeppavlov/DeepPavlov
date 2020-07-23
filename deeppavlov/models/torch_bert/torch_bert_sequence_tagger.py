@@ -76,9 +76,8 @@ class TorchBertSequenceTagger(TorchModel):
                  encoder_layer_ids: List[int] = (-1,),
                  encoder_dropout: float = 0.0,
                  optimizer: str = None,
-                 weight_decay_rate: float = 1e-6,
+                 optimizer_parameters={"lr": 1e-3, "weight_decay_rate": 1e-6},
                  freeze_embeddings: bool = False,
-                 learning_rate: float = 1e-3,
                  bert_learning_rate: float = 2e-5,
                  min_learning_rate: float = 1e-07,
                  learning_rate_drop_patience: int = 20,
@@ -92,9 +91,7 @@ class TorchBertSequenceTagger(TorchModel):
         self.keep_prob = keep_prob
         self.encoder_layer_ids = encoder_layer_ids
         self.encoder_dropout = encoder_dropout
-        self.weight_decay_rate = weight_decay_rate
         self.freeze_embeddings = freeze_embeddings
-        self.bert_learning_rate_multiplier = bert_learning_rate / learning_rate
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
 
@@ -102,7 +99,7 @@ class TorchBertSequenceTagger(TorchModel):
         self.bert_config_file = bert_config_file
 
         super().__init__(optimizer=optimizer,
-                         optimizer_parameters={"lr": learning_rate},
+                         optimizer_parameters=optimizer_parameters,
                          learning_rate_drop_patience=learning_rate_drop_patience,
                          learning_rate_drop_div=learning_rate_drop_div,
                          load_before_drop=load_before_drop,
