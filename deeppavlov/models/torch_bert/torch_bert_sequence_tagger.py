@@ -168,9 +168,7 @@ def token_from_subtoken(units: torch.Tensor, mask: torch.Tensor) -> torch.Tensor
     tensor_flat = torch.stack(dynamic_stitch([word_indices_flat, nonword_indices_flat], [elements, paddings]))
     # tensor_flat -> [x, x, x, x, x, 0, x, 0, 0]
 
-    tensor = torch.reshape(tensor_flat, tuple(torch.stack([torch.tensor(batch_size),
-                                                           torch.tensor(max_token_seq_len),
-                                                           torch.tensor(nf_int)], 0).numpy()))
+    tensor = torch.reshape(tensor_flat, (batch_size, max_token_seq_len.item(), nf_int))
     # tensor -> [[x, x, x],
     #            [x, x, 0],
     #            [x, 0, 0]]
