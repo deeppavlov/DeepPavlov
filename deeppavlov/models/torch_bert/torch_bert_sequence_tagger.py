@@ -153,13 +153,16 @@ def token_from_subtoken(units: torch.Tensor, mask: torch.Tensor) -> torch.Tensor
     paddings = torch.zeros(sh, dtype=torch.float64)
 
     def dynamic_stitch(indices, data):
+        # https://discuss.pytorch.org/t/equivalent-of-tf-dynamic-partition/53735/2
         n = sum(idx.numel() for idx in indices)
         res = [None] * n
         for i, data_ in enumerate(data):
             idx = indices[i].view(-1)
             d = data_.view(idx.numel(), -1)
             k = 0
-            for idx_ in idx: res[idx_] = d[k].to(torch.float64); k += 1
+            for idx_ in idx:
+                res[idx_] = d[k].to(torch.float64)
+                k += 1
         return res
 
     tensor_flat = torch.stack(dynamic_stitch([word_indices_flat, nonword_indices_flat], [elements, paddings]))
