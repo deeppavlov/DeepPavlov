@@ -96,7 +96,7 @@ def token_from_subtoken(units: torch.Tensor, mask: torch.Tensor) -> torch.Tensor
     # [0, 0, 0, 0, 1, 1, 2]
     # padding is for computing change from one sample to another in the batch
 
-    a = 1 - torch.eq(sample_ids_in_batch[1:], sample_ids_in_batch[:-1]).to(torch.int64)
+    a = torch.logical_not(torch.eq(sample_ids_in_batch[1:], sample_ids_in_batch[:-1]).to(torch.int64))
     # for the example above the result of this statement equals
     # [0, 0, 0, 1, 0, 1]
     # so data samples begin in 3rd and 5th positions (the indexes of ones)
