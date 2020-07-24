@@ -296,7 +296,7 @@ class TorchBertSequenceTagger(TorchModel):
         b_input_ids = torch.from_numpy(input_ids).to(self.device)
         b_input_masks = torch.from_numpy(input_masks).to(self.device)
         subtoken_labels = [token_labels_to_subtoken_labels(y_el, y_mask) for y_el, y_mask in zip(y, y_masks)]
-        b_labels = torch.from_numpy(np.array(subtoken_labels)).to(self.device)
+        b_labels = torch.from_numpy(np.array(subtoken_labels)).to(self.device).to(torch.int64)
         self.optimizer.zero_grad()
 
         loss, logits = self.model(input_ids=b_input_ids, token_type_ids=None, attention_mask=b_input_masks,
