@@ -15,7 +15,7 @@
 import os
 from pathlib import Path
 from logging import getLogger
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Optional
 from overrides import overrides
 
 import numpy as np
@@ -235,13 +235,13 @@ class TorchBertSequenceTagger(TorchModel):
                  encoder_layer_ids: List[int] = (-1,),
                  encoder_dropout: float = 0.0,
                  optimizer: str = None,
-                 optimizer_parameters={"lr": 1e-3, "weight_decay_rate": 1e-6},
+                 optimizer_parameters={"lr": 1e-3, "weight_decay": 1e-6},
                  freeze_embeddings: bool = False,
                  min_learning_rate: float = 1e-07,
                  learning_rate_drop_patience: int = 20,
                  learning_rate_drop_div: float = 2.0,
                  load_before_drop: bool = True,
-                 clip_norm: float = 1.0,
+                 clip_norm: Optional[float] = None,
                  **kwargs) -> None:
 
         self.n_classes = n_tags
