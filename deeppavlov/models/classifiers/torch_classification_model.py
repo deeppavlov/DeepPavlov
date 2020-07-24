@@ -14,6 +14,7 @@
 
 from typing import List, Union, Optional
 import logging
+from overrides import overrides
 
 import torch
 import torch.nn as nn
@@ -104,6 +105,7 @@ class TorchTextClassificationModel(TorchModel):
         preds = np.array(self.infer_on_batch(data), dtype="float64").tolist()
         return preds
 
+    @overrides
     def process_event(self, event_name: str, data: dict):
         """
         Process event after epoch

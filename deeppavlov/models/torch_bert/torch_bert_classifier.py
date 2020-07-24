@@ -72,20 +72,15 @@ class TorchBertClassifierModel(TorchModel):
         self.n_classes = n_classes
         self.clip_norm = clip_norm
 
-        super().__init__(optimizer=optimizer,
-                         optimizer_parameters=optimizer_parameters,
-                         **kwargs)
-
         if self.multilabel and not self.one_hot_labels:
             raise RuntimeError('Use one-hot encoded labels for multilabel classification!')
 
         if self.multilabel and not self.return_probas:
             raise RuntimeError('Set return_probas to True for multilabel classification!')
 
-        self.load()
-        self.model.to(self.device)
-        # need to move it to `eval` mode because it can be used in `build_model` (not by `torch_trainer`
-        self.model.eval()
+        super().__init__(optimizer=optimizer,
+                         optimizer_parameters=optimizer_parameters,
+                         **kwargs)
 
     def train_on_batch(self, features: List[InputFeatures], y: Union[List[int], List[List[int]]]) -> Dict:
         """Train model on given batch.
