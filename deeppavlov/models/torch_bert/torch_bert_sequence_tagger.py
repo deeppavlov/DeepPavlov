@@ -187,6 +187,7 @@ def token_labels_to_subtoken_labels(labels, y_mask):
             labels_ind += 1
         else:
             subtoken_labels += [labels[labels_ind - 1]]
+    subtoken_labels = [0] + subtoken_labels + [0]
     return subtoken_labels
 
 
