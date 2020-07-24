@@ -287,7 +287,7 @@ class TorchBertSequenceTagger(TorchModel):
 
         seq_lengths = torch.sum(b_y_masks, axis=1)
         max_length = torch.max(seq_lengths)
-        one_hot_max_len = torch.nn.functional.one_hot(self.seq_lengths - 1, max_length)
+        one_hot_max_len = torch.nn.functional.one_hot(seq_lengths - 1, max_length)
         tag_mask = torch.cumsum(one_hot_max_len[:, ::-1], axis=1)[:, ::-1]
         y_mask = tag_mask.to(torch.float64)
 
