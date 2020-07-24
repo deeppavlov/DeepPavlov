@@ -179,15 +179,16 @@ def token_from_subtoken(units: torch.Tensor, mask: torch.Tensor) -> torch.Tensor
 def token_labels_to_subtoken_labels(labels, y_mask, input_mask):
     subtoken_labels = []
     labels_ind = 0
+    n_tokens_with_special = int(np.sum(input_mask))
 
-    for el in y_mask[1:np.sum(input_mask) - 1]:
+    for el in y_mask[1:n_tokens_with_special - 1]:
         if el == 1:
             subtoken_labels += [labels[labels_ind]]
             labels_ind += 1
         else:
             subtoken_labels += [labels[labels_ind - 1]]
 
-    subtoken_labels = [0] + subtoken_labels + [0] * (len(input_mask) - np.sum(input_mask) + 1)
+    subtoken_labels = [0] + subtoken_labels + [0] * (len(input_mask) - n_tokens_with_special + 1)
     return subtoken_labels
 
 
