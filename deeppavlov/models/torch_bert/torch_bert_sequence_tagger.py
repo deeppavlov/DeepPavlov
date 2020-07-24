@@ -176,15 +176,17 @@ def token_from_subtoken(units: torch.Tensor, mask: torch.Tensor) -> torch.Tensor
     return tensor
 
 
-def token_labels_to_subtoken_labels(labels, y_mask):
+def token_labels_to_subtoken_labels(labels, y_mask, input_id):
     subtoken_labels = []
     labels_ind = 0
-    for el in y_mask[1:-1]:
-        if el == 1:
-            subtoken_labels += [labels[labels_ind]]
-            labels_ind += 1
-        else:
-            subtoken_labels += [labels[labels_ind - 1]]
+
+    for el, inp in zip(y_mask[1:-1], input_id[1:-1]):
+        if inp != 0:
+            if el == 1:
+                subtoken_labels += [labels[labels_ind]]
+                labels_ind += 1
+            else:
+                subtoken_labels += [labels[labels_ind - 1]]
     subtoken_labels = [0] + subtoken_labels + [0]
     return subtoken_labels
 
@@ -288,7 +290,8 @@ class TorchBertSequenceTagger(TorchModel):
         """
         b_input_ids = torch.from_numpy(input_ids).to(self.device)
         b_input_masks = torch.from_numpy(input_masks).to(self.device)
-        subtoken_labels = [token_labels_to_subtoken_labels(y_el, y_mask) for y_el, y_mask in zip(y, y_masks)]
+        subtoken_labels = [token_labels_to_subtoken_labels(y_el, y_mask, input_id)
+                           for y_el, y_mask, input_id in zip(y, y_masks, input_ids)]
         b_labels = torch.from_numpy(np.array(subtoken_labels)).to(torch.int64).to(self.device)
         self.optimizer.zero_grad()
 
