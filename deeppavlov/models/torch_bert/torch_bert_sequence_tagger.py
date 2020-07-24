@@ -241,6 +241,7 @@ class TorchBertSequenceTagger(TorchModel):
         self.freeze_embeddings = freeze_embeddings
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
+        self.clip_norm = clip_norm
 
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
@@ -251,7 +252,6 @@ class TorchBertSequenceTagger(TorchModel):
                          learning_rate_drop_div=learning_rate_drop_div,
                          load_before_drop=load_before_drop,
                          min_learning_rate=min_learning_rate,
-                         clip_norm=clip_norm,
                          **kwargs)
 
         self.load()
@@ -348,11 +348,11 @@ class TorchBertSequenceTagger(TorchModel):
                 self.bert_config.hidden_dropout_prob = 1.0 - self.hidden_keep_prob
             self.model = BertForTokenClassification(config=self.bert_config)
 
-        self.optimizer = getattr(torch.optim, self.opt["optimizer"])(
-            self.model.parameters(), **self.opt.get("optimizer_parameters", {}))
+        self.optimizer = getattr(torch.optim, self.optimizer_name)(
+            self.model.parameters(), **self.optimizer_parameters)
         if self.opt.get("lr_scheduler", None):
-            self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.opt["lr_scheduler"])(
-                self.optimizer, **self.opt.get("lr_scheduler_parameters", {}))
+            self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
+                self.optimizer, **self.lr_scheduler_parameters)
 
         if self.load_path:
             log.info(f"Load path {self.load_path} is given.")
