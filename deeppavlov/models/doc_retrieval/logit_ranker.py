@@ -31,42 +31,56 @@ class LogitRanker(Component):
 
      Args:
         squad_model: a loaded squad model
+        out: list of model outputs
         batch_size: batch size to use with squad model
         sort_noans: whether to downgrade noans tokens in the most possible answers
+        top_n: number of answers to return
 
      Attributes:
         squad_model: a loaded squad model
+        out_params: list of model outputs
         batch_size: batch size to use with squad model
+        top_n: number of answers to return
 
     """
 
-    def __init__(self, squad_model: Union[Chainer, Component], batch_size: int = 50,
-                 sort_noans: bool = False, **kwargs):
+    def __init__(self, squad_model: Union[Chainer, Component], out: List[str], batch_size: int = 50,
+                 sort_noans: bool = False, top_n: int = 1, **kwargs):
         self.squad_model = squad_model
         self.batch_size = batch_size
         self.sort_noans = sort_noans
+        self.top_n = top_n
+        self.out_params = out
 
-    def __call__(self, contexts_batch: List[List[str]], questions_batch: List[List[str]]) -> \
-            Tuple[List[str], List[float]]:
+    def __call__(self, contexts_batch: List[List[str]], questions_batch: List[List[str]],
+                 tfidf_doc_ids: List[List[str]] = None):
         """
         Sort obtained results from squad reader by logits and get the answer with a maximum logit.
 
         Args:
             contexts_batch: a batch of contexts which should be treated as a single batch in the outer JSON config
             questions_batch: a batch of questions which should be treated as a single batch in the outer JSON config
-
+            tfidf_doc_ids (optional): names of the documents from which the contexts_batch was derived
         Returns:
-            a batch of best answers and their scores
-
+            desirable variables as specified by 'out' parameter of JSON config
         """
-        # TODO output result for top_n
-        warnings.warn(f'{self.__class__.__name__}.__call__() API will be changed in the future release.'
-                      ' Instead of returning Tuple(List[str], List[float] will return'
-                      ' Tuple(List[List[str]], List[List[float]]).', FutureWarning)
+
+        if tfidf_doc_ids is not None and len(tfidf_doc_ids) < self.top_n:
+            logger.critical("odqa top_n parameter should be less or equal to top_n parameter of tfidf")
+
+        if tfidf_doc_ids is None and 'batch_best_answers_doc_ids' in self.out_params:
+            logger.info("you didn't pass tfidf_doc_ids as input in logit_ranker config so batch_best_answers_doc_ids"
+                        "can't be compute")
+
+        name_map = {'best_answer': 'batch_best_answers', 'best_answer_score': 'batch_best_answers_score',
+                    'best_answer_place': 'batch_best_answers_place',
+                    'best_answer_doc_ids': 'batch_best_answers_doc_ids'}
 
         batch_best_answers = []
-        batch_best_answers_scores = []
-        for contexts, questions in zip(contexts_batch, questions_batch):
+        batch_best_answers_score = []
+        batch_best_answers_place = []
+        batch_best_answers_doc_ids = []
+        for quest_ind, [contexts, questions] in enumerate(zip(contexts_batch, questions_batch)):
             results = []
             for i in range(0, len(contexts), self.batch_size):
                 c_batch = contexts[i: i + self.batch_size]
@@ -74,9 +88,16 @@ class LogitRanker(Component):
                 batch_predict = zip(*self.squad_model(c_batch, q_batch))
                 results += batch_predict
             if self.sort_noans:
-                results = sorted(results, key=lambda x: (x[0] != '', x[2]), reverse=True)
+                results_sort = sorted(results, key=lambda x: (x[0] != '', x[2]), reverse=True)
             else:
-                results = sorted(results, key=itemgetter(2), reverse=True)
-            batch_best_answers.append(results[0][0])
-            batch_best_answers_scores.append(results[0][2])
-        return batch_best_answers, batch_best_answers_scores
+                results_sort = sorted(results, key=itemgetter(2), reverse=True)
+            batch_best_answers.append([x[0] for x in results_sort[:self.top_n] if x[0]])
+            batch_best_answers_place.append([x[1] for x in results_sort[:self.top_n] if x[0]])
+            batch_best_answers_score.append([x[2] for x in results_sort[:self.top_n] if x[0]])
+            if tfidf_doc_ids is not None:
+                doc_ind = [results.index(x) for x in results_sort]
+                batch_best_answers_doc_ids.append(
+                    [tfidf_doc_ids[quest_ind][i] for i in doc_ind][:len(batch_best_answers[-1])])
+
+        local_vars = locals()
+        return (local_vars[name_map[param]] for param in self.out_params)
