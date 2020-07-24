@@ -336,8 +336,8 @@ class TorchBertSequenceTagger(TorchModel):
             logits = self.model(b_input_ids, token_type_ids=None, attention_mask=b_input_masks)
 
         # Move logits and labels to CPU and to numpy arrays
-        logits = token_from_subtoken(logits[0].to(torch.device("cpu")), torch.from_numpy(y_masks))
-        logits = logits.detach().cpu().numpy()
+        logits = token_from_subtoken(logits[0].detach().cpu(), torch.from_numpy(y_masks))
+        logits = logits.numpy()
 
         if self.return_probas:
             pred = logits
@@ -345,6 +345,7 @@ class TorchBertSequenceTagger(TorchModel):
             pred = np.argmax(logits, axis=-1)
             seq_lengths = np.sum(y_masks, axis=1)
             pred = [p[:l] for l, p in zip(seq_lengths, pred)]
+
         return pred
 
     @overrides
