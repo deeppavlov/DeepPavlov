@@ -102,7 +102,10 @@ class TorchModel(NNModel):
             raise AttributeError("Model is not defined.")
 
     @overrides
-    def load(self, *args, **kwargs):
+    def load(self, fname=None, *args, **kwargs):
+        if fname is not None:
+            self.load_path = fname
+
         model_func = getattr(self, self.opt.get("model_name"), None)
 
         if self.load_path:

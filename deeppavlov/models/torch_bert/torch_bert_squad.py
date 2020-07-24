@@ -85,7 +85,10 @@ class TorchBertSQuADModel(TorchModel):
         self.model.eval()
 
     @overrides
-    def load(self):
+    def load(self, fname):
+        if fname is not None:
+            self.load_path = fname
+
         if self.pretrained_bert and not os.path.isfile(self.pretrained_bert):
             self.model = BertForQuestionAnswering.from_pretrained(
                 self.pretrained_bert, output_attentions=False, output_hidden_states=False)

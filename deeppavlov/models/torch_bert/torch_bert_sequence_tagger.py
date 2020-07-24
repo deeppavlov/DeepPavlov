@@ -341,7 +341,10 @@ class TorchBertSequenceTagger(TorchModel):
         return pred
 
     @overrides
-    def load(self):
+    def load(self, fname=None):
+        if fname is not None:
+            self.load_path = fname
+
         if self.pretrained_bert and not os.path.isfile(self.pretrained_bert):
             self.model = BertForTokenClassification.from_pretrained(
                 self.pretrained_bert, num_labels=self.n_classes,
