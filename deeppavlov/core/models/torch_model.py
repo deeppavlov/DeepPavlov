@@ -53,9 +53,14 @@ class TorchModel(NNModel):
     """
 
     def __init__(self, device: str = "gpu",
+                 optimizer: str = "AdamW",
+                 optimizer_parameters: dict = {"lr": 0.01},
+                 lr_scheduler: Optional[str] = None,
+                 lr_scheduler_parameters: Optional[dict] = {},
                  learning_rate_drop_patience: Optional[int] = None,
                  learning_rate_drop_div: Optional[float] = None,
-                 load_before_drop: bool = True, min_learning_rate: float = 0.,
+                 load_before_drop: bool = True,
+                 min_learning_rate: float = 0.,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.device = torch.device("cuda" if torch.cuda.is_available() and device == "gpu" else "cpu")
@@ -64,6 +69,12 @@ class TorchModel(NNModel):
         self.lr_scheduler = None
         self.criterion = None
         self.epochs_done = 0
+
+        self.optimizer_name = optimizer
+        self.optimizer_parameters = optimizer_parameters
+        self.lr_scheduler_name = lr_scheduler
+        self.lr_scheduler_parameters = lr_scheduler_parameters
+
         self.learning_rate_drop_patience = learning_rate_drop_patience
         self.learning_rate_drop_div = learning_rate_drop_div
         self.load_before_drop = load_before_drop
@@ -79,11 +90,11 @@ class TorchModel(NNModel):
     def init_from_opt(self, model_func):
         if callable(model_func):
             self.model = model_func(**self.opt)
-            self.optimizer = getattr(torch.optim, self.opt["optimizer"])(
-                self.model.parameters(), **self.opt.get("optimizer_parameters", {}))
+            self.optimizer = getattr(torch.optim, self.optimizer_name)(
+                self.model.parameters(), **self.optimizer_parameters)
             if self.opt.get("lr_scheduler", None):
-                self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.opt["lr_scheduler"])(
-                    self.optimizer, **self.opt.get("lr_scheduler_parameters", {}))
+                self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
+                    self.optimizer, **self.lr_scheduler_parameters)
 
             if self.opt.get("criterion", None):
                 self.criterion = getattr(torch.nn, self.opt.get("criterion", None))()
