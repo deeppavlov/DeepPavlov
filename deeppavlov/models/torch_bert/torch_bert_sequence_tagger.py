@@ -262,6 +262,8 @@ class TorchBertSequenceTagger(TorchModel):
     def train_on_batch(self,
                        input_ids: Union[List[List[int]], np.ndarray],
                        input_masks: Union[List[List[int]], np.ndarray],
+                       y_masks: Union[List[List[int]], np.ndarray],
+                       y: List[List[int]],
                        *args, **kwargs) -> Dict[str, float]:
         """
 
@@ -280,10 +282,18 @@ class TorchBertSequenceTagger(TorchModel):
         """
         b_input_ids = torch.from_numpy(input_ids).to(self.device)
         b_input_masks = torch.from_numpy(input_masks).to(self.device)
+        b_labels = torch.from_numpy(np.array(y)).to(self.device)
+
+        # seq_lengths = np.sum(y_masks, axis=1)
+        # max_length = torch.max(seq_lengths)
+        # one_hot_max_len = torch.nn.functional.one_hot(self.seq_lengths - 1, max_length)
+        # tag_mask = torch.cumsum(one_hot_max_len[:, ::-1], axis=1)[:, ::-1]
+        # y_mask = tag_mask.to(torch.float64)
 
         self.optimizer.zero_grad()
 
-        loss, logits = self.model(input_ids=b_input_ids, token_type_ids=None, attention_mask=b_input_masks)
+        loss, logits = self.model(input_ids=b_input_ids, token_type_ids=None, attention_mask=b_input_masks,
+                                  labels=b_labels)
         loss.backward()
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
