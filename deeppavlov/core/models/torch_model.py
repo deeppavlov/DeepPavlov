@@ -174,5 +174,6 @@ class TorchModel(NNModel):
                 log.info(f"----------Current LR is decreased in {self.learning_rate_drop_div} times----------")
                 if self.load_before_drop:
                     self.load(self.save_path)
+                    self.model.eval()
                 for param_group in self.optimizer.param_groups:
                     param_group['lr'] = max(param_group['lr'] / self.learning_rate_drop_div, self.min_learning_rate)
