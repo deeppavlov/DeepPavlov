@@ -325,7 +325,7 @@ class TorchBertSequenceTagger(TorchModel):
         if self.return_probas:
             pred = logits
         else:
-            pred = np.argmax(logits, axis=1)
+            pred = np.argmax(logits, axis=-1)
         return pred
 
     @overrides
