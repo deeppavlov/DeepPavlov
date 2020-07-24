@@ -180,14 +180,14 @@ def token_labels_to_subtoken_labels(labels, y_mask, input_mask):
     subtoken_labels = []
     labels_ind = 0
 
-    for el in zip(y_mask[1:sum(input_mask) - 1]):
+    for el in y_mask[1:np.sum(input_mask) - 1]:
         if el == 1:
             subtoken_labels += [labels[labels_ind]]
             labels_ind += 1
         else:
             subtoken_labels += [labels[labels_ind - 1]]
 
-    subtoken_labels = [0] + subtoken_labels + [0] * (len(input_mask) - sum(input_mask) + 1)
+    subtoken_labels = [0] + subtoken_labels + [0] * (len(input_mask) - np.sum(input_mask) + 1)
     return subtoken_labels
 
 
