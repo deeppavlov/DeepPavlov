@@ -165,11 +165,11 @@ class TorchBertClassifierModel(TorchModel):
                 self.bert_config.hidden_dropout_prob = 1.0 - self.hidden_keep_prob
             self.model = BertForSequenceClassification(config=self.bert_config)
 
-        self.optimizer = getattr(torch.optim, self.opt["optimizer"])(
-            self.model.parameters(), **self.opt.get("optimizer_parameters", {}))
+        self.optimizer = getattr(torch.optim, self.optimizer_name)(
+            self.model.parameters(), **self.optimizer_parameters)
         if self.opt.get("lr_scheduler", None):
-            self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.opt["lr_scheduler"])(
-                self.optimizer, **self.opt.get("lr_scheduler_parameters", {}))
+            self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
+                self.optimizer, **self.lr_scheduler_parameters)
 
         if self.load_path:
             log.info(f"Load path {self.load_path} is given.")
