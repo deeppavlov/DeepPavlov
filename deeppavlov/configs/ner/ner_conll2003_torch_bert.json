@@ -65,7 +65,7 @@
         ],
         "optimizer": "AdamW",
         "optimizer_parameters": {
-          "lr": 1e-3,
+          "lr": 2e-5,
           "weight_decay": 1e-6,
           "betas": [
             0.9,
