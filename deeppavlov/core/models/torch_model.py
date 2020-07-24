@@ -92,7 +92,7 @@ class TorchModel(NNModel):
             self.model = model_func(**self.opt)
             self.optimizer = getattr(torch.optim, self.optimizer_name)(
                 self.model.parameters(), **self.optimizer_parameters)
-            if self.opt.get("lr_scheduler", None):
+            if self.lr_scheduler_name:
                 self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
                     self.optimizer, **self.lr_scheduler_parameters)
 

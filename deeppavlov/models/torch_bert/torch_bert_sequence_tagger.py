@@ -296,7 +296,7 @@ class TorchBertSequenceTagger(TorchModel):
         b_input_ids = torch.from_numpy(input_ids).to(self.device)
         b_input_masks = torch.from_numpy(input_masks).to(self.device)
         subtoken_labels = [token_labels_to_subtoken_labels(y_el, y_mask) for y_el, y_mask in zip(y, y_masks)]
-        b_labels = torch.from_numpy(np.array(subtoken_labels)).to(self.device).to(torch.int64)
+        b_labels = torch.from_numpy(np.array(subtoken_labels)).to(torch.int64).to(self.device)
         self.optimizer.zero_grad()
 
         loss, logits = self.model(input_ids=b_input_ids, token_type_ids=None, attention_mask=b_input_masks,
@@ -367,7 +367,7 @@ class TorchBertSequenceTagger(TorchModel):
 
         self.optimizer = getattr(torch.optim, self.optimizer_name)(
             self.model.parameters(), **self.optimizer_parameters)
-        if self.opt.get("lr_scheduler", None):
+        if self.lr_scheduler_name is not None:
             self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
                 self.optimizer, **self.lr_scheduler_parameters)
 
