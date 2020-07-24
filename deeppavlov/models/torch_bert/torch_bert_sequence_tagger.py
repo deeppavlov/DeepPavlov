@@ -178,6 +178,18 @@ def token_from_subtoken(units: torch.Tensor, mask: torch.Tensor) -> torch.Tensor
     return tensor
 
 
+def token_labels_to_subtoken_labels(labels, y_mask):
+    subtoken_labels = []
+    labels_ind = 0
+    for el in y_mask[1:-1]:
+        if el == 1:
+            subtoken_labels += [labels[labels_ind]]
+            labels_ind += 1
+        else:
+            subtoken_labels += [labels[labels_ind - 1]]
+    return subtoken_labels
+
+
 @register('torch_bert_sequence_tagger')
 class TorchBertSequenceTagger(TorchModel):
     """BERT-based model for text tagging. It predicts a label for every token (not subtoken) in the text.
@@ -282,19 +294,12 @@ class TorchBertSequenceTagger(TorchModel):
         """
         b_input_ids = torch.from_numpy(input_ids).to(self.device)
         b_input_masks = torch.from_numpy(input_masks).to(self.device)
-        b_labels = torch.from_numpy(np.array(y)).to(self.device)
-        b_y_masks = torch.from_numpy(np.array(y_masks)).to(self.device)
-
-        seq_lengths = torch.sum(b_y_masks, axis=1)
-        max_length = torch.max(seq_lengths)
-        one_hot_max_len = torch.nn.functional.one_hot(seq_lengths - 1, max_length)
-        tag_mask = torch.cumsum(one_hot_max_len[:, ::-1], axis=1)[:, ::-1]
-        y_mask = tag_mask.to(torch.float64)
-
+        subtoken_labels = token_labels_to_subtoken_labels(y, y_masks)
+        b_labels = torch.from_numpy(np.array(subtoken_labels)).to(self.device)
         self.optimizer.zero_grad()
 
         loss, logits = self.model(input_ids=b_input_ids, token_type_ids=None, attention_mask=b_input_masks,
-                                  head_mask=y_mask, labels=b_labels)
+                                  labels=b_labels)
         loss.backward()
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
