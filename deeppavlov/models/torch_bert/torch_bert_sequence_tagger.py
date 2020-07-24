@@ -329,6 +329,8 @@ class TorchBertSequenceTagger(TorchModel):
             pred = logits
         else:
             pred = np.argmax(logits, axis=-1)
+            seq_lengths = np.sum(y_masks, axis=1)
+            pred = [p[:l] for l, p in zip(seq_lengths, pred)]
         return pred
 
     @overrides
