@@ -65,9 +65,6 @@ class LogitRanker(Component):
             desirable variables as specified by 'out' parameter of JSON config
         """
 
-        if tfidf_doc_ids is not None and len(tfidf_doc_ids) < self.top_n:
-            logger.critical("odqa top_n parameter should be less or equal to top_n parameter of tfidf")
-
         if tfidf_doc_ids is None and 'batch_best_answers_doc_ids' in self.out_params:
             logger.info("you didn't pass tfidf_doc_ids as input in logit_ranker config so batch_best_answers_doc_ids"
                         "can't be compute")
