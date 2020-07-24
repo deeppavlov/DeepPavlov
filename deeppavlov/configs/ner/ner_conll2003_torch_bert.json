@@ -73,6 +73,7 @@
           ],
           "eps": 1e-6
         },
+        "clip_norm": 1.0,
         "min_learning_rate": 1e-7,
         "learning_rate_drop_patience": 30,
         "learning_rate_drop_div": 1.5,
