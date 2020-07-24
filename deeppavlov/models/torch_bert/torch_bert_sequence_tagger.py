@@ -265,11 +265,6 @@ class TorchBertSequenceTagger(TorchModel):
                          min_learning_rate=min_learning_rate,
                          **kwargs)
 
-        self.load()
-        self.model.to(self.device)
-        # need to move it to `eval` mode because it can be used in `build_model` (not by `torch_trainer`
-        self.model.eval()
-
     def train_on_batch(self,
                        input_ids: Union[List[List[int]], np.ndarray],
                        input_masks: Union[List[List[int]], np.ndarray],

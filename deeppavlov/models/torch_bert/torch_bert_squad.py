@@ -60,29 +60,33 @@ class TorchBertSQuADModel(TorchModel):
     def __init__(self, keep_prob: float,
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
-                 optimizer: Optional[str] = None,
-                 weight_decay_rate: Optional[float] = 0.01,
+                 optimizer: Optional[str] = "AdamW",
+                 optimizer_parameters: Optional[dict] = {"lr": 0.01, "weight_decay": 0.01,
+                                                         "betas": (0.9, 0.999), "eps": 1e-6},
                  pretrained_bert: Optional[str] = None,
                  bert_config_file: str = None,
-                 min_learning_rate: float = 1e-06, **kwargs) -> None:
+                 learning_rate_drop_patience: int = 20,
+                 learning_rate_drop_div: float = 2.0,
+                 load_before_drop: bool = True,
+                 clip_norm: float = 1.0,
+                 min_learning_rate: float = 1e-06,
+                 **kwargs) -> None:
 
         self.min_learning_rate = min_learning_rate
         self.keep_prob = keep_prob
-        self.optimizer = optimizer
-        self.weight_decay_rate = weight_decay_rate
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
-        self.learning_rate = kwargs["learning_rate"]
-        self.weight_decay_rate = kwargs.get("weight_decay_rate", 0.)
+        self.clip_norm = clip_norm
 
-        super().__init__(**kwargs)
-
-        self.load()
-        self.model.to(self.device)
-        # need to move it to `eval` mode because it can be used in `build_model` (not by `torch_trainer`
-        self.model.eval()
+        super().__init__(optimizer=optimizer,
+                         optimizer_parameters=optimizer_parameters,
+                         learning_rate_drop_patience=learning_rate_drop_patience,
+                         learning_rate_drop_div=learning_rate_drop_div,
+                         load_before_drop=load_before_drop,
+                         min_learning_rate=min_learning_rate,
+                         **kwargs)
 
     @overrides
     def load(self, fname):
@@ -101,8 +105,11 @@ class TorchBertSQuADModel(TorchModel):
                 self.bert_config.hidden_dropout_prob = 1.0 - self.hidden_keep_prob
             self.model = BertForQuestionAnswering(config=self.bert_config)
 
-        self.optimizer = AdamW(self.model.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay_rate,
-                               betas=(0.9, 0.999), eps=1e-6)
+        self.optimizer = getattr(torch.optim, self.optimizer_name)(
+            self.model.parameters(), **self.optimizer_parameters)
+        if self.lr_scheduler_name is not None:
+            self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
+                self.optimizer, **self.lr_scheduler_parameters)
 
         if self.load_path:
             logger.info(f"Load path {self.load_path} is given.")
