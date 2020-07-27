@@ -406,7 +406,7 @@ class SquadBertMappingPreprocessor(Component):
             idx = 0
             subtok2char = {}
             char2subtok = {}
-            for i, subtok in list(enumerate(features.tokens))[context_start:-1]:
+            for i, subtok in list(enumerate(subtokens))[context_start:-1]:
                 subtok = subtok[2:] if subtok.startswith('##') else subtok
                 subtok_pos = context[idx:].find(subtok)
                 if subtok_pos == -1:
