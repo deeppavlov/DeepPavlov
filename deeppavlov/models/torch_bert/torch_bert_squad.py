@@ -72,13 +72,13 @@ class TorchBertSQuADModel(TorchModel):
                  min_learning_rate: float = 1e-06,
                  **kwargs) -> None:
 
-        self.min_learning_rate = min_learning_rate
         self.keep_prob = keep_prob
-        self.pretrained_bert = pretrained_bert
-        self.bert_config_file = bert_config_file
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
         self.clip_norm = clip_norm
+
+        self.pretrained_bert = pretrained_bert
+        self.bert_config_file = bert_config_file
 
         super().__init__(optimizer=optimizer,
                          optimizer_parameters=optimizer_parameters,
@@ -87,58 +87,6 @@ class TorchBertSQuADModel(TorchModel):
                          load_before_drop=load_before_drop,
                          min_learning_rate=min_learning_rate,
                          **kwargs)
-
-    @overrides
-    def load(self, fname):
-        if fname is not None:
-            self.load_path = fname
-
-        if self.pretrained_bert and not os.path.isfile(self.pretrained_bert):
-            self.model = BertForQuestionAnswering.from_pretrained(
-                self.pretrained_bert, output_attentions=False, output_hidden_states=False)
-        elif self.bert_config_file and os.path.isfile(self.bert_config_file):
-            self.bert_config = BertConfig.from_json_file(str(expand_path(self.bert_config_file)))
-
-            if self.attention_probs_keep_prob is not None:
-                self.bert_config.attention_probs_dropout_prob = 1.0 - self.attention_probs_keep_prob
-            if self.hidden_keep_prob is not None:
-                self.bert_config.hidden_dropout_prob = 1.0 - self.hidden_keep_prob
-            self.model = BertForQuestionAnswering(config=self.bert_config)
-
-        self.optimizer = getattr(torch.optim, self.optimizer_name)(
-            self.model.parameters(), **self.optimizer_parameters)
-        if self.lr_scheduler_name is not None:
-            self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
-                self.optimizer, **self.lr_scheduler_parameters)
-
-        if self.load_path:
-            logger.info(f"Load path {self.load_path} is given.")
-            if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
-                raise ConfigError("Provided load path is incorrect!")
-
-            weights_path = Path("{}.pth.tar".format(str(self.load_path.resolve())))
-            if weights_path.exists():
-                logger.info(f"Load path {weights_path} exists.")
-                logger.info(f"Initializing `{self.__class__.__name__}` from saved.")
-
-                # firstly, initialize with random weights and previously saved parameters
-                if self.opt.get("lr_scheduler", None):
-                    self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.opt["lr_scheduler"])(
-                        self.optimizer, **self.opt.get("lr_scheduler_parameters", {}))
-
-                # now load the weights, optimizer from saved
-                logger.info(f"Loading weights from {weights_path}.")
-                checkpoint = torch.load(weights_path, map_location=self.device)
-                self.model.load_state_dict(checkpoint["model_state_dict"])
-                self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-                self.epochs_done = checkpoint.get("epochs_done", 0)
-            else:
-                logger.info(f"Init from scratch. Load path {weights_path} does not exist.")
-                if self.opt.get("lr_scheduler", None):
-                    self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.opt["lr_scheduler"])(
-                        self.optimizer, **self.opt.get("lr_scheduler_parameters", {}))
-
-        self.model.to(self.device)
 
     def train_on_batch(self, features: List[InputFeatures], y_st: List[List[int]], y_end: List[List[int]]) -> Dict:
         """Train model on given batch.
@@ -173,6 +121,10 @@ class TorchBertSQuADModel(TorchModel):
                              start_positions=b_y_st, end_positions=b_y_end)
         loss, start_scores, end_scores = outputs[:3]
         loss.backward()
+        # Clip the norm of the gradients to 1.0.
+        # This is to help prevent the "exploding gradients" problem.
+        if self.clip_norm:
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
 
         self.optimizer.step()
         if self.lr_scheduler is not None:
@@ -211,6 +163,50 @@ class TorchBertSQuADModel(TorchModel):
         end_pos = np.argmax(end_scores, axis=1).tolist()
 
         return start_pos, end_pos, start_scores.tolist(), end_scores.tolist()
+
+    @overrides
+    def load(self, fname=None):
+        if fname is not None:
+            self.load_path = fname
+
+        if self.pretrained_bert and not os.path.isfile(self.pretrained_bert):
+            self.model = BertForQuestionAnswering.from_pretrained(
+                self.pretrained_bert, output_attentions=False, output_hidden_states=False)
+        elif self.bert_config_file and os.path.isfile(self.bert_config_file):
+            self.bert_config = BertConfig.from_json_file(str(expand_path(self.bert_config_file)))
+
+            if self.attention_probs_keep_prob is not None:
+                self.bert_config.attention_probs_dropout_prob = 1.0 - self.attention_probs_keep_prob
+            if self.hidden_keep_prob is not None:
+                self.bert_config.hidden_dropout_prob = 1.0 - self.hidden_keep_prob
+            self.model = BertForQuestionAnswering(config=self.bert_config)
+
+        self.optimizer = getattr(torch.optim, self.optimizer_name)(
+            self.model.parameters(), **self.optimizer_parameters)
+        if self.lr_scheduler_name is not None:
+            self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
+                self.optimizer, **self.lr_scheduler_parameters)
+
+        if self.load_path:
+            logger.info(f"Load path {self.load_path} is given.")
+            if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
+                raise ConfigError("Provided load path is incorrect!")
+
+            weights_path = Path("{}.pth.tar".format(str(self.load_path.resolve())))
+            if weights_path.exists():
+                logger.info(f"Load path {weights_path} exists.")
+                logger.info(f"Initializing `{self.__class__.__name__}` from saved.")
+
+                # now load the weights, optimizer from saved
+                logger.info(f"Loading weights from {weights_path}.")
+                checkpoint = torch.load(weights_path, map_location=self.device)
+                self.model.load_state_dict(checkpoint["model_state_dict"])
+                self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+                self.epochs_done = checkpoint.get("epochs_done", 0)
+            else:
+                logger.info(f"Init from scratch. Load path {weights_path} does not exist.")
+
+        self.model.to(self.device)
 
 
 @register('torch_squad_bert_infer')
