@@ -89,7 +89,7 @@ class TorchModel(NNModel):
 
     def init_from_opt(self, model_func):
         if callable(model_func):
-            self.model = model_func(**self.opt)
+            self.model = model_func(**self.opt).to(self.device)
             self.optimizer = getattr(torch.optim, self.optimizer_name)(
                 self.model.parameters(), **self.optimizer_parameters)
             if self.lr_scheduler_name:
@@ -133,8 +133,6 @@ class TorchModel(NNModel):
         else:
             log.info(f"Init from scratch. Load path {self.load_path} is not provided.")
             self.init_from_opt(model_func)
-
-        self.model.to(self.device)
 
     @overrides
     def save(self, fname: Optional[str] = None, *args, **kwargs):

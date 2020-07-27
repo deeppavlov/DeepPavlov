@@ -200,7 +200,10 @@ class TorchBertSQuADModel(TorchModel):
             if self.hidden_keep_prob is not None:
                 self.bert_config.hidden_dropout_prob = 1.0 - self.hidden_keep_prob
             self.model = BertForQuestionAnswering(config=self.bert_config)
+        else:
+            raise ConfigError("No pre-trained BERT model is given.")
 
+        self.model.to(self.device)
         self.optimizer = getattr(torch.optim, self.optimizer_name)(
             self.model.parameters(), **self.optimizer_parameters)
         if self.lr_scheduler_name is not None:
@@ -225,8 +228,6 @@ class TorchBertSQuADModel(TorchModel):
                 self.epochs_done = checkpoint.get("epochs_done", 0)
             else:
                 logger.info(f"Init from scratch. Load path {weights_path} does not exist.")
-
-        self.model.to(self.device)
 
 
 @register('torch_squad_bert_infer')

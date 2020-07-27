@@ -22,6 +22,7 @@ import numpy as np
 import torch
 from transformers import BertForNextSentencePrediction, BertConfig
 
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
@@ -108,6 +109,8 @@ class TorchBertAsSummarizer(TorchModel):
             if self.hidden_keep_prob is not None:
                 self.bert_config.hidden_dropout_prob = 1.0 - self.hidden_keep_prob
             self.model = BertForNextSentencePrediction(config=self.bert_config)
+        else:
+            raise ConfigError("No pre-trained BERT model is given.")
 
         self.model.to(self.device)
 

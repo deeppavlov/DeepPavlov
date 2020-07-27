@@ -348,7 +348,11 @@ class TorchBertSequenceTagger(TorchModel):
             if self.hidden_keep_prob is not None:
                 self.bert_config.hidden_dropout_prob = 1.0 - self.hidden_keep_prob
             self.model = BertForTokenClassification(config=self.bert_config)
+        else:
+            raise ConfigError("No pre-trained BERT model is given.")
 
+        self.model.to(self.device)
+        
         self.optimizer = getattr(torch.optim, self.optimizer_name)(
             self.model.parameters(), **self.optimizer_parameters)
         if self.lr_scheduler_name is not None:
@@ -373,5 +377,3 @@ class TorchBertSequenceTagger(TorchModel):
                 self.epochs_done = checkpoint.get("epochs_done", 0)
             else:
                 log.info(f"Init from scratch. Load path {weights_path} does not exist.")
-
-        self.model.to(self.device)
