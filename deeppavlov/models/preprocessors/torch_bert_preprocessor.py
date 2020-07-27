@@ -39,18 +39,23 @@ class TorchBertPreprocessor(Component):
         vocab_file: path to vocabulary
         do_lower_case: set True if lowercasing is needed
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
+        return_tokens: whether to return tuple of inputfeatures and tokens, or only inputfeatures
 
     Attributes:
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
+        return_tokens: whether to return tuple of inputfeatures and tokens, or only inputfeatures
         tokenizer: instance of Bert FullTokenizer
+
     """
 
     def __init__(self,
                  vocab_file: str,
                  do_lower_case: bool = True,
                  max_seq_length: int = 512,
+                 return_tokens: Optional[bool] = False,
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
+        self.return_tokens = return_tokens
         if os.path.isfile(vocab_file):
             vocab_file = str(expand_path(vocab_file))
             self.tokenizer = BertTokenizer(vocab_file=vocab_file,
@@ -58,7 +63,8 @@ class TorchBertPreprocessor(Component):
         else:
             self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=True)
 
-    def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> List[InputFeatures]:
+    def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> Union[
+            List[InputFeatures], Tuple[List[InputFeatures], List[List[str]]]]:
         """Tokenize and create masks.
 
         texts_a and texts_b are separated by [SEP] token
@@ -68,14 +74,16 @@ class TorchBertPreprocessor(Component):
             texts_b: list of texts, it could be None, e.g. single sentence classification task
 
         Returns:
-            batch of :class:`bert_dp.preprocessing.InputFeatures` with subtokens, subtoken ids, subtoken mask, segment mask.
-
+            batch of :class:`transformers.data.processors.utils.InputFeatures`
+                    with subtokens, subtoken ids, subtoken mask, segment mask.
+            of tuple of batch of InputFeatures and Batch of subtokens
         """
 
         if texts_b is None:
             texts_b = [None] * len(texts_a)
 
         input_features = []
+        tokens = []
         for text_a, text_b in zip(texts_a, texts_b):
             encoded_dict = self.tokenizer.encode_plus(
                 text=text_a, text_pair=text_b, add_special_tokens=True, max_length=self.max_seq_length,
@@ -85,8 +93,13 @@ class TorchBertPreprocessor(Component):
                                           token_type_ids=encoded_dict['token_type_ids'],
                                           label=None)
             input_features.append(curr_features)
+            if self.return_tokens:
+                tokens.append(self.tokenizer.convert_ids_to_tokens(encoded_dict['input_ids'][0]))
 
-        return input_features
+        if self.return_tokens:
+            return input_features, tokens
+        else:
+            return input_features
 
 
 @register('torch_bert_ner_preprocessor')
@@ -237,7 +250,7 @@ class TorchBertRankerPreprocessor(TorchBertPreprocessor):
     """
 
     def __call__(self, batch: List[List[str]]) -> List[List[InputFeatures]]:
-        """Call BERT :func:`bert_dp.preprocessing.convert_examples_to_features` function to tokenize and create masks.
+        """Tokenize and create masks.
 
         Args:
             batch: list of elemenents where the first element represents the batch with contexts
