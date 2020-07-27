@@ -29,6 +29,7 @@ Welcome to DeepPavlov's documentation!
    BERT-based models <features/models/bert>
    Context Question Answering <features/models/squad>
    Classification <features/models/classifiers>
+   Entity Linking <features/models/entity_linking>
    Morphological Tagger <features/models/morphotagger>
    Named Entity Recognition <features/models/ner>
    Neural Ranking <features/models/neural_ranking>
