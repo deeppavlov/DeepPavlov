@@ -340,7 +340,6 @@ class MultiTaskBert(LRScheduledTFModel):
                 values = args
             n_distributed = sum([n_args for n_args in distribution.values()])
             if len(values) != n_distributed:
-                log.debug(f"(MultiTaskBert.__call__)args: {args}")
                 raise ConfigError(f"The number of '{what_to_distribute}' arguments of MultitaskBert does not match "
                     f"the number of distributed params according to '{what_to_distribute}_distribution' parameter. "
                     f"{len(values)} parameters are in '{what_to_distribute}' and {n_distributed} parameters are in "
@@ -437,7 +436,6 @@ class MultiTaskBert(LRScheduledTFModel):
             list results of called tasks.
         """
         args_by_task = self._distribute_arguments_by_tasks(args, kwargs, task_names, "in", in_distribution)        
-        log.debug(f"(MultiTaskBert.call)args_by_task: {args_by_task}")
         results = []
         task_count = 0
         for elem in task_names:
@@ -456,7 +454,6 @@ class MultiTaskBert(LRScheduledTFModel):
                         *args_by_task[task_name])
                     fetches.append(task_fetches)
                     feed_dict = self._unite_task_feed_dicts(feed_dict, task_feed_dict, task_name)
-                log.debug(f"(MultiTaskBert.call)fetches: {fetches}")
                 sess_run_res = self.sess.run(fetches, feed_dict=feed_dict)
                 for task_name, srs in zip(elem, sess_run_res):
                     task_results = self.tasks[task_name].post_process_preds(srs)
@@ -928,7 +925,6 @@ class MTBertClassificationTask(MTBertTask):
             learning_rate: float = 2e-5,
             optimizer: str = "Adam",
     ):
-        log.debug(f"(MTBertClassificationTask.__init__)n_classes: {n_classes}")
         super().__init__(keep_prob, return_probas, learning_rate)
         self.n_classes = n_classes
         self.one_hot_labels = one_hot_labels
@@ -1078,7 +1074,6 @@ class MTBertReUser:
             list of results of inference of tasks listed in `task_names`
         """
         res = self.mt_bert.call(args, kwargs, task_names=self.task_names, in_distribution=self.in_distribution)
-        log.debug(f"(MTBertReUser.__call__)res: {res}")
         return res
 
 

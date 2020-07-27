@@ -37,7 +37,39 @@ models. The ``metadata`` field of config is below
 
 .. code: json
 
-    {"foo": "bar"}
+  "metadata": {                                                                                                           
+    "variables": {                                                                                                        
+      "ROOT_PATH": "~/.deeppavlov",                                                                                       
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",                                                                          
+      "MODELS_PATH": "{ROOT_PATH}/models",                                                                                
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",                                                  
+      "MT_BERT_PATH": "{MODELS_PATH}/mt_bert_tutorial",                                                                   
+      "INSULTS_PATH": "{MT_BERT_PATH}/insults",                                                                           
+      "SENTIMENT_PATH": "{MT_BERT_PATH}/sentiment",                                                                       
+      "NER_PATH": "{MT_BERT_PATH}/ner"                                                                                    
+    },                                                                                                                    
+    "requirements": [                                                                                                     
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",                                                                            
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",                                                                       
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",                                                                      
+      "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",                                                                     
+      "{DEEPPAVLOV_PATH}/requirements/hdt.txt"                                                                            
+    ],                                                                                                                    
+    "download": [                                                                                                         
+      {                                                                                                                   
+        "url": "http://files.deeppavlov.ai/datasets/insults_data.tar.gz",                                                 
+        "subdir": "{DOWNLOADS_PATH}"                                                                                      
+      },                                                                                                                  
+      {                                                                                                                   
+        "url": "http://files.deeppavlov.ai/datasets/yelp_review_full_csv.tar.gz",                                         
+        "subdir": "{DOWNLOADS_PATH}"                                                                                      
+      },                                                                                                                  
+      {                                                                                                                   
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",                               
+        "subdir": "{DOWNLOADS_PATH}/bert_models"                                                                          
+      }                                                                                                                   
+    ]                                                                                                                     
+  }
 
 
 Train config
@@ -228,7 +260,7 @@ work if put in file ``deeppavlov/metrics/fmeasure.py``.
         return (roc_auc1 + roc_auc2 + ner_f1_3) / 3
 
 Inference config
-------------
+----------------
 
 Let's compare train and inference configs. In inference config there is no dataset reader and dataset iterator in test
 config and there is no 'in_y' preparation components in pipe. ``train`` field can be removed. In ``multitask_bert``
