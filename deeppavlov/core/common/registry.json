@@ -171,6 +171,7 @@
   "tfidf_ranker": "deeppavlov.models.doc_retrieval.tfidf_ranker:TfidfRanker",
   "tfidf_weighted": "deeppavlov.models.embedders.tfidf_weighted_embedder:TfidfWeightedEmbedder",
   "top1_elector": "deeppavlov.models.spelling_correction.electors.top1_elector:TopOneElector",
+  "torch_bert_as_summarizer": "deeppavlov.models.torch_bert.torch_bert_as_summarizer:TorchBertAsSummarizer",
   "torch_bert_classifier": "deeppavlov.models.torch_bert.torch_bert_classifier:TorchBertClassifierModel",
   "torch_bert_ner_preprocessor": "deeppavlov.models.preprocessors.torch_bert_preprocessor:TorchBertNerPreprocessor",
   "torch_bert_preprocessor": "deeppavlov.models.preprocessors.torch_bert_preprocessor:TorchBertPreprocessor",
