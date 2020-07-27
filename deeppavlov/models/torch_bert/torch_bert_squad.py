@@ -153,16 +153,31 @@ class TorchBertSQuADModel(TorchModel):
         with torch.no_grad():
             # Forward pass, calculate logit predictions
             outputs = self.model(input_ids=b_input_ids, attention_mask=b_input_masks, token_type_ids=b_input_type_ids)
-        start_scores, end_scores = outputs[:2]
+            logits_st, logits_end = outputs[:2]
+            start_scores = torch.nn.softmax(logits_st, dim=-1)
+            end_scores = torch.nn.softmax(logits_end, dim=-1)
+
+            scores = torch.tensor(1) - torch.nn.functional.softmax(
+                start_scores, dim=-1)[:, 0] * torch.nn.functional.softmax(end_scores, dim=-1)[:, 0]
+
+            outer_logits = torch.exp(logits_st.view(*logits_st.size(), 1) + logits_end.view(*logits_end.size(), 1))
+            context_max_len = torch.max(torch.sum(b_input_type_ids, dim=1)).to(torch.int64)
+            max_ans_length = torch.min(torch.tensor(20), context_max_len).to(torch.int64)
+            # outer = torch.triu(outer, diagonal=max_ans_length)
+            outer_logits = torch.triu(outer_logits, diagonal=max_ans_length.item())
+            logits_last_dim_max, _ = torch.max(outer_logits, dim=2)
+            logits, _ = torch.max(logits_last_dim_max, dim=1)
 
         # Move logits and labels to CPU and to numpy arrays
         start_scores = start_scores.detach().cpu().numpy()
         end_scores = end_scores.detach().cpu().numpy()
+        logits = logits.detach().cpu().numpy().tolist()
+        scores = scores.detach().cpu().numpy().tolist()
 
         start_pos = np.argmax(start_scores, axis=1).tolist()
         end_pos = np.argmax(end_scores, axis=1).tolist()
 
-        return start_pos, end_pos, start_scores.tolist(), end_scores.tolist()
+        return start_pos, end_pos, logits, scores
 
     @overrides
     def load(self, fname=None):
