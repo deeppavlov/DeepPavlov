@@ -119,7 +119,7 @@ class TorchBertSQuADModel(TorchModel):
         outputs = self.model(input_ids=b_input_ids, attention_mask=b_input_masks,
                              token_type_ids=b_input_type_ids,
                              start_positions=b_y_st, end_positions=b_y_end)
-        loss, start_scores, end_scores = outputs[:3]
+        loss = outputs[0]
         loss.backward()
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
