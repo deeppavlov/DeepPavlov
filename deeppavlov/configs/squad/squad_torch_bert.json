@@ -58,7 +58,7 @@
       },
       {
         "class_name": "squad_bert_ans_postprocessor",
-        "in": ["ans_start_predicted", "ans_end_predicted", "context_raw", "bert_features", "subtok2chars"],
+        "in": ["ans_start_predicted", "ans_end_predicted", "context_raw", "bert_features", "subtok2chars", "subtokens"],
         "out": ["ans_predicted", "ans_start_predicted", "ans_end_predicted"]
       }
     ],
