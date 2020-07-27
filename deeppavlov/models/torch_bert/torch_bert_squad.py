@@ -37,7 +37,7 @@ logger = getLogger(__name__)
 
 @register('torch_squad_bert_model')
 class TorchBertSQuADModel(TorchModel):
-    """Bert-based model for SQuAD-like problem setting:
+    """Bert-based on PyTorch model for SQuAD-like problem setting:
     It predicts start and end position of answer for given question and context.
 
     [CLS] token is used as no_answer. If model selects [CLS] token as most probable

@@ -194,7 +194,7 @@ def token_labels_to_subtoken_labels(labels, y_mask, input_mask):
 
 @register('torch_bert_sequence_tagger')
 class TorchBertSequenceTagger(TorchModel):
-    """BERT-based model for text tagging. It predicts a label for every token (not subtoken) in the text.
+    """BERT-based model on PyTorch for text tagging. It predicts a label for every token (not subtoken) in the text.
     You can use it for sequence labeling tasks, such as morphological tagging or named entity recognition.
     See :class:`deeppavlov.models.bert.bert_sequence_tagger.BertSequenceNetwork`
     for the description of inherited parameters.
