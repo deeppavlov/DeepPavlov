@@ -88,14 +88,7 @@ class RelRankerMTBertInfer(Component, Serializable):
 
                 features = self.bert_preprocessor(questions_batch, rels_labels_batch)
                 probas = self.ranker(features)
-                import numpy as np
-                from deeppavlov.models.kbqa.debug_helpers import recursive_shape
-                log.debug(f"(RelRankingMTBertInfer.__call__)probas shape: {np.array(probas).shape}")
                 probas = [proba[1] for proba in probas]
-                log.debug(f"(RelRankingMTBertInfer.__call__)probas shape: {np.array(probas).shape}")
-                log.debug(
-                    f"(RelRankingMTBertInfer.__call__)rels_labels_batch shape: {recursive_shape(rels_labels_batch)}")
-                log.debug(f"(RelRankingMTBertInfer.__call__)answers_batch shape: {recursive_shape(answers_batch)}")
                 for j, (answer, rels_labels) in enumerate(zip(answers_batch, rels_labels_batch)):
                     answers_with_scores.append((answer, rels_labels, probas[j]))
 

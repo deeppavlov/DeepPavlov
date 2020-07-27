@@ -20,8 +20,6 @@ from typing import Iterator, Tuple
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.params import from_params
 
-from deeppavlov.models.kbqa.debug_helpers import recursive_shape  # FIXME: remove debug import
-
 
 log = getLogger(__name__)
 

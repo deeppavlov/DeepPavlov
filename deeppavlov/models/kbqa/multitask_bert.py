@@ -34,9 +34,6 @@ from deeppavlov.models.bert.bert_sequence_tagger import token_from_subtoken
 log = getLogger(__name__)
 
 
-from deeppavlov.models.kbqa.debug_helpers import recursive_shape, recursive_type
-
-
 @register('mt_bert')
 class MultiTaskBert(LRScheduledTFModel):
     """The component for multi task BERT. It builds the BERT body, launches building of bert heads. 
