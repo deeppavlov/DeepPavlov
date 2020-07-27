@@ -21,7 +21,7 @@ Currently there are heads for classification (``mt_bert_classification_task``) a
 (``mt_bert_seq_tagging_task``).
 
 At this page Multitask BERT usage is explained on a toy configuration file of a model which detects
-insults, analyzes sentiment and recognises named entities. Multitask Bert configuration files for train
+insults, analyzes sentiment and recognises named entities. Multitask Bert configuration files for training
 :config:`mt_bert_train_tutorial.json <tutorials/mt_bert/mt_bert_train_tutorial.json>` and for inference
 :config:`mt_bert_inference_tutorial.json <tutorials/mt_bert/mt_bert_inference_tutorial.json>` are based on configs
 :config:`insults_kaggle_bert.json <classifiers/insults_kaggle_bert.json>`,
@@ -331,4 +331,3 @@ approximately 2 times more time.
         "in": ["bert_features", "bert_features"],
         "out": ["y_insults_pred_probas", "y_sentiment_pred_probas"]
       }
-
