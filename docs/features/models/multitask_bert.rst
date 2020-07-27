@@ -89,34 +89,36 @@ below.
 
 .. code:: json
 
-  "dataset_reader": {
-    "class_name": "multitask_reader",
-    "data_path": "null",
-    "tasks": {
-      "insults": {
-        "reader_class_name": "basic_classification_reader",
-        "x": "Comment",
-        "y": "Class",
-        "data_path": "{DOWNLOADS_PATH}/insults_data"
-      },
-      "sentiment": {
-        "reader_class_name": "basic_classification_reader",
-        "x": "text",
-        "y": "label",
-        "data_path": "{DOWNLOADS_PATH}/yelp_review_full_csv",
-        "train": "train.csv",
-        "test": "test.csv",
-        "header": null,
-        "names": [
-          "label",
-          "text"
-        ]
-      },
-      "ner": {
-        "reader_class_name": "conll2003_reader",
-        "data_path": "{DOWNLOADS_PATH}/conll2003/",
-        "dataset_name": "conll2003",
-        "provide_pos": false
+  {
+    "dataset_reader": {
+      "class_name": "multitask_reader",
+      "data_path": "null",
+      "tasks": {
+        "insults": {
+          "reader_class_name": "basic_classification_reader",
+          "x": "Comment",
+          "y": "Class",
+          "data_path": "{DOWNLOADS_PATH}/insults_data"
+        },
+        "sentiment": {
+          "reader_class_name": "basic_classification_reader",
+          "x": "text",
+          "y": "label",
+          "data_path": "{DOWNLOADS_PATH}/yelp_review_full_csv",
+          "train": "train.csv",
+          "test": "test.csv",
+          "header": null,
+          "names": [
+            "label",
+            "text"
+          ]
+        },
+        "ner": {
+          "reader_class_name": "conll2003_reader",
+          "data_path": "{DOWNLOADS_PATH}/conll2003/",
+          "dataset_name": "conll2003",
+          "provide_pos": false
+        }
       }
     }
   }
@@ -127,28 +129,30 @@ configurations of task iterators. In configurations of task iterators ``iterator
 
 .. code:: json
 
-  "dataset_iterator": {
-    "class_name": "multitask_iterator",
-    "tasks": {
-      "insults": {
-        "iterator_class_name": "basic_classification_iterator",
-        "seed": 42
-      },
-      "sentiment": {
-        "iterator_class_name": "basic_classification_iterator",
-        "seed": 42,
-        "split_seed": 23,
-        "field_to_split": "train",
-        "split_fields": [
-          "train",
-          "valid"
-        ],
-        "split_proportions": [
-          0.9,
-          0.1
-        ]
-      },
-      "ner": {"iterator_class_name": "data_learning_iterator"}
+  {
+    "dataset_iterator": {
+      "class_name": "multitask_iterator",
+      "tasks": {
+        "insults": {
+          "iterator_class_name": "basic_classification_iterator",
+          "seed": 42
+        },
+        "sentiment": {
+          "iterator_class_name": "basic_classification_iterator",
+          "seed": 42,
+          "split_seed": 23,
+          "field_to_split": "train",
+          "split_fields": [
+            "train",
+            "valid"
+          ],
+          "split_proportions": [
+            0.9,
+            0.1
+          ]
+        },
+        "ner": {"iterator_class_name": "data_learning_iterator"}
+      }
     }
   }
 
@@ -166,8 +170,10 @@ In this example there are 3 datasets. Considering the batch structure ``chainer`
 
 .. code:: json
 
+  {
     "in": ["x_insults", "x_sentiment", "x_ner"],
-    "in_y": ["y_insults", "y_sentiment", "y_ner"],
+    "in_y": ["y_insults", "y_sentiment", "y_ner"]
+  }
 
 Data preparation steps in pipe are similar to original configs except for names of the variables.
 
