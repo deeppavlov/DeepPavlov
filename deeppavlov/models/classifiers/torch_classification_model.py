@@ -189,5 +189,4 @@ class TorchTextClassificationModel(TorchModel):
                                   dense_size=dense_size, dropout_rate=dropout_rate,
                                   multi_label=self.opt["multi_label"], embedded_tokens=self.opt["embedded_tokens"],
                                   vocab_size=self.opt["vocab_size"])
-        model.to(self.device)
         return model
