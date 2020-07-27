@@ -33,54 +33,37 @@
       {                                                                                                                
         "class_name": "mt_bert",
         "id": "mt_bert_kbqa",
-        "inference_launch_names": ["ner"],
+        "inference_task_names": ["ner"],
         "bert_config_file": "{BERT_PATH}/bert_config.json",
         "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
         "load_path": "{MT_BERT_PATH}/model",
         "save_path": "{MT_BERT_PATH}/model",
-        "launches_params": {
+        "tasks": {
           "ner": {
-            "tasks": {
-              "ner": {
-                "class_name": "mt_bert_seq_tagging_task",
-                "bert_head_variable_scope": "ner",
-                "n_tags": "#tag_vocab.len",
-                "use_crf": false,
-                "return_probas": true,
-                "encoder_layer_ids": [-1],
-                "in_names": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask"]
-              }
-            }
+            "class_name": "mt_bert_seq_tagging_task",
+            "n_tags": "#tag_vocab.len",
+            "use_crf": false,
+            "return_probas": true,
+            "encoder_layer_ids": [-1]
           },
           "query_prediction": {
-            "tasks": {
-              "query_prediction": {
-                "class_name": "mt_bert_classification_task",
-                "bert_head_variable_scope": "qr_prediction",
-                "n_classes": "#queries_vocab.len",
-                "return_probas": true,
-                "one_hot_labels": true,
-                "in_names": ["bert_features_qr"]
-              }
-            }
+            "class_name": "mt_bert_classification_task",
+            "n_classes": "#queries_vocab.len",
+            "return_probas": true,
+            "one_hot_labels": true
           },
           "rel_ranking": {
-            "tasks": {
-              "rel_ranking": {
-                "class_name": "mt_bert_classification_task",
-                "bert_head_variable_scope": "rel_ranking",
-                "n_classes": 2,
-                "return_probas": true,
-                "one_hot_labels": false,
-                "in_names": ["bert_features_rr"]
-              }
-            }
+            "class_name": "mt_bert_classification_task",
+            "n_classes": 2,
+            "return_probas": true,
+            "one_hot_labels": false
           }
         },
+        "in_distribution": {"ner": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask"]},
         "in": {
-            "x_subword_tok_ids": "x_subword_tok_ids", 
-            "x_subword_mask": "x_subword_mask", 
-            "pred_subword_mask": "pred_subword_mask"
+          "x_subword_tok_ids": "x_subword_tok_ids", 
+          "x_subword_mask": "x_subword_mask", 
+          "pred_subword_mask": "pred_subword_mask"
         },                                                                                
         "out": ["tag_probas_ner"]                                                                 
       }, 
@@ -96,7 +79,8 @@
       {
         "class_name": "mt_bert_reuser",
         "mt_bert": "#mt_bert_kbqa",
-        "launch_name": "query_prediction",
+        "task_names": [["query_prediction"]],
+        "in_distribution": {"query_prediction": 1},
         "in": ["bert_features_qr"],
         "out": ["template_probas"]
       },
@@ -192,7 +176,8 @@
         "ranker":{
           "class_name": "mt_bert_reuser",
           "mt_bert": "#mt_bert_kbqa",
-          "launch_name": "rel_ranking"
+          "task_names": "rel_ranking",
+          "in_distribution": {"rel_ranking": 1}
         },
         "wiki_parser": "#wiki_p",
         "batch_size": 32,
@@ -235,7 +220,7 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
-      "MT_BERT_PATH": "{MODELS_PATH}/mt_bert"
+      "MT_BERT_PATH": "{MODELS_PATH}/mt_bert_kbqa"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",

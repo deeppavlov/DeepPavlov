@@ -110,6 +110,7 @@
         "bert_config_file": "{BERT_PATH}/bert_config.json",
         "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
         "attention_probs_keep_prob": 0.5,
+        "freeze_embeddings": false,
         "body_learning_rate": 3e-5,
         "min_body_learning_rate": 2e-7,
         "learning_rate_drop_patience": 10,
@@ -117,54 +118,34 @@
         "load_before_drop": true,
         "optimizer": "tf.train:AdamOptimizer",
         "clip_norm": 1.0,
-        "launches_params": {
+        "tasks": {
           "ner": {
-            "tasks": {
-              "ner": {
-                "class_name": "mt_bert_seq_tagging_task",
-                "bert_head_variable_scope": "ner",
-                "n_tags": "#tag_vocab.len",
-                "use_crf": false,
-                "keep_prob": 0.1,
-                "return_probas": false,
-                "encoder_layer_ids": [-1],
-                "learning_rate": 1e-4,
-                "in_names": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask"],
-                "in_y_names": ["y_ner_ind"]
-              }
-            }
+            "class_name": "mt_bert_seq_tagging_task",
+            "n_tags": "#tag_vocab.len",
+            "use_crf": false,
+            "keep_prob": 0.5,
+            "return_probas": false,
+            "encoder_layer_ids": [-1],
+            "learning_rate": 1e-4
           },
           "query_prediction": {
-            "tasks": { 
-              "query_prediction": {
-                "class_name": "mt_bert_classification_task",
-                "bert_head_variable_scope": "qr_prediction",
-                "n_classes": "#queries_vocab.len",
-                "return_probas": true,
-                "one_hot_labels": true,
-                "keep_prob": 0.5,
-                "learning_rate": 1e-4,
-                "in_names": ["bert_features_qr"],
-                "in_y_names": ["y_qr_onehot"]
-              }
-            }
+            "class_name": "mt_bert_classification_task",
+            "n_classes": "#queries_vocab.len",
+            "return_probas": true,
+            "one_hot_labels": true,
+            "keep_prob": 0.5,
+            "learning_rate": 1e-4
           },
           "rel_ranking": {
-            "tasks": {
-              "rel_ranking": {
-                "class_name": "mt_bert_classification_task",
-                "bert_head_variable_scope": "rel_ranking",
-                "n_classes": 2,
-                "return_probas": false,
-                "one_hot_labels": false,
-                "keep_prob": 0.5,
-                "learning_rate": 1e-4,
-                "in_names": ["bert_features_rr"],
-                "in_y_names": ["y_rr"]
-              }
-            }
+            "class_name": "mt_bert_classification_task",
+            "n_classes": 2,
+            "return_probas": false,
+            "one_hot_labels": false,
+            "keep_prob": 0.5,
+            "learning_rate": 1e-4
           }
         },
+        "in_distribution": {"ner": 3, "query_prediction": 1, "rel_ranking": 1},
         "in":  {
           "x_subword_tok_ids": "x_subword_tok_ids",
           "x_subword_mask": "x_subword_mask",
@@ -172,6 +153,7 @@
           "bert_features_qr": "bert_features_qr",
           "bert_features_rr": "bert_features_rr"
         },
+        "in_y_distribution": {"ner": 1, "query_prediction": 1, "rel_ranking": 1},
         "in_y": {
           "y_ner_ind": "y_ner_ind",
           "y_qr_onehot": "y_qr_onehot",
@@ -199,11 +181,11 @@
     "out": ["ner_labels", "qr_labels", "rr_preds"]
   },
   "train": {
-    "epochs": 1,
+    "epochs": 5,
     "batch_size": 32,
     "metrics": [
       {
-        "name": "ner_f1__f1_macro__f1",
+        "name": "average__ner_f1__f1_macro__f1",
         "inputs": ["y_ner", "ner_labels", "y_qr", "qr_labels", "y_rr", "rr_preds"]
       },
       {
@@ -236,7 +218,7 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",
-      "MT_BERT_PATH": "{MODELS_PATH}/mt_bert",
+      "MT_BERT_PATH": "{MODELS_PATH}/mt_bert_kbqa",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
     "requirements": [

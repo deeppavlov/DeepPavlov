@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 from abc import ABC, abstractmethod
 from logging import getLogger
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -24,6 +25,7 @@ from bert_dp.preprocessing import InputFeatures
 from overrides import overrides
 
 from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.layers.tf_layers import bi_rnn
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
@@ -37,13 +39,17 @@ from deeppavlov.models.kbqa.debug_helpers import recursive_shape, recursive_type
 
 @register('mt_bert')
 class MultiTaskBert(LRScheduledTFModel):
-    """The component for multi task BERT. It builds the BERT body, initiates building of bert heads. 
-    When the component `__call__` or `train_on_batch` methods are called the component calls appropriate methods
-    of head components. 
+    """The component for multi task BERT. It builds the BERT body, launches building of bert heads. 
 
-    The aggregates components aggreates commponents implementing Bert heads. The head components are called tasks.
-    Tasks are split in groups called launches. If tasks they can be in one launch. If tasks are in same launch the
-    `__call__` method runs the tasks simultaneously with one call of `tf.Session.run()`.
+    The component aggregates components implementing Bert heads. The head components are called tasks.
+    `__call__` and `train_on_batch` methods of `MultiTaskBert` are used for inference and training of 
+    BERT heads. BERT head components derived from `MTBertTask` can be used only inside this class.
+
+    One training iteration consists of one `train_on_batch` consequent call for every task.
+    
+    If `inference_task_names` is not `None` then the component is created for training. Otherwise the 
+    component is created for inference. If component is created for inference several tasks can be run 
+    simultaneously. For explanation see parameter `inference_task_names` description.
 
     Args:
         bert_config_file: path to Bert configuration file
@@ -58,12 +64,31 @@ class MultiTaskBert(LRScheduledTFModel):
         load_before_drop: whether to load best model before dropping learning rate or not
         clip_norm: clip gradients by norm
         freeze_embeddings: set False to train input embeddings
-        inference_launch_names: list of names of launches used in the inference mode. If this parameter is provided 
-            model is used in inference mode.
+        inference_task_names: names of task on which inference is done.
+            If this paramter is provided the component is created for inference else the component is created for
+            training. If tasks have identical inputs on inference they can be run simultaneously. For tasks running
+            simultaneously `inference_task_names` has to be a `list` and in `inference_task_names` tasks have to 
+            be in one `list. E.g. if `inference_task_names` is equal to 
+            `["task1", "task2", ["task3", "task4", "task5"]]` than tasks `"task3"`, `"task4"`, and `"task5"` are run
+            simultaneously.
+        in_distribution: The distribution of variables listed in 'in' config parameter between tasks. 
+            `in_distribuition` can be `None` if the component is infered on one task. In that case all in variables
+            listed in 'in' are arguments of 1 task. 
+
+            `in_distribution` can be a dictionary of `int`. If so then keys of `in_distribution` are task names and 
+            values are numbers of variables from 'in' parameter in config which are inputs of corresponding task.
+            The variables in 'in' parameter have to be in the same order the tasks are listed in `in_distribution`.
+            
+            `in_distribution` can be a dictionary of lists of `str`. Strings are names of variables from 'in'
+            parameter. If 'in' parameter is a list then 'in_distribution' works the same way dictionary of `int` 
+            works meaning that lists are replaced with their lengths. If 'in' parameter is a dictionary then the order
+            of strings should match the order of arguments of `train_on_batch` and `get_sess_run_infer_args` methods
+            of task components.
+        in_y_distribution: The same as `in_distribution` for 'in_y' config parameter.
     """
     def __init__(self,
                  bert_config_file: str,
-                 launches_params: dict,
+                 tasks: Dict[str, Dict[str, Any]],
                  pretrained_bert: str = None,
                  attention_probs_keep_prob: float = None,
                  hidden_keep_prob: float = None,
@@ -76,7 +101,9 @@ class MultiTaskBert(LRScheduledTFModel):
                  load_before_drop: bool = True,
                  clip_norm: float = 1.0,
                  freeze_embeddings: bool = True,
-                 inference_launch_names: List[str] = None,
+                 inference_task_names: Optional[Union[str, List[Union[List[str], str]]]] = None,
+                 in_distribution: Optional[Dict[str, Union[int, List[str]]]] = None,
+                 in_y_distribution: Optional[Dict[str, Union[int, List[str]]]] = None,
                  **kwargs) -> None:
         super().__init__(learning_rate=body_learning_rate,
                          learning_rate_drop_div=learning_rate_drop_div,
@@ -91,9 +118,13 @@ class MultiTaskBert(LRScheduledTFModel):
             "weight_decay_rate": weight_decay_rate
         }
         self.freeze_embeddings = freeze_embeddings
-        self.launches_tasks = launches_params
-        self.inference_launch_names = inference_launch_names
-        self.mode = 'train' if self.inference_launch_names is None else 'inference'
+        self.tasks = tasks
+
+        if inference_task_names is not None and isinstance(inference_task_names, str):
+            inference_task_names = [inference_task_names]
+        self.inference_task_names = inference_task_names
+
+        self.mode = 'train' if self.inference_task_names is None else 'inference'
 
         self.shared_ph = None
 
@@ -119,32 +150,30 @@ class MultiTaskBert(LRScheduledTFModel):
                     and not (self.load_path and tf.train.checkpoint_exists(str(self.load_path.resolve()))) \
                     and self.mode == 'train':
                 log.info('[initializing model with Bert from {}]'.format(pretrained_bert))
-                task_names = []
-                for launch_params in self.launches_tasks.values():
-                    for task_obj in launch_params['tasks'].values():
-                        task_names.append(task_obj.bert_head_variable_scope)
                 var_list = self._get_saveable_variables(
-                    exclude_scopes=('Optimizer', 'learning_rate', 'momentum') + tuple(task_names))
+                    exclude_scopes=('Optimizer', 'learning_rate', 'momentum') + tuple(self.tasks.keys()))
                 saver = tf.train.Saver(var_list)
                 saver.restore(self.sess, pretrained_bert)
 
         if self.load_path is not None:
             self.load()
+        self.in_distribution = in_distribution
+        self.in_y_distribution = in_y_distribution
 
     def build_tasks(self):
         def get_train_op(*args, **kwargs):
             return self.get_train_op(*args, **kwargs)
-        for launch_name, launch_params in self.launches_tasks.items():
-            for task_name, task_obj in launch_params['tasks'].items():
-                task_obj.build(
-                    bert_body=self.bert,
-                    optimizer_params=self.optimizer_params,
-                    shared_placeholders=self.shared_ph,
-                    sess=self.sess,
-                    mode=self.mode,
-                    get_train_op_func=get_train_op,
-                    freeze_embeddings=self.freeze_embeddings
-                )
+        for task_name, task_obj in self.tasks.items():
+            task_obj.build(
+                bert_body=self.bert,
+                optimizer_params=self.optimizer_params,
+                shared_placeholders=self.shared_ph,
+                sess=self.sess,
+                mode=self.mode,
+                get_train_op_func=get_train_op,
+                freeze_embeddings=self.freeze_embeddings,
+                bert_head_variable_scope=task_name
+            )
 
     def _init_shared_placeholders(self) -> None:
         self.shared_ph = {
@@ -182,70 +211,211 @@ class MultiTaskBert(LRScheduledTFModel):
              **kwargs) -> None:
         return super().load(exclude_scopes=exclude_scopes, **kwargs)
 
-    def train_on_batch(self, *args, **kwargs) -> None:
+    def train_on_batch(self, *args, **kwargs) -> Dict[str, Dict[str, float]]:
         """Calls `train_on_batch` methods for every task. This method takes either `args` or `kwargs` not both.
         The order of `args` is the same as the order of tasks in the component parameters:
         ```python
         args = [
-            launch1_task1_in_x[0],
-            launch1_task1_in_x[1],
-            launch1_task1_in_x[2],
+            task1_in_x[0],
+            task1_in_x[1],
+            task1_in_x[2],
             ...
-            launch1_task1_in_y[0],
-            launch1_task1_in_y[1],
+            task1_in_y[0],
+            task1_in_y[1],
             ...
-            launch1_task2_in_x[0],
-            ...
-            launch2_task1_in_x[0],
+            task2_in_x[0],
             ...
         ]
-        ```
+        ``
         
-        If `kwargs` are used keys of args have to match values of `in_names` and `in_y_names` params passed to the
+        If `kwargs` are used and `in_distribution` and `in_y_distribution` are dictionaries of lists of strings then
+        keys of `kwargs have to be same as strings in `in_distribution` and `in_y_distribution`. If `in_distribution`
+        and `in_y_distribution` are dictionaries of `int` then `kwargs` values are treated the same way as `args.
         tasks. 
+ 
+        Args:
+            args: BERT body learning rate and task inputs and expected outputs
+            kwargs: BERT body learning rate and task inputs and expected outputs
+
+        Returns:
+            dictionary of dictionaries with task losses and learning rates.
         """
         # TODO: test passing arguments as args
         if args and kwargs:
             raise ValueError("You can use either args or kwargs not both")
-        tasks = []
-        for launch_params in self.launches_tasks.values():
-            for task in launch_params['tasks'].values():
-                tasks.append(task)
-        num_x_args = sum([len(task.in_names) for task in tasks])
-        num_used_x_args, num_used_y_args = 0, num_x_args
-        for task in tasks:
-            if args:
-                kw = {
-                    inp_name: a for inp_name, a 
-                    in zip(
-                        task.in_names + task.in_y_names, 
-                        args[num_used_x_args:num_used_x_args+len(task.in_names)] 
-                            + args[num_used_y_args:num_used_y_args+len(task.in_y_names)],
-                    )
-                }
-                num_used_x_args += len(task.in_names)
-                num_used_y_args += len(task.in_y_names)
-            else:
-                kw = {inp_name: kwargs[inp_name] for inp_name in task.in_names + task.in_y_names}
-            task.train_on_batch(
-                **kw, 
-                body_learning_rate=max(self.get_learning_rate(), self.optimizer_params['min_body_learning_rate'])
+        n_in = sum([len(inp) if isinstance(inp, list) else inp for inp in self.in_distribution.values()])
+        if args:
+            args_in, args_in_y = args[:n_in], args[n_in:]
+            in_by_tasks = self._distribute_arguments_by_tasks(args_in, {}, list(self.tasks.keys()), "in")
+            in_y_by_tasks = self._distribute_arguments_by_tasks(args_in_y, {}, list(self.tasks.keys()), "in_y")
+        else:
+            kwargs_in, kwargs_in_y = {}, {}
+            for i, (k, v) in enumerate(kwargs.items()):
+                if i < n_in:
+                    kwargs_in[k] = v
+                else:
+                    kwargs_in_y[k] = v
+            in_by_tasks = self._distribute_arguments_by_tasks({}, kwargs_in, list(self.tasks.keys()), "in")
+            in_y_by_tasks = self._distribute_arguments_by_tasks({}, kwargs_in_y, list(self.tasks.keys()), "in_y")
+        train_on_batch_results = {}
+        for task_name, task in self.tasks.items():
+            train_on_batch_results.update(
+                task.train_on_batch(
+                    *in_by_tasks[task_name],
+                    *in_y_by_tasks[task_name], 
+                    body_learning_rate=max(self.get_learning_rate(), self.optimizer_params['min_body_learning_rate'])
+                )
             )
+        for k, v in train_on_batch_results.items():
+            train_on_batch_results[k] = float(f"{v:.3}")
+        return train_on_batch_results
 
-    def __call__(self, *args, launch_name: Optional[str] = None, **kwargs):
-        """Calls one or several BERT heads depending on provided launch names. `args` and `kwargs` contain 
+    @staticmethod
+    def _unite_task_feed_dicts(d1, d2, task_name):
+        d = copy.copy(d1)
+        for k, v in d2.items():
+            if k in d:
+                comp = v != d[k]
+                if isinstance(comp, np.ndarray):
+                    comp = comp.any()
+                if comp:
+                    raise ValueError(
+                        f"Value of placeholder {k} for task '{task_name}' does not match value of this placeholder "
+                        "other tasks")
+            else:
+                d[k] = v
+        return d
+
+    def _distribute_arguments_by_tasks(self, args, kwargs, task_names, what_to_distribute, in_distribution=None):
+        if args and kwargs:
+            raise ValueError("You may use either args or kwargs not both")
+
+        if what_to_distribute == "in":
+            if in_distribution is not None:
+                distribution = in_distribution
+            else:
+                distribution = self.in_distribution
+        elif what_to_distribute == "in_y":
+            if in_distribution is not None:
+                raise ValueError(
+                    f"If parameter `what_to_distribute` is 'in_y' parameter `in_distribution` has to be `None`. "
+                    f"in_distribution = {in_distribution}")
+            distribution = self.in_y_distribution
+        else:
+            raise ValueError(f"`what_to_distribute` can be 'in' or 'in_y', {repr(what_to_distribute)} is given")
+
+        if distribution is None:
+            if len(task_names) != 1:
+                raise ValueError(f"If no '{what_to_distribute}_distribution' is not provided there have to be only 1"
+                    "task for inference")
+            return {task_names[0]: list(kwargs.values()) if kwargs else list(args)}
+
+        if all([isinstance(task_distr, int) for task_distr in distribution.values()]):
+            ints = True
+        elif all([isinstance(task_distr, list) for task_distr in distribution.values()]):
+            ints = False
+        else:
+            raise ConfigError(
+                f"Values of `{what_to_distribute}_distribution` attributte of `MultiTaskBert` have to be "
+                f"either `int` or `list` not both. "
+                f"{what_to_distribute}_distribution = {distribution}")
+
+        args_by_task = {}
+        
+        flattened = []
+        for task_name in task_names:
+            if isinstance(task_name, str):
+                flattened.append(task_name)
+            else:
+                flattened.extend(task_name)
+        task_names = flattened 
+
+        if args and not ints:
+            ints = True
+            distribution = {task_name: len(in_distr) for task_name, in_distr in distribution.items()}
+        if ints:
+            if kwargs:
+                values = list(kwargs.values())
+            else:
+                values = args
+            n_distributed = sum([n_args for n_args in distribution.values()])
+            if len(values) != n_distributed:
+                log.debug(f"(MultiTaskBert.__call__)args: {args}")
+                raise ConfigError(f"The number of '{what_to_distribute}' arguments of MultitaskBert does not match "
+                    f"the number of distributed params according to '{what_to_distribute}_distribution' parameter. "
+                    f"{len(values)} parameters are in '{what_to_distribute}' and {n_distributed} parameters are in "
+                    f"'{what_to_distribute}_distribution'. "
+                    f"{what_to_distribute}_distribution = {distribution}")
+            values_taken = 0
+            for task_name in task_names:
+                args_by_task[task_name] = {}
+                n_args = distribution[task_name]
+                args_by_task[task_name] = [values[i] for i in range(values_taken, values_taken + n_args)]
+                values_taken += n_args
+            
+        else:
+            assert kwargs
+            arg_names_used = []
+            for task_name in task_names:
+                in_distr = distribution[task_name]
+                args_by_task[task_name] = {}    
+                args_by_task[task_name] = [kwargs[arg_name] for arg_name in in_distr]
+                arg_names_used += in_distr
+            set_used = set(arg_names_used)
+            set_all = set(kwargs.keys())
+            if set_used != set_all:
+                raise ConfigError(f"There are unused '{what_to_distribute}' parameters {set_all - set_used}")
+        return args_by_task
+
+    def __call__(self, *args, **kwargs):
+        """Calls one or several BERT heads depending on provided task names. `args` and `kwargs` contain 
+        inputs of BERT tasks. `args` and `kwargs cannot be used together. If `args` are used `args` content has 
+        to be
+        ```python
+        args = [
+            task1_in_x[0],
+            task1_in_x[1],
+            ...
+            task2_in_x[0],
+            task2_in_x[1],
+            ...
+        ]
+        ```
+
+        If `kwargs` are used and `in_distribution` is dictionary of `int` then `kwargs` order has to be the same as 
+        `args` order described in previous paragraph. If `in_distribution` is a dictionary of lists of `str`, then
+        `kwargs` have to contain all strings in `in_distribution` values.
+        
+        Returns:
+            list of results of called tasks.
+        """
+        if self.inference_task_names is None:
+            task_names = list(self.tasks.keys())
+        else:
+            task_names = self.inference_task_names
+        if not task_names:
+            raise ValueError("No tasks to call")
+        if args and kwargs:
+            raise ValueError("You may use either args or kwargs not both")
+        return self.call(args, kwargs, task_names)
+
+    def call(
+            self, 
+            args: List[Any],
+            kwargs: Dict[str, Any], 
+            task_names: Optional[Union[List[str], str]],
+            in_distribution: Optional[Union[Dict[str, int], Dict[str, List[str]]]] = None,
+    ):
+        """Calls one or several BERT heads depending on provided task names. `args` and `kwargs` contain 
         inputs of BERT tasks. `args` and `kwargs cannot be used simultaneously. If `args` are used `args` content has 
         to be
         ```python
         args = [
-            launch1_task1_in_x[0],
-            launch1_task1_in_x[1],
+            task1_in_x[0],
+            task1_in_x[1],
             ...
-            launch1_task2_in_x[0],
-            launch1_task2_in_x[1],
-            ...
-            launch2_task1_in_x[0],
-            launch2_task1_in_x[1],
+            task2_in_x[0],
+            task2_in_x[1],
             ...
         ]
         ```
@@ -253,87 +423,71 @@ class MultiTaskBert(LRScheduledTFModel):
         If `kwargs` is used `kwargs` keys has to match content of `in_names` params of called tasks.
 
         Args:
-            launch_name: launch which which task are called. If `launch_name` is not provided and 
-                `self.inference_launches` is not `None` launches from `self.inference_launches` are run. If 
-                `launch_name` is `None` and `self.inference_launches` is `None` all launches are run.
+            args: args parameter of `__call__` method of this component or `MTBertReUser`. Inputs of one or several 
+                tasks.
+            kwargs: kwargs parameter of `__call__` method of this component or `MTBertReUser`. Inputs of one or 
+                several tasks.
+            task_names: names of tasks that are called. If `str` then 1 task is called. If a task name is an element 
+                of `task_names` list then this task is run indepedently. If task an element of `task_names` is an
+                list of strings then tasks in the inner list are sun simultaneously.
+            in_distribution: a distribution of variables from 'in' config parameters between tasks. For details see
+                method `__init__` docstring.
         
         Returns:
             list results of called tasks.
         """
-        if args and kwargs:
-            raise ValueError("You may use either args or kwargs not both")
-        if launch_name is None:
-            if self.inference_launch_names is None:
-                launch_names = list(self.launches_tasks.keys())
-            else:
-                launch_names = self.inference_launch_names
-        else:
-            launch_names = [launch_name]
+        args_by_task = self._distribute_arguments_by_tasks(args, kwargs, task_names, "in", in_distribution)        
+        log.debug(f"(MultiTaskBert.call)args_by_task: {args_by_task}")
         results = []
-        for launch_name in launch_names:
-            fetches = []
-            feed_dict = {}
-            tasks = []
-            for launch_tasks in self.launches_tasks[launch_name].values():
-                for task in launch_tasks.values():
-                    tasks.append(task)
-            num_used_args = 0
-            for task in tasks:
-                if args:
-                    kw = {
-                        inp_name: a for inp_name, a 
-                        in zip(task.in_names, args[num_used_args:num_used_args+len(task.in_names)])
-                    }
-                    num_used_args += len(task.in_names)
-                else:
-                    kw = {inp_name: kwargs[inp_name] for inp_name in task.in_names}
-                task_fetches, task_feed_dict = task.get_sess_run_infer_args(**kw)
-                fetches.append(task_fetches)
-                feed_dict.update(task_feed_dict)
-            sess_run_res = self.sess.run(fetches, feed_dict=feed_dict)
-            for task, srs in zip(tasks, sess_run_res):
-                task_results = task.post_process_preds(srs)
-                results.append(task_results)
-        if len(launch_names) == 1 and len(tasks) == 1:
+        task_count = 0
+        for elem in task_names:
+            if isinstance(elem, str):
+                task_count += 1
+                task = self.tasks[elem]
+                fetches, feed_dict = task.get_sess_run_infer_args(*args_by_task[elem])
+                sess_run_res = self.sess.run(fetches, feed_dict=feed_dict)
+                results.append(task.post_process_preds(sess_run_res))
+            else:
+                fetches = []
+                for task_name in elem:
+                    task_count += 1
+                    feed_dict = {}
+                    task_fetches, task_feed_dict = self.tasks[task_name].get_sess_run_infer_args(
+                        *args_by_task[task_name])
+                    fetches.append(task_fetches)
+                    feed_dict = self._unite_task_feed_dicts(feed_dict, task_feed_dict, task_name)
+                log.debug(f"(MultiTaskBert.call)fetches: {fetches}")
+                sess_run_res = self.sess.run(fetches, feed_dict=feed_dict)
+                for task_name, srs in zip(elem, sess_run_res):
+                    task_results = self.tasks[task_name].post_process_preds(srs)
+                    results.append(task_results)
+        if task_count == 1:
             results = results[0]
         return results
 
 
 class MTBertTask(ABC):
-    """Abstract class for multitask Bert tasks. Objects of its subclasses are linked with bert body when `build` 
-    method is called. Training is performed with `train_on_batch` method. One training iteration consists of one
-    `train_on_batch` consequent call for every task. The objects of classes derived from `MTBertTask` don't have 
-    `__call__` method. Instead they have `get_sess_run_infer_args` and `post_process_preds` which are called from 
-    object of `MultiTaskBert` class.
+    """Abstract class for multitask BERT tasks. Objects of its subclasses are linked with BERT body when `build` 
+    method is called. Training is performed with `train_on_batch` method. The objects of classes derived from `MTBertTask` don't have 
+    `__call__` method. Instead they have `get_sess_run_infer_args` and `post_process_preds` methods which are called from 
+    `call` method of `MultiTaskBert` class.
 
     Args:
-        bert_head_variable_scope: the name of the multitask Bert task used as variable scope. This parameter should have equal
-            values in training and inference configs.
         keep_prob: dropout keep_prob for non-Bert layers 
         return_probas: set this to `True` if you need the probabilities instead of raw answers
         learning_rate: learning rate of BERT head
-        in_names: list of inputs of the model. These should be a subset of "in" list of "multitask_bert" component
-            in the config.
-        in_y_names: list of y inputs of the model. These should be a subset of "in_y" list of "multitask_bert"
-            component in the config.
     """
     def __init__(
             self,
-            bert_head_variable_scope: str = "seq_tagging",
             keep_prob: float = 1.,
             return_probas: bool = None,
             learning_rate: float = 1e-3,
-            in_names: List[str] = None,
-            in_y_names: List[str] = None,
     ):
-        self.bert_head_variable_scope = bert_head_variable_scope
         self.keep_prob = keep_prob
         self.return_probas = return_probas
         self.init_head_learning_rate = learning_rate
         self.min_body_learning_rate = None
         self.head_learning_rate_multiplier = None
-        self.in_names = in_names
-        self.in_y_names = in_y_names
 
         self.bert = None
         self.optimizer_params = None
@@ -342,6 +496,7 @@ class MTBertTask(ABC):
         self.sess = None
         self.get_train_op_func = None
         self.freeze_embeddings = None
+        self.bert_head_variable_scope = None
 
     def build(
             self, 
@@ -351,7 +506,8 @@ class MTBertTask(ABC):
             sess: tf.Session, 
             mode: str, 
             get_train_op_func: Callable,
-            freeze_embeddings: bool) -> None:
+            freeze_embeddings: bool,
+            bert_head_variable_scope: str) -> None:
         """Initiates building of the Bert head and initializes optimizer parameters, placeholders that are common for 
         all tasks.
 
@@ -370,6 +526,7 @@ class MTBertTask(ABC):
                 `LRScheduledTFModel.get_train_op` without `self` argument.
             freeze_embeddings: set False to train input embeddings
         """
+        self.bert_head_variable_scope = bert_head_variable_scope
         self.get_train_op_func = get_train_op_func
         self.freeze_embeddings = freeze_embeddings
         self.bert = bert_body
@@ -467,33 +624,32 @@ class MTBertTask(ABC):
             })
         return feed_dict
 
-    def train_on_batch(self, **kwargs) -> Dict[str, float]:
+    def train_on_batch(self, *args, **kwargs) -> Dict[str, float]:
         """Trains the task on one batch. This method will work correctly if you override `get_sess_run_train_args`
         for your task.
         
         Args:
-            kwargs: the keys are `body_learning_rate` and contents of `in_names`, `in_y_names` attributes.
+            kwargs: the keys are `body_learning_rate` and 'in' and 'in_y' params for the task.
 
         Returns:
             dictionary with loss and body and head learning rates.
         """
-        fetches, feed_dict = self.get_sess_run_train_args(**kwargs)
+        fetches, feed_dict = self.get_sess_run_train_args(*args, **kwargs)
         _, loss = self.sess.run(fetches, feed_dict=feed_dict)
-        return {'loss': loss,
+        return {f'{self.bert_head_variable_scope}_loss': loss,
                 f'{self.bert_head_variable_scope}_head_learning_rate':
                     float(kwargs['body_learning_rate']) * self.head_learning_rate_multiplier,
-                'bert_learning_rate': kwargs['body_learning_rate']}
+                'bert_body_learning_rate': kwargs['body_learning_rate']}
 
     @abstractmethod
-    def get_sess_run_infer_args(self, **kwargs) -> Tuple[List[tf.Tensor], Dict[tf.placeholder, Any]]:
+    def get_sess_run_infer_args(self) -> Tuple[List[tf.Tensor], Dict[tf.placeholder, Any]]:
         """Returns fetches and feed_dict for inference. Fetches are lists of tensors and feed_dict is dictionary
-        with placeholder values required for fetches computation. The method is used for when `MultiTaskBert` `__call__`
-        method is used.
+        with placeholder values required for fetches computation. The method is used inside `MultiTaskBert` `__call__`
+        method.
 
         If `self.return_probas` is True fetches contains probabilities tensor and predictions tensor otherwise.
 
-        Args:
-            kwargs: the keys of `kwargs` are model `in_names` attribute content.
+        Overriding methods take task inputs as positional arguments,
         
         Returns:
             fetches and feed_dict
@@ -501,12 +657,10 @@ class MTBertTask(ABC):
         pass
 
     @abstractmethod
-    def get_sess_run_train_args(self, **kwargs) -> Tuple[List[tf.Tensor], Dict[tf.placeholder, Any]]:
+    def get_sess_run_train_args(self) -> Tuple[List[tf.Tensor], Dict[tf.placeholder, Any]]:
         """Returns fetches and feed_dict for task `train_on_batch` method.
 
-        Args:
-            kwargs: the keys of `kwargs` are model `in_names` and `in_y_names` attributes content and 
-                'body_learning_rate`.
+        Overriding methods take task inputs as positional arguments.
 
         Returns:
             fetches and feed_dict
@@ -531,11 +685,9 @@ class MTBertTask(ABC):
 class MTBertSequenceTaggingTask(MTBertTask):
     """BERT head for text tagging. It predicts a label for every token (not subtoken) in the text.
     You can use it for sequence labeling tasks, such as morphological tagging or named entity recognition.
-    Objects of this class should be passed to the constructor of `MultitaskBert` class in param `launches_params`.
+    Objects of this class should be passed to the constructor of `MultiTaskBert` class in param `tasks`.
 
     Args:
-        bert_head_variable_scope: the name of the multitask Bert task used as variable scope. This parameter should have equal
-            values in training and inference configs.
         n_tags: number of distinct tags
         use_crf: whether to use CRF on top or not
         use_birnn: whether to use bidirection rnn after BERT layers.
@@ -549,14 +701,10 @@ class MTBertSequenceTaggingTask(MTBertTask):
             optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
             weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer
         learning_rate: learning rate of BERT head
-        in_names: list of inputs of the model. These should be a subset of "in" list of "multitask_bert" component
-            in config.
-        in_y_names: list of y inputs of the model. These should be a subset of "in_y" list of "multitask_bert"
-            component in config.
     """
+
     def __init__(
             self,
-            bert_head_variable_scope: str = "seq_tagging",
             n_tags: int = None,
             use_crf: bool = None,
             use_birnn: bool = False,
@@ -567,16 +715,8 @@ class MTBertSequenceTaggingTask(MTBertTask):
             return_probas: bool = None,
             encoder_layer_ids: List[int] = None,
             learning_rate: float = 1e-3,
-            in_names: List[str] = None,
-            in_y_names: List[str] = None,
     ):
-        super().__init__(
-            bert_head_variable_scope,
-            keep_prob, 
-            return_probas, 
-            learning_rate, 
-            in_names, 
-            in_y_names)
+        super().__init__(keep_prob, return_probas, learning_rate)
         self.n_tags = n_tags
         self.use_crf = use_crf
         self.use_birnn = use_birnn
@@ -689,31 +829,23 @@ class MTBertSequenceTaggingTask(MTBertTask):
             y_pred += [viterbi_seq]
         return y_pred
 
-    def _check_in_names(self):
-        if len(self.in_names) != 3:
-            raise ValueError(
-                f"Sequence tagging task of multitask Bert takes exactly 3 arguments: input ids, input masks "
-                "and y masks whereas {len(self.in_names)} arguments {self.in_names} are given.")       
-
-    def _check_in_y_names(self):
-        if len(self.in_y_names) != 1:
-            raise ValueError(
-                f"Sequence tagging task of multitask Bert in_y has to have 1 element "
-                "whereas its length is {len(self.in_y_names)}.\nin_y_names = {self.in_y_names}")       
-
-    def get_sess_run_infer_args(self, **kwargs) -> Tuple[List[tf.Tensor], Dict[tf.placeholder, Any]]:
+    def get_sess_run_infer_args(
+            self, 
+            input_ids: Union[List[List[int]], np.ndarray],
+            input_masks: Union[List[List[int]], np.ndarray],
+            y_masks: Union[List[List[int]], np.ndarray],
+    ) -> Tuple[List[tf.Tensor], Dict[tf.placeholder, Any]]:
         """Returns fetches and feed_dict for model inference. The method is called from `MultiTaskBert.__call__`.
 
         Args:
-            kwargs: a dictionary of size 3 containing input ids, input masks, y masks. The keys should be equal to
-                `in_names` attribute.
+            input_ids: indices of the subwords
+            input_masks: mask that determines where to attend and where not to
+            y_masks: mask which determines the first subword units in the the word
 
         Returns:
             list of fetches and feed_dict
         """
-        self._check_in_names()
-        build_feed_dict_args = [kwargs[k] for k in self.in_names]
-        feed_dict = self._build_feed_dict(*build_feed_dict_args)
+        feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks)
         if self.return_probas:
             fetches = self.y_probas
         else:
@@ -723,26 +855,30 @@ class MTBertSequenceTaggingTask(MTBertTask):
                 fetches = [self.y_predictions, self.seq_lengths]
         return fetches, feed_dict
 
-    def get_sess_run_train_args(self, **kwargs) -> Tuple[List[tf.Tensor], Dict[tf.placeholder, Any]]:
+    def get_sess_run_train_args(
+            self, 
+            input_ids: Union[List[List[int]], np.ndarray],                                                                 
+            input_masks: Union[List[List[int]], np.ndarray],                                                               
+            y_masks: Union[List[List[int]], np.ndarray],
+            y: Union[List[List[int]], np.ndarray], 
+            body_learning_rate: float) -> Tuple[List[tf.Tensor], Dict[tf.placeholder, Any]]:
         """Returns fetches and feed_dict for model `train_on_batch` method.
 
         Args:
-            kwargs: a dictionary which keys are elements of `in_names` attribute, `in_y_names` attribute and
-                `'body_learning_rate'`.
+            input_ids: indices of the subwords                                                                         
+            input_masks: mask that determines where to attend and where not to                                         
+            y_masks: mask which determines the first subword units in the the word
+            y: indices of ground truth tags
+            body_learning_rate: learning rate for BERT body
 
         Returns:
             list of fetches and feed_dict
         """
-        self._check_in_names()
-        self._check_in_y_names()
-        build_feed_dict_args = [kwargs[k] for k in self.in_names]
-        y = kwargs[self.in_y_names[0]]
-        lr = kwargs['body_learning_rate']
-        feed_dict = self._build_feed_dict(*build_feed_dict_args, y=y, body_learning_rate=lr)
+        feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks, y=y, body_learning_rate=body_learning_rate)
         fetches = [self.train_op, self.loss]
         return fetches, feed_dict
 
-    def post_process_preds(self, sess_run_res):
+    def post_process_preds(self, sess_run_res: List[np.ndarray]) -> Union[List[List[int]], List[np.ndarray]]:
         """Decodes CRF if needed and returns predictions or probabilities.
 
         Args:
@@ -774,8 +910,6 @@ class MTBertClassificationTask(MTBertTask):
     It uses output from [CLS] token and predicts labels using linear transformation.
 
     Args:
-        bert_head_variable_scope: the name of the multitask Bert task used as variable scope. This parameter should have equal
-            values in training and inference configs.
         n_classes: number of classes
         return_probas: set True if return class probabilites instead of most probable label needed
         one_hot_labels: set True if one-hot encoding for labels is used
@@ -783,14 +917,9 @@ class MTBertClassificationTask(MTBertTask):
         multilabel: set True if it is multi-label classification
         learning_rate: learning rate of BERT head
         optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
-        in_names: list of inputs of the model. These should be a subset of "in" list of "multitask_bert" component
-            in config.
-        in_y_names: list of y inputs of the model. These should be a subset of "in_y" list of "multitask_bert"
-            component in config.
     """
     def __init__(
             self,
-            bert_head_variable_scope: str = "classification",
             n_classes: int = None,
             return_probas: bool = None,
             one_hot_labels: bool = None,
@@ -798,16 +927,9 @@ class MTBertClassificationTask(MTBertTask):
             multilabel: bool = False,
             learning_rate: float = 2e-5,
             optimizer: str = "Adam",
-            in_names: List[str] = None,
-            in_y_names: List[str] = None,
     ):
-        super().__init__(
-            bert_head_variable_scope,
-            keep_prob, 
-            return_probas, 
-            learning_rate, 
-            in_names, 
-            in_y_names)
+        log.debug(f"(MTBertClassificationTask.__init__)n_classes: {n_classes}")
+        super().__init__(keep_prob, return_probas, learning_rate)
         self.n_classes = n_classes
         self.one_hot_labels = one_hot_labels
         self.multilabel = multilabel
@@ -859,52 +981,39 @@ class MTBertClassificationTask(MTBertTask):
                     self.loss = tf.reduce_mean(
                         tf.nn.sigmoid_cross_entropy_with_logits(labels=one_hot_labels, logits=logits))
 
-    def _check_in_names(self):
-        if len(self.in_names) != 1:
-            raise ValueError(
-                f"Classification task of multitask Bert takes exactly 1 arguments: Bert features "
-                "whereas {len(self.in_names)} arguments {self.in_names} are given.")       
-
-    def _check_in_y_names(self):
-        if len(self.in_y_names) != 1:
-            raise ValueError(
-                f"Classification task of multitask Bert in_y has to have 1 element "
-                "whereas its length is {len(self.in_y_names)}.\nin_y_names = {self.in_y_names}")       
-
-    def get_sess_run_train_args(self, **kwargs) -> Tuple[List[tf.Tensor], Dict[tf.placeholder, Any]]:
+    def get_sess_run_train_args(
+            self, 
+            features: List[InputFeatures], 
+            y: Union[List[int], List[List[int]]], 
+            body_learning_rate: float) -> Tuple[List[tf.Tensor], Dict[tf.placeholder, Any]]:
         """Returns fetches and feed_dict for model `train_on_batch` method.
 
         Args:
-            kwargs: a dictionary which keys are elements of `in_names` attribute, `in_y_names` attribute and
-                `'body_learning_rate'`.
+            features: text features created by BERT preprocessor.
+            y: batch of labels (class id or one-hot encoding)
+            body_learning_rate: learning rate for BERT body
 
         Returns:
             list of fetches and feed_dict
         """
-        self._check_in_names()
-        self._check_in_y_names()
-        features = kwargs[self.in_names[0]]
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
-        y = kwargs[self.in_y_names[0]]
-        lr = kwargs['body_learning_rate']
-        feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids, y=y, body_learning_rate=lr)
+        feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids, y=y, body_learning_rate=body_learning_rate)
         fetches = [self.train_op, self.loss]
         return fetches, feed_dict
 
-    def get_sess_run_infer_args(self, **kwargs) -> Tuple[List[tf.Tensor], Dict[tf.placeholder, Any]]:
+    def get_sess_run_infer_args(
+            self, 
+            features: List[InputFeatures]) -> Tuple[List[tf.Tensor], Dict[tf.placeholder, Any]]:
         """Returns fetches and feed_dict for model inference. The method is called from `MultiTaskBert.__call__`.
 
         Args:
-            kwargs: a dictionary of size 1 containing Bert features. The keys should be equal to
-                `in_names` attribute.
+            features: text features created by BERT preprocessor. 
 
         Returns:
             list of fetches and feed_dict
         """
-        self._check_in_names()
-        features = kwargs[self.in_names[0]]
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
@@ -923,15 +1032,54 @@ class MTBertReUser:
     declared for inference on 1 launch. To use another launch `MTBertReUser` instance is created.
 
     Args:
-        mt_bert: an instance of `MultiTaskBert`
-        launch_name: the name of the launch of in multitask Bert
+        mt_bert: An instance of `MultiTaskBert`
+        task_names: Names of infered tasks. If `task_names` is `str` then `task_names` is the name of the only
+            infered task. If `task_names` is `list` then its elements can be either strings or lists of strings.
+            If an element of `task_names` is a string then this element is a name of a task that is run 
+            independently. If an element of `task_names` is a list of strings then the element is a list of names of
+            tasks that have common inputs and run simultaneously.
     """
-    def __init__(self, mt_bert: MultiTaskBert, launch_name: str, *args, **kwargs):
+    def __init__(
+            self, 
+            mt_bert: MultiTaskBert, 
+            task_names: Union[str, List[Union[str, List[str]]]], 
+            in_distribution: Union[Dict[str, int], Dict[str, List[str]]] = None,
+            *args, 
+            **kwargs):
         self.mt_bert = mt_bert
-        self.launch_name = launch_name
+        if isinstance(task_names, str):
+            task_names = [task_names]
+        elif not task_names:
+            raise ValueError("At least 1 task has to specified")
+        self.task_names = task_names
+        flattened = []
+        for elem in self.task_names:
+            if isinstance(elem, str):
+                flattened.append(elem)
+            else:
+                flattened.extend(elem)
 
-    def __call__(self, *args, **kwargs):
-        return self.mt_bert(*args, **kwargs, launch_name=self.launch_name)
+        if in_distribution is None:
+            if len(flattened) > 1:
+                raise ValueError(
+                    "If `in_distribution` parameter is not provided, there has to be only 1 task."
+                    f"task_names = {self.task_names}")
+          
+        self.in_distribution = in_distribution
+
+    def __call__(self, *args, **kwargs) -> List[Any]:
+        """Infer tasks listed in parameter `task_names`.
+
+        Args:
+            args: inputs and labels of infered tasks.
+            kwargs: inputs and labels of infered tasks.
+
+        Returns:
+            list of results of inference of tasks listed in `task_names`
+        """
+        res = self.mt_bert.call(args, kwargs, task_names=self.task_names, in_distribution=self.in_distribution)
+        log.debug(f"(MTBertReUser.__call__)res: {res}")
+        return res
 
 
 @register("input_splitter")
