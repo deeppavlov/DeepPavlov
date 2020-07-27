@@ -14,7 +14,7 @@
     "pipe": [
       {
         "class_name": "torch_bert_preprocessor",
-        "vocab_file": "bert-base-uncased",
+        "vocab_file": "bert-base-cased",
         "do_lower_case": false,
         "max_seq_length": 384,
         "return_tokens": true,
@@ -36,7 +36,7 @@
       },
       {
         "class_name": "torch_squad_bert_model",
-        "pretrained_bert": "bert-base-uncased",
+        "pretrained_bert": "bert-base-cased",
         "save_path": "{MODELS_PATH}/model",
         "load_path": "{MODELS_PATH}/model",
         "keep_prob": 0.5,
