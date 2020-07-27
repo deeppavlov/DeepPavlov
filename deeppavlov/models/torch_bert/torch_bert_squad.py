@@ -22,7 +22,7 @@ from overrides import overrides
 
 import numpy as np
 import torch
-from transformers import BertForQuestionAnswering, AdamW, BertConfig, BertTokenizer
+from transformers import BertForQuestionAnswering, BertConfig, BertTokenizer
 from transformers.data.processors.utils import InputFeatures
 
 from deeppavlov import build_model
@@ -50,10 +50,15 @@ class TorchBertSQuADModel(TorchModel):
         keep_prob: dropout keep_prob for non-Bert layers
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
-        optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
-        weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
-        pretrained_bert: pretrained Bert checkpoint
-        bert_config_file: path to Bert configuration file
+        optimizer: name of `torch.optim` or None for `AdamW`
+        optimizer_parameters: dictionary with parameters for optimizer
+        pretrained_bert: pretrained Bert checkpoint path or string name
+        bert_config_file: path to Bert configuration file or None, if `pretrained_bert` is string name
+        learning_rate_drop_patience: how many validations with no improvements to wait
+        learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
+            validations
+        load_before_drop: whether to load best model before dropping learning rate or not
+        clip_norm: clip gradients by norm
         min_learning_rate: min value of learning rate if learning rate decay is used
     """
 
