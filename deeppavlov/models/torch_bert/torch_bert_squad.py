@@ -154,8 +154,8 @@ class TorchBertSQuADModel(TorchModel):
             # Forward pass, calculate logit predictions
             outputs = self.model(input_ids=b_input_ids, attention_mask=b_input_masks, token_type_ids=b_input_type_ids)
             logits_st, logits_end = outputs[:2]
-            start_scores = torch.nn.softmax(logits_st, dim=-1)
-            end_scores = torch.nn.softmax(logits_end, dim=-1)
+            start_scores = torch.nn.functional.softmax(logits_st, dim=-1)
+            end_scores = torch.nn.functional.softmax(logits_end, dim=-1)
 
             scores = torch.tensor(1) - torch.nn.functional.softmax(
                 start_scores, dim=-1)[:, 0] * torch.nn.functional.softmax(end_scores, dim=-1)[:, 0]
