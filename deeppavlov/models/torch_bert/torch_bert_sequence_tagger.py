@@ -203,20 +203,12 @@ class TorchBertSequenceTagger(TorchModel):
         n_tags: number of distinct tags
         keep_prob: dropout keep_prob for non-Bert layers
         return_probas: set this to `True` if you need the probabilities instead of raw answers
-        bert_config_file: path to Bert configuration file
-        pretrained_bert: pretrained Bert checkpoint
+        bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
+        pretrained_bert: pretrained Bert checkpoint or string name
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
-        encoder_layer_ids: list of averaged layers from Bert encoder (layer ids)
-            optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
-            weight_decay_rate: L2 weight decay for `AdamWeightDecayOptimizer`
-        encoder_dropout: dropout probability of encoder output layer
-        ema_decay: what exponential moving averaging to use for network parameters, value from 0.0 to 1.0.
-            Values closer to 1.0 put weight on the parameters history and values closer to 0.0 corresponds put weight
-            on the current parameters.
-        ema_variables_on_cpu: whether to put EMA variables to CPU. It may save a lot of GPU memory
-        freeze_embeddings: set True to not train input embeddings set True to
-            not train input embeddings set True to not train input embeddings
+        optimizer: name of `torch.optim` or None for `AdamW`
+        optimizer_parameters: dictionary with parameters for optimizer
         learning_rate: learning rate of BERT head
         bert_learning_rate: learning rate of BERT body
         min_learning_rate: min value of learning rate if learning rate decay is used
@@ -235,11 +227,8 @@ class TorchBertSequenceTagger(TorchModel):
                  pretrained_bert: str = None,
                  attention_probs_keep_prob: float = None,
                  hidden_keep_prob: float = None,
-                 encoder_layer_ids: List[int] = (-1,),
-                 encoder_dropout: float = 0.0,
                  optimizer: str = None,
                  optimizer_parameters={"lr": 1e-3, "weight_decay": 1e-6},
-                 freeze_embeddings: bool = False,
                  min_learning_rate: float = 1e-07,
                  learning_rate_drop_patience: int = 20,
                  learning_rate_drop_div: float = 2.0,
@@ -250,9 +239,6 @@ class TorchBertSequenceTagger(TorchModel):
         self.n_classes = n_tags
         self.return_probas = return_probas
         self.keep_prob = keep_prob
-        self.encoder_layer_ids = encoder_layer_ids
-        self.encoder_dropout = encoder_dropout
-        self.freeze_embeddings = freeze_embeddings
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
         self.clip_norm = clip_norm
