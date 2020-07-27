@@ -71,6 +71,7 @@ class TorchBertAsSummarizer(TorchModel):
                  max_seq_length: Optional[int] = 128,
                  do_lower_case: Optional[bool] = False,
                  lang: Optional[str] = 'ru',
+                 save_path=None,
                  **kwargs) -> None:
 
         self.max_summary_length = max_summary_length
@@ -89,7 +90,7 @@ class TorchBertAsSummarizer(TorchModel):
             from nltk import sent_tokenize
             self.sent_tokenizer = sent_tokenize
 
-        super().__init__(**kwargs)
+        super().__init__(save_path=save_path, **kwargs)
 
     @overrides
     def load(self, fname=None):
