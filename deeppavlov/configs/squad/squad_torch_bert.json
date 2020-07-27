@@ -17,13 +17,15 @@
         "vocab_file": "bert-base-uncased",
         "do_lower_case": false,
         "max_seq_length": 384,
+        "return_tokens": true,
         "in": ["question_raw", "context_raw"],
-        "out": ["bert_features"]
+        "out": ["bert_features", "subtokens"]
       },
       {
         "class_name": "squad_bert_mapping",
         "do_lower_case": false,
-        "in": ["context_raw", "bert_features"],
+        "torch": true,
+        "in": ["context_raw", "bert_features", "subtokens"],
         "out": ["subtok2chars", "char2subtoks"]
       },
       {

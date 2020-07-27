@@ -392,13 +392,16 @@ class SquadBertMappingPreprocessor(Component):
     def __init__(self, do_lower_case: bool = True, *args, **kwargs):
         self.do_lower_case = do_lower_case
 
-    def __call__(self, contexts, bert_features, **kwargs):
+    def __call__(self, contexts, bert_features, *args, **kwargs):
         subtok2chars = []
         char2subtoks = []
-        for context, features in zip(contexts, bert_features):
+        for batch_counter, (context, features) in enumerate(zip(contexts, bert_features)):
             if self.do_lower_case:
                 context = context.lower()
-            subtokens = features.tokens
+            if len(args) > 0:
+                subtokens = args[0][batch_counter]
+            else:
+                subtokens = features.tokens
             context_start = subtokens.index('[SEP]') + 1
             idx = 0
             subtok2char = {}
