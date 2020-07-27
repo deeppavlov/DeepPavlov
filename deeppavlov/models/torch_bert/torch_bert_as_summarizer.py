@@ -133,7 +133,7 @@ class TorchBertAsSummarizer(TorchModel):
         b_input_masks = torch.cat(input_masks, dim=0).to(self.device)
         b_input_type_ids = torch.cat(input_type_ids, dim=0).to(self.device)
 
-        pred = self.model(input_ids=b_input_ids, attention_mask=b_input_masks, token_type_ids=b_input_type_ids)
+        pred = self.model(input_ids=b_input_ids, attention_mask=b_input_masks, token_type_ids=b_input_type_ids)[1]
         nsp_probs = torch.nn.functional.softmax(pred, dim=-1)
         return nsp_probs[:, 0]
 
