@@ -178,6 +178,14 @@
         "subdir": "{MODELS_PATH}/rel_ranking_bert_rus"
       },
       {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/entity_linking_rus.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/entity_linking_t_rus.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+      },
+      {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/syntax_parser/syntax_ru_syntagrus_bert.tar.gz",
         "subdir": "{MODELS_PATH}/syntax_ru_syntagrus"
       },
