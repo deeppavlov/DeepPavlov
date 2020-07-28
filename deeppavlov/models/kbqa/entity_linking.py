@@ -13,8 +13,6 @@
 # limitations under the License.
 
 import re
-import sqlite3
-import time
 from logging import getLogger
 from typing import List, Dict, Tuple, Optional, Any
 from collections import defaultdict, Counter
@@ -25,8 +23,6 @@ import pymorphy2
 import faiss
 from nltk.corpus import stopwords
 from nltk import sent_tokenize
-from rapidfuzz import fuzz
-from hdt import HDTDocument
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 from deeppavlov.core.common.registry import register
@@ -43,6 +39,11 @@ log = getLogger(__name__)
 
 @register('ner_chunker')
 class NerChunker(Component):
+    """
+        Class to split documents into chunks of max_chunk_len symbols so that the length will not exceed
+        maximal sequence length to feed into BERT
+    """
+
     def __init__(self, max_chunk_len: int = 300, batch_size: int = 30, **kwargs):
         self.max_chunk_len = max_chunk_len
         self.batch_size = batch_size
@@ -84,6 +85,10 @@ class NerChunker(Component):
 
 @register('entity_linker')
 class EntityLinker(Component, Serializable):
+    """
+        Class for linking of entity substrings in the document to entities in Wikidata
+    """
+
     def __init__(self, load_path: str,
                  word_to_idlist_filename: str,
                  entities_list_filename: str,
@@ -134,7 +139,6 @@ class EntityLinker(Component, Serializable):
             self.stopwords = set(stopwords.words("english"))
         elif self.lang_str == "@ru":
             self.stopwords = set(stopwords.words("russian"))
-        self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
         self.use_descriptions = use_descriptions
 
         self.load()
