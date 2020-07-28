@@ -216,25 +216,35 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
         curr_story_title = None
         curr_story_utters = None
+        curr_story_bad = False
         for line in open(story_fpath):
             line = line.strip()
             if line.startswith('#'):
                 # #... marks the beginning of new story
                 if curr_story_utters and curr_story_utters[-1]["speaker"] == cls._USER_SPEAKER_ID:
                     curr_story_utters.append(default_system_goodbye)  # dialogs MUST end with system replics
-                stories_parsed[curr_story_title] = curr_story_utters
+
+                if not curr_story_bad:
+                    stories_parsed[curr_story_title] = curr_story_utters
 
                 curr_story_title = line.strip('#')
                 curr_story_utters = []
+                curr_story_bad = False
             elif line.startswith('*'):
                 # user actions are started in dataset with *
                 user_action, slots_dstc2formatted = cls._parse_user_intent(line)
                 slots_actual_values = cls._clarify_slots_values(slot_name2text2value, slots_dstc2formatted)
-                slots_to_exclude, slots_used_values = cls._choose_slots_for_whom_exists_text(intent2slots2text,
-                                                                                             slots_actual_values,
-                                                                                             user_action)
-
-                user_response_info = cls._user_text(intent2slots2text, user_action, slots_used_values)
+                try:
+                    slots_to_exclude, slots_used_values, action_for_text = cls._choose_slots_for_whom_exists_text(
+                        intent2slots2text, slots_actual_values,
+                        user_action)
+                except KeyError as e:
+                    log.info(f"Skipping story w. line {line} because of no NLU candidates found")
+                    curr_story_bad = True
+                    # raise e
+                    # input()
+                    continue
+                user_response_info = cls._user_text(intent2slots2text, action_for_text, slots_used_values)
                 user_utter = {"speaker": cls._USER_SPEAKER_ID,
                               "text": user_response_info["text"],
                               "dialog_acts": [{"act": user_action, "slots": user_response_info["slots"]}],
@@ -276,29 +286,43 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
     @classmethod
     def _choose_slots_for_whom_exists_text(cls, intent2slots2text, slots_actual_values, user_action):
-        slots_used_values = slots_actual_values
-        slots_to_exclude = []
-        if not intent2slots2text[user_action].get(slots_actual_values):
-            slots_lazy_key = set(e[0] for e in slots_actual_values)
-            fake_keys = []
-            for known_key in intent2slots2text[user_action].keys():
-                if slots_lazy_key.issubset(set(e[0] for e in known_key)):
-                    fake_keys.append(known_key)
-                    break
-            fake_key = None
-            if fake_keys:
-                fake_key = sorted(fake_keys,
-                                  key=lambda elem: (len(set(slots_actual_values) ^ set(elem)),
-                                                    len([e for e in elem if e[0] not in slots_lazy_key])))[0]
-            slots_to_exclude = [e[0] for e in fake_key if e[0] not in slots_lazy_key]
-            slots_used_values = fake_key
-        return slots_to_exclude, slots_used_values
+        possible_keys = [k for k in intent2slots2text.keys() if user_action in k]
+        possible_keys = possible_keys + [user_action]
+        possible_keys = sorted(possible_keys, key=lambda action_s: action_s.count('+'))
+        for possible_action_key in possible_keys:
+            if intent2slots2text[possible_action_key].get(slots_actual_values):
+                slots_used_values = slots_actual_values
+                slots_to_exclude = []
+                return slots_to_exclude, slots_used_values, possible_action_key
+            else:
+                slots_lazy_key = set(e[0] for e in slots_actual_values)
+                slots_lazy_key -= {"intent"}
+                fake_keys = []
+                for known_key in intent2slots2text[possible_action_key].keys():
+                    if slots_lazy_key.issubset(set(e[0] for e in known_key)):
+                        fake_keys.append(known_key)
+                        break
+                fake_key = None
+                if fake_keys:
+                    fake_key = sorted(fake_keys,
+                                      key=lambda elem: (len(set(slots_actual_values) ^ set(elem)),
+                                                        len([e for e in elem if e[0] not in slots_lazy_key])))[0]
+
+                    slots_to_exclude = [e[0] for e in fake_key if e[0] not in slots_lazy_key]
+                    slots_used_values = fake_key
+                    return slots_to_exclude, slots_used_values, possible_action_key
+
+        # print({k: intent2slots2text[k] for k in possible_keys})
+        # print(user_action)
+        # print(slots_lazy_key)
+        # input()
+        raise KeyError("no possible NLU candidates found")
 
     @classmethod
     def _clarify_slots_values(cls, slot_name2text2value, slots_dstc2formatted):
         slots_key = []
         for slot_name, slot_value in slots_dstc2formatted:
-            if slot_value in slot_name2text2value[slot_name].keys():
+            if slot_value in slot_name2text2value.get(slot_name, {}).keys():
                 slot_actual_value = slot_name2text2value[slot_name][slot_value]
             else:
                 slot_actual_value = slot_value
