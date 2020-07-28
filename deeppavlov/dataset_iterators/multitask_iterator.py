@@ -15,18 +15,36 @@
 import copy
 import math
 from logging import getLogger
-from typing import Iterator, Tuple
+from typing import Iterator, Tuple, Union
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.params import from_params
-
+from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 log = getLogger(__name__)
 
 
 class RepeatBatchGenerator:
+    """Repeating dataset. If there is not enough elements in the dataset to form another batch, elements for the batch 
+    are drawn in the beginning of the dataset. Optionally dataset is reshuffled before a repeat.
+
+    Args:
+        dataset_iterator: Dataset iterator from which batches are drawn.
+        batch_size: Size fo the batch.
+        data_type: "train", "valid", or "test"
+        shuffle: Whether dataset will be shuffled before each repeat.
+        n_batches: The number of batches which will be generated.
+        size_of_the_last_batch: Used if dataset size is not evenly divisible by batch size.
+    """
     def __init__(
-            self, dataset_iterator, batch_size, data_type, shuffle, n_batches=float('inf'), size_of_last_batch=None):
+            self, 
+            dataset_iterator: Union[MultiTaskIterator, DataLearningIterator], 
+            batch_size: int, 
+            data_type: str, 
+            shuffle: bool, 
+            n_batches: Optional[int] = None, 
+            size_of_last_batch=None
+    ):
         self.dataset_iterator = dataset_iterator
         self.batch_size = batch_size
         self.data_type = data_type
@@ -42,7 +60,7 @@ class RepeatBatchGenerator:
         return self
 
     def __next__(self):
-        if self.batch_count > self.n_batches:
+        if n_batches is not None and if self.batch_count > self.n_batches:
             raise StopIteration
         x, y = (), ()
         while len(x) < self.batch_size or len(y) < self.batch_size:
