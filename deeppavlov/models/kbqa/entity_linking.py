@@ -103,6 +103,7 @@ class EntityLinker(Component, Serializable):
                  max_tfidf_features: int = 1000,
                  include_mention: bool = False,
                  ngram_range: List[int] = None,
+                 num_entities_to_return: int = 10,
                  build_inverted_index: bool = False,
                  kb_format: str = "hdt",
                  kb_filename: str = None,
@@ -136,6 +137,7 @@ class EntityLinker(Component, Serializable):
         self.max_tfidf_features = max_tfidf_features
         self.include_mention = include_mention
         self.ngram_range = ngram_range
+        self.num_entities_to_return = num_entities_to_return
         self.build_inverted_index = build_inverted_index
         self.kb_format = kb_format
         self.kb_filename = kb_filename
@@ -224,62 +226,64 @@ class EntityLinker(Component, Serializable):
             log.debug(f"entity_positions_batch {entity_positions_batch}")
             for entity_substr_list, entity_positions_list, context_tokens in zip(entity_substr_batch, entity_positions_batch, ner_tokens_batch):
                 if entity_substr_list:
-                    entity_ids_list = self.link_entity(entity_substr_list, entity_positions_list, context_tokens)
+                    entity_ids_list = self.link_entities(entity_substr_list, entity_positions_list, context_tokens)
                     entity_ids_batch.append(entity_ids_list)
             entity_ids_batch_list.append(entity_ids_batch)
         return entity_ids_batch_list
 
-    def link_entity(self, entity_substr_list: List[str], entity_positions_list: List[List[int]] = None,
+    def link_entities(self, entity_substr_list: List[str], entity_positions_list: List[List[int]] = None,
                           context_tokens: List[str] = None) -> List[List[str]]:
         log.debug(f"context_tokens {context_tokens}")
         log.debug(f"entity substr list {entity_substr_list}")
         log.debug(f"entity positions list {entity_positions_list}")
         entity_ids_list = []
-        entity_substr_list = [[word for word in entity_substr.split(' ') if word not in self.stopwords] for entity_substr in entity_substr_list]
-        words_and_indices  = [(self.morph_parse(word), i) for i, entity_substr in enumerate(entity_substr_list) for word in entity_substr]
-        substr_lens = [len(entity_substr) for entity_substr in entity_substr_list]
-        log.debug(f"words and indices {words_and_indices}")
-        words, indices = zip(*words_and_indices)
-        words = list(words)
-        indices = list(indices)
-        log.debug(f"words {words}")
-        log.debug(f"indices {indices}")
-        ent_substr_tfidfs = self.vectorizer.transform(words).toarray().astype(np.float32)
-        D, I = self.faiss_index.search(ent_substr_tfidfs, self.num_faiss_candidate_entities)
-        candidate_entities_dict = defaultdict(list)
-        for ind_list, scores_list, index in zip(I, D, indices):
-            candidate_entities = {}
-            for ind, score in zip(ind_list, scores_list):
-                start_ind, end_ind = self.word_to_idlist[self.word_list[ind]]
-                for entity in self.entities_list[start_ind:end_ind]:
-                    if entity in candidate_entities:
-                        if score > candidate_entities[entity]:
+        if entity_substr_list:
+            entity_substr_list = [[word for word in entity_substr.split(' ') if word not in self.stopwords and len(word) > 0]
+                                        for entity_substr in entity_substr_list]
+            words_and_indices  = [(self.morph_parse(word), i) for i, entity_substr in enumerate(entity_substr_list) for word in entity_substr]
+            substr_lens = [len(entity_substr) for entity_substr in entity_substr_list]
+            log.debug(f"words and indices {words_and_indices}")
+            words, indices = zip(*words_and_indices)
+            words = list(words)
+            indices = list(indices)
+            log.debug(f"words {words}")
+            log.debug(f"indices {indices}")
+            ent_substr_tfidfs = self.vectorizer.transform(words).toarray().astype(np.float32)
+            D, I = self.faiss_index.search(ent_substr_tfidfs, self.num_faiss_candidate_entities)
+            candidate_entities_dict = defaultdict(list)
+            for ind_list, scores_list, index in zip(I, D, indices):
+                candidate_entities = {}
+                for ind, score in zip(ind_list, scores_list):
+                    start_ind, end_ind = self.word_to_idlist[self.word_list[ind]]
+                    for entity in self.entities_list[start_ind:end_ind]:
+                        if entity in candidate_entities:
+                            if score > candidate_entities[entity]:
+                                candidate_entities[entity] = score
+                        else:
                             candidate_entities[entity] = score
-                    else:
-                        candidate_entities[entity] = score
-            candidate_entities_dict[index] += [(entity, cand_entity_len, score) for (entity, cand_entity_len), score in candidate_entities.items()]
-            log.debug(f"{index} candidate_entities {[self.word_list[ind] for ind in ind_list[:10]]}")
-        candidate_entities_total = list(candidate_entities_dict.values())
-        candidate_entities_total = [self.sum_scores(candidate_entities, substr_len)
-                          for candidate_entities, substr_len in zip(candidate_entities_total, substr_lens)]
-        log.debug(f"length candidate entities list {len(candidate_entities_total)}")
-        candidate_entities_list = []
-        entities_scores_list = []
-        for candidate_entities in candidate_entities_total:
-            log.debug(f"candidate_entities before ranking {candidate_entities[:10]}")
-            candidate_entities = [candidate_entity + (self.entities_ranking_dict.get(candidate_entity[0], 0),)
-                                           for candidate_entity in candidate_entities]
-            candidate_entities_str = '\n'.join([str(candidate_entity) for candidate_entity in candidate_entities])
-            candidate_entities = sorted(candidate_entities, key=lambda x: (x[1], x[2]), reverse=True)
-            log.debug(f"candidate_entities {candidate_entities[:10]}")
-            entities_scores = {entity: (substr_score, pop_score) for entity, substr_score, pop_score in candidate_entities}
-            candidate_entities = [candidate_entity[0] for candidate_entity in candidate_entities][:self.num_entities_for_bert_ranking]
-            log.debug(f"candidate_entities {candidate_entities[:10]}")
-            candidate_entities_list.append(candidate_entities)
-            entity_ids_list.append(candidate_entities[:40])
-            entities_scores_list.append(entities_scores)
-        if self.use_descriptions:
-            entity_ids_list = self.rank_by_description(entity_positions_list, candidate_entities_list, entities_scores_list, context_tokens)
+                candidate_entities_dict[index] += [(entity, cand_entity_len, score) for (entity, cand_entity_len), score in candidate_entities.items()]
+                log.debug(f"{index} candidate_entities {[self.word_list[ind] for ind in ind_list[:10]]}")
+            candidate_entities_total = list(candidate_entities_dict.values())
+            candidate_entities_total = [self.sum_scores(candidate_entities, substr_len)
+                              for candidate_entities, substr_len in zip(candidate_entities_total, substr_lens)]
+            log.debug(f"length candidate entities list {len(candidate_entities_total)}")
+            candidate_entities_list = []
+            entities_scores_list = []
+            for candidate_entities in candidate_entities_total:
+                log.debug(f"candidate_entities before ranking {candidate_entities[:10]}")
+                candidate_entities = [candidate_entity + (self.entities_ranking_dict.get(candidate_entity[0], 0),)
+                                               for candidate_entity in candidate_entities]
+                candidate_entities_str = '\n'.join([str(candidate_entity) for candidate_entity in candidate_entities])
+                candidate_entities = sorted(candidate_entities, key=lambda x: (x[1], x[2]), reverse=True)
+                log.debug(f"candidate_entities {candidate_entities[:10]}")
+                entities_scores = {entity: (substr_score, pop_score) for entity, substr_score, pop_score in candidate_entities}
+                candidate_entities = [candidate_entity[0] for candidate_entity in candidate_entities][:self.num_entities_for_bert_ranking]
+                log.debug(f"candidate_entities {candidate_entities[:10]}")
+                candidate_entities_list.append(candidate_entities)
+                entity_ids_list.append(candidate_entities[:self.num_entities_to_return])
+                entities_scores_list.append(entities_scores)
+            if self.use_descriptions:
+                entity_ids_list = self.rank_by_description(entity_positions_list, candidate_entities_list, entities_scores_list, context_tokens)
 
         return entity_ids_list
 
