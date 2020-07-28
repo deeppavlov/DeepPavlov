@@ -158,11 +158,12 @@ def token_from_subtoken(units: torch.Tensor, mask: torch.Tensor) -> torch.Tensor
         res = [None] * n
         for i, data_ in enumerate(data):
             idx = indices[i].view(-1)
-            d = data_.view(idx.numel(), -1)
-            k = 0
-            for idx_ in idx:
-                res[idx_] = d[k].to(torch.float64)
-                k += 1
+            if idx.numel() > 0:
+                d = data_.view(idx.numel(), -1)
+                k = 0
+                for idx_ in idx:
+                    res[idx_] = d[k].to(torch.float64)
+                    k += 1
         return res
 
     tensor_flat = torch.stack(dynamic_stitch([word_indices_flat, nonword_indices_flat], [elements, paddings]))
