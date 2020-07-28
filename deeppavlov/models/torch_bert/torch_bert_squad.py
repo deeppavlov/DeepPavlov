@@ -168,8 +168,8 @@ class TorchBertSQuADModel(TorchModel):
             outer_logits = torch.exp(logits_st.view(*logits_st.size(), 1) + logits_end.view(*logits_end.size(), 1))
             context_max_len = torch.max(torch.sum(b_input_type_ids, dim=1)).to(torch.int64)
             max_ans_length = torch.min(torch.tensor(20), context_max_len).to(torch.int64)
-            # outer = torch.triu(outer, diagonal=max_ans_length)
-            outer_logits = torch.triu(outer_logits, diagonal=max_ans_length.item())
+            outer_logits = torch.triu(outer_logits, diagonal=0) - torch.triu(
+                outer_logits, diagonal=outer_logits.size()[1] - max_ans_length.item())
             logits_last_dim_max, _ = torch.max(outer_logits, dim=2)
             logits, _ = torch.max(logits_last_dim_max, dim=1)
 
