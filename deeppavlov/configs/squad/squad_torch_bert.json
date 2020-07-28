@@ -99,7 +99,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/squad_torch_bert_v0"
+      "MODELS_PATH": "{ROOT_PATH}/models/squad_torch_bert"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/torch.txt"
@@ -107,7 +107,7 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/squad_torch_bert_v0.tar.gz",
-        "subdir": "{MODELS_PATH}"
+        "subdir": "{ROOT_PATH}/models"
       }
       ]
   }
