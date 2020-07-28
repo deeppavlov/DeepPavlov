@@ -43,50 +43,28 @@
         "templates_filename": "templates_rus.json"
       },
       {
-        "class_name": "entity_linker",
+        "class_name": "kbqa_entity_linker",
         "id": "linker_entities",
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
-        "save_path": "{DOWNLOADS_PATH}/wikidata_rus",
-        "word_to_idlist_filename": "word_to_idlist_rus.pickle",
-        "entities_list_filename": "ent_list_rus.pickle",
-        "entities_ranking_filename": "entities_ranking_dict_rus.pickle",
-        "vectorizer_filename": "vectorizer_rus.pk",
-        "faiss_index_filename": "{DOWNLOADS_PATH}/wikidata_rus/faiss_vectors_rus.index",
-        "num_faiss_candidate_entities": 10,
-        "num_faiss_cells": 1,
-        "use_gpu": false,
-        "fit_vectorizer": false,
-        "max_tfidf_features": 500,
-        "include_mention": false,
-        "ngram_range": [2, 2],
-        "num_entities_to_return": 20,
+        "inverted_index_filename": "inverted_index_rus.pickle",
+        "entities_list_filename": "entities_list_rus.pickle",
+        "q2name_filename": "wiki_rus_q_to_name.pickle",
         "build_inverted_index": false,
-        "use_descriptions": false,
         "lemmatize": true,
-        "lang": "ru"
+        "use_descriptions": false,
+        "use_prefix_tree": false
       },
       {
-        "class_name": "entity_linker",
+        "class_name": "kbqa_entity_linker",
         "id": "linker_types",
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
-        "save_path": "{DOWNLOADS_PATH}/wikidata_rus",
-        "word_to_idlist_filename": "word_to_idlist_t_rus.pickle",
-        "entities_list_filename": "ent_list_t_rus.pickle",
-        "entities_ranking_filename": "entities_ranking_dict_t_rus.pickle",
-        "vectorizer_filename": "vectorizer_t_rus.pk",
-        "faiss_index_filename": "{DOWNLOADS_PATH}/wikidata_rus/faiss_vectors_t_rus.index",
-        "num_faiss_candidate_entities": 10,
-        "num_faiss_cells": 1,
-        "use_gpu": false,
-        "fit_vectorizer": false,
-        "max_tfidf_features": 500,
-        "include_mention": false,
-        "ngram_range": [2, 2],
-        "num_entities_to_return": 20,
+        "inverted_index_filename": "inverted_index_types_rus.pickle",
+        "entities_list_filename": "types_list_rus.pickle",
+        "q2name_filename": "wiki_rus_q_to_name_types.pickle",
         "build_inverted_index": false,
-        "use_descriptions": false,
         "lemmatize": true,
-        "lang": "ru"
+        "use_descriptions": false,
+        "use_prefix_tree": false
       },
       {
         "class_name": "rel_ranking_bert_infer",
@@ -176,14 +154,6 @@
       {
         "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_bert_rus.tar.gz",
         "subdir": "{MODELS_PATH}/rel_ranking_bert_rus"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/entity_linking_rus.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/entity_linking_t_rus.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/syntax_parser/syntax_ru_syntagrus_bert.tar.gz",

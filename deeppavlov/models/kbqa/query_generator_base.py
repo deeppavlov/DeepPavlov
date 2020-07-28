@@ -147,10 +147,13 @@ class QueryGeneratorBase(Component, Serializable):
 
     def get_entity_ids(self, entities: List[str], what_to_link: str) -> List[List[str]]:
         entity_ids = []
-        if what_to_link == "entities":
-            entity_ids = self.linker_entities.link_entities(entities)
-        if what_to_link == "types":
-            entity_ids = self.linker_types.link_entities(entities)
+        for entity in entities:
+            entity_id = []
+            if what_to_link == "entities":
+                entity_id, confidences = self.linker_entities.link_entity(entity)
+            if what_to_link == "types":
+                entity_id, confidences = self.linker_types.link_entity(entity)
+            entity_ids.append(entity_id[:15])
         return entity_ids
 
     def sparql_template_parser(self, question: str,
