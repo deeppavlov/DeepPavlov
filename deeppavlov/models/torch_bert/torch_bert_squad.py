@@ -73,7 +73,7 @@ class TorchBertSQuADModel(TorchModel):
                  learning_rate_drop_patience: int = 20,
                  learning_rate_drop_div: float = 2.0,
                  load_before_drop: bool = True,
-                 clip_norm: float = 1.0,
+                 clip_norm: Optional[float] = None,
                  min_learning_rate: float = 1e-06,
                  **kwargs) -> None:
 
