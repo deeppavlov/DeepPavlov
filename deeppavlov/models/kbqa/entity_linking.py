@@ -43,7 +43,7 @@ log = getLogger(__name__)
 
 @register('ner_chunker')
 class NerChunker(Component):
-    def __init__(self, max_chunk_len: int = 300, batch_size: int = 5, **kwargs):
+    def __init__(self, max_chunk_len: int = 300, batch_size: int = 30, **kwargs):
         self.max_chunk_len = max_chunk_len
         self.batch_size = batch_size
 
@@ -104,18 +104,9 @@ class EntityLinker(Component, Serializable):
                  include_mention: bool = False,
                  ngram_range: List[int] = None,
                  num_entities_to_return: int = 10,
-                 build_inverted_index: bool = False,
-                 kb_format: str = "hdt",
-                 kb_filename: str = None,
-                 label_rel: str = None,
-                 descr_rel: str = None,
-                 aliases_rels: List[str] = None,
-                 sql_table_name: str = None,
-                 sql_column_names: List[str] = None,
                  lang: str = "ru",
                  use_descriptions: bool = True,
                  lemmatize: bool = False,
-                 use_prefix_tree: bool = False,
                  **kwargs) -> None:
         super().__init__(save_path=save_path, load_path=load_path)
         self.morph = pymorphy2.MorphAnalyzer()
@@ -138,15 +129,6 @@ class EntityLinker(Component, Serializable):
         self.include_mention = include_mention
         self.ngram_range = ngram_range
         self.num_entities_to_return = num_entities_to_return
-        self.build_inverted_index = build_inverted_index
-        self.kb_format = kb_format
-        self.kb_filename = kb_filename
-        self.label_rel = label_rel
-        self.aliases_rels = aliases_rels
-        self.descr_rel = descr_rel
-        self.sql_table_name = sql_table_name
-        self.sql_column_names = sql_column_names
-        self.inverted_index: Optional[Dict[str, List[Tuple[str]]]] = None
         self.lang_str = f"@{lang}"
         if self.lang_str == "@en":
             self.stopwords = set(stopwords.words("english"))
@@ -155,16 +137,7 @@ class EntityLinker(Component, Serializable):
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
         self.use_descriptions = use_descriptions
 
-        if self.build_inverted_index:
-            if self.kb_format == "hdt":
-                self.doc = HDTDocument(str(expand_path(self.kb_filename)))
-            if self.kb_format == "sqlite3":
-                self.conn = sqlite3.connect(str(expand_path(self.kb_filename)))
-                self.cursor = self.conn.cursor()
-            self.inverted_index_builder()
-            self.save()
-        else:
-            self.load()
+        self.load()
 
         if self.fit_vectorizer:
             self.vectorizer = TfidfVectorizer(analyzer="char_wb", ngram_range=tuple(self.ngram_range),
@@ -197,11 +170,7 @@ class EntityLinker(Component, Serializable):
                 self.faiss_index = faiss.index_cpu_to_gpu(res, 0, self.faiss_index)
 
     def save(self) -> None:
-        save_pickle(self.inverted_index, self.save_path / self.inverted_index_filename)
-        save_pickle(self.entities_list, self.save_path / self.entities_list_filename)
-        save_pickle(self.q2name, self.save_path / self.q2name_filename)
-        if self.q2descr_filename is not None:
-            save_pickle(self.q2descr, self.save_path / self.q2descr_filename)
+        pass
 
     def save_vectorizers_data(self) -> None:
         save_pickle(self.vectorizer, self.save_path / self.vectorizer_filename)
@@ -229,7 +198,21 @@ class EntityLinker(Component, Serializable):
                     entity_ids_list = self.link_entities(entity_substr_list, entity_positions_list, context_tokens)
                     entity_ids_batch.append(entity_ids_list)
             entity_ids_batch_list.append(entity_ids_batch)
-        return entity_ids_batch_list
+
+        doc_entity_ids_batch = []
+        doc_entity_ids = []
+        cur_doc_num = 0
+        for entity_ids_batch, nums_batch in zip(entity_ids_batch_list, nums_batch_list):
+            for entity_ids, doc_num in zip(entity_ids_batch, nums_batch):
+                if doc_num == cur_doc_num:
+                    doc_entity_ids += entity_ids
+                else:
+                    doc_entity_ids_batch.append(doc_entity_ids)
+                    doc_entity_ids = entity_ids
+                    cur_doc_num = doc_num
+        doc_entity_ids_batch.append(doc_entity_ids)
+
+        return doc_entity_ids_batch
 
     def link_entities(self, entity_substr_list: List[str], entity_positions_list: List[List[int]] = None,
                           context_tokens: List[str] = None) -> List[List[str]]:
@@ -333,5 +316,5 @@ class EntityLinker(Component, Serializable):
             entities_with_scores = sorted(entities_with_scores, key=lambda x: (x[1], x[3], x[2]), reverse=True)
             log.debug(f"entities_with_scores {entities_with_scores}")
             top_entities = [score[0] for score in entities_with_scores]
-            entity_ids_list.append(top_entities[:10])
+            entity_ids_list.append(top_entities[:self.num_entities_to_return])
         return entity_ids_list
