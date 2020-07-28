@@ -241,8 +241,6 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                 except KeyError as e:
                     log.info(f"Skipping story w. line {line} because of no NLU candidates found")
                     curr_story_bad = True
-                    # raise e
-                    # input()
                     continue
                 user_response_info = cls._user_text(intent2slots2text, action_for_text, slots_used_values)
                 user_utter = {"speaker": cls._USER_SPEAKER_ID,
@@ -312,10 +310,6 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                     slots_used_values = fake_key
                     return slots_to_exclude, slots_used_values, possible_action_key
 
-        # print({k: intent2slots2text[k] for k in possible_keys})
-        # print(user_action)
-        # print(slots_lazy_key)
-        # input()
         raise KeyError("no possible NLU candidates found")
 
     @classmethod
