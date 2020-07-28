@@ -60,7 +60,7 @@ class RepeatBatchGenerator:
         return self
 
     def __next__(self):
-        if n_batches is not None and if self.batch_count > self.n_batches:
+        if self.n_batches is not None and if self.batch_count > self.n_batches:
             raise StopIteration
         x, y = (), ()
         while len(x) < self.batch_size or len(y) < self.batch_size:
