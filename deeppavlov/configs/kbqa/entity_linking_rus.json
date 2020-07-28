@@ -25,7 +25,7 @@
         "rels_to_leave": 200
       },
       {
-        "class_name": "entity_linker_new",
+        "class_name": "entity_linker",
         "in": ["documents"],
         "out": ["entity_ids_list"],
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
