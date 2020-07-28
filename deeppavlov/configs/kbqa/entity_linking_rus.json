@@ -69,12 +69,16 @@
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
       "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-      "{DEEPPAVLOV_PATH}/requirements/faiss.txt
+      "{DEEPPAVLOV_PATH}/requirements/faiss.txt"
     ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/entity_linking_rus.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_rus_bert_v1.tar.gz",
+        "subdir": "{MODELS_PATH}"
       }
     ]
   }
