@@ -61,7 +61,7 @@ class TorchBertPreprocessor(Component):
             self.tokenizer = BertTokenizer(vocab_file=vocab_file,
                                            do_lower_case=do_lower_case)
         else:
-            self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=True)
+            self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
     def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> Union[
             List[InputFeatures], Tuple[List[InputFeatures], List[List[str]]]]:
