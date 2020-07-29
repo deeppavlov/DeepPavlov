@@ -15,71 +15,13 @@
 import copy
 import math
 from logging import getLogger
-from typing import Iterator, Tuple, Union
+from typing import Iterator, Optional, Tuple, Union
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 log = getLogger(__name__)
-
-
-class RepeatBatchGenerator:
-    """Repeating dataset. If there is not enough elements in the dataset to form another batch, elements for the batch 
-    are drawn in the beginning of the dataset. Optionally dataset is reshuffled before a repeat.
-
-    Args:
-        dataset_iterator: Dataset iterator from which batches are drawn.
-        batch_size: Size fo the batch.
-        data_type: "train", "valid", or "test"
-        shuffle: Whether dataset will be shuffled before each repeat.
-        n_batches: The number of batches which will be generated.
-        size_of_the_last_batch: Used if dataset size is not evenly divisible by batch size.
-    """
-    def __init__(
-            self, 
-            dataset_iterator: Union[MultiTaskIterator, DataLearningIterator], 
-            batch_size: int, 
-            data_type: str, 
-            shuffle: bool, 
-            n_batches: Optional[int] = None, 
-            size_of_last_batch=None
-    ):
-        self.dataset_iterator = dataset_iterator
-        self.batch_size = batch_size
-        self.data_type = data_type
-        self.shuffle = shuffle
-        self.n_batches = n_batches
-        self.size_of_last_batch = self.batch_size if size_of_last_batch is None else size_of_last_batch
-        
-        self.inner_batch_size = math.gcd(len(self.dataset_iterator.data[data_type]), batch_size)
-        self.gen = self.dataset_iterator.gen_batches(self.inner_batch_size, self.data_type, self.shuffle)
-        self.batch_count = 0
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        if self.n_batches is not None and self.batch_count > self.n_batches:
-            raise StopIteration
-        x, y = (), ()
-        while len(x) < self.batch_size or len(y) < self.batch_size:
-            try:
-                xx, yy = next(self.gen)
-            except StopIteration:
-                self.gen = self.dataset_iterator.gen_batches(self.inner_batch_size, self.data_type, self.shuffle)
-                continue
-            assert len(xx) == self.inner_batch_size and len(yy) == self.inner_batch_size, \
-                "self.inner_batch_size equals greatest common divisor of dataset size and " \
-                "required batch size so dataset size has to divisible by task batch size evenly."
-            x += xx
-            y += yy
-        assert len(x) == self.batch_size and len(y) == self.batch_size
-        self.batch_count += 1
-        if self.batch_count == self.n_batches:
-            x = x[:self.size_of_last_batch]
-            y = y[:self.size_of_last_batch]
-        return x, y
 
 
 @register('multitask_iterator')
@@ -99,10 +41,8 @@ class MultiTaskIterator:
     """
 
     def __init__(self, data: dict, tasks: dict):
-        self.data = data
-        self.task_iterators_params = tasks
         self.task_iterators = {}
-        for task_name, task_iterator_params in self.task_iterators_params.items():
+        for task_name, task_iterator_params in tasks.items():
             task_iterator_params = copy.deepcopy(task_iterator_params)
             task_iterator_params['class_name'] = task_iterator_params['iterator_class_name']
             del task_iterator_params['iterator_class_name']
@@ -194,3 +134,62 @@ class MultiTaskIterator:
             
         instances = (tuple(zip(*x_instances)), tuple(zip(*y_instances)))
         return instances
+
+
+class RepeatBatchGenerator:
+    """Repeating dataset. If there is not enough elements in the dataset to form another batch, elements for the batch 
+    are drawn in the beginning of the dataset. Optionally dataset is reshuffled before a repeat.
+
+    Args:
+        dataset_iterator: Dataset iterator from which batches are drawn.
+        batch_size: Size fo the batch.
+        data_type: "train", "valid", or "test"
+        shuffle: Whether dataset will be shuffled before each repeat.
+        n_batches: The number of batches which will be generated.
+        size_of_the_last_batch: Used if dataset size is not evenly divisible by batch size.
+    """
+    def __init__(
+            self, 
+            dataset_iterator: Union[MultiTaskIterator, DataLearningIterator], 
+            batch_size: int, 
+            data_type: str, 
+            shuffle: bool, 
+            n_batches: Optional[int] = None, 
+            size_of_last_batch: Optional[int] = None
+    ):
+        self.dataset_iterator = dataset_iterator
+        self.batch_size = batch_size
+        self.data_type = data_type
+        self.shuffle = shuffle
+        self.n_batches = n_batches
+        self.size_of_last_batch = self.batch_size if size_of_last_batch is None else size_of_last_batch
+        
+        self.inner_batch_size = math.gcd(len(self.dataset_iterator.data[data_type]), batch_size)
+        self.gen = self.dataset_iterator.gen_batches(self.inner_batch_size, self.data_type, self.shuffle)
+        self.batch_count = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.n_batches is not None and self.batch_count > self.n_batches:
+            raise StopIteration
+        x, y = (), ()
+        while len(x) < self.batch_size or len(y) < self.batch_size:
+            try:
+                xx, yy = next(self.gen)
+            except StopIteration:
+                self.gen = self.dataset_iterator.gen_batches(self.inner_batch_size, self.data_type, self.shuffle)
+                continue
+            assert len(xx) == self.inner_batch_size and len(yy) == self.inner_batch_size, \
+                "self.inner_batch_size equals greatest common divisor of dataset size and " \
+                "required batch size so dataset size has to divisible by task batch size evenly."
+            x += xx
+            y += yy
+        assert len(x) == self.batch_size and len(y) == self.batch_size
+        self.batch_count += 1
+        if self.batch_count == self.n_batches:
+            x = x[:self.size_of_last_batch]
+            y = y[:self.size_of_last_batch]
+        return x, y
+
