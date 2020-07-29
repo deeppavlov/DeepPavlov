@@ -39,7 +39,6 @@ class TorchBertClassifierModel(TorchModel):
 
     Args:
         n_classes: number of classes
-        keep_prob: dropout keep_prob for non-Bert layers
         one_hot_labels: set True if one-hot encoding for labels is used
         multilabel: set True if it is multi-label classification
         return_probas: set True if return class probabilites instead of most probable label needed
@@ -52,7 +51,7 @@ class TorchBertClassifierModel(TorchModel):
         bert_config_file: path to Bert configuration file (not used if pretrained_bert is key title)
     """
 
-    def __init__(self, n_classes, keep_prob,
+    def __init__(self, n_classes,
                  one_hot_labels=False, multilabel=False, return_probas=False,
                  attention_probs_keep_prob=None, hidden_keep_prob=None,
                  optimizer="AdamW",
@@ -62,7 +61,6 @@ class TorchBertClassifierModel(TorchModel):
                  **kwargs) -> None:
 
         self.return_probas = return_probas
-        self.keep_prob = keep_prob
         self.one_hot_labels = one_hot_labels
         self.multilabel = multilabel
         self.pretrained_bert = pretrained_bert

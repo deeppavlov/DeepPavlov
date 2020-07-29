@@ -56,7 +56,6 @@
       {
         "class_name": "torch_bert_sequence_tagger",
         "n_tags": "#tag_vocab.len",
-        "keep_prob": 0.1,
         "pretrained_bert": "bert-base-cased",
         "attention_probs_keep_prob": 0.5,
         "return_probas": false,

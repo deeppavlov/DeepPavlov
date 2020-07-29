@@ -38,7 +38,6 @@
         "pretrained_bert": "bert-base-cased",
         "save_path": "{MODELS_PATH}/model",
         "load_path": "{MODELS_PATH}/model",
-        "keep_prob": 0.5,
         "optimizer": "AdamW",
         "optimizer_parameters": {
           "lr": 2e-5,

@@ -35,17 +35,16 @@ class TorchBertRankerModel(TorchBertClassifierModel):
     Args:
         bert_config_file: path to Bert configuration file
         n_classes: number of classes
-        keep_prob: dropout keep_prob for non-Bert layers
         return_probas: set True if class probabilities are returned instead of the most probable label
     """
 
     def __init__(self, pretrained_bert=None, bert_config_file=None,
-                 n_classes=2, keep_prob=0.9, return_probas=True,
+                 n_classes=2, return_probas=True,
                  optimizer="AdamW",
                  optimizer_parameters={"lr": 2e-5, "weight_decay": 0.01, "betas": (0.9, 0.999), "eps": 1e-6},
                  **kwargs) -> None:
         super().__init__(pretrained_bert=pretrained_bert, bert_config_file=bert_config_file,
-                         n_classes=n_classes, keep_prob=keep_prob, return_probas=return_probas,
+                         n_classes=n_classes, return_probas=return_probas,
                          optimizer=optimizer, optimizer_parameters=optimizer_parameters,
                          **kwargs)
 

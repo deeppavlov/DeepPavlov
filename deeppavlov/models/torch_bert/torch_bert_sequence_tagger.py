@@ -202,7 +202,6 @@ class TorchBertSequenceTagger(TorchModel):
 
     Args:
         n_tags: number of distinct tags
-        keep_prob: dropout keep_prob for non-Bert layers
         return_probas: set this to `True` if you need the probabilities instead of raw answers
         bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
         pretrained_bert: pretrained Bert checkpoint or string name
@@ -222,7 +221,6 @@ class TorchBertSequenceTagger(TorchModel):
 
     def __init__(self,
                  n_tags: int,
-                 keep_prob: float,
                  bert_config_file: str = None,
                  return_probas: bool = False,
                  pretrained_bert: str = None,
@@ -239,7 +237,6 @@ class TorchBertSequenceTagger(TorchModel):
 
         self.n_classes = n_tags
         self.return_probas = return_probas
-        self.keep_prob = keep_prob
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
         self.clip_norm = clip_norm

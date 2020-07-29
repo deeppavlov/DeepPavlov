@@ -52,7 +52,6 @@ class TorchBertSQuADModel(TorchModel):
     of Bert outputs.
 
     Args:
-        keep_prob: dropout keep_prob for non-Bert layers
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
         optimizer: name of `torch.optim` or None for `AdamW`
@@ -67,7 +66,7 @@ class TorchBertSQuADModel(TorchModel):
         min_learning_rate: min value of learning rate if learning rate decay is used
     """
 
-    def __init__(self, keep_prob: float,
+    def __init__(self,
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
                  optimizer: Optional[str] = "AdamW",
@@ -82,7 +81,6 @@ class TorchBertSQuADModel(TorchModel):
                  min_learning_rate: float = 1e-06,
                  **kwargs) -> None:
 
-        self.keep_prob = keep_prob
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
         self.clip_norm = clip_norm
