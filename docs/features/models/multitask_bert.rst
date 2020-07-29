@@ -1,90 +1,90 @@
-Multitask BERT in DeepPavlov
-============================
+Multi-task BERT in DeepPavlov
+=============================
 
-Multitask BERT in DeepPavlov is an implementation of BERT training algorithm published in the paper "Multi-Task Deep
+Multi-task BERT in DeepPavlov is an implementation of BERT training algorithm published in the paper "Multi-Task Deep
 Neural Networks for Natural Language Understanding".
 
-| Multitask BERT paper: https://arxiv.org/abs/1901.11504
+| Multi-task BERT paper: https://arxiv.org/abs/1901.11504
 
 The idea is to share BERT body between several tasks. This is necessary if a model pipe has several
-components using BERT and the amount of GPU memory is limited. Each task has its own 'head' part attached to the output
-of the BERT encoder. If Multitask BERT has :math:`T` heads 1 training iteration consists of
+components using BERT and the amount of GPU memory is limited. Each task has its own 'head' part attached to the
+output of the BERT encoder. If multi-task BERT has :math:`T` heads, one training iteration consists of
 
-- composing :math:`T` minibatches, one for each task,
+- composing :math:`T` mini-batches, one for each task,
 
 - :math:`T` gradient steps, one gradient step for each task.
 
-When one of BERT heads is being trained, other heads parameters do not change. On each training step both BERT head
-and body parameters are modified. You may specify different learning rates for head and body.
+When one of BERT heads is being trained, other heads' parameters do not change. On each training step both BERT head
+and body parameters are modified. You may specify different learning rates for a head and a body.
 
 Currently there are heads for classification (``mt_bert_classification_task``) and sequence tagging
 (``mt_bert_seq_tagging_task``).
 
-At this page Multitask BERT usage is explained on a toy configuration file of a model which detects
-insults, analyzes sentiment and recognises named entities. Multitask Bert configuration files for training
+At this page, multi-task BERT usage is explained on a toy configuration file of a model that detects
+insults, analyzes sentiment, and recognises named entities. Multi-task BERT configuration files for training
 :config:`mt_bert_train_tutorial.json <tutorials/mt_bert/mt_bert_train_tutorial.json>` and for inference
 :config:`mt_bert_inference_tutorial.json <tutorials/mt_bert/mt_bert_inference_tutorial.json>` are based on configs
 :config:`insults_kaggle_bert.json <classifiers/insults_kaggle_bert.json>`,
 :config:`sentiment_sst_multi_bert.json <classifiers/sentiment_sst_multi_bert.json>`,
 :config:`ner_conll2003_bert.json <ner/ner_conll2003_bert.json>`.
 
-We start with ``metadata`` field  of configuration file. Multitask Bert model is saved in
+We start with the ``metadata`` field of the configuration file. Multi-task BERT model is saved in
 ``{"MT_BERT_PATH": "{MODELS_PATH}/mt_bert"}``. Classes and tag vocabularies are saved in
 ``{"INSULTS_PATH": "{MT_BERT_PATH}/insults"}``, ``{"SENTIMENT_PATH": "{MT_BERT_PATH}/sentiment"}``. ``requirements``
 field of Multitask BERT configuration file is identical to ``requirements`` fields of original configs. ``downloads``
-field of Multitask BERT configuration file is a union of ``downloads`` fields of original configs without pretrained
-models. The ``metadata`` field of config is below
+field of Multitask BERT configuration file is a union of ``downloads`` fields of original configs without pre-trained
+models. The ``metadata`` field of our config is below.
 
 .. code: json
 
-  "metadata": {                                                                                                           
-    "variables": {                                                                                                        
-      "ROOT_PATH": "~/.deeppavlov",                                                                                       
-      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",                                                                          
-      "MODELS_PATH": "{ROOT_PATH}/models",                                                                                
-      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",                                                  
-      "MT_BERT_PATH": "{MODELS_PATH}/mt_bert_tutorial",                                                                   
-      "INSULTS_PATH": "{MT_BERT_PATH}/insults",                                                                           
-      "SENTIMENT_PATH": "{MT_BERT_PATH}/sentiment",                                                                       
-      "NER_PATH": "{MT_BERT_PATH}/ner"                                                                                    
-    },                                                                                                                    
-    "requirements": [                                                                                                     
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",                                                                            
-      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",                                                                       
-      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",                                                                      
-      "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",                                                                     
-      "{DEEPPAVLOV_PATH}/requirements/hdt.txt"                                                                            
-    ],                                                                                                                    
-    "download": [                                                                                                         
-      {                                                                                                                   
-        "url": "http://files.deeppavlov.ai/datasets/insults_data.tar.gz",                                                 
-        "subdir": "{DOWNLOADS_PATH}"                                                                                      
-      },                                                                                                                  
-      {                                                                                                                   
-        "url": "http://files.deeppavlov.ai/datasets/yelp_review_full_csv.tar.gz",                                         
-        "subdir": "{DOWNLOADS_PATH}"                                                                                      
-      },                                                                                                                  
-      {                                                                                                                   
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",                               
-        "subdir": "{DOWNLOADS_PATH}/bert_models"                                                                          
-      }                                                                                                                   
-    ]                                                                                                                     
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",
+      "MT_BERT_PATH": "{MODELS_PATH}/mt_bert_tutorial",
+      "INSULTS_PATH": "{MT_BERT_PATH}/insults",
+      "SENTIMENT_PATH": "{MT_BERT_PATH}/sentiment",
+      "NER_PATH": "{MT_BERT_PATH}/ner"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
+      "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
+      "{DEEPPAVLOV_PATH}/requirements/hdt.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/datasets/insults_data.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/datasets/yelp_review_full_csv.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
+        "subdir": "{DOWNLOADS_PATH}/bert_models"
+      }
+    ]
   }
 
 
 Train config
 ------------
 
-When using ``multitask_bert`` component you need **separate train and inference configuration files**.
+When using ``multitask_bert`` component, you need **separate train and inference configuration files**.
 
-Data reading and iteration is performed in ``multitask_reader`` and ``multitask_iterator``. These classes are composed
-of task readers and iterators and generate batches which contain data from heterogeneous datasets.
+Data reading and iteration is performed by ``multitask_reader`` and ``multitask_iterator``. These classes are composed
+of task readers and iterators and generate batches that contain data from heterogeneous datasets.
 
-``multitask_reader`` configuration has parameters ``class_name'``, ``data_path`` and ``tasks``.
-``data_path`` field may have any string because data paths are passed for all tasks individually in ``tasks``
-parameters. However, you can not drop ``data_path`` parameter because it is obligatory for dataset reader
+A ``multitask_reader`` configuration has parameters ``class_name'``, ``data_path``, and ``tasks``.
+``data_path`` field may be any string because data paths are passed for all tasks individually in ``tasks``
+parameter. However, you can not drop a ``data_path`` parameter because it is obligatory for dataset reader
 configuration. ``tasks`` parameter is a dictionary of task dataset readers configurations. In configurations of
-task readers ``reader_class_name`` parameter is used instead of ``class_name``. The dataset reader configuration is
+task readers, ``reader_class_name`` parameter is used instead of ``class_name``. The dataset reader configuration is
 below.
 
 .. code:: json
@@ -123,8 +123,8 @@ below.
     }
   }
 
-``multitask_iterator`` configuration  has parameters ``class_name`` and ``tasks``. ``tasks`` is a dictionary of
-configurations of task iterators. In configurations of task iterators ``iterator_class_name`` is used instead of
+A ``multitask_iterator`` configuration  has parameters ``class_name`` and ``tasks``. ``tasks`` is a dictionary of
+configurations of task iterators. In configurations of task iterators, ``iterator_class_name`` is used instead of
 ``class_name``. The dataset iterator configuration is below.
 
 .. code:: json
@@ -156,17 +156,17 @@ configurations of task iterators. In configurations of task iterators ``iterator
     }
   }
 
-Batches generated by ``multitask_iterator`` are tuples of two elements: inputs of the model and labels. Both inputs and
-labels are lists of tuples. The inputs has following format: ``[(first_task_inputs[0], second_task_inputs[0], ...),
+Batches generated by ``multitask_iterator`` are tuples of two elements: inputs of the model and labels. Both inputs
+and labels are lists of tuples. The inputs has following format: ``[(first_task_inputs[0], second_task_inputs[0], ...),
 (first_task_inputs[1], second_task_inputs[1], ...), ...]`` where ``first_task_inputs``, ``second_task_inputs`` and so
 on are x values of batches from task dataset iterators. Labels have the same format.
 
-If task datasets have different sizes then smaller datasets are repeated until
+If task datasets have different sizes, then smaller datasets are repeated until
 their sizes are equal to the size of the largest dataset. For example, if the first task dataset inputs are
-``[0, 1, 2, 3, 4, 5, 6]``, the second task dataset inputs are ``[7, 8, 9]`` and batch size is ``2`` then multitask
-input mini-batches are ``[(0, 7), (1, 8)]``, ``[(2, 9), (3, 7)]``, ``[(4, 8), (5, 9)]``, ``[(6, 7)]``.
+``[0, 1, 2, 3, 4, 5, 6]``, the second task dataset inputs are ``[7, 8, 9]``, and the batch size is ``2``, then
+multi-task input mini-batches are ``[(0, 7), (1, 8)]``, ``[(2, 9), (3, 7)]``, ``[(4, 8), (5, 9)]``, ``[(6, 7)]``.
 
-In this example there are 3 datasets. Considering the batch structure ``chainer`` inputs are
+In this example, there are 3 datasets. Considering the batch structure, ``chainer`` inputs are
 
 .. code:: json
 
@@ -175,24 +175,27 @@ In this example there are 3 datasets. Considering the batch structure ``chainer`
     "in_y": ["y_insults", "y_sentiment", "y_ner"]
   }
 
-Data preparation steps in pipe are similar to original configs except for names of the variables.
+Data preparation steps in the pipe are similar to original configs except for names of the variables.
 
-``multitask_bert`` component has parameters that are common for all tasks and task specific parameters. The latter
-is provided inside ``tasks`` parameter. ``tasks`` is a dictionary which keys are task names and values are task
-specific parameters. **The names of tasks have to be similar in train and inference configs.**
+A ``multitask_bert`` component has parameters that are common for all tasks and task-specific parameters. The latter
+is provided inside the ``tasks`` parameter. The ``tasks`` is a dictionary that keys are task names and values are 
+task-specific parameters. **The names of tasks have to be similar in train and inference configs.**
 
-If ``inference_task_names`` parameter of ``multitask_bert`` component is provided the component is created for
-inference. Otherwise it is created for training.
+If ``inference_task_names`` parameter of a ``multitask_bert`` component is provided, the component is created for
+inference. Otherwise, it is created for training.
 
-Task classes inherit ``MTBertTask`` class. Inputs and labels of ``multitask_bert`` component are distributed between
-tasks according to ``in_distribution`` and ``in_y_distribution`` parameters. You can drop this parameters if only one
-task is called. In that case all ``multitask_bert`` inputs are passed to the called task. Another option is to make
-distribution parameter a dictionary which keys are task names and values are numbers of arguments called tasks take.
-If this option is used, the order of component inputs in 'in' or 'in_y' has to match the order of tasks in
-corresponding distribution parameter and the order of every task arguments has to match order of arguments of
-``get_sess_run_infer_args`` and ``get_sess_run_train_args`` methods of the task. If 'in' and 'in_y' are dictionaries
-you may make distribution parameter a dictionary which keys are task names and values are lists of key of 'in' or
-'in_y'.
+Task classes inherit ``MTBertTask`` class. Inputs and labels of a ``multitask_bert`` component are distributed between
+the tasks according to the ``in_distribution`` and ``in_y_distribution`` parameters. You can drop these parameters if
+only one task is called. In that case, all ``multitask_bert`` inputs are passed to the task. Another option is
+to make a distribution parameter a dictionary whose keys are task names and values are numbers of arguments the tasks
+take. If this option is used, the order of the ``multitask_bert`` component inputs in ``in`` and ``in_y`` parameters
+must meet three conditions. First, ``in`` and ``in_y`` elements have to be grouped by tasks, e.g. arguments for the
+first task, then arguments for the second task and so on. Secondly, the order of tasks in ``in`` and ``in_y`` has to
+be the same as the order of tasks in the ``in_distribution`` and ``in_y_distribution`` parameters. Thirdly, in ``in``
+and ``in_y`` parameters the arguments of a task has to be put in the same order as the order they are passed to
+``get_sess_run_infer_args`` and ``get_sess_run_train_args`` methods of the task. If ``in`` and ``in_y`` parameters are
+dictionaries, you may make ``in_distribution`` and ``in_y_distribution`` parameter dictionaries which keys are task
+names and values are lists of elements of ``in`` or ``in_y``.
 
 .. code:: json
 
@@ -250,10 +253,10 @@ you may make distribution parameter a dictionary which keys are task names and v
         "out": ["y_insults_pred_probas", "y_sentiment_pred_probas", "y_ner_pred_ind"]
       }
 
-For early you may need to design your own metric. Here are target metric is an average of AUC ROC for insults and
-sentiment tasks and F1 NER task. In order to add a metric to config the metric has to be registered. To register
-metric add decorator ``register_metric`` and run command ``python -m utils.prepare.registry``. The code below should
-work if put in file ``deeppavlov/metrics/fmeasure.py``.
+You may need to design your own metric for early stopping. In this example, the target metric is an average of AUC ROC
+for insults and sentiment tasks and F1 for NER task. In order to add a metric to config, you have to register the
+metric. To register metric add decorator ``register_metric`` and run command ``python -m utils.prepare.registry``.
+The code below should work if it is inserted into file ``deeppavlov/metrics/fmeasure.py``.
 
 .. code:: python
 
@@ -268,16 +271,25 @@ work if put in file ``deeppavlov/metrics/fmeasure.py``.
 Inference config
 ----------------
 
-Let's compare train and inference configs. In inference config there is no dataset reader and dataset iterator in test
-config and there is no 'in_y' preparation components in pipe. ``train`` field can be removed. In ``multitask_bert``
-configuration all training parameters (learning rate, optimizer, etc.) are omitted.
+In an inference config there is no need in dataset reader and dataset iterator. A ``train`` field and components
+preparing ``in_y`` are removed. In ``multitask_bert`` component configuration all training parameters (learning rate,
+optimizer, etc.) are omitted.
 
-For demonstration of ``multitask_bert`` component functionality inference is made in 2 components: ``multitask_bert``
-and ``mtbert_reuser``. The first component performs named entity recognition and the second performs insult detection
-and sentiment analysis.
+For demonstration of DeepPavlov multi-task BERT functionality, in this example, the inference is made in 2 separate 
+components: ``multitask_bert`` and ``mtbert_reuser``. The first component performs named entity recognition and the 
+second performs insult detection and sentiment analysis.
 
-To run NER on ``multitask_bert`` component you need to add ``inference_task_names`` parameter to it. In our example
-this parameter will be equal to "ner".
+To run NER using the ``multitask_bert`` component you need to add ``inference_task_names`` parameter to
+``multitask_bert`` component configuration. An ``inference_task_names`` parameter can be a string or a list containing
+strings and lists of strings. If an ``inference_task_names`` parameter is a string, it is the name of the task called
+separately (in individual ``tf.Session.run`` call). 
+
+If an ``inference_task_names`` parameter is a list, then this list contains names of called tasks. You may group
+several tasks to speed up inference if these tasks have common inputs. If an element of the ``inference_task_names``
+is a list of task names, the tasks from the list are run simultaneously in one ``tf.Session.run`` call. Despite the
+fact that tasks share inputs, you have to provide full sets of inputs for all tasks in ``in`` parameter of
+``multitask_bert``. In our example, NER tasks do not have common inputs with other tasks and have to be run
+separately.
 
 .. code:: json
 
@@ -314,12 +326,12 @@ this parameter will be equal to "ner".
         "out": ["y_ner_pred_ind"]
       }
 
-``mtbert_reuser`` component is an interface to ``multitask_bert`` ``call`` method. To use ``mtbert_reuser`` provide it
-with ``multitask_bert`` object, a list of task for inference (the format is same as in ``inference_task_names``
-parameter of ``multitask_bert``), and ``in_distribution`` parameter. Notice that tasks "insults" and "sentiment" are
-are grouped into a list of 2 elements. Such s syntax invokes inference of these tasks in 1 call of ``tf.Session.run``.
-If ``task_names`` were equal to ``["insults", "sentiment"]``, the inference of the tasks would sequential and took
-approximately 2 times more time.
+``mtbert_reuser`` component is an interface to ``call`` method of ``MultiTaskBert`` class. ``mtbert_reuser``
+component is provided with ``multitask_bert`` component, a list of task names for inference ``task_names`` (the format
+is same as in ``inference_task_names`` parameter of ``multitask_bert``), and ``in_distribution`` parameter. Notice
+that tasks "insults" and "sentiment" are grouped into a list of 2 elements. Such s syntax invokes inference of these
+tasks in one call of ``tf.Session.run``. If ``task_names`` were equal to ``["insults", "sentiment"]``, the inference
+of the tasks would be sequential and took approximately 2 times more time.
 
 .. code:: json
 
@@ -331,3 +343,4 @@ approximately 2 times more time.
         "in": ["bert_features", "bert_features"],
         "out": ["y_insults_pred_probas", "y_sentiment_pred_probas"]
       }
+

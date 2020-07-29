@@ -36,23 +36,23 @@ log = getLogger(__name__)
 
 @register('mt_bert')
 class MultiTaskBert(LRScheduledTFModel):
-    """The component for multi task BERT. It builds the BERT body, launches building of bert heads. 
+    """The component for multi-task BERT. It builds the BERT body, launches building of BERT heads. 
 
-    The component aggregates components implementing Bert heads. The head components are called tasks.
+    The component aggregates components implementing BERT heads. The head components are called tasks.
     `__call__` and `train_on_batch` methods of `MultiTaskBert` are used for inference and training of 
-    BERT heads. BERT head components derived from `MTBertTask` can be used only inside this class.
+    BERT heads. BERT head components, which are derived from `MTBertTask`, can be used only inside this class.
 
-    One training iteration consists of one `train_on_batch` consequent call for every task.
+    One training iteration consists of one `train_on_batch` call for every task.
     
-    If `inference_task_names` is not `None` then the component is created for training. Otherwise the 
-    component is created for inference. If component is created for inference several tasks can be run 
+    If `inference_task_names` is not `None`, then the component is created for training. Otherwise, the 
+    component is created for inference. If component is created for inference, several tasks can be run 
     simultaneously. For explanation see parameter `inference_task_names` description.
 
     Args:
-        bert_config_file: path to Bert configuration file
-        pretrained_bert: pretrained Bert checkpoint
-        attention_probs_keep_prob: keep_prob for Bert self-attention layers
-        hidden_keep_prob: keep_prob for Bert hidden layers
+        bert_config_file: path to BERT configuration file
+        pretrained_bert: pretrained BERT checkpoint
+        attention_probs_keep_prob: keep_prob for BERT self-attention layers
+        hidden_keep_prob: keep_prob for BERT hidden layers
         body_learning_rate: learning rate of BERT body
         min_body_learning_rate: min value of body learning rate if learning rate decay is used
         learning_rate_drop_patience: how many validations with no improvements to wait
@@ -60,28 +60,46 @@ class MultiTaskBert(LRScheduledTFModel):
             validations
         load_before_drop: whether to load best model before dropping learning rate or not
         clip_norm: clip gradients by norm
-        freeze_embeddings: set False to train input embeddings
-        inference_task_names: names of task on which inference is done.
-            If this paramter is provided the component is created for inference else the component is created for
-            training. If tasks have identical inputs on inference they can be run simultaneously. For tasks running
-            simultaneously `inference_task_names` has to be a `list` and in `inference_task_names` tasks have to 
-            be in one `list. E.g. if `inference_task_names` is equal to 
-            `["task1", "task2", ["task3", "task4", "task5"]]` than tasks `"task3"`, `"task4"`, and `"task5"` are run
-            simultaneously.
-        in_distribution: The distribution of variables listed in 'in' config parameter between tasks. 
-            `in_distribuition` can be `None` if the component is infered on one task. In that case all in variables
-            listed in 'in' are arguments of 1 task. 
+        freeze_embeddings: set to False to train input embeddings
+        inference_task_names: names of tasks on which inference is done.
+            If this parameter is provided, the component is created for inference, else the component is created for
+            training. 
 
-            `in_distribution` can be a dictionary of `int`. If so then keys of `in_distribution` are task names and 
-            values are numbers of variables from 'in' parameter in config which are inputs of corresponding task.
-            The variables in 'in' parameter have to be in the same order the tasks are listed in `in_distribution`.
+            If `inference_task_names` is a string, then it is a name of the task called separately from other tasks
+            (in individual `tf.Session.run` call).
+
+            If `inference_task_names` is a `list`, then elements of this list are either strings or lists of strings.
+            You can combine these options. For example, `["task_name1", ["task_name2", "task_name3"], ["task_name4",
+            "task_name5"]]`.
+
+            If an element of `inference_task_names` list is a string, the element is a name of the task that is
+            computed when `__call__` method is called.
+
+            If an element of the `inference_task_names` parameter is a list of strings
+            `["task_name1", "task_name2", ...]`, then tasks `"task_name1"`, `"task_name2"` and so on are run
+            simultaneously in `tf.Session.run` call. This option is available if tasks `"task_name1"`, `"task_name2"`
+            and so on have common inputs. Despite the fact that tasks share inputs, if positional arguments are used
+            in methods `__call__` and `train_on_batch`, all arguments are passed individually. For instance, if
+            `"task_name1"`, `"task_name2"`, and `"task_name3"` all take an argument with name `x` in the model pipe,
+            then the `__call__` method takes arguments `(x, x, x)`.
             
-            `in_distribution` can be a dictionary of lists of `str`. Strings are names of variables from 'in'
-            parameter. If 'in' parameter is a list then 'in_distribution' works the same way dictionary of `int` 
-            works meaning that lists are replaced with their lengths. If 'in' parameter is a dictionary then the order
-            of strings should match the order of arguments of `train_on_batch` and `get_sess_run_infer_args` methods
-            of task components.
-        in_y_distribution: The same as `in_distribution` for 'in_y' config parameter.
+            
+        in_distribution: The distribution of variables listed in the `'in'` config parameter between tasks. 
+            `in_distribuition` can be `None` if only 1 task is called. In that case all variables
+            listed in `'in'` are arguments of 1 task. 
+
+            `in_distribution` can be a dictionary of `int`. If that is the case, then keys of `in_distribution` are
+            task names and values are numbers of variables from `'in'` parameter of config which are inputs of
+            corresponding task. The variables in `'in'` parameter have to be in the same order the tasks are listed in
+            `in_distribution`.
+            
+            `in_distribution` can be a dictionary of lists of `str`. Strings are names of variables from `'in'`
+            configuration parameter. If `'in'` parameter is a list, then `in_distribution` works the same way as when
+            `in_distribution` is dictionary of `int`. Values of `in_distribution`, which are lists, are replaced by
+            their lengths. If `'in'` parameter in component config is a dictionary, then the order of strings in
+            `in_distribution` values has to match the order of arguments of `train_on_batch` and 
+            `get_sess_run_infer_args` methods of task components.
+        in_y_distribution: The same as `in_distribution` for `'in_y'` config parameter.
     """
     def __init__(self,
                  bert_config_file: str,
@@ -426,7 +444,7 @@ class MultiTaskBert(LRScheduledTFModel):
             task_names: names of tasks that are called. If `str` then 1 task is called. If a task name is an element 
                 of `task_names` list then this task is run indepedently. If task an element of `task_names` is an
                 list of strings then tasks in the inner list are sun simultaneously.
-            in_distribution: a distribution of variables from 'in' config parameters between tasks. For details see
+            in_distribution: a distribution of variables from `'in'` config parameters between tasks. For details see
                 method `__init__` docstring.
         
         Returns:
@@ -623,7 +641,7 @@ class MTBertTask(ABC):
         for your task.
         
         Args:
-            kwargs: the keys are `body_learning_rate` and 'in' and 'in_y' params for the task.
+            kwargs: the keys are `body_learning_rate` and `'in'` and `'in_y'` params for the task.
 
         Returns:
             dictionary with loss and body and head learning rates.
