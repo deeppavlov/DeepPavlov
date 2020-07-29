@@ -47,9 +47,9 @@
         "database": null,
         "nlg_manager": {
           "class_name": "gobot_json_nlg_manager",
-          "data_path": "{DSTC2_DATA_PATH}",
+          "data_path": "{DATA_PATH}",
           "dataset_reader_class": "md_yaml_dialogs_reader",
-          "actions2slots_path": "{DSTC2_DATA_PATH}/dstc2-actions2slots.json",
+          "actions2slots_path": "{DATA_PATH}/dstc2-actions2slots.json",
           "api_call_action": null
         },
         "api_call_action": null,
@@ -94,7 +94,7 @@
       "ROOT_PATH": "~/.deeppavlov",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "DATA_PATH": "{DOWNLOADS_PATH}/dstc2_v3",
+      "DATA_PATH": "{DOWNLOADS_PATH}/gobot_md_yaml_minimal",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/gobot_md_yaml_minimal"
     },
