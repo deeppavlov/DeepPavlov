@@ -79,6 +79,14 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_rus_bert_v1.tar.gz",
         "subdir": "{MODELS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/entity_ranking_bert_rus_no_mention.tar.gz",
+        "subdir": "{MODELS_PATH}/entity_ranking_bert_rus_no_mention"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/q_to_descr_ru.pickle",
+        "subdir": "{MODELS_PATH}/wikidata_rus"
       }
     ]
   }
