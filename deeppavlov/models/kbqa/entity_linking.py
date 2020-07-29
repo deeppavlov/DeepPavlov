@@ -373,9 +373,9 @@ class EntityLinker(Component, Serializable):
             log.debug(f"entity_pos {entity_pos}")
             log.debug(f"candidate_entities {candidate_entities[:10]}")
             if self.include_mention:
-                context = ' '.join(context_tokens[:entity_pos[0]]+["[ENT]"]+
-                                                   context_tokens[entity_pos[0]:entity_pos[-1]+1]+["[ENT]"]+
-                                                   context_tokens[entity_pos[-1]+1:])
+                context = ' '.join(context_tokens[:entity_pos[0]] + ["[ENT]"] +
+                                   context_tokens[entity_pos[0]:entity_pos[-1]+1] + ["[ENT]"] +
+                                   context_tokens[entity_pos[-1]+1:])
             else:
                 context = ' '.join(context_tokens[:entity_pos[0]]+["[ENT]"] + context_tokens[entity_pos[-1]+1:])
             log.debug(f"context {context}")
