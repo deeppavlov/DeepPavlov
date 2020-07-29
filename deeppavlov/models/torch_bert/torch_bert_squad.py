@@ -35,6 +35,11 @@ from deeppavlov.core.models.torch_model import TorchModel
 logger = getLogger(__name__)
 
 
+def softmax_mask(val, mask):
+    INF = 1e30
+    return -INF * (1 - mask.to(torch.float32)) + val
+
+
 @register('torch_squad_bert_model')
 class TorchBertSQuADModel(TorchModel):
     """Bert-based on PyTorch model for SQuAD-like problem setting:
@@ -159,6 +164,15 @@ class TorchBertSQuADModel(TorchModel):
             # Forward pass, calculate logit predictions
             outputs = self.model(input_ids=b_input_ids, attention_mask=b_input_masks, token_type_ids=b_input_type_ids)
             logits_st, logits_end = outputs[:2]
+
+            bs = b_input_ids.size()[0]
+            seq_len = b_input_ids.size()[-1]
+            mask = torch.cat([torch.ones(bs, 1, dtype=torch.int32),
+                              torch.zeros(bs, seq_len - 1, dtype=torch.int32)], dim=-1)
+            logit_mask = b_input_type_ids + mask
+            logits_st = softmax_mask(logits_st, logit_mask)
+            logits_end = softmax_mask(logits_end, logit_mask)
+
             start_probs = torch.nn.functional.softmax(logits_st, dim=-1)
             end_probs = torch.nn.functional.softmax(logits_end, dim=-1)
             scores = torch.tensor(1) - start_probs[:, 0] * end_probs[:, 0]  # ok
