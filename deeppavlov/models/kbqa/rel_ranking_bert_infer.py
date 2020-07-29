@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import Tuple, List, Any
+from typing import Tuple, List, Any, Optional
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
