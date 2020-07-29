@@ -210,7 +210,8 @@ class KBEntityLinker(Component, Serializable):
 
     def sort_found_entities(self, candidate_entities: List[Tuple[int, str, int]],
                             candidate_names: List[List[str]],
-                            entity: str, context: str = None) -> Tuple[List[str], List[float], List[Tuple[str, str, int, int]]]:
+                            entity: str,
+                            context: str = None) -> Tuple[List[str], List[float], List[Tuple[str, str, int, int]]]:
         entities_ratios = []
         for candidate, entity_names in zip(candidate_entities, candidate_names):
             entity_num, entity_id, num_rels = candidate
