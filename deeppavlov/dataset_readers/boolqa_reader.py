@@ -49,11 +49,15 @@ class BoolqaReader(DatasetReader):
              language: str = 'en',
              *args, **kwargs) -> Dict[str, List[Tuple[Tuple[str, str], int]]]:
 
-        """Reads BoolQ dataset from files.
+        """
+        Reads BoolQ dataset from files.
 
         Args:
             data_path: A path to a folder with dataset files.
             language: The dataset language ('ru', 'en' are available)
+
+        Returns:
+            dataset: items of the dataset [(question, passage), label]
         """
 
         if language in self.urls:
