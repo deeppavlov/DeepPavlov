@@ -47,7 +47,17 @@ log = getLogger(__name__)
 @register('md_yaml_dialogs_reader')
 class MD_YAML_DialogsDatasetReader(DatasetReader):
     """
-    Reads dialogs from dataset composed of stories.md, nlu.md, domain.yml .
+    Reads dialogs from dataset composed of ``stories.md``, ``nlu.md``, ``domain.yml`` .
+
+    ``stories.md`` is to provide the dialogues dataset for model to train on.
+    The dialogues are `not` the sequences of user utterances `texts` and respective system replies texts
+    `but` the intent + slots user utterances `labels` and respective system replies `labels`.
+    This is so to distinguish the NLU-NLG tasks from the actual dialogues storytelling experience: one should be able to describe just the scripts of dialogues to the system.
+
+    ``nlu.md`` is contrariwise to provide the NLU training set irrespective of the dialogues scripts.
+
+    ``domain.yml`` is to desribe the task-specific domain and serves two purposes:
+    provide the NLG templates and provide some specific configuration of the NLU
     """
 
     _USER_SPEAKER_ID = 1
@@ -201,7 +211,26 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                     domain_knowledge,
                     intent2slots2text,
                     slot_name2text2value):
-        # todo: docstring, BEFORE/AFTER logging
+        """
+        Reads stories from the specified path converting them to go-bot format on the fly.
+
+        Args:
+            story_fpath: path to the file containing the stories dataset
+            dialogs: flag which indicates whether to output list of turns or
+             list of dialogs
+            domain_knowledge: the domain knowledge, usually inferred from domain.yml
+            intent2slots2text: the mapping allowing given the intent class and
+             slotfilling values of utterance, restore utterance text.
+            slot_name2text2value: the mapping of possible slot values spellings to the values themselves.
+        Returns:
+            stories read as if it was done with DSTC2DatasetReader._read_from_file()
+        """
+        log.debug(f"BEFORE MLU_MD_DialogsDatasetReader._read_story(): "
+                  f"story_fpath={story_fpath}, "
+                  f"dialogs={dialogs}, "
+                  f"domain_knowledge={domain_knowledge}, "
+                  f"intent2slots2text={intent2slots2text}, "
+                  f"slot_name2text2value={slot_name2text2value}")
 
         default_system_start = {
             "speaker": cls._SYSTEM_SPEAKER_ID,
@@ -239,7 +268,8 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                         intent2slots2text, slots_actual_values,
                         user_action)
                 except KeyError as e:
-                    log.info(f"Skipping story w. line {line} because of no NLU candidates found")
+                    log.info(f"INSIDE MLU_MD_DialogsDatasetReader._read_story(): "
+                             f"Skipping story w. line {line} because of no NLU candidates found")
                     curr_story_bad = True
                     continue
                 user_response_info = cls._user_text(intent2slots2text, action_for_text, slots_used_values)
@@ -282,6 +312,14 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         tmp_f.close()
         gobot_formatted_stories = DSTC2DatasetReader._read_from_file(tmp_f.name, dialogs=dialogs)
         os.remove(tmp_f.name)
+
+        log.debug(f"AFTER MLU_MD_DialogsDatasetReader._read_story(): "
+                  f"story_fpath={story_fpath}, "
+                  f"dialogs={dialogs}, "
+                  f"domain_knowledge={domain_knowledge}, "
+                  f"intent2slots2text={intent2slots2text}, "
+                  f"slot_name2text2value={slot_name2text2value}")
+
         return gobot_formatted_stories
 
     @classmethod
