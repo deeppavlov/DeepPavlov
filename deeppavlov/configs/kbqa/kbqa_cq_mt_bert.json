@@ -96,7 +96,7 @@
         "in": ["x_tokens", "tag_probas_ner"],
         "out": ["entities", "types"],
         "thres_proba": 0.95,
-        "entity_tag": "ENTITY",
+        "entity_tags": ["ENTITY"],
         "type_tag": "TYPE",
         "o_tag": "O",
         "tags_file": "{MT_BERT_PATH}/ner/tag.dict",
