@@ -26,7 +26,8 @@ from deeppavlov.core.models.component import Component
 class EntityDetectionParser(Component):
     """This class parses probabilities of tokens to be a token from the entity substring."""
 
-    def __init__(self, entity_tags: List[str], type_tag: str, o_tag: str, tags_file: str, thres_proba: float = 0.8, **kwargs):
+    def __init__(self, entity_tags: List[str], type_tag: str, o_tag: str, tags_file: str,
+                       thres_proba: float = 0.8, **kwargs):
         """
 
         Args:
@@ -43,7 +44,8 @@ class EntityDetectionParser(Component):
         self.tag_ind_dict = {}
         with open(str(expand_path(tags_file))) as fl:
             tags = [line.split('\t')[0] for line in fl.readlines()]
-            self.entity_prob_ind = {entity_tag: [i for i, tag in enumerate(tags) if entity_tag in tag] for entity_tag in self.entity_tags}
+            self.entity_prob_ind = {entity_tag: [i for i, tag in enumerate(tags) if entity_tag in tag]
+                                                       for entity_tag in self.entity_tags}
             self.type_prob_ind = [i for i, tag in enumerate(tags) if self.type_tag in tag]
             self.et_prob_ind = [i for tag, ind in self.entity_prob_ind.items() for i in ind] + self.type_prob_ind
             for entity_tag, tag_ind in self.entity_prob_ind.items():
@@ -54,7 +56,7 @@ class EntityDetectionParser(Component):
             self.tag_ind_dict[0] = self.o_tag
 
     def __call__(self, question_tokens: List[List[str]],
-                 token_probas: List[List[List[float]]]) -> Tuple[List[List[str]], List[List[str]], List[List[List[int]]]]:
+             token_probas: List[List[List[float]]]) -> Tuple[List[List[str]], List[List[str]], List[List[List[int]]]]:
         """
 
         Args:
@@ -94,7 +96,8 @@ class EntityDetectionParser(Component):
         entity_type = []
         types_probas = []
         type_proba = []
-        replace_tokens = [(' - ', '-'), ("'s", ''), (' .', ''), ('{', ''), ('}', ''), ('  ', ' '), ('"', "'"), ('(', ''), (')', '')]
+        replace_tokens = [(' - ', '-'), ("'s", ''), (' .', ''), ('{', ''), ('}', ''),
+                          ('  ', ' '), ('"', "'"), ('(', ''), (')', '')]
 
         for n, (tok, tag, proba) in enumerate(zip(tokens, tags, tag_probas)):
             if tag in self.entity_tags:
@@ -103,7 +106,7 @@ class EntityDetectionParser(Component):
             elif tag == self.type_tag:
                 entity_type.append(tok)
                 type_proba.append(proba)
-            elif any([len(entity) > 0 for tag, entity in entity_dict.items()]):
+            elif any(entity_dict.values()):
                 for tag, entity in entity_dict.items():
                     entity = ' '.join(entity)
                     for old, new in replace_tokens:

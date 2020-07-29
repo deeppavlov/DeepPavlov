@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
 from logging import getLogger
-from typing import List, Dict, Tuple, Optional, Any
-from collections import defaultdict, Counter
+from typing import List, Dict, Tuple
+from collections import defaultdict
 
-import numpy as np
 import nltk
 import pymorphy2
 import faiss
