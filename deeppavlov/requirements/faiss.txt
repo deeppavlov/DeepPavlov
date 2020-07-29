@@ -1,1 +1,1 @@
-faiss==1.6.3
+faiss-gpu==1.6.3

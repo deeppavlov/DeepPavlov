@@ -48,7 +48,7 @@
         "max_tfidf_features": 500,
         "include_mention": false,
         "ngram_range": [2, 2],
-        "num_entities_to_return": 5,
+        "num_entities_to_return": 1,
         "build_inverted_index": false,
         "lemmatize": true,
         "use_descriptions": true,
@@ -69,7 +69,8 @@
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
       "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-      "{DEEPPAVLOV_PATH}/requirements/faiss.txt"
+      "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
+      "{DEEPPAVLOV_PATH}/requirements/hdt.txt"
     ],
     "download": [
       {
@@ -77,8 +78,8 @@
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_rus_bert_v1.tar.gz",
-        "subdir": "{MODELS_PATH}"
+        "url": "http://files.deeppavlov.ai/kbqa/models/ner_rus_bert.tar.gz",
+        "subdir": "{MODELS_PATH}/ner_rus_bert"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/models/entity_ranking_bert_rus_no_mention.tar.gz",
@@ -86,7 +87,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/q_to_descr_ru.pickle",
-        "subdir": "{MODELS_PATH}/wikidata_rus"
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       }
     ]
   }
