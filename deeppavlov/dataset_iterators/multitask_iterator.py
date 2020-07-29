@@ -110,8 +110,8 @@ class MultiTaskIterator:
             yield b
 
     def get_instances(self, data_type: str = 'train'):
-        """Returns a tuple of inputs and outputs of datasets. Lengths of inputs and outputs are equal to
-        the size of the largest dataset. Smaller datasets are repeated until their size is equal to the
+        """Returns a tuple of inputs and outputs from all datasets. Lengths of inputs and outputs are equal to
+        the size of the largest dataset. Smaller datasets are repeated until their sizes are equal to the
         size of the largest dataset.
 
         Args:
@@ -141,12 +141,12 @@ class RepeatBatchGenerator:
     are drawn in the beginning of the dataset. Optionally dataset is reshuffled before a repeat.
 
     Args:
-        dataset_iterator: Dataset iterator from which batches are drawn.
-        batch_size: Size fo the batch.
+        dataset_iterator: dataset iterator from which batches are drawn.
+        batch_size: size fo the batch.
         data_type: "train", "valid", or "test"
-        shuffle: Whether dataset will be shuffled before each repeat.
-        n_batches: The number of batches which will be generated.
-        size_of_the_last_batch: Used if dataset size is not evenly divisible by batch size.
+        shuffle: whether dataset will be shuffled before each repeat.
+        n_batches: the number of batches that will be generated.
+        size_of_the_last_batch: used if dataset size is not evenly divisible by batch size.
     """
     def __init__(
             self, 

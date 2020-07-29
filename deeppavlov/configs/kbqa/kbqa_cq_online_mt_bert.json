@@ -119,7 +119,7 @@
         "templates_filename": "templates_eng.json"
       },
       {
-        "class_name": "entity_linker",
+        "class_name": "kbqa_entity_linker",
         "id": "linker_entities",
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
         "inverted_index_filename": "inverted_index_eng.pickle",
@@ -130,7 +130,7 @@
         "use_prefix_tree": false
       },
       {
-        "class_name": "entity_linker",
+        "class_name": "kbqa_entity_linker",
         "id": "linker_types",
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
         "inverted_index_filename": "inverted_index_types_eng.pickle",

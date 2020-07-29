@@ -49,6 +49,9 @@ class MultiTaskBert(LRScheduledTFModel):
     simultaneously. For explanation see parameter ``inference_task_names`` description.
 
     Args:
+        tasks: a dictionary. Task names are dictionary keys and objects of ``MTBertTask`` subclasses are dictionary
+            values. Task names are used as variable scopes in computational graph so it is important to use same
+            names in multi-task BERT train and inference configuration files.
         bert_config_file: path to BERT configuration file
         pretrained_bert: pretrained BERT checkpoint
         attention_probs_keep_prob: keep_prob for BERT self-attention layers
@@ -68,42 +71,40 @@ class MultiTaskBert(LRScheduledTFModel):
             If ``inference_task_names`` is a string, then it is a name of the task called separately from other tasks
             (in individual ``tf.Session.run`` call).
 
-            If ``inference_task_names`` is a ``list``, then elements of this list are either strings or lists of strings.
-            You can combine these options. For example, ``["task_name1", ["task_name2", "task_name3"], ["task_name4",
-            "task_name5"]]``.
+            If ``inference_task_names`` is a ``list``, then elements of this list are either strings or lists of
+            strings. You can combine these options. For example, ``["task_name1", ["task_name2", "task_name3"],
+            ["task_name4", "task_name5"]]``.
 
             If an element of ``inference_task_names`` list is a string, the element is a name of the task that is
             computed when ``__call__`` method is called.
 
             If an element of the ``inference_task_names`` parameter is a list of strings
             ``["task_name1", "task_name2", ...]``, then tasks ``"task_name1"``, ``"task_name2"`` and so on are run
-            simultaneously in ``tf.Session.run`` call. This option is available if tasks ``"task_name1"``, ``"task_name2"``
-            and so on have common inputs. Despite the fact that tasks share inputs, if positional arguments are used
-            in methods ``__call__`` and ``train_on_batch``, all arguments are passed individually. For instance, if
-            ``"task_name1"``, ``"task_name2"``, and ``"task_name3"`` all take an argument with name ``x`` in the model pipe,
-            then the ``__call__`` method takes arguments ``(x, x, x)``.
-            
-            
+            simultaneously in ``tf.Session.run`` call. This option is available if tasks ``"task_name1"``,
+            ``"task_name2"`` and so on have common inputs. Despite the fact that tasks share inputs, if positional
+            arguments are used in methods ``__call__`` and ``train_on_batch``, all arguments are passed individually.
+            For instance, if ``"task_name1"``, ``"task_name2"``, and ``"task_name3"`` all take an argument with name
+            ``x`` in the model pipe, then the ``__call__`` method takes arguments ``(x, x, x)``.
         in_distribution: The distribution of variables listed in the ``"in"`` config parameter between tasks. 
             ``in_distribuition`` can be ``None`` if only 1 task is called. In that case all variables
             listed in ``"in"`` are arguments of 1 task. 
 
-            ``in_distribution`` can be a dictionary of ``int``. If that is the case, then keys of ``in_distribution`` are
-            task names and values are numbers of variables from ``"in"`` parameter of config which are inputs of
-            corresponding task. The variables in ``"in"`` parameter have to be in the same order the tasks are listed in
-            ``in_distribution``.
+            ``in_distribution`` can be a dictionary of ``int``. If that is the case, then keys of ``in_distribution``
+            are task names and values are numbers of variables from ``"in"`` parameter of config which are inputs of
+            corresponding task. The variables in ``"in"`` parameter have to be in the same order the tasks are listed
+            in ``in_distribution``.
             
             ``in_distribution`` can be a dictionary of lists of ``str``. Strings are names of variables from ``"in"``
-            configuration parameter. If ``"in"`` parameter is a list, then ``in_distribution`` works the same way as when
-            ``in_distribution`` is dictionary of ``int``. Values of ``in_distribution``, which are lists, are replaced by
-            their lengths. If ``"in"`` parameter in component config is a dictionary, then the order of strings in
-            ``in_distribution`` values has to match the order of arguments of ``train_on_batch`` and 
+            configuration parameter. If ``"in"`` parameter is a list, then ``in_distribution`` works the same way as
+            when ``in_distribution`` is dictionary of ``int``. Values of ``in_distribution``, which are lists, are
+            replaced by their lengths. If ``"in"`` parameter in component config is a dictionary, then the order of
+            strings in ``in_distribution`` values has to match the order of arguments of ``train_on_batch`` and 
             ``get_sess_run_infer_args`` methods of task components.
         in_y_distribution: The same as ``in_distribution`` for ``"in_y"`` config parameter.
     """
     def __init__(self,
-                 bert_config_file: str,
                  tasks: Dict[str, Dict[str, Any]],
+                 bert_config_file: str,
                  pretrained_bert: str = None,
                  attention_probs_keep_prob: float = None,
                  hidden_keep_prob: float = None,
@@ -243,14 +244,14 @@ class MultiTaskBert(LRScheduledTFModel):
         ]
         ```
         
-        If ``kwargs`` are used and ``in_distribution`` and ``in_y_distribution`` are dictionaries of lists of strings, then
-        keys of ``kwargs`` have to be same as strings in ``in_distribution`` and ``in_y_distribution``. If ``in_distribution``
-        and ``in_y_distribution`` are dictionaries of ``int``, then ``kwargs`` values are treated the same way as ``args``.
-        tasks. 
+        If ``kwargs`` are used and ``in_distribution`` and ``in_y_distribution`` attributes are dictionaries of lists
+        of strings, then keys of ``kwargs`` have to be same as strings in ``in_distribution`` and
+        ``in_y_distribution``. If ``in_distribution`` and ``in_y_distribution`` are dictionaries of ``int``, then
+        ``kwargs`` values are treate the same way as ``args``.
  
         Args:
-            args: BERT body learning rate and task inputs and expected outputs
-            kwargs: BERT body learning rate and task inputs and expected outputs
+            args: task inputs and expected outputs
+            kwargs: task inputs and expected outputs
 
         Returns:
             dictionary of dictionaries with task losses and learning rates.
@@ -357,8 +358,8 @@ class MultiTaskBert(LRScheduledTFModel):
             if len(values) != n_distributed:
                 raise ConfigError(f"The number of '{what_to_distribute}' arguments of MultitaskBert does not match "
                     f"the number of distributed params according to '{what_to_distribute}_distribution' parameter. "
-                    f"{len(values)} parameters are in '{what_to_distribute}' and {n_distributed} parameters are in "
-                    f"'{what_to_distribute}_distribution'. "
+                    f"{len(values)} parameters are in '{what_to_distribute}' and {n_distributed} parameters are "
+                    f"required '{what_to_distribute}_distribution'. "
                     f"{what_to_distribute}_distribution = {distribution}")
             values_taken = 0
             for task_name in task_names:
@@ -396,9 +397,9 @@ class MultiTaskBert(LRScheduledTFModel):
         ]
         ```
 
-        If ``kwargs`` are used and ``in_distribution`` is dictionary of ``int`` then ``kwargs`` order has to be the same as 
-        ``args`` order described in previous paragraph. If ``in_distribution`` is a dictionary of lists of ``str``, then
-        ``kwargs`` have to contain all strings in ``in_distribution`` values.
+        If ``kwargs`` are used and ``in_distribution`` is a dictionary of ``int``, then ``kwargs``' order has to be
+        the same as ``args`` order described in the previous paragraph. If ``in_distribution`` is a dictionary of
+        lists of ``str``, then all task names from ``in_distribution`` have to be present in ``kwargs`` keys.
         
         Returns:
             list of results of called tasks.
@@ -420,9 +421,9 @@ class MultiTaskBert(LRScheduledTFModel):
             task_names: Optional[Union[List[str], str]],
             in_distribution: Optional[Union[Dict[str, int], Dict[str, List[str]]]] = None,
     ):
-        """Calls one or several BERT heads depending on provided task names. ``args`` and ``kwargs`` contain 
-        inputs of BERT tasks. ``args`` and ``kwargs cannot be used simultaneously. If ``args`` are used ``args`` content has 
-        to be
+        """Calls one or several BERT heads depending on provided task names in ``task_names`` parameter. ``args`` and
+        ``kwargs`` contain inputs of BERT tasks. ``args`` and ``kwargs cannot be used simultaneously. If ``args`` are
+        used ``args``, content has to be
         ```python
         args = [
             task1_in_x[0],
@@ -437,13 +438,13 @@ class MultiTaskBert(LRScheduledTFModel):
         If ``kwargs`` is used ``kwargs`` keys has to match content of ``in_names`` params of called tasks.
 
         Args:
-            args: args parameter of ``__call__`` method of this component or ``MTBertReUser``. Inputs of one or
-                several tasks.
-            kwargs: kwargs parameter of ``__call__`` method of this component or ``MTBertReUser``. Inputs of one or 
-                several tasks.
-            task_names: names of tasks that are called. If ``str`` then 1 task is called. If a task name is an element 
-                of ``task_names`` list then this task is run indepedently. If task an element of ``task_names`` is an
-                list of strings then tasks in the inner list are run simultaneously.
+            args: generally, ``args`` parameter of ``__call__`` method of this component or ``MTBertReUser``. Inputs 
+                of one or several tasks. Has to be empty if ``kwargs`` argument is used.
+            kwargs: generally, ``kwargs`` parameter of ``__call__`` method of this component or ``MTBertReUser``. 
+                Inputs of one or several tasks. Has to be empty if ``args`` argument is used.
+            task_names: names of tasks that are called. If ``str``, then 1 task is called. If a task name is an
+                element of ``task_names`` list, then this task is run indepedently. If task an element of
+                ``task_names`` is an list of strings, then tasks in the inner list are run simultaneously.
             in_distribution: a distribution of variables from ``"in"`` config parameters between tasks. For details
                 see method ``__init__`` docstring.
         
@@ -479,10 +480,13 @@ class MultiTaskBert(LRScheduledTFModel):
 
 
 class MTBertTask(ABC):
-    """Abstract class for multitask BERT tasks. Objects of its subclasses are linked with BERT body when ``build`` 
-    method is called. Training is performed with ``train_on_batch`` method. The objects of classes derived from
-    ``MTBertTask`` don't have ``__call__`` method. Instead they have ``get_sess_run_infer_args`` and
-    ``post_process_preds`` methods which are called from ``call`` method of ``MultiTaskBert`` class.
+    """Abstract class for multitask BERT tasks. Objects of its subclasses are linked with BERT body when
+    ``MultiTaskBert.build`` method is called. Training is performed with ``MultiTaskBert.train_on_batch`` method is
+    called. The objects of classes derived from ``MTBertTask`` don't have ``__call__`` method. Instead they have
+    ``get_sess_run_infer_args`` and ``post_process_preds`` methods, which are called from ``call`` method of
+    ``MultiTaskBert`` class. ``get_sess_run_infer_args`` method returns fetches and feed_dict for inference and
+    ``post_process_preds`` method retrieves predictions from computed fetches. Classes derived from ``MTBertTask``
+    must ``get_sess_run_train_args`` method that returns fetches and feed_dict for training.
 
     Args:
         keep_prob: dropout keep_prob for non-BERT layers 
@@ -536,7 +540,8 @@ class MTBertTask(ABC):
             sess: current ``tf.Session`` instance
             mode: ``'train'`` or ``'inference'``
             get_train_op_func: a function returning ``tf.Operation`` and with signature similar to 
-                ``LRScheduledTFModel.get_train_op`` without ``self`` argument.
+                ``LRScheduledTFModel.get_train_op`` without ``self`` argument. It is a function returning train
+                operation for specified loss and variable scopes.
             freeze_embeddings: set ``False`` to train input embeddings
         """
         self.bert_head_variable_scope = bert_head_variable_scope
@@ -565,7 +570,7 @@ class MTBertTask(ABC):
 
     def get_train_op(self, loss: tf.Tensor, body_learning_rate: Union[tf.Tensor, float], **kwargs) -> tf.Operation:
         """Return operation for the task training. Head learning rate is calculated as a product of 
-        ``body_learning_rate`` and quotient of initial head learning rate and body learning rate.
+        ``body_learning_rate`` and quotient of initial head learning rate and initial body learning rate.
 
         Args:
             loss: the task loss
@@ -645,7 +650,7 @@ class MTBertTask(ABC):
             kwargs: the keys are ``body_learning_rate`` and ``"in"`` and ``"in_y"`` params for the task.
 
         Returns:
-            dictionary with loss and body and head learning rates.
+            dictionary with calcutated task loss and body and head learning rates.
         """
         fetches, feed_dict = self.get_sess_run_train_args(*args, **kwargs)
         _, loss = self.sess.run(fetches, feed_dict=feed_dict)
@@ -662,7 +667,11 @@ class MTBertTask(ABC):
 
         If ``self.return_probas`` is ``True`` fetches contains probabilities tensor and predictions tensor otherwise.
 
-        Overriding methods take task inputs as positional arguments,
+        Overriding methods take task inputs as positional arguments. 
+
+        ATTENTION! Let ``get_sess_run_infer_args`` method have ``n_x_args`` arguments. Then the order of first
+        ``n_x_args`` arguments of ``get_sess_run_train_args`` method arguments has to match the order of
+        ``get_sess_run_infer_args`` arguments. 
         
         Returns:
             fetches and feed_dict
@@ -674,6 +683,10 @@ class MTBertTask(ABC):
         """Returns fetches and feed_dict for task ``train_on_batch`` method.
 
         Overriding methods take task inputs as positional arguments.
+
+        ATTENTION! Let ``get_sess_run_infer_args`` method have ``n_x_args`` arguments. Then the order of first
+        ``n_x_args`` arguments of ``get_sess_run_train_args`` method arguments has to match the order of
+        ``get_sess_run_infer_args`` arguments.
 
         Returns:
             fetches and feed_dict
@@ -697,7 +710,7 @@ class MTBertTask(ABC):
 @register("mt_bert_seq_tagging_task")
 class MTBertSequenceTaggingTask(MTBertTask):
     """BERT head for text tagging. It predicts a label for every token (not subtoken) in the text.
-    You can use it for sequence labeling tasks, such as morphological tagging or named entity recognition.
+    You can use it for sequence labelling tasks, such as morphological tagging or named entity recognition.
     Objects of this class should be passed to the constructor of ``MultiTaskBert`` class in param ``tasks``.
 
     Args:
@@ -851,7 +864,7 @@ class MTBertSequenceTaggingTask(MTBertTask):
         """Returns fetches and feed_dict for model inference. The method is called from ``MultiTaskBert.__call__``.
 
         Args:
-            input_ids: indices of the subwords
+            input_ids: indices of the subwords in vocabulary
             input_masks: mask that determines where to attend and where not to
             y_masks: mask which determines the first subword units in the the word
 
@@ -878,8 +891,8 @@ class MTBertSequenceTaggingTask(MTBertTask):
         """Returns fetches and feed_dict for model ``train_on_batch`` method.
 
         Args:
-            input_ids: indices of the subwords                                                                         
-            input_masks: mask that determines where to attend and where not to                                         
+            input_ids: indices of the subwords in vocabulary
+            input_masks: mask that determines where to attend and where not to
             y_masks: mask which determines the first subword units in the the word
             y: indices of ground truth tags
             body_learning_rate: learning rate for BERT body
@@ -1040,16 +1053,18 @@ class MTBertClassificationTask(MTBertTask):
 
 @register("mt_bert_reuser")
 class MTBertReUser:
-    """Instances of this class are for calling MultiTaskBert launches. In config pipe ``MultiTaskBert`` class is 
-    declared for inference on 1 launch. To use another launch ``MTBertReUser`` instance is created.
+    """Instances of this class are for multi-task BERT inference. In inference config ``MultiTaskBert`` class may
+    not perform inference of some tasks. For example, you may need to sequentially apply two models with BERT.
+    In that case, ``mt_bert_reuser`` is created to call remaining tasks.
 
     Args:
         mt_bert: An instance of ``MultiTaskBert``
-        task_names: Names of infered tasks. If ``task_names`` is ``str`` then ``task_names`` is the name of the only
-            infered task. If ``task_names`` is ``list`` then its elements can be either strings or lists of strings.
-            If an element of ``task_names`` is a string then this element is a name of a task that is run 
-            independently. If an element of ``task_names`` is a list of strings then the element is a list of names of
-            tasks that have common inputs and run simultaneously.
+        task_names: Names of infered tasks. If ``task_names`` is ``str``, then ``task_names`` is the name of the only
+            infered task. If ``task_names`` is ``list``, then its elements can be either strings or lists of strings.
+            If an element of ``task_names`` is a string, then this element is a name of a task that is run 
+            independently. If an element of ``task_names`` is a list of strings, then the element is a list of names
+            of tasks that have common inputs and run simultaneously. For detailed information look up
+            ``MultiTaskBert`` ``inference_task_names`` parameter.
     """
     def __init__(
             self, 
@@ -1080,7 +1095,7 @@ class MTBertReUser:
         self.in_distribution = in_distribution
 
     def __call__(self, *args, **kwargs) -> List[Any]:
-        """Infer tasks listed in parameter ``task_names``.
+        """Infer tasks listed in parameter ``task_names``. One of parameters ``args`` and ``kwargs`` has to be empty.
 
         Args:
             args: inputs and labels of infered tasks.
@@ -1095,16 +1110,17 @@ class MTBertReUser:
 
 @register("input_splitter")
 class InputSplitter:
-    """The instance of these class in pipe splits a sequence of dictionaries into independent variables.
+    """The instance of these class in pipe splits a sequence of dictionaries with identical keys into independent
+    variables.
 
     Args:
-        keys_to_extract: a sequence of strings which have to match keys of dictionary which will be splitted
+        keys_to_extract: a sequence of strings which have to match keys of splitted dictionaries
     """
     def __init__(self, keys_to_extract: Union[List[str], Tuple[str, ...]], **kwargs):
         self.keys_to_extract = keys_to_extract
 
     def __call__(self, inp: List[dict]) -> List[list]:
-        """Returns lists of values of dictionaries from ``inp``. Every list contains values which have a key from 
+        """Returns lists of values of dictionaries from ``inp``. Every list contains values which have a one key from 
         ``keys_to_extract`` attribute. The order of elements of ``keys_to_extract`` is preserved.
 
         Args:
