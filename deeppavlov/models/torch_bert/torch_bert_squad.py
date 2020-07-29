@@ -159,30 +159,32 @@ class TorchBertSQuADModel(TorchModel):
             # Forward pass, calculate logit predictions
             outputs = self.model(input_ids=b_input_ids, attention_mask=b_input_masks, token_type_ids=b_input_type_ids)
             logits_st, logits_end = outputs[:2]
-            start_scores = torch.nn.functional.softmax(logits_st, dim=-1)
-            end_scores = torch.nn.functional.softmax(logits_end, dim=-1)
+            start_probs = torch.nn.functional.softmax(logits_st, dim=-1)
+            end_probs = torch.nn.functional.softmax(logits_end, dim=-1)
+            scores = torch.tensor(1) - start_probs[:, 0] * end_probs[:, 0]  # ok
 
-            scores = torch.tensor(1) - torch.nn.functional.softmax(
-                start_scores, dim=-1)[:, 0] * torch.nn.functional.softmax(end_scores, dim=-1)[:, 0]
-
+            outer = torch.matmul(start_probs.view(*start_probs.size(), 1), end_probs.view(*end_probs.size(), 1))
             outer_logits = torch.exp(logits_st.view(*logits_st.size(), 1) + logits_end.view(*logits_end.size(), 1))
+
             context_max_len = torch.max(torch.sum(b_input_type_ids, dim=1)).to(torch.int64)
-            max_ans_length = torch.min(torch.tensor(20), context_max_len).to(torch.int64)
+
+            max_ans_length = torch.min(torch.tensor(20), context_max_len).to(torch.int64).item()
+
+            outer = torch.triu(outer, diagonal=0) - torch.triu(outer, diagonal=outer.size()[1] - max_ans_length)
             outer_logits = torch.triu(outer_logits, diagonal=0) - torch.triu(
-                outer_logits, diagonal=outer_logits.size()[1] - max_ans_length.item())
-            logits_last_dim_max, _ = torch.max(outer_logits, dim=2)
-            logits, _ = torch.max(logits_last_dim_max, dim=1)
+                outer_logits, diagonal=outer_logits.size()[1] - max_ans_length)
+
+            start_pred = torch.argmax(torch.max(outer, dim=2)[0], dim=1)
+            end_pred = torch.argmax(torch.max(outer, dim=1)[0], dim=1)
+            logits = torch.max(torch.max(outer_logits, dim=2)[0], dim=1)[0]
 
         # Move logits and labels to CPU and to numpy arrays
-        start_scores = start_scores.detach().cpu().numpy()
-        end_scores = end_scores.detach().cpu().numpy()
+        start_pred = start_pred.detach().cpu().numpy()
+        end_pred = end_pred.detach().cpu().numpy()
         logits = logits.detach().cpu().numpy().tolist()
         scores = scores.detach().cpu().numpy().tolist()
 
-        start_pos = np.argmax(start_scores, axis=1).tolist()
-        end_pos = np.argmax(end_scores, axis=1).tolist()
-
-        return start_pos, end_pos, logits, scores
+        return start_pred, end_pred, logits, scores
 
     @overrides
     def load(self, fname=None):
