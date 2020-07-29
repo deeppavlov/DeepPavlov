@@ -16,6 +16,7 @@ from logging import getLogger
 from typing import List, Dict, Tuple
 from collections import defaultdict
 
+import numpy as np
 import nltk
 import pymorphy2
 import faiss
@@ -265,7 +266,10 @@ class EntityLinker(Component, Serializable):
                 candidate_entities = [candidate_entity[0] for candidate_entity in candidate_entities][:self.num_entities_for_bert_ranking]
                 log.debug(f"candidate_entities {candidate_entities[:10]}")
                 candidate_entities_list.append(candidate_entities)
-                entity_ids_list.append(candidate_entities[:self.num_entities_to_return])
+                if self.num_entities_to_return == 1:
+                    entity_ids_list.append(candidate_entities[0])
+                else:
+                    entity_ids_list.append(candidate_entities[:self.num_entities_to_return])
                 entities_scores_list.append(entities_scores)
             if self.use_descriptions:
                 entity_ids_list = self.rank_by_description(entity_positions_list, candidate_entities_list, entities_scores_list, context_tokens)
@@ -318,5 +322,8 @@ class EntityLinker(Component, Serializable):
             entities_with_scores = sorted(entities_with_scores, key=lambda x: (x[1], x[3], x[2]), reverse=True)
             log.debug(f"entities_with_scores {entities_with_scores}")
             top_entities = [score[0] for score in entities_with_scores]
-            entity_ids_list.append(top_entities[:self.num_entities_to_return])
+            if self.num_entities_to_return == 1:
+                entity_ids_list.append(top_entities[0])
+            else:
+                entity_ids_list.append(top_entities[:self.num_entities_to_return])
         return entity_ids_list
