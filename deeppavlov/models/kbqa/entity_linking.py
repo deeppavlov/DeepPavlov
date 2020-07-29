@@ -382,7 +382,7 @@ class EntityLinker(Component, Serializable):
             log.debug(f"len candidate entities {len(candidate_entities)}")
             scores = self.entity_ranker.rank_rels(context, candidate_entities)
             entities_with_scores = [(entity, round(entities_scores[entity][0], 2), entities_scores[entity][1],
-                                     round(score,2)) for entity, score in scores]
+                                     round(score, 2)) for entity, score in scores]
             log.debug(f"len entities with scores {len(entities_with_scores)}")
             entities_with_scores = [entity for entity in entities_with_scores if entity[3] > 0.1]
             entities_with_scores = sorted(entities_with_scores, key=lambda x: (x[1], x[3], x[2]), reverse=True)
