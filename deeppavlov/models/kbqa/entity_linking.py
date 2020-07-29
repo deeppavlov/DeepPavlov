@@ -246,8 +246,8 @@ class EntityLinker(Component, Serializable):
             log.debug(f"entity_substr_batch {entity_substr_batch}")
             log.debug(f"entity_positions_batch {entity_positions_batch}")
             entity_substr_batch = [[entity_substr.lower() for tag, entity_substr_list in entity_substr_dict.items()
-                                                         for entity_substr in entity_substr_list]
-                                                         for entity_substr_dict in entity_substr_batch]
+                                    for entity_substr in entity_substr_list]
+                                   for entity_substr_dict in entity_substr_batch]
             entity_positions_batch = [[entity_positions for tag, entity_positions_list in entity_positions_dict.items()
                                                          for entity_positions in entity_positions_list]
                                                          for entity_positions_dict in entity_positions_batch]
