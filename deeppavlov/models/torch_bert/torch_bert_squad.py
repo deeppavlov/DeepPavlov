@@ -168,7 +168,7 @@ class TorchBertSQuADModel(TorchModel):
             bs = b_input_ids.size()[0]
             seq_len = b_input_ids.size()[-1]
             mask = torch.cat([torch.ones(bs, 1, dtype=torch.int32),
-                              torch.zeros(bs, seq_len - 1, dtype=torch.int32)], dim=-1)
+                              torch.zeros(bs, seq_len - 1, dtype=torch.int32)], dim=-1).to(self.device)
             logit_mask = b_input_type_ids + mask
             logits_st = softmax_mask(logits_st, logit_mask)
             logits_end = softmax_mask(logits_end, logit_mask)
