@@ -3,12 +3,12 @@ Entity Linking
 
 Entity linking is the task of mapping words from text (e.g. names of persons, locations and organizations) to entities from the target knowledge base (Wikidata in our case).
 
-Entity Linking component consists of the following steps:
+Entity Linking component performs the following steps:
 
 * the substring, detected with :config:`NER <ner/ner_rus_bert_probas.json>`, is fed to TfidfVectorizer and the resulting sparse vector is converted to dense one
 * `Faiss <https://github.com/facebookresearch/faiss>`__ library is used to find k nearest neighbours for tf-idf vector in the matrix where rows correspond to tf-idf vectors of words in entity titles
-* Entities are ranked by number of relations in Wikidata (number of outgoing edges of nodes in the knowledge graph)
-* :config:`BERT <classifiers/entity_ranking_bert_rus_no_mention.json>` is used for entities ranking by entity description and the sentence with the mention of the entity.
+* entities are ranked by number of relations in Wikidata (number of outgoing edges of nodes in the knowledge graph)
+* :config:`BERT <classifiers/entity_ranking_bert_rus_no_mention.json>` is used for entities ranking by entity description and by sentence that mentions the entity
 
 Use the model
 -------------

@@ -39,8 +39,8 @@ log = getLogger(__name__)
 class KBEntityLinker(Component, Serializable):
     """
         This class extracts from the knowledge base candidate entities for the entity mentioned in the question and then
-        extracts triplets from Wikidata for the extracted entity. Candidate entities are searched in the dictionary where 
-        keys are titles and aliases of Wikidata entities and values are lists of tuples (entity_title, entity_id,
+        extracts triplets from Wikidata for the extracted entity. Candidate entities are searched in the dictionary
+        where keys are titles and aliases of Wikidata entities and values are lists of tuples (entity_title, entity_id,
         number_of_relations). First candidate entities are searched in the dictionary by keys where the keys are
         entities extracted from the question, if nothing is found entities are searched in the dictionary using
         Levenstein distance between the entity and keys (titles) in the dictionary.
@@ -128,7 +128,7 @@ class KBEntityLinker(Component, Serializable):
         if self.build_inverted_index:
             if self.kb_format == "hdt":
                 self.doc = HDTDocument(str(expand_path(self.kb_filename)))
-            if self.kb_format == "sqlite3":
+            elif self.kb_format == "sqlite3":
                 self.conn = sqlite3.connect(str(expand_path(self.kb_filename)))
                 self.cursor = self.conn.cursor()
             self.inverted_index_builder()
@@ -149,7 +149,7 @@ class KBEntityLinker(Component, Serializable):
             save_pickle(self.q2descr, self.save_path / self.q2descr_filename)
 
     def __call__(self, entity_substr_batch: List[List[str]], entity_positions_batch: List[List[List[int]]] = None,
-                       context_tokens: List[List[str]] = None) -> Tuple[List[List[List[str]]], List[List[List[float]]]]:
+                 context_tokens: List[List[str]] = None) -> Tuple[List[List[List[str]]], List[List[List[float]]]]:
         entity_ids_batch = []
         confidences_batch = []
         if entity_positions_batch is None:
@@ -177,7 +177,7 @@ class KBEntityLinker(Component, Serializable):
             candidate_entities = self.candidate_entities_inverted_index(entity)
             candidate_entities, candidate_names = self.candidate_entities_names(entity, candidate_entities)
             entities_ids, confidences, srtd_cand_ent = self.sort_found_entities(candidate_entities,
-                                                                                 candidate_names, entity, context)
+                                                                                candidate_names, entity, context)
 
         return entities_ids, confidences
 
@@ -210,7 +210,8 @@ class KBEntityLinker(Component, Serializable):
 
     def sort_found_entities(self, candidate_entities: List[Tuple[int, str, int]],
                             candidate_names: List[List[str]],
-                            entity: str, context: str = None) -> Tuple[List[str], List[float], List[Tuple[str, str, int, int]]]:
+                            entity: str,
+                            context: str = None) -> Tuple[List[str], List[float], List[Tuple[str, str, int, int]]]:
         entities_ratios = []
         for candidate, entity_names in zip(candidate_entities, candidate_names):
             entity_num, entity_id, num_rels = candidate
@@ -232,13 +233,13 @@ class KBEntityLinker(Component, Serializable):
         return entity_ids, confidences, srtd_with_ratios
 
     def candidate_entities_names(self, entity: str,
-          candidate_entities: List[Tuple[int, str, int]]) -> Tuple[List[Tuple[int, str, int]], List[List[str]]]:
+                                 candidate_entities: List[Tuple[int, str, int]]) -> Tuple[List[Tuple[int, str, int]],
+                                                                                          List[List[str]]]:
         entity_length = len(entity)
         candidate_names = []
         candidate_entities_filter = []
         for candidate in candidate_entities:
             entity_num = candidate[0]
-            entity_id = candidate[1]
             entity_names = []
             
             entity_names_found = self.q2name[entity_num]
@@ -273,17 +274,20 @@ class KBEntityLinker(Component, Serializable):
 
         if self.kb_format == "sqlite3":
             subject, relation, obj = self.sql_column_names
-            query = f'SELECT {subject}, {relation}, {obj} FROM {self.sql_table_name} WHERE {relation} = "{self.label_rel}";'
+            query = f'SELECT {subject}, {relation}, {obj} FROM {self.sql_table_name} '\
+                    f'WHERE {relation} = "{self.label_rel}";'
             res = self.cursor.execute(query)
             label_triplets = res.fetchall()
             if self.aliases_rels is not None:
                 for alias_rel in self.aliases_rels:
-                    query = f'SELECT {subject}, {relation}, {obj} FROM {self.sql_table_name} WHERE {relation} = "{alias_rel}";'
+                    query = f'SELECT {subject}, {relation}, {obj} FROM {self.sql_table_name} '\
+                            f'WHERE {relation} = "{alias_rel}";'
                     res = self.cursor.execute(query)
                     alias_triplets = res.fetchall()
                     alias_triplets_list.append(alias_triplets)
             if self.descr_rel is not None:
-                query = f'SELECT {subject}, {relation}, {obj} FROM {self.sql_table_name} WHERE {relation} = "{self.descr_rel}";'
+                query = f'SELECT {subject}, {relation}, {obj} FROM {self.sql_table_name} '\
+                        f'WHERE {relation} = "{self.descr_rel}";'
                 res = self.cursor.execute(query)
                 descr_triplets = res.fetchall()
 

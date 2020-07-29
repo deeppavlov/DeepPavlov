@@ -12,6 +12,7 @@
         "type_tag": "TYPE",
         "o_tag": "O",
         "tags_file": "{NER_PATH}/tag.dict",
+        "return_entities_with_tags": true,
         "class_name": "entity_detection_parser",
         "id": "edp"
       },
@@ -43,7 +44,7 @@
         "num_faiss_candidate_entities": 10,
         "num_entities_for_bert_ranking": 200,
         "num_faiss_cells": 1,
-        "use_gpu": true,
+        "use_gpu": false,
         "fit_vectorizer": false,
         "max_tfidf_features": 500,
         "include_mention": false,

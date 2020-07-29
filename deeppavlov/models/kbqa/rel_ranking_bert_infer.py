@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import Tuple, List, Any
+from typing import Tuple, List, Any, Optional
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
@@ -32,7 +32,7 @@ class RelRankerBertInfer(Component, Serializable):
     def __init__(self, load_path: str,
                  rel_q2name_filename: str,
                  ranker: RelRanker,
-                 wiki_parser: WikiParser = None,
+                 wiki_parser: Optional[WikiParser] = None,
                  batch_size: int = 32,
                  rels_to_leave: int = 40, **kwargs):
         """
