@@ -13,25 +13,24 @@
 # limitations under the License.
 
 import numpy as np
+from sklearn.metrics import mean_squared_error
 
 from deeppavlov.core.common.metrics_registry import register_metric
 
 
 @register_metric('mean_squared_error')
 def mse(y_true: Union[np.array, list],
-        y_predicted: Union[np.array, list]):
+        y_predicted: Union[np.array, list],
+        *args, **kwargs):
     """
     Calculates mean squared error.
     Args:
         y_true: list of true probs
         y_predicted: list of predicted peobs
     Returns:
-        F1 score
+        Mean squared error
     """
     for value in [y_true, y_predicted]:
         assert (np.isfinite(value).all())
-    y_true_np = np.array(y_true)
-    y_predicted_np = np.array(y_predicted)
-    assert y_true_np.ndim == y_predicted_np.ndim == 2
-    err = ((y_true_np - y_predicted_np) ** 2).sum() ** 0.5
-    return err
+    return mean_squared_error(y_true, y_predicted,
+                              *args, **kwargs)
