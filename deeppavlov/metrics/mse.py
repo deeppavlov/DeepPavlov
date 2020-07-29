@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import numpy as np
+
 from deeppavlov.core.common.metrics_registry import register_metric
 
 
