@@ -21,19 +21,22 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.data.utils import download_decompress
 
+
 @register('boolqa_reader')
 class BoolqaReader(DatasetReader):
     """
-    The class to read the BoolQ dataset from files. BoolQ is a question answering dataset for yes/no questions containing 15942 examples. These questions are naturally occurring ---they are generated in unprompted and unconstrained settings. Each example is a triplet of (question, passage, answer), with the title of the page as optional additional context. The text-pair classification setup is similar to existing natural language inference tasks.
+    The class to read the BoolQ dataset from files. 
+    BoolQ is a question answering dataset for yes/no questions containing 15942 examples. 
+    Each example is a triplet of (question, passage, answer).
 
-More details about the English BoolQ are available in https://arxiv.org/abs/1905.10044
-https://github.com/google-research-datasets/boolean-questions
+    More details about the English BoolQ are available in https://arxiv.org/abs/1905.10044
+    https://github.com/google-research-datasets/boolean-questions
 
-The details about the Russian DaNetQA are available in 
-https://russiansuperglue.com/ru/tasks/task_info/DaNetQA
+    The details about the Russian DaNetQA are available in 
+    https://russiansuperglue.com/ru/tasks/task_info/DaNetQA
 
-The reader supports the English and the Russian variants of the dataset.
-The config example is boolqa_rubert.json.
+    The reader supports English and Russian variants of the dataset.
+    The config example is boolqa_rubert.json.
     """
 
     urls = { 
@@ -46,7 +49,7 @@ The config example is boolqa_rubert.json.
              language: str = 'en',
              *args, **kwargs) -> Dict[str, List[Tuple[Tuple[str, str], int]]]:
 
-        """Read the BoolQ dataset from files.
+        """Reads BoolQ dataset from files.
 
         Args:
             data_path: A path to a folder with dataset files.
@@ -56,7 +59,7 @@ The config example is boolqa_rubert.json.
         if language in self.urls:
             self.url = self.urls[language]
         else:
-             raise RuntimeError(f'The dataset for {language} is unavailable')
+            raise RuntimeError(f'The dataset for {language} is unavailable')
 
         data_path = expand_path(data_path)
         if not data_path.exists():
@@ -66,7 +69,7 @@ The config example is boolqa_rubert.json.
         dataset = {}
 
         for filename in ['train.jsonl', 'valid.jsonl']:
-           dataset[filename.split('.')[0]] = self._build_data(language, data_path / filename)
+            dataset[filename.split('.')[0]] = self._build_data(language, data_path / filename)
 
         return dataset
 
@@ -79,9 +82,9 @@ The config example is boolqa_rubert.json.
                 jline = json.loads(line)
                 if ln == 'ru':
                     if 'label' in jline:
-                        data[tuple([jline['question'], jline['passage']])] = int(jline['label'])
+                        data[jline['question'], jline['passage']] = int(jline['label'])
                 if ln == 'en':
                     if 'answer' in jline:
-                        data[tuple([jline['question'], jline['passage']])] = int(jline['answer'])
+                        data[jline['question'], jline['passage']] = int(jline['answer'])
 
         return list(data.items())
