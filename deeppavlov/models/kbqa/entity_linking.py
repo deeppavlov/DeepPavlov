@@ -54,16 +54,20 @@ class NerChunker(Component):
         nums_batch = []
         count_texts = 0
         text = ""
+        curr_doc = 0
         for n, doc in enumerate(docs_batch):
             sentences = sent_tokenize(doc)
             for sentence in sentences:
-                if len(text) + len(sentence) < self.max_chunk_len:
+                if len(text) + len(sentence) < self.max_chunk_len and n == curr_doc:
                     text += sentence
                     text += " "
                 else:
                     if count_texts < self.batch_size:
                         text_batch.append(text.strip(" "))
-                        nums_batch.append(n)
+                        if n == curr_doc:
+                            nums_batch.append(n)
+                        else:
+                            nums_batch.append(n-1)
                         count_texts  += 1
                     else:
                         text_batch_list.append(text_batch)
@@ -71,6 +75,7 @@ class NerChunker(Component):
                         nums_batch_list.append(nums_batch)
                         nums_batch = [n]
                         count_texts = 0
+                    curr_doc = n
                     text = sentence + " "
                     
         if text:
@@ -196,10 +201,12 @@ class EntityLinker(Component, Serializable):
                                                          for entity_positions_dict in entity_positions_batch]
             log.debug(f"entity_substr_batch {entity_substr_batch}")
             log.debug(f"entity_positions_batch {entity_positions_batch}")
-            for entity_substr_list, entity_positions_list, context_tokens in zip(entity_substr_batch, entity_positions_batch, ner_tokens_batch):
+            for entity_substr_list, entity_positions_list, context_tokens in \
+                                               zip(entity_substr_batch, entity_positions_batch, ner_tokens_batch):
+                entity_ids_list = []
                 if entity_substr_list:
                     entity_ids_list = self.link_entities(entity_substr_list, entity_positions_list, context_tokens)
-                    entity_ids_batch.append(entity_ids_list)
+                entity_ids_batch.append(entity_ids_list)
             entity_ids_batch_list.append(entity_ids_batch)
 
         doc_entity_ids_batch = []
@@ -224,9 +231,11 @@ class EntityLinker(Component, Serializable):
         log.debug(f"entity positions list {entity_positions_list}")
         entity_ids_list = []
         if entity_substr_list:
-            entity_substr_list = [[word for word in entity_substr.split(' ') if word not in self.stopwords and len(word) > 0]
+            entity_substr_list = [[word for word in entity_substr.split(' ')
+                                        if word not in self.stopwords and len(word) > 0]
                                         for entity_substr in entity_substr_list]
-            words_and_indices  = [(self.morph_parse(word), i) for i, entity_substr in enumerate(entity_substr_list) for word in entity_substr]
+            words_and_indices  = [(self.morph_parse(word), i) for i, entity_substr in enumerate(entity_substr_list)
+                                                                                         for word in entity_substr]
             substr_lens = [len(entity_substr) for entity_substr in entity_substr_list]
             log.debug(f"words and indices {words_and_indices}")
             words, indices = zip(*words_and_indices)
@@ -247,7 +256,8 @@ class EntityLinker(Component, Serializable):
                                 candidate_entities[entity] = score
                         else:
                             candidate_entities[entity] = score
-                candidate_entities_dict[index] += [(entity, cand_entity_len, score) for (entity, cand_entity_len), score in candidate_entities.items()]
+                candidate_entities_dict[index] += [(entity, cand_entity_len, score)
+                                                          for (entity, cand_entity_len), score in candidate_entities.items()]
                 log.debug(f"{index} candidate_entities {[self.word_list[ind] for ind in ind_list[:10]]}")
             candidate_entities_total = list(candidate_entities_dict.values())
             candidate_entities_total = [self.sum_scores(candidate_entities, substr_len)
