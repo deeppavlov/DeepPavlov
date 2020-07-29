@@ -272,7 +272,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                              f"Skipping story w. line {line} because of no NLU candidates found")
                     curr_story_bad = True
                     continue
-                user_response_info = cls._user_text(intent2slots2text, action_for_text, slots_used_values)
+                user_response_info = cls._user_action2text(intent2slots2text, action_for_text, slots_used_values)
                 user_utter = {"speaker": cls._USER_SPEAKER_ID,
                               "text": user_response_info["text"],
                               "dialog_acts": [{"act": user_action, "slots": user_response_info["slots"]}],
@@ -375,7 +375,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         return user_action, slots_dstc2formatted
 
     @classmethod
-    def _user_text(cls, intent2slots2text: dict, user_action: str, slots_li=None):
+    def _user_action2text(cls, intent2slots2text: dict, user_action: str, slots_li=None):
         if slots_li is None:
             slots_li = {}
         return intent2slots2text[user_action][slots_li][0]
