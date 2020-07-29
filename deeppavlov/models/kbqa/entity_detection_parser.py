@@ -45,7 +45,7 @@ class EntityDetectionParser(Component):
         with open(str(expand_path(tags_file))) as fl:
             tags = [line.split('\t')[0] for line in fl.readlines()]
             self.entity_prob_ind = {entity_tag: [i for i, tag in enumerate(tags) if entity_tag in tag]
-                                                       for entity_tag in self.entity_tags}
+                                    for entity_tag in self.entity_tags}
             self.type_prob_ind = [i for i, tag in enumerate(tags) if self.type_tag in tag]
             self.et_prob_ind = [i for tag, ind in self.entity_prob_ind.items() for i in ind] + self.type_prob_ind
             for entity_tag, tag_ind in self.entity_prob_ind.items():
