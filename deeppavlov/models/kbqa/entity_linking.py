@@ -16,7 +16,6 @@ from logging import getLogger
 from typing import List, Dict, Tuple
 from collections import defaultdict
 
-import numpy as np
 import nltk
 import pymorphy2
 import faiss
@@ -44,10 +43,26 @@ class NerChunker(Component):
     """
 
     def __init__(self, max_chunk_len: int = 300, batch_size: int = 30, **kwargs):
+        """
+
+        Args:
+            max_chunk_len: maximal length of chunks into which the document is split
+            batch_size: how many chunks are in batch
+        """
         self.max_chunk_len = max_chunk_len
         self.batch_size = batch_size
 
     def __call__(self, docs_batch: List[str]) -> Tuple[List[List[str]], List[List[int]]]:
+        """
+        This method splits each document in the batch into chunks wuth the maximal length of max_chunk_len
+ 
+        Args:
+            docs_batch: batch of documents
+
+        Returns:
+            batch of lists of document chunks for each document
+            batch of lists of numbers of documents which correspond to chunks
+        """
         text_batch_list = []
         text_batch = []
         nums_batch_list = []
@@ -63,12 +78,12 @@ class NerChunker(Component):
                     text += " "
                 else:
                     if count_texts < self.batch_size:
-                        text_batch.append(text.strip(" "))
+                        text_batch.append(text.strip())
                         if n == curr_doc:
                             nums_batch.append(n)
                         else:
                             nums_batch.append(n-1)
-                        count_texts  += 1
+                        count_texts += 1
                     else:
                         text_batch_list.append(text_batch)
                         text_batch = []
@@ -76,10 +91,10 @@ class NerChunker(Component):
                         nums_batch = [n]
                         count_texts = 0
                     curr_doc = n
-                    text = sentence + " "
+                    text = f"{sentence} "
                     
         if text:
-            text_batch.append(text.strip(" "))
+            text_batch.append(text.strip())
             text_batch_list.append(text_batch)
             nums_batch.append(len(docs_batch)-1)
             nums_batch_list.append(nums_batch)
@@ -117,6 +132,36 @@ class EntityLinker(Component, Serializable):
                  use_descriptions: bool = True,
                  lemmatize: bool = False,
                  **kwargs) -> None:
+        """
+
+        Args:
+            load_path: path to folder with inverted index files
+            word_to_idlist_filename: file with dict of words (keys) and start and end indices in
+                entities_list filename of the corresponding entity ids
+            entities_list_filename: file with the list of entity ids from the knowledge base
+            entities_ranking_filename: file with dict of entity ids (keys) and number of relations in Wikidata
+                for entities
+            vectorizer_filename: filename with TfidfVectorizer data
+            faiss_index_filename: file with Faiss index of words
+            chunker: component deeppavlov.models.kbqa.ner_chunker
+            ner: config for entity detection
+            ner_parser: component deeppavlov.models.kbqa.entity_detection_parser
+            entity_ranker: component deeppavlov.models.kbqa.rel_ranking_bert_infer
+            num_faiss_candidate_entities: number of nearest neighbors for the entity substring from the text
+            num_entities_for_bert_ranking: number of candidate entities for BERT ranking using description and context
+            num_faiss_cells: number of Voronoi cells for Faiss index
+            use_gpu: whether to use GPU for faster search of candidate entities
+            save_path: path to folder with inverted index files
+            fit_vectorizer: whether to build index with Faiss library
+            max_tfidf_features: maximal number of features for TfidfVectorizer
+            include_mention: whether to leave entity mention in the context (during BERT ranking)
+            ngram_range: char ngrams range for TfidfVectorizer
+            num_entities_to_return: number of candidate entities for the substring which are returned
+            lang: russian or english
+            use_description: whether to perform entity ranking by context and description
+            lemmatize: whether to lemmatize tokens
+            **kwargs:
+        """
         super().__init__(save_path=save_path, load_path=load_path)
         self.morph = pymorphy2.MorphAnalyzer()
         self.lemmatize = lemmatize

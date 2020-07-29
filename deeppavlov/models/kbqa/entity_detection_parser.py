@@ -55,13 +55,17 @@ class EntityDetectionParser(Component):
                 self.tag_ind_dict[ind] = self.type_tag
             self.tag_ind_dict[0] = self.o_tag
 
-    def __call__(self, question_tokens: List[List[str]],
-             token_probas: List[List[List[float]]]) -> Tuple[List[List[str]], List[List[str]], List[List[List[int]]]]:
+    def __call__(self, question_tokens: List[List[str]], token_probas: List[List[List[float]]]) -> \
+            Tuple[List[List[str]], List[List[str]], List[List[List[int]]]]:
         """
 
         Args:
             question_tokens: tokenized questions
             token_probas: list of probabilities of question tokens
+        Returns:
+            Batch of dicts where keys are tags and values are substrings corresponding to tags
+            Batch of substrings which correspond to entity types
+            Batch of lists of token indices in the text which correspond to entities
         """
         entities_batch = []
         types_batch = []
