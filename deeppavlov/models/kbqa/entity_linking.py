@@ -277,7 +277,7 @@ class EntityLinker(Component, Serializable):
         return doc_entity_ids_batch
 
     def link_entities(self, entity_substr_list: List[str], entity_positions_list: List[List[int]] = None,
-                          context_tokens: List[str] = None) -> List[List[str]]:
+                      context_tokens: List[str] = None) -> List[List[str]]:
         log.debug(f"context_tokens {context_tokens}")
         log.debug(f"entity substr list {entity_substr_list}")
         log.debug(f"entity positions list {entity_positions_list}")
