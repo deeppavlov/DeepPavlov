@@ -32,7 +32,7 @@ class RelRankerBertInfer(Component, Serializable):
     def __init__(self, load_path: str,
                  rel_q2name_filename: str,
                  ranker: RelRanker,
-                 wiki_parser: WikiParser = None,
+                 wiki_parser: Optional[WikiParser] = None,
                  batch_size: int = 32,
                  rels_to_leave: int = 40, **kwargs):
         """

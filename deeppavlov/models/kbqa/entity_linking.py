@@ -229,7 +229,14 @@ class EntityLinker(Component, Serializable):
         save_pickle(self.vectorizer, self.save_path / self.vectorizer_filename)
         faiss.write_index(self.faiss_index, str(expand_path(self.faiss_index_filename)))
 
-    def __call__(self, docs_batch: List[List[str]]):
+    def __call__(self, docs_batch: List[str]):
+        """
+
+        Args:
+            docs_batch: batch of documents
+        Returns:
+            batch of lists of candidate entity ids
+        """
         text_batch_list, nums_batch_list = self.chunker(docs_batch)
         entity_ids_batch_list = []
         for text_batch in text_batch_list:
