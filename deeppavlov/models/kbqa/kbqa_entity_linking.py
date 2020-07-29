@@ -128,7 +128,7 @@ class KBEntityLinker(Component, Serializable):
         if self.build_inverted_index:
             if self.kb_format == "hdt":
                 self.doc = HDTDocument(str(expand_path(self.kb_filename)))
-            if self.kb_format == "sqlite3":
+            elif self.kb_format == "sqlite3":
                 self.conn = sqlite3.connect(str(expand_path(self.kb_filename)))
                 self.cursor = self.conn.cursor()
             self.inverted_index_builder()
