@@ -375,7 +375,9 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         return user_action, slots_dstc2formatted
 
     @classmethod
-    def _user_text(cls, intent2slots2text: dict, user_action: str, slots_li: dict = {}):
+    def _user_text(cls, intent2slots2text: dict, user_action: str, slots_li=None):
+        if slots_li is None:
+            slots_li = {}
         return intent2slots2text[user_action][slots_li][0]
 
     @classmethod
