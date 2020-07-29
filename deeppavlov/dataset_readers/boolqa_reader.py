@@ -67,7 +67,7 @@ class BoolqaReader(DatasetReader):
         dataset = {}
 
         for filename in ['train.jsonl', 'valid.jsonl']:
-           dataset[filename.split('.')[0]] = self._build_data(language, data_path / filename)
+            dataset[filename.split('.')[0]] = self._build_data(language, data_path / filename)
 
         return dataset
 
