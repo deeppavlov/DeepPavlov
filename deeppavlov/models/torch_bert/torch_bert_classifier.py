@@ -135,13 +135,16 @@ class TorchBertClassifierModel(TorchModel):
         with torch.no_grad():
             # Forward pass, calculate logit predictions
             logits = self.model(b_input_ids, token_type_ids=None, attention_mask=b_input_masks)
-
-        # Move logits and labels to CPU and to numpy arrays
-        logits = logits[0].detach().cpu().numpy()
+            logits = logits[0]
 
         if self.return_probas:
-            pred = logits
+            if not self.multilabel:
+                pred = torch.nn.functional.softmax(logits, dim=-1)
+            else:
+                pred = torch.nn.functional.sigmoid(logits)
+            pred = pred.detach().cpu().numpy()
         else:
+            logits = logits.detach().cpu().numpy()
             pred = np.argmax(logits, axis=1)
         return pred
 
