@@ -257,7 +257,7 @@ class EntityLinker(Component, Serializable):
                         else:
                             candidate_entities[entity] = score
                 candidate_entities_dict[index] += [(entity, cand_entity_len, score)
-                                                          for (entity, cand_entity_len), score in candidate_entities.items()]
+                                                for (entity, cand_entity_len), score in candidate_entities.items()]
                 log.debug(f"{index} candidate_entities {[self.word_list[ind] for ind in ind_list[:10]]}")
             candidate_entities_total = list(candidate_entities_dict.values())
             candidate_entities_total = [self.sum_scores(candidate_entities, substr_len)
@@ -272,8 +272,10 @@ class EntityLinker(Component, Serializable):
                 candidate_entities_str = '\n'.join([str(candidate_entity) for candidate_entity in candidate_entities])
                 candidate_entities = sorted(candidate_entities, key=lambda x: (x[1], x[2]), reverse=True)
                 log.debug(f"candidate_entities {candidate_entities[:10]}")
-                entities_scores = {entity: (substr_score, pop_score) for entity, substr_score, pop_score in candidate_entities}
-                candidate_entities = [candidate_entity[0] for candidate_entity in candidate_entities][:self.num_entities_for_bert_ranking]
+                entities_scores = {entity: (substr_score, pop_score)
+                                   for entity, substr_score, pop_score in candidate_entities}
+                candidate_entities = [candidate_entity[0] for candidate_entity
+                                      in candidate_entities][:self.num_entities_for_bert_ranking]
                 log.debug(f"candidate_entities {candidate_entities[:10]}")
                 candidate_entities_list.append(candidate_entities)
                 if self.num_entities_to_return == 1:
@@ -282,7 +284,8 @@ class EntityLinker(Component, Serializable):
                     entity_ids_list.append(candidate_entities[:self.num_entities_to_return])
                 entities_scores_list.append(entities_scores)
             if self.use_descriptions:
-                entity_ids_list = self.rank_by_description(entity_positions_list, candidate_entities_list, entities_scores_list, context_tokens)
+                entity_ids_list = self.rank_by_description(entity_positions_list, candidate_entities_list,
+                                                           entities_scores_list, context_tokens)
 
         return entity_ids_list
 
@@ -313,7 +316,8 @@ class EntityLinker(Component, Serializable):
                                   entities_scores_list: List[Dict[str, Tuple[int, float]]],
                                   context_tokens: List[str]) -> List[List[str]]:
         entity_ids_list = []
-        for entity_pos, candidate_entities, entities_scores in zip(entity_positions_list, candidate_entities_list, entities_scores_list):
+        for entity_pos, candidate_entities, entities_scores in zip(entity_positions_list, candidate_entities_list,
+                                                                   entities_scores_list):
             log.debug(f"entity_pos {entity_pos}")
             log.debug(f"candidate_entities {candidate_entities[:10]}")
             if self.include_mention:
@@ -325,8 +329,8 @@ class EntityLinker(Component, Serializable):
             log.debug(f"context {context}")
             log.debug(f"len candidate entities {len(candidate_entities)}")
             scores = self.entity_ranker.rank_rels(context, candidate_entities)
-            entities_with_scores = [(entity, round(entities_scores[entity][0], 2), entities_scores[entity][1], round(score,2))
-                                                                                                 for entity, score in scores]
+            entities_with_scores = [(entity, round(entities_scores[entity][0], 2), entities_scores[entity][1],
+                                     round(score,2)) for entity, score in scores]
             log.debug(f"len entities with scores {len(entities_with_scores)}")
             entities_with_scores = [entity for entity in entities_with_scores if entity[3] > 0.1]
             entities_with_scores = sorted(entities_with_scores, key=lambda x: (x[1], x[3], x[2]), reverse=True)
