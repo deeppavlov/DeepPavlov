@@ -275,7 +275,8 @@ class KBEntityLinker(Component, Serializable):
 
         if self.kb_format == "sqlite3":
             subject, relation, obj = self.sql_column_names
-            query = f'SELECT {subject}, {relation}, {obj} FROM {self.sql_table_name} WHERE {relation} = "{self.label_rel}";'
+            query = f'SELECT {subject}, {relation}, {obj} FROM {self.sql_table_name} '\
+                    f'WHERE {relation} = "{self.label_rel}";'
             res = self.cursor.execute(query)
             label_triplets = res.fetchall()
             if self.aliases_rels is not None:
