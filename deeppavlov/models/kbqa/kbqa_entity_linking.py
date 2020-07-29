@@ -279,7 +279,8 @@ class KBEntityLinker(Component, Serializable):
             label_triplets = res.fetchall()
             if self.aliases_rels is not None:
                 for alias_rel in self.aliases_rels:
-                    query = f'SELECT {subject}, {relation}, {obj} FROM {self.sql_table_name} WHERE {relation} = "{alias_rel}";'
+                    query = f'SELECT {subject}, {relation}, {obj} FROM {self.sql_table_name} '\
+                            f'WHERE {relation} = "{alias_rel}";'
                     res = self.cursor.execute(query)
                     alias_triplets = res.fetchall()
                     alias_triplets_list.append(alias_triplets)
