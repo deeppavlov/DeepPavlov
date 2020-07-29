@@ -240,7 +240,6 @@ class KBEntityLinker(Component, Serializable):
         candidate_entities_filter = []
         for candidate in candidate_entities:
             entity_num = candidate[0]
-            entity_id = candidate[1]
             entity_names = []
             
             entity_names_found = self.q2name[entity_num]
