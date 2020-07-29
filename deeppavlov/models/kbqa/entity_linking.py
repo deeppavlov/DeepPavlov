@@ -249,12 +249,12 @@ class EntityLinker(Component, Serializable):
                                     for entity_substr in entity_substr_list]
                                    for entity_substr_dict in entity_substr_batch]
             entity_positions_batch = [[entity_positions for tag, entity_positions_list in entity_positions_dict.items()
-                                                         for entity_positions in entity_positions_list]
-                                                         for entity_positions_dict in entity_positions_batch]
+                                       for entity_positions in entity_positions_list]
+                                      for entity_positions_dict in entity_positions_batch]
             log.debug(f"entity_substr_batch {entity_substr_batch}")
             log.debug(f"entity_positions_batch {entity_positions_batch}")
             for entity_substr_list, entity_positions_list, context_tokens in \
-                                               zip(entity_substr_batch, entity_positions_batch, ner_tokens_batch):
+                    zip(entity_substr_batch, entity_positions_batch, ner_tokens_batch):
                 entity_ids_list = []
                 if entity_substr_list:
                     entity_ids_list = self.link_entities(entity_substr_list, entity_positions_list, context_tokens)
@@ -277,15 +277,15 @@ class EntityLinker(Component, Serializable):
         return doc_entity_ids_batch
 
     def link_entities(self, entity_substr_list: List[str], entity_positions_list: List[List[int]] = None,
-                          context_tokens: List[str] = None) -> List[List[str]]:
+                      context_tokens: List[str] = None) -> List[List[str]]:
         log.debug(f"context_tokens {context_tokens}")
         log.debug(f"entity substr list {entity_substr_list}")
         log.debug(f"entity positions list {entity_positions_list}")
         entity_ids_list = []
         if entity_substr_list:
             entity_substr_list = [[word for word in entity_substr.split(' ')
-                                        if word not in self.stopwords and len(word) > 0]
-                                        for entity_substr in entity_substr_list]
+                                   if word not in self.stopwords and len(word) > 0]
+                                  for entity_substr in entity_substr_list]
             words_and_indices = [(self.morph_parse(word), i) for i, entity_substr in enumerate(entity_substr_list)
                                  for word in entity_substr]
             substr_lens = [len(entity_substr) for entity_substr in entity_substr_list]
