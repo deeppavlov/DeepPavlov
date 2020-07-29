@@ -70,7 +70,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
     @classmethod
     @overrides
-    def read(self, data_path: str, dialogs: bool = False) -> Dict[str, List]:
+    def read(self, data_path: str, dialogs: bool = False, debug: bool = False) -> Dict[str, List]:
         """
         Parameters:
             data_path: path to read dataset from
@@ -102,15 +102,18 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
             'train': self._read_story(Path(data_path, self._data_fname('trn')),
                                       dialogs,
                                       domain_knowledge,
-                                      intent2slots2text, slot_name2text2value),
+                                      intent2slots2text, slot_name2text2value,
+                                      debug),
             'valid': self._read_story(Path(data_path, self._data_fname('val')),
                                       dialogs,
                                       domain_knowledge,
-                                      intent2slots2text, slot_name2text2value),
+                                      intent2slots2text, slot_name2text2value,
+                                      debug),
             'test': self._read_story(Path(data_path, self._data_fname('tst')),
                                      dialogs,
                                      domain_knowledge,
-                                     intent2slots2text, slot_name2text2value)
+                                     intent2slots2text, slot_name2text2value,
+                                     debug)
         }
         return data
 
@@ -210,7 +213,8 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                     dialogs,
                     domain_knowledge,
                     intent2slots2text,
-                    slot_name2text2value):
+                    slot_name2text2value,
+                    debug=False):
         """
         Reads stories from the specified path converting them to go-bot format on the fly.
 
@@ -225,12 +229,13 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         Returns:
             stories read as if it was done with DSTC2DatasetReader._read_from_file()
         """
-        log.debug(f"BEFORE MLU_MD_DialogsDatasetReader._read_story(): "
-                  f"story_fpath={story_fpath}, "
-                  f"dialogs={dialogs}, "
-                  f"domain_knowledge={domain_knowledge}, "
-                  f"intent2slots2text={intent2slots2text}, "
-                  f"slot_name2text2value={slot_name2text2value}")
+        if debug:
+            log.debug(f"BEFORE MLU_MD_DialogsDatasetReader._read_story(): "
+                      f"story_fpath={story_fpath}, "
+                      f"dialogs={dialogs}, "
+                      f"domain_knowledge={domain_knowledge}, "
+                      f"intent2slots2text={intent2slots2text}, "
+                      f"slot_name2text2value={slot_name2text2value}")
 
         default_system_start = {
             "speaker": cls._SYSTEM_SPEAKER_ID,
@@ -313,12 +318,13 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         gobot_formatted_stories = DSTC2DatasetReader._read_from_file(tmp_f.name, dialogs=dialogs)
         os.remove(tmp_f.name)
 
-        log.debug(f"AFTER MLU_MD_DialogsDatasetReader._read_story(): "
-                  f"story_fpath={story_fpath}, "
-                  f"dialogs={dialogs}, "
-                  f"domain_knowledge={domain_knowledge}, "
-                  f"intent2slots2text={intent2slots2text}, "
-                  f"slot_name2text2value={slot_name2text2value}")
+        if debug:
+            log.debug(f"AFTER MLU_MD_DialogsDatasetReader._read_story(): "
+                      f"story_fpath={story_fpath}, "
+                      f"dialogs={dialogs}, "
+                      f"domain_knowledge={domain_knowledge}, "
+                      f"intent2slots2text={intent2slots2text}, "
+                      f"slot_name2text2value={slot_name2text2value}")
 
         return gobot_formatted_stories
 
