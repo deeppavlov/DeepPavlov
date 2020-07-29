@@ -47,7 +47,17 @@ log = getLogger(__name__)
 @register('md_yaml_dialogs_reader')
 class MD_YAML_DialogsDatasetReader(DatasetReader):
     """
-    Reads dialogs from dataset composed of stories.md, nlu.md, domain.yml .
+    Reads dialogs from dataset composed of ``stories.md``, ``nlu.md``, ``domain.yml`` .
+
+    ``stories.md`` is to provide the dialogues dataset for model to train on.
+    The dialogues are `not` the sequences of user utterances `texts` and respective system replies texts
+    `but` the intent + slots user utterances `labels` and respective system replies `labels`.
+    This is so to distinguish the NLU-NLG tasks from the actual dialogues storytelling experience: one should be able to describe just the scripts of dialogues to the system.
+
+    ``nlu.md`` is contrariwise to provide the NLU training set irrespective of the dialogues scripts.
+
+    ``domain.yml`` is to desribe the task-specific domain and serves two purposes:
+    provide the NLG templates and provide some specific configuration of the NLU
     """
 
     _USER_SPEAKER_ID = 1
@@ -60,7 +70,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
     @classmethod
     @overrides
-    def read(self, data_path: str, dialogs: bool = False) -> Dict[str, List]:
+    def read(self, data_path: str, dialogs: bool = False, debug: bool = False) -> Dict[str, List]:
         """
         Parameters:
             data_path: path to read dataset from
@@ -78,11 +88,11 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         nlu_fname = "nlu.md"
         stories_fnames = tuple(self._data_fname(dt) for dt in ('trn', 'val', 'tst'))
         required_fnames = stories_fnames + (nlu_fname, domain_fname)
-        for reqiured_fname in required_fnames:
-            required_path = Path(data_path, reqiured_fname)
+        for required_fname in required_fnames:
+            required_path = Path(data_path, required_fname)
             if not required_path.exists():
                 log.error(f"INSIDE MLU_MD_DialogsDatasetReader.read(): "
-                          f"{reqiured_fname} not found with path {required_path}")
+                          f"{required_fname} not found with path {required_path}")
 
         domain_knowledge = self._read_domain_knowledge(Path(data_path, domain_fname))
         intent2slots2text, slot_name2text2value = self._read_intent2text_mapping(Path(data_path, nlu_fname),
@@ -92,15 +102,18 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
             'train': self._read_story(Path(data_path, self._data_fname('trn')),
                                       dialogs,
                                       domain_knowledge,
-                                      intent2slots2text, slot_name2text2value),
+                                      intent2slots2text, slot_name2text2value,
+                                      debug),
             'valid': self._read_story(Path(data_path, self._data_fname('val')),
                                       dialogs,
                                       domain_knowledge,
-                                      intent2slots2text, slot_name2text2value),
+                                      intent2slots2text, slot_name2text2value,
+                                      debug),
             'test': self._read_story(Path(data_path, self._data_fname('tst')),
                                      dialogs,
                                      domain_knowledge,
-                                     intent2slots2text, slot_name2text2value)
+                                     intent2slots2text, slot_name2text2value,
+                                     debug)
         }
         return data
 
@@ -200,8 +213,29 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                     dialogs,
                     domain_knowledge,
                     intent2slots2text,
-                    slot_name2text2value):
-        # todo: docstring, BEFORE/AFTER logging
+                    slot_name2text2value,
+                    debug=False):
+        """
+        Reads stories from the specified path converting them to go-bot format on the fly.
+
+        Args:
+            story_fpath: path to the file containing the stories dataset
+            dialogs: flag which indicates whether to output list of turns or
+             list of dialogs
+            domain_knowledge: the domain knowledge, usually inferred from domain.yml
+            intent2slots2text: the mapping allowing given the intent class and
+             slotfilling values of utterance, restore utterance text.
+            slot_name2text2value: the mapping of possible slot values spellings to the values themselves.
+        Returns:
+            stories read as if it was done with DSTC2DatasetReader._read_from_file()
+        """
+        if debug:
+            log.debug(f"BEFORE MLU_MD_DialogsDatasetReader._read_story(): "
+                      f"story_fpath={story_fpath}, "
+                      f"dialogs={dialogs}, "
+                      f"domain_knowledge={domain_knowledge}, "
+                      f"intent2slots2text={intent2slots2text}, "
+                      f"slot_name2text2value={slot_name2text2value}")
 
         default_system_start = {
             "speaker": cls._SYSTEM_SPEAKER_ID,
@@ -216,25 +250,35 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
         curr_story_title = None
         curr_story_utters = None
+        curr_story_bad = False
         for line in open(story_fpath):
             line = line.strip()
             if line.startswith('#'):
                 # #... marks the beginning of new story
                 if curr_story_utters and curr_story_utters[-1]["speaker"] == cls._USER_SPEAKER_ID:
                     curr_story_utters.append(default_system_goodbye)  # dialogs MUST end with system replics
-                stories_parsed[curr_story_title] = curr_story_utters
+
+                if not curr_story_bad:
+                    stories_parsed[curr_story_title] = curr_story_utters
 
                 curr_story_title = line.strip('#')
                 curr_story_utters = []
+                curr_story_bad = False
             elif line.startswith('*'):
                 # user actions are started in dataset with *
                 user_action, slots_dstc2formatted = cls._parse_user_intent(line)
                 slots_actual_values = cls._clarify_slots_values(slot_name2text2value, slots_dstc2formatted)
-                slots_to_exclude, slots_used_values = cls._choose_slots_for_whom_exists_text(intent2slots2text,
-                                                                                             slots_actual_values,
-                                                                                             user_action)
-
-                user_response_info = cls._user_text(intent2slots2text, user_action, slots_used_values)
+                try:
+                    slots_to_exclude, slots_used_values, action_for_text = cls._choose_slots_for_whom_exists_text(
+                        intent2slots2text, slots_actual_values,
+                        user_action)
+                except KeyError as e:
+                    if debug:
+                        log.debug(f"INSIDE MLU_MD_DialogsDatasetReader._read_story(): "
+                                  f"Skipping story w. line {line} because of no NLU candidates found")
+                    curr_story_bad = True
+                    continue
+                user_response_info = cls._user_action2text(intent2slots2text, action_for_text, slots_used_values)
                 user_utter = {"speaker": cls._USER_SPEAKER_ID,
                               "text": user_response_info["text"],
                               "dialog_acts": [{"act": user_action, "slots": user_response_info["slots"]}],
@@ -262,6 +306,8 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
                 curr_story_utters.append(system_action)
 
+        if not curr_story_bad:
+            stories_parsed[curr_story_title] = curr_story_utters
         stories_parsed.pop(None)
 
         tmp_f = tempfile.NamedTemporaryFile(delete=False, mode='w', encoding="utf-8")
@@ -272,33 +318,52 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         tmp_f.close()
         gobot_formatted_stories = DSTC2DatasetReader._read_from_file(tmp_f.name, dialogs=dialogs)
         os.remove(tmp_f.name)
+
+        if debug:
+            log.debug(f"AFTER MLU_MD_DialogsDatasetReader._read_story(): "
+                      f"story_fpath={story_fpath}, "
+                      f"dialogs={dialogs}, "
+                      f"domain_knowledge={domain_knowledge}, "
+                      f"intent2slots2text={intent2slots2text}, "
+                      f"slot_name2text2value={slot_name2text2value}")
+
         return gobot_formatted_stories
 
     @classmethod
     def _choose_slots_for_whom_exists_text(cls, intent2slots2text, slots_actual_values, user_action):
-        slots_used_values = slots_actual_values
-        slots_to_exclude = []
-        if not intent2slots2text[user_action].get(slots_actual_values):
-            slots_lazy_key = set(e[0] for e in slots_actual_values)
-            fake_keys = []
-            for known_key in intent2slots2text[user_action].keys():
-                if slots_lazy_key.issubset(set(e[0] for e in known_key)):
-                    fake_keys.append(known_key)
-                    break
-            fake_key = None
-            if fake_keys:
-                fake_key = sorted(fake_keys,
-                                  key=lambda elem: (len(set(slots_actual_values) ^ set(elem)),
-                                                    len([e for e in elem if e[0] not in slots_lazy_key])))[0]
-            slots_to_exclude = [e[0] for e in fake_key if e[0] not in slots_lazy_key]
-            slots_used_values = fake_key
-        return slots_to_exclude, slots_used_values
+        possible_keys = [k for k in intent2slots2text.keys() if user_action in k]
+        possible_keys = possible_keys + [user_action]
+        possible_keys = sorted(possible_keys, key=lambda action_s: action_s.count('+'))
+        for possible_action_key in possible_keys:
+            if intent2slots2text[possible_action_key].get(slots_actual_values):
+                slots_used_values = slots_actual_values
+                slots_to_exclude = []
+                return slots_to_exclude, slots_used_values, possible_action_key
+            else:
+                slots_lazy_key = set(e[0] for e in slots_actual_values)
+                slots_lazy_key -= {"intent"}
+                fake_keys = []
+                for known_key in intent2slots2text[possible_action_key].keys():
+                    if slots_lazy_key.issubset(set(e[0] for e in known_key)):
+                        fake_keys.append(known_key)
+                        break
+                fake_key = None
+                if fake_keys:
+                    fake_key = sorted(fake_keys,
+                                      key=lambda elem: (len(set(slots_actual_values) ^ set(elem)),
+                                                        len([e for e in elem if e[0] not in slots_lazy_key])))[0]
+
+                    slots_to_exclude = [e[0] for e in fake_key if e[0] not in slots_lazy_key]
+                    slots_used_values = fake_key
+                    return slots_to_exclude, slots_used_values, possible_action_key
+
+        raise KeyError("no possible NLU candidates found")
 
     @classmethod
     def _clarify_slots_values(cls, slot_name2text2value, slots_dstc2formatted):
         slots_key = []
         for slot_name, slot_value in slots_dstc2formatted:
-            if slot_value in slot_name2text2value[slot_name].keys():
+            if slot_value in slot_name2text2value.get(slot_name, {}).keys():
                 slot_actual_value = slot_name2text2value[slot_name][slot_value]
             else:
                 slot_actual_value = slot_value
@@ -317,7 +382,9 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         return user_action, slots_dstc2formatted
 
     @classmethod
-    def _user_text(cls, intent2slots2text: dict, user_action: str, slots_li: dict = {}):
+    def _user_action2text(cls, intent2slots2text: dict, user_action: str, slots_li=None):
+        if slots_li is None:
+            slots_li = {}
         return intent2slots2text[user_action][slots_li][0]
 
     @classmethod
