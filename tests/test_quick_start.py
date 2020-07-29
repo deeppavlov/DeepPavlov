@@ -137,6 +137,14 @@ PARAMS = {
         ("classifiers/intents_sample_csv.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_sample_json.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
+    "entity_linking": {
+        ("kbqa/entity_linking_rus.json", "entity_linking",  ('IP',)):
+            [
+                ("Москва — столица России, центр Центрального федерального округа и центр Московской области.",
+                 ['Q649', 'Q159', 'Q190778', 'Q1749']),
+                ("абв", [])
+            ]
+    },
     "ner": {
         ("ner/conll2003_m1.json", "conll2003_m1", ('IP', 'TI')): [
             (["Peter", "Blackburn"], ["NNP", "NNP"], None)],
