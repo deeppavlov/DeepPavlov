@@ -83,6 +83,16 @@ class EntityDetectionParser(Component):
         return entities_batch, types_batch, positions_batch
 
     def tags_from_probas(self, probas):
+        """
+        This method makes a list of tags from a list of probas for tags
+
+        Args:
+            probas: probabilities for tokens to belong to particular tags
+
+        Returns:
+            list of tags for tokens
+            list of probabilities of these tags
+        """
         tags = []
         tag_probas = []
         for proba in probas:
@@ -96,6 +106,21 @@ class EntityDetectionParser(Component):
         return tags, tag_probas
 
     def entities_from_tags(self, tokens, tags, tag_probas):
+        """
+        This method makes lists of substrings corresponding to entities and entity types
+        and a list of indices of tokens which correspond to entities
+
+        Args:
+            tokens: list of tokens of the text
+            tags: list of tags for tokens
+            tag_probas: list of probabilities of tags
+
+        Returns:
+            list of entity substrings (or a dict of tags (keys) and entity substrings (values))
+            list of substrings for entity types
+            list of indices of tokens which correspond to entities (or a dict of tags (keys)
+                and list of indices of entity tokens)
+        """
         entities_dict = defaultdict(list)
         entity_types = []
         entity_dict = defaultdict(list)
