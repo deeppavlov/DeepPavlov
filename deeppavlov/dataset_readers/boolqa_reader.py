@@ -80,7 +80,7 @@ class BoolqaReader(DatasetReader):
                 jline = json.loads(line)
                 if ln == 'ru':
                     if 'label' in jline:
-                        data[tuple([jline['question'], jline['passage']])] = int(jline['label'])
+                        data[jline['question'], jline['passage']] = int(jline['label'])
                 if ln == 'en':
                     if 'answer' in jline:
                         data[tuple([jline['question'], jline['passage']])] = int(jline['answer'])
