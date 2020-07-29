@@ -25,9 +25,12 @@ from typing import Dict, List, Tuple
 import yaml
 from overrides import overrides
 
+from deeppavlov.core.common.file import read_yaml
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.dataset_readers.dstc2_reader import DSTC2DatasetReader
+
+log = getLogger(__name__)
 
 
 class DomainKnowledge:
@@ -41,18 +44,16 @@ class DomainKnowledge:
     session_config: Dict
 
 
-log = getLogger(__name__)
-
-
 @register('md_yaml_dialogs_reader')
 class MD_YAML_DialogsDatasetReader(DatasetReader):
     """
     Reads dialogs from dataset composed of ``stories.md``, ``nlu.md``, ``domain.yml`` .
 
     ``stories.md`` is to provide the dialogues dataset for model to train on.
-    The dialogues are `not` the sequences of user utterances `texts` and respective system replies texts
-    `but` the intent + slots user utterances `labels` and respective system replies `labels`.
-    This is so to distinguish the NLU-NLG tasks from the actual dialogues storytelling experience: one should be able to describe just the scripts of dialogues to the system.
+    The dialogues are represented as user messages labels and system response messages labels.
+      (not texts, just action labels)
+    This is so to distinguish the NLU-NLG tasks from the actual dialogues storytelling experience:
+      one should be able to describe just the scripts of dialogues to the system.
 
     ``nlu.md`` is contrariwise to provide the NLU training set irrespective of the dialogues scripts.
 
@@ -63,14 +64,16 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
     _USER_SPEAKER_ID = 1
     _SYSTEM_SPEAKER_ID = 2
 
-    @staticmethod
-    def _data_fname(datatype):
-        assert datatype in ('trn', 'val', 'tst'), "wrong datatype name"
+    VALID_DATATYPES = ('trn', 'val', 'tst')
+
+    @classmethod
+    def _data_fname(cls, datatype):
+        assert datatype in cls.VALID_DATATYPES, f"wrong datatype name: {datatype}"
         return f"stories-{datatype}.md"
 
     @classmethod
     @overrides
-    def read(self, data_path: str, dialogs: bool = False, debug: bool = False) -> Dict[str, List]:
+    def read(cls, data_path: str, dialogs: bool = False) -> Dict[str, List]:
         """
         Parameters:
             data_path: path to read dataset from
@@ -86,7 +89,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         """
         domain_fname = "domain.yml"
         nlu_fname = "nlu.md"
-        stories_fnames = tuple(self._data_fname(dt) for dt in ('trn', 'val', 'tst'))
+        stories_fnames = tuple(cls._data_fname(dt) for dt in cls.VALID_DATATYPES)
         required_fnames = stories_fnames + (nlu_fname, domain_fname)
         for required_fname in required_fnames:
             required_path = Path(data_path, required_fname)
@@ -94,27 +97,19 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                 log.error(f"INSIDE MLU_MD_DialogsDatasetReader.read(): "
                           f"{required_fname} not found with path {required_path}")
 
-        domain_knowledge = self._read_domain_knowledge(Path(data_path, domain_fname))
-        intent2slots2text, slot_name2text2value = self._read_intent2text_mapping(Path(data_path, nlu_fname),
-                                                                                 domain_knowledge)
+        domain_knowledge = cls._read_domain_knowledge(Path(data_path, domain_fname))
+        intent2slots2text, slot_name2text2value = cls._read_intent2text_mapping(Path(data_path, nlu_fname),
+                                                                                domain_knowledge)
 
-        data = {
-            'train': self._read_story(Path(data_path, self._data_fname('trn')),
-                                      dialogs,
-                                      domain_knowledge,
-                                      intent2slots2text, slot_name2text2value,
-                                      debug),
-            'valid': self._read_story(Path(data_path, self._data_fname('val')),
-                                      dialogs,
-                                      domain_knowledge,
-                                      intent2slots2text, slot_name2text2value,
-                                      debug),
-            'test': self._read_story(Path(data_path, self._data_fname('tst')),
-                                     dialogs,
-                                     domain_knowledge,
-                                     intent2slots2text, slot_name2text2value,
-                                     debug)
-        }
+        short2long_subsample_name = {"trn": "train",
+                                     "val": "valid",
+                                     "tst": "test"}
+
+        data = {short2long_subsample_name[subsample_name_short]:
+                    cls._read_story(Path(data_path, cls._data_fname(subsample_name_short)),
+                                    dialogs, domain_knowledge, intent2slots2text, slot_name2text2value)
+                for subsample_name_short in cls.VALID_DATATYPES}
+
         return data
 
     @classmethod
@@ -123,8 +118,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         log.info(f"INSIDE MLU_MD_DialogsDatasetReader._read_domain_knowledge(): "
                  f"reading domain knowledge from {domain_fpath}")
 
-        with open(domain_fpath, encoding="utf-8") as domain_f:
-            domain_knowledge_di = yaml.safe_load(domain_f)
+        domain_knowledge_di = read_yaml(domain_fpath)
 
         domain_knowledge = DomainKnowledge()
         domain_knowledge.known_entities = domain_knowledge_di.get("entities", [])
@@ -213,8 +207,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                     dialogs,
                     domain_knowledge,
                     intent2slots2text,
-                    slot_name2text2value,
-                    debug=False):
+                    slot_name2text2value):
         """
         Reads stories from the specified path converting them to go-bot format on the fly.
 
@@ -229,13 +222,12 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         Returns:
             stories read as if it was done with DSTC2DatasetReader._read_from_file()
         """
-        if debug:
-            log.debug(f"BEFORE MLU_MD_DialogsDatasetReader._read_story(): "
-                      f"story_fpath={story_fpath}, "
-                      f"dialogs={dialogs}, "
-                      f"domain_knowledge={domain_knowledge}, "
-                      f"intent2slots2text={intent2slots2text}, "
-                      f"slot_name2text2value={slot_name2text2value}")
+        log.debug(f"BEFORE MLU_MD_DialogsDatasetReader._read_story(): "
+                  f"story_fpath={story_fpath}, "
+                  f"dialogs={dialogs}, "
+                  f"domain_knowledge={domain_knowledge}, "
+                  f"intent2slots2text={intent2slots2text}, "
+                  f"slot_name2text2value={slot_name2text2value}")
 
         default_system_start = {
             "speaker": cls._SYSTEM_SPEAKER_ID,
@@ -273,9 +265,8 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                         intent2slots2text, slots_actual_values,
                         user_action)
                 except KeyError as e:
-                    if debug:
-                        log.debug(f"INSIDE MLU_MD_DialogsDatasetReader._read_story(): "
-                                  f"Skipping story w. line {line} because of no NLU candidates found")
+                    log.debug(f"INSIDE MLU_MD_DialogsDatasetReader._read_story(): "
+                              f"Skipping story w. line {line} because of no NLU candidates found")
                     curr_story_bad = True
                     continue
                 user_response_info = cls._user_action2text(intent2slots2text, action_for_text, slots_used_values)
@@ -319,13 +310,12 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         gobot_formatted_stories = DSTC2DatasetReader._read_from_file(tmp_f.name, dialogs=dialogs)
         os.remove(tmp_f.name)
 
-        if debug:
-            log.debug(f"AFTER MLU_MD_DialogsDatasetReader._read_story(): "
-                      f"story_fpath={story_fpath}, "
-                      f"dialogs={dialogs}, "
-                      f"domain_knowledge={domain_knowledge}, "
-                      f"intent2slots2text={intent2slots2text}, "
-                      f"slot_name2text2value={slot_name2text2value}")
+        log.debug(f"AFTER MLU_MD_DialogsDatasetReader._read_story(): "
+                  f"story_fpath={story_fpath}, "
+                  f"dialogs={dialogs}, "
+                  f"domain_knowledge={domain_knowledge}, "
+                  f"intent2slots2text={intent2slots2text}, "
+                  f"slot_name2text2value={slot_name2text2value}")
 
         return gobot_formatted_stories
 
