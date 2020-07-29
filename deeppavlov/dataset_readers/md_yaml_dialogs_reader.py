@@ -273,8 +273,9 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                         intent2slots2text, slots_actual_values,
                         user_action)
                 except KeyError as e:
-                    log.info(f"INSIDE MLU_MD_DialogsDatasetReader._read_story(): "
-                             f"Skipping story w. line {line} because of no NLU candidates found")
+                    if debug:
+                        log.debug(f"INSIDE MLU_MD_DialogsDatasetReader._read_story(): "
+                                  f"Skipping story w. line {line} because of no NLU candidates found")
                     curr_story_bad = True
                     continue
                 user_response_info = cls._user_action2text(intent2slots2text, action_for_text, slots_used_values)
