@@ -24,7 +24,6 @@
       {
         "class_name": "squad_bert_mapping",
         "do_lower_case": false,
-        "torch": true,
         "in": ["context_raw", "bert_features", "subtokens"],
         "out": ["subtok2chars", "char2subtoks"]
       },
