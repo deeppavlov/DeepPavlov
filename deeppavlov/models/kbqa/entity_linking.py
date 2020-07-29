@@ -254,7 +254,7 @@ class EntityLinker(Component, Serializable):
             log.debug(f"entity_substr_batch {entity_substr_batch}")
             log.debug(f"entity_positions_batch {entity_positions_batch}")
             for entity_substr_list, entity_positions_list, context_tokens in \
-                                               zip(entity_substr_batch, entity_positions_batch, ner_tokens_batch):
+                    zip(entity_substr_batch, entity_positions_batch, ner_tokens_batch):
                 entity_ids_list = []
                 if entity_substr_list:
                     entity_ids_list = self.link_entities(entity_substr_list, entity_positions_list, context_tokens)
