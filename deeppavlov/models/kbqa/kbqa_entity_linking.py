@@ -177,7 +177,7 @@ class KBEntityLinker(Component, Serializable):
             candidate_entities = self.candidate_entities_inverted_index(entity)
             candidate_entities, candidate_names = self.candidate_entities_names(entity, candidate_entities)
             entities_ids, confidences, srtd_cand_ent = self.sort_found_entities(candidate_entities,
-                                                                                 candidate_names, entity, context)
+                                                                                candidate_names, entity, context)
 
         return entities_ids, confidences
 
