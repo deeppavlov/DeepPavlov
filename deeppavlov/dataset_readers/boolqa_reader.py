@@ -26,14 +26,14 @@ class BoolqaReader(DatasetReader):
     """
     The class to read the BoolQ dataset from files. BoolQ is a question answering dataset for yes/no questions containing 15942 examples. These questions are naturally occurring ---they are generated in unprompted and unconstrained settings. Each example is a triplet of (question, passage, answer), with the title of the page as optional additional context. The text-pair classification setup is similar to existing natural language inference tasks.
 
-More details about the English BoolQ are available in https://arxiv.org/abs/1905.10044
-https://github.com/google-research-datasets/boolean-questions
+    More details about the English BoolQ are available in https://arxiv.org/abs/1905.10044
+    https://github.com/google-research-datasets/boolean-questions
 
-The details about the Russian DaNetQA are available in 
-https://russiansuperglue.com/ru/tasks/task_info/DaNetQA
+    The details about the Russian DaNetQA are available in 
+    https://russiansuperglue.com/ru/tasks/task_info/DaNetQA
 
-The reader supports the English and the Russian variants of the dataset.
-The config example is boolqa_rubert.json.
+    The reader supports English and Russian variants of the dataset.
+    The config example is boolqa_rubert.json.
     """
 
     urls = { 
