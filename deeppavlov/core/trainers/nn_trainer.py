@@ -41,8 +41,6 @@ class NNTrainer(FitTrainer):
         chainer_config: ``"chainer"`` block of a configuration file
         batch_size: batch_size to use for partial fitting (if available) and evaluation,
             the whole dataset is used if ``batch_size`` is negative or zero (default is ``1``)
-        gradient_accumulation_steps: steps for gradient accumulation.
-        If it more than 1, gradient is updated every following number of steps (default is ``1``)
         epochs: maximum epochs number to train the pipeline, ignored if negative or zero (default is ``-1``)
         start_epoch_num: starting epoch number for reports (default is ``0``)
         max_batches: maximum batches number to train the pipeline, ignored if negative or zero (default is ``-1``)
@@ -92,7 +90,6 @@ class NNTrainer(FitTrainer):
 
     def __init__(self, chainer_config: dict, *, 
                  batch_size: int = 1,
-                 gradient_accumulation_steps: int = 1,
                  epochs: int = -1,
                  start_epoch_num: int = 0,
                  max_batches: int = -1,
