@@ -270,6 +270,8 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
                 curr_story_utters.append(system_action)
 
+        if not curr_story_bad:
+            stories_parsed[curr_story_title] = curr_story_utters
         stories_parsed.pop(None)
 
         tmp_f = tempfile.NamedTemporaryFile(delete=False, mode='w', encoding="utf-8")
