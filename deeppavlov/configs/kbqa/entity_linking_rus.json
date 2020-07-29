@@ -43,7 +43,7 @@
         "num_faiss_candidate_entities": 10,
         "num_entities_for_bert_ranking": 200,
         "num_faiss_cells": 1,
-        "use_gpu": true,
+        "use_gpu": false,
         "fit_vectorizer": false,
         "max_tfidf_features": 500,
         "include_mention": false,

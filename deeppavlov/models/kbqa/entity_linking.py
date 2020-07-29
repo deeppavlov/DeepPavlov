@@ -16,6 +16,7 @@ from logging import getLogger
 from typing import List, Dict, Tuple
 from collections import defaultdict
 
+import numpy as np
 import nltk
 import pymorphy2
 import faiss
