@@ -21,6 +21,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.data.utils import download_decompress
 
+
 @register('boolqa_reader')
 class BoolqaReader(DatasetReader):
     """
