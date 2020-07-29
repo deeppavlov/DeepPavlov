@@ -39,8 +39,8 @@ log = getLogger(__name__)
 class KBEntityLinker(Component, Serializable):
     """
         This class extracts from the knowledge base candidate entities for the entity mentioned in the question and then
-        extracts triplets from Wikidata for the extracted entity. Candidate entities are searched in the dictionary where 
-        keys are titles and aliases of Wikidata entities and values are lists of tuples (entity_title, entity_id,
+        extracts triplets from Wikidata for the extracted entity. Candidate entities are searched in the dictionary
+        where keys are titles and aliases of Wikidata entities and values are lists of tuples (entity_title, entity_id,
         number_of_relations). First candidate entities are searched in the dictionary by keys where the keys are
         entities extracted from the question, if nothing is found entities are searched in the dictionary using
         Levenstein distance between the entity and keys (titles) in the dictionary.
