@@ -46,7 +46,7 @@ class BoolqaReader(DatasetReader):
              language: str = 'en',
              *args, **kwargs) -> Dict[str, List[Tuple[Tuple[str, str], int]]]:
 
-        """Read the BoolQ dataset from files.
+        """Reads BoolQ dataset from files.
 
         Args:
             data_path: A path to a folder with dataset files.
