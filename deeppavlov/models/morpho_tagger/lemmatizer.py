@@ -83,7 +83,8 @@ class UDPymorphyLemmatizer(BasicLemmatizer):
     SPECIAL_FEATURES = ["Patr", "Surn"]
 
     def __init__(self, save_path: Optional[str] = None, load_path: Optional[str] = None,
-                 rare_grammeme_penalty=1.0, long_lemma_penalty=1.0, **kwargs) -> None:
+                 rare_grammeme_penalty: float = 1.0, long_lemma_penalty: float = 1.0, 
+                 **kwargs) -> None:
         self.rare_grammeme_penalty = rare_grammeme_penalty
         self.long_lemma_penalty = long_lemma_penalty
         self._reset()
