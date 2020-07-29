@@ -22,6 +22,7 @@
   "bert_syntax_parser": "deeppavlov.models.syntax_parser.network:BertSyntaxParser",
   "bilstm_gru_nn": "deeppavlov.models.ranking.bilstm_gru_siamese_network:BiLSTMGRUSiameseNetwork",
   "bilstm_nn": "deeppavlov.models.ranking.bilstm_siamese_network:BiLSTMSiameseNetwork",
+  "boolqa_reader": "deeppavlov.dataset_readers.boolqa_reader:BoolqaReader",
   "bow": "deeppavlov.models.embedders.bow_embedder:BoWEmbedder",
   "bytesIO_encode_base64": "deeppavlov.models.nemo.common:bytes_io_to_ascii",
   "capitalization_featurizer": "deeppavlov.models.preprocessors.capitalization:CapitalizationPreprocessor",
