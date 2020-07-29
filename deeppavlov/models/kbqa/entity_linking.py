@@ -364,9 +364,9 @@ class EntityLinker(Component, Serializable):
         return entities_with_scores
 
     def rank_by_description(self, entity_positions_list: List[List[int]],
-                                  candidate_entities_list: List[List[str]],
-                                  entities_scores_list: List[Dict[str, Tuple[int, float]]],
-                                  context_tokens: List[str]) -> List[List[str]]:
+                            candidate_entities_list: List[List[str]],
+                            entities_scores_list: List[Dict[str, Tuple[int, float]]],
+                            context_tokens: List[str]) -> List[List[str]]:
         entity_ids_list = []
         for entity_pos, candidate_entities, entities_scores in zip(entity_positions_list, candidate_entities_list,
                                                                    entities_scores_list):
