@@ -287,7 +287,7 @@ class EntityLinker(Component, Serializable):
                                         if word not in self.stopwords and len(word) > 0]
                                         for entity_substr in entity_substr_list]
             words_and_indices  = [(self.morph_parse(word), i) for i, entity_substr in enumerate(entity_substr_list)
-                                                                                         for word in entity_substr]
+                                 for word in entity_substr]
             substr_lens = [len(entity_substr) for entity_substr in entity_substr_list]
             log.debug(f"words and indices {words_and_indices}")
             words, indices = zip(*words_and_indices)
