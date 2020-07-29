@@ -233,7 +233,8 @@ class KBEntityLinker(Component, Serializable):
         return entity_ids, confidences, srtd_with_ratios
 
     def candidate_entities_names(self, entity: str,
-          candidate_entities: List[Tuple[int, str, int]]) -> Tuple[List[Tuple[int, str, int]], List[List[str]]]:
+                                 candidate_entities: List[Tuple[int, str, int]]) -> Tuple[List[Tuple[int, str, int]],
+                                                                                          List[List[str]]]:
         entity_length = len(entity)
         candidate_names = []
         candidate_entities_filter = []
