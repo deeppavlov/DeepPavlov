@@ -83,6 +83,6 @@ class BoolqaReader(DatasetReader):
                         data[jline['question'], jline['passage']] = int(jline['label'])
                 if ln == 'en':
                     if 'answer' in jline:
-                        data[tuple([jline['question'], jline['passage']])] = int(jline['answer'])
+                        data[jline['question'], jline['passage']] = int(jline['answer'])
 
         return list(data.items())
