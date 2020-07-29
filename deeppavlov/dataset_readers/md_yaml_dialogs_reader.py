@@ -88,11 +88,11 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         nlu_fname = "nlu.md"
         stories_fnames = tuple(self._data_fname(dt) for dt in ('trn', 'val', 'tst'))
         required_fnames = stories_fnames + (nlu_fname, domain_fname)
-        for reqiured_fname in required_fnames:
-            required_path = Path(data_path, reqiured_fname)
+        for required_fname in required_fnames:
+            required_path = Path(data_path, required_fname)
             if not required_path.exists():
                 log.error(f"INSIDE MLU_MD_DialogsDatasetReader.read(): "
-                          f"{reqiured_fname} not found with path {required_path}")
+                          f"{required_fname} not found with path {required_path}")
 
         domain_knowledge = self._read_domain_knowledge(Path(data_path, domain_fname))
         intent2slots2text, slot_name2text2value = self._read_intent2text_mapping(Path(data_path, nlu_fname),
