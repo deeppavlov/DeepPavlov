@@ -149,7 +149,7 @@ class KBEntityLinker(Component, Serializable):
             save_pickle(self.q2descr, self.save_path / self.q2descr_filename)
 
     def __call__(self, entity_substr_batch: List[List[str]], entity_positions_batch: List[List[List[int]]] = None,
-                       context_tokens: List[List[str]] = None) -> Tuple[List[List[List[str]]], List[List[List[float]]]]:
+                 context_tokens: List[List[str]] = None) -> Tuple[List[List[List[str]]], List[List[List[float]]]]:
         entity_ids_batch = []
         confidences_batch = []
         if entity_positions_batch is None:
