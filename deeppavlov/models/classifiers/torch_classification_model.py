@@ -52,6 +52,7 @@ class TorchTextClassificationModel(TorchModel):
         learning_rate_drop_patience: how many validations with no improvements to wait
         learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
             validations
+        return_probas: whether to return probabilities or index of classes (only for `multi_label=False`)
 
     Attributes:
         opt: dictionary with all model parameters
@@ -86,6 +87,7 @@ class TorchTextClassificationModel(TorchModel):
             "learning_rate_drop_div": learning_rate_drop_div,
             "lr_scheduler": lr_scheduler,
             "lr_scheduler_parameters": lr_scheduler_parameters,
+            "return_probas": return_probas,
             **kwargs,
         }
         super().__init__(**full_kwargs)
