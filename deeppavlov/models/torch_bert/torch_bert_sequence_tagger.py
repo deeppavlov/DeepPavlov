@@ -34,7 +34,7 @@ def token_from_subtoken(units: torch.Tensor, mask: torch.Tensor) -> torch.Tensor
     """ Assemble token level units from subtoken level units
 
     Args:
-        units: tf.Tensor of shape [batch_size, SUBTOKEN_seq_length, n_features]
+        units: torch.Tensor of shape [batch_size, SUBTOKEN_seq_length, n_features]
         mask: mask of token beginnings. For example: for tokens
 
                 [[``[CLS]`` ``My``, ``capybara``, ``[SEP]``],
@@ -197,42 +197,39 @@ def token_labels_to_subtoken_labels(labels, y_mask, input_mask):
 class TorchBertSequenceTagger(TorchModel):
     """BERT-based model on PyTorch for text tagging. It predicts a label for every token (not subtoken) in the text.
     You can use it for sequence labeling tasks, such as morphological tagging or named entity recognition.
-    See :class:`deeppavlov.models.bert.bert_sequence_tagger.BertSequenceNetwork`
-    for the description of inherited parameters.
 
     Args:
         n_tags: number of distinct tags
+        pretrained_bert: pretrained Bert checkpoint path or key title (e.g. "bert-base-uncased")
         return_probas: set this to `True` if you need the probabilities instead of raw answers
         bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
-        pretrained_bert: pretrained Bert checkpoint or string name
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
-        optimizer: name of `torch.optim` or None for `AdamW`
-        optimizer_parameters: dictionary with parameters for optimizer
-        learning_rate: learning rate of BERT head
-        bert_learning_rate: learning rate of BERT body
-        min_learning_rate: min value of learning rate if learning rate decay is used
+        optimizer: optimizer name from `torch.optim`
+        optimizer_parameters: dictionary with optimizer's parameters,
+                              e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
         learning_rate_drop_patience: how many validations with no improvements to wait
         learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
             validations
         load_before_drop: whether to load best model before dropping learning rate or not
         clip_norm: clip gradients by norm
+        min_learning_rate: min value of learning rate if learning rate decay is used
     """
 
     def __init__(self,
                  n_tags: int,
-                 bert_config_file: str = None,
+                 pretrained_bert: str,
+                 bert_config_file: Optional[str] = None,
                  return_probas: bool = False,
-                 pretrained_bert: str = None,
-                 attention_probs_keep_prob: float = None,
-                 hidden_keep_prob: float = None,
+                 attention_probs_keep_prob: Optional[float] = None,
+                 hidden_keep_prob: Optional[float] = None,
                  optimizer: str = None,
-                 optimizer_parameters={"lr": 1e-3, "weight_decay": 1e-6},
-                 min_learning_rate: float = 1e-07,
+                 optimizer_parameters: dict = {"lr": 1e-3, "weight_decay": 1e-6},
                  learning_rate_drop_patience: int = 20,
                  learning_rate_drop_div: float = 2.0,
                  load_before_drop: bool = True,
                  clip_norm: Optional[float] = None,
+                 min_learning_rate: Optional[float] = 1e-07,
                  **kwargs) -> None:
 
         self.n_classes = n_tags
