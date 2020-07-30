@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Optional
 
 import numpy as np
 import torch
@@ -33,15 +33,21 @@ class TorchBertRankerModel(TorchBertClassifierModel):
     Predicted probabilities of classes are used as a similarity measure for ranking.
 
     Args:
-        bert_config_file: path to Bert configuration file
+        pretrained_bert: pretrained Bert checkpoint path or key title (e.g. "bert-base-uncased")
+        bert_config_file: path to Bert configuration file (not used if pretrained_bert is key title)
         n_classes: number of classes
         return_probas: set True if class probabilities are returned instead of the most probable label
+        optimizer: optimizer name from `torch.optim`
+        optimizer_parameters: dictionary with optimizer's parameters,
+                              e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
     """
 
-    def __init__(self, pretrained_bert=None, bert_config_file=None,
-                 n_classes=2, return_probas=True,
-                 optimizer="AdamW",
-                 optimizer_parameters={"lr": 2e-5, "weight_decay": 0.01, "betas": (0.9, 0.999), "eps": 1e-6},
+    def __init__(self, pretrained_bert: str,
+                 bert_config_file: Optional[str] = None,
+                 n_classes: int = 2,
+                 return_probas: bool = True,
+                 optimizer: str = "AdamW",
+                 optimizer_parameters: dict = {"lr": 2e-5, "weight_decay": 0.01, "betas": (0.9, 0.999), "eps": 1e-6},
                  **kwargs) -> None:
         super().__init__(pretrained_bert=pretrained_bert, bert_config_file=bert_config_file,
                          n_classes=n_classes, return_probas=return_probas,
@@ -74,7 +80,8 @@ class TorchBertRankerModel(TorchBertClassifierModel):
         loss.backward()
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
-        # torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+        if self.clip_norm:
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
 
         self.optimizer.step()
         if self.lr_scheduler is not None:
