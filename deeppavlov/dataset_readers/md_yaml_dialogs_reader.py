@@ -369,13 +369,13 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
     @staticmethod
     def _user_action2text(intent2slots2text: Dict[str, Dict[SLOT2VALUE_PAIRS_TUPLE, List]],
                           user_action: str,
-                          slots_li=SLOT2VALUE_PAIRS_TUPLE):
+                          slots_li=SLOT2VALUE_PAIRS_TUPLE) -> str:
         if slots_li is None:
             slots_li = tuple()
         return intent2slots2text[user_action][slots_li][0]
 
-    @classmethod
-    def _system_action2text(cls, domain_knowledge: DomainKnowledge, system_action: str):
+    @staticmethod
+    def _system_action2text(domain_knowledge: DomainKnowledge, system_action: str) -> str:
         possible_system_responses = domain_knowledge.response_templates.get(system_action,
                                                                             [{"text": system_action}])
 
