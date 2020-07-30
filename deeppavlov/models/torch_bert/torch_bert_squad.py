@@ -52,12 +52,13 @@ class TorchBertSQuADModel(TorchModel):
     of Bert outputs.
 
     Args:
+        pretrained_bert: pretrained Bert checkpoint path or key title (e.g. "bert-base-uncased")
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
-        optimizer: name of `torch.optim` or None for `AdamW`
-        optimizer_parameters: dictionary with parameters for optimizer
-        pretrained_bert: pretrained Bert checkpoint path or string name
-        bert_config_file: path to Bert configuration file or None, if `pretrained_bert` is string name
+        optimizer: optimizer name from `torch.optim`
+        optimizer_parameters: dictionary with optimizer's parameters,
+                              e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
+        bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
         learning_rate_drop_patience: how many validations with no improvements to wait
         learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
             validations
@@ -67,18 +68,18 @@ class TorchBertSQuADModel(TorchModel):
     """
 
     def __init__(self,
+                 pretrained_bert: str,
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
-                 optimizer: Optional[str] = "AdamW",
-                 optimizer_parameters: Optional[dict] = {"lr": 0.01, "weight_decay": 0.01,
-                                                         "betas": (0.9, 0.999), "eps": 1e-6},
-                 pretrained_bert: Optional[str] = None,
-                 bert_config_file: str = None,
+                 optimizer: str = "AdamW",
+                 optimizer_parameters: dict = {"lr": 0.01, "weight_decay": 0.01,
+                                               "betas": (0.9, 0.999), "eps": 1e-6},
+                 bert_config_file: Optional[str] = None,
                  learning_rate_drop_patience: int = 20,
                  learning_rate_drop_div: float = 2.0,
                  load_before_drop: bool = True,
                  clip_norm: Optional[float] = None,
-                 min_learning_rate: float = 1e-06,
+                 min_learning_rate: Optional[float] = 1e-06,
                  **kwargs) -> None:
 
         self.attention_probs_keep_prob = attention_probs_keep_prob
