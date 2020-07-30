@@ -177,7 +177,7 @@ In this tutorial, there are 3 datasets. Considering the batch structure, ``chain
   }
 
 Sometimes a task dataset iterator returns inputs or labels consisting of more than elements. For example, in model
-:config:`mt_bert_train_tutorial.json <tutorials/mt_bert/mt_bert_train_tutorial.json>` ``siamese_iterator`` input
+:config:`mt_bert_train_tutorial.json <kbqa/kbqa_mt_bert_train.json>` ``siamese_iterator`` input
 element consists of 2 strings. If there is a necessity to split such a variable, ``InputSplitter`` component can
 be used.
 
