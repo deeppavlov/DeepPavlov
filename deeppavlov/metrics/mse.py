@@ -33,5 +33,4 @@ def mse(y_true: Union[np.array, list],
     """
     for value in [y_true, y_predicted]:
         assert (np.isfinite(value).all())
-    return mean_squared_error(y_true, y_predicted,
-                              *args, **kwargs)
+    return mean_squared_error(y_true, y_predicted, *args, **kwargs)
