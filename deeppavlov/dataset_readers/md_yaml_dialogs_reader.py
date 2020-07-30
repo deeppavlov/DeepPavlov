@@ -122,7 +122,9 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         return data
 
     @classmethod
-    def _read_intent2text_mapping(cls, nlu_fpath: Path, domain_knowledge: DomainKnowledge) -> Tuple[Dict, Dict]:
+    def _read_intent2text_mapping(cls, nlu_fpath: Path, domain_knowledge: DomainKnowledge) \
+            -> Tuple[Dict[str, Dict[SLOT2VALUE_PAIRS_TUPLE, List]],
+                     Dict[str, Dict[str, str]]]:
 
         slots_markup_pattern = r"\[" + \
                                r"(?P<slot_value>.*?)" + \
@@ -197,8 +199,8 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                     story_fpath: Path,
                     dialogs: bool,
                     domain_knowledge: DomainKnowledge,
-                    intent2slots2text: dict,
-                    slot_name2text2value: dict) \
+                    intent2slots2text: Dict[str, Dict[SLOT2VALUE_PAIRS_TUPLE, List]],
+                    slot_name2text2value: Dict[str, Dict[str, str]]) \
             -> Union[List[List[Tuple[Dict[str, bool], Dict[str, Any]]]], List[Tuple[Dict[str, bool], Dict[str, Any]]]]:
         """
         Reads stories from the specified path converting them to go-bot format on the fly.
@@ -313,7 +315,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         return gobot_formatted_stories
 
     @staticmethod
-    def _choose_slots_for_whom_exists_text(intent2slots2text: Dict[str, Dict[SLOT2VALUE_PAIRS_TUPLE, Any]],
+    def _choose_slots_for_whom_exists_text(intent2slots2text: Dict[str, Dict[SLOT2VALUE_PAIRS_TUPLE, List]],
                                            slots_actual_values: SLOT2VALUE_PAIRS_TUPLE,
                                            user_action: str) -> Tuple[List, SLOT2VALUE_PAIRS_TUPLE, str]:
         possible_keys = [k for k in intent2slots2text.keys() if user_action in k]
@@ -365,9 +367,11 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         return user_action, slots_dstc2formatted
 
     @staticmethod
-    def _user_action2text(intent2slots2text: Dict[str, Any], user_action: str, slots_li=None):
+    def _user_action2text(intent2slots2text: Dict[str, Dict[SLOT2VALUE_PAIRS_TUPLE, List]],
+                          user_action: str,
+                          slots_li=SLOT2VALUE_PAIRS_TUPLE):
         if slots_li is None:
-            slots_li = {}
+            slots_li = tuple()
         return intent2slots2text[user_action][slots_li][0]
 
     @classmethod
