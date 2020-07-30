@@ -97,4 +97,7 @@ class LogitRanker(Component):
             batch_best_answers_score = [x[0] for x in batch_best_answers_score]
             batch_best_answers_doc_ids = [x[0] for x in batch_best_answers_doc_ids]
 
+        if tfidf_doc_ids is None:
+            return batch_best_answers, batch_best_answers_score, batch_best_answers_place
+
         return batch_best_answers, batch_best_answers_score, batch_best_answers_place, batch_best_answers_doc_ids
