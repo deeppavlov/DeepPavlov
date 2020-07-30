@@ -67,7 +67,7 @@ class TorchTextClassificationModel(TorchModel):
                  lr_scheduler: str = None, lr_scheduler_parameters: Optional[dict] = {},
                  embedded_tokens=True, vocab_size=None, lr_decay_every_n_epochs: Optional[int] = None,
                  learning_rate_drop_patience: Optional[int] = None, learning_rate_drop_div: Optional[float] = None,
-                 **kwargs):
+                 return_probas: Optional[bool] = True, **kwargs):
         if n_classes == 0:
             raise ConfigError("Please, provide vocabulary with considered classes or number of classes.")
 
@@ -90,11 +90,12 @@ class TorchTextClassificationModel(TorchModel):
         }
         super().__init__(**full_kwargs)
 
-    def __call__(self, data: List[List[np.ndarray]], *args) -> List[List[float]]:
+    def __call__(self, texts: List[np.ndarray], labels: List[np.ndarray], *args) -> Union[List[List[float]], List[int]]:
         """Infer on the given data.
 
         Args:
-            data: list of tokenized text samples
+            texts: list of tokenized text samples
+            labels: labels
             *args: additional arguments
 
         Returns:
@@ -102,8 +103,21 @@ class TorchTextClassificationModel(TorchModel):
                 vector of probabilities to belong with each class
                 or list of labels sentence belongs with
         """
-        preds = np.array(self.infer_on_batch(data), dtype="float64").tolist()
-        return preds
+        with torch.no_grad():
+            features = np.array(texts)
+            inputs = torch.from_numpy(features)
+            inputs = inputs.to(self.device)
+            outputs = self.model(inputs)
+            if self.opt["multi_label"]:
+                outputs = torch.nn.functional.sigmoid(outputs)
+            else:
+                outputs = torch.nn.functional.softmax(outputs, dim=-1)
+
+        outputs = outputs.cpu().detach().numpy()
+        if self.opt["return_probas"]:
+            return outputs.tolist()
+        else:
+            return np.argmax(outputs, axis=-1).tolist()
 
     @overrides
     def process_event(self, event_name: str, data: dict):
@@ -150,25 +164,6 @@ class TorchTextClassificationModel(TorchModel):
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
         return loss.item()
-
-    def infer_on_batch(self, texts: List[List[np.ndarray]],
-                       labels: list = None) -> Union[float, List[float], np.ndarray]:
-        """Infer the model on the given batch.
-
-        Args:
-            texts:
-            labels: list of labels
-
-        Returns:
-            predictions, otherwise
-        """
-        with torch.no_grad():
-            features = np.array(texts)
-            inputs = torch.from_numpy(features)
-            inputs = inputs.to(self.device)
-            outputs = self.model(inputs)
-
-        return outputs.cpu().detach().numpy()
 
     def cnn_model(self, kernel_sizes_cnn: List[int], filters_cnn: int, dense_size: int, dropout_rate: float = 0.0,
                   **kwargs) -> nn.Module:
