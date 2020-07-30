@@ -14,6 +14,7 @@
 
 import numpy as np
 from sklearn.metrics import mean_squared_error
+from typing import Union
 
 from deeppavlov.core.common.metrics_registry import register_metric
 
