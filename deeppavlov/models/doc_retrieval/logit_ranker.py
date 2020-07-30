@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import warnings
 from logging import getLogger
 from operator import itemgetter
-from typing import List, Union, Tuple
+from typing import List, Union, Tuple, Optional
 
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.registry import register
@@ -31,29 +30,29 @@ class LogitRanker(Component):
 
      Args:
         squad_model: a loaded squad model
-        out: list of model outputs
         batch_size: batch size to use with squad model
         sort_noans: whether to downgrade noans tokens in the most possible answers
         top_n: number of answers to return
 
      Attributes:
         squad_model: a loaded squad model
-        out_params: list of model outputs
         batch_size: batch size to use with squad model
         top_n: number of answers to return
 
     """
 
-    def __init__(self, squad_model: Union[Chainer, Component], out: List[str], batch_size: int = 50,
+    def __init__(self, squad_model: Union[Chainer, Component], batch_size: int = 50,
                  sort_noans: bool = False, top_n: int = 1, **kwargs):
         self.squad_model = squad_model
         self.batch_size = batch_size
         self.sort_noans = sort_noans
         self.top_n = top_n
-        self.out_params = out
 
     def __call__(self, contexts_batch: List[List[str]], questions_batch: List[List[str]],
-                 tfidf_doc_ids: List[List[str]] = None):
+                 tfidf_doc_ids: Optional[List[List[str]]] = None) -> \
+            Union[Tuple[List[str], List[float], List[int], List[str]],
+                  Tuple[List[List[str]], List[List[float]], List[List[int]], List[List[str]]]]:
+
         """
         Sort obtained results from squad reader by logits and get the answer with a maximum logit.
 
@@ -62,16 +61,12 @@ class LogitRanker(Component):
             questions_batch: a batch of questions which should be treated as a single batch in the outer JSON config
             tfidf_doc_ids (optional): names of the documents from which the contexts_batch was derived
         Returns:
-            desirable variables as specified by 'out' parameter of JSON config
+             a batch of best answers, their scores, places in contexts
+             and tfidf_doc_ids for this answers if tfidf_doc_ids were passed
         """
-
-        if tfidf_doc_ids is None and 'batch_best_answers_doc_ids' in self.out_params:
+        if tfidf_doc_ids is None:
             logger.info("you didn't pass tfidf_doc_ids as input in logit_ranker config so batch_best_answers_doc_ids"
                         "can't be compute")
-
-        name_map = {'best_answer': 'batch_best_answers', 'best_answer_score': 'batch_best_answers_score',
-                    'best_answer_place': 'batch_best_answers_place',
-                    'best_answer_doc_ids': 'batch_best_answers_doc_ids'}
 
         batch_best_answers = []
         batch_best_answers_score = []
@@ -96,5 +91,10 @@ class LogitRanker(Component):
                 batch_best_answers_doc_ids.append(
                     [tfidf_doc_ids[quest_ind][i] for i in doc_ind][:len(batch_best_answers[-1])])
 
-        local_vars = locals()
-        return (local_vars[name_map[param]] for param in self.out_params)
+        if self.top_n == 1:
+            batch_best_answers = [x[0] for x in batch_best_answers]
+            batch_best_answers_place = [x[0] for x in batch_best_answers_place]
+            batch_best_answers_score = [x[0] for x in batch_best_answers_score]
+            batch_best_answers_doc_ids = [x[0] for x in batch_best_answers_doc_ids]
+
+        return batch_best_answers, batch_best_answers_score, batch_best_answers_place, batch_best_answers_doc_ids
