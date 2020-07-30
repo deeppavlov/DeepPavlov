@@ -87,7 +87,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         Parameters:
             data_path: path to read dataset from
             dialogs: flag which indicates whether to output list of turns or
-             list of dialogs
+                list of dialogs
 
         Returns:
             dictionary that contains
