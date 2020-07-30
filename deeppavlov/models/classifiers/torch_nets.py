@@ -18,7 +18,8 @@ class ShallowAndWideCnn(nn.Module):
             filters_cnn = len(kernel_sizes_cnn) * [filters_cnn]
 
         for i in range(len(kernel_sizes_cnn)):
-            setattr(self, "conv_" + str(i), nn.Conv1d(embedding_size, filters_cnn[i], kernel_sizes_cnn[i]))
+            setattr(self, "conv_" + str(i), nn.Conv1d(embedding_size, filters_cnn[i], kernel_sizes_cnn[i],
+                                                      padding=kernel_sizes_cnn[i]))
             setattr(self, "bn_" + str(i), nn.BatchNorm1d(filters_cnn[i]))
             setattr(self, "relu_" + str(i), nn.ReLU())
             setattr(self, "pool_" + str(i), nn.AdaptiveMaxPool1d(1))
@@ -29,17 +30,19 @@ class ShallowAndWideCnn(nn.Module):
         self.final_dense = nn.Linear(dense_size, n_classes)
 
     def forward(self, x):
-        # x of shape [batch_size, number of tokens, embedding_size]
-        # or x of shape [batch_size, number of tokens]
         # number of tokens is variable
         if not self.embedded_tokens:
+            # x of shape [batch_size, number of tokens]
             input = self.embedding(x)
+            input = input.permute(0, 2, 1)
         else:
+            # x of shape [batch_size, number of tokens, embedding_size]
             input = x.permute(0, 2, 1)
 
         # input of [batch size, embedding size, number of tokens]
         outputs = []
         for i in range(len(self.kernel_sizes_cnn)):
+            # convolutional input should be of shape [batch_size, embedding_size, number of tokens]
             output = getattr(self, "conv_" + str(i))(input)
             output = getattr(self, "bn_" + str(i))(output)
             output = getattr(self, "relu_" + str(i))(output)
