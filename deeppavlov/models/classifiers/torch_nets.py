@@ -7,7 +7,7 @@ import torch.nn as nn
 class ShallowAndWideCnn(nn.Module):
     def __init__(self, n_classes: int, embedding_size: int, kernel_sizes_cnn: List[int],
                  filters_cnn: Union[int, List[int]], dense_size: int, dropout_rate: float = 0.0,
-                 multi_label=False, embedded_tokens=True, vocab_size: int=None, **kwargs):
+                 embedded_tokens=True, vocab_size: int=None, **kwargs):
         super().__init__()
         self.embedded_tokens = embedded_tokens
         self.kernel_sizes_cnn = kernel_sizes_cnn

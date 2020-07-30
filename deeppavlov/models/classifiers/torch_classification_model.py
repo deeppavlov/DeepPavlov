@@ -184,6 +184,6 @@ class TorchTextClassificationModel(TorchModel):
         model = ShallowAndWideCnn(n_classes=self.opt["n_classes"], embedding_size=self.opt["embedding_size"],
                                   kernel_sizes_cnn=kernel_sizes_cnn, filters_cnn=filters_cnn,
                                   dense_size=dense_size, dropout_rate=dropout_rate,
-                                  multi_label=self.opt["multi_label"], embedded_tokens=self.opt["embedded_tokens"],
+                                  embedded_tokens=self.opt["embedded_tokens"],
                                   vocab_size=self.opt["vocab_size"])
         return model
