@@ -812,25 +812,27 @@ class MultiTaskBert(LRScheduledTFModel):
     def train_on_batch(self, *args, **kwargs) -> Dict[str, Dict[str, float]]:
         """Calls ``train_on_batch`` methods for every task. This method takes ``args`` or ``kwargs`` but not both.
         The order of ``args`` is the same as the order of tasks in the component parameters:
-        ```python
-        args = [
-            task1_in_x[0],
-            task1_in_x[1],
-            task1_in_x[2],
-            ...
-            task1_in_y[0],
-            task1_in_y[1],
-            ...
-            task2_in_x[0],
-            ...
-        ]
-        ```
-        
+
+        .. highlight:: python
+        .. code-block:: python
+
+           args = [
+               task1_in_x[0],
+               task1_in_x[1],
+               task1_in_x[2],
+               ...
+               task1_in_y[0],
+               task1_in_y[1],
+               ...
+               task2_in_x[0],
+               ...
+           ]
+ 
         If ``kwargs`` are used and ``in_distribution`` and ``in_y_distribution`` attributes are dictionaries of lists
         of strings, then keys of ``kwargs`` have to be same as strings in ``in_distribution`` and
         ``in_y_distribution``. If ``in_distribution`` and ``in_y_distribution`` are dictionaries of ``int``, then
         ``kwargs`` values are treated the same way as ``args``.
- 
+
         Args:
             args: task inputs and expected outputs
             kwargs: task inputs and expected outputs
@@ -969,16 +971,17 @@ class MultiTaskBert(LRScheduledTFModel):
         """Calls one or several BERT heads depending on provided task names. ``args`` and ``kwargs`` contain 
         inputs of BERT tasks. ``args`` and ``kwargs`` cannot be used together. If ``args`` are used ``args`` content
         has to be
-        ```python
-        args = [
-            task1_in_x[0],
-            task1_in_x[1],
-            ...
-            task2_in_x[0],
-            task2_in_x[1],
-            ...
-        ]
-        ```
+
+        .. code-block:: python
+        
+            args = [
+                task1_in_x[0],
+                task1_in_x[1],
+                ...
+                task2_in_x[0],
+                task2_in_x[1],
+                ...
+            ]
 
         If ``kwargs`` are used and ``in_distribution`` is a dictionary of ``int``, then ``kwargs``' order has to be
         the same as ``args`` order described in the previous paragraph. If ``in_distribution`` is a dictionary of
@@ -1007,16 +1010,17 @@ class MultiTaskBert(LRScheduledTFModel):
         """Calls one or several BERT heads depending on provided task names in ``task_names`` parameter. ``args`` and
         ``kwargs`` contain inputs of BERT tasks. ``args`` and ``kwargs cannot be used simultaneously. If ``args`` are
         used ``args``, content has to be
-        ```python
-        args = [
-            task1_in_x[0],
-            task1_in_x[1],
-            ...
-            task2_in_x[0],
-            task2_in_x[1],
-            ...
-        ]
-        ```
+        
+        .. code-block:: python
+
+            args = [
+                task1_in_x[0],
+                task1_in_x[1],
+                ...
+                task2_in_x[0],
+                task2_in_x[1],
+                ...
+            ]
 
         If ``kwargs`` is used ``kwargs`` keys has to match content of ``in_names`` params of called tasks.
 
@@ -1121,17 +1125,17 @@ class MTBertReUser:
 
 @register("input_splitter")
 class InputSplitter:
-    """The instance of these class in pipe splits a sequence of dictionaries with identical keys into independent
-    variables.
+    """The instance of these class in pipe splits a batch of sequences of identical length or dictionaries with 
+    identical keys into tuple of batches.
 
     Args:
-        keys_to_extract: a sequence of strings which have to match keys of split dictionaries
+        keys_to_extract: a sequence of ints or strings that have to match keys of split dictionaries.
     """
     def __init__(self, keys_to_extract: Union[List[str], Tuple[str, ...]], **kwargs):
         self.keys_to_extract = keys_to_extract
 
-    def __call__(self, inp: List[dict]) -> List[list]:
-        """Returns lists of values of dictionaries from ``inp``. Every list contains values which have a one key from 
+    def __call__(self, inp: Union[List[dict], List[List[int]], List[Tuple[int]]]) -> List[list]:
+        """Returns batches of values from ``inp``. Every batch contains values that have same key from 
         ``keys_to_extract`` attribute. The order of elements of ``keys_to_extract`` is preserved.
 
         Args:
