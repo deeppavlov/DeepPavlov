@@ -20,7 +20,7 @@ import tempfile
 from collections import defaultdict
 from logging import getLogger
 from pathlib import Path
-from typing import Dict, List, Tuple, Union, Any
+from typing import Dict, List, Tuple, Union, Any, Optional
 
 from overrides import overrides
 
@@ -369,7 +369,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
     @staticmethod
     def _user_action2text(intent2slots2text: Dict[str, Dict[SLOT2VALUE_PAIRS_TUPLE, List]],
                           user_action: str,
-                          slots_li: SLOT2VALUE_PAIRS_TUPLE = None) -> str:
+                          slots_li: Optional[SLOT2VALUE_PAIRS_TUPLE] = None) -> str:
         if slots_li is None:
             slots_li = tuple()
         return intent2slots2text[user_action][slots_li][0]
