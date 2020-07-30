@@ -164,9 +164,9 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                         if ':' in slot_name:
                             slot_name, slot_value = slot_name.split(':', 1)  # e.g. [moderately](price:moderate)
 
-                        assert_error_text = f"{slot_name} from {nlu_fpath} was not listed as slot " + \
-                                            "in domain knowledge config"
-                        assert slot_name in domain_knowledge.known_slots, assert_error_text
+                        assert slot_name in domain_knowledge.known_slots, f"{slot_name} from {nlu_fpath}" + \
+                                                                          " was not listed as slot " + \
+                                                                          "in domain knowledge config"
 
                         slot_value_new_l_span = len(intent_text_without_markup)  # l span in cleaned text
                         slot_value_new_r_span = slot_value_new_l_span + len(slot_value_text)  # r span in cleaned text
