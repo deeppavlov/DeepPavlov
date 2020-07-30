@@ -65,8 +65,8 @@ class LogitRanker(Component):
              and tfidf_doc_ids for this answers if tfidf_doc_ids were passed
         """
         if tfidf_doc_ids is None:
-            logger.info("you didn't pass tfidf_doc_ids as input in logit_ranker config so batch_best_answers_doc_ids"
-                        "can't be compute")
+            logger.warning("you didn't pass tfidf_doc_ids as input in logit_ranker config so "
+                           "batch_best_answers_doc_ids can't be compute")
 
         batch_best_answers = []
         batch_best_answers_score = []
