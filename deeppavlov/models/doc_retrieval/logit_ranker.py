@@ -50,8 +50,12 @@ class LogitRanker(Component):
 
     def __call__(self, contexts_batch: List[List[str]], questions_batch: List[List[str]],
                  tfidf_doc_ids: Optional[List[List[str]]] = None) -> \
-            Union[Tuple[List[str], List[float], List[int], List[str]],
-                  Tuple[List[List[str]], List[List[float]], List[List[int]], List[List[str]]]]:
+            Union[
+                Tuple[List[str], List[float], List[int], List[str]],
+                Tuple[List[List[str]], List[List[float]], List[List[int]], List[List[str]]],
+                Tuple[List[str], List[float], List[int]],
+                Tuple[List[List[str]], List[List[float]], List[List[int]]]
+                ]:
 
         """
         Sort obtained results from squad reader by logits and get the answer with a maximum logit.
