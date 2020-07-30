@@ -33,7 +33,7 @@ We start with the ``metadata`` field of the configuration file. Multi-task BERT 
 ``{"INSULTS_PATH": "{MT_BERT_PATH}/insults"}``, ``{"SENTIMENT_PATH": "{MT_BERT_PATH}/sentiment"}``. ``requirements``
 field of Multitask BERT configuration file is identical to ``requirements`` fields of original configs. ``downloads``
 field of Multitask BERT configuration file is a union of ``downloads`` fields of original configs without pre-trained
-models. The ``metadata`` field of our config is below.
+models. The ``metadata`` field of our config is given below.
 
 .. code:: json
 
@@ -86,7 +86,7 @@ A ``multitask_reader`` configuration has parameters ``class_name``, ``data_path`
 parameter. However, you can not drop a ``data_path`` parameter because it is obligatory for dataset reader
 configuration. ``tasks`` parameter is a dictionary of task dataset readers configurations. In configurations of
 task readers, ``reader_class_name`` parameter is used instead of ``class_name``. The dataset reader configuration is
-below.
+provided:
 
 .. code:: json
 
@@ -126,7 +126,7 @@ below.
 
 A ``multitask_iterator`` configuration  has parameters ``class_name`` and ``tasks``. ``tasks`` is a dictionary of
 configurations of task iterators. In configurations of task iterators, ``iterator_class_name`` is used instead of
-``class_name``. The dataset iterator configuration is below.
+``class_name``. The dataset iterator configuration is as follows:
 
 .. code:: json
 
@@ -167,7 +167,7 @@ their sizes are equal to the size of the largest dataset. For example, if the fi
 ``[0, 1, 2, 3, 4, 5, 6]``, the second task dataset inputs are ``[7, 8, 9]``, and the batch size is ``2``, then
 multi-task input mini-batches will be ``[(0, 7), (1, 8)]``, ``[(2, 9), (3, 7)]``, ``[(4, 8), (5, 9)]``, ``[(6, 7)]``.
 
-In this tutorial, there are 3 datasets. Considering the batch structure, ``chainer`` inputs are
+In this tutorial, there are 3 datasets. Considering the batch structure, ``chainer`` inputs are:
 
 .. code:: json
 
@@ -176,17 +176,17 @@ In this tutorial, there are 3 datasets. Considering the batch structure, ``chain
     "in_y": ["y_insults", "y_sentiment", "y_ner"]
   }
 
-Sometimes a task dataset iterator returns inputs or labels consisting of more than elements. For example, in model
+Sometimes a task dataset iterator returns inputs or labels consisting of more than one element. For example, in model
 :config:`mt_bert_train_tutorial.json <kbqa/kbqa_mt_bert_train.json>` ``siamese_iterator`` input
 element consists of 2 strings. If there is a necessity to split such a variable, ``InputSplitter`` component can
 be used.
 
-The data preparation steps in the pipe of tutorial config are similar to data preparation steps in the original
+Data preparation steps in the pipe of tutorial config are similar to data preparation steps in the original
 configs except for names of the variables.
 
 A ``multitask_bert`` component has task-specific parameters and parameters that are common for all tasks. The first
 are provided inside the ``tasks`` parameter. The ``tasks`` is a dictionary that keys are task names and values are 
-task-specific parameters. **The names of tasks have to be similar in train and inference configs.**
+task-specific parameters. **The names of tasks have to be the same in train and inference configs.**
 
 If ``inference_task_names`` parameter of a ``multitask_bert`` component is provided, the component is created for
 inference. Otherwise, it is created for training.
@@ -262,9 +262,9 @@ task names and values are lists of elements of ``in`` or ``in_y``.
 
 You may need to design your own metric for early stopping. In this example, the target metric is an average of AUC ROC
 for insults and sentiment tasks and F1 for NER task. In order to add a metric to config, you have to register the
-metric. To register metric, add decorator ``register_metric`` and run command ``python -m utils.prepare.registry`` in
-DeepPavlov root directory. The code below should work if it is inserted into file ``deeppavlov/metrics/fmeasure.py``
-and registry is updated with command ``python -m utils.prepare.registry``.
+metric. To register metric, add the decorator ``register_metric`` and run the command
+``python -m utils.prepare.registry`` in DeepPavlov root directory. The code below should be placed in the file
+``deeppavlov/metrics/fmeasure.py`` and registry is updated with command ``python -m utils.prepare.registry``.
 
 .. code:: python
 
@@ -341,7 +341,7 @@ component is provided with ``multitask_bert`` component, a list of task names fo
 is same as in ``inference_task_names`` parameter of ``multitask_bert``), and ``in_distribution`` parameter. Notice
 that tasks "insults" and "sentiment" are grouped into a list of 2 elements. This syntax invokes inference of these
 tasks in one call of ``tf.Session.run``. If ``task_names`` were equal to ``["insults", "sentiment"]``, the inference
-of the tasks would be sequential and took approximately 2 times more time.
+of the tasks would be sequential and take approximately 2 times more time.
 
 .. code:: json
 
