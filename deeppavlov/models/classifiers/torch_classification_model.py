@@ -38,7 +38,7 @@ class TorchTextClassificationModel(TorchModel):
         n_classes: number of classes
         model_name: name of `TorchTextClassificationModel` methods which initializes model architecture
         embedding_size: size of vector representation of words
-        multi_label: is multi-label classification (if so, `sigmoid` activation will be used, otherwise, softmax)
+        multilabel: is multi-label classification (if so, `sigmoid` activation will be used, otherwise, softmax)
         criterion: criterion name from `torch.nn`
         optimizer: optimizer name from `torch.optim`
         optimizer_parameters: dictionary with optimizer's parameters,
@@ -47,12 +47,12 @@ class TorchTextClassificationModel(TorchModel):
         lr_scheduler_parameters: parameters for scheduler
         embedded_tokens: True, if input contains embedded tokenized texts;
                          False, if input containes indices of words in the vocabulary
-        vocab_size: vocabulary size in case of `embedded_tokens=False`
+        vocab_size: vocabulary size in case of `embedded_tokens=False`, and embedding is a layer in the Network
         lr_decay_every_n_epochs: how often to decay lr
         learning_rate_drop_patience: how many validations with no improvements to wait
         learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
             validations
-        return_probas: whether to return probabilities or index of classes (only for `multi_label=False`)
+        return_probas: whether to return probabilities or index of classes (only for `multilabel=False`)
 
     Attributes:
         opt: dictionary with all model parameters
@@ -63,14 +63,26 @@ class TorchTextClassificationModel(TorchModel):
         criterion: torch criterion instance
     """
 
-    def __init__(self, n_classes: int, model_name: str, embedding_size: int = None, multi_label: bool = False,
-                 criterion: str = "CrossEntropyLoss", optimizer: str = "Adam", optimizer_parameters: dict = {"lr": 0.1},
-                 lr_scheduler: str = None, lr_scheduler_parameters: Optional[dict] = {},
-                 embedded_tokens=True, vocab_size=None, lr_decay_every_n_epochs: Optional[int] = None,
-                 learning_rate_drop_patience: Optional[int] = None, learning_rate_drop_div: Optional[float] = None,
-                 return_probas: Optional[bool] = True, **kwargs):
+    def __init__(self, n_classes: int, model_name: str, embedding_size: int = None,
+                 multilabel: bool = False,
+                 criterion: str = "CrossEntropyLoss",
+                 optimizer: str = "Adam",
+                 optimizer_parameters: dict = {"lr": 0.1},
+                 lr_scheduler: Optional[str] = None,
+                 lr_scheduler_parameters: Optional[dict] = {},
+                 embedded_tokens: bool = True,
+                 vocab_size: Optional[int] = None,
+                 lr_decay_every_n_epochs: Optional[int] = None,
+                 learning_rate_drop_patience: Optional[int] = None,
+                 learning_rate_drop_div: Optional[float] = None,
+                 return_probas: Optional[bool] = True,
+                 **kwargs):
+
         if n_classes == 0:
             raise ConfigError("Please, provide vocabulary with considered classes or number of classes.")
+
+        if multilabel and not return_probas:
+            raise RuntimeError('Set return_probas to True for multilabel classification!')
 
         full_kwargs = {
             "embedding_size": embedding_size,
@@ -78,7 +90,7 @@ class TorchTextClassificationModel(TorchModel):
             "model_name": model_name,
             "optimizer": optimizer,
             "criterion": criterion,
-            "multi_label": multi_label,
+            "multilabel": multilabel,
             "optimizer_parameters": optimizer_parameters,
             "embedded_tokens": embedded_tokens,
             "vocab_size": vocab_size,
@@ -110,7 +122,7 @@ class TorchTextClassificationModel(TorchModel):
             inputs = torch.from_numpy(features)
             inputs = inputs.to(self.device)
             outputs = self.model(inputs)
-            if self.opt["multi_label"]:
+            if self.opt["multilabel"]:
                 outputs = torch.nn.functional.sigmoid(outputs)
             else:
                 outputs = torch.nn.functional.softmax(outputs, dim=-1)
