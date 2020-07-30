@@ -58,11 +58,10 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
     """
     Reads dialogs from dataset composed of ``stories.md``, ``nlu.md``, ``domain.yml`` .
 
-    ``stories.md`` is to provide the dialogues dataset for model to train on.
-    The dialogues are represented as user messages labels and system response messages labels.
-      (not texts, just action labels)
-    This is so to distinguish the NLU-NLG tasks from the actual dialogues storytelling experience:
-      one should be able to describe just the scripts of dialogues to the system.
+    ``stories.md`` is to provide the dialogues dataset for model to train on. The dialogues
+    are represented as user messages labels and system response messages labels: (not texts, just action labels).
+    This is so to distinguish the NLU-NLG tasks from the actual dialogues storytelling experience: one
+    should be able to describe just the scripts of dialogues to the system.
 
     ``nlu.md`` is contrariwise to provide the NLU training set irrespective of the dialogues scripts.
 
