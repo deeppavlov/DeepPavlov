@@ -65,7 +65,8 @@
       "MODEL_PATH": "{MODELS_PATH}/ubuntu_v2_uncased_torch_bert_model"
     },
     "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/torch.txt"
+      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+      "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
     ],
     "download": [
       {
