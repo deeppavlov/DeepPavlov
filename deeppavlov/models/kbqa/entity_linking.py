@@ -74,8 +74,7 @@ class NerChunker(Component):
             sentences = sent_tokenize(doc)
             for sentence in sentences:
                 if len(text) + len(sentence) < self.max_chunk_len and n == curr_doc:
-                    text += sentence
-                    text += " "
+                    text += f"{sentence} "
                 else:
                     if count_texts < self.batch_size:
                         text_batch.append(text.strip())
