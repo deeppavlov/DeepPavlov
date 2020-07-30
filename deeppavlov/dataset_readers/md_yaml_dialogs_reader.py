@@ -20,15 +20,16 @@ import tempfile
 from collections import defaultdict
 from logging import getLogger
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union, Any
 
-import yaml
 from overrides import overrides
 
 from deeppavlov.core.common.file import read_yaml
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.dataset_readers.dstc2_reader import DSTC2DatasetReader
+
+SLOT2VALUE_PAIRS_TUPLE = Tuple[Tuple[str, Any], ...]
 
 log = getLogger(__name__)
 
@@ -42,6 +43,14 @@ class DomainKnowledge:
     known_slots: Dict
     response_templates: Dict
     session_config: Dict
+
+    def __init__(self, domain_knowledge_di: Dict):
+        self.known_entities = domain_knowledge_di.get("known_entities", [])
+        self.known_intents = domain_knowledge_di.get("known_intents", [])
+        self.known_actions = domain_knowledge_di.get("known_actions", [])
+        self.known_slots = domain_knowledge_di.get("known_slots", {})
+        self.response_templates = domain_knowledge_di.get("response_templates", {})
+        self.session_config = domain_knowledge_di.get("session_config", {})
 
 
 @register('md_yaml_dialogs_reader')
@@ -67,7 +76,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
     VALID_DATATYPES = ('trn', 'val', 'tst')
 
     @classmethod
-    def _data_fname(cls, datatype):
+    def _data_fname(cls, datatype: str) -> str:
         assert datatype in cls.VALID_DATATYPES, f"wrong datatype name: {datatype}"
         return f"stories-{datatype}.md"
 
@@ -97,7 +106,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                 log.error(f"INSIDE MLU_MD_DialogsDatasetReader.read(): "
                           f"{required_fname} not found with path {required_path}")
 
-        domain_knowledge = cls._read_domain_knowledge(Path(data_path, domain_fname))
+        domain_knowledge = DomainKnowledge(read_yaml(Path(data_path, domain_fname)))
         intent2slots2text, slot_name2text2value = cls._read_intent2text_mapping(Path(data_path, nlu_fname),
                                                                                 domain_knowledge)
 
@@ -111,24 +120,6 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                 for subsample_name_short in cls.VALID_DATATYPES}
 
         return data
-
-    @classmethod
-    def _read_domain_knowledge(cls, domain_fpath: Path) -> DomainKnowledge:
-        """Reads domain.yml"""
-        log.info(f"INSIDE MLU_MD_DialogsDatasetReader._read_domain_knowledge(): "
-                 f"reading domain knowledge from {domain_fpath}")
-
-        domain_knowledge_di = read_yaml(domain_fpath)
-
-        domain_knowledge = DomainKnowledge()
-        domain_knowledge.known_entities = domain_knowledge_di.get("entities", [])
-        domain_knowledge.known_intents = domain_knowledge_di.get("intents", [])
-        domain_knowledge.known_actions = domain_knowledge_di.get("actions", [])
-        domain_knowledge.known_slots = domain_knowledge_di.get("slots", {})
-        domain_knowledge.response_templates = domain_knowledge_di.get("responses", {})
-        domain_knowledge.session_config = domain_knowledge_di.get("session_config", {})
-
-        return domain_knowledge
 
     @classmethod
     def _read_intent2text_mapping(cls, nlu_fpath: Path, domain_knowledge: DomainKnowledge) -> Tuple[Dict, Dict]:
@@ -203,21 +194,22 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
     @classmethod
     def _read_story(cls,
-                    story_fpath,
-                    dialogs,
-                    domain_knowledge,
-                    intent2slots2text,
-                    slot_name2text2value):
+                    story_fpath: Path,
+                    dialogs: bool,
+                    domain_knowledge: DomainKnowledge,
+                    intent2slots2text: dict,
+                    slot_name2text2value: dict) \
+            -> Union[List[List[Tuple[Dict[str, bool], Dict[str, Any]]]], List[Tuple[Dict[str, bool], Dict[str, Any]]]]:
         """
         Reads stories from the specified path converting them to go-bot format on the fly.
 
         Args:
             story_fpath: path to the file containing the stories dataset
             dialogs: flag which indicates whether to output list of turns or
-             list of dialogs
+                list of dialogs
             domain_knowledge: the domain knowledge, usually inferred from domain.yml
             intent2slots2text: the mapping allowing given the intent class and
-             slotfilling values of utterance, restore utterance text.
+                slotfilling values of utterance, restore utterance text.
             slot_name2text2value: the mapping of possible slot values spellings to the values themselves.
         Returns:
             stories read as if it was done with DSTC2DatasetReader._read_from_file()
@@ -236,7 +228,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         default_system_goodbye = {
             "text": "goodbye :(",
             "dialog_acts": [{"act": "utter_goodbye", "slots": []}],
-            "speaker": cls._SYSTEM_SPEAKER_ID}  # todo infer from dataset
+            "speaker": cls._SYSTEM_SPEAKER_ID}  # TODO infer from dataset
 
         stories_parsed = {}
 
@@ -307,6 +299,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                 print(json.dumps(replics), file=tmp_f)
             print(file=tmp_f)
         tmp_f.close()
+        # noinspection PyProtectedMember
         gobot_formatted_stories = DSTC2DatasetReader._read_from_file(tmp_f.name, dialogs=dialogs)
         os.remove(tmp_f.name)
 
@@ -319,8 +312,10 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
         return gobot_formatted_stories
 
-    @classmethod
-    def _choose_slots_for_whom_exists_text(cls, intent2slots2text, slots_actual_values, user_action):
+    @staticmethod
+    def _choose_slots_for_whom_exists_text(intent2slots2text: Dict[str, Dict[SLOT2VALUE_PAIRS_TUPLE, Any]],
+                                           slots_actual_values: SLOT2VALUE_PAIRS_TUPLE,
+                                           user_action: str) -> Tuple[List, SLOT2VALUE_PAIRS_TUPLE, str]:
         possible_keys = [k for k in intent2slots2text.keys() if user_action in k]
         possible_keys = possible_keys + [user_action]
         possible_keys = sorted(possible_keys, key=lambda action_s: action_s.count('+'))
@@ -337,32 +332,30 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                     if slots_lazy_key.issubset(set(e[0] for e in known_key)):
                         fake_keys.append(known_key)
                         break
-                fake_key = None
-                if fake_keys:
-                    fake_key = sorted(fake_keys,
-                                      key=lambda elem: (len(set(slots_actual_values) ^ set(elem)),
-                                                        len([e for e in elem if e[0] not in slots_lazy_key])))[0]
 
-                    slots_to_exclude = [e[0] for e in fake_key if e[0] not in slots_lazy_key]
-                    slots_used_values = fake_key
+                if fake_keys:
+                    slots_used_values = sorted(fake_keys, key=lambda elem: (len(set(slots_actual_values) ^ set(elem)),
+                                                                            len([e for e in elem
+                                                                                 if e[0] not in slots_lazy_key]))
+                                               )[0]
+
+                    slots_to_exclude = [e[0] for e in slots_used_values if e[0] not in slots_lazy_key]
                     return slots_to_exclude, slots_used_values, possible_action_key
 
         raise KeyError("no possible NLU candidates found")
 
-    @classmethod
-    def _clarify_slots_values(cls, slot_name2text2value, slots_dstc2formatted):
+    @staticmethod
+    def _clarify_slots_values(slot_name2text2value: Dict[str, Dict[str, Any]],
+                              slots_dstc2formatted: List[List]) -> SLOT2VALUE_PAIRS_TUPLE:
         slots_key = []
         for slot_name, slot_value in slots_dstc2formatted:
-            if slot_value in slot_name2text2value.get(slot_name, {}).keys():
-                slot_actual_value = slot_name2text2value[slot_name][slot_value]
-            else:
-                slot_actual_value = slot_value
+            slot_actual_value = slot_name2text2value.get(slot_name, {}).get(slot_value, slot_value)
             slots_key.append((slot_name, slot_actual_value))
         slots_key = tuple(sorted(slots_key))
         return slots_key
 
-    @classmethod
-    def _parse_user_intent(cls, line):
+    @staticmethod
+    def _parse_user_intent(line: str) -> Tuple[str, List[List]]:
         intent = line.strip('*').strip()
         if '{' not in intent:
             intent = intent + "{}"  # the prototypical intent is "intent_name{slot1: value1, slotN: valueN}"
@@ -371,8 +364,8 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         slots_dstc2formatted = [[slot_name, slot_value] for slot_name, slot_value in slots_info.items()]
         return user_action, slots_dstc2formatted
 
-    @classmethod
-    def _user_action2text(cls, intent2slots2text: dict, user_action: str, slots_li=None):
+    @staticmethod
+    def _user_action2text(intent2slots2text: Dict[str, Any], user_action: str, slots_li=None):
         if slots_li is None:
             slots_li = {}
         return intent2slots2text[user_action][slots_li][0]
@@ -383,6 +376,6 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                                                                             [{"text": system_action}])
 
         response_text = possible_system_responses[0]["text"]
-        response_text = re.sub(r"(\w+)\=\{(.*?)\}", r"#\2", response_text)
+        response_text = re.sub(r"(\w+)\=\{(.*?)\}", r"#\2", response_text)  # TODO: straightforward regex string
 
         return response_text
