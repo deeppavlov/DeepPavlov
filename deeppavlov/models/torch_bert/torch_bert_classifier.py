@@ -14,7 +14,7 @@
 
 import os
 from logging import getLogger
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Optional
 import numpy as np
 from pathlib import Path
 from overrides import overrides
@@ -39,25 +39,30 @@ class TorchBertClassifierModel(TorchModel):
 
     Args:
         n_classes: number of classes
+        pretrained_bert: pretrained Bert checkpoint path or key title (e.g. "bert-base-uncased")
         one_hot_labels: set True if one-hot encoding for labels is used
         multilabel: set True if it is multi-label classification
         return_probas: set True if return class probabilites instead of most probable label needed
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
-        optimizer: name of tf.train.* optimizer or None for `AdamWeightDecayOptimizer`
-        optimizer_parameters: dictionary with optimizer parameters
+        optimizer: optimizer name from `torch.optim`
+        optimizer_parameters: dictionary with optimizer's parameters,
+                              e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
         clip_norm: clip gradients by norm coefficient
-        pretrained_bert: pretrained Bert checkpoint path or key title (e.g. "bert-base-uncased")
         bert_config_file: path to Bert configuration file (not used if pretrained_bert is key title)
     """
 
     def __init__(self, n_classes,
-                 one_hot_labels=False, multilabel=False, return_probas=False,
-                 attention_probs_keep_prob=None, hidden_keep_prob=None,
-                 optimizer="AdamW",
-                 optimizer_parameters={"lr": 1e-3, "weight_decay": 0.01, "betas": (0.9, 0.999), "eps": 1e-6},
-                 clip_norm=None,
-                 pretrained_bert=None, bert_config_file=None,
+                 pretrained_bert,
+                 one_hot_labels: bool = False,
+                 multilabel: bool = False,
+                 return_probas: bool = False,
+                 attention_probs_keep_prob: float = None,
+                 hidden_keep_prob: float = None,
+                 optimizer: str = "AdamW",
+                 optimizer_parameters: dict = {"lr": 1e-3, "weight_decay": 0.01, "betas": (0.9, 0.999), "eps": 1e-6},
+                 clip_norm: Optional[float] = None,
+                 bert_config_file: Optional[str] = None,
                  **kwargs) -> None:
 
         self.return_probas = return_probas
