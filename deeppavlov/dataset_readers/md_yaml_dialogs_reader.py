@@ -19,10 +19,9 @@ import re
 import tempfile
 from collections import defaultdict
 from logging import getLogger
+from overrides import overrides
 from pathlib import Path
 from typing import Dict, List, Tuple, Union, Any, Optional
-
-from overrides import overrides
 
 from deeppavlov.core.common.file import read_yaml
 from deeppavlov.core.common.registry import register
