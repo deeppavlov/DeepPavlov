@@ -14,7 +14,7 @@
 
 from itertools import chain
 from logging import getLogger
-from typing import List, Callable, Union
+from typing import List, Callable, Union, Tuple, Optional
 
 from nltk import sent_tokenize
 
@@ -52,27 +52,39 @@ class DocumentChunker(Component):
         self.flatten_result = flatten_result
         self.paragraphs = paragraphs
 
-    def __call__(self, batch_docs: List[Union[str, List[str]]]) -> \
-            List[Union[List[str], List[List[str]]]]:
+    def __call__(self, batch_docs: List[Union[str, List[str]]],
+                 batch_docs_ids: Optional[List[Union[str, List[str]]]] = None) -> \
+            Union[Tuple[Union[List[str], List[List[str]]], Union[List[str], List[List[str]]]],
+                  Union[List[str], List[List[str]]]]:
         """Make chunks from a batch of documents. There can be several documents in each batch.
         Args:
             batch_docs: a batch of documents / a batch of lists of documents
+            batch_docs_ids (optional) : a batch of documents ids / a batch of lists of documents ids
         Returns:
-            chunks of docs, flattened or not
+            chunks of docs, flattened or not and
+            chunks of docs ids, flattened or not if batch_docs_ids were passed
         """
 
         result = []
+        result_ids = []
 
-        for docs in batch_docs:
+        if not batch_docs_ids:
+            batch_docs_ids = [[[] for j in i] for i in batch_docs]
+
+        for ids, docs in zip(batch_docs_ids, batch_docs):
             batch_chunks = []
+            batch_chunks_ids = []
             if isinstance(docs, str):
                 docs = [docs]
-            for doc in docs:
+                ids = [ids]
+
+            for id, doc in zip(ids, docs):
                 if self.paragraphs:
                     split_doc = doc.split('\n\n')
                     split_doc = [sd.strip() for sd in split_doc]
                     split_doc = list(filter(lambda x: len(x) > 40, split_doc))
                     batch_chunks.append(split_doc)
+                    batch_chunks_ids.append([id] * len(split_doc))
                 else:
                     doc_chunks = []
                     if self.keep_sentences:
@@ -90,20 +102,28 @@ class DocumentChunker(Component):
                         if keep:
                             doc_chunks.append(' '.join(keep))
                         batch_chunks.append(doc_chunks)
+                        batch_chunks_ids.append([id] * len(doc_chunks))
                     else:
                         split_doc = doc.split()
                         doc_chunks = [split_doc[i:i + self.tokens_limit] for i in
                                       range(0, len(split_doc), self.tokens_limit)]
                         batch_chunks.append(doc_chunks)
+                        batch_chunks_ids.append([id] * len(doc_chunks))
             result.append(batch_chunks)
+            result_ids.append(batch_chunks_ids)
 
         if self.flatten_result:
             if isinstance(result[0][0], list):
                 for i in range(len(result)):
                     flattened = list(chain.from_iterable(result[i]))
+                    flattened_ids = list(chain.from_iterable(result_ids[i]))
                     result[i] = flattened
+                    result_ids[i] = flattened_ids
 
-        return result
+        if batch_docs_ids is None:
+            return result
+
+        return result, result_ids
 
 
 @register('string_multiplier')

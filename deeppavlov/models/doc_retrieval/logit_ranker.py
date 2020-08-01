@@ -49,7 +49,7 @@ class LogitRanker(Component):
         self.top_n = top_n
 
     def __call__(self, contexts_batch: List[List[str]], questions_batch: List[List[str]],
-                 tfidf_doc_ids: Optional[List[List[str]]] = None) -> \
+                 doc_ids_batch: Optional[List[List[str]]] = None) -> \
             Union[
                 Tuple[List[str], List[float], List[int], List[str]],
                 Tuple[List[List[str]], List[List[float]], List[List[int]], List[List[str]]],
@@ -63,12 +63,12 @@ class LogitRanker(Component):
         Args:
             contexts_batch: a batch of contexts which should be treated as a single batch in the outer JSON config
             questions_batch: a batch of questions which should be treated as a single batch in the outer JSON config
-            tfidf_doc_ids (optional): names of the documents from which the contexts_batch was derived
+            doc_ids_batch (optional): names of the documents from which the contexts_batch was derived
         Returns:
              a batch of best answers, their scores, places in contexts
-             and tfidf_doc_ids for this answers if tfidf_doc_ids were passed
+             and doc_ids for this answers if doc_ids_batch were passed
         """
-        if tfidf_doc_ids is None:
+        if doc_ids_batch is None:
             logger.warning("you didn't pass tfidf_doc_ids as input in logit_ranker config so "
                            "batch_best_answers_doc_ids can't be compute")
 
@@ -90,10 +90,10 @@ class LogitRanker(Component):
             batch_best_answers.append([x[0] for x in results_sort[:self.top_n] if x[0]])
             batch_best_answers_place.append([x[1] for x in results_sort[:self.top_n] if x[0]])
             batch_best_answers_score.append([x[2] for x in results_sort[:self.top_n] if x[0]])
-            if tfidf_doc_ids is not None:
+            if doc_ids_batch is not None:
                 doc_ind = [results.index(x) for x in results_sort]
                 batch_best_answers_doc_ids.append(
-                    [tfidf_doc_ids[quest_ind][i] for i in doc_ind][:len(batch_best_answers[-1])])
+                    [doc_ids_batch[quest_ind][i] for i in doc_ind][:len(batch_best_answers[-1])])
 
         if self.top_n == 1:
             batch_best_answers = [x[0] for x in batch_best_answers]
@@ -101,7 +101,7 @@ class LogitRanker(Component):
             batch_best_answers_score = [x[0] for x in batch_best_answers_score]
             batch_best_answers_doc_ids = [x[0] for x in batch_best_answers_doc_ids]
 
-        if tfidf_doc_ids is None:
+        if doc_ids_batch is None:
             return batch_best_answers, batch_best_answers_score, batch_best_answers_place
 
         return batch_best_answers, batch_best_answers_score, batch_best_answers_place, batch_best_answers_doc_ids
