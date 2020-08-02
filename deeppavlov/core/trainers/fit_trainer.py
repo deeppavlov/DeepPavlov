@@ -28,7 +28,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.models.estimator import Estimator
-from deeppavlov.core.trainers.utils import Metric, parse_metrics, prettify_metrics
+from deeppavlov.core.trainers.utils import Metric, parse_metrics, prettify_metrics, NumpyArrayEncoder
 
 log = getLogger(__name__)
 
@@ -244,7 +244,7 @@ class FitTrainer:
                  print_reports: bool = True) -> Dict[str, dict]:
         """
         Run :meth:`test` on multiple data types using provided data iterator
-        
+
         Args:
             iterator: :class:`~deeppavlov.core.data.data_learning_iterator.DataLearningIterator` used for evaluation
             evaluation_targets: iterable of data types to evaluate on
@@ -264,6 +264,6 @@ class FitTrainer:
             report = self.test(data_gen)
             res[data_type] = report
             if print_reports:
-                print(json.dumps({data_type: report}, ensure_ascii=False))
+                print(json.dumps({data_type: report}, ensure_ascii=False, cls=NumpyArrayEncoder))
 
         return res
