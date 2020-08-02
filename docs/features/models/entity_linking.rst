@@ -25,7 +25,7 @@ To use a pre-trained model from CLI use the following command:
 
     python -m deeppavlov interact entity_linking_rus -d
     >>> Москва — столица России, город федерального значения, административный центр Центрального федерального округа и центр Московской области.
-    >>> ['Q649', 'Q159', 'Q190778', 'Q1749']
+    >>> (['москва', 'россии', 'центрального федерального округа', 'московской области'], [[0], [3], [11, 12, 13], [16, 17]], ['Q649', 'Q159', 'Q190778', 'Q1749'])
 
 Entity Linking model can be used from Python using the following code:
 
