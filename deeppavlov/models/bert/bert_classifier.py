@@ -221,8 +221,6 @@ class BertClassifierModel(LRScheduledTFModel):
         else:
             y_batches = []
         return feature_batches, y_batches
-
-    @tf.function
     def train_on_batch(self, features: List[InputFeatures], y: Union[List[int], List[List[int]]] = None) -> Dict:
         """Train model on given batch.
         This method clls train_op using features and y (labels).
@@ -243,7 +241,7 @@ class BertClassifierModel(LRScheduledTFModel):
                       for feature_batch, y in zip(feature_batches, y_batches)]
         learning_rate = max(self.get_learning_rate(), self.min_learning_rate)
         learning_rate = float(learning_rate)
-        total_batch_loss = 0
+        total_batch_loss = 0.0
         # https://stackoverflow.com/questions/59893850/how-to-accumulate-gradients-in-tensorflow-2-0
         for feed_dict in feed_dicts:
             with tf.GradientTape() as tape:
@@ -258,7 +256,8 @@ class BertClassifierModel(LRScheduledTFModel):
         # apply optimization step
         self.optimizer.apply_gradients(zip(accumulated_gradient, train_vars))
         batch_loss = total_batch_loss / self.gradient_accumulation_steps
-        return {'loss': batch_loss, 'learning_rate': learning_rate}
+        answer = {'loss': batch_loss, 'learning_rate': learning_rate}
+        return answer
 
     def __call__(self, features: List[InputFeatures]) -> Union[List[int], List[List[float]]]:
         """Make prediction for given features (texts).

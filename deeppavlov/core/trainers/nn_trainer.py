@@ -17,6 +17,7 @@ import json
 import time
 from itertools import islice
 from logging import getLogger
+from tensorflow import Tensor
 from pathlib import Path
 from typing import List, Tuple, Union, Optional, Iterable
 
@@ -251,7 +252,6 @@ class NNTrainer(FitTrainer):
 
         if metrics and self.tensorboard_log_dir is not None:
             summary = self._tf.Summary()
-
             for name, score in metrics:
                 summary.value.add(tag=f'{tensorboard_tag}/{name}', simple_value=score)
             self.tb_train_writer.add_summary(summary, tensorboard_index)
