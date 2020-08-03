@@ -104,7 +104,7 @@ class TorchTextClassificationModel(TorchModel):
         }
         super().__init__(**full_kwargs)
 
-    def __call__(self, texts: List[np.ndarray], labels: List[np.ndarray], *args) -> Union[List[List[float]], List[int]]:
+    def __call__(self, texts: List[np.ndarray], *args) -> Union[List[List[float]], List[int]]:
         """Infer on the given data.
 
         Args:
