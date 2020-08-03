@@ -183,7 +183,7 @@ class TorchBertSQuADModel(TorchModel):
 
             context_max_len = torch.max(torch.sum(b_input_type_ids, dim=1)).to(torch.int64)
 
-            max_ans_length = torch.min(torch.tensor(20), context_max_len).to(torch.int64).item()
+            max_ans_length = torch.min(torch.tensor(20).to(self.device), context_max_len).to(torch.int64).item()
 
             outer = torch.triu(outer, diagonal=0) - torch.triu(outer, diagonal=outer.size()[1] - max_ans_length)
             outer_logits = torch.triu(outer_logits, diagonal=0) - torch.triu(
