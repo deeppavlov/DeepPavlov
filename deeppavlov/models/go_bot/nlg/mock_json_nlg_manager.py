@@ -86,8 +86,14 @@ class MockJSONNLGManager(NLGManagerInterface):
     @staticmethod
     def _load_actions2slots_mapping(actions2slots_json_path) -> Dict[str, str]:
         actions2slots_json_path = expand_path(actions2slots_json_path)
-        with open(actions2slots_json_path, encoding="utf-8") as actions2slots_json_f:
-            actions2slots = json.load(actions2slots_json_f)
+        if actions2slots_json_path.exists():
+            with open(actions2slots_json_path, encoding="utf-8") as actions2slots_json_f:
+                actions2slots = json.load(actions2slots_json_f)
+        else:
+            actions2slots = dict()
+            log.info(f"INSIDE {__class__.__name__} _load_actions2slots_mapping(): "
+                      f"actions2slots_json_path={actions2slots_json_path} DOES NOT EXIST. "
+                      f"initialized actions2slots mapping with an empty one: {str(actions2slots)}")
         return actions2slots
 
     def get_action_id(self, action_text: str) -> int:
