@@ -174,7 +174,7 @@ The BERT model was trained on Masked Language Modeling (MLM) and Next Sentence P
 NSP head was trained to detect in ``[CLS] text_a [SEP] text_b [SEP]`` if text_b follows text_a in original document.
 This NSP head can be used to stack sentences from a long document, based on a initial sentence. The first sentence in
 a document can be used as initial one. :class:`~deeppavlov.models.bert.bert_as_summarizer.BertAsSummarizer` on TensorFlow
- and :class:`~deeppavlov.models.torch_bert.torch_bert_as_summarizer.TorchBertAsSummarizer` on PyTorch rely on
+and :class:`~deeppavlov.models.torch_bert.torch_bert_as_summarizer.TorchBertAsSummarizer` on PyTorch rely on
 pretrained BERT models and does not require training on summarization dataset. 
 We have three configuration files:
 
