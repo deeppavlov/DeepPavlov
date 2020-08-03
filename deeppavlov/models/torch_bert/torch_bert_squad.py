@@ -284,8 +284,14 @@ class TorchBertSQuADInferModel(Component):
         config['chainer']['pipe'][0]['max_seq_length'] = max_seq_length
         self.model = build_model(config)
         self.max_seq_length = max_seq_length
-        vocab_file = str(expand_path(vocab_file))
-        self.tokenizer = BertTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
+
+        if os.path.isfile(vocab_file):
+            vocab_file = str(expand_path(vocab_file))
+            self.tokenizer = BertTokenizer(vocab_file=vocab_file,
+                                           do_lower_case=do_lower_case)
+        else:
+            self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+
         self.batch_size = batch_size
 
         if lang == 'en':
