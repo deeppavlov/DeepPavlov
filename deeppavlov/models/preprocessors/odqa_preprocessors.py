@@ -68,7 +68,12 @@ class DocumentChunker(Component):
         result = []
         result_ids = []
 
+        empty_docs_ids_flag = False
+
         if not batch_docs_ids:
+            empty_docs_ids_flag = True
+
+        if empty_docs_ids_flag:
             batch_docs_ids = [[[] for j in i] for i in batch_docs]
 
         for ids, docs in zip(batch_docs_ids, batch_docs):
@@ -120,7 +125,7 @@ class DocumentChunker(Component):
                     result[i] = flattened
                     result_ids[i] = flattened_ids
 
-        if batch_docs_ids is None:
+        if empty_docs_ids_flag:
             return result
 
         return result, result_ids
