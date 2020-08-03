@@ -1,5 +1,5 @@
 deeppavlov.models.torch_bert
-======================
+============================
 
 .. automodule:: deeppavlov.models.torch_bert
    :members:

@@ -74,9 +74,8 @@ class TorchBertPreprocessor(Component):
             texts_b: list of texts, it could be None, e.g. single sentence classification task
 
         Returns:
-            batch of :class:`transformers.data.processors.utils.InputFeatures`
-                    with subtokens, subtoken ids, subtoken mask, segment mask.
-            of tuple of batch of InputFeatures and Batch of subtokens
+            batch of :class:`transformers.data.processors.utils.InputFeatures` with subtokens, subtoken ids, \
+                subtoken mask, segment mask, or tuple of batch of InputFeatures and Batch of subtokens
         """
 
         if texts_b is None:
