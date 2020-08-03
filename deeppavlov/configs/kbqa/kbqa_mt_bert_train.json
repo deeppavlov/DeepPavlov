@@ -1,0 +1,262 @@
+{
+  "dataset_reader": {
+    "class_name": "multitask_reader",
+    "data_path": "null",
+    "tasks": {
+      "ner_lcquad": {
+        "reader_class_name": "sq_reader",
+        "data_path": "{DOWNLOADS_PATH}/lcquad/entity_and_type_detection_BIO.pickle"
+      },
+      "query_prediction": {
+        "reader_class_name": "basic_classification_reader",
+        "x": "Question",
+        "y": "Class",
+        "data_path": "{DOWNLOADS_PATH}/query_prediction"
+      },
+      "rel_ranking": {
+        "reader_class_name": "rel_ranking_reader",
+        "data_path": "{DOWNLOADS_PATH}/rel_ranking_bert",
+        "do_lower_case": false
+      }
+    }
+  },
+  "dataset_iterator": {
+    "class_name": "multitask_iterator",
+    "tasks": {
+      "ner_lcquad": {"iterator_class_name": "data_learning_iterator"},
+      "query_prediction": {"iterator_class_name": "basic_classification_iterator"},
+      "rel_ranking": {
+        "iterator_class_name": "siamese_iterator",
+        "seed": 243,
+        "len_valid": 500
+      }
+    }
+  },
+  "chainer": {
+    "in": ["x_ner", "x_qr", "texts_a_b"],
+    "in_y": ["y_ner", "y_qr", "y_rr"],
+    "pipe": [
+      {
+        "class_name": "input_splitter",
+        "keys_to_extract": [0, 1],
+        "in": ["texts_a_b"],
+        "out": ["text_a", "text_b"]
+      },
+      {                                                                                                                
+        "class_name": "bert_ner_preprocessor",                                                                         
+        "vocab_file": "{BERT_PATH}/vocab.txt",                                                                         
+        "do_lower_case": false,                                                                                        
+        "max_seq_length": 512,                                                                                         
+        "max_subword_length": 15,                                                                                      
+        "token_maksing_prob": 0.0,                                                                                     
+        "in": ["x_ner"],                                                                                                   
+        "out": ["x_tokens", "x_subword_tokens", "x_subword_tok_ids", "pred_subword_mask"]                              
+      },                                                                                                               
+      {                                                                                                                
+        "class_name": "mask",                                                                                          
+        "in": ["x_subword_tokens"],                                                                                    
+        "out": ["x_subword_mask"]                                                                                      
+      },                                                                                                               
+      {                                                                                                                
+        "id": "tag_vocab",                                                                                             
+        "class_name": "simple_vocab",                                                                                  
+        "unk_token": ["O"],                                                                                            
+        "pad_with_zeros": true,                                                                                        
+        "save_path": "{MT_BERT_PATH}/ner/tag.dict",
+        "load_path": "{MT_BERT_PATH}/ner/tag.dict",
+        "fit_on": ["y_ner"],                                                                                               
+        "in": ["y_ner"],                                                                                                   
+        "out": ["y_ner_ind"]                                                                                               
+      },
+
+      {                                                                                                                
+        "class_name": "bert_preprocessor",                                                                             
+        "vocab_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/vocab.txt",                                  
+        "do_lower_case": false,                                                                                        
+        "max_seq_length": 64,                                                                                          
+        "in": ["x_qr"],                                                                                                   
+        "out": ["bert_features_qr"]                                                                                       
+      },                                                                                                               
+      {                                                                                                                
+        "id": "queries_vocab",                                                                                         
+        "class_name": "simple_vocab",                                                                                  
+        "fit_on": ["y_qr"],                                                                                               
+        "save_path": "{MT_BERT_PATH}/query_prediction/classes.dict",
+        "load_path": "{MT_BERT_PATH}/query_prediction/classes.dict",
+        "in": "y_qr",                                                                                                     
+        "out": "y_qr_ids"                                                                                                 
+      },                                                                                                               
+      {                                                                                                                
+        "in": "y_qr_ids",                                                                                                 
+        "out": "y_qr_onehot",                                                                                             
+        "class_name": "one_hotter",                                                                                    
+        "depth": "#queries_vocab.len",                                                                                 
+        "single_vector": true                                                                                          
+      },
+
+      {                                                                                                                
+        "class_name": "bert_preprocessor",                                                                             
+        "vocab_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/vocab.txt",                                  
+        "do_lower_case": false,                                                                                        
+        "max_seq_length": 64,                                                                                          
+        "in": ["text_a", "text_b"],                                                                                    
+        "out": ["bert_features_rr"]                                                                                       
+      },
+      { 
+        "id": "mt_bert",                                                                                                               
+        "class_name": "mt_bert",
+        "save_path": "{MT_BERT_PATH}/model",
+        "load_path": "{MT_BERT_PATH}/model",
+        "bert_config_file": "{BERT_PATH}/bert_config.json",
+        "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
+        "attention_probs_keep_prob": 0.5,
+        "freeze_embeddings": false,
+        "body_learning_rate": 3e-5,
+        "min_body_learning_rate": 2e-7,
+        "learning_rate_drop_patience": 10,
+        "learning_rate_drop_div": 1.5,
+        "load_before_drop": true,
+        "optimizer": "tf.train:AdamOptimizer",
+        "clip_norm": 1.0,
+        "tasks": {
+          "ner": {
+            "class_name": "mt_bert_seq_tagging_task",
+            "n_tags": "#tag_vocab.len",
+            "use_crf": false,
+            "keep_prob": 0.5,
+            "return_probas": false,
+            "encoder_layer_ids": [-1],
+            "learning_rate": 1e-4
+          },
+          "query_prediction": {
+            "class_name": "mt_bert_classification_task",
+            "n_classes": "#queries_vocab.len",
+            "return_probas": true,
+            "one_hot_labels": true,
+            "keep_prob": 0.5,
+            "learning_rate": 1e-4
+          },
+          "rel_ranking": {
+            "class_name": "mt_bert_classification_task",
+            "n_classes": 2,
+            "return_probas": false,
+            "one_hot_labels": false,
+            "keep_prob": 0.5,
+            "learning_rate": 1e-4
+          }
+        },
+        "in_distribution": {"ner": 3, "query_prediction": 1, "rel_ranking": 1},
+        "in":  {
+          "x_subword_tok_ids": "x_subword_tok_ids",
+          "x_subword_mask": "x_subword_mask",
+          "pred_subword_mask": "pred_subword_mask",
+          "bert_features_qr": "bert_features_qr",
+          "bert_features_rr": "bert_features_rr"
+        },
+        "in_y_distribution": {"ner": 1, "query_prediction": 1, "rel_ranking": 1},
+        "in_y": {
+          "y_ner_ind": "y_ner_ind",
+          "y_qr_onehot": "y_qr_onehot",
+          "y_rr": "y_rr"
+        },
+        "out": ["ner_ids", "qr_probas", "rr_preds"]
+      },
+      {                                                                                                                
+        "in": "ner_ids",                                                                                            
+        "out": "ner_labels",                                                                                        
+        "ref": "tag_vocab"
+      },
+      {                                                                                                                
+        "in": "qr_probas",                                                                                         
+        "out": "qr_ids",
+        "max_proba": true,
+        "class_name": "proba2labels"                                                                                              
+      },                                                                                                               
+      {                                                                                                                
+        "in": "qr_ids",                                                                                            
+        "out": "qr_labels",                                                                                        
+        "ref": "queries_vocab"                                                                                         
+      }
+    ],
+    "out": ["ner_labels", "qr_labels", "rr_preds"]
+  },
+  "train": {
+    "epochs": 5,
+    "batch_size": 32,
+    "metrics": [
+      {
+        "name": "average__ner_f1__f1_macro__f1",
+        "inputs": ["y_ner", "ner_labels", "y_qr", "qr_labels", "y_rr", "rr_preds"]
+      },
+      {
+        "name": "ner_f1",
+        "inputs": ["y_ner", "ner_labels"]
+      },
+      {                                                                                                 
+        "name": "f1_macro",
+        "inputs": ["y_qr", "qr_labels"]
+      },
+      {
+        "name": "f1",
+        "inputs": ["y_rr", "rr_preds"]
+      }
+    ],
+    "validation_patience": 20,
+    "val_every_n_batches": 400,
+
+    "log_every_n_batches": 400,
+    "tensorboard_log_dir": "{MT_BERT_PATH}/logs",
+    "show_examples": false,
+    "pytest_max_batches": 2,
+    "pytest_batch_size": 8,
+    "evaluation_targets": ["valid", "test"],
+    "class_name": "nn_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",
+      "MT_BERT_PATH": "{MODELS_PATH}/mt_bert_kbqa",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
+      "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
+      "{DEEPPAVLOV_PATH}/requirements/hdt.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/datasets/query_prediction.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/query_prediction"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/datasets/rel_ranking_bert.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/rel_ranking_bert"
+      },
+      {                                                                                                                
+        "url": "http://files.deeppavlov.ai/kbqa/models/mt_bert.tar.gz",                                                
+        "subdir": "{MT_BERT_PATH}"                                                                                     
+      },
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/reddit_fastText/wordpunct_tok_reddit_comments_2017_11_300.bin",
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
+        "subdir": "{DOWNLOADS_PATH}/bert_models"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking.tar.gz",
+        "subdir": "{MODELS_PATH}/rel_ranking"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/datasets/entity_and_type_detection_BIO.pickle",
+        "subdir": "{DOWNLOADS_PATH}/lcquad"
+      }
+    ]
+  }
+}
