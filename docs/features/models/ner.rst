@@ -4,8 +4,8 @@ Named Entity Recognition (NER)
 Train and use the model
 -----------------------
 
-There are three main types of models available: Standard RNN-based model, BERT-based model, and the hybrid model. To see details about BERT based
-models see :doc:`here </features/models/bert>`. The last one, the hybrid model, reproduces the architecture proposed
+There are three main types of models available: Standard RNN-based model, BERT-based model (on TensorFlow and PyTorch), and the hybrid model.
+To see details about BERT based models see :doc:`here </features/models/bert>`. The last one, the hybrid model, reproduces the architecture proposed
 in the paper `A Deep Neural Network Model for the Task of Named Entity Recognition <http://www.ijmlc.org/show-83-881-1.html>`__.
 Any pre-trained model can be used for inference from both Command Line Interface (CLI) and Python. Before using the
 model make sure that all required packages are installed using the command:
