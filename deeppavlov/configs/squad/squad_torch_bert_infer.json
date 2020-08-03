@@ -13,7 +13,7 @@
     "in_y": ["ans_raw", "ans_raw_start"],
     "pipe": [
       {
-        "class_name": "squad_torch_bert_infer",
+        "class_name": "torch_squad_bert_infer",
         "batch_size": 10,
         "squad_model_config": "{CONFIGS_PATH}/squad/squad_torch_bert.json",
         "vocab_file": "bert-base-cased",
