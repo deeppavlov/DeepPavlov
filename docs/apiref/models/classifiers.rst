@@ -4,7 +4,7 @@ deeppavlov.models.classifiers
 .. automodule:: deeppavlov.models.classifiers
    :members:
 
-.. autoclass:: deeppavlov.models.classifiers.torch_classification_model.TorchClassificationModel
+.. autoclass:: deeppavlov.models.classifiers.torch_classification_model.TorchTextClassificationModel
     :members:
 
     .. automethod:: __call__
