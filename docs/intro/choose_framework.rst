@@ -67,14 +67,14 @@ Other NLP-tasks on TensorFlow, Keras or PyTorch
     .. code:: python
 
         # Keras
-        from deeppavlov.models.classifiers.keras_classification_model import KerasClassificationModel
+        from deeppavlov.core.models.keras_model import LRScheduledKerasModel
         # PyTorch
-        # from deeppavlov.models.classifiers.torch_classification_model import TorchTextClassificationModel
+        # from deeppavlov.core.models.torch_model import TorchModel
 
         # Keras
-        class MyModel(KerasClassificationModel):
+        class MyModel(LRScheduledKerasModel):
         # Torch
-        # class MyModel(TorchTextClassificationModel):
+        # class MyModel(TorchModel):
 
             def train_on_batch(x, y, *args, **kwargs):
                 <your code here>
