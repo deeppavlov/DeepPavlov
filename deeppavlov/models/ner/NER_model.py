@@ -19,6 +19,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
 from gensim.models import KeyedVectors
+from gensim.models.wrappers import FastText
 from tensorflow.contrib.layers import xavier_initializer, xavier_initializer_conv2d
 
 from deeppavlov.core.common.registry import register
@@ -46,6 +47,7 @@ class HybridNerModel(LRScheduledTFModel):
         chunk_vocab_size: The size of Chunk vocabulary.
         char_dim: The dimension of character vector.
         elmo_dim: The dimension of ELMo-based word vector
+        elmo_hub_path: The path to the ELmo tensorhub
         pos_dim: The dimension of POS vector.
         chunk_dim: The dimension of Chunk vector.
         cap_dim: The dimension of capitalization vector.
@@ -65,6 +67,7 @@ class HybridNerModel(LRScheduledTFModel):
                  chunk_vocab_size: int = None,
                  char_dim: int = None,
                  elmo_dim: int = None,
+                 elmo_hub_path = "https://tfhub.dev/google/elmo/2",
                  pos_dim: int = None,
                  chunk_dim: int = None,
                  cap_dim: int = None,
@@ -197,7 +200,7 @@ class HybridNerModel(LRScheduledTFModel):
                 padded_x_tokens_ph = tf.placeholder(tf.string, [None, None], name="padded_x_tokens")
                 self._xs_ph_list.append(padded_x_tokens_ph)
 
-                elmo = hub.Module("https://tfhub.dev/google/elmo/2", trainable=True)
+                elmo = hub.Module(elmo_hub_path, trainable=True)
                 emb = elmo(inputs={"tokens": padded_x_tokens_ph, "sequence_len": self.real_sent_lengths_ph},
                            signature="tokens", as_dict=True)["elmo"]
                 elmo_emb = tf.layers.dense(emb, elmo_dim, activation=None)
@@ -298,6 +301,12 @@ class HybridNerModel(LRScheduledTFModel):
                     loaded_words += 1
                 elif word in model.vocab:
                     word_embeddings[word2id[word]] = model[word]
+                    loaded_words += 1
+        elif model_name == "fasttext":
+            ft_model = FastText.load_fasttext_format(model_path)
+            for word in word2id:
+                if word in ft_model.wv.vocab:
+                    word_embeddings[word2id[word]] = ft_model.wv[word]
                     loaded_words += 1
         elif model_name is not None:
             raise RuntimeError(f'got an unexpected value for model_name: `{model_name}`')

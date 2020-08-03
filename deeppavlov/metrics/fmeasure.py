@@ -396,3 +396,20 @@ def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, 
                 tot_predicted=results[entity_of_interest]['n_pred'])
         log.debug(s)
     return results
+
+
+@register_metric("average__ner_f1__f1_macro__f1")
+def ner_f1__f1_macro__f1(ner_true, ner_pred, macro_true, macro_pred, f1_true, f1_pred):
+    ner_f1_res = ner_f1(ner_true, ner_pred) / 100
+    f1_macro_res = round_f1_macro(macro_true, macro_pred)
+    f1_res = round_f1(f1_true, f1_pred)
+    return (ner_f1_res + f1_macro_res + f1_res) / 3
+
+
+@register_metric("average__roc_auc__roc_auc__ner_f1")
+def roc_auc__roc_auc__ner_f1(true_onehot1, pred_probas1, true_onehot2, pred_probas2, ner_true3, ner_pred3):
+    from .roc_auc_score import roc_auc_score
+    roc_auc1 = roc_auc_score(true_onehot1, pred_probas1)
+    roc_auc2 = roc_auc_score(true_onehot2, pred_probas2)
+    ner_f1_3 = ner_f1(ner_true3, ner_pred3) / 100
+    return (roc_auc1 + roc_auc2 + ner_f1_3) / 3

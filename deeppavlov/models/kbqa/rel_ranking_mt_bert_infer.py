@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import Tuple, List, Any, Optional
+from typing import Tuple, List, Any
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
@@ -25,14 +25,15 @@ from deeppavlov.models.kbqa.wiki_parser import WikiParser
 log = getLogger(__name__)
 
 
-@register('rel_ranking_bert_infer')
-class RelRankerBertInfer(Component, Serializable):
+@register('rel_ranking_mt_bert_infer')
+class RelRankerMTBertInfer(Component, Serializable):
     """Class for ranking of paths in subgraph"""
 
     def __init__(self, load_path: str,
                  rel_q2name_filename: str,
-                 ranker: RelRanker,
-                 wiki_parser: Optional[WikiParser] = None,
+                 wiki_parser: WikiParser,
+                 bert_preprocessor,
+                 ranker,
                  batch_size: int = 32,
                  rels_to_leave: int = 40, **kwargs):
         """
@@ -48,6 +49,7 @@ class RelRankerBertInfer(Component, Serializable):
         """
         super().__init__(save_path=None, load_path=load_path)
         self.rel_q2name_filename = rel_q2name_filename
+        self.bert_preprocessor = bert_preprocessor
         self.ranker = ranker
         self.wiki_parser = wiki_parser
         self.batch_size = batch_size
@@ -84,7 +86,8 @@ class RelRankerBertInfer(Component, Serializable):
                         rels_labels_batch.append(candidate_rels)
                         answers_batch.append(candidate_answer)
 
-                probas = self.ranker(questions_batch, rels_labels_batch)
+                features = self.bert_preprocessor(questions_batch, rels_labels_batch)
+                probas = self.ranker(features)
                 probas = [proba[1] for proba in probas]
                 for j, (answer, rels_labels) in enumerate(zip(answers_batch, rels_labels_batch)):
                     answers_with_scores.append((answer, rels_labels, probas[j]))
@@ -111,11 +114,10 @@ class RelRankerBertInfer(Component, Serializable):
                     questions_batch.append(question)
                     rels_batch.append(candidate_rel)
                     rels_labels_batch.append(self.rel_q2name[candidate_rel])
-            if questions_batch:
-                probas = self.ranker(questions_batch, rels_labels_batch)
-                probas = [proba[1] for proba in probas]
-                for j, rel in enumerate(rels_batch):
-                    rels_with_scores.append((rel, probas[j]))
+            probas = self.ranker(questions_batch, rels_labels_batch)
+            probas = [proba[1] for proba in probas]
+            for j, rel in enumerate(rels_batch):
+                rels_with_scores.append((rel, probas[j]))
         rels_with_scores = sorted(rels_with_scores, key=lambda x: x[1], reverse=True)
 
         return rels_with_scores[:self.rels_to_leave]

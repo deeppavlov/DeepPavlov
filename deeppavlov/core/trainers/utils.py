@@ -13,7 +13,10 @@
 # limitations under the License.
 
 from collections import OrderedDict, namedtuple
-from typing import List, Tuple, Union, Iterable, Any
+from json import JSONEncoder
+from typing import List, Tuple, Union, Iterable
+
+import numpy
 
 from deeppavlov.core.common.metrics_registry import get_metric_by_name
 
@@ -34,7 +37,6 @@ def parse_metrics(metrics: Iterable[Union[str, dict]], in_y: List[str], out_vars
         inputs = metric.get('inputs', in_y + out_vars)
         if isinstance(inputs, str):
             inputs = [inputs]
-        
 
         metrics_functions.append(Metric(metric_name, f, inputs, alias))
     return metrics_functions
@@ -50,3 +52,10 @@ def prettify_metrics(metrics: List[Tuple[str, float]], precision: int = 4) -> Or
             value = round(value, precision)
         prettified_metrics[key] = value
     return prettified_metrics
+
+
+class NumpyArrayEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, numpy.ndarray):
+            return obj.tolist()
+        return JSONEncoder.default(self, obj)
