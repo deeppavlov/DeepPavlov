@@ -64,8 +64,9 @@
   },
   "train": {
     "show_examples": false,
-    "test_best": false,
-    "validate_best": true,
+    "evaluation_targets": [
+      "valid"
+    ],
     "log_every_n_batches": 250,
     "val_every_n_batches": 500,
     "batch_size": 10,
