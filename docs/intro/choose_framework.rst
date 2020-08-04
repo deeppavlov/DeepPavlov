@@ -15,16 +15,17 @@ to install ``deeppavlov`` package for Python 3.6/3.7.
 
 Now based on the considered NLP task you need to choose one of the available frameworks.
 The full list of available model is :doc:`here </features/overview>`.
-To install requirements for the considered model, you can find the config file with the same configuration
-in terms of used components, and install the requirements in the following way:
 
-    .. code:: bash
+- To install requirements for the considered model, you can find the config file with the same configuration
+  in terms of used components, and install the requirements in the following way:
 
-        python -m deeppavlov install <config_path>
+        .. code:: bash
 
-    where ``<config_path>`` is path to the chosen model's config file (e.g. ``deeppavlov/configs/ner/slotfill_dstc2.json``)
-    or just name without `.json` extension (e.g. ``slotfill_dstc2``).
+            python -m deeppavlov install -d <config_path>
 
+        where ``<config_path>`` is path to the chosen model's config file (e.g. ``deeppavlov/configs/ner/slotfill_dstc2.json``)
+        or just name without `.json` extension (e.g. ``slotfill_dstc2``);
+        ``-d`` downloads required data -- pretrained model files and embeddings (optional).
 
 Trainer
 -------
