@@ -195,7 +195,7 @@ Concerning ``stories``, ``nlu``, and ``domain`` files, the following
 functionality is supported by now.
 
 ``stories.md``
-~~~~~~~~~~~~~~
+""""""""""""""
 
 ``stories.md`` is a mechanism used to teach your chatbot how to respond
 to user messages. It allows you to control your chatbot's dialog
@@ -242,7 +242,7 @@ Stories file is a markdown file of the following format:
     ...
 
 ``nlu.md``
-~~~~~~~~~~
+""""""""""
 
 ``nlu.md`` represents an NLU model of your chatbot. It allows you to
 provide training examples that show how your chatbot should
@@ -283,7 +283,7 @@ NLU file is a markdown file of the following format:
     ...
 
 ``domain.yml``
-~~~~~~~~~~~~~~
+""""""""""""""
 
 ``domain.yml`` helps you to define the universe your chatbot lives in:
 what user inputs it expects to get, what actions it should be able to
