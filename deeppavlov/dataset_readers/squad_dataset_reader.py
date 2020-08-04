@@ -75,8 +75,7 @@ class SquadDatasetReader(DatasetReader):
 
         dir_path = Path(dir_path)
         required_files = ['{}-v1.1.json'.format(dt) for dt in ['train', 'dev']]
-        if not dir_path.exists():
-            dir_path.mkdir()
+        dir_path.mkdir(parents=True, exist_ok=True)
 
         if not all((dir_path / f).exists() for f in required_files):
             download_decompress(self.url, dir_path)
