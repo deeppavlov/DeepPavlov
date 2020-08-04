@@ -87,9 +87,9 @@ class LogitRanker(Component):
                 results_sort = sorted(results, key=lambda x: (x[0] != '', x[2]), reverse=True)
             else:
                 results_sort = sorted(results, key=itemgetter(2), reverse=True)
-            batch_best_answers.append([x[0] for x in results_sort[:self.top_n] if x[0]])
-            batch_best_answers_place.append([x[1] for x in results_sort[:self.top_n] if x[0]])
-            batch_best_answers_score.append([x[2] for x in results_sort[:self.top_n] if x[0]])
+            batch_best_answers.append([x[0] for x in results_sort[:self.top_n]])
+            batch_best_answers_place.append([x[1] for x in results_sort[:self.top_n]])
+            batch_best_answers_score.append([x[2] for x in results_sort[:self.top_n]])
             if doc_ids_batch is not None:
                 doc_ind = [results.index(x) for x in results_sort]
                 batch_best_answers_doc_ids.append(
