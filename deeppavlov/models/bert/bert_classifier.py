@@ -200,7 +200,7 @@ class BertClassifierModel(LRScheduledTFModel):
 
         return feed_dict
 
-    def split(self, features: List[InputFeatures], y: Union[Optional[List[int]], List[List[int]]] = None):
+    def split(self, features: List):
         """
         Splits features: batch of InputFeatures
          on num_parts equal parts
@@ -210,17 +210,28 @@ class BertClassifierModel(LRScheduledTFModel):
         num_parts = self.gradient_accumulation_steps
         assert num_parts > 0
         assert num_parts <= len(features)
-
-        def split_value(x, num_features):
-            return [x[i:i + num_features] for i in range(0, len(x), num_features)]
-
         num_features = math.ceil(len(features) / num_parts)
-        feature_batches = split_value(features, num_features=num_features)
-        if y is not None:
-            y_batches = split_value(y, num_features=num_features)
-        else:
-            y_batches = []
-        return feature_batches, y_batches
+        feature_batches =  [features[i:i + num_features] for i in range(0, len(features), num_features)]
+        return feature_batches
+
+    def train_on_batch_old(self, features: List[InputFeatures], y: Union[List[int], List[List[int]]]) -> Dict:
+        """Train model on given batch.
+        This method calls train_op using features and y (labels).
+        Args:
+            features: batch of InputFeatures
+            y: batch of labels (class id or one-hot encoding)
+        Returns:
+            dict with loss and learning_rate values
+        """
+        input_ids = [f.input_ids for f in features]
+        input_masks = [f.input_mask for f in features]
+        input_type_ids = [f.input_type_ids for f in features]
+
+        feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids, y)
+
+        loss = self.sess.run(self.loss, feed_dict=feed_dict)
+        return {'loss': loss, 'learning_rate': feed_dict[self.learning_rate_ph]}
+
     def train_on_batch(self, features: List[InputFeatures], y: Union[List[int], List[List[int]]] = None) -> Dict:
         """Train model on given batch.
         This method clls train_op using features and y (labels).
@@ -230,33 +241,48 @@ class BertClassifierModel(LRScheduledTFModel):
         Returns:
             dict with loss and learning_rate values
         """
+        # Define operations
+        trainable_variables = tf.trainable_variables()
+        trainable_variables = [j for j in trainable_variables
+                               if 'learning_rate' not in j.name and 'momentum' not in j.name]
+        accumulated_gradients = [tf.Variable(tf.zeros_like(this_var), trainable=False)
+                                 for this_var in trainable_variables]
+        gradients = self.optimizer.compute_gradients(self.loss, trainable_variables)
+        apply_gradients = self.optimizer.apply_gradients([
+            (accumulated_gradient, gradient)
+            for accumulated_gradient, (variable, gradient)
+            in zip(accumulated_gradients, gradients)])
+        evaluate_batch = [
+            accumulated_gradient.assign_add(tf.div(variable, self.gradient_accumulation_steps))
+            for accumulated_gradient, (variable, gradient)
+            in zip(accumulated_gradients, gradients)]
+        average_loss = tf.Variable(0., trainable=False)
+        update_loss = average_loss.assign_add(tf.div(self.loss , self.gradient_accumulation_steps))
+        reset_gradients = [gradient.assign(tf.zeros_like(gradient)) for gradient in
+                           accumulated_gradients]
+        reset_loss = average_loss.assign(0.)
+        self.sess.run([reset_gradients, reset_loss])
 
-        # get trainable variables
-
-        train_vars = tf.trainable_variables()
-        accumulated_gradient = [(tf.zeros_like(this_var)) for this_var in train_vars]
-        feature_batches, y_batches = self.split(features)
-        feed_dicts = [self.build_feed_dict(input_ids=feature_batch[0], input_masks=feature_batch[1],
-                                           token_types=feature_batch[2], y=y)
-                      for feature_batch, y in zip(feature_batches, y_batches)]
+        # Extract data
+        input_ids = [f.input_ids for f in features]
+        input_ids_batches = self.split(input_ids)
+        input_masks = [f.input_mask for f in features]
+        input_masks_batches = self.split(input_masks)
+        token_type_ids = [f.input_type_ids for f in features]
+        token_types_batches = self.split(token_type_ids)
+        y_batches = self.split(y)
+        # https://stackoverflow.com/questions/50000263/how-to-feed-the-list-of-gradients-or-grad-variable-name-pairs-to-my-model
+        for (input_ids_batch, input_masks_batch, token_types_batch, y_batch) in zip(
+            input_ids_batches, input_masks_batches, token_types_batches, y_batches):
+            feed_dict = self._build_feed_dict(input_ids=input_ids_batch, input_masks=input_masks_batch,
+                                              token_types=token_types_batch, y=y_batch)
+            self.sess.run([evaluate_batch, update_loss],
+                          feed_dict=feed_dict)
+        loss = self.sess.run(average_loss)
+        self.sess.run(apply_gradients)
         learning_rate = max(self.get_learning_rate(), self.min_learning_rate)
-        learning_rate = float(learning_rate)
-        total_batch_loss = 0.0
-        # https://stackoverflow.com/questions/59893850/how-to-accumulate-gradients-in-tensorflow-2-0
-        for feed_dict in feed_dicts:
-            with tf.GradientTape() as tape:
-                loss_value = self.sess.run(self.loss, feed_dict=feed_dict)
-                total_batch_loss += loss_value
-                gradients = tape.gradient(loss_value, train_vars)
-                # Accumulate the gradients
-                accumulated_gradient = [accum_grad + grad for accum_grad, grad in zip(accumulated_gradient, gradients)]
-        # Now, after executing all the tapes you needed, we apply the optimization step
-        # (but first we take the average of the gradients)
-        accumulated_gradient = [this_grad / self.gradient_accumulation_steps for this_grad in accumulated_gradient]
-        # apply optimization step
-        self.optimizer.apply_gradients(zip(accumulated_gradient, train_vars))
-        batch_loss = total_batch_loss / self.gradient_accumulation_steps
-        answer = {'loss': batch_loss, 'learning_rate': learning_rate}
+        answer = {'loss': loss, 'learning_rate': learning_rate}
+
         return answer
 
     def __call__(self, features: List[InputFeatures]) -> Union[List[int], List[List[float]]]:
@@ -269,7 +295,6 @@ class BertClassifierModel(LRScheduledTFModel):
             predicted classes or probabilities of each class
 
         """
-        feature_batches, _ = self.split(features)
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
         input_type_ids = [f.input_type_ids for f in features]
