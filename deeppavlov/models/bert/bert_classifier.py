@@ -254,7 +254,7 @@ class BertClassifierModel(LRScheduledTFModel):
             for accumulated_gradient, (gradient, variable)
             in zip(accumulated_gradients, gradients_vars)])
         evaluate_batch = [
-            accumulated_gradient.assign_add(tf.div(variable, self.gradient_accumulation_steps))
+            accumulated_gradient.assign_add(tf.div(gradient, self.gradient_accumulation_steps))
             for accumulated_gradient, (gradient, variable)
             in zip(accumulated_gradients, gradients_vars)]
         average_loss = tf.Variable(0., trainable=False)
