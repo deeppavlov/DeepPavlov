@@ -96,7 +96,8 @@ class BertClassifierModel(LRScheduledTFModel):
 
         self._init_optimizer()
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
+        self.sess.run(tf.compat.v1.local_variables_initializer())
 
         if pretrained_bert is not None:
             pretrained_bert = str(expand_path(pretrained_bert))
@@ -211,7 +212,7 @@ class BertClassifierModel(LRScheduledTFModel):
         assert num_parts > 0
         assert num_parts <= len(features)
         num_features = math.ceil(len(features) / num_parts)
-        feature_batches =  [features[i:i + num_features] for i in range(0, len(features), num_features)]
+        feature_batches = [features[i:i + num_features] for i in range(0, len(features), num_features)]
         return feature_batches
 
     def train_on_batch_old(self, features: List[InputFeatures], y: Union[List[int], List[List[int]]]) -> Dict:
@@ -247,17 +248,17 @@ class BertClassifierModel(LRScheduledTFModel):
                                if 'learning_rate' not in j.name and 'momentum' not in j.name]
         accumulated_gradients = [tf.Variable(tf.zeros_like(this_var), trainable=False)
                                  for this_var in trainable_variables]
-        gradients = self.optimizer.compute_gradients(self.loss, trainable_variables)
+        gradients_vars= self.optimizer.compute_gradients(self.loss, trainable_variables)
         apply_gradients = self.optimizer.apply_gradients([
-            (accumulated_gradient, gradient)
-            for accumulated_gradient, (variable, gradient)
-            in zip(accumulated_gradients, gradients)])
+            (accumulated_gradient, variable)
+            for accumulated_gradient, (gradient, variable)
+            in zip(accumulated_gradients, gradients_vars)])
         evaluate_batch = [
             accumulated_gradient.assign_add(tf.div(variable, self.gradient_accumulation_steps))
-            for accumulated_gradient, (variable, gradient)
-            in zip(accumulated_gradients, gradients)]
+            for accumulated_gradient, (gradient, variable)
+            in zip(accumulated_gradients, gradients_vars)]
         average_loss = tf.Variable(0., trainable=False)
-        update_loss = average_loss.assign_add(tf.div(self.loss , self.gradient_accumulation_steps))
+        update_loss = average_loss.assign_add(tf.div(self.loss, self.gradient_accumulation_steps))
         reset_gradients = [gradient.assign(tf.zeros_like(gradient)) for gradient in
                            accumulated_gradients]
         reset_loss = average_loss.assign(0.)
