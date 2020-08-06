@@ -194,7 +194,7 @@ class TorchModel(NNModel):
             "optimizer_state_dict": self.optimizer.state_dict(),
             "epochs_done": self.epochs_done
         }, weights_path)
-        # return it back to device (necessary if it was on `cuda`
+        # return it back to device (necessary if it was on `cuda`)
         self.model.to(self.device)
 
     @overrides
