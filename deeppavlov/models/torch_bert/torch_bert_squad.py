@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import json
-import os
 import math
 from logging import getLogger
 from typing import List, Tuple, Optional, Dict
@@ -206,10 +205,10 @@ class TorchBertSQuADModel(TorchModel):
         if fname is not None:
             self.load_path = fname
 
-        if self.pretrained_bert and not os.path.isfile(self.pretrained_bert):
+        if self.pretrained_bert and not Path(self.pretrained_bert).is_file():
             self.model = BertForQuestionAnswering.from_pretrained(
                 self.pretrained_bert, output_attentions=False, output_hidden_states=False)
-        elif self.bert_config_file and os.path.isfile(self.bert_config_file):
+        elif self.bert_config_file and Path(self.bert_config_file).is_file():
             self.bert_config = BertConfig.from_json_file(str(expand_path(self.bert_config_file)))
 
             if self.attention_probs_keep_prob is not None:
@@ -286,7 +285,7 @@ class TorchBertSQuADInferModel(Component):
         self.model = build_model(config)
         self.max_seq_length = max_seq_length
 
-        if os.path.isfile(vocab_file):
+        if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
             self.tokenizer = BertTokenizer(vocab_file=vocab_file,
                                            do_lower_case=do_lower_case)

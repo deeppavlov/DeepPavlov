@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 from pathlib import Path
 from logging import getLogger
 from typing import List, Union, Dict, Optional
@@ -332,11 +331,11 @@ class TorchBertSequenceTagger(TorchModel):
         if fname is not None:
             self.load_path = fname
 
-        if self.pretrained_bert and not os.path.isfile(self.pretrained_bert):
+        if self.pretrained_bert and not Path(self.pretrained_bert).is_file():
             self.model = BertForTokenClassification.from_pretrained(
                 self.pretrained_bert, num_labels=self.n_classes,
                 output_attentions=False, output_hidden_states=False)
-        elif self.bert_config_file and os.path.isfile(self.bert_config_file):
+        elif self.bert_config_file and Path(self.bert_config_file).is_file():
             self.bert_config = BertConfig.from_json_file(str(expand_path(self.bert_config_file)))
 
             if self.attention_probs_keep_prob is not None:
