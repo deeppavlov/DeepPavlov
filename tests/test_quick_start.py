@@ -437,7 +437,7 @@ class TestQuickStart(object):
         *inputs, expected_outputs = zip(*qr_list) if qr_list else ([],)
         with ProcessPoolExecutor(max_workers=1) as executor:
             f = executor.submit(_infer, config_path, inputs)
-        outputs = f.result()
+        outputs = list(zip(*f.result()))
 
         if check_outputs:
             errors = ';'.join([f'expected `{expected}` got `{output}`'
