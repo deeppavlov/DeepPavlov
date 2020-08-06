@@ -96,7 +96,18 @@ class TorchModel(NNModel):
         self.model.eval()
         log.info(f"Model was successfully initialized! Model summary:\n {self.model}")
 
-    def init_from_opt(self, model_func):
+    def init_from_opt(self, model_func: str) -> None:
+        """Initialize from scratch `self.model` with the architecture built in  `model_func` method of this class
+            along with `self.optimizer` as `self.optimizer_name` from `torch.optim` and parameters
+            `self.optimizer_parameters`, optionally initialize `self.lr_scheduler` as `self.lr_scheduler_name` from
+            `torch.optim.lr_scheduler` and parameters `self.lr_scheduler_parameters`
+
+        Args:
+            model_func: string name of this class methods
+
+        Returns:
+            None
+        """
         if callable(model_func):
             self.model = model_func(**self.opt).to(self.device)
             self.optimizer = getattr(torch.optim, self.optimizer_name)(
@@ -111,7 +122,19 @@ class TorchModel(NNModel):
             raise AttributeError("Model is not defined.")
 
     @overrides
-    def load(self, fname=None, *args, **kwargs):
+    def load(self, fname: Optional[str] = None, *args, **kwargs) -> None:
+        """Load model from `fname` (if `fname` is not given, use `self.load_path`) to `self.model` along with
+            the optimizer `self.optimizer`, optionally `self.lr_scheduler`.
+            If `fname` (if `fname` is not given, use `self.load_path`) does not exist, initialize model from scratch.
+
+        Args:
+            fname: string path to checkpoint
+            *args:
+            **kwargs:
+
+        Returns:
+            None
+        """
         if fname is not None:
             self.load_path = fname
 
@@ -145,7 +168,18 @@ class TorchModel(NNModel):
             self.init_from_opt(model_func)
 
     @overrides
-    def save(self, fname: Optional[str] = None, *args, **kwargs):
+    def save(self, fname: Optional[str] = None, *args, **kwargs) -> None:
+        """Save torch model to `fname` (if `fname` is not given, use `self.save_path`). Checkpoint includes
+            `model_state_dict`, `optimizer_state_dict`, and `epochs_done` (number of training epochs).
+
+        Args:
+            fname:
+            *args:
+            **kwargs:
+
+        Returns:
+
+        """
         if fname is None:
             fname = self.save_path
 
@@ -164,8 +198,10 @@ class TorchModel(NNModel):
         self.model.to(self.device)
 
     @overrides
-    def process_event(self, event_name: str, data: dict):
-        """Process event
+    def process_event(self, event_name: str, data: dict) -> None:
+        """Process event. After epoch, increase `self.epochs_done`. After validation, decrease learning rate in
+            `self.learning_rate_drop_div` times (not lower than `self.min_learning_rate`)
+            if given `self.learning_rate_drop_patience`.
 
         Args:
             event_name: whether event is send after epoch or batch.
