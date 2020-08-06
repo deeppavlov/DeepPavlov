@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Union, Optional
 import logging
 from overrides import overrides
+from typing import List, Union, Optional
 
+import numpy as np
 import torch
 import torch.nn as nn
 
-import numpy as np
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.torch_model import TorchModel
 from deeppavlov.core.common.registry import register
