@@ -14,9 +14,8 @@
 
 import random
 from logging import getLogger
+from typing import Optional
 
-import numpy as np
-import torch
 import torchtext
 import torchtext.datasets as torch_texts
 from overrides import overrides
@@ -27,12 +26,6 @@ from deeppavlov.core.data.dataset_reader import DatasetReader
 log = getLogger(__name__)
 
 
-def _init_fn():
-    np.random.seed(12)
-    torch.manual_seed(12)
-    torch.cuda.manual_seed(12)
-
-
 @register("torchtext_classification_data_reader")
 class TorchtextClassificationDataReader(DatasetReader):
     """Class initializes datasets as an attribute of `torchtext.datasets`.
@@ -40,8 +33,8 @@ class TorchtextClassificationDataReader(DatasetReader):
     """
     @overrides
     def read(self, data_path: str, dataset_title: str,
-             splits=["train", "valid", "test"], valid_portion=None,
-             split_seed=42, *args, **kwargs) -> dict:
+             splits: list = ["train", "valid", "test"], valid_portion: Optional[float] = None,
+             split_seed: int = 42, *args, **kwargs) -> dict:
 
         if hasattr(torch_texts, dataset_title) and callable(getattr(torch_texts, dataset_title)):
             log.info(f"Dataset {dataset_title} is used as an attribute of `torchtext.datasets`.")
