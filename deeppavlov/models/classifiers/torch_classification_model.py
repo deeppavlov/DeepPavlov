@@ -63,19 +63,21 @@ class TorchTextClassificationModel(TorchModel):
         criterion: torch criterion instance
     """
 
-    def __init__(self, n_classes: int, model_name: str, embedding_size: int = None,
+    def __init__(self, n_classes: int,
+                 model_name: str,
+                 embedding_size: Optional[int] = None,
                  multilabel: bool = False,
                  criterion: str = "CrossEntropyLoss",
-                 optimizer: str = "Adam",
+                 optimizer: str = "AdamW",
                  optimizer_parameters: dict = {"lr": 0.1},
                  lr_scheduler: Optional[str] = None,
-                 lr_scheduler_parameters: Optional[dict] = {},
+                 lr_scheduler_parameters: dict = {},
                  embedded_tokens: bool = True,
                  vocab_size: Optional[int] = None,
                  lr_decay_every_n_epochs: Optional[int] = None,
                  learning_rate_drop_patience: Optional[int] = None,
                  learning_rate_drop_div: Optional[float] = None,
-                 return_probas: Optional[bool] = True,
+                 return_probas: bool = True,
                  **kwargs):
 
         if n_classes == 0:
@@ -84,25 +86,23 @@ class TorchTextClassificationModel(TorchModel):
         if multilabel and not return_probas:
             raise RuntimeError('Set return_probas to True for multilabel classification!')
 
-        full_kwargs = {
-            "embedding_size": embedding_size,
-            "n_classes": n_classes,
-            "model_name": model_name,
-            "optimizer": optimizer,
-            "criterion": criterion,
-            "multilabel": multilabel,
-            "optimizer_parameters": optimizer_parameters,
-            "embedded_tokens": embedded_tokens,
-            "vocab_size": vocab_size,
-            "lr_decay_every_n_epochs": lr_decay_every_n_epochs,
-            "learning_rate_drop_patience": learning_rate_drop_patience,
-            "learning_rate_drop_div": learning_rate_drop_div,
-            "lr_scheduler": lr_scheduler,
-            "lr_scheduler_parameters": lr_scheduler_parameters,
-            "return_probas": return_probas,
-            **kwargs,
-        }
-        super().__init__(**full_kwargs)
+        super().__init__(
+            embedding_size=embedding_size,
+            n_classes=n_classes,
+            model_name=model_name,
+            optimizer=optimizer,
+            criterion=criterion,
+            multilabel=multilabel,
+            optimizer_parameters=optimizer_parameters,
+            embedded_tokens=embedded_tokens,
+            vocab_size=vocab_size,
+            lr_decay_every_n_epochs=lr_decay_every_n_epochs,
+            learning_rate_drop_patience=learning_rate_drop_patience,
+            learning_rate_drop_div=learning_rate_drop_div,
+            lr_scheduler=lr_scheduler,
+            lr_scheduler_parameters=lr_scheduler_parameters,
+            return_probas=return_probas,
+            **kwargs)
 
     def __call__(self, texts: List[np.ndarray], *args) -> Union[List[List[float]], List[int]]:
         """Infer on the given data.
