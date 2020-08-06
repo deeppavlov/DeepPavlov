@@ -100,7 +100,7 @@ class TorchBertRankerModel(TorchBertClassifierModel):
             predicted scores for contexts over response candidates
         """
         if len(features_li) == 1 and len(features_li[0]) == 1:
-            msg = "It is not intended to use the {} in the interact mode.".format(self.__class__)
+            msg = f"It is not intended to use the {self.__class__} in the interact mode."
             logger.error(msg)
             return [msg]
 

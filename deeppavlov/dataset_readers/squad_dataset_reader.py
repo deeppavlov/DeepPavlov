@@ -71,10 +71,10 @@ class SquadDatasetReader(DatasetReader):
         elif dataset == 'MultiSQuAD':
             self.url = self.url_multi_squad
         else:
-            raise RuntimeError('Dataset {} is unknown'.format(dataset))
+            raise RuntimeError(f'Dataset {dataset} is unknown')
 
         dir_path = Path(dir_path)
-        required_files = ['{}-v1.1.json'.format(dt) for dt in ['train', 'dev']]
+        required_files = [f'{dt}-v1.1.json' for dt in ['train', 'dev']]
         dir_path.mkdir(parents=True, exist_ok=True)
 
         if not all((dir_path / f).exists() for f in required_files):
@@ -130,10 +130,10 @@ class MultiSquadDatasetReader(DatasetReader):
         elif dataset == 'MultiSQuADRuRetr':
             self.url = self.url_multi_squad_ru_retr
         else:
-            raise RuntimeError('Dataset {} is unknown'.format(dataset))
+            raise RuntimeError(f'Dataset {dataset} is unknown')
 
         dir_path = Path(dir_path)
-        required_files = ['{}.jsonl'.format(dt) for dt in ['train', 'dev']]
+        required_files = [f'{dt}.jsonl' for dt in ['train', 'dev']]
         if not dir_path.exists():
             dir_path.mkdir(parents=True)
 
