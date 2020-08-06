@@ -11,11 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import re
 import random
 from logging import getLogger
+from pathlib import Path
 from typing import Tuple, List, Optional, Union
-import os
 
 from transformers import BertTokenizer
 from transformers.data.processors.utils import InputFeatures
@@ -56,7 +57,7 @@ class TorchBertPreprocessor(Component):
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
         self.return_tokens = return_tokens
-        if os.path.isfile(vocab_file):
+        if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
             self.tokenizer = BertTokenizer(vocab_file=vocab_file,
                                            do_lower_case=do_lower_case)
@@ -140,7 +141,7 @@ class TorchBertNerPreprocessor(Component):
         self.max_seq_length = max_seq_length
         self.max_subword_length = max_subword_length
         self.subword_mask_mode = subword_mask_mode
-        if os.path.isfile(vocab_file):
+        if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
             self.tokenizer = BertTokenizer(vocab_file=vocab_file,
                                            do_lower_case=do_lower_case)
