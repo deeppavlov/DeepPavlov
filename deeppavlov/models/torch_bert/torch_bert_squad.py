@@ -18,9 +18,9 @@ from logging import getLogger
 from pathlib import Path
 from typing import List, Tuple, Optional, Dict
 
-from overrides import overrides
 import numpy as np
 import torch
+from overrides import overrides
 from transformers import BertForQuestionAnswering, BertConfig, BertTokenizer
 from transformers.data.processors.utils import InputFeatures
 

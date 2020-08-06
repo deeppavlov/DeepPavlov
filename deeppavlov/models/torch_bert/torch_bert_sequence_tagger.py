@@ -17,8 +17,8 @@ from pathlib import Path
 from typing import List, Union, Dict, Optional
 
 import numpy as np
-from overrides import overrides
 import torch
+from overrides import overrides
 from transformers import BertForTokenClassification, BertConfig
 
 from deeppavlov.core.common.errors import ConfigError

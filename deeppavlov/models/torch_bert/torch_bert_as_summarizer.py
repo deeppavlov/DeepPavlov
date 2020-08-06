@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 from logging import getLogger
 from pathlib import Path
-import re
 from typing import List, Optional
 
 import numpy as np
-from overrides import overrides
 import torch
+from overrides import overrides
 from transformers import BertForNextSentencePrediction, BertConfig
 
 from deeppavlov.core.common.errors import ConfigError
@@ -71,8 +71,8 @@ class TorchBertAsSummarizer(TorchModel):
                  max_summary_length_in_tokens: Optional[bool] = False,
                  max_seq_length: Optional[int] = 128,
                  do_lower_case: Optional[bool] = False,
-                 lang: Optional[str] = 'ru',
-                 save_path=None,
+                 lang: str = 'ru',
+                 save_path: Optional[str] = None,
                  **kwargs) -> None:
 
         self.max_summary_length = max_summary_length
