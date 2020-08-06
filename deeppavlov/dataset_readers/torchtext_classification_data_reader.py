@@ -12,15 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-from logging import getLogger
 import random
-import numpy as np
-from overrides import overrides
+from logging import getLogger
 
+import numpy as np
 import torch
 import torchtext
 import torchtext.datasets as torch_texts
+from overrides import overrides
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader

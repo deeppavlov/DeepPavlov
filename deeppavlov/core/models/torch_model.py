@@ -18,8 +18,8 @@ from logging import getLogger
 from pathlib import Path
 from typing import Optional
 
-from overrides import overrides
 import torch
+from overrides import overrides
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.nn_model import NNModel
