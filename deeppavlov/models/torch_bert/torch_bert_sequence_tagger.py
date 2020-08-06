@@ -222,13 +222,13 @@ class TorchBertSequenceTagger(TorchModel):
                  return_probas: bool = False,
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
-                 optimizer: str = None,
+                 optimizer: str = "AdamW",
                  optimizer_parameters: dict = {"lr": 1e-3, "weight_decay": 1e-6},
                  learning_rate_drop_patience: int = 20,
                  learning_rate_drop_div: float = 2.0,
                  load_before_drop: bool = True,
                  clip_norm: Optional[float] = None,
-                 min_learning_rate: Optional[float] = 1e-07,
+                 min_learning_rate: float = 1e-07,
                  **kwargs) -> None:
 
         self.n_classes = n_tags

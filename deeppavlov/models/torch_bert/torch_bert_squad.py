@@ -78,7 +78,7 @@ class TorchBertSQuADModel(TorchModel):
                  learning_rate_drop_div: float = 2.0,
                  load_before_drop: bool = True,
                  clip_norm: Optional[float] = None,
-                 min_learning_rate: Optional[float] = 1e-06,
+                 min_learning_rate: float = 1e-06,
                  **kwargs) -> None:
 
         self.attention_probs_keep_prob = attention_probs_keep_prob
@@ -279,7 +279,7 @@ class TorchBertSQuADInferModel(Component):
                  do_lower_case: bool,
                  max_seq_length: int = 512,
                  batch_size: int = 10,
-                 lang='en', **kwargs) -> None:
+                 lang: str = 'en', **kwargs) -> None:
         config = json.load(open(squad_model_config))
         config['chainer']['pipe'][0]['max_seq_length'] = max_seq_length
         self.model = build_model(config)

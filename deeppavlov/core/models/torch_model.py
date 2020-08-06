@@ -87,7 +87,7 @@ class TorchModel(NNModel):
         self.learning_rate_drop_patience = learning_rate_drop_patience
         self.learning_rate_drop_div = learning_rate_drop_div
         self.load_before_drop = load_before_drop
-        self.min_learning_rate = min_learning_rate if min_learning_rate is not None else 0.
+        self.min_learning_rate = min_learning_rate
         self.opt = deepcopy(kwargs)
 
         self.load()
