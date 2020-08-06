@@ -13,11 +13,11 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import List, Dict, Union, Optional
 import numpy as np
 from pathlib import Path
-from overrides import overrides
+from typing import List, Dict, Union, Optional
 
+from overrides import overrides
 import torch
 from transformers import BertForSequenceClassification, BertConfig
 from transformers.data.processors.utils import InputFeatures

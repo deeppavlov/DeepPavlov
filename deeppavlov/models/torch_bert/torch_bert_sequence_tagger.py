@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pathlib import Path
 from logging import getLogger
+from pathlib import Path
 from typing import List, Union, Dict, Optional
-from overrides import overrides
 
 import numpy as np
+from overrides import overrides
 import torch
 from transformers import BertForTokenClassification, BertConfig
 

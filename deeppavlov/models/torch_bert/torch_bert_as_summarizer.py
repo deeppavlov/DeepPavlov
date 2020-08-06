@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
-from pathlib import Path
 from logging import getLogger
+from pathlib import Path
+import re
 from typing import List, Optional
-from overrides import overrides
 
 import numpy as np
+from overrides import overrides
 import torch
 from transformers import BertForNextSentencePrediction, BertConfig
 

@@ -15,10 +15,10 @@
 import json
 import math
 from logging import getLogger
-from typing import List, Tuple, Optional, Dict
 from pathlib import Path
-from overrides import overrides
+from typing import List, Tuple, Optional, Dict
 
+from overrides import overrides
 import numpy as np
 import torch
 from transformers import BertForQuestionAnswering, BertConfig, BertTokenizer

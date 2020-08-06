@@ -13,12 +13,12 @@
 # limitations under the License.
 
 from abc import abstractmethod
-from typing import Optional
+from copy import deepcopy
 from logging import getLogger
 from pathlib import Path
-from copy import deepcopy
-from overrides import overrides
+from typing import Optional
 
+from overrides import overrides
 import torch
 
 from deeppavlov.core.common.errors import ConfigError
