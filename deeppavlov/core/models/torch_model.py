@@ -88,6 +88,7 @@ class TorchModel(NNModel):
         self.learning_rate_drop_div = learning_rate_drop_div
         self.load_before_drop = load_before_drop
         self.min_learning_rate = min_learning_rate
+        # TODO: replace opt dict with explicit arguments/structure
         self.opt = deepcopy(kwargs)
 
         self.load()
