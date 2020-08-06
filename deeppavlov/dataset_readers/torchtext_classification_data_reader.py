@@ -42,7 +42,7 @@ class TorchtextClassificationDataReader(DatasetReader):
             _label = torchtext.data.RawField()
             data_splits = getattr(torch_texts, dataset_title).splits(_text, _label, root=data_path)
             assert len(data_splits) == len(splits)
-            data_splits = {data_field: data_splits[i] for i, data_field in enumerate(splits)}
+            data_splits = dict(zip(splits, data_splits))
 
             if "valid" not in splits and valid_portion is not None:
                 log.info("Valid not in `splits` and `valid_portion` is given. Split `train` to `train` and `valid`")

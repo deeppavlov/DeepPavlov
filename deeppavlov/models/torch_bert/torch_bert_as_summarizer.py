@@ -68,9 +68,9 @@ class TorchBertAsSummarizer(TorchModel):
                  vocab_file: str,
                  max_summary_length: int,
                  bert_config_file: Optional[str] = None,
-                 max_summary_length_in_tokens: Optional[bool] = False,
-                 max_seq_length: Optional[int] = 128,
-                 do_lower_case: Optional[bool] = False,
+                 max_summary_length_in_tokens: bool = False,
+                 max_seq_length: int = 128,
+                 do_lower_case: bool = False,
                  lang: str = 'ru',
                  save_path: Optional[str] = None,
                  **kwargs) -> None:
