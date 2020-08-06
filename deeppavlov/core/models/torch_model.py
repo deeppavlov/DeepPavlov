@@ -65,7 +65,7 @@ class TorchModel(NNModel):
                  optimizer: str = "AdamW",
                  optimizer_parameters: dict = {"lr": 0.01},
                  lr_scheduler: Optional[str] = None,
-                 lr_scheduler_parameters: Optional[dict] = {},
+                 lr_scheduler_parameters: dict = {},
                  learning_rate_drop_patience: Optional[int] = None,
                  learning_rate_drop_div: Optional[float] = None,
                  load_before_drop: bool = True,
