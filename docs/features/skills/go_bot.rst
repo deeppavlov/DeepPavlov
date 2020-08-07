@@ -1,5 +1,6 @@
+==========================
 Goal-Oriented Dialogue Bot
-===================================
+==========================
 
 This component of DeepPavlov Library also known as Go-Bot is designed to enable development of the ML-driven goal-oriented dialogue bots.
 
@@ -32,7 +33,7 @@ If some required packages are missing, install all the requirements by running i
    python -m deeppavlov install gobot_dstc2
 
 Intro
-^^^^^
+=====
 
 The Go-Bot is based on [1]_ which introduces
 Hybrid Code Networks (HCNs) that combine an RNN with domain-specific
@@ -84,8 +85,12 @@ Here is a simple example of interaction with a trained dialogue bot
     x::bye
     >> You are welcome!
 
-Quick Start: Building Goal-Oriented Bot Using DSTC-2
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Quick Start: DSTC2
+=======================================
+
+Building Goal-Oriented Bot Using DSTC-2
+---------------------------------------
+
 DSTC is a set of competitions originally known as "Dialog State Tracking Challenges" (DSTC, for short). First challenge was organized in 2012-2013. Starting as an initiative to provide a common testbed for the task of Dialog State Tracking, the first Dialog State Tracking Challenge (DSTC) was organized in 2013, followed by DSTC2&3 in 2014, DSTC4 in 2015, and DSTC5 in 2016. Given the remarkable success of the first five editions, and understanding both, the complexity of the dialog phenomenon and the interest of the research community in a wider variety of dialog related problems, the DSTC rebranded itself as "Dialog System Technology Challenges" for its sixth edition. Then, DSTC6 and DSTC7 have been completed in 2017 and 2018, respectively.
 
 DSTC-2 released a large number of training dialogs related to restaurant search. Compared to DSTC (which was in the bus timetables domain), DSTC 2 introduced changing user goals, tracking 'requested slots' as well as the new Restaurants domain. 
@@ -93,7 +98,7 @@ DSTC-2 released a large number of training dialogs related to restaurant search.
 Historically, DeepPavlov's Go-Bot used this DSTC-2 approach to defining domain model and behavior of the goal-oriented bots. In this section you will learn how to use this approach to build a DSTC-2-based Go-Bot.
 
 Requirements
-------------
+^^^^^^^^^^^^
 
 **TO TRAIN** a go\_bot model you should have:
 
@@ -124,7 +129,7 @@ Requirements
    - ``intent_classifier`` section of go\_bot's config should match classifier's configuration
 
 Configs
--------
+^^^^^^^
 
 For a working exemplary config see
 :config:`configs/go_bot/gobot_dstc2.json <go_bot/gobot_dstc2.json>` (model without embeddings).
@@ -137,7 +142,7 @@ does not use bag-of-words) is configured in
 :config:`configs/go_bot/gobot_dstc2_best.json <go_bot/gobot_dstc2_best.json>`.
 
 Usage example
--------------
+^^^^^^^^^^^^^
 
 To interact with a pretrained go\_bot model using commandline run:
 
@@ -179,12 +184,138 @@ To infer from a pretrained model with config path equal to ``<path_to_config>``:
         utterance = input(':: ')
 
 Config parameters
------------------
+^^^^^^^^^^^^^^^^^
 
 To configure your own pipelines that contain a ``"go_bot"`` component, refer to documentation for :class:`~deeppavlov.models.go_bot.bot.GoalOrientedBot` and :class:`~deeppavlov.models.go_bot.network.GoalOrientedBotNetwork` classes.
 
-Quick Start: Building Goal-Oriented Bot Using RASA DSLs
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Datasets
+----------------------------------
+
+.. _dstc2_dataset:
+
+DSTC2
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The Hybrid Code Network model was trained and evaluated on a modification of a dataset from Dialogue State Tracking
+Challenge 2 [2]_. The modifications were as follows:
+
+-  **new turns with api calls**
+
+   -  added api\_calls to restaurant database (example:
+      ``{"text": "api_call area=\"south\" food=\"dontcare\" pricerange=\"cheap\"", "dialog_acts": ["api_call"]}``)
+
+-  **new actions**
+
+   -  bot dialog actions were concatenated into one action (example:
+      ``{"dialog_acts": ["ask", "request"]}`` ->
+      ``{"dialog_acts": ["ask_request"]}``)
+   -  if a slot key was associated with the dialog action, the new act
+      was a concatenation of an act and a slot key (example:
+      ``{"dialog_acts": ["ask"], "slot_vals": ["area"]}`` ->
+      ``{"dialog_acts": ["ask_area"]}``)
+
+-  **new train/dev/test split**
+
+   -  original dstc2 consisted of three different MDP policies, the original train
+      and dev datasets (consisting of two policies) were merged and
+      randomly split into train/dev/test
+
+-  **minor fixes**
+
+   -  fixed several dialogs, where actions were wrongly annotated
+   -  uppercased first letter of bot responses
+   -  unified punctuation for bot responses
+
+See :class:`deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader` for implementation.
+
+Your data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Dialogs
+"""""""
+
+If your model uses DSTC2 and relies on ``"dstc2_reader"``
+(:class:`~deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader`),
+all needed files, if not present in the
+:attr:`DSTC2DatasetReader.data_path <deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader.data_path>` directory,
+will be downloaded from web.
+
+If your model needs to be trained on different data, you have several ways of
+achieving that (sorted by increase in the amount of code):
+
+1. Use ``"dialog_iterator"`` in dataset iterator config section and
+   ``"dstc2_reader"`` in dataset reader config section
+   (**the simplest, but not the best way**):
+
+   -  set ``dataset_reader.data_path`` to your data directory;
+   -  your data files should have the same format as expected in
+      :meth:`DSTC2DatasetReader.read() <deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader.read>`
+      method.
+
+2. Use ``"dialog_iterator"`` in dataset iterator config section and
+   ``"your_dataset_reader"`` in dataset reader config section (**recommended**):
+
+   -  clone :class:`deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader` to
+      ``YourDatasetReader``;
+   -  register as ``"your_dataset_reader"``;
+   -  rewrite so that it implements the same interface as the origin.
+      Particularly, ``YourDatasetReader.read()`` must have the same output as
+      :meth:`DSTC2DatasetReader.read() <deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader.read>`.
+   
+      -  ``train`` — training dialog turns consisting of tuples:
+      
+         -  first tuple element contains first user's utterance info
+            (as dictionary with the following fields):
+
+            -  ``text`` — utterance string
+            -  ``intents`` — list of string intents, associated with user's utterance
+            -  ``db_result`` — a database response *(optional)*
+            -  ``episode_done`` — set to ``true``, if current utterance is
+               the start of a new dialog, and ``false`` (or skipped) otherwise *(optional)*
+
+         -  second tuple element contains second user's response info
+
+            -  ``text`` — utterance string
+            -  ``act`` — an act, associated with the user's utterance
+
+      -  ``valid`` — validation dialog turns in the same format
+      -  ``test`` — test dialog turns in the same format
+
+3. Use your own dataset iterator and dataset reader (**if 2. doesn't work for you**):
+
+   -  your ``YourDatasetIterator.gen_batches()`` class method output should match the
+      input format for chainer from
+      :config:`configs/go_bot/gobot_dstc2.json <go_bot/gobot_dstc2.json>`.
+
+Templates
+"""""""""
+
+You should provide a maping from actions to text templates in the format
+
+.. code:: text
+
+    action1<tab>template1
+    action2<tab>template2
+    ...
+    actionN<tab>templateN
+
+where filled slots in templates should start with "#" and mustn't contain whitespaces.
+
+For example,
+
+.. code:: text
+
+    bye You are welcome!
+    canthear  Sorry, I can't hear you.
+    expl-conf_area  Did you say you are looking for a restaurant in the #area of town?
+    inform_area+inform_food+offer_name  #name is a nice place in the #area of town serving tasty #food food.
+
+It is recommended to use ``"DefaultTemplate"`` value for ``template_type`` parameter.
+
+Quick Start: RASA DSLs
+==========================================
+Building Goal-Oriented Bot Using RASA DSLs
+------------------------------------------
 While DSTC-2 schemas format is quite rich, preparing this kind of dataset with all required annotations might be challenging. To simplify the process of building goal-oriented bots using DeepPavlov technology, we have introduced a (limited) support for defining them using RASA DSLs.
 
 DSLs, known as Domain-Specific Languages, provide a rich mechanism to define the behavior, or "the what", while 
@@ -363,133 +494,8 @@ Domain file is a YAML file of the following format:
         - text: "Here some text again"
 
 
-
-Datasets
-^^^^^^^^
-
-.. _dstc2_dataset:
-
-DSTC2
-^^^^^
-
-The Hybrid Code Network model was trained and evaluated on a modification of a dataset from Dialogue State Tracking
-Challenge 2 [2]_. The modifications were as follows:
-
--  **new turns with api calls**
-
-   -  added api\_calls to restaurant database (example:
-      ``{"text": "api_call area=\"south\" food=\"dontcare\" pricerange=\"cheap\"", "dialog_acts": ["api_call"]}``)
-
--  **new actions**
-
-   -  bot dialog actions were concatenated into one action (example:
-      ``{"dialog_acts": ["ask", "request"]}`` ->
-      ``{"dialog_acts": ["ask_request"]}``)
-   -  if a slot key was associated with the dialog action, the new act
-      was a concatenation of an act and a slot key (example:
-      ``{"dialog_acts": ["ask"], "slot_vals": ["area"]}`` ->
-      ``{"dialog_acts": ["ask_area"]}``)
-
--  **new train/dev/test split**
-
-   -  original dstc2 consisted of three different MDP policies, the original train
-      and dev datasets (consisting of two policies) were merged and
-      randomly split into train/dev/test
-
--  **minor fixes**
-
-   -  fixed several dialogs, where actions were wrongly annotated
-   -  uppercased first letter of bot responses
-   -  unified punctuation for bot responses
-
-See :class:`deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader` for implementation.
-
-Your data
-^^^^^^^^^
-
-Dialogs
-"""""""
-
-If your model uses DSTC2 and relies on ``"dstc2_reader"``
-(:class:`~deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader`),
-all needed files, if not present in the
-:attr:`DSTC2DatasetReader.data_path <deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader.data_path>` directory,
-will be downloaded from web.
-
-If your model needs to be trained on different data, you have several ways of
-achieving that (sorted by increase in the amount of code):
-
-1. Use ``"dialog_iterator"`` in dataset iterator config section and
-   ``"dstc2_reader"`` in dataset reader config section
-   (**the simplest, but not the best way**):
-
-   -  set ``dataset_reader.data_path`` to your data directory;
-   -  your data files should have the same format as expected in
-      :meth:`DSTC2DatasetReader.read() <deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader.read>`
-      method.
-
-2. Use ``"dialog_iterator"`` in dataset iterator config section and
-   ``"your_dataset_reader"`` in dataset reader config section (**recommended**):
-
-   -  clone :class:`deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader` to
-      ``YourDatasetReader``;
-   -  register as ``"your_dataset_reader"``;
-   -  rewrite so that it implements the same interface as the origin.
-      Particularly, ``YourDatasetReader.read()`` must have the same output as
-      :meth:`DSTC2DatasetReader.read() <deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader.read>`.
-   
-      -  ``train`` — training dialog turns consisting of tuples:
-      
-         -  first tuple element contains first user's utterance info
-            (as dictionary with the following fields):
-
-            -  ``text`` — utterance string
-            -  ``intents`` — list of string intents, associated with user's utterance
-            -  ``db_result`` — a database response *(optional)*
-            -  ``episode_done`` — set to ``true``, if current utterance is
-               the start of a new dialog, and ``false`` (or skipped) otherwise *(optional)*
-
-         -  second tuple element contains second user's response info
-
-            -  ``text`` — utterance string
-            -  ``act`` — an act, associated with the user's utterance
-
-      -  ``valid`` — validation dialog turns in the same format
-      -  ``test`` — test dialog turns in the same format
-
-3. Use your own dataset iterator and dataset reader (**if 2. doesn't work for you**):
-
-   -  your ``YourDatasetIterator.gen_batches()`` class method output should match the
-      input format for chainer from
-      :config:`configs/go_bot/gobot_dstc2.json <go_bot/gobot_dstc2.json>`.
-
-Templates
-"""""""""
-
-You should provide a maping from actions to text templates in the format
-
-.. code:: text
-
-    action1<tab>template1
-    action2<tab>template2
-    ...
-    actionN<tab>templateN
-
-where filled slots in templates should start with "#" and mustn't contain whitespaces.
-
-For example,
-
-.. code:: text
-
-    bye You are welcome!
-    canthear  Sorry, I can't hear you.
-    expl-conf_area  Did you say you are looking for a restaurant in the #area of town?
-    inform_area+inform_food+offer_name  #name is a nice place in the #area of town serving tasty #food food.
-
-It is recommended to use ``"DefaultTemplate"`` value for ``template_type`` parameter.
-
-Database (optional)
-"""""""""""""""""""
+Database (Optional)
+===================
 
 If your dataset doesn't imply any api calls to an external database, just do not set
 ``database`` and ``api_call_action`` parameters and skip the section below.
@@ -535,7 +541,7 @@ Scores for different modifications of our bot model and comparison with existing
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
 
 References
-----------
+===========================
 
 .. [1] `Jason D. Williams, Kavosh Asadi, Geoffrey Zweig "Hybrid Code
     Networks: practical and efficient end-to-end dialog control with
