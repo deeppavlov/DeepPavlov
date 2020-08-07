@@ -4,6 +4,11 @@ deeppavlov.models.classifiers
 .. automodule:: deeppavlov.models.classifiers
    :members:
 
+.. autoclass:: deeppavlov.models.classifiers.torch_classification_model.TorchTextClassificationModel
+    :members:
+
+    .. automethod:: __call__
+
 .. autoclass:: deeppavlov.models.classifiers.keras_classification_model.KerasClassificationModel
     :members:
 

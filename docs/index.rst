@@ -9,6 +9,7 @@ Welcome to DeepPavlov's documentation!
    QuickStart <intro/quick_start>
    General concepts <intro/overview>
    Configuration file <intro/configuration>
+   Choosing The Framework <intro/choose_framework>
    Models/Skills overview <features/overview>
 
 

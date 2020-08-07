@@ -115,7 +115,9 @@ PARAMS = {
         ("classifiers/sentiment_yelp_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_yelp_multi_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_imdb_bert.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/sentiment_imdb_conv_bert.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("classifiers/sentiment_imdb_conv_bert.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sst_torch_swcnn.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/insults_kaggle_bert_torch.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK]
     },
     "snips": {
         ("classifiers/intents_snips.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -169,7 +171,8 @@ PARAMS = {
                 ("chinese food", {'food': 'chinese'}),
                 ("in the west part", {'area': 'west'}),
                 ("moderate price range", {'pricerange': 'moderate'})
-            ]
+            ],
+        ("ner/ner_conll2003_torch_bert.json", "ner_conll2003_torch_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK]
     },
     "sentence_segmentation": {
         ("sentence_segmentation/sentseg_dailydialog.json", "sentseg_dailydialog", ('IP', 'TI')): [
@@ -251,7 +254,8 @@ PARAMS = {
         ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json", "ranking", ('IP',)):
             [(' & & & & & & & & bonhoeffer  whar drives do you want to mount what &  i have an ext3 usb drive  '
               '& look with fdisk -l & hello there & fdisk is all you need',
-              None)]
+              None)],
+        ("ranking/ranking_ubuntu_v2_torch_bert_uncased.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "doc_retrieval": {
         ("doc_retrieval/en_ranker_tfidf_wiki_test.json", "doc_retrieval", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -270,7 +274,9 @@ PARAMS = {
         ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/multi_squad_noans.json", "multi_squad_noans", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_zh_bert_mult.json", "squad_zh_bert_mult", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_zh_bert_zh.json", "squad_zh_bert_zh", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK]
+        ("squad/squad_zh_bert_zh.json", "squad_zh_bert_zh", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_torch_bert.json", "squad_torch_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_torch_bert_infer.json", "squad_torch_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
     },
     "seq2seq_go_bot": {
         ("seq2seq_go_bot/bot_kvret_train.json", "seq2seq_go_bot", ('TI',)):
