@@ -8,16 +8,24 @@
     "seed": 243
   },
   "chainer": {
-    "in": ["x"],
-    "in_y": ["y"],
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
     "pipe": [
       {
         "class_name": "torch_bert_ranker_preprocessor",
         "vocab_file": "bert-base-uncased",
         "do_lower_case": true,
         "max_seq_length": 128,
-        "in": ["x"],
-        "out": ["bert_features"]
+        "in": [
+          "x"
+        ],
+        "out": [
+          "bert_features"
+        ]
       },
       {
         "class_name": "torch_bert_ranker",
@@ -35,18 +43,30 @@
           ],
           "eps": 1e-6
         },
-        "in": ["bert_features"],
-        "in_y": ["y"],
-        "out": ["predictions"]
+        "in": [
+          "bert_features"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "predictions"
+        ]
       }
     ],
-    "out": ["predictions"]
+    "out": [
+      "predictions"
+    ]
   },
   "train": {
     "batch_size": 32,
     "pytest_max_batches": 2,
     "train_metrics": [],
-    "metrics": ["r@1", "r@2", "r@5"],
+    "metrics": [
+      "r@1",
+      "r@2",
+      "r@5"
+    ],
     "validation_patience": 1,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
