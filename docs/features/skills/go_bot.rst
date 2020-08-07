@@ -7,8 +7,7 @@ It supports two different approaches to define domain model and behavior of a gi
 
 To experiment with the Go-Bot you can pick one of the two available pre-trained models designed around the DSTSC2 dataset (English), or follow a tutorial for using RASA DSLs.
 
-Quick DSTC2-Based Demos
-^^^^^^^^^^^^^^^^^^^^^^^
+**Quick DSTC2-Based Demos**
 
 To quickly try out the Go-Bot capabilities you can use one of the two available pretrained models for DSTC2 dataset (English). Check them out by running this code:
 
@@ -33,7 +32,7 @@ If some required packages are missing, install all the requirements by running i
    python -m deeppavlov install gobot_dstc2
 
 Intro
------
+^^^^^
 
 The Go-Bot is based on [1]_ which introduces
 Hybrid Code Networks (HCNs) that combine an RNN with domain-specific
@@ -86,7 +85,7 @@ Here is a simple example of interaction with a trained dialogue bot
     >> You are welcome!
 
 Quick Start: Building Goal-Oriented Bot Using DSTC-2
-----------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 DSTC is a set of competitions originally known as "Dialog State Tracking Challenges" (DSTC, for short). First challenge was organized in 2012-2013. Starting as an initiative to provide a common testbed for the task of Dialog State Tracking, the first Dialog State Tracking Challenge (DSTC) was organized in 2013, followed by DSTC2&3 in 2014, DSTC4 in 2015, and DSTC5 in 2016. Given the remarkable success of the first five editions, and understanding both, the complexity of the dialog phenomenon and the interest of the research community in a wider variety of dialog related problems, the DSTC rebranded itself as "Dialog System Technology Challenges" for its sixth edition. Then, DSTC6 and DSTC7 have been completed in 2017 and 2018, respectively.
 
 DSTC-2 released a large number of training dialogs related to restaurant search. Compared to DSTC (which was in the bus timetables domain), DSTC 2 introduced changing user goals, tracking 'requested slots' as well as the new Restaurants domain. 
@@ -94,7 +93,7 @@ DSTC-2 released a large number of training dialogs related to restaurant search.
 Historically, DeepPavlov's Go-Bot used this DSTC-2 approach to defining domain model and behavior of the goal-oriented bots. In this section you will learn how to use this approach to build a DSTC-2-based Go-Bot.
 
 Requirements
-^^^^^^^^^^^^
+------------
 
 **TO TRAIN** a go\_bot model you should have:
 
@@ -125,7 +124,7 @@ Requirements
    - ``intent_classifier`` section of go\_bot's config should match classifier's configuration
 
 Configs
-^^^^^^^^
+-------
 
 For a working exemplary config see
 :config:`configs/go_bot/gobot_dstc2.json <go_bot/gobot_dstc2.json>` (model without embeddings).
@@ -138,7 +137,7 @@ does not use bag-of-words) is configured in
 :config:`configs/go_bot/gobot_dstc2_best.json <go_bot/gobot_dstc2_best.json>`.
 
 Usage example
-^^^^^^^^^^^^^
+-------------
 
 To interact with a pretrained go\_bot model using commandline run:
 
@@ -180,12 +179,12 @@ To infer from a pretrained model with config path equal to ``<path_to_config>``:
         utterance = input(':: ')
 
 Config parameters
-^^^^^^^^^^^^^^^^^
+-----------------
 
 To configure your own pipelines that contain a ``"go_bot"`` component, refer to documentation for :class:`~deeppavlov.models.go_bot.bot.GoalOrientedBot` and :class:`~deeppavlov.models.go_bot.network.GoalOrientedBotNetwork` classes.
 
 Quick Start: Building Goal-Oriented Bot Using RASA DSLs
--------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 While DSTC-2 schemas format is quite rich, preparing this kind of dataset with all required annotations might be challenging. To simplify the process of building goal-oriented bots using DeepPavlov technology, we have introduced a (limited) support for defining them using RASA DSLs.
 
 DSLs, known as Domain-Specific Languages, provide a rich mechanism to define the behavior, or "the what", while 
@@ -366,7 +365,7 @@ Domain file is a YAML file of the following format:
 
 
 Datasets
---------
+^^^^^^^^
 
 .. _dstc2_dataset:
 
