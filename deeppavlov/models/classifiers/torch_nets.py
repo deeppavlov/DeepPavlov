@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Union
+from typing import List, Union, Optional
 
 import torch
 import torch.nn as nn
@@ -21,7 +21,7 @@ import torch.nn as nn
 class ShallowAndWideCnn(nn.Module):
     def __init__(self, n_classes: int, embedding_size: int, kernel_sizes_cnn: List[int],
                  filters_cnn: Union[int, List[int]], dense_size: int, dropout_rate: float = 0.0,
-                 embedded_tokens=True, vocab_size: int=None, **kwargs):
+                 embedded_tokens: bool = True, vocab_size: Optional[int] = None, **kwargs):
         super().__init__()
         self.embedded_tokens = embedded_tokens
         self.kernel_sizes_cnn = kernel_sizes_cnn
@@ -43,7 +43,7 @@ class ShallowAndWideCnn(nn.Module):
         self.relu_dense = nn.ReLU()
         self.final_dense = nn.Linear(dense_size, n_classes)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         # number of tokens is variable
         if not self.embedded_tokens:
             # x of shape [batch_size, number of tokens]

@@ -53,7 +53,7 @@ class TorchBertPreprocessor(Component):
                  vocab_file: str,
                  do_lower_case: bool = True,
                  max_seq_length: int = 512,
-                 return_tokens: Optional[bool] = False,
+                 return_tokens: bool = False,
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
         self.return_tokens = return_tokens
