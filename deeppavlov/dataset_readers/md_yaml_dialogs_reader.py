@@ -19,10 +19,9 @@ import re
 import tempfile
 from collections import defaultdict
 from logging import getLogger
+from overrides import overrides
 from pathlib import Path
 from typing import Dict, List, Tuple, Union, Any, Optional
-
-from overrides import overrides
 
 from deeppavlov.core.common.file import read_yaml
 from deeppavlov.core.common.registry import register
@@ -45,11 +44,11 @@ class DomainKnowledge:
     session_config: Dict
 
     def __init__(self, domain_knowledge_di: Dict):
-        self.known_entities = domain_knowledge_di.get("known_entities", [])
-        self.known_intents = domain_knowledge_di.get("known_intents", [])
-        self.known_actions = domain_knowledge_di.get("known_actions", [])
-        self.known_slots = domain_knowledge_di.get("known_slots", {})
-        self.response_templates = domain_knowledge_di.get("response_templates", {})
+        self.known_entities = domain_knowledge_di.get("entities", [])
+        self.known_intents = domain_knowledge_di.get("intents", [])
+        self.known_actions = domain_knowledge_di.get("actions", [])
+        self.known_slots = domain_knowledge_di.get("slots", {})
+        self.response_templates = domain_knowledge_di.get("responses", {})
         self.session_config = domain_knowledge_di.get("session_config", {})
 
 
