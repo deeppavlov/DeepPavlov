@@ -168,7 +168,7 @@ References
 .. target-notes::
 
 .. _`DrQA`: https://github.com/facebookresearch/DrQA/
-.. _`R-NET`: https://www.microsoft.com/en-us/research/publication/mrc/
+.. _`R-NET`: https://www.microsoft.com/en-us/research/publication/mcr/
 .. _`implementation`: https://github.com/HKUST-KnowComp/R-Net/
 .. _`R3`: https://arxiv.org/abs/1709.00023
 
