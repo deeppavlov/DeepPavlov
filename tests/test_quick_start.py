@@ -414,7 +414,13 @@ def _serialize(config):
 
 def _infer(config, inputs, download=False):
     chainer = build_model(config, download=download)
-    return chainer(*inputs) if inputs else []
+    if inputs:
+        prediction = chainer(*inputs)
+        if len(chainer.out_params) == 1:
+            prediction = [prediction]
+    else:
+        prediction = []
+    return prediction
 
 
 def _deserialize(config, raw_bytes, examples):
