@@ -68,18 +68,18 @@ PARAMS = {
     "spelling_correction": {
         ("spelling_correction/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
             [
-                ("helllo", "hello"),
-                ("datha", "data")
+                ("helllo", ("hello",)),
+                ("datha", ("data",))
             ],
         ("spelling_correction/brillmoore_kartaslov_ru.json", "error_model", ('IP',)):
             [
-                ("преведствую", "приветствую"),
-                ("я джва года дду эту игру", "я два года жду эту игру")
+                ("преведствую", ("приветствую",)),
+                ("я джва года дду эту игру", ("я два года жду эту игру",))
             ],
         ("spelling_correction/levenshtein_corrector_ru.json", "error_model", ('IP',)):
             [
-                ("преветствую", "приветствую"),
-                ("Я джва года хочу такую игру", "я два года хочу такую игру")
+                ("преветствую", ("приветствую",)),
+                ("Я джва года хочу такую игру", ("я два года хочу такую игру",))
             ]
     },
     "go_bot": {
@@ -107,8 +107,8 @@ PARAMS = {
         ("classifiers/yahoo_convers_vs_info.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/ru_obscenity_classifier.json", "classifiers", ('IP',)):
             [
-                ("Ну и сука же она", True),
-                ("я два года жду эту игру", False)
+                ("Ну и сука же она", (True,)),
+                ("я два года жду эту игру", (False,))
             ],
         ("classifiers/sentiment_sst_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_sst_multi_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -167,9 +167,9 @@ PARAMS = {
         ("ner/ner_rus.json", "ner_rus", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/slotfill_dstc2.json", "slotfill_dstc2", ('IP',)):
             [
-                ("chinese food", {'food': 'chinese'}),
-                ("in the west part", {'area': 'west'}),
-                ("moderate price range", {'pricerange': 'moderate'})
+                ("chinese food", ({'food': 'chinese'},)),
+                ("in the west part", ({'area': 'west'},)),
+                ("moderate price range", ({'pricerange': 'moderate'},))
             ]
     },
     "sentence_segmentation": {
@@ -179,37 +179,37 @@ PARAMS = {
     "kbqa": {
         ("kbqa/kbqa_cq.json", "kbqa", ('IP',)):
             [
-                ("What is the currency of Sweden?", "Swedish krona"),
-                ("Where was Napoleon Bonaparte born?", "Ajaccio"),
-                ("When did the Korean War end?", "1953-07-27"),
-                ("   ", "Not Found")
+                ("What is the currency of Sweden?", ("Swedish krona",)),
+                ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
+                ("When did the Korean War end?", ("1953-07-27",)),
+                ("   ", ("Not Found",))
             ],
         ("kbqa/kbqa_cq_mt_bert.json", "kbqa", ('IP',)):
             [
-                ("What is the currency of Sweden?", "Swedish krona"),
-                ("Where was Napoleon Bonaparte born?", "Ajaccio"),
-                ("When did the Korean War end?", "1953-07-27"),
-                ("   ", "Not Found")
+                ("What is the currency of Sweden?", ("Swedish krona",)),
+                ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
+                ("When did the Korean War end?", ("1953-07-27",)),
+                ("   ", ("Not Found",))
             ],
         ("kbqa/kbqa_cq_online_mt_bert.json", "kbqa", ('IP',)):
             [
-                ("What is the currency of Sweden?", "Swedish krona"),
-                ("Where was Napoleon Bonaparte born?", "Ajaccio"),
-                ("When did the Korean War end?", "1953-07-27"),
-                ("   ", "Not Found")
+                ("What is the currency of Sweden?", ("Swedish krona",)),
+                ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
+                ("When did the Korean War end?", ("1953-07-27",)),
+                ("   ", ("Not Found",))
             ],
         ("kbqa/kbqa_cq_bert_ranker.json", "kbqa", ('IP',)):
             [
-                ("What is the currency of Sweden?", "Swedish krona"),
-                ("Where was Napoleon Bonaparte born?", "Ajaccio"),
-                ("When did the Korean War end?", "1953-07-27"),
-                ("   ", "Not Found")
+                ("What is the currency of Sweden?", ("Swedish krona",)),
+                ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
+                ("When did the Korean War end?", ("1953-07-27",)),
+                ("   ", ("Not Found",))
             ],
         ("kbqa/kbqa_cq_rus.json", "kbqa", ('IP',)):
             [
-                ("Кто такой Оксимирон?", "британский рэп-исполнитель"),
-                ("Чем питаются коалы?", "Эвкалипт"),
-                ("абв", "Not Found")
+                ("Кто такой Оксимирон?", ("британский рэп-исполнитель",)),
+                ("Чем питаются коалы?", ("Эвкалипт",)),
+                ("абв", ("Not Found",))
             ]
     },
     "elmo_embedder": {
