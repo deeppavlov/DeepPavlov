@@ -48,7 +48,7 @@ both be strings. Therefore, ``Skill``\ s are usually associated with
 dialogue tasks.
 
 DeepPavlov is built on top of machine learning frameworks
-`TensorFlow <https://www.tensorflow.org/>`__ and
-`Keras <https://keras.io/>`__. Other external libraries can be used to
+`TensorFlow <https://www.tensorflow.org/>`__,
+`Keras <https://keras.io/>`__ and `PyTorch <https://www.pytorch.org/>`__. Other external libraries can be used to
 build basic components.
 

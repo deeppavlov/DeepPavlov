@@ -392,18 +392,21 @@ class SquadBertMappingPreprocessor(Component):
     def __init__(self, do_lower_case: bool = True, *args, **kwargs):
         self.do_lower_case = do_lower_case
 
-    def __call__(self, contexts, bert_features, **kwargs):
+    def __call__(self, contexts, bert_features, *args, **kwargs):
         subtok2chars = []
         char2subtoks = []
-        for context, features in zip(contexts, bert_features):
+        for batch_counter, (context, features) in enumerate(zip(contexts, bert_features)):
             if self.do_lower_case:
                 context = context.lower()
-            subtokens = features.tokens
+            if len(args) > 0:
+                subtokens = args[0][batch_counter]
+            else:
+                subtokens = features.tokens
             context_start = subtokens.index('[SEP]') + 1
             idx = 0
             subtok2char = {}
             char2subtok = {}
-            for i, subtok in list(enumerate(features.tokens))[context_start:-1]:
+            for i, subtok in list(enumerate(subtokens))[context_start:-1]:
                 subtok = subtok[2:] if subtok.startswith('##') else subtok
                 subtok_pos = context[idx:].find(subtok)
                 if subtok_pos == -1:
@@ -464,12 +467,12 @@ class SquadBertAnsPostprocessor(Component):
     def __init__(self, *args, **kwargs):
         pass
 
-    def __call__(self, answers_start, answers_end, contexts, bert_features, subtok2chars, **kwargs):
+    def __call__(self, answers_start, answers_end, contexts, bert_features, subtok2chars, *args, **kwargs):
         answers = []
         starts = []
         ends = []
-        for answer_st, answer_end, context, features, sub2c in \
-                zip(answers_start, answers_end, contexts, bert_features, subtok2chars):
+        for batch_counter, (answer_st, answer_end, context, features, sub2c) in \
+                enumerate(zip(answers_start, answers_end, contexts, bert_features, subtok2chars)):
             # CLS token is no_answer token
             if answer_st == 0 or answer_end == 0:
                 answers += ['']
@@ -478,7 +481,10 @@ class SquadBertAnsPostprocessor(Component):
             else:
                 st = self.get_char_position(sub2c, answer_st)
                 end = self.get_char_position(sub2c, answer_end)
-                subtok = features.tokens[answer_end]
+                if len(args) > 0:
+                    subtok = args[0][batch_counter][answer_end]
+                else:
+                    subtok = features.tokens[answer_end]
                 subtok = subtok[2:] if subtok.startswith('##') else subtok
                 answer = context[st:end + len(subtok)]
                 answers += [answer]
