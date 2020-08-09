@@ -264,9 +264,8 @@ class MorphoTagger(KerasModel):
         """Trains the model on a single batch.
 
         Args:
-            *args: the list of network inputs.
-            Last element of `args` is the batch of targets,
-            all previous elements are training data batches
+            *args: the list of network inputs. Last element of `args` is the batch of targets,
+                all previous elements are training data batches
         """
         # data: List[Iterable], labels: Iterable[list]
         # Args:
