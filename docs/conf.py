@@ -192,7 +192,7 @@ texinfo_documents = [
 
 autodoc_mock_imports = ['aiml', 'bert_dp', 'fastText', 'fasttext', 'gensim', 'hdt', 'kenlm', 'librosa', 'lxml', 'nemo',
                         'nemo_asr', 'nemo_tts', 'nltk', 'rapidfuzz', 'rasa', 'russian_tagsets', 'sacremoses',
-                        'sortedcontainers', 'spacy', 'tensorflow', 'tensorflow_hub', 'torch', 'transformers']
+                        'sortedcontainers', 'spacy', 'tensorflow', 'tensorflow_hub', 'torch', 'transformers', 'udapi']
 
 extlinks = {
     'config': (f'https://github.com/deepmipt/DeepPavlov/blob/{release}/deeppavlov/configs/%s', None)
