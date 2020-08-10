@@ -68,18 +68,18 @@ PARAMS = {
     "spelling_correction": {
         ("spelling_correction/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
             [
-                ("helllo", "hello"),
-                ("datha", "data")
+                ("helllo", ("hello",)),
+                ("datha", ("data",))
             ],
         ("spelling_correction/brillmoore_kartaslov_ru.json", "error_model", ('IP',)):
             [
-                ("преведствую", "приветствую"),
-                ("я джва года дду эту игру", "я два года жду эту игру")
+                ("преведствую", ("приветствую",)),
+                ("я джва года дду эту игру", ("я два года жду эту игру",))
             ],
         ("spelling_correction/levenshtein_corrector_ru.json", "error_model", ('IP',)):
             [
-                ("преветствую", "приветствую"),
-                ("Я джва года хочу такую игру", "я два года хочу такую игру")
+                ("преветствую", ("приветствую",)),
+                ("Я джва года хочу такую игру", ("я два года хочу такую игру",))
             ]
     },
     "go_bot": {
@@ -108,8 +108,8 @@ PARAMS = {
         ("classifiers/yahoo_convers_vs_info.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/ru_obscenity_classifier.json", "classifiers", ('IP',)):
             [
-                ("Ну и сука же она", True),
-                ("я два года жду эту игру", False)
+                ("Ну и сука же она", (True,)),
+                ("я два года жду эту игру", (False,))
             ],
         ("classifiers/sentiment_sst_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_sst_multi_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -144,8 +144,9 @@ PARAMS = {
         ("kbqa/entity_linking_rus.json", "entity_linking",  ('IP',)):
             [
                 ("Москва — столица России, центр Центрального федерального округа и центр Московской области.",
-                 ['Q649', 'Q159', 'Q190778', 'Q1749']),
-                ("абв", [])
+                 (['москва', 'россии', 'центрального федерального округа', 'московской области'],
+                  [[0], [3], [6, 7, 8], [11, 12]], ['Q649', 'Q159', 'Q190778', 'Q1749'])),
+                ("абв", ([], [], []))
             ]
     },
     "ner": {
@@ -169,9 +170,9 @@ PARAMS = {
         ("ner/ner_rus.json", "ner_rus", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/slotfill_dstc2.json", "slotfill_dstc2", ('IP',)):
             [
-                ("chinese food", {'food': 'chinese'}),
-                ("in the west part", {'area': 'west'}),
-                ("moderate price range", {'pricerange': 'moderate'})
+                ("chinese food", ({'food': 'chinese'},)),
+                ("in the west part", ({'area': 'west'},)),
+                ("moderate price range", ({'pricerange': 'moderate'},))
             ],
         ("ner/ner_conll2003_torch_bert.json", "ner_conll2003_torch_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK]
     },
@@ -182,37 +183,37 @@ PARAMS = {
     "kbqa": {
         ("kbqa/kbqa_cq.json", "kbqa", ('IP',)):
             [
-                ("What is the currency of Sweden?", "Swedish krona"),
-                ("Where was Napoleon Bonaparte born?", "Ajaccio"),
-                ("When did the Korean War end?", "1953-07-27"),
-                ("   ", "Not Found")
+                ("What is the currency of Sweden?", ("Swedish krona",)),
+                ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
+                ("When did the Korean War end?", ("1953-07-27",)),
+                ("   ", ("Not Found",))
             ],
         ("kbqa/kbqa_cq_mt_bert.json", "kbqa", ('IP',)):
             [
-                ("What is the currency of Sweden?", "Swedish krona"),
-                ("Where was Napoleon Bonaparte born?", "Ajaccio"),
-                ("When did the Korean War end?", "1953-07-27"),
-                ("   ", "Not Found")
+                ("What is the currency of Sweden?", ("Swedish krona",)),
+                ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
+                ("When did the Korean War end?", ("1953-07-27",)),
+                ("   ", ("Not Found",))
             ],
         ("kbqa/kbqa_cq_online_mt_bert.json", "kbqa", ('IP',)):
             [
-                ("What is the currency of Sweden?", "Swedish krona"),
-                ("Where was Napoleon Bonaparte born?", "Ajaccio"),
-                ("When did the Korean War end?", "1953-07-27"),
-                ("   ", "Not Found")
+                ("What is the currency of Sweden?", ("Swedish krona",)),
+                ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
+                ("When did the Korean War end?", ("1953-07-27",)),
+                ("   ", ("Not Found",))
             ],
         ("kbqa/kbqa_cq_bert_ranker.json", "kbqa", ('IP',)):
             [
-                ("What is the currency of Sweden?", "Swedish krona"),
-                ("Where was Napoleon Bonaparte born?", "Ajaccio"),
-                ("When did the Korean War end?", "1953-07-27"),
-                ("   ", "Not Found")
+                ("What is the currency of Sweden?", ("Swedish krona",)),
+                ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
+                ("When did the Korean War end?", ("1953-07-27",)),
+                ("   ", ("Not Found",))
             ],
         ("kbqa/kbqa_cq_rus.json", "kbqa", ('IP',)):
             [
-                ("Кто такой Оксимирон?", "британский рэп-исполнитель"),
-                ("Чем питаются коалы?", "Эвкалипт"),
-                ("абв", "Not Found")
+                ("Кто такой Оксимирон?", ("британский рэп-исполнитель",)),
+                ("Чем питаются коалы?", ("Эвкалипт",)),
+                ("абв", ("Not Found",))
             ]
     },
     "elmo_embedder": {
@@ -420,7 +421,13 @@ def _serialize(config):
 
 def _infer(config, inputs, download=False):
     chainer = build_model(config, download=download)
-    return chainer(*inputs) if inputs else []
+    if inputs:
+        prediction = chainer(*inputs)
+        if len(chainer.out_params) == 1:
+            prediction = [prediction]
+    else:
+        prediction = []
+    return prediction
 
 
 def _deserialize(config, raw_bytes, examples):
@@ -443,7 +450,7 @@ class TestQuickStart(object):
         *inputs, expected_outputs = zip(*qr_list) if qr_list else ([],)
         with ProcessPoolExecutor(max_workers=1) as executor:
             f = executor.submit(_infer, config_path, inputs)
-        outputs = f.result()
+        outputs = list(zip(*f.result()))
 
         if check_outputs:
             errors = ';'.join([f'expected `{expected}` got `{output}`'

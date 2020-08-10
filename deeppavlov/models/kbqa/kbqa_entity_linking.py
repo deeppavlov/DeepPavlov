@@ -131,6 +131,8 @@ class KBEntityLinker(Component, Serializable):
             elif self.kb_format == "sqlite3":
                 self.conn = sqlite3.connect(str(expand_path(self.kb_filename)))
                 self.cursor = self.conn.cursor()
+            else:
+                raise ValueError(f'unsupported kb_format value {self.kb_format}')
             self.inverted_index_builder()
             self.save()
         else:
