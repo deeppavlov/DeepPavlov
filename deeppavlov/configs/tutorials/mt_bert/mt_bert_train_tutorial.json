@@ -1,0 +1,318 @@
+{
+  "dataset_reader": {
+    "class_name": "multitask_reader",
+    "data_path": "null",
+    "tasks": {
+      "insults": {
+        "reader_class_name": "basic_classification_reader",
+        "x": "Comment",
+        "y": "Class",
+        "data_path": "{DOWNLOADS_PATH}/insults_data"
+      },
+      "sentiment": {
+        "reader_class_name": "basic_classification_reader",
+        "x": "text",
+        "y": "label",
+        "data_path": "{DOWNLOADS_PATH}/yelp_review_full_csv",
+        "train": "train.csv",
+        "test": "test.csv",
+        "header": null,
+        "names": [
+          "label",
+          "text"
+        ]
+      },
+      "ner": {
+        "reader_class_name": "conll2003_reader",
+        "data_path": "{DOWNLOADS_PATH}/conll2003/",
+        "dataset_name": "conll2003",
+        "provide_pos": false
+      }
+    }
+  },
+  "dataset_iterator": {
+    "class_name": "multitask_iterator",
+    "tasks": {
+      "insults": {
+        "iterator_class_name": "basic_classification_iterator",
+        "seed": 42
+      },
+      "sentiment": {
+        "iterator_class_name": "basic_classification_iterator",
+        "seed": 42,
+        "split_seed": 23,
+        "field_to_split": "train",
+        "split_fields": [
+          "train",
+          "valid"
+        ],
+        "split_proportions": [
+          0.9,
+          0.1
+        ]      
+      },
+      "ner": {"iterator_class_name": "data_learning_iterator"}
+    }
+  },
+  "chainer": {
+    "in": ["x_insults", "x_sentiment", "x_ner"],
+    "in_y": ["y_insults", "y_sentiment", "y_ner"],
+    "pipe": [
+      {
+        "class_name": "bert_preprocessor",
+        "vocab_file": "{BERT_PATH}/vocab.txt",
+        "do_lower_case": false,
+        "max_seq_length": 64,
+        "in": [
+          "x_insults"
+        ],
+        "out": [
+          "bert_features_insults"
+        ]
+      },
+      {
+        "id": "classes_vocab_insults",
+        "class_name": "simple_vocab",
+        "fit_on": [
+          "y_insults"
+        ],
+        "save_path": "{INSULTS_PATH}/classes.dict",
+        "load_path": "{INSULTS_PATH}/classes.dict",
+        "in": "y_insults",
+        "out": "y_insults_ids"
+      },
+      {
+        "in": "y_insults_ids",
+        "out": "y_insults_onehot",
+        "class_name": "one_hotter",
+        "depth": "#classes_vocab_insults.len",
+        "single_vector": true
+      },
+
+      {
+        "class_name": "bert_preprocessor",
+        "vocab_file": "{BERT_PATH}/vocab.txt",
+        "do_lower_case": false,
+        "max_seq_length": 200,
+        "in": [
+          "x_sentiment"
+        ],
+        "out": [
+          "bert_features_sentiment"
+        ]
+      },
+      {
+        "id": "classes_vocab_sentiment",
+        "class_name": "simple_vocab",
+        "fit_on": [
+          "y_sentiment"
+        ],
+        "save_path": "{SENTIMENT_PATH}/classes.dict",
+        "load_path": "{SENTIMENT_PATH}/classes.dict",
+        "in": "y_sentiment",
+        "out": "y_sentiment_ids"
+      },
+      {
+        "in": "y_sentiment_ids",
+        "out": "y_sentiment_onehot",
+        "class_name": "one_hotter",
+        "depth": "#classes_vocab_sentiment.len",
+        "single_vector": true
+      },
+
+      {
+        "class_name": "bert_ner_preprocessor",
+        "vocab_file": "{BERT_PATH}/vocab.txt",
+        "do_lower_case": false,
+        "max_seq_length": 512,
+        "max_subword_length": 15,
+        "token_masking_prob": 0.0,
+        "in": ["x_ner"],
+        "out": [
+            "x_ner_tokens", 
+            "x_ner_subword_tokens", 
+            "x_ner_subword_tok_ids", 
+            "ner_startofword_markers", 
+            "ner_attention_mask"]
+      },
+      {
+        "id": "tag_vocab",
+        "class_name": "simple_vocab",
+        "unk_token": ["O"],
+        "pad_with_zeros": true,
+        "save_path": "{NER_PATH}/tag.dict",
+        "load_path": "{NER_PATH}/tag.dict",
+        "fit_on": ["y_ner"],
+        "in": ["y_ner"],
+        "out": ["y_ner_ind"]
+      },
+
+      { 
+        "id": "mt_bert",                                                                                                               
+        "class_name": "mt_bert",
+        "save_path": "{MT_BERT_PATH}/model",
+        "load_path": "{MT_BERT_PATH}/model",
+        "bert_config_file": "{BERT_PATH}/bert_config.json",
+        "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
+        "attention_probs_keep_prob": 0.5,
+        "body_learning_rate": 3e-5,
+        "min_body_learning_rate": 2e-7,
+        "learning_rate_drop_patience": 10,
+        "learning_rate_drop_div": 1.5,
+        "load_before_drop": true,
+        "optimizer": "tf.train:AdamOptimizer",
+        "clip_norm": 1.0,
+        "tasks": {
+          "insults": {
+            "class_name": "mt_bert_classification_task",
+            "n_classes": "#classes_vocab_insults.len",
+            "keep_prob": 0.5,
+            "return_probas": true,
+            "learning_rate": 1e-3,
+            "one_hot_labels": true
+          },
+          "sentiment": {
+            "class_name": "mt_bert_classification_task",
+            "n_classes": "#classes_vocab_sentiment.len",
+            "return_probas": true,
+            "one_hot_labels": true,
+            "keep_prob": 0.5,
+            "learning_rate": 1e-3
+          },
+          "ner": {
+            "class_name": "mt_bert_seq_tagging_task",
+            "n_tags": "#tag_vocab.len",
+            "return_probas": false,
+            "keep_prob": 0.5,
+            "learning_rate": 1e-3,
+            "use_crf": true,
+            "encoder_layer_ids": [-1]
+          }
+        },
+        "in_distribution": {"insults": 1, "sentiment": 1, "ner": 3},
+        "in": [
+          "bert_features_insults", 
+          "bert_features_sentiment", 
+          "x_ner_subword_tok_ids", 
+          "ner_attention_mask", 
+          "ner_startofword_markers"],
+        "in_y_distribution": {"insults": 1, "sentiment": 1, "ner": 1},
+        "in_y": ["y_insults_onehot", "y_sentiment_onehot", "y_ner_ind"],
+        "out": ["y_insults_pred_probas", "y_sentiment_pred_probas", "y_ner_pred_ind"]
+      },
+
+      {
+        "in": "y_insults_pred_probas",
+        "out": "y_insults_pred_ids",
+        "class_name": "proba2labels",
+        "max_proba": true
+      },
+      {
+        "in": "y_insults_pred_ids",
+        "out": "y_insults_pred_labels",
+        "ref": "classes_vocab_insults"
+      },
+
+      {
+        "in": "y_sentiment_pred_probas",
+        "out": "y_sentiment_pred_ids",
+        "class_name": "proba2labels",
+        "max_proba": true
+      },
+      {
+        "in": "y_sentiment_pred_ids",
+        "out": "y_sentiment_pred_labels",
+        "ref": "classes_vocab_sentiment"
+      },
+
+      {
+        "ref": "tag_vocab",
+        "in": ["y_ner_pred_ind"],
+        "out": ["y_ner_pred"]
+      }
+    ],
+    "out": ["y_insults_pred_labels", "y_sentiment_pred_labels", "y_ner_pred"]
+  },
+  "train": {
+    "epochs": 30,
+    "batch_size": 16,
+    "metrics": [
+      {
+        "name": "average__roc_auc__roc_auc__ner_f1",
+        "inputs": [
+          "y_insults_onehot",
+          "y_insults_pred_probas",
+          "y_sentiment_onehot",
+          "y_sentiment_pred_probas",
+          "y_ner",
+          "y_ner_pred"
+        ]
+      },
+      {
+        "name": "roc_auc",
+        "inputs": [
+          "y_insults_onehot",
+          "y_insults_pred_probas"
+        ]
+      },
+      {
+        "name": "accuracy",
+        "inputs": [
+          "y_sentiment_onehot",
+          "y_sentiment_pred_probas"
+        ]
+      },
+      {
+        "name": "ner_f1",
+        "inputs": ["y_ner", "y_ner_pred"]
+      },
+      {
+        "name": "ner_token_f1",
+        "inputs": ["y_ner", "y_ner_pred"]
+      }
+    ],
+    "validation_patience": 100,
+    "val_every_n_batches": 20,
+
+    "log_every_n_batches": 20,
+    "tensorboard_log_dir": "{MT_BERT_PATH}/logs",
+    "show_examples": false,
+    "pytest_max_batches": 2,
+    "pytest_batch_size": 8,
+    "evaluation_targets": ["valid", "test"],
+    "class_name": "nn_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",
+      "MT_BERT_PATH": "{MODELS_PATH}/mt_bert_tutorial",
+      "INSULTS_PATH": "{MT_BERT_PATH}/insults",
+      "SENTIMENT_PATH": "{MT_BERT_PATH}/sentiment",
+      "NER_PATH": "{MT_BERT_PATH}/ner"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
+      "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
+      "{DEEPPAVLOV_PATH}/requirements/hdt.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/datasets/insults_data.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/datasets/yelp_review_full_csv.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
+        "subdir": "{DOWNLOADS_PATH}/bert_models"
+      }
+    ]
+  }
+}

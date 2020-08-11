@@ -4,7 +4,8 @@ from pathlib import Path
 from typing import Union, Dict
 
 from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.registry import register
+from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.registry import register, get_model
 from deeppavlov.dataset_readers.dstc2_reader import DSTC2DatasetReader
 from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesFeatures
 from deeppavlov.models.go_bot.nlg.dto.json_nlg_response import JSONNLGResponse
@@ -23,6 +24,7 @@ class MockJSONNLGManager(NLGManagerInterface):
                  actions2slots_path: Union[str, Path],
                  api_call_action: str,
                  data_path: Union[str, Path],
+                 dataset_reader_class="dstc2_reader",
                  debug=False):
         self.debug = debug
 
@@ -30,6 +32,8 @@ class MockJSONNLGManager(NLGManagerInterface):
             log.debug(f"BEFORE {self.__class__.__name__} init(): "
                       f"actions2slots_path={actions2slots_path}, "
                       f"api_call_action={api_call_action}, debug={debug}")
+
+        self._dataset_reader = get_model(dataset_reader_class)
 
         individual_actions2slots = self._load_actions2slots_mapping(actions2slots_path)
         possible_actions_combinations_tuples = sorted(
@@ -70,7 +74,7 @@ class MockJSONNLGManager(NLGManagerInterface):
 
     def _extract_actions_combinations(self, dataset_path: Union[str, Path]):
         dataset_path = expand_path(dataset_path)
-        dataset = DSTC2DatasetReader.read(data_path=dataset_path, dialogs=True)
+        dataset = self._dataset_reader.read(data_path=dataset_path, dialogs=True)
         actions_combinations = set()
         for dataset_split in dataset.values():
             for dialogue in dataset_split:
@@ -82,8 +86,14 @@ class MockJSONNLGManager(NLGManagerInterface):
     @staticmethod
     def _load_actions2slots_mapping(actions2slots_json_path) -> Dict[str, str]:
         actions2slots_json_path = expand_path(actions2slots_json_path)
-        with open(actions2slots_json_path, encoding="utf-8") as actions2slots_json_f:
-            actions2slots = json.load(actions2slots_json_f)
+        if actions2slots_json_path.exists():
+            with open(actions2slots_json_path, encoding="utf-8") as actions2slots_json_f:
+                actions2slots = json.load(actions2slots_json_f)
+        else:
+            actions2slots = dict()
+            log.info(f"INSIDE {__class__.__name__} _load_actions2slots_mapping(): "
+                      f"actions2slots_json_path={actions2slots_json_path} DOES NOT EXIST. "
+                      f"initialized actions2slots mapping with an empty one: {str(actions2slots)}")
         return actions2slots
 
     def get_action_id(self, action_text: str) -> int:

@@ -136,15 +136,35 @@ Integrations section for more info.
 Using GPU
 ~~~~~~~~~
 
-To run or train DeepPavlov models on GPU you should have `CUDA <https://developer.nvidia.com/cuda-toolkit>`__ 10.0
+To run or train **TensorFlow**-based DeepPavlov models on GPU you should have `CUDA <https://developer.nvidia.com/cuda-toolkit>`__ 10.0
 installed on your host machine and TensorFlow with GPU support (``tensorflow-gpu``)
-installed in your python environment. Current supported TensorFlow version is 1.14.0. Run
+installed in your python environment. Current supported TensorFlow version is 1.15.2. Run
 
     .. code:: bash
 
-        pip install tensorflow-gpu==1.14.0
+        pip install tensorflow-gpu==1.15.2
 
 before installing model's package requirements to install supported ``tensorflow-gpu`` version.
+
+To run or train **PyTorch**-based DeepPavlov models on GPU you should also have `CUDA <https://developer.nvidia.com/cuda-toolkit>`__ 9.0 or 10.0
+installed on your host machine, and install model's package requirements.
+If you want to run the code on GPU, just make the device visible for the script.
+If you want to use a particular device, you may set it in command line:
+
+    .. code:: bash
+
+        export CUDA_VISIBLE_DEVICES=3; python -m deeppavlov train <config_path>
+
+or in Python script:
+
+    .. code:: python
+
+        import os
+
+        os.environ["CUDA_VISIBLE_DEVICES"]="3"
+
+In case one wants to left the GPU device visible but use CPU, one can set directly in the configuration file in dictionary
+with model parameters `"device": "cpu"`.
 
 
 Pretrained models

@@ -1,0 +1,72 @@
+{
+  "dataset_reader": {
+    "class_name": "boolqa_reader",
+    "data_path": "{DOWNLOADS_PATH}/boolqa_data",
+    "language": "ru"
+  },
+  "dataset_iterator": {
+    "class_name": "basic_classification_iterator",
+    "seed": 243
+  },
+  "chainer": {
+    "in": ["text_a", "text_b"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "class_name": "bert_preprocessor",
+        "vocab_file": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1/vocab.txt",
+        "do_lower_case": false,
+        "max_seq_length": 128,
+        "in": ["text_a", "text_b"],
+        "out": ["bert_features"]
+      },
+      {
+        "class_name": "bert_classifier",
+        "n_classes": 2,
+        "one_hot_labels": false,
+        "bert_config_file": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1/bert_config.json",
+        "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1/bert_model.ckpt",
+        "save_path": "{MODELS_PATH}/boolqa_rubert/model_rubert",
+        "load_path": "{MODELS_PATH}/boolqa_rubert/model_rubert",
+        "keep_prob": 0.5,
+        "optimizer": "tf.train:AdamOptimizer",
+        "learning_rate": 2e-05,
+        "learning_rate_drop_patience": 3,
+        "learning_rate_drop_div": 2.0,
+        "in": ["bert_features"],
+        "in_y": ["y"],
+        "out": ["predictions"]
+      }
+    ],
+    "out": ["predictions"]
+  },
+  "train": {
+    "epochs": 50,
+    "batch_size": 32,
+    "train_metrics": ["f1", "acc"],
+    "metrics": ["f1", "acc"],
+    "validation_patience": 5,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
+    "evaluation_targets": ["valid", "train"],
+    "show_examples": false,
+    "tensorboard_log_dir": "{MODELS_PATH}/boolqa_rubert/logs"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v1.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/bert_models"
+      }
+    ]
+  }
+}

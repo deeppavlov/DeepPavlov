@@ -14,3 +14,4 @@
 
 from .fit_trainer import FitTrainer
 from .nn_trainer import NNTrainer
+from .torch_trainer import TorchTrainer

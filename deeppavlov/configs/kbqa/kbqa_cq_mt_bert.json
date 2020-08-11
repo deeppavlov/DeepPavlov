@@ -1,0 +1,264 @@
+{
+  "chainer": {
+    "in": ["x"],
+    "pipe": [
+      {                                                                                                                
+        "id": "queries_vocab",                                                                                         
+        "class_name": "simple_vocab",                                                                                  
+        "save_path": "{MT_BERT_PATH}/query_prediction/classes.dict"
+      },
+      {
+        "class_name": "bert_ner_preprocessor",
+        "vocab_file": "{BERT_PATH}/vocab.txt",
+        "do_lower_case": false,
+        "max_seq_length": 512,
+        "max_subword_length": 15,
+        "token_maksing_prob": 0.0,
+        "in": ["x"],
+        "out": ["x_tokens", "x_subword_tokens", "x_subword_tok_ids", "pred_subword_mask"]
+      },
+      {
+        "class_name": "mask",
+        "in": ["x_subword_tokens"],
+        "out": ["x_subword_mask"]
+      },
+      {                                                                                                                
+        "id": "tag_vocab",
+        "class_name": "simple_vocab",
+        "unk_token": ["O"],
+        "pad_with_zeros": true,
+        "save_path": "{MT_BERT_PATH}/ner/tag.dict",
+        "load_path": "{MT_BERT_PATH}/ner/tag.dict"
+      },
+      {                                                                                                                
+        "class_name": "mt_bert",
+        "id": "mt_bert_kbqa",
+        "inference_task_names": ["ner"],
+        "bert_config_file": "{BERT_PATH}/bert_config.json",
+        "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
+        "load_path": "{MT_BERT_PATH}/model",
+        "save_path": "{MT_BERT_PATH}/model",
+        "tasks": {
+          "ner": {
+            "class_name": "mt_bert_seq_tagging_task",
+            "n_tags": "#tag_vocab.len",
+            "use_crf": false,
+            "return_probas": true,
+            "encoder_layer_ids": [-1]
+          },
+          "query_prediction": {
+            "class_name": "mt_bert_classification_task",
+            "n_classes": "#queries_vocab.len",
+            "return_probas": true,
+            "one_hot_labels": true
+          },
+          "rel_ranking": {
+            "class_name": "mt_bert_classification_task",
+            "n_classes": 2,
+            "return_probas": true,
+            "one_hot_labels": false
+          }    
+        },
+        "in": {
+          "x_subword_tok_ids": "x_subword_tok_ids", 
+          "x_subword_mask": "x_subword_mask", 
+          "pred_subword_mask": "pred_subword_mask"
+        },                                                                                
+        "out": ["tag_probas_ner"]                                                                 
+      },
+      {
+        "class_name": "bert_preprocessor",
+        "vocab_file": "{BERT_PATH}/vocab.txt",
+        "do_lower_case": false,
+        "max_seq_length": 64,
+        "in": ["x"],
+        "out": ["bert_features_qr"]
+      },
+      {
+        "class_name": "mt_bert_reuser",
+        "mt_bert": "#mt_bert_kbqa",
+        "task_names": "query_prediction",
+        "in": ["bert_features_qr"],
+        "out": ["template_probas"]
+      },
+      {
+        "in": "template_probas",
+        "out": "template_ids",
+        "class_name": "proba2labels",
+        "max_proba": true
+      },
+      {
+        "ref": "queries_vocab",
+        "in": "template_ids",
+        "out": "template_type"
+      },
+      {
+        "in": ["x_tokens", "tag_probas_ner"],
+        "out": ["entities", "types"],
+        "thres_proba": 0.95,
+        "entity_tags": ["ENTITY"],
+        "type_tag": "TYPE",
+        "o_tag": "O",
+        "tags_file": "{MT_BERT_PATH}/ner/tag.dict",
+        "class_name": "entity_detection_parser"
+      },
+      {
+        "class_name": "wiki_parser",
+        "id": "wiki_p",
+        "wiki_filename": "{DOWNLOADS_PATH}/wikidata/wikidata.hdt"
+      },
+      {
+        "class_name": "template_matcher",
+        "id": "template_m",
+        "num_processors": 8,
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "templates_filename": "templates_eng.json"
+      },
+      {
+        "class_name": "kbqa_entity_linker",
+        "id": "linker_entities",
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "inverted_index_filename": "inverted_index_eng.pickle",
+        "entities_list_filename": "entities_list.pickle",
+        "q2name_filename": "wiki_eng_q_to_name.pickle",
+        "use_hdt": false,
+        "wiki_parser": "#wiki_p",
+        "use_prefix_tree": false
+      },
+      {
+        "class_name": "kbqa_entity_linker",
+        "id": "linker_types",
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "inverted_index_filename": "inverted_index_types_eng.pickle",
+        "entities_list_filename": "types_list.pickle",
+        "q2name_filename": "wiki_eng_q_to_name_types.pickle",
+        "use_hdt": false,
+        "wiki_parser": "#wiki_p",
+        "use_prefix_tree": false
+      },
+      {
+        "class_name": "rel_ranking_infer",
+        "id": "rel_r_inf",
+        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking.json"},
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "rel_q2name_filename": "wiki_dict_properties.pickle",
+        "rels_to_leave": 40
+      },
+      {
+        "class_name": "query_generator",
+        "id": "query_g",
+        "linker_entities": "#linker_entities",
+        "linker_types": "#linker_types",
+        "template_matcher": "#template_m",
+        "rel_ranker": "#rel_r_inf",
+        "wiki_parser": "#wiki_p",
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "rank_rels_filename_1": "rels_0.txt",
+        "rank_rels_filename_2": "rels_1.txt",
+        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata_eng/sparql_queries.json",
+        "entities_to_leave": 5,
+        "rels_to_leave": 10,
+        "in": ["x", "template_type", "entities", "types"],
+        "out": ["candidate_rels_answers"]
+      },
+      {
+        "class_name": "rel_ranking_mt_bert_infer",
+        "bert_preprocessor": {
+          "class_name": "bert_preprocessor",
+          "vocab_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/vocab.txt",
+          "do_lower_case": false,
+          "max_seq_length": 64
+        },
+        "ranker":{
+          "class_name": "mt_bert_reuser",
+          "mt_bert": "#mt_bert_kbqa",
+          "task_names": ["rel_ranking"]
+        },
+        "wiki_parser": "#wiki_p",
+        "batch_size": 32,
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "rel_q2name_filename": "wiki_dict_properties.pickle",
+        "in": ["x", "candidate_rels_answers"],
+        "out": ["answers"]
+      }
+    ],
+    "out": ["answers"]
+  },
+  "train": {
+    "epochs": 30,
+    "batch_size": 16,
+    "metrics": [
+      {
+        "name": "ner_f1",
+        "inputs": ["y", "y_pred"]
+      },
+      {
+        "name": "ner_token_f1",
+        "inputs": ["y", "y_pred"]
+      }
+    ],
+    "validation_patience": 10,
+    "val_every_n_batches": 400,
+
+    "log_every_n_batches": 400,
+    "tensorboard_log_dir": "{MT_BERT_PATH}/logs",
+    "show_examples": false,
+    "pytest_max_batches": 2,
+    "pytest_batch_size": 8,
+    "evaluation_targets": ["valid", "test"],
+    "class_name": "nn_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
+      "MT_BERT_PATH": "{MODELS_PATH}/mt_bert_kbqa"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
+      "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
+      "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
+      "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
+      "{DEEPPAVLOV_PATH}/requirements/spelling.txt"
+    ],
+    "labels": {
+      "telegram_utils": "KBQA_MT_BERT_MODEL",
+      "server_utils": "KBQA"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/reddit_fastText/wordpunct_tok_reddit_comments_2017_11_300.bin",
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/mt_bert.tar.gz",
+        "subdir": "{MT_BERT_PATH}"
+      },
+      {                                                                                                                   
+        "url": "http://files.deeppavlov.ai/kbqa/models/cased_L-12_H-768_A-12_vocab_config.tar.gz",                            
+        "subdir": "{BERT_PATH}"                                                                                           
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wiki_eng_files.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/sparql_queries.json",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+      },
+      {                                                                                                                   
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.hdt",                                                   
+        "subdir": "{DOWNLOADS_PATH}/wikidata"                                                                             
+      },                                                                                                                  
+      {                                                                                                                   
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.hdt.index.v1-1",                                        
+        "subdir": "{DOWNLOADS_PATH}/wikidata"                                                                             
+      }
+    ]
+  }
+}

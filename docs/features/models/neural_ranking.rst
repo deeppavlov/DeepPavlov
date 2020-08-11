@@ -12,13 +12,20 @@ Training and inference models on predifined datasets
 BERT Ranking
 ~~~~~~~~~~~~
 
-Before using models make sure that all required packages are installed running the command:
+Before using models make sure that all required packages are installed running the command for TensorFlow:
 
 .. code:: bash
 
     python -m deeppavlov install ranking_ubuntu_v2_bert_uncased
     python -m deeppavlov install ranking_ubuntu_v2_bert_sep
     python -m deeppavlov install ranking_ubuntu_v2_bert_sep_interact
+
+or on PyTorch:
+
+.. code:: bash
+
+    python -m deeppavlov install ranking_ubuntu_v2_torch_bert_uncased
+
 
 To train the interaction-based (accurate, slow) model on the `Ubuntu V2`_ from command line:
 
