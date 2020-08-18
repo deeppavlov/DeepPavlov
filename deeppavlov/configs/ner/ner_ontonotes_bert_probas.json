@@ -1,0 +1,111 @@
+{
+  "dataset_reader": {
+    "class_name": "conll2003_reader",
+    "data_path": "{DOWNLOADS_PATH}/ontonotes/",
+    "dataset_name": "ontonotes",
+    "provide_pos": false
+  },
+  "dataset_iterator": {
+    "class_name": "data_learning_iterator"
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "class_name": "bert_ner_preprocessor",
+        "vocab_file": "{BERT_PATH}/vocab.txt",
+        "do_lower_case": false,
+        "max_seq_length": 512,
+        "max_subword_length": 15,
+        "token_masking_prob": 0.0,
+        "in": ["x"],
+        "out": ["x_tokens", "x_subword_tokens", "x_subword_tok_ids", "startofword_markers", "attention_mask"]
+      },
+      {
+        "id": "tag_vocab",
+        "class_name": "simple_vocab",
+        "unk_token": ["O"],
+        "pad_with_zeros": true,
+        "save_path": "{NER_PATH}/tag.dict",
+        "load_path": "{NER_PATH}/tag.dict",
+        "fit_on": ["y"],
+        "in": ["y"],
+        "out": ["y_ind"]
+      },
+      {
+        "class_name": "bert_sequence_tagger",
+        "n_tags": "#tag_vocab.len",
+        "keep_prob": 0.1,
+        "bert_config_file": "{BERT_PATH}/bert_config.json",
+        "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
+        "attention_probs_keep_prob": 0.5,
+        "use_crf": true,
+        "return_probas": true,
+        "ema_decay": 0.9,
+        "encoder_layer_ids": [-1],
+        "weight_decay_rate": 1e-6,
+        "learning_rate": 1e-2,
+        "bert_learning_rate": 2e-5,
+        "min_learning_rate": 1e-7,
+        "learning_rate_drop_patience": 30,
+        "learning_rate_drop_div": 2,
+        "load_before_drop": false,
+        "clip_norm": 1.0,
+        "save_path": "{NER_PATH}/model",
+        "load_path": "{NER_PATH}/model",
+        "in": ["x_subword_tok_ids", "attention_mask", "startofword_markers"],
+        "in_y": ["y_ind"],
+        "out": ["y_pred"]
+      }
+    ],
+    "out": ["x_tokens", "y_pred"]
+  },
+  "train": {
+    "epochs": 30,
+    "batch_size": 16,
+    "metrics": [
+      {
+        "name": "ner_f1",
+        "inputs": ["y", "y_pred"]
+      },
+      {
+        "name": "ner_token_f1",
+        "inputs": ["y", "y_pred"]
+      }
+    ],
+    "validation_patience": 100,
+    "val_every_n_batches": 40,
+
+    "log_every_n_batches": 40,
+    "tensorboard_log_dir": "{NER_PATH}/logs",
+    "show_examples": false,
+    "pytest_max_batches": 2,
+    "pytest_batch_size": 8,
+    "evaluation_targets": ["valid", "test"],
+    "class_name": "nn_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",
+      "NER_PATH": "{MODELS_PATH}/ner_ontonotes_bert"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_ontonotes_bert_v1.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
+        "subdir": "{DOWNLOADS_PATH}/bert_models"
+      }
+    ]
+  }
+}
