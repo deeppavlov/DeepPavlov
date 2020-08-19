@@ -63,15 +63,18 @@ class QueryGeneratorOnline(QueryGeneratorBase):
         self.load()
 
     def __call__(self, question_batch: List[str],
+                 question_san_batch: List[str],
                  template_type_batch: List[str],
                  entities_from_ner_batch: List[List[str]],
                  types_from_ner_batch: List[List[str]]) -> List[Union[List[Tuple[str, Any]], List[str]]]:
 
         candidate_outputs_batch = []
-        for question, template_type, entities_from_ner, types_from_ner in \
-                zip(question_batch, template_type_batch, entities_from_ner_batch, types_from_ner_batch):
+        for question, question_sanitized, template_type, entities_from_ner, types_from_ner in \
+                zip(question_batch, question_san_batch, template_type_batch,
+                                                        entities_from_ner_batch, types_from_ner_batch):
 
-            candidate_outputs = self.find_candidate_answers(question, template_type, entities_from_ner, types_from_ner)
+            candidate_outputs = self.find_candidate_answers(question, question_sanitized,
+                                                            template_type, entities_from_ner, types_from_ner)
             candidate_outputs_batch.append(candidate_outputs)
         if self.return_answers:
             answers = self.rel_ranker(question_batch, candidate_outputs_batch)
