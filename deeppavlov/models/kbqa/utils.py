@@ -98,7 +98,7 @@ def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], r
         query = query.replace(f"e{n + 1}", entity)
     for n, entity_type in enumerate(type_comb[:-1]):  # type_entity
         query = query.replace(f"t{n + 1}", entity_type)
-    for n, rel in enumerate(rel_comb[:-1]):
+    for n, (rel, score) in enumerate(rel_comb[:-1]):
         query = query.replace(f"r{n + 1}", rel)
     query = query.replace("http://www.wikidata.org/prop/direct/P0", "http://schema.org/description")
     query = query.split(' ')

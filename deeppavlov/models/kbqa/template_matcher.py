@@ -16,8 +16,9 @@ import re
 import multiprocessing as mp
 import json
 import functools
+import time
 from logging import getLogger
-from typing import Tuple, List
+from typing import Tuple, List, Dict, Any
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
@@ -69,13 +70,17 @@ class TemplateMatcher(Serializable):
     def save(self) -> None:
         raise NotImplementedError
 
-    def __call__(self, question: str) -> Tuple[List[str], List[str], List[Tuple[str]], List[str], str]:
+    def __call__(self, question: str, entities_from_ner: List[str]) -> \
+                                      Tuple[List[str], List[str], List[Tuple[str]], List[str], str]:
         question = question.lower()
         question = self.sanitize(question)
         question_length = len(question)
         entities, types, relations, relation_dirs = [], [], [], []
         query_type = ""
+        template_found = ""
+        tm1 = time.time()
         results = self.pool.map(RegexpMatcher(question), self.templates)
+        tm1 = time.time()
         results = functools.reduce(lambda x, y: x + y, results)
         replace_tokens = [("the uk", "united kingdom"), ("the us", "united states")]
         if results:
@@ -94,8 +99,8 @@ class TemplateMatcher(Serializable):
                 type_lengths = [len(entity_type) for entity_type in types_cand]
                 unuseful_tokens_len = sum([len(unuseful_tok) for unuseful_tok in unuseful_tokens])
                 log.debug(f"found template: {template}, {found_ent}")
-
-                if 0 not in entity_lengths or 0 not in type_lengths and entity_num_tokens:
+                match, entities_cand = self.check_whatis_templates(template, entities_cand, entities_from_ner)
+                if match and (0 not in entity_lengths or 0 not in type_lengths and entity_num_tokens):
                     cur_len = sum(entity_lengths) + sum(type_lengths)
                     log.debug(f"lengths: entity+type {cur_len}, question {question_length}, "
                               f"template {template_len}, unuseful tokens {unuseful_tokens_len}")
@@ -109,7 +114,7 @@ class TemplateMatcher(Serializable):
                         query_type = template["template_type"]
                         min_length = cur_len
 
-        return entities, types, relations, relation_dirs, query_type
+        return entities, types, relations, relation_dirs, query_type, template_found
 
     def sanitize(self, question: str) -> str:
         if question.startswith("the "):
@@ -122,3 +127,13 @@ class TemplateMatcher(Serializable):
             question = question.replace(date_interval[0], '')
         question = question.replace('  ', ' ')
         return question
+
+    def check_whatis_templates(self, template: Dict[str, Any], entities_cand: List[str], entities_from_ner: List[str]):
+        entities_from_ner = [entity.lower() for entity in entities_from_ner]
+        match = True
+        if template["template"] in ["who is xxx?", "what is xxx?", "who was xxx?", "what was xxx?", "where is xxx?",
+                                    "tell me more about xxx?", "tell me about xxx?"]:
+            entities_cand = [re.sub(r"\b(a |the )", '', entity) for entity in entities_cand]
+            if entities_cand != entities_from_ner:
+                match = False
+        return match, entities_cand

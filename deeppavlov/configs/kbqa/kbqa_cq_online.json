@@ -132,9 +132,7 @@
       "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
       "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
-      "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
-      "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
-      "{DEEPPAVLOV_PATH}/requirements/spelling.txt"
+      "{DEEPPAVLOV_PATH}/requirements/hdt.txt"
     ],
     "labels": {
       "telegram_utils": "NERCoNLL2003Model",
