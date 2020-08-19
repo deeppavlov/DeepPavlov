@@ -19,6 +19,7 @@ from typing import Tuple, List, Optional, Union, Dict, Any
 from collections import namedtuple
 
 import nltk
+import numpy as np
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.models.kbqa.wiki_parser_online import WikiParserOnline
@@ -108,7 +109,7 @@ class QueryGeneratorOnline(QueryGeneratorBase):
         rel_variables = re.findall(":(r[\d]{1,2})", query)
         entity_ids = [entity[:self.entities_to_leave] for entity in entity_ids]
         if rels_from_template is not None:
-            rels = rels_from_template
+            rels = [[(rel, 1.0) for rel in rel_list] for rel_list in rels_from_template]
         else:
             rels = [self.find_top_rels(question, entity_ids, triplet_info)
                     for triplet_info in triplet_info_list]
@@ -160,16 +161,20 @@ class QueryGeneratorOnline(QueryGeneratorBase):
         log.debug(f"(query_parser)entity_combs: {entity_combs[:3]}")
         type_combs = make_combs(selected_type_ids, permut=False)
         log.debug(f"(query_parser)type_combs: {type_combs[:3]}")
-        for combs in itertools.product(entity_combs, type_combs, rel_combs):
+        confidence = 0.0
+        for comb_num, combs in enumerate(itertools.product(entity_combs, type_combs, rel_combs)):
             filled_query, filter_rels = fill_online_query(query, combs[0], combs[1], combs[2], fill_rel_variables,
                                                           filter_rel_variables, rels_list_for_filter)
+            if comb_num == 0:
+                log.debug(f"\n_______________________________\nfilled query: {filled_query}\n_______________________________\n")
             candidate_output = self.wiki_parser.get_answer(filled_query)
             
             out_vars = filter_rels + rels_from_query + answer_ent
             candidate_output = [output for output in candidate_output
                 if (all([filter_value in output[filter_var[1:]]["value"] for filter_var, filter_value in property_types.items()])
                 and all([not output[ent[1:]]["value"].startswith("http://www.wikidata.org/value") for ent in answer_ent]))]
-            candidate_outputs += [combs[2][:-1] + [output[var[1:]]["value"] for var in out_vars] for output in candidate_output]
+            candidate_outputs += [combs[2][:-1] + [output[var[1:]]["value"] for var in out_vars] + [confidence]
+                                                                                    for output in candidate_output]
             if return_if_found and candidate_output:
                 return candidate_outputs
         log.debug(f"(query_parser)loop time: {datetime.datetime.now() - start_time}")
