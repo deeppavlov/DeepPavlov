@@ -36,8 +36,22 @@ log = getLogger(__name__)
 
 @register('adj_to_noun')
 class AdjToNoun:
-    def __init__(self, freq_dict_filename: str, **kwargs):
+    """
+        Class for converting an adjective in Russian to the corresponding noun, for example:
+        "московский" -> "Москва", "африканский" -> "Африка"
+    """
+    def __init__(self, freq_dict_filename: str, candidate_nouns: int = 10, **kwargs):
+        """
+
+        Args:
+            freq_dict_filename: file with the dictionary of Russian words with the corresponding frequencies
+            candidate_nouns: how many candidate nouns to leave after search
+            **kwargs:
+        """
+        self.candidate_nouns = candidate_nouns
         alphabet = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя-"
+        self.alphabet_length = len(alphabet)
+        self.max_word_length = 24
         self.letter_nums = {letter: num for num, letter in enumerate(alphabet)}
         with open(str(expand_path(freq_dict_filename)), 'r') as fl:
             lines = fl.readlines()
@@ -54,13 +68,12 @@ class AdjToNoun:
 
         self.matrix = self.make_sparse_matrix(self.nouns).transpose()
 
-    def search(self, word):
-        thres = 10
+    def search(self, word: str):
         if word in self.adj_set:
             q_matrix = self.make_sparse_matrix([word])
             scores = q_matrix * self.matrix
             scores = np.squeeze(scores.toarray() + 0.0001)
-            o = np.argpartition(-scores, thres)[0:thres]
+            o = np.argpartition(-scores, self.candidate_nouns)[0:self.candidate_nouns]
             o_sort = o[np.argsort(-scores[o])]
             candidates = [self.nouns_with_freq[i] for i in o_sort]
             candidates = sorted(candidates, key=lambda x: x[1], reverse=True)
@@ -68,7 +81,7 @@ class AdjToNoun:
         else:
             return ""
 
-    def make_sparse_matrix(self, words):
+    def make_sparse_matrix(self, words: List[str]):
         indptr = []
         indices = []
         data = []
@@ -79,7 +92,7 @@ class AdjToNoun:
             indptr.append(total_length)
             init_value = 1
             for cnt, letter in enumerate(word.lower()):
-                col = 34*cnt + self.letter_nums[letter]
+                col = self.alphabet_length*cnt + self.letter_nums[letter]
                 indices.append(col)
                 init_value = 1.0 - cnt*0.1
                 if init_value < 0:
@@ -92,9 +105,9 @@ class AdjToNoun:
         data = np.array(data)
         indptr = np.array(indptr)
         indices = np.array(indices)
-        shape=(len(words), 24*34)
+        shape=(len(words), self.max_word_length*self.alphabet_length)
 
-        matrix = csr_matrix((data, indices, indptr), shape=(len(words), 24*34))
+        matrix = csr_matrix((data, indices, indptr), shape=(len(words), self.max_word_length*self.alphabet_length))
 
         return matrix
 
@@ -109,6 +122,8 @@ class TreeToSparql(Component):
 
         Args:
             sparql_queries_filename: file with sparql query templates
+            lang: english or russian
+            adj_to_noun: component deeppavlov.models.kbqa.tree_to_sparql:AdjToNoun
             **kwargs:
         """
         self.lang = lang
