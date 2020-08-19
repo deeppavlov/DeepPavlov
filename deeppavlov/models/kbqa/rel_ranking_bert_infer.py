@@ -34,7 +34,8 @@ class RelRankerBertInfer(Component, Serializable):
                  ranker: RelRanker,
                  wiki_parser: Optional[WikiParser] = None,
                  batch_size: int = 32,
-                 rels_to_leave: int = 40, **kwargs):
+                 rels_to_leave: int = 40,
+                 return_confidences: bool = False, **kwargs):
         """
 
         Args:
@@ -52,6 +53,7 @@ class RelRankerBertInfer(Component, Serializable):
         self.wiki_parser = wiki_parser
         self.batch_size = batch_size
         self.rels_to_leave = rels_to_leave
+        self.return_confidences = return_confidences
         self.load()
 
     def load(self) -> None:
@@ -100,8 +102,11 @@ class RelRankerBertInfer(Component, Serializable):
                 log.debug(f"answers: {answers_with_scores[0]}")
                 answer = self.wiki_parser.find_label(answers_with_scores[0][0])
                 confidence = answers_with_scores[0][2]
-
-            answers.append((answer, confidence))
+            
+            if self.return_confidences:
+                answers.append((answer, confidence))
+            else:
+                answers.append(answer)
 
         return answers
 
