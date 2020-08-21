@@ -52,8 +52,7 @@
         "name": "squad_v2_em",
         "inputs": ["ans_raw", "ans_predicted"]
       }
-    ],
-    "tensorboard_log_dir": "{MODELS_PATH}/logs"
+    ]
   },
   "metadata": {
     "variables": {
