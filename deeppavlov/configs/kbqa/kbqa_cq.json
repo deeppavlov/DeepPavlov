@@ -160,7 +160,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/models/ner_lcquad.tar.gz",
-        "subdir": "{MODELS_PATH}/ner_lcquad"
+        "subdir": "{MODELS_PATH}/ner_lcquad_ent_and_type"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking.tar.gz",
