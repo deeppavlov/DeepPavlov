@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
+import re
 from logging import getLogger
 from typing import List, Tuple, Dict
 from collections import namedtuple
@@ -131,7 +133,7 @@ class WikiParser:
         combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
         return combs
 
-    def find_label(self, entity: str) -> str:
+    def find_label(self, entity: str, question: str) -> str:
         entity = str(entity).replace('"', '')
         if entity.startswith("Q"):
             # example: "Q5513"
@@ -160,6 +162,9 @@ class WikiParser:
             entity = entity.split("^^")[0]
             for token in ["T00:00:00Z", "+"]:
                 entity = entity.replace(token, '')
+            year = re.findall("([\d]{3,4})-[\d]{1,2}-[\d]{1,2}", entity)
+            if "how old" in question.lower() and year:
+                entity = datetime.datetime.now().year - int(year[0])
             return entity
 
         elif entity.isdigit():

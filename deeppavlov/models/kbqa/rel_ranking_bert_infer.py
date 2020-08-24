@@ -45,7 +45,7 @@ class RelRankerBertInfer(Component, Serializable):
             ranker: component deeppavlov.models.ranking.rel_ranker
             batch_size: infering batch size
             rels_to_leave: how many relations to leave after relation ranking
-            return_confidences: whether to return confidences of answers
+            return_confidences: whether to return confidences of candidate answers
             **kwargs:
         """
         super().__init__(save_path=None, load_path=load_path)
@@ -101,7 +101,7 @@ class RelRankerBertInfer(Component, Serializable):
 
             if answers_with_scores:
                 log.debug(f"answers: {answers_with_scores[0]}")
-                answer = self.wiki_parser.find_label(answers_with_scores[0][0])
+                answer = self.wiki_parser.find_label(answers_with_scores[0][0], question)
                 confidence = answers_with_scores[0][2]
             
             if self.return_confidences:

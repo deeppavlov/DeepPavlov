@@ -53,7 +53,7 @@ class KBEntityLinker(Component, Serializable):
                  who_entities_filename: str = None,
                  save_path: str = None,
                  q2descr_filename: str = None,
-                 descr_rank_score_thres: float = 0.1,
+                 descr_rank_score_thres: float = 0.0,
                  freq_dict_filename: str = None,
                  entity_ranker: RelRankerBertInfer = None,
                  build_inverted_index: bool = False,
@@ -274,7 +274,8 @@ class KBEntityLinker(Component, Serializable):
             scores = self.entity_ranker.rank_rels(context, entity_ids)
             entities_with_scores = [(entity_id, id_to_score[entity_id][0], id_to_score[entity_id][1], score) for entity_id, score in scores]
             entities_with_scores = sorted(entities_with_scores, key=lambda x: (x[1], x[2], x[3]), reverse=True)
-            entities_with_scores = [entity for entity in entities_with_scores if entity[3] > self.descr_rank_score_thres]
+            entities_with_scores = [entity for entity in entities_with_scores if \
+                                   (entity[3] > self.descr_rank_score_thres or entity[2] == 100.0)]
             log.debug(f"entities_with_scores {entities_with_scores[:10]}")
             entity_ids = [entity for entity, _, _, _ in entities_with_scores]
             confidences = [score for _, _, _, score in entities_with_scores]

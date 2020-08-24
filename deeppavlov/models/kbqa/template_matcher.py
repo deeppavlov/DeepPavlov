@@ -99,7 +99,7 @@ class TemplateMatcher(Serializable):
                 type_lengths = [len(entity_type) for entity_type in types_cand]
                 unuseful_tokens_len = sum([len(unuseful_tok) for unuseful_tok in unuseful_tokens])
                 log.debug(f"found template: {template}, {found_ent}")
-                match, entities_cand = self.check_whatis_templates(template, entities_cand, entities_from_ner)
+                match, entities_cand = self.match_template_and_ner(entities_cand, entities_from_ner)
                 if match and (0 not in entity_lengths or 0 not in type_lengths and entity_num_tokens):
                     cur_len = sum(entity_lengths) + sum(type_lengths)
                     log.debug(f"lengths: entity+type {cur_len}, question {question_length}, "
@@ -128,12 +128,12 @@ class TemplateMatcher(Serializable):
         question = question.replace('  ', ' ')
         return question
 
-    def check_whatis_templates(self, template: Dict[str, Any], entities_cand: List[str], entities_from_ner: List[str]):
+    def match_template_and_ner(self, entities_cand: List[str], entities_from_ner: List[str]):
+        match = False
         entities_from_ner = [entity.lower() for entity in entities_from_ner]
-        match = True
-        if template["template"] in ["who is xxx?", "what is xxx?", "who was xxx?", "what was xxx?", "where is xxx?",
-                                    "tell me more about xxx?", "tell me about xxx?"]:
-            entities_cand = [re.sub(r"\b(a |the )", '', entity) for entity in entities_cand]
-            if entities_cand != entities_from_ner:
-                match = False
+        entities_from_ner = [re.sub(r"^(a |the )", '', entity) for entity in entities_from_ner]
+        entities_cand = [re.sub(r"^(a |the )", '', entity) for entity in entities_cand]
+        log.debug(f"entities_cand {entities_cand} entities_from_ner {entities_from_ner}")
+        if set(entities_cand) == set(entities_from_ner) or not entities_from_ner:
+            match = True
         return match, entities_cand

@@ -112,6 +112,23 @@ class AdjToNoun:
         return matrix
 
 
+@register('udpipe_parser')
+class UdpipeParser(Component):
+    def __init__(self, udpipe_filename: str, **kwargs):
+        self.udpipe_filename = udpipe_filename
+        self.ud_model = udModel.load(str(expand_path(self.udpipe_filename)))
+        self.full_ud_model = Pipeline(self.ud_model, "vertical", Pipeline.DEFAULT, Pipeline.DEFAULT, "conllu")
+
+    def __call__(self, sentences_batch: List[str]):
+        conll_outputs = []
+        for sentence in sentences_batch:
+            sentence_tokens = nltk.word_tokenize(sentence)
+            sentence_inp = '\n'.join(sentence_tokens)
+            conll_output = self.full_ud_model.process(sentence_inp)
+            conll_outputs.append(conll_output)
+        return conll_outputs
+
+
 @register('tree_to_sparql')
 class TreeToSparql(Component):
     """
@@ -171,11 +188,12 @@ class TreeToSparql(Component):
                     new_root = root
                 root_desc = defaultdict(list)
                 for node in new_root.children:
-                    if node.deprel not in ["punct", "advmod", "cop"]:
+                    if node.deprel not in ["punct", "advmod", "cop", "mark"]:
                         if node == unknown_branch:
                             root_desc[node.deprel].append(node)
                         else:
-                            if self.find_entities(node, positions, cut_clause=False) or self.find_year_or_number(node):
+                            if self.find_entities(node, positions, cut_clause=False) or \
+                               (self.find_year_or_number(node) and node.deprel in ["obl", "nummod"]):
                                 root_desc[node.deprel].append(node)
                 
                 if root.form.lower() == self.how_many or ("nsubj" in root_desc.keys() and \
@@ -185,11 +203,17 @@ class TreeToSparql(Component):
                 appos_token_nums = sorted(self.find_appos_tokens(root, []))
                 appos_tokens = [elem.form for elem in tree_desc if elem.ord in appos_token_nums]
                 log.debug(f"appos tokens: {appos_tokens}")
+                self.root_entity = False
+                if root.ord - 1 in positions:
+                    self.root_entity = True
                 query_nums, entities_dict, types_dict = self.build_query(new_root, unknown_branch, root_desc,
                                      unknown_node, modifiers, clause_modifiers, clause_node, positions, count=count)
     
-                question = ' '.join([node.form for node in tree.descendants \
-                    if (node.ord not in appos_token_nums or node.ord not in clause_token_nums)])
+                if self.lang == "rus":
+                    question = ' '.join([node.form for node in tree.descendants \
+                        if (node.ord not in appos_token_nums or node.ord not in clause_token_nums)])
+                else:
+                    question = ' '.join([node.form for node in tree.descendants])
                 log.debug(f"sanitized question: {question}")
                 query_nums_batch.append(query_nums)
                 entities_dict_batch.append(entities_dict)
@@ -208,7 +232,7 @@ class TreeToSparql(Component):
         self.one_chain = False
         
         if root.form.lower() in self.q_pronouns:
-            if [node.deprel for node in root.children] == ["nsubj", "punct"]:
+            if "nsubj" in [node.deprel for node in root.children]:
                 self.one_chain = True
             else:
                 for node in root.children:
@@ -393,6 +417,7 @@ class TreeToSparql(Component):
         if root_desc_deprels in [["nsubj", "obl"],
                                  ["nsubj", "obj"],
                                  ["nsubj", "xcomp"],
+                                 ["obj", "xcomp"],
                                  ["nmod", "nsubj"],
                                  ["obj", "obl"],
                                  ["iobj", "nsubj"],
@@ -403,12 +428,17 @@ class TreeToSparql(Component):
                                  ["xcomp"],
                                  ["nsubj"]]:
             if self.wh_leaf or self.one_chain:
-                for nodes in root_desc.values():
-                    if nodes[0].form not in self.q_pronouns:
-                        grounded_entities_list = self.find_entities(nodes[0], positions, cut_clause=True)
-                        if grounded_entities_list:
-                            break
+                if root_desc_deprels == ["nsubj", "obl"]:
+                    grounded_entities_list = self.find_entities(root_desc["nsubj"][0], positions, cut_clause=True)
+                else:
+                    for nodes in root_desc.values():
+                        if nodes[0].form not in self.q_pronouns:
+                            grounded_entities_list = self.find_entities(nodes[0], positions, cut_clause=True)
+                            if grounded_entities_list:
+                                break
             else:
+                if self.root_entity:
+                    grounded_entities_list = [root.form]
                 for nodes in root_desc.values():
                     if nodes[0] != unknown_branch:
                         grounded_entities_list = self.find_entities(nodes[0], positions, cut_clause=True)
@@ -427,6 +457,17 @@ class TreeToSparql(Component):
                 if clause_modifiers:
                     found_year_or_number = self.find_year_or_number(clause_modifiers[0])
                     qualifier_entities_list = self.find_entities(clause_modifiers[0], positions, cut_clause=True)
+
+        if root_desc_deprels == ["nsubj", "obl", "obl"]:
+            grounded_entities_list = self.find_entities(root_desc["nsubj"][0], positions, cut_clause=True)
+            for node in root_desc["obl"]:
+                if node == unknown_branch:
+                    types_list.append(node.form)
+                else:
+                    grounded_entities_list += self.find_entities(node, positions, cut_clause=True)
+
+        if root_desc_deprels == ["obj", "xcomp"]:
+            grounded_entities_list = self.find_entities(root_desc["xcomp"][0], positions, cut_clause=True)
         
         if root_desc_deprels == ["nsubj", "obj", "obl"] or root_desc_deprels == ["obj", "obl"] and self.wh_leaf:
             found_year_or_number = self.find_year_or_number(root_desc["obl"][0])
@@ -459,13 +500,11 @@ class TreeToSparql(Component):
                 found_year_or_number = self.find_year_or_number(root_desc["nummod"][0])
 
         entities_list = grounded_entities_list + qualifier_entities_list + modifiers_list
-        if found_year_or_number:
-            query_nums.append("0")
-        else:
-            for num, template in self.template_queries.items():
-                if [len(grounded_entities_list), len(types_list), len(modifiers_list),
-                    len(qualifier_entities_list), count, order] == list(template["syntax_structure"].values()):
-                    query_nums.append(num)
+ 
+        for num, template in self.template_queries.items():
+            if [len(grounded_entities_list), len(types_list), len(modifiers_list),
+                len(qualifier_entities_list), found_year_or_number, count, order] == list(template["syntax_structure"].values()):
+                query_nums.append(num)
 
         log.debug(f"tree_to_sparql, grounded entities {grounded_entities_list}")
         log.debug(f"tree_to_sparql, types {types_list}")

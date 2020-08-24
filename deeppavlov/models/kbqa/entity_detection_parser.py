@@ -22,6 +22,25 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 
 
+@register('question_sign_checker')
+class QuestionSignChecker(Component):
+    """This class adds question sign if it is absent or replaces dot with question sign"""
+
+    def __init__(self, **kwargs):
+        pass
+
+    def __call__(self, questions: List[str]) -> List[str]:
+        questions_sanitized = []
+        for question in questions:
+            if not question.endswith('?'):
+                if question.endswith('.'):
+                    question = question[:-1] + '?'
+                else:
+                    question += '?'
+            questions_sanitized.append(question)
+        return questions_sanitized
+
+
 @register('entity_detection_parser')
 class EntityDetectionParser(Component):
     """This class parses probabilities of tokens to be a token from the entity substring."""

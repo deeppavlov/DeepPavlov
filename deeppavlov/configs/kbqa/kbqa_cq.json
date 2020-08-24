@@ -1,8 +1,13 @@
 {
   "chainer": {
-    "in": ["x"],
+    "in": ["x_init"],
     "in_y": ["y"],
     "pipe": [
+      {
+        "class_name": "question_sign_checker",
+        "in": ["x_init"],
+        "out": ["x"]
+      },
       {
         "config_path": "{CONFIGS_PATH}/ner/ner_lcquad_bert_ent_and_type.json",
         "in": ["x"],
