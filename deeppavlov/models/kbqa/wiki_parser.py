@@ -50,10 +50,10 @@ class WikiParser:
                  filter_info: List[Tuple[str]],
                  order_info: namedtuple) -> List[List[str]]:
         """
-            Let us consider an example of the question 
-                "What is the deepest lake in Russia?"
+            Let us consider an example of the question "What is the deepest lake in Russia?"
             with the corresponding SPARQL query            
             "SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:R1 ?obj . ?ent wdt:R2 wd:E1 } ORDER BY ASC(?obj) LIMIT 5"
+
             arguments:
                 what_return: ["?obj"]
                 query_seq: [["?ent", "http://www.wikidata.org/prop/direct/P17", "http://www.wikidata.org/entity/Q159"]
