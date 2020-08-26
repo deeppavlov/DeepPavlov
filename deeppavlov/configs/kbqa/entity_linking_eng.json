@@ -79,7 +79,7 @@
         "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_ontonotes_bert_v1.tar.gz",
+        "url": "http://files.deeppavlov.ai/kbqa/models/ner_ontonotes_bert.tar.gz",
         "subdir": "{MODELS_PATH}/ner_ontonotes_bert"
       },
       {
