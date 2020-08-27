@@ -156,10 +156,8 @@ class KBEntityLinker(Component, Serializable):
         pos_freq_dict = defaultdict(list)
         for line in lines:
             line_split = line.strip('\n').split('\t')
-            try:
+            if re.match("[\d]+\.[\d]+", line_split[2]):
                 pos_freq_dict[line_split[1]].append((line_split[0], float(line_split[2])))
-            except ValueError:
-                pass
         nouns_with_freq = pos_freq_dict["s"]
         self.nouns_dict = {noun: freq for noun, freq in nouns_with_freq}
 

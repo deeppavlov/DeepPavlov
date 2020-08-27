@@ -57,10 +57,8 @@ class RuAdjToNoun:
         pos_freq_dict = defaultdict(list)
         for line in lines:
             line_split = line.strip('\n').split('\t')
-            try:
+            if re.match("[\d]+\.[\d]+", line_split[2]):
                 pos_freq_dict[line_split[1]].append((line_split[0], float(line_split[2])))
-            except ValueError:
-                pass
         self.nouns_with_freq = pos_freq_dict["s"] + pos_freq_dict["s.PROP"]
         self.adj_set = set([word for word, freq in pos_freq_dict["a"]])
         self.nouns = [noun[0] for noun in self.nouns_with_freq]
@@ -155,7 +153,7 @@ class TreeToSparql(Component):
             self.q_pronouns = {"какой", "какая", "какое", "каком", "каким", "какую", "кто", "что", "как", "когда",
                                "где", "чем", "сколько"}
             self.how_many = "сколько"
-            self.change_root_tokens = {"каким был", "какой была"}:
+            self.change_root_tokens = {"каким был", "какой была"}
             self.temporal_order_tokens = {"первый", "последний"}
         elif self.lang == "eng":
             self.q_pronouns = {"what", "who", "how", "when", "where", "which"}
