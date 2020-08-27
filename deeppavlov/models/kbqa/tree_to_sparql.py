@@ -152,12 +152,16 @@ class TreeToSparql(Component):
         """
         self.lang = lang
         if self.lang == "rus":
-            self.q_pronouns = ["какой", "какая", "какое", "каком", "каким", "какую", "кто", "что", "как", "когда",
-                               "где", "чем", "сколько"]
+            self.q_pronouns = {"какой", "какая", "какое", "каком", "каким", "какую", "кто", "что", "как", "когда",
+                               "где", "чем", "сколько"}
             self.how_many = "сколько"
+            self.change_root_tokens = {"каким был", "какой была"}:
+            self.temporal_order_tokens = {"первый", "последний"}
         elif self.lang == "eng":
-            self.q_pronouns = ["what", "who", "how", "when", "where", "which"]
+            self.q_pronouns = {"what", "who", "how", "when", "where", "which"}
             self.how_many = "how many"
+            self.change_root_tokens = ""
+            self.temporal_order_tokens = {"first", "last"}
         else:
             raise ValueError(f"unsupported language {lang}")
         self.sparql_queries_filename = expand_path(sparql_queries_filename)
@@ -189,7 +193,7 @@ class TreeToSparql(Component):
                 clause_node, clause_branch = self.find_clause_node(root, unknown_branch)
                 modifiers, clause_modifiers = self.find_modifiers_of_unknown(unknown_node)
                 log.debug(f"modifiers: {[modifier.form for modifier in modifiers]}")
-                if f"{tree_desc[0].form.lower()} {tree_desc[1].form.lower()}" in ["каким был", "какой была"]:
+                if f"{tree_desc[0].form.lower()} {tree_desc[1].form.lower()}" in self.change_root_tokens:
                     new_root = root.children[0]
                 else:
                     new_root = root
@@ -209,6 +213,8 @@ class TreeToSparql(Component):
                 log.debug(f"root_desc {root_desc.keys()}")
                 appos_token_nums = sorted(self.find_appos_tokens(root, []))
                 appos_tokens = [elem.form for elem in tree_desc if elem.ord in appos_token_nums]
+                clause_token_nums = sorted(self.find_clause_tokens(root, clause_node, []))
+                clause_tokens = [elem.form for elem in tree_desc if elem.ord in clause_token_nums]
                 log.debug(f"appos tokens: {appos_tokens}")
                 self.root_entity = False
                 if root.ord - 1 in positions:
@@ -381,10 +387,8 @@ class TreeToSparql(Component):
 
     def find_appos_tokens(self, node: Node, appos_token_nums: List[int]) -> List[int]:
         for elem in node.children:
-            if elem.deprel == "appos" and (len(elem.descendants) > 1 and
-                    "«" not in [nd.form for nd in elem.children] and
-                    '"' not in [nd.form for nd in elem.children] and
-                    '``' not in [nd.form for nd in elem.children] or
+            if elem.deprel == "appos" and (len(elem.descendants) > 1 and 
+                    not {"«", '"', '``'} & {nd.form for nd in elem.children} or
                     (len(elem.descendants) == 1 and elem.descendants[0].deprel != "flat:name")):
                 appos_token_nums.append(elem.ord)
                 for desc in elem.descendants:
@@ -412,8 +416,8 @@ class TreeToSparql(Component):
                 for elem in node.children:
                     node_desc[elem.deprel].add(self.morph.parse(elem.form.lower())[0].inflect({"masc", "sing", "nomn"}).word)
                 if "amod" in node_desc.keys() and "nmod" in node_desc.keys() and \
-                   node_desc["amod"].intersection({"первый", "последний"}):
-                    first_or_last = node_desc["amod"].intersection({"первый", "последний"})
+                   node_desc["amod"].intersection(self.temporal_order_tokens):
+                    first_or_last = node_desc["amod"].intersection(self.temporal_order_tokens)
                     return first_or_last
             nodes = [elem for node in nodes for elem in node.children]
         return first_or_last
