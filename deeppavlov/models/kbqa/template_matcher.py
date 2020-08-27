@@ -16,9 +16,8 @@ import re
 import multiprocessing as mp
 import json
 import functools
-import time
 from logging import getLogger
-from typing import Tuple, List, Dict, Any
+from typing import Tuple, List
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
@@ -71,16 +70,14 @@ class TemplateMatcher(Serializable):
         raise NotImplementedError
 
     def __call__(self, question: str, entities_from_ner: List[str]) -> \
-                                      Tuple[List[str], List[str], List[Tuple[str]], List[str], str]:
+                                      Tuple[List[str], List[str], List[Tuple[str]], List[str], str, str]:
         question = question.lower()
         question = self.sanitize(question)
         question_length = len(question)
         entities, types, relations, relation_dirs = [], [], [], []
         query_type = ""
         template_found = ""
-        tm1 = time.time()
         results = self.pool.map(RegexpMatcher(question), self.templates)
-        tm1 = time.time()
         results = functools.reduce(lambda x, y: x + y, results)
         replace_tokens = [("the uk", "united kingdom"), ("the us", "united states")]
         if results:
@@ -91,6 +88,7 @@ class TemplateMatcher(Serializable):
                 positions_type_tokens = template["positions_type_tokens"]
                 positions_unuseful_tokens = template["positions_unuseful_tokens"]
                 template_len = template["template_len"]
+                template_found = template["template"]
                 entities_cand = [found_ent[pos].replace('?', '') for pos in positions_entity_tokens]
                 types_cand = [found_ent[pos].replace('?', '').split(',')[0] for pos in positions_type_tokens]
                 unuseful_tokens = [found_ent[pos].replace('?', '') for pos in positions_unuseful_tokens]
@@ -117,11 +115,7 @@ class TemplateMatcher(Serializable):
         return entities, types, relations, relation_dirs, query_type, template_found
 
     def sanitize(self, question: str) -> str:
-        if question.startswith("the "):
-            question = question[4:]
-        if question.startswith("a "):
-            question = question[2:]
-
+        question = re.sub(r"^(a |the )", '', question)
         date_interval = re.findall("([\d]{4}-[\d]{4})", question)
         if date_interval:
             question = question.replace(date_interval[0], '')
@@ -129,11 +123,9 @@ class TemplateMatcher(Serializable):
         return question
 
     def match_template_and_ner(self, entities_cand: List[str], entities_from_ner: List[str]):
-        match = False
         entities_from_ner = [entity.lower() for entity in entities_from_ner]
         entities_from_ner = [re.sub(r"^(a |the )", '', entity) for entity in entities_from_ner]
         entities_cand = [re.sub(r"^(a |the )", '', entity) for entity in entities_cand]
         log.debug(f"entities_cand {entities_cand} entities_from_ner {entities_from_ner}")
-        if set(entities_cand) == set(entities_from_ner) or not entities_from_ner:
-            match = True
+        match = set(entities_cand) == set(entities_from_ner) or not entities_from_ner
         return match, entities_cand
