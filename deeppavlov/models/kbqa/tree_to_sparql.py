@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
 from io import StringIO
 from typing import List, Tuple, Dict
 from logging import getLogger
@@ -34,8 +33,8 @@ from deeppavlov.core.common.registry import register
 log = getLogger(__name__)
 
 
-@register('adj_to_noun')
-class AdjToNoun:
+@register('ru_adj_to_noun')
+class RuAdjToNoun:
     """
         Class for converting an adjective in Russian to the corresponding noun, for example:
         "московский" -> "Москва", "африканский" -> "Африка"
@@ -134,13 +133,13 @@ class TreeToSparql(Component):
     """
         Class for building of sparql query template using syntax parser
     """
-    def __init__(self, sparql_queries_filename: str, lang: str = "rus", adj_to_noun: AdjToNoun = None, **kwargs):
+    def __init__(self, sparql_queries_filename: str, lang: str = "rus", adj_to_noun: RuAdjToNoun = None, **kwargs):
         """
 
         Args:
             sparql_queries_filename: file with sparql query templates
             lang: english or russian
-            adj_to_noun: component deeppavlov.models.kbqa.tree_to_sparql:AdjToNoun
+            adj_to_noun: component deeppavlov.models.kbqa.tree_to_sparql:RuAdjToNoun
             **kwargs:
         """
         self.lang = lang

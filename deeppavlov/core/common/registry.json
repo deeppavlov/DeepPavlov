@@ -1,6 +1,5 @@
 {
   "UD_pymorphy_lemmatizer": "deeppavlov.models.morpho_tagger.lemmatizer:UDPymorphyLemmatizer",
-  "adj_to_noun": "deeppavlov.models.kbqa.tree_to_sparql:AdjToNoun",
   "aiml_skill": "deeppavlov.skills.aiml_skill.aiml_skill:AIMLSkill",
   "amazon_ecommerce_reader": "deeppavlov.dataset_readers.amazon_ecommerce_reader:AmazonEcommerceReader",
   "api_requester": "deeppavlov.models.api_requester.api_requester:ApiRequester",
@@ -137,6 +136,7 @@
   "rel_ranking_mt_bert_infer": "deeppavlov.models.kbqa.rel_ranking_mt_bert_infer:RelRankerMTBertInfer",
   "rel_ranking_reader": "deeppavlov.dataset_readers.rel_ranking_reader:ParaphraserReader",
   "response_base_loader": "deeppavlov.models.preprocessors.response_base_loader:ResponseBaseLoader",
+  "ru_adj_to_noun": "deeppavlov.models.kbqa.tree_to_sparql:RuAdjToNoun",
   "ru_obscenity_classifier": "deeppavlov.models.classifiers.ru_obscenity_classifier:RuObscenityClassifier",
   "ru_sent_tokenizer": "deeppavlov.models.tokenizers.ru_sent_tokenizer:RuSentTokenizer",
   "ru_tokenizer": "deeppavlov.models.tokenizers.ru_tokenizer:RussianTokenizer",

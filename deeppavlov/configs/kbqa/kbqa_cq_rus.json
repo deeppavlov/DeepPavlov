@@ -30,7 +30,7 @@
         "out": ["syntax_info"]
       },
       {
-        "class_name": "adj_to_noun",
+        "class_name": "ru_adj_to_noun",
         "freq_dict_filename": "{DOWNLOADS_PATH}/wikidata_rus/freqrnc2011.csv",
         "id": "adj2noun"
       },
