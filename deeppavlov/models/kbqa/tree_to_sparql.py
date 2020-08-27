@@ -59,7 +59,7 @@ class RuAdjToNoun:
             line_split = line.strip('\n').split('\t')
             try:
                 pos_freq_dict[line_split[1]].append((line_split[0], float(line_split[2])))
-            except:
+            except ValueError:
                 pass
         self.nouns_with_freq = pos_freq_dict["s"] + pos_freq_dict["s.PROP"]
         self.adj_set = set([word for word, freq in pos_freq_dict["a"]])
@@ -89,7 +89,6 @@ class RuAdjToNoun:
 
         for n, word in enumerate(words):
             indptr.append(total_length)
-            init_value = 1
             for cnt, letter in enumerate(word.lower()):
                 col = self.alphabet_length*cnt + self.letter_nums[letter]
                 indices.append(col)
@@ -113,7 +112,16 @@ class RuAdjToNoun:
 
 @register('udpipe_parser')
 class UdpipeParser(Component):
+    """
+        Class for building syntactic trees from sentences using UDPipe
+    """
     def __init__(self, udpipe_filename: str, **kwargs):
+        """
+
+        Args:
+            udpipe_filename: file with UDPipe model
+            **kwargs:
+        """
         self.udpipe_filename = udpipe_filename
         self.ud_model = udModel.load(str(expand_path(self.udpipe_filename)))
         self.full_ud_model = Pipeline(self.ud_model, "vertical", Pipeline.DEFAULT, Pipeline.DEFAULT, "conllu")
@@ -219,7 +227,6 @@ class TreeToSparql(Component):
                 types_dict_batch.append(types_dict)
                 questions_batch.append(question)
         return questions_batch, query_nums_batch, entities_dict_batch, types_dict_batch
-        
     
     def find_root(self, tree: Node) -> Node:
         for node in tree.descendants:
@@ -291,18 +298,32 @@ class TreeToSparql(Component):
             else:
                 used_desc = node.children
             for elem in used_desc:
-                if (not cut_clause or (cut_clause and elem.deprel != "acl")) and elem not in conj_list \
-                    and (elem.deprel != "appos" or (elem.deprel == "appos" \
-                    and (not elem.children or (len(elem.children) == 1 and elem.children[0].deprel == "flat:name")
-                    or (len(elem.children) > 1 and ("«" in [nd.form for nd in elem.children]
-                    or '"' in [nd.form for nd in elem.children]
-                    or '``' in [nd.form for nd in elem.children]))))):
+                if self.check_node(elem, conj_list, cut_clause):
                     desc_list = self.find_named_entity(elem, conj_list, desc_list, positions, cut_clause)
         log.debug(f"find_named_entity: node.ord, {node.ord-1}, {node.form}, positions, {positions}")
         if node.ord-1 in positions:
             desc_list.append((node.form, node.ord))
 
         return desc_list
+
+    def check_node(self, elem: Node, conj_list: List[Node], cut_clause: bool) -> bool:
+        """
+        This function defines whether to go deeper in the syntactic tree to look for named entity tokens
+        If all the conditions are true, then we recursively look for named entity tokens in elem's descendants.
+        Args:
+            elem: node of the syntactic tree for which we decide whether to look for named entities in its descendants
+            conj_list: list of nodes, connected with the "elem" node with "conj" deprel
+            cut_clause: if cut_clause is True, we do not want to look for named entities in adjective clauses ("acl")
+        """
+        move_deeper = False
+        if not cut_clause or (cut_clause and elem.deprel != "acl"):
+            if elem not in conj_list:
+                if elem.deprel != "appos" or (elem.deprel == "appos" \
+                   and (not elem.children or 
+                       (len(elem.children) == 1 and elem.children[0].deprel == "flat:name") or \
+                       (len(elem.children) > 1 and {"«", '"', '``'} & {nd.form for nd in elem.children}))):
+                    move_deeper = True
+        return move_deeper
 
     def find_conj(self, node: Node, conj_list: List[Node], positions: List[int], cut_clause: bool) -> List[Node]:
         if node.children:
