@@ -163,7 +163,8 @@ class QueryGenerator(QueryGeneratorBase):
                 log.debug(f"\n_______________________________\nfilled query: {query_hdt_seq}\n_______________________________\n")
             candidate_output = self.wiki_parser(
                 rels_from_query + answer_ent, query_hdt_seq, filter_info, order_info)
-            candidate_outputs += [[rel for rel, score in combs[2][:-1]] + output + [confidence] for output in candidate_output]
+            candidate_outputs += [[rel for rel, score in combs[2][:-1]] + output + [confidence]
+                                  for output in candidate_output]
             if return_if_found and candidate_output:
                 return candidate_outputs
         log.debug(f"(query_parser)loop time: {datetime.datetime.now() - start_time}")
