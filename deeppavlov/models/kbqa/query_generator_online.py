@@ -72,7 +72,7 @@ class QueryGeneratorOnline(QueryGeneratorBase):
         candidate_outputs_batch = []
         for question, question_sanitized, template_type, entities_from_ner, types_from_ner in \
                 zip(question_batch, question_san_batch, template_type_batch,
-                                                        entities_from_ner_batch, types_from_ner_batch):
+                    entities_from_ner_batch, types_from_ner_batch):
 
             candidate_outputs = self.find_candidate_answers(question, question_sanitized,
                                                             template_type, entities_from_ner, types_from_ner)
