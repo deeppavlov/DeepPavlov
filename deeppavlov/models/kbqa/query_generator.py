@@ -153,7 +153,8 @@ class QueryGenerator(QueryGeneratorBase):
         selected_type_ids = [type_ids[int(pos)-1] for pos in type_positions if int(pos)>0]
         entity_combs = make_combs(selected_entity_ids, permut=True)
         type_combs = make_combs(selected_type_ids, permut=False)
-        log.debug(f"(query_parser)entity_combs: {entity_combs[:3]}, type_combs: {type_combs[:3]}, rel_combs: {rel_combs[:3]}")
+        log.debug(f"(query_parser)entity_combs: {entity_combs[:3]}, type_combs: {type_combs[:3]},"
+                  f" rel_combs: {rel_combs[:3]}")
         for comb_num, combs in enumerate(itertools.product(entity_combs, type_combs, rel_combs)):
             confidence = np.prod([score for rel, score in combs[2][:-1]])
             query_hdt_seq = [
