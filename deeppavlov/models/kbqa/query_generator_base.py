@@ -102,7 +102,7 @@ class QueryGeneratorBase(Component, Serializable):
 
     def find_candidate_answers(self, question: str,
                  question_sanitized: str,
-                 template_types: List[str],
+                 template_types: Union[List[str], str],
                  entities_from_ner: List[str],
                  types_from_ner: List[str]) -> Union[List[Tuple[str, Any]], List[str]]:
 
