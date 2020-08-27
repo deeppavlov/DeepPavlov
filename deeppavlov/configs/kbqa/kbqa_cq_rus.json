@@ -154,7 +154,9 @@
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
       "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
       "{DEEPPAVLOV_PATH}/requirements/udpipe.txt",
-      "{DEEPPAVLOV_PATH}/requirements/hdt.txt"
+      "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
+      "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
+      "{DEEPPAVLOV_PATH}/requirements/spelling.txt"
     ],
     "labels": {
       "telegram_utils": "NERCoNLL2003Model",
@@ -172,6 +174,10 @@
       {
         "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_bert_rus.tar.gz",
         "subdir": "{MODELS_PATH}/rel_ranking_bert_rus"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/entity_ranking_bert_rus_no_mention.tar.gz",
+        "subdir": "{MODELS_PATH}/entity_ranking_bert_rus_no_mention"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/syntax_parser/syntax_ru_syntagrus_bert.tar.gz",
