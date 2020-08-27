@@ -50,7 +50,7 @@ class KBEntityLinker(Component, Serializable):
                  inverted_index_filename: str,
                  entities_list_filename: str,
                  q2name_filename: str,
-                 who_entities_filename: str = None,
+                 who_entities_filename: Optional[str] = None,
                  save_path: str = None,
                  q2descr_filename: str = None,
                  descr_rank_score_thres: float = 0.0,
@@ -79,6 +79,9 @@ class KBEntityLinker(Component, Serializable):
             entities_list_filename: file with the list of entities from the knowledge base
             q2name_filename: name of file which maps entity id to name
             q2descr_filename: name of file which maps entity id to description
+            descr_rank_score_thres: if the score of the entity description is less than thres, the entity is not
+                added to output list
+            freq_dict_filename: filename with frequences dictionary of Russian words
             entity_ranker: component deeppavlov.models.kbqa.rel_ranker_bert_infer
             build_inverted_index: if "true", inverted index of entities of the KB will be built
             kb_format: "hdt" or "sqlite3"
@@ -90,6 +93,7 @@ class KBEntityLinker(Component, Serializable):
             sql_column_names: names of columns with subject, relation and object
             lang: language used
             use_descriptions: whether to use context and descriptions of entities for entity ranking
+            include_mention: whether to leave or delete entity mention from the sentence before passing to BERT ranker
             lemmatize: whether to lemmatize tokens of extracted entity
             use_prefix_tree: whether to use prefix tree for search of entities with typos in entity labels
             **kwargs:
@@ -154,7 +158,7 @@ class KBEntityLinker(Component, Serializable):
             line_split = line.strip('\n').split('\t')
             try:
                 pos_freq_dict[line_split[1]].append((line_split[0], float(line_split[2])))
-            except:
+            except ValueError:
                 pass
         nouns_with_freq = pos_freq_dict["s"]
         self.nouns_dict = {noun: freq for noun, freq in nouns_with_freq}
@@ -201,8 +205,8 @@ class KBEntityLinker(Component, Serializable):
 
         return entity_ids_batch, confidences_batch
 
-    def link_entity(self, entity: str, context: str = None, template_found: str = None, cut_entity: bool = False) -> \
-                                                                   Tuple[List[str], List[float]]:
+    def link_entity(self, entity: str, context: Optional[str] = None, template_found: Optional[str] = None,
+                          cut_entity: bool = False) -> Tuple[List[str], List[float]]:
         confidences = []
         if not entity:
             entities_ids = ['None']
