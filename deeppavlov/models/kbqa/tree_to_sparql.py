@@ -20,6 +20,7 @@ from collections import defaultdict
 import nltk
 import numpy as np
 import pymorphy2
+import re
 from scipy.sparse import csr_matrix
 from ufal_udpipe import Model as udModel, Pipeline
 from udapi.block.read.conllu import Conllu
