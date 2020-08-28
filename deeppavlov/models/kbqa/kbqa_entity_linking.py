@@ -74,10 +74,12 @@ class KBEntityLinker(Component, Serializable):
 
         Args:
             load_path: path to folder with inverted index files
-            save_path: path where to save inverted index files
             inverted_index_filename: file with dict of words (keys) and entities containing these words
             entities_list_filename: file with the list of entities from the knowledge base
             q2name_filename: name of file which maps entity id to name
+            who_entities_filename: file with the list of entities in Wikidata, which can be answers to questions
+                with "Who" pronoun, i.e. humans, literary characters etc.
+            save_path: path where to save inverted index files
             q2descr_filename: name of file which maps entity id to description
             descr_rank_score_thres: if the score of the entity description is less than thres, the entity is not
                 added to output list
