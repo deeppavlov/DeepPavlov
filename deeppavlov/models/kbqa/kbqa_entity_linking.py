@@ -129,6 +129,8 @@ class KBEntityLinker(Component, Serializable):
         self.entity_ranker = entity_ranker
         self.use_descriptions = use_descriptions
         self.include_mention = include_mention
+        if self.use_descriptions and self.entity_ranker is None:
+            raise ValueError("No entity ranker is provided!")
 
         if self.use_prefix_tree:
             alphabet = "!#%\&'()+,-./0123456789:;?ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz½¿ÁÄ" + \
