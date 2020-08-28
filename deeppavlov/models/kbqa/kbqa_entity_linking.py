@@ -81,7 +81,7 @@ class KBEntityLinker(Component, Serializable):
                 with "Who" pronoun, i.e. humans, literary characters etc.
             save_path: path where to save inverted index files
             q2descr_filename: name of file which maps entity id to description
-            descr_rank_score_thres: if the score of the entity description is less than thres, the entity is not
+            descr_rank_score_thres: if the score of the entity description is less than threshold, the entity is not
                 added to output list
             freq_dict_filename: filename with frequences dictionary of Russian words
             entity_ranker: component deeppavlov.models.kbqa.rel_ranker_bert_infer
