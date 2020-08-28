@@ -102,7 +102,6 @@ class RuAdjToNoun:
         data = np.array(data)
         indptr = np.array(indptr)
         indices = np.array(indices)
-        shape=(len(words), self.max_word_length*self.alphabet_length)
 
         matrix = csr_matrix((data, indices, indptr), shape=(len(words), self.max_word_length*self.alphabet_length))
 
@@ -215,6 +214,7 @@ class TreeToSparql(Component):
                 clause_token_nums = sorted(self.find_clause_tokens(root, clause_node, []))
                 clause_tokens = [elem.form for elem in tree_desc if elem.ord in clause_token_nums]
                 log.debug(f"appos tokens: {appos_tokens}")
+                log.debug(f"clause_tokens: {clause_tokens}")
                 self.root_entity = False
                 if root.ord - 1 in positions:
                     self.root_entity = True
