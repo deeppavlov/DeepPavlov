@@ -43,7 +43,7 @@ class DialogueStateTracker(FeaturizedTracker):
         self.database = database
         self.n_actions = n_actions
         self.api_call_id = api_call_id
-
+        self.formfilling_action_ids2slots_ids: Dict[int, List[int]] = dict()
         self.reset_state()
 
     @staticmethod
@@ -51,10 +51,24 @@ class DialogueStateTracker(FeaturizedTracker):
                           nlg_manager: NLGManagerInterface,
                           policy_network_params: PolicyNetworkParams,
                           database: Component):
-        return DialogueStateTracker(parent_tracker.slot_names,
-                                    nlg_manager.num_of_known_actions(), nlg_manager.get_api_call_action_id(),
-                                    policy_network_params.hidden_size,
-                                    database)
+        dialogue_state_tracker = DialogueStateTracker(parent_tracker.slot_names, nlg_manager.num_of_known_actions(),
+                                                      nlg_manager.get_api_call_action_id(),
+                                                      policy_network_params.hidden_size,
+                                                      database)
+
+        # region set formfilling info
+        act2act_id = {a_text: nlg_manager.get_action_id(a_text) for a_text in nlg_manager.known_actions()}
+        action_id2slots_ids = dict()
+        for act in nlg_manager.known_actions():
+            act_id = act2act_id[act]
+            action_id2slots_ids[act_id] = np.zeros(len(dialogue_state_tracker.slot_names), dtype=np.float32)
+            for slot_name_i, slot_name in enumerate(parent_tracker.action_names2required_slots[act]):
+                slot_ix_in_tracker = dialogue_state_tracker.slot_names.index(slot_name)
+                action_id2slots_ids[act_id][slot_ix_in_tracker] = 1.
+
+        dialogue_state_tracker.formfilling_action_ids2slots_ids = action_id2slots_ids
+        # endregion set formfilling info
+        return dialogue_state_tracker
 
     def reset_state(self):
         super().reset_state()
@@ -110,6 +124,12 @@ class DialogueStateTracker(FeaturizedTracker):
             prev_act_id = np.argmax(self.prev_action)
             if prev_act_id == self.api_call_id:
                 mask[prev_act_id] = 0.
+
+        for act_id in range(self.n_actions):
+            required_slots_mask = self.formfilling_action_ids2slots_ids[act_id]
+            act_slots_fulfilled = required_slots_mask * self._binary_features() == required_slots_mask
+            if not act_slots_fulfilled:
+                mask[act_id] = 0.
 
         return mask
 

@@ -1,7 +1,10 @@
-from typing import List, Iterator
+import json
+from pathlib import Path
+from typing import List, Iterator, Union, Optional, Dict
 
 import numpy as np
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.models.go_bot.nlu.dto.nlu_response import NLUResponse
 from deeppavlov.models.go_bot.tracker.dto.tracker_knowledge_interface import TrackerKnowledgeInterface
@@ -18,14 +21,17 @@ class FeaturizedTracker(TrackerInterface):
 
     Parameters:
         slot_names: list of slots that should be tracked.
+        actions_required_slots_path: (optional) path to json-file with mapping
+            of actions to slots that should be filled to allow for action to be executed
     """
 
     def get_current_knowledge(self) -> TrackerKnowledgeInterface:
         raise NotImplementedError("Featurized tracker lacks get_current_knowledge() method. "
                                   "To be improved in future versions.")
 
-    def __init__(self, slot_names: List[str]) -> None:
+    def __init__(self, slot_names: List[str], actions_required_slots_path: Optional[Union[str, Path]]=None) -> None:
         self.slot_names = list(slot_names)
+        self.action_names2required_slots = self._load_actions2slots_formfilling_info(actions_required_slots_path)
         self.history = []
         self.current_features = None
 
@@ -105,3 +111,16 @@ class FeaturizedTracker(TrackerInterface):
                 feats[i] = 1.
 
         return feats
+
+    def _load_actions2slots_formfilling_info(self, actions_required_slots_path: Optional[Union[str, Path]]=None)\
+            -> Dict[str, List[str]]:
+        """
+        loads the formfilling mapping of actions onto the required slots from the json of the following structure:
+        {action1: [required_slot_name_1], action2: [required_slot_name_21, required_slot_name_22], ..}
+        Returns:
+             the dictionary represented by the passed json
+        """
+        actions2required_slots_json_path = expand_path(actions_required_slots_path)
+        with open(actions2required_slots_json_path, encoding="utf-8") as actions2slots_json_f:
+            actions2required_slots = json.load(actions2slots_json_f)
+        return actions2required_slots

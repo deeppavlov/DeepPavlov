@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from typing import List
 
 from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesFeatures
 from deeppavlov.models.go_bot.nlg.dto.nlg_response_interface import NLGResponseInterface
@@ -42,3 +43,10 @@ class NLGManagerInterface(metaclass=ABCMeta):
             the number of actions known to the NLG module
         """
         pass
+
+    @abstractmethod
+    def known_actions(self) -> List:
+        """
+        Returns:
+             the list of actions known to the NLG module
+        """

@@ -1,7 +1,7 @@
 import json
 from itertools import combinations
 from pathlib import Path
-from typing import Union, Dict
+from typing import Union, Dict, List
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
@@ -127,3 +127,10 @@ class MockJSONNLGManager(NLGManagerInterface):
             the number of actions known to the NLG module
         """
         return len(self.action_tuples2ids.keys())
+
+    def known_actions(self) -> List:
+        """
+        Returns:
+             the list of actions known to the NLG module
+        """
+        return list(self.action_tuples2ids.keys())
