@@ -73,7 +73,7 @@
       },
       {
         "in": "y_pred_proba",
-        "out": "y_pred_ids",
+        "out": ["y_pred_ids", "y_pred_proba_max"],
         "class_name": "proba2labels",
         "max_proba": true
       },
@@ -85,7 +85,7 @@
     ],
     "out": [
       "y_pred_answers",
-      "y_pred_proba"
+      "y_pred_proba_max"
     ]
   },
   "train": {

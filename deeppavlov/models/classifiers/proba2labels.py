@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import List, Union
+from typing import List, Union, Tuple
 
 import numpy as np
 
@@ -54,7 +54,7 @@ class Proba2Labels(Component):
         self.top_n = top_n
 
     def __call__(self, data: Union[np.ndarray, List[List[float]], List[List[int]]],
-                 *args, **kwargs) -> Union[List[List[int]], List[int]]:
+                 *args, **kwargs) -> Tuple[Union[List[List[int]], List[int]], Union[List[List[int]], List[int]]]:
         """
         Process probabilities to labels
 
@@ -63,14 +63,18 @@ class Proba2Labels(Component):
 
         Returns:
             list of labels (only label classification) or list of lists of labels (multi-label classification)
+            # add comment here
         """
         if self.confident_threshold:
-            return [list(np.where(np.array(d) > self.confident_threshold)[0])
+            labels = [list(np.where(np.array(d) > self.confident_threshold)[0])
                     for d in data]
+            return labels, [[d[l] for l in label] for d, label in zip(data, labels)]
         elif self.max_proba:
-            return [np.argmax(d) for d in data]
+            labels = [np.argmax(d) for d in data]
+            return labels, [[d[l] for l in label] for d, label in zip(data, labels)]
         elif self.top_n:
-            return [np.argsort(d)[::-1][:self.top_n] for d in data]
+            labels = [np.argsort(d)[::-1][:self.top_n] for d in data]
+            return labels, [[d[l] for l in label] for d, label in zip(data, labels)]
         else:
             raise ConfigError("Proba2Labels requires one of three arguments: bool `max_proba` or "
                               "float `confident_threshold` for multi-label classification or"
