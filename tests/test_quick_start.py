@@ -147,6 +147,14 @@ PARAMS = {
                  (['москва', 'россии', 'центрального федерального округа', 'московской области'],
                   [[0], [3], [6, 7, 8], [11, 12]], ['Q649', 'Q159', 'Q190778', 'Q1749'])),
                 ("абв", ([], [], []))
+            ],
+        ("kbqa/entity_linking_eng.json", "entity_linking",  ('IP',)):
+            [
+                ("The city stands on the River Thames in the south-east of England, " + \
+                 "at the head of its 50-mile (80 km) estuary leading to the North Sea.",
+                 (['the river thames', 'the north sea', 'england'], [[4, 5, 6], [30, 31, 32], [13]],
+                  ['Q19686', 'Q1693', 'Q21'])),
+                ("abc", ([], [], []))
             ]
     },
     "ner": {

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
+import re
 from logging import getLogger
 from typing import List, Tuple, Dict
 from collections import namedtuple
@@ -48,11 +50,11 @@ class WikiParser:
                  filter_info: List[Tuple[str]],
                  order_info: namedtuple) -> List[List[str]]:
         """
-            Let us consider an example of the question "What is the deepest lake in Russia?" \
-            with the corresponding SPARQL query \
-            ``SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:R1 ?obj . ?ent wdt:R2 wd:E1 } ORDER BY ASC(?obj) LIMIT 5``
+            Let us consider an example of the question "What is the deepest lake in Russia?"
+            with the corresponding SPARQL query            
+            "SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:R1 ?obj . ?ent wdt:R2 wd:E1 } ORDER BY ASC(?obj) LIMIT 5"
 
-            Args:
+            arguments:
                 what_return: ["?obj"]
                 query_seq: [["?ent", "http://www.wikidata.org/prop/direct/P17", "http://www.wikidata.org/entity/Q159"]
                             ["?ent", "http://www.wikidata.org/prop/direct/P31", "http://www.wikidata.org/entity/Q23397"],
@@ -131,7 +133,7 @@ class WikiParser:
         combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
         return combs
 
-    def find_label(self, entity: str) -> str:
+    def find_label(self, entity: str, question: str) -> str:
         entity = str(entity).replace('"', '')
         if entity.startswith("Q"):
             # example: "Q5513"
@@ -148,7 +150,7 @@ class WikiParser:
 
         elif entity.endswith(self.lang):
             # entity: '"Lake Baikal"@en'
-            entity = entity.strip(self.lang)
+            entity = entity[:-3]
             return entity
 
         elif "^^" in entity:
@@ -160,6 +162,9 @@ class WikiParser:
             entity = entity.split("^^")[0]
             for token in ["T00:00:00Z", "+"]:
                 entity = entity.replace(token, '')
+            year = re.findall("([\d]{3,4})-[\d]{1,2}-[\d]{1,2}", entity)
+            if "how old" in question.lower() and year:
+                entity = datetime.datetime.now().year - int(year[0])
             return entity
 
         elif entity.isdigit():

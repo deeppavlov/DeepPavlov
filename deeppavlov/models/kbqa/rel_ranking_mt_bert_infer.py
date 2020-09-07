@@ -35,7 +35,8 @@ class RelRankerMTBertInfer(Component, Serializable):
                  bert_preprocessor,
                  ranker,
                  batch_size: int = 32,
-                 rels_to_leave: int = 40, **kwargs):
+                 rels_to_leave: int = 40,
+                 return_confidences: bool = False, **kwargs):
         """
 
         Args:
@@ -54,6 +55,7 @@ class RelRankerMTBertInfer(Component, Serializable):
         self.wiki_parser = wiki_parser
         self.batch_size = batch_size
         self.rels_to_leave = rels_to_leave
+        self.return_confidences = return_confidences
         self.load()
 
     def load(self) -> None:
@@ -64,6 +66,7 @@ class RelRankerMTBertInfer(Component, Serializable):
 
     def __call__(self, questions_list: List[str], candidate_answers_list: List[List[Tuple[str]]]) -> List[str]:
         answers = []
+        confidence = 0.0
         for question, candidate_answers in zip(questions_list, candidate_answers_list):
             answers_with_scores = []
             answer = "Not Found"
@@ -73,10 +76,12 @@ class RelRankerMTBertInfer(Component, Serializable):
                 questions_batch = []
                 rels_labels_batch = []
                 answers_batch = []
+                confidences_batch = []
                 for candidate_ans_and_rels in candidate_answers[i * self.batch_size: (i + 1) * self.batch_size]:
-                    candidate_rels = candidate_ans_and_rels[:-1]
+                    candidate_rels = candidate_ans_and_rels[:-2]
                     candidate_rels = [candidate_rel.split('/')[-1] for candidate_rel in candidate_rels]
-                    candidate_answer = candidate_ans_and_rels[-1]
+                    candidate_answer = candidate_ans_and_rels[-2]
+                    candidate_confidence = candidate_ans_and_rels[-1]
                     candidate_rels = " # ".join([self.rel_q2name[candidate_rel] \
                                                  for candidate_rel in candidate_rels if
                                                  candidate_rel in self.rel_q2name])
@@ -85,20 +90,26 @@ class RelRankerMTBertInfer(Component, Serializable):
                         questions_batch.append(question)
                         rels_labels_batch.append(candidate_rels)
                         answers_batch.append(candidate_answer)
+                        confidences_batch.append(candidate_confidence)
 
                 features = self.bert_preprocessor(questions_batch, rels_labels_batch)
                 probas = self.ranker(features)
                 probas = [proba[1] for proba in probas]
-                for j, (answer, rels_labels) in enumerate(zip(answers_batch, rels_labels_batch)):
-                    answers_with_scores.append((answer, rels_labels, probas[j]))
+                for j, (answer, confidence, rels_labels) in \
+                        enumerate(zip(answers_batch, confidences_batch, rels_labels_batch)):
+                    answers_with_scores.append((answer, rels_labels, max(probas[j], confidence)))
 
             answers_with_scores = sorted(answers_with_scores, key=lambda x: x[-1], reverse=True)
 
             if answers_with_scores:
                 log.debug(f"answers: {answers_with_scores[0]}")
-                answer = self.wiki_parser.find_label(answers_with_scores[0][0])
+                answer = self.wiki_parser.find_label(answers_with_scores[0][0], question)
+                confidence = answers_with_scores[0][2]
 
-            answers.append(answer)
+            if self.return_confidences:
+                answers.append((answer, confidence))
+            else:
+                answers.append(answer)
 
         return answers
 
@@ -114,10 +125,11 @@ class RelRankerMTBertInfer(Component, Serializable):
                     questions_batch.append(question)
                     rels_batch.append(candidate_rel)
                     rels_labels_batch.append(self.rel_q2name[candidate_rel])
-            probas = self.ranker(questions_batch, rels_labels_batch)
-            probas = [proba[1] for proba in probas]
-            for j, rel in enumerate(rels_batch):
-                rels_with_scores.append((rel, probas[j]))
+            if questions_batch:
+                probas = self.ranker(questions_batch, rels_labels_batch)
+                probas = [proba[1] for proba in probas]
+                for j, rel in enumerate(rels_batch):
+                    rels_with_scores.append((rel, probas[j]))
         rels_with_scores = sorted(rels_with_scores, key=lambda x: x[1], reverse=True)
 
         return rels_with_scores[:self.rels_to_leave]
