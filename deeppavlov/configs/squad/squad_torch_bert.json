@@ -154,7 +154,6 @@
         ]
       }
     ],
-    "tensorboard_log_dir": "{MODELS_PATH}/logs",
     "class_name": "torch_trainer"
   },
   "metadata": {

@@ -125,8 +125,7 @@
       "valid",
       "test"
     ],
-    "class_name": "torch_trainer",
-    "tensorboard_log_dir": "{MODEL_PATH}/"
+    "class_name": "torch_trainer"
   },
   "metadata": {
     "variables": {
