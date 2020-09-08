@@ -45,7 +45,7 @@ class WikiParserOnline:
 
         return data
 
-    def find_label(self, entity: str) -> str:
+    def find_label(self, entity: str, question: str) -> str:
         entity = str(entity).replace('"', '')
         if entity.startswith("http://www.wikidata.org/entity/Q"):
             entity = entity.split('/')[-1]
