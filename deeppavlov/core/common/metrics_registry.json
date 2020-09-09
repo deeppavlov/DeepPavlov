@@ -12,6 +12,7 @@
   "google_bleu": "deeppavlov.metrics.bleu:google_bleu",
   "kbqa_accuracy": "deeppavlov.metrics.accuracy:kbqa_accuracy",
   "log_loss": "deeppavlov.metrics.log_loss:sk_log_loss",
+  "mean_squared_error": "deeppavlov.metrics.mse:mse",
   "multitask_accuracy": "deeppavlov.metrics.accuracy:multitask_accuracy",
   "multitask_sequence_accuracy": "deeppavlov.metrics.accuracy:multitask_sequence_accuracy",
   "multitask_token_accuracy": "deeppavlov.metrics.accuracy:multitask_token_accuracy",

@@ -81,7 +81,7 @@
         "entities_to_leave": 5,
         "rels_to_leave": 12,
         "return_answers": true,
-        "in": ["x", "template_type", "entities", "types"],
+        "in": ["x", "x", "template_type", "entities", "types"],
         "out": ["answers"]
       }
     ],

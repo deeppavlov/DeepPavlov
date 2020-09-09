@@ -128,7 +128,6 @@
     "validation_patience": 100,
     "val_every_n_batches": 20,
     "log_every_n_batches": 20,
-    "tensorboard_log_dir": "{NER_PATH}/logs",
     "show_examples": false,
     "pytest_max_batches": 2,
     "pytest_batch_size": 8,

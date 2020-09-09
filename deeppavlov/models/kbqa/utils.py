@@ -98,7 +98,7 @@ def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], r
         query = query.replace(f"e{n + 1}", entity)
     for n, entity_type in enumerate(type_comb[:-1]):  # type_entity
         query = query.replace(f"t{n + 1}", entity_type)
-    for n, rel in enumerate(rel_comb[:-1]):
+    for n, (rel, score) in enumerate(rel_comb[:-1]):
         query = query.replace(f"r{n + 1}", rel)
     query = query.replace("http://www.wikidata.org/prop/direct/P0", "http://schema.org/description")
     query = query.split(' ')
@@ -107,12 +107,13 @@ def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], r
 def fill_online_query(query: List[str], entity_comb: List[str], type_comb: List[str],
               rel_comb: List[str], rels_to_replace: List[str],
               rels_for_filter: List[str], rel_list_for_filter: List[List[str]]) -> Tuple[str, List[str]]:
-
+    
+    rel_list_for_filter = [[rel for rel, score in rel_list] for rel_list in rel_list_for_filter]
     for n, entity in enumerate(entity_comb[:-1]):
         query = query.replace(f"e{n + 1}", entity)
     for n, entity_type in enumerate(type_comb[:-1]):  # type_entity
         query = query.replace(f"t{n + 1}", entity_type)
-    for n, rel in enumerate(rel_comb[:-1]):
+    for n, (rel, score) in enumerate(rel_comb[:-1]):
         query = query.replace(rels_to_replace[n], rel)
 
     candidate_rel_filters = []
