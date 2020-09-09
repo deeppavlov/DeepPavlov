@@ -162,7 +162,7 @@
         "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata_eng/sparql_queries.json",
         "entities_to_leave": 5,
         "rels_to_leave": 10,
-        "in": ["x", "template_type", "entities", "types"],
+        "in": ["x", "x", "template_type", "entities", "types"],
         "out": ["candidate_rels_answers"]
       },
       {
