@@ -1,19 +1,19 @@
 Choose the Framework
 ====================
 
-DeepPavlov is built on top of machine learning frameworks
+DeepPavlov is built on top of the machine learning frameworks
 `TensorFlow <https://www.tensorflow.org/>`__,
 `Keras <https://keras.io/>`__ and `PyTorch <https://www.pytorch.org/>`__:
 
-* BERT-based models on TensorFlow and PyTorch,
-* text classification on Keras and PyTorch,
-* text ranking and morpho-tagging on Keras,
-* all other models on TensorFlow.
+* BERT-based models on TensorFlow and PyTorch;
+* Text classification on Keras and PyTorch;
+* Text ranking and morpho-tagging on Keras;
+* All other models on TensorFlow.
 
-First, follow instructions on :doc:`Installation page </intro/installation>`
+First, follow the instructions on :doc:`Installation page </intro/installation>`
 to install the ``deeppavlov`` package for Python 3.6/3.7.
 
-Now, based on the considered NLP task, you need to choose one of the available frameworks.
+Depending on the considered NLP task, you need to choose one of the available frameworks.
 The full list of available models is :doc:`here </features/overview>`.
 
 - To install the requirements for the considered model, you can find the config file with the same configuration
