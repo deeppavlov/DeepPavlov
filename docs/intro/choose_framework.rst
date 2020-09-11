@@ -1,4 +1,4 @@
-Choose The Framework
+Choose the Framework
 ====================
 
 DeepPavlov is built on top of machine learning frameworks
@@ -11,12 +11,12 @@ DeepPavlov is built on top of machine learning frameworks
 * all other models on TensorFlow.
 
 First, follow instructions on :doc:`Installation page </intro/installation>`
-to install ``deeppavlov`` package for Python 3.6/3.7.
+to install the ``deeppavlov`` package for Python 3.6/3.7.
 
-Now based on the considered NLP task you need to choose one of the available frameworks.
-The full list of available model is :doc:`here </features/overview>`.
+Now, based on the considered NLP task, you need to choose one of the available frameworks.
+The full list of available models is :doc:`here </features/overview>`.
 
-- To install requirements for the considered model, you can find the config file with the same configuration
+- To install the requirements for the considered model, you can find the config file with the same configuration
   in terms of used components, and install the requirements in the following way:
 
         .. code:: bash
@@ -24,21 +24,21 @@ The full list of available model is :doc:`here </features/overview>`.
             python -m deeppavlov install -d <config_path>
 
         where ``<config_path>`` is path to the chosen model's config file (e.g. ``deeppavlov/configs/ner/slotfill_dstc2.json``)
-        or just name without `.json` extension (e.g. ``slotfill_dstc2``);
+        or just the file name without the `.json` extension (e.g. ``slotfill_dstc2``);
         ``-d`` downloads required data -- pretrained model files and embeddings (optional).
 
 Trainer
 -------
 
-If you are going to use models on Keras or TensorFlow, in ``config["train"]``, you need to set ``"class_name": "nn_trainer"``,
-in case of PyTorch, you need to use ``"class_name": "torch_trainer"`` which differs from ``nn_trainer``
+If you are going to use models on Keras or TensorFlow, in ``config["train"]``, you need to set ``"class_name": "nn_trainer"``;
+If using PyTorch, you need to use ``"class_name": "torch_trainer"``, which differs from ``nn_trainer``
 only in assigning ``torch.nn.Module.train()`` and ``torch.nn.Module.eval()`` models for PyTorch modules.
 
 
 Text Classification on Keras or PyTorch
 ---------------------------------------
 
-If you want to build your own architecture for **text classification** task, do the following in **Keras** or in **PyTorch**:
+If you want to build your own architecture for **text classification** tasks, do the following in **Keras** or in **PyTorch**:
 
     .. code:: python
 
@@ -56,11 +56,12 @@ If you want to build your own architecture for **text classification** task, do 
                 model = <create Keras/Torch model using parameters from kwargs>
                 return model
 
-    In the config file in the dictionary with the main model assign ``"class_name": "module.path.to.my.model.file:MyModel"`` and
-    ``"model_name": "my_network_architecture"``.
+    In the config file, assign ``"class_name": "module.path.to.my.model.file:MyModel"`` 
+    and ``"model_name": "my_network_architecture"``
+    in the dictionary with the main model.
     Don't forget to set ``torch_trainer`` or ``nn_trainer`` (for PyTorch) or ``nn_trainer`` (for TensorFlow and Keras).
 
-Other NLP-tasks on TensorFlow, Keras or PyTorch
+Other NLP-tasks on TensorFlow, Keras, or PyTorch
 -----------------------------------------------
 
 - If you want to build your own model for **some other NLP** task, do the following in **Keras** or **PyTorch**:
@@ -89,8 +90,9 @@ Other NLP-tasks on TensorFlow, Keras or PyTorch
                 model = <create Keras/Torch model using parameters from kwargs>
                 return model
 
-    In the config file in the dictionary with the main model assign ``"class_name": "module.path.to.my.model.file:MyModel"`` and
-    ``"model_name": "my_network_architecture"``.
+    In the config file, assign ``"class_name": "module.path.to.my.model.file:MyModel"`` 
+    and ``"model_name": "my_network_architecture"``
+    in the dictionary with the main model.
     Don't forget to set ``torch_trainer`` or ``nn_trainer`` (for PyTorch) or ``nn_trainer`` (for TensorFlow and Keras).
 
 
@@ -127,6 +129,9 @@ Other NLP-tasks on TensorFlow, Keras or PyTorch
                 predictions = self.sess.run([self.predictions], feed_dict=feed_dict)
                 return predictions.tolist()
 
-    In the config file in the dictionary with the main model assign ``"class_name": "module.path.to.my.model.file:MyModel"`` and
-    ``"model_name": "my_network_architecture"``, also set all the necessary parameters in the same dictionary.
+
+
+    In the config file, assign ``"class_name": "module.path.to.my.model.file:MyModel"`` 
+    and ``"model_name": "my_network_architecture"``
+    in the dictionary with the main model; Also, set all the necessary parameters in the same dictionary.
     Don't forget to set  ``nn_trainer`` (for TensorFlow).
