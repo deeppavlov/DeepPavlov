@@ -327,7 +327,7 @@ RASA.ai is an another well-known Open Source Conversational AI Framework. Their 
 We encourage you to read the `tutorial notebook <https://github.com/deepmipt/DeepPavlov/blob/master/examples/gobot_md_yaml_configs_tutorial.ipynb>`__ 
 to get better understanding of how to build basic and more advanced goal-oriented bots with these RASA DSLs.
 
-**Note:** As mentioned in our `blog post <todo/link>`__, **this is the
+**Note:** As mentioned in our `blog post <https://deeppavlov.ai/blog/tpost/58y1cugd7b-deeppavlov-library-0120-release>`__, **this is the
 very beginning of our work** focused on supporting RASA DSLs as a way to
 configure DeepPavlov-based goal-oriented chatbots.
 
