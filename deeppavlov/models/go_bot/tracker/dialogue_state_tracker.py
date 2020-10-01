@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 import numpy as np
 
@@ -43,7 +43,7 @@ class DialogueStateTracker(FeaturizedTracker):
         self.database = database
         self.n_actions = n_actions
         self.api_call_id = api_call_id
-        self.formfilling_action_ids2slots_ids: Dict[int, List[int]] = dict()
+        self.ffill_act_ids2req_slots_ids: Dict[int, List[int]] = dict()
         self.reset_state()
 
     @staticmethod
@@ -58,15 +58,23 @@ class DialogueStateTracker(FeaturizedTracker):
 
         # region set formfilling info
         act2act_id = {a_text: nlg_manager.get_action_id(a_text) for a_text in nlg_manager.known_actions()}
-        action_id2slots_ids = dict()
+        action_id2aqd_slots_ids = dict()  # aqd stands for acquired
+        action_id2req_slots_ids = dict()
         for act in nlg_manager.known_actions():
             act_id = act2act_id[act]
-            action_id2slots_ids[act_id] = np.zeros(len(dialogue_state_tracker.slot_names), dtype=np.float32)
+
+            action_id2req_slots_ids[act_id] = np.zeros(len(dialogue_state_tracker.slot_names), dtype=np.float32)
+            action_id2aqd_slots_ids[act_id] = np.zeros(len(dialogue_state_tracker.slot_names), dtype=np.float32)
+
             for slot_name_i, slot_name in enumerate(parent_tracker.action_names2required_slots[act]):
                 slot_ix_in_tracker = dialogue_state_tracker.slot_names.index(slot_name)
-                action_id2slots_ids[act_id][slot_ix_in_tracker] = 1.
+                action_id2req_slots_ids[act_id][slot_ix_in_tracker] = 1.
+            for slot_name_i, slot_name in enumerate(parent_tracker.action_names2acquired_slots[act]):
+                slot_ix_in_tracker = dialogue_state_tracker.slot_names.index(slot_name)
+                action_id2aqd_slots_ids[act_id][slot_ix_in_tracker] = 1.
 
-        dialogue_state_tracker.formfilling_action_ids2slots_ids = action_id2slots_ids
+        dialogue_state_tracker.ffill_act_ids2req_slots_ids = action_id2req_slots_ids
+        dialogue_state_tracker.ffill_act_ids2aqd_slots_ids = action_id2aqd_slots_ids
         # endregion set formfilling info
         return dialogue_state_tracker
 
@@ -126,9 +134,12 @@ class DialogueStateTracker(FeaturizedTracker):
                 mask[prev_act_id] = 0.
 
         for act_id in range(self.n_actions):
-            required_slots_mask = self.formfilling_action_ids2slots_ids[act_id]
-            act_slots_fulfilled = required_slots_mask * self._binary_features() == required_slots_mask
-            if not act_slots_fulfilled:
+            required_slots_mask = self.ffill_act_ids2req_slots_ids[act_id]
+            acquired_slots_mask = self.ffill_act_ids2aqd_slots_ids[act_id]
+            act_req_slots_fulfilled = (required_slots_mask * self._binary_features()) == required_slots_mask
+            act_requirements_not_fulfilled = not act_req_slots_fulfilled
+            act_nothing_new_to_knew = (acquired_slots_mask * self._binary_features()) == acquired_slots_mask
+            if act_requirements_not_fulfilled or act_nothing_new_to_knew:
                 mask[act_id] = 0.
 
         return mask
