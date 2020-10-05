@@ -16,7 +16,7 @@ import re
 import sqlite3
 from logging import getLogger
 from typing import List, Dict, Tuple, Optional, Any
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 import nltk
 import pymorphy2
@@ -50,9 +50,12 @@ class KBEntityLinker(Component, Serializable):
                  inverted_index_filename: str,
                  entities_list_filename: str,
                  q2name_filename: str,
+                 who_entities_filename: Optional[str] = None,
                  save_path: str = None,
                  q2descr_filename: str = None,
-                 rel_ranker: RelRankerBertInfer = None,
+                 descr_rank_score_thres: float = 0.0,
+                 freq_dict_filename: Optional[str] = None,
+                 entity_ranker: RelRankerBertInfer = None,
                  build_inverted_index: bool = False,
                  kb_format: str = "hdt",
                  kb_filename: str = None,
@@ -63,6 +66,7 @@ class KBEntityLinker(Component, Serializable):
                  sql_column_names: List[str] = None,
                  lang: str = "en",
                  use_descriptions: bool = False,
+                 include_mention: bool = False,
                  lemmatize: bool = False,
                  use_prefix_tree: bool = False,
                  **kwargs) -> None:
@@ -70,12 +74,17 @@ class KBEntityLinker(Component, Serializable):
 
         Args:
             load_path: path to folder with inverted index files
-            save_path: path where to save inverted index files
             inverted_index_filename: file with dict of words (keys) and entities containing these words
             entities_list_filename: file with the list of entities from the knowledge base
             q2name_filename: name of file which maps entity id to name
+            who_entities_filename: file with the list of entities in Wikidata, which can be answers to questions
+                with "Who" pronoun, i.e. humans, literary characters etc.
+            save_path: path where to save inverted index files
             q2descr_filename: name of file which maps entity id to description
-            rel_ranker: component deeppavlov.models.kbqa.rel_ranker_bert_infer
+            descr_rank_score_thres: if the score of the entity description is less than threshold, the entity is not
+                added to output list
+            freq_dict_filename: filename with frequences dictionary of Russian words
+            entity_ranker: component deeppavlov.models.kbqa.rel_ranker_bert_infer
             build_inverted_index: if "true", inverted index of entities of the KB will be built
             kb_format: "hdt" or "sqlite3"
             kb_filename: file with the knowledge base, which will be used for building of inverted index
@@ -86,6 +95,7 @@ class KBEntityLinker(Component, Serializable):
             sql_column_names: names of columns with subject, relation and object
             lang: language used
             use_descriptions: whether to use context and descriptions of entities for entity ranking
+            include_mention: whether to leave or delete entity mention from the sentence before passing to BERT ranker
             lemmatize: whether to lemmatize tokens of extracted entity
             use_prefix_tree: whether to use prefix tree for search of entities with typos in entity labels
             **kwargs:
@@ -98,7 +108,10 @@ class KBEntityLinker(Component, Serializable):
         self.entities_list_filename = entities_list_filename
         self.build_inverted_index = build_inverted_index
         self.q2name_filename = q2name_filename
+        self.who_entities_filename = who_entities_filename
         self.q2descr_filename = q2descr_filename
+        self.descr_rank_score_thres = descr_rank_score_thres
+        self.freq_dict_filename = freq_dict_filename
         self.kb_format = kb_format
         self.kb_filename = kb_filename
         self.label_rel = label_rel
@@ -115,8 +128,11 @@ class KBEntityLinker(Component, Serializable):
         elif self.lang_str == "@ru":
             self.stopwords = set(stopwords.words("russian"))
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
-        self.rel_ranker = rel_ranker
+        self.entity_ranker = entity_ranker
         self.use_descriptions = use_descriptions
+        self.include_mention = include_mention
+        if self.use_descriptions and self.entity_ranker is None:
+            raise ValueError("No entity ranker is provided!")
 
         if self.use_prefix_tree:
             alphabet = "!#%\&'()+,-./0123456789:;?ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz½¿ÁÄ" + \
@@ -131,15 +147,32 @@ class KBEntityLinker(Component, Serializable):
             elif self.kb_format == "sqlite3":
                 self.conn = sqlite3.connect(str(expand_path(self.kb_filename)))
                 self.cursor = self.conn.cursor()
+            else:
+                raise ValueError(f'unsupported kb_format value {self.kb_format}')
             self.inverted_index_builder()
             self.save()
         else:
             self.load()
 
+    def load_freq_dict(self, freq_dict_filename: str):
+        with open(str(expand_path(freq_dict_filename)), 'r') as fl:
+            lines = fl.readlines()
+        pos_freq_dict = defaultdict(list)
+        for line in lines:
+            line_split = line.strip('\n').split('\t')
+            if re.match("[\d]+\.[\d]+", line_split[2]):
+                pos_freq_dict[line_split[1]].append((line_split[0], float(line_split[2])))
+        nouns_with_freq = pos_freq_dict["s"]
+        self.nouns_dict = {noun: freq for noun, freq in nouns_with_freq}
+
     def load(self) -> None:
         self.inverted_index = load_pickle(self.load_path / self.inverted_index_filename)
         self.entities_list = load_pickle(self.load_path / self.entities_list_filename)
         self.q2name = load_pickle(self.load_path / self.q2name_filename)
+        if self.who_entities_filename:
+            self.who_entities = load_pickle(self.load_path / self.who_entities_filename)
+        if self.freq_dict_filename:
+            self.load_freq_dict(self.freq_dict_filename)
 
     def save(self) -> None:
         save_pickle(self.inverted_index, self.save_path / self.inverted_index_filename)
@@ -160,7 +193,12 @@ class KBEntityLinker(Component, Serializable):
             for entity_substr, entity_pos in zip(entity_substr_list, entity_positions_list):
                 context = ""
                 if self.use_descriptions:
-                    context = ' '.join(context_tokens[:entity_pos[0]]+["[ENT]"]+context_tokens[entity_pos[-1]+1:])
+                    if self.include_mention:
+                        context = ' '.join(context_tokens[:entity_pos[0]] + ["[ENT]"] +
+                                   context_tokens[entity_pos[0]:entity_pos[-1]+1] + ["[ENT]"] +
+                                   context_tokens[entity_pos[-1]+1:])
+                    else:
+                        context = ' '.join(context_tokens[:entity_pos[0]]+["[ENT]"] + context_tokens[entity_pos[-1]+1:])
                 entity_ids, confidences = self.link_entity(entity_substr, context)
                 entity_ids_list.append(entity_ids)
                 confidences_list.append(confidences)
@@ -169,20 +207,35 @@ class KBEntityLinker(Component, Serializable):
 
         return entity_ids_batch, confidences_batch
 
-    def link_entity(self, entity: str, context: str = None) -> Tuple[List[str], List[float]]:
+    def link_entity(self, entity: str, context: Optional[str] = None, template_found: Optional[str] = None,
+                          cut_entity: bool = False) -> Tuple[List[str], List[float]]:
         confidences = []
         if not entity:
             entities_ids = ['None']
         else:
             candidate_entities = self.candidate_entities_inverted_index(entity)
+            if cut_entity and candidate_entities and len(entity.split()) > 1 and candidate_entities[0][3] == 1:
+                entity = self.cut_entity_substr(entity)
+                candidate_entities = self.candidate_entities_inverted_index(entity)
             candidate_entities, candidate_names = self.candidate_entities_names(entity, candidate_entities)
             entities_ids, confidences, srtd_cand_ent = self.sort_found_entities(candidate_entities,
                                                                                 candidate_names, entity, context)
+            if template_found:
+                entities_ids = self.filter_entities(entities_ids, template_found)
 
         return entities_ids, confidences
 
+    def cut_entity_substr(self, entity: str):
+        word_tokens = nltk.word_tokenize(entity.lower())
+        word_tokens = [word for word in word_tokens if word not in self.stopwords]
+        normal_form_tokens = [self.morph.parse(word)[0].normal_form for word in word_tokens]
+        words_with_freq = [(word, self.nouns_dict.get(word, 0.0)) for word in normal_form_tokens]
+        words_with_freq = sorted(words_with_freq, key=lambda x: x[1])
+        return words_with_freq[0][0]
+
     def candidate_entities_inverted_index(self, entity: str) -> List[Tuple[Any, Any, Any]]:
         word_tokens = nltk.word_tokenize(entity.lower())
+        word_tokens = [word for word in word_tokens if word not in self.stopwords]
         candidate_entities = []
 
         for tok in word_tokens:
@@ -195,7 +248,7 @@ class KBEntityLinker(Component, Serializable):
                 if self.lemmatize:
                     morph_parse_tok = self.morph.parse(tok)[0]
                     lemmatized_tok = morph_parse_tok.normal_form
-                    if lemmatized_tok in self.inverted_index:
+                    if lemmatized_tok != tok and lemmatized_tok in self.inverted_index:
                         candidate_entities += self.inverted_index[lemmatized_tok]
                         found = True
 
@@ -203,8 +256,9 @@ class KBEntityLinker(Component, Serializable):
                     words_with_levens_1 = self.searcher.search(tok, d=1)
                     for word in words_with_levens_1:
                         candidate_entities += self.inverted_index[word[0]]
-        candidate_entities = list(set(candidate_entities))
-        candidate_entities = [(entity[0], self.entities_list[entity[0]], entity[1]) for entity in candidate_entities]
+        candidate_entities = Counter(candidate_entities).most_common()
+        candidate_entities = [(entity_num, self.entities_list[entity_num], entity_freq, count) for \
+                                                (entity_num, entity_freq), count in candidate_entities]
 
         return candidate_entities
 
@@ -214,18 +268,23 @@ class KBEntityLinker(Component, Serializable):
                             context: str = None) -> Tuple[List[str], List[float], List[Tuple[str, str, int, int]]]:
         entities_ratios = []
         for candidate, entity_names in zip(candidate_entities, candidate_names):
-            entity_num, entity_id, num_rels = candidate
+            entity_num, entity_id, num_rels, tokens_matched = candidate
             fuzz_ratio = max([fuzz.ratio(name.lower(), entity) for name in entity_names])
-            entities_ratios.append((entity_num, entity_id, fuzz_ratio, num_rels))
+            entities_ratios.append((entity_num, entity_id, tokens_matched, fuzz_ratio, num_rels))
 
-        srtd_with_ratios = sorted(entities_ratios, key=lambda x: (x[2], x[3]), reverse=True)
+        srtd_with_ratios = sorted(entities_ratios, key=lambda x: (x[2], x[3], x[4]), reverse=True)
         if self.use_descriptions:
-            num_to_id = {entity_num: entity_id for entity_num, entity_id, _, _ in srtd_with_ratios[:30]}
-            entity_numbers = [entity_num for entity_num, _, _, _ in srtd_with_ratios[:30]]
-            scores = self.rel_ranker.rank_rels(context, entity_numbers)
-            top_rels = [score[0] for score in scores]
-            entity_ids = [num_to_id[num] for num in top_rels]
-            confidences = [score[1] for score in scores]
+            log.debug(f"context {context}")
+            id_to_score = {entity_id: (tokens_matched, score) for _, entity_id, tokens_matched, score, _ in srtd_with_ratios[:30]}
+            entity_ids = [entity_id for _, entity_id, _, _, _ in srtd_with_ratios[:30]]
+            scores = self.entity_ranker.rank_rels(context, entity_ids)
+            entities_with_scores = [(entity_id, id_to_score[entity_id][0], id_to_score[entity_id][1], score) for entity_id, score in scores]
+            entities_with_scores = sorted(entities_with_scores, key=lambda x: (x[1], x[2], x[3]), reverse=True)
+            entities_with_scores = [entity for entity in entities_with_scores if \
+                                   (entity[3] > self.descr_rank_score_thres or entity[2] == 100.0)]
+            log.debug(f"entities_with_scores {entities_with_scores[:10]}")
+            entity_ids = [entity for entity, _, _, _ in entities_with_scores]
+            confidences = [score for _, _, _, score in entities_with_scores]
         else:
             entity_ids = [ent[1] for ent in srtd_with_ratios]
             confidences = [float(ent[2]) * 0.01 for ent in srtd_with_ratios]
@@ -331,3 +390,10 @@ class KBEntityLinker(Component, Serializable):
         self.q2descr = []
         if id_to_descr_dict:
             self.q2descr = [id_to_descr_dict[entity] for entity in self.entities_list]
+
+    def filter_entities(self, entities: List[str], template_found: str) -> List[str]:
+        if template_found in ["who is xxx?", "who was xxx?"]:
+            entities = [entity for entity in entities if entity in self.who_entities]
+        if template_found in ["what is xxx?", "what was xxx?"]:
+            entities = [entity for entity in entities if entity not in self.who_entities]
+        return entities

@@ -1,7 +1,16 @@
-Dialogue Bot for goal-oriented task
-===================================
+==========================
+Goal-Oriented Dialogue Bot
+==========================
 
-There are available two pretrained models for DSTC2 dataset (English). Try them by running:
+This component of DeepPavlov Library also known as Go-Bot is designed to enable development of the ML-driven goal-oriented dialogue bots.
+
+It supports two different approaches to define domain model and behavior of a given bot, including DSTC2 dataset and a (limited) subset of RASA DSLs (Domain-Specific Languages).
+
+To experiment with the Go-Bot you can pick one of the two available pre-trained models designed around the DSTSC2 dataset (English), or follow a tutorial for using RASA DSLs.
+
+**Quick DSTC2-Based Demos**
+
+To quickly try out the Go-Bot capabilities you can use one of the two available pretrained models for DSTC2 dataset (English). Check them out by running this code:
 
 .. code:: python
 
@@ -24,9 +33,9 @@ If some required packages are missing, install all the requirements by running i
    python -m deeppavlov install gobot_dstc2
 
 Intro
------
+=====
 
-The dialogue bot is based on [1]_ which introduces
+The Go-Bot is based on [1]_ which introduces
 Hybrid Code Networks (HCNs) that combine an RNN with domain-specific
 knowledge and system action templates.
 
@@ -76,8 +85,17 @@ Here is a simple example of interaction with a trained dialogue bot
     x::bye
     >> You are welcome!
 
-Usage
------
+Quick Start: DSTC2
+=======================================
+
+Building Goal-Oriented Bot Using DSTC-2
+---------------------------------------
+
+DSTC is a set of competitions originally known as "Dialog State Tracking Challenges" (DSTC, for short). First challenge was organized in 2012-2013. Starting as an initiative to provide a common testbed for the task of Dialog State Tracking, the first Dialog State Tracking Challenge (DSTC) was organized in 2013, followed by DSTC2&3 in 2014, DSTC4 in 2015, and DSTC5 in 2016. Given the remarkable success of the first five editions, and understanding both, the complexity of the dialog phenomenon and the interest of the research community in a wider variety of dialog related problems, the DSTC rebranded itself as "Dialog System Technology Challenges" for its sixth edition. Then, DSTC6 and DSTC7 have been completed in 2017 and 2018, respectively.
+
+DSTC-2 released a large number of training dialogs related to restaurant search. Compared to DSTC (which was in the bus timetables domain), DSTC 2 introduced changing user goals, tracking 'requested slots' as well as the new Restaurants domain. 
+
+Historically, DeepPavlov's Go-Bot used this DSTC-2 approach to defining domain model and behavior of the goal-oriented bots. In this section you will learn how to use this approach to build a DSTC-2-based Go-Bot.
 
 Requirements
 ^^^^^^^^^^^^
@@ -110,8 +128,8 @@ Requirements
    - ``slot_filler`` section of go\_bot's config should match NER's configuration
    - ``intent_classifier`` section of go\_bot's config should match classifier's configuration
 
-Configs:
-^^^^^^^^
+Configs
+^^^^^^^
 
 For a working exemplary config see
 :config:`configs/go_bot/gobot_dstc2.json <go_bot/gobot_dstc2.json>` (model without embeddings).
@@ -171,12 +189,12 @@ Config parameters
 To configure your own pipelines that contain a ``"go_bot"`` component, refer to documentation for :class:`~deeppavlov.models.go_bot.bot.GoalOrientedBot` and :class:`~deeppavlov.models.go_bot.network.GoalOrientedBotNetwork` classes.
 
 Datasets
---------
+----------------------------------
 
 .. _dstc2_dataset:
 
 DSTC2
-^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The Hybrid Code Network model was trained and evaluated on a modification of a dataset from Dialogue State Tracking
 Challenge 2 [2]_. The modifications were as follows:
@@ -211,7 +229,7 @@ Challenge 2 [2]_. The modifications were as follows:
 See :class:`deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader` for implementation.
 
 Your data
-^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Dialogs
 """""""
@@ -294,8 +312,190 @@ For example,
 
 It is recommended to use ``"DefaultTemplate"`` value for ``template_type`` parameter.
 
-Database (optional)
-"""""""""""""""""""
+Quick Start: RASA DSLs
+==========================================
+Building Goal-Oriented Bot Using RASA DSLs
+------------------------------------------
+While DSTC-2 schemas format is quite rich, preparing this kind of dataset with all required annotations might be challenging. To simplify the process of building goal-oriented bots using DeepPavlov technology, we have introduced a (limited) support for defining them using RASA DSLs.
+
+DSLs, known as Domain-Specific Languages, provide a rich mechanism to define the behavior, or "the what", while 
+the underlying system uses the parser to transform these definitions into commands that implement this behavior, or "the how"
+using the system's components.
+
+RASA.ai is an another well-known Open Source Conversational AI Framework. Their approach to defining the domain model and behavior of the goal-oriented bots is quite simple for building simple goal-oriented bots. In this section you will learn how to use key parts of RASA DSLs (configuration files) to build your own goal-oriented chatbot based on the DeepPavlov's Go-Bot framework.
+
+We encourage you to read the `tutorial notebook <https://github.com/deepmipt/DeepPavlov/blob/master/examples/gobot_md_yaml_configs_tutorial.ipynb>`__ 
+to get better understanding of how to build basic and more advanced goal-oriented bots with these RASA DSLs.
+
+**Note:** As mentioned in our `blog post <todo/link>`__, **this is the
+very beginning of our work** focused on supporting RASA DSLs as a way to
+configure DeepPavlov-based goal-oriented chatbots.
+
+While there are several configuration files used by the RASA platform, each with their own corresponding DSL (mostly re-purposed Markdown and YAML), for now only three essential files: ``stories.md``,
+``nlu.md``, ``domain.yml`` are supported by the DeepPavlov's Go-Bot.
+
+These files allows you to define user stories that match intents and bot actions, intents with slots and entities, as well as the training data for the NLU components.
+
+In this release, only a subset of the functionality in these files is supported by now.
+
+stories.md
+^^^^^^^^^^
+
+``stories.md`` is a mechanism used to teach your chatbot how to respond
+to user messages. It allows you to control your chatbot's dialog
+management.
+
+The full RASA functionality is described in the `original
+documentation <https://rasa.com/docs/rasa/core/stories/>`__.
+
+The format supported by DeepPavlov is the subset of features described
+in `"What makes up a story"
+section <https://rasa.com/docs/rasa/core/stories/#what-makes-up-a-story>`__.
+
+The original format features are: *User Messages*, *Actions*, *Events*,
+*Checkpoints*, *OR Statements*, *End-to-End Story Evaluation Format*.
+
+-  We **do support** all the functionality of User Messages format
+   feature.
+
+-  We **do support only** utterance actions of the Actions format
+   feature. Custom actions are **not supported yet**.
+
+-  We **do not support** Events, Checkpoints and OR Statements format
+   features.
+
+format
+""""""
+
+see the `original
+documentation <https://rasa.com/docs/rasa/core/stories/>`__ for the
+detailed ``stories.md`` format description.
+
+Stories file is a markdown file of the following format:
+
+.. code:: md
+
+    ## story_title(not used by algorithm, but useful to work with for humans)
+    * user_action_label{"1st_slot_present_in_action": "slot1_value", .., "Nth_slot_present_in_action": "slotN_value"}
+     - system_respective_utterance
+    * another_user_action_of_the_same_format
+      - another_system_response
+    ...
+
+    ## another_story_title
+    ...
+    
+
+
+nlu.md
+^^^^^^
+
+``nlu.md`` represents an NLU model of your chatbot. It allows you to
+provide training examples that show how your chatbot should
+understand user messages, and then train a model through these
+examples.
+
+We do support the format described in the `Markdown
+format <https://rasa.com/docs/rasa/nlu/training-data-format/#markdown-format>`__
+section of the original RASA documentation with the following
+limitations:
+
+-  an extended entities annotation format
+   (``[<entity-text>]{"entity": "<entity name>", "role": "<role name>", ...}``)
+   is **not supported**
+-  *synonyms*, *regex features* and *lookup tables* format features are
+   **not supported**
+
+format
+""""""
+
+see the `original
+documentation <https://rasa.com/docs/rasa/nlu/training-data-format/>`__
+on the RASA NLU markdown format for the detailed ``nlu.md`` format
+description.
+
+NLU file is a markdown file of the following format:
+
+.. code:: md
+
+    ## intent:possible_user_action_label_1
+    - An example of user text that has the possible_user_action_label_1 action label
+    - Another example of user text that has the possible_user_action_label_1 action label
+    ...
+
+    ## intent:possible_user_action_label_N
+    - An example of user text that has the (possible_user_action_label_N)[action_label] action label
+    <!-- Slotfilling dataset is provided as an inline markup of user texts -->
+    ...
+
+domain.yml
+^^^^^^^^^^
+
+``domain.yml`` helps you to define the universe your chatbot lives in:
+what user inputs it expects to get, what actions it should be able to
+predict,
+how to respond, and what information to store.
+
+The format supported by DeepPavlov is the same as the described in the
+`original documentation <https://rasa.com/docs/rasa/core/domains/>`__
+with the following limitations:
+
+-  only textual slots are allowed
+-  only slot classes are allowed as entity classes
+-  only textual response actions are allowed with currently no variables
+   support
+
+format
+""""""
+
+see the `original
+documentation <https://rasa.com/docs/rasa/core/domains/>`__ on the RASA
+Domains YAML config format for the detailed ``domain.yml`` format
+description.
+
+Domain file is a YAML file of the following format:
+
+.. code:: yaml
+
+    # slots section lists the possible slot names (aka slot types) 
+    # that are used in the domain (i.e. relevant for bot's tasks)
+    # currently only type: text is supported
+    slots:
+      slot1_name:
+        type: text
+      ...
+      slotN_name:
+        type: text
+
+    # entities list now follows the slots list 2nd level keys 
+    # and is present to support upcoming features. Stay tuned for updates with this!
+    entities:
+    - slot1_name
+    ...
+    - slotN_name
+
+    # intents section lists the intents that can appear in the stories
+    # being kept together they do describe the user-side part of go-bot's experience
+    intents:
+      - user_action_label
+      - another_user_action_of_the_same_format
+      ...
+
+    # responses section lists the system response templates.
+    # Despite system response' titles being usually informative themselves
+    #   (one could even find them more appropriate when no actual "Natural Language" is needed 
+    #    (e.g. for buttons actions in bot apps))
+    # It is though extremely useful to be able to serialize the response title to text. 
+    # That's what this section content is needed for.
+    responses:
+      system_utterance_1:
+        - text: "The text that system responds with"
+      another_system_response:
+        - text: "Here some text again"
+
+
+Database (Optional)
+===================
 
 If your dataset doesn't imply any api calls to an external database, just do not set
 ``database`` and ``api_call_action`` parameters and skip the section below.
@@ -341,7 +541,7 @@ Scores for different modifications of our bot model and comparison with existing
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
 
 References
-----------
+===========================
 
 .. [1] `Jason D. Williams, Kavosh Asadi, Geoffrey Zweig "Hybrid Code
     Networks: practical and efficient end-to-end dialog control with

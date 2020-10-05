@@ -17,7 +17,6 @@ from typing import List, Dict, Tuple
 from collections import defaultdict
 
 import numpy as np
-import nltk
 import pymorphy2
 import faiss
 from nltk.corpus import stopwords
@@ -75,8 +74,7 @@ class NerChunker(Component):
             sentences = sent_tokenize(doc)
             for sentence in sentences:
                 if len(text) + len(sentence) < self.max_chunk_len and n == curr_doc:
-                    text += sentence
-                    text += " "
+                    text += f"{sentence} "
                 else:
                     if count_texts < self.batch_size:
                         text_batch.append(text.strip())
@@ -240,6 +238,9 @@ class EntityLinker(Component, Serializable):
         """
         text_batch_list, nums_batch_list = self.chunker(docs_batch)
         entity_ids_batch_list = []
+        entity_substr_batch_list = []
+        entity_positions_batch_list = []
+        text_len_batch_list = []
         for text_batch in text_batch_list:
             entity_ids_batch = []
             ner_tokens_batch, ner_probas_batch = self.ner(text_batch)
@@ -261,21 +262,43 @@ class EntityLinker(Component, Serializable):
                     entity_ids_list = self.link_entities(entity_substr_list, entity_positions_list, context_tokens)
                 entity_ids_batch.append(entity_ids_list)
             entity_ids_batch_list.append(entity_ids_batch)
+            entity_substr_batch_list.append(entity_substr_batch)
+            entity_positions_batch_list.append(entity_positions_batch)
+            text_len_batch_list.append([len(text) for text in ner_tokens_batch])
 
         doc_entity_ids_batch = []
+        doc_entity_substr_batch = []
+        doc_entity_positions_batch = []
         doc_entity_ids = []
+        doc_entity_substr = []
+        doc_entity_positions = []
         cur_doc_num = 0
-        for entity_ids_batch, nums_batch in zip(entity_ids_batch_list, nums_batch_list):
-            for entity_ids, doc_num in zip(entity_ids_batch, nums_batch):
+        text_len_sum = 0
+        for entity_ids_batch, entity_substr_batch, entity_positions_batch, text_len_batch, nums_batch in \
+                zip(entity_ids_batch_list, entity_substr_batch_list, entity_positions_batch_list,
+                                                                 text_len_batch_list, nums_batch_list):
+            for entity_ids, entity_substr, entity_positions, text_len, doc_num in \
+                    zip(entity_ids_batch, entity_substr_batch, entity_positions_batch, text_len_batch, nums_batch):
                 if doc_num == cur_doc_num:
                     doc_entity_ids += entity_ids
+                    doc_entity_substr += entity_substr
+                    doc_entity_positions += [[pos + text_len_sum for pos in entity_position]
+                                                                 for entity_position in entity_positions]
+                    text_len_sum += text_len
                 else:
                     doc_entity_ids_batch.append(doc_entity_ids)
+                    doc_entity_substr_batch.append(doc_entity_substr)
+                    doc_entity_positions_batch.append(doc_entity_positions)
                     doc_entity_ids = entity_ids
+                    doc_entity_substr = entity_substr
+                    doc_entity_positions = entity_positions
                     cur_doc_num = doc_num
+                    text_len_sum = 0
         doc_entity_ids_batch.append(doc_entity_ids)
+        doc_entity_substr_batch.append(doc_entity_substr)
+        doc_entity_positions_batch.append(doc_entity_positions)
 
-        return doc_entity_ids_batch
+        return doc_entity_substr_batch, doc_entity_positions_batch, doc_entity_ids_batch
 
     def link_entities(self, entity_substr_list: List[str], entity_positions_list: List[List[int]] = None,
                       context_tokens: List[str] = None) -> List[List[str]]:
@@ -300,6 +323,8 @@ class EntityLinker(Component, Serializable):
             D, I = self.faiss_index.search(ent_substr_tfidfs, self.num_faiss_candidate_entities)
             candidate_entities_dict = defaultdict(list)
             for ind_list, scores_list, index in zip(I, D, indices):
+                if self.num_faiss_cells > 1:
+                    scores_list = [1.0 - score for score in scores_list]
                 candidate_entities = {}
                 for ind, score in zip(ind_list, scores_list):
                     start_ind, end_ind = self.word_to_idlist[self.word_list[ind]]

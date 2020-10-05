@@ -78,7 +78,7 @@
         "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries.json",
         "entities_to_leave": 5,
         "rels_to_leave": 10,
-        "in": ["x", "template_type", "entities", "types"],
+        "in": ["x", "x", "template_type", "entities", "types"],
         "out": ["candidate_answers"]
       },
       {
@@ -132,7 +132,9 @@
       "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
       "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
-      "{DEEPPAVLOV_PATH}/requirements/hdt.txt"
+      "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
+      "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
+      "{DEEPPAVLOV_PATH}/requirements/spelling.txt"
     ],
     "labels": {
       "telegram_utils": "NERCoNLL2003Model",
@@ -153,7 +155,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/models/ner_lcquad.tar.gz",
-        "subdir": "{MODELS_PATH}/ner_lcquad"
+        "subdir": "{MODELS_PATH}/ner_lcquad_ent_and_type"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking.tar.gz",

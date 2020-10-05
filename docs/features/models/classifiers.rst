@@ -6,9 +6,11 @@ which are implemented as a number of different **neural networks** or **sklearn 
 Models can be used for binary, multi-class or multi-label classification.
 List of available classifiers (more info see below):
 
-* **BERT classifier** (see :doc:`here </apiref/models/bert>`) builds BERT [8]_ architecture for classification problem on Tensorflow.
+* **BERT classifier** (see :doc:`here </apiref/models/bert>`) builds BERT [8]_ architecture for classification problem on **TensorFlow** or on **PyTorch**.
 
 * **Keras classifier** (see :doc:`here </apiref/models/classifiers>`) builds neural network on Keras with tensorflow backend.
+
+* **PyTorch classifier** (see :doc:`here </apiref/models/classifiers>`) builds neural network on PyTorch.
 
 * **Sklearn classifier** (see :doc:`here </apiref/models/sklearn>`) builds most of sklearn classifiers.
 
@@ -78,8 +80,8 @@ Python code
 ~~~~~~~~~~~
 
 One can also use these configs in python code.
-When using KerasClassificationModel for **Windows** platform
-one needs to set `KERAS_BACKEND` to `tensorflow` in the following way:
+When using ``KerasClassificationModel`` for **Windows** platform
+one needs to set ``KERAS_BACKEND`` to ``tensorflow`` in the following way:
 
 .. code:: python
 
@@ -129,13 +131,13 @@ Several **pre-trained English, multi-lingual and Russian BERT** models are provi
 :doc:`our BERT documentation </features/models/bert>`.
 
 Two main components of BERT classifier pipeline in DeepPavlov are
-``deeppavlov.models.preprocessors.BertPreprocessor`` (see :doc:`here </apiref/models/bert>`)
-and ``deeppavlov.models.bert.BertClassifierModel`` (see :doc:`here </apiref/models/bert>`).
-Non-processed texts should be given to ``bert_preprocessor`` for tokenization on subtokens,
+``deeppavlov.models.preprocessors.BertPreprocessor`` on TensorFlow (or ``deeppavlov.models.preprocessors.TorchBertPreprocessor`` on PyTorch) (see :doc:`here </apiref/models/bert>`)
+and ``deeppavlov.models.bert.BertClassifierModel`` on TensorFlow (or ``deeppavlov.models.torch_bert.TorchBertClassifierModel`` on PyTorch) (see :doc:`here </apiref/models/bert>`).
+Non-processed texts should be given to ``bert_preprocessor`` (``torch_bert_preprocessor``) for tokenization on subtokens,
 encoding subtokens with their indices and creating tokens and segment masks.
 If one processed classes to one-hot labels in pipeline, ``one_hot_labels`` should be set to ``true``.
 
-``bert_classifier`` has a dense layer of number of classes size upon pooled outputs of Transformer encoder,
+``bert_classifier`` (``torch_bert_classifier``) has a dense layer of number of classes size upon pooled outputs of Transformer encoder,
 it is followed by ``softmax`` activation (``sigmoid`` if ``multilabel`` parameter is set to ``true`` in config).
 
 Neural Networks on Keras
@@ -159,6 +161,13 @@ Below the list of available models is presented:
 * ``bilstm_self_mult_attention_model`` -- Bidirectional LSTM followed by self multiplicative attention layer,
 * ``bigru_model`` -- Bidirectional GRU model.
 
+
+Neural Networks on PyTorch
+--------------------------
+
+**deeppavlov.models.classifiers.TorchClassificationModel** (see :doc:`here </apiref/models/classifiers>`)
+does not contain a zoo of models while it has an example of shallow-and-wide CNN (``swcnn_model``).
+An instruction of how to build your own architecture on PyTorch one may find :doc:`here </intro/choose_framework>`.
 
 Sklearn models
 --------------
@@ -307,6 +316,8 @@ The reviews are long enough (cut up to 200 subtokens).
 |                  |                    |      | :config:`English BERT <classifiers/insults_kaggle_bert.json>`                                   |             | 0.9255 | 0.8612 |  1200 Mb  |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
 |                  |                    |      | :config:`English Conversational BERT <classifiers/insults_kaggle_conv_bert.json>`               |             | 0.9389 | 0.8941 |  1200 Mb  |
++                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |                    |      | :config:`English BERT on PyTorch <classifiers/insults_kaggle_bert_torch.json>`                  |             | 0.9329 | 0.877  |  1.1 Gb   |
 +------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | 5 topics         | `AG News`_         |      | :config:`Wiki emb <classifiers/topic_ag_news.json>`                                             | Accuracy    | 0.8922 | 0.9059 |  8.5 Gb   |
 +------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
@@ -315,6 +326,8 @@ The reviews are long enough (cut up to 200 subtokens).
 | Sentiment        |`SST`_              |      | :config:`5-classes SST on conversational BERT <classifiers/sentiment_sst_conv_bert.json>`       | Accuracy    | 0.6456 | 0.6715 |  400 Mb   |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
 |                  |                    |      | :config:`5-classes SST on multilingual BERT <classifiers/sentiment_sst_multi_bert.json>`        |             | 0.5738 | 0.6024 |  660 Mb   |
++                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
+|                  |                    |      | :config:`3-classes SST SWCNN on PyTorch <classifiers/sst_torch_swcnn.json>`                     |             | 0.7379 | 0.6312 |  4.3 Mb   |
 +                  +--------------------+      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
 |                  |`Yelp`_             |      | :config:`5-classes Yelp on conversational BERT <classifiers/sentiment_yelp_conv_bert.json>`     |             | 0.6925 | 0.6842 |  400 Mb   |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+

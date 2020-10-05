@@ -158,7 +158,7 @@
         "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata_eng/sparql_queries.json",
         "entities_to_leave": 5,
         "rels_to_leave": 10,
-        "in": ["x", "template_type", "entities", "types"],
+        "in": ["x", "x", "template_type", "entities", "types"],
         "out": ["candidate_rels_answers"]
       },
       {
@@ -222,7 +222,9 @@
       "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
       "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
-      "{DEEPPAVLOV_PATH}/requirements/hdt.txt"
+      "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
+      "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
+      "{DEEPPAVLOV_PATH}/requirements/spelling.txt"
     ],
     "labels": {
       "telegram_utils": "KBQA_MT_BERT_MODEL",

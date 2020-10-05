@@ -1,0 +1,118 @@
+{
+  "dataset_reader": {
+    "class_name": "md_yaml_dialogs_reader",
+    "data_path": "{DATA_PATH}"
+  },
+  "dataset_iterator": {
+    "class_name": "dialog_iterator"
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "out": ["y_predicted"],
+    "pipe": [
+      {
+        "class_name": "deeppavlov.models.go_bot.wrapper:DialogComponentWrapper",
+        "component": { "class_name": "split_tokenizer" },
+        "in": ["x"],
+        "out": ["x_tokens"]
+      },
+      {
+        "id": "word_vocab",
+        "class_name": "simple_vocab",
+        "fit_on": ["x_tokens"],
+        "save_path": "{MODEL_PATH}/word.dict",
+        "load_path": "{MODEL_PATH}/word.dict"
+      },
+      {
+        "class_name": "go_bot",
+        "load_path": "{MODEL_PATH}/model",
+        "save_path": "{MODEL_PATH}/model",
+        "in": ["x"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "main": true,
+        "debug": false,
+        "learning_rate": 0.003,
+        "learning_rate_drop_patience": 5,
+        "learning_rate_drop_div": 10.0,
+        "momentum": 0.95,
+        "optimizer": "tensorflow.train:AdamOptimizer",
+        "clip_norm": 2.0,
+        "dropout_rate": 0.4,
+        "l2_reg_coef": 3e-4,
+        "hidden_size": 128,
+        "dense_size": 160,
+        "word_vocab": "#word_vocab",
+        "database": null,
+        "nlg_manager": {
+          "class_name": "gobot_json_nlg_manager",
+          "data_path": "{DATA_PATH}",
+          "dataset_reader_class": "md_yaml_dialogs_reader",
+          "actions2slots_path": "{DATA_PATH}/dstc2-actions2slots.json",
+          "api_call_action": null
+        },
+        "api_call_action": null,
+        "use_action_mask": false,
+        "slot_filler": null,
+        "intent_classifier": null,
+        "embedder": {
+          "class_name": "glove",
+          "load_path": "{DOWNLOADS_PATH}/embeddings/glove.6B.100d.txt"
+        },
+        "bow_embedder": null,
+        "tokenizer": {
+          "class_name": "stream_spacy_tokenizer",
+          "lowercase": false
+        },
+        "tracker": {
+          "class_name": "featurized_tracker",
+          "slot_names": []
+        }
+      }
+    ]
+  },
+  "train": {
+    "epochs": 200,
+    "batch_size": 4,
+
+    "metrics": ["per_item_action_accuracy"],
+    "validation_patience": 10,
+    "val_every_n_batches": 15,
+
+    "log_every_n_batches": 15,
+    "log_on_k_batches": -1,
+    "show_examples": false,
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ],
+    "class_name": "nn_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "DATA_PATH": "{DOWNLOADS_PATH}/gobot_md_yaml_minimal",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/gobot_md_yaml_minimal"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/gensim.txt",
+      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/glove.6B.100d.txt",
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/datasets/gobot_md_yaml_minimal.tar.gz",
+        "subdir": "{DATA_PATH}"
+      }
+    ]
+  }
+}

@@ -30,8 +30,15 @@
         "out": ["syntax_info"]
       },
       {
+        "class_name": "ru_adj_to_noun",
+        "freq_dict_filename": "{DOWNLOADS_PATH}/wikidata_rus/freqrnc2011.csv",
+        "id": "adj2noun"
+      },
+      {
         "class_name": "tree_to_sparql",
         "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries.json",
+        "adj_to_noun": "#adj2noun",
+        "lang": "rus",
         "in": ["syntax_info", "entities_pos"],
         "out": ["x_sanitized", "query_nums", "entities_dict", "types_dict"]
       },
@@ -43,15 +50,26 @@
         "templates_filename": "templates_rus.json"
       },
       {
+        "class_name": "rel_ranking_bert_infer",
+        "id": "entity_descr_ranking",
+        "ranker": {"config_path": "{CONFIGS_PATH}/classifiers/entity_ranking_bert_rus_no_mention.json"},
+        "batch_size": 100,
+        "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
+        "rel_q2name_filename": "q_to_descr_ru.pickle",
+        "rels_to_leave": 200
+      },
+      {
         "class_name": "kbqa_entity_linker",
         "id": "linker_entities",
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "inverted_index_filename": "inverted_index_rus.pickle",
         "entities_list_filename": "entities_list_rus.pickle",
         "q2name_filename": "wiki_rus_q_to_name.pickle",
+        "entity_ranker": "#entity_descr_ranking",
         "build_inverted_index": false,
         "lemmatize": true,
-        "use_descriptions": false,
+        "use_descriptions": true,
+        "include_mention": false,
         "use_prefix_tree": false
       },
       {
@@ -91,7 +109,7 @@
         "rels_to_leave": 10,
         "return_answers": true,
         "syntax_structure_known": true,
-        "in": ["x_sanitized", "query_nums", "entities_dict", "types_dict"],
+        "in": ["x", "x_sanitized", "query_nums", "entities_dict", "types_dict"],
         "out": ["answers"]
       }
     ],
@@ -136,7 +154,9 @@
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
       "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
       "{DEEPPAVLOV_PATH}/requirements/udpipe.txt",
-      "{DEEPPAVLOV_PATH}/requirements/hdt.txt"
+      "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
+      "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
+      "{DEEPPAVLOV_PATH}/requirements/spelling.txt"
     ],
     "labels": {
       "telegram_utils": "NERCoNLL2003Model",
@@ -154,6 +174,10 @@
       {
         "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_bert_rus.tar.gz",
         "subdir": "{MODELS_PATH}/rel_ranking_bert_rus"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/entity_ranking_bert_rus_no_mention.tar.gz",
+        "subdir": "{MODELS_PATH}/entity_ranking_bert_rus_no_mention"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/syntax_parser/syntax_ru_syntagrus_bert.tar.gz",

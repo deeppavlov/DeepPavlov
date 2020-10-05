@@ -42,13 +42,13 @@ rule-based system.
 
 ``Component``\ s can be joined into a ``Model`` or a ``Skill``. ``Model``
 solves a larger NLP task compared to ``Component``. However, in terms of
-implementation ``Models``\ s are not different from ``Component``\ s. The
+implementation ``Model``\ s are not different from ``Component``\ s. The
 difference of a ``Skill`` from a ``Model`` is that its input and output should
 both be strings. Therefore, ``Skill``\ s are usually associated with
 dialogue tasks.
 
 DeepPavlov is built on top of machine learning frameworks
-`TensorFlow <https://www.tensorflow.org/>`__ and
-`Keras <https://keras.io/>`__. Other external libraries can be used to
+`TensorFlow <https://www.tensorflow.org/>`__,
+`Keras <https://keras.io/>`__ and `PyTorch <https://www.pytorch.org/>`__. Other external libraries can be used to
 build basic components.
 
