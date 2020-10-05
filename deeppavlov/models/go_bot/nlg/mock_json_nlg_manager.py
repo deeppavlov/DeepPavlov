@@ -105,8 +105,10 @@ class MockJSONNLGManager(NLGManagerInterface):
         Returns:
             an ID corresponding to the passed action text
         """
-
-        actions_tuple = tuple(action_text.split('+'))
+        if isinstance(action_text, str):
+            actions_tuple = tuple(action_text.split('+'))
+        elif isinstance(action_text, tuple):
+            actions_tuple = action_text
         return self.action_tuples2ids[actions_tuple]  # todo unhandled exception when not found
 
     def decode_response(self,

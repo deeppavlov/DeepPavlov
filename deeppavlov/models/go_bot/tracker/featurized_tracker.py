@@ -29,9 +29,13 @@ class FeaturizedTracker(TrackerInterface):
         raise NotImplementedError("Featurized tracker lacks get_current_knowledge() method. "
                                   "To be improved in future versions.")
 
-    def __init__(self, slot_names: List[str], actions_required_acquired_slots_path: Optional[Union[str, Path]]=None) -> None:
+    def __init__(self,
+                 slot_names: List[str],
+                 actions_required_acquired_slots_path: Optional[Union[str, Path]]=None,
+                 **kwargs) -> None:
         self.slot_names = list(slot_names)
-        self.action_names2required_slots, self.action_names2acquired_slots = self._load_actions2slots_formfilling_info(actions_required_acquired_slots_path)
+        self.actions_required_acquired_slots_path = actions_required_acquired_slots_path
+        self.action_names2required_slots, self.action_names2acquired_slots = self._load_actions2slots_formfilling_info(self.actions_required_acquired_slots_path)
         self.history = []
         self.current_features = None
 

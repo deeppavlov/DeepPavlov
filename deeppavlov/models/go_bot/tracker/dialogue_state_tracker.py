@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import Dict, Any, List
+from pathlib import Path
+from typing import List, Iterator, Union, Optional, Dict, Tuple, Any
 
 import numpy as np
 
@@ -33,12 +34,19 @@ class DialogueStateTracker(FeaturizedTracker):
         knowledge = DSTKnowledge(self.prev_action,
                                  state_features, context_features,
                                  self.api_call_id,
-                                 self.n_actions)
+                                 self.n_actions,
+                                 self.calc_action_mask())
         return knowledge
 
     def __init__(self,
-                 slot_names, n_actions: int, api_call_id: int, hidden_size: int, database: Component = None) -> None:
-        super().__init__(slot_names)
+                 slot_names,
+                 n_actions: int,
+                 api_call_id: int,
+                 hidden_size: int,
+                 database: Component = None,
+                 actions_required_acquired_slots_path: Optional[Union[str, Path]]=None,
+                 **kwargs) -> None:
+        super().__init__(slot_names, actions_required_acquired_slots_path, **kwargs)
         self.hidden_size = hidden_size
         self.database = database
         self.n_actions = n_actions
@@ -54,7 +62,8 @@ class DialogueStateTracker(FeaturizedTracker):
         dialogue_state_tracker = DialogueStateTracker(parent_tracker.slot_names, nlg_manager.num_of_known_actions(),
                                                       nlg_manager.get_api_call_action_id(),
                                                       policy_network_params.hidden_size,
-                                                      database)
+                                                      database,
+                                                      parent_tracker.actions_required_acquired_slots_path)
 
         # region set formfilling info
         act2act_id = {a_text: nlg_manager.get_action_id(a_text) for a_text in nlg_manager.known_actions()}
@@ -66,12 +75,18 @@ class DialogueStateTracker(FeaturizedTracker):
             action_id2req_slots_ids[act_id] = np.zeros(len(dialogue_state_tracker.slot_names), dtype=np.float32)
             action_id2aqd_slots_ids[act_id] = np.zeros(len(dialogue_state_tracker.slot_names), dtype=np.float32)
 
-            for slot_name_i, slot_name in enumerate(parent_tracker.action_names2required_slots[act]):
-                slot_ix_in_tracker = dialogue_state_tracker.slot_names.index(slot_name)
-                action_id2req_slots_ids[act_id][slot_ix_in_tracker] = 1.
-            for slot_name_i, slot_name in enumerate(parent_tracker.action_names2acquired_slots[act]):
-                slot_ix_in_tracker = dialogue_state_tracker.slot_names.index(slot_name)
-                action_id2aqd_slots_ids[act_id][slot_ix_in_tracker] = 1.
+            if isinstance(act, tuple):
+                acts = act
+            else:
+                acts = [act]
+
+            for act in acts:
+                for slot_name_i, slot_name in enumerate(parent_tracker.action_names2required_slots.get(act, [])):
+                    slot_ix_in_tracker = dialogue_state_tracker.slot_names.index(slot_name)
+                    action_id2req_slots_ids[act_id][slot_ix_in_tracker] = 1.
+                for slot_name_i, slot_name in enumerate(parent_tracker.action_names2acquired_slots.get(act, [])):
+                    slot_ix_in_tracker = dialogue_state_tracker.slot_names.index(slot_name)
+                    action_id2aqd_slots_ids[act_id][slot_ix_in_tracker] = 1.
 
         dialogue_state_tracker.ffill_act_ids2req_slots_ids = action_id2req_slots_ids
         dialogue_state_tracker.ffill_act_ids2aqd_slots_ids = action_id2aqd_slots_ids
@@ -137,9 +152,10 @@ class DialogueStateTracker(FeaturizedTracker):
             required_slots_mask = self.ffill_act_ids2req_slots_ids[act_id]
             acquired_slots_mask = self.ffill_act_ids2aqd_slots_ids[act_id]
             act_req_slots_fulfilled = (required_slots_mask * self._binary_features()) == required_slots_mask
-            act_requirements_not_fulfilled = not act_req_slots_fulfilled
+            act_requirements_not_fulfilled = not act_req_slots_fulfilled if act_req_slots_fulfilled != [] else np.array([])
             act_nothing_new_to_knew = (acquired_slots_mask * self._binary_features()) == acquired_slots_mask
-            if act_requirements_not_fulfilled or act_nothing_new_to_knew:
+
+            if any(np.logical_or(act_requirements_not_fulfilled, act_nothing_new_to_knew)):
                 mask[act_id] = 0.
 
         return mask
