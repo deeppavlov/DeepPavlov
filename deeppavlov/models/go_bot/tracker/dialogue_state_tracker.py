@@ -151,9 +151,9 @@ class DialogueStateTracker(FeaturizedTracker):
         for act_id in range(self.n_actions):
             required_slots_mask = self.ffill_act_ids2req_slots_ids[act_id]
             acquired_slots_mask = self.ffill_act_ids2aqd_slots_ids[act_id]
-            act_req_slots_fulfilled = (required_slots_mask * self._binary_features()) == required_slots_mask
-            act_requirements_not_fulfilled = not act_req_slots_fulfilled if act_req_slots_fulfilled != [] else np.array([])
-            act_nothing_new_to_knew = (acquired_slots_mask * self._binary_features()) == acquired_slots_mask
+            act_req_slots_fulfilled = np.equal((required_slots_mask * self._binary_features()), required_slots_mask)
+            act_requirements_not_fulfilled = np.invert(act_req_slots_fulfilled)# if act_req_slots_fulfilled != [] else np.array([])
+            act_nothing_new_to_knew = np.equal((acquired_slots_mask * self._binary_features()), acquired_slots_mask)
 
             if any(np.logical_or(act_requirements_not_fulfilled, act_nothing_new_to_knew)):
                 mask[act_id] = 0.
@@ -232,7 +232,8 @@ class MultipleUserStateTrackersPool(object):
             tracker_entity.n_actions,
             tracker_entity.api_call_id,
             tracker_entity.hidden_size,
-            tracker_entity.database
+            tracker_entity.database,
+            tracker_entity.actions_required_acquired_slots_path
         )
 
         self._ids_to_trackers[user_id] = tracker
@@ -245,3 +246,4 @@ class MultipleUserStateTrackersPool(object):
             self._ids_to_trackers[user_id].reset_state()
         else:
             self._ids_to_trackers.clear()
+nm
