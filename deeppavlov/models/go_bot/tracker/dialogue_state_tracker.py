@@ -246,4 +246,3 @@ class MultipleUserStateTrackersPool(object):
             self._ids_to_trackers[user_id].reset_state()
         else:
             self._ids_to_trackers.clear()
-nm
