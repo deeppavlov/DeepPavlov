@@ -1,0 +1,7 @@
+.git
+.github
+_layouts
+docs
+examples
+tests
+Dockerfile
