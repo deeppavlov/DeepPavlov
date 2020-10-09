@@ -9,6 +9,7 @@ Welcome to DeepPavlov's documentation!
    QuickStart <intro/quick_start>
    General concepts <intro/overview>
    Configuration file <intro/configuration>
+   Choosing The Framework <intro/choose_framework>
    Models/Skills overview <features/overview>
 
 
@@ -27,8 +28,10 @@ Welcome to DeepPavlov's documentation!
    :caption: Models
    
    BERT-based models <features/models/bert>
+   Multitask BERT <features/models/multitask_bert>
    Context Question Answering <features/models/squad>
    Classification <features/models/classifiers>
+   Entity Linking <features/models/entity_linking>
    Morphological Tagger <features/models/morphotagger>
    Named Entity Recognition <features/models/ner>
    Neural Ranking <features/models/neural_ranking>

@@ -90,18 +90,23 @@ and :config:`NER Ontonotes <ner/ner_ontonotes_bert_emb.json>` configuration file
 BERT for Classification
 -----------------------
 
-:class:`~deeppavlov.models.bert.bert_classifier.BertClassifierModel` provides easy to use solution for classification problem
-using pre-trained BERT. One can use several pre-trained English, multi-lingual and Russian BERT models that are
+:class:`~deeppavlov.models.bert.bert_classifier.BertClassifierModel` and
+:class:`~deeppavlov.models.torch_bert.torch_bert_classifier.TorchBertClassifierModel`
+provide easy to use solution for classification problem
+using pre-trained BERT on TensorFlow and PyTorch correspondingly.
+One can use several pre-trained English, multi-lingual and Russian BERT models that are
 listed above.
 
 Two main components of BERT classifier pipeline in DeepPavlov are
-:class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertPreprocessor` and
-:class:`~deeppavlov.models.bert.bert_classifier.BertClassifierModel`.
-Non-processed texts should be given to ``bert_preprocessor`` for tokenization on subtokens,
+:class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertPreprocessor` on TensorFlow
+(:class:`~deeppavlov.models.preprocessors.torch_bert_preprocessor.TorchBertPreprocessor` on PyTorch) and
+:class:`~deeppavlov.models.bert.bert_classifier.BertClassifierModel` on TensorFlow
+(:class:`~deeppavlov.models.torch_bert.torch_bert_classifier.TorchBertClassifierModel` on PyTorch).
+Non-processed texts should be given to ``bert_preprocessor`` (or ``torch_bert_preprocessor``) for tokenization on subtokens,
 encoding subtokens with their indices and creating tokens and segment masks.
 In case of using one-hot encoded classes in the pipeline, set ``one_hot_labels`` to ``true``.
 
-``bert_classifier`` has a dense layer of number of classes size upon pooled outputs of Transformer encoder,
+``bert_classifier`` and ``torch_bert_classifier`` have a dense layer of number of classes size upon pooled outputs of Transformer encoder,
 it is followed by ``softmax`` activation (``sigmoid`` if ``multilabel`` parameter is set to ``true`` in config).
 
 
@@ -109,10 +114,11 @@ BERT for Named Entity Recognition (Sequence Tagging)
 ----------------------------------------------------
 
 Pre-trained BERT model can be used for sequence tagging. Examples of BERT application to sequence tagging
-can be found :doc:`here </features/models/ner>`. The module used for tagging
-is :class:`~deeppavlov.models.bert.bert_sequence_tagger.BertSequenceTagger`.
+can be found :doc:`here </features/models/ner>`. The modules used for tagging
+are :class:`~deeppavlov.models.bert.bert_sequence_tagger.BertSequenceTagger` on TensorFlow and
+:class:`~deeppavlov.models.torch_bert.torch_bert_sequence_tagger.TorchBertSequenceTagger` on PyTorch.
 The tags are obtained by applying a dense layer to the representation of
-the first subtoken of each word. There is also an optional CRF layer on the top.
+the first subtoken of each word. There is also an optional CRF layer on the top for TensorFlow implementation.
 
 Multilingual BERT model allows to perform zero-shot transfer across languages. To use our 19 tags NER for over a
 hundred languages see :ref:`ner_multi_bert`.
@@ -138,7 +144,8 @@ BERT for Context Question Answering (SQuAD)
 -------------------------------------------
 Context Question Answering on `SQuAD <https://rajpurkar.github.io/SQuAD-explorer/>`__ dataset is a task
 of looking for an answer on a question in a given context. This task could be formalized as predicting answer start
-and end position in a given context. :class:`~deeppavlov.models.bert.bert_squad.BertSQuADModel` uses two linear
+and end position in a given context. :class:`~deeppavlov.models.bert.bert_squad.BertSQuADModel` on TensorFlow and
+:class:`~deeppavlov.models.torch_bert.torch_bert_squad.TorchBertSQuADModel` on PyTorch use two linear
 transformations to predict probability that current subtoken is start/end position of an answer. For details check
 :doc:`Context Question Answering documentation page </features/models/squad>`.
 
@@ -147,14 +154,16 @@ BERT for Ranking
 There are two main approaches in text ranking. The first one is interaction-based which is relatively accurate but
 works slow and the second one is representation-based which is less accurate but faster [3]_.
 The interaction-based ranking based on BERT is represented in the DeepPavlov with two main components
-:class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertRankerPreprocessor`
-and :class:`~deeppavlov.models.bert.bert_ranker.BertRankerModel`
+:class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertRankerPreprocessor` on TensorFlow
+(:class:`~deeppavlov.models.preprocessors.torch_bert_preprocessor.TorchBertRankerPreprocessor` on PyTorch)
+and :class:`~deeppavlov.models.bert.bert_ranker.BertRankerModel` on TensorFlow
+(:class:`~deeppavlov.models.torch_bert.torch_bert_ranker.TorchBertRankerModel` on PyTorch)
 and the representation-based ranking with components
 :class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertSepRankerPreprocessor`
-and :class:`~deeppavlov.models.bert.bert_ranker.BertSepRankerModel`.
+and :class:`~deeppavlov.models.bert.bert_ranker.BertSepRankerModel` on TensorFlow.
 Additional components
 :class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertSepRankerPredictorPreprocessor`
-and :class:`~deeppavlov.models.bert.bert_ranker.BertSepRankerPredictor` are for usage in the ``interact`` mode
+and :class:`~deeppavlov.models.bert.bert_ranker.BertSepRankerPredictor` (on TensorFlow) are for usage in the ``interact`` mode
 where the task for ranking is to retrieve the best possible response from some provided response base with the help of
 the trained model. Working examples with the trained models are given :doc:`here </features/models/neural_ranking>`.
 Statistics are available :doc:`here </features/overview>`.
@@ -164,12 +173,14 @@ BERT for Extractive Summarization
 The BERT model was trained on Masked Language Modeling (MLM) and Next Sentence Prediction (NSP) tasks.
 NSP head was trained to detect in ``[CLS] text_a [SEP] text_b [SEP]`` if text_b follows text_a in original document.
 This NSP head can be used to stack sentences from a long document, based on a initial sentence. The first sentence in
-a document can be used as initial one. :class:`~deeppavlov.models.bert.bert_as_summarizer.BertAsSummarizer` relies on 
+a document can be used as initial one. :class:`~deeppavlov.models.bert.bert_as_summarizer.BertAsSummarizer` on TensorFlow
+and :class:`~deeppavlov.models.torch_bert.torch_bert_as_summarizer.TorchBertAsSummarizer` on PyTorch rely on
 pretrained BERT models and does not require training on summarization dataset. 
-We have two configuration files:
+We have three configuration files:
 
-- :config:`BertAsSummarizer <summarization/bert_as_summarizer.json>` takes first sentence in document as initialization. 
-- :config:`BertAsSummarizer with init <summarization/bert_as_summarizer_with_init.json>` uses provided initial sentence.
+- :config:`BertAsSummarizer <summarization/bert_as_summarizer.json>` in Russian takes first sentence in document as initialization.
+- :config:`BertAsSummarizer with init <summarization/bert_as_summarizer_with_init.json>` in Russian uses provided initial sentence.
+- :config:`TorchBertAsSummarizer <summarization/torch_bert_as_en_summarizer.json>` in English takes first sentence in document as initialization.
 
 Using custom BERT in DeepPavlov
 -------------------------------
@@ -179,8 +190,10 @@ To change the BERT model used for initialization in any downstream task mentione
 the :doc:`config </intro/configuration>` file must be changed to match new BERT path:
 
 * download URL in the ``metadata.download.url`` part of the config
-* ``bert_config_file``, ``pretrained_bert`` in the BERT based Component
-* ``vocab_file`` in the ``bert_preprocessor``
+* ``bert_config_file``, ``pretrained_bert`` in the BERT based Component. In case of PyTorch BERT, ``pretrained_bert`` can be assigned to
+    string name of used pre-trained BERT (e.g. ``"bert-base-uncased"``) and then ``bert_config_file`` is set to ``None``.
+* ``vocab_file`` in the ``bert_preprocessor`` (``torch_bert_preprocessor``). In case of PyTorch BERT, ``vocab_file`` can be assigned to
+    string name of used pre-trained BERT (e.g. ``"bert-base-uncased"``).
 
 .. [1] Kuratov, Y., Arkhipov, M. (2019). Adaptation of Deep Bidirectional Multilingual Transformers for Russian Language. arXiv preprint arXiv:1905.07213.
 .. [2] Arkhipov M., Trofimova M., Kuratov Y., Sorokin A. (2019). `Tuning Multilingual Transformers for Language-Specific Named Entity Recognition <https://www.aclweb.org/anthology/W19-3712/>`__ . ACL anthology W19-3712.

@@ -14,6 +14,7 @@
 
 import itertools
 import re
+import time
 from logging import getLogger
 from typing import Tuple, List, Optional, Union, Dict, Any
 
@@ -100,7 +101,8 @@ class QueryGeneratorBase(Component, Serializable):
         pass
 
     def find_candidate_answers(self, question: str,
-                 template_types: List[str],
+                 question_sanitized: str,
+                 template_types: Union[List[str], str],
                  entities_from_ner: List[str],
                  types_from_ner: List[str]) -> Union[List[Tuple[str, Any]], List[str]]:
 
@@ -112,15 +114,17 @@ class QueryGeneratorBase(Component, Serializable):
         for old, new in replace_tokens:
             question = question.replace(old, new)
 
+        tm1 = time.time()
         entities_from_template, types_from_template, rels_from_template, rel_dirs_from_template, \
-        query_type_template = self.template_matcher(question)
+        query_type_template, template_found = self.template_matcher(question, entities_from_ner)
         self.template_nums = [query_type_template]
 
         log.debug(f"question: {question}\n")
         log.debug(f"template_type {self.template_nums}")
 
         if entities_from_template or types_from_template:
-            entity_ids = self.get_entity_ids(entities_from_template, "entities")
+            tm1 = time.time()
+            entity_ids = self.get_entity_ids(entities_from_template, "entities", template_found, question)
             type_ids = self.get_entity_ids(types_from_template, "types")
             log.debug(f"entities_from_template {entities_from_template}")
             log.debug(f"types_from_template {types_from_template}")
@@ -128,13 +132,14 @@ class QueryGeneratorBase(Component, Serializable):
             log.debug(f"entity_ids {entity_ids}")
             log.debug(f"type_ids {type_ids}")
 
-            candidate_outputs = self.sparql_template_parser(question, entity_ids, type_ids, rels_from_template,
+            tm1 = time.time()
+            candidate_outputs = self.sparql_template_parser(question_sanitized, entity_ids, type_ids, rels_from_template,
                                                             rel_dirs_from_template)
 
         if not candidate_outputs and entities_from_ner:
             log.debug(f"(__call__)entities_from_ner: {entities_from_ner}")
             log.debug(f"(__call__)types_from_ner: {types_from_ner}")
-            entity_ids = self.get_entity_ids(entities_from_ner, "entities")
+            entity_ids = self.get_entity_ids(entities_from_ner, "entities", question=question)
             type_ids = self.get_entity_ids(types_from_ner, "types")
             log.debug(f"(__call__)entity_ids: {entity_ids}")
             log.debug(f"(__call__)type_ids: {type_ids}")
@@ -142,15 +147,19 @@ class QueryGeneratorBase(Component, Serializable):
             log.debug(f"(__call__)self.template_nums: {self.template_nums}")
             if not self.syntax_structure_known:
                 entity_ids = entity_ids[:3]
-            candidate_outputs = self.sparql_template_parser(question, entity_ids, type_ids)
+            tm1 = time.time()
+            candidate_outputs = self.sparql_template_parser(question_sanitized, entity_ids, type_ids)
         return candidate_outputs
 
-    def get_entity_ids(self, entities: List[str], what_to_link: str) -> List[List[str]]:
+    def get_entity_ids(self, entities: List[str],
+                             what_to_link: str,
+                             template_found: str = None,
+                             question: str = None) -> List[List[str]]:
         entity_ids = []
         for entity in entities:
             entity_id = []
             if what_to_link == "entities":
-                entity_id, confidences = self.linker_entities.link_entity(entity)
+                entity_id, confidences = self.linker_entities.link_entity(entity, context=question, template_found=template_found)
             if what_to_link == "types":
                 entity_id, confidences = self.linker_types.link_entity(entity)
             entity_ids.append(entity_id[:15])
@@ -188,15 +197,16 @@ class QueryGeneratorBase(Component, Serializable):
         else:
             for template in templates:
                 entities_and_types_select = template["entities_and_types_select"]
-                candidate_outputs = self.query_parser(question, template, entities_and_types_select, entity_ids, type_ids, rels_from_template)
+                candidate_outputs = self.query_parser(question, template, entities_and_types_select,
+                                                                entity_ids, type_ids, rels_from_template)
                 if candidate_outputs:
                     return candidate_outputs
 
             if not candidate_outputs:
                 alternative_templates = templates[0]["alternative_templates"]
                 for template_num, entities_and_types_select in alternative_templates:
-                    candidate_outputs = self.query_parser(question, self.template_queries[template_num], entities_and_types_select,
-                                                          entity_ids, type_ids, rels_from_template)
+                    candidate_outputs = self.query_parser(question, self.template_queries[template_num],
+                                        entities_and_types_select, entity_ids, type_ids, rels_from_template)
                     return candidate_outputs
 
         log.debug("candidate_rels_and_answers:\n" + '\n'.join([str(output) for output in candidate_outputs[:5]]))
@@ -216,6 +226,5 @@ class QueryGeneratorBase(Component, Serializable):
             ex_rels = self.rank_list_0
         elif source == "rank_list_2":
             ex_rels = self.rank_list_1
-        scores = self.rel_ranker.rank_rels(question, ex_rels)
-        top_rels = [score[0] for score in scores]
-        return top_rels[:self.rels_to_leave]
+        rels_with_scores = self.rel_ranker.rank_rels(question, ex_rels)
+        return rels_with_scores[:self.rels_to_leave]

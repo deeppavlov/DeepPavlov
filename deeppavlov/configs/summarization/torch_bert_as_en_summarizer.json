@@ -1,0 +1,42 @@
+{
+  "chainer": {
+    "in": [
+      "texts"
+    ],
+    "pipe": [
+      {
+        "class_name": "torch_bert_as_summarizer",
+        "pretrained_bert": "bert-base-uncased",
+        "vocab_file": "bert-base-uncased",
+        "max_summary_length": 100,
+        "max_summary_length_in_tokens": true,
+        "lang": "en",
+        "do_lower_case": false,
+        "max_seq_length": 512,
+        "in": [
+          "texts"
+        ],
+        "out": [
+          "summarized_text"
+        ]
+      }
+    ],
+    "out": [
+      "summarized_text"
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+      "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+    ]
+  }
+}
+  
+  

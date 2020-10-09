@@ -1,0 +1,95 @@
+{
+  "chainer": {
+    "in": ["documents"],
+    "pipe": [
+      {
+        "class_name": "ner_chunker",
+        "id": "chunker"
+      },
+      {
+        "thres_proba": 0.05,
+        "entity_tags": ["PER", "LOC", "ORG"],
+        "type_tag": "TYPE",
+        "o_tag": "O",
+        "tags_file": "{NER_PATH}/tag.dict",
+        "return_entities_with_tags": true,
+        "class_name": "entity_detection_parser",
+        "id": "edp"
+      },
+      {
+        "class_name": "rel_ranking_bert_infer",
+        "id": "entity_descr_ranking",
+        "ranker": {"config_path": "{CONFIGS_PATH}/classifiers/entity_ranking_bert_rus_no_mention.json"},
+        "batch_size": 100,
+        "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
+        "rel_q2name_filename": "q_to_descr_ru.pickle",
+        "rels_to_leave": 200
+      },
+      {
+        "class_name": "entity_linker",
+        "in": ["documents"],
+        "out": ["entity_substr_list", "entity_positions_list", "entity_ids_list"],
+        "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
+        "save_path": "{DOWNLOADS_PATH}/wikidata_rus",
+        "word_to_idlist_filename": "word_to_idlist_rus.pickle",
+        "entities_list_filename": "ent_list_rus.pickle",
+        "entities_ranking_filename": "entities_ranking_dict_rus.pickle",
+        "vectorizer_filename": "vectorizer_rus.pk",
+        "faiss_index_filename": "{DOWNLOADS_PATH}/wikidata_rus/faiss_vectors_rus.index",
+        "q_to_descr_filename": "q_to_descr_ru.pickle",
+        "chunker": "#chunker",
+        "ner": {"config_path": "{CONFIGS_PATH}/ner/ner_rus_bert_probas.json"},
+        "ner_parser": "#edp",
+        "entity_ranker": "#entity_descr_ranking",
+        "num_faiss_candidate_entities": 10,
+        "num_entities_for_bert_ranking": 200,
+        "num_faiss_cells": 1,
+        "use_gpu": false,
+        "fit_vectorizer": false,
+        "max_tfidf_features": 500,
+        "include_mention": false,
+        "ngram_range": [2, 2],
+        "num_entities_to_return": 1,
+        "build_inverted_index": false,
+        "lemmatize": true,
+        "use_descriptions": true,
+        "use_prefix_tree": false,
+        "lang": "ru"
+      }
+    ],
+    "out": ["entity_substr_list", "entity_positions_list", "entity_ids_list"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
+      "NER_PATH": "{MODELS_PATH}/ner_rus_bert"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+      "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
+      "{DEEPPAVLOV_PATH}/requirements/hdt.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/entity_linking_rus.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/ner_rus_bert.tar.gz",
+        "subdir": "{MODELS_PATH}/ner_rus_bert"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/entity_ranking_bert_rus_no_mention.tar.gz",
+        "subdir": "{MODELS_PATH}/entity_ranking_bert_rus_no_mention"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/q_to_descr_ru.pickle",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+      }
+    ]
+  }
+}

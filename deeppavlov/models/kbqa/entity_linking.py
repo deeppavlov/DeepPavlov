@@ -12,318 +12,410 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
-import sqlite3
 from logging import getLogger
-from typing import List, Dict, Tuple, Optional, Any
+from typing import List, Dict, Tuple
 from collections import defaultdict
 
-import nltk
+import numpy as np
 import pymorphy2
+import faiss
 from nltk.corpus import stopwords
-from rapidfuzz import fuzz
-from hdt import HDTDocument
+from nltk import sent_tokenize
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
+from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.file import load_pickle, save_pickle
-from deeppavlov.models.spelling_correction.levenshtein.levenshtein_searcher import LevenshteinSearcher
+from deeppavlov.models.kbqa.entity_detection_parser import EntityDetectionParser
 from deeppavlov.models.kbqa.rel_ranking_bert_infer import RelRankerBertInfer
 
 log = getLogger(__name__)
 
 
+@register('ner_chunker')
+class NerChunker(Component):
+    """
+        Class to split documents into chunks of max_chunk_len symbols so that the length will not exceed
+        maximal sequence length to feed into BERT
+    """
+
+    def __init__(self, max_chunk_len: int = 300, batch_size: int = 30, **kwargs):
+        """
+
+        Args:
+            max_chunk_len: maximal length of chunks into which the document is split
+            batch_size: how many chunks are in batch
+        """
+        self.max_chunk_len = max_chunk_len
+        self.batch_size = batch_size
+
+    def __call__(self, docs_batch: List[str]) -> Tuple[List[List[str]], List[List[int]]]:
+        """
+        This method splits each document in the batch into chunks wuth the maximal length of max_chunk_len
+ 
+        Args:
+            docs_batch: batch of documents
+
+        Returns:
+            batch of lists of document chunks for each document
+            batch of lists of numbers of documents which correspond to chunks
+        """
+        text_batch_list = []
+        text_batch = []
+        nums_batch_list = []
+        nums_batch = []
+        count_texts = 0
+        text = ""
+        curr_doc = 0
+        for n, doc in enumerate(docs_batch):
+            sentences = sent_tokenize(doc)
+            for sentence in sentences:
+                if len(text) + len(sentence) < self.max_chunk_len and n == curr_doc:
+                    text += f"{sentence} "
+                else:
+                    if count_texts < self.batch_size:
+                        text_batch.append(text.strip())
+                        if n == curr_doc:
+                            nums_batch.append(n)
+                        else:
+                            nums_batch.append(n-1)
+                        count_texts += 1
+                    else:
+                        text_batch_list.append(text_batch)
+                        text_batch = []
+                        nums_batch_list.append(nums_batch)
+                        nums_batch = [n]
+                        count_texts = 0
+                    curr_doc = n
+                    text = f"{sentence} "
+                    
+        if text:
+            text_batch.append(text.strip())
+            text_batch_list.append(text_batch)
+            nums_batch.append(len(docs_batch)-1)
+            nums_batch_list.append(nums_batch)
+                    
+        return text_batch_list, nums_batch_list
+
+
 @register('entity_linker')
 class EntityLinker(Component, Serializable):
     """
-        This class extracts from the knowledge base candidate entities for the entity mentioned in the question and then
-        extracts triplets from Wikidata for the extracted entity. Candidate entities are searched in the dictionary where 
-        keys are titles and aliases of Wikidata entities and values are lists of tuples (entity_title, entity_id,
-        number_of_relations). First candidate entities are searched in the dictionary by keys where the keys are
-        entities extracted from the question, if nothing is found entities are searched in the dictionary using
-        Levenstein distance between the entity and keys (titles) in the dictionary.
+        Class for linking of entity substrings in the document to entities in Wikidata
     """
 
     def __init__(self, load_path: str,
-                 inverted_index_filename: str,
+                 word_to_idlist_filename: str,
                  entities_list_filename: str,
-                 q2name_filename: str,
+                 entities_ranking_filename: str,
+                 vectorizer_filename: str,
+                 faiss_index_filename: str,
+                 chunker: NerChunker = None,
+                 ner: Chainer = None,
+                 ner_parser: EntityDetectionParser = None,
+                 entity_ranker: RelRankerBertInfer = None,
+                 num_faiss_candidate_entities: int = 20,
+                 num_entities_for_bert_ranking: int = 50,
+                 num_faiss_cells: int = 50,
+                 use_gpu: bool = True,
                  save_path: str = None,
-                 q2descr_filename: str = None,
-                 rel_ranker: RelRankerBertInfer = None,
-                 build_inverted_index: bool = False,
-                 kb_format: str = "hdt",
-                 kb_filename: str = None,
-                 label_rel: str = None,
-                 descr_rel: str = None,
-                 aliases_rels: List[str] = None,
-                 sql_table_name: str = None,
-                 sql_column_names: List[str] = None,
-                 lang: str = "en",
-                 use_descriptions: bool = False,
+                 fit_vectorizer: bool = False,
+                 max_tfidf_features: int = 1000,
+                 include_mention: bool = False,
+                 ngram_range: List[int] = None,
+                 num_entities_to_return: int = 10,
+                 lang: str = "ru",
+                 use_descriptions: bool = True,
                  lemmatize: bool = False,
-                 use_prefix_tree: bool = False,
                  **kwargs) -> None:
         """
 
         Args:
             load_path: path to folder with inverted index files
-            save_path: path where to save inverted index files
-            inverted_index_filename: file with dict of words (keys) and entities containing these words
-            entities_list_filename: file with the list of entities from the knowledge base
-            q2name_filename: name of file which maps entity id to name
-            q2descr_filename: name of file which maps entity id to description
-            rel_ranker: component deeppavlov.models.kbqa.rel_ranker_bert_infer
-            build_inverted_index: if "true", inverted index of entities of the KB will be built
-            kb_format: "hdt" or "sqlite3"
-            kb_filename: file with the knowledge base, which will be used for building of inverted index
-            label_rel: relation in the knowledge base which connects entity ids and entity titles
-            descr_rel: relation in the knowledge base which connects entity ids and entity descriptions
-            aliases_rels: list of relations which connect entity ids and entity aliases
-            sql_table_name: name of the table with the KB if the KB is in sqlite3 format
-            sql_column_names: names of columns with subject, relation and object
-            lang: language used
-            use_descriptions: whether to use context and descriptions of entities for entity ranking
-            lemmatize: whether to lemmatize tokens of extracted entity
-            use_prefix_tree: whether to use prefix tree for search of entities with typos in entity labels
+            word_to_idlist_filename: file with dict of words (keys) and start and end indices in
+                entities_list filename of the corresponding entity ids
+            entities_list_filename: file with the list of entity ids from the knowledge base
+            entities_ranking_filename: file with dict of entity ids (keys) and number of relations in Wikidata
+                for entities
+            vectorizer_filename: filename with TfidfVectorizer data
+            faiss_index_filename: file with Faiss index of words
+            chunker: component deeppavlov.models.kbqa.ner_chunker
+            ner: config for entity detection
+            ner_parser: component deeppavlov.models.kbqa.entity_detection_parser
+            entity_ranker: component deeppavlov.models.kbqa.rel_ranking_bert_infer
+            num_faiss_candidate_entities: number of nearest neighbors for the entity substring from the text
+            num_entities_for_bert_ranking: number of candidate entities for BERT ranking using description and context
+            num_faiss_cells: number of Voronoi cells for Faiss index
+            use_gpu: whether to use GPU for faster search of candidate entities
+            save_path: path to folder with inverted index files
+            fit_vectorizer: whether to build index with Faiss library
+            max_tfidf_features: maximal number of features for TfidfVectorizer
+            include_mention: whether to leave entity mention in the context (during BERT ranking)
+            ngram_range: char ngrams range for TfidfVectorizer
+            num_entities_to_return: number of candidate entities for the substring which are returned
+            lang: russian or english
+            use_description: whether to perform entity ranking by context and description
+            lemmatize: whether to lemmatize tokens
             **kwargs:
         """
         super().__init__(save_path=save_path, load_path=load_path)
         self.morph = pymorphy2.MorphAnalyzer()
         self.lemmatize = lemmatize
-        self.use_prefix_tree = use_prefix_tree
-        self.inverted_index_filename = inverted_index_filename
+        self.word_to_idlist_filename = word_to_idlist_filename
         self.entities_list_filename = entities_list_filename
-        self.build_inverted_index = build_inverted_index
-        self.q2name_filename = q2name_filename
-        self.q2descr_filename = q2descr_filename
-        self.kb_format = kb_format
-        self.kb_filename = kb_filename
-        self.label_rel = label_rel
-        self.aliases_rels = aliases_rels
-        self.descr_rel = descr_rel
-        self.sql_table_name = sql_table_name
-        self.sql_column_names = sql_column_names
-        self.inverted_index: Optional[Dict[str, List[Tuple[str]]]] = None
-        self.entities_index: Optional[List[str]] = None
-        self.q2name: Optional[List[Tuple[str]]] = None
+        self.entities_ranking_filename = entities_ranking_filename
+        self.vectorizer_filename = vectorizer_filename
+        self.faiss_index_filename = faiss_index_filename
+        self.num_entities_for_bert_ranking = num_entities_for_bert_ranking
+        self.num_faiss_candidate_entities = num_faiss_candidate_entities
+        self.num_faiss_cells = num_faiss_cells
+        self.use_gpu = use_gpu
+        self.chunker = chunker
+        self.ner = ner
+        self.ner_parser = ner_parser
+        self.entity_ranker = entity_ranker
+        self.fit_vectorizer = fit_vectorizer
+        self.max_tfidf_features = max_tfidf_features
+        self.include_mention = include_mention
+        self.ngram_range = ngram_range
+        self.num_entities_to_return = num_entities_to_return
         self.lang_str = f"@{lang}"
         if self.lang_str == "@en":
             self.stopwords = set(stopwords.words("english"))
         elif self.lang_str == "@ru":
             self.stopwords = set(stopwords.words("russian"))
-        self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
-        self.rel_ranker = rel_ranker
         self.use_descriptions = use_descriptions
 
-        if self.use_prefix_tree:
-            alphabet = "!#%\&'()+,-./0123456789:;?ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz½¿ÁÄ" + \
-                       "ÅÆÇÉÎÓÖ×ÚßàáâãäåæçèéêëíîïðñòóôöøùúûüýāăąćČčĐėęěĞğĩīİıŁłńňŌōőřŚśşŠšťũūůŵźŻżŽžơưșȚțəʻ" + \
-                       "ʿΠΡβγБМавдежикмностъяḤḥṇṬṭầếờợ–‘’Ⅲ−∗"
-            dictionary_words = list(self.inverted_index.keys())
-            self.searcher = LevenshteinSearcher(alphabet, dictionary_words)
+        self.load()
 
-        if self.build_inverted_index:
-            if self.kb_format == "hdt":
-                self.doc = HDTDocument(str(expand_path(self.kb_filename)))
-            if self.kb_format == "sqlite3":
-                self.conn = sqlite3.connect(str(expand_path(self.kb_filename)))
-                self.cursor = self.conn.cursor()
-            self.inverted_index_builder()
-            self.save()
-        else:
-            self.load()
+        if self.fit_vectorizer:
+            self.vectorizer = TfidfVectorizer(analyzer="char_wb", ngram_range=tuple(self.ngram_range),
+                                              max_features=self.max_tfidf_features, max_df=0.85)
+            self.vectorizer.fit(self.word_list)
+            self.matrix = self.vectorizer.transform(self.word_list)
+            self.dense_matrix = self.matrix.toarray()
+            if self.num_faiss_cells > 1:
+                quantizer = faiss.IndexFlatIP(self.max_tfidf_features)
+                self.faiss_index = faiss.IndexIVFFlat(quantizer, self.max_tfidf_features, self.num_faiss_cells)
+                self.faiss_index.train(self.dense_matrix.astype(np.float32))
+            else:
+                self.faiss_index = faiss.IndexFlatIP(self.max_tfidf_features)
+                if self.use_gpu:
+                    res = faiss.StandardGpuResources()
+                    self.faiss_index = faiss.index_cpu_to_gpu(res, 0, self.faiss_index)
+            self.faiss_index.add(self.dense_matrix.astype(np.float32))
+            self.save_vectorizers_data()
 
     def load(self) -> None:
-        self.inverted_index = load_pickle(self.load_path / self.inverted_index_filename)
+        self.word_to_idlist = load_pickle(self.load_path / self.word_to_idlist_filename)
         self.entities_list = load_pickle(self.load_path / self.entities_list_filename)
-        self.q2name = load_pickle(self.load_path / self.q2name_filename)
+        self.word_list = list(self.word_to_idlist.keys())
+        self.entities_ranking_dict = load_pickle(self.load_path / self.entities_ranking_filename)
+        if not self.fit_vectorizer:
+            self.vectorizer = load_pickle(self.load_path / self.vectorizer_filename)
+            self.faiss_index = faiss.read_index(str(expand_path(self.faiss_index_filename)))
+            if self.use_gpu:
+                res = faiss.StandardGpuResources()
+                self.faiss_index = faiss.index_cpu_to_gpu(res, 0, self.faiss_index)
 
     def save(self) -> None:
-        save_pickle(self.inverted_index, self.save_path / self.inverted_index_filename)
-        save_pickle(self.entities_list, self.save_path / self.entities_list_filename)
-        save_pickle(self.q2name, self.save_path / self.q2name_filename)
-        if self.q2descr_filename is not None:
-            save_pickle(self.q2descr, self.save_path / self.q2descr_filename)
+        pass
 
-    def __call__(self, entity_substr_batch: List[List[str]], entity_positions_batch: List[List[List[int]]] = None,
-                       context_tokens: List[List[str]] = None) -> Tuple[List[List[List[str]]], List[List[List[float]]]]:
-        entity_ids_batch = []
-        confidences_batch = []
-        if entity_positions_batch is None:
-            entity_positions_batch = [[[0] for i in range(len(entities_list))] for entities_list in entity_substr_batch]
-        for entity_substr_list, entity_positions_list in zip(entity_substr_batch, entity_positions_batch):
-            entity_ids_list = []
-            confidences_list = []
-            for entity_substr, entity_pos in zip(entity_substr_list, entity_positions_list):
-                context = ""
-                if self.use_descriptions:
-                    context = ' '.join(context_tokens[:entity_pos[0]]+["[ENT]"]+context_tokens[entity_pos[-1]+1:])
-                entity_ids, confidences = self.link_entity(entity_substr, context)
-                entity_ids_list.append(entity_ids)
-                confidences_list.append(confidences)
-        entity_ids_batch.append(entity_ids_list)
-        confidences_batch.append(confidences_list)
+    def save_vectorizers_data(self) -> None:
+        save_pickle(self.vectorizer, self.save_path / self.vectorizer_filename)
+        faiss.write_index(self.faiss_index, str(expand_path(self.faiss_index_filename)))
 
-        return entity_ids_batch, confidences_batch
+    def __call__(self, docs_batch: List[str]):
+        """
 
-    def link_entity(self, entity: str, context: str = None) -> Tuple[List[str], List[float]]:
-        confidences = []
-        if not entity:
-            entities_ids = ['None']
-        else:
-            candidate_entities = self.candidate_entities_inverted_index(entity)
-            candidate_entities, candidate_names = self.candidate_entities_names(entity, candidate_entities)
-            entities_ids, confidences, srtd_cand_ent = self.sort_found_entities(candidate_entities,
-                                                                                 candidate_names, entity, context)
+        Args:
+            docs_batch: batch of documents
+        Returns:
+            batch of lists of candidate entity ids
+        """
+        text_batch_list, nums_batch_list = self.chunker(docs_batch)
+        entity_ids_batch_list = []
+        entity_substr_batch_list = []
+        entity_positions_batch_list = []
+        text_len_batch_list = []
+        for text_batch in text_batch_list:
+            entity_ids_batch = []
+            ner_tokens_batch, ner_probas_batch = self.ner(text_batch)
+            entity_substr_batch, _, entity_positions_batch = self.ner_parser(ner_tokens_batch, ner_probas_batch)
+            log.debug(f"entity_substr_batch {entity_substr_batch}")
+            log.debug(f"entity_positions_batch {entity_positions_batch}")
+            entity_substr_batch = [[entity_substr.lower() for tag, entity_substr_list in entity_substr_dict.items()
+                                    for entity_substr in entity_substr_list]
+                                   for entity_substr_dict in entity_substr_batch]
+            entity_positions_batch = [[entity_positions for tag, entity_positions_list in entity_positions_dict.items()
+                                       for entity_positions in entity_positions_list]
+                                      for entity_positions_dict in entity_positions_batch]
+            log.debug(f"entity_substr_batch {entity_substr_batch}")
+            log.debug(f"entity_positions_batch {entity_positions_batch}")
+            for entity_substr_list, entity_positions_list, context_tokens in \
+                    zip(entity_substr_batch, entity_positions_batch, ner_tokens_batch):
+                entity_ids_list = []
+                if entity_substr_list:
+                    entity_ids_list = self.link_entities(entity_substr_list, entity_positions_list, context_tokens)
+                entity_ids_batch.append(entity_ids_list)
+            entity_ids_batch_list.append(entity_ids_batch)
+            entity_substr_batch_list.append(entity_substr_batch)
+            entity_positions_batch_list.append(entity_positions_batch)
+            text_len_batch_list.append([len(text) for text in ner_tokens_batch])
 
-        return entities_ids, confidences
+        doc_entity_ids_batch = []
+        doc_entity_substr_batch = []
+        doc_entity_positions_batch = []
+        doc_entity_ids = []
+        doc_entity_substr = []
+        doc_entity_positions = []
+        cur_doc_num = 0
+        text_len_sum = 0
+        for entity_ids_batch, entity_substr_batch, entity_positions_batch, text_len_batch, nums_batch in \
+                zip(entity_ids_batch_list, entity_substr_batch_list, entity_positions_batch_list,
+                                                                 text_len_batch_list, nums_batch_list):
+            for entity_ids, entity_substr, entity_positions, text_len, doc_num in \
+                    zip(entity_ids_batch, entity_substr_batch, entity_positions_batch, text_len_batch, nums_batch):
+                if doc_num == cur_doc_num:
+                    doc_entity_ids += entity_ids
+                    doc_entity_substr += entity_substr
+                    doc_entity_positions += [[pos + text_len_sum for pos in entity_position]
+                                                                 for entity_position in entity_positions]
+                    text_len_sum += text_len
+                else:
+                    doc_entity_ids_batch.append(doc_entity_ids)
+                    doc_entity_substr_batch.append(doc_entity_substr)
+                    doc_entity_positions_batch.append(doc_entity_positions)
+                    doc_entity_ids = entity_ids
+                    doc_entity_substr = entity_substr
+                    doc_entity_positions = entity_positions
+                    cur_doc_num = doc_num
+                    text_len_sum = 0
+        doc_entity_ids_batch.append(doc_entity_ids)
+        doc_entity_substr_batch.append(doc_entity_substr)
+        doc_entity_positions_batch.append(doc_entity_positions)
 
-    def candidate_entities_inverted_index(self, entity: str) -> List[Tuple[Any, Any, Any]]:
-        word_tokens = nltk.word_tokenize(entity.lower())
-        candidate_entities = []
+        return doc_entity_substr_batch, doc_entity_positions_batch, doc_entity_ids_batch
 
-        for tok in word_tokens:
-            if len(tok) > 1:
-                found = False
-                if tok in self.inverted_index:
-                    candidate_entities += self.inverted_index[tok]
-                    found = True
+    def link_entities(self, entity_substr_list: List[str], entity_positions_list: List[List[int]] = None,
+                      context_tokens: List[str] = None) -> List[List[str]]:
+        log.debug(f"context_tokens {context_tokens}")
+        log.debug(f"entity substr list {entity_substr_list}")
+        log.debug(f"entity positions list {entity_positions_list}")
+        entity_ids_list = []
+        if entity_substr_list:
+            entity_substr_list = [[word for word in entity_substr.split(' ')
+                                   if word not in self.stopwords and len(word) > 0]
+                                  for entity_substr in entity_substr_list]
+            words_and_indices = [(self.morph_parse(word), i) for i, entity_substr in enumerate(entity_substr_list)
+                                 for word in entity_substr]
+            substr_lens = [len(entity_substr) for entity_substr in entity_substr_list]
+            log.debug(f"words and indices {words_and_indices}")
+            words, indices = zip(*words_and_indices)
+            words = list(words)
+            indices = list(indices)
+            log.debug(f"words {words}")
+            log.debug(f"indices {indices}")
+            ent_substr_tfidfs = self.vectorizer.transform(words).toarray().astype(np.float32)
+            D, I = self.faiss_index.search(ent_substr_tfidfs, self.num_faiss_candidate_entities)
+            candidate_entities_dict = defaultdict(list)
+            for ind_list, scores_list, index in zip(I, D, indices):
+                if self.num_faiss_cells > 1:
+                    scores_list = [1.0 - score for score in scores_list]
+                candidate_entities = {}
+                for ind, score in zip(ind_list, scores_list):
+                    start_ind, end_ind = self.word_to_idlist[self.word_list[ind]]
+                    for entity in self.entities_list[start_ind:end_ind]:
+                        if entity in candidate_entities:
+                            if score > candidate_entities[entity]:
+                                candidate_entities[entity] = score
+                        else:
+                            candidate_entities[entity] = score
+                candidate_entities_dict[index] += [(entity, cand_entity_len, score)
+                                                for (entity, cand_entity_len), score in candidate_entities.items()]
+                log.debug(f"{index} candidate_entities {[self.word_list[ind] for ind in ind_list[:10]]}")
+            candidate_entities_total = list(candidate_entities_dict.values())
+            candidate_entities_total = [self.sum_scores(candidate_entities, substr_len)
+                              for candidate_entities, substr_len in zip(candidate_entities_total, substr_lens)]
+            log.debug(f"length candidate entities list {len(candidate_entities_total)}")
+            candidate_entities_list = []
+            entities_scores_list = []
+            for candidate_entities in candidate_entities_total:
+                log.debug(f"candidate_entities before ranking {candidate_entities[:10]}")
+                candidate_entities = [candidate_entity + (self.entities_ranking_dict.get(candidate_entity[0], 0),)
+                                               for candidate_entity in candidate_entities]
+                candidate_entities_str = '\n'.join([str(candidate_entity) for candidate_entity in candidate_entities])
+                candidate_entities = sorted(candidate_entities, key=lambda x: (x[1], x[2]), reverse=True)
+                log.debug(f"candidate_entities {candidate_entities[:10]}")
+                entities_scores = {entity: (substr_score, pop_score)
+                                   for entity, substr_score, pop_score in candidate_entities}
+                candidate_entities = [candidate_entity[0] for candidate_entity
+                                      in candidate_entities][:self.num_entities_for_bert_ranking]
+                log.debug(f"candidate_entities {candidate_entities[:10]}")
+                candidate_entities_list.append(candidate_entities)
+                if self.num_entities_to_return == 1:
+                    entity_ids_list.append(candidate_entities[0])
+                else:
+                    entity_ids_list.append(candidate_entities[:self.num_entities_to_return])
+                entities_scores_list.append(entities_scores)
+            if self.use_descriptions:
+                entity_ids_list = self.rank_by_description(entity_positions_list, candidate_entities_list,
+                                                           entities_scores_list, context_tokens)
 
-                if self.lemmatize:
-                    morph_parse_tok = self.morph.parse(tok)[0]
-                    lemmatized_tok = morph_parse_tok.normal_form
-                    if lemmatized_tok in self.inverted_index:
-                        candidate_entities += self.inverted_index[lemmatized_tok]
-                        found = True
+        return entity_ids_list
 
-                if not found and self.use_prefix_tree:
-                    words_with_levens_1 = self.searcher.search(tok, d=1)
-                    for word in words_with_levens_1:
-                        candidate_entities += self.inverted_index[word[0]]
-        candidate_entities = list(set(candidate_entities))
-        candidate_entities = [(entity[0], self.entities_list[entity[0]], entity[1]) for entity in candidate_entities]
+    def morph_parse(self, word):
+        morph_parse_tok = self.morph.parse(word)[0]
+        normal_form = morph_parse_tok.normal_form
+        return normal_form
 
-        return candidate_entities
+    def sum_scores(self, candidate_entities: List[Tuple[str, int]], substr_len: int) -> List[Tuple[str, float]]:
+        entities_with_scores_sum = defaultdict(int)
+        for entity in candidate_entities:
+            entities_with_scores_sum[(entity[0], entity[1])] += entity[2]
+        
+        entities_with_scores = {}
+        for (entity, cand_entity_len), scores_sum in entities_with_scores_sum.items():
+            score = min(scores_sum, cand_entity_len)/max(substr_len, cand_entity_len)
+            if entity in entities_with_scores:
+                if score > entities_with_scores[entity]:
+                    entities_with_scores[entity] = score
+            else:
+                entities_with_scores[entity] = score
+        entities_with_scores = list(entities_with_scores.items())
+        
+        return entities_with_scores
 
-    def sort_found_entities(self, candidate_entities: List[Tuple[int, str, int]],
-                            candidate_names: List[List[str]],
-                            entity: str, context: str = None) -> Tuple[List[str], List[float], List[Tuple[str, str, int, int]]]:
-        entities_ratios = []
-        for candidate, entity_names in zip(candidate_entities, candidate_names):
-            entity_num, entity_id, num_rels = candidate
-            fuzz_ratio = max([fuzz.ratio(name.lower(), entity) for name in entity_names])
-            entities_ratios.append((entity_num, entity_id, fuzz_ratio, num_rels))
-
-        srtd_with_ratios = sorted(entities_ratios, key=lambda x: (x[2], x[3]), reverse=True)
-        if self.use_descriptions:
-            num_to_id = {entity_num: entity_id for entity_num, entity_id, _, _ in srtd_with_ratios[:30]}
-            entity_numbers = [entity_num for entity_num, _, _, _ in srtd_with_ratios[:30]]
-            scores = self.rel_ranker.rank_rels(context, entity_numbers)
-            top_rels = [score[0] for score in scores]
-            entity_ids = [num_to_id[num] for num in top_rels]
-            confidences = [score[1] for score in scores]
-        else:
-            entity_ids = [ent[1] for ent in srtd_with_ratios]
-            confidences = [float(ent[2]) * 0.01 for ent in srtd_with_ratios]
-
-        return entity_ids, confidences, srtd_with_ratios
-
-    def candidate_entities_names(self, entity: str,
-          candidate_entities: List[Tuple[int, str, int]]) -> Tuple[List[Tuple[int, str, int]], List[List[str]]]:
-        entity_length = len(entity)
-        candidate_names = []
-        candidate_entities_filter = []
-        for candidate in candidate_entities:
-            entity_num = candidate[0]
-            entity_id = candidate[1]
-            entity_names = []
-            
-            entity_names_found = self.q2name[entity_num]
-            if len(entity_names_found[0]) < 6 * entity_length:
-                entity_name = entity_names_found[0]
-                entity_names.append(entity_name)
-                if len(entity_names_found) > 1:
-                    for alias in entity_names_found[1:]:
-                        entity_names.append(alias)
-                candidate_names.append(entity_names)
-                candidate_entities_filter.append(candidate)
-
-        return candidate_entities_filter, candidate_names
-
-    def inverted_index_builder(self) -> None:
-        log.debug("building inverted index")
-        entities_set = set()
-        id_to_label_dict = defaultdict(list)
-        id_to_descr_dict = {}
-        label_to_id_dict = {}
-        label_triplets = []
-        alias_triplets_list = []
-        descr_triplets = []
-        if self.kb_format == "hdt":
-            label_triplets, c = self.doc.search_triples("", self.label_rel, "")
-            if self.aliases_rels is not None:
-                for alias_rel in self.aliases_rels:
-                    alias_triplets, c = self.doc.search_triples("", alias_rel, "")
-                    alias_triplets_list.append(alias_triplets)
-            if self.descr_rel is not None:
-                descr_triplets, c = self.doc.search_triples("", self.descr_rel, "")
-
-        if self.kb_format == "sqlite3":
-            subject, relation, obj = self.sql_column_names
-            query = f'SELECT {subject}, {relation}, {obj} FROM {self.sql_table_name} WHERE {relation} = "{self.label_rel}";'
-            res = self.cursor.execute(query)
-            label_triplets = res.fetchall()
-            if self.aliases_rels is not None:
-                for alias_rel in self.aliases_rels:
-                    query = f'SELECT {subject}, {relation}, {obj} FROM {self.sql_table_name} WHERE {relation} = "{alias_rel}";'
-                    res = self.cursor.execute(query)
-                    alias_triplets = res.fetchall()
-                    alias_triplets_list.append(alias_triplets)
-            if self.descr_rel is not None:
-                query = f'SELECT {subject}, {relation}, {obj} FROM {self.sql_table_name} WHERE {relation} = "{self.descr_rel}";'
-                res = self.cursor.execute(query)
-                descr_triplets = res.fetchall()
-
-        for triplets in [label_triplets] + alias_triplets_list:
-            for triplet in triplets:
-                entities_set.add(triplet[0])
-                if triplet[2].endswith(self.lang_str):
-                    label = triplet[2].replace(self.lang_str, '').replace('"', '')
-                    id_to_label_dict[triplet[0]].append(label)
-                    label_to_id_dict[label] = triplet[0]
-
-        for triplet in descr_triplets:
-            entities_set.add(triplet[0])
-            if triplet[2].endswith(self.lang_str):
-                descr = triplet[2].replace(self.lang_str, '').replace('"', '')
-                id_to_descr_dict[triplet[0]].append(descr)
-
-        popularities_dict = {}
-        for entity in entities_set:
-            if self.kb_format == "hdt":
-                all_triplets, number_of_triplets = self.doc.search_triples(entity, "", "")
-                popularities_dict[entity] = number_of_triplets
-            if self.kb_format == "sqlite3":
-                subject, relation, obj = self.sql_column_names
-                query = f'SELECT COUNT({obj}) FROM {self.sql_table_name} WHERE {subject} = "{entity}";'
-                res = self.cursor.execute(query)
-                popularities_dict[entity] = res.fetchall()[0][0]
-
-        entities_dict = {entity: n for n, entity in enumerate(entities_set)}
-            
-        inverted_index = defaultdict(list)
-        for label in label_to_id_dict:
-            tokens = re.findall(self.re_tokenizer, label.lower())
-            for tok in tokens:
-                if len(tok) > 1 and tok not in self.stopwords:
-                    inverted_index[tok].append((entities_dict[label_to_id_dict[label]],
-                                                popularities_dict[label_to_id_dict[label]]))
-        self.inverted_index = dict(inverted_index)
-        self.entities_list = list(entities_set)
-        self.q2name = [id_to_label_dict[entity] for entity in self.entities_list]
-        self.q2descr = []
-        if id_to_descr_dict:
-            self.q2descr = [id_to_descr_dict[entity] for entity in self.entities_list]
+    def rank_by_description(self, entity_positions_list: List[List[int]],
+                            candidate_entities_list: List[List[str]],
+                            entities_scores_list: List[Dict[str, Tuple[int, float]]],
+                            context_tokens: List[str]) -> List[List[str]]:
+        entity_ids_list = []
+        for entity_pos, candidate_entities, entities_scores in zip(entity_positions_list, candidate_entities_list,
+                                                                   entities_scores_list):
+            log.debug(f"entity_pos {entity_pos}")
+            log.debug(f"candidate_entities {candidate_entities[:10]}")
+            if self.include_mention:
+                context = ' '.join(context_tokens[:entity_pos[0]] + ["[ENT]"] +
+                                   context_tokens[entity_pos[0]:entity_pos[-1]+1] + ["[ENT]"] +
+                                   context_tokens[entity_pos[-1]+1:])
+            else:
+                context = ' '.join(context_tokens[:entity_pos[0]]+["[ENT]"] + context_tokens[entity_pos[-1]+1:])
+            log.debug(f"context {context}")
+            log.debug(f"len candidate entities {len(candidate_entities)}")
+            scores = self.entity_ranker.rank_rels(context, candidate_entities)
+            entities_with_scores = [(entity, round(entities_scores[entity][0], 2), entities_scores[entity][1],
+                                     round(score, 2)) for entity, score in scores]
+            log.debug(f"len entities with scores {len(entities_with_scores)}")
+            entities_with_scores = [entity for entity in entities_with_scores if entity[3] > 0.1]
+            entities_with_scores = sorted(entities_with_scores, key=lambda x: (x[1], x[3], x[2]), reverse=True)
+            log.debug(f"entities_with_scores {entities_with_scores}")
+            top_entities = [score[0] for score in entities_with_scores]
+            if self.num_entities_to_return == 1:
+                entity_ids_list.append(top_entities[0])
+            else:
+                entity_ids_list.append(top_entities[:self.num_entities_to_return])
+        return entity_ids_list

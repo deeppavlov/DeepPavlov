@@ -11,6 +11,10 @@
       {
         "in": ["x_tokens", "y_pred"],
         "out": ["entities", "types", "entities_pos"],
+        "entity_tags": ["E-TAG"],
+        "type_tag": "T-TAG",
+        "o_tag": "O-TAG",
+        "tags_file": "{NER_PATH}/tag.dict",
         "class_name": "entity_detection_parser"
       },
       {
@@ -32,7 +36,7 @@
         "out": ["template_type"]
       },
       {
-        "class_name": "entity_linker",
+        "class_name": "kbqa_entity_linker",
         "id": "linker_entities",
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
         "inverted_index_filename": "inverted_index_eng.pickle",
@@ -43,7 +47,7 @@
         "use_prefix_tree": false
       },
       {
-        "class_name": "entity_linker",
+        "class_name": "kbqa_entity_linker",
         "id": "linker_types",
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
         "inverted_index_filename": "inverted_index_types_eng.pickle",
@@ -77,7 +81,7 @@
         "entities_to_leave": 5,
         "rels_to_leave": 12,
         "return_answers": true,
-        "in": ["x", "template_type", "entities", "types"],
+        "in": ["x", "x", "template_type", "entities", "types"],
         "out": ["answers"]
       }
     ],
@@ -113,7 +117,7 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",
-      "NER_PATH": "{MODELS_PATH}/ner_lcquad",
+      "NER_PATH": "{MODELS_PATH}/ner_lcquad_ent_and_type",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
     "requirements": [
@@ -121,7 +125,9 @@
       "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
       "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
       "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
-      "{DEEPPAVLOV_PATH}/requirements/hdt.txt"
+      "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
+      "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
+      "{DEEPPAVLOV_PATH}/requirements/spelling.txt"
     ],
     "labels": {
       "telegram_utils": "NERCoNLL2003Model",
@@ -142,7 +148,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/models/ner_lcquad.tar.gz",
-        "subdir": "{MODELS_PATH}/ner_lcquad"
+        "subdir": "{NER_PATH}"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking.tar.gz",
