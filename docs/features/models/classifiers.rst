@@ -368,14 +368,15 @@ The General Language Understanding Evaluation (GLUE) benchmark is a collection o
 and analyzing natural language understanding systems. More details are on the official page https://gluebenchmark.com/.
 
 In DeepPavlov there is a set of configuration files to run training and evaluation on GLUE tasks train/dev sets.
-DeepPavlov (DP) results on dev sets are averaged over 3 runs.
+DeepPavlov (DP) results on dev sets are averaged over 3 runs. We report the same metrics as on the official leaderboard
+https://gluebenchmark.com/leaderboard.
  
 +-------------------------------------------------+----------+---------+-------------+---------------+-------------+-------------+--------+---------+
 |   Models                                        | CoLA     | SST2    | MRPC        | STS-B         | QQP         | MNLI-m/mm   | QNLI   | RTE     |
 +=================================================+==========+=========+=============+===============+=============+=============+========+=========+
-| :config:`DP bert-base-cased <classifiers/glue/>`| 61.50    | 92.62   | 89.69/85.37 | 87.62/87.32   | 86.85/90.11 | 83.43/83.64 | 90.95  |         |
+| :config:`DP bert-base-cased <classifiers/glue/>`| 61.50    | 92.62   | 89.69/85.37 | 87.62/87.32   | 86.85/90.11 | 83.43/83.64 | 90.95  |  68.23  |
 +-------------------------------------------------+----------+---------+-------------+---------------+-------------+-------------+--------+---------+
-| DP bert-base-uncased                            |          |         |             | 88.73/88.35   | 87.29/90.39 | 84.04/84.27 | 91.61  |         |
+| DP bert-base-uncased                            | 62.27    | 92.78   | 88.99/84.17 | 88.73/88.35   | 87.29/90.39 | 84.04/84.27 | 91.61  |  71.34  |
 +-------------------------------------------------+----------+---------+-------------+---------------+-------------+-------------+--------+---------+
 | `HuggingFace bert-base-uncased`_                | 49.23    | 91.97   | 89.47/85.29 | 83.95/83.70   | 84.31/88.40 | 80.61/81.08 | 87.46  |  61.73  |
 +-------------------------------------------------+----------+---------+-------------+---------------+-------------+-------------+--------+---------+
