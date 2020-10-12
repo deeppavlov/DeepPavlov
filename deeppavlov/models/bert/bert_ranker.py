@@ -62,14 +62,7 @@ class BertRankerModel(BertClassifierModel):
         """
 
         features = features_li[0]
-        input_ids = [f.input_ids for f in features]
-        input_masks = [f.input_mask for f in features]
-        input_type_ids = [f.input_type_ids for f in features]
-
-        feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids, y)
-
-        _, loss = self.sess.run([self.train_op, self.loss], feed_dict=feed_dict)
-        return {'loss': loss, 'learning_rate': feed_dict[self.learning_rate_ph]}
+        return super().train_on_batch(features,y)
 
     def __call__(self, features_li: List[List[InputFeatures]]) -> Union[List[int], List[List[float]]]:
         """Calculate scores for the given context over candidate responses.
@@ -87,18 +80,8 @@ class BertRankerModel(BertClassifierModel):
             logger.error(msg)
             return [msg]
 
-        predictions = []
-        for features in features_li:
-            input_ids = [f.input_ids for f in features]
-            input_masks = [f.input_mask for f in features]
-            input_type_ids = [f.input_type_ids for f in features]
-
-            feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids)
-            if not self.return_probas:
-                pred = self.sess.run(self.y_predictions, feed_dict=feed_dict)
-            else:
-                pred = self.sess.run(self.y_probas, feed_dict=feed_dict)
-            predictions.append(pred[:, 1])
+        predictions = super()(features)
+        predictions = [j[:, 1] for j in features]
         if len(features_li) == 1:
             predictions = predictions[0]
         else:
