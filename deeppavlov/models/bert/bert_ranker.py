@@ -79,9 +79,10 @@ class BertRankerModel(BertClassifierModel):
             msg = "It is not intended to use the {} in the interact mode.".format(self.__class__)
             logger.error(msg)
             return [msg]
-
-        predictions = super()(features)
-        predictions = [j[:, 1] for j in features]
+        predictions=[]
+        for features in features_li:
+            pred = super()(features)
+            predictions.append(pred[:, 1])
         if len(features_li) == 1:
             predictions = predictions[0]
         else:
