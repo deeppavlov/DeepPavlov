@@ -23,7 +23,6 @@ from hashlib import md5
 from itertools import chain
 from logging import getLogger
 from pathlib import Path
-from time import sleep
 from typing import Any, Generator, Iterable, List, Mapping, Optional, Sequence, Sized, Union, Collection
 from urllib.parse import urlencode, parse_qs, urlsplit, urlunsplit, urlparse
 
@@ -98,6 +97,7 @@ def simple_download(url: str, destination: Union[Path, str]) -> None:
         return s3_download(url, str(destination))
 
     chunk_size = 32 * 1024
+
     temporary = destination.with_suffix(destination.suffix + '.part')
 
     headers = {'dp-token': _get_download_token()}
@@ -224,8 +224,7 @@ def ungzip(file_path: Union[Path, str], extract_path: Optional[Union[Path, str]]
 
 def download_decompress(url: str,
                         download_path: Union[Path, str],
-                        extract_paths: Optional[Union[List[Union[Path, str]], Path, str]] = None,
-                        timeout: int = 600) -> None:
+                        extract_paths: Optional[Union[List[Union[Path, str]], Path, str]] = None) -> None:
     """Download and extract .tar.gz or .gz file to one or several target locations.
 
     The archive is deleted if extraction was successful.
@@ -236,7 +235,6 @@ def download_decompress(url: str,
         extract_paths: Path or list of paths where contents of archive will be extracted.
 
     """
-    timeout_step = 10
     file_name = Path(urlparse(url).path).name
     download_path = Path(download_path)
 
@@ -264,27 +262,7 @@ def download_decompress(url: str,
                 log.info(f'Found cached {url} in {arch_file_path}')
     else:
         arch_file_path = download_path / file_name
-        arch_file_path.parent.mkdir(parents=True, exist_ok=True)
-        lockfile = arch_file_path.with_suffix('.lock')
-        try:
-            for x in range(timeout, 0, -timeout_step):
-                if lockfile.exists():
-                    log.info(f'Seems like another process is downloading this file, waiting...{x} sec')
-                    if timeout == x:
-                        log.info(f'If you are sure that no process is downloading this file, remove {lockfile} and start again')
-                    sleep(timeout_step)
-        except KeyboardInterrupt:
-            raise
-        if lockfile.exists():
-            raise RuntimeError(f'Wait too long for downloading to be completed')
-        try:
-            lockfile.open('a').close()
-            simple_download(url, arch_file_path)
-        except KeyboardInterrupt:
-            lockfile.unlink()
-            raise
-        finally:
-            lockfile.unlink(missing_ok=True)
+        simple_download(url, arch_file_path)
         extracted_path = extract_paths.pop()
 
     if not extracted:
