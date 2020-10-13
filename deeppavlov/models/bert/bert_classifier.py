@@ -14,8 +14,8 @@
 
 from logging import getLogger
 from typing import List, Dict, Union, Optional
-
 import math
+
 import tensorflow as tf
 from bert_dp.modeling import BertConfig, BertModel
 from bert_dp.optimization import AdamWeightDecayOptimizer
@@ -221,27 +221,6 @@ class BertClassifierModel(LRScheduledTFModel):
         feature_batches = [features[i:i + num_features] for i in range(0, len(features), num_features)]
         return feature_batches
 
-    def train_on_batch_old(self, features: List[InputFeatures], y: Union[List[int], List[List[int]]]) -> Dict:
-        """Train model on given batch.
-        This method calls train_op using features and y (labels).
-
-        Args:
-            features: batch of InputFeatures
-            y: batch of labels (class id or one-hot encoding)
-
-        Returns:
-            dict with loss and learning_rate values
-
-        """
-        input_ids = [f.input_ids for f in features]
-        input_masks = [f.input_mask for f in features]
-        input_type_ids = [f.input_type_ids for f in features]
-
-        feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids, y)
-
-        loss = self.sess.run(self.loss, feed_dict=feed_dict)
-        return {'loss': loss, 'learning_rate': feed_dict[self.learning_rate_ph]}
-
     def train_on_batch(self, features: List[InputFeatures], y: Union[List[int], List[List[int]]] = None) -> Dict:
         """Train model on given batch.
         This method calls train_op using features and y (labels).
@@ -256,7 +235,13 @@ class BertClassifierModel(LRScheduledTFModel):
         """
         # Define operations
         if self.gradient_accumulation_steps == 1:  # Don't use accumulation
-            return self.train_on_batch_old(features, y)
+            input_ids = [f.input_ids for f in features]
+            input_masks = [f.input_mask for f in features]
+            input_type_ids = [f.input_type_ids for f in features]
+            feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids, y)
+            loss = self.sess.run(self.loss, feed_dict=feed_dict)
+            return {'loss': loss, 'learning_rate': feed_dict[self.learning_rate_ph]}
+
         trainable_variables = tf.trainable_variables()
         trainable_variables = [j for j in trainable_variables
                                if 'learning_rate' not in j.name and 'momentum' not in j.name]
