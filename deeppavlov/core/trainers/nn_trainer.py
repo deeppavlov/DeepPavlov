@@ -17,7 +17,6 @@ import json
 import time
 from itertools import islice
 from logging import getLogger
-from tensorflow import Tensor
 from pathlib import Path
 from typing import List, Tuple, Union, Optional, Iterable
 
@@ -91,9 +90,8 @@ class NNTrainer(FitTrainer):
 
     """
 
-    def __init__(self, chainer_config: dict, *, 
+    def __init__(self, chainer_config: dict, *,
                  batch_size: int = 1,
-                 gradient_accumulation_steps: int = 1,
                  epochs: int = -1,
                  start_epoch_num: int = 0,
                  max_batches: int = -1,
@@ -252,6 +250,7 @@ class NNTrainer(FitTrainer):
 
         if metrics and self.tensorboard_log_dir is not None:
             summary = self._tf.Summary()
+
             for name, score in metrics:
                 summary.value.add(tag=f'{tensorboard_tag}/{name}', simple_value=score)
             self.tb_train_writer.add_summary(summary, tensorboard_index)

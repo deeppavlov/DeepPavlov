@@ -14,9 +14,9 @@
 
 from logging import getLogger
 from typing import List, Dict, Union, Optional
+
 import math
 import tensorflow as tf
-
 from bert_dp.modeling import BertConfig, BertModel
 from bert_dp.optimization import AdamWeightDecayOptimizer
 from bert_dp.preprocessing import InputFeatures
@@ -204,8 +204,14 @@ class BertClassifierModel(LRScheduledTFModel):
     def split(self, features: List):
         """
         Splits features: batch of InputFeatures
-         on num_parts equal parts
-        making num_parts batches instead
+         on the number of parts equal to the number of gradient accumulation steps
+
+        Args:
+            features: batch of InputFeatures
+
+        Returns:
+            list of input feature batches, with the size equal to the gradient_accumulation_steps
+
         """
 
         num_parts = self.gradient_accumulation_steps
@@ -218,11 +224,14 @@ class BertClassifierModel(LRScheduledTFModel):
     def train_on_batch_old(self, features: List[InputFeatures], y: Union[List[int], List[List[int]]]) -> Dict:
         """Train model on given batch.
         This method calls train_op using features and y (labels).
+
         Args:
             features: batch of InputFeatures
             y: batch of labels (class id or one-hot encoding)
+
         Returns:
             dict with loss and learning_rate values
+
         """
         input_ids = [f.input_ids for f in features]
         input_masks = [f.input_mask for f in features]
@@ -235,20 +244,25 @@ class BertClassifierModel(LRScheduledTFModel):
 
     def train_on_batch(self, features: List[InputFeatures], y: Union[List[int], List[List[int]]] = None) -> Dict:
         """Train model on given batch.
-        This method clls train_op using features and y (labels).
+        This method calls train_op using features and y (labels).
+
         Args:
             features: batch of InputFeatures
             y: batch of labels (class id or one-hot encoding)
+
         Returns:
             dict with loss and learning_rate values
+
         """
         # Define operations
+        if self.gradient_accumulation_steps == 1:  # Don't use accumulation
+            return self.train_on_batch_old(features, y)
         trainable_variables = tf.trainable_variables()
         trainable_variables = [j for j in trainable_variables
                                if 'learning_rate' not in j.name and 'momentum' not in j.name]
         accumulated_gradients = [tf.Variable(tf.zeros_like(this_var), trainable=False)
                                  for this_var in trainable_variables]
-        gradients_vars= self.optimizer.compute_gradients(self.loss, trainable_variables)
+        gradients_vars = self.optimizer.compute_gradients(self.loss, trainable_variables)
         apply_gradients = self.optimizer.apply_gradients([
             (accumulated_gradient, variable)
             for accumulated_gradient, (gradient, variable)
