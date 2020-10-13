@@ -113,12 +113,7 @@
     "val_every_n_batches": 250,
     "log_every_n_batches": 250,
     "show_examples": false,
-    "test_best": false,
-    "validate_best": true,
-    "evaluation_targets": [
-      "train",
-      "valid"
-    ],
+    "evaluation_targets": ["train", "valid"],
     "class_name": "torch_trainer",
     "tensorboard_log_dir": "{MODEL_PATH}/",
     "pytest_max_batches": 2
