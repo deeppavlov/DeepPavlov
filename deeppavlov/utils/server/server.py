@@ -36,15 +36,10 @@ from deeppavlov.core.common.log import log_config
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.data.utils import check_nested_dict_keys, jsonify_data
 from deeppavlov.utils.connector import DialogLogger
-
-from deeppavlov.core.common.metrics import metrics, PrometheusMiddleware
+from deeppavlov.utils.server.metrics import metrics, PrometheusMiddleware
 
 SERVER_CONFIG_PATH = get_settings_path() / 'server_config.json'
 SSLConfig = namedtuple('SSLConfig', ['version', 'keyfile', 'certfile'])
-do_not_scrape = (
-    '/metrics',
-    '/api'
-)
 
 log = getLogger(__name__)
 dialog_logger = DialogLogger(logger_name='rest_api')
@@ -53,9 +48,9 @@ app = FastAPI()
 
 app.add_middleware(
     PrometheusMiddleware,
-    ignore_paths=do_not_scrape,
-    filter_unhandled_paths=True,
+    ignore_paths=('/', '/metrics', '/api', '/probe', '/docs', '/openapi.json')
 )
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['*'],
