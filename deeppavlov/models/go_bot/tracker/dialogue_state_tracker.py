@@ -59,21 +59,35 @@ class DialogueStateTracker(FeaturizedTracker):
                           nlg_manager: NLGManagerInterface,
                           policy_network_params: PolicyNetworkParams,
                           database: Component):
-        dialogue_state_tracker = DialogueStateTracker(parent_tracker.slot_names, nlg_manager.num_of_known_actions(),
+        slot_names = parent_tracker.slot_names
+
+        # region set formfilling info
+        act2act_id = {a_text: nlg_manager.get_action_id(a_text) for a_text in nlg_manager.known_actions()}
+        action_id2aqd_slots_ids, action_id2req_slots_ids = DialogueStateTracker.extract_reqiured_acquired_slots_ids_mapping(
+            act2act_id, slot_names, nlg_manager, parent_tracker)
+
+        # todo why so ugly and duplicated in multiple users tracker
+        dialogue_state_tracker = DialogueStateTracker(slot_names, nlg_manager.num_of_known_actions(),
                                                       nlg_manager.get_api_call_action_id(),
                                                       policy_network_params.hidden_size,
                                                       database,
                                                       parent_tracker.actions_required_acquired_slots_path)
 
-        # region set formfilling info
-        act2act_id = {a_text: nlg_manager.get_action_id(a_text) for a_text in nlg_manager.known_actions()}
+        dialogue_state_tracker.ffill_act_ids2req_slots_ids = action_id2req_slots_ids
+        dialogue_state_tracker.ffill_act_ids2aqd_slots_ids = action_id2aqd_slots_ids
+
+        # endregion set formfilling info
+        return dialogue_state_tracker
+
+    @staticmethod
+    def extract_reqiured_acquired_slots_ids_mapping(act2act_id, slot_names, nlg_manager, parent_tracker):
         action_id2aqd_slots_ids = dict()  # aqd stands for acquired
         action_id2req_slots_ids = dict()
         for act in nlg_manager.known_actions():
             act_id = act2act_id[act]
 
-            action_id2req_slots_ids[act_id] = np.zeros(len(dialogue_state_tracker.slot_names), dtype=np.float32)
-            action_id2aqd_slots_ids[act_id] = np.zeros(len(dialogue_state_tracker.slot_names), dtype=np.float32)
+            action_id2req_slots_ids[act_id] = np.zeros(len(slot_names), dtype=np.float32)
+            action_id2aqd_slots_ids[act_id] = np.zeros(len(slot_names), dtype=np.float32)
 
             if isinstance(act, tuple):
                 acts = act
@@ -82,16 +96,12 @@ class DialogueStateTracker(FeaturizedTracker):
 
             for act in acts:
                 for slot_name_i, slot_name in enumerate(parent_tracker.action_names2required_slots.get(act, [])):
-                    slot_ix_in_tracker = dialogue_state_tracker.slot_names.index(slot_name)
+                    slot_ix_in_tracker = slot_names.index(slot_name)
                     action_id2req_slots_ids[act_id][slot_ix_in_tracker] = 1.
                 for slot_name_i, slot_name in enumerate(parent_tracker.action_names2acquired_slots.get(act, [])):
-                    slot_ix_in_tracker = dialogue_state_tracker.slot_names.index(slot_name)
+                    slot_ix_in_tracker = slot_names.index(slot_name)
                     action_id2aqd_slots_ids[act_id][slot_ix_in_tracker] = 1.
-
-        dialogue_state_tracker.ffill_act_ids2req_slots_ids = action_id2req_slots_ids
-        dialogue_state_tracker.ffill_act_ids2aqd_slots_ids = action_id2aqd_slots_ids
-        # endregion set formfilling info
-        return dialogue_state_tracker
+        return action_id2aqd_slots_ids, action_id2req_slots_ids
 
     def reset_state(self):
         super().reset_state()
@@ -153,9 +163,9 @@ class DialogueStateTracker(FeaturizedTracker):
             acquired_slots_mask = self.ffill_act_ids2aqd_slots_ids[act_id]
             act_req_slots_fulfilled = np.equal((required_slots_mask * self._binary_features()), required_slots_mask)
             act_requirements_not_fulfilled = np.invert(act_req_slots_fulfilled)# if act_req_slots_fulfilled != [] else np.array([])
-            act_nothing_new_to_knew = np.equal((acquired_slots_mask * self._binary_features()), acquired_slots_mask)
+            ack_slot_is_already_known = np.equal((acquired_slots_mask * self._binary_features()), acquired_slots_mask)
 
-            if any(np.logical_or(act_requirements_not_fulfilled, act_nothing_new_to_knew)):
+            if any(act_requirements_not_fulfilled) or (all(ack_slot_is_already_known) and any(acquired_slots_mask)):
                 mask[act_id] = 0.
 
         return mask
@@ -213,6 +223,7 @@ class MultipleUserStateTrackersPool(object):
         return tracker
 
     def new_tracker(self):
+        # todo deprecated and never used?
         tracker = DialogueStateTracker(self.base_tracker.slot_names, self.base_tracker.n_actions,
                                        self.base_tracker.api_call_id, self.base_tracker.hidden_size,
                                        self.base_tracker.database)
@@ -235,6 +246,8 @@ class MultipleUserStateTrackersPool(object):
             tracker_entity.database,
             tracker_entity.actions_required_acquired_slots_path
         )
+        tracker.ffill_act_ids2req_slots_ids = tracker_entity.ffill_act_ids2req_slots_ids
+        tracker.ffill_act_ids2aqd_slots_ids = tracker_entity.ffill_act_ids2aqd_slots_ids
 
         self._ids_to_trackers[user_id] = tracker
 

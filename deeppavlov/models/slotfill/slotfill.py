@@ -66,7 +66,9 @@ class DstcSlotFillingNetwork(Component, Serializable):
         entities = []
         normalized_slot_vals = []
         for entity_name in self._slot_vals[slot]:
+            # todo log missing keys
             for entity in self._slot_vals[slot][entity_name]:
+                # todo log missing keys
                 entities.append(entity)
                 normalized_slot_vals.append(entity_name)
         best_match, score = process.extract(input_entity, entities, limit=2 ** 20)[0]
