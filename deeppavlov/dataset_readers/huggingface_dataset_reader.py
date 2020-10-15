@@ -29,7 +29,7 @@ class HuggingFaceDatasetReader(DatasetReader):
 
     @overrides
     def read(self, data_path: str, path: str, name: Optional[str] = None, train: str = 'train',
-             valid: str = 'validation', test: str = 'test', **kwargs) -> Dict[str, Dataset]:
+             valid: Optional[str] = None, test: Optional[str] = None, **kwargs) -> Dict[str, Dataset]:
         """Wraps datasets.load_dataset method
 
         Args:
@@ -37,8 +37,8 @@ class HuggingFaceDatasetReader(DatasetReader):
             path: datasets.load_dataset path argument (e.g., `glue`)
             name: datasets.load_dataset name argument (e.g., `mrpc`)
             train: split name to use as training data. Defaults to `train`.
-            valid: split name to use as validation data. Defaults to `validation`.
-            test: split name to use as test data. Defaults to `test`.
+            valid: split name to use as validation data. Defaults to `None`, no validation data is used.
+            test: split name to use as test data. Defaults to `None`, no test data is used.
 
         Returns:
             Dict[str, List[Dict]]: Dictionary with train, valid, test datasets
