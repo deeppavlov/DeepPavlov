@@ -133,7 +133,7 @@ def download_resource(url: str, dest_paths: Iterable[Union[Path, str]]) -> None:
     lockfile = download_path / f'{file_name}.lock'
 
     try:
-        with FileLock(lockfile):
+        with FileLock(lockfile).acquire(poll_intervall=10):
             if check_md5(url, dest_paths):
                 log.info(f'Skipped {url} download because of matching hashes')
             elif any(ext in url for ext in ('.tar.gz', '.gz', '.zip')):
