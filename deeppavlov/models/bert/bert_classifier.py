@@ -195,7 +195,6 @@ class BertClassifierModel(LRScheduledTFModel):
             else:
                 self.train_op = self.get_train_op(self.loss, learning_rate=self.learning_rate_ph)
 
-
     def _build_feed_dict(self, input_ids, input_masks, token_types, y=None):
         feed_dict = {
             self.input_ids_ph: input_ids,
@@ -264,6 +263,7 @@ class BertClassifierModel(LRScheduledTFModel):
             def clip_if_not_none(grad):
                 if grad is not None:
                     return tf.clip_by_norm(grad, self.clip_norm)
+
             if self.clip_norm is not None:
                 gradients_vars = [(clip_if_not_none(grad), var)
                                   for grad, var in gradients_vars]
