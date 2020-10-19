@@ -42,6 +42,7 @@ class DomainKnowledge:
     known_slots: Dict
     response_templates: Dict
     session_config: Dict
+    forms: Dict
 
     def __init__(self, domain_knowledge_di: Dict):
         self.known_entities = domain_knowledge_di.get("entities", [])
@@ -50,6 +51,7 @@ class DomainKnowledge:
         self.known_slots = domain_knowledge_di.get("slots", {})
         self.response_templates = domain_knowledge_di.get("responses", {})
         self.session_config = domain_knowledge_di.get("session_config", {})
+        self.forms = domain_knowledge_di.get("forms", {})
 
 
 @register('md_yaml_dialogs_reader')
