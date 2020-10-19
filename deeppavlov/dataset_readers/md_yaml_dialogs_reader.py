@@ -45,13 +45,13 @@ class DomainKnowledge:
     forms: Dict
 
     def __init__(self, domain_knowledge_di: Dict):
-        self.known_entities = domain_knowledge_di.get("entities", [])
-        self.known_intents = domain_knowledge_di.get("intents", [])
-        self.known_actions = domain_knowledge_di.get("actions", [])
-        self.known_slots = domain_knowledge_di.get("slots", {})
-        self.response_templates = domain_knowledge_di.get("responses", {})
-        self.session_config = domain_knowledge_di.get("session_config", {})
-        self.forms = domain_knowledge_di.get("forms", {})
+        self.known_entities: List = domain_knowledge_di.get("entities", [])
+        self.known_intents: List = domain_knowledge_di.get("intents", [])
+        self.known_actions: List = domain_knowledge_di.get("actions", [])
+        self.known_slots: Dict = domain_knowledge_di.get("slots", {})
+        self.response_templates: Dict = domain_knowledge_di.get("responses", {})
+        self.session_config: Dict = domain_knowledge_di.get("session_config", {})
+        self.forms: Dict = domain_knowledge_di.get("forms", {})
 
     @classmethod
     def from_yaml(cls, domain_yml_fpath: Union[str, Path] = "domain.yml"):
@@ -117,7 +117,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                           f"{required_fname} not found with path {required_path}")
 
         domain_path = Path(data_path, domain_fname)
-        domain_knowledge = DomainKnowledge(read_yaml(domain_path))
+        domain_knowledge = DomainKnowledge.from_yaml(domain_path)
         intent2slots2text, slot_name2text2value = cls._read_intent2text_mapping(Path(data_path, nlu_fname),
                                                                                 domain_knowledge)
 
