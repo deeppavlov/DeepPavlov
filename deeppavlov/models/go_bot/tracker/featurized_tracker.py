@@ -35,7 +35,7 @@ class FeaturizedTracker(TrackerInterface):
                  **kwargs) -> None:
         self.slot_names = list(slot_names)
         self.actions_required_acquired_slots_path = actions_required_acquired_slots_path
-        self.action_names2required_slots, self.action_names2acquired_slots = self._load_actions2slots_formfilling_info(self.actions_required_acquired_slots_path)
+        self.action_names2required_slots, self.action_names2acquired_slots = self._load_actions2slots_formfilling_info_from_json(self.actions_required_acquired_slots_path)
         self.history = []
         self.current_features = None
 
@@ -116,14 +116,38 @@ class FeaturizedTracker(TrackerInterface):
 
         return feats
 
-    def _load_actions2slots_formfilling_info(self,
-                                             actions_required_acquired_slots_path: Optional[Union[str, Path]] = None)\
+    def _load_actions2slots_formfilling_info_from_json(self,
+                                                       actions_required_acquired_slots_path: Optional[Union[str, Path]] = None)\
             -> Tuple[Dict[str, List[str]], Dict[str, List[str]]]:
         """
         loads the formfilling mapping of actions onto the required slots from the json of the following structure:
         {action1: {"required": [required_slot_name_1], "acquired": [acquired_slot_name_1, acquired_slot_name_2]},
          action2: {"required": [required_slot_name_21, required_slot_name_22], "acquired": [acquired_slot_name_21]},
         ..}
+        Returns:
+             the dictionary represented by the passed json
+        """
+        actions_required_acquired_slots_path = expand_path(actions_required_acquired_slots_path)
+        with open(actions_required_acquired_slots_path, encoding="utf-8") as actions2slots_json_f:
+            actions2slots = json.load(actions2slots_json_f)
+            actions2required_slots = {act: act_slots["required"] for act, act_slots in actions2slots.items()}
+            actions2acquired_slots = {act: act_slots["acquired"] for act, act_slots in actions2slots.items()}
+        return actions2required_slots, actions2acquired_slots
+
+    def _load_actions2slots_formfilling_info_from(self,
+                                                  actions_required_acquired_slots_path: Optional[Union[str, Path]] = None)\
+            -> Tuple[Dict[str, List[str]], Dict[str, List[str]]]:
+        """
+        loads the formfilling mapping of actions onto the required slots from the domain.yml form description:
+
+            restaurant_form:
+                cuisine:
+                  - type: from_entity
+                    entity: cuisine
+                num_people:
+                  - type: from_entity
+                    entity: number
+
         Returns:
              the dictionary represented by the passed json
         """

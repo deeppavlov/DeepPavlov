@@ -53,6 +53,16 @@ class DomainKnowledge:
         self.session_config = domain_knowledge_di.get("session_config", {})
         self.forms = domain_knowledge_di.get("forms", {})
 
+    @classmethod
+    def from_yaml(cls, domain_yml_fpath: Union[str, Path] = "domain.yml"):
+        """
+        Parses domain.yml domain config file into the DomainKnowledge object
+        :param domain_yml_fpath: path to the domain config file, defaults to domain.yml
+        :return: the loaded DomainKnowledge obect
+        """
+        return cls(read_yaml(domain_yml_fpath))
+
+
 
 @register('md_yaml_dialogs_reader')
 class MD_YAML_DialogsDatasetReader(DatasetReader):
@@ -106,7 +116,8 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                 log.error(f"INSIDE MLU_MD_DialogsDatasetReader.read(): "
                           f"{required_fname} not found with path {required_path}")
 
-        domain_knowledge = DomainKnowledge(read_yaml(Path(data_path, domain_fname)))
+        domain_path = Path(data_path, domain_fname)
+        domain_knowledge = DomainKnowledge(read_yaml(domain_path))
         intent2slots2text, slot_name2text2value = cls._read_intent2text_mapping(Path(data_path, nlu_fname),
                                                                                 domain_knowledge)
 
