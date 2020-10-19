@@ -44,9 +44,10 @@ class DialogueStateTracker(FeaturizedTracker):
                  api_call_id: int,
                  hidden_size: int,
                  database: Component = None,
-                 actions_required_acquired_slots_path: Optional[Union[str, Path]]=None,
+                 domain_yml_path: Optional[Union[str, Path]]=None,
+                 stories_yml_path: Optional[Union[str, Path]]=None,
                  **kwargs) -> None:
-        super().__init__(slot_names, actions_required_acquired_slots_path, **kwargs)
+        super().__init__(slot_names, domain_yml_path, stories_yml_path, **kwargs)
         self.hidden_size = hidden_size
         self.database = database
         self.n_actions = n_actions
@@ -71,7 +72,8 @@ class DialogueStateTracker(FeaturizedTracker):
                                                       nlg_manager.get_api_call_action_id(),
                                                       policy_network_params.hidden_size,
                                                       database,
-                                                      parent_tracker.actions_required_acquired_slots_path)
+                                                      parent_tracker.domain_yml_path,
+                                                      parent_tracker.stories_path)
 
         dialogue_state_tracker.ffill_act_ids2req_slots_ids = action_id2req_slots_ids
         dialogue_state_tracker.ffill_act_ids2aqd_slots_ids = action_id2aqd_slots_ids
@@ -244,7 +246,8 @@ class MultipleUserStateTrackersPool(object):
             tracker_entity.api_call_id,
             tracker_entity.hidden_size,
             tracker_entity.database,
-            tracker_entity.actions_required_acquired_slots_path
+            tracker_entity.domain_yml_path,
+            tracker_entity.stories_path
         )
         tracker.ffill_act_ids2req_slots_ids = tracker_entity.ffill_act_ids2req_slots_ids
         tracker.ffill_act_ids2aqd_slots_ids = tracker_entity.ffill_act_ids2aqd_slots_ids

@@ -5,7 +5,9 @@ from typing import List, Iterator, Union, Optional, Dict, Tuple
 import numpy as np
 
 from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.file import read_yaml
 from deeppavlov.core.common.registry import register
+from deeppavlov.dataset_readers.md_yaml_dialogs_reader import DomainKnowledge
 from deeppavlov.models.go_bot.nlu.dto.nlu_response import NLUResponse
 from deeppavlov.models.go_bot.tracker.dto.tracker_knowledge_interface import TrackerKnowledgeInterface
 from deeppavlov.models.go_bot.tracker.tracker_interface import TrackerInterface
@@ -31,11 +33,16 @@ class FeaturizedTracker(TrackerInterface):
 
     def __init__(self,
                  slot_names: List[str],
-                 actions_required_acquired_slots_path: Optional[Union[str, Path]]=None,
+                 # actions_required_acquired_slots_path: Optional[Union[str, Path]]=None,
+                 domain_yml_path: Optional[Union[str, Path]]=None,
+                 stories_yml_path: Optional[Union[str, Path]]=None,
                  **kwargs) -> None:
         self.slot_names = list(slot_names)
-        self.actions_required_acquired_slots_path = actions_required_acquired_slots_path
-        self.action_names2required_slots, self.action_names2acquired_slots = self._load_actions2slots_formfilling_info_from_json(self.actions_required_acquired_slots_path)
+        self.domain_yml_path = domain_yml_path
+        self.stories_path = stories_yml_path
+        self.action_names2required_slots, self.action_names2acquired_slots =\
+            self._load_actions2slots_formfilling_info_from(domain_yml_path, stories_yml_path)
+        # self._load_actions2slots_formfilling_info_from_json(self.actions_required_acquired_slots_path)
         self.history = []
         self.current_features = None
 
@@ -135,7 +142,8 @@ class FeaturizedTracker(TrackerInterface):
         return actions2required_slots, actions2acquired_slots
 
     def _load_actions2slots_formfilling_info_from(self,
-                                                  actions_required_acquired_slots_path: Optional[Union[str, Path]] = None)\
+                                                  domain_yml_path: Optional[Union[str, Path]],
+                                                  stories_yml_path: Optional[Union[str, Path]])\
             -> Tuple[Dict[str, List[str]], Dict[str, List[str]]]:
         """
         loads the formfilling mapping of actions onto the required slots from the domain.yml form description:
@@ -151,9 +159,40 @@ class FeaturizedTracker(TrackerInterface):
         Returns:
              the dictionary represented by the passed json
         """
-        actions_required_acquired_slots_path = expand_path(actions_required_acquired_slots_path)
-        with open(actions_required_acquired_slots_path, encoding="utf-8") as actions2slots_json_f:
-            actions2slots = json.load(actions2slots_json_f)
-            actions2required_slots = {act: act_slots["required"] for act, act_slots in actions2slots.items()}
-            actions2acquired_slots = {act: act_slots["acquired"] for act, act_slots in actions2slots.items()}
+        domain_yml_path = expand_path(domain_yml_path)
+        domain_knowledge: DomainKnowledge = DomainKnowledge.from_yaml(domain_yml_path)
+        potential_api_or_db_actions = domain_knowledge.known_actions
+        forms = domain_knowledge.forms
+        form_names = list(forms.keys())
+
+        stories_yml_path = expand_path(stories_yml_path)
+        stories_yml_di = read_yaml(stories_yml_path)
+        prev_forms = []
+        action2forms = {}
+        for story in stories_yml_di["stories"]:
+            story_name = story["story"]
+            story_steps = story["steps"]
+            for step in story_steps:
+                if "action" not in step.keys():
+                    continue
+
+                curr_action = step["action"]
+                if curr_action in form_names:
+                    prev_forms.append(curr_action)
+                if curr_action in potential_api_or_db_actions:
+                    action2forms[curr_action] = prev_forms
+                    prev_forms = []
+
+        actions2acquired_slots = {form_name: self._get_form_acquired_slots(form) for form_name, form in forms.items()}
+        actions2required_slots = {act: {slot
+                                        for form in forms
+                                        for slot in actions2acquired_slots[form]}
+                                  for act, forms in action2forms.items()}
+
         return actions2required_slots, actions2acquired_slots
+
+    def _get_form_acquired_slots(self, form):
+        acquired_slots = [slot_name
+                          for slot_name, slot_info_li in form.items()
+                          if slot_info_li and slot_info_li[0].get("type", '') == "from_entity"]
+        return acquired_slots
