@@ -173,11 +173,16 @@ class BertClassifierModel(LRScheduledTFModel):
         self.keep_prob_ph = tf.placeholder_with_default(1.0, shape=[], name='keep_prob_ph')
         self.is_train_ph = tf.placeholder_with_default(False, shape=[], name='is_train_ph')
 
-    def _init_optimizer(self):
+    def _init_optimizer(self, learnable_scopes=None, clip_norm=None):
         with tf.variable_scope('Optimizer'):
             self.global_step = tf.get_variable('global_step', shape=[], dtype=tf.int32,
                                                initializer=tf.constant_initializer(0), trainable=False)
-
+            if learnable_scopes is None:
+                variables_to_train = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
+            else:
+                variables_to_train = []
+                for scope_name in learnable_scopes:
+                    variables_to_train.extend(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope_name))
             if self.optimizer is None:
                 self.optimizer = AdamWeightDecayOptimizer(
                     learning_rate=self.learning_rate_ph,
@@ -188,10 +193,16 @@ class BertClassifierModel(LRScheduledTFModel):
                     exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"]
                 )
                 new_global_step = self.global_step + 1
-                self.train_op = self.get_train_op(self.loss, learning_rate=self.learning_rate_ph,
-                                                  optimizer=self.optimizer
-                                                  )
-                self.train_op = tf.group(self.train_op, [self.global_step.assign(new_global_step)])
+                grads_and_vars = self.optimizer.compute_gradients(self.loss, var_list=variables_to_train)
+
+                def clip_if_not_none(grad):
+                    if grad is not None:
+                        return tf.clip_by_norm(grad, clip_norm)
+
+                if clip_norm is not None:
+                    grads_and_vars = [(clip_if_not_none(grad), var)
+                                      for grad, var in grads_and_vars]
+                self.train_op = self.optimizer.apply_gradients(grads_and_vars)
             else:
                 self.train_op = self.get_train_op(self.loss, learning_rate=self.learning_rate_ph)
 
@@ -243,6 +254,7 @@ class BertClassifierModel(LRScheduledTFModel):
 
         """
         # Define operations
+        #raise Exception('Func')
         extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(extra_update_ops):
             if self.gradient_accumulation_steps == 1:  # Don't use accumulation
@@ -290,6 +302,7 @@ class BertClassifierModel(LRScheduledTFModel):
             token_type_ids = [f.input_type_ids for f in features]
             token_types_batches = self.split(token_type_ids)
             y_batches = self.split(y)
+            #raise Exception('Splitted')
             # https://stackoverflow.com/questions/50000263/how-to-feed-the-list-of-gradients-or-grad-variable-name-pairs-to-my-model
             for (input_ids_batch, input_masks_batch, token_types_batch, y_batch) in zip(
                 input_ids_batches, input_masks_batches, token_types_batches, y_batches):
@@ -298,7 +311,7 @@ class BertClassifierModel(LRScheduledTFModel):
                 self.sess.run([evaluate_batch, update_loss],
                               feed_dict=feed_dict)
             loss = self.sess.run(average_loss)
-            self.sess.run(apply_gradients)
+            #self.sess.run(apply_gradients)
             learning_rate = max(self.get_learning_rate(), self.min_learning_rate)
             answer = {'loss': loss, 'learning_rate': learning_rate}
 
