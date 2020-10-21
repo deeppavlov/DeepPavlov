@@ -45,9 +45,8 @@ class HuggingFaceDatasetReader(DatasetReader):
         """
         if 'split' in kwargs:
             raise RuntimeError('Split argument was used. Use train, valid, test arguments instead of split.')
-        split = ['train', 'valid', 'test']
         split_mapping = {'train': train, 'valid': valid, 'test': test}
-        # filter sets that are not available in dataset
-        split_mapped = [split_mapping[s] for s in split if split_mapping[s]]
-        dataset = load_dataset(path=path, name=name, split=split_mapped, **kwargs)
-        return dict(zip(split, dataset))
+        # filter unused splits
+        split_mapping = {el: split_mapping[el] for el in split_mapping if split_mapping[el]}
+        dataset = load_dataset(path=path, name=name, split=list(split_mapping.values()), **kwargs)
+        return dict(zip(split_mapping.keys(), dataset))
