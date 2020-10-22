@@ -246,7 +246,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
             try:
                 user_utter = cls.augment_user_turn(intent2slots2text, line, slot_name2text2value)
                 # dialogs MUST start with system replics
-                utters_to_append = [default_system_start] if not curr_story_utters else [] + [user_utter]
+                utters_to_append = ([default_system_start] if not curr_story_utters else []) + [user_utter]
             except KeyError as e:
                 log.debug(f"INSIDE MLU_MD_DialogsDatasetReader._read_story(): "
                           f"Skipping story w. line {line} because of no NLU candidates found")
