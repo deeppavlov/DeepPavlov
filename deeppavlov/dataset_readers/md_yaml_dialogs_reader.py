@@ -369,7 +369,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
     @classmethod
     def get_last_users_turn(cls, curr_story_utters):
-        *_, last_user_utter = filter(curr_story_utters, lambda x: x["speaker"] == cls._USER_SPEAKER_ID)
+        *_, last_user_utter = filter(lambda x: x["speaker"] == cls._USER_SPEAKER_ID, curr_story_utters)
         return last_user_utter
 
     @classmethod
