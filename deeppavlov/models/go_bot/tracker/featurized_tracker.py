@@ -215,15 +215,16 @@ class FeaturizedTracker(TrackerInterface):
                     action2forms[curr_action] = prev_forms
                     prev_forms = []
 
-        def get_slot(system_utter, form_name):
+        def get_slots(system_utter, form_name):
+            slots = []
             if system_utter.startswith(f"utter_ask_{form_name}_"):
-                slot_name = system_utter[len(f"utter_ask_{form_name}_"):]
+                slots.append(system_utter[len(f"utter_ask_{form_name}_"):])
             elif system_utter.startswith(f"utter_ask_"):
-                slot_name = system_utter[len(f"utter_ask_"):]
+                slots.append(system_utter[len(f"utter_ask_"):])
             else:
                 # todo: raise an exception
                 pass
-            return slot_name
+            return slots
 
         actions2acquired_slots = {utter.strip('-').strip(): get_slot(utter.strip('-').strip(), form_name)
                                   for form_name, form in forms.items()
