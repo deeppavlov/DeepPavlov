@@ -264,8 +264,15 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                 # deal with consecutive system actions by inserting the last user replics in between
                 utters_to_append.append(cls.get_last_users_turn(curr_story_utters))
 
+            def parse_form_name(story_line):
+                form_name = None
+                if story_line.startswith("form"):
+                    form_di = json.loads(story_line[len("form"):])
+                    form_name = form_di["name"]
+                return form_name
+
             if system_action_name.startswith("form"):
-                form_name = system_action_name
+                form_name = parse_form_name(system_action_name)
                 augmented_utters = cls.augment_form(form_name, domain_knowledge, intent2slots2text)
                 augmented_utters_parsed = [processed_line
                                            for aug_line in augmented_utters
