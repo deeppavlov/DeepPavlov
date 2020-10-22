@@ -7,7 +7,7 @@ import numpy as np
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.file import read_yaml
 from deeppavlov.core.common.registry import register
-from deeppavlov.dataset_readers.md_yaml_dialogs_reader import DomainKnowledge
+from deeppavlov.dataset_readers.md_yaml_dialogs_reader import DomainKnowledge, MD_YAML_DialogsDatasetReader
 from deeppavlov.models.go_bot.nlu.dto.nlu_response import NLUResponse
 from deeppavlov.models.go_bot.tracker.dto.tracker_knowledge_interface import TrackerKnowledgeInterface
 from deeppavlov.models.go_bot.tracker.tracker_interface import TrackerInterface
@@ -206,18 +206,35 @@ class FeaturizedTracker(TrackerInterface):
                     continue
 
                 curr_action = step["action"]
+                if curr_action.startswith("form"):
+                    curr_action = json.loads(curr_action[len("form"):])["name"]
+                    print(curr_action)
                 if curr_action in form_names:
                     prev_forms.append(curr_action)
                 if curr_action in potential_api_or_db_actions:
                     action2forms[curr_action] = prev_forms
                     prev_forms = []
 
-        actions2acquired_slots = {form_name: self._get_form_acquired_slots(form) for form_name, form in forms.items()}
+        def get_slot(system_utter, form_name):
+            if system_utter.startswith(f"utter_ask_{form_name}_"):
+                slot_name = system_utter[len(f"utter_ask_{form_name}_"):]
+            elif system_utter.startswith(f"utter_ask_"):
+                slot_name = system_utter[len(f"utter_ask_"):]
+            else:
+                # todo: raise an exception
+                pass
+            return slot_name
+
+        actions2acquired_slots = {utter.strip('-').strip(): get_slot(utter.strip('-').strip(), form_name)
+                                  for form_name, form in forms.items()
+                                  for utter in
+                                  MD_YAML_DialogsDatasetReader.augment_form(form_name, domain_knowledge, {})
+                                  if utter.strip().startswith("-")}
+        forms2acquired_slots = {form_name: self._get_form_acquired_slots(form) for form_name, form in forms.items()}
         actions2required_slots = {act: {slot
                                         for form in forms
-                                        for slot in actions2acquired_slots[form]}
+                                        for slot in forms2acquired_slots[form]}
                                   for act, forms in action2forms.items()}
-
         return actions2required_slots, actions2acquired_slots
 
     def _get_form_acquired_slots(self, form):

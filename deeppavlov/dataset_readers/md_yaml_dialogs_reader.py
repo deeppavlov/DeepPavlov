@@ -347,6 +347,24 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
     @classmethod
     def augment_slot(cls, known_responses: List[str], known_intents: List[str], slot_name: str, form_name: str):
+        ask_slot_act_name = cls.get_augmented_ask_slot_utter(form_name, known_responses, slot_name)
+        inform_slot_user_utter = cls.get_augmented_ask_intent_utter(known_intents, slot_name)
+
+        return [f"- {ask_slot_act_name}", f"* {inform_slot_user_utter}"]
+
+    @classmethod
+    def get_augmented_ask_intent_utter(cls, known_intents, slot_name):
+        inform_slot_user_utter_hypothesis = f"inform_{slot_name}"
+        if inform_slot_user_utter_hypothesis in known_intents:
+            inform_slot_user_utter = inform_slot_user_utter_hypothesis
+        else:
+            # todo raise an exception
+            inform_slot_user_utter = None
+            pass
+        return inform_slot_user_utter
+
+    @classmethod
+    def get_augmented_ask_slot_utter(cls, form_name, known_responses, slot_name):
         ask_slot_act_name_hypothesis1 = f"utter_ask_{form_name}_{slot_name}"
         ask_slot_act_name_hypothesis2 = f"utter_ask_{slot_name}"
         if ask_slot_act_name_hypothesis1 in known_responses:
@@ -355,18 +373,9 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
             ask_slot_act_name = ask_slot_act_name_hypothesis2
         else:
             # todo raise an exception
+            ask_slot_act_name = None
             pass
-
-
-
-        inform_slot_user_utter_hypothesis = f"inform_{slot_name}"
-        if inform_slot_user_utter_hypothesis in known_intents:
-            inform_slot_user_utter = inform_slot_user_utter_hypothesis
-        else:
-            # todo raise an exception
-            pass
-
-        return [f"- {ask_slot_act_name}", f"* {inform_slot_user_utter}"]
+        return ask_slot_act_name
 
     @classmethod
     def get_last_users_turn(cls, curr_story_utters):
