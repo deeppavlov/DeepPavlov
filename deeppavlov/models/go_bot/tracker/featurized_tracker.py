@@ -226,7 +226,7 @@ class FeaturizedTracker(TrackerInterface):
                 pass
             return slots
 
-        actions2acquired_slots = {utter.strip('-').strip(): get_slot(utter.strip('-').strip(), form_name)
+        actions2acquired_slots = {utter.strip('-').strip(): get_slots(utter.strip('-').strip(), form_name)
                                   for form_name, form in forms.items()
                                   for utter in
                                   MD_YAML_DialogsDatasetReader.augment_form(form_name, domain_knowledge, {})
