@@ -165,8 +165,37 @@ class FeaturizedTracker(TrackerInterface):
         forms = domain_knowledge.forms
         form_names = list(forms.keys())
 
-        stories_yml_path = expand_path(stories_yml_path)
-        stories_yml_di = read_yaml(stories_yml_path)
+        # todo migrate to rasa2.0
+        # stories_yml_path = expand_path(stories_yml_path)
+        # stories_yml_di = read_yaml(stories_yml_path)
+        def read_md_story(story_path):
+            story_f = open(story_path, 'r')
+            stories_li = []
+            curr_story = None
+            for line in story_f:
+                line = line.strip()
+                if not line: continue;
+                if line.startswith("#"):
+                    if curr_story is not None:
+                        stories_li.append(curr_story)
+                    story_name = line.strip('#').strip()
+                    curr_story = {"story": story_name, "steps": []}
+                elif line.startswith("*"):
+                    # user turn
+                    step = {"intent": line.strip('*').strip()}
+                    curr_story["steps"].append(step)
+                elif line.startswith('-'):
+                    # system turn
+                    step = {"action": line.strip('-').strip()}
+                    curr_story["steps"].append(step)
+            if curr_story is not None:
+                stories_li.append(curr_story)
+            story_f.close()
+            stories_di = {"stories": stories_li}
+            return stories_di
+
+        stories_md_path = expand_path(stories_yml_path)
+        stories_yml_di = read_md_story(stories_md_path)
         prev_forms = []
         action2forms = {}
         for story in stories_yml_di["stories"]:
