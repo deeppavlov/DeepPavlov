@@ -278,7 +278,8 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                                            for aug_line in augmented_utters
                                            for processed_line in process_story_line(aug_line)]
                 utters_to_append.extend(augmented_utters_parsed)
-            utters_to_append.append(system_action)
+            else:
+                utters_to_append.append(system_action)
             return utters_to_append
 
         def process_story_line(line):
