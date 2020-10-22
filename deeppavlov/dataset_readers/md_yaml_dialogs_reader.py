@@ -238,7 +238,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         stories_parsed = {}
 
         curr_story_title = None
-        curr_story_utters = None
+        curr_story_utters = []
         nonlocal_curr_story_bad = False  # can be modified as a nonlocal variable
 
         def process_user_utter(line):
