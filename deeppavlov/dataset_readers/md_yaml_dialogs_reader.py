@@ -106,7 +106,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
         domain_knowledge = DomainKnowledge(read_yaml(Path(data_path, domain_fname)))
         intent2slots2text, slot_name2text2value = cls._read_intent2text_mapping(Path(data_path, nlu_fname),
-                                                                                domain_knowledge)
+                                                                                domain_knowledge, ignore_slots)
 
         short2long_subsample_name = {"trn": "train",
                                      "val": "valid",
@@ -121,7 +121,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         return data
 
     @classmethod
-    def _read_intent2text_mapping(cls, nlu_fpath: Path, domain_knowledge: DomainKnowledge) \
+    def _read_intent2text_mapping(cls, nlu_fpath: Path, domain_knowledge: DomainKnowledge, ignore_slots=False) \
             -> Tuple[Dict[str, Dict[SLOT2VALUE_PAIRS_TUPLE, List]],
                      Dict[str, Dict[str, str]]]:
 
@@ -147,6 +147,8 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                     # lines starting with - are listing the examples of intent texts of the current intent type
                     intent_text_w_markup = line.strip().strip('-').strip()
                     line_slots_found = re.finditer(slots_markup_pattern, intent_text_w_markup)
+                    if ignore_slots:
+                        line_slots_found = []
 
                     curr_char_ix = 0
                     intent_text_without_markup = ''
