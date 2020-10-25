@@ -8,7 +8,7 @@ from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register, get_model
 from deeppavlov.dataset_readers.dstc2_reader import DSTC2DatasetReader
 from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesFeatures
-from deeppavlov.models.go_bot.nlg.dto.json_nlg_response import JSONNLGResponse
+from deeppavlov.models.go_bot.nlg.dto.json_nlg_response import JSONNLGResponse, VerboseJSONNLGResponse
 from deeppavlov.models.go_bot.nlg.nlg_manager import log
 from deeppavlov.models.go_bot.nlg.nlg_manager_interface import NLGManagerInterface
 from deeppavlov.models.go_bot.policy.dto.policy_prediction import PolicyPrediction
@@ -129,7 +129,9 @@ class MockJSONNLGManager(NLGManagerInterface):
         slots_values = {slot_name: tracker_slotfilled_state.get(slot_name, "unk") for slot_name in slots_to_log}
         actions_tuple = self.ids2action_tuples[policy_prediction.predicted_action_ix]
 
-        return JSONNLGResponse(slots_values, actions_tuple)
+        response = JSONNLGResponse(slots_values, actions_tuple)
+        verbose_response = VerboseJSONNLGResponse.from_json_nlg_response(response)
+        return verbose_response
 
     def num_of_known_actions(self) -> int:
         """
