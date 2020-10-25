@@ -42,6 +42,7 @@ class QueryGenerator(QueryGeneratorBase):
                  rel_ranker: Union[RelRankerInfer, RelRankerBertInfer],
                  entities_to_leave: int = 5,
                  rels_to_leave: int = 7,
+                 max_comb_num: int = 50,
                  return_answers: bool = False, *args, **kwargs) -> None:
         """
 
@@ -57,6 +58,7 @@ class QueryGenerator(QueryGeneratorBase):
         self.rel_ranker = rel_ranker
         self.entities_to_leave = entities_to_leave
         self.rels_to_leave = rels_to_leave
+        self.max_comb_num = max_comb_num
         self.return_answers = return_answers
         super().__init__(wiki_parser = self.wiki_parser, rel_ranker = self.rel_ranker,
             entities_to_leave = self.entities_to_leave, rels_to_leave = self.rels_to_leave,
@@ -155,18 +157,34 @@ class QueryGenerator(QueryGeneratorBase):
         type_combs = make_combs(selected_type_ids, permut=False)
         log.debug(f"(query_parser)entity_combs: {entity_combs[:3]}, type_combs: {type_combs[:3]},"
                   f" rel_combs: {rel_combs[:3]}")
-        for comb_num, combs in enumerate(itertools.product(entity_combs, type_combs, rel_combs)):
+        queries_list = []
+        parser_info_list = []
+        confidences_list = []
+        all_combs_list = list(itertools.product(entity_combs, type_combs, rel_combs))
+        for comb_num, combs in enumerate(all_combs_list):
             confidence = np.prod([score for rel, score in combs[2][:-1]])
+            confidences_list.append(confidence)
             query_hdt_seq = [
                 fill_query(query_hdt_elem, combs[0], combs[1], combs[2]) for query_hdt_elem in query_sequence]
             if comb_num == 0:
                 log.debug(f"\n_______________________________\nfilled query: {query_hdt_seq}\n_______________________________\n")
-            candidate_output = self.wiki_parser(
-                rels_from_query + answer_ent, query_hdt_seq, filter_info, order_info)
-            candidate_outputs += [[rel for rel, score in combs[2][:-1]] + output + [confidence]
-                                  for output in candidate_output]
-            if return_if_found and candidate_output:
-                return candidate_outputs
+            queries_list.append((rels_from_query + answer_ent, query_hdt_seq, filter_info, order_info, return_if_found))
+            parser_info_list.append("query_execute")
+            if comb_num == self.max_comb_num:
+                break
+        
+        candidate_outputs = []
+        candidate_outputs_list = self.wiki_parser(parser_info_list, queries_list)
+        if self.use_api_requester and isinstance(candidate_outputs_list, list) and candidate_outputs_list:
+            candidate_outputs_list = candidate_outputs_list[0]
+        
+        if isinstance(candidate_outputs_list, list) and candidate_outputs_list:
+            outputs_len = len(candidate_outputs_list)
+            all_combs_list = all_combs_list[:outputs_len]
+            confidences_list = confidences_list[:outputs_len]
+            for combs, confidence, candidate_output in zip(all_combs_list, confidences_list, candidate_outputs_list):
+                candidate_outputs += [[rel for rel, score in combs[2][:-1]] + output + [confidence]
+                                      for output in candidate_output]
         log.debug(f"(query_parser)loop time: {datetime.datetime.now() - start_time}")
         log.debug(f"(query_parser)final outputs: {candidate_outputs[:3]}")
 

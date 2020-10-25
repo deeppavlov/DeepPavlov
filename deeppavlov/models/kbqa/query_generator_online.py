@@ -162,21 +162,30 @@ class QueryGeneratorOnline(QueryGeneratorBase):
         type_combs = make_combs(selected_type_ids, permut=False)
         log.debug(f"(query_parser)type_combs: {type_combs[:3]}")
         confidence = 0.0
-        for comb_num, combs in enumerate(itertools.product(entity_combs, type_combs, rel_combs)):
+        queries_list = []
+        parser_info_list = []
+        all_combs_list = list(itertools.product(entity_combs, type_combs, rel_combs))
+        for comb_num, combs in enumerate(all_combs_list):
             filled_query, filter_rels = fill_online_query(query, combs[0], combs[1], combs[2], fill_rel_variables,
                                                           filter_rel_variables, rels_list_for_filter)
             if comb_num == 0:
                 log.debug(f"\n_______________________________\nfilled query: {filled_query}\n_______________________________\n")
-            candidate_output = self.wiki_parser.get_answer(filled_query)
+            queries_list.append((filled_query, return_if_found))
+            parser_info_list.append("query_execute")
             
-            out_vars = filter_rels + rels_from_query + answer_ent
+        candidate_outputs_list = self.wiki_parser(parser_info_list, queries_list)
+        outputs_len = len(candidate_outputs_list)
+        all_combs_list = all_combs_list[:outputs_len]
+        out_vars = filter_rels + rels_from_query + answer_ent
+        
+        candidate_outputs = []
+        for combs, candidate_output in zip(all_combs_list, candidate_outputs_list):
             candidate_output = [output for output in candidate_output
                 if (all([filter_value in output[filter_var[1:]]["value"] for filter_var, filter_value in property_types.items()])
                 and all([not output[ent[1:]]["value"].startswith("http://www.wikidata.org/value") for ent in answer_ent]))]
             candidate_outputs += [combs[2][:-1] + [output[var[1:]]["value"] for var in out_vars] + [confidence]
                                   for output in candidate_output]
-            if return_if_found and candidate_output:
-                return candidate_outputs
+        
         log.debug(f"(query_parser)loop time: {datetime.datetime.now() - start_time}")
         log.debug(f"(query_parser)final outputs: {candidate_outputs[:3]}")
 

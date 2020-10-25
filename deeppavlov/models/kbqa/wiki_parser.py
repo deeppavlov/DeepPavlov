@@ -15,40 +15,68 @@
 import datetime
 import re
 from logging import getLogger
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Union, Any
 from collections import namedtuple
 
 from hdt import HDTDocument
 
+from deeppavlov.core.common.file import load_pickle
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 
 log = getLogger(__name__)
 
-
 @register('wiki_parser')
 class WikiParser:
     """This class extract relations, objects or triplets from Wikidata HDT file"""
 
-    def __init__(self, wiki_filename: str, lang: str = "@en", **kwargs) -> None:
+    def __init__(self, wiki_filename: str, file_format: str = "hdt", lang: str = "@en", **kwargs) -> None:
         """
 
         Args:
-            wiki_filename: hdt file with wikidata
+            file_format: format of Wikidata file
             lang: Russian or English language
             **kwargs:
         """
-        log.debug(f'__init__ wiki_filename: {wiki_filename}')
-        wiki_path = expand_path(wiki_filename)
         self.description_rel = "http://schema.org/description"
+        self.file_format = file_format
+        self.wiki_filename = str(expand_path(wiki_filename))
+        if self.file_format == "hdt":
+            self.document = HDTDocument(self.wiki_filename)
+        elif self.file_format == "pickle":
+            self.document = load_pickle(self.wiki_filename)
+        else:
+            raise ValueError("Unsupported file format")
         self.lang = lang
-        self.document = HDTDocument(str(wiki_path))
+        
+    def __call__(self, parser_info_list: List[str], queries_list: List[Any]) -> List[Any]:
+        wiki_parser_output = []
+        for parser_info, query in zip(parser_info_list, queries_list):
+            if parser_info == "query_execute":
+                *query_to_execute, return_if_found = query
+                candidate_output = self.execute(*query_to_execute)
+                wiki_parser_output.append(candidate_output)
+                if return_if_found and candidate_output:
+                    return wiki_parser_output
+            elif parser_info == "find_rels":
+                wiki_parser_output += self.find_rels(*query)
+            elif parser_info == "find_label":
+                wiki_parser_output.append(self.find_label(*query))
+            elif parser_info == "find_triplets":
+                if self.file_format == "hdt":
+                    tr, c = self.document.search_triples(*query)
+                    wiki_parser_output.append(list(tr))
+                else:
+                    wiki_parser_output.append(self.document.get(query, {}))
+            else:
+                raise ValueError("Unsupported query type")
+        return wiki_parser_output
 
-    def __call__(self, what_return: List[str],
+    def execute(self, what_return: List[str],
                  query_seq: List[List[str]],
-                 filter_info: List[Tuple[str]],
-                 order_info: namedtuple) -> List[List[str]]:
+                 filter_info: List[Tuple[str]] = None,
+                 order_info: namedtuple = None) -> List[List[str]]:
         """
             Let us consider an example of the question "What is the deepest lake in Russia?"
             with the corresponding SPARQL query            
@@ -64,54 +92,55 @@ class WikiParser:
         """
         extended_combs = []
         combs = []
-        for n, query in enumerate(query_seq):
-            unknown_elem_positions = [(pos, elem) for pos, elem in enumerate(query) if elem.startswith('?')]
-            """
-                n = 0, query = ["?ent", "http://www.wikidata.org/prop/direct/P17", "http://www.wikidata.org/entity/Q159"]
-                       unknown_elem_positions = ["?ent"]
-                n = 1, query = ["?ent", "http://www.wikidata.org/prop/direct/P31", "http://www.wikidata.org/entity/Q23397"]
-                       unknown_elem_positions = [(0, "?ent")]
-                n = 2, query = ["?ent", "http://www.wikidata.org/prop/direct/P4511", "?obj"]
-                       unknown_elem_positions = [(0, "?ent"), (2, "?obj")]
-            """
-            if n == 0:
-                combs = self.search(query, unknown_elem_positions)
-                # combs = [{"?ent": "http://www.wikidata.org/entity/Q5513"}, ...]
-            else:
-                if combs:
-                    known_elements = []
-                    extended_combs = []
-                    for elem in query:
-                        if elem in combs[0].keys():
-                            known_elements.append(elem)
-                    for comb in combs:
-                        """
-                            n = 1
-                            query = ["?ent", "http://www.wikidata.org/prop/direct/P31", "http://www.wikidata.org/entity/Q23397"]
-                            comb = {"?ent": "http://www.wikidata.org/entity/Q5513"}
-                            known_elements = ["?ent"], known_values = ["http://www.wikidata.org/entity/Q5513"]
-                            filled_query = ["http://www.wikidata.org/entity/Q5513", 
-                                            "http://www.wikidata.org/prop/direct/P31", 
-                                            "http://www.wikidata.org/entity/Q23397"]
-                            new_combs = [["http://www.wikidata.org/entity/Q5513", 
-                                          "http://www.wikidata.org/prop/direct/P31", 
-                                          "http://www.wikidata.org/entity/Q23397"], ...]
-                            extended_combs = [{"?ent": "http://www.wikidata.org/entity/Q5513"}, ...]
-                        """                        
-                        known_values = [comb[known_elem] for known_elem in known_elements]
-                        for known_elem, known_value in zip(known_elements, known_values):
-                            filled_query = [elem.replace(known_elem, known_value) for elem in query]
-                            new_combs = self.search(filled_query, unknown_elem_positions)
-                            for new_comb in new_combs:
-                                extended_combs.append({**comb, **new_comb})
-                combs = extended_combs
+        if "qualifier" not in filter_info:
+            for n, query in enumerate(query_seq):
+                unknown_elem_positions = [(pos, elem) for pos, elem in enumerate(query) if elem.startswith('?')]
+                """
+                    n = 0, query = ["?ent", "http://www.wikidata.org/prop/direct/P17", "http://www.wikidata.org/entity/Q159"]
+                           unknown_elem_positions = ["?ent"]
+                    n = 1, query = ["?ent", "http://www.wikidata.org/prop/direct/P31", "http://www.wikidata.org/entity/Q23397"]
+                           unknown_elem_positions = [(0, "?ent")]
+                    n = 2, query = ["?ent", "http://www.wikidata.org/prop/direct/P4511", "?obj"]
+                           unknown_elem_positions = [(0, "?ent"), (2, "?obj")]
+                """
+                if n == 0:
+                    combs = self.search(query, unknown_elem_positions)
+                    # combs = [{"?ent": "http://www.wikidata.org/entity/Q5513"}, ...]
+                else:
+                    if combs:
+                        known_elements = []
+                        extended_combs = []
+                        for elem in query:
+                            if elem in combs[0].keys():
+                                known_elements.append(elem)
+                        for comb in combs:
+                            """
+                                n = 1
+                                query = ["?ent", "http://www.wikidata.org/prop/direct/P31", "http://www.wikidata.org/entity/Q23397"]
+                                comb = {"?ent": "http://www.wikidata.org/entity/Q5513"}
+                                known_elements = ["?ent"], known_values = ["http://www.wikidata.org/entity/Q5513"]
+                                filled_query = ["http://www.wikidata.org/entity/Q5513", 
+                                                "http://www.wikidata.org/prop/direct/P31", 
+                                                "http://www.wikidata.org/entity/Q23397"]
+                                new_combs = [["http://www.wikidata.org/entity/Q5513", 
+                                              "http://www.wikidata.org/prop/direct/P31", 
+                                              "http://www.wikidata.org/entity/Q23397"], ...]
+                                extended_combs = [{"?ent": "http://www.wikidata.org/entity/Q5513"}, ...]
+                            """                        
+                            known_values = [comb[known_elem] for known_elem in known_elements]
+                            for known_elem, known_value in zip(known_elements, known_values):
+                                filled_query = [elem.replace(known_elem, known_value) for elem in query]
+                                new_combs = self.search(filled_query, unknown_elem_positions)
+                                for new_comb in new_combs:
+                                    extended_combs.append({**comb, **new_comb})
+                    combs = extended_combs
 
         if combs:
             if filter_info:
                 for filter_elem, filter_value in filter_info:
                     combs = [comb for comb in combs if filter_value in comb[filter_elem]]
 
-            if order_info.variable is not None:
+            if order_info and not isinstance(order_info, list) and order_info.variable is not None:
                 reverse = True if order_info.sorting_order == "desc" else False
                 sort_elem = order_info.variable
                 combs = sorted(combs, key=lambda x: float(x[sort_elem].split('^^')[0].strip('"')), reverse=reverse)
@@ -127,48 +156,74 @@ class WikiParser:
     def search(self, query: List[str], unknown_elem_positions: List[Tuple[int, str]]) -> List[Dict[str, str]]:
         query = list(map(lambda elem: "" if elem.startswith('?') else elem, query))
         subj, rel, obj = query
-        triplets, c = self.document.search_triples(subj, rel, obj)
-        if rel == self.description_rel:
-            triplets = [triplet for triplet in triplets if triplet[2].endswith(self.lang)]
-        combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
+        if self.file_format == "hdt":
+            triplets, c = self.document.search_triples(subj, rel, obj)
+            if rel == self.description_rel:
+                triplets = [triplet for triplet in triplets if triplet[2].endswith(self.lang)]
+            combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
+        else:
+            if subj:
+                direction = "forw"
+            if obj:
+                direction = "backw"
+            subj = subj.split('/')[-1]
+            triplets = self.document.get(subj, {}).get(direction, [])
+            triplets = [[subj, triplet[0], obj] for triplet in triplets for obj in triplet[1:]]
+            if rel:
+                if rel == self.description_rel:
+                    triplets = [triplet for triplet in triplets if triplet[1] == "descr_en"]
+                else:
+                    rel = rel.split('/')[-1]
+                    triplets = [triplet for triplet in triplets if triplet[1] == rel]
+            combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
         return combs
 
     def find_label(self, entity: str, question: str) -> str:
         entity = str(entity).replace('"', '')
-        if entity.startswith("Q"):
-            # example: "Q5513"
-            entity = "http://www.wikidata.org/entity/" + entity
-            # "http://www.wikidata.org/entity/Q5513"
+        if self.file_format == "hdt":
+            if entity.startswith("Q"):
+                # example: "Q5513"
+                entity = "http://www.wikidata.org/entity/" + entity
+                # "http://www.wikidata.org/entity/Q5513"
 
-        if entity.startswith("http://www.wikidata.org/entity/"):
-            labels, cardinality = self.document.search_triples(entity, "http://www.w3.org/2000/01/rdf-schema#label", "")
-            # labels = [["http://www.wikidata.org/entity/Q5513", "http://www.w3.org/2000/01/rdf-schema#label", '"Lake Baikal"@en'], ...]
-            for label in labels:
-                if label[2].endswith(self.lang):
-                    found_label = label[2].strip(self.lang).replace('"', '')
-                    return found_label
+            if entity.startswith("http://www.wikidata.org/entity/"):
+                labels, c = self.document.search_triples(entity, "http://www.w3.org/2000/01/rdf-schema#label", "")
+                # labels = [["http://www.wikidata.org/entity/Q5513", "http://www.w3.org/2000/01/rdf-schema#label", '"Lake Baikal"@en'], ...]
+                for label in labels:
+                    if label[2].endswith(self.lang):
+                        found_label = label[2].strip(self.lang).replace('"', '')
+                        return found_label
 
-        elif entity.endswith(self.lang):
-            # entity: '"Lake Baikal"@en'
-            entity = entity[:-3]
-            return entity
+            elif entity.endswith(self.lang):
+                # entity: '"Lake Baikal"@en'
+                entity = entity[:-3]
+                return entity
 
-        elif "^^" in entity:
-            """
-                examples:
-                    '"1799-06-06T00:00:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>' (date)
-                    '"+1642"^^<http://www.w3.org/2001/XMLSchema#decimal>' (number)
-            """
-            entity = entity.split("^^")[0]
-            for token in ["T00:00:00Z", "+"]:
-                entity = entity.replace(token, '')
-            year = re.findall("([\d]{3,4})-[\d]{1,2}-[\d]{1,2}", entity)
-            if "how old" in question.lower() and year:
-                entity = datetime.datetime.now().year - int(year[0])
-            return entity
+            elif "^^" in entity:
+                """
+                    examples:
+                        '"1799-06-06T00:00:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>' (date)
+                        '"+1642"^^<http://www.w3.org/2001/XMLSchema#decimal>' (number)
+                """
+                entity = entity.split("^^")[0]
+                for token in ["T00:00:00Z", "+"]:
+                    entity = entity.replace(token, '')
+                year = re.findall("([\d]{3,4})-[\d]{1,2}-[\d]{1,2}", entity)
+                if "how old" in question.lower() and year:
+                    entity = datetime.datetime.now().year - int(year[0])
+                return entity
 
-        elif entity.isdigit():
-            return entity
+            elif entity.isdigit():
+                return entity
+        if self.file_format == "pickle":
+            if entity:
+                if entity.startswith("Q"):
+                    triplets = self.document.get(entity, {}).get("forw", [])
+                    for triplet in triplets:
+                        if triplet[0] == "name_en":
+                            return triplet[1]
+                else:
+                    return entity
 
         return "Not Found"
 
@@ -181,14 +236,19 @@ class WikiParser:
         return aliases
 
     def find_rels(self, entity: str, direction: str, rel_type: str = "no_type") -> List[str]:
-        if direction == "forw":
-            triplets, num = self.document.search_triples(f"http://www.wikidata.org/entity/{entity}", "", "")
-        else:
-            triplets, num = self.document.search_triples("", "", f"http://www.wikidata.org/entity/{entity}")
+        if self.file_format == "hdt":
+            if direction == "forw":
+                query = [f"http://www.wikidata.org/entity/{entity}", "", ""]
+            else:
+                query = ["", "", f"http://www.wikidata.org/entity/{entity}"]
+            triplets, c = self.document.search_triples(*query)
 
-        if rel_type != "no_type":
-            start_str = f"http://www.wikidata.org/prop/{rel_type}"
-        else:
-            start_str = "http://www.wikidata.org/prop/P"
-        rels = [triplet[1] for triplet in triplets if triplet[1].startswith(start_str)]
+            if rel_type != "no_type":
+                start_str = f"http://www.wikidata.org/prop/{rel_type}"
+            else:
+                start_str = "http://www.wikidata.org/prop/P"
+            rels = [triplet[1] for triplet in triplets if triplet[1].startswith(start_str)]
+        if self.file_format == "pickle":
+            triplets = self.document.get(entity, {}).get(direction, [])
+            rels = [triplet[0] for triplet in triplets if triplet[0].startswith("P")]
         return rels

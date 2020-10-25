@@ -135,7 +135,10 @@ def fill_online_query(query: List[str], entity_comb: List[str], type_comb: List[
             query = query.replace("filter(", f"filter({'&&'.join(candidate_rel_filters)}&&")
         else:
             query = query.replace(" }", f" filter({'&&'.join(candidate_rel_filters)}) }}")
+        
+        query = query.replace(" where", f" {' '.join(new_rels)} where")
+        if rel_list_for_filter[0][0] == "P0" and len(entity_comb) == 2:
+            query = f"select ?ent ?p1 where {{ wd:{entity_comb[0]} ?p1 ?ent filter((?p1=schema:description)&&(lang(?ent)='en'))}}"
+            
     
-        query = query.replace(" where", f" {' '.join(new_rels)} where")    
-
     return query, new_rels

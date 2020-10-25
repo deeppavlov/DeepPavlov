@@ -96,7 +96,7 @@ class TemplateMatcher(Serializable):
                 type_lengths = [len(entity_type) for entity_type in types_cand]
                 unuseful_tokens_len = sum([len(unuseful_tok) for unuseful_tok in unuseful_tokens])
                 log.debug(f"found template: {template}, {found_ent}")
-                match, entities_cand = self.match_template_and_ner(entities_cand, entities_from_ner)
+                match, entities_cand = self.match_template_and_ner(entities_cand, entities_from_ner, template_found)
                 if match and (0 not in entity_lengths or 0 not in type_lengths and entity_num_tokens):
                     cur_len = sum(entity_lengths) + sum(type_lengths)
                     log.debug(f"lengths: entity+type {cur_len}, question {question_length}, "
@@ -121,10 +121,10 @@ class TemplateMatcher(Serializable):
         question = question.replace('  ', ' ')
         return question
 
-    def match_template_and_ner(self, entities_cand: List[str], entities_from_ner: List[str]):
+    def match_template_and_ner(self, entities_cand: List[str], entities_from_ner: List[str], template: str):
         entities_from_ner = [entity.lower() for entity in entities_from_ner]
         entities_from_ner = [re.sub(r"^(a |the )", '', entity) for entity in entities_from_ner]
         entities_cand = [re.sub(r"^(a |the )", '', entity) for entity in entities_cand]
         log.debug(f"entities_cand {entities_cand} entities_from_ner {entities_from_ner}")
-        match = set(entities_cand) == set(entities_from_ner) or not entities_from_ner
+        match = set(entities_cand) == set(entities_from_ner) or not entities_from_ner or template == "how to xxx?"
         return match, entities_cand
