@@ -160,11 +160,11 @@ class QueryGeneratorBase(Component, Serializable):
                              question: str = None) -> List[List[str]]:
         entity_ids = []
         if what_to_link == "entities":
-            el_output = self.linker_entities([entities], [template_found])
+            el_output = self.linker_entities([entities], [template_found], [question])
             if self.use_api_requester:
                 el_output = el_output[0]
             entity_ids, _ = el_output
-            if not self.use_api_requester:
+            if not self.use_api_requester and entity_ids:
                 entity_ids = entity_ids[0]
         if what_to_link == "types":
             entity_ids, _ = self.linker_types([entities])

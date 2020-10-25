@@ -185,28 +185,18 @@ class KBEntityLinker(Component, Serializable):
 
     def __call__(self, entity_substr_batch: List[List[str]],
                  templates_batch: List[str] = None,
-                 entity_positions_batch: List[List[List[int]]] = None,
-                 context_tokens: List[List[str]] = None) -> Tuple[List[List[List[str]]], List[List[List[float]]]]:
+                 context_batch: List[str] = None) -> Tuple[List[List[List[str]]], List[List[List[float]]]]:
         entity_ids_batch = []
         confidences_batch = []
-        if entity_positions_batch is None:
-            entity_positions_batch = [[[0] for i in range(len(entities_list))] for entities_list in entity_substr_batch]
         if templates_batch is None:
             templates_batch = ["" for i in range(len(entity_substr_batch))]
-        for entity_substr_list, template_found, entity_positions_list in \
-                zip(entity_substr_batch, templates_batch, entity_positions_batch):
+        if context_batch is None:
+            context_batch = ["" for i in range(len(entity_substr_batch))]
+        for entity_substr_list, template_found, context in zip(entity_substr_batch, templates_batch, context_batch):
             entity_ids_list = []
             confidences_list = []
-            for entity_substr, entity_pos in zip(entity_substr_list, entity_positions_list):
-                context = ""
-                if self.use_descriptions:
-                    if self.include_mention:
-                        context = ' '.join(context_tokens[:entity_pos[0]] + ["[ENT]"] +
-                                   context_tokens[entity_pos[0]:entity_pos[-1]+1] + ["[ENT]"] +
-                                   context_tokens[entity_pos[-1]+1:])
-                    else:
-                        context = ' '.join(context_tokens[:entity_pos[0]]+["[ENT]"] + context_tokens[entity_pos[-1]+1:])
-                entity_ids, confidences = self.link_entity(entity_substr, template_found, context)
+            for entity_substr in entity_substr_list:
+                entity_ids, confidences = self.link_entity(entity_substr, context, template_found)
                 if self.num_entities_to_return == 1:
                     if entity_ids:
                         entity_ids_list.append(entity_ids[0])
@@ -217,8 +207,8 @@ class KBEntityLinker(Component, Serializable):
                 else:
                     entity_ids_list.append(entity_ids[:self.num_entities_to_return])
                     confidences_list.append(confidences[:self.num_entities_to_return])
-        entity_ids_batch.append(entity_ids_list)
-        confidences_batch.append(confidences_list)
+            entity_ids_batch.append(entity_ids_list)
+            confidences_batch.append(confidences_list)
 
         return entity_ids_batch, confidences_batch
 
@@ -253,24 +243,36 @@ class KBEntityLinker(Component, Serializable):
         word_tokens = [word for word in word_tokens if word not in self.stopwords]
         candidate_entities = []
 
+        candidate_entities_for_tokens = []
         for tok in word_tokens:
+            candidate_entities_for_tok = set()
             if len(tok) > 1:
                 found = False
                 if tok in self.inverted_index:
-                    candidate_entities += self.inverted_index[tok]
+                    candidate_entities_for_tok = set(self.inverted_index[tok])
                     found = True
 
                 if self.lemmatize:
-                    morph_parse_tok = self.morph.parse(tok)[0]
-                    lemmatized_tok = morph_parse_tok.normal_form
+                    if self.lang_str == "@ru":
+                        morph_parse_tok = self.morph.parse(tok)[0]
+                        lemmatized_tok = morph_parse_tok.normal_form
+                    if self.lang_str == "@en":
+                        lemmatized_tok = self.lemmatizer.lemmatize(tok)
+                        
                     if lemmatized_tok != tok and lemmatized_tok in self.inverted_index:
-                        candidate_entities += self.inverted_index[lemmatized_tok]
+                        candidate_entities_for_tok = \
+                            candidate_entities_for_tok.union(set(self.inverted_index[lemmatized_tok]))
                         found = True
 
                 if not found and self.use_prefix_tree:
                     words_with_levens_1 = self.searcher.search(tok, d=1)
                     for word in words_with_levens_1:
-                        candidate_entities += self.inverted_index[word[0]]
+                        candidate_entities_for_tok = \
+                            candidate_entities_for_tok.union(set(self.inverted_index[word[0]]))
+                candidate_entities_for_tokens.append(candidate_entities_for_tok)
+        
+        for candidate_entities_for_tok in candidate_entities_for_tokens:
+            candidate_entities += list(candidate_entities_for_tok)
         candidate_entities = Counter(candidate_entities).most_common()
         candidate_entities = [(entity_num, self.entities_list[entity_num], entity_freq, count) for \
                                                 (entity_num, entity_freq), count in candidate_entities]
