@@ -80,7 +80,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
     @classmethod
     @overrides
-    def read(cls, data_path: str, dialogs: bool = False) -> Dict[str, List]:
+    def read(cls, data_path: str, dialogs: bool = False, ignore_slots=False) -> Dict[str, List]:
         """
         Parameters:
             data_path: path to read dataset from
@@ -114,7 +114,8 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
         data = {short2long_subsample_name[subsample_name_short]:
                     cls._read_story(Path(data_path, cls._data_fname(subsample_name_short)),
-                                    dialogs, domain_knowledge, intent2slots2text, slot_name2text2value)
+                                    dialogs, domain_knowledge, intent2slots2text, slot_name2text2value,
+                                    ignore_slots=ignore_slots)
                 for subsample_name_short in cls.VALID_DATATYPES}
 
         return data
@@ -198,7 +199,8 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                     dialogs: bool,
                     domain_knowledge: DomainKnowledge,
                     intent2slots2text: Dict[str, Dict[SLOT2VALUE_PAIRS_TUPLE, List]],
-                    slot_name2text2value: Dict[str, Dict[str, str]]) \
+                    slot_name2text2value: Dict[str, Dict[str, str]],
+                    ignore_slots=False) \
             -> Union[List[List[Tuple[Dict[str, bool], Dict[str, Any]]]], List[Tuple[Dict[str, bool], Dict[str, Any]]]]:
         """
         Reads stories from the specified path converting them to go-bot format on the fly.
@@ -250,7 +252,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                 curr_story_bad = False
             elif line.startswith('*'):
                 # user actions are started in dataset with *
-                user_action, slots_dstc2formatted = cls._parse_user_intent(line)
+                user_action, slots_dstc2formatted = cls._parse_user_intent(line, ignore_slots=ignore_slots)
                 slots_actual_values = cls._clarify_slots_values(slot_name2text2value, slots_dstc2formatted)
                 try:
                     slots_to_exclude, slots_used_values, action_for_text = cls._choose_slots_for_whom_exists_text(
@@ -355,13 +357,15 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         return slots_key
 
     @staticmethod
-    def _parse_user_intent(line: str) -> Tuple[str, List[List]]:
+    def _parse_user_intent(line: str, ignore_slots=False) -> Tuple[str, List[List]]:
         intent = line.strip('*').strip()
         if '{' not in intent:
             intent = intent + "{}"  # the prototypical intent is "intent_name{slot1: value1, slotN: valueN}"
         user_action, slots_info = intent.split('{', 1)
         slots_info = json.loads('{' + slots_info)
         slots_dstc2formatted = [[slot_name, slot_value] for slot_name, slot_value in slots_info.items()]
+        if ignore_slots:
+            slots_dstc2formatted = dict()
         return user_action, slots_dstc2formatted
 
     @staticmethod
