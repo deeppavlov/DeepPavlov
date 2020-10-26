@@ -42,7 +42,7 @@ class QueryGenerator(QueryGeneratorBase):
                  rel_ranker: Union[RelRankerInfer, RelRankerBertInfer],
                  entities_to_leave: int = 5,
                  rels_to_leave: int = 7,
-                 max_comb_num: int = 50,
+                 max_comb_num: int = 1000,
                  return_answers: bool = False, *args, **kwargs) -> None:
         """
 
@@ -60,6 +60,8 @@ class QueryGenerator(QueryGeneratorBase):
         self.rels_to_leave = rels_to_leave
         self.max_comb_num = max_comb_num
         self.return_answers = return_answers
+        self.replace_tokens = [("wdt:p31", "wdt:P31"), ("pq:p580", "pq:P580"),
+                               ("pq:p582", "pq:P582"), ("pq:p585", "pq:P585")]
         super().__init__(wiki_parser = self.wiki_parser, rel_ranker = self.rel_ranker,
             entities_to_leave = self.entities_to_leave, rels_to_leave = self.rels_to_leave,
             return_answers = self.return_answers, *args, **kwargs)
@@ -95,7 +97,9 @@ class QueryGenerator(QueryGeneratorBase):
                      rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str]]:
         candidate_outputs = []
         question_tokens = nltk.word_tokenize(question)
-        query = query_info["query_template"].lower().replace("wdt:p31", "wdt:P31")
+        query = query_info["query_template"].lower()
+        for old_tok, new_tok in self.replace_tokens:
+            query = query.replace(old_tok, new_tok)
         log.debug(f"\n_______________________________\nquery: {query}\n_______________________________\n")
         rels_for_search = query_info["rank_rels"]
         rel_types = query_info["rel_types"]

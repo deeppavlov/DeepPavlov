@@ -143,7 +143,14 @@ class WikiParser:
             if order_info and not isinstance(order_info, list) and order_info.variable is not None:
                 reverse = True if order_info.sorting_order == "desc" else False
                 sort_elem = order_info.variable
-                combs = sorted(combs, key=lambda x: float(x[sort_elem].split('^^')[0].strip('"')), reverse=reverse)
+                for i in range(len(combs)):
+                    value_str = combs[i][sort_elem].split('^^')[0].strip('"')
+                    if value_str.endswith("T00:00:00Z"):
+                        value_str = value_str.strip("T00:00:00Z")
+                        combs[i][sort_elem] = value_str
+                    else:
+                        combs[i][sort_elem] = float(value_str)
+                combs = sorted(combs, key=lambda x: x[sort_elem], reverse=reverse)
                 combs = [combs[0]]
 
             if what_return[-1].startswith("count"):

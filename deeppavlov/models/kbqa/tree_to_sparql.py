@@ -158,12 +158,20 @@ class TreeToSparql(Component):
                                "где", "чем", "сколько"}
             self.how_many = "сколько"
             self.change_root_tokens = {"каким был", "какой была"}
-            self.temporal_order_tokens = {"первый", "последний"}
+            self.first_tokens = {"первый"}
+            self.last_tokens = {"последний"}
+            self.begin_tokens = {"начинать", "начать"}
+            self.end_tokens = {"завершить", "завершать", "закончить"}
+            self.ranking_tokens = {"самый"}
         elif self.lang == "eng":
             self.q_pronouns = {"what", "who", "how", "when", "where", "which"}
             self.how_many = "how many"
             self.change_root_tokens = ""
-            self.temporal_order_tokens = {"first", "last"}
+            self.first_tokens = {"first"}
+            self.last_tokens = {"last"}
+            self.begin_tokens = set()
+            self.end_tokens = set()
+            self.ranking_tokens = set()
         else:
             raise ValueError(f"unsupported language {lang}")
         self.sparql_queries_filename = expand_path(sparql_queries_filename)
@@ -232,8 +240,15 @@ class TreeToSparql(Component):
                 self.root_entity = False
                 if root.ord - 1 in positions:
                     self.root_entity = True
+                    
+                temporal_order = self.find_first_last(new_root)
+                new_root_nf = self.morph.parse(new_root.form)[0].normal_form
+                if new_root_nf in self.begin_tokens or new_root_nf in self.end_tokens:
+                    temporal_order = new_root_nf
+                ranked_entity = self.find_ranking_tokens(new_root)
                 query_nums, entities_dict, types_dict = self.build_query(new_root, unknown_branch, root_desc,
-                                     unknown_node, modifiers, clause_modifiers, clause_node, positions, count=count)
+                        unknown_node, modifiers, clause_modifiers, clause_node, positions, count,
+                        temporal_order, ranked_entity)
     
                 if self.lang == "rus":
                     question = ' '.join([node.form for node in tree.descendants \
@@ -436,30 +451,47 @@ class TreeToSparql(Component):
             for node in nodes:
                 node_desc = defaultdict(set)
                 for elem in node.children:
-                    node_desc[elem.deprel].add(self.morph.parse(elem.form.lower())[0].inflect({"masc", "sing", "nomn"}).word)
+                    parsed_elem = self.morph.parse(elem.form.lower())[0].inflect({"masc", "sing", "nomn"})
+                    if parsed_elem is not None:
+                        node_desc[elem.deprel].add(parsed_elem.word)
+                    else:
+                        node_desc[elem.deprel].add(elem.form)
                 if "amod" in node_desc.keys() and "nmod" in node_desc.keys() and \
-                   node_desc["amod"].intersection(self.temporal_order_tokens):
-                    first_or_last = node_desc["amod"].intersection(self.temporal_order_tokens)
+                   node_desc["amod"].intersection(self.first_tokens | self.last_tokens):
+                    first_or_last = ' '.join(node_desc["amod"].intersection(self.first_tokens | self.last_tokens))
                     return first_or_last
             nodes = [elem for node in nodes for elem in node.children]
         return first_or_last
+        
+    def find_ranking_tokens(self, node: Node) -> Tuple[bool, str]:
+        ranked_entity = ""
+        for elem in node.descendants:
+            if elem.deprel == "nsubj":
+                for nd in elem.descendants:
+                    if self.morph.parse(nd.form)[0].normal_form in self.ranking_tokens:
+                        ranked_entity = elem.form
+                        return ranked_entity
+        return ranked_entity
 
     def build_query(self, root: Node, unknown_branch: Node, root_desc: Dict[str, List[Node]],
                           unknown_node: Node, unknown_modifiers: List[Node], clause_modifiers: List[Node], 
                           clause_node: Node, positions: List[int],
-                          count: bool = False, order: bool = False) -> Tuple[List[str], List[str], List[str]]:
+                          count: bool = False, temporal_order: str = "",
+                          ranked_entity: str = "") -> Tuple[List[str], List[str], List[str]]:
         query_nums = []
         grounded_entities_list = []
         types_list = []
         modifiers_list = []
         qualifier_entities_list = []
         found_year_or_number = False
+        order = False
         root_desc_deprels = []
         for key in root_desc.keys():
             for i in range(len(root_desc[key])):
                 root_desc_deprels.append(key)
         root_desc_deprels = sorted(root_desc_deprels)
         log.debug(f"build_query: root_desc.keys, {root_desc_deprels}, positions {positions}")
+        log.debug(f"temporal order {temporal_order}, ranked entity {ranked_entity}")
         if root_desc_deprels in [["nsubj", "obl"],
                                  ["nsubj", "obj"],
                                  ["nsubj", "xcomp"],
@@ -550,6 +582,23 @@ class TreeToSparql(Component):
             if not self.wh_leaf:
                 grounded_entities_list = self.find_entities(root_desc["nmod"][0], positions, cut_clause=True)
                 found_year_or_number = self.find_year_or_number(root_desc["nummod"][0])
+                
+        if temporal_order:
+            for deprel in root_desc:
+                for node in root_desc[deprel]:
+                    entities = self.find_entities(node, positions, cut_clause=True)
+                    if entities:
+                        grounded_entities_list = entities
+                        break
+                if grounded_entities_list:
+                    break
+            if temporal_order in self.first_tokens:
+                query_nums.append("22")
+                query_nums.append("23")
+            if temporal_order in self.last_tokens:
+                query_nums.append("24")
+            if temporal_order in self.end_tokens:
+                query_nums.append("24")
 
         entities_list = grounded_entities_list + qualifier_entities_list + modifiers_list
  
@@ -559,10 +608,12 @@ class TreeToSparql(Component):
         qualifiers_length = len(qualifier_entities_list)
         if qualifiers_length > 0 or modifiers_length:
             types_length = 0
-        for num, template in self.template_queries.items():
-            if [grounded_entities_length, types_length, modifiers_length,
-                qualifiers_length, found_year_or_number, count, order] == list(template["syntax_structure"].values()):
-                query_nums.append(num)
+            
+        if not temporal_order:
+            for num, template in self.template_queries.items():
+                if [grounded_entities_length, types_length, modifiers_length,
+                    qualifiers_length, found_year_or_number, count, order] == list(template["syntax_structure"].values()):
+                    query_nums.append(num)
 
         log.debug(f"tree_to_sparql, grounded entities {grounded_entities_list}")
         log.debug(f"tree_to_sparql, types {types_list}")
