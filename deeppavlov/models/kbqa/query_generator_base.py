@@ -214,7 +214,8 @@ class QueryGeneratorBase(Component, Serializable):
                 for template_num, entities_and_types_select in alternative_templates:
                     candidate_outputs = self.query_parser(question, self.template_queries[template_num],
                                         entities_and_types_select, entity_ids, type_ids, rels_from_template)
-                    return candidate_outputs
+                    if candidate_outputs:
+                        return candidate_outputs
 
         log.debug("candidate_rels_and_answers:\n" + '\n'.join([str(output) for output in candidate_outputs[:5]]))
 

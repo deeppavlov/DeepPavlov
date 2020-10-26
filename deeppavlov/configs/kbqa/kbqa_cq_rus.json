@@ -98,6 +98,8 @@
         "ranker": {"config_path": "{CONFIGS_PATH}/classifiers/rel_ranking_bert_rus.json"},
         "wiki_parser": "#wiki_p",
         "batch_size": 32,
+        "return_all_possible_answers": true,
+        "return_answer_ids": true,
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "rel_q2name_filename": "wiki_dict_properties_rus.pickle"
       },
@@ -116,6 +118,7 @@
         "entities_to_leave": 9,
         "rels_to_leave": 10,
         "return_answers": true,
+        "return_all_possible_answers": true,
         "syntax_structure_known": true,
         "in": ["x", "x_sanitized", "query_nums", "entities_dict", "types_dict"],
         "out": ["answers"]

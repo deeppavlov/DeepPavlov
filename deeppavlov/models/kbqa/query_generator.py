@@ -16,7 +16,7 @@ import itertools
 import re
 from logging import getLogger
 from typing import Tuple, List, Optional, Union, Dict, Any
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 import numpy as np
 import nltk
@@ -42,7 +42,8 @@ class QueryGenerator(QueryGeneratorBase):
                  rel_ranker: Union[RelRankerInfer, RelRankerBertInfer],
                  entities_to_leave: int = 5,
                  rels_to_leave: int = 7,
-                 max_comb_num: int = 1000,
+                 max_comb_num: int = 10000,
+                 return_all_possible_answers: bool = False,
                  return_answers: bool = False, *args, **kwargs) -> None:
         """
 
@@ -59,6 +60,7 @@ class QueryGenerator(QueryGeneratorBase):
         self.entities_to_leave = entities_to_leave
         self.rels_to_leave = rels_to_leave
         self.max_comb_num = max_comb_num
+        self.return_all_possible_answers = return_all_possible_answers
         self.return_answers = return_answers
         self.replace_tokens = [("wdt:p31", "wdt:P31"), ("pq:p580", "pq:P580"),
                                ("pq:p582", "pq:P582"), ("pq:p585", "pq:P585")]
@@ -171,7 +173,7 @@ class QueryGenerator(QueryGeneratorBase):
             query_hdt_seq = [
                 fill_query(query_hdt_elem, combs[0], combs[1], combs[2]) for query_hdt_elem in query_sequence]
             if comb_num == 0:
-                log.debug(f"\n_______________________________\nfilled query: {query_hdt_seq}\n_______________________________\n")
+                log.debug(f"\n__________________________\nfilled query: {query_hdt_seq}\n__________________________\n")
             queries_list.append((rels_from_query + answer_ent, query_hdt_seq, filter_info, order_info, return_if_found))
             parser_info_list.append("query_execute")
             if comb_num == self.max_comb_num:
@@ -189,6 +191,14 @@ class QueryGenerator(QueryGeneratorBase):
             for combs, confidence, candidate_output in zip(all_combs_list, confidences_list, candidate_outputs_list):
                 candidate_outputs += [[rel for rel, score in combs[2][:-1]] + output + [confidence]
                                       for output in candidate_output]
+            if self.return_all_possible_answers:
+                candidate_outputs_dict = defaultdict(list)
+                for candidate_output in candidate_outputs:
+                    candidate_outputs_dict[tuple(candidate_output[:-2])].append(candidate_output[-2:])
+                candidate_outputs = []
+                for candidate_rel_comb, candidate_output in candidate_outputs_dict.items():
+                    candidate_outputs.append(list(candidate_rel_comb) + \
+                        [tuple([ans for ans, conf in candidate_output]), candidate_output[0][1]])
         log.debug(f"(query_parser)loop time: {datetime.datetime.now() - start_time}")
         log.debug(f"(query_parser)final outputs: {candidate_outputs[:3]}")
 
