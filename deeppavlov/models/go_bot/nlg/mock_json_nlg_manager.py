@@ -131,6 +131,7 @@ class MockJSONNLGManager(NLGManagerInterface):
 
         response = JSONNLGResponse(slots_values, actions_tuple)
         verbose_response = VerboseJSONNLGResponse.from_json_nlg_response(response)
+        verbose_response.policy_prediction = policy_prediction
         return verbose_response
 
     def num_of_known_actions(self) -> int:

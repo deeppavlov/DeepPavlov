@@ -254,12 +254,12 @@ class GoalOrientedBot(NNModel):
         # todo: not obvious logic
         self.dialogue_state_tracker.update_ground_truth_db_result_from_context(utterance_context_info_dict)
 
-        utterance_features = self.extract_features_from_utterance_text(text, self.dialogue_state_tracker)
+        utterance_features_digitized, utterance_features = self.extract_features_from_utterance_text(text, self.dialogue_state_tracker)
 
         action_id = self.nlg_manager.get_action_id(utterance_response_info_dict['act'])
         utterance_target = UtteranceTarget(action_id)
 
-        utterance_data_entry = UtteranceDataEntry.from_features_and_target(utterance_features, utterance_target)
+        utterance_data_entry = UtteranceDataEntry.from_features_and_target(utterance_features_digitized, utterance_target)
         return utterance_data_entry
 
     def extract_features_from_utterance_text(self, text, tracker, keep_tracker_state=False) -> UtteranceFeatures:
