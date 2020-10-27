@@ -118,7 +118,7 @@ class QueryGeneratorBase(Component, Serializable):
             question = question.replace(old, new)
 
         entities_from_template, types_from_template, rels_from_template, rel_dirs_from_template, \
-        query_type_template, template_found = self.template_matcher(question, entities_from_ner)
+        query_type_template, template_found = self.template_matcher(question_sanitized, entities_from_ner)
         self.template_nums = [query_type_template]
 
         log.debug(f"question: {question}\n")

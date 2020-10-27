@@ -53,7 +53,7 @@ class KBEntityLinker(Component, Serializable):
                  who_entities_filename: Optional[str] = None,
                  save_path: str = None,
                  q2descr_filename: str = None,
-                 descr_rank_score_thres: float = 0.0,
+                 descr_rank_score_thres: float = 0.01,
                  freq_dict_filename: Optional[str] = None,
                  entity_ranker: RelRankerBertInfer = None,
                  build_inverted_index: bool = False,

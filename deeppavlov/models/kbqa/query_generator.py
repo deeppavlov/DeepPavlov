@@ -63,7 +63,7 @@ class QueryGenerator(QueryGeneratorBase):
         self.return_all_possible_answers = return_all_possible_answers
         self.return_answers = return_answers
         self.replace_tokens = [("wdt:p31", "wdt:P31"), ("pq:p580", "pq:P580"),
-                               ("pq:p582", "pq:P582"), ("pq:p585", "pq:P585")]
+                               ("pq:p582", "pq:P582"), ("pq:p585", "pq:P585"), ("pq:p1545", "pq:P1545")]
         super().__init__(wiki_parser = self.wiki_parser, rel_ranker = self.rel_ranker,
             entities_to_leave = self.entities_to_leave, rels_to_leave = self.rels_to_leave,
             return_answers = self.return_answers, *args, **kwargs)
@@ -107,6 +107,7 @@ class QueryGenerator(QueryGeneratorBase):
         rel_types = query_info["rel_types"]
         query_seq_num = query_info["query_sequence"]
         return_if_found = query_info["return_if_found"]
+        define_sorting_order = query_info["define_sorting_order"]
         property_types = query_info["property_types"]
         log.debug(f"(query_parser)query: {query}, {rels_for_search}, {query_seq_num}, {return_if_found}")
         query_triplets = re.findall("{[ ]?(.*?)[ ]?}", query)[0].split(' . ')
@@ -131,8 +132,11 @@ class QueryGenerator(QueryGeneratorBase):
         answer_ent = re.findall("select [\(]?([\S]+) ", query)
         order_info_nt = namedtuple("order_info", ["variable", "sorting_order"])
         order_variable = re.findall("order by (asc|desc)\((.*)\)", query)
-        answers_sorting_order = order_of_answers_sorting(question)
         if order_variable:
+            if define_sorting_order:
+                answers_sorting_order = order_of_answers_sorting(question)
+            else:
+                answers_sorting_order = order_variable[0][0]
             order_info = order_info_nt(order_variable[0][1], answers_sorting_order)
         else:
             order_info = order_info_nt(None, None)
