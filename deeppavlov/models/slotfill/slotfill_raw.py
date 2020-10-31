@@ -13,15 +13,18 @@
 # limitations under the License.
 
 import json
+import tempfile
 from collections import defaultdict
 from logging import getLogger
 from math import exp
-
+from pathlib import Path
 from overrides import overrides
 
+from deeppavlov.core.common.file import read_json, read_yaml
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
+from deeppavlov.dataset_readers.md_yaml_dialogs_reader import MD_YAML_DialogsDatasetReader, DomainKnowledge
 
 log = getLogger(__name__)
 
@@ -125,7 +128,8 @@ class SlotFillingComponent(Component, Serializable):
 
         # base cases
         if m == 1:
-            return needle not in haystack
+            not_found = needle not in haystack
+            return float(not_found), 0 if not_found else haystack.index(needle)
         if not n:
             return m
 
@@ -152,3 +156,28 @@ class SlotFillingComponent(Component, Serializable):
                     j_min = j
                 # d = min(d, row1[j])
         return d, j_min
+
+
+@register('slotfill_raw_rasa')
+class RASA_SlotFillingComponent(SlotFillingComponent):
+
+    def __init__(self, **kwargs):
+        load_path = kwargs.get("load_path")
+        if load_path is not None:
+            slot_values = self._get_slots_info(load_path)
+            tmp_f = tempfile.NamedTemporaryFile(delete=False, mode='w', encoding="utf-8")
+            json.dump(slot_values, tmp_f)
+            tmp_f.close()
+            load_path = tmp_f.name
+            kwargs["load_path"] = load_path
+        super().__init__(**kwargs)
+
+    def save(self):
+        pass
+
+    def _get_slots_info(self, load_path):
+        domain_path = Path(load_path, MD_YAML_DialogsDatasetReader.DOMAIN_FNAME)
+        nlu_path = Path(load_path, MD_YAML_DialogsDatasetReader.NLU_FNAME)
+        domain_knowledge = DomainKnowledge(read_yaml(domain_path))
+        _, slot_name2text2value = MD_YAML_DialogsDatasetReader._read_intent2text_mapping(nlu_path, domain_knowledge)
+        return slot_name2text2value

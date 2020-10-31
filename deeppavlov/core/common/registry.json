@@ -151,6 +151,7 @@
   "simple_vocab": "deeppavlov.core.data.simple_vocab:SimpleVocabulary",
   "sklearn_component": "deeppavlov.models.sklearn.sklearn_component:SklearnComponent",
   "slotfill_raw": "deeppavlov.models.slotfill.slotfill_raw:SlotFillingComponent",
+  "slotfill_raw_rasa": "deeppavlov.models.slotfill.slotfill_raw:RASA_SlotFillingComponent",
   "smn_nn": "deeppavlov.models.ranking.sequential_matching_network:SMNNetwork",
   "snips_intents_iterator": "deeppavlov.dataset_iterators.snips_intents_iterator:SnipsIntentIterator",
   "snips_ner_iterator": "deeppavlov.dataset_iterators.snips_ner_iterator:SnipsNerIterator",

@@ -28,6 +28,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.dataset_readers.dstc2_reader import DSTC2DatasetReader
 
+
 SLOT2VALUE_PAIRS_TUPLE = Tuple[Tuple[str, Any], ...]
 
 log = getLogger(__name__)
@@ -73,6 +74,9 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
     VALID_DATATYPES = ('trn', 'val', 'tst')
 
+    NLU_FNAME = "nlu.md"
+    DOMAIN_FNAME = "domain.yml"
+
     @classmethod
     def _data_fname(cls, datatype: str) -> str:
         assert datatype in cls.VALID_DATATYPES, f"wrong datatype name: {datatype}"
@@ -94,8 +98,8 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
             ``'test'`` field with dialogs from ``'stories-tst.md'``.
             Each field is a list of tuples ``(x_i, y_i)``.
         """
-        domain_fname = "domain.yml"
-        nlu_fname = "nlu.md"
+        domain_fname = cls.DOMAIN_FNAME
+        nlu_fname = cls.NLU_FNAME
         stories_fnames = tuple(cls._data_fname(dt) for dt in cls.VALID_DATATYPES)
         required_fnames = stories_fnames + (nlu_fname, domain_fname)
         for required_fname in required_fnames:
@@ -133,7 +137,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                                r"\)"
 
         intent2slots2text = defaultdict(lambda: defaultdict(list))
-        slot_name2text2value = defaultdict(dict)
+        slot_name2text2value = defaultdict(lambda: defaultdict(list))
 
         curr_intent_name = None
 
@@ -180,7 +184,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                                                    "slot_name": slot_name,
                                                    "span": (slot_value_new_l_span, slot_value_new_r_span)})
 
-                        slot_name2text2value[slot_name][slot_value_text] = slot_value
+                        slot_name2text2value[slot_name][slot_value_text].append(slot_value)
 
                         curr_char_ix = line_slot_r_span
                     intent_text_without_markup += intent_text_w_markup[curr_char_ix: len(intent_text_w_markup)]
