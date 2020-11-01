@@ -29,8 +29,7 @@
   },
   "metadata": {
     "variables": {
-      "DATA_PATH": "rasa_configs_reader",
-      "SLOT_VALS_PATH": "{DATA_PATH}/slot_vals.json"
+      "DATA_PATH": "rasa_configs_reader"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt"
