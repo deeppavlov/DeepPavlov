@@ -62,7 +62,7 @@ If you want to build your own architecture for **text classification** tasks, do
     Don't forget to set ``torch_trainer`` or ``nn_trainer`` (for PyTorch) or ``nn_trainer`` (for TensorFlow and Keras).
 
 Other NLP-tasks on TensorFlow, Keras, or PyTorch
------------------------------------------------
+------------------------------------------------
 
 - If you want to build your own model for **some other NLP** task, do the following in **Keras** or **PyTorch**:
 
@@ -93,7 +93,7 @@ Other NLP-tasks on TensorFlow, Keras, or PyTorch
     In the config file, assign ``"class_name": "module.path.to.my.model.file:MyModel"`` 
     and ``"model_name": "my_network_architecture"``
     in the dictionary with the main model.
-    Don't forget to set ``torch_trainer`` or ``nn_trainer`` (for PyTorch) or ``nn_trainer`` (for TensorFlow and Keras).
+    Don't forget to set ``torch_trainer`` (for PyTorch) or ``nn_trainer`` (for TensorFlow and Keras).
 
 
 - If you want to build your own model for **some other NLP** task, do the following in **TensorFlow**:
@@ -128,8 +128,6 @@ Other NLP-tasks on TensorFlow, Keras, or PyTorch
                 feed_dict = self._build_feed_dict(*variables)
                 predictions = self.sess.run([self.predictions], feed_dict=feed_dict)
                 return predictions.tolist()
-
-
 
     In the config file, assign ``"class_name": "module.path.to.my.model.file:MyModel"`` 
     and ``"model_name": "my_network_architecture"``
