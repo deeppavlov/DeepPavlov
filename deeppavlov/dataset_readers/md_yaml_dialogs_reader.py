@@ -243,13 +243,13 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         stories_parsed = {}
 
         curr_story_title = None
-        curr_story_utters_batch = [None]
+        curr_story_utters_batch = []
         curr_story_bad = False
         for line in open(story_fpath):
             line = line.strip()
             if line.startswith('#'):
                 # #... marks the beginning of new story
-                if curr_story_utters_batch[0] and curr_story_utters_batch[0][-1]["speaker"] == cls._USER_SPEAKER_ID:
+                if curr_story_utters_batch and curr_story_utters_batch[0] and curr_story_utters_batch[0][-1]["speaker"] == cls._USER_SPEAKER_ID:
                     for curr_story_utters in curr_story_utters_batch:
                         curr_story_utters.append(default_system_goodbye)  # dialogs MUST end with system replics
 
@@ -315,7 +315,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
         for curr_story_utters_ix, curr_story_utters in enumerate(curr_story_utters_batch):
             stories_parsed[curr_story_title + f"_{curr_story_utters_ix}"] = curr_story_utters
-        stories_parsed.pop(None)
+        # stories_parsed.pop(None)
 
         tmp_f = tempfile.NamedTemporaryFile(delete=False, mode='w', encoding="utf-8")
         for story_id, story in stories_parsed.items():
@@ -396,7 +396,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                           slots_li: Optional[SLOT2VALUE_PAIRS_TUPLE] = None) -> List[str]:
         if slots_li is None:
             slots_li = tuple()
-        return [intent2slots2text[user_action][slots_li][0]]
+        return intent2slots2text[user_action][slots_li]
 
     @staticmethod
     def _system_action2text(domain_knowledge: DomainKnowledge, system_action: str) -> str:
