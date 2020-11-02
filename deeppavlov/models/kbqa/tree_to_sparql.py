@@ -281,7 +281,7 @@ class TreeToSparql(Component):
         self.one_chain = False
         
         if root.form.lower() in self.q_pronouns:
-            if "nsubj" in [node.deprel for node in root.children]:
+            if "nsubj" in [node.deprel for node in root.children] or root.form.lower() in self.how_many:
                 self.one_chain = True
             else:
                 for node in root.children:
@@ -293,7 +293,7 @@ class TreeToSparql(Component):
                 if node.form.lower() in self.q_pronouns:
                     if node.children:
                         for child in node.children:
-                            if child.deprel == "nmod":
+                            if child.deprel in ["nmod", "obl"]:
                                 return child, node
                     else:
                         self.wh_leaf = True
@@ -611,6 +611,9 @@ class TreeToSparql(Component):
             if temporal_order in self.end_tokens:
                 query_nums.append("24")
                 query_nums.append("26")
+                
+        if count:
+        	grounded_entities_list = self.find_entities(root, positions, cut_clause=True)
 
         entities_list = grounded_entities_list + qualifier_entities_list + modifiers_list
  
@@ -618,7 +621,7 @@ class TreeToSparql(Component):
         types_length = len(types_list)
         modifiers_length = len(modifiers_list)
         qualifiers_length = len(qualifier_entities_list)
-        if qualifiers_length > 0 or modifiers_length:
+        if qualifiers_length > 0 or modifiers_length or count:
             types_length = 0
             
         if not temporal_order:
