@@ -243,20 +243,22 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         stories_parsed = {}
 
         curr_story_title = None
-        curr_story_utters = None
+        curr_story_utters_batch = [None]
         curr_story_bad = False
         for line in open(story_fpath):
             line = line.strip()
             if line.startswith('#'):
                 # #... marks the beginning of new story
-                if curr_story_utters and curr_story_utters[-1]["speaker"] == cls._USER_SPEAKER_ID:
-                    curr_story_utters.append(default_system_goodbye)  # dialogs MUST end with system replics
+                if curr_story_utters_batch[0] and curr_story_utters_batch[0][-1]["speaker"] == cls._USER_SPEAKER_ID:
+                    for curr_story_utters in curr_story_utters_batch:
+                        curr_story_utters.append(default_system_goodbye)  # dialogs MUST end with system replics
 
                 if not curr_story_bad:
-                    stories_parsed[curr_story_title] = curr_story_utters
+                    for curr_story_utters_ix, curr_story_utters in enumerate(curr_story_utters_batch):
+                        stories_parsed[curr_story_title+f"_{curr_story_utters_ix}"] = curr_story_utters
 
                 curr_story_title = line.strip('#')
-                curr_story_utters = []
+                curr_story_utters_batch = [[]]
                 curr_story_bad = False
             elif line.startswith('*'):
                 # user actions are started in dataset with *
@@ -271,15 +273,26 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                               f"Skipping story w. line {line} because of no NLU candidates found")
                     curr_story_bad = True
                     continue
-                user_response_info = cls._user_action2text(intent2slots2text, action_for_text, slots_used_values)
-                user_utter = {"speaker": cls._USER_SPEAKER_ID,
-                              "text": user_response_info["text"],
-                              "dialog_acts": [{"act": user_action, "slots": user_response_info["slots"]}],
-                              "slots to exclude": slots_to_exclude}
+                possible_user_response_infos = cls._user_action2text(intent2slots2text, action_for_text, slots_used_values)
+                # possible_user_response_infos = [user_response_info_]
+                possible_user_utters = []
+                for user_response_info in possible_user_response_infos:
+                    user_utter = {"speaker": cls._USER_SPEAKER_ID,
+                                  "text": user_response_info["text"],
+                                  "dialog_acts": [{"act": user_action, "slots": user_response_info["slots"]}],
+                                  "slots to exclude": slots_to_exclude}
+                    possible_user_utters.append(user_utter)
 
-                if not curr_story_utters:
-                    curr_story_utters.append(default_system_start)  # dialogs MUST start with system replics
-                curr_story_utters.append(user_utter)
+                if not curr_story_utters_batch[0]:
+                    curr_story_utters_batch[0].append(default_system_start)  # dialogs MUST start with system replics
+
+                new_curr_story_utters_batch = []
+                for curr_story_utters in curr_story_utters_batch:
+                    for user_utter in possible_user_utters:
+                        new_curr_story_utters = curr_story_utters.copy()
+                        new_curr_story_utters.append(user_utter)
+                        new_curr_story_utters_batch.append(new_curr_story_utters)
+                curr_story_utters_batch = new_curr_story_utters_batch
             elif line.startswith('-'):
                 # system actions are started in dataset with -
 
@@ -291,16 +304,17 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                 if system_action_name.startswith("action"):
                     system_action["db_result"] = {}
 
-                if curr_story_utters and curr_story_utters[-1]["speaker"] == cls._SYSTEM_SPEAKER_ID:
-                    # deal with consecutive system actions by inserting the last user replics in between
-                    last_user_utter = [u for u in reversed(curr_story_utters)
-                                       if u["speaker"] == cls._USER_SPEAKER_ID][0]
-                    curr_story_utters.append(last_user_utter)
+                for curr_story_utters in curr_story_utters_batch:
+                    if curr_story_utters and curr_story_utters[-1]["speaker"] == cls._SYSTEM_SPEAKER_ID:
+                        # deal with consecutive system actions by inserting the last user replics in between
+                        last_user_utter = [u for u in reversed(curr_story_utters)
+                                           if u["speaker"] == cls._USER_SPEAKER_ID][0]
+                        curr_story_utters.append(last_user_utter)
 
-                curr_story_utters.append(system_action)
+                    curr_story_utters.append(system_action)
 
-        if not curr_story_bad:
-            stories_parsed[curr_story_title] = curr_story_utters
+        for curr_story_utters_ix, curr_story_utters in enumerate(curr_story_utters_batch):
+            stories_parsed[curr_story_title + f"_{curr_story_utters_ix}"] = curr_story_utters
         stories_parsed.pop(None)
 
         tmp_f = tempfile.NamedTemporaryFile(delete=False, mode='w', encoding="utf-8")
@@ -379,10 +393,10 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
     @staticmethod
     def _user_action2text(intent2slots2text: Dict[str, Dict[SLOT2VALUE_PAIRS_TUPLE, List]],
                           user_action: str,
-                          slots_li: Optional[SLOT2VALUE_PAIRS_TUPLE] = None) -> str:
+                          slots_li: Optional[SLOT2VALUE_PAIRS_TUPLE] = None) -> List[str]:
         if slots_li is None:
             slots_li = tuple()
-        return intent2slots2text[user_action][slots_li][0]
+        return [intent2slots2text[user_action][slots_li][0]]
 
     @staticmethod
     def _system_action2text(domain_knowledge: DomainKnowledge, system_action: str) -> str:
