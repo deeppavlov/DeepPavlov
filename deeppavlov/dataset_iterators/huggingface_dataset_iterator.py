@@ -22,18 +22,20 @@ from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 @register('huggingface_dataset_iterator')
 class HuggingFaceDatasetIterator(DataLearningIterator):
-    """Dataset iterator for HuggingFace Datasets.
-    """
+    """Dataset iterator for HuggingFace Datasets."""
 
-    def preprocess(self, data: Dataset,
-                   features: Union[str, List[str]], label: str = 'label', use_label_name: bool = True,
+    def preprocess(self,
+                   data: Dataset,
+                   features: Union[str, List[str]],
+                   label: str = 'label',
+                   use_label_name: bool = True,
                    *args, **kwargs) -> List[Tuple[Any, Any]]:
         """Extracts features and labels from HuggingFace Dataset
 
         Args:
             data: instance of HuggingFace Dataset
             features: Dataset fields names to be extracted as features
-            label: Dataset field name to be used as label. Defaults to `label`.
+            label: Dataset field name to be used as label.
             use_label_name: Use actual label name instead of its index (0, 1, ...). Defaults to True.
 
         Returns:
@@ -48,8 +50,8 @@ class HuggingFaceDatasetIterator(DataLearningIterator):
             else:
                 raise RuntimeError(f"features should be str or list, but found: {features}")
             lb = example[label]
-            if use_label_name:
+            if use_label_name and lb != -1:
                 # -1 label is used if there is no label (test set)
-                lb = data.info.features[label].names[lb] if lb != -1 else lb
+                lb = data.info.features[label].names[lb]
             dataset += [(feat, lb)]
         return dataset

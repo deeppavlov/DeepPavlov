@@ -13,13 +13,13 @@
 # limitations under the License.
 
 
-from overrides import overrides
 from typing import Dict, Optional
 
-from deeppavlov.core.data.dataset_reader import DatasetReader
-from deeppavlov.core.common.registry import register
-
 from datasets import load_dataset, Dataset
+from overrides import overrides
+
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.dataset_reader import DatasetReader
 
 
 @register('huggingface_dataset_reader')
@@ -36,9 +36,9 @@ class HuggingFaceDatasetReader(DatasetReader):
             data_path: DeepPavlov's data_path argument, is not used, but passed by trainer
             path: datasets.load_dataset path argument (e.g., `glue`)
             name: datasets.load_dataset name argument (e.g., `mrpc`)
-            train: split name to use as training data. Defaults to `train`.
-            valid: split name to use as validation data. Defaults to `None`, no validation data is used.
-            test: split name to use as test data. Defaults to `None`, no test data is used.
+            train: split name to use as training data.
+            valid: split name to use as validation data.
+            test: split name to use as test data.
 
         Returns:
             Dict[str, List[Dict]]: Dictionary with train, valid, test datasets
