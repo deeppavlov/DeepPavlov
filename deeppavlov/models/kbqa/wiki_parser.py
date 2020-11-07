@@ -15,7 +15,7 @@
 import datetime
 import re
 from logging import getLogger
-from typing import List, Tuple, Dict, Union, Any
+from typing import List, Tuple, Dict, Any
 from collections import namedtuple
 
 from hdt import HDTDocument
@@ -23,9 +23,9 @@ from hdt import HDTDocument
 from deeppavlov.core.common.file import load_pickle
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.component import Component
 
 log = getLogger(__name__)
+
 
 @register('wiki_parser')
 class WikiParser:
@@ -35,6 +35,7 @@ class WikiParser:
         """
 
         Args:
+            wiki_filename: file with Wikidata
             file_format: format of Wikidata file
             lang: Russian or English language
             **kwargs:
@@ -49,7 +50,7 @@ class WikiParser:
         else:
             raise ValueError("Unsupported file format")
         self.lang = lang
-        
+
     def __call__(self, parser_info_list: List[str], queries_list: List[Any]) -> List[Any]:
         wiki_parser_output = []
         for parser_info, query in zip(parser_info_list, queries_list):
@@ -74,9 +75,9 @@ class WikiParser:
         return wiki_parser_output
 
     def execute(self, what_return: List[str],
-                 query_seq: List[List[str]],
-                 filter_info: List[Tuple[str]] = None,
-                 order_info: namedtuple = None) -> List[List[str]]:
+                query_seq: List[List[str]],
+                filter_info: List[Tuple[str]] = None,
+                order_info: namedtuple = None) -> List[List[str]]:
         """
             Let us consider an example of the question "What is the deepest lake in Russia?"
             with the corresponding SPARQL query            
@@ -96,9 +97,11 @@ class WikiParser:
             for n, query in enumerate(query_seq):
                 unknown_elem_positions = [(pos, elem) for pos, elem in enumerate(query) if elem.startswith('?')]
                 """
-                    n = 0, query = ["?ent", "http://www.wikidata.org/prop/direct/P17", "http://www.wikidata.org/entity/Q159"]
+                    n = 0, query = ["?ent", "http://www.wikidata.org/prop/direct/P17",
+                                                                                "http://www.wikidata.org/entity/Q159"]
                            unknown_elem_positions = ["?ent"]
-                    n = 1, query = ["?ent", "http://www.wikidata.org/prop/direct/P31", "http://www.wikidata.org/entity/Q23397"]
+                    n = 1, query = ["?ent", "http://www.wikidata.org/prop/direct/P31",
+                                                                            "http://www.wikidata.org/entity/Q23397"]
                            unknown_elem_positions = [(0, "?ent")]
                     n = 2, query = ["?ent", "http://www.wikidata.org/prop/direct/P4511", "?obj"]
                            unknown_elem_positions = [(0, "?ent"), (2, "?obj")]
@@ -116,7 +119,8 @@ class WikiParser:
                         for comb in combs:
                             """
                                 n = 1
-                                query = ["?ent", "http://www.wikidata.org/prop/direct/P31", "http://www.wikidata.org/entity/Q23397"]
+                                query = ["?ent", "http://www.wikidata.org/prop/direct/P31",
+                                                                            "http://www.wikidata.org/entity/Q23397"]
                                 comb = {"?ent": "http://www.wikidata.org/entity/Q5513"}
                                 known_elements = ["?ent"], known_values = ["http://www.wikidata.org/entity/Q5513"]
                                 filled_query = ["http://www.wikidata.org/entity/Q5513", 
@@ -126,7 +130,7 @@ class WikiParser:
                                               "http://www.wikidata.org/prop/direct/P31", 
                                               "http://www.wikidata.org/entity/Q23397"], ...]
                                 extended_combs = [{"?ent": "http://www.wikidata.org/entity/Q5513"}, ...]
-                            """                        
+                            """
                             known_values = [comb[known_elem] for known_elem in known_elements]
                             for known_elem, known_value in zip(known_elements, known_values):
                                 filled_query = [elem.replace(known_elem, known_value) for elem in query]
@@ -195,7 +199,8 @@ class WikiParser:
 
             if entity.startswith("http://www.wikidata.org/entity/"):
                 labels, c = self.document.search_triples(entity, "http://www.w3.org/2000/01/rdf-schema#label", "")
-                # labels = [["http://www.wikidata.org/entity/Q5513", "http://www.w3.org/2000/01/rdf-schema#label", '"Lake Baikal"@en'], ...]
+                # labels = [["http://www.wikidata.org/entity/Q5513", "http://www.w3.org/2000/01/rdf-schema#label",
+                #                                                    '"Lake Baikal"@en'], ...]
                 for label in labels:
                     if label[2].endswith(self.lang):
                         found_label = label[2].strip(self.lang).replace('"', '')
@@ -243,6 +248,7 @@ class WikiParser:
         return aliases
 
     def find_rels(self, entity: str, direction: str, rel_type: str = "no_type") -> List[str]:
+        rels = []
         if self.file_format == "hdt":
             if direction == "forw":
                 query = [f"http://www.wikidata.org/entity/{entity}", "", ""]

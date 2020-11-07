@@ -52,6 +52,8 @@ class QueryGenerator(QueryGeneratorBase):
             rel_ranker: component deeppavlov.models.kbqa.rel_ranking_infer
             entities_to_leave: how many entities to leave after entity linking
             rels_to_leave: how many relations to leave after relation ranking
+            max_comb_num: the maximum number of combinations of candidate entities and relations
+            return_all_possible_answers: whether to return all found answers
             return_answers: whether to return answers or candidate answers
             **kwargs:
         """
@@ -64,9 +66,9 @@ class QueryGenerator(QueryGeneratorBase):
         self.return_answers = return_answers
         self.replace_tokens = [("wdt:p31", "wdt:P31"), ("pq:p580", "pq:P580"),
                                ("pq:p582", "pq:P582"), ("pq:p585", "pq:P585"), ("pq:p1545", "pq:P1545")]
-        super().__init__(wiki_parser = self.wiki_parser, rel_ranker = self.rel_ranker,
-            entities_to_leave = self.entities_to_leave, rels_to_leave = self.rels_to_leave,
-            return_answers = self.return_answers, *args, **kwargs)
+        super().__init__(wiki_parser=self.wiki_parser, rel_ranker=self.rel_ranker,
+                         entities_to_leave=self.entities_to_leave, rels_to_leave=self.rels_to_leave,
+                         return_answers=self.return_answers, *args, **kwargs)
 
     def __call__(self, question_batch: List[str],
                  question_san_batch: List[str],
@@ -78,7 +80,6 @@ class QueryGenerator(QueryGeneratorBase):
         for question, question_sanitized, template_type, entities_from_ner, types_from_ner in \
                 zip(question_batch, question_san_batch, template_type_batch,
                     entities_from_ner_batch, types_from_ner_batch):
-
             candidate_outputs = self.find_candidate_answers(question, question_sanitized,
                                                             template_type, entities_from_ner, types_from_ner)
             candidate_outputs_batch.append(candidate_outputs)
@@ -96,8 +97,7 @@ class QueryGenerator(QueryGeneratorBase):
                      entities_and_types_select: List[str],
                      entity_ids: List[List[str]],
                      type_ids: List[List[str]],
-                     rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str]]:
-        candidate_outputs = []
+                     rels_from_template: Optional[List[Tuple[str]]] = None) -> List[List[Union[Tuple[Any, ...], Any]]]:
         question_tokens = nltk.word_tokenize(question)
         query = query_info["query_template"].lower()
         for old_tok, new_tok in self.replace_tokens:
@@ -161,8 +161,8 @@ class QueryGenerator(QueryGeneratorBase):
         start_time = datetime.datetime.now()
         entity_positions, type_positions = [elem.split('_') for elem in entities_and_types_select.split(' ')]
         log.debug(f"entity_positions {entity_positions}, type_positions {type_positions}")
-        selected_entity_ids = [entity_ids[int(pos)-1] for pos in entity_positions if int(pos)>0]
-        selected_type_ids = [type_ids[int(pos)-1] for pos in type_positions if int(pos)>0]
+        selected_entity_ids = [entity_ids[int(pos) - 1] for pos in entity_positions if int(pos) > 0]
+        selected_type_ids = [type_ids[int(pos) - 1] for pos in type_positions if int(pos) > 0]
         entity_combs = make_combs(selected_entity_ids, permut=True)
         type_combs = make_combs(selected_type_ids, permut=False)
         log.debug(f"(query_parser)entity_combs: {entity_combs[:3]}, type_combs: {type_combs[:3]},"
@@ -182,12 +182,12 @@ class QueryGenerator(QueryGeneratorBase):
             parser_info_list.append("query_execute")
             if comb_num == self.max_comb_num:
                 break
-        
+
         candidate_outputs = []
         candidate_outputs_list = self.wiki_parser(parser_info_list, queries_list)
         if self.use_api_requester and isinstance(candidate_outputs_list, list) and candidate_outputs_list:
             candidate_outputs_list = candidate_outputs_list[0]
-        
+
         if isinstance(candidate_outputs_list, list) and candidate_outputs_list:
             outputs_len = len(candidate_outputs_list)
             all_combs_list = all_combs_list[:outputs_len]
@@ -201,8 +201,8 @@ class QueryGenerator(QueryGeneratorBase):
                     candidate_outputs_dict[tuple(candidate_output[:-2])].append(candidate_output[-2:])
                 candidate_outputs = []
                 for candidate_rel_comb, candidate_output in candidate_outputs_dict.items():
-                    candidate_outputs.append(list(candidate_rel_comb) + \
-                        [tuple([ans for ans, conf in candidate_output]), candidate_output[0][1]])
+                    candidate_outputs.append(list(candidate_rel_comb) +
+                                             [tuple([ans for ans, conf in candidate_output]), candidate_output[0][1]])
         log.debug(f"(query_parser)loop time: {datetime.datetime.now() - start_time}")
         log.debug(f"(query_parser)final outputs: {candidate_outputs[:3]}")
 

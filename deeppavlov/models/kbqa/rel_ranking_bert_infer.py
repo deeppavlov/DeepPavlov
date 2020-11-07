@@ -44,10 +44,12 @@ class RelRankerBertInfer(Component, Serializable):
         Args:
             load_path: path to folder with wikidata files
             rel_q2name_filename: name of file which maps relation id to name
-            wiki_parser: component deeppavlov.models.wiki_parser
             ranker: component deeppavlov.models.ranking.rel_ranker
+            wiki_parser: component deeppavlov.models.wiki_parser
             batch_size: infering batch size
             rels_to_leave: how many relations to leave after relation ranking
+            return_all_possible_answers: whether to return all found answers
+            return_answer_ids: whether to return answer ids from Wikidata
             return_confidences: whether to return confidences of candidate answers
             **kwargs:
         """
@@ -96,7 +98,7 @@ class RelRankerBertInfer(Component, Serializable):
                         rels_labels_batch.append(candidate_rels)
                         answers_batch.append(candidate_answer)
                         confidences_batch.append(candidate_confidence)
-                
+
                 probas = self.ranker(questions_batch, rels_labels_batch)
                 probas = [proba[1] for proba in probas]
                 for j, (answer, confidence, rels_labels) in \
@@ -121,7 +123,7 @@ class RelRankerBertInfer(Component, Serializable):
                 if self.use_api_requester:
                     answer = answer[0]
                 confidence = answers_with_scores[0][2]
-            
+
             if self.return_confidences:
                 answers.append((answer, confidence))
             else:

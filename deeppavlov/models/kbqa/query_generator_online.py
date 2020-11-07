@@ -16,17 +16,15 @@ import itertools
 import re
 from logging import getLogger
 from typing import Tuple, List, Optional, Union, Dict, Any
-from collections import namedtuple
 
 import nltk
-import numpy as np
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.models.kbqa.wiki_parser_online import WikiParserOnline
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
 from deeppavlov.models.kbqa.rel_ranking_bert_infer import RelRankerBertInfer
 from deeppavlov.models.kbqa.utils import \
-    extract_year, extract_number, order_of_answers_sorting, make_combs, fill_online_query
+    extract_year, extract_number, make_combs, fill_online_query
 from deeppavlov.models.kbqa.query_generator_base import QueryGeneratorBase
 
 log = getLogger(__name__)
@@ -57,9 +55,9 @@ class QueryGeneratorOnline(QueryGeneratorBase):
         self.entities_to_leave = entities_to_leave
         self.rels_to_leave = rels_to_leave
         self.return_answers = return_answers
-        super().__init__(wiki_parser = self.wiki_parser, rel_ranker = self.rel_ranker,
-            entities_to_leave = self.entities_to_leave, rels_to_leave = self.rels_to_leave,
-            return_answers = self.return_answers, *args, **kwargs)
+        super().__init__(wiki_parser=self.wiki_parser, rel_ranker=self.rel_ranker,
+                         entities_to_leave=self.entities_to_leave, rels_to_leave=self.rels_to_leave,
+                         return_answers=self.return_answers, *args, **kwargs)
 
         self.load()
 
@@ -73,7 +71,6 @@ class QueryGeneratorOnline(QueryGeneratorBase):
         for question, question_sanitized, template_type, entities_from_ner, types_from_ner in \
                 zip(question_batch, question_san_batch, template_type_batch,
                     entities_from_ner_batch, types_from_ner_batch):
-
             candidate_outputs = self.find_candidate_answers(question, question_sanitized,
                                                             template_type, entities_from_ner, types_from_ner)
             candidate_outputs_batch.append(candidate_outputs)
@@ -89,7 +86,6 @@ class QueryGeneratorOnline(QueryGeneratorBase):
                      entities_and_types_select: List[str],
                      entity_ids: List[List[str]], type_ids: List[List[str]],
                      rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str]]:
-        candidate_outputs = []
         question_tokens = nltk.word_tokenize(question)
         query = query_info["query_template"].lower().replace("wdt:p31", "wdt:P31")
         rels_for_search = query_info["rank_rels"]
@@ -133,7 +129,7 @@ class QueryGeneratorOnline(QueryGeneratorBase):
             answer_ent = re.findall("as (\?[\S]+)", query)
         else:
             answer_ent = re.findall("select [\(]?([\S]+) ", query)
-        
+
         filter_from_query = re.findall("contains\((\?\w), (.+?)\)", query)
         log.debug(f"(query_parser)filter_from_query: {filter_from_query}")
 
@@ -147,7 +143,7 @@ class QueryGeneratorOnline(QueryGeneratorBase):
             for elem in filter_from_query:
                 query = query.replace(f"{elem[0]}, n", f"{elem[0]}, {number}")
         query = query.replace(" where", f" {' '.join(rels_from_query)} where")
-        
+
         log.debug(f"(query_parser)query_with_filtering: {query}")
         rel_combs = make_combs(rels_list_for_fill, permut=False)
         log.debug(f"(query_parser)rel_combs: {rel_combs[:3]}")
@@ -155,8 +151,8 @@ class QueryGeneratorOnline(QueryGeneratorBase):
         start_time = datetime.datetime.now()
         entity_positions, type_positions = [elem.split('_') for elem in entities_and_types_select.split(' ')]
         log.debug(f"entity_positions {entity_positions}, type_positions {type_positions}")
-        selected_entity_ids = [entity_ids[int(pos)-1] for pos in entity_positions if int(pos)>0]
-        selected_type_ids = [type_ids[int(pos)-1] for pos in type_positions if int(pos)>0]
+        selected_entity_ids = [entity_ids[int(pos) - 1] for pos in entity_positions if int(pos) > 0]
+        selected_type_ids = [type_ids[int(pos) - 1] for pos in type_positions if int(pos) > 0]
         entity_combs = make_combs(selected_entity_ids, permut=True)
         log.debug(f"(query_parser)entity_combs: {entity_combs[:3]}")
         type_combs = make_combs(selected_type_ids, permut=False)
@@ -169,23 +165,25 @@ class QueryGeneratorOnline(QueryGeneratorBase):
             filled_query, filter_rels = fill_online_query(query, combs[0], combs[1], combs[2], fill_rel_variables,
                                                           filter_rel_variables, rels_list_for_filter)
             if comb_num == 0:
-                log.debug(f"\n_______________________________\nfilled query: {filled_query}\n_______________________________\n")
+                log.debug(f"\n___________________________\nfilled query: {filled_query}\n___________________________\n")
             queries_list.append((filled_query, return_if_found))
             parser_info_list.append("query_execute")
-            
+
         candidate_outputs_list = self.wiki_parser(parser_info_list, queries_list)
         outputs_len = len(candidate_outputs_list)
         all_combs_list = all_combs_list[:outputs_len]
         out_vars = filter_rels + rels_from_query + answer_ent
-        
+
         candidate_outputs = []
         for combs, candidate_output in zip(all_combs_list, candidate_outputs_list):
             candidate_output = [output for output in candidate_output
-                if (all([filter_value in output[filter_var[1:]]["value"] for filter_var, filter_value in property_types.items()])
-                and all([not output[ent[1:]]["value"].startswith("http://www.wikidata.org/value") for ent in answer_ent]))]
+                                if (all([filter_value in output[filter_var[1:]]["value"]
+                                         for filter_var, filter_value in property_types.items()])
+                                    and all([not output[ent[1:]]["value"].startswith("http://www.wikidata.org/value")
+                                             for ent in answer_ent]))]
             candidate_outputs += [combs[2][:-1] + [output[var[1:]]["value"] for var in out_vars] + [confidence]
                                   for output in candidate_output]
-        
+
         log.debug(f"(query_parser)loop time: {datetime.datetime.now() - start_time}")
         log.debug(f"(query_parser)final outputs: {candidate_outputs[:3]}")
 
