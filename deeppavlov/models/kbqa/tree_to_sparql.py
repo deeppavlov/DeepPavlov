@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from io import StringIO
-from typing import List, Tuple, Dict
+from typing import Any, List, Tuple, Dict, Union
 from logging import getLogger
 from collections import defaultdict
 
