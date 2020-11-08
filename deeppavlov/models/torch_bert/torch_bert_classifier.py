@@ -35,6 +35,7 @@ class TorchBertClassifierModel(TorchModel):
     """Bert-based model for text classification on PyTorch.
 
     It uses output from [CLS] token and predicts labels using linear transformation.
+    Solves regression task if n_classes == 1.
 
     Args:
         n_classes: number of classes
@@ -80,6 +81,9 @@ class TorchBertClassifierModel(TorchModel):
         if self.multilabel and not self.return_probas:
             raise RuntimeError('Set return_probas to True for multilabel classification!')
 
+        if self.return_probas and self.n_classes == 1:
+            raise RuntimeError('Set return_probas to False for regression task!')
+
         super().__init__(optimizer=optimizer,
                          optimizer_parameters=optimizer_parameters,
                          **kwargs)
@@ -97,14 +101,19 @@ class TorchBertClassifierModel(TorchModel):
         """
         input_ids = [f.input_ids for f in features]
         input_masks = [f.attention_mask for f in features]
+        input_type_ids = [f.token_type_ids for f in features]
 
         b_input_ids = torch.cat(input_ids, dim=0).to(self.device)
         b_input_masks = torch.cat(input_masks, dim=0).to(self.device)
-        b_labels = torch.from_numpy(np.array(y)).to(self.device)
+        b_input_type_ids = torch.cat(input_type_ids, dim=0).to(self.device)
+        if self.n_classes > 1:
+            b_labels = torch.from_numpy(np.array(y)).to(self.device)
+        else:
+            b_labels = torch.from_numpy(np.array(y, dtype=np.float32)).to(self.device)
 
         self.optimizer.zero_grad()
 
-        loss, logits = self.model(b_input_ids, token_type_ids=None, attention_mask=b_input_masks,
+        loss, logits = self.model(b_input_ids, token_type_ids=b_input_type_ids, attention_mask=b_input_masks,
                                   labels=b_labels)
         loss.backward()
         # Clip the norm of the gradients to 1.0.
@@ -130,13 +139,15 @@ class TorchBertClassifierModel(TorchModel):
         """
         input_ids = [f.input_ids for f in features]
         input_masks = [f.attention_mask for f in features]
+        input_type_ids = [f.token_type_ids for f in features]
 
         b_input_ids = torch.cat(input_ids, dim=0).to(self.device)
         b_input_masks = torch.cat(input_masks, dim=0).to(self.device)
+        b_input_type_ids = torch.cat(input_type_ids, dim=0).to(self.device)
 
         with torch.no_grad():
             # Forward pass, calculate logit predictions
-            logits = self.model(b_input_ids, token_type_ids=None, attention_mask=b_input_masks)
+            logits = self.model(b_input_ids, token_type_ids=b_input_type_ids, attention_mask=b_input_masks)
             logits = logits[0]
 
         if self.return_probas:
@@ -145,9 +156,11 @@ class TorchBertClassifierModel(TorchModel):
             else:
                 pred = torch.nn.functional.sigmoid(logits)
             pred = pred.detach().cpu().numpy()
-        else:
+        elif self.n_classes > 1:
             logits = logits.detach().cpu().numpy()
             pred = np.argmax(logits, axis=1)
+        else:  # regression
+            pred = logits.squeeze(-1).detach().cpu().numpy()
         return pred
 
     @overrides
