@@ -24,7 +24,7 @@
       "propagate": true
     },
     "filelock": {
-      "level": "DEBUG",
+      "level": "WARNING",
       "handlers": [
         "stdout"
       ],
