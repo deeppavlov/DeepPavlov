@@ -118,7 +118,9 @@ PARAMS = {
         ("classifiers/sentiment_imdb_bert.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_imdb_conv_bert.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sst_torch_swcnn.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/insults_kaggle_bert_torch.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK]
+        ("classifiers/insults_kaggle_bert_torch.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/glue/glue_mrpc_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/glue/glue_stsb_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK]
     },
     "snips": {
         ("classifiers/intents_snips.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
