@@ -97,7 +97,6 @@ def simple_download(url: str, destination: Union[Path, str]) -> None:
         return s3_download(url, str(destination))
 
     chunk_size = 32 * 1024
-
     temporary = destination.with_suffix(destination.suffix + '.part')
 
     headers = {'dp-token': _get_download_token()}
