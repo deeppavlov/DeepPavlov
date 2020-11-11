@@ -125,6 +125,7 @@ class TemplateMatcher(Serializable):
         entities_from_ner = [entity.lower() for entity in entities_from_ner]
         entities_from_ner = [re.sub(r"^(a |the )", '', entity) for entity in entities_from_ner]
         entities_cand = [re.sub(r"^(a |the )", '', entity) for entity in entities_cand]
+        entities_cand = [entity.strip() for entity in entities_cand]
         log.debug(f"entities_cand {entities_cand} entities_from_ner {entities_from_ner}")
         match = set(entities_cand) == set(entities_from_ner) or not entities_from_ner or template == "how to xxx?"
         return match, entities_cand
