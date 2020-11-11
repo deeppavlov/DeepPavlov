@@ -13,10 +13,11 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import List, Tuple, Dict, Any
+from typing import List, Dict, Any
 
 import requests
 
+from deeppavlov import __version__ as dp_version
 from deeppavlov.core.common.registry import register
 
 log = getLogger(__name__)
@@ -29,7 +30,9 @@ class WikiParserOnline:
     def __init__(self, url: str, timeout: float = 0.5, **kwargs) -> None:
         self.url = url
         self.timeout = timeout
-        
+        self.agent_header = {'User-Agent': f'wiki_parser_online/{dp_version} (https://deeppavlov.ai;'
+                                           f' info@deeppavlov.ai) deeppavlov/{dp_version}'}
+
     def __call__(self, parser_info_list: List[str], queries_list: List[Any]) -> List[Any]:
         wiki_parser_output = []
         for parser_info, query in zip(parser_info_list, queries_list):
@@ -51,13 +54,19 @@ class WikiParserOnline:
         data = []
         for i in range(5):
             try:
-                data_0 = requests.get(self.url, params={'query': query, 'format': 'json'},  timeout=self.timeout).json()
+                resp = requests.get(self.url,
+                                    params={'query': query, 'format': 'json'},
+                                    timeout=self.timeout,
+                                    headers=self.agent_header)
+                if resp.status_code != 200:
+                    continue
+                data_0 = resp.json()
                 if "results" in data_0.keys():
                     data = data_0['results']['bindings']
                 elif "boolean" in data_0.keys():
                     data = data_0['boolean']
                 break
-            except:
+            except requests.exceptions.ReadTimeout:
                 pass
 
         return data
