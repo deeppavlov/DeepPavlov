@@ -16,6 +16,7 @@ from logging import getLogger
 from typing import List, Dict, Any
 
 import requests
+from requests.exceptions import ConnectTimeout, ReadTimeout
 
 from deeppavlov import __version__ as dp_version
 from deeppavlov.core.common.registry import register
@@ -66,7 +67,7 @@ class WikiParserOnline:
                 elif "boolean" in data_0.keys():
                     data = data_0['boolean']
                 break
-            except requests.exceptions.ReadTimeout:
+            except (ConnectTimeout, ReadTimeout):
                 pass
 
         return data
