@@ -323,6 +323,8 @@ class EntityLinker(Component, Serializable):
             D, I = self.faiss_index.search(ent_substr_tfidfs, self.num_faiss_candidate_entities)
             candidate_entities_dict = defaultdict(list)
             for ind_list, scores_list, index in zip(I, D, indices):
+                if self.num_faiss_cells > 1:
+                    scores_list = [1.0 - score for score in scores_list]
                 candidate_entities = {}
                 for ind, score in zip(ind_list, scores_list):
                     start_ind, end_ind = self.word_to_idlist[self.word_list[ind]]

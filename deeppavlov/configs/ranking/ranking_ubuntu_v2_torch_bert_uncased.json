@@ -74,7 +74,6 @@
       "valid",
       "test"
     ],
-    "tensorboard_log_dir": "{MODEL_PATH}/",
     "class_name": "torch_trainer"
   },
   "metadata": {

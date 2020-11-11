@@ -34,7 +34,8 @@ class RelRankerBertInfer(Component, Serializable):
                  ranker: RelRanker,
                  wiki_parser: Optional[WikiParser] = None,
                  batch_size: int = 32,
-                 rels_to_leave: int = 40, **kwargs):
+                 rels_to_leave: int = 40,
+                 return_confidences: bool = False, **kwargs):
         """
 
         Args:
@@ -44,6 +45,7 @@ class RelRankerBertInfer(Component, Serializable):
             ranker: component deeppavlov.models.ranking.rel_ranker
             batch_size: infering batch size
             rels_to_leave: how many relations to leave after relation ranking
+            return_confidences: whether to return confidences of candidate answers
             **kwargs:
         """
         super().__init__(save_path=None, load_path=load_path)
@@ -52,6 +54,7 @@ class RelRankerBertInfer(Component, Serializable):
         self.wiki_parser = wiki_parser
         self.batch_size = batch_size
         self.rels_to_leave = rels_to_leave
+        self.return_confidences = return_confidences
         self.load()
 
     def load(self) -> None:
@@ -62,6 +65,7 @@ class RelRankerBertInfer(Component, Serializable):
 
     def __call__(self, questions_list: List[str], candidate_answers_list: List[List[Tuple[str]]]) -> List[str]:
         answers = []
+        confidence = 0.0
         for question, candidate_answers in zip(questions_list, candidate_answers_list):
             answers_with_scores = []
             answer = "Not Found"
@@ -71,10 +75,12 @@ class RelRankerBertInfer(Component, Serializable):
                 questions_batch = []
                 rels_labels_batch = []
                 answers_batch = []
+                confidences_batch = []
                 for candidate_ans_and_rels in candidate_answers[i * self.batch_size: (i + 1) * self.batch_size]:
-                    candidate_rels = candidate_ans_and_rels[:-1]
+                    candidate_rels = candidate_ans_and_rels[:-2]
                     candidate_rels = [candidate_rel.split('/')[-1] for candidate_rel in candidate_rels]
-                    candidate_answer = candidate_ans_and_rels[-1]
+                    candidate_answer = candidate_ans_and_rels[-2]
+                    candidate_confidence = candidate_ans_and_rels[-1]
                     candidate_rels = " # ".join([self.rel_q2name[candidate_rel] \
                                                  for candidate_rel in candidate_rels if
                                                  candidate_rel in self.rel_q2name])
@@ -83,19 +89,25 @@ class RelRankerBertInfer(Component, Serializable):
                         questions_batch.append(question)
                         rels_labels_batch.append(candidate_rels)
                         answers_batch.append(candidate_answer)
+                        confidences_batch.append(candidate_confidence)
 
                 probas = self.ranker(questions_batch, rels_labels_batch)
                 probas = [proba[1] for proba in probas]
-                for j, (answer, rels_labels) in enumerate(zip(answers_batch, rels_labels_batch)):
-                    answers_with_scores.append((answer, rels_labels, probas[j]))
+                for j, (answer, confidence, rels_labels) in \
+                        enumerate(zip(answers_batch, confidences_batch, rels_labels_batch)):
+                    answers_with_scores.append((answer, rels_labels, max(probas[j], confidence)))
 
             answers_with_scores = sorted(answers_with_scores, key=lambda x: x[-1], reverse=True)
 
             if answers_with_scores:
                 log.debug(f"answers: {answers_with_scores[0]}")
-                answer = self.wiki_parser.find_label(answers_with_scores[0][0])
-
-            answers.append(answer)
+                answer = self.wiki_parser.find_label(answers_with_scores[0][0], question)
+                confidence = answers_with_scores[0][2]
+            
+            if self.return_confidences:
+                answers.append((answer, confidence))
+            else:
+                answers.append(answer)
 
         return answers
 

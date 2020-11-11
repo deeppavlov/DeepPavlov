@@ -20,7 +20,6 @@ from logging import getLogger
 from typing import Tuple, List
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
 
 log = getLogger(__name__)
@@ -69,12 +68,14 @@ class TemplateMatcher(Serializable):
     def save(self) -> None:
         raise NotImplementedError
 
-    def __call__(self, question: str) -> Tuple[List[str], List[str], List[Tuple[str]], List[str], str]:
+    def __call__(self, question: str, entities_from_ner: List[str]) -> \
+                                      Tuple[List[str], List[str], List[Tuple[str]], List[str], str, str]:
         question = question.lower()
         question = self.sanitize(question)
         question_length = len(question)
         entities, types, relations, relation_dirs = [], [], [], []
         query_type = ""
+        template_found = ""
         results = self.pool.map(RegexpMatcher(question), self.templates)
         results = functools.reduce(lambda x, y: x + y, results)
         replace_tokens = [("the uk", "united kingdom"), ("the us", "united states")]
@@ -86,6 +87,7 @@ class TemplateMatcher(Serializable):
                 positions_type_tokens = template["positions_type_tokens"]
                 positions_unuseful_tokens = template["positions_unuseful_tokens"]
                 template_len = template["template_len"]
+                template_found = template["template"]
                 entities_cand = [found_ent[pos].replace('?', '') for pos in positions_entity_tokens]
                 types_cand = [found_ent[pos].replace('?', '').split(',')[0] for pos in positions_type_tokens]
                 unuseful_tokens = [found_ent[pos].replace('?', '') for pos in positions_unuseful_tokens]
@@ -94,8 +96,8 @@ class TemplateMatcher(Serializable):
                 type_lengths = [len(entity_type) for entity_type in types_cand]
                 unuseful_tokens_len = sum([len(unuseful_tok) for unuseful_tok in unuseful_tokens])
                 log.debug(f"found template: {template}, {found_ent}")
-
-                if 0 not in entity_lengths or 0 not in type_lengths and entity_num_tokens:
+                match, entities_cand = self.match_template_and_ner(entities_cand, entities_from_ner)
+                if match and (0 not in entity_lengths or 0 not in type_lengths and entity_num_tokens):
                     cur_len = sum(entity_lengths) + sum(type_lengths)
                     log.debug(f"lengths: entity+type {cur_len}, question {question_length}, "
                               f"template {template_len}, unuseful tokens {unuseful_tokens_len}")
@@ -109,16 +111,20 @@ class TemplateMatcher(Serializable):
                         query_type = template["template_type"]
                         min_length = cur_len
 
-        return entities, types, relations, relation_dirs, query_type
+        return entities, types, relations, relation_dirs, query_type, template_found
 
     def sanitize(self, question: str) -> str:
-        if question.startswith("the "):
-            question = question[4:]
-        if question.startswith("a "):
-            question = question[2:]
-
+        question = re.sub(r"^(a |the )", '', question)
         date_interval = re.findall("([\d]{4}-[\d]{4})", question)
         if date_interval:
             question = question.replace(date_interval[0], '')
         question = question.replace('  ', ' ')
         return question
+
+    def match_template_and_ner(self, entities_cand: List[str], entities_from_ner: List[str]):
+        entities_from_ner = [entity.lower() for entity in entities_from_ner]
+        entities_from_ner = [re.sub(r"^(a |the )", '', entity) for entity in entities_from_ner]
+        entities_cand = [re.sub(r"^(a |the )", '', entity) for entity in entities_cand]
+        log.debug(f"entities_cand {entities_cand} entities_from_ner {entities_from_ner}")
+        match = set(entities_cand) == set(entities_from_ner) or not entities_from_ner
+        return match, entities_cand

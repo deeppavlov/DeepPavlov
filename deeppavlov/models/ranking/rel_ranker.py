@@ -3,12 +3,13 @@ from typing import List, Tuple, Union, Dict, Optional
 import numpy as np
 import tensorflow as tf
 
+from deeppavlov.core.common.check_gpu import check_gpu_existence
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.layers.tf_layers import variational_dropout
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
 from deeppavlov.models.embedders.abstract_embedder import Embedder
-from deeppavlov.models.squad.utils import CudnnGRU, softmax_mask
+from deeppavlov.models.squad.utils import CudnnGRU, CudnnCompatibleGRU, softmax_mask
 
 
 @register('two_sentences_emb')
@@ -60,6 +61,11 @@ class RelRanker(LRScheduledTFModel):
         self.return_probas = return_probas
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
+        
+        if check_gpu_existence():
+            self.GRU = CudnnGRU
+        else:
+            self.GRU = CudnnCompatibleGRU
 
         self.question_ph = tf.placeholder(tf.float32, [None, None, 300])
         self.rel_emb_ph = tf.placeholder(tf.float32, [None, None, 300])
@@ -84,7 +90,7 @@ class RelRanker(LRScheduledTFModel):
         b_size = tf.shape(self.question_ph)[0]
 
         with tf.variable_scope("question_encode"):
-            rnn = CudnnGRU(num_layers=2, num_units=75, batch_size=b_size, input_size=300, keep_prob=self.keep_prob_ph)
+            rnn = self.GRU(num_layers=2, num_units=75, batch_size=b_size, input_size=300, keep_prob=self.keep_prob_ph)
             q = rnn(question_dr, seq_len=q_len)
 
         with tf.variable_scope("attention"):
