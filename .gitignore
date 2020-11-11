@@ -125,3 +125,8 @@ download/
 
 # project data
 /data/
+
+# local dockerfiles
+/Dockerfile
+/entrypoint.sh
+/.dockerignore

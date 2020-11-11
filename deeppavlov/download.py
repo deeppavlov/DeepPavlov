@@ -19,8 +19,10 @@ from collections import defaultdict
 from logging import getLogger
 from pathlib import Path
 from typing import Union, Optional, Dict, Iterable, Set, Tuple, List
+from urllib.parse import urlparse
 
 import requests
+from filelock import FileLock
 
 import deeppavlov
 from deeppavlov.core.commands.utils import expand_path, parse_config
@@ -124,19 +126,21 @@ def check_md5(url: str, dest_paths: List[Path]) -> bool:
     return True
 
 
-def download_resource(url: str, dest_paths: Iterable[Union[Path, str]]) \
-        -> None:
+def download_resource(url: str, dest_paths: Iterable[Union[Path, str]]) -> None:
     dest_paths = [Path(dest) for dest in dest_paths]
+    download_path = dest_paths[0].parent
+    download_path.mkdir(parents=True, exist_ok=True)
+    file_name = urlparse(url).path.split('/')[-1]
+    lockfile = download_path / f'.{file_name}.lock'
 
-    if check_md5(url, dest_paths):
-        log.info(f'Skipped {url} download because of matching hashes')
-    elif any(ext in url for ext in ('.tar.gz', '.gz', '.zip')):
-        download_path = dest_paths[0].parent
-        download_decompress(url, download_path, dest_paths)
-    else:
-        file_name = url.split('/')[-1].split('?')[0]
-        dest_files = [dest_path / file_name for dest_path in dest_paths]
-        download(dest_files, url)
+    with FileLock(lockfile).acquire(poll_intervall=10):
+        if check_md5(url, dest_paths):
+            log.info(f'Skipped {url} download because of matching hashes')
+        elif any(ext in url for ext in ('.tar.gz', '.gz', '.zip')):
+            download_decompress(url, download_path, dest_paths)
+        else:
+            dest_files = [dest_path / file_name for dest_path in dest_paths]
+            download(dest_files, url)
 
 
 def download_resources(args: Namespace) -> None:
