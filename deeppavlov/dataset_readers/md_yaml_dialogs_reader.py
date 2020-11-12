@@ -208,7 +208,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                     domain_knowledge: DomainKnowledge,
                     intent2slots2text: Dict[str, Dict[SLOT2VALUE_PAIRS_TUPLE, List]],
                     slot_name2text2value: Dict[str, Dict[str, str]],
-                    ignore_slots=False) \
+                    ignore_slots: bool = False) \
             -> Union[List[List[Tuple[Dict[str, bool], Dict[str, Any]]]], List[Tuple[Dict[str, bool], Dict[str, Any]]]]:
         """
         Reads stories from the specified path converting them to go-bot format on the fly.
