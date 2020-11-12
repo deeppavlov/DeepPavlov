@@ -84,12 +84,13 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
     @classmethod
     @overrides
-    def read(cls, data_path: str, dialogs: bool = False, ignore_slots=False) -> Dict[str, List]:
+    def read(cls, data_path: str, dialogs: bool = False, ignore_slots: bool = False) -> Dict[str, List]:
         """
         Parameters:
             data_path: path to read dataset from
             dialogs: flag which indicates whether to output list of turns or
                 list of dialogs
+            ignore_slots: whether to ignore slots information provided in stories.md or not
 
         Returns:
             dictionary that contains
