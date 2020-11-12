@@ -20,7 +20,7 @@ from math import exp
 from pathlib import Path
 from overrides import overrides
 
-from deeppavlov.core.common.file import read_json, read_yaml
+from deeppavlov.core.common.file import read_yaml
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
