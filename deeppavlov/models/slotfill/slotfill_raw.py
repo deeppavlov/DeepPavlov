@@ -165,18 +165,14 @@ class SlotFillingComponent(Component, Serializable):
 class RASA_SlotFillingComponent(SlotFillingComponent):
 
     def __init__(self, **kwargs):
-        load_path = kwargs.get("load_path")
-        if load_path is not None:
-            slot_values = self._get_slots_info(load_path)
-            tmp_f = tempfile.NamedTemporaryFile(delete=False, mode='w', encoding="utf-8")
-            json.dump(slot_values, tmp_f)
-            tmp_f.close()
-            load_path = tmp_f.name
-            kwargs["load_path"] = load_path
         super().__init__(**kwargs)
 
     def save(self):
         pass
+
+    def load(self, *args, **kwargs):
+        self._slot_vals = self._get_slots_info(self.load_path)
+
 
     def _get_slots_info(self, load_path):
         domain_path = Path(load_path, MD_YAML_DialogsDatasetReader.DOMAIN_FNAME)
