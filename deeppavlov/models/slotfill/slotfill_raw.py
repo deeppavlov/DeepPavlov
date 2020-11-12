@@ -130,7 +130,9 @@ class SlotFillingComponent(Component, Serializable):
         # base cases
         if m == 1:
             not_found = needle not in haystack
-            return float(not_found), 0 if not_found else haystack.index(needle)
+            not_found = float(not_found)  # float required by the method usage
+            occurrence_ix = 0 if not_found else haystack.index(needle)
+            return not_found, occurrence_ix
         if not n:
             return m
 
