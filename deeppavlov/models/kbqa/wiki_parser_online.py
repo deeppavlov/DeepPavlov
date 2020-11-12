@@ -13,10 +13,11 @@
 # limitations under the License.
 
 from logging import getLogger
+from time import sleep
 from typing import List, Dict, Any
 
 import requests
-from requests.exceptions import ConnectTimeout, ReadTimeout
+from requests.exceptions import ConnectionError, ConnectTimeout, ReadTimeout
 
 from deeppavlov import __version__ as dp_version
 from deeppavlov.core.common.registry import register
@@ -67,9 +68,11 @@ class WikiParserOnline:
                 elif "boolean" in data_0.keys():
                     data = data_0['boolean']
                 break
-            except (ConnectTimeout, ReadTimeout):
-                pass
-
+            except (ConnectTimeout, ReadTimeout) as e:
+                log.warning(f'TimeoutError: {repr(e)}')
+            except ConnectionError as e:
+                log.warning(f'Connection error: {repr(e)}\nWaiting 1s...')
+                sleep(1)
         return data
 
     def find_label(self, entity: str, question: str) -> str:
