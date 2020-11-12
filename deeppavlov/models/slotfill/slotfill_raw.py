@@ -163,6 +163,7 @@ class SlotFillingComponent(Component, Serializable):
 
 @register('slotfill_raw_rasa')
 class RASA_SlotFillingComponent(SlotFillingComponent):
+    """wraps SlotFillingComponent so that it takes the slotfilling info from RASA configs"""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -171,12 +172,10 @@ class RASA_SlotFillingComponent(SlotFillingComponent):
         pass
 
     def load(self, *args, **kwargs):
-        self._slot_vals = self._get_slots_info(self.load_path)
-
-
-    def _get_slots_info(self, load_path):
-        domain_path = Path(load_path, MD_YAML_DialogsDatasetReader.DOMAIN_FNAME)
-        nlu_path = Path(load_path, MD_YAML_DialogsDatasetReader.NLU_FNAME)
+        """reads the slotfilling info from RASA-styled dataset"""
+        domain_path = Path(self.load_path, MD_YAML_DialogsDatasetReader.DOMAIN_FNAME)
+        nlu_path = Path(self.load_path, MD_YAML_DialogsDatasetReader.NLU_FNAME)
         domain_knowledge = DomainKnowledge(read_yaml(domain_path))
+        # todo: rewrite MD_YAML_DialogsDatasetReader so that public methods are enough
         _, slot_name2text2value = MD_YAML_DialogsDatasetReader._read_intent2text_mapping(nlu_path, domain_knowledge)
-        return slot_name2text2value
+        self._slot_vals = slot_name2text2value
