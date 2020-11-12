@@ -28,6 +28,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.dataset_readers.dstc2_reader import DSTC2DatasetReader
 
+
 SLOT2VALUE_PAIRS_TUPLE = Tuple[Tuple[str, Any], ...]
 
 log = getLogger(__name__)
@@ -73,6 +74,9 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
     VALID_DATATYPES = ('trn', 'val', 'tst')
 
+    NLU_FNAME = "nlu.md"
+    DOMAIN_FNAME = "domain.yml"
+
     @classmethod
     def _data_fname(cls, datatype: str) -> str:
         assert datatype in cls.VALID_DATATYPES, f"wrong datatype name: {datatype}"
@@ -80,12 +84,13 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
     @classmethod
     @overrides
-    def read(cls, data_path: str, dialogs: bool = False) -> Dict[str, List]:
+    def read(cls, data_path: str, dialogs: bool = False, ignore_slots: bool = False) -> Dict[str, List]:
         """
         Parameters:
             data_path: path to read dataset from
             dialogs: flag which indicates whether to output list of turns or
                 list of dialogs
+            ignore_slots: whether to ignore slots information provided in stories.md or not
 
         Returns:
             dictionary that contains
@@ -94,8 +99,8 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
             ``'test'`` field with dialogs from ``'stories-tst.md'``.
             Each field is a list of tuples ``(x_i, y_i)``.
         """
-        domain_fname = "domain.yml"
-        nlu_fname = "nlu.md"
+        domain_fname = cls.DOMAIN_FNAME
+        nlu_fname = cls.NLU_FNAME
         stories_fnames = tuple(cls._data_fname(dt) for dt in cls.VALID_DATATYPES)
         required_fnames = stories_fnames + (nlu_fname, domain_fname)
         for required_fname in required_fnames:
@@ -106,7 +111,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
         domain_knowledge = DomainKnowledge(read_yaml(Path(data_path, domain_fname)))
         intent2slots2text, slot_name2text2value = cls._read_intent2text_mapping(Path(data_path, nlu_fname),
-                                                                                domain_knowledge)
+                                                                                domain_knowledge, ignore_slots)
 
         short2long_subsample_name = {"trn": "train",
                                      "val": "valid",
@@ -114,13 +119,14 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
         data = {short2long_subsample_name[subsample_name_short]:
                     cls._read_story(Path(data_path, cls._data_fname(subsample_name_short)),
-                                    dialogs, domain_knowledge, intent2slots2text, slot_name2text2value)
+                                    dialogs, domain_knowledge, intent2slots2text, slot_name2text2value,
+                                    ignore_slots=ignore_slots)
                 for subsample_name_short in cls.VALID_DATATYPES}
 
         return data
 
     @classmethod
-    def _read_intent2text_mapping(cls, nlu_fpath: Path, domain_knowledge: DomainKnowledge) \
+    def _read_intent2text_mapping(cls, nlu_fpath: Path, domain_knowledge: DomainKnowledge, ignore_slots: bool  = False) \
             -> Tuple[Dict[str, Dict[SLOT2VALUE_PAIRS_TUPLE, List]],
                      Dict[str, Dict[str, str]]]:
 
@@ -132,7 +138,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                                r"\)"
 
         intent2slots2text = defaultdict(lambda: defaultdict(list))
-        slot_name2text2value = defaultdict(dict)
+        slot_name2text2value = defaultdict(lambda: defaultdict(list))
 
         curr_intent_name = None
 
@@ -146,6 +152,8 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                     # lines starting with - are listing the examples of intent texts of the current intent type
                     intent_text_w_markup = line.strip().strip('-').strip()
                     line_slots_found = re.finditer(slots_markup_pattern, intent_text_w_markup)
+                    if ignore_slots:
+                        line_slots_found = []
 
                     curr_char_ix = 0
                     intent_text_without_markup = ''
@@ -172,19 +180,17 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                         # so we should remove brackets and the parentheses content
                         intent_text_without_markup += slot_value_text
 
-                        cleaned_text_slots.append({"slot_value": slot_value,
-                                                   "slot_text": slot_value_text,
-                                                   "slot_name": slot_name,
-                                                   "span": (slot_value_new_l_span, slot_value_new_r_span)})
+                        cleaned_text_slots.append((slot_name, slot_value))
 
-                        slot_name2text2value[slot_name][slot_value_text] = slot_value
+                        slot_name2text2value[slot_name][slot_value_text].append(slot_value)
 
                         curr_char_ix = line_slot_r_span
                     intent_text_without_markup += intent_text_w_markup[curr_char_ix: len(intent_text_w_markup)]
 
-                    slots_key = tuple(sorted((slot["slot_name"], slot["slot_value"]) for slot in cleaned_text_slots))
+                    slots_key = tuple(sorted((slot[0], slot[1]) for slot in cleaned_text_slots))
                     intent2slots2text[curr_intent_name][slots_key].append({"text": intent_text_without_markup,
-                                                                           "slots": cleaned_text_slots})
+                                                                           "slots_di": cleaned_text_slots,
+                                                                           "slots": slots_key})
 
         # defaultdict behavior is no more needed
         intent2slots2text = {k: dict(v) for k, v in intent2slots2text.items()}
@@ -198,7 +204,8 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                     dialogs: bool,
                     domain_knowledge: DomainKnowledge,
                     intent2slots2text: Dict[str, Dict[SLOT2VALUE_PAIRS_TUPLE, List]],
-                    slot_name2text2value: Dict[str, Dict[str, str]]) \
+                    slot_name2text2value: Dict[str, Dict[str, str]],
+                    ignore_slots: bool = False) \
             -> Union[List[List[Tuple[Dict[str, bool], Dict[str, Any]]]], List[Tuple[Dict[str, bool], Dict[str, Any]]]]:
         """
         Reads stories from the specified path converting them to go-bot format on the fly.
@@ -233,24 +240,26 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         stories_parsed = {}
 
         curr_story_title = None
-        curr_story_utters = None
+        curr_story_utters_batch = []
         curr_story_bad = False
         for line in open(story_fpath):
             line = line.strip()
             if line.startswith('#'):
                 # #... marks the beginning of new story
-                if curr_story_utters and curr_story_utters[-1]["speaker"] == cls._USER_SPEAKER_ID:
-                    curr_story_utters.append(default_system_goodbye)  # dialogs MUST end with system replics
+                if curr_story_utters_batch and curr_story_utters_batch[0] and curr_story_utters_batch[0][-1]["speaker"] == cls._USER_SPEAKER_ID:
+                    for curr_story_utters in curr_story_utters_batch:
+                        curr_story_utters.append(default_system_goodbye)  # dialogs MUST end with system replics
 
                 if not curr_story_bad:
-                    stories_parsed[curr_story_title] = curr_story_utters
+                    for curr_story_utters_ix, curr_story_utters in enumerate(curr_story_utters_batch):
+                        stories_parsed[curr_story_title+f"_{curr_story_utters_ix}"] = curr_story_utters
 
                 curr_story_title = line.strip('#')
-                curr_story_utters = []
+                curr_story_utters_batch = [[]]
                 curr_story_bad = False
             elif line.startswith('*'):
                 # user actions are started in dataset with *
-                user_action, slots_dstc2formatted = cls._parse_user_intent(line)
+                user_action, slots_dstc2formatted = cls._parse_user_intent(line, ignore_slots=ignore_slots)
                 slots_actual_values = cls._clarify_slots_values(slot_name2text2value, slots_dstc2formatted)
                 try:
                     slots_to_exclude, slots_used_values, action_for_text = cls._choose_slots_for_whom_exists_text(
@@ -261,15 +270,26 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                               f"Skipping story w. line {line} because of no NLU candidates found")
                     curr_story_bad = True
                     continue
-                user_response_info = cls._user_action2text(intent2slots2text, action_for_text, slots_used_values)
-                user_utter = {"speaker": cls._USER_SPEAKER_ID,
-                              "text": user_response_info["text"],
-                              "dialog_acts": [{"act": user_action, "slots": user_response_info["slots"]}],
-                              "slots to exclude": slots_to_exclude}
+                possible_user_response_infos = cls._user_action2text(intent2slots2text, action_for_text, slots_used_values)
+                # possible_user_response_infos = [user_response_info_]
+                possible_user_utters = []
+                for user_response_info in possible_user_response_infos:
+                    user_utter = {"speaker": cls._USER_SPEAKER_ID,
+                                  "text": user_response_info["text"],
+                                  "dialog_acts": [{"act": user_action, "slots": user_response_info["slots"]}],
+                                  "slots to exclude": slots_to_exclude}
+                    possible_user_utters.append(user_utter)
 
-                if not curr_story_utters:
-                    curr_story_utters.append(default_system_start)  # dialogs MUST start with system replics
-                curr_story_utters.append(user_utter)
+                if not curr_story_utters_batch[0]:
+                    curr_story_utters_batch[0].append(default_system_start)  # dialogs MUST start with system replics
+
+                new_curr_story_utters_batch = []
+                for curr_story_utters in curr_story_utters_batch:
+                    for user_utter in possible_user_utters:
+                        new_curr_story_utters = curr_story_utters.copy()
+                        new_curr_story_utters.append(user_utter)
+                        new_curr_story_utters_batch.append(new_curr_story_utters)
+                curr_story_utters_batch = new_curr_story_utters_batch
             elif line.startswith('-'):
                 # system actions are started in dataset with -
 
@@ -281,17 +301,18 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                 if system_action_name.startswith("action"):
                     system_action["db_result"] = {}
 
-                if curr_story_utters and curr_story_utters[-1]["speaker"] == cls._SYSTEM_SPEAKER_ID:
-                    # deal with consecutive system actions by inserting the last user replics in between
-                    last_user_utter = [u for u in reversed(curr_story_utters)
-                                       if u["speaker"] == cls._USER_SPEAKER_ID][0]
-                    curr_story_utters.append(last_user_utter)
+                for curr_story_utters in curr_story_utters_batch:
+                    if curr_story_utters and curr_story_utters[-1]["speaker"] == cls._SYSTEM_SPEAKER_ID:
+                        # deal with consecutive system actions by inserting the last user replics in between
+                        last_user_utter = [u for u in reversed(curr_story_utters)
+                                           if u["speaker"] == cls._USER_SPEAKER_ID][0]
+                        curr_story_utters.append(last_user_utter)
 
-                curr_story_utters.append(system_action)
+                    curr_story_utters.append(system_action)
 
-        if not curr_story_bad:
-            stories_parsed[curr_story_title] = curr_story_utters
-        stories_parsed.pop(None)
+        for curr_story_utters_ix, curr_story_utters in enumerate(curr_story_utters_batch):
+            stories_parsed[curr_story_title + f"_{curr_story_utters_ix}"] = curr_story_utters
+        # stories_parsed.pop(None)
 
         tmp_f = tempfile.NamedTemporaryFile(delete=False, mode='w', encoding="utf-8")
         for story_id, story in stories_parsed.items():
@@ -355,22 +376,24 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         return slots_key
 
     @staticmethod
-    def _parse_user_intent(line: str) -> Tuple[str, List[List]]:
+    def _parse_user_intent(line: str, ignore_slots=False) -> Tuple[str, List[List]]:
         intent = line.strip('*').strip()
         if '{' not in intent:
             intent = intent + "{}"  # the prototypical intent is "intent_name{slot1: value1, slotN: valueN}"
         user_action, slots_info = intent.split('{', 1)
         slots_info = json.loads('{' + slots_info)
         slots_dstc2formatted = [[slot_name, slot_value] for slot_name, slot_value in slots_info.items()]
+        if ignore_slots:
+            slots_dstc2formatted = dict()
         return user_action, slots_dstc2formatted
 
     @staticmethod
     def _user_action2text(intent2slots2text: Dict[str, Dict[SLOT2VALUE_PAIRS_TUPLE, List]],
                           user_action: str,
-                          slots_li: Optional[SLOT2VALUE_PAIRS_TUPLE] = None) -> str:
+                          slots_li: Optional[SLOT2VALUE_PAIRS_TUPLE] = None) -> List[str]:
         if slots_li is None:
             slots_li = tuple()
-        return intent2slots2text[user_action][slots_li][0]
+        return intent2slots2text[user_action][slots_li]
 
     @staticmethod
     def _system_action2text(domain_knowledge: DomainKnowledge, system_action: str) -> str:
