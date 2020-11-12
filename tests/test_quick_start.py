@@ -545,7 +545,7 @@ class TestQuickStart(object):
                     sleep(1)
                     s.connect(connect_arg)
                 s.sendall(encode(socket_payload))
-                s.settimeout(60)
+                s.settimeout(120)
                 header = s.recv(4)
                 body_len = unpack('<I', header)[0]
                 data = bytearray()
