@@ -180,18 +180,14 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                         # so we should remove brackets and the parentheses content
                         intent_text_without_markup += slot_value_text
 
-                        cleaned_text_slots.append({0: slot_name, 1: slot_value,
-                                                   "slot_value": slot_value,
-                                                   "slot_text": slot_value_text,
-                                                   "slot_name": slot_name,
-                                                   "span": (slot_value_new_l_span, slot_value_new_r_span)})
+                        cleaned_text_slots.append((slot_name, slot_value))
 
                         slot_name2text2value[slot_name][slot_value_text].append(slot_value)
 
                         curr_char_ix = line_slot_r_span
                     intent_text_without_markup += intent_text_w_markup[curr_char_ix: len(intent_text_w_markup)]
 
-                    slots_key = tuple(sorted((slot["slot_name"], slot["slot_value"]) for slot in cleaned_text_slots))
+                    slots_key = tuple(sorted((slot[0], slot[1]) for slot in cleaned_text_slots))
                     intent2slots2text[curr_intent_name][slots_key].append({"text": intent_text_without_markup,
                                                                            "slots_di": cleaned_text_slots,
                                                                            "slots": slots_key})
