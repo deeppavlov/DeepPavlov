@@ -125,7 +125,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         return data
 
     @classmethod
-    def _read_intent2text_mapping(cls, nlu_fpath: Path, domain_knowledge: DomainKnowledge, ignore_slots=False) \
+    def _read_intent2text_mapping(cls, nlu_fpath: Path, domain_knowledge: DomainKnowledge, ignore_slots: bool  = False) \
             -> Tuple[Dict[str, Dict[SLOT2VALUE_PAIRS_TUPLE, List]],
                      Dict[str, Dict[str, str]]]:
 
