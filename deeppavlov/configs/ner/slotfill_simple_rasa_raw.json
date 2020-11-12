@@ -38,7 +38,7 @@
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/dp_minimal_demo_dir.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/dp_minimal_rasa_demo.tar.gz",
         "subdir": "{DATA_PATH}"
       }
     ]
