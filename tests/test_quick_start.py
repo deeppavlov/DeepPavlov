@@ -184,6 +184,8 @@ PARAMS = {
                 ("in the west part", ({'area': 'west'},)),
                 ("moderate price range", ({'pricerange': 'moderate'},))
             ],
+        ("ner/slotfill_simple_rasa_raw.json", "slotfill_simple_rasa_raw", ('IP')): [
+            ("i see 1 cat", ({"number": '1'},))],
         ("ner/ner_conll2003_torch_bert.json", "ner_conll2003_torch_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK]
     },
     "sentence_segmentation": {
