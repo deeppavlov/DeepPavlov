@@ -35,16 +35,21 @@ class RelRankerBertInfer(Component, Serializable):
                  wiki_parser: Optional[WikiParser] = None,
                  batch_size: int = 32,
                  rels_to_leave: int = 40,
+                 return_all_possible_answers: bool = False,
+                 return_answer_ids: bool = False,
+                 use_api_requester: bool = False,
                  return_confidences: bool = False, **kwargs):
         """
 
         Args:
             load_path: path to folder with wikidata files
             rel_q2name_filename: name of file which maps relation id to name
-            wiki_parser: component deeppavlov.models.wiki_parser
             ranker: component deeppavlov.models.ranking.rel_ranker
+            wiki_parser: component deeppavlov.models.wiki_parser
             batch_size: infering batch size
             rels_to_leave: how many relations to leave after relation ranking
+            return_all_possible_answers: whether to return all found answers
+            return_answer_ids: whether to return answer ids from Wikidata
             return_confidences: whether to return confidences of candidate answers
             **kwargs:
         """
@@ -54,6 +59,9 @@ class RelRankerBertInfer(Component, Serializable):
         self.wiki_parser = wiki_parser
         self.batch_size = batch_size
         self.rels_to_leave = rels_to_leave
+        self.return_all_possible_answers = return_all_possible_answers
+        self.return_answer_ids = return_answer_ids
+        self.use_api_requester = use_api_requester
         self.return_confidences = return_confidences
         self.load()
 
@@ -101,13 +109,28 @@ class RelRankerBertInfer(Component, Serializable):
 
             if answers_with_scores:
                 log.debug(f"answers: {answers_with_scores[0]}")
-                answer = self.wiki_parser.find_label(answers_with_scores[0][0], question)
+                answer_ids = answers_with_scores[0][0]
+                if self.return_all_possible_answers:
+                    answer_ids_input = [(answer_id, question) for answer_id in answer_ids]
+                else:
+                    answer_ids_input = [(answer_ids, question)]
+                parser_info_list = ["find_label" for i in range(len(answer_ids))]
+                answer_labels = self.wiki_parser(parser_info_list, answer_ids_input)
+                if self.return_all_possible_answers:
+                    answer = ', '.join(answer_labels)
+                else:
+                    answer = answer_labels[0]
+                if self.use_api_requester:
+                    answer = answer[0]
                 confidence = answers_with_scores[0][2]
-            
+
             if self.return_confidences:
                 answers.append((answer, confidence))
             else:
-                answers.append(answer)
+                if self.return_answer_ids:
+                    answers.append((answer, answer_ids))
+                else:
+                    answers.append(answer)
 
         return answers
 

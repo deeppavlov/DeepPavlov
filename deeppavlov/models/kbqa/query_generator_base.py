@@ -12,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import itertools
-import re
-import time
 from logging import getLogger
-from typing import Tuple, List, Optional, Union, Dict, Any
+from typing import Tuple, List, Optional, Union, Any
 
-import nltk
+from whapi import search, get_html
+from bs4 import BeautifulSoup
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
@@ -46,10 +44,11 @@ class QueryGeneratorBase(Component, Serializable):
                  rank_rels_filename_1: str,
                  rank_rels_filename_2: str,
                  sparql_queries_filename: str,
-                 wiki_parser = None,
+                 wiki_parser=None,
                  entities_to_leave: int = 5,
                  rels_to_leave: int = 7,
                  syntax_structure_known: bool = False,
+                 use_api_requester: bool = False,
                  return_answers: bool = False, *args, **kwargs) -> None:
         """
 
@@ -66,6 +65,8 @@ class QueryGeneratorBase(Component, Serializable):
             entities_to_leave: how many entities to leave after entity linking
             rels_to_leave: how many relations to leave after relation ranking
             syntax_structure_known: if syntax tree parser was used to define query template type
+            use_api_requester: whether deeppavlov.models.api_requester.api_requester component will be used for
+                Entity Linking and Wiki Parser
             return_answers: whether to return answers or candidate answers
         """
         super().__init__(save_path=None, load_path=load_path)
@@ -81,6 +82,7 @@ class QueryGeneratorBase(Component, Serializable):
         self.entities_to_leave = entities_to_leave
         self.rels_to_leave = rels_to_leave
         self.syntax_structure_known = syntax_structure_known
+        self.use_api_requester = use_api_requester
         self.sparql_queries_filename = sparql_queries_filename
         self.return_answers = return_answers
 
@@ -101,10 +103,10 @@ class QueryGeneratorBase(Component, Serializable):
         pass
 
     def find_candidate_answers(self, question: str,
-                 question_sanitized: str,
-                 template_types: Union[List[str], str],
-                 entities_from_ner: List[str],
-                 types_from_ner: List[str]) -> Union[List[Tuple[str, Any]], List[str]]:
+                               question_sanitized: str,
+                               template_types: Union[List[str], str],
+                               entities_from_ner: List[str],
+                               types_from_ner: List[str]) -> Union[List[Tuple[str, Any]], List[str]]:
 
         candidate_outputs = []
         self.template_nums = template_types
@@ -114,27 +116,29 @@ class QueryGeneratorBase(Component, Serializable):
         for old, new in replace_tokens:
             question = question.replace(old, new)
 
-        tm1 = time.time()
         entities_from_template, types_from_template, rels_from_template, rel_dirs_from_template, \
-        query_type_template, template_found = self.template_matcher(question, entities_from_ner)
+        query_type_template, template_found = self.template_matcher(question_sanitized, entities_from_ner)
         self.template_nums = [query_type_template]
 
         log.debug(f"question: {question}\n")
         log.debug(f"template_type {self.template_nums}")
 
         if entities_from_template or types_from_template:
-            tm1 = time.time()
-            entity_ids = self.get_entity_ids(entities_from_template, "entities", template_found, question)
-            type_ids = self.get_entity_ids(types_from_template, "types")
-            log.debug(f"entities_from_template {entities_from_template}")
-            log.debug(f"types_from_template {types_from_template}")
-            log.debug(f"rels_from_template {rels_from_template}")
-            log.debug(f"entity_ids {entity_ids}")
-            log.debug(f"type_ids {type_ids}")
+            if rels_from_template[0][0] == "PHOW":
+                how_to_content = self.find_answer_wikihow(entities_from_template[0])
+                candidate_outputs = [["PHOW", how_to_content, 1.0]]
+            else:
+                entity_ids = self.get_entity_ids(entities_from_template, "entities", template_found, question)
+                type_ids = self.get_entity_ids(types_from_template, "types")
+                log.debug(f"entities_from_template {entities_from_template}")
+                log.debug(f"types_from_template {types_from_template}")
+                log.debug(f"rels_from_template {rels_from_template}")
+                log.debug(f"entity_ids {entity_ids}")
+                log.debug(f"type_ids {type_ids}")
 
-            tm1 = time.time()
-            candidate_outputs = self.sparql_template_parser(question_sanitized, entity_ids, type_ids, rels_from_template,
-                                                            rel_dirs_from_template)
+                candidate_outputs = self.sparql_template_parser(question_sanitized, entity_ids, type_ids,
+                                                                rels_from_template,
+                                                                rel_dirs_from_template)
 
         if not candidate_outputs and entities_from_ner:
             log.debug(f"(__call__)entities_from_ner: {entities_from_ner}")
@@ -147,39 +151,43 @@ class QueryGeneratorBase(Component, Serializable):
             log.debug(f"(__call__)self.template_nums: {self.template_nums}")
             if not self.syntax_structure_known:
                 entity_ids = entity_ids[:3]
-            tm1 = time.time()
             candidate_outputs = self.sparql_template_parser(question_sanitized, entity_ids, type_ids)
         return candidate_outputs
 
     def get_entity_ids(self, entities: List[str],
-                             what_to_link: str,
-                             template_found: str = None,
-                             question: str = None) -> List[List[str]]:
+                       what_to_link: str,
+                       template_found: str = None,
+                       question: str = None) -> List[List[str]]:
         entity_ids = []
-        for entity in entities:
-            entity_id = []
-            if what_to_link == "entities":
-                entity_id, confidences = self.linker_entities.link_entity(entity, context=question, template_found=template_found)
-            if what_to_link == "types":
-                entity_id, confidences = self.linker_types.link_entity(entity)
-            entity_ids.append(entity_id[:15])
+        if what_to_link == "entities":
+            el_output = self.linker_entities([entities], [template_found], [question])
+            if self.use_api_requester:
+                el_output = el_output[0]
+            entity_ids, _ = el_output
+            if not self.use_api_requester and entity_ids:
+                entity_ids = entity_ids[0]
+        if what_to_link == "types":
+            entity_ids, _ = self.linker_types([entities])
+            entity_ids = entity_ids[0]
+
         return entity_ids
 
     def sparql_template_parser(self, question: str,
-                              entity_ids: List[List[str]],
-                              type_ids: List[List[str]],
-                              rels_from_template: Optional[List[Tuple[str]]] = None,
-                              rel_dirs_from_template: Optional[List[str]] = None) -> List[Tuple[str]]:
+                               entity_ids: List[List[str]],
+                               type_ids: List[List[str]],
+                               rels_from_template: Optional[List[Tuple[str]]] = None,
+                               rel_dirs_from_template: Optional[List[str]] = None) -> List[Tuple[str]]:
         candidate_outputs = []
         log.debug(f"(find_candidate_answers)self.template_nums: {self.template_nums}")
         templates = []
         for template_num in self.template_nums:
             for num, template in self.template_queries.items():
                 if (num == template_num and self.syntax_structure_known) or \
-                   (template["template_num"] == template_num and not self.syntax_structure_known):
+                        (template["template_num"] == template_num and not self.syntax_structure_known):
                     templates.append(template)
-        templates = [template for template in templates if \
-                    (not self.syntax_structure_known and [len(entity_ids), len(type_ids)] == template["entities_and_types_num"]) \
+        templates = [template for template in templates if
+                     (not self.syntax_structure_known and [len(entity_ids), len(type_ids)] == template[
+                         "entities_and_types_num"])
                      or self.syntax_structure_known]
         templates_string = '\n'.join([template["query_template"] for template in templates])
         log.debug(f"{templates_string}")
@@ -198,7 +206,7 @@ class QueryGeneratorBase(Component, Serializable):
             for template in templates:
                 entities_and_types_select = template["entities_and_types_select"]
                 candidate_outputs = self.query_parser(question, template, entities_and_types_select,
-                                                                entity_ids, type_ids, rels_from_template)
+                                                      entity_ids, type_ids, rels_from_template)
                 if candidate_outputs:
                     return candidate_outputs
 
@@ -206,20 +214,25 @@ class QueryGeneratorBase(Component, Serializable):
                 alternative_templates = templates[0]["alternative_templates"]
                 for template_num, entities_and_types_select in alternative_templates:
                     candidate_outputs = self.query_parser(question, self.template_queries[template_num],
-                                        entities_and_types_select, entity_ids, type_ids, rels_from_template)
-                    return candidate_outputs
+                                                          entities_and_types_select, entity_ids, type_ids,
+                                                          rels_from_template)
+                    if candidate_outputs:
+                        return candidate_outputs
 
         log.debug("candidate_rels_and_answers:\n" + '\n'.join([str(output) for output in candidate_outputs[:5]]))
 
         return candidate_outputs
 
-    def find_top_rels(self, question: str, entity_ids: List[List[str]], triplet_info: Tuple) -> List[str]:
+    def find_top_rels(self, question: str, entity_ids: List[List[str]], triplet_info: Tuple) -> List[Tuple[str, Any]]:
         ex_rels = []
         direction, source, rel_type = triplet_info
         if source == "wiki":
-            for entity_id in entity_ids:
-                for entity in entity_id[:self.entities_to_leave]:
-                    ex_rels += self.wiki_parser.find_rels(entity, direction, rel_type)
+            queries_list = list({(entity, direction, rel_type) for entity_id in entity_ids
+                                 for entity in entity_id[:self.entities_to_leave]})
+            parser_info_list = ["find_rels" for i in range(len(queries_list))]
+            ex_rels = self.wiki_parser(parser_info_list, queries_list)
+            if self.use_api_requester and ex_rels:
+                ex_rels = [rel[0] for rel in ex_rels]
             ex_rels = list(set(ex_rels))
             ex_rels = [rel.split('/')[-1] for rel in ex_rels]
         elif source == "rank_list_1":
@@ -228,3 +241,15 @@ class QueryGeneratorBase(Component, Serializable):
             ex_rels = self.rank_list_1
         rels_with_scores = self.rel_ranker.rank_rels(question, ex_rels)
         return rels_with_scores[:self.rels_to_leave]
+
+    def find_answer_wikihow(self, howto_sentence: str) -> str:
+        search_results = search(howto_sentence, 5)
+        article_id = search_results[0]["article_id"]
+        html = get_html(article_id)
+        page = BeautifulSoup(html, 'lxml')
+        tags = list(page.find_all(['p']))
+        if tags:
+            howto_content = f"{tags[0].text.strip()}@en"
+        else:
+            howto_content = "Not Found"
+        return howto_content

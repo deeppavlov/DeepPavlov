@@ -104,10 +104,10 @@ def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], r
     query = query.split(' ')
     return query
 
+
 def fill_online_query(query: List[str], entity_comb: List[str], type_comb: List[str],
-              rel_comb: List[str], rels_to_replace: List[str],
-              rels_for_filter: List[str], rel_list_for_filter: List[List[str]]) -> Tuple[str, List[str]]:
-    
+                      rel_comb: List[str], rels_to_replace: List[str],
+                      rels_for_filter: List[str], rel_list_for_filter: List[List[str]]) -> Tuple[str, List[str]]:
     rel_list_for_filter = [[rel for rel, score in rel_list] for rel_list in rel_list_for_filter]
     for n, entity in enumerate(entity_comb[:-1]):
         query = query.replace(f"e{n + 1}", entity)
@@ -123,7 +123,7 @@ def fill_online_query(query: List[str], entity_comb: List[str], type_comb: List[
         for rel, candidate_rels in zip(rels_for_filter, rel_list_for_filter):
             rel_types = re.findall(f" ([\S]+:){rel}", query)
             for rel_type in rel_types:
-                new_rel = f"?p{n+1}"
+                new_rel = f"?p{n + 1}"
                 query = query.replace(f'{rel_type}{rel}', new_rel)
                 new_rels.append(new_rel)
                 candidate_rels_filled = [f"{new_rel} = {rel_type}{rel_value}" for rel_value in candidate_rels]
@@ -135,7 +135,10 @@ def fill_online_query(query: List[str], entity_comb: List[str], type_comb: List[
             query = query.replace("filter(", f"filter({'&&'.join(candidate_rel_filters)}&&")
         else:
             query = query.replace(" }", f" filter({'&&'.join(candidate_rel_filters)}) }}")
-    
-        query = query.replace(" where", f" {' '.join(new_rels)} where")    
+
+        query = query.replace(" where", f" {' '.join(new_rels)} where")
+        if rel_list_for_filter[0][0] == "P0" and len(entity_comb) == 2:
+            query = f"select ?ent ?p1 where {{ wd:{entity_comb[0]} ?p1" + \
+                    "?ent filter((?p1=schema:description)&&(lang(?ent)='en'))}}"
 
     return query, new_rels

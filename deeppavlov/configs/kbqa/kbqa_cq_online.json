@@ -41,8 +41,9 @@
         "inverted_index_filename": "inverted_index_eng.pickle",
         "entities_list_filename": "entities_list.pickle",
         "q2name_filename": "wiki_eng_q_to_name.pickle",
-        "use_hdt": false,
-        "wiki_parser": "#wiki_p",
+        "who_entities_filename": "who_entities.pickle",
+        "build_inverted_index": false,
+        "use_descriptions": false,
         "use_prefix_tree": false
       },
       {
@@ -52,8 +53,8 @@
         "inverted_index_filename": "inverted_index_types_eng.pickle",
         "entities_list_filename": "types_list.pickle",
         "q2name_filename": "wiki_eng_q_to_name_types.pickle",
-        "use_hdt": false,
-        "wiki_parser": "#wiki_p",
+        "build_inverted_index": false,
+        "use_descriptions": false,
         "use_prefix_tree": false
       },
       {
@@ -134,7 +135,8 @@
       "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
       "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
       "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
-      "{DEEPPAVLOV_PATH}/requirements/spelling.txt"
+      "{DEEPPAVLOV_PATH}/requirements/spelling.txt",
+      "{DEEPPAVLOV_PATH}/requirements/wikihow.txt"
     ],
     "labels": {
       "telegram_utils": "NERCoNLL2003Model",
@@ -167,7 +169,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/wiki_eng_files.tar.gz",
-        "subdir": "{MODELS_PATH}/wikidata_eng"
+        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/sparql_queries.json",

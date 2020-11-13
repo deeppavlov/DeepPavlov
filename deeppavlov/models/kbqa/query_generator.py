@@ -16,7 +16,7 @@ import itertools
 import re
 from logging import getLogger
 from typing import Tuple, List, Optional, Union, Dict, Any
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 import numpy as np
 import nltk
@@ -42,6 +42,8 @@ class QueryGenerator(QueryGeneratorBase):
                  rel_ranker: Union[RelRankerInfer, RelRankerBertInfer],
                  entities_to_leave: int = 5,
                  rels_to_leave: int = 7,
+                 max_comb_num: int = 10000,
+                 return_all_possible_answers: bool = False,
                  return_answers: bool = False, *args, **kwargs) -> None:
         """
 
@@ -50,6 +52,8 @@ class QueryGenerator(QueryGeneratorBase):
             rel_ranker: component deeppavlov.models.kbqa.rel_ranking_infer
             entities_to_leave: how many entities to leave after entity linking
             rels_to_leave: how many relations to leave after relation ranking
+            max_comb_num: the maximum number of combinations of candidate entities and relations
+            return_all_possible_answers: whether to return all found answers
             return_answers: whether to return answers or candidate answers
             **kwargs:
         """
@@ -57,10 +61,14 @@ class QueryGenerator(QueryGeneratorBase):
         self.rel_ranker = rel_ranker
         self.entities_to_leave = entities_to_leave
         self.rels_to_leave = rels_to_leave
+        self.max_comb_num = max_comb_num
+        self.return_all_possible_answers = return_all_possible_answers
         self.return_answers = return_answers
-        super().__init__(wiki_parser = self.wiki_parser, rel_ranker = self.rel_ranker,
-            entities_to_leave = self.entities_to_leave, rels_to_leave = self.rels_to_leave,
-            return_answers = self.return_answers, *args, **kwargs)
+        self.replace_tokens = [("wdt:p31", "wdt:P31"), ("pq:p580", "pq:P580"),
+                               ("pq:p582", "pq:P582"), ("pq:p585", "pq:P585"), ("pq:p1545", "pq:P1545")]
+        super().__init__(wiki_parser=self.wiki_parser, rel_ranker=self.rel_ranker,
+                         entities_to_leave=self.entities_to_leave, rels_to_leave=self.rels_to_leave,
+                         return_answers=self.return_answers, *args, **kwargs)
 
     def __call__(self, question_batch: List[str],
                  question_san_batch: List[str],
@@ -72,7 +80,6 @@ class QueryGenerator(QueryGeneratorBase):
         for question, question_sanitized, template_type, entities_from_ner, types_from_ner in \
                 zip(question_batch, question_san_batch, template_type_batch,
                     entities_from_ner_batch, types_from_ner_batch):
-
             candidate_outputs = self.find_candidate_answers(question, question_sanitized,
                                                             template_type, entities_from_ner, types_from_ner)
             candidate_outputs_batch.append(candidate_outputs)
@@ -90,15 +97,17 @@ class QueryGenerator(QueryGeneratorBase):
                      entities_and_types_select: List[str],
                      entity_ids: List[List[str]],
                      type_ids: List[List[str]],
-                     rels_from_template: Optional[List[Tuple[str]]] = None) -> List[Tuple[str]]:
-        candidate_outputs = []
+                     rels_from_template: Optional[List[Tuple[str]]] = None) -> List[List[Union[Tuple[Any, ...], Any]]]:
         question_tokens = nltk.word_tokenize(question)
-        query = query_info["query_template"].lower().replace("wdt:p31", "wdt:P31")
+        query = query_info["query_template"].lower()
+        for old_tok, new_tok in self.replace_tokens:
+            query = query.replace(old_tok, new_tok)
         log.debug(f"\n_______________________________\nquery: {query}\n_______________________________\n")
         rels_for_search = query_info["rank_rels"]
         rel_types = query_info["rel_types"]
         query_seq_num = query_info["query_sequence"]
         return_if_found = query_info["return_if_found"]
+        define_sorting_order = query_info["define_sorting_order"]
         property_types = query_info["property_types"]
         log.debug(f"(query_parser)query: {query}, {rels_for_search}, {query_seq_num}, {return_if_found}")
         query_triplets = re.findall("{[ ]?(.*?)[ ]?}", query)[0].split(' . ')
@@ -123,8 +132,11 @@ class QueryGenerator(QueryGeneratorBase):
         answer_ent = re.findall("select [\(]?([\S]+) ", query)
         order_info_nt = namedtuple("order_info", ["variable", "sorting_order"])
         order_variable = re.findall("order by (asc|desc)\((.*)\)", query)
-        answers_sorting_order = order_of_answers_sorting(question)
         if order_variable:
+            if define_sorting_order:
+                answers_sorting_order = order_of_answers_sorting(question)
+            else:
+                answers_sorting_order = order_variable[0][0]
             order_info = order_info_nt(order_variable[0][1], answers_sorting_order)
         else:
             order_info = order_info_nt(None, None)
@@ -149,24 +161,48 @@ class QueryGenerator(QueryGeneratorBase):
         start_time = datetime.datetime.now()
         entity_positions, type_positions = [elem.split('_') for elem in entities_and_types_select.split(' ')]
         log.debug(f"entity_positions {entity_positions}, type_positions {type_positions}")
-        selected_entity_ids = [entity_ids[int(pos)-1] for pos in entity_positions if int(pos)>0]
-        selected_type_ids = [type_ids[int(pos)-1] for pos in type_positions if int(pos)>0]
+        selected_entity_ids = [entity_ids[int(pos) - 1] for pos in entity_positions if int(pos) > 0]
+        selected_type_ids = [type_ids[int(pos) - 1] for pos in type_positions if int(pos) > 0]
         entity_combs = make_combs(selected_entity_ids, permut=True)
         type_combs = make_combs(selected_type_ids, permut=False)
         log.debug(f"(query_parser)entity_combs: {entity_combs[:3]}, type_combs: {type_combs[:3]},"
                   f" rel_combs: {rel_combs[:3]}")
-        for comb_num, combs in enumerate(itertools.product(entity_combs, type_combs, rel_combs)):
+        queries_list = []
+        parser_info_list = []
+        confidences_list = []
+        all_combs_list = list(itertools.product(entity_combs, type_combs, rel_combs))
+        for comb_num, combs in enumerate(all_combs_list):
             confidence = np.prod([score for rel, score in combs[2][:-1]])
+            confidences_list.append(confidence)
             query_hdt_seq = [
                 fill_query(query_hdt_elem, combs[0], combs[1], combs[2]) for query_hdt_elem in query_sequence]
             if comb_num == 0:
-                log.debug(f"\n_______________________________\nfilled query: {query_hdt_seq}\n_______________________________\n")
-            candidate_output = self.wiki_parser(
-                rels_from_query + answer_ent, query_hdt_seq, filter_info, order_info)
-            candidate_outputs += [[rel for rel, score in combs[2][:-1]] + output + [confidence]
-                                  for output in candidate_output]
-            if return_if_found and candidate_output:
-                return candidate_outputs
+                log.debug(f"\n__________________________\nfilled query: {query_hdt_seq}\n__________________________\n")
+            queries_list.append((rels_from_query + answer_ent, query_hdt_seq, filter_info, order_info, return_if_found))
+            parser_info_list.append("query_execute")
+            if comb_num == self.max_comb_num:
+                break
+
+        candidate_outputs = []
+        candidate_outputs_list = self.wiki_parser(parser_info_list, queries_list)
+        if self.use_api_requester and isinstance(candidate_outputs_list, list) and candidate_outputs_list:
+            candidate_outputs_list = candidate_outputs_list[0]
+
+        if isinstance(candidate_outputs_list, list) and candidate_outputs_list:
+            outputs_len = len(candidate_outputs_list)
+            all_combs_list = all_combs_list[:outputs_len]
+            confidences_list = confidences_list[:outputs_len]
+            for combs, confidence, candidate_output in zip(all_combs_list, confidences_list, candidate_outputs_list):
+                candidate_outputs += [[rel for rel, score in combs[2][:-1]] + output + [confidence]
+                                      for output in candidate_output]
+            if self.return_all_possible_answers:
+                candidate_outputs_dict = defaultdict(list)
+                for candidate_output in candidate_outputs:
+                    candidate_outputs_dict[tuple(candidate_output[:-2])].append(candidate_output[-2:])
+                candidate_outputs = []
+                for candidate_rel_comb, candidate_output in candidate_outputs_dict.items():
+                    candidate_outputs.append(list(candidate_rel_comb) +
+                                             [tuple([ans for ans, conf in candidate_output]), candidate_output[0][1]])
         log.debug(f"(query_parser)loop time: {datetime.datetime.now() - start_time}")
         log.debug(f"(query_parser)final outputs: {candidate_outputs[:3]}")
 
