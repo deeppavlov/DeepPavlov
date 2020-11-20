@@ -327,15 +327,15 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                 for curr_story_utters in curr_story_utters_batch:
                     for user_utter in possible_extensions:
                         new_curr_story_utters = curr_story_utters.copy()
-                        new_curr_story_utters.append(user_utter)
+                        new_curr_story_utters.extend(user_utter)
                         new_curr_story_utters_batch.append(new_curr_story_utters)
                 curr_story_utters_batch = new_curr_story_utters_batch
                 # curr_story_utters.extend(process_story_line(line))
         story_file.close()
 
         if not nonlocal_curr_story_bad:
-            stories_parsed[curr_story_title] = curr_story_utters
-        stories_parsed.pop(None)
+            for curr_story_utters_ix, curr_story_utters in enumerate(curr_story_utters_batch):
+                stories_parsed[curr_story_title + f"_{curr_story_utters_ix}"] = curr_story_utters
 
         tmp_f = tempfile.NamedTemporaryFile(delete=False, mode='w', encoding="utf-8")
         for story_id, story in stories_parsed.items():
