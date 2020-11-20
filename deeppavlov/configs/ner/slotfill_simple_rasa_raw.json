@@ -1,0 +1,46 @@
+{
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "in": ["x"],
+        "class_name": "lazy_tokenizer",
+        "out": ["x_tokens"]
+      },
+      {
+        "in": ["x_tokens"],
+        "class_name": "str_lower",
+        "out": ["x_lower"]
+      },
+      {
+        "in": ["x_lower"],
+        "class_name": "slotfill_raw_rasa",
+        "save_path": "{DATA_PATH}",
+        "load_path": "{DATA_PATH}",
+        "out": ["slots"]
+      }
+    ],
+    "out": ["slots"]
+  },
+  "train": {
+    "metrics": [],
+    "evaluation_targets": []
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "DATA_PATH": "{DOWNLOADS_PATH}/rasa_configs_reader"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/dp_minimal_rasa_demo.tar.gz",
+        "subdir": "{DATA_PATH}"
+      }
+    ]
+  }
+}

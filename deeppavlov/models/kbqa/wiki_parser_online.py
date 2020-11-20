@@ -13,10 +13,13 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import List, Tuple, Dict
+from time import sleep
+from typing import List, Dict, Any
 
 import requests
+from requests.exceptions import ConnectionError, ConnectTimeout, ReadTimeout
 
+from deeppavlov import __version__ as dp_version
 from deeppavlov.core.common.registry import register
 
 log = getLogger(__name__)
@@ -29,20 +32,47 @@ class WikiParserOnline:
     def __init__(self, url: str, timeout: float = 0.5, **kwargs) -> None:
         self.url = url
         self.timeout = timeout
+        self.agent_header = {'User-Agent': f'wiki_parser_online/{dp_version} (https://deeppavlov.ai;'
+                                           f' info@deeppavlov.ai) deeppavlov/{dp_version}'}
+
+    def __call__(self, parser_info_list: List[str], queries_list: List[Any]) -> List[Any]:
+        wiki_parser_output = []
+        for parser_info, query in zip(parser_info_list, queries_list):
+            if parser_info == "query_execute":
+                query_to_execute, return_if_found = query
+                candidate_output = self.get_answer(query_to_execute)
+                wiki_parser_output.append(candidate_output)
+                if return_if_found and candidate_output:
+                    return wiki_parser_output
+            elif parser_info == "find_rels":
+                wiki_parser_output += self.find_rels(*query)
+            elif parser_info == "find_label":
+                wiki_parser_output.append(self.find_label(*query))
+            else:
+                raise ValueError("Unsupported query type")
+        return wiki_parser_output
 
     def get_answer(self, query: str) -> List[Dict[str, Dict[str, str]]]:
         data = []
         for i in range(5):
             try:
-                data_0 = requests.get(self.url, params={'query': query, 'format': 'json'},  timeout=self.timeout).json()
+                resp = requests.get(self.url,
+                                    params={'query': query, 'format': 'json'},
+                                    timeout=self.timeout,
+                                    headers=self.agent_header)
+                if resp.status_code != 200:
+                    continue
+                data_0 = resp.json()
                 if "results" in data_0.keys():
                     data = data_0['results']['bindings']
                 elif "boolean" in data_0.keys():
                     data = data_0['boolean']
                 break
-            except:
-                pass
-
+            except (ConnectTimeout, ReadTimeout) as e:
+                log.warning(f'TimeoutError: {repr(e)}')
+            except ConnectionError as e:
+                log.warning(f'Connection error: {repr(e)}\nWaiting 1s...')
+                sleep(1)
         return data
 
     def find_label(self, entity: str, question: str) -> str:

@@ -103,7 +103,7 @@ class RelRankerMTBertInfer(Component, Serializable):
 
             if answers_with_scores:
                 log.debug(f"answers: {answers_with_scores[0]}")
-                answer = self.wiki_parser.find_label(answers_with_scores[0][0], question)
+                answer = self.wiki_parser(["find_label"], [(answers_with_scores[0][0], question)])[0]
                 confidence = answers_with_scores[0][2]
 
             if self.return_confidences:

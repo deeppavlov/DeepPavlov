@@ -35,7 +35,7 @@ Send POST request to ``<host>:<port>/model`` to infer model. See details at
 /probe
 """"""
 Send POST request to ``<host>:<port>/probe`` to check if API is working. The
-server will send a response ``["Test passed"]`` if it is working.  Requests to
+server will send a response ``["Test passed"]`` if it is working. Requests to
 ``/probe`` are not logged.
 
 /api
@@ -47,10 +47,17 @@ will return list with argument names.
 
 /docs
 """""
-
 To interact with the REST API via graphical interface open
 ``<host>:<port>/docs`` in a browser (Swagger UI).
 
+/metrics
+""""""""
+Endpoint to monitor a running service using Prometheus. Metrics:
+
+* ``http_requests_count``: Counter, tracks number of processed requests. Labels: ``endpoint``, ``status_code``.
+* ``http_requests_latency_seconds``: Histogram, tracks responses latency (only with 200 status code). Labels:
+  ``endpoint``.
+* ``http_requests_in_progress``: Gauge, tracks inprogress requests. Labels: ``endpoint``.
 
 Advanced configuration
 ----------------------

@@ -45,8 +45,8 @@ class QuestionSignChecker(Component):
 class EntityDetectionParser(Component):
     """This class parses probabilities of tokens to be a token from the entity substring."""
 
-    def __init__(self, entity_tags: List[str], type_tag: str, o_tag: str, tags_file: str,
-                       return_entities_with_tags: bool = False, thres_proba: float = 0.8, **kwargs):
+    def __init__(self, entity_tags: List[str], type_tag: str, o_tag: str, tags_file: str, ignore_points: bool = False,
+                 return_entities_with_tags: bool = False, thres_proba: float = 0.8, **kwargs):
         """
 
         Args:
@@ -54,6 +54,7 @@ class EntityDetectionParser(Component):
             type_tag: tag for types
             o_tag: tag for tokens which are neither entities nor types
             tags_file: filename with NER tags
+            ignore_points: whether to consider points as separate symbols
             return_entities_with_tags: whether to return a dict of tags (keys) and list of entity substrings (values)
                 or simply a list of entity substrings
             thres_proba: if the probability of the tag is less than thres_proba, we assign the tag as 'O'
@@ -61,6 +62,7 @@ class EntityDetectionParser(Component):
         self.entity_tags = entity_tags
         self.type_tag = type_tag
         self.o_tag = o_tag
+        self.ignore_points = ignore_points
         self.return_entities_with_tags = return_entities_with_tags
         self.thres_proba = thres_proba
         self.tag_ind_dict = {}
@@ -123,7 +125,7 @@ class EntityDetectionParser(Component):
                 tag_num = 0
             tags.append(self.tag_ind_dict[tag_num])
             tag_probas.append(proba[tag_num])
-                    
+
         return tags, tag_probas
 
     def entities_from_tags(self, tokens, tags, tag_probas):
@@ -153,13 +155,23 @@ class EntityDetectionParser(Component):
         replace_tokens = [(' - ', '-'), ("'s", ''), (' .', ''), ('{', ''), ('}', ''),
                           ('  ', ' '), ('"', "'"), ('(', ''), (')', '')]
 
+        cnt = 0
         for n, (tok, tag, proba) in enumerate(zip(tokens, tags, tag_probas)):
             if tag in self.entity_tags:
-                entity_dict[tag].append(tok)
-                entity_positions_dict[tag].append(n)
+                if self.ignore_points:
+                    if len(tok) == 1 and n < len(tokens) - 1 and tokens[n + 1] == ".":
+                        entity_dict[tag].append(f"{tok}.")
+                    else:
+                        entity_dict[tag].append(tok)
+                else:
+                    entity_dict[tag].append(tok)
+                entity_positions_dict[tag].append(cnt)
+
             elif tag == self.type_tag:
                 entity_type.append(tok)
                 type_proba.append(proba)
+            elif self.ignore_points and tok == "." and n > 0 and len(tokens[n - 1]) == 1:
+                cnt -= 1
             elif any(entity_dict.values()):
                 for tag, entity in entity_dict.items():
                     entity = ' '.join(entity)
@@ -178,14 +190,15 @@ class EntityDetectionParser(Component):
                 entity_type = []
                 types_probas.append(np.mean(type_proba))
                 type_proba = []
+            cnt += 1
 
         if entity_types:
             entity_types = sorted(zip(entity_types, types_probas), key=lambda x: x[1], reverse=True)
             entity_types = [entity_type[0] for entity_type in entity_types]
 
         entities_list = [entity for tag, entities in entities_dict.items() for entity in entities]
-        entities_positions_list = [position for tag, positions in entities_positions_dict.items() 
-                                                                         for position in positions]
+        entities_positions_list = [position for tag, positions in entities_positions_dict.items()
+                                   for position in positions]
 
         if self.return_entities_with_tags:
             return entities_dict, entity_types, entities_positions_dict

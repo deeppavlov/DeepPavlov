@@ -1,8 +1,13 @@
 {
   "chainer": {
-    "in": ["x"],
+    "in": ["x_init"],
     "in_y": ["y"],
     "pipe": [
+      {
+        "class_name": "question_sign_checker",
+        "in": ["x_init"],
+        "out": ["x"]
+      },
       {
         "config_path": "{CONFIGS_PATH}/ner/ner_bert_ent_and_type_rus.json",
         "in": ["x"],
@@ -16,6 +21,7 @@
         "type_tag": "T-TAG",
         "o_tag": "O-TAG",
         "tags_file": "{NER_PATH}/tag.dict",
+        "ignore_points": true,
         "class_name": "entity_detection_parser"
       },
       {
@@ -70,7 +76,8 @@
         "lemmatize": true,
         "use_descriptions": true,
         "include_mention": false,
-        "use_prefix_tree": false
+        "use_prefix_tree": false,
+        "lang": "ru"
       },
       {
         "class_name": "kbqa_entity_linker",
@@ -82,7 +89,8 @@
         "build_inverted_index": false,
         "lemmatize": true,
         "use_descriptions": false,
-        "use_prefix_tree": false
+        "use_prefix_tree": false,
+        "lang": "ru"
       },
       {
         "class_name": "rel_ranking_bert_infer",
@@ -90,6 +98,8 @@
         "ranker": {"config_path": "{CONFIGS_PATH}/classifiers/rel_ranking_bert_rus.json"},
         "wiki_parser": "#wiki_p",
         "batch_size": 32,
+        "return_all_possible_answers": false,
+        "return_answer_ids": false,
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "rel_q2name_filename": "wiki_dict_properties_rus.pickle"
       },
@@ -105,9 +115,10 @@
         "rank_rels_filename_1": "rels_0.txt",
         "rank_rels_filename_2": "rels_1.txt",
         "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries.json",
-        "entities_to_leave": 7,
+        "entities_to_leave": 9,
         "rels_to_leave": 10,
         "return_answers": true,
+        "return_all_possible_answers": false,
         "syntax_structure_known": true,
         "in": ["x", "x_sanitized", "query_nums", "entities_dict", "types_dict"],
         "out": ["answers"]
@@ -156,7 +167,8 @@
       "{DEEPPAVLOV_PATH}/requirements/udpipe.txt",
       "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
       "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
-      "{DEEPPAVLOV_PATH}/requirements/spelling.txt"
+      "{DEEPPAVLOV_PATH}/requirements/spelling.txt",
+      "{DEEPPAVLOV_PATH}/requirements/wikihow.txt"
     ],
     "labels": {
       "telegram_utils": "NERCoNLL2003Model",

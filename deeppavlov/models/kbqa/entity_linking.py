@@ -81,7 +81,7 @@ class NerChunker(Component):
                         if n == curr_doc:
                             nums_batch.append(n)
                         else:
-                            nums_batch.append(n-1)
+                            nums_batch.append(n - 1)
                         count_texts += 1
                     else:
                         text_batch_list.append(text_batch)
@@ -91,13 +91,13 @@ class NerChunker(Component):
                         count_texts = 0
                     curr_doc = n
                     text = f"{sentence} "
-                    
+
         if text:
             text_batch.append(text.strip())
             text_batch_list.append(text_batch)
-            nums_batch.append(len(docs_batch)-1)
+            nums_batch.append(len(docs_batch) - 1)
             nums_batch_list.append(nums_batch)
-                    
+
         return text_batch_list, nums_batch_list
 
 
@@ -276,14 +276,14 @@ class EntityLinker(Component, Serializable):
         text_len_sum = 0
         for entity_ids_batch, entity_substr_batch, entity_positions_batch, text_len_batch, nums_batch in \
                 zip(entity_ids_batch_list, entity_substr_batch_list, entity_positions_batch_list,
-                                                                 text_len_batch_list, nums_batch_list):
+                    text_len_batch_list, nums_batch_list):
             for entity_ids, entity_substr, entity_positions, text_len, doc_num in \
                     zip(entity_ids_batch, entity_substr_batch, entity_positions_batch, text_len_batch, nums_batch):
                 if doc_num == cur_doc_num:
                     doc_entity_ids += entity_ids
                     doc_entity_substr += entity_substr
                     doc_entity_positions += [[pos + text_len_sum for pos in entity_position]
-                                                                 for entity_position in entity_positions]
+                                             for entity_position in entity_positions]
                     text_len_sum += text_len
                 else:
                     doc_entity_ids_batch.append(doc_entity_ids)
@@ -335,18 +335,19 @@ class EntityLinker(Component, Serializable):
                         else:
                             candidate_entities[entity] = score
                 candidate_entities_dict[index] += [(entity, cand_entity_len, score)
-                                                for (entity, cand_entity_len), score in candidate_entities.items()]
+                                                   for (entity, cand_entity_len), score in candidate_entities.items()]
                 log.debug(f"{index} candidate_entities {[self.word_list[ind] for ind in ind_list[:10]]}")
             candidate_entities_total = list(candidate_entities_dict.values())
             candidate_entities_total = [self.sum_scores(candidate_entities, substr_len)
-                              for candidate_entities, substr_len in zip(candidate_entities_total, substr_lens)]
+                                        for candidate_entities, substr_len in
+                                        zip(candidate_entities_total, substr_lens)]
             log.debug(f"length candidate entities list {len(candidate_entities_total)}")
             candidate_entities_list = []
             entities_scores_list = []
             for candidate_entities in candidate_entities_total:
                 log.debug(f"candidate_entities before ranking {candidate_entities[:10]}")
                 candidate_entities = [candidate_entity + (self.entities_ranking_dict.get(candidate_entity[0], 0),)
-                                               for candidate_entity in candidate_entities]
+                                      for candidate_entity in candidate_entities]
                 candidate_entities_str = '\n'.join([str(candidate_entity) for candidate_entity in candidate_entities])
                 candidate_entities = sorted(candidate_entities, key=lambda x: (x[1], x[2]), reverse=True)
                 log.debug(f"candidate_entities {candidate_entities[:10]}")
@@ -376,17 +377,17 @@ class EntityLinker(Component, Serializable):
         entities_with_scores_sum = defaultdict(int)
         for entity in candidate_entities:
             entities_with_scores_sum[(entity[0], entity[1])] += entity[2]
-        
+
         entities_with_scores = {}
         for (entity, cand_entity_len), scores_sum in entities_with_scores_sum.items():
-            score = min(scores_sum, cand_entity_len)/max(substr_len, cand_entity_len)
+            score = min(scores_sum, cand_entity_len) / max(substr_len, cand_entity_len)
             if entity in entities_with_scores:
                 if score > entities_with_scores[entity]:
                     entities_with_scores[entity] = score
             else:
                 entities_with_scores[entity] = score
         entities_with_scores = list(entities_with_scores.items())
-        
+
         return entities_with_scores
 
     def rank_by_description(self, entity_positions_list: List[List[int]],
@@ -400,10 +401,10 @@ class EntityLinker(Component, Serializable):
             log.debug(f"candidate_entities {candidate_entities[:10]}")
             if self.include_mention:
                 context = ' '.join(context_tokens[:entity_pos[0]] + ["[ENT]"] +
-                                   context_tokens[entity_pos[0]:entity_pos[-1]+1] + ["[ENT]"] +
-                                   context_tokens[entity_pos[-1]+1:])
+                                   context_tokens[entity_pos[0]:entity_pos[-1] + 1] + ["[ENT]"] +
+                                   context_tokens[entity_pos[-1] + 1:])
             else:
-                context = ' '.join(context_tokens[:entity_pos[0]]+["[ENT]"] + context_tokens[entity_pos[-1]+1:])
+                context = ' '.join(context_tokens[:entity_pos[0]] + ["[ENT]"] + context_tokens[entity_pos[-1] + 1:])
             log.debug(f"context {context}")
             log.debug(f"len candidate entities {len(candidate_entities)}")
             scores = self.entity_ranker.rank_rels(context, candidate_entities)
