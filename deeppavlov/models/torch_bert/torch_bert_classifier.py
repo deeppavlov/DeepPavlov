@@ -19,7 +19,7 @@ from typing import List, Dict, Union, Optional
 import numpy as np
 import torch
 from overrides import overrides
-from transformers import BertForSequenceClassification, BertConfig
+from transformers import AutoModelForSequenceClassification, AutoConfig
 from transformers.data.processors.utils import InputFeatures
 
 from deeppavlov.core.common.errors import ConfigError
@@ -104,7 +104,8 @@ class TorchBertClassifierModel(TorchModel):
 
         self.optimizer.zero_grad()
 
-        loss, logits = self.model(b_input_ids, token_type_ids=None, attention_mask=b_input_masks,
+        # Token_type_id is omitted for Text Classification
+        loss, logits = self.model(input_ids=b_input_ids, attention_mask=b_input_masks,
                                   labels=b_labels)
         loss.backward()
         # Clip the norm of the gradients to 1.0.
@@ -136,7 +137,7 @@ class TorchBertClassifierModel(TorchModel):
 
         with torch.no_grad():
             # Forward pass, calculate logit predictions
-            logits = self.model(b_input_ids, token_type_ids=None, attention_mask=b_input_masks)
+            logits = self.model(input_ids=b_input_ids, attention_mask=b_input_masks)
             logits = logits[0]
 
         if self.return_probas:
@@ -155,18 +156,18 @@ class TorchBertClassifierModel(TorchModel):
         if fname is not None:
             self.load_path = fname
 
-        if self.pretrained_bert and not Path(self.pretrained_bert).is_file():
-            self.model = BertForSequenceClassification.from_pretrained(
-                self.pretrained_bert, num_labels=self.n_classes,
-                output_attentions=False, output_hidden_states=False)
+        if self.pretrained_bert:
+           self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert,
+                                                                           config={'num_labels':self.n_classes,
+                                                                                   'output_attentions':  False,
+                                                                                   'output_hidden_states': False})
         elif self.bert_config_file and Path(self.bert_config_file).is_file():
-            self.bert_config = BertConfig.from_json_file(str(expand_path(self.bert_config_file)))
-
+            self.bert_config = AutoConfig.from_json_file(str(expand_path(self.bert_config_file)))
             if self.attention_probs_keep_prob is not None:
                 self.bert_config.attention_probs_dropout_prob = 1.0 - self.attention_probs_keep_prob
             if self.hidden_keep_prob is not None:
                 self.bert_config.hidden_dropout_prob = 1.0 - self.hidden_keep_prob
-            self.model = BertForSequenceClassification(config=self.bert_config)
+            self.model = AutoModelForSequenceClassification.from_config(config=self.bert_config)
         else:
             raise ConfigError("No pre-trained BERT model is given.")
 
