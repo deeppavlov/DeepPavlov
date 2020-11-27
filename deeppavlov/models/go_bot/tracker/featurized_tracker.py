@@ -159,6 +159,9 @@ class FeaturizedTracker(TrackerInterface):
         Returns:
              the dictionary represented by the passed json
         """
+        if domain_yml_path is None or stories_yml_path is None:
+            return {}, {}
+
         domain_yml_path = expand_path(domain_yml_path)
         domain_knowledge: DomainKnowledge = DomainKnowledge.from_yaml(domain_yml_path)
         potential_api_or_db_actions = domain_knowledge.known_actions
