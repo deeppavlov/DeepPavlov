@@ -107,7 +107,7 @@
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/paraphrase_ident_qqp.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/paraphrase_ident_qqp_27112020.tar.gz",
         "subdir": "{MODELS_PATH}"
       },
       {
