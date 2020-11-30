@@ -294,7 +294,15 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                     # deal with consecutive system actions by inserting the last user replics in between
                     curr_story_utters.append(cls.get_last_users_turn(curr_story_utters))
 
-            def parse_form_name(story_line):
+            def parse_form_name(story_line: str) -> str:
+                """
+                if the line (in stories.md utterance format) contains a form name, return it
+                Args:
+                    story_line: line to extract form name from
+
+                Returns:
+                    the extracted form name or None if no form name found
+                """
                 form_name = None
                 if story_line.startswith("form"):
                     form_di = json.loads(story_line[len("form"):])
