@@ -84,6 +84,17 @@ class DialogueStateTracker(FeaturizedTracker):
 
     @staticmethod
     def extract_reqiured_acquired_slots_ids_mapping(act2act_id, slot_names, nlg_manager, parent_tracker):
+        """
+        get the required and acquired slots information for each known action in the -Hot Encoding form
+        Args:
+            act2act_id: the mapping of actions onto their ids
+            slot_names: the names of slots known to the tracker
+            nlg_manager: the NLG manager used in system
+            parent_tracker: the tracker to take required and acquired slots information from
+
+        Returns:
+            the dicts providing np.array masks of required and acquired slots for each known action
+        """
         action_id2aqd_slots_ids = dict()  # aqd stands for acquired
         action_id2req_slots_ids = dict()
         for act in nlg_manager.known_actions():
