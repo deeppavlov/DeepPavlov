@@ -248,7 +248,15 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         curr_story_utters_batch = []
         nonlocal_curr_story_bad = False  # can be modified as a nonlocal variable
 
-        def process_user_utter(line):
+        def process_user_utter(line: str) -> List[List[Dict[str, Any]]]:
+            """
+            given the stories.md user line, returns the batch of all the dstc2 ways to represent it
+            Args:
+                line: the system line to generate dstc2 versions for
+
+            Returns:
+                all the possible dstc2 versions of the passed story line
+            """
             nonlocal intent2slots2text, slot_name2text2value, curr_story_utters_batch, nonlocal_curr_story_bad
             try:
                 possible_user_utters = cls.augment_user_turn(intent2slots2text, line, slot_name2text2value)
@@ -268,7 +276,15 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                 utters_to_append_batch = []
             return utters_to_append_batch
 
-        def process_system_utter(line):
+        def process_system_utter(line: str) -> List[List[Dict[str, Any]]]:
+            """
+            given the stories.md system line, returns the batch of all the dstc2 ways to represent it
+            Args:
+                line: the system line to generate dstc2 versions for
+
+            Returns:
+                all the possible dstc2 versions of the passed story line
+            """
             nonlocal intent2slots2text, domain_knowledge, curr_story_utters_batch, nonlocal_curr_story_bad
             system_action = cls.parse_system_turn(domain_knowledge, line)
             system_action_name = system_action.get("dialog_acts")[0].get("act")
@@ -307,7 +323,15 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                 utters_to_append_batch = [[system_action]]
             return utters_to_append_batch
 
-        def process_story_line(line):
+        def process_story_line(line: str) -> List[List[Dict[str, Any]]]:
+            """
+            given the stories.md line, returns the batch of all the dstc2 ways to represent it
+            Args:
+                line: the line to generate dstc2 versions
+
+            Returns:
+                all the possible dstc2 versions of the passed story line
+            """
             if line.startswith('*'):
                 utters_to_extend_with_batch = process_user_utter(line)
             elif line.startswith('-'):
@@ -371,26 +395,58 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         return gobot_formatted_stories
 
     @classmethod
-    def augment_form(cls, form_name:str, domain_knowledge: DomainKnowledge, intent2slots2text: Dict):
+    def augment_form(cls, form_name: str, domain_knowledge: DomainKnowledge, intent2slots2text: Dict) -> List[str]:
+        """
+        Replaced the form mention in stories.md with the actual turns relevant to the form
+        Args:
+            form_name: the name of form to generate turns for
+            domain_knowledge: the domain knowledge (see domain.yml in RASA) relevant to the processed config
+            intent2slots2text: the mapping of intents and particular slots onto text
+
+        Returns:
+            the story turns relevant to the passed form
+        """
         form = domain_knowledge.forms[form_name] # todo handle keyerr
         augmended_story = []
         for slot_name, slot_info_li in form.items():
             if slot_info_li and slot_info_li[0].get("type", '') == "from_entity":
-                # we only handle this sort of slots
+                # we only handle from_entity slots
                 known_responses = list(domain_knowledge.response_templates)
                 known_intents = list(intent2slots2text.keys())
                 augmended_story.extend(cls.augment_slot(known_responses, known_intents, slot_name, form_name))
         return augmended_story
 
     @classmethod
-    def augment_slot(cls, known_responses: List[str], known_intents: List[str], slot_name: str, form_name: str):
+    def augment_slot(cls, known_responses: List[str], known_intents: List[str], slot_name: str, form_name: str) \
+            -> List[str]:
+        """
+        Given the slot name, generates a sequence of system turn asking for a slot and user' turn providing this slot
+
+        Args:
+            known_responses: responses known to the system from domain.yml
+            known_intents: intents known to the system from domain.yml
+            slot_name: the name of the slot to augment for
+            form_name: the name of the form for which the turn is augmented
+
+        Returns:
+            the list of stories.md alike turns
+        """
         ask_slot_act_name = cls.get_augmented_ask_slot_utter(form_name, known_responses, slot_name)
         inform_slot_user_utter = cls.get_augmented_ask_intent_utter(known_intents, slot_name)
 
         return [f"- {ask_slot_act_name}", f"* {inform_slot_user_utter}"]
 
     @classmethod
-    def get_augmented_ask_intent_utter(cls, known_intents, slot_name):
+    def get_augmented_ask_intent_utter(cls, known_intents: List[str], slot_name: str) -> Optional[str]:
+        """
+        if the system knows the inform_{slot} intent, return this intent name, otherwise return None
+        Args:
+            known_intents: intents known to the system
+            slot_name: the slot to look inform intent for
+
+        Returns:
+            the slot informing intent or None
+        """
         inform_slot_user_utter_hypothesis = f"inform_{slot_name}"
         if inform_slot_user_utter_hypothesis in known_intents:
             inform_slot_user_utter = inform_slot_user_utter_hypothesis
@@ -401,7 +457,17 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         return inform_slot_user_utter
 
     @classmethod
-    def get_augmented_ask_slot_utter(cls, form_name, known_responses, slot_name):
+    def get_augmented_ask_slot_utter(cls, form_name: str, known_responses: List[str], slot_name: str):
+        """
+        if the system knows the ask_{slot} action, return this action name, otherwise return None
+        Args:
+            form_name: the name of the currently processed form
+            known_responses: actions known to the system
+            slot_name: the slot to look asking action for
+
+        Returns:
+            the slot asking action or None
+        """
         ask_slot_act_name_hypothesis1 = f"utter_ask_{form_name}_{slot_name}"
         ask_slot_act_name_hypothesis2 = f"utter_ask_{slot_name}"
         if ask_slot_act_name_hypothesis1 in known_responses:
@@ -424,7 +490,16 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         return curr_story_utters and curr_story_utters[-1]["speaker"] == cls._SYSTEM_SPEAKER_ID
 
     @classmethod
-    def parse_system_turn(cls, domain_knowledge, line):
+    def parse_system_turn(cls, domain_knowledge: DomainKnowledge, line: str) -> Dict:
+        """
+        Given the RASA stories.md line, returns the dstc2-formatted json (dict) for this line
+        Args:
+            domain_knowledge: the domain knowledge relevant to the processed stories config (from which line is taken)
+            line: the story system step representing line from stories.md
+
+        Returns:
+            the dstc2-formatted passed turn
+        """
         # system actions are started in dataset with -
         system_action_name = line.strip('-').strip()
         curr_action_text = cls._system_action2text(domain_knowledge, system_action_name)
@@ -436,7 +511,17 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         return system_action
 
     @classmethod
-    def augment_user_turn(cls, intent2slots2text, line, slot_name2text2value):
+    def augment_user_turn(cls, intent2slots2text, line: str, slot_name2text2value) -> List[Dict[str: Any]]:
+        """
+        given the turn information generate all the possible stories representing it
+        Args:
+            intent2slots2text: the intents and slots to natural language utterances mapping known to the system
+            line: the line representing used utterance in stories.md format
+            slot_name2text2value: the slot names to values mapping known o the system
+
+        Returns:
+            the batch of all the possible dstc2 representations of the passed intent
+        """
         # user actions are started in dataset with *
         user_action, slots_dstc2formatted = cls._parse_user_intent(line)
         slots_actual_values = cls._clarify_slots_values(slot_name2text2value, slots_dstc2formatted)
@@ -457,6 +542,16 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
     def _choose_slots_for_whom_exists_text(intent2slots2text: Dict[str, Dict[SLOT2VALUE_PAIRS_TUPLE, List]],
                                            slots_actual_values: SLOT2VALUE_PAIRS_TUPLE,
                                            user_action: str) -> Tuple[List, SLOT2VALUE_PAIRS_TUPLE, str]:
+        """
+
+        Args:
+            intent2slots2text: the mapping of intents and slots to natural language utterances representing them
+            slots_actual_values: the slot values information to look utterance for
+            user_action: the intent to look utterance for
+
+        Returns:
+            the slots ommitted to find an NLU candidate, the slots represented in the candidate, the intent name used
+        """
         possible_keys = [k for k in intent2slots2text.keys() if user_action in k]
         possible_keys = possible_keys + [user_action]
         possible_keys = sorted(possible_keys, key=lambda action_s: action_s.count('+'))
@@ -497,6 +592,15 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
     @staticmethod
     def _parse_user_intent(line: str, ignore_slots=False) -> Tuple[str, List[List]]:
+        """
+        Given the intent line in RASA stories.md format, return the name of the intent and slots described with this line
+        Args:
+            line: the line to parse
+            ignore_slots: whether to ignore slots information
+
+        Returns:
+            the pair of the intent name and slots ([[slot name, slot value],.. ]) info
+        """
         intent = line.strip('*').strip()
         if '{' not in intent:
             intent = intent + "{}"  # the prototypical intent is "intent_name{slot1: value1, slotN: valueN}"
@@ -511,12 +615,31 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
     def _user_action2text(intent2slots2text: Dict[str, Dict[SLOT2VALUE_PAIRS_TUPLE, List]],
                           user_action: str,
                           slots_li: Optional[SLOT2VALUE_PAIRS_TUPLE] = None) -> List[str]:
+        """
+        given the user intent, return the text representing this intent with passed slots
+        Args:
+            intent2slots2text: the mapping of intents and slots to natural language utterances
+            user_action: the name of intent to generate text for
+            slots_li: the slot values to provide
+
+        Returns:
+            the text of utterance relevant to the passed intent and slots
+        """
         if slots_li is None:
             slots_li = tuple()
         return intent2slots2text[user_action][slots_li]
 
     @staticmethod
     def _system_action2text(domain_knowledge: DomainKnowledge, system_action: str) -> str:
+        """
+        given the system action name return the relevant template text
+        Args:
+            domain_knowledge: the domain knowledge relevant to the currently processed config
+            system_action: the name of the action to get intent for
+
+        Returns:
+            template relevant to the passed action
+        """
         possible_system_responses = domain_knowledge.response_templates.get(system_action,
                                                                             [{"text": system_action}])
 
