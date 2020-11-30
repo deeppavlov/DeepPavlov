@@ -288,9 +288,21 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
             if system_action_name.startswith("form"):
                 form_name = parse_form_name(system_action_name)
                 augmented_utters = cls.augment_form(form_name, domain_knowledge, intent2slots2text)
-                utters_to_append_batch = [[processed_line for processed_line in processed_line_batch]
-                                                 for aug_line in augmented_utters
-                                                 for processed_line_batch in process_story_line(aug_line)]
+
+                utters_to_append_batch = [[]]
+                for user_utter in augmented_utters:
+                    new_curr_story_utters_batch = []
+                    for curr_story_utters in utters_to_append_batch:
+                        possible_extensions = process_story_line(user_utter)
+                        for possible_extension in possible_extensions:
+                            new_curr_story_utters = curr_story_utters.copy()
+                            new_curr_story_utters.extend(possible_extension)
+                            new_curr_story_utters_batch.append(new_curr_story_utters)
+                    utters_to_append_batch = new_curr_story_utters_batch
+
+                # utters_to_append_batch = [[processed_line for processed_line in processed_line_batch]
+                #                                  for aug_line in augmented_utters
+                #                                  for processed_line_batch in process_story_line(aug_line)]
             else:
                 utters_to_append_batch = [[system_action]]
             return utters_to_append_batch
@@ -308,6 +320,8 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         story_file = open(story_fpath)
         for line in story_file:
             line = line.strip()
+            if not line:
+                continue
             if line.startswith('#'):
                 # #... marks the beginning of new story
                 if curr_story_utters_batch and curr_story_utters_batch[0] and curr_story_utters_batch[0][-1]["speaker"] == cls._USER_SPEAKER_ID:
