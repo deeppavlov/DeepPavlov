@@ -226,7 +226,7 @@ class FeaturizedTracker(TrackerInterface):
                     action2forms[curr_action] = prev_forms
                     prev_forms = []
 
-        def get_slots(system_utter, form_name):
+        def get_slots(system_utter: str, form_name: str) -> List[str]:
             """
             Given the utterance story line, extract slots information from it
             Args:
