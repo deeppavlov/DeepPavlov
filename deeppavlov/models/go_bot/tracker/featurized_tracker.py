@@ -227,6 +227,15 @@ class FeaturizedTracker(TrackerInterface):
                     prev_forms = []
 
         def get_slots(system_utter, form_name):
+            """
+            Given the utterance story line, extract slots information from it
+            Args:
+                system_utter: the utterance story line
+                form_name: the form we are filling
+
+            Returns:
+                the slots extracted from the line
+            """
             slots = []
             if system_utter.startswith(f"utter_ask_{form_name}_"):
                 slots.append(system_utter[len(f"utter_ask_{form_name}_"):])
