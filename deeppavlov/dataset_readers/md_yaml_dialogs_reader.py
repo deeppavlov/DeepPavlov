@@ -489,7 +489,15 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         return ask_slot_act_name
 
     @classmethod
-    def get_last_users_turn(cls, curr_story_utters):
+    def get_last_users_turn(cls, curr_story_utters: List[Dict]) -> Dict:
+        """
+        Given the dstc2 story, return the last user utterance from it
+        Args:
+            curr_story_utters: the dstc2-formatted stoyr
+
+        Returns:
+            the last user utterance from the passed story
+        """
         *_, last_user_utter = filter(lambda x: x["speaker"] == cls._USER_SPEAKER_ID, curr_story_utters)
         return last_user_utter
 
