@@ -53,6 +53,7 @@ class DialogueStateTracker(FeaturizedTracker):
         self.n_actions = n_actions
         self.api_call_id = api_call_id
         self.ffill_act_ids2req_slots_ids: Dict[int, List[int]] = dict()
+        self.ffill_act_ids2aqd_slots_ids: Dict[int, List[int]] = dict()
         self.reset_state()
 
     @staticmethod
