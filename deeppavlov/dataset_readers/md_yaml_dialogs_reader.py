@@ -527,7 +527,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         return system_action
 
     @classmethod
-    def augment_user_turn(cls, intent2slots2text, line: str, slot_name2text2value) -> List[Dict[str: Any]]:
+    def augment_user_turn(cls, intent2slots2text, line: str, slot_name2text2value) -> List[Dict[str, Any]]:
         """
         given the turn information generate all the possible stories representing it
         Args:
