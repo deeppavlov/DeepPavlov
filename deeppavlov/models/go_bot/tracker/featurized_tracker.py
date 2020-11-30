@@ -171,7 +171,15 @@ class FeaturizedTracker(TrackerInterface):
         # todo migrate to rasa2.0
         # stories_yml_path = expand_path(stories_yml_path)
         # stories_yml_di = read_yaml(stories_yml_path)
-        def read_md_story(story_path):
+        def read_md_story(story_path: Union[Path, str]) -> Dict[str, List[Dict]]:
+            """
+            given the path to stories.md naively read steps from it. ToDo use MDYAML reader
+            Args:
+                story_path: the path to stories.md
+
+            Returns:
+                the dict containing info on all the stories used
+            """
             story_f = open(story_path, 'r')
             stories_li = []
             curr_story = None
