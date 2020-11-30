@@ -258,7 +258,15 @@ class FeaturizedTracker(TrackerInterface):
                                   for act, forms in action2forms.items()}
         return actions2required_slots, actions2acquired_slots
 
-    def _get_form_acquired_slots(self, form):
+    def _get_form_acquired_slots(self, form: Dict) -> List[str]:
+        """
+        given the form, return the slots that are acquired with this form
+        Args:
+            form: form to extract acquired slots from
+
+        Returns:
+            the slots acquired from the passed form
+        """
         acquired_slots = [slot_name
                           for slot_name, slot_info_li in form.items()
                           if slot_info_li and slot_info_li[0].get("type", '') == "from_entity"]
