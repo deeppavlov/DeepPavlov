@@ -83,7 +83,10 @@ class DialogueStateTracker(FeaturizedTracker):
         return dialogue_state_tracker
 
     @staticmethod
-    def extract_reqiured_acquired_slots_ids_mapping(act2act_id, slot_names, nlg_manager, parent_tracker):
+    def extract_reqiured_acquired_slots_ids_mapping(act2act_id: Dict,
+                                                    slot_names: List,
+                                                    nlg_manager: NLGManagerInterface,
+                                                    parent_tracker: FeaturizedTracker) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
         """
         get the required and acquired slots information for each known action in the -Hot Encoding form
         Args:
