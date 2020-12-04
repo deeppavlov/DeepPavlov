@@ -157,7 +157,8 @@ class TorchBertClassifierModel(TorchModel):
             self.load_path = fname
 
         if self.pretrained_bert:
-           self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert,
+            log.info(f"Auto From pretrained {self.pretrained_bert}.")
+            self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert,
                                                                            config={'num_labels':self.n_classes,
                                                                                    'output_attentions':  False,
                                                                                    'output_hidden_states': False})
