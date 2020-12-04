@@ -95,18 +95,25 @@ class TorchBertClassifierModel(TorchModel):
         Returns:
             dict with loss and learning_rate values
         """
-        input_ids = [f.input_ids for f in features]
-        input_masks = [f.attention_mask for f in features]
-
-        b_input_ids = torch.cat(input_ids, dim=0).to(self.device)
-        b_input_masks = torch.cat(input_masks, dim=0).to(self.device)
-        b_labels = torch.from_numpy(np.array(y)).to(self.device)
+        
+        _input = {}
+        for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
+            _input[elem] = [getattr(f, elem) for f in features]
+        
+        for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
+            _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
+        
+        if self.n_classes > 1:
+            _input['labels'] = torch.from_numpy(np.array(y)).to(self.device)
+        else:
+            _input['labels'] = torch.from_numpy(np.array(y, dtype=np.float32)).to(self.device)
 
         self.optimizer.zero_grad()
+        
+        tokenized = {key:value for (key,value) in _input.items() if key in self.model.forward.__code__.co_varnames}
 
         # Token_type_id is omitted for Text Classification
-        loss, logits = self.model(input_ids=b_input_ids, attention_mask=b_input_masks,
-                                  labels=b_labels)
+        loss, logits = self.model(**tokenized)
         loss.backward()
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
@@ -129,15 +136,19 @@ class TorchBertClassifierModel(TorchModel):
             predicted classes or probabilities of each class
 
         """
-        input_ids = [f.input_ids for f in features]
-        input_masks = [f.attention_mask for f in features]
 
-        b_input_ids = torch.cat(input_ids, dim=0).to(self.device)
-        b_input_masks = torch.cat(input_masks, dim=0).to(self.device)
-
+        _input = {}
+        for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
+            _input[elem] = [getattr(f, elem) for f in features]
+        
+        for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
+            _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
+            
         with torch.no_grad():
+            tokenized = {key:value for (key,value) in _input.items() if key in self.model.forward.__code__.co_varnames}
+
             # Forward pass, calculate logit predictions
-            logits = self.model(input_ids=b_input_ids, attention_mask=b_input_masks)
+            logits = self.model(**tokenized)
             logits = logits[0]
 
         if self.return_probas:
