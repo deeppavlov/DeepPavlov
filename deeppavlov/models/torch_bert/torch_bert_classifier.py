@@ -80,6 +80,9 @@ class TorchBertClassifierModel(TorchModel):
         if self.multilabel and not self.return_probas:
             raise RuntimeError('Set return_probas to True for multilabel classification!')
 
+        if self.return_probas and self.n_classes == 1:
+            raise RuntimeError('Set return_probas to False for regression task!')
+            
         super().__init__(optimizer=optimizer,
                          optimizer_parameters=optimizer_parameters,
                          **kwargs)
@@ -95,24 +98,25 @@ class TorchBertClassifierModel(TorchModel):
         Returns:
             dict with loss and learning_rate values
         """
-        
+
         _input = {}
         for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
             _input[elem] = [getattr(f, elem) for f in features]
-        
+
         for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
             _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
-        
+
         if self.n_classes > 1:
             _input['labels'] = torch.from_numpy(np.array(y)).to(self.device)
         else:
             _input['labels'] = torch.from_numpy(np.array(y, dtype=np.float32)).to(self.device)
 
         self.optimizer.zero_grad()
-        
+
         tokenized = {key:value for (key,value) in _input.items() if key in self.model.forward.__code__.co_varnames}
 
         # Token_type_id is omitted for Text Classification
+
         loss, logits = self.model(**tokenized)
         loss.backward()
         # Clip the norm of the gradients to 1.0.
@@ -140,10 +144,10 @@ class TorchBertClassifierModel(TorchModel):
         _input = {}
         for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
             _input[elem] = [getattr(f, elem) for f in features]
-        
+
         for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
             _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
-            
+
         with torch.no_grad():
             tokenized = {key:value for (key,value) in _input.items() if key in self.model.forward.__code__.co_varnames}
 
@@ -157,9 +161,12 @@ class TorchBertClassifierModel(TorchModel):
             else:
                 pred = torch.nn.functional.sigmoid(logits)
             pred = pred.detach().cpu().numpy()
-        else:
+        elif self.n_classes > 1:
             logits = logits.detach().cpu().numpy()
             pred = np.argmax(logits, axis=1)
+        else:  # regression
+            pred = logits.squeeze(-1).detach().cpu().numpy()
+
         return pred
 
     @overrides
@@ -168,11 +175,12 @@ class TorchBertClassifierModel(TorchModel):
             self.load_path = fname
 
         if self.pretrained_bert:
-            log.info(f"Auto From pretrained {self.pretrained_bert}.")
-            self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert,
-                                                                           config={'num_labels':self.n_classes,
-                                                                                   'output_attentions':  False,
-                                                                                   'output_hidden_states': False})
+            log.info(f"From pretrained {self.pretrained_bert}.")
+            config = AutoConfig.from_pretrained(self.pretrained_bert, num_labels=self.n_classes, 
+                                                output_attentions=False, output_hidden_states=False)
+
+            self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert, config=config)
+
         elif self.bert_config_file and Path(self.bert_config_file).is_file():
             self.bert_config = AutoConfig.from_json_file(str(expand_path(self.bert_config_file)))
             if self.attention_probs_keep_prob is not None:
