@@ -16,6 +16,7 @@ import re
 import random
 from logging import getLogger
 from pathlib import Path
+import torch
 from typing import Tuple, List, Optional, Union
 
 from transformers import AutoTokenizer
@@ -90,7 +91,7 @@ class TorchBertPreprocessor(Component):
                 pad_to_max_length=True, return_attention_mask=True, return_tensors='pt')
 
             if 'token_type_ids' not in encoded_dict:
-                encoded_dict['token_type_ids'] = None
+                encoded_dict['token_type_ids'] = torch.tensor([0])
 
             curr_features = InputFeatures(input_ids=encoded_dict['input_ids'],
                                           attention_mask=encoded_dict['attention_mask'],
@@ -286,7 +287,7 @@ class TorchBertRankerPreprocessor(TorchBertPreprocessor):
             for context, response in s:
                 encoded_dict = self.tokenizer.encode_plus(
                     text=context, text_pair=response, add_special_tokens=True, max_length=self.max_seq_length,
-                    pad_to_max_length=True, return_attention_mask=True, return_tensors='pt')
+                    padding='max_length', return_attention_mask=True, return_tensors='pt')
                 curr_features = InputFeatures(input_ids=encoded_dict['input_ids'],
                                               attention_mask=encoded_dict['attention_mask'],
                                               token_type_ids=encoded_dict['token_type_ids'],
