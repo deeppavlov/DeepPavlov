@@ -282,12 +282,14 @@ class TorchBertRankerPreprocessor(TorchBertPreprocessor):
                 cont_resp_pairs.append(zip(contexts, responses))
 
         input_features = []
+
         for s in cont_resp_pairs:
             sub_list_features = []
             for context, response in s:
                 encoded_dict = self.tokenizer.encode_plus(
                     text=context, text_pair=response, add_special_tokens=True, max_length=self.max_seq_length,
-                    padding='max_length', return_attention_mask=True, return_tensors='pt')
+                    pad_to_max_length=True, return_attention_mask=True, return_tensors='pt')
+
                 curr_features = InputFeatures(input_ids=encoded_dict['input_ids'],
                                               attention_mask=encoded_dict['attention_mask'],
                                               token_type_ids=encoded_dict['token_type_ids'],
