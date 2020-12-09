@@ -95,7 +95,8 @@ BERT for Classification
 provide easy to use solution for classification problem
 using pre-trained BERT on TensorFlow and PyTorch correspondingly.
 One can use several pre-trained English, multi-lingual and Russian BERT models that are
-listed above.
+listed above. :class:`~deeppavlov.models.torch_bert.torch_bert_classifier.TorchBertClassifierModel`
+supports any Transformer-based model of `Transformers <https://github.com/huggingface/transformers>`.
 
 Two main components of BERT classifier pipeline in DeepPavlov are
 :class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertPreprocessor` on TensorFlow
@@ -191,7 +192,7 @@ the :doc:`config </intro/configuration>` file must be changed to match new BERT 
 
 * download URL in the ``metadata.download.url`` part of the config
 * ``bert_config_file``, ``pretrained_bert`` in the BERT based Component. In case of PyTorch BERT, ``pretrained_bert`` can be assigned to
-    string name of used pre-trained BERT (e.g. ``"bert-base-uncased"``) and then ``bert_config_file`` is set to ``None``.
+    string name of any Transformer-based model (e.g. ``"bert-base-uncased"``, ``"distilbert-base-uncased"``) and then ``bert_config_file`` is set to ``None``.
 * ``vocab_file`` in the ``bert_preprocessor`` (``torch_bert_preprocessor``). In case of PyTorch BERT, ``vocab_file`` can be assigned to
     string name of used pre-trained BERT (e.g. ``"bert-base-uncased"``).
 
