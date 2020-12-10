@@ -325,10 +325,6 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                             new_curr_story_utters.extend(possible_extension)
                             new_curr_story_utters_batch.append(new_curr_story_utters)
                     utters_to_append_batch = new_curr_story_utters_batch
-
-                # utters_to_append_batch = [[processed_line for processed_line in processed_line_batch]
-                #                                  for aug_line in augmented_utters
-                #                                  for processed_line_batch in process_story_line(aug_line)]
             else:
                 utters_to_append_batch = [[system_action]]
             return utters_to_append_batch
