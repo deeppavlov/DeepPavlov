@@ -1,7 +1,7 @@
 import json
 from itertools import combinations
 from pathlib import Path
-from typing import Union, Dict, List
+from typing import Union, Dict, List, Tuple
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.errors import ConfigError
@@ -96,7 +96,7 @@ class MockJSONNLGManager(NLGManagerInterface):
                       f"initialized actions2slots mapping with an empty one: {str(actions2slots)}")
         return actions2slots
 
-    def get_action_id(self, action_text: str) -> int:
+    def get_action_id(self, action_text: Union[str, Tuple[str, ...]]) -> int:
         """
         Looks up for an ID corresponding to the passed action text.
 
@@ -107,7 +107,7 @@ class MockJSONNLGManager(NLGManagerInterface):
         """
         if isinstance(action_text, str):
             actions_tuple = tuple(action_text.split('+'))
-        elif isinstance(action_text, tuple):
+        else:
             actions_tuple = action_text
         return self.action_tuples2ids[actions_tuple]  # todo unhandled exception when not found
 
