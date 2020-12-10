@@ -14,7 +14,7 @@
 
 from logging import getLogger
 from pathlib import Path
-from typing import List, Iterator, Union, Optional, Dict, Tuple, Any
+from typing import List, Union, Optional, Dict, Tuple, Any
 
 import numpy as np
 
