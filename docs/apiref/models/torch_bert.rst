@@ -4,7 +4,7 @@ deeppavlov.models.torch_bert
 .. automodule:: deeppavlov.models.torch_bert
    :members:
 
-.. autoclass:: deeppavlov.models.preprocessors.torch_bert_preprocessor.TorchBertPreprocessor
+.. autoclass:: deeppavlov.models.preprocessors.torch_bert_preprocessor.TorchTransformersPreprocessor
 
     .. automethod:: __call__
 
@@ -16,7 +16,7 @@ deeppavlov.models.torch_bert
 
     .. automethod:: __call__
 
-.. autoclass:: deeppavlov.models.torch_bert.torch_bert_classifier.TorchBertClassifierModel
+.. autoclass:: deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel
 
     .. automethod:: __call__
     .. automethod:: train_on_batch
