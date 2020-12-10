@@ -135,7 +135,7 @@ Two main components of BERT classifier pipeline in DeepPavlov are
 and ``deeppavlov.models.bert.BertClassifierModel`` on TensorFlow (or ``deeppavlov.models.torch_bert.TorchBertClassifierModel`` on PyTorch) (see :doc:`here </apiref/models/bert>`).
 The ``deeppavlov.models.torch_bert.TorchBertClassifierModel`` class supports any Transformer-based model. 
 
-Non-processed texts should be given to ``bert_preprocessor`` (``torch_bert_preprocessor``) for tokenization on subtokens,
+Non-processed texts should be given to ``bert_preprocessor`` (``torch_transformers_preprocessor``) for tokenization on subtokens,
 encoding subtokens with their indices and creating tokens and segment masks.
 If one processed classes to one-hot labels in pipeline, ``one_hot_labels`` should be set to ``true``.
 
