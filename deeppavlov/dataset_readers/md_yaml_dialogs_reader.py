@@ -271,7 +271,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                 for user_utter in possible_user_utters:
                     utters_to_append_batch.append([user_utter])
 
-            except KeyError as e:
+            except KeyError:
                 log.debug(f"INSIDE MLU_MD_DialogsDatasetReader._read_story(): "
                           f"Skipping story w. line {line} because of no NLU candidates found")
                 nonlocal_curr_story_bad = True
