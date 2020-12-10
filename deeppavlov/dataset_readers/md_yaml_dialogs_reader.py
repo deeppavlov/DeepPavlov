@@ -50,8 +50,10 @@ class DomainKnowledge:
     def from_yaml(cls, domain_yml_fpath: Union[str, Path] = "domain.yml"):
         """
         Parses domain.yml domain config file into the DomainKnowledge object
-        :param domain_yml_fpath: path to the domain config file, defaults to domain.yml
-        :return: the loaded DomainKnowledge obect
+        Args:
+            domain_yml_fpath: path to the domain config file, defaults to domain.yml
+        Returns:
+            the loaded DomainKnowledge obect
         """
         return cls(read_yaml(domain_yml_fpath))
 
