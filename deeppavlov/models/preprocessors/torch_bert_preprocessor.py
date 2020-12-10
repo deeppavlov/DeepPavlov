@@ -31,8 +31,8 @@ from deeppavlov.models.preprocessors.mask import Mask
 log = getLogger(__name__)
 
 
-@register('torch_bert_preprocessor')
-class TorchBertPreprocessor(Component):
+@register('torch_transformers_preprocessor')
+class TorchTransformersPreprocessor(Component):
     """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks.
 
     Check details in :func:`bert_dp.preprocessing.convert_examples_to_features` function.
@@ -248,7 +248,7 @@ class TorchBertNerPreprocessor(Component):
 
 
 @register('torch_bert_ranker_preprocessor')
-class TorchBertRankerPreprocessor(TorchBertPreprocessor):
+class TorchBertRankerPreprocessor(TorchTransformersPreprocessor):
     """Tokenize text to sub-tokens, encode sub-tokens with their indices, create tokens and segment masks for ranking.
 
     Builds features for a pair of context with each of the response candidates.
