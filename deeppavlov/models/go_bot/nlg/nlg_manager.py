@@ -107,7 +107,7 @@ class NLGManager(NLGManagerInterface):
         """
         return len(self.templates)
 
-    def known_actions(self) -> List:
+    def known_actions(self) -> List[str]:
         """
         Returns:
              the list of actions known to the NLG module
