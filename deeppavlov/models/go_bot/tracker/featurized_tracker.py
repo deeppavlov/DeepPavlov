@@ -42,7 +42,6 @@ class FeaturizedTracker(TrackerInterface):
         self.stories_path = stories_yml_path
         self.action_names2required_slots, self.action_names2acquired_slots =\
             self._load_actions2slots_formfilling_info_from(domain_yml_path, stories_yml_path)
-        # self._load_actions2slots_formfilling_info_from_json(self.actions_required_acquired_slots_path)
         self.history = []
         self.current_features = None
 
@@ -169,8 +168,6 @@ class FeaturizedTracker(TrackerInterface):
         form_names = list(forms.keys())
 
         # todo migrate to rasa2.0
-        # stories_yml_path = expand_path(stories_yml_path)
-        # stories_yml_di = read_yaml(stories_yml_path)
         def read_md_story(story_path: Union[Path, str]) -> Dict[str, List[Dict]]:
             """
             given the path to stories.md naively read steps from it. ToDo use MDYAML reader
