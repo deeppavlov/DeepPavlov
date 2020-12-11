@@ -79,7 +79,7 @@ class TorchBertAsSummarizer(TorchModel):
         self.max_summary_length_in_tokens = max_summary_length_in_tokens
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
-        self.bert_preprocessor = TorchBertPreprocessor(vocab_file=vocab_file, do_lower_case=do_lower_case,
+        self.bert_preprocessor = TorchTransformersPreprocessor(vocab_file=vocab_file, do_lower_case=do_lower_case,
                                                        max_seq_length=max_seq_length)
 
         self.tokenize_reg = re.compile(r"[\w']+|[^\w ]")
