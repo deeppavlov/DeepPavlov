@@ -21,6 +21,7 @@ from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.file import load_pickle
 from deeppavlov.models.ranking.rel_ranker import RelRanker
 from deeppavlov.models.kbqa.wiki_parser import WikiParser
+from deeppavlov.models.kbqa.sentence_answer import sentence_answer
 
 log = getLogger(__name__)
 
@@ -38,6 +39,7 @@ class RelRankerBertInfer(Component, Serializable):
                  return_all_possible_answers: bool = False,
                  return_answer_ids: bool = False,
                  use_api_requester: bool = False,
+                 return_sentence_answer: bool = False,
                  return_confidences: bool = False, **kwargs):
         """
 
@@ -62,6 +64,7 @@ class RelRankerBertInfer(Component, Serializable):
         self.return_all_possible_answers = return_all_possible_answers
         self.return_answer_ids = return_answer_ids
         self.use_api_requester = use_api_requester
+        self.return_sentence_answer = return_sentence_answer
         self.return_confidences = return_confidences
         self.load()
 
@@ -114,7 +117,7 @@ class RelRankerBertInfer(Component, Serializable):
                     answer_ids_input = [(answer_id, question) for answer_id in answer_ids]
                 else:
                     answer_ids_input = [(answer_ids, question)]
-                parser_info_list = ["find_label" for i in range(len(answer_ids))]
+                parser_info_list = ["find_label" for _ in answer_ids_input]
                 answer_labels = self.wiki_parser(parser_info_list, answer_ids_input)
                 if self.return_all_possible_answers:
                     answer = ', '.join(answer_labels)
@@ -122,6 +125,8 @@ class RelRankerBertInfer(Component, Serializable):
                     answer = answer_labels[0]
                 if self.use_api_requester:
                     answer = answer[0]
+                if self.return_sentence_answer:
+                    answer = sentence_answer(question, answer)
                 confidence = answers_with_scores[0][2]
 
             if self.return_confidences:
