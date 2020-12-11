@@ -179,11 +179,7 @@
         "subdir": "{DOWNLOADS_PATH}/wikidata"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.hdt",
-        "subdir": "{DOWNLOADS_PATH}/wikidata"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.hdt.index.v1-1",
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.pickle",
         "subdir": "{DOWNLOADS_PATH}/wikidata"
       }
     ]
