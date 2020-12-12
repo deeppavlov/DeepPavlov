@@ -197,28 +197,28 @@ PARAMS = {
             [
                 ("What is the currency of Sweden?", ("Swedish krona",)),
                 ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-                ("When did the Korean War end?", ("1953-07-27",)),
+                ("When did the Korean War end?", ("27 July 1953",)),
                 ("   ", ("Not Found",))
             ],
         ("kbqa/kbqa_cq_mt_bert.json", "kbqa", ('IP',)):
             [
                 ("What is the currency of Sweden?", ("Swedish krona",)),
                 ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-                ("When did the Korean War end?", ("1953-07-27",)),
+                ("When did the Korean War end?", ("27 July 1953",)),
                 ("   ", ("Not Found",))
             ],
         ("kbqa/kbqa_cq_online_mt_bert.json", "kbqa", ('IP',)):
             [
                 ("What is the currency of Sweden?", ("Swedish krona",)),
                 ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-                ("When did the Korean War end?", ("1953-07-27",)),
+                ("When did the Korean War end?", ("27 July 1953",)),
                 ("   ", ("Not Found",))
             ],
         ("kbqa/kbqa_cq_bert_ranker.json", "kbqa", ('IP',)):
             [
                 ("What is the currency of Sweden?", ("Swedish krona",)),
                 ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-                ("When did the Korean War end?", ("1953-07-27",)),
+                ("When did the Korean War end?", ("27 July 1953",)),
                 ("   ", ("Not Found",))
             ],
         ("kbqa/kbqa_cq_rus.json", "kbqa", ('IP',)):
