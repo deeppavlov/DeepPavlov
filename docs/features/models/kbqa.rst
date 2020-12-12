@@ -205,6 +205,7 @@ Config :config:`kbqa_entity_linking <kbqa/kbqa_entity_linking.json>` can be used
 Arguments: "entity_substr" - batch of lists of entity substrings for which we want to find ids in Wikidata, "template" - template of the sentence (if the sentence with the entity matches of one of templates), "context" - text with the entity.
 
 .. code:: python
+
     requests.post(entity_linking_url, json = {"entity_substr": [["Forrest Gump"]], "template": [""], "context": ["Who directed Forrest Gump?"]}).json()
 
     
@@ -221,12 +222,14 @@ Examples of queries:
 To extract triplets for entities, the "query" argument should be the list of entities ids and "parser_info" - list of "find\_triplets" strings.
 
 .. code:: python
+
     requests.post(wiki_parser_url, json = {"parser_info": ["find_triplets"], "query": ["Q159"]}).json()
 
 
 To extract all relations of the entities, the "query" argument should be the list of entities ids and "parser_info" - list of "find\_rels" strings.
 
 .. code:: python
+
     requests.post(wiki_parser_url, json = {"parser_info": ["find_rels"], "query": ["Q159"]}).json()
 
 
@@ -244,12 +247,14 @@ arguments:
 * order\_info: order\_info(variable='?obj', sorting_order='asc')
 
 .. code:: python
+
     requests.post("wiki_parser_url", json = {"parser_info": ["query_execute"], "query": [[["?obj"], [["http://www.wikidata.org/entity/Q159", "http://www.wikidata.org/prop/direct/P36", "?obj"]], [], [], True]]}).json()
 
 
 To find labels for entities ids, the "query" argument should be the list of entities ids and "parser_info" - list of "find\_label" strings.
 
 .. code:: python
+
     requests.post(wiki_parser_url, json = {"parser_info": ["find_label"], "query": [["Q159", ""]]}).json()
 
 
@@ -257,26 +262,22 @@ In the example in the list ["Q159", ""] the second element which is an empty str
 
 To use Entity Linking service in KBQA, in the :config:`kbqa_cq_sep <kbqa/kbqa_cq_sep.json>` you should use API Requester component:
 
-    {
-        "class_name": "api_requester",
-        "id": "linker_entities",
-        "url": "entity_linking_url",
-        "out": ["entity_ids"],
-        "param_names": ["entity_substr", "template_found"]
-    }
+    {"class_name": "api_requester",
+     "id": "linker_entities",
+     "url": "entity_linking_url",
+     "out": ["entity_ids"],
+     "param_names": ["entity_substr", "template_found"]}
 
-and replace 71 line in config with
+and replace line (https://github.com/deepmipt/DeepPavlov/blob/3139e7848efc07605c492199444258edc1b6980c/deeppavlov/configs/kbqa/kbqa_cq_sep.json#L71) in config with
     "linker_entities": "#linker_entities"
     
 To use Wiki Parser service in KBQA, in the :config:`kbqa_cq_sep <kbqa/kbqa_cq_sep.json>` you should use API Requester component:
 
-    {
-        "class_name": "api_requester",
-        "id": "wiki_p",
-        "url": "wiki_parser_url",
-        "out": ["wiki_parser_output"],
-        "param_names": ["parser_info", "query"]
-      },
+    {"class_name": "api_requester",
+     "id": "wiki_p",
+     "url": "wiki_parser_url",
+     "out": ["wiki_parser_output"],
+     "param_names": ["parser_info", "query"]}
 
-and replace 75 and 88 lines in config with
+and replace lines (https://github.com/deepmipt/DeepPavlov/blob/3139e7848efc07605c492199444258edc1b6980c/deeppavlov/configs/kbqa/kbqa_cq_sep.json#L75) and (https://github.com/deepmipt/DeepPavlov/blob/3139e7848efc07605c492199444258edc1b6980c/deeppavlov/configs/kbqa/kbqa_cq_sep.json#L88) in config with
     "wiki_parser": "#wiki_p".
