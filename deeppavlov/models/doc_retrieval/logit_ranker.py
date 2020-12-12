@@ -57,7 +57,7 @@ class LogitRanker(Component):
                 Tuple[List[List[str]], List[List[float]], List[List[int]], List[List[str]]],
                 Tuple[List[str], List[float], List[int]],
                 Tuple[List[List[str]], List[List[float]], List[List[int]]]
-                ]:
+            ]:
 
         """
         Sort obtained results from squad reader by logits and get the answer with a maximum logit.
@@ -99,10 +99,10 @@ class LogitRanker(Component):
             batch_best_answers_score.append(best_answers_score)
             best_answers_sentences = []
             for answer, place, context in zip(best_answers, best_answers_place, best_answers_contexts):
-                sentence = find_answer_sentence(answer, place, context)
+                sentence = find_answer_sentence(place, context)
                 best_answers_sentences.append(sentence)
             batch_best_answers_sentences.append(best_answers_sentences)
-            
+
             if doc_ids_batch is not None:
                 doc_ind = [results.index(x) for x in results_sort]
                 batch_best_answers_doc_ids.append(
@@ -117,9 +117,11 @@ class LogitRanker(Component):
 
         if doc_ids_batch is None:
             if self.return_answer_sentence:
-                return batch_best_answers, batch_best_answers_score, batch_best_answers_place, batch_best_answers_sentences
+                return batch_best_answers, batch_best_answers_score, batch_best_answers_place, \
+                       batch_best_answers_sentences
             return batch_best_answers, batch_best_answers_score, batch_best_answers_place
-        
+
         if self.return_answer_sentence:
-            return batch_best_answers, batch_best_answers_score, batch_best_answers_place, batch_best_answers_doc_ids, batch_best_answers_sentences
+            return batch_best_answers, batch_best_answers_score, batch_best_answers_place, batch_best_answers_doc_ids, \
+                   batch_best_answers_sentences
         return batch_best_answers, batch_best_answers_score, batch_best_answers_place, batch_best_answers_doc_ids

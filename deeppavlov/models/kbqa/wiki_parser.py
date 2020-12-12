@@ -237,7 +237,7 @@ class WikiParser:
                     return entity
 
         return "Not Found"
-        
+
     def format_date(self, entity, question):
         date_info = re.findall("([\d]{3,4})-([\d]{1,2})-([\d]{1,2})", entity)
         if date_info:
