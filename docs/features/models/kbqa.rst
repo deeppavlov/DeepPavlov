@@ -242,15 +242,13 @@ Let us consider an example of the question "What is the deepest lake in Russia?"
 
 arguments:
 * what_return: ["?obj"]
-* query_seq: [["?ent", "http://www.wikidata.org/prop/direct/P17", "http://www.wikidata.org/entity/Q159"]
-                ["?ent", "http://www.wikidata.org/prop/direct/P31", "http://www.wikidata.org/entity/Q23397"],
-                ["?ent", "http://www.wikidata.org/prop/direct/P4511", "?obj"]]
+* query_seq: [["?ent", "P17", "Q159"], ["?ent", "P31", "Q23397"], ["?ent", "P4511", "?obj"]]
 * filter_info: []
 * order\_info: order\_info(variable='?obj', sorting_order='asc')
 
 .. code:: python
 
-    requests.post("wiki_parser_url", json = {"parser_info": ["query_execute"], "query": [[["?obj"], [["http://www.wikidata.org/entity/Q159", "http://www.wikidata.org/prop/direct/P36", "?obj"]], [], [], True]]}).json()
+    requests.post("wiki_parser_url", json = {"parser_info": ["query_execute"], "query": [[["?obj"], [["Q159", "P36", "?obj"]], [], [], True]]}).json()
 
 
 To find labels for entities ids, the "query" argument should be the list of entities ids and "parser_info" - list of "find\_label" strings.
