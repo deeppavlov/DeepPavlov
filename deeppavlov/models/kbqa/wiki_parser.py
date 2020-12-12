@@ -220,9 +220,7 @@ class WikiParser:
                 entity = entity.split("^^")[0]
                 for token in ["T00:00:00Z", "+"]:
                     entity = entity.replace(token, '')
-                year = re.findall("([\d]{3,4})-[\d]{1,2}-[\d]{1,2}", entity)
-                if "how old" in question.lower() and year:
-                    entity = datetime.datetime.now().year - int(year[0])
+                entity = self.format_date(entity, question)
                 return entity
 
             elif entity.isdigit():
@@ -235,9 +233,24 @@ class WikiParser:
                         if triplet[0] == "name_en":
                             return triplet[1]
                 else:
+                    entity = self.format_date(entity, question)
                     return entity
 
         return "Not Found"
+        
+    def format_date(self, entity, question):
+        date_info = re.findall("([\d]{3,4})-([\d]{1,2})-([\d]{1,2})", entity)
+        if date_info:
+            year, month, day = date_info[0]
+            if "how old" in question.lower():
+                entity = datetime.datetime.now().year - int(year)
+            elif day != "00":
+                date = datetime.datetime.strptime(f"{year}-{month}-{day}", "%Y-%m-%d")
+                entity = date.strftime("%d %B %Y")
+            else:
+                entity = year
+            return entity
+        return entity
 
     def find_alias(self, entity: str) -> List[str]:
         aliases = []
