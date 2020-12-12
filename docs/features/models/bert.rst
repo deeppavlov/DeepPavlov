@@ -100,7 +100,7 @@ supports any Transformer-based model of `Transformers <https://github.com/huggin
 
 Two main components of BERT classifier pipeline in DeepPavlov are
 :class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertPreprocessor` on TensorFlow
-(:class:`~deeppavlov.models.preprocessors.torch_bert_preprocessor.TorchTransformersPreprocessor` on PyTorch) and
+(:class:`~deeppavlov.models.preprocessors.torch_transformers_preprocessor.TorchTransformersPreprocessor` on PyTorch) and
 :class:`~deeppavlov.models.bert.bert_classifier.BertClassifierModel` on TensorFlow
 (:class:`~deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel` on PyTorch).
 Non-processed texts should be given to ``bert_preprocessor`` (or ``torch_transformers_preprocessor``) for tokenization on subtokens,

@@ -4,15 +4,15 @@ deeppavlov.models.torch_bert
 .. automodule:: deeppavlov.models.torch_bert
    :members:
 
-.. autoclass:: deeppavlov.models.preprocessors.torch_bert_preprocessor.TorchTransformersPreprocessor
+.. autoclass:: deeppavlov.models.preprocessors.torch_transformers_preprocessor.TorchTransformersPreprocessor
 
     .. automethod:: __call__
 
-.. autoclass:: deeppavlov.models.preprocessors.torch_bert_preprocessor.TorchBertNerPreprocessor
+.. autoclass:: deeppavlov.models.preprocessors.torch_transformers_preprocessor.TorchBertNerPreprocessor
 
     .. automethod:: __call__
 
-.. autoclass:: deeppavlov.models.preprocessors.torch_bert_preprocessor.TorchBertRankerPreprocessor
+.. autoclass:: deeppavlov.models.preprocessors.torch_transformers_preprocessor.TorchBertRankerPreprocessor
 
     .. automethod:: __call__
 

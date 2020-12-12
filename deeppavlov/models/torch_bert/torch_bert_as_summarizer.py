@@ -26,7 +26,7 @@ from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
-from deeppavlov.models.preprocessors.torch_bert_preprocessor import TorchTransformersPreprocessor
+from deeppavlov.models.preprocessors.torch_transformers_preprocessor import TorchTransformersPreprocessor
 
 logger = getLogger(__name__)
 
