@@ -198,6 +198,7 @@ An example of a template::
 Using Entity Linking and Wiki Parser as separate services in KBQA
 -----------------------------------------------------------------
 Config :config:`kbqa_entity_linking <kbqa/kbqa_entity_linking.json>` can be used as service with the following command:
+
 .. code:: bash
 
     python -m deeppavlov riseapi kbqa_entity_linking [-d] [-p <port>]
@@ -211,6 +212,7 @@ Arguments: "entity_substr" - batch of lists of entity substrings for which we wa
     
     
 Config :config:`wiki_parser <kbqa/wiki_parser.json>` can be used as service with the following command:
+
 .. code:: bash
 
     python -m deeppavlov riseapi wiki_parser [-d] [-p <port>]
