@@ -109,9 +109,10 @@ class TemplateMatcher(Serializable):
                         relations = template["relations"]
                         relation_dirs = template["rel_dirs"]
                         query_type = template["template_type"]
+                        entity_types = template.get("entity_types", [])
                         min_length = cur_len
 
-        return entities, types, relations, relation_dirs, query_type, template_found
+        return entities, types, relations, relation_dirs, query_type, entity_types, template_found
 
     def sanitize(self, question: str) -> str:
         question = re.sub(r"^(a |the )", '', question)

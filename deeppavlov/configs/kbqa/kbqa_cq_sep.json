@@ -77,6 +77,7 @@
         "rank_rels_filename_1": "rels_0.txt",
         "rank_rels_filename_2": "rels_1.txt",
         "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries.json",
+        "wiki_file_format": "pickle",
         "entities_to_leave": 5,
         "rels_to_leave": 10,
         "in": ["x", "x", "template_type", "entities", "types"],

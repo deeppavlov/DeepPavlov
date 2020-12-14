@@ -45,6 +45,7 @@ class QueryGeneratorBase(Component, Serializable):
                  rank_rels_filename_2: str,
                  sparql_queries_filename: str,
                  wiki_parser=None,
+                 wiki_file_format: str = "hdt",
                  entities_to_leave: int = 5,
                  rels_to_leave: int = 7,
                  syntax_structure_known: bool = False,
@@ -61,6 +62,7 @@ class QueryGeneratorBase(Component, Serializable):
             rank_rels_filename_1: file with list of rels for first rels in questions with ranking 
             rank_rels_filename_2: file with list of rels for second rels in questions with ranking
             sparql_queries_filename: file with sparql query templates
+            wiki_file_format: format of wikidata file
             wiki_parser: component deeppavlov.models.kbqa.wiki_parser
             entities_to_leave: how many entities to leave after entity linking
             rels_to_leave: how many relations to leave after relation ranking
@@ -74,6 +76,7 @@ class QueryGeneratorBase(Component, Serializable):
         self.linker_entities = linker_entities
         self.linker_types = linker_types
         self.wiki_parser = wiki_parser
+        self.wiki_file_format = wiki_file_format
         self.rel_ranker = rel_ranker
         self.rank_rels_filename_1 = rank_rels_filename_1
         self.rank_rels_filename_2 = rank_rels_filename_2
@@ -117,7 +120,7 @@ class QueryGeneratorBase(Component, Serializable):
             question = question.replace(old, new)
 
         entities_from_template, types_from_template, rels_from_template, rel_dirs_from_template, \
-        query_type_template, template_found = self.template_matcher(question_sanitized, entities_from_ner)
+        query_type_template, entity_types, template_found = self.template_matcher(question_sanitized, entities_from_ner)
         self.template_nums = [query_type_template]
 
         log.debug(f"question: {question}\n")
@@ -128,9 +131,10 @@ class QueryGeneratorBase(Component, Serializable):
                 how_to_content = self.find_answer_wikihow(entities_from_template[0])
                 candidate_outputs = [["PHOW", how_to_content, 1.0]]
             else:
-                entity_ids = self.get_entity_ids(entities_from_template, "entities", template_found, question)
+                entity_ids = self.get_entity_ids(entities_from_template, "entities", template_found, question, entity_types)
                 type_ids = self.get_entity_ids(types_from_template, "types")
                 log.debug(f"entities_from_template {entities_from_template}")
+                log.debug(f"entity_types {entity_types}")
                 log.debug(f"types_from_template {types_from_template}")
                 log.debug(f"rels_from_template {rels_from_template}")
                 log.debug(f"entity_ids {entity_ids}")
@@ -157,10 +161,14 @@ class QueryGeneratorBase(Component, Serializable):
     def get_entity_ids(self, entities: List[str],
                        what_to_link: str,
                        template_found: str = None,
-                       question: str = None) -> List[List[str]]:
+                       question: str = None,
+                       entity_types: List[List[str]] = None) -> List[List[str]]:
         entity_ids = []
         if what_to_link == "entities":
-            el_output = self.linker_entities([entities], [template_found], [question])
+            if entity_types is None:
+                el_output = self.linker_entities([entities], [template_found], [question])
+            else:
+                el_output = self.linker_entities([entities], [template_found], [question], [entity_types])
             if self.use_api_requester:
                 el_output = el_output[0]
             entity_ids, _ = el_output

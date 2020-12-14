@@ -50,6 +50,7 @@ class KBEntityLinker(Component, Serializable):
                  inverted_index_filename: str,
                  entities_list_filename: str,
                  q2name_filename: str,
+                 types_dict_filename: Optional[str] = None,
                  who_entities_filename: Optional[str] = None,
                  save_path: str = None,
                  q2descr_filename: str = None,
@@ -77,7 +78,8 @@ class KBEntityLinker(Component, Serializable):
             load_path: path to folder with inverted index files
             inverted_index_filename: file with dict of words (keys) and entities containing these words
             entities_list_filename: file with the list of entities from the knowledge base
-            q2name_filename: name of file which maps entity id to name
+            q2name_filename: file which maps entity id to name
+            types_dict_filename: file with types of entities
             who_entities_filename: file with the list of entities in Wikidata, which can be answers to questions
                 with "Who" pronoun, i.e. humans, literary characters etc.
             save_path: path where to save inverted index files
@@ -110,6 +112,7 @@ class KBEntityLinker(Component, Serializable):
         self.entities_list_filename = entities_list_filename
         self.build_inverted_index = build_inverted_index
         self.q2name_filename = q2name_filename
+        self.types_dict_filename = types_dict_filename
         self.who_entities_filename = who_entities_filename
         self.q2descr_filename = q2descr_filename
         self.descr_rank_score_thres = descr_rank_score_thres
@@ -124,6 +127,7 @@ class KBEntityLinker(Component, Serializable):
         self.inverted_index: Optional[Dict[str, List[Tuple[str]]]] = None
         self.entities_index: Optional[List[str]] = None
         self.q2name: Optional[List[Tuple[str]]] = None
+        self.types_dict: Optional[Dict[str, List[str]]] = None
         self.lang_str = f"@{lang}"
         if self.lang_str == "@en":
             self.stopwords = set(stopwords.words("english"))
@@ -176,6 +180,8 @@ class KBEntityLinker(Component, Serializable):
             self.who_entities = load_pickle(self.load_path / self.who_entities_filename)
         if self.freq_dict_filename:
             self.load_freq_dict(self.freq_dict_filename)
+        if self.types_dict_filename:
+        	self.types_dict = load_pickle(self.load_path / self.types_dict_filename)
 
     def save(self) -> None:
         save_pickle(self.inverted_index, self.save_path / self.inverted_index_filename)
@@ -186,18 +192,22 @@ class KBEntityLinker(Component, Serializable):
 
     def __call__(self, entity_substr_batch: List[List[str]],
                  templates_batch: List[str] = None,
-                 context_batch: List[str] = None) -> Tuple[List[List[List[str]]], List[List[List[float]]]]:
+                 context_batch: List[str] = None,
+                 entity_types_batch: List[List[List[str]]] = None) -> Tuple[List[List[List[str]]], List[List[List[float]]]]:
         entity_ids_batch = []
         confidences_batch = []
         if templates_batch is None:
             templates_batch = ["" for _ in entity_substr_batch]
         if context_batch is None:
             context_batch = ["" for _ in entity_substr_batch]
-        for entity_substr_list, template_found, context in zip(entity_substr_batch, templates_batch, context_batch):
+        if entity_types_batch is None:
+            entity_types_batch = [[[] for _ in entity_substr_list] for entity_substr_list in entity_substr_batch]
+        for entity_substr_list, template_found, context, entity_types_list in \
+                zip(entity_substr_batch, templates_batch, context_batch, entity_types_batch):
             entity_ids_list = []
             confidences_list = []
-            for entity_substr in entity_substr_list:
-                entity_ids, confidences = self.link_entity(entity_substr, context, template_found)
+            for entity_substr, entity_types in zip(entity_substr_list, entity_types_list):
+                entity_ids, confidences = self.link_entity(entity_substr, context, template_found, entity_types)
                 if self.num_entities_to_return == 1:
                     if entity_ids:
                         entity_ids_list.append(entity_ids[0])
@@ -214,12 +224,15 @@ class KBEntityLinker(Component, Serializable):
         return entity_ids_batch, confidences_batch
 
     def link_entity(self, entity: str, context: Optional[str] = None, template_found: Optional[str] = None,
-                    cut_entity: bool = False) -> Tuple[List[str], List[float]]:
+                    entity_types: List[str] = None, cut_entity: bool = False) -> Tuple[List[str], List[float]]:
         confidences = []
         if not entity:
             entities_ids = ['None']
         else:
             candidate_entities = self.candidate_entities_inverted_index(entity)
+            if entity_types and self.types_dict:
+                entity_types = set(entity_types)
+                candidate_entities = [entity for entity in candidate_entities if self.types_dict.get(entity[1], set()).intersection(entity_types)]
             if cut_entity and candidate_entities and len(entity.split()) > 1 and candidate_entities[0][3] == 1:
                 entity = self.cut_entity_substr(entity)
                 candidate_entities = self.candidate_entities_inverted_index(entity)
