@@ -181,7 +181,7 @@ class KBEntityLinker(Component, Serializable):
         if self.freq_dict_filename:
             self.load_freq_dict(self.freq_dict_filename)
         if self.types_dict_filename:
-        	self.types_dict = load_pickle(self.load_path / self.types_dict_filename)
+            self.types_dict = load_pickle(self.load_path / self.types_dict_filename)
 
     def save(self) -> None:
         save_pickle(self.inverted_index, self.save_path / self.inverted_index_filename)
@@ -193,7 +193,8 @@ class KBEntityLinker(Component, Serializable):
     def __call__(self, entity_substr_batch: List[List[str]],
                  templates_batch: List[str] = None,
                  context_batch: List[str] = None,
-                 entity_types_batch: List[List[List[str]]] = None) -> Tuple[List[List[List[str]]], List[List[List[float]]]]:
+                 entity_types_batch: List[List[List[str]]] = None) -> Tuple[
+        List[List[List[str]]], List[List[List[float]]]]:
         entity_ids_batch = []
         confidences_batch = []
         if templates_batch is None:
@@ -232,7 +233,8 @@ class KBEntityLinker(Component, Serializable):
             candidate_entities = self.candidate_entities_inverted_index(entity)
             if entity_types and self.types_dict:
                 entity_types = set(entity_types)
-                candidate_entities = [entity for entity in candidate_entities if self.types_dict.get(entity[1], set()).intersection(entity_types)]
+                candidate_entities = [entity for entity in candidate_entities if
+                                      self.types_dict.get(entity[1], set()).intersection(entity_types)]
             if cut_entity and candidate_entities and len(entity.split()) > 1 and candidate_entities[0][3] == 1:
                 entity = self.cut_entity_substr(entity)
                 candidate_entities = self.candidate_entities_inverted_index(entity)

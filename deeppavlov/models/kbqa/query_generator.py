@@ -173,7 +173,7 @@ class QueryGenerator(QueryGeneratorBase):
         all_combs_list = list(itertools.product(entity_combs, type_combs, rel_combs))
         if self.wiki_file_format == "pickle":
             total_entities_list = list(itertools.chain.from_iterable(selected_entity_ids)) + \
-                list(itertools.chain.from_iterable(selected_type_ids))
+                                  list(itertools.chain.from_iterable(selected_type_ids))
             parse_res = self.wiki_parser(["parse_triplets"], [total_entities_list])
         for comb_num, combs in enumerate(all_combs_list):
             confidence = np.prod([score for rel, score in combs[2][:-1]])

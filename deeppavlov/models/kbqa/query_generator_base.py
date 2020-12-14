@@ -131,7 +131,8 @@ class QueryGeneratorBase(Component, Serializable):
                 how_to_content = self.find_answer_wikihow(entities_from_template[0])
                 candidate_outputs = [["PHOW", how_to_content, 1.0]]
             else:
-                entity_ids = self.get_entity_ids(entities_from_template, "entities", template_found, question, entity_types)
+                entity_ids = self.get_entity_ids(entities_from_template, "entities", template_found, question,
+                                                 entity_types)
                 type_ids = self.get_entity_ids(types_from_template, "types")
                 log.debug(f"entities_from_template {entities_from_template}")
                 log.debug(f"entity_types {entity_types}")

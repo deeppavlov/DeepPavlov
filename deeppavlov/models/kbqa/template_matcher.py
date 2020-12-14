@@ -69,13 +69,15 @@ class TemplateMatcher(Serializable):
         raise NotImplementedError
 
     def __call__(self, question: str, entities_from_ner: List[str]) -> \
-                                      Tuple[List[str], List[str], List[Tuple[str]], List[str], str, str]:
+            Tuple[Union[List[str], list], list, Union[list, Any], Union[list, Any], Union[str, Any], Any, Union[
+                str, Any]]:
         question = question.lower()
         question = self.sanitize(question)
         question_length = len(question)
         entities, types, relations, relation_dirs = [], [], [], []
         query_type = ""
         template_found = ""
+        entity_types = []
         results = self.pool.map(RegexpMatcher(question), self.templates)
         results = functools.reduce(lambda x, y: x + y, results)
         replace_tokens = [("the uk", "united kingdom"), ("the us", "united states")]

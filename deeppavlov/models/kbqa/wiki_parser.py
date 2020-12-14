@@ -72,7 +72,6 @@ class WikiParser:
                 else:
                     wiki_parser_output.append(self.document.get(query, {}))
             elif parser_info == "parse_triplets" and self.file_format == "pickle":
-                print("parse_triplets", query)
                 for entity in query:
                     self.parse_triplets(entity)
                 wiki_parser_output.append("ok")
@@ -243,7 +242,7 @@ class WikiParser:
                     return entity
 
         return "Not Found"
-        
+
     def format_date(self, entity, question):
         date_info = re.findall("([\d]{3,4})-([\d]{1,2})-([\d]{1,2})", entity)
         if date_info:
@@ -285,13 +284,13 @@ class WikiParser:
             triplets = self.uncompress(triplets)
             rels = [triplet[0] for triplet in triplets if triplet[0].startswith("P")]
         return rels
-        
+
     def uncompress(self, triplets: Union[str, List[List[str]]]) -> List[List[str]]:
         if isinstance(triplets, str):
             triplets = triplets.split('\t')
             triplets = [triplet.split() for triplet in triplets]
         return triplets
-        
+
     def parse_triplets(self, entity):
         triplets = self.document.get(entity, {})
         for direction in ["forw", "backw"]:
@@ -302,8 +301,8 @@ class WikiParser:
                     self.parsed_document[entity][direction] = dir_triplets
                 else:
                     self.parsed_document[entity] = {direction: dir_triplets}
-                    
-    def find_triplets(self, subj: str, direction: str) -> List[List[str]]:
+
+    def find_triplets(self, subj: str, direction: str) -> Tuple[str, List[List[str]]]:
         subj = subj.split('/')[-1]
         if subj in self.parsed_document:
             print("searching in parsed document")
