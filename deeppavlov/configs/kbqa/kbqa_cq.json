@@ -144,8 +144,7 @@
       "{DEEPPAVLOV_PATH}/requirements/spelling.txt",
       "{DEEPPAVLOV_PATH}/requirements/wikihow.txt",
       "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
-      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
-      "{DEEPPAVLOV_PATH}/requirements/pyinflect.txt"
+      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
     ],
     "labels": {
       "telegram_utils": "NERCoNLL2003Model",

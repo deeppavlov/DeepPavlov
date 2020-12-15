@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pyinflect
 import re
+
 import spacy
 
 nlp = spacy.load('en_core_web_sm')
