@@ -138,11 +138,11 @@ Using GPU
 
 To run or train **TensorFlow**-based DeepPavlov models on GPU you should have `CUDA <https://developer.nvidia.com/cuda-toolkit>`__ 10.0
 installed on your host machine and TensorFlow with GPU support (``tensorflow-gpu``)
-installed in your python environment. Current supported TensorFlow version is 1.15.2. Run
+installed in your python environment. Current supported TensorFlow version is 1.15.4. Run
 
     .. code:: bash
 
-        pip install tensorflow-gpu==1.15.2
+        pip install tensorflow-gpu==1.15.4
 
 before installing model's package requirements to install supported ``tensorflow-gpu`` version.
 
