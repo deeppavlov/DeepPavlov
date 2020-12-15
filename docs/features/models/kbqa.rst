@@ -14,21 +14,21 @@ Currently, we support Wikidata as a Knowledge Base (Knowledge Graph). In the fut
 
 The question answerer:
 
-* validates questions against a preconfigured list of question templates, disambiguates entities using Entity Linking, and answers questions asked in natural language
-* can be used with Wikidata (English, Russian) and (in the future versions) with custom knowledge graphs
+* validates questions against a preconfigured list of question templates, disambiguates entities using Entity Linking, and answers questions asked in natural language,
+* can be used with Wikidata (English, Russian) and (in the future versions) with custom knowledge graphs.
 
 Built-In Models
 ------------------
 
 Currently, we provide three built-in models for KBQA in DeepPavlov library:
 
-* :config:`kbqa_cq <kbqa/kbqa_cq.json>` - for answering complex questions over Wikidata in English
+* :config:`kbqa_cq <kbqa/kbqa_cq.json>` - for answering complex questions over Wikidata in English,
 
-* :config:`kbqa_rus <kbqa/kbqa_cq_rus.json>` - for answering complex questions over Wikidata in Russian
+* :config:`kbqa_rus <kbqa/kbqa_cq_rus.json>` - for answering complex questions over Wikidata in Russian,
 
 and
 
-* :config:`kbqa_cq <kbqa/kbqa_cq_online.json>` - for answering complex questions in English over Wikidata using Wikidata Query Service
+* :config:`kbqa_cq <kbqa/kbqa_cq_online.json>` - for answering complex questions in English over Wikidata using Wikidata Query Service.
 
 The first two models are very similar to each other, and they allow you to deploy them together with local copy of Wikidata on-premises or in the cloud. The third model is lightweight as it allows you to skip downloading entire Wikidata and use the existing Wikidata APIs instead. 
 
@@ -54,18 +54,18 @@ The Knowledge Base Question Answering model uses Wikidata to answer complex ques
 
 The following models are used to find the answer:
 
-* BERT model for prediction of query template type. Model performs classification of questions into 8 classes correponding to 8 query template types.
+* BERT model for prediction of query template type. Model performs classification of questions into 8 classes correponding to 8 query template types,
 
-* BERT entity detection model for extraction of entity substrings from the questions. 
+* BERT entity detection model for extraction of entity substrings from the questions, 
 
 * Substring extracted by the entity detection model is used for entity linking. Entity linking performs matching the substring
   with one of the Wikidata entities. Matching is based on Levenshtein distance between the substring and an entity
   title. The result of the matching procedure is a set of candidate entities. The reset is search of the
-  entity among this set with one of the top-k relations predicted by classification model.
+  entity among this set with one of the top-k relations predicted by classification model,
 
-* BiGRU model for ranking of candidate relations.
+* BiGRU model for ranking of candidate relations,
 
-* BERT model for ranking of candidate relation paths.
+* BERT model for ranking of candidate relation paths,
 
 * Query generator model is used to fill query template with candidate entities and relations (to find valid combinations of entities and relations for query template). Query Generation model uses Wikidata HDT file. Query Generation Online model uses Wikidata Query Service.
 
@@ -131,13 +131,13 @@ How Do I: Train KBQA Model
 ------------
 Here are the models we've trained for complex question answering:
 
-* :config:`query_pr <classifiers/query_pr.json>` - classification model for prediction of query template type
+* :config:`query_pr <classifiers/query_pr.json>` - classification model for prediction of query template type,
 
-* :config:`entity_detection <ner/ner_lcquad_bert_ent_and_type.json>` - sequence tagging model for detection of entity and entity types substrings in the question
+* :config:`entity_detection <ner/ner_lcquad_bert_ent_and_type.json>` - sequence tagging model for detection of entity and entity types substrings in the question,
 
-* :config:`rel_ranking <ranking/rel_ranking.json>` - model for ranking of candidate relations for the question
+* :config:`rel_ranking <ranking/rel_ranking.json>` - model for ranking of candidate relations for the question,
 
-* :config:`rel_ranking_bert <classifiers/rel_ranking_bert.json>` - model for ranking of candidate relation paths for the question
+* :config:`rel_ranking_bert <classifiers/rel_ranking_bert.json>` - model for ranking of candidate relation paths for the question.
 
 How Do I: Train Query Prediction Model
 ----------------------------
@@ -197,20 +197,20 @@ An example of a template::
      "template_num": "0",
      "alternative_templates": []}
 
-* "query_template" is the template of the SPARQL query
-* "property_types" defines the types of unknown relations in the template
-* "rank_rels" is a list which defines whether to rank relations, in this example "p:R1" relations we extract from Wikidata for "wd:E1" entities and rank with RelRanker, "ps:R1" and "?p" relations we do not extract and rank
-* "rel_types" - direct, statement or qualifier relations
-* "filter_rels" (only for online version of KBQA) - whether candidate rels will be enumerated in the "filter" expression in the query, for example
-  "SELECT ?ent WHERE { ?ent wdt:P31 wd:Q4022 . ?ent ?p1 wd:Q90 } filter(?p1 = wdt:P131 || ?p1 = wdt:P17)"
-* "rel_dirs" - "forw" if the relation connects the subject and unknown object, for example, "wd:Q649 wdt:P17 ?p", "backw" if the relation connects the unknown object and the subject, for example "?p wdt:P17 wd:Q159"
-* "query_sequence" (only for offline version of KBQA) - the sequence in which the triplets will be extracted from Wikidata hdt file
-* "entities_and_types_num" - numbers of entities and types extracted from the question, which this template can contain
-* "entities_and_types_select" - the dictionary where keys are number of entities and types extracted from the question and values are indices of entities and types which should be filled in the template (because we can extract more entities and types than the template contains)
-* "syntax_structure" - information about syntactic structure of questions corresponding to this query
-* "return_if_found" - parameter for the cycle which iterates over all possible combinations of entities, relations and types, if "true" - return if the first valid combination is found, if "false" - consider all combinations
-* "template_num" - the number of template
-* alternative_templates - numbers of alternative templates to use if the answer was not found with the current template
+* "query_template" is the template of the SPARQL query,
+* "property_types" defines the types of unknown relations in the template,
+* "rank_rels" is a list which defines whether to rank relations, in this example "p:R1" relations we extract from Wikidata for "wd:E1" entities and rank with RelRanker, "ps:R1" and "?p" relations we do not extract and rank,
+* "rel_types" - direct, statement or qualifier relations,
+* "filter_rels" (only for online version of KBQA) - whether candidate rels will be enumerated in the "filter" expression in the query, for example,
+  "SELECT ?ent WHERE { ?ent wdt:P31 wd:Q4022 . ?ent ?p1 wd:Q90 } filter(?p1 = wdt:P131 || ?p1 = wdt:P17)",
+* "rel_dirs" - "forw" if the relation connects the subject and unknown object, for example, "wd:Q649 wdt:P17 ?p", "backw" if the relation connects the unknown object and the subject, for example "?p wdt:P17 wd:Q159",
+* "query_sequence" (only for offline version of KBQA) - the sequence in which the triplets will be extracted from Wikidata hdt file,
+* "entities_and_types_num" - numbers of entities and types extracted from the question, which this template can contain,
+* "entities_and_types_select" - the dictionary where keys are number of entities and types extracted from the question and values are indices of entities and types which should be filled in the template (because we can extract more entities and types than the template contains),
+* "syntax_structure" - information about syntactic structure of questions corresponding to this query,
+* "return_if_found" - parameter for the cycle which iterates over all possible combinations of entities, relations and types, if "true" - return if the first valid combination is found, if "false" - consider all combinations,
+* "template_num" - the number of template,
+* alternative_templates - numbers of alternative templates to use if the answer was not found with the current template.
 
 Advanced: Using Entity Linking and Wiki Parser As Standalone Services For KBQA
 -----------------------------------------------------------------
@@ -262,10 +262,10 @@ Let us consider an example of the question "What is the deepest lake in Russia?"
 "SELECT ?ent WHERE { ?ent wdt:P31 wd:T1 . ?ent wdt:R1 ?obj . ?ent wdt:R2 wd:E1 } ORDER BY ASC(?obj) LIMIT 5"
 
 arguments:
-* what_return: ["?obj"]
-* query_seq: [["?ent", "P17", "Q159"], ["?ent", "P31", "Q23397"], ["?ent", "P4511", "?obj"]]
-* filter_info: []
-* order\_info: order\_info(variable='?obj', sorting_order='asc')
+* what_return: ["?obj"],
+* query_seq: [["?ent", "P17", "Q159"], ["?ent", "P31", "Q23397"], ["?ent", "P4511", "?obj"]],
+* filter_info: [],
+* order\_info: order\_info(variable='?obj', sorting_order='asc').
 
 .. code:: python
 
