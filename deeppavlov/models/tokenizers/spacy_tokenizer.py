@@ -150,7 +150,7 @@ class StreamSpacyTokenizer(Component):
             else:
                 tokens = [t.text for t in doc]
             filtered = self._filter(tokens)
-            processed_doc = ngramize(filtered, data[i], ngram_range=_ngram_range)
+            processed_doc = ngramize(filtered, ngram_range=_ngram_range, doc=data[i])
             yield from processed_doc
 
     def _lemmatize(self, data: List[str], ngram_range: Optional[Tuple[int, int]] = None, batch_size: int = 10000,
@@ -183,7 +183,7 @@ class StreamSpacyTokenizer(Component):
             if _lowercase:
                 lemmas = [t.lower() for t in lemmas]
             filtered = self._filter(lemmas)
-            processed_doc = ngramize(filtered, data[i], ngram_range=_ngram_range)
+            processed_doc = ngramize(filtered, ngram_range=_ngram_range, doc=data[i])
             yield from processed_doc
 
     def _filter(self, items: List[str], alphas_only: bool = True) -> List[str]:
