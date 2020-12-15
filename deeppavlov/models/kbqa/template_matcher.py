@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
-import multiprocessing as mp
-import json
 import functools
+import json
+import multiprocessing as mp
+import re
 from logging import getLogger
-from typing import Tuple, List
+from typing import Any, Tuple, List, Union
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.serializable import Serializable
