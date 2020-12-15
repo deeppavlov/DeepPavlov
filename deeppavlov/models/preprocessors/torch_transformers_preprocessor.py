@@ -16,9 +16,10 @@ import re
 import random
 from logging import getLogger
 from pathlib import Path
+import torch
 from typing import Tuple, List, Optional, Union
 
-from transformers import BertTokenizer
+from transformers import AutoTokenizer
 from transformers.data.processors.utils import InputFeatures
 
 from deeppavlov.core.commands.utils import expand_path
@@ -30,8 +31,8 @@ from deeppavlov.models.preprocessors.mask import Mask
 log = getLogger(__name__)
 
 
-@register('torch_bert_preprocessor')
-class TorchBertPreprocessor(Component):
+@register('torch_transformers_preprocessor')
+class TorchTransformersPreprocessor(Component):
     """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks.
 
     Check details in :func:`bert_dp.preprocessing.convert_examples_to_features` function.
@@ -59,10 +60,10 @@ class TorchBertPreprocessor(Component):
         self.return_tokens = return_tokens
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
-            self.tokenizer = BertTokenizer(vocab_file=vocab_file,
+            self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
                                            do_lower_case=do_lower_case)
         else:
-            self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
     def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> Union[
             List[InputFeatures], Tuple[List[InputFeatures], List[List[str]]]]:
@@ -88,6 +89,10 @@ class TorchBertPreprocessor(Component):
             encoded_dict = self.tokenizer.encode_plus(
                 text=text_a, text_pair=text_b, add_special_tokens=True, max_length=self.max_seq_length,
                 pad_to_max_length=True, return_attention_mask=True, return_tensors='pt')
+
+            if 'token_type_ids' not in encoded_dict:
+                encoded_dict['token_type_ids'] = torch.tensor([0])
+
             curr_features = InputFeatures(input_ids=encoded_dict['input_ids'],
                                           attention_mask=encoded_dict['attention_mask'],
                                           token_type_ids=encoded_dict['token_type_ids'],
@@ -143,10 +148,10 @@ class TorchBertNerPreprocessor(Component):
         self.subword_mask_mode = subword_mask_mode
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
-            self.tokenizer = BertTokenizer(vocab_file=vocab_file,
+            self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
                                            do_lower_case=do_lower_case)
         else:
-            self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=True)
+            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=True)
         self.token_masking_prob = token_masking_prob
 
     def __call__(self,
@@ -208,7 +213,7 @@ class TorchBertNerPreprocessor(Component):
     @staticmethod
     def _ner_bert_tokenize(tokens: List[str],
                            tags: List[str],
-                           tokenizer: BertTokenizer,
+                           tokenizer: AutoTokenizer,
                            max_subword_len: int = None,
                            mode: str = None,
                            subword_mask_mode: str = "first",
@@ -243,7 +248,7 @@ class TorchBertNerPreprocessor(Component):
 
 
 @register('torch_bert_ranker_preprocessor')
-class TorchBertRankerPreprocessor(TorchBertPreprocessor):
+class TorchBertRankerPreprocessor(TorchTransformersPreprocessor):
     """Tokenize text to sub-tokens, encode sub-tokens with their indices, create tokens and segment masks for ranking.
 
     Builds features for a pair of context with each of the response candidates.
@@ -277,12 +282,14 @@ class TorchBertRankerPreprocessor(TorchBertPreprocessor):
                 cont_resp_pairs.append(zip(contexts, responses))
 
         input_features = []
+
         for s in cont_resp_pairs:
             sub_list_features = []
             for context, response in s:
                 encoded_dict = self.tokenizer.encode_plus(
                     text=context, text_pair=response, add_special_tokens=True, max_length=self.max_seq_length,
                     pad_to_max_length=True, return_attention_mask=True, return_tensors='pt')
+
                 curr_features = InputFeatures(input_ids=encoded_dict['input_ids'],
                                               attention_mask=encoded_dict['attention_mask'],
                                               token_type_ids=encoded_dict['token_type_ids'],

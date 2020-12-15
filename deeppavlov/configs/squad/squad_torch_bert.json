@@ -19,7 +19,7 @@
     ],
     "pipe": [
       {
-        "class_name": "torch_bert_preprocessor",
+        "class_name": "torch_transformers_preprocessor",
         "vocab_file": "bert-base-cased",
         "do_lower_case": false,
         "max_seq_length": 384,
