@@ -1,18 +1,41 @@
 Knowledge Base Question Answering (KBQA)
 ========================================
 
-Description
+Overview
 -----------
 
-There are three models for KBQA in DeepPavlov library:
+The knowledge base:
 
-* :config:`kbqa_cq <kbqa/kbqa_cq.json>` - for answering complex questions in English
+* is a comprehensive repository of information about a given domain or a number of domains,
+* reflects the ways we model knowledge about a given subject or subjects, in terms of concepts, entities, properties, and relationships,
+* enables us to use this structured knowledge where appropriate, e.g., answering factoid questions
 
-* :config:`kbqa_cq <kbqa/kbqa_cq_online.json>` - for answering complex questions in English using Wikidata Query Service
+Currently, we support Wikidata as a Knowledge Base (Knowledge Graph). In the future, we will expand support for more knowledge graphs, as well as outline the steps needed to support a custom knowledge base.
 
-* :config:`kbqa_rus <kbqa/kbqa_cq_rus.json>` - for answering complex questions in Russian
+The question answerer:
 
-The Complex Knowledge Base Question Answering model uses Wikidata to answer complex questions. Types of questions which the model answers:
+* validates questions against a preconfigured list of question templates, disambiguates entities using Entity Linking, and answers questions asked in natural language
+* can be used with Wikidata (English, Russian) and (in the future versions) with custom knowledge graphs
+
+Built-In Models
+------------------
+
+Currently, we provide three built-in models for KBQA in DeepPavlov library:
+
+* :config:`kbqa_cq <kbqa/kbqa_cq.json>` - for answering complex questions over Wikidata in English
+
+* :config:`kbqa_rus <kbqa/kbqa_cq_rus.json>` - for answering complex questions over Wikidata in Russian
+
+and
+
+* :config:`kbqa_cq <kbqa/kbqa_cq_online.json>` - for answering complex questions in English over Wikidata using Wikidata Query Service
+
+The first two models are very similar to each other, and they allow you to deploy them together with local copy of Wikidata on-premises or in the cloud. The third model is lightweight as it allows you to skip downloading entire Wikidata and use the existing Wikidata APIs instead. 
+
+.. note:: 
+   We recommend you to use the lightweight model for quick experiments as well as academic research, and full models in production to avoid dependencies on the public Wikidata APIs.
+
+The Knowledge Base Question Answering model uses Wikidata to answer complex questions. Here are some of the most popular types of questions supported by the model:
 
 * Complex questions with numerical values:
     "What position did Angela Merkel hold on November 10, 1994?"
@@ -29,8 +52,7 @@ The Complex Knowledge Base Question Answering model uses Wikidata to answer comp
 * Simple questions:
     "What is crew member Yuri Gagarin's Vostok?"
 
-To find the answer the following
-models are used:
+The following models are used to find the answer:
 
 * BERT model for prediction of query template type. Model performs classification of questions into 8 classes correponding to 8 query template types.
 
@@ -47,11 +69,10 @@ models are used:
 
 * Query generator model is used to fill query template with candidate entities and relations (to find valid combinations of entities and relations for query template). Query Generation model uses Wikidata HDT file. Query Generation Online model uses Wikidata Query Service.
 
-Use the model
+How Do I: Using KBQA In CLI & Python
 -------------
 
-Any pre-trained model can be used for inference from both Command Line Interface (CLI) and Python. Before using the
-model make sure that all required packages are installed using the command:
+Any pre-trained model in DeepPavlov Library can be used for inference from both Command Line Interface (CLI) and Python. Before using the model make sure that all required packages are installed using the command:
 
 .. code:: bash
 
@@ -68,10 +89,7 @@ To use a pre-trained model from CLI use the following command:
     python deeppavlov/deep.py interact kbqa_cq_rus [-d]
 
 where ``kbqa_cq`` and others are the names of configs and ``-d`` is an optional download key. The key ``-d`` is used
-to download the pre-trained model along with embeddings and all other files needed to run the model. Also command
-``download`` is possible,
-
-
+to download the pre-trained model along with embeddings and all other files needed to run the model. You can also use command ``download``.
 
 KBQA model for complex question answering can be used from Python using the following code:
 
@@ -109,10 +127,9 @@ KBQA model for complex question answering in Russian can be used from Python usi
     kbqa_model(['Когда родился Пушкин?'])
     >>> ["1799-05-26"]
 
-Train models
+How Do I: Train KBQA Model
 ------------
-
-Models, trained for complex question answering:
+Here are the models we've trained for complex question answering:
 
 * :config:`query_pr <classifiers/query_pr.json>` - classification model for prediction of query template type
 
@@ -122,14 +139,14 @@ Models, trained for complex question answering:
 
 * :config:`rel_ranking_bert <classifiers/rel_ranking_bert.json>` - model for ranking of candidate relation paths for the question
 
-Training of Query Prediction
+How Do I: Train Query Prediction Model
 ----------------------------
 
 The dataset consists of three csv files: train.csv, valid.csv and test.csv. Each line in this file contains question and corresponding query template type, for example:
 
 "What is the longest river in the UK?", 6
 
-Training of Entity Detection
+How Do I: Train Entity Detection Model
 ----------------------------
 
 The dataset is a pickle file. The dataset must be split into three parts: train, test, and validation. Each part is a list of tuples of question tokens and tags for each token. An example of training sample:
@@ -138,7 +155,7 @@ The dataset is a pickle file. The dataset must be split into three parts: train,
 
 "T-TAG" corresponds to tokens of entity types, "E-TAG" - for entities, "O-TAG" - for other tokens.
 
-Training of Relation and Path Ranking
+How Do I: Train Relation and Path Ranking Models
 -------------------------------------
 
 The dataset for relation ranking consists of two xml files (train and test sets). Each sample contains a question, a relation title and a label (1 if the relation corresponds to the question and 0 otherwise). An example of training sample:
@@ -161,7 +178,7 @@ The dataset for path ranking is similar to the dataset for relation ranking. If 
        <value name="class">1</value>
     </paraphrase>
 
-Adding new SPARQL queries templates
+How Do I: Adding Templates For New SPARQL Queries
 -----------------------------------------
 Templates can be added to sparql_queries.json file, which is a dictionary, where keys are template numbers, and values are templates with additional information.
 An example of a template::
@@ -195,8 +212,12 @@ An example of a template::
 * "template_num" - the number of template
 * alternative_templates - numbers of alternative templates to use if the answer was not found with the current template
 
-Using Entity Linking and Wiki Parser as separate services in KBQA
+Advanced: Using Entity Linking and Wiki Parser As Standalone Services For KBQA
 -----------------------------------------------------------------
+Default configuration for KBQA was designed to use all of the supporting models together as a part of the KBQA pipeline. However, there might be a case when you want to work with some of these models in addition to KBQA.
+
+For example, you might want to use Entity Linking as an annotator in your [Deepy-based](https://github.com/deepmipt/assistant-base) multiskill AI Assistant. Or, you might want to use Wiki Parser component to directly run SPARQL queries against your copy of Wikidata. To support these usecase, starting with this release you can also deploy supporting models as standalone components. 
+
 Config :config:`kbqa_entity_linking <kbqa/kbqa_entity_linking.json>` can be used as service with the following command:
 
 .. code:: bash
