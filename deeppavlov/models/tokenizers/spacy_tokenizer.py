@@ -153,7 +153,7 @@ class StreamSpacyTokenizer(Component):
             processed_doc = ngramize(filtered, data[i], ngram_range=_ngram_range)
             yield from processed_doc
 
-    def _lemmatize(self, data: List[str], ngram_range: Optional[Tuple[int, int]] = None, batch_size: int = 10000
+    def _lemmatize(self, data: List[str], ngram_range: Optional[Tuple[int, int]] = None, batch_size: int = 10000,
                    lowercase: bool = True) -> Generator[List[str], Any, None]:
         """Lemmatize a list of documents.
 
