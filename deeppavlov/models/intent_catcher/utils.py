@@ -14,13 +14,17 @@
 
 import numpy as np
 
-def batch_samples(sentences, labels, batch_size=64):
+def batch_samples(sentences, labels, batch_size=64, shuffle=True):
     """Simple batcher"""
-    assert isinstance(sentences, list) or isinstance(sentences, np.array), \
+    assert isinstance(sentences, list) or isinstance(sentences, np.ndarray), \
         print("`sentences` type must be list or np.array")
-    assert isinstance(labels, list) or isinstance(labels, np.array), \
+    assert isinstance(labels, list) or isinstance(labels, np.ndarray), \
         print("`sentences` type must be list or np.array")
+    if shuffle:
+        z = list(zip(sentences, labels))
+        np.random.shuffle(z)
+        sentences, labels = zip(*z)
     i = 0
     while i < len(sentences):
-        yield sentences[i:i+batch_size], labels[i:i+batch_size]
+        yield sentences[i:i+batch_size], np.array(labels[i:i+batch_size])
         i+=batch_size

@@ -21,15 +21,17 @@ import keras
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as tfhub
-from typing import Union, Optional, List
 from xeger import Xeger
+from sklearn.preprocessing import LabelEncoder
+
+from typing import Union, List
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.models.intent_catcher.utils import batch_samples
 
-logger = getLogger(__name__)
+log = getLogger(__name__)
 
 
 @register("intent_catcher")
@@ -49,49 +51,46 @@ class IntentCatcher(Estimator, Serializable):
             'use':"https://tfhub.dev/google/universal-sentence-encoder/2",
             'use_large':"https://tfhub.dev/google/universal-sentence-encoder-large/2"
         }
+        self.le = LabelEncoder()
         self.regexps = []
         embedder = tfhub.Module(urls[catcher_params_path['embeddings']])
         self.sentences = tf.placeholder(dtype=tf.string)
         self.embedded = embedder(self.sentences)
         self.multulabel = catcher_params_path['multilabel']
-        if config['number_of_layers'] == 0:
+        if catcher_params_path['number_of_layers'] == 0:
             layers = [
                 tf.keras.layers.Dense(
-                    units=config['number_of_intents'],
-                    activation='softmax' if not config['multilabel'] else 'sigmoid',
-                    input_shape=(None, int(embedded.shape[1]))
+                    units=catcher_params_path['number_of_intents'],
+                    activation='softmax' if not catcher_params_path['multilabel'] else 'sigmoid'
                 )
             ]
-        elif config['number_of_layers'] > 0:
+        elif catcher_params_path['number_of_layers'] > 0:
             layers = [
                 tf.keras.layers.Dense(
-                    units=config['hidden_dim'],
-                    activation='relu',
-                    input_shape=(None, int(embedded.shape[1]))
+                    units=catcher_params_path['hidden_dim'],
+                    activation='relu'
                 )
             ]
-            for i in range(config['number_of_layers']-2):
+            for i in range(catcher_params_path['number_of_layers']-2):
                 layers.append(
                     tf.keras.layers.Dense(
-                        units=config['hidden_dim'],
-                        activation='relu',
-                        input_shape=(None, config['hidden_dim'])
+                        units=catcher_params_path['hidden_dim'],
+                        activation='relu'
                     )
                 )
             layers.append(
                 tf.keras.layers.Dense(
-                    units=config['number_of_intents'],
-                    activation='softmax' if not config['multilabel'] else 'sigmoid',
-                    input_shape=(None, config['hidden_dim'])
+                    units=catcher_params_path['number_of_intents'],
+                    activation='softmax' if not catcher_params_path['multilabel'] else 'sigmoid'
                 )
             )
-        elif config['number_of_layers'] < 0:
+        elif catcher_params_path['number_of_layers'] < 0:
             raise Exception("Number of layers should be >= 0")
         self.classifier = tf.keras.Sequential(layers=layers)
         self.classifier.compile(
             optimizer='adam',
-            loss='categorical_crossentropy' if not config['multilabel'] else 'binary_crossentropy',
-            metrics=config['metrics']
+            loss='sparse_categorical_crossentropy' if not catcher_params_path['multilabel'] else 'binary_crossentropy',
+            metrics=catcher_params_path['metrics']
         )
         if 'device' in catcher_params_path:
             pass
@@ -101,27 +100,31 @@ class IntentCatcher(Estimator, Serializable):
 
     def fit(self, sentences: List[str], labels: List[Union[str, int]], limit=10, batch_size=64, epochs=1) -> None:
         """Train classifier"""
+        labels = self.le.fit_transform(labels)
         xeger = Xeger(limit)
         assert len(sentences) == len(labels), logger.error("Number of labels is not equal to the number of sentences")
         intents = np.unique(labels)
         generated_sentences = []
         generated_labels = []
-        logger.info("Generating samples from regexps")
         for s, l in zip(sentences, labels): # generate samples and add regexp
             try:
                 self.regexps.append((re.compile(s), l))
             except Exception as e:
-                logger.error(f"Sentence `{s}` is not a consitent regexp")
+                log.error(f"Sentence `{s}` is not a consitent regexp")
                 raise e
-            gs = {xeger.xeger(s) for _ in limit}
+            gs = {xeger.xeger(s) for _ in range(limit)}
             generated_sentences.extend(gs)
             generated_labels.extend([l for i in range(len(gs))])
-        logger.info("Training classifier")
+        log.info(f"Original number of samples: {len(labels)}, generated samples: {len(generated_labels)}")
+        history = []
         for epoch in range(epochs): # train classifier
-            batch_generator = batch_samples(generated_sentences, generated_labels, batch_size)
+            batch_generator = batch_samples(generated_sentences, np.array(generated_labels), batch_size)
             for x, y in batch_generator:
                 x = self.session.run(self.embedded, feed_dict={self.sentences:x})
                 self.classifier.train_on_batch(x, y)
+                pred = self.classifier.predict_classes(x)
+                history.append(np.sum(pred == y)/len(y))
+                log.info(f"Epoch: {epoch}, accuracy:{np.mean(history[-10:]):.5f}")
 
     def __call__(self, sentences: List[str]) -> List[Union[str, int]]:
         """Predict labels"""
@@ -138,20 +141,27 @@ class IntentCatcher(Estimator, Serializable):
         nn_predictions = self.classifier.predict_classes(x)
         for i, l in enumerate(nn_predictions):
             labels[indx[i]] = l
-        return labels
+        return self.le.inverse_transform(labels)
 
     def save(self) -> None:
         """Save classifier parameters and regexps"""
-        logger.info("Saving model and regexps to {}".format(self.save_path))
+        log.info("Saving model and regexps to {}".format(self.save_path))
         self.classifier.save(self.save_path / Path('nn.h5'))
+        le_params = {i:c for i,c in enumerate(self.le.classes_)}
+        with open(self.save_path / Path("le.json"), 'w') as fp:
+            json.dump(le_params, fp)
         regexps = [{"regexp":reg.pattern, "label":str(l)} for reg, l in self.regexps]
-        with open(self.save_path / Path('regexps.json')) as fp:
+        with open(self.save_path / Path('regexps.json'), 'w') as fp:
             json.dump(regexps, fp)
 
     def load(self) -> None:
         """Load classifier parameters and regexps"""
-        logger.info("Loading model and regexps from {}".format(self.load_path))
-        self.classifier = tf.keras.models.load_model(self.load_path / Path("model.h5"))
+        log.info("Loading model and regexps from {}".format(self.load_path))
+        self.classifier = tf.keras.models.load_model(self.load_path / Path("nn.h5"))
+        self.le = LabelEncoder()
+        with open(self.load_path / Path("le.json")) as fp:
+            le_params = json.load(fp)
+            self.le.fit([le_params[str(i)] for i in range(len(le_params))])
         with open(self.load_path / Path('regexps.json')) as fp:
             self.regexps = json.load(fp)
-        self.regexps = [(re.compile(d['regexp']), d['label']) for d in self.regexps]
+        self.regexps = [(re.compile(d['regexp']), int(d['label'])) for d in self.regexps]
