@@ -211,7 +211,7 @@ PARAMS = {
             [
                 ("What is the currency of Sweden?", ("Swedish krona",)),
                 ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-                ("When did the Korean War end?", ("27 July 1953",)),
+                ("When did the Korean War end?", ("1953-07-27",)),
                 ("   ", ("Not Found",))
             ],
         ("kbqa/kbqa_cq_bert_ranker.json", "kbqa", ('IP',)):
