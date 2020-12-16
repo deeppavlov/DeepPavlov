@@ -1,11 +1,5 @@
-import bz2
-import json
-import multiprocessing as mp
 import os
-import unidecode
 from pathlib import Path
-from collections import defaultdict
-from nltk.corpus import stopwords
 from deeppavlov.core.data.utils import simple_download
 from .wikidata_parse import WikidataParser
 from .entities_parse import EntitiesParser
@@ -22,8 +16,6 @@ wikidata_parser.parse()
 
 entities_parser = EntitiesParser(load_path="~/.deeppavlov/downloads/wikidata_rus",
                                  save_path="~/.deeppavlov/downloads/wikidata_rus",
-                                 name_to_idlist_filename="name_to_idlist_ru.pickle",
-                                 ent_list_filename="ent_list_rus.pickle",
                                  word_to_idlist_filename="word_to_idlist_rus.pickle",
                                  entities_ranking_dict_filename="entities_ranking_dict_rus.pickle",
                                  entities_descr_filename="q_to_descr_ru.pickle")

@@ -2,10 +2,8 @@ import bz2
 import json
 import multiprocessing as mp
 import os
-import pickle
-from collections import defaultdict
 from pathlib import Path
-from deeppavlov.core.common_file import save_pickle
+from deeppavlov.core.common.file import save_pickle
 
 
 class WikidataParser:
@@ -28,12 +26,12 @@ class WikidataParser:
         self.chunk_num_lines = chunk_num_lines
         self.save_path = Path(save_path).expanduser().resolve()
         self.save_path.parent.mkdir(parents=True, exist_ok=True)
-        manager = mp.Manager()
+        self.manager = mp.Manager()
         if num_processors is None:
             self.num_processors = mp.cpu_count()
         else:
             self.num_processors = num_processors
-        self.wiki_dict = manager.dict()
+        self.wiki_dict = self.manager.dict()
         self.bz_file = bz2.BZ2File(self.wikidata_filename)
 
     def process_sample(self, entity_dict):
@@ -90,9 +88,9 @@ class WikidataParser:
         Method for parallel processing of lines from Wikidata file
         """
         length = len(common_list)
-        chunk_size = length // num_processors + 1
+        chunk_size = length // self.num_processors + 1
         for i in range(chunk_size):
-            num_sample = num_processors * i + num_proc
+            num_sample = self.num_processors * i + num_proc
             if num_sample < length:
                 line = common_list[num_sample]
                 line = line[:-2]
@@ -116,7 +114,7 @@ class WikidataParser:
                 line = self.bz_file.readline()
 
         while True:
-            self.wiki_dict = manager.dict()
+            self.wiki_dict = self.manager.dict()
             common_list = []
 
             count = 0
