@@ -7,6 +7,7 @@ from collections import defaultdict
 from pathlib import Path
 from deeppavlov.core.common_file import save_pickle
 
+
 class WikidataParser:
     """
     This class parses json file with Wikidata
@@ -17,16 +18,16 @@ class WikidataParser:
                  "descr": "cтолица и крупнейший город России", "wikipedia_title": "https://ru.wikipedia.org/wiki/Москва",
                  "triplets": [["P31", "Q4442912", "Q183342", "Q1549591"]], "number_of_relations": 558}
     """
-    
+
     def __init__(self, wikidata_filename: str,
-                       chunk_num_lines: int = 60000,
-                       save_path: str = "~/.deeppavlov/downloads/wikidata_parse",
-                       num_processors = None):
-        
+                 chunk_num_lines: int = 60000,
+                 save_path: str = "~/.deeppavlov/downloads/wikidata_parse",
+                 num_processors=None):
+
         self.wikidata_filename = wikidata_filename
         self.chunk_num_lines = chunk_num_lines
         self.save_path = Path(save_path).expanduser().resolve()
-        self.save_path.parent.mkdir(parents = True, exist_ok = True)
+        self.save_path.parent.mkdir(parents=True, exist_ok=True)
         manager = mp.Manager()
         if num_processors is None:
             self.num_processors = mp.cpu_count()
@@ -34,7 +35,7 @@ class WikidataParser:
             self.num_processors = num_processors
         self.wiki_dict = manager.dict()
         self.bz_file = bz2.BZ2File(self.wikidata_filename)
-        
+
     def process_sample(self, entity_dict):
         """
         Method which takes as input line from Wikidata file, parsed with json.loads (entity_dict)
@@ -59,10 +60,10 @@ class WikidataParser:
                     if "ru" in entity_dict["descriptions"]:
                         descr = entity_dict["descriptions"]["ru"]["value"]
                         entity_info["descr"] = descr
-                
+
                 wikipedia_title = entity_dict.get("sitelinks", {}).get("ruwiki", {}).get("title", "")
                 entity_info["wikipedia_title"] = wikipedia_title
-                
+
                 if "claims" in entity_dict and entity_in_russian:
                     triplets = []
                     for relation in entity_dict["claims"]:
@@ -73,15 +74,15 @@ class WikidataParser:
                                 if "id" in obj["mainsnak"]["datavalue"]["value"]:
                                     objects_list.append(obj["mainsnak"]["datavalue"]["value"]["id"])
                             if objects_list:
-                                triplets.append([relation]+objects_list)
+                                triplets.append([relation] + objects_list)
                     entity_info["triplets"] = triplets
-                    
+
                     number_of_relations = len(entity_dict["claims"])
                     entity_info["number_of_relations"] = number_of_relations
-                
+
         except:
             pass
-            
+
         return entity_id, entity_info
 
     def run(self, num_proc, common_list):
@@ -91,7 +92,7 @@ class WikidataParser:
         length = len(common_list)
         chunk_size = length // num_processors + 1
         for i in range(chunk_size):
-            num_sample = num_processors*i+num_proc
+            num_sample = num_processors * i + num_proc
             if num_sample < length:
                 line = common_list[num_sample]
                 line = line[:-2]
@@ -105,40 +106,40 @@ class WikidataParser:
         Method for parsing of Wikidata file
         """
         line = self.bz_file.readline()
-        
+
+        num_iterations = 0
         if continue_parsing:
             files = os.listdir(self.save_path)
-            num_files = len(files)
-            
-            for _ in range(num_files*self.chunk_num_lines*self.num_processors):
+            num_iterations = len(files)
+
+            for _ in range(num_iterations * self.chunk_num_lines * self.num_processors):
                 line = self.bz_file.readline()
 
         while True:
             self.wiki_dict = manager.dict()
             common_list = []
-            
+
             count = 0
             while line:
                 line = self.bz_file.readline()
                 common_list.append(line)
                 count += 1
-                if count == self.chunk_num_lines*self.num_processors:
+                if count == self.chunk_num_lines * self.num_processors:
                     break
-                    
+
             if not common_list:
                 break
-                
+
             workers = []
             for ii in range(self.num_processors):
-                worker = mp.Process(target = self.run, args = (ii, common_list))
+                worker = mp.Process(target=self.run, args=(ii, common_list))
                 workers.append(worker)
                 worker.start()
             for worker in workers:
                 worker.join()
-            
-            self.wiki_dict = dict(self.wiki_dict)
-            
-            save_pickle(self.wiki_dict, self.save_path / f"{num_iterations}.pickle")
-                
-            num_iterations += 1
 
+            self.wiki_dict = dict(self.wiki_dict)
+
+            save_pickle(self.wiki_dict, self.save_path / f"{num_iterations}.pickle")
+
+            num_iterations += 1
