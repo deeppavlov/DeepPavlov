@@ -109,7 +109,6 @@ class EntityLinker(Component, Serializable):
 
     def __init__(self, load_path: str,
                  word_to_idlist_filename: str,
-                 entities_list_filename: str,
                  entities_ranking_filename: str,
                  vectorizer_filename: str,
                  faiss_index_filename: str,
