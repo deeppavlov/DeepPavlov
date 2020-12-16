@@ -27,12 +27,13 @@ class WikidataParser:
         self.wikidata_filename = wikidata_filename
         self.chunk_num_lines = chunk_num_lines
         self.save_path = Path(save_path).expanduser().resolve()
-        self.save_path.parent.mkdir(parents=True, exist_ok=True)
+        self.save_path.mkdir(parents=True, exist_ok=True)
         self.manager = mp.Manager()
         if num_processors is None:
             self.num_processors = mp.cpu_count()
         else:
             self.num_processors = num_processors
+        log.debug(f"number of processors {self.num_processors}")
         self.wiki_dict = self.manager.dict()
         self.bz_file = bz2.BZ2File(self.wikidata_filename)
 

@@ -1,4 +1,5 @@
 import os
+from logging import getLogger
 from pathlib import Path
 from collections import defaultdict
 from nltk.corpus import stopwords
@@ -6,9 +7,10 @@ from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.file import load_pickle, save_pickle
 from deeppavlov.core.commands.utils import expand_path
 
+log = getLogger(__name__)
 
 class EntitiesParser(Serializable):
-    def __init__(self, load_path: str = "~/.deeppavlov/downloads/wikidata_rus",
+    def __init__(self, load_path: str = "~/.deeppavlov/downloads/wikidata_parse",
                  save_path: str = "~/.deeppavlov/downloads/wikidata_rus",
                  word_to_idlist_filename: str = "word_to_idlist_rus.pickle",
                  entities_ranking_dict_filename: str = "entities_ranking_dict_rus.pickle",
@@ -37,6 +39,7 @@ class EntitiesParser(Serializable):
     def load(self):
         self.load_path = str(expand_path(self.load_path))
         files = os.listdir(self.load_path)
+        log.debug(f"processed wikidata files for further parsing: {len(files)}")
         for fl in files:
             wiki_chunk = load_pickle(self.load_path / Path(fl))
             for elem in wiki_chunk:
@@ -46,8 +49,10 @@ class EntitiesParser(Serializable):
         save_pickle(self.word_to_idlist, self.save_path / self.word_to_idlist_filename)
         save_pickle(self.entities_ranking_dict, self.save_path / self.entities_ranking_dict_filename)
         save_pickle(self.entities_descr, self.save_path / self.entities_descr_filename)
+        log.debug("saved files")
 
     def parse(self):
+        log.debug("start parsing entities")
         for entity_id in self.wiki_dict:
             entity_info = self.wiki_dict[entity_id]
             name = entity_info.get("name", "")
