@@ -1,19 +1,25 @@
 import os
 from pathlib import Path
 from deeppavlov.core.data.utils import simple_download
-from .wikidata_parse import WikidataParser
-from .entities_parse import EntitiesParser
+from deeppavlov.models.kbqa.download_parse_utils.wikidata_parse import WikidataParser
+from deeppavlov.models.kbqa.download_parse_utils.entities_parse import EntitiesParser
+
 
 save_path = "~/.deeppavlov/downloads/wikidata"
 wikidata_filename = "wikidata.json.bz2"
-save_path = Path(os.path.join(save_path, wikidata_filename)).expanduser().resolve()
-save_path.parent.mkdir(parents=True, exist_ok=True)
+wikidata_path = Path(os.path.join(save_path, wikidata_filename)).expanduser().resolve()
+wikidata_path.parent.mkdir(parents=True, exist_ok=True)
 url = "https://dumps.wikimedia.org/wikidatawiki/entities/latest-all.json.bz2"
-simple_download(url, save_path)
 
-wikidata_parser = WikidataParser(wikidata_filename)
+#simple_download(url, wikidata_path)
+
+
+wikidata_parser = WikidataParser(wikidata_path,
+                                 chunk_num_lines = 6000,
+                                 save_path = "~/.deeppavlov/downloads/wikidata_parse")
 wikidata_parser.parse()
 
+'''
 entities_parser = EntitiesParser(load_path="~/.deeppavlov/downloads/wikidata_rus",
                                  save_path="~/.deeppavlov/downloads/wikidata_rus",
                                  word_to_idlist_filename="word_to_idlist_rus.pickle",
@@ -23,3 +29,4 @@ entities_parser = EntitiesParser(load_path="~/.deeppavlov/downloads/wikidata_rus
 entities_parser.load()
 entities_parser.parse()
 entities_parser.save()
+'''

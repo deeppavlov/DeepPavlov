@@ -2,9 +2,11 @@ import bz2
 import json
 import multiprocessing as mp
 import os
+from logging import getLogger
 from pathlib import Path
 from deeppavlov.core.common.file import save_pickle
 
+log = getLogger(__name__)
 
 class WikidataParser:
     """
@@ -114,6 +116,7 @@ class WikidataParser:
                 line = self.bz_file.readline()
 
         while True:
+            log.debug(f"iteration number {num_iterations}")
             self.wiki_dict = self.manager.dict()
             common_list = []
 
