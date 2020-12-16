@@ -32,7 +32,6 @@
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "save_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "word_to_idlist_filename": "word_to_idlist_rus.pickle",
-        "entities_list_filename": "ent_list_rus.pickle",
         "entities_ranking_filename": "entities_ranking_dict_rus.pickle",
         "vectorizer_filename": "vectorizer_rus.pk",
         "faiss_index_filename": "{DOWNLOADS_PATH}/wikidata_rus/faiss_vectors_rus.index",
@@ -75,7 +74,7 @@
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/entity_linking_rus.tar.gz",
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/entity_linking_rus_vx.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {

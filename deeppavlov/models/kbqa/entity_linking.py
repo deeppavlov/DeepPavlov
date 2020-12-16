@@ -135,9 +135,7 @@ class EntityLinker(Component, Serializable):
 
         Args:
             load_path: path to folder with inverted index files
-            word_to_idlist_filename: file with dict of words (keys) and start and end indices in
-                entities_list filename of the corresponding entity ids
-            entities_list_filename: file with the list of entity ids from the knowledge base
+            word_to_idlist_filename: file with dict of words (keys) and entity ids list as value
             entities_ranking_filename: file with dict of entity ids (keys) and number of relations in Wikidata
                 for entities
             vectorizer_filename: filename with TfidfVectorizer data
@@ -165,7 +163,6 @@ class EntityLinker(Component, Serializable):
         self.morph = pymorphy2.MorphAnalyzer()
         self.lemmatize = lemmatize
         self.word_to_idlist_filename = word_to_idlist_filename
-        self.entities_list_filename = entities_list_filename
         self.entities_ranking_filename = entities_ranking_filename
         self.vectorizer_filename = vectorizer_filename
         self.faiss_index_filename = faiss_index_filename
@@ -211,7 +208,6 @@ class EntityLinker(Component, Serializable):
 
     def load(self) -> None:
         self.word_to_idlist = load_pickle(self.load_path / self.word_to_idlist_filename)
-        self.entities_list = load_pickle(self.load_path / self.entities_list_filename)
         self.word_list = list(self.word_to_idlist.keys())
         self.entities_ranking_dict = load_pickle(self.load_path / self.entities_ranking_filename)
         if not self.fit_vectorizer:
@@ -327,8 +323,8 @@ class EntityLinker(Component, Serializable):
                     scores_list = [1.0 - score for score in scores_list]
                 candidate_entities = {}
                 for ind, score in zip(ind_list, scores_list):
-                    start_ind, end_ind = self.word_to_idlist[self.word_list[ind]]
-                    for entity in self.entities_list[start_ind:end_ind]:
+                    entities_set = self.word_to_idlist[self.word_list[ind]]
+                    for entity in entities_set:
                         if entity in candidate_entities:
                             if score > candidate_entities[entity]:
                                 candidate_entities[entity] = score
