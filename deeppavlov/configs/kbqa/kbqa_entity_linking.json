@@ -25,7 +25,7 @@
         "build_inverted_index": false,
         "use_descriptions": false,
         "use_prefix_tree": false,
-        "num_entities_to_return": 5
+        "num_entities_to_return": 2
       }
     ],
     "out": ["entity_ids", "confidences"]
