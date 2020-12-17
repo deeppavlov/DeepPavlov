@@ -15,7 +15,7 @@
     "pipe": [
       {
         "class_name": "bert_preprocessor",
-        "vocab_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/vocab.txt",
+        "vocab_file": "{BERT_PATH}/vocab.txt",
         "do_lower_case": false,
         "max_seq_length": 64,
         "in": ["text_a", "text_b"],
@@ -26,8 +26,8 @@
         "n_classes": 2,
         "return_probas": true,
         "one_hot_labels": false,
-        "bert_config_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/bert_config.json",
-        "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/bert_model.ckpt",
+        "bert_config_file": "{BERT_PATH}/bert_config.json",
+        "pretrained_bert": "{BERT_PATH}/bert_model.ckpt",
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
         "keep_prob": 0.5,
@@ -56,6 +56,7 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models_kbqa/cased_L-12_H-768_A-12",
       "MODEL_PATH": "{MODELS_PATH}/rel_ranking_bert"
     },
     "requirements": [
@@ -69,7 +70,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
-        "subdir": "{DOWNLOADS_PATH}/bert_models"
+        "subdir": "{DOWNLOADS_PATH}/bert_models_kbqa"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_bert.tar.gz",
