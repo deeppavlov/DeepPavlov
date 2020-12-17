@@ -288,7 +288,7 @@ class WikiParser:
     def uncompress(self, triplets: Union[str, List[List[str]]]) -> List[List[str]]:
         if isinstance(triplets, str):
             triplets = triplets.split('\t')
-            triplets = [triplet.split() for triplet in triplets]
+            triplets = [triplet.split("  ") for triplet in triplets]
         return triplets
 
     def parse_triplets(self, entity):
@@ -305,7 +305,6 @@ class WikiParser:
     def find_triplets(self, subj: str, direction: str) -> Tuple[str, List[List[str]]]:
         subj = subj.split('/')[-1]
         if subj in self.parsed_document:
-            print("searching in parsed document")
             triplets = self.parsed_document.get(subj, {}).get(direction, [])
         else:
             triplets = self.document.get(subj, {}).get(direction, [])
