@@ -165,7 +165,7 @@
         "class_name": "rel_ranking_mt_bert_infer",
         "bert_preprocessor": {
           "class_name": "bert_preprocessor",
-          "vocab_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/vocab.txt",
+          "vocab_file": "{BERT_PATH}/vocab.txt",
           "do_lower_case": false,
           "max_seq_length": 64
         },
