@@ -18,7 +18,7 @@ from deeppavlov.models.go_bot.nlu.tokens_vectorizer import TokensVectorRepresent
 from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesFeatures, BatchDialoguesTargets
 
 # todo
-from deeppavlov.models.go_bot.dto.shared_gobot_params import SharedGoBotParams
+from deeppavlov.models.go_bot.dto.shared_gobot_params import SharedGoBotParams, MemorizingGoBotParams
 from deeppavlov.models.go_bot.policy.dto.attn_params import GobotAttnParams
 from deeppavlov.models.go_bot.policy.dto.digitized_policy_features import DigitizedPolicyFeatures
 from deeppavlov.models.go_bot.policy.dto.policy_network_params import PolicyNetworkParams
@@ -453,3 +453,41 @@ class PolicyNetwork(LRScheduledTFModel):
 
         if self.debug:
             log.debug(f"AFTER {self.__class__.__name__} _save_nn_params()")
+
+class MemorizingPolicy(PolicyNetwork):
+    def __init__(self, network_params_passed: PolicyNetworkParams,
+                 tokens_dims: TokensVectorRepresentationParams,
+                 features_params: MemorizingGoBotParams,
+                 load_path,
+                 save_path,
+                 debug=False,
+                 **kwargs):
+        super().__init__(network_params_passed, tokens_dims, features_params, load_path, save_path, debug, **kwargs)
+        self.intent_ids2intents = features_params.intent_ids2intents
+        self.intents2intent_ids = features_params.intents2intent_ids
+
+    def digitize_features(self,
+                          nlu_response: NLUResponse,
+                          tracker_knowledge: DSTKnowledge) -> DigitizedPolicyFeatures:
+        intent_name = self.intent_ids2intents[nlu_response.intents]
+        # compute the actuap prediction
+        concat_feats = intent_name  # todo warning!!! do not merge until rewritten !!!
+
+        return DigitizedPolicyFeatures(None, concat_feats, None)
+
+    def __call__(self, batch_dialogues_features: BatchDialoguesFeatures,
+                 states_c: np.ndarray, states_h: np.ndarray, prob: bool = False,
+                 *args, **kwargs) -> PolicyPrediction:
+
+        states_c = [[states_c]]  # list of list aka batch of dialogues
+        states_h = [[states_h]]  # list of list aka batch of dialogues
+
+        probs = [np.zeros_like(self.action_size)] * len(batch_dialogues_features)
+        prediction = []
+        for feature in batch_dialogues_features.b_featuress.todo:
+            # take intent_name
+            # given the tracker knowledge
+
+        policy_prediction = PolicyPrediction(probs, prediction, states_c, states_h)
+
+        return policy_prediction

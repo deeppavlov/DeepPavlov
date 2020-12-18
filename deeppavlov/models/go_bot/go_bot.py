@@ -25,13 +25,14 @@ from deeppavlov.models.go_bot.nlu.dto.text_vectorization_response import TextVec
 from deeppavlov.models.go_bot.nlu.tokens_vectorizer import TokensVectorizer
 from deeppavlov.models.go_bot.dto.dataset_features import UtteranceDataEntry, DialogueDataEntry, \
     BatchDialoguesDataset, UtteranceFeatures, UtteranceTarget, BatchDialoguesFeatures
-from deeppavlov.models.go_bot.dto.shared_gobot_params import SharedGoBotParams
+from deeppavlov.models.go_bot.dto.shared_gobot_params import SharedGoBotParams, MemorizingGoBotParams
 from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManagerInterface
 from deeppavlov.models.go_bot.nlu.nlu_manager import NLUManager
 from deeppavlov.models.go_bot.policy.policy_network import PolicyNetwork, PolicyNetworkParams
 from deeppavlov.models.go_bot.policy.dto.policy_prediction import PolicyPrediction
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
-from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DialogueStateTracker, MultipleUserStateTrackersPool
+from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DialogueStateTracker, MultipleUserStateTrackersPool, \
+    MemorizingDialogueStateTracker
 from pathlib import Path
 
 log = getLogger(__name__)
@@ -138,19 +139,21 @@ class GoalOrientedBot(NNModel):
         self.data_handler = TokensVectorizer(debug, word_vocab, bow_embedder, embedder)
 
         # todo make mor abstract
-        self.dialogue_state_tracker = DialogueStateTracker.from_gobot_params(tracker, self.nlg_manager,
-                                                                             policy_network_params, database)
+        self.dialogue_state_tracker = MemorizingDialogueStateTracker.from_gobot_params(tracker,
+                                                                                       self.nlu_manager,
+                                                                                       self.nlg_manager,
+                                                                                       policy_network_params, database)
         # todo make mor abstract
         self.multiple_user_state_tracker = MultipleUserStateTrackersPool(base_tracker=self.dialogue_state_tracker)
 
         tokens_dims = self.data_handler.get_dims()
-        features_params = SharedGoBotParams.from_configured(self.nlg_manager, self.nlu_manager,
-                                                            self.dialogue_state_tracker)
+        features_params = MemorizingGoBotParams.from_configured(self.nlg_manager, self.nlu_manager,
+                                                                self.dialogue_state_tracker)
         policy_save_path = Path(save_path, self.POLICY_DIR_NAME)
         policy_load_path = Path(load_path, self.POLICY_DIR_NAME)
 
-        self.policy = PolicyNetwork(policy_network_params, tokens_dims, features_params,
-                                    policy_load_path, policy_save_path, **kwargs)
+        self.policy = MemorizingPolicy(policy_network_params, tokens_dims, features_params,
+                                       policy_load_path, policy_save_path, **kwargs)
 
         self.dialogues_cached_features = dict()
 
