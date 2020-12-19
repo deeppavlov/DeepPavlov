@@ -36,6 +36,10 @@ class RelRankerMTBertInfer(Component, Serializable):
                  ranker,
                  batch_size: int = 32,
                  rels_to_leave: int = 40,
+                 return_all_possible_answers: bool = False,
+                 return_answer_ids: bool = False,
+                 use_api_requester: bool = False,
+                 return_sentence_answer: bool = False,
                  return_confidences: bool = False, **kwargs):
         """
 
@@ -103,13 +107,30 @@ class RelRankerMTBertInfer(Component, Serializable):
 
             if answers_with_scores:
                 log.debug(f"answers: {answers_with_scores[0]}")
-                answer = self.wiki_parser(["find_label"], [(answers_with_scores[0][0], question)])[0]
+                answer_ids = answers_with_scores[0][0]
+                if self.return_all_possible_answers:
+                    answer_ids_input = [(answer_id, question) for answer_id in answer_ids]
+                else:
+                    answer_ids_input = [(answer_ids, question)]
+                parser_info_list = ["find_label" for _ in answer_ids_input]
+                answer_labels = self.wiki_parser(parser_info_list, answer_ids_input)
+                if self.return_all_possible_answers:
+                    answer = ', '.join(answer_labels)
+                else:
+                    answer = answer_labels[0]
+                if self.use_api_requester:
+                    answer = answer[0]
+                if self.return_sentence_answer:
+                    answer = sentence_answer(question, answer)
                 confidence = answers_with_scores[0][2]
 
             if self.return_confidences:
                 answers.append((answer, confidence))
             else:
-                answers.append(answer)
+                if self.return_answer_ids:
+                    answers.append((answer, answer_ids))
+                else:
+                    answers.append(answer)
 
         return answers
 
