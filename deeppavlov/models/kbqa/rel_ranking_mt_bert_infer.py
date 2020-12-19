@@ -59,6 +59,10 @@ class RelRankerMTBertInfer(Component, Serializable):
         self.wiki_parser = wiki_parser
         self.batch_size = batch_size
         self.rels_to_leave = rels_to_leave
+        self.return_all_possible_answers = return_all_possible_answers
+        self.return_answer_ids = return_answer_ids
+        self.use_api_requester = use_api_requester
+        self.return_sentence_answer = return_sentence_answer
         self.return_confidences = return_confidences
         self.load()
 
