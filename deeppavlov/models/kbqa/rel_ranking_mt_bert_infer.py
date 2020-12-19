@@ -21,6 +21,7 @@ from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.file import load_pickle
 from deeppavlov.models.ranking.rel_ranker import RelRanker
 from deeppavlov.models.kbqa.wiki_parser import WikiParser
+from deeppavlov.models.kbqa.sentence_answer import sentence_answer
 
 log = getLogger(__name__)
 
