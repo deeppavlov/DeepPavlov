@@ -133,7 +133,6 @@ def sentence_answer(question, entity_title):
     wh_node, wh_node_head, main_head = find_wh_node(sent_nodes)
     redundant_replace_substr, question_replace_substr = find_tokens_to_replace(wh_node_head, main_head, question_tokens)
 
-    answer = ""
     if redundant_replace_substr:
         answer = question.replace(redundant_replace_substr, '')
     else:
@@ -142,15 +141,15 @@ def sentence_answer(question, entity_title):
     if answer.endswith('?'):
         answer = answer.replace('?', '').strip()
 
-    who_is_question, entity_tokens = find_who_is_tokens(answer, noun_tokens)
-    how_old_question, entity_tokens = find_how_old_tokens(answer, noun_tokens)
+    who_is_question, who_entity_tokens = find_who_is_tokens(answer, noun_tokens)
+    how_old_question, how_entity_tokens = find_how_old_tokens(answer, noun_tokens)
 
     if question_replace_substr:
         if wh_node.text.lower() in ["what", "who", "how"]:
             if who_is_question:
-                answer = f"{entity_tokens} is {entity_title}"
+                answer = f"{who_entity_tokens} is {entity_title}"
             elif how_old_question:
-                answer = f"{entity_tokens} is {entity_title} years old"
+                answer = f"{how_entity_tokens} is {entity_title} years old"
             else:
                 answer = answer.replace(question_replace_substr, entity_title)
         if wh_node.text.lower() in ["when", "where"]:
