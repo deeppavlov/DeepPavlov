@@ -126,7 +126,8 @@ class RelRankerMTBertInfer(Component, Serializable):
                     rels_batch.append(candidate_rel)
                     rels_labels_batch.append(self.rel_q2name[candidate_rel])
             if questions_batch:
-                probas = self.ranker(questions_batch, rels_labels_batch)
+                features = self.bert_preprocessor(questions_batch, rels_labels_batch)
+                probas = self.ranker(features)
                 probas = [proba[1] for proba in probas]
                 for j, rel in enumerate(rels_batch):
                     rels_with_scores.append((rel, probas[j]))
