@@ -155,7 +155,7 @@
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
         "rank_rels_filename_1": "rels_0.txt",
         "rank_rels_filename_2": "rels_1.txt",
-        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata_eng/sparql_queries.json",
+        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries.json",
         "entities_to_leave": 5,
         "rels_to_leave": 10,
         "in": ["x", "x", "template_type", "entities", "types"],
@@ -252,7 +252,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/sparql_queries.json",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+        "subdir": "{DOWNLOADS_PATH}/wikidata"
       },
       {                                                                                                                   
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.hdt",                                                   
