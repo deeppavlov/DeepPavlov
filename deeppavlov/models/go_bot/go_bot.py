@@ -28,7 +28,7 @@ from deeppavlov.models.go_bot.dto.dataset_features import UtteranceDataEntry, Di
 from deeppavlov.models.go_bot.dto.shared_gobot_params import SharedGoBotParams, MemorizingGoBotParams
 from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManagerInterface
 from deeppavlov.models.go_bot.nlu.nlu_manager import NLUManager
-from deeppavlov.models.go_bot.policy.policy_network import PolicyNetwork, PolicyNetworkParams
+from deeppavlov.models.go_bot.policy.policy_network import PolicyNetwork, PolicyNetworkParams, MemorizingPolicy
 from deeppavlov.models.go_bot.policy.dto.policy_prediction import PolicyPrediction
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
 from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DialogueStateTracker, MultipleUserStateTrackersPool, \
@@ -140,7 +140,6 @@ class GoalOrientedBot(NNModel):
 
         # todo make mor abstract
         self.dialogue_state_tracker = MemorizingDialogueStateTracker.from_gobot_params(tracker,
-                                                                                       self.nlu_manager,
                                                                                        self.nlg_manager,
                                                                                        policy_network_params, database)
         # todo make mor abstract
@@ -278,8 +277,7 @@ class GoalOrientedBot(NNModel):
             tracker: the tracker that tracks the dialogue from which the text is taken
             keep_tracker_state: if True, the tracker state will not be updated during the prediction.
                                 Used to keep tracker's state intact when predicting the action
-                                to perform right after the api call action is predicted and performed.
-
+                                to perform right after the api call action is predicted and performed.[jx
         Returns:
             the utterance features object containing the numpy-vectorized features extracted from the utterance
         """

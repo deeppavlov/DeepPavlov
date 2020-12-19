@@ -260,7 +260,9 @@ class MemorizingDialogueStateTracker(DialogueStateTracker):
         dialogue_state_tracker.ffill_act_ids2aqd_slots_ids = action_id2aqd_slots_ids
         dialogue_state_tracker.act2act_id = act2act_id
         dialogue_state_tracker.act_id2act = {v:k for k, v in act2act_id.items()}
-
+        for story in dialogue_state_tracker.stories:
+            for el in story:
+                el["action_ix"] = dialogue_state_tracker.act2act_id[(el["action_name"],)]
         # endregion set formfilling info
         return dialogue_state_tracker
 
@@ -285,7 +287,7 @@ class MemorizingDialogueStateTracker(DialogueStateTracker):
                 else:
                     story_adj.append({
                         "utter_needed": story[turn_ix-1].strip(" *"),  # todo smwhr exists a special method for this
-                        "action_name": story[turn_ix].strip(" -")  # todo smwhr exists a special method for this
+                        "action_name": story[turn_ix].strip(" -"),  # todo smwhr exists a special method for this
                     })
             stories.append(story_adj)
         return stories
@@ -320,7 +322,7 @@ class MultipleUserStateTrackersPool(object):
 
     def new_tracker(self):
         # todo deprecated and never used?
-        tracker = DialogueStateTracker(self.base_tracker.slot_names, self.base_tracker.n_actions,
+        tracker = MemorizingDialogueStateTracker(self.base_tracker.slot_names, self.base_tracker.n_actions,
                                        self.base_tracker.api_call_id, self.base_tracker.hidden_size,
                                        self.base_tracker.database)
         return tracker
@@ -334,7 +336,7 @@ class MultipleUserStateTrackersPool(object):
     def init_new_tracker(self, user_id: int, tracker_entity: DialogueStateTracker) -> None:
         # TODO: implement a better way to init a tracker
         # todo deprecated. The whole class should follow AbstractFactory or Pool pattern?
-        tracker = DialogueStateTracker(
+        tracker = tracker_entity.__class__(
             tracker_entity.slot_names,
             tracker_entity.n_actions,
             tracker_entity.api_call_id,
@@ -345,7 +347,8 @@ class MultipleUserStateTrackersPool(object):
         )
         tracker.ffill_act_ids2req_slots_ids = tracker_entity.ffill_act_ids2req_slots_ids
         tracker.ffill_act_ids2aqd_slots_ids = tracker_entity.ffill_act_ids2aqd_slots_ids
-
+        tracker.act2act_id = tracker_entity.act2act_id
+        tracker.act_id2act = tracker_entity.act_id2act
         self._ids_to_trackers[user_id] = tracker
 
     def reset(self, user_id: int = None) -> None:

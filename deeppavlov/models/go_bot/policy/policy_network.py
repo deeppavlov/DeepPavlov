@@ -469,10 +469,21 @@ class MemorizingPolicy(PolicyNetwork):
     def digitize_features(self,
                           nlu_response: NLUResponse,
                           tracker_knowledge: DSTKnowledge) -> DigitizedPolicyFeatures:
-        intent_name = self.intent_ids2intents[nlu_response.intents]
+        intent_name = self.intent_ids2intents.get(np.argmax(nlu_response.intents))
         # compute the actuap prediction
         concat_feats = intent_name  # todo warning!!! do not merge until rewritten !!!
+        possible_actions = []
+        for story_ix, (story_ptr, story) in enumerate(zip(tracker_knowledge.stories_ptrs, tracker_knowledge.stories)):
+            next_action_ptr = story_ptr + 1
+            if next_action_ptr < len(story) and story[next_action_ptr]["utter_needed"] == intent_name:
+                possible_actions.append((story[next_action_ptr]["action_name"], story[next_action_ptr]["action_ix"]))
+            elif any(ptr > -1 for ptr in tracker_knowledge.stories_ptrs):
+                tracker_knowledge.stories_ptrs[story_ix] = len(story)  # mark this story as no longer accessible
+        if len(possible_actions) > 2:
+            log.debug("STORIES: multiple proceedings available, picked the first one")
+        (action_name, action_ix) = possible_actions[0] if possible_actions else (None, None)
 
+        concat_feats = action_ix
         return DigitizedPolicyFeatures(None, concat_feats, None)
 
     def __call__(self, batch_dialogues_features: BatchDialoguesFeatures,
@@ -484,9 +495,12 @@ class MemorizingPolicy(PolicyNetwork):
 
         probs = [np.zeros_like(self.action_size)] * len(batch_dialogues_features)
         prediction = []
-        for feature in batch_dialogues_features.b_featuress.todo:
+        for feature_ix, feature in enumerate(batch_dialogues_features.b_featuress):
             # take intent_name
             # given the tracker knowledge
+            prediction.extend(feature)
+            if feature is not None:
+                probs[feature_ix][feature] = 1.
 
         policy_prediction = PolicyPrediction(probs, prediction, states_c, states_h)
 

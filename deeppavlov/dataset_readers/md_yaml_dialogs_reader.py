@@ -262,6 +262,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
             nonlocal intent2slots2text, slot_name2text2value, curr_story_utters_batch, nonlocal_curr_story_bad
             try:
                 possible_user_utters = cls.augment_user_turn(intent2slots2text, line, slot_name2text2value)
+                possible_user_utters = [possible_user_utters[0]]
                 # dialogs MUST start with system replics
                 for curr_story_utters in curr_story_utters_batch:
                     if not curr_story_utters:
