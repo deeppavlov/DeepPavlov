@@ -1,8 +1,6 @@
 {
   "dataset_reader": {
-    "class_name": "basic_classification_reader",
-    "x": "Phrase",
-    "y": "Label",
+    "class_name": "intent_catcher_reader",
     "data_path": "{DOWNLOADS_PATH}/intent_catcher_data"
   },
   "dataset_iterator": {
