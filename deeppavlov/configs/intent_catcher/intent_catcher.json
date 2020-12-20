@@ -78,7 +78,7 @@
       "valid",
       "test"
     ],
-    "class_name": "fit_trainer"
+    "class_name": "nn_trainer"
   },
   "metadata": {
     "variables": {
