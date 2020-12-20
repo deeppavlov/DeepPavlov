@@ -29,10 +29,9 @@ class IntentCatcherReader(DatasetReader):
         train_file = kwargs.get('train', 'train.csv')
 
         if not Path(data_path, train_file).exists():
-            if url is None:
-                raise Exception(
-                    "data path {} does not exist or is empty, and download url parameter not specified!".format(
-                        data_path))
+            raise Exception(
+                "data path {} does not exist or is empty, and download url parameter not specified!".format(
+                    data_path))
 
         data = {"train": [],
                 "valid": [],
