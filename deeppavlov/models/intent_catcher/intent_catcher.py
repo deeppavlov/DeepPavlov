@@ -29,7 +29,6 @@ from typing import Union, List
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.serializable import Serializable
-from deeppavlov.models.intent_catcher.utils import batch_samples
 
 log = getLogger(__name__)
 
@@ -38,95 +37,103 @@ log = getLogger(__name__)
 class IntentCatcher(Estimator, Serializable):
     """Class for IntentCatcher Chainer's pipeline components."""
 
-    def __init__(self, save_path: Union[str, Path], load_path: Union[str, Path], catcher_params_path: Union[str, Path], **kwargs) -> None:
+    def __init__(self, save_path: Union[str, Path], load_path: Union[str, Path],
+        embeddings : str = 'use', limit : int = 10, multilabel : bool = False,
+        number_of_layers : int = 0, number_of_intents : int = 1,
+        hidden_dim : int = 256, **kwargs) -> None:
         """Initializes IntentCatcher on CPU (or GPU) and reads IntentCatcher modules params from yaml.
 
         Args:
+            save_path: Path to a directory with pretrained classifier and regexps for IntentCatcher.
             load_path: Path to a directory with pretrained classifier and regexps for IntentCatcher.
-            catcher_params_path: Path to a file containig IntentCatcher modules params.
+            embeddings: Input embeddings type. Provided embeddings are: USE and USE Large.
+            limit: Maximum number of phrases, that are generated from input regexps.
+            multilabel: Whether the task should be multilabel prediction or multiclass.
+            number_of_layers: Number of hidden dense layers, that come after embeddings.
+            number_of_intents: Number of output labels.
+            hidden_dim: Dimension of hidden dense layers, that come after embeddings.
+            **kwargs: Additional parameters whose names will be logged but otherwise ignored.
 
         """
         super(IntentCatcher, self).__init__(save_path=save_path, load_path=load_path, **kwargs)
+        if kwargs:
+            log.info(f'{self.__class__.__name__} got additional init parameters {list(kwargs)} that will be ignored:')
         urls = {
             'use':"https://tfhub.dev/google/universal-sentence-encoder/2",
             'use_large':"https://tfhub.dev/google/universal-sentence-encoder-large/2"
         }
-        self.le = LabelEncoder()
-        self.regexps = []
-        embedder = tfhub.Module(urls[catcher_params_path['embeddings']])
+        if embeddings not in urls:
+            raise Exception(f"Chosen embeddings {embeddings} are not available. Provided embeddings are: use, use_large.")
+        self.limit = limit
+        self.regexps = set()
+        embedder = tfhub.Module(urls[embeddings])
         self.sentences = tf.placeholder(dtype=tf.string)
         self.embedded = embedder(self.sentences)
-        self.multulabel = catcher_params_path['multilabel']
-        if catcher_params_path['number_of_layers'] == 0:
+        self.multulabel =  multilabel
+        if number_of_layers == 0:
             layers = [
                 tf.keras.layers.Dense(
-                    units=catcher_params_path['number_of_intents'],
-                    activation='softmax' if not catcher_params_path['multilabel'] else 'sigmoid'
+                    units=number_of_intents,
+                    activation='softmax' if not multilabel else 'sigmoid'
                 )
             ]
-        elif catcher_params_path['number_of_layers'] > 0:
+        elif number_of_layers > 0:
             layers = [
                 tf.keras.layers.Dense(
-                    units=catcher_params_path['hidden_dim'],
+                    units=hidden_dim,
                     activation='relu'
                 )
             ]
-            for i in range(catcher_params_path['number_of_layers']-2):
+            for i in range(number_of_layers-2):
                 layers.append(
                     tf.keras.layers.Dense(
-                        units=catcher_params_path['hidden_dim'],
+                        units=hidden_dim,
                         activation='relu'
                     )
                 )
             layers.append(
                 tf.keras.layers.Dense(
-                    units=catcher_params_path['number_of_intents'],
-                    activation='softmax' if not catcher_params_path['multilabel'] else 'sigmoid'
+                    units=number_of_intents,
+                    activation='softmax' if not multilabel else 'sigmoid'
                 )
             )
-        elif catcher_params_path['number_of_layers'] < 0:
+        elif number_of_layers < 0:
             raise Exception("Number of layers should be >= 0")
         self.classifier = tf.keras.Sequential(layers=layers)
         self.classifier.compile(
             optimizer='adam',
-            loss='sparse_categorical_crossentropy' if not catcher_params_path['multilabel'] else 'binary_crossentropy',
-            metrics=catcher_params_path['metrics']
+            loss='sparse_categorical_crossentropy' if not catcher_config_params['multilabel'] else 'binary_crossentropy',
+            metrics=catcher_config_params['metrics']
         )
-        if 'device' in catcher_params_path:
-            pass
         self.session = tf.Session()
         self.session.run(tf.global_variables_initializer())
         self.session.run(tf.tables_initializer())
 
-    def fit(self, sentences: List[str], labels: List[Union[str, int]], limit=10, batch_size=64, epochs=1) -> None:
-        """Train classifier"""
-        labels = self.le.fit_transform(labels)
+    def partial_fit(self, x: List[str], y: List[Union[str, int]]) -> None:
+        """Train classifier on batch of data"""
+        assert len(x) == len(y), logger.error("Number of labels is not equal to the number of sentences")
+        try:
+            regexps = {(re.compile(s), l) for s, l in zip(x, y)}
+        except Exception as e:
+            log.error(f"Some sentences are not a consitent regular expressions")
+            raise e
         xeger = Xeger(limit)
-        assert len(sentences) == len(labels), logger.error("Number of labels is not equal to the number of sentences")
-        intents = np.unique(labels)
-        generated_sentences = []
-        generated_labels = []
-        for s, l in zip(sentences, labels): # generate samples and add regexp
-            try:
-                self.regexps.append((re.compile(s), l))
-            except Exception as e:
-                log.error(f"Sentence `{s}` is not a consitent regexp")
-                raise e
-            gs = {xeger.xeger(s) for _ in range(limit)}
-            generated_sentences.extend(gs)
-            generated_labels.extend([l for i in range(len(gs))])
-        log.info(f"Original number of samples: {len(labels)}, generated samples: {len(generated_labels)}")
-        history = []
-        for epoch in range(epochs): # train classifier
-            batch_generator = batch_samples(generated_sentences, np.array(generated_labels), batch_size)
-            for x, y in batch_generator:
-                x = self.session.run(self.embedded, feed_dict={self.sentences:x})
-                self.classifier.train_on_batch(x, y)
-                pred = self.classifier.predict_classes(x)
-                history.append(np.sum(pred == y)/len(y))
-                log.info(f"Epoch: {epoch}, accuracy:{np.mean(history[-10:]):.5f}")
+        self.regexps.union(regexps)
+        generated_x = []
+        generated_y = []
+        for s, l in zip(x, y): # generate samples and add regexp
+            gx = {xeger.xeger(s) for _ in range(self.limit)}
+            generated_x.extend(gx)
+            generated_y.extend([l for i in range(len(gs))])
+        log.info(f"Original number of samples: {len(y)}, generated samples: {len(generated_y)}")
+        embedded_x = self.session.run(self.embedded, feed_dict={self.sentences:generated_x}) # actual trainig
+        self.classifier.train_on_batch(embedded_x, generated_y)
 
     def __call__(self, sentences: List[str]) -> List[Union[str, int]]:
+        """Predict probabilities"""
+        return self.predict_proba(sentences)
+
+    def predict_label(self, sentences: List[str]) -> List[Union[str, int]]:
         """Predict labels"""
         labels = [None for i in range(len(sentences))]
         indx = []
@@ -141,27 +148,32 @@ class IntentCatcher(Estimator, Serializable):
         nn_predictions = self.classifier.predict_classes(x)
         for i, l in enumerate(nn_predictions):
             labels[indx[i]] = l
-        return self.le.inverse_transform(labels)
+        return labels
+
+    def predict_proba(self, sentences: List[str]) -> List[Union[str, int]]:
+        """Predict probabilities"""
+        x = self.session.run(self.embedded, feed_dict={self.sentences:sentences})
+        probs = self.classifier.predict_proba(x)
+        _, num_labels = probs.shape
+        for i, s in enumerate(sentences):
+            for reg, l in self.regexps:
+                if reg.fullmatch(s):
+                    probs[i] = np.zeros(num_labels)
+                    probs[i, l] = 1.0
+        return probs
 
     def save(self) -> None:
         """Save classifier parameters and regexps"""
-        log.info("Saving model and regexps to {}".format(self.save_path))
+        log.info("Saving model {} and regexps to {}".format(self.__class__.__name__, self.save_path))
         self.classifier.save(self.save_path / Path('nn.h5'))
-        le_params = {i:c for i,c in enumerate(self.le.classes_)}
-        with open(self.save_path / Path("le.json"), 'w') as fp:
-            json.dump(le_params, fp)
         regexps = [{"regexp":reg.pattern, "label":str(l)} for reg, l in self.regexps]
         with open(self.save_path / Path('regexps.json'), 'w') as fp:
             json.dump(regexps, fp)
 
     def load(self) -> None:
         """Load classifier parameters and regexps"""
-        log.info("Loading model and regexps from {}".format(self.load_path))
+        log.info("Loading model {} and regexps from {}".format(self.__class__.__name__, self.save_path))
         self.classifier = tf.keras.models.load_model(self.load_path / Path("nn.h5"))
-        self.le = LabelEncoder()
-        with open(self.load_path / Path("le.json")) as fp:
-            le_params = json.load(fp)
-            self.le.fit([le_params[str(i)] for i in range(len(le_params))])
         with open(self.load_path / Path('regexps.json')) as fp:
             self.regexps = json.load(fp)
         self.regexps = [(re.compile(d['regexp']), int(d['label'])) for d in self.regexps]
