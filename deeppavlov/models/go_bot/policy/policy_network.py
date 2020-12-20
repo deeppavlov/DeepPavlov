@@ -469,7 +469,7 @@ class MemorizingPolicy(PolicyNetwork):
     def digitize_features(self,
                           nlu_response: NLUResponse,
                           tracker_knowledge: DSTKnowledge) -> DigitizedPolicyFeatures:
-        intent_name = "start"# self.intent_ids2intents.get(np.argmax(nlu_response.intents))
+        intent_name = self.intent_ids2intents.get(np.argmax(nlu_response.intents))
         # compute the actuap prediction
         concat_feats = intent_name  # todo warning!!! do not merge until rewritten !!!
         possible_actions = []
