@@ -469,7 +469,7 @@ class MemorizingPolicy(PolicyNetwork):
     def digitize_features(self,
                           nlu_response: NLUResponse,
                           tracker_knowledge: DSTKnowledge) -> DigitizedPolicyFeatures:
-        intent_name = self.intent_ids2intents.get(np.argmax(nlu_response.intents))
+        intent_name = "start"# self.intent_ids2intents.get(np.argmax(nlu_response.intents))
         # compute the actuap prediction
         concat_feats = intent_name  # todo warning!!! do not merge until rewritten !!!
         possible_actions = []
@@ -493,15 +493,24 @@ class MemorizingPolicy(PolicyNetwork):
         states_c = [[states_c]]  # list of list aka batch of dialogues
         states_h = [[states_h]]  # list of list aka batch of dialogues
 
-        probs = [np.zeros_like(self.action_size)] * len(batch_dialogues_features)
+        probs = [np.zeros((self.action_size, 1))] * len(batch_dialogues_features)
         prediction = []
         for feature_ix, feature in enumerate(batch_dialogues_features.b_featuress):
             # take intent_name
             # given the tracker knowledge
             prediction.extend(feature)
-            if feature is not None:
-                probs[feature_ix][feature] = 1.
+            if feature is not None and feature:
+                feature_ = feature[0]
+                probs[feature_ix][feature_] = 1.
 
         policy_prediction = PolicyPrediction(probs, prediction, states_c, states_h)
 
         return policy_prediction
+
+    def train_on_batch(self,
+                       batch_dialogues_features: BatchDialoguesFeatures,
+                       batch_dialogues_targets: BatchDialoguesTargets) -> dict:
+        log.debug("not trainable policy chosen")
+        return {'loss': 0.,
+                'learning_rate': self.get_learning_rate(),
+                'momentum': self.get_momentum()}

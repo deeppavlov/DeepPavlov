@@ -233,6 +233,7 @@ class MemorizingDialogueStateTracker(DialogueStateTracker):
         self.act2act_id: dict = {}
         self.act_id2act: dict = {}
         self.stories = self._load_stories(self.stories_path)
+        self._setup_action_ixes(self.stories)
         self.stories_ptrs = [-1]*len(self.stories)
 
 
@@ -260,11 +261,16 @@ class MemorizingDialogueStateTracker(DialogueStateTracker):
         dialogue_state_tracker.ffill_act_ids2aqd_slots_ids = action_id2aqd_slots_ids
         dialogue_state_tracker.act2act_id = act2act_id
         dialogue_state_tracker.act_id2act = {v:k for k, v in act2act_id.items()}
-        for story in dialogue_state_tracker.stories:
-            for el in story:
-                el["action_ix"] = dialogue_state_tracker.act2act_id[(el["action_name"],)]
+        dialogue_state_tracker._setup_action_ixes(dialogue_state_tracker.stories)
         # endregion set formfilling info
         return dialogue_state_tracker
+
+    def _setup_action_ixes(self, stories_lidi):
+        for story in stories_lidi:
+            for el in story:
+                act_name_k = (el["action_name"],)
+                if act_name_k in self.act2act_id:
+                    el["action_ix"] = self.act2act_id[act_name_k]
 
     def _load_stories(self, stories_path: Union[Path, str]):
         story_lines = []
@@ -349,6 +355,8 @@ class MultipleUserStateTrackersPool(object):
         tracker.ffill_act_ids2aqd_slots_ids = tracker_entity.ffill_act_ids2aqd_slots_ids
         tracker.act2act_id = tracker_entity.act2act_id
         tracker.act_id2act = tracker_entity.act_id2act
+        if isinstance(tracker, MemorizingDialogueStateTracker):
+            tracker._setup_action_ixes(tracker.stories)
         self._ids_to_trackers[user_id] = tracker
 
     def reset(self, user_id: int = None) -> None:
