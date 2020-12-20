@@ -119,8 +119,8 @@ class QueryGeneratorBase(Component, Serializable):
         for old, new in replace_tokens:
             question = question.replace(old, new)
 
-        entities_from_template, types_from_template, rels_from_template, rel_dirs_from_template, \
-        query_type_template, entity_types, template_found = self.template_matcher(question_sanitized, entities_from_ner)
+        entities_from_template, types_from_template, rels_from_template, rel_dirs_from_template, query_type_template, \
+        entity_types, template_answer, template_found = self.template_matcher(question_sanitized, entities_from_ner)
         self.template_nums = [query_type_template]
 
         log.debug(f"question: {question}\n")
@@ -157,7 +157,7 @@ class QueryGeneratorBase(Component, Serializable):
             if not self.syntax_structure_known:
                 entity_ids = entity_ids[:3]
             candidate_outputs = self.sparql_template_parser(question_sanitized, entity_ids, type_ids)
-        return candidate_outputs
+        return candidate_outputs, template_answer
 
     def get_entity_ids(self, entities: List[str],
                        what_to_link: str,

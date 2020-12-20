@@ -74,10 +74,16 @@ class RelRankerBertInfer(Component, Serializable):
     def save(self) -> None:
         pass
 
-    def __call__(self, questions_list: List[str], candidate_answers_list: List[List[Tuple[str]]]) -> List[str]:
+    def __call__(self, questions_list: List[str], candidate_answers_list: List[List[Tuple[str]]],
+                       entities_list: List[List[str]] = None, template_answers_list: List[str] = None) -> List[str]:
         answers = []
         confidence = 0.0
-        for question, candidate_answers in zip(questions_list, candidate_answers_list):
+        if entities_list is None:
+            entities_list = [[] for _ in questions_list]
+        if template_answers_list is None:
+            template_answers_list = ["" for _ in questions_list]
+        for question, candidate_answers, entities, template_answer in \
+                zip(questions_list, candidate_answers_list, entities_list, template_answers_list):
             answers_with_scores = []
             answer = "Not Found"
 
@@ -126,7 +132,7 @@ class RelRankerBertInfer(Component, Serializable):
                 if self.use_api_requester:
                     answer = answer[0]
                 if self.return_sentence_answer:
-                    answer = sentence_answer(question, answer)
+                    answer = sentence_answer(question, answer, entities, template_answer)
                 confidence = answers_with_scores[0][2]
 
             if self.return_confidences:

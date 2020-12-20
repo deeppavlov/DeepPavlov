@@ -78,6 +78,7 @@ class TemplateMatcher(Serializable):
         query_type = ""
         template_found = ""
         entity_types = []
+        template_answer = ""
         results = self.pool.map(RegexpMatcher(question), self.templates)
         results = functools.reduce(lambda x, y: x + y, results)
         replace_tokens = [("the uk", "united kingdom"), ("the us", "united states")]
@@ -112,9 +113,10 @@ class TemplateMatcher(Serializable):
                         relation_dirs = template["rel_dirs"]
                         query_type = template["template_type"]
                         entity_types = template.get("entity_types", [])
+                        template_answer = template.get("template_answer", "")
                         min_length = cur_len
 
-        return entities, types, relations, relation_dirs, query_type, entity_types, template_found
+        return entities, types, relations, relation_dirs, query_type, entity_types, template_answer, template_found
 
     def sanitize(self, question: str) -> str:
         question = re.sub(r"^(a |the )", '', question)

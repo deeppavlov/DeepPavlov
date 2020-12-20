@@ -123,7 +123,7 @@ def find_how_old_tokens(answer, noun_tokens):
     return how_old_question, entity_tokens
 
 
-def sentence_answer(question, entity_title):
+def sentence_answer(question, entity_title, entities = None, template_answer = None):
     sent_nodes = nlp(question)
 
     question_tokens = [elem.text for elem in sent_nodes]

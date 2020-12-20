@@ -77,14 +77,17 @@ class QueryGenerator(QueryGeneratorBase):
                  types_from_ner_batch: List[List[str]]) -> List[Union[List[Tuple[str, Any]], List[str]]]:
 
         candidate_outputs_batch = []
+        template_answers_batch = []
         for question, question_sanitized, template_type, entities_from_ner, types_from_ner in \
                 zip(question_batch, question_san_batch, template_type_batch,
                     entities_from_ner_batch, types_from_ner_batch):
-            candidate_outputs = self.find_candidate_answers(question, question_sanitized,
+            candidate_outputs, template_answer = self.find_candidate_answers(question, question_sanitized,
                                                             template_type, entities_from_ner, types_from_ner)
             candidate_outputs_batch.append(candidate_outputs)
+            template_answers_batch.append(template_answer)
         if self.return_answers:
-            answers = self.rel_ranker(question_batch, candidate_outputs_batch)
+            answers = self.rel_ranker(question_batch, candidate_outputs_batch, entities_from_ner_batch,
+                                        template_answers_batch)
             log.debug(f"(__call__)answers: {answers}")
             if not answers:
                 answers = ["Not Found"]
