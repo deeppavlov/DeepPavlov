@@ -74,7 +74,7 @@ class MockJSONNLGManager(NLGManagerInterface):
 
     def _extract_actions_combinations(self, dataset_path: Union[str, Path]):
         dataset_path = expand_path(dataset_path)
-        dataset = self._dataset_reader.read(data_path=dataset_path, dialogs=True, ignore_slots=True)
+        dataset = self._dataset_reader.read(data_path=dataset_path, dialogs=True, ignore_slots=True, augment_strategy="min")
         actions_combinations = set()
         for dataset_split in dataset.values():
             for dialogue in dataset_split:
