@@ -26,11 +26,11 @@ class IntentCatcherReader(DatasetReader):
     def read(self, data_path: str, *args, **kwargs) -> Dict[str, List[Tuple[str, str]]]:
         data_types = ["train", "valid", "test"]
 
-        train_file = kwargs.get('train', 'train.csv')
+        train_file = kwargs.get('train', 'train.json')
 
         if not Path(data_path, train_file).exists():
             raise Exception(
-                "data path {} does not exist or is empty, and download url parameter not specified!".format(
+                "data path {} does not exist or is empty!".format(
                     data_path))
 
         data = {"train": [],
