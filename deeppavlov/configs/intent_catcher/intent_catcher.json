@@ -46,7 +46,7 @@
         "number_of_intents": 23,
         "hidden_dim": 256,
         "save_path": "{MODEL_PATH}/model",
-        "load_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model"
       },
       {
         "in": "y_pred_probas",
