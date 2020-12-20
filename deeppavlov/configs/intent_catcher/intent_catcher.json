@@ -90,7 +90,7 @@
       "MODEL_PATH": "{MODELS_PATH}/classifiers/intent_catcher"
     },
     "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/intent_catcher.txt",
+      "{DEEPPAVLOV_PATH}/requirements/intent_catcher.txt"
     ]
   }
 }
