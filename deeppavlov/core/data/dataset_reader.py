@@ -18,7 +18,7 @@ from typing import List, Dict, Tuple, Any
 class DatasetReader:
     """An abstract class for reading data from some location and construction of a dataset."""
 
-    def def read(self, data_path: str, url: str = None,
+    def read(self, data_path: str, url: str = None,
              format: str = "csv", class_sep: str = None,
              *args, **kwargs) -> Dict[str, List[Tuple[Any, Any]]]:
         """Reads a file from a path and returns data as a list of tuples of inputs and correct outputs
