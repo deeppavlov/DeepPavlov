@@ -302,7 +302,8 @@ class MemorizingDialogueStateTracker(DialogueStateTracker):
         super().update_previous_action(prev_act_id)
         act_name = self.act_id2act[prev_act_id][0]
         for ix, (story_ptr, story) in enumerate(zip(self.stories_ptrs, self.stories)):
-            if story[story_ptr+1]["action_name"] == act_name:
+            next_action_ix = story_ptr + 1
+            if next_action_ix<len(story) and story[next_action_ix]["action_name"] == act_name:
                 self.stories_ptrs[ix] += 1
 
 
