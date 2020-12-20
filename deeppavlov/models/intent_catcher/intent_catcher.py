@@ -17,14 +17,12 @@ from pathlib import Path
 
 import re
 import json
-import keras
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as tfhub
 from xeger import Xeger
-from sklearn.preprocessing import LabelEncoder
 
-from typing import Union, List
+from typing import Union, List, Path
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Estimator
