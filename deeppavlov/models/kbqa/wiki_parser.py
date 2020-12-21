@@ -289,7 +289,7 @@ class WikiParser:
     def uncompress(self, triplets: Union[str, List[List[str]]]) -> List[List[str]]:
         if isinstance(triplets, str):
             triplets = triplets.split('\t')
-            triplets = [triplet.split("  ") for triplet in triplets]
+            triplets = [triplet.strip().split("  ") for triplet in triplets]
         return triplets
 
     def parse_triplets(self, entity):
