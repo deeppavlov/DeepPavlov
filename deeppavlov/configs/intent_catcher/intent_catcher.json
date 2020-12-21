@@ -27,15 +27,9 @@
         "out": "y_ids"
       },
       {
-        "in": [
-          "x"
-        ],
-        "in_y": [
-          "y_ids"
-        ],
-        "out": [
-          "y_pred_probas"
-        ],
+        "in": "x",
+        "in_y": "y_ids",
+        "out": "y_pred_probas",
         "class_name": "intent_catcher",
         "embeddings": "use",
         "limit": 10,
@@ -63,8 +57,8 @@
     ]
   },
   "train": {
-    "epochs": 15,
-    "batch_size": 64,
+    "epochs": 25,
+    "batch_size": 100,
     "metrics": [
       "accuracy",
       "f1_macro"

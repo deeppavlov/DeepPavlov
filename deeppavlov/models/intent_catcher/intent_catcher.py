@@ -12,27 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import getLogger
+import os
+import json
 from pathlib import Path
+from logging import getLogger
+from typing import Union, List
 
 import re
-import json
 import numpy as np
+from xeger import Xeger
 import tensorflow as tf
 import tensorflow_hub as tfhub
-from xeger import Xeger
-
-from typing import Union, List, Path
+from overrides import overrides
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.estimator import Estimator
-from deeppavlov.core.models.serializable import Serializable
+from deeppavlov.core.models.nn_model import NNModel
 
 log = getLogger(__name__)
 
 
 @register("intent_catcher")
-class IntentCatcher(Estimator, Serializable):
+class IntentCatcher(NNModel):
     """Class for IntentCatcher Chainer's pipeline components."""
 
     def __init__(self, save_path: Union[str, Path], load_path: Union[str, Path],
@@ -64,6 +64,7 @@ class IntentCatcher(Estimator, Serializable):
             raise Exception(f"Chosen embeddings {embeddings} are not available. Provided embeddings are: use, use_large.")
         self.limit = limit
         self.regexps = set()
+        os.environ["TFHUB_CACHE_DIR"] = str(save_path)
         embedder = tfhub.Module(urls[embeddings])
         self.sentences = tf.placeholder(dtype=tf.string)
         self.embedded = embedder(self.sentences)
@@ -100,14 +101,13 @@ class IntentCatcher(Estimator, Serializable):
         self.classifier = tf.keras.Sequential(layers=layers)
         self.classifier.compile(
             optimizer='adam',
-            loss='sparse_categorical_crossentropy' if not catcher_config_params['multilabel'] else 'binary_crossentropy',
-            metrics=catcher_config_params['metrics']
+            loss='sparse_categorical_crossentropy' if not multilabel else 'binary_crossentropy'
         )
         self.session = tf.Session()
         self.session.run(tf.global_variables_initializer())
         self.session.run(tf.tables_initializer())
 
-    def partial_fit(self, x: List[str], y: List[Union[str, int]]) -> None:
+    def train_on_batch(self, x: list, y: list) -> List[float]:
         """Train classifier on batch of data"""
         assert len(x) == len(y), logger.error("Number of labels is not equal to the number of sentences")
         try:
@@ -115,17 +115,21 @@ class IntentCatcher(Estimator, Serializable):
         except Exception as e:
             log.error(f"Some sentences are not a consitent regular expressions")
             raise e
-        xeger = Xeger(limit)
+        xeger = Xeger(self.limit)
         self.regexps.union(regexps)
         generated_x = []
         generated_y = []
         for s, l in zip(x, y): # generate samples and add regexp
             gx = {xeger.xeger(s) for _ in range(self.limit)}
             generated_x.extend(gx)
-            generated_y.extend([l for i in range(len(gs))])
+            generated_y.extend([l for i in range(len(gx))])
         log.info(f"Original number of samples: {len(y)}, generated samples: {len(generated_y)}")
         embedded_x = self.session.run(self.embedded, feed_dict={self.sentences:generated_x}) # actual trainig
-        self.classifier.train_on_batch(embedded_x, generated_y)
+        loss = self.classifier.train_on_batch(embedded_x, generated_y)
+        return loss
+
+    def process_event(self, event_name, data):
+        pass
 
     def __call__(self, sentences: List[str]) -> List[Union[str, int]]:
         """Predict probabilities"""
@@ -160,6 +164,7 @@ class IntentCatcher(Estimator, Serializable):
                     probs[i, l] = 1.0
         return probs
 
+    @overrides
     def save(self) -> None:
         """Save classifier parameters and regexps"""
         log.info("Saving model {} and regexps to {}".format(self.__class__.__name__, self.save_path))
@@ -168,6 +173,7 @@ class IntentCatcher(Estimator, Serializable):
         with open(self.save_path / Path('regexps.json'), 'w') as fp:
             json.dump(regexps, fp)
 
+    @overrides
     def load(self) -> None:
         """Load classifier parameters and regexps"""
         log.info("Loading model {} and regexps from {}".format(self.__class__.__name__, self.save_path))
