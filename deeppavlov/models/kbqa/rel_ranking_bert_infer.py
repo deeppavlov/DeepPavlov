@@ -125,6 +125,8 @@ class RelRankerBertInfer(Component, Serializable):
                     answer_ids_input = [(answer_ids, question)]
                 parser_info_list = ["find_label" for _ in answer_ids_input]
                 answer_labels = self.wiki_parser(parser_info_list, answer_ids_input)
+                if self.use_api_requester:
+                    answer_labels = answer_labels[0]
                 if self.return_all_possible_answers:
                     answer_labels = [label for label in answer_labels if label][:5]
                     if len(answer_labels) > 2:
@@ -133,8 +135,6 @@ class RelRankerBertInfer(Component, Serializable):
                         answer = ', '.join(answer_labels)
                 else:
                     answer = answer_labels[0]
-                if self.use_api_requester:
-                    answer = answer[0]
                 if self.return_sentence_answer:
                     answer = sentence_answer(question, answer, entities, template_answer)
                 confidence = answers_with_scores[0][2]
