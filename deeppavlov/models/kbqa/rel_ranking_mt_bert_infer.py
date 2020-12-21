@@ -119,14 +119,18 @@ class RelRankerMTBertInfer(Component, Serializable):
             if answers_with_scores:
                 log.debug(f"answers: {answers_with_scores[0]}")
                 answer_ids = answers_with_scores[0][0]
-                if self.return_all_possible_answers:
+                if self.return_all_possible_answers and isinstance(answer_ids, tuple):
                     answer_ids_input = [(answer_id, question) for answer_id in answer_ids]
                 else:
                     answer_ids_input = [(answer_ids, question)]
                 parser_info_list = ["find_label" for _ in answer_ids_input]
                 answer_labels = self.wiki_parser(parser_info_list, answer_ids_input)
                 if self.return_all_possible_answers:
-                    answer = ', '.join(answer_labels)
+                    answer_labels = [label for label in answer_labels if label][:5]
+                    if len(answer_labels) > 2:
+                        answer = f"{', '.join(answer_labels[:-1])} and {answer_labels[-1]}"
+                    else:
+                        answer = ', '.join(answer_labels)
                 else:
                     answer = answer_labels[0]
                 if self.use_api_requester:

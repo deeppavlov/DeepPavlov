@@ -97,32 +97,6 @@ def find_tokens_to_replace(wh_node_head, main_head, question_tokens):
     return redundant_replace_substr, question_replace_substr
 
 
-def find_who_is_tokens(answer, noun_tokens):
-    fnd = re.findall("[Ww]ho is (.*)", answer)
-    who_is_question = False
-    entity_tokens = ""
-    if fnd:
-        tokens = fnd[0].split()
-        if all([tok in noun_tokens for tok in tokens]):
-            who_is_question = True
-            entity_tokens = fnd[0]
-
-    return who_is_question, entity_tokens
-
-
-def find_how_old_tokens(answer, noun_tokens):
-    fnd = re.findall("[Hh]ow old is (.*)", answer)
-    how_old_question = False
-    entity_tokens = ""
-    if fnd:
-        tokens = fnd[0].split()
-        if all([tok in noun_tokens for tok in tokens]):
-            how_old_question = True
-            entity_tokens = fnd[0]
-
-    return how_old_question, entity_tokens
-
-
 def sentence_answer(question, entity_title, entities = None, template_answer = None):
     sent_nodes = nlp(question)
 
@@ -141,20 +115,19 @@ def sentence_answer(question, entity_title, entities = None, template_answer = N
     if answer.endswith('?'):
         answer = answer.replace('?', '').strip()
 
-    who_is_question, who_entity_tokens = find_who_is_tokens(answer, noun_tokens)
-    how_old_question, how_entity_tokens = find_how_old_tokens(answer, noun_tokens)
-
     if question_replace_substr:
-        if wh_node.text.lower() in ["what", "who", "how"]:
-            if who_is_question:
-                answer = f"{who_entity_tokens} is {entity_title}"
-            elif how_old_question:
-                answer = f"{how_entity_tokens} is {entity_title} years old"
+        if template_answer and entities:
+            answer = template_answer.replace("[ent]", entities[0]).replace("[ans]", entity_title)
+        elif wh_node.text.lower() in ["what", "who", "how"]:
+            answer = answer.replace(question_replace_substr, entity_title)
+        elif wh_node.text.lower() in ["when", "where"] and entities:
+            sent_cut = re.findall(f"when was {entities[0]} (.*)", question, re.IGNORECASE)
+            if sent_cut:
+                answer = f"{entities[0]} was {sent_cut[0]} on {entity_title}"
+                answer = answer.replace("  ", " ")
             else:
-                answer = answer.replace(question_replace_substr, entity_title)
-        if wh_node.text.lower() in ["when", "where"]:
-            answer = answer.replace(question_replace_substr, '')
-            answer = f"{answer} in {entity_title}"
+                answer = answer.replace(question_replace_substr, '')
+                answer = f"{answer} in {entity_title}"
 
     for old_tok, new_tok in inflect_dict.items():
         answer = answer.replace(old_tok, new_tok)

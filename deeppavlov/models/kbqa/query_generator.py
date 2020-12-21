@@ -200,16 +200,19 @@ class QueryGenerator(QueryGeneratorBase):
             all_combs_list = all_combs_list[:outputs_len]
             confidences_list = confidences_list[:outputs_len]
             for combs, confidence, candidate_output in zip(all_combs_list, confidences_list, candidate_outputs_list):
-                candidate_outputs += [[rel for rel, score in combs[2][:-1]] + output + [confidence]
+                candidate_outputs += [[combs[0]]+[rel for rel, score in combs[2][:-1]] + output + [confidence]
                                       for output in candidate_output]
             if self.return_all_possible_answers:
                 candidate_outputs_dict = defaultdict(list)
                 for candidate_output in candidate_outputs:
-                    candidate_outputs_dict[tuple(candidate_output[:-2])].append(candidate_output[-2:])
+                    candidate_outputs_dict[(tuple(candidate_output[0]),
+                                            tuple(candidate_output[1:-2]))].append(candidate_output[-2:])
                 candidate_outputs = []
-                for candidate_rel_comb, candidate_output in candidate_outputs_dict.items():
+                for (candidate_entity_comb, candidate_rel_comb), candidate_output in candidate_outputs_dict.items():
                     candidate_outputs.append(list(candidate_rel_comb) +
                                              [tuple([ans for ans, conf in candidate_output]), candidate_output[0][1]])
+            else:
+                candidate_outputs = [output[1:] for output in candidate_outputs]
         log.debug(f"(query_parser)loop time: {datetime.datetime.now() - start_time}")
         log.debug(f"(query_parser)final outputs: {candidate_outputs[:3]}")
 
