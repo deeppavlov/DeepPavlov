@@ -82,12 +82,13 @@ class QueryGenerator(QueryGeneratorBase):
                 zip(question_batch, question_san_batch, template_type_batch,
                     entities_from_ner_batch, types_from_ner_batch):
             candidate_outputs, template_answer = self.find_candidate_answers(question, question_sanitized,
-                                                            template_type, entities_from_ner, types_from_ner)
+                                                                             template_type, entities_from_ner,
+                                                                             types_from_ner)
             candidate_outputs_batch.append(candidate_outputs)
             template_answers_batch.append(template_answer)
         if self.return_answers:
             answers = self.rel_ranker(question_batch, candidate_outputs_batch, entities_from_ner_batch,
-                                        template_answers_batch)
+                                      template_answers_batch)
             log.debug(f"(__call__)answers: {answers}")
             if not answers:
                 answers = ["Not Found"]
@@ -200,7 +201,7 @@ class QueryGenerator(QueryGeneratorBase):
             all_combs_list = all_combs_list[:outputs_len]
             confidences_list = confidences_list[:outputs_len]
             for combs, confidence, candidate_output in zip(all_combs_list, confidences_list, candidate_outputs_list):
-                candidate_outputs += [[combs[0]]+[rel for rel, score in combs[2][:-1]] + output + [confidence]
+                candidate_outputs += [[combs[0]] + [rel for rel, score in combs[2][:-1]] + output + [confidence]
                                       for output in candidate_output]
             if self.return_all_possible_answers:
                 candidate_outputs_dict = defaultdict(list)

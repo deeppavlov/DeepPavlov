@@ -75,7 +75,7 @@ class RelRankerBertInfer(Component, Serializable):
         pass
 
     def __call__(self, questions_list: List[str], candidate_answers_list: List[List[Tuple[str]]],
-                       entities_list: List[List[str]] = None, template_answers_list: List[str] = None) -> List[str]:
+                 entities_list: List[List[str]] = None, template_answers_list: List[str] = None) -> List[str]:
         answers = []
         confidence = 0.0
         if entities_list is None:

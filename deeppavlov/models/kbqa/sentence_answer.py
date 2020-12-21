@@ -97,11 +97,9 @@ def find_tokens_to_replace(wh_node_head, main_head, question_tokens):
     return redundant_replace_substr, question_replace_substr
 
 
-def sentence_answer(question, entity_title, entities = None, template_answer = None):
+def sentence_answer(question, entity_title, entities=None, template_answer=None):
     sent_nodes = nlp(question)
-
     question_tokens = [elem.text for elem in sent_nodes]
-    noun_tokens = [elem.text for elem in sent_nodes if elem.tag_ in ["NN", "NNP"]]
 
     inflect_dict = find_inflect_dict(sent_nodes)
     wh_node, wh_node_head, main_head = find_wh_node(sent_nodes)
