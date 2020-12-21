@@ -129,6 +129,7 @@ class RelRankerBertInfer(Component, Serializable):
                     answer_labels = answer_labels[0]
                 if self.return_all_possible_answers:
                     answer_labels = [label for label in answer_labels if label][:5]
+                    answer_labels = [str(label) for label in answer_labels]
                     if len(answer_labels) > 2:
                         answer = f"{', '.join(answer_labels[:-1])} and {answer_labels[-1]}"
                     else:
