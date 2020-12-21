@@ -1,5 +1,5 @@
-Goal-Oriented Dialogue Bot
-##########################
+Go-Bot Framework
+##################
 
 Overview
 ********
