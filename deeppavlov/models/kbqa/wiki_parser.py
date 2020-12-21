@@ -255,6 +255,7 @@ class WikiParser:
             else:
                 entity = year
             return entity
+        entity = entity.lstrip('+-')
         return entity
 
     def find_alias(self, entity: str) -> List[str]:
