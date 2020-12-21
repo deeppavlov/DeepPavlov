@@ -562,7 +562,7 @@ It is recommended to use ``"DefaultTemplate"`` value for ``template_type`` param
 
 
 Database (Optional)
-===================
+=====================
 
 If your dataset doesn't imply any api calls to an external database, just do not set
 ``database`` and ``api_call_action`` parameters and skip the section below.
@@ -583,7 +583,7 @@ Otherwise, you should
    ``save_path``, ``primary_keys`` and ``unknown_value``.
 
 Comparison
-----------
+************
 
 Scores for different modifications of our bot model and comparison with existing benchmarks:
 
@@ -608,7 +608,7 @@ Scores for different modifications of our bot model and comparison with existing
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
 
 References
-===========================
+************
 
 .. [1] `Jason D. Williams, Kavosh Asadi, Geoffrey Zweig "Hybrid Code
     Networks: practical and efficient end-to-end dialog control with
