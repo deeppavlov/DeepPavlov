@@ -22,8 +22,11 @@ In the future, we will expand support for RASA DSLs where appropriate to enable 
 
 To experiment with the Go-Bot you can follow tutorials for using RASA DSLs, or pick one of the two available pre-trained models designed around the DSTSC2 dataset (English).
 
-RASA DSLs Support Overview
-****************************
+RASA DSLs Format Support
+**************************
+
+Overview
+==========
 While DSTC-2 schema format is quite rich, preparing this kind of dataset with all required annotations might be challenging. To simplify the process of building goal-oriented bots using DeepPavlov technology, in `v0.12.0 <https://deeppavlov.ai/blog/tpost/58y1cugd7b-deeppavlov-library-0120-release>`_ we have introduced a (limited) support for defining them using RASA DSLs.
 
 .. note::
@@ -133,12 +136,13 @@ NLU file is a markdown file of the following format:
      - An example of user text that has the possible_user_action_label_1 action label
      - Another example of user text that has the possible_user_action_label_1 action label
      ...
-
+   
    ## intent:possible_user_action_label_N
      - An example of user text that has the (possible_user_action_label_N)[action_label] action label
      <!-- Slotfilling dataset is provided as an inline markup of user texts -->
     ...
 
+   
 domain.yml
 ^^^^^^^^^^
 
@@ -211,10 +215,10 @@ Domain file is a YAML file of the following format:
            entity: animal
 
 How Do I: Build Go-Bot Skill with RASA DSLs (v1)
-**************************************************
+==================================================
 
 Tutorials
-===========
+-----------
 
 We encourage you to explore the tutorials below to get better understanding of how to build basic and more advanced goal-oriented skills with these RASA DSLs:
 
@@ -223,60 +227,50 @@ We encourage you to explore the tutorials below to get better understanding of h
 * `Tutorial Notebook Featuring Harvesters Maintenance Go-Bot Skill from Deepy 3000 Demo <https://colab.research.google.com/drive/1BdTnDsytEABOU7RbNRQqIVE-rBHOv0kM?usp=sharing>`_
 
 
+How Do I: Integrate Go-Bot-based Goal-Oriented Skill into DeepPavlov Deepy
+============================================================================
+
+To integrate your Go-Bot-based goal-oriented skill into your Multiskill AI Assistant built using DeepPavlov Conversational AI Stack, follow the following instructions:
+
+1. Clone `Deepy repository <https://github.com/deepmipt/assistant-base>`_
+2. Replace ```docker-compose.yml``` in the root of the repository and ```pipeline_conf.json``` in the ```/agent/``` subdirectory with the corresponding files from the `deepy_gobot_base <https://github.com/deepmipt/assistant-base/tree/main/assistant_dists/deepy_gobot_base>`_ **Deepy Distribution**
+3. Clone the second `Tutorial Notebook <https://colab.research.google.com/drive/1BdTnDsytEABOU7RbNRQqIVE-rBHOv0kM?usp=sharing>`_
+4. Change its ```domain.yml```, ```nlu.md```, and ```stories.md``` based on your project needs with your custom **intents**, **slots**, **forms**, and write your own **stories**
+5. Train the go-bot model in your copy of the Tutorial Notebook
+6. Download and put saved data from your copy of the Tutorial Notebook into the `Harvesters Maintenance Go-Bot Skill <https://github.com/deepmipt/assistant-base/tree/main/skills/harvesters_maintenance_gobot_skill>`_ 
+7. [Optional] Unless you need a Chit-Chat skill remove `it <https://github.com/deepmipt/assistant-base/tree/main/skills/program-y`_ from at both the ```/agent/pipeline_conf.json``` and from ```docker-compose.yml```
+8. Use ```docker-compose up --build``` command to build and run your DeepPavlov-based Multiskill AI Assistant
+
+.. note::
+   In the coming version of the DeepPavlov Library we will provide a more comprehensive update to the documentation to further simplify the process of building goal-oriented skills with DeepPavlov Conversational AI technology stack. Stay tuned!
+
 How Do I: Use Form-Filling in Go-Bot Skill with RASA DSLs (v1)
-****************************************************************
+================================================================
 
 Tutorials
-===========
+-----------
 
 Follow this tutorial to experiment with the Form-Filling functionality in Go-Bot-based goal-oriented skills built using RASA DSLs (v1):
 
 * `Tutorial Notebook Featuring Basic Form-Filling <https://github.com/deepmipt/DeepPavlov/blob/feature/gobot_naive_formfilling/examples/gobot_formfilling_tutorial.ipynb>`_
 
 
-How Do I: Use Go-Bot with DSTC2
-***********************************
+DSTC2 Format Support
+**********************
 
-Quick Demo
-============
+Overview
+==========
 
-To quickly try out the Go-Bot capabilities you can use one of the two available pretrained models for DSTC2 dataset (English). Check them out by running this code:
-
-.. code:: python
-
-    from deeppavlov import build_model, configs
-
-    bot1 = build_model(configs.go_bot.gobot_dstc2, download=True)
-
-    bot1(['hi, i want restaurant in the cheap pricerange'])
-    bot1(['bye'])
-
-    bot2 = build_model(configs.go_bot.gobot_dstc2_best, download=True)
-
-    bot2(['hi, i want chinese restaurant'])
-    bot2(['bye'])
-
-If some required packages are missing, install all the requirements by running in command line:
-
-.. code:: bash
-
-   python -m deeppavlov install gobot_dstc2
-
-How Do I: Build Go-Bot with DSTC2
-------------------------------------
-Intro
-=====
-
-The Go-Bot is based on [1]_ which introduces
+The DeepPavlov Go-Bot Framework is based on [1]_ which introduces
 Hybrid Code Networks (HCNs) that combine an RNN with domain-specific
-knowledge and system action templates.
+knowledge and system action templates. Originally, the DSTC2 format was used for the dataset to train a Go-Bot-based goal-oriented skills upon.
 
 |alt text| **Diagram 1.** Dotted lines correspond to unrequired
 (optional) modules, black squares to trained models, trapezes are
 modules that depend on a dataset and must be provided by software
 developer.
 
-Here is a simple example of interaction with a trained dialogue bot
+Here is a simple example of interaction with a trained goal-oriented skill
 (available for download):
 
 .. note::
@@ -317,12 +311,34 @@ Here is a simple example of interaction with a trained dialogue bot
     x::bye
     >> You are welcome!
 
-Quick Start: DSTC2
-=======================================
 
-Building Goal-Oriented Bot Using DSTC-2
----------------------------------------
+Quick Demo
+============
 
+To quickly try out the Go-Bot capabilities you can use one of the two available pretrained models for DSTC2 dataset (English). Check them out by running this code:
+
+.. code:: python
+
+    from deeppavlov import build_model, configs
+
+    bot1 = build_model(configs.go_bot.gobot_dstc2, download=True)
+
+    bot1(['hi, i want restaurant in the cheap pricerange'])
+    bot1(['bye'])
+
+    bot2 = build_model(configs.go_bot.gobot_dstc2_best, download=True)
+
+    bot2(['hi, i want chinese restaurant'])
+    bot2(['bye'])
+
+If some required packages are missing, install all the requirements by running in command line:
+
+.. code:: bash
+
+   python -m deeppavlov install gobot_dstc2
+
+How Do I: Build Go-Bot with DSTC2
+===================================
 DSTC is a set of competitions originally known as "Dialog State Tracking Challenges" (DSTC, for short). First challenge was organized in 2012-2013. Starting as an initiative to provide a common testbed for the task of Dialog State Tracking, the first Dialog State Tracking Challenge (DSTC) was organized in 2013, followed by DSTC2&3 in 2014, DSTC4 in 2015, and DSTC5 in 2016. Given the remarkable success of the first five editions, and understanding both, the complexity of the dialog phenomenon and the interest of the research community in a wider variety of dialog related problems, the DSTC rebranded itself as "Dialog System Technology Challenges" for its sixth edition. Then, DSTC6 and DSTC7 have been completed in 2017 and 2018, respectively.
 
 DSTC-2 released a large number of training dialogs related to restaurant search. Compared to DSTC (which was in the bus timetables domain), DSTC 2 introduced changing user goals, tracking 'requested slots' as well as the new Restaurants domain. 
@@ -543,7 +559,6 @@ For example,
     inform_area+inform_food+offer_name  #name is a nice place in the #area of town serving tasty #food food.
 
 It is recommended to use ``"DefaultTemplate"`` value for ``template_type`` parameter.
-
 
 
 Database (Optional)
