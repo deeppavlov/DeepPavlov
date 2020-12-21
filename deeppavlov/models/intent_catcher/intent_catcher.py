@@ -39,7 +39,15 @@ class IntentCatcher(NNModel):
         embeddings : str = 'use', limit : int = 10, multilabel : bool = False,
         number_of_layers : int = 0, number_of_intents : int = 1,
         hidden_dim : int = 256, **kwargs) -> None:
-        """Initializes IntentCatcher on CPU (or GPU) and reads IntentCatcher modules params from yaml.
+        """Initializes IntentCatcher model.
+
+        This model is mainly used for user intent detection in conversational systems.
+        It provides some BERT-based embeddings for start and then fits a number
+        of dense layers upon them for labels prediction.
+        The main feature is that the user can provide regular expressions
+        instead of actual phrases, and the model will derive phrases from it,
+        thus making construction of the dataset easy and fast.
+        The number of phrases generated from regexp is control by `limit` parameter.
 
         Args:
             save_path: Path to a directory with pretrained classifier and regexps for IntentCatcher.
