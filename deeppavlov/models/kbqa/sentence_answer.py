@@ -13,8 +13,12 @@
 # limitations under the License.
 
 import re
+from logging import getLogger
 
+import pyinflect
 import spacy
+
+log = getLogger(__name__)
 
 nlp = spacy.load('en_core_web_sm')
 
@@ -32,9 +36,14 @@ def find_tokens(tokens, node, not_inc_node):
 def find_inflect_dict(sent_nodes):
     inflect_dict = {}
     for node in sent_nodes:
-        if node.dep_ == "aux" and node.tag_ == "VBD" and node.head.tag_ == "VBP":
+        if node.dep_ == "aux" and node.tag_ == "VBD" and (node.head.tag_ == "VBP" or node.head.tag_ == "VB"):
             new_verb = node.head._.inflect("VBD")
             inflect_dict[node.head.text] = new_verb
+            inflect_dict[node.text] = ""
+        if node.dep_ == "aux" and node.tag_ == "VBZ" and node.head.tag_ == "VB":
+            new_verb = node.head._.inflect("VBZ")
+            inflect_dict[node.head.text] = new_verb
+            inflect_dict[node.text] = ""
     return inflect_dict
 
 
@@ -55,12 +64,17 @@ def find_wh_node(sent_nodes):
     return wh_node, wh_node_head, main_head
 
 
-def find_tokens_to_replace(wh_node_head, main_head, question_tokens):
+def find_tokens_to_replace(wh_node_head, main_head, question_tokens, question):
     redundant_tokens_to_replace = []
     question_tokens_to_replace = []
 
     if main_head:
         redundant_tokens_to_replace = find_tokens([], main_head, wh_node_head)
+    what_tokens_fnd = re.findall("what (.*) (is|was|does|did) (.*)", question, re.IGNORECASE)
+    if what_tokens_fnd:
+        what_tokens = what_tokens_fnd[0][0].split()
+        if len(what_tokens) <= 2:
+            redundant_tokens_to_replace += what_tokens
 
     wh_node_head_desc = [node for node in wh_node_head.children if node.text != "?"]
     wh_node_head_dep = [node.dep_ for node in wh_node_head.children if
@@ -100,11 +114,12 @@ def find_tokens_to_replace(wh_node_head, main_head, question_tokens):
 def sentence_answer(question, entity_title, entities=None, template_answer=None):
     sent_nodes = nlp(question)
     question_tokens = [elem.text for elem in sent_nodes]
+    log.debug(f"spacy tags: {[(elem.text, elem.tag_, elem.dep_, elem.head.text) for elem in sent_nodes]}")
 
     inflect_dict = find_inflect_dict(sent_nodes)
     wh_node, wh_node_head, main_head = find_wh_node(sent_nodes)
-    redundant_replace_substr, question_replace_substr = find_tokens_to_replace(wh_node_head, main_head, question_tokens)
-
+    redundant_replace_substr, question_replace_substr = find_tokens_to_replace(wh_node_head, main_head,
+                                                                               question_tokens, question)
     if redundant_replace_substr:
         answer = question.replace(redundant_replace_substr, '')
     else:
@@ -122,13 +137,13 @@ def sentence_answer(question, entity_title, entities=None, template_answer=None)
             sent_cut = re.findall(f"when was {entities[0]} (.*)", question, re.IGNORECASE)
             if sent_cut:
                 answer = f"{entities[0]} was {sent_cut[0]} on {entity_title}"
-                answer = answer.replace("  ", " ")
             else:
                 answer = answer.replace(question_replace_substr, '')
                 answer = f"{answer} in {entity_title}"
 
     for old_tok, new_tok in inflect_dict.items():
         answer = answer.replace(old_tok, new_tok)
+    answer = re.sub("\s+", " ", answer)
 
     answer = answer + '.'
 
