@@ -121,6 +121,7 @@
         "inverted_index_filename": "inverted_index_eng.pickle",
         "entities_list_filename": "entities_list.pickle",
         "q2name_filename": "wiki_eng_q_to_name.pickle",
+        "who_entities_filename": "who_entities.pickle",
         "use_hdt": false,
         "wiki_parser": "#wiki_p",
         "use_prefix_tree": false
