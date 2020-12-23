@@ -132,7 +132,14 @@ def sentence_answer(question, entity_title, entities=None, template_answer=None)
         if template_answer and entities:
             answer = template_answer.replace("[ent]", entities[0]).replace("[ans]", entity_title)
         elif wh_node.text.lower() in ["what", "who", "how"]:
-            answer = answer.replace(question_replace_substr, entity_title)
+            fnd = re.findall("what (is|was) the name (.*)\?", question, re.IGNORECASE)
+            if fnd:
+                aux_verb, sent_cut = fnd[0]
+                if sent_cut.startswith("of "):
+                    sent_cut = sent_cut[3:]
+                answer = f"{entity_title} {aux_verb} {sent_cut}"
+            else:
+                answer = answer.replace(question_replace_substr, entity_title)
         elif wh_node.text.lower() in ["when", "where"] and entities:
             sent_cut = re.findall(f"when was {entities[0]} (.*)", question, re.IGNORECASE)
             if sent_cut:
