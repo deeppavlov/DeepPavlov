@@ -42,6 +42,7 @@ Welcome to DeepPavlov's documentation!
    TF-IDF Ranking <features/models/tfidf_ranking>
    Popularity Ranking <features/models/popularity_ranking>
    Knowledge Base Question answering <features/models/kbqa>
+   Intent Catcher <features/models/intent_catcher>
 
 
 .. toctree::
