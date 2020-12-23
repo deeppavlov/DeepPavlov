@@ -77,15 +77,17 @@ class IntentCatcher(NNModel):
         embedder = tfhub.Module(urls[embeddings])
         self.sentences = tf.placeholder(dtype=tf.string)
         self.embedded = embedder(self.sentences)
-        self.session = self._config_session()
-        mode = model.lower().strip()
+        mode = mode.lower().strip()
         if mode == 'infer':
             self.load()
         elif mode == 'train':
+            log.info("Initializing NN")
             self.regexps = set()
-            self._init_nn()
+            self.classifier = self._config_nn(number_of_layers, multilabel, hidden_dim, number_of_intents)
         else:
             raise Exception(f"Provided mode `{mode}` is not supported!")
+        log.info("Configuring session")
+        self.session = self._config_session()
 
     @staticmethod
     def _config_session():
@@ -97,10 +99,13 @@ class IntentCatcher(NNModel):
         """
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
-        config.gpu_options.visible_device_list = '0'
-        return tf.Session(config=config)
+        # config.gpu_options.visible_device_list = '0'
+        session = tf.Session(config=config)
+        session.run(tf.global_variables_initializer())
+        session.run(tf.tables_initializer())
+        return session
 
-    def _config_nn(self, number_of_layers, multilabel, hidden_dim) -> tf.keras.Model:
+    def _config_nn(self, number_of_layers, multilabel, hidden_dim, number_of_intents) -> tf.keras.Model:
         """
         Initialize Neural Network upon embeddings.
 
@@ -223,7 +228,7 @@ class IntentCatcher(NNModel):
         x = self.session.run(self.embedded, feed_dict={self.sentences:x})
         probs = self.classifier.predict_proba(x)
         _, num_labels = probs.shape
-        for i, s in enumerate(sentences):
+        for i, s in enumerate(x):
             for reg, l in self.regexps:
                 if reg.fullmatch(s):
                     probs[i] = np.zeros(num_labels)
