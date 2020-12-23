@@ -162,7 +162,7 @@
         "out": ["candidate_rels_answers"]
       },
       {
-        "class_name": "rel_ranking_mt_bert_infer",
+        "class_name": "rel_ranking_bert_infer",
         "bert_preprocessor": {
           "class_name": "bert_preprocessor",
           "vocab_file": "{BERT_PATH}/vocab.txt",
@@ -178,6 +178,7 @@
         "batch_size": 32,
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
         "rel_q2name_filename": "wiki_dict_properties.pickle",
+        "use_mt_bert": true,
         "in": ["x", "candidate_rels_answers"],
         "out": ["answers"]
       }
