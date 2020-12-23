@@ -38,7 +38,7 @@ class IntentCatcher(NNModel):
     def __init__(self, save_path: Union[str, Path], load_path: Union[str, Path],
         embeddings : str = 'use', limit : int = 10, multilabel : bool = False,
         number_of_layers : int = 0, number_of_intents : int = 1,
-        hidden_dim : int = 256, **kwargs) -> None:
+        hidden_dim : int = 256, mode : str = 'train', **kwargs) -> None:
         """Initializes IntentCatcher model.
 
         This model is mainly used for user intent detection in conversational systems.
@@ -58,6 +58,7 @@ class IntentCatcher(NNModel):
             number_of_layers: Number of hidden dense layers, that come after embeddings.
             number_of_intents: Number of output labels.
             hidden_dim: Dimension of hidden dense layers, that come after embeddings.
+            mode: Train or infer mode. If infer - tries to load data from load_path.
             **kwargs: Additional parameters whose names will be logged but otherwise ignored.
 
         """
@@ -69,14 +70,43 @@ class IntentCatcher(NNModel):
             'use_large':"https://tfhub.dev/google/universal-sentence-encoder-large/2"
         }
         if embeddings not in urls:
-            raise Exception(f"Chosen embeddings {embeddings} are not available. Provided embeddings are: use, use_large.")
+            raise Exception(f"Provided embeddings type `{embeddings}` is not available. Available embeddings are: use, use_large.")
         self.limit = limit
-        self.regexps = set()
+        # ToDo: rewrite it.
         os.environ["TFHUB_CACHE_DIR"] = str(save_path)
         embedder = tfhub.Module(urls[embeddings])
         self.sentences = tf.placeholder(dtype=tf.string)
         self.embedded = embedder(self.sentences)
-        self.multulabel =  multilabel
+        self.session = self._config_session()
+        mode = model.lower().strip()
+        if mode == 'infer':
+            self.load()
+        elif mode == 'train':
+            self.regexps = set()
+            self._init_nn()
+        else:
+            raise Exception(f"Provided mode `{mode}` is not supported!")
+
+    @staticmethod
+    def _config_session():
+        """
+        Configure session for particular device
+
+        Returns:
+            tensorflow.Session
+        """
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        config.gpu_options.visible_device_list = '0'
+        return tf.Session(config=config)
+
+    def _config_nn(self, number_of_layers, multilabel, hidden_dim) -> tf.keras.Model:
+        """
+        Initialize Neural Network upon embeddings.
+
+        Returns:
+            tf.keras.Model
+        """
         if number_of_layers == 0:
             layers = [
                 tf.keras.layers.Dense(
@@ -106,17 +136,24 @@ class IntentCatcher(NNModel):
             )
         elif number_of_layers < 0:
             raise Exception("Number of layers should be >= 0")
-        self.classifier = tf.keras.Sequential(layers=layers)
-        self.classifier.compile(
+        classifier = tf.keras.Sequential(layers=layers)
+        classifier.compile(
             optimizer='adam',
             loss='sparse_categorical_crossentropy' if not multilabel else 'binary_crossentropy'
         )
-        self.session = tf.Session()
-        self.session.run(tf.global_variables_initializer())
-        self.session.run(tf.tables_initializer())
+        return classifier
 
     def train_on_batch(self, x: list, y: list) -> List[float]:
-        """Train classifier on batch of data"""
+        """
+        Train classifier on batch of data.
+
+        Args:
+            x: List of input sentences
+            y: List of input encoded labels
+
+        Returns:
+            List[float]: list of losses.
+        """
         assert len(x) == len(y), logger.error("Number of labels is not equal to the number of sentences")
         try:
             regexps = {(re.compile(s), l) for s, l in zip(x, y)}
@@ -139,12 +176,26 @@ class IntentCatcher(NNModel):
     def process_event(self, event_name, data):
         pass
 
-    def __call__(self, sentences: List[str]) -> List[Union[str, int]]:
-        """Predict probabilities"""
-        return self.predict_proba(sentences)
+    def __call__(self, x: List[str]) -> List[int]:
+        """
+        Predict probabilities.
 
-    def predict_label(self, sentences: List[str]) -> List[Union[str, int]]:
-        """Predict labels"""
+        Args:
+            x: list of input sentences.
+        Returns:
+            list of probabilities.
+        """
+        return self._predict_proba(x)
+
+    def _predict_label(self, sentences: List[str]) -> List[int]:
+        """
+        Predict labels.
+
+        Args:
+            x: list of input sentences.
+        Returns:
+            list of labels.
+        """
         labels = [None for i in range(len(sentences))]
         indx = []
         for i, s in enumerate(sentences):
@@ -160,9 +211,16 @@ class IntentCatcher(NNModel):
             labels[indx[i]] = l
         return labels
 
-    def predict_proba(self, sentences: List[str]) -> List[Union[str, int]]:
-        """Predict probabilities"""
-        x = self.session.run(self.embedded, feed_dict={self.sentences:sentences})
+    def _predict_proba(self, x: List[str]) -> List[float]:
+        """
+        Predict probabilities. Used in __call__.
+
+        Args:
+            x: list of input sentences.
+        Returns:
+            list of probabilities
+        """
+        x = self.session.run(self.embedded, feed_dict={self.sentences:x})
         probs = self.classifier.predict_proba(x)
         _, num_labels = probs.shape
         for i, s in enumerate(sentences):
@@ -174,7 +232,9 @@ class IntentCatcher(NNModel):
 
     @overrides
     def save(self) -> None:
-        """Save classifier parameters and regexps"""
+        """
+        Save classifier parameters and regexps to self.save_path.
+        """
         log.info("Saving model {} and regexps to {}".format(self.__class__.__name__, self.save_path))
         self.classifier.save(self.save_path / Path('nn.h5'))
         regexps = [{"regexp":reg.pattern, "label":str(l)} for reg, l in self.regexps]
@@ -183,7 +243,9 @@ class IntentCatcher(NNModel):
 
     @overrides
     def load(self) -> None:
-        """Load classifier parameters and regexps"""
+        """
+        Load classifier parameters and regexps from self.load_path.
+        """
         log.info("Loading model {} and regexps from {}".format(self.__class__.__name__, self.save_path))
         self.classifier = tf.keras.models.load_model(self.load_path / Path("nn.h5"))
         with open(self.load_path / Path('regexps.json')) as fp:

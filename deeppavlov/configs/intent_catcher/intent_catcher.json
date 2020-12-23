@@ -27,9 +27,15 @@
         "out": "y_ids"
       },
       {
-        "in": "x",
-        "in_y": "y_ids",
-        "out": "y_pred_probas",
+        "in": [
+          "x"
+        ],
+        "in_y": [
+          "y_ids"
+        ],
+        "out": [
+          "y_pred_probas"
+        ],
         "class_name": "intent_catcher",
         "embeddings": "use",
         "limit": 10,
@@ -38,7 +44,8 @@
         "number_of_intents": 23,
         "hidden_dim": 256,
         "save_path": "{MODEL_PATH}/model",
-        "load_path": "{MODEL_PATH}/model"
+        "load_path": "{MODEL_PATH}/model",
+        "mode": "train"
       },
       {
         "in": "y_pred_probas",
