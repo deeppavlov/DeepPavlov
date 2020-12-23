@@ -112,7 +112,11 @@ def find_tokens_to_replace(wh_node_head, main_head, question_tokens, question):
 
 
 def sentence_answer(question, entity_title, entities=None, template_answer=None):
+    log.debug(f"question {question} entity_title {entity_title} entities {entities} template_answer {template_answer}")
     sent_nodes = nlp(question)
+    reverse = False
+    if sent_nodes[-2].tag_ == "IN":
+        reverse = True
     question_tokens = [elem.text for elem in sent_nodes]
     log.debug(f"spacy tags: {[(elem.text, elem.tag_, elem.dep_, elem.head.text) for elem in sent_nodes]}")
 
@@ -120,6 +124,7 @@ def sentence_answer(question, entity_title, entities=None, template_answer=None)
     wh_node, wh_node_head, main_head = find_wh_node(sent_nodes)
     redundant_replace_substr, question_replace_substr = find_tokens_to_replace(wh_node_head, main_head,
                                                                                question_tokens, question)
+    log.debug(f"redundant_replace_substr {redundant_replace_substr} question_replace_substr {question_replace_substr}")
     if redundant_replace_substr:
         answer = question.replace(redundant_replace_substr, '')
     else:
@@ -132,25 +137,42 @@ def sentence_answer(question, entity_title, entities=None, template_answer=None)
         if template_answer and entities:
             answer = template_answer.replace("[ent]", entities[0]).replace("[ans]", entity_title)
         elif wh_node.text.lower() in ["what", "who", "how"]:
-            fnd = re.findall("what (is|was) the name (.*)\?", question, re.IGNORECASE)
-            if fnd:
-                aux_verb, sent_cut = fnd[0]
+            fnd_date = re.findall(f"what (day|year) (.*)\?", question, re.IGNORECASE)
+            fnd_wh = re.findall("what (is|was) the name of (.*) (which|that) (.*)\?", question, re.IGNORECASE)
+            fnd_name = re.findall("what (is|was) the name (.*)\?", question, re.IGNORECASE)
+            if fnd_date:
+                fnd_date_aux = re.findall(f"what (day|year) (is|was) ({entities[0]}) (.*)\?", question, re.IGNORECASE)
+                if fnd_date_aux:
+                    answer = f"{entities[0]} {fnd_date_aux[0][1]} {fnd_date_aux[0][3]} on {entity_title}"
+                else:
+                    answer = f"{fnd_date[0][1]} on {entity_title}"
+            elif fnd_wh:
+                answer = f"{entity_title} {fnd_wh[0][3]}"
+            elif fnd_name:
+                aux_verb, sent_cut = fnd_name[0]
                 if sent_cut.startswith("of "):
                     sent_cut = sent_cut[3:]
                 answer = f"{entity_title} {aux_verb} {sent_cut}"
             else:
-                answer = answer.replace(question_replace_substr, entity_title)
+                if reverse:
+                    answer = answer.replace(question_replace_substr, '')
+                    answer = f"{answer} {entity_title}"
+                else:
+                    answer = answer.replace(question_replace_substr, entity_title)
         elif wh_node.text.lower() in ["when", "where"] and entities:
-            sent_cut = re.findall(f"when was {entities[0]} (.*)", question, re.IGNORECASE)
+            sent_cut = re.findall(f"(when|where) (was|is) {entities[0]} (.*)\?", question, re.IGNORECASE)
             if sent_cut:
-                answer = f"{entities[0]} was {sent_cut[0]} on {entity_title}"
+                if sent_cut[0][0].lower() == "when":
+                    answer = f"{entities[0]} {sent_cut[0][1]} {sent_cut[0][2]} on {entity_title}"
+                else:
+                    answer = f"{entities[0]} {sent_cut[0][1]} {sent_cut[0][2]} in {entity_title}"
             else:
                 answer = answer.replace(question_replace_substr, '')
                 answer = f"{answer} in {entity_title}"
 
     for old_tok, new_tok in inflect_dict.items():
         answer = answer.replace(old_tok, new_tok)
-    answer = re.sub("\s+", " ", answer)
+    answer = re.sub("\s+", " ", answer).strip()
 
     answer = answer + '.'
 

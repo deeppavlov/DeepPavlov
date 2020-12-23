@@ -141,6 +141,7 @@ class RelRankerBertInfer(Component, Serializable):
                 if self.use_api_requester:
                     answer_labels = [label[0] for label in answer_labels]
                 if self.return_all_possible_answers:
+                    answer_labels = list(set(answer_labels))
                     answer_labels = [label for label in answer_labels if (label and label != "Not Found")][:5]
                     answer_labels = [str(label) for label in answer_labels]
                     if len(answer_labels) > 2:
