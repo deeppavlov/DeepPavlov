@@ -236,6 +236,10 @@ class IntentCatcher(NNModel):
         Save classifier parameters and regexps to self.save_path.
         """
         log.info("Saving model {} and regexps to {}".format(self.__class__.__name__, self.save_path))
+        save_path = Path(self.save_path)
+        if not save_path.exists():
+            if save_path.parent.exists() and save_path.parent / "model" == save_path:
+                os.mkdir(save_path.parent / "model")
         self.classifier.save(self.save_path / Path('nn.h5'))
         regexps = [{"regexp":reg.pattern, "label":str(l)} for reg, l in self.regexps]
         with open(self.save_path / Path('regexps.json'), 'w') as fp:
