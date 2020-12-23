@@ -71,7 +71,8 @@
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
       "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
       "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
-      "{DEEPPAVLOV_PATH}/requirements/hdt.txt"
+      "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
+      "{DEEPPAVLOV_PATH}/requirements/pyinflect.txt"
     ],
     "download": [
       {
