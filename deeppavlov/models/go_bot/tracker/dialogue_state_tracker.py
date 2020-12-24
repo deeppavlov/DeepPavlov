@@ -329,7 +329,7 @@ class MultipleUserStateTrackersPool(object):
 
     def new_tracker(self):
         # todo deprecated and never used?
-        tracker = MemorizingDialogueStateTracker(self.base_tracker.slot_names, self.base_tracker.n_actions,
+        tracker = DialogueStateTracker(self.base_tracker.slot_names, self.base_tracker.n_actions,
                                        self.base_tracker.api_call_id, self.base_tracker.hidden_size,
                                        self.base_tracker.database)
         return tracker

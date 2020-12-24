@@ -139,20 +139,19 @@ class GoalOrientedBot(NNModel):
         self.data_handler = TokensVectorizer(debug, word_vocab, bow_embedder, embedder)
 
         # todo make mor abstract
-        self.dialogue_state_tracker = MemorizingDialogueStateTracker.from_gobot_params(tracker,
-                                                                                       self.nlg_manager,
-                                                                                       policy_network_params, database)
+        self.dialogue_state_tracker = DialogueStateTracker.from_gobot_params(tracker, self.nlg_manager,
+                                                                             policy_network_params, database)
         # todo make mor abstract
         self.multiple_user_state_tracker = MultipleUserStateTrackersPool(base_tracker=self.dialogue_state_tracker)
 
         tokens_dims = self.data_handler.get_dims()
-        features_params = MemorizingGoBotParams.from_configured(self.nlg_manager, self.nlu_manager,
-                                                                self.dialogue_state_tracker)
+        features_params = SharedGoBotParams.from_configured(self.nlg_manager, self.nlu_manager,
+                                                            self.dialogue_state_tracker)
         policy_save_path = Path(save_path, self.POLICY_DIR_NAME)
         policy_load_path = Path(load_path, self.POLICY_DIR_NAME)
 
-        self.policy = MemorizingPolicy(policy_network_params, tokens_dims, features_params,
-                                       policy_load_path, policy_save_path, **kwargs)
+        self.policy = PolicyNetwork(policy_network_params, tokens_dims, features_params,
+                                    policy_load_path, policy_save_path, **kwargs)
 
         self.dialogues_cached_features = dict()
 
@@ -277,7 +276,8 @@ class GoalOrientedBot(NNModel):
             tracker: the tracker that tracks the dialogue from which the text is taken
             keep_tracker_state: if True, the tracker state will not be updated during the prediction.
                                 Used to keep tracker's state intact when predicting the action
-                                to perform right after the api call action is predicted and performed.[jx
+                                to perform right after the api call action is predicted and performed.
+
         Returns:
             the utterance features object containing the numpy-vectorized features extracted from the utterance
         """
