@@ -72,8 +72,6 @@ class IntentCatcher(NNModel):
         if embeddings not in urls:
             raise Exception(f"Provided embeddings type `{embeddings}` is not available. Available embeddings are: use, use_large.")
         self.limit = limit
-        # ToDo: rewrite it.
-        os.environ["TFHUB_CACHE_DIR"] = str(save_path)
         embedder = tfhub.Module(urls[embeddings])
         self.sentences = tf.placeholder(dtype=tf.string)
         self.embedded = embedder(self.sentences)
@@ -159,7 +157,7 @@ class IntentCatcher(NNModel):
         Returns:
             List[float]: list of losses.
         """
-        assert len(x) == len(y), log.error("Number of labels is not equal to the number of sentences")
+        assert len(x) == len(y), "Number of labels is not equal to the number of sentences"
         try:
             regexps = {(re.compile(s), l) for s, l in zip(x, y)}
         except Exception as e:
