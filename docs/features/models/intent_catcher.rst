@@ -1,5 +1,5 @@
 Intent Catcher
-##################
+########################
 
 Overview
 ********
@@ -70,7 +70,7 @@ To integrate your Intent Catcher-based intent classifier into your Multiskill AI
 3. Clone the `Tutorial Notebook <https://colab.research.google.com/drive/1l6Fhj3rEVup0N-n9Jy5z_iA3b1W53V6m?usp=sharing#scrollTo=1u0lUI7q_dDd>`_
 4. Change its ```intents``` based on your project needs with your custom **intents**
 5. Train the Intent Catcher model in your copy of the Tutorial Notebook
-6. Download and put saved data from your copy of the Tutorial Notebook into the `Intent Catcher <https://github.com/deepmipt/assistant-base/tree/main/annotators/intent_catcher>`_ 
+6. Download and put saved data from your copy of the Tutorial Notebook into the `Intent Catcher <https://github.com/deepmipt/assistant-base/tree/main/annotators/intent_catcher>`_
 7. [Optional] Unless you need a Chit-Chat skill remove `it <https://github.com/deepmipt/assistant-base/tree/main/skills/program-y`_ from at both the ```/agent/pipeline_conf.json``` and from ```docker-compose.yml```
 8. Use ```docker-compose up --build``` command to build and run your DeepPavlov-based Multiskill AI Assistant
 
