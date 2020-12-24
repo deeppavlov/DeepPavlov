@@ -67,7 +67,7 @@ To integrate your Intent Catcher-based intent classifier into your Multiskill AI
 
 1. Clone `Deepy repository <https://github.com/deepmipt/assistant-base>`_
 2. Replace ```docker-compose.yml``` in the root of the repository and ```pipeline_conf.json``` in the ```/agent/``` subdirectory with the corresponding files from the `deepy_adv <https://github.com/deepmipt/assistant-base/tree/main/assistant_dists/deepy_adv>`_ **Deepy Distribution**
-3. Clone the `Tutorial Notebook <TBD>`_
+3. Clone the `Tutorial Notebook <https://colab.research.google.com/drive/1l6Fhj3rEVup0N-n9Jy5z_iA3b1W53V6m?usp=sharing#scrollTo=1u0lUI7q_dDd>`_
 4. Change its ```intents``` based on your project needs with your custom **intents**
 5. Train the Intent Catcher model in your copy of the Tutorial Notebook
 6. Download and put saved data from your copy of the Tutorial Notebook into the `Intent Catcher <https://github.com/deepmipt/assistant-base/tree/main/annotators/intent_catcher>`_ 
