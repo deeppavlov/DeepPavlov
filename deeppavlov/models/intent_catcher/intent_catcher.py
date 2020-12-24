@@ -64,7 +64,7 @@ class IntentCatcher(NNModel):
         """
         super(IntentCatcher, self).__init__(save_path=save_path, load_path=load_path, **kwargs)
         if kwargs:
-            log.info(f'{self.__class__.__name__} got additional init parameters {list(kwargs)} that will be ignored:')
+            log.info(f'{self.__class__.__name__} got additional init parameters {list(kwargs)} that will be ignored')
         urls = {
             'use':"https://tfhub.dev/google/universal-sentence-encoder/2",
             'use_large':"https://tfhub.dev/google/universal-sentence-encoder-large/2"
