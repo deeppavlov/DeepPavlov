@@ -216,5 +216,7 @@
   "wiki_parser": "deeppavlov.models.kbqa.wiki_parser:WikiParser",
   "wiki_parser_online": "deeppavlov.models.kbqa.wiki_parser_online:WikiParserOnline",
   "wiki_sqlite_vocab": "deeppavlov.vocabs.wiki_sqlite:WikiSQLiteVocab",
-  "wikitionary_100K_vocab": "deeppavlov.vocabs.typos:Wiki100KDictionary"
+  "wikitionary_100K_vocab": "deeppavlov.vocabs.typos:Wiki100KDictionary",
+  "intent_catcher_reader": "deeppavlov.dataset_readers.intent_catcher_reader:IntentCatcherReader",
+  "intent_catcher": "deeppavlov.models.intent_catcher.intent_catcher:IntentCatcher"
 }
