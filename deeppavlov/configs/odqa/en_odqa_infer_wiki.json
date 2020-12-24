@@ -1,29 +1,17 @@
 {
   "chainer": {
-    "in": [
-      "question_raw"
-    ],
-    "out": [
-      "best_answer"
-    ],
+    "in": ["question_raw"],
+    "out": ["answer", "answer_score", "answer_place"],
     "pipe": [
       {
         "config_path": "{CONFIGS_PATH}/doc_retrieval/en_ranker_tfidf_wiki.json",
-        "in": [
-          "question_raw"
-        ],
-        "out": [
-          "tfidf_doc_ids"
-        ]
+        "in": ["question_raw"],
+        "out": ["tfidf_doc_ids"]
       },
       {
         "class_name": "wiki_sqlite_vocab",
-        "in": [
-          "tfidf_doc_ids"
-        ],
-        "out": [
-          "tfidf_doc_text"
-        ],
+        "in": ["tfidf_doc_ids"],
+        "out": ["tfidf_doc_text"],
         "join_docs": false,
         "shuffle": false,
         "load_path": "{DOWNLOADS_PATH}/odqa/enwiki.db"
@@ -42,17 +30,11 @@
       },
       {
         "class_name": "logit_ranker",
-        "batch_size": 10,
+        "batch_size": 64,
         "squad_model": {"config_path": "{CONFIGS_PATH}/squad/multi_squad_noans_infer.json"},
         "sort_noans": true,
-        "in": [
-          "chunks",
-          "questions"
-        ],
-        "out": [
-          "best_answer",
-          "best_answer_score"
-        ]
+        "in": ["chunks", "questions"],
+        "out": ["answer", "answer_score", "answer_place"]
       }
     ]
   },

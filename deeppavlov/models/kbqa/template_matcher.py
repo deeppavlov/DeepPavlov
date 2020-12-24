@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
-import multiprocessing as mp
-import json
 import functools
+import json
+import multiprocessing as mp
+import re
 from logging import getLogger
-from typing import Tuple, List
+from typing import Any, Tuple, List, Union
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.serializable import Serializable
@@ -69,13 +69,16 @@ class TemplateMatcher(Serializable):
         raise NotImplementedError
 
     def __call__(self, question: str, entities_from_ner: List[str]) -> \
-                                      Tuple[List[str], List[str], List[Tuple[str]], List[str], str, str]:
+            Tuple[Union[List[str], list], list, Union[list, Any], Union[list, Any], Union[str, Any], Any, Union[
+                str, Any]]:
         question = question.lower()
         question = self.sanitize(question)
         question_length = len(question)
         entities, types, relations, relation_dirs = [], [], [], []
         query_type = ""
         template_found = ""
+        entity_types = []
+        template_answer = ""
         results = self.pool.map(RegexpMatcher(question), self.templates)
         results = functools.reduce(lambda x, y: x + y, results)
         replace_tokens = [("the uk", "united kingdom"), ("the us", "united states")]
@@ -109,9 +112,11 @@ class TemplateMatcher(Serializable):
                         relations = template["relations"]
                         relation_dirs = template["rel_dirs"]
                         query_type = template["template_type"]
+                        entity_types = template.get("entity_types", [])
+                        template_answer = template.get("template_answer", "")
                         min_length = cur_len
 
-        return entities, types, relations, relation_dirs, query_type, template_found
+        return entities, types, relations, relation_dirs, query_type, entity_types, template_answer, template_found
 
     def sanitize(self, question: str) -> str:
         question = re.sub(r"^(a |the )", '', question)

@@ -35,6 +35,8 @@
         "tokenizer": {
           "class_name": "stream_spacy_tokenizer",
           "lemmas": true,
+          "lowercase": true,
+          "filter_stopwords": true,
           "ngram_range": [
             1,
             2
@@ -43,7 +45,7 @@
       },
       {
         "class_name": "tfidf_ranker",
-        "top_n": 25,
+        "top_n": 12,
         "in": [
           "docs"
         ],

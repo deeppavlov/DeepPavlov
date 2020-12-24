@@ -157,6 +157,12 @@ PARAMS = {
                  (['the river thames', 'the north sea', 'england'], [[4, 5, 6], [30, 31, 32], [13]],
                   ['Q19686', 'Q1693', 'Q21'])),
                 ("abc", ([], [], []))
+            ],
+        ("kbqa/kbqa_entity_linking.json", "entity_linking",  ('IP',)):
+            [
+                (["River Thames", "England"], "", "The city stands on the River Thames in the south-east of England.",
+                 ([['Q19686', 'Q2880751'], ['Q21', 'Q179876']], [[0.02, 0.02], [0.01, 0.01]])),
+                (["  "], "", "", ([[]], [[]]))
             ]
     },
     "ner": {
@@ -197,14 +203,21 @@ PARAMS = {
             [
                 ("What is the currency of Sweden?", ("Swedish krona",)),
                 ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-                ("When did the Korean War end?", ("1953-07-27",)),
+                ("When did the Korean War end?", ("27 July 1953",)),
+                ("   ", ("Not Found",))
+            ],
+        ("kbqa/kbqa_cq_sep.json", "kbqa", ('IP',)):
+            [
+                ("What is the currency of Sweden?", ("Swedish krona",)),
+                ("Who directed Forrest Gump?", ("Robert Zemeckis",)),
+                ("When did the Korean War end?", ("27 July 1953",)),
                 ("   ", ("Not Found",))
             ],
         ("kbqa/kbqa_cq_mt_bert.json", "kbqa", ('IP',)):
             [
                 ("What is the currency of Sweden?", ("Swedish krona",)),
                 ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-                ("When did the Korean War end?", ("1953-07-27",)),
+                ("When did the Korean War end?", ("27 July 1953",)),
                 ("   ", ("Not Found",))
             ],
         ("kbqa/kbqa_cq_online_mt_bert.json", "kbqa", ('IP',)):
@@ -218,7 +231,7 @@ PARAMS = {
             [
                 ("What is the currency of Sweden?", ("Swedish krona",)),
                 ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-                ("When did the Korean War end?", ("1953-07-27",)),
+                ("When did the Korean War end?", ("27 July 1953",)),
                 ("   ", ("Not Found",))
             ],
         ("kbqa/kbqa_cq_rus.json", "kbqa", ('IP',)):
