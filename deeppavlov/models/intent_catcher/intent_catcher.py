@@ -166,7 +166,7 @@ class IntentCatcher(NNModel):
             log.error(f"Some sentences are not a consitent regular expressions")
             raise e
         xeger = Xeger(self.limit)
-        self.regexps.union(regexps)
+        self.regexps = self.regexps.union(regexps)
         generated_x = []
         generated_y = []
         for s, l in zip(x, y): # generate samples and add regexp
@@ -225,8 +225,8 @@ class IntentCatcher(NNModel):
         Returns:
             list of probabilities
         """
-        x = self.session.run(self.embedded, feed_dict={self.sentences:x})
-        probs = self.classifier.predict_proba(x)
+        x_embedded = self.session.run(self.embedded, feed_dict={self.sentences:x})
+        probs = self.classifier.predict_proba(x_embedded)
         _, num_labels = probs.shape
         for i, s in enumerate(x):
             for reg, l in self.regexps:
