@@ -1,7 +1,7 @@
 import re
 from logging import getLogger
 from pathlib import Path
-from typing import Union
+from typing import Union, List
 
 from deeppavlov.core.commands.utils import expand_path
 import deeppavlov.models.go_bot.nlg.templates.templates as go_bot_templates
@@ -106,3 +106,10 @@ class NLGManager(NLGManagerInterface):
             the number of actions known to the NLG module
         """
         return len(self.templates)
+
+    def known_actions(self) -> List[str]:
+        """
+        Returns:
+             the list of actions known to the NLG module
+        """
+        return self.templates.actions

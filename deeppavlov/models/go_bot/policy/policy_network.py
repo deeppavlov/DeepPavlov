@@ -217,7 +217,7 @@ class PolicyNetwork(LRScheduledTFModel):
                           tracker_knowledge: DSTKnowledge) -> DigitizedPolicyFeatures:
         attn_key = self.calc_attn_key(nlu_response, tracker_knowledge)
         concat_feats = self.stack_features(nlu_response, tracker_knowledge)
-        action_mask = self.calc_action_mask(tracker_knowledge)
+        action_mask = tracker_knowledge.action_mask
 
         return DigitizedPolicyFeatures(attn_key, concat_feats, action_mask)
 
