@@ -233,13 +233,13 @@ How Do I: Integrate Go-Bot-based Goal-Oriented Skill into DeepPavlov Deepy
 To integrate your Go-Bot-based goal-oriented skill into your Multiskill AI Assistant built using DeepPavlov Conversational AI Stack, follow the following instructions:
 
 1. Clone `Deepy repository <https://github.com/deepmipt/assistant-base>`_
-2. Replace ```docker-compose.yml``` in the root of the repository and ```pipeline_conf.json``` in the ```/agent/``` subdirectory with the corresponding files from the `deepy_gobot_base <https://github.com/deepmipt/assistant-base/tree/main/assistant_dists/deepy_gobot_base>`_ **Deepy Distribution**
+2. Replace ``docker-compose.yml`` in the root of the repository and ``pipeline_conf.json`` in the ``/agent/`` subdirectory with the corresponding files from the `deepy_gobot_base <https://github.com/deepmipt/assistant-base/tree/main/assistant_dists/deepy_gobot_base>`_ **Deepy Distribution**
 3. Clone the second `Tutorial Notebook <https://colab.research.google.com/drive/1BdTnDsytEABOU7RbNRQqIVE-rBHOv0kM?usp=sharing>`_
-4. Change its ```domain.yml```, ```nlu.md```, and ```stories.md``` based on your project needs with your custom **intents**, **slots**, **forms**, and write your own **stories**
+4. Change its ``domain.yml``, ``nlu.md``, and ``stories.md`` based on your project needs with your custom **intents**, **slots**, **forms**, and write your own **stories**
 5. Train the go-bot model in your copy of the Tutorial Notebook
 6. Download and put saved data from your copy of the Tutorial Notebook into the `Harvesters Maintenance Go-Bot Skill <https://github.com/deepmipt/assistant-base/tree/main/skills/harvesters_maintenance_gobot_skill>`_ 
-7. [Optional] Unless you need a Chit-Chat skill remove `it <https://github.com/deepmipt/assistant-base/tree/main/skills/program-y>`_ from at both the ```/agent/pipeline_conf.json``` and from ```docker-compose.yml```
-8. Use ```docker-compose up --build``` command to build and run your DeepPavlov-based Multiskill AI Assistant
+7. [Optional] Unless you need a Chit-Chat skill remove `it <https://github.com/deepmipt/assistant-base/tree/main/skills/program-y>`_ from at both the ``/agent/pipeline_conf.json`` and from ``docker-compose.yml``
+8. Use ``docker-compose up --build`` command to build and run your DeepPavlov-based Multiskill AI Assistant
 
 .. note::
    In the coming version of the DeepPavlov Library we will provide a more comprehensive update to the documentation to further simplify the process of building goal-oriented skills with DeepPavlov Conversational AI technology stack. Stay tuned!
