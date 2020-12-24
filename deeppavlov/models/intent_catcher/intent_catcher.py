@@ -12,18 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import json
-from pathlib import Path
+import os
+import re
 from logging import getLogger
+from pathlib import Path
 from typing import Union, List
 
-import re
 import numpy as np
-from xeger import Xeger
 import tensorflow as tf
 import tensorflow_hub as tfhub
 from overrides import overrides
+from xeger import Xeger
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.nn_model import NNModel
@@ -159,7 +159,7 @@ class IntentCatcher(NNModel):
         Returns:
             List[float]: list of losses.
         """
-        assert len(x) == len(y), logger.error("Number of labels is not equal to the number of sentences")
+        assert len(x) == len(y), log.error("Number of labels is not equal to the number of sentences")
         try:
             regexps = {(re.compile(s), l) for s, l in zip(x, y)}
         except Exception as e:

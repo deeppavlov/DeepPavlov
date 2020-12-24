@@ -1,3 +1,0 @@
-xeger==0.3.5
-tensorflow-gpu==1.15.2
-tensorflow-hub==0.10.0

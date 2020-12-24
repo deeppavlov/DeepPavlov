@@ -54,7 +54,7 @@ To use a pre-trained model from CLI use the following command:
 
 .. code:: bash
 
-    python deeppavlov/deep.py interact intent_catcher
+    python -m deeppavlov interact intent_catcher
 
 where ``intent_catcher`` is the name of the config.
 
