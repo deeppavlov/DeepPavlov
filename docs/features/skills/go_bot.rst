@@ -1,5 +1,5 @@
 Go-Bot Framework
-##################
+################
 
 Overview
 ********
@@ -23,10 +23,10 @@ In the future, we will expand support for RASA DSLs where appropriate to enable 
 To experiment with the Go-Bot you can follow tutorials for using RASA DSLs, or pick one of the two available pre-trained models designed around the DSTSC2 dataset (English).
 
 RASA DSLs Format Support
-**************************
+************************
 
 Overview
-==========
+========
 While DSTC-2 schema format is quite rich, preparing this kind of dataset with all required annotations might be challenging. To simplify the process of building goal-oriented bots using DeepPavlov technology, in `v0.12.0 <https://deeppavlov.ai/blog/tpost/58y1cugd7b-deeppavlov-library-0120-release>`_ we have introduced a (limited) support for defining them using RASA DSLs.
 
 .. note::
@@ -215,10 +215,10 @@ Domain file is a YAML file of the following format:
            entity: animal
 
 How Do I: Build Go-Bot Skill with RASA DSLs (v1)
-==================================================
+================================================
 
 Tutorials
------------
+^^^^^^^^^
 
 We encourage you to explore the tutorials below to get better understanding of how to build basic and more advanced goal-oriented skills with these RASA DSLs:
 
@@ -238,7 +238,7 @@ To integrate your Go-Bot-based goal-oriented skill into your Multiskill AI Assis
 4. Change its ```domain.yml```, ```nlu.md```, and ```stories.md``` based on your project needs with your custom **intents**, **slots**, **forms**, and write your own **stories**
 5. Train the go-bot model in your copy of the Tutorial Notebook
 6. Download and put saved data from your copy of the Tutorial Notebook into the `Harvesters Maintenance Go-Bot Skill <https://github.com/deepmipt/assistant-base/tree/main/skills/harvesters_maintenance_gobot_skill>`_ 
-7. [Optional] Unless you need a Chit-Chat skill remove `it <https://github.com/deepmipt/assistant-base/tree/main/skills/program-y`_ from at both the ```/agent/pipeline_conf.json``` and from ```docker-compose.yml```
+7. [Optional] Unless you need a Chit-Chat skill remove `it <https://github.com/deepmipt/assistant-base/tree/main/skills/program-y>`_ from at both the ```/agent/pipeline_conf.json``` and from ```docker-compose.yml```
 8. Use ```docker-compose up --build``` command to build and run your DeepPavlov-based Multiskill AI Assistant
 
 .. note::
@@ -248,7 +248,7 @@ How Do I: Use Form-Filling in Go-Bot Skill with RASA DSLs (v1)
 ================================================================
 
 Tutorials
------------
+^^^^^^^^^
 
 Follow this tutorial to experiment with the Form-Filling functionality in Go-Bot-based goal-oriented skills built using RASA DSLs (v1):
 
@@ -437,12 +437,12 @@ Config parameters
 To configure your own pipelines that contain a ``"go_bot"`` component, refer to documentation for :class:`~deeppavlov.models.go_bot.bot.GoalOrientedBot` and :class:`~deeppavlov.models.go_bot.network.GoalOrientedBotNetwork` classes.
 
 Datasets
-----------------------------------
+========
 
 .. _dstc2_dataset:
 
 DSTC2
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^
 
 The Hybrid Code Network model was trained and evaluated on a modification of a dataset from Dialogue State Tracking
 Challenge 2 [2]_. The modifications were as follows:
