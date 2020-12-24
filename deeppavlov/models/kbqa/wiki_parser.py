@@ -15,7 +15,7 @@
 import datetime
 import re
 from logging import getLogger
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict, Any, Union
 from collections import namedtuple
 
 from hdt import HDTDocument
@@ -47,6 +47,7 @@ class WikiParser:
             self.document = HDTDocument(self.wiki_filename)
         elif self.file_format == "pickle":
             self.document = load_pickle(self.wiki_filename)
+            self.parsed_document = {}
         else:
             raise ValueError("Unsupported file format")
         self.lang = lang
@@ -70,6 +71,10 @@ class WikiParser:
                     wiki_parser_output.append(list(tr))
                 else:
                     wiki_parser_output.append(self.document.get(query, {}))
+            elif parser_info == "parse_triplets" and self.file_format == "pickle":
+                for entity in query:
+                    self.parse_triplets(entity)
+                wiki_parser_output.append("ok")
             else:
                 raise ValueError("Unsupported query type")
         return wiki_parser_output
@@ -174,12 +179,11 @@ class WikiParser:
             combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
         else:
             if subj:
-                direction = "forw"
+                subj, triplets = self.find_triplets(subj, "forw")
+                triplets = [[subj, triplet[0], obj] for triplet in triplets for obj in triplet[1:]]
             if obj:
-                direction = "backw"
-            subj = subj.split('/')[-1]
-            triplets = self.document.get(subj, {}).get(direction, [])
-            triplets = [[subj, triplet[0], obj] for triplet in triplets for obj in triplet[1:]]
+                obj, triplets = self.find_triplets(obj, "backw")
+                triplets = [[subj, triplet[0], obj] for triplet in triplets for subj in triplet[1:]]
             if rel:
                 if rel == self.description_rel:
                     triplets = [triplet for triplet in triplets if triplet[1] == "descr_en"]
@@ -220,9 +224,7 @@ class WikiParser:
                 entity = entity.split("^^")[0]
                 for token in ["T00:00:00Z", "+"]:
                     entity = entity.replace(token, '')
-                year = re.findall("([\d]{3,4})-[\d]{1,2}-[\d]{1,2}", entity)
-                if "how old" in question.lower() and year:
-                    entity = datetime.datetime.now().year - int(year[0])
+                entity = self.format_date(entity, question)
                 return entity
 
             elif entity.isdigit():
@@ -231,13 +233,30 @@ class WikiParser:
             if entity:
                 if entity.startswith("Q"):
                     triplets = self.document.get(entity, {}).get("forw", [])
+                    triplets = self.uncompress(triplets)
                     for triplet in triplets:
                         if triplet[0] == "name_en":
                             return triplet[1]
                 else:
+                    entity = self.format_date(entity, question)
                     return entity
 
         return "Not Found"
+
+    def format_date(self, entity, question):
+        date_info = re.findall("([\d]{3,4})-([\d]{1,2})-([\d]{1,2})", entity)
+        if date_info:
+            year, month, day = date_info[0]
+            if "how old" in question.lower():
+                entity = datetime.datetime.now().year - int(year)
+            elif day != "00":
+                date = datetime.datetime.strptime(f"{year}-{month}-{day}", "%Y-%m-%d")
+                entity = date.strftime("%d %B %Y")
+            else:
+                entity = year
+            return entity
+        entity = entity.lstrip('+-')
+        return entity
 
     def find_alias(self, entity: str) -> List[str]:
         aliases = []
@@ -263,5 +282,32 @@ class WikiParser:
             rels = [triplet[1] for triplet in triplets if triplet[1].startswith(start_str)]
         if self.file_format == "pickle":
             triplets = self.document.get(entity, {}).get(direction, [])
+            triplets = self.uncompress(triplets)
             rels = [triplet[0] for triplet in triplets if triplet[0].startswith("P")]
         return rels
+
+    def uncompress(self, triplets: Union[str, List[List[str]]]) -> List[List[str]]:
+        if isinstance(triplets, str):
+            triplets = triplets.split('\t')
+            triplets = [triplet.strip().split("  ") for triplet in triplets]
+        return triplets
+
+    def parse_triplets(self, entity):
+        triplets = self.document.get(entity, {})
+        for direction in ["forw", "backw"]:
+            if direction in triplets:
+                dir_triplets = triplets[direction]
+                dir_triplets = self.uncompress(dir_triplets)
+                if entity in self.parsed_document:
+                    self.parsed_document[entity][direction] = dir_triplets
+                else:
+                    self.parsed_document[entity] = {direction: dir_triplets}
+
+    def find_triplets(self, subj: str, direction: str) -> Tuple[str, List[List[str]]]:
+        subj = subj.split('/')[-1]
+        if subj in self.parsed_document:
+            triplets = self.parsed_document.get(subj, {}).get(direction, [])
+        else:
+            triplets = self.document.get(subj, {}).get(direction, [])
+            triplets = self.uncompress(triplets)
+        return subj, triplets

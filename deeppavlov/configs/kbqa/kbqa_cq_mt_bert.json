@@ -121,6 +121,7 @@
         "inverted_index_filename": "inverted_index_eng.pickle",
         "entities_list_filename": "entities_list.pickle",
         "q2name_filename": "wiki_eng_q_to_name.pickle",
+        "who_entities_filename": "who_entities.pickle",
         "use_hdt": false,
         "wiki_parser": "#wiki_p",
         "use_prefix_tree": false
@@ -155,17 +156,17 @@
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
         "rank_rels_filename_1": "rels_0.txt",
         "rank_rels_filename_2": "rels_1.txt",
-        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata_eng/sparql_queries.json",
+        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries.json",
         "entities_to_leave": 5,
         "rels_to_leave": 10,
         "in": ["x", "x", "template_type", "entities", "types"],
         "out": ["candidate_rels_answers"]
       },
       {
-        "class_name": "rel_ranking_mt_bert_infer",
+        "class_name": "rel_ranking_bert_infer",
         "bert_preprocessor": {
           "class_name": "bert_preprocessor",
-          "vocab_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/vocab.txt",
+          "vocab_file": "{BERT_PATH}/vocab.txt",
           "do_lower_case": false,
           "max_seq_length": 64
         },
@@ -178,6 +179,7 @@
         "batch_size": 32,
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
         "rel_q2name_filename": "wiki_dict_properties.pickle",
+        "use_mt_bert": true,
         "in": ["x", "candidate_rels_answers"],
         "out": ["answers"]
       }
@@ -213,7 +215,7 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models_kbqa/cased_L-12_H-768_A-12",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
       "MT_BERT_PATH": "{MODELS_PATH}/mt_bert_kbqa"
     },
@@ -225,7 +227,10 @@
       "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
       "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
       "{DEEPPAVLOV_PATH}/requirements/spelling.txt",
-      "{DEEPPAVLOV_PATH}/requirements/wikihow.txt"
+      "{DEEPPAVLOV_PATH}/requirements/wikihow.txt",
+      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
+      "{DEEPPAVLOV_PATH}/requirements/pyinflect.txt"
     ],
     "labels": {
       "telegram_utils": "KBQA_MT_BERT_MODEL",
@@ -250,7 +255,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/sparql_queries.json",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+        "subdir": "{DOWNLOADS_PATH}/wikidata"
       },
       {                                                                                                                   
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata.hdt",                                                   

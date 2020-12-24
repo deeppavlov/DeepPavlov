@@ -19,7 +19,7 @@
     "in_y": ["y_ids"],
     "pipe": [
       {
-        "class_name": "torch_bert_preprocessor",
+        "class_name": "torch_transformers_preprocessor",
         "vocab_file": "{BASE_MODEL}",
         "do_lower_case": false,
         "max_seq_length": 128,
@@ -34,7 +34,7 @@
         "single_vector": true
       },
       {
-        "class_name": "torch_bert_classifier",
+        "class_name": "torch_transformers_classifier",
         "n_classes": 2,
         "return_probas": true,
         "pretrained_bert": "{BASE_MODEL}",

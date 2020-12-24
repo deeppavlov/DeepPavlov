@@ -19,7 +19,7 @@ from typing import List, Dict, Union, Optional
 import numpy as np
 import torch
 from overrides import overrides
-from transformers import BertForSequenceClassification, BertConfig
+from transformers import AutoModelForSequenceClassification, AutoConfig
 from transformers.data.processors.utils import InputFeatures
 
 from deeppavlov.core.common.errors import ConfigError
@@ -30,12 +30,11 @@ from deeppavlov.core.models.torch_model import TorchModel
 log = getLogger(__name__)
 
 
-@register('torch_bert_classifier')
-class TorchBertClassifierModel(TorchModel):
+@register('torch_transformers_classifier')
+class TorchTransformersClassifierModel(TorchModel):
     """Bert-based model for text classification on PyTorch.
 
     It uses output from [CLS] token and predicts labels using linear transformation.
-    Solves regression task if n_classes == 1.
 
     Args:
         n_classes: number of classes
@@ -83,7 +82,7 @@ class TorchBertClassifierModel(TorchModel):
 
         if self.return_probas and self.n_classes == 1:
             raise RuntimeError('Set return_probas to False for regression task!')
-
+            
         super().__init__(optimizer=optimizer,
                          optimizer_parameters=optimizer_parameters,
                          **kwargs)
@@ -99,22 +98,26 @@ class TorchBertClassifierModel(TorchModel):
         Returns:
             dict with loss and learning_rate values
         """
-        input_ids = [f.input_ids for f in features]
-        input_masks = [f.attention_mask for f in features]
-        input_type_ids = [f.token_type_ids for f in features]
 
-        b_input_ids = torch.cat(input_ids, dim=0).to(self.device)
-        b_input_masks = torch.cat(input_masks, dim=0).to(self.device)
-        b_input_type_ids = torch.cat(input_type_ids, dim=0).to(self.device)
+        _input = {}
+        for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
+            _input[elem] = [getattr(f, elem) for f in features]
+
+        for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
+            _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
+
         if self.n_classes > 1:
-            b_labels = torch.from_numpy(np.array(y)).to(self.device)
+            _input['labels'] = torch.from_numpy(np.array(y)).to(self.device)
         else:
-            b_labels = torch.from_numpy(np.array(y, dtype=np.float32)).to(self.device)
+            _input['labels'] = torch.from_numpy(np.array(y, dtype=np.float32)).to(self.device)
 
         self.optimizer.zero_grad()
 
-        loss, logits = self.model(b_input_ids, token_type_ids=b_input_type_ids, attention_mask=b_input_masks,
-                                  labels=b_labels)
+        tokenized = {key:value for (key,value) in _input.items() if key in self.model.forward.__code__.co_varnames}
+
+        # Token_type_id is omitted for Text Classification
+
+        loss, logits = self.model(**tokenized)
         loss.backward()
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
@@ -137,17 +140,19 @@ class TorchBertClassifierModel(TorchModel):
             predicted classes or probabilities of each class
 
         """
-        input_ids = [f.input_ids for f in features]
-        input_masks = [f.attention_mask for f in features]
-        input_type_ids = [f.token_type_ids for f in features]
 
-        b_input_ids = torch.cat(input_ids, dim=0).to(self.device)
-        b_input_masks = torch.cat(input_masks, dim=0).to(self.device)
-        b_input_type_ids = torch.cat(input_type_ids, dim=0).to(self.device)
+        _input = {}
+        for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
+            _input[elem] = [getattr(f, elem) for f in features]
+
+        for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
+            _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
 
         with torch.no_grad():
+            tokenized = {key:value for (key,value) in _input.items() if key in self.model.forward.__code__.co_varnames}
+
             # Forward pass, calculate logit predictions
-            logits = self.model(b_input_ids, token_type_ids=b_input_type_ids, attention_mask=b_input_masks)
+            logits = self.model(**tokenized)
             logits = logits[0]
 
         if self.return_probas:
@@ -161,6 +166,7 @@ class TorchBertClassifierModel(TorchModel):
             pred = np.argmax(logits, axis=1)
         else:  # regression
             pred = logits.squeeze(-1).detach().cpu().numpy()
+
         return pred
 
     @overrides
@@ -168,18 +174,20 @@ class TorchBertClassifierModel(TorchModel):
         if fname is not None:
             self.load_path = fname
 
-        if self.pretrained_bert and not Path(self.pretrained_bert).is_file():
-            self.model = BertForSequenceClassification.from_pretrained(
-                self.pretrained_bert, num_labels=self.n_classes,
-                output_attentions=False, output_hidden_states=False)
-        elif self.bert_config_file and Path(self.bert_config_file).is_file():
-            self.bert_config = BertConfig.from_json_file(str(expand_path(self.bert_config_file)))
+        if self.pretrained_bert:
+            log.info(f"From pretrained {self.pretrained_bert}.")
+            config = AutoConfig.from_pretrained(self.pretrained_bert, num_labels=self.n_classes, 
+                                                output_attentions=False, output_hidden_states=False)
 
+            self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert, config=config)
+
+        elif self.bert_config_file and Path(self.bert_config_file).is_file():
+            self.bert_config = AutoConfig.from_json_file(str(expand_path(self.bert_config_file)))
             if self.attention_probs_keep_prob is not None:
                 self.bert_config.attention_probs_dropout_prob = 1.0 - self.attention_probs_keep_prob
             if self.hidden_keep_prob is not None:
                 self.bert_config.hidden_dropout_prob = 1.0 - self.hidden_keep_prob
-            self.model = BertForSequenceClassification(config=self.bert_config)
+            self.model = AutoModelForSequenceClassification.from_config(config=self.bert_config)
         else:
             raise ConfigError("No pre-trained BERT model is given.")
 

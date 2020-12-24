@@ -93,7 +93,7 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models_kbqa/cased_L-12_H-768_A-12",
       "NER_PATH": "{MODELS_PATH}/ner_lcquad_ent_and_type"
     },
     "requirements": [
@@ -112,7 +112,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
-        "subdir": "{DOWNLOADS_PATH}/bert_models"
+        "subdir": "{DOWNLOADS_PATH}/bert_models_kbqa"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/models/ner_lcquad.tar.gz",

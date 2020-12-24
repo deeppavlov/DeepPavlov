@@ -20,13 +20,13 @@ import torch
 from transformers.data.processors.utils import InputFeatures
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.torch_bert.torch_bert_classifier import TorchBertClassifierModel
+from deeppavlov.models.torch_bert.torch_transformers_classifier import TorchTransformersClassifierModel
 
 logger = getLogger(__name__)
 
 
 @register('torch_bert_ranker')
-class TorchBertRankerModel(TorchBertClassifierModel):
+class TorchBertRankerModel(TorchTransformersClassifierModel):
     """BERT-based model for interaction-based text ranking on PyTorch.
 
     Linear transformation is trained over the BERT pooled output from [CLS] token.
