@@ -159,7 +159,7 @@ class IntentCatcher(NNModel):
         Returns:
             List[float]: list of losses.
         """
-        assert len(x) == len(y), logger.error("Number of labels is not equal to the number of sentences")
+        assert len(x) == len(y), log.error("Number of labels is not equal to the number of sentences")
         try:
             regexps = {(re.compile(s), l) for s, l in zip(x, y)}
         except Exception as e:
