@@ -9,14 +9,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, List, Tuple, Any
-
-from pathlib import Path
-from pandas import read_csv
 from json import load
+from logging import getLogger
+from pathlib import Path
+from typing import Dict, List, Tuple
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
+
+log = getLogger(__file__)
 
 
 @register('intent_catcher_reader')
