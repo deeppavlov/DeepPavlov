@@ -384,7 +384,7 @@ class PolicyNetwork(LRScheduledTFModel):
                        batch_dialogues_targets: BatchDialoguesTargets) -> dict:
 
         feed_dict = {
-            self._dropout_keep_prob: 1.,
+            self._dropout_keep_prob: 1. - self.dropout_rate,
             self._utterance_mask: batch_dialogues_features.b_padded_dialogue_length_mask,
             self._features: batch_dialogues_features.b_featuress,
             self._action: batch_dialogues_targets.b_action_ids,
