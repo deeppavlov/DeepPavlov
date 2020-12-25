@@ -120,7 +120,7 @@ class QueryGeneratorBase(Component, Serializable):
             question = question.replace(old, new)
 
         entities_from_template, types_from_template, rels_from_template, rel_dirs_from_template, query_type_template, \
-        entity_types, template_answer, template_found = self.template_matcher(question_sanitized, entities_from_ner)
+        entity_types, template_answer, answer_types, template_found = self.template_matcher(question_sanitized, entities_from_ner)
         self.template_nums = [query_type_template]
 
         log.debug(f"question: {question}\n")
@@ -142,7 +142,7 @@ class QueryGeneratorBase(Component, Serializable):
                 log.debug(f"type_ids {type_ids}")
 
                 candidate_outputs = self.sparql_template_parser(question_sanitized, entity_ids, type_ids,
-                                                                rels_from_template,
+                                                                answer_types, rels_from_template,
                                                                 rel_dirs_from_template)
 
         if not candidate_outputs and entities_from_ner:
@@ -156,7 +156,7 @@ class QueryGeneratorBase(Component, Serializable):
             log.debug(f"(__call__)self.template_nums: {self.template_nums}")
             if not self.syntax_structure_known:
                 entity_ids = entity_ids[:3]
-            candidate_outputs = self.sparql_template_parser(question_sanitized, entity_ids, type_ids)
+            candidate_outputs = self.sparql_template_parser(question_sanitized, entity_ids, type_ids, answer_types)
         return candidate_outputs, template_answer
 
     def get_entity_ids(self, entities: List[str],
@@ -184,6 +184,7 @@ class QueryGeneratorBase(Component, Serializable):
     def sparql_template_parser(self, question: str,
                                entity_ids: List[List[str]],
                                type_ids: List[List[str]],
+                               answer_types: List[str],
                                rels_from_template: Optional[List[Tuple[str]]] = None,
                                rel_dirs_from_template: Optional[List[str]] = None) -> List[Tuple[str]]:
         candidate_outputs = []
@@ -210,12 +211,12 @@ class QueryGeneratorBase(Component, Serializable):
             if query_template:
                 entities_and_types_select = query_template["entities_and_types_select"]
                 candidate_outputs = self.query_parser(question, query_template, entities_and_types_select,
-                                                      entity_ids, type_ids, rels_from_template)
+                                                      entity_ids, type_ids, rels_from_template, answer_types)
         else:
             for template in templates:
                 entities_and_types_select = template["entities_and_types_select"]
                 candidate_outputs = self.query_parser(question, template, entities_and_types_select,
-                                                      entity_ids, type_ids, rels_from_template)
+                                                      entity_ids, type_ids, rels_from_template, answer_types)
                 if candidate_outputs:
                     return candidate_outputs
 
@@ -224,7 +225,7 @@ class QueryGeneratorBase(Component, Serializable):
                 for template_num, entities_and_types_select in alternative_templates:
                     candidate_outputs = self.query_parser(question, self.template_queries[template_num],
                                                           entities_and_types_select, entity_ids, type_ids,
-                                                          rels_from_template)
+                                                          rels_from_template, answer_types)
                     if candidate_outputs:
                         return candidate_outputs
 

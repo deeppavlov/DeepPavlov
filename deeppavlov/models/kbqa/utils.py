@@ -142,3 +142,19 @@ def fill_online_query(query: List[str], entity_comb: List[str], type_comb: List[
                     "?ent filter((?p1=schema:description)&&(lang(?ent)='en'))}}"
 
     return query, new_rels
+    
+def filter_answers(question: str, answer_types: List[str] = None):
+    # Q5 - human
+    # Q15773347 - film character
+    # Q95074 - fictional character
+    # Q15632617 - fictional human
+    # Q3658341 - literary character
+    # Q1114461 - comics character
+    # Q15711870 - animated character
+    # Q15773317 - television character
+    if answer_types:
+        return answer_types
+    elif "who" in question:
+        return ["Q5", "Q15773347", "Q95074", "Q15632617", "Q3658341", "Q1114461", "Q15711870", "Q15773317"]
+    else:
+        return []

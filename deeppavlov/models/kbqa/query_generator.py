@@ -26,7 +26,7 @@ from deeppavlov.models.kbqa.wiki_parser import WikiParser
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
 from deeppavlov.models.kbqa.rel_ranking_bert_infer import RelRankerBertInfer
 from deeppavlov.models.kbqa.utils import \
-    extract_year, extract_number, order_of_answers_sorting, make_combs, fill_query
+    extract_year, extract_number, order_of_answers_sorting, make_combs, fill_query, filter_answers
 from deeppavlov.models.kbqa.query_generator_base import QueryGeneratorBase
 
 log = getLogger(__name__)
@@ -101,7 +101,8 @@ class QueryGenerator(QueryGeneratorBase):
                      entities_and_types_select: List[str],
                      entity_ids: List[List[str]],
                      type_ids: List[List[str]],
-                     rels_from_template: Optional[List[Tuple[str]]] = None) -> List[List[Union[Tuple[Any, ...], Any]]]:
+                     rels_from_template: Optional[List[Tuple[str]]] = None,
+                     answer_types: Optional[List[str]] = None) -> List[List[Union[Tuple[Any, ...], Any]]]:
         question_tokens = nltk.word_tokenize(question)
         query = query_info["query_template"].lower()
         for old_tok, new_tok in self.replace_tokens:
@@ -179,6 +180,7 @@ class QueryGenerator(QueryGeneratorBase):
             total_entities_list = list(itertools.chain.from_iterable(selected_entity_ids)) + \
                                   list(itertools.chain.from_iterable(selected_type_ids))
             parse_res = self.wiki_parser(["parse_triplets"], [total_entities_list])
+        answer_types = filter_answers(question.lower(), answer_types)
         for comb_num, combs in enumerate(all_combs_list):
             confidence = np.prod([score for rel, score in combs[2][:-1]])
             confidences_list.append(confidence)
@@ -186,7 +188,8 @@ class QueryGenerator(QueryGeneratorBase):
                 fill_query(query_hdt_elem, combs[0], combs[1], combs[2]) for query_hdt_elem in query_sequence]
             if comb_num == 0:
                 log.debug(f"\n__________________________\nfilled query: {query_hdt_seq}\n__________________________\n")
-            queries_list.append((rels_from_query + answer_ent, query_hdt_seq, filter_info, order_info, return_if_found))
+            queries_list.append((rels_from_query + answer_ent, query_hdt_seq, filter_info, order_info, answer_types,
+                                 return_if_found))
             parser_info_list.append("query_execute")
             if comb_num == self.max_comb_num:
                 break

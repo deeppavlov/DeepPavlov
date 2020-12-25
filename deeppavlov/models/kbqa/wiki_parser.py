@@ -82,7 +82,8 @@ class WikiParser:
     def execute(self, what_return: List[str],
                 query_seq: List[List[str]],
                 filter_info: List[Tuple[str]] = None,
-                order_info: namedtuple = None) -> List[List[str]]:
+                order_info: namedtuple = None,
+                answer_types: List[str] = None) -> List[List[str]]:
         """
             Let us consider an example of the question "What is the deepest lake in Russia?"
             with the corresponding SPARQL query            
@@ -166,6 +167,10 @@ class WikiParser:
                 combs = [[combs[0][key] for key in what_return[:-1]] + [len(combs)]]
             else:
                 combs = [[elem[key] for key in what_return] for elem in combs]
+            if answer_types:
+                answer_types = set(answer_types)
+                combs = [[entity for entity in comb
+                              if answer_types.intersection(self.find_types(entity))] for comb in combs]
 
         return combs
 
@@ -285,6 +290,23 @@ class WikiParser:
             triplets = self.uncompress(triplets)
             rels = [triplet[0] for triplet in triplets if triplet[0].startswith("P")]
         return rels
+        
+    def find_types(self, entity: str):
+        types = []
+        if self.file_format == "hdt":
+            if not entity.startswith("http"):
+                entity = "http://www.wikidata.org/entity/{entity}"
+            tr, c = self.document.search_triples(entity, "http://www.wikidata.org/prop/direct/P31", "")
+            types = [triplet[2].split('/')[-1] for triplet in tr]
+        if self.file_format == "pickle":
+            entity = entity.split('/')[-1]
+            triplets = self.document.get(entity, {}).get("forw", [])
+            triplets = self.uncompress(triplets)
+            for triplet in triplets:
+                if triplet[0] == "P31":
+                    types = triplet[1:]
+        types = set(types)
+        return types
 
     def uncompress(self, triplets: Union[str, List[List[str]]]) -> List[List[str]]:
         if isinstance(triplets, str):
