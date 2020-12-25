@@ -199,6 +199,7 @@ class QueryGenerator(QueryGeneratorBase):
                 break
 
         candidate_outputs = []
+        candidate_outputs_list = []
         try:
             candidate_outputs_list = self.wiki_parser(parser_info_list, queries_list)
         except json.decoder.JSONDecodeError:
