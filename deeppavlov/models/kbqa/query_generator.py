@@ -179,7 +179,10 @@ class QueryGenerator(QueryGeneratorBase):
         if self.wiki_file_format == "pickle":
             total_entities_list = list(itertools.chain.from_iterable(selected_entity_ids)) + \
                                   list(itertools.chain.from_iterable(selected_type_ids))
-            parse_res = self.wiki_parser(["parse_triplets"], [total_entities_list])
+            try:
+                parse_res = self.wiki_parser(["parse_triplets"], [total_entities_list])
+            except json.decoder.JSONDecodeError:
+                print("parse triplets, not received output from wiki parser")
         answer_types = filter_answers(question.lower(), answer_types)
         for comb_num, combs in enumerate(all_combs_list):
             confidence = np.prod([score for rel, score in combs[2][:-1]])
@@ -195,7 +198,10 @@ class QueryGenerator(QueryGeneratorBase):
                 break
 
         candidate_outputs = []
-        candidate_outputs_list = self.wiki_parser(parser_info_list, queries_list)
+        try:
+            candidate_outputs_list = self.wiki_parser(parser_info_list, queries_list)
+        except json.decoder.JSONDecodeError:
+            print("query execute, not received output from wiki parser")
         if self.use_api_requester and isinstance(candidate_outputs_list, list) and candidate_outputs_list:
             candidate_outputs_list = candidate_outputs_list[0]
 

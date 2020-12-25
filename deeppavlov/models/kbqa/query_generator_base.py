@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 from logging import getLogger
 from typing import Tuple, List, Optional, Union, Any
 
@@ -167,9 +168,15 @@ class QueryGeneratorBase(Component, Serializable):
         entity_ids = []
         if what_to_link == "entities":
             if entity_types:
-                el_output = self.linker_entities([entities], [template_found], [question], [entity_types])
+                try:
+                    el_output = self.linker_entities([entities], [template_found], [question], [entity_types])
+                except json.decoder.JSONDecodeError:
+                    print("not received output from entity linking")
             else:
-                el_output = self.linker_entities([entities], [template_found], [question])
+                try:
+                    el_output = self.linker_entities([entities], [template_found], [question])
+                except json.decoder.JSONDecodeError:
+                    print("not received output from entity linking")
             if self.use_api_requester:
                 el_output = el_output[0]
             entity_ids, _ = el_output
@@ -240,7 +247,10 @@ class QueryGeneratorBase(Component, Serializable):
             queries_list = list({(entity, direction, rel_type) for entity_id in entity_ids
                                  for entity in entity_id[:self.entities_to_leave]})
             parser_info_list = ["find_rels" for i in range(len(queries_list))]
-            ex_rels = self.wiki_parser(parser_info_list, queries_list)
+            try:
+                ex_rels = self.wiki_parser(parser_info_list, queries_list)
+            except json.decoder.JSONDecodeError:
+                print("find_top_rels, not received output from wiki parser")
             if self.use_api_requester and ex_rels:
                 ex_rels = [rel[0] for rel in ex_rels]
             ex_rels = list(set(ex_rels))
