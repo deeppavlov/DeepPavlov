@@ -354,8 +354,9 @@ class MultipleUserStateTrackersPool(object):
         )
         tracker.ffill_act_ids2req_slots_ids = tracker_entity.ffill_act_ids2req_slots_ids
         tracker.ffill_act_ids2aqd_slots_ids = tracker_entity.ffill_act_ids2aqd_slots_ids
-        tracker.act2act_id = tracker_entity.act2act_id
-        tracker.act_id2act = tracker_entity.act_id2act
+        # wip: memorizing tracker and policy
+        # tracker.act2act_id = tracker_entity.act2act_id
+        # tracker.act_id2act = tracker_entity.act_id2act
         if isinstance(tracker, MemorizingDialogueStateTracker):
             tracker._setup_action_ixes(tracker.stories)
         self._ids_to_trackers[user_id] = tracker
