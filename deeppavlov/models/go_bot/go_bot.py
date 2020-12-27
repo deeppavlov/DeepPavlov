@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import Dict, Any, List, Optional, Union, Tuple
+from typing import Dict, Any, List, Optional, Union, Tuple, Type
 
 import numpy as np
 
@@ -139,19 +139,24 @@ class GoalOrientedBot(NNModel):
         self.data_handler = TokensVectorizer(debug, word_vocab, bow_embedder, embedder)
 
         # todo make mor abstract
-        self.dialogue_state_tracker = DialogueStateTracker.from_gobot_params(tracker, self.nlg_manager,
+        tracker_class: Type = type(tracker)
+        if tracker_class == MemorizingDialogueStateTracker:
+            features_params_class: Type = MemorizingGoBotParams
+            policy_class: Type = MemorizingPolicy
+
+        self.dialogue_state_tracker = tracker_class.from_gobot_params(tracker, self.nlg_manager,
                                                                              policy_network_params, database)
         # todo make mor abstract
         self.multiple_user_state_tracker = MultipleUserStateTrackersPool(base_tracker=self.dialogue_state_tracker)
 
         tokens_dims = self.data_handler.get_dims()
-        features_params = SharedGoBotParams.from_configured(self.nlg_manager, self.nlu_manager,
+        features_params = features_params_class.from_configured(self.nlg_manager, self.nlu_manager,
                                                             self.dialogue_state_tracker)
         policy_save_path = Path(save_path, self.POLICY_DIR_NAME)
         policy_load_path = Path(load_path, self.POLICY_DIR_NAME)
 
-        self.policy = PolicyNetwork(policy_network_params, tokens_dims, features_params,
-                                    policy_load_path, policy_save_path, **kwargs)
+        self.policy = policy_class(policy_network_params, tokens_dims, features_params,
+                                   policy_load_path, policy_save_path, **kwargs)
 
         self.dialogues_cached_features = dict()
 

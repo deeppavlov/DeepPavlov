@@ -328,10 +328,11 @@ class MultipleUserStateTrackersPool(object):
         return tracker
 
     def new_tracker(self):
-        # todo deprecated and never used?
-        tracker = DialogueStateTracker(self.base_tracker.slot_names, self.base_tracker.n_actions,
-                                       self.base_tracker.api_call_id, self.base_tracker.hidden_size,
-                                       self.base_tracker.database)
+        # todo deprecated and never used?  (response: nope, but should be removed in favor of init_new_tracker)
+        tracker = self.base_tracker.__class__(
+            self.base_tracker.slot_names, self.base_tracker.n_actions,
+            self.base_tracker.api_call_id, self.base_tracker.hidden_size,
+            self.base_tracker.database)
         return tracker
 
     def get_or_init_tracker(self, user_id: int):
@@ -354,9 +355,10 @@ class MultipleUserStateTrackersPool(object):
         )
         tracker.ffill_act_ids2req_slots_ids = tracker_entity.ffill_act_ids2req_slots_ids
         tracker.ffill_act_ids2aqd_slots_ids = tracker_entity.ffill_act_ids2aqd_slots_ids
-        # wip: memorizing tracker and policy
-        # tracker.act2act_id = tracker_entity.act2act_id
-        # tracker.act_id2act = tracker_entity.act_id2act
+        if type(tracker_entity) == MemorizingDialogueStateTracker:
+            # wip: memorizing tracker and policy
+            tracker.act2act_id = tracker_entity.act2act_id
+            tracker.act_id2act = tracker_entity.act_id2act
         if isinstance(tracker, MemorizingDialogueStateTracker):
             tracker._setup_action_ixes(tracker.stories)
         self._ids_to_trackers[user_id] = tracker
