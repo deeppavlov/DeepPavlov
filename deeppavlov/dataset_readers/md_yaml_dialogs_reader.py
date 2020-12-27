@@ -400,7 +400,17 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         # noinspection PyProtectedMember
         gobot_formatted_stories = DSTC2DatasetReader._read_from_file(tmp_f.name, dialogs=dialogs)
         os.remove(tmp_f.name)
-
+        if dialogs:
+            for story in gobot_formatted_stories:
+                for turn_ix, turn in enumerate(story):
+                    if turn[0] == {'text': '', 'intents': [], 'episode_done': True}:
+                        turn = ({'text': 'start', 'intents': ["start"], 'episode_done': True}, turn[1])
+                        story[turn_ix] = turn
+        else:
+            for turn_ix, turn in enumerate(gobot_formatted_stories):
+                if turn[0] == {'text': '', 'intents': [], 'episode_done': True}:
+                    turn = ({'text': 'start', 'intents': ["start"], 'episode_done': True}, turn[1])
+                    gobot_formatted_stories[turn_ix] = turn
         log.debug(f"AFTER MLU_MD_DialogsDatasetReader._read_story(): "
                   f"story_fpath={story_fpath}, "
                   f"dialogs={dialogs}, "
