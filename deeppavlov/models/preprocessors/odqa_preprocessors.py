@@ -93,7 +93,7 @@ class DocumentChunker(Component):
                         split_doc = split_doc[:self.number_of_paragraphs]
                     new_split_doc = []
                     for par in split_doc:
-                        sentences = sent_tokenize(doc)
+                        sentences = sent_tokenize(par)
                         if len(sentences) <= 3:
                             new_split_doc.append(' '.join(sentences))
                         else:
