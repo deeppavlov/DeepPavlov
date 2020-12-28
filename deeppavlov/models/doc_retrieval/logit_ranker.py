@@ -120,6 +120,7 @@ class LogitRanker(Component):
 
         if doc_ids_batch is None:
             if self.return_answer_sentence:
+                print("odqa answer", batch_best_answers, batch_best_answers_score, batch_best_answers_place, batch_best_answers_sentences, batch_best_answers_contexts)
                 return batch_best_answers, batch_best_answers_score, batch_best_answers_place, \
                        batch_best_answers_sentences, batch_best_answers_contexts
             return batch_best_answers, batch_best_answers_score, batch_best_answers_place
