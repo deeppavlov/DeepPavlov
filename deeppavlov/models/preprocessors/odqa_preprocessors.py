@@ -91,8 +91,19 @@ class DocumentChunker(Component):
                     split_doc = list(filter(lambda x: len(x) > 40, split_doc))
                     if self.number_of_paragraphs != -1:
                         split_doc = split_doc[:self.number_of_paragraphs]
-                    batch_chunks.append(split_doc)
-                    batch_chunks_ids.append([id] * len(split_doc))
+                    new_split_doc = []
+                    for par in split_doc:
+                        sentences = sent_tokenize(doc)
+                        if len(sentences) <= 3:
+                            new_split_doc.append(' '.join(sentences))
+                        else:
+                            num_pieces = len(sentences) // 2
+                            for i in range(num_pieces):
+                                piece = ' '.join(sentences[i*2:i*2+3])
+                                new_split_doc.append(piece)
+                        
+                    batch_chunks.append(new_split_doc)
+                    batch_chunks_ids.append([id] * len(new_split_doc))
                 else:
                     doc_chunks = []
                     if self.keep_sentences:
