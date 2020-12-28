@@ -57,20 +57,45 @@ class WikiParser:
         for parser_info, query in zip(parser_info_list, queries_list):
             if parser_info == "query_execute":
                 *query_to_execute, return_if_found = query
-                candidate_output = self.execute(*query_to_execute)
+                candidate_output = {}
+                try:
+                    candidate_output = self.execute(*query_to_execute)
+                except TypeError:
+                    log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(candidate_output)
                 if return_if_found and candidate_output:
                     return wiki_parser_output
             elif parser_info == "find_rels":
-                wiki_parser_output += self.find_rels(*query)
+                rels = []
+                try:
+                    rels = self.find_rels(*query)
+                except TypeError:
+                    log.info("Wrong arguments are passed to wiki_parser")
+                wiki_parser_output += rels
             elif parser_info == "find_label":
-                wiki_parser_output.append(self.find_label(*query))
+                label = ""
+                try:
+                    label = self.find_label(*query)
+                except TypeError:
+                    log.info("Wrong arguments are passed to wiki_parser")
+                wiki_parser_output.append(label)
             elif parser_info == "find_triplets":
                 if self.file_format == "hdt":
                     tr, c = self.document.search_triples(*query)
                     wiki_parser_output.append(list(tr))
                 else:
-                    wiki_parser_output.append(self.document.get(query, {}))
+                    triplets = {}
+                    try:
+                        triplets = self.document.get(query, {})
+                    except TypeError:
+                        log.info("Wrong arguments are passed to wiki_parser")
+                    uncompressed_triplets = {}
+                    if triplets:
+                        if "forw" in triplets:
+                            uncompressed_triplets["forw"] = self.uncompress(triplets["forw"])
+                        if "backw" in triplets:
+                            uncompressed_triplets["backw"] = self.uncompress(triplets["backw"])
+                    wiki_parser_output.append(uncompressed_triplets)
             elif parser_info == "parse_triplets" and self.file_format == "pickle":
                 for entity in query:
                     self.parse_triplets(entity)
