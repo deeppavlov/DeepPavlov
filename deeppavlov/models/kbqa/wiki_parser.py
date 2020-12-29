@@ -144,28 +144,34 @@ class WikiParser:
                     if combs:
                         known_elements = []
                         extended_combs = []
-                        for elem in query:
-                            if elem in combs[0].keys():
-                                known_elements.append(elem)
-                        for comb in combs:
-                            """
-                                n = 1
-                                query = ["?ent", "http://www.wikidata.org/prop/direct/P31",
-                                                                            "http://www.wikidata.org/entity/Q23397"]
-                                comb = {"?ent": "http://www.wikidata.org/entity/Q5513"}
-                                known_elements = ["?ent"], known_values = ["http://www.wikidata.org/entity/Q5513"]
-                                filled_query = ["http://www.wikidata.org/entity/Q5513", 
-                                                "http://www.wikidata.org/prop/direct/P31", 
-                                                "http://www.wikidata.org/entity/Q23397"]
-                                new_combs = [["http://www.wikidata.org/entity/Q5513", 
-                                              "http://www.wikidata.org/prop/direct/P31", 
-                                              "http://www.wikidata.org/entity/Q23397"], ...]
-                                extended_combs = [{"?ent": "http://www.wikidata.org/entity/Q5513"}, ...]
-                            """
-                            known_values = [comb[known_elem] for known_elem in known_elements]
-                            for known_elem, known_value in zip(known_elements, known_values):
-                                filled_query = [elem.replace(known_elem, known_value) for elem in query]
-                                new_combs = self.search(filled_query, unknown_elem_positions)
+                        if query[0].startswith("?") and query[2].startswith("?"):
+                            for elem in query:
+                                if elem in combs[0].keys():
+                                    known_elements.append(elem)
+                            for comb in combs:
+                                """
+                                    n = 1
+                                    query = ["?ent", "http://www.wikidata.org/prop/direct/P31",
+                                                                                "http://www.wikidata.org/entity/Q23397"]
+                                    comb = {"?ent": "http://www.wikidata.org/entity/Q5513"}
+                                    known_elements = ["?ent"], known_values = ["http://www.wikidata.org/entity/Q5513"]
+                                    filled_query = ["http://www.wikidata.org/entity/Q5513", 
+                                                    "http://www.wikidata.org/prop/direct/P31", 
+                                                    "http://www.wikidata.org/entity/Q23397"]
+                                    new_combs = [["http://www.wikidata.org/entity/Q5513", 
+                                                  "http://www.wikidata.org/prop/direct/P31", 
+                                                  "http://www.wikidata.org/entity/Q23397"], ...]
+                                    extended_combs = [{"?ent": "http://www.wikidata.org/entity/Q5513"}, ...]
+                                """
+                                known_values = [comb[known_elem] for known_elem in known_elements]
+                                for known_elem, known_value in zip(known_elements, known_values):
+                                    filled_query = [elem.replace(known_elem, known_value) for elem in query]
+                                    new_combs = self.search(filled_query, unknown_elem_positions)
+                                    for new_comb in new_combs:
+                                        extended_combs.append({**comb, **new_comb})
+                        else:
+                            new_combs = self.search(query, unknown_elem_positions)
+                            for comb in combs:
                                 for new_comb in new_combs:
                                     extended_combs.append({**comb, **new_comb})
                     combs = extended_combs

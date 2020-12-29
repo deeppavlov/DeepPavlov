@@ -75,15 +75,16 @@ def find_tokens_to_replace(wh_node_head, main_head, question_tokens, question):
         what_tokens = what_tokens_fnd[0][0].split()
         if len(what_tokens) <= 2:
             redundant_tokens_to_replace += what_tokens
-
-    wh_node_head_desc = [node for node in wh_node_head.children if node.text != "?"]
-    wh_node_head_dep = [node.dep_ for node in wh_node_head.children if
-                        (node.text != "?" and node.dep_ not in ["aux", "prep"] and node.text.lower() not in pronouns)]
-    for node in wh_node_head_desc:
-        if node.dep_ == "nsubj" and len(wh_node_head_dep) > 1 or node.text.lower() in pronouns or node.dep_ == "aux":
-            question_tokens_to_replace.append(node.text)
-            for elem in node.subtree:
-                question_tokens_to_replace.append(elem.text)
+    
+    if wh_node_head:
+        wh_node_head_desc = [node for node in wh_node_head.children if node.text != "?"]
+        wh_node_head_dep = [node.dep_ for node in wh_node_head.children if
+                            (node.text != "?" and node.dep_ not in ["aux", "prep"] and node.text.lower() not in pronouns)]
+        for node in wh_node_head_desc:
+            if node.dep_ == "nsubj" and len(wh_node_head_dep) > 1 or node.text.lower() in pronouns or node.dep_ == "aux":
+                question_tokens_to_replace.append(node.text)
+                for elem in node.subtree:
+                    question_tokens_to_replace.append(elem.text)
 
     question_tokens_to_replace = list(set(question_tokens_to_replace))
 
@@ -174,6 +175,11 @@ def sentence_answer(question, entity_title, entities=None, template_answer=None)
         answer = answer.replace(old_tok, new_tok)
     answer = re.sub("\s+", " ", answer).strip()
 
-    answer = answer + '.'
+    if answer.strip('.?') == question.strip('.?'):
+        answer = entity_title
+    else:
+        answer = answer + '.'
+        if answer[0].islower():
+            answer = answer.capitalize()
 
     return answer
