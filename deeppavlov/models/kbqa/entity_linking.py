@@ -77,12 +77,14 @@ class NerChunker(Component):
                     text += f"{sentence} "
                 else:
                     if count_texts < self.batch_size:
-                        text_batch.append(text.strip())
-                        if n == curr_doc:
-                            nums_batch.append(n)
-                        else:
-                            nums_batch.append(n - 1)
-                        count_texts += 1
+                        text = text.strip()
+                        if text:
+                            text_batch.append(text)
+                            if n == curr_doc:
+                                nums_batch.append(n)
+                            else:
+                                nums_batch.append(n - 1)
+                            count_texts += 1
                     else:
                         text_batch_list.append(text_batch)
                         text_batch = []
@@ -92,8 +94,9 @@ class NerChunker(Component):
                     curr_doc = n
                     text = f"{sentence} "
 
+        text = text.strip()
         if text:
-            text_batch.append(text.strip())
+            text_batch.append(text)
             text_batch_list.append(text_batch)
             nums_batch.append(len(docs_batch) - 1)
             nums_batch_list.append(nums_batch)
@@ -128,6 +131,7 @@ class EntityLinker(Component, Serializable):
                  num_entities_to_return: int = 10,
                  lang: str = "ru",
                  use_descriptions: bool = True,
+                 return_confidences: bool = False,
                  lemmatize: bool = False,
                  **kwargs) -> None:
         """
@@ -184,6 +188,7 @@ class EntityLinker(Component, Serializable):
         elif self.lang_str == "@ru":
             self.stopwords = set(stopwords.words("russian"))
         self.use_descriptions = use_descriptions
+        self.return_confidences = return_confidences
 
         self.load()
 
@@ -233,11 +238,13 @@ class EntityLinker(Component, Serializable):
         """
         text_batch_list, nums_batch_list = self.chunker(docs_batch)
         entity_ids_batch_list = []
+        conf_batch_list = []
         entity_substr_batch_list = []
         entity_positions_batch_list = []
         text_len_batch_list = []
         for text_batch in text_batch_list:
             entity_ids_batch = []
+            conf_batch = []
             ner_tokens_batch, ner_probas_batch = self.ner(text_batch)
             entity_substr_batch, _, entity_positions_batch = self.ner_parser(ner_tokens_batch, ner_probas_batch)
             log.debug(f"entity_substr_batch {entity_substr_batch}")
@@ -253,47 +260,61 @@ class EntityLinker(Component, Serializable):
             for entity_substr_list, entity_positions_list, context_tokens in \
                     zip(entity_substr_batch, entity_positions_batch, ner_tokens_batch):
                 entity_ids_list = []
+                conf_list = []
                 if entity_substr_list:
-                    entity_ids_list = self.link_entities(entity_substr_list, entity_positions_list, context_tokens)
+                    entity_ids_list, conf_list = \
+                        self.link_entities(entity_substr_list, entity_positions_list, context_tokens)
                 entity_ids_batch.append(entity_ids_list)
+                conf_batch.append(conf_list)
             entity_ids_batch_list.append(entity_ids_batch)
+            conf_batch_list.append(conf_batch)
             entity_substr_batch_list.append(entity_substr_batch)
             entity_positions_batch_list.append(entity_positions_batch)
             text_len_batch_list.append([len(text) for text in ner_tokens_batch])
 
         doc_entity_ids_batch = []
+        doc_conf_batch = []
         doc_entity_substr_batch = []
         doc_entity_positions_batch = []
         doc_entity_ids = []
+        doc_conf = []
         doc_entity_substr = []
         doc_entity_positions = []
         cur_doc_num = 0
         text_len_sum = 0
-        for entity_ids_batch, entity_substr_batch, entity_positions_batch, text_len_batch, nums_batch in \
-                zip(entity_ids_batch_list, entity_substr_batch_list, entity_positions_batch_list,
+        for entity_ids_batch, conf_batch, entity_substr_batch, entity_positions_batch, text_len_batch, nums_batch in \
+                zip(entity_ids_batch_list, conf_batch_list, entity_substr_batch_list, entity_positions_batch_list,
                     text_len_batch_list, nums_batch_list):
-            for entity_ids, entity_substr, entity_positions, text_len, doc_num in \
-                    zip(entity_ids_batch, entity_substr_batch, entity_positions_batch, text_len_batch, nums_batch):
+            for entity_ids, conf, entity_substr, entity_positions, text_len, doc_num in \
+                    zip(entity_ids_batch, conf_batch, entity_substr_batch,
+                        entity_positions_batch, text_len_batch, nums_batch):
                 if doc_num == cur_doc_num:
                     doc_entity_ids += entity_ids
+                    doc_conf += conf
                     doc_entity_substr += entity_substr
                     doc_entity_positions += [[pos + text_len_sum for pos in entity_position]
                                              for entity_position in entity_positions]
                     text_len_sum += text_len
                 else:
                     doc_entity_ids_batch.append(doc_entity_ids)
+                    doc_conf_batch.append(doc_conf)
                     doc_entity_substr_batch.append(doc_entity_substr)
                     doc_entity_positions_batch.append(doc_entity_positions)
                     doc_entity_ids = entity_ids
+                    doc_conf = conf
                     doc_entity_substr = entity_substr
                     doc_entity_positions = entity_positions
                     cur_doc_num = doc_num
                     text_len_sum = 0
         doc_entity_ids_batch.append(doc_entity_ids)
+        doc_conf_batch.append(doc_conf)
         doc_entity_substr_batch.append(doc_entity_substr)
         doc_entity_positions_batch.append(doc_entity_positions)
 
-        return doc_entity_substr_batch, doc_entity_positions_batch, doc_entity_ids_batch
+        if self.return_confidences:
+            return doc_entity_substr_batch, doc_conf_batch, doc_entity_positions_batch, doc_entity_ids_batch
+        else:
+            return doc_entity_substr_batch, doc_entity_positions_batch, doc_entity_ids_batch
 
     def link_entities(self, entity_substr_list: List[str], entity_positions_list: List[List[int]] = None,
                       context_tokens: List[str] = None) -> List[List[str]]:
@@ -301,6 +322,7 @@ class EntityLinker(Component, Serializable):
         log.debug(f"entity substr list {entity_substr_list}")
         log.debug(f"entity positions list {entity_positions_list}")
         entity_ids_list = []
+        conf_list = []
         if entity_substr_list:
             entity_substr_list = [[word for word in entity_substr.split(' ')
                                    if word not in self.stopwords and len(word) > 0]
@@ -350,18 +372,22 @@ class EntityLinker(Component, Serializable):
                                    for entity, substr_score, pop_score in candidate_entities}
                 candidate_entities = [candidate_entity[0] for candidate_entity
                                       in candidate_entities][:self.num_entities_for_bert_ranking]
+                conf = [candidate_entity[1:] for candidate_entity
+                                      in candidate_entities][:self.num_entities_for_bert_ranking]
                 log.debug(f"candidate_entities {candidate_entities[:10]}")
                 candidate_entities_list.append(candidate_entities)
-                if self.num_entities_to_return == 1:
+                if self.num_entities_to_return == 1 and candidate_entities:
                     entity_ids_list.append(candidate_entities[0])
+                    conf_list.append(conf[0])
                 else:
                     entity_ids_list.append(candidate_entities[:self.num_entities_to_return])
+                    conf_list.append(conf[:self.num_entities_to_return])
                 entities_scores_list.append(entities_scores)
             if self.use_descriptions:
-                entity_ids_list = self.rank_by_description(entity_positions_list, candidate_entities_list,
+                entity_ids_list, conf_list = self.rank_by_description(entity_positions_list, candidate_entities_list,
                                                            entities_scores_list, context_tokens)
 
-        return entity_ids_list
+        return entity_ids_list, conf_list
 
     def morph_parse(self, word):
         morph_parse_tok = self.morph.parse(word)[0]
@@ -390,6 +416,7 @@ class EntityLinker(Component, Serializable):
                             entities_scores_list: List[Dict[str, Tuple[int, float]]],
                             context_tokens: List[str]) -> List[List[str]]:
         entity_ids_list = []
+        conf_list = []
         for entity_pos, candidate_entities, entities_scores in zip(entity_positions_list, candidate_entities_list,
                                                                    entities_scores_list):
             log.debug(f"entity_pos {entity_pos}")
@@ -406,12 +433,19 @@ class EntityLinker(Component, Serializable):
             entities_with_scores = [(entity, round(entities_scores[entity][0], 2), entities_scores[entity][1],
                                      round(score, 2)) for entity, score in scores]
             log.debug(f"len entities with scores {len(entities_with_scores)}")
-            entities_with_scores = [entity for entity in entities_with_scores if entity[3] > 0.1]
+            entities_with_scores = [entity for entity in entities_with_scores if entity[3] > 0.001]
             entities_with_scores = sorted(entities_with_scores, key=lambda x: (x[1], x[3], x[2]), reverse=True)
             log.debug(f"entities_with_scores {entities_with_scores}")
-            top_entities = [score[0] for score in entities_with_scores]
-            if self.num_entities_to_return == 1:
+            top_entities = []
+            top_conf = []
+            if entities_with_scores and 7.5*entities_with_scores[0][3] > 1.0:
+                top_entities = [score[0] for score in entities_with_scores]
+                top_conf = [score[1:] for score in entities_with_scores]
+                
+            if self.num_entities_to_return == 1 and top_entities:
                 entity_ids_list.append(top_entities[0])
+                conf_list.append(top_conf[0])
             else:
                 entity_ids_list.append(top_entities[:self.num_entities_to_return])
-        return entity_ids_list
+                conf_list.append(top_conf[:self.num_entities_to_return])
+        return entity_ids_list, conf_list
