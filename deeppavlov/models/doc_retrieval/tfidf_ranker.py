@@ -94,13 +94,10 @@ class ParTfidfRanker(Component):
         self.vectorizer = vectorizer
 
     def __call__(self, questions_batch: List[str], paragraphs_batch: List[List[str]]) -> Tuple[List[Any], List[float]]:
-        tm1 = time.time()
         batch_top_paragraphs = []
         
         for question, paragraphs in zip(questions_batch, paragraphs_batch):
             paragraphs = self.vectorizer.rank_paragraphs(question, paragraphs)
             batch_top_paragraphs.append(paragraphs)
-        tm2 = time.time()
-        print("time of paragraph ranking", tm2-tm1, len(batch_top_paragraphs[0]))
 
         return batch_top_paragraphs
