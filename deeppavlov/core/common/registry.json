@@ -122,6 +122,7 @@
   "params_search": "deeppavlov.core.common.params_search:ParamsSearch",
   "paraphraser_pretrain_reader": "deeppavlov.dataset_readers.paraphraser_pretrain_reader:ParaphraserPretrainReader",
   "paraphraser_reader": "deeppavlov.dataset_readers.paraphraser_reader:ParaphraserReader",
+  "par_tfidf_ranker": "deeppavlov.models.doc_retrieval.tfidf_ranker:ParTfidfRanker",
   "pop_ranker": "deeppavlov.models.doc_retrieval.pop_ranker:PopRanker",
   "proba2labels": "deeppavlov.models.classifiers.proba2labels:Proba2Labels",
   "pymorphy_russian_lemmatizer": "deeppavlov.models.preprocessors.russian_lemmatizer:PymorphyRussianLemmatizer",

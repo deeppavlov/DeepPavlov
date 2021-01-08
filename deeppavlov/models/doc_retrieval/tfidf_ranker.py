@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
 from logging import getLogger
 from typing import List, Any, Tuple
 
@@ -85,3 +86,21 @@ class TfidfRanker(Component):
             batch_docs_scores.append(doc_scores)
 
         return batch_doc_ids, batch_docs_scores
+        
+        
+@register("par_tfidf_ranker")
+class ParTfidfRanker(Component):
+    def __init__(self, vectorizer: HashingTfIdfVectorizer, **kwargs):
+        self.vectorizer = vectorizer
+
+    def __call__(self, questions_batch: List[str], paragraphs_batch: List[List[str]]) -> Tuple[List[Any], List[float]]:
+        tm1 = time.time()
+        batch_top_paragraphs = []
+        
+        for question, paragraphs in zip(questions_batch, paragraphs_batch):
+            paragraphs = self.vectorizer.rank_paragraphs(question, paragraphs)
+            batch_top_paragraphs.append(paragraphs)
+        tm2 = time.time()
+        print("time of paragraph ranking", tm2-tm1, len(batch_top_paragraphs[0]))
+
+        return batch_top_paragraphs

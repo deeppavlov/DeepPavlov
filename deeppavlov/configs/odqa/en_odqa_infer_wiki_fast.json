@@ -1,0 +1,94 @@
+{
+  "chainer": {
+    "in": ["question_raw"],
+    "out": ["answer", "answer_score", "answer_place"],
+    "pipe": [
+      {
+        "class_name": "hashing_tfidf_vectorizer",
+        "id": "vectorizer",
+        "parallel": true,
+        "fit_on": [
+          "docs",
+          "doc_ids",
+          "doc_nums"
+        ],
+        "save_path": "{MODELS_PATH}/odqa/enwiki_tfidf_matrix.npz",
+        "load_path": "{MODELS_PATH}/odqa/enwiki_tfidf_matrix.npz",
+        "tokenizer": {
+          "class_name": "stream_spacy_tokenizer",
+          "lemmas": true,
+          "lowercase": true,
+          "filter_stopwords": true,
+          "ngram_range": [1, 2]
+        }
+      },
+      {
+        "class_name": "tfidf_ranker",
+        "top_n": 12,
+        "in": ["question_raw"],
+        "out": [
+          "tfidf_doc_ids",
+          "tfidf_doc_scores"
+        ],
+        "vectorizer": "#vectorizer"
+      },
+      {
+        "class_name": "wiki_sqlite_vocab",
+        "in": ["tfidf_doc_ids"],
+        "out": ["tfidf_doc_text"],
+        "join_docs": false,
+        "shuffle": false,
+        "load_path": "{DOWNLOADS_PATH}/odqa/enwiki.db"
+      },
+      {
+        "class_name": "document_chunker",
+        "in": ["tfidf_doc_text"],
+        "out": ["paragraphs"],
+        "flatten_result": true,
+        "paragraphs": true
+      },
+      {
+        "class_name": "par_tfidf_ranker",
+        "in": ["question_raw", "paragraphs"],
+        "out": ["top_paragraphs"],
+        "vectorizer": "#vectorizer"
+      },
+      {
+        "class_name": "string_multiplier",
+        "in": ["question_raw", "top_paragraphs"],
+        "out":["questions"]
+      },
+      {
+        "class_name": "logit_ranker",
+        "batch_size": 64,
+        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/multi_squad_noans_infer.json"},
+        "sort_noans": true,
+        "in": ["top_paragraphs", "questions"],
+        "out": ["answer", "answer_score", "answer_place"]
+      }
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/datasets/wikipedia/enwiki.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/en_odqa.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      }
+    ]
+  }
+}

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 from collections import Counter
 from logging import getLogger
 from typing import List, Any, Generator, Tuple, KeysView, ValuesView, Dict, Optional
@@ -65,12 +66,13 @@ class HashingTfIdfVectorizer(Estimator):
 
     """
 
-    def __init__(self, tokenizer: Component, hash_size=2 ** 24, doc_index: Optional[dict] = None,
+    def __init__(self, tokenizer: Component, hash_size=2 ** 24, doc_index: Optional[dict] = None, top_n: int = 16,
                  save_path: Optional[str] = None, load_path: Optional[str] = None, **kwargs):
 
         super().__init__(save_path=save_path, load_path=load_path, mode=kwargs.get('mode', 'infer'))
 
         self.hash_size = hash_size
+        self.top_n = top_n
         self.tokenizer = tokenizer
         self.rows = []
         self.cols = []
@@ -125,6 +127,37 @@ class HashingTfIdfVectorizer(Estimator):
 
         transformed = sp.sparse.vstack(sp_tfidfs)
         return transformed
+        
+    def rank_paragraphs(self, question: str, paragraphs: List[str]) -> List[str]:
+        ngrams = list(self.tokenizer([question]))[0]
+        tfidf_scores = []
+        idf_scores = []
+        size = len(self.doc_index)
+        
+        for paragraph in paragraphs:
+            ngrams_counts = [len(re.findall(f"{ngram}\W", paragraph, re.IGNORECASE)) for ngram in ngrams]
+            non_zero_counts = [(ngram, ngram_count) for ngram, ngram_count in zip(ngrams, ngrams_counts) if ngram_count > 0]
+            if non_zero_counts:
+                par_ngrams, ngrams_counts = zip(*non_zero_counts)
+                hashes = np.array([hash_(ngram, self.hash_size) for ngram in par_ngrams])
+                tfs = np.log1p(np.array(ngrams_counts))
+                Ns = self.term_freqs[hashes]
+                idfs = np.log((size - Ns + 0.5) / (Ns + 0.5))
+                idfs[idfs < 0] = 0
+                tfidf = np.multiply(tfs, idfs)
+                tfidf_scores.append(np.sum(tfidf**2))
+                idf_scores.append(np.sum(idfs**2))
+            else:
+                tfidf_scores.append(0.0)
+                idf_scores.append(0.0)
+        
+        indices = np.argsort(tfidf_scores)[::-1][:self.top_n]
+        top_paragraphs = [paragraphs[ind] for ind in indices]
+        indices = np.argsort(idf_scores)[::-1][:self.top_n]
+        top_paragraphs += [paragraphs[ind] for ind in indices]
+        
+        return top_paragraphs
+    
 
     def get_index2doc(self) -> Dict[Any, int]:
         """Invert doc_index.
