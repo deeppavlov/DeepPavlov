@@ -15,6 +15,7 @@
 import itertools
 import json
 import re
+import time
 from logging import getLogger
 from typing import Tuple, List, Optional, Union, Dict, Any
 from collections import namedtuple, defaultdict
@@ -128,11 +129,14 @@ class QueryGenerator(QueryGeneratorBase):
                              search_source != "do_not_rank"]
         log.debug(f"(query_parser)rel_directions: {triplet_info_list}")
         entity_ids = [entity[:self.entities_to_leave] for entity in entity_ids]
+        rel_tm1 = time.time()
         if rels_from_template is not None:
             rels = [[(rel, 1.0) for rel in rel_list] for rel_list in rels_from_template]
         else:
             rels = [self.find_top_rels(question, entity_ids, triplet_info)
                     for triplet_info in triplet_info_list]
+        rel_tm2 = time.time()
+        log.debug(f"--------rels find time: {rel_tm2-rel_tm1}")
         log.debug(f"(query_parser)rels: {rels}")
         rels_from_query = [triplet[1] for triplet in query_triplets if triplet[1].startswith('?')]
         answer_ent = re.findall("select [\(]?([\S]+) ", query)
@@ -163,8 +167,6 @@ class QueryGenerator(QueryGeneratorBase):
             filter_info.append((unk_prop, prop_type))
         log.debug(f"(query_parser)filter_from_query: {filter_from_query}")
         rel_combs = make_combs(rels, permut=False)
-        import datetime
-        start_time = datetime.datetime.now()
         entity_positions, type_positions = [elem.split('_') for elem in entities_and_types_select.split(' ')]
         log.debug(f"entity_positions {entity_positions}, type_positions {type_positions}")
         selected_entity_ids = [entity_ids[int(pos) - 1] for pos in entity_positions if int(pos) > 0]
@@ -185,6 +187,7 @@ class QueryGenerator(QueryGeneratorBase):
             except json.decoder.JSONDecodeError:
                 log.info("parse triplets, not received output from wiki parser")
         answer_types = filter_answers(question.lower(), answer_types)
+        query_tm1 = time.time()
         for comb_num, combs in enumerate(all_combs_list):
             confidence = np.prod([score for rel, score in combs[2][:-1]])
             confidences_list.append(confidence)
@@ -228,7 +231,8 @@ class QueryGenerator(QueryGeneratorBase):
                                              [tuple([ans for ans, conf in candidate_output]), candidate_output[0][1]])
             else:
                 candidate_outputs = [output[1:] for output in candidate_outputs]
-        log.debug(f"(query_parser)loop time: {datetime.datetime.now() - start_time}")
+        query_tm2 = time.time()
+        log.debug(f"--------queries execution time: {query_tm2-query_tm1}")
         log.debug(f"(query_parser)final outputs: {candidate_outputs[:3]}")
 
         return candidate_outputs

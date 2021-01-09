@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+import time
 from logging import getLogger
 from typing import Tuple, List, Optional, Union, Any
 
@@ -121,9 +122,12 @@ class QueryGeneratorBase(Component, Serializable):
                           (')', ''), ('–', '-')]
         for old, new in replace_tokens:
             question = question.replace(old, new)
-
+    
+        temp_tm1 = time.time()
         entities_from_template, types_from_template, rels_from_template, rel_dirs_from_template, query_type_template, \
         entity_types, template_answer, answer_types, template_found = self.template_matcher(question_sanitized, entities_from_ner)
+        temp_tm2 = time.time()
+        log.debug(f"--------template matching time: {temp_tm2-temp_tm1}")
         self.template_nums = [query_type_template]
 
         log.debug(f"question: {question}\n")
