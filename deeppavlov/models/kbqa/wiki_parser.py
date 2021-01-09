@@ -106,7 +106,7 @@ class WikiParser:
                 check_res = False
                 try:
                     check_res = self.check_triplet(*query)
-                else:
+                except:
                     log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(check_res)
             elif parser_info == "find_label":
@@ -458,7 +458,7 @@ class WikiParser:
             subj = f"{self.prefixes['entity']}/{subj}"
             rel = f"{self.prefixes['rels']['direct']}/{rel}"
             obj = f"{self.prefixes['entity']}/{obj}"
-            triplets, cnt == self.document.search_triples(subj, rel, obj)
+            triplets, cnt = self.document.search_triples(subj, rel, obj)
             if cnt > 0:
                 return True
             else:
