@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import datetime
+import random
 import re
 from logging import getLogger
 from typing import List, Tuple, Dict, Any, Union
@@ -31,7 +32,22 @@ log = getLogger(__name__)
 class WikiParser:
     """This class extract relations, objects or triplets from Wikidata HDT file"""
 
-    def __init__(self, wiki_filename: str, file_format: str = "hdt", lang: str = "@en", **kwargs) -> None:
+    def __init__(self, wiki_filename: str,
+                       file_format: str = "hdt",
+                       prefixes: Dict[str, Union[str, Dict[str, str]]] = {
+                           "entity": "http://we",
+                           "label": "http://wl",
+                           "alias": "http://wal",
+                           "description": "http://wd",
+                           "rels": {"direct": "http://wpd",
+                                    "no_type": "http://wp",
+                                    "statement": "http://wps",
+                                    "qualifier": "http://wpq"
+                                   },
+                           "statement": "http://ws"
+                       },
+                       dialog_mode: bool = False,
+                       lang: str = "@en", **kwargs) -> None:
         """
 
         Args:
@@ -40,7 +56,8 @@ class WikiParser:
             lang: Russian or English language
             **kwargs:
         """
-        self.description_rel = "http://schema.org/description"
+        
+        self.prefixes = prefixes
         self.file_format = file_format
         self.wiki_filename = str(expand_path(wiki_filename))
         if self.file_format == "hdt":
@@ -50,17 +67,21 @@ class WikiParser:
             self.parsed_document = {}
         else:
             raise ValueError("Unsupported file format")
+        
+        self.grounded_entities_set = set()
+        self.connected_entities_set = set()
         self.lang = lang
 
     def __call__(self, parser_info_list: List[str], queries_list: List[Any]) -> List[Any]:
         wiki_parser_output = []
+        
         for parser_info, query in zip(parser_info_list, queries_list):
             if parser_info == "query_execute":
                 *query_to_execute, return_if_found = query
                 candidate_output = {}
                 try:
                     candidate_output = self.execute(*query_to_execute)
-                except TypeError:
+                except:
                     log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(candidate_output)
                 if return_if_found and candidate_output:
@@ -69,25 +90,87 @@ class WikiParser:
                 rels = []
                 try:
                     rels = self.find_rels(*query)
-                except TypeError:
+                except:
                     log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output += rels
             elif parser_info == "find_label":
                 label = ""
                 try:
                     label = self.find_label(*query)
-                except TypeError:
+                except:
                     log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(label)
+            elif parser_info == "find_types":
+                types = []
+                try:
+                    types = self.find_types(query)
+                except:
+                    log.info("Wrong arguments are passed to wiki_parser")
+                wiki_parser_output.append(types)
+            elif parser_info == "retrieve_paths":
+                paths = []
+                try:
+                    paths = self.retrieve_paths(*query)
+                except:
+                    log.info("Wrong arguments are passed to wiki_parser")
+                wiki_parser_output.append(paths)
+            elif parser_info == "add_entities_to_dialogue_subgraph":
+                log.debug(f"adding entities to dialogue subgraph, {query}")
+                for entity in query:
+                    self.grounded_entities_set.add(entity)
+                    if self.file_format == "hdt":
+                        tr, cnt = self.document.search_triples(f"{self.prefixes['entity']}/{entity}", "", "")
+                        if cnt < 10000:
+                            for triplet in tr:
+                                obj = triplet[2].split('/')[-1].split("^^")[0].strip('"')
+                                if re.findall("Q[\d]+", obj):
+                                    self.connected_entities_set.add(obj)
+                        tr, cnt = self.document.search_triples("", "", f"{self.prefixes['entity']}/{entity}")
+                        if cnt < 10000:
+                            for triplet in tr:
+                                obj = triplet[0].split('/')[-1].split("^^")[0].strip('"')
+                                if re.findall("Q[\d]+", obj):
+                                    self.connected_entities_set.add(obj)
+                    if self.file_format == "pickle":
+                        triplets = self.document.get(entity, {})
+                        if triplets:
+                            if "forw" in triplets:
+                                uncompressed_triplets = self.uncompress(triplets["forw"])
+                                for triplet in uncompressed_triplets:
+                                    for obj in triplet[1:]:
+                                        self.connected_entities_set.add(obj)
+                            if "backw" in triplets:
+                                uncompressed_triplets = self.uncompress(triplets["backw"])
+                                for triplet in uncompressed_triplets:
+                                    for obj in triplet[1:]:
+                                        self.connected_entities_set.add(obj)
+            elif parser_info == "find_entities_in_subgraph":
+                entities = set(query).intersection(self.connected_entities_set)
+                if not entities:
+                    entities = query
+                log.debug(f"found intersection with subgraph, {entities}")
+                wiki_parser_output.append(list(entities))
+            elif parser_info == "retrieve_grounded_entities":
+                log.debug(f"retrieve grounded entities, {self.grounded_entities_set}")
+                wiki_parser_output.append(list(self.grounded_entities_set))
             elif parser_info == "find_triplets":
                 if self.file_format == "hdt":
-                    tr, c = self.document.search_triples(*query)
-                    wiki_parser_output.append(list(tr))
+                    triplets = []
+                    try:
+                        triplets_forw, c = self.document.search_triples(f"{self.prefixes['entity']}/{query}", "", "")
+                        triplets.extend([triplet for triplet in triplets_forw
+                                             if not triplet[2].startswith(self.prefixes["statement"])])
+                        triplets_backw, c = self.document.search_triples("", "", f"{self.prefixes['entity']}/{query}")
+                        triplets.extend([triplet for triplet in triplets_forw
+                                             if not triplet[0].startswith(self.prefixes["statement"])])
+                    except:
+                        log.info("Wrong arguments are passed to wiki_parser")
+                    wiki_parser_output.append(list(triplets))
                 else:
                     triplets = {}
                     try:
                         triplets = self.document.get(query, {})
-                    except TypeError:
+                    except:
                         log.info("Wrong arguments are passed to wiki_parser")
                     uncompressed_triplets = {}
                     if triplets:
@@ -102,6 +185,7 @@ class WikiParser:
                 wiki_parser_output.append("ok")
             else:
                 raise ValueError("Unsupported query type")
+        
         return wiki_parser_output
 
     def execute(self, what_return: List[str],
@@ -124,61 +208,63 @@ class WikiParser:
         """
         extended_combs = []
         combs = []
-        if "qualifier" not in filter_info:
-            for n, query in enumerate(query_seq):
-                unknown_elem_positions = [(pos, elem) for pos, elem in enumerate(query) if elem.startswith('?')]
-                """
-                    n = 0, query = ["?ent", "http://www.wikidata.org/prop/direct/P17",
-                                                                                "http://www.wikidata.org/entity/Q159"]
-                           unknown_elem_positions = ["?ent"]
-                    n = 1, query = ["?ent", "http://www.wikidata.org/prop/direct/P31",
+        
+        for n, query in enumerate(query_seq):
+            unknown_elem_positions = [(pos, elem) for pos, elem in enumerate(query) if elem.startswith('?')]
+            """
+                n = 0, query = ["?ent", "http://www.wikidata.org/prop/direct/P17",
+                                                                            "http://www.wikidata.org/entity/Q159"]
+                       unknown_elem_positions = ["?ent"]
+                n = 1, query = ["?ent", "http://www.wikidata.org/prop/direct/P31",
+                                                                        "http://www.wikidata.org/entity/Q23397"]
+                       unknown_elem_positions = [(0, "?ent")]
+                n = 2, query = ["?ent", "http://www.wikidata.org/prop/direct/P4511", "?obj"]
+                       unknown_elem_positions = [(0, "?ent"), (2, "?obj")]
+            """
+            if n == 0:
+                combs = self.search(query, unknown_elem_positions)
+                # combs = [{"?ent": "http://www.wikidata.org/entity/Q5513"}, ...]
+            else:
+                if combs:
+                    known_elements = []
+                    extended_combs = []
+                    if query[0].startswith("?") and query[2].startswith("?"):
+                        for elem in query:
+                            if elem in combs[0].keys():
+                                known_elements.append(elem)
+                        for comb in combs:
+                            """
+                                n = 1
+                                query = ["?ent", "http://www.wikidata.org/prop/direct/P31",
                                                                             "http://www.wikidata.org/entity/Q23397"]
-                           unknown_elem_positions = [(0, "?ent")]
-                    n = 2, query = ["?ent", "http://www.wikidata.org/prop/direct/P4511", "?obj"]
-                           unknown_elem_positions = [(0, "?ent"), (2, "?obj")]
-                """
-                if n == 0:
-                    combs = self.search(query, unknown_elem_positions)
-                    # combs = [{"?ent": "http://www.wikidata.org/entity/Q5513"}, ...]
-                else:
-                    if combs:
-                        known_elements = []
-                        extended_combs = []
-                        if query[0].startswith("?") and query[2].startswith("?"):
-                            for elem in query:
-                                if elem in combs[0].keys():
-                                    known_elements.append(elem)
-                            for comb in combs:
-                                """
-                                    n = 1
-                                    query = ["?ent", "http://www.wikidata.org/prop/direct/P31",
-                                                                                "http://www.wikidata.org/entity/Q23397"]
-                                    comb = {"?ent": "http://www.wikidata.org/entity/Q5513"}
-                                    known_elements = ["?ent"], known_values = ["http://www.wikidata.org/entity/Q5513"]
-                                    filled_query = ["http://www.wikidata.org/entity/Q5513", 
-                                                    "http://www.wikidata.org/prop/direct/P31", 
-                                                    "http://www.wikidata.org/entity/Q23397"]
-                                    new_combs = [["http://www.wikidata.org/entity/Q5513", 
-                                                  "http://www.wikidata.org/prop/direct/P31", 
-                                                  "http://www.wikidata.org/entity/Q23397"], ...]
-                                    extended_combs = [{"?ent": "http://www.wikidata.org/entity/Q5513"}, ...]
-                                """
-                                known_values = [comb[known_elem] for known_elem in known_elements]
-                                for known_elem, known_value in zip(known_elements, known_values):
-                                    filled_query = [elem.replace(known_elem, known_value) for elem in query]
-                                    new_combs = self.search(filled_query, unknown_elem_positions)
-                                    for new_comb in new_combs:
-                                        extended_combs.append({**comb, **new_comb})
-                        else:
-                            new_combs = self.search(query, unknown_elem_positions)
-                            for comb in combs:
+                                comb = {"?ent": "http://www.wikidata.org/entity/Q5513"}
+                                known_elements = ["?ent"], known_values = ["http://www.wikidata.org/entity/Q5513"]
+                                filled_query = ["http://www.wikidata.org/entity/Q5513", 
+                                                "http://www.wikidata.org/prop/direct/P31", 
+                                                "http://www.wikidata.org/entity/Q23397"]
+                                new_combs = [["http://www.wikidata.org/entity/Q5513", 
+                                              "http://www.wikidata.org/prop/direct/P31", 
+                                              "http://www.wikidata.org/entity/Q23397"], ...]
+                                extended_combs = [{"?ent": "http://www.wikidata.org/entity/Q5513"}, ...]
+                            """
+                            known_values = [comb[known_elem] for known_elem in known_elements]
+                            for known_elem, known_value in zip(known_elements, known_values):
+                                filled_query = [elem.replace(known_elem, known_value) for elem in query]
+                                new_combs = self.search(filled_query, unknown_elem_positions)
                                 for new_comb in new_combs:
                                     extended_combs.append({**comb, **new_comb})
-                    combs = extended_combs
+                    else:
+                        new_combs = self.search(query, unknown_elem_positions)
+                        for comb in combs:
+                            for new_comb in new_combs:
+                                extended_combs.append({**comb, **new_comb})
+                combs = extended_combs
 
         if combs:
             if filter_info:
                 for filter_elem, filter_value in filter_info:
+                    if filter_value == "qualifier":
+                        filter_value = "wpq/"
                     combs = [comb for comb in combs if filter_value in comb[filter_elem]]
 
             if order_info and not isinstance(order_info, list) and order_info.variable is not None:
@@ -186,9 +272,9 @@ class WikiParser:
                 sort_elem = order_info.variable
                 for i in range(len(combs)):
                     value_str = combs[i][sort_elem].split('^^')[0].strip('"')
-                    if value_str.endswith("T00:00:00Z"):
-                        value_str = value_str.strip("T00:00:00Z")
-                        combs[i][sort_elem] = value_str
+                    fnd = re.findall("[\d]{3,4}-[\d]{1,2}-[\d]{1,2}")
+                    if fnd:
+                        combs[i][sort_elem] = fnd[0]
                     else:
                         combs[i][sort_elem] = float(value_str)
                 combs = sorted(combs, key=lambda x: x[sort_elem], reverse=reverse)
@@ -198,6 +284,7 @@ class WikiParser:
                 combs = [[combs[0][key] for key in what_return[:-1]] + [len(combs)]]
             else:
                 combs = [[elem[key] for key in what_return] for elem in combs]
+            
             if answer_types:
                 answer_types = set(answer_types)
                 combs = [[entity for entity in comb
@@ -210,7 +297,7 @@ class WikiParser:
         subj, rel, obj = query
         if self.file_format == "hdt":
             triplets, c = self.document.search_triples(subj, rel, obj)
-            if rel == self.description_rel:
+            if rel == self.prefixes["description"]:
                 triplets = [triplet for triplet in triplets if triplet[2].endswith(self.lang)]
             combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
         else:
@@ -221,7 +308,7 @@ class WikiParser:
                 obj, triplets = self.find_triplets(obj, "backw")
                 triplets = [[subj, triplet[0], obj] for triplet in triplets for subj in triplet[1:]]
             if rel:
-                if rel == self.description_rel:
+                if rel == self.prefixes["description"]:
                     triplets = [triplet for triplet in triplets if triplet[1] == "descr_en"]
                 else:
                     rel = rel.split('/')[-1]
@@ -232,13 +319,13 @@ class WikiParser:
     def find_label(self, entity: str, question: str) -> str:
         entity = str(entity).replace('"', '')
         if self.file_format == "hdt":
-            if entity.startswith("Q"):
+            if entity.startswith("Q") or entity.startswith("P"):
                 # example: "Q5513"
-                entity = "http://www.wikidata.org/entity/" + entity
+                entity = f"{self.prefixes['entity']}/{entity}"
                 # "http://www.wikidata.org/entity/Q5513"
 
-            if entity.startswith("http://www.wikidata.org/entity/"):
-                labels, c = self.document.search_triples(entity, "http://www.w3.org/2000/01/rdf-schema#label", "")
+            if entity.startswith(self.prefixes["entity"]):
+                labels, c = self.document.search_triples(entity, self.prefixes["label"], "")
                 # labels = [["http://www.wikidata.org/entity/Q5513", "http://www.w3.org/2000/01/rdf-schema#label",
                 #                                                    '"Lake Baikal"@en'], ...]
                 for label in labels:
@@ -267,7 +354,7 @@ class WikiParser:
                 return entity
         if self.file_format == "pickle":
             if entity:
-                if entity.startswith("Q"):
+                if entity.startswith("Q") or entity.startswith("P"):
                     triplets = self.document.get(entity, {}).get("forw", [])
                     triplets = self.uncompress(triplets)
                     for triplet in triplets:
@@ -296,38 +383,109 @@ class WikiParser:
 
     def find_alias(self, entity: str) -> List[str]:
         aliases = []
-        if entity.startswith("http://www.wikidata.org/entity/"):
-            labels, cardinality = self.document.search_triples(entity,
-                                                               "http://www.w3.org/2004/02/skos/core#altLabel", "")
+        if entity.startswith(self.prefixes["entity"]):
+            labels, cardinality = self.document.search_triples(entity, self.prefixes["alias"], "")
             aliases = [label[2].strip(self.lang).strip('"') for label in labels if label[2].endswith(self.lang)]
         return aliases
 
-    def find_rels(self, entity: str, direction: str, rel_type: str = "no_type") -> List[str]:
+    def find_rels(self, entity: str, direction: str, rel_type: str = "no_type", save: bool = False) -> List[str]:
         rels = []
         if self.file_format == "hdt":
+            if not rel_type:
+                rel_type = "direct"
             if direction == "forw":
-                query = [f"http://www.wikidata.org/entity/{entity}", "", ""]
+                query = [f"{self.prefixes['entity']}/{entity}", "", ""]
             else:
-                query = ["", "", f"http://www.wikidata.org/entity/{entity}"]
+                query = ["", "", f"{self.prefixes['entity']}/{entity}"]
             triplets, c = self.document.search_triples(*query)
 
-            if rel_type != "no_type":
-                start_str = f"http://www.wikidata.org/prop/{rel_type}"
-            else:
-                start_str = "http://www.wikidata.org/prop/P"
-            rels = [triplet[1] for triplet in triplets if triplet[1].startswith(start_str)]
+            start_str = f"{self.prefixes['rels'][rel_type]}/P"
+            rels = {triplet[1] for triplet in triplets if triplet[1].startswith(start_str)}
+            rels = list(rels)
         if self.file_format == "pickle":
             triplets = self.document.get(entity, {}).get(direction, [])
             triplets = self.uncompress(triplets)
             rels = [triplet[0] for triplet in triplets if triplet[0].startswith("P")]
         return rels
         
+    def retrieve_paths(self, entity: str, paths: List[List[str]]) -> List[List[str]]:
+        retrieved_paths = []
+        for path in paths:
+            rel_1 = path[0]
+            if rel_1.startswith("~"):
+                dir_1 = "backw"
+            else:
+                dir_1 = "forw"
+            rel_1 = rel_1.strip("~")
+            if self.file_format == "hdt":
+                if dir_1 == "forw":
+                    query_1 = [f"{self.prefixes['entity']}/{entity}", f"{self.prefixes['rels']['direct']}/{rel_1}", ""]
+                else:
+                    query_1 = ["", f"{self.prefixes['rels']['direct']}/{rel_1}", f"{self.prefixes['entity']}/{entity}"]
+                tr, cnt = self.document.search_triples(*query_1)
+                
+                if dir_1 == "forw":
+                    objects_1 = [triplet[2].split('/')[-1] for triplet in tr]
+                else:
+                    objects_1 = [triplet[0].split('/')[-1] for triplet in tr]
+                    
+                if objects_1:
+                    if len(path) == 1:
+                        chosen_obj = random.choice(objects_1)
+                        if dir_1 == "forw":
+                            retrieved_paths.append([self.find_label(rel_1, ""), self.find_label(chosen_obj, "")])
+                        else:
+                            retrieved_paths.append([self.find_label(chosen_obj, ""), self.find_label(rel_1, "")])
+                    else:
+                        cur_paths = []
+                        rel_2 = path[1]
+                        if rel_2.startswith("~"):
+                            dir_2 = "backw"
+                        else:
+                            dir_2 = "forw"
+                        rel_2 = rel_2.strip("~")
+                        for obj_1 in objects_1:
+                            if obj_1.startswith("Q"):
+                                if dir_2 == "forw":
+                                    query_2 = [f"{self.prefixes['entity']}/{obj_1}", f"{self.prefixes['rels']['direct']}/{rel_2}", ""]
+                                else:
+                                    query_2 = ["", f"{self.prefixes['rels']['direct']}/{rel_2}", f"{self.prefixes['entity']}/{obj_1}"]
+                                tr, cnt = self.document.search_triples(*query_2)
+                                
+                                if dir_2 == "forw":
+                                    objects_2 = [triplet[2].split('/')[-1] for triplet in tr]
+                                else:
+                                    objects_2 = [triplet[0].split('/')[-1] for triplet in tr]
+            
+                                if objects_2:
+                                    chosen_obj = random.choice(objects_2)
+                                    if dir_1 == "forw" and dir_2 == "forw":
+                                        cur_paths.append([self.find_label(rel_1, ""), self.find_label(obj_1, ""),
+                                                                self.find_label(rel_2, ""), self.find_label(chosen_obj, "")])
+                                    elif dir_1 == "forw" and dir_2 == "backw":
+                                        cur_paths.append([self.find_label(rel_1, ""), self.find_label(obj_1, ""),
+                                                                self.find_label(chosen_obj, ""), self.find_label(rel_2, ""),
+                                                                self.find_label(obj_1, "")])
+                                    elif dir_1 == "backw" and dir_2 == "forw":
+                                        cur_paths.append([self.find_label(obj_1, ""), self.find_label(rel_1, ""),
+                                                                self.find_label(obj_1, ""), self.find_label(rel_2, ""),
+                                                                self.find_label(chosen_obj, "")])
+                                    else:
+                                        cur_paths.append([self.find_label(obj_1, ""), self.find_label(rel_1, ""),
+                                                                self.find_label(chosen_obj, ""), self.find_label(rel_2, ""),
+                                                                self.find_label(obj_1, "")])
+                        
+                        retrieved_paths.append(random.choice(cur_paths))
+                        
+        return retrieved_paths
+        
+        
     def find_types(self, entity: str):
         types = []
         if self.file_format == "hdt":
             if not entity.startswith("http"):
-                entity = "http://www.wikidata.org/entity/{entity}"
-            tr, c = self.document.search_triples(entity, "http://www.wikidata.org/prop/direct/P31", "")
+                entity = f"{self.prefixes['entity']}/{entity}"
+            tr, c = self.document.search_triples(entity, f"{self.prefixes['rels']['direct']}/P31", "")
             types = [triplet[2].split('/')[-1] for triplet in tr]
         if self.file_format == "pickle":
             entity = entity.split('/')[-1]

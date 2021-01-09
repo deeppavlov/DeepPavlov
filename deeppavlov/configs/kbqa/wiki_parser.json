@@ -6,8 +6,8 @@
         "class_name": "wiki_parser",
         "in": ["parser_info", "query"],
         "out": ["wiki_parser_output"],
-        "wiki_filename": "{DOWNLOADS_PATH}/wikidata/wikidata_compr.pickle",
-        "file_format": "pickle",
+        "wiki_filename": "{DOWNLOADS_PATH}/wikidata/wikidata_lite.hdt",
+        "file_format": "hdt",
         "lang": "@en"
       }
     ],
@@ -23,7 +23,11 @@
     "requirements": ["{DEEPPAVLOV_PATH}/requirements/hdt.txt"],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata_compr.pickle",
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata_lite.hdt",
+        "subdir": "{DOWNLOADS_PATH}/wikidata"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata_lite.hdt.index.v1-1",
         "subdir": "{DOWNLOADS_PATH}/wikidata"
       }
     ]
