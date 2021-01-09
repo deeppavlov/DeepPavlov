@@ -67,12 +67,14 @@ class HashingTfIdfVectorizer(Estimator):
     """
 
     def __init__(self, tokenizer: Component, hash_size=2 ** 24, doc_index: Optional[dict] = None, top_n: int = 16,
-                 save_path: Optional[str] = None, load_path: Optional[str] = None, **kwargs):
+                 use_tfidf_scores: bool = True, save_path: Optional[str] = None,
+                 load_path: Optional[str] = None, **kwargs):
 
         super().__init__(save_path=save_path, load_path=load_path, mode=kwargs.get('mode', 'infer'))
 
         self.hash_size = hash_size
         self.top_n = top_n
+        self.use_tfidf_scores = use_tfidf_scores
         self.tokenizer = tokenizer
         self.rows = []
         self.cols = []
@@ -151,10 +153,11 @@ class HashingTfIdfVectorizer(Estimator):
                 tfidf_scores.append(0.0)
                 idf_scores.append(0.0)
         
-        indices = np.argsort(tfidf_scores)[::-1][:self.top_n]
-        top_paragraphs = [paragraphs[ind] for ind in indices]
         indices = np.argsort(idf_scores)[::-1][:self.top_n]
-        top_paragraphs += [paragraphs[ind] for ind in indices]
+        top_paragraphs = [paragraphs[ind] for ind in indices]
+        if self.use_tfidf_scores:
+            indices = np.argsort(tfidf_scores)[::-1][:self.top_n]
+            top_paragraphs += [paragraphs[ind] for ind in indices]
         
         return top_paragraphs
     

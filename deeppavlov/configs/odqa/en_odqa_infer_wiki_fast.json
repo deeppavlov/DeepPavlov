@@ -1,19 +1,20 @@
 {
   "chainer": {
     "in": ["question_raw"],
-    "out": ["answer", "answer_score", "answer_place"],
+    "out": ["answer", "answer_score", "answer_place", "answer_sentence", "answer_context"],
     "pipe": [
       {
         "class_name": "hashing_tfidf_vectorizer",
         "id": "vectorizer",
-        "parallel": true,
         "fit_on": [
           "docs",
           "doc_ids",
           "doc_nums"
         ],
-        "save_path": "{MODELS_PATH}/odqa/enwiki_tfidf_matrix.npz",
-        "load_path": "{MODELS_PATH}/odqa/enwiki_tfidf_matrix.npz",
+        "top_n": 32,
+        "use_tfidf_scores": false,
+        "save_path": "{MODELS_PATH}/odqa/enwiki_tfidf_matrix_compr.npz",
+        "load_path": "{MODELS_PATH}/odqa/enwiki_tfidf_matrix_compr.npz",
         "tokenizer": {
           "class_name": "stream_spacy_tokenizer",
           "lemmas": true,
@@ -63,8 +64,9 @@
         "batch_size": 64,
         "squad_model": {"config_path": "{CONFIGS_PATH}/squad/multi_squad_noans_infer.json"},
         "sort_noans": true,
+        "return_answer_sentence": true,
         "in": ["top_paragraphs", "questions"],
-        "out": ["answer", "answer_score", "answer_place"]
+        "out": ["answer", "answer_score", "answer_place", "answer_sentence", "answer_context"]
       }
     ]
   },
@@ -86,7 +88,7 @@
         "subdir": "{DOWNLOADS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/en_odqa.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/en_odqa_compr.tar.gz",
         "subdir": "{MODELS_PATH}"
       }
     ]
