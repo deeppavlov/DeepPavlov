@@ -46,7 +46,7 @@ class WikiParser:
                                    },
                            "statement": "http://ws"
                        },
-                       dialog_mode: bool = False,
+                       max_comb_num: int = 1e6,
                        lang: str = "@en", **kwargs) -> None:
         """
 
@@ -68,8 +68,7 @@ class WikiParser:
         else:
             raise ValueError("Unsupported file format")
         
-        self.grounded_entities_set = set()
-        self.connected_entities_set = set()
+        self.max_comb_num = max_comb_num
         self.lang = lang
 
     def __call__(self, parser_info_list: List[str], queries_list: List[Any]) -> List[Any]:
@@ -231,7 +230,7 @@ class WikiParser:
                 if combs:
                     known_elements = []
                     extended_combs = []
-                    if query[0].startswith("?") and query[2].startswith("?"):
+                    if query[0].startswith("?"):
                         for elem in query:
                             if elem in combs[0].keys():
                                 known_elements.append(elem)
@@ -300,10 +299,14 @@ class WikiParser:
         query = list(map(lambda elem: "" if elem.startswith('?') else elem, query))
         subj, rel, obj = query
         if self.file_format == "hdt":
-            triplets, c = self.document.search_triples(subj, rel, obj)
-            if rel == self.prefixes["description"]:
-                triplets = [triplet for triplet in triplets if triplet[2].endswith(self.lang)]
-            combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
+            combs = []
+            triplets, cnt = self.document.search_triples(subj, rel, obj)
+            if cnt < self.max_comb_num:
+                if rel == self.prefixes["description"]:
+                    triplets = [triplet for triplet in triplets if triplet[2].endswith(self.lang)]
+                combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
+            else:
+                log.debug("max comb num exceede")
         else:
             if subj:
                 subj, triplets = self.find_triplets(subj, "forw")
@@ -318,6 +321,7 @@ class WikiParser:
                     rel = rel.split('/')[-1]
                     triplets = [triplet for triplet in triplets if triplet[1] == rel]
             combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
+        
         return combs
 
     def find_label(self, entity: str, question: str) -> str:

@@ -8,6 +8,7 @@
         "out": ["wiki_parser_output"],
         "wiki_filename": "{DOWNLOADS_PATH}/wikidata/wikidata_lite.hdt",
         "file_format": "hdt",
+        "max_comb_num": 1000,
         "lang": "@en"
       }
     ],
