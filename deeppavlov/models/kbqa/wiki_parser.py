@@ -76,11 +76,11 @@ class WikiParser:
         query_answer_types = []
         for parser_info, query in zip(parser_info_list, queries_list):
             if parser_info == "query_execute":
-                what_return, query_seq, filter_info, order_info, answer_types, return_if_found = query
-                if answer_types:
-                    query_answer_types = answer_types
-                candidate_output = {}
+                candidate_output = []
                 try:
+                    what_return, query_seq, filter_info, order_info, answer_types, return_if_found = query
+                    if answer_types:
+                        query_answer_types = answer_types
                     candidate_output = self.execute(what_return, query_seq, filter_info, order_info,
                                                                  query_answer_types)
                 except:
