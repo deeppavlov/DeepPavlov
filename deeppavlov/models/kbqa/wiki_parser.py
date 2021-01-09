@@ -95,6 +95,20 @@ class WikiParser:
                 except:
                     log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output += rels
+            elif parser_info == "find_object":
+                objects = []
+                try:
+                    objects = self.find_object(*query)
+                except:
+                    log.info("Wrong arguments are passed to wiki_parser")
+                wiki_parser_output.append(objects)
+            elif parser_info == "check_triplet":
+                check_res = False
+                try:
+                    check_res = self.check_triplet(*query)
+                else:
+                    log.info("Wrong arguments are passed to wiki_parser")
+                wiki_parser_output.append(check_res)
             elif parser_info == "find_label":
                 label = ""
                 try:
@@ -415,6 +429,52 @@ class WikiParser:
             triplets = self.uncompress(triplets)
             rels = [triplet[0] for triplet in triplets if triplet[0].startswith("P")]
         return rels
+        
+    def find_object(self, entity: str, rel: str, direction: str) -> List[str]:
+        objects = []
+        if self.file_format == "hdt":
+            entity = f"{self.prefixes['entity']}/{entity.split('/')[-1]}"
+            rel = f"{self.prefixes['rels']['direct']}/{rel}"
+            if direction == "forw":
+                triplets, cnt = self.document.search_triples(entity, rel, "")
+                if cnt < self.max_comb_num:
+                    objects.extend([triplet[2] for triplet in triplets])
+            else:
+                triplets, cnt = self.document.search_triples("", rel, entity)
+                if cnt < self.max_comb_num:
+                    objects.extend([triplet[0] for triplet in triplets])
+        else:
+            entity = entity.split('/')[-1]
+            rel = rel.split('/')[-1]
+            triplets = self.document.get(entity, {}).get(direction, [])
+            triplets = self.uncompress(triplets)
+            for found_rel, *objects in triplets:
+                if rel == found_rel:
+                    objects.extend(objects)
+        return objects
+        
+    def check_triplet(self, subj: str, rel: str, obj: str) -> bool:
+        if self.file_format == "hdt":
+            subj = f"{self.prefixes['entity']}/{subj}"
+            rel = f"{self.prefixes['rels']['direct']}/{rel}"
+            obj = f"{self.prefixes['entity']}/{obj}"
+            triplets, cnt == self.document.search_triples(subj, rel, obj)
+            if cnt > 0:
+                return True
+            else:
+                return False
+        else:
+            entity = entity.split('/')[-1]
+            rel = rel.split('/')[-1]
+            obj = obj.split('/')[-1]
+            triplets = self.document.get(entity, {}).get("forw", [])
+            triplets = self.uncompress(triplets)
+            for found_rel, *objects in triplets:
+                if found_rel == rel:
+                    for found_obj in objects:
+                        if found_obj == obj:
+                            return True
+            return False
         
     def retrieve_paths(self, entity: str, paths: List[List[str]]) -> List[List[str]]:
         retrieved_paths = []
