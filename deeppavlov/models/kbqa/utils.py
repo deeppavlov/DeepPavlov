@@ -84,13 +84,12 @@ def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], r
                    rel_comb: ["P17"]
     '''
     query = " ".join(query)
-    map_query_str_to_wikidata = [("P0", "http://schema.org/description"),
-                                 ("wd:", "http://www.wikidata.org/entity/"),
-                                 ("wdt:", "http://www.wikidata.org/prop/direct/"),
-                                 (" p:", " http://www.wikidata.org/prop/"),
-                                 ("wdt:", "http://www.wikidata.org/prop/direct/"),
-                                 ("ps:", "http://www.wikidata.org/prop/statement/"),
-                                 ("pq:", "http://www.wikidata.org/prop/qualifier/")]
+    map_query_str_to_wikidata = [("P0", "http://wd"),
+                                 ("wd:", "http://we/"),
+                                 ("wdt:", "http://wpd/"),
+                                 (" p:", " http://wp/"),
+                                 ("ps:", "http://wps/"),
+                                 ("pq:", "http://wpq/")]
 
     for query_str, wikidata_str in map_query_str_to_wikidata:
         query = query.replace(query_str, wikidata_str)
@@ -100,7 +99,7 @@ def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], r
         query = query.replace(f"t{n + 1}", entity_type)
     for n, (rel, score) in enumerate(rel_comb[:-1]):
         query = query.replace(f"r{n + 1}", rel)
-    query = query.replace("http://www.wikidata.org/prop/direct/P0", "http://schema.org/description")
+    query = query.replace("http://wpd/P0", "http://wd")
     query = query.split(' ')
     return query
 
@@ -153,7 +152,10 @@ def filter_answers(question: str, answer_types: List[str] = None):
     # Q15711870 - animated character
     # Q15773317 - television character
     if answer_types:
-        return answer_types
+        if answer_types == ["no_type"]:
+            return []
+        else:
+            return answer_types
     elif "who" in question:
         return ["Q5", "Q15773347", "Q95074", "Q15632617", "Q3658341", "Q1114461", "Q15711870", "Q15773317"]
     else:
