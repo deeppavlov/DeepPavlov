@@ -438,11 +438,11 @@ class WikiParser:
             if direction == "forw":
                 triplets, cnt = self.document.search_triples(entity, rel, "")
                 if cnt < self.max_comb_num:
-                    objects.extend([triplet[2] for triplet in triplets])
+                    objects.extend([triplet[2].split('/')[-1] for triplet in triplets])
             else:
                 triplets, cnt = self.document.search_triples("", rel, entity)
                 if cnt < self.max_comb_num:
-                    objects.extend([triplet[0] for triplet in triplets])
+                    objects.extend([triplet[0].split('/')[-1] for triplet in triplets])
         else:
             entity = entity.split('/')[-1]
             rel = rel.split('/')[-1]
