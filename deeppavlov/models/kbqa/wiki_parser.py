@@ -74,13 +74,16 @@ class WikiParser:
 
     def __call__(self, parser_info_list: List[str], queries_list: List[Any]) -> List[Any]:
         wiki_parser_output = []
-        
+        query_answer_types = []
         for parser_info, query in zip(parser_info_list, queries_list):
             if parser_info == "query_execute":
-                *query_to_execute, return_if_found = query
+                what_return, query_seq, filter_info, order_info, answer_types, return_if_found = query
+                if answer_types:
+                    query_answer_types = answer_types
                 candidate_output = {}
                 try:
-                    candidate_output = self.execute(*query_to_execute)
+                    candidate_output = self.execute(what_return, query_seq, filter_info, order_info,
+                                                                 query_answer_types)
                 except:
                     log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(candidate_output)
@@ -289,6 +292,7 @@ class WikiParser:
                 answer_types = set(answer_types)
                 combs = [[entity for entity in comb
                               if answer_types.intersection(self.find_types(entity))] for comb in combs]
+                combs = [comb for comb in combs if any([entity for entity in comb])]
 
         return combs
 

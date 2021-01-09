@@ -192,8 +192,11 @@ class QueryGenerator(QueryGeneratorBase):
                 fill_query(query_hdt_elem, combs[0], combs[1], combs[2]) for query_hdt_elem in query_sequence]
             if comb_num == 0:
                 log.debug(f"\n__________________________\nfilled query: {query_hdt_seq}\n__________________________\n")
+            if comb_num > 0:
+                 answer_types = []
             queries_list.append((rels_from_query + answer_ent, query_hdt_seq, filter_info, order_info, answer_types,
                                  return_if_found))
+            
             parser_info_list.append("query_execute")
             if comb_num == self.max_comb_num:
                 break

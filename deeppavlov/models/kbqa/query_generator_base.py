@@ -51,6 +51,7 @@ class QueryGeneratorBase(Component, Serializable):
                  rels_to_leave: int = 7,
                  syntax_structure_known: bool = False,
                  use_api_requester: bool = False,
+                 use_alt_templates: bool = True,
                  return_answers: bool = False, *args, **kwargs) -> None:
         """
 
@@ -87,6 +88,7 @@ class QueryGeneratorBase(Component, Serializable):
         self.rels_to_leave = rels_to_leave
         self.syntax_structure_known = syntax_structure_known
         self.use_api_requester = use_api_requester
+        self.use_alt_templates = use_alt_templates
         self.sparql_queries_filename = sparql_queries_filename
         self.return_answers = return_answers
 
@@ -171,12 +173,12 @@ class QueryGeneratorBase(Component, Serializable):
                 try:
                     el_output = self.linker_entities([entities], [template_found], [question], [entity_types])
                 except json.decoder.JSONDecodeError:
-                    print("not received output from entity linking")
+                    log.info("not received output from entity linking")
             else:
                 try:
                     el_output = self.linker_entities([entities], [template_found], [question])
                 except json.decoder.JSONDecodeError:
-                    print("not received output from entity linking")
+                    log.info("not received output from entity linking")
             if self.use_api_requester:
                 el_output = el_output[0]
             entity_ids, _ = el_output
@@ -195,6 +197,7 @@ class QueryGeneratorBase(Component, Serializable):
                                rels_from_template: Optional[List[Tuple[str]]] = None,
                                rel_dirs_from_template: Optional[List[str]] = None) -> List[Tuple[str]]:
         candidate_outputs = []
+        log.debug(f"use alternative templates {self.use_alt_templates}")
         log.debug(f"(find_candidate_answers)self.template_nums: {self.template_nums}")
         templates = []
         for template_num in self.template_nums:
@@ -227,7 +230,7 @@ class QueryGeneratorBase(Component, Serializable):
                 if candidate_outputs:
                     return candidate_outputs
 
-            if not candidate_outputs:
+            if not candidate_outputs and self.use_alt_templates:
                 alternative_templates = templates[0]["alternative_templates"]
                 for template_num, entities_and_types_select in alternative_templates:
                     candidate_outputs = self.query_parser(question, self.template_queries[template_num],
@@ -250,7 +253,7 @@ class QueryGeneratorBase(Component, Serializable):
             try:
                 ex_rels = self.wiki_parser(parser_info_list, queries_list)
             except json.decoder.JSONDecodeError:
-                print("find_top_rels, not received output from wiki parser")
+                log.info("find_top_rels, not received output from wiki parser")
             if self.use_api_requester and ex_rels:
                 ex_rels = [rel[0] for rel in ex_rels]
             ex_rels = list(set(ex_rels))
