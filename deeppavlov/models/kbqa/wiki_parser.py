@@ -432,6 +432,8 @@ class WikiParser:
         
     def find_object(self, entity: str, rel: str, direction: str) -> List[str]:
         objects = []
+        if not direction:
+            direction = "forw"
         if self.file_format == "hdt":
             entity = f"{self.prefixes['entity']}/{entity.split('/')[-1]}"
             rel = f"{self.prefixes['rels']['direct']}/{rel}"
