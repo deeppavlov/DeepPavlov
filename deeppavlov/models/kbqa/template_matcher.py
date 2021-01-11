@@ -72,6 +72,21 @@ class TemplateMatcher(Serializable):
             Tuple[Union[List[str], list], list, Union[list, Any], Union[list, Any], Union[str, Any], Any, Union[
                 str, Any]]:
         question = question.lower()
+        found_first = False
+        found_second = False
+        for first_word in self.templates:
+            if first_word != "else" and first_word in question:
+                for second_word in self.templates[first_word]:
+                    if f"{first_word} {second_word}" in question:
+                        templates = self.templates[first_word][second_word]
+                        found_second = True
+                        break
+                if not found_second:
+                    templates = self.templates[first_word]["else"]
+                found_first = True
+                break
+        if not found_first:
+            templates = self.templates["else"]
         question = self.sanitize(question)
         question_length = len(question)
         entities, types, relations, relation_dirs = [], [], [], []
@@ -80,7 +95,7 @@ class TemplateMatcher(Serializable):
         entity_types = []
         template_answer = ""
         answer_types = []
-        results = self.pool.map(RegexpMatcher(question), self.templates)
+        results = self.pool.map(RegexpMatcher(question), templates)
         results = functools.reduce(lambda x, y: x + y, results)
         replace_tokens = [("the uk", "united kingdom"), ("the us", "united states")]
         if results:
