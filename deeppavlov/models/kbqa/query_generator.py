@@ -80,6 +80,7 @@ class QueryGenerator(QueryGeneratorBase):
 
         candidate_outputs_batch = []
         template_answers_batch = []
+        qg_tm1 = time.time()
         try:
             for question, question_sanitized, template_type, entities_from_ner, types_from_ner in \
                     zip(question_batch, question_san_batch, template_type_batch,
@@ -89,8 +90,11 @@ class QueryGenerator(QueryGeneratorBase):
                                                                                  types_from_ner)
                 candidate_outputs_batch.append(candidate_outputs)
                 template_answers_batch.append(template_answer)
-        except:
+        except Exception as e:
             log.info("query generator is broken")
+            log.exception(e)
+        qg_tm2 = time.time()
+        log.debug(f"--------query generator time {qg_tm2-qg_tm1}")
         if self.return_answers:
             answers = self.rel_ranker(question_batch, candidate_outputs_batch, entities_from_ner_batch,
                                       template_answers_batch)
