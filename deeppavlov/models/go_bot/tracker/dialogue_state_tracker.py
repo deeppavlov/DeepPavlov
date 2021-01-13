@@ -299,7 +299,7 @@ class MemorizingDialogueStateTracker(DialogueStateTracker):
         return stories
 
     def update_previous_action(self, prev_act_id: int) -> None:
-        super().update_previous_action(prev_act_id)
+        self.update_previous_action(prev_act_id)
         act_name = self.act_id2act[prev_act_id][0]
         for ix, (story_ptr, story) in enumerate(zip(self.stories_ptrs, self.stories)):
             next_action_ix = story_ptr + 1
