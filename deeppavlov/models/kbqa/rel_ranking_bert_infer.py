@@ -151,7 +151,10 @@ class RelRankerBertInfer(Component, Serializable):
                 else:
                     answer = answer_labels[0]
                 if self.return_sentence_answer:
-                    answer = sentence_answer(question, answer, entities, template_answer)
+                    try:
+                        answer = sentence_answer(question, answer, entities, template_answer)
+                    except:
+                        log.info("Error in sentence answer")
                 confidence = answers_with_scores[0][2]
 
             if self.return_confidences:
@@ -161,6 +164,11 @@ class RelRankerBertInfer(Component, Serializable):
                     answers.append((answer, answer_ids))
                 else:
                     answers.append(answer)
+        if not answers:
+            if self.return_confidences:
+                answers.append(("Not found", 0.0))
+            else:
+                answers.append("Not found")
 
         return answers
 
