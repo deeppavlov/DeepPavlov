@@ -64,6 +64,7 @@ class TorchTransformersPreprocessor(Component):
                                            do_lower_case=do_lower_case)
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+        self.sep_token_ids = self.tokenizer.encode("[SEP]")
 
     def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> Union[
             List[InputFeatures], Tuple[List[InputFeatures], List[List[str]]]]:
@@ -91,7 +92,20 @@ class TorchTransformersPreprocessor(Component):
                 pad_to_max_length=True, return_attention_mask=True, return_tensors='pt')
 
             if 'token_type_ids' not in encoded_dict:
-                encoded_dict['token_type_ids'] = torch.tensor([0])
+                input_ids = encoded_dict['input_ids'][0]
+                token_type_ids = [0 for _ in input_ids]
+                found_first_sep = False
+                for n, tok_id in enumerate(input_ids):
+                    if found_first_sep and not tok_id == self.sep_token_ids[1]:
+                        token_type_ids[n] = 1
+                    elif found_first_sep and tok_id == self.sep_token_ids[2]:
+                        break
+                    elif not found_first_sep and tok_id == self.sep_token_ids[1]:
+                        found_first_sep = True
+                    else:
+                        continue
+                        
+                encoded_dict['token_type_ids'] = torch.tensor([token_type_ids])
 
             curr_features = InputFeatures(input_ids=encoded_dict['input_ids'],
                                           attention_mask=encoded_dict['attention_mask'],

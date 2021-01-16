@@ -1,0 +1,97 @@
+{
+  "chainer": {
+    "in": [
+      "context_raw",
+      "question_raw"
+    ],
+    "pipe": [
+      {
+        "class_name": "torch_transformers_preprocessor",
+        "vocab_file": "distilbert-base-uncased",
+        "do_lower_case": true,
+        "max_seq_length": 384,
+        "return_tokens": true,
+        "in": [
+          "question_raw",
+          "context_raw"
+        ],
+        "out": [
+          "bert_features",
+          "subtokens"
+        ]
+      },
+      {
+        "class_name": "squad_bert_mapping",
+        "do_lower_case": true,
+        "in": [
+          "context_raw",
+          "bert_features",
+          "subtokens"
+        ],
+        "out": [
+          "subtok2chars",
+          "char2subtoks"
+        ]
+      },
+      {
+        "class_name": "torch_squad_bert_model",
+        "pretrained_bert": "distilbert-base-uncased-distilled-squad",
+        "save_path": "{MODELS_PATH}/model",
+        "load_path": "{MODELS_PATH}/model",
+        "optimizer": "AdamW",
+        "optimizer_parameters": {
+          "lr": 2e-5,
+          "weight_decay": 1e-2,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "eps": 1e-6
+        },
+        "learning_rate_drop_patience": 2,
+        "learning_rate_drop_div": 2.0,
+        "in": [
+          "bert_features"
+        ],
+        "out": [
+          "ans_start_predicted",
+          "ans_end_predicted",
+          "logits"
+        ]
+      },
+      {
+        "class_name": "squad_bert_ans_postprocessor",
+        "in": [
+          "ans_start_predicted",
+          "ans_end_predicted",
+          "context_raw",
+          "bert_features",
+          "subtok2chars",
+          "subtokens"
+        ],
+        "out": [
+          "ans_predicted",
+          "ans_start_predicted",
+          "ans_end_predicted"
+        ]
+      }
+    ],
+    "out": [
+      "ans_predicted",
+      "ans_start_predicted",
+      "logits"
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models/squad_torch_bert"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+      "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+    ]
+  }
+}
+

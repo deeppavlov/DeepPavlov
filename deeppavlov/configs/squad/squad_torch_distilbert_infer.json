@@ -1,0 +1,32 @@
+{
+  "chainer": {
+    "in": ["context_raw", "question_raw"],
+    "in_y": ["ans_raw", "ans_raw_start"],
+    "pipe": [
+      {
+        "class_name": "torch_squad_bert_infer",
+        "batch_size": 10,
+        "squad_model_config": "{CONFIGS_PATH}/squad/squad_torch_distilbert.json",
+        "vocab_file": "distilbert-base-uncased",
+        "do_lower_case": true,
+        "max_seq_length": 512,
+        "in": ["context_raw", "question_raw"],
+        "out": ["ans_predicted", "ans_start_predicted", "logits"]
+      }
+    ],
+    "out": ["ans_predicted", "ans_start_predicted", "logits"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models/squad_torch_bert",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+      "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+    ]
+  }
+}
+

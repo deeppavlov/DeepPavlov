@@ -22,6 +22,7 @@ import numpy as np
 import torch
 from overrides import overrides
 from transformers import BertForQuestionAnswering, BertConfig, BertTokenizer
+from transformers import DistilBertForQuestionAnswering, DistilBertTokenizer
 from transformers.data.processors.utils import InputFeatures
 
 from deeppavlov import build_model
@@ -160,7 +161,10 @@ class TorchBertSQuADModel(TorchModel):
 
         with torch.no_grad():
             # Forward pass, calculate logit predictions
-            outputs = self.model(input_ids=b_input_ids, attention_mask=b_input_masks, token_type_ids=b_input_type_ids)
+            if self.pretrained_bert.startswith("distilbert"):
+                outputs = self.model(input_ids=b_input_ids, attention_mask=b_input_masks)
+            else:
+                outputs = self.model(input_ids=b_input_ids, attention_mask=b_input_masks, token_type_ids=b_input_type_ids)
             logits_st, logits_end = outputs[:2]
 
             bs = b_input_ids.size()[0]
@@ -179,7 +183,7 @@ class TorchBertSQuADModel(TorchModel):
                                  end_probs.view(end_probs.size()[0], 1, end_probs.size()[1]))
             outer_logits = torch.exp(logits_st.view(*logits_st.size(), 1) + logits_end.view(
                 logits_end.size()[0], 1, logits_end.size()[1]))
-
+            
             context_max_len = torch.max(torch.sum(b_input_type_ids, dim=1)).to(torch.int64)
 
             max_ans_length = torch.min(torch.tensor(20).to(self.device), context_max_len).to(torch.int64).item()
@@ -206,8 +210,12 @@ class TorchBertSQuADModel(TorchModel):
             self.load_path = fname
 
         if self.pretrained_bert and not Path(self.pretrained_bert).is_file():
-            self.model = BertForQuestionAnswering.from_pretrained(
-                self.pretrained_bert, output_attentions=False, output_hidden_states=False)
+            if self.pretrained_bert.startswith("distilbert"):
+                self.model = DistilBertForQuestionAnswering.from_pretrained(
+                    self.pretrained_bert, output_attentions=False, output_hidden_states=False)
+            else:
+                self.model = BertForQuestionAnswering.from_pretrained(
+                    self.pretrained_bert, output_attentions=False, output_hidden_states=False)
         elif self.bert_config_file and Path(self.bert_config_file).is_file():
             self.bert_config = BertConfig.from_json_file(str(expand_path(self.bert_config_file)))
 
@@ -290,7 +298,10 @@ class TorchBertSQuADInferModel(Component):
             self.tokenizer = BertTokenizer(vocab_file=vocab_file,
                                            do_lower_case=do_lower_case)
         else:
-            self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+            if vocab_file.startswith("distilbert"):
+                self.tokenizer = DistilBertTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+            else:
+                self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
         self.batch_size = batch_size
 
