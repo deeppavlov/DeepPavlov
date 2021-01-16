@@ -19,6 +19,7 @@ from typing import List, Any, Tuple
 
 from pyserini.search import SimpleSearcher
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Component
 
@@ -29,7 +30,7 @@ logger = getLogger(__name__)
 class PyseriniRanker(Component):
     def __init__(self, index_folder: str, n_threads: int = 1, top_n: int = 5,
                        text_column_name: str = "contents", return_scores: bool = False, *args, **kwargs):
-        self.searcher = SimpleSearcher(index_folder)
+        self.searcher = SimpleSearcher(str(expand_path(index_folder)))
         self.n_threads = n_threads
         self.top_n = top_n
         self.text_column_name = text_column_name
@@ -41,7 +42,7 @@ class PyseriniRanker(Component):
             for question in questions:
                 docs = []
                 scores = []
-                res = self.searcher(question, self.top_n)
+                res = self.searcher.search(question, self.top_n)
                 for elem in res:
                     doc = json.loads(elem.raw)
                     score = elem.score

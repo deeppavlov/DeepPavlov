@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 import time
 from logging import getLogger
 from typing import List, Any, Tuple
@@ -62,6 +63,7 @@ class TfidfRanker(Component):
 
         batch_doc_ids, batch_docs_scores = [], []
 
+        tm_st = time.time()
         q_tfidfs = self.vectorizer(questions)
 
         for q_tfidf in q_tfidfs:
@@ -84,20 +86,45 @@ class TfidfRanker(Component):
             doc_ids = [self.vectorizer.index2doc[i] for i in o_sort]
             batch_doc_ids.append(doc_ids)
             batch_docs_scores.append(doc_scores)
+        tm_end = time.time()
+        logger.debug(f"tfidf ranker time {tm_end-tm_st}")
+        logger.debug(f"doc ids {batch_doc_ids}")
 
         return batch_doc_ids, batch_docs_scores
         
         
 @register("par_tfidf_ranker")
 class ParTfidfRanker(Component):
-    def __init__(self, vectorizer: HashingTfIdfVectorizer, **kwargs):
-        self.vectorizer = vectorizer
+    def __init__(self, tokenizer: Component, top_n: int = 10, **kwargs):
+        self.tokenizer = tokenizer
+        self.top_n = top_n
 
     def __call__(self, questions_batch: List[str], paragraphs_batch: List[List[str]]) -> Tuple[List[Any], List[float]]:
         batch_top_paragraphs = []
-        
+        tm_st = time.time()
         for question, paragraphs in zip(questions_batch, paragraphs_batch):
-            paragraphs = self.vectorizer.rank_paragraphs(question, paragraphs)
+            paragraphs = self.rank_paragraphs(question, paragraphs)
             batch_top_paragraphs.append(paragraphs)
+        paragraph_total_length = sum([len(chunk) for chunk in batch_top_paragraphs[0]])
+        tm_end = time.time()
+        logger.debug(f"paragraph ranking time {tm_end-tm_st}, length {paragraph_total_length}")
 
         return batch_top_paragraphs
+        
+    def rank_paragraphs(self, question: str, paragraphs: List[str]) -> List[str]:
+        ngrams = list(self.tokenizer([question]))[0]
+        idf_scores = []
+        
+        for paragraph in paragraphs:
+            ngrams_counts = [len(re.findall(f"{ngram}\W", paragraph, re.IGNORECASE)) for ngram in ngrams]
+            non_zero_counts = [(ngram, ngram_count) for ngram, ngram_count in zip(ngrams, ngrams_counts) if ngram_count > 0]
+            if non_zero_counts:
+                par_ngrams, ngrams_counts = zip(*non_zero_counts)
+                idf_scores.append(sum(ngrams_counts))
+            else:
+                idf_scores.append(0.0)
+        
+        indices = np.argsort(idf_scores)[::-1][:self.top_n]
+        top_paragraphs = [paragraphs[ind] for ind in indices]
+        
+        return top_paragraphs

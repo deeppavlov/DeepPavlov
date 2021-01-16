@@ -1,0 +1,67 @@
+{
+  "chainer": {
+    "in": ["question_raw"],
+    "out": ["answer", "answer_score", "answer_place", "answer_sentence", "answer_context"],
+    "pipe": [
+      {
+        "class_name": "pyserini_ranker",
+        "index_folder": "{DOWNLOADS_PATH}/wiki_index",
+        "in": ["question_raw"],
+        "out": ["doc_text"]
+      },
+      {
+        "class_name": "document_chunker",
+        "in": ["doc_text"],
+        "out": ["paragraphs"],
+        "flatten_result": true,
+        "number_of_paragraphs": 10,
+        "paragraphs": true
+      },
+      {
+        "class_name": "par_tfidf_ranker",
+        "in": ["question_raw", "paragraphs"],
+        "out": ["top_paragraphs"],
+        "tokenizer": {
+          "class_name": "stream_spacy_tokenizer",
+          "lemmas": true,
+          "lowercase": true,
+          "filter_stopwords": true,
+          "ngram_range": [1, 2]
+        }
+      },
+      {
+        "class_name": "string_multiplier",
+        "in": ["question_raw", "top_paragraphs"],
+        "out":["questions"]
+      },
+      {
+        "class_name": "logit_ranker",
+        "batch_size": 32,
+        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/multi_squad_noans_infer.json"},
+        "sort_noans": true,
+        "return_answer_sentence": true,
+        "in": ["top_paragraphs", "questions"],
+        "out": ["answer", "answer_score", "answer_place", "answer_sentence", "answer_context"]
+      }
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/wiki_index.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      }
+    ]
+  }
+}
