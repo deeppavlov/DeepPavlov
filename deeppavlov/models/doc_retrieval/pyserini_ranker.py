@@ -17,7 +17,7 @@ import time
 from logging import getLogger
 from typing import List, Any, Tuple
 
-from pyserini.searcher import SimpleSearcher
+from pyserini.search import SimpleSearcher
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Component
@@ -27,11 +27,13 @@ logger = getLogger(__name__)
 
 @register("pyserini_ranker")
 class PyseriniRanker(Component):
-    def __init__(self, index_folder: str, n_threads: int = 1, top_n: int = 5, text_column_name: str = "contents"):
+    def __init__(self, index_folder: str, n_threads: int = 1, top_n: int = 5,
+                       text_column_name: str = "contents", return_scores: bool = False):
         self.searcher = SimpleSearcher(index_folder)
         self.n_threads = n_threads
         self.top_n = top_n
         self.text_column_name = text_column_name
+        self.return_scores = return_scores
     def __call__(self, questions: List[str]) -> Tuple[List[Any], List[float]]:
         docs_batch = []
         scores_batch = []
@@ -67,4 +69,7 @@ class PyseriniRanker(Component):
                     docs_batch.append(docs)
                     scores_batch.append(scores)
         
-        return docs_batch, scores_batch
+        if self.return_scores:
+            return docs_batch, scores_batch
+        else:
+            return docs_batch
