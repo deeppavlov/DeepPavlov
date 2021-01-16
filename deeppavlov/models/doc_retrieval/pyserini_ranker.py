@@ -28,7 +28,7 @@ logger = getLogger(__name__)
 @register("pyserini_ranker")
 class PyseriniRanker(Component):
     def __init__(self, index_folder: str, n_threads: int = 1, top_n: int = 5,
-                       text_column_name: str = "contents", return_scores: bool = False):
+                       text_column_name: str = "contents", return_scores: bool = False, *args, **kwargs):
         self.searcher = SimpleSearcher(index_folder)
         self.n_threads = n_threads
         self.top_n = top_n
