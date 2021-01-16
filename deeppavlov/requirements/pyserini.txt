@@ -1,1 +1,1 @@
-pip install pyserini==0.10.1.0
+pyserini==0.10.1.0
