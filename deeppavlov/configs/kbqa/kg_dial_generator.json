@@ -1,0 +1,58 @@
+{
+  "chainer":
+  {
+    "in": ["utterance", "entities"],
+    "pipe": [
+      {
+        "class_name": "rel_ranking_infer",
+        "id": "pthr",
+        "path_ranker": {"configs_path": "{CONFIGS_PATH}/ranking/opendialkg_path_ranking.json"},
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "rel_q2name_filename": "wiki_dict_properties.pickle",
+        "rels_to_leave": 40,
+        "softmax": true
+      },
+      {
+        "class_name": "dial_path_ranker",
+        "wiki_parser": {"configs_path": "{CONFIGS_PATH}/kbqa/wiki_parser.json"},
+        "path_ranker": "#pthr",
+        "type_paths_file": "{DOWNLOADS_PATH}/wikidata/paths.pickle",
+        "type_groups_file": "",
+        "in": ["utterance", "entities"],
+        "out": ["paths"]
+      },
+      {
+        "class_name": "kg_dial_generator",
+        "transformer_model": "microsoft/DialoGPT-small",
+        "path_to_model": "{MODELS_PATH}/dialopt_wiki",
+        "in": ["utterance", "paths"],
+        "out": ["generated_utterance"]
+      }
+    ],
+    "out": ["generated_utterance"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
+      "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/dialogpt_wiki.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/path_ranking_data.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/path_ranking_data"
+      }
+    ]
+  }
+}

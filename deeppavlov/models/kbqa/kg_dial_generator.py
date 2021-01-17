@@ -25,10 +25,10 @@ from deeppavlov.models.kbqa.wiki_parser import WikiParser
 log = getLogger(__name__)
 
 
-@register('kg_dial_gen')
+@register('kg_dial_generator')
 class KGDialGenerator(Component):
     def __init__(self, transformer_model: str,
-                       path_to_model: str) -> None:
+                       path_to_model: str, *args, **kwargs) -> None:
                        
         self.tokenizer = AutoTokenizer.from_pretrained(transformer_model)
         special_tokens_dict = {"sep_token": "<SEP>"}
@@ -55,18 +55,17 @@ class KGDialGenerator(Component):
 
 @register('dial_path_ranker')    
 class DialPathRanker(Component):
-    def __init__(self, type_paths_file: str,
-                       type_groups_file: str,
-                       wiki_parser: WikiParser,
+    def __init__(self, wiki_parser: WikiParser,
                        path_ranker: RelRankingInfer,
-                       
-                ) -> None:
+                       type_paths_file: str,
+                       type_groups_file: str = None,
+                       *args, **kwargs) -> None:
         
         self.type_paths = load_pickle(type_paths_file)
         self.type_groups = load_pickle(type_groups_file)
         self.wiki_parser = wiki_parser
         self.path_ranker = path_ranker
-                
+    
     def __call__(self, utterances_batch: List[str], entities_batch: List[List[str]]):
         paths_batch = []
         for utterance, entities_list in zip(utterances_batch, entities_batch):
@@ -77,9 +76,10 @@ class DialPathRanker(Component):
             for entity_type in entity_types:
                 candidate_paths = candidate_paths.union(self.type_paths[entity_type])
             
-            paths_with_scores = self.path_ranker(question, candidate_paths)
+            paths_with_scores = self.path_ranker.rank_paths(question, candidate_paths)
             top_paths = [path for path, score in paths_with_scores]
             retrieved_paths = self.wiki_parser(["retrieve_paths"], [[entity, top_paths]])[0]
+            log.debug(f"retrieved paths {retrieved_paths}")
             if retrieved_paths:
                 paths_batch.append(retrieved_paths[0])
             else:
