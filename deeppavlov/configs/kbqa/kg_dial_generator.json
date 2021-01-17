@@ -6,7 +6,7 @@
       {
         "class_name": "rel_ranking_infer",
         "id": "pthr",
-        "ranker": {"configs_path": "{CONFIGS_PATH}/ranking/opendialkg_path_ranking.json"},
+        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/opendialkg_path_ranking.json"},
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
         "rel_q2name_filename": "wiki_dict_properties.pickle",
         "rels_to_leave": 40,
@@ -14,7 +14,7 @@
       },
       {
         "class_name": "dial_path_ranker",
-        "wiki_parser": {"configs_path": "{CONFIGS_PATH}/kbqa/wiki_parser.json"},
+        "wiki_parser": {"config_path": "{CONFIGS_PATH}/kbqa/wiki_parser.json"},
         "path_ranker": "#pthr",
         "type_paths_file": "{DOWNLOADS_PATH}/wikidata/paths.pickle",
         "type_groups_file": "",

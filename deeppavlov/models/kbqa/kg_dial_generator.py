@@ -72,13 +72,14 @@ class DialPathRanker(Component):
         paths_batch = []
         for utterance, entities_list in zip(utterances_batch, entities_batch):
             entity = entities_list[0]
+            log.debug(f"seed entity {entity}")
             entity_types = self.wiki_parser(["find_types"], [entity])[0]
             log.debug(f"entity types {entity_types}")
             candidate_paths = set()
             for entity_type in entity_types:
                 candidate_paths = candidate_paths.union(self.type_paths[entity_type])
             
-            paths_with_scores = self.path_ranker.rank_paths(question, candidate_paths)
+            paths_with_scores = self.path_ranker.rank_paths(utterance, candidate_paths)
             top_paths = [path for path, score in paths_with_scores]
             retrieved_paths = self.wiki_parser(["retrieve_paths"], [[entity, top_paths]])[0]
             log.debug(f"retrieved paths {retrieved_paths}")
