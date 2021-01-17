@@ -44,14 +44,14 @@ class KGDialGenerator(Component):
             context_plus_gk = triplets + " <SEP> " + prev_utterance + self.tokenizer.eos_token
             input_ids = self.tokenizer.encode(context_plus_gk, return_tensors="pt")
             generated_ids = self.model.generate(input_ids, max_length=200,
-                                                pad_token_id=tokenizer.eos_token_id,
+                                                pad_token_id=self.tokenizer.eos_token_id,
                                                 no_repeat_ngram_size=3, do_sample=True,
                                                 top_k=100, top_p=0.7, temperature=0.8)
             generated_utterance = self.tokenizer.decode(generated_ids[:, input_ids.shape[-1]:][0],
                                                         skip_special_tokens=True)
             generated_utterances_batch.append(generated_utterance)
         
-        return generated_utterance_batch
+        return generated_utterances_batch
         
 
 @register('dial_path_ranker')    
@@ -79,8 +79,9 @@ class DialPathRanker(Component):
             for entity_type in entity_types:
                 candidate_paths = candidate_paths.union(self.type_paths[entity_type])
             
-            paths_with_scores = self.path_ranker.rank_paths(utterance, candidate_paths)
+            paths_with_scores = self.path_ranker.rank_paths(utterance, list(candidate_paths))
             top_paths = [path for path, score in paths_with_scores]
+            log.debug(f"top paths {top_paths[:10]}")
             retrieved_paths = self.wiki_parser(["retrieve_paths"], [[entity, top_paths]])[0]
             log.debug(f"retrieved paths {retrieved_paths}")
             if retrieved_paths:
