@@ -13,13 +13,14 @@
 # limitations under the License.
 
 from logging import getLogger
+from typing import List
 
 from transformers import AutoTokenizer, AutoModelWithLMHead
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.file import load_pickle
-from deeppavlov.models.kbqa.rel_ranking_infer import RelRankingInfer
+from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
 from deeppavlov.models.kbqa.wiki_parser import WikiParser
 
 log = getLogger(__name__)
@@ -33,10 +34,10 @@ class KGDialGenerator(Component):
         self.tokenizer = AutoTokenizer.from_pretrained(transformer_model)
         special_tokens_dict = {"sep_token": "<SEP>"}
         self.tokenizer.add_special_tokens(special_tokens_dict)
-        self.model = AutoModelWithLMHead.from_pretrained(expand_path(path_to_model))
+        self.model = AutoModelWithLMHead.from_pretrained(str(expand_path(path_to_model)))
         self.model.resize_token_embeddings(len(self.tokenizer))
         
-    def __call__(self, prev_utterances_batch: List[str], triplets_batch: List[List[str]]):
+    def __call__(self, prev_utterances_batch: List[str], triplets_batch: List[List[str]]) -> List[str]:
         generated_utterances_batch = []
         for prev_utterance, triplets in zip(prev_utterances_batch, triplets_batch):
             triplets = ' '.join([' '.join(triplet) for triplet in triplets])
@@ -56,17 +57,18 @@ class KGDialGenerator(Component):
 @register('dial_path_ranker')    
 class DialPathRanker(Component):
     def __init__(self, wiki_parser: WikiParser,
-                       path_ranker: RelRankingInfer,
+                       path_ranker: RelRankerInfer,
                        type_paths_file: str,
                        type_groups_file: str = None,
                        *args, **kwargs) -> None:
         
-        self.type_paths = load_pickle(type_paths_file)
-        self.type_groups = load_pickle(type_groups_file)
+        self.type_paths = load_pickle(expand_path(type_paths_file))
+        if type_groups_file:
+            self.type_groups = load_pickle(expand_path(type_groups_file))
         self.wiki_parser = wiki_parser
         self.path_ranker = path_ranker
     
-    def __call__(self, utterances_batch: List[str], entities_batch: List[List[str]]):
+    def __call__(self, utterances_batch: List[str], entities_batch: List[List[str]]) -> List[List[str]]:
         paths_batch = []
         for utterance, entities_list in zip(utterances_batch, entities_batch):
             entity = entities_list[0]

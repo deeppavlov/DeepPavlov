@@ -6,7 +6,7 @@
       {
         "class_name": "rel_ranking_infer",
         "id": "pthr",
-        "path_ranker": {"configs_path": "{CONFIGS_PATH}/ranking/opendialkg_path_ranking.json"},
+        "ranker": {"configs_path": "{CONFIGS_PATH}/ranking/opendialkg_path_ranking.json"},
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
         "rel_q2name_filename": "wiki_dict_properties.pickle",
         "rels_to_leave": 40,
@@ -24,7 +24,7 @@
       {
         "class_name": "kg_dial_generator",
         "transformer_model": "microsoft/DialoGPT-small",
-        "path_to_model": "{MODELS_PATH}/dialopt_wiki",
+        "path_to_model": "{MODELS_PATH}/dialogpt_wiki",
         "in": ["utterance", "paths"],
         "out": ["generated_utterance"]
       }
