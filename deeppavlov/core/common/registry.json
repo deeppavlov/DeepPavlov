@@ -137,7 +137,6 @@
   "random_emb_mat": "deeppavlov.models.preprocessors.random_embeddings_matrix:RandomEmbeddingsMatrix",
   "rasa_skill": "deeppavlov.skills.rasa_skill.rasa_skill:RASASkill",
   "rel_ranker": "deeppavlov.models.ranking.rel_ranker:RelRanker",
-  "rel_ranking_bert_infer": "deeppavlov.models.kbqa.rel_ranking_bert_infer:RelRankerBertInfer",
   "rel_ranking_infer": "deeppavlov.models.kbqa.rel_ranking_infer:RelRankerInfer",
   "rel_ranking_reader": "deeppavlov.dataset_readers.rel_ranking_reader:ParaphraserReader",
   "response_base_loader": "deeppavlov.models.preprocessors.response_base_loader:ResponseBaseLoader",

@@ -29,7 +29,7 @@ log = getLogger(__name__)
 
 
 @register('rel_ranking_infer')
-class RelRankerBertInfer(Component, Serializable):
+class RelRankerInfer(Component, Serializable):
     """Class for ranking of paths in subgraph"""
 
     def __init__(self, load_path: str,
