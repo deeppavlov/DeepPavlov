@@ -95,6 +95,16 @@ class WikiParser:
                 except:
                     log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output += rels
+            elif parser_info == "find_top_triplets":
+                triplets = []
+                try:
+                    for rel in ["P31", "P279", "P131", "P106", "P27", "P569"]:
+                        objects = self.find_object(query, rel, "")
+                        for obj in objects[:5]:
+                            triplets.append([query, rel, obj])
+                except:
+                    log.info("Wrong arguments are passed to wiki_parser")
+                wiki_parser_output.append({query: triplets})
             elif parser_info == "find_object":
                 objects = []
                 try:
@@ -479,6 +489,8 @@ class WikiParser:
             return False
         
     def retrieve_paths(self, entity: str, paths: List[List[str]]) -> List[List[str]]:
+        print("wiki parser, paths", paths)
+        paths = paths[:5]
         retrieved_paths = []
         for path in paths:
             rel_1 = path[0]
@@ -488,24 +500,27 @@ class WikiParser:
                 dir_1 = "forw"
             rel_1 = rel_1.strip("~")
             if self.file_format == "hdt":
+                entity_label = self.find_label(entity, "")
                 if dir_1 == "forw":
                     query_1 = [f"{self.prefixes['entity']}/{entity}", f"{self.prefixes['rels']['direct']}/{rel_1}", ""]
                 else:
                     query_1 = ["", f"{self.prefixes['rels']['direct']}/{rel_1}", f"{self.prefixes['entity']}/{entity}"]
+                print("query", query_1)
                 tr, cnt = self.document.search_triples(*query_1)
                 
                 if dir_1 == "forw":
                     objects_1 = [triplet[2].split('/')[-1] for triplet in tr]
                 else:
                     objects_1 = [triplet[0].split('/')[-1] for triplet in tr]
+                print("objects", objects_1)
                     
                 if objects_1:
                     if len(path) == 1:
                         chosen_obj = random.choice(objects_1)
                         if dir_1 == "forw":
-                            retrieved_paths.append([self.find_label(rel_1, ""), self.find_label(chosen_obj, "")])
+                            retrieved_paths.append([entity_label, self.find_label(rel_1, ""), self.find_label(chosen_obj, "")])
                         else:
-                            retrieved_paths.append([self.find_label(chosen_obj, ""), self.find_label(rel_1, "")])
+                            retrieved_paths.append([self.find_label(chosen_obj, ""), self.find_label(rel_1, ""), entity_label])
                     else:
                         cur_paths = []
                         rel_2 = path[1]
@@ -530,18 +545,18 @@ class WikiParser:
                                 if objects_2:
                                     chosen_obj = random.choice(objects_2)
                                     if dir_1 == "forw" and dir_2 == "forw":
-                                        cur_paths.append([self.find_label(rel_1, ""), self.find_label(obj_1, ""),
+                                        cur_paths.append([entity_label, self.find_label(rel_1, ""), self.find_label(obj_1, ""),
                                                                 self.find_label(rel_2, ""), self.find_label(chosen_obj, "")])
                                     elif dir_1 == "forw" and dir_2 == "backw":
-                                        cur_paths.append([self.find_label(rel_1, ""), self.find_label(obj_1, ""),
+                                        cur_paths.append([entity_label, self.find_label(rel_1, ""), self.find_label(obj_1, ""),
                                                                 self.find_label(chosen_obj, ""), self.find_label(rel_2, ""),
                                                                 self.find_label(obj_1, "")])
                                     elif dir_1 == "backw" and dir_2 == "forw":
-                                        cur_paths.append([self.find_label(obj_1, ""), self.find_label(rel_1, ""),
+                                        cur_paths.append([self.find_label(obj_1, ""), self.find_label(rel_1, ""), entity_label,
                                                                 self.find_label(obj_1, ""), self.find_label(rel_2, ""),
                                                                 self.find_label(chosen_obj, "")])
                                     else:
-                                        cur_paths.append([self.find_label(obj_1, ""), self.find_label(rel_1, ""),
+                                        cur_paths.append([self.find_label(obj_1, ""), self.find_label(rel_1, ""), entity_label,
                                                                 self.find_label(chosen_obj, ""), self.find_label(rel_2, ""),
                                                                 self.find_label(obj_1, "")])
                         
