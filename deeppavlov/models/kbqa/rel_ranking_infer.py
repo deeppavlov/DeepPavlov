@@ -220,7 +220,7 @@ class RelRankerInfer(Component, Serializable):
                     rel = rel.strip("~")
                     path_label.append(self.rel_q2name.get(rel, ""))
                 if path_label:
-                    path_label = ' '.join(path_label)
+                    path_label = ', '.join(path_label)
                     questions_batch.append(question)
                     paths_batch.append(candidate_path)
                     paths_labels_batch.append(path_label)
@@ -232,7 +232,7 @@ class RelRankerInfer(Component, Serializable):
         if self.softmax:
             scores = [score for rel, score in paths_with_scores]
             softmax_scores = softmax(scores)
-            paths_with_scores = [(path, softmax_score) for (rel, score), softmax_score in 
+            paths_with_scores = [(path, softmax_score) for (path, score), softmax_score in 
                                                               zip(paths_with_scores, softmax_scores)]
         paths_with_scores = sorted(paths_with_scores, key=lambda x: x[1], reverse=True)
 

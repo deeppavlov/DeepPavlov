@@ -106,7 +106,7 @@ class QueryGenerator(QueryGeneratorBase):
             return answers
         else:
             log.debug(f"(__call__)candidate_outputs_batch: {[output[:5] for output in candidate_outputs_batch]}")
-            return candidate_outputs_batch
+            return candidate_outputs_batch, entities_from_ner_batch, template_answers_batch
 
     def query_parser(self, question: str, query_info: Dict[str, str],
                      entities_and_types_select: List[str],
