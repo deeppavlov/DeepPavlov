@@ -154,3 +154,42 @@ class RelRankerBertInfer(Component, Serializable):
         rels_with_scores = sorted(rels_with_scores, key=lambda x: x[1], reverse=True)
 
         return rels_with_scores[:self.rels_to_leave]
+        
+    def batch_rank_rels(self, questions_batch: List[str],
+                              candidate_rels_batch: List[List[str]]) -> List[List[Tuple[str, Any]]]:
+        questions_list = []
+        question_nums_list = []
+        rels_list = []
+        rels_labels_list = []
+        for n, (question, candidate_rels) in enumerate(zip(questions_batch, candidate_rels_batch)):
+            for rel in candidate_rels:
+                if rel in self.rel_q2name:
+                    questions_list.append(question)
+                    question_nums_list.append(n)
+                    rels_list.append(rel)
+                    rels_labels_list.append(self.rel_q2name[rel])
+        n_batches = len(rels_list) // self.batch_size + int(len(rels_list) % self.batch_size > 0)
+        rels_with_scores_batch = []
+        rels_with_scores = []
+        cur_num = 0
+        for i in range(n_batches):
+            questions_batch = questions_list[i*self.batch_size:(i+1)*self.batch_size]
+            questions_nums_batch = question_nums_list[i*self.batch_size:(i+1)*self.batch_size]
+            rels_batch = rels_list[i*self.batch_size:(i+1)*self.batch_size]
+            rels_labels_batch = rels_labels_list[i*self.batch_size:(i+1)*self.batch_size]
+            probas = self.ranker(questions_batch, rels_labels_batch)
+            probas = [proba[1] for proba in probas]
+            for num, proba, rel in zip(questions_nums_batch, probas, rels_batch):
+                if num != cur_num:
+                    rels_with_scores_batch.append(rels_with_scores)
+                    rels_with_scores = []
+                rels_with_scores.append((rel, proba))
+                cur_num = num
+        if rels_with_scores:
+            rels_with_scores_batch.append(rels_with_scores)
+        
+        for i in range(len(rels_with_scores_batch)):
+            rels_with_scores_batch[i] = sorted(rels_with_scores_batch[i], key=lambda x: x[1], reverse=True)
+            rels_with_scores_batch[i] = rels_with_scores_batch[i][:self.rels_to_leave]
+        
+        return rels_with_scores_batch

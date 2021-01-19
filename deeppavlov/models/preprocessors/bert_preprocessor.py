@@ -124,8 +124,21 @@ class BertNerPreprocessor(Component):
                  tokens: Union[List[List[str]], List[str]],
                  tags: List[List[str]] = None,
                  **kwargs):
+        
+        tokens_offsets_batch = [[] for _ in tokens]
         if isinstance(tokens[0], str):
-            tokens = [re.findall(self._re_tokenizer, s) for s in tokens]
+            tokens_batch = []
+            tokens_offsets_batch = []
+            for s in tokens:
+                tokens_list = []
+                tokens_offsets_list = []
+                for elem in re.finditer(self._re_tokenizer, s):
+                    tokens_list.append(elem[0])
+                    tokens_offsets_list.append((elem.start(), elem.end()))
+                tokens_batch.append(tokens_list)
+                tokens_offsets_batch.append(tokens_offsets_list)
+            tokens = tokens_batch    
+            
         subword_tokens, subword_tok_ids, startofword_markers, subword_tags = [], [], [], []
         for i in range(len(tokens)):
             toks = tokens[i]
@@ -174,7 +187,7 @@ class BertNerPreprocessor(Component):
                         log.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
                 return tokens, subword_tokens, subword_tok_ids, \
                     attention_mask, startofword_markers, nonmasked_tags
-        return tokens, subword_tokens, subword_tok_ids, startofword_markers, attention_mask
+        return tokens, subword_tokens, subword_tok_ids, startofword_markers, attention_mask, tokens_offsets_batch
 
     @staticmethod
     def _ner_bert_tokenize(tokens: List[str],
