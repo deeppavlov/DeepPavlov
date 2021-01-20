@@ -273,6 +273,7 @@ class QueryGeneratorBase(Component, Serializable):
         elif source == "rank_list_2":
             ex_rels = self.rank_list_1
         rels_with_scores = []
+        log.info(f"ex_rels", ex_rels)
         if ex_rels:
             rels_with_scores = self.rel_ranker.rank_rels(question, ex_rels)
         return rels_with_scores[:self.rels_to_leave]
