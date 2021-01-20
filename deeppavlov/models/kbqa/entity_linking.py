@@ -219,6 +219,8 @@ class EntityLinker(Component, Serializable):
             self.stopwords = set(stopwords.words("english"))
         elif self.lang_str == "@ru":
             self.stopwords = set(stopwords.words("russian"))
+        self.not_found_tokens = ["ооо", "оао", "фгуп", "муп", "акционерное общество", "зао", "мкп"]
+        self.not_found_str = "not in wiki"
         self.use_descriptions = use_descriptions
         self.return_confidences = return_confidences
 
@@ -281,7 +283,7 @@ class EntityLinker(Component, Serializable):
             entity_ids_batch = []
             conf_batch = []
             tm_ner_st = time.time()
-            ner_tokens_batch, ner_tokens_offsets_batch, ner_probas_batch = self.ner(text_batch)            
+            ner_tokens_batch, ner_tokens_offsets_batch, ner_probas_batch = self.ner(text_batch)
             entity_substr_batch, _, entity_positions_batch = self.ner_parser(ner_tokens_batch, ner_probas_batch)
             tm_ner_end = time.time()
             log.debug(f"ner time {tm_ner_end-tm_ner_st}")
@@ -306,9 +308,62 @@ class EntityLinker(Component, Serializable):
                                       for entity_positions_dict in entity_positions_batch]
             log.debug(f"entity_substr_batch {entity_substr_batch}")
             log.debug(f"entity_positions_batch {entity_positions_batch}")
-            entity_ids_batch, conf_batch = \
-                self.link_entities(entity_substr_batch, tags_batch, entity_positions_batch, sentences_batch,
+            
+            nf_entity_substr_batch, nf_tags_batch, nf_entity_positions_batch = [], [], []
+            nf_entity_ids_batch, nf_conf_batch = [], []
+            fnd_entity_substr_batch, fnd_tags_batch, fnd_entity_positions_batch = [], [], []
+            
+            for entity_substr_list, tags_list, entity_positions_list in \
+                    zip(entity_substr_batch, tags_batch, entity_positions_batch):
+                nf_entity_substr_list, nf_tags_list, nf_entity_positions_list = [], [], []
+                nf_entity_ids_list, nf_conf_list = [], []
+                fnd_entity_substr_list, fnd_tags_list, fnd_entity_positions_list = [], [], []
+                for entity_substr, tag, entity_positions in zip(entity_substr_list, tags_list, entity_positions_list):
+                    nf = False
+                    for tok in self.not_found_tokens:
+                        if tok in entity_substr:
+                            nf = True
+                            break
+                    if nf:
+                        nf_entity_substr_list.append(entity_substr)
+                        nf_tags_list.append(tag)
+                        nf_entity_positions_list.append(entity_positions)
+                        if self.num_entities_to_return == 1:
+                            nf_entity_ids_list.append(self.not_found_str)
+                            nf_conf_list.append((0.0, 0, 0.0))
+                        else:
+                            nf_entity_ids_list.append([self.not_found_str])
+                            nf_conf_list.append([(0.0, 0, 0.0)])
+                    else:
+                        fnd_entity_substr_list.append(entity_substr)
+                        fnd_tags_list.append(tag)
+                        fnd_entity_positions_list.append(entity_positions)
+                nf_entity_substr_batch.append(nf_entity_substr_list)
+                nf_tags_batch.append(nf_tags_list)
+                nf_entity_positions_batch.append(nf_entity_positions_list)
+                nf_entity_ids_batch.append(nf_entity_ids_list)
+                nf_conf_batch.append(nf_conf_list)
+                fnd_entity_substr_batch.append(fnd_entity_substr_list)
+                fnd_tags_batch.append(fnd_tags_list)
+                fnd_entity_positions_batch.append(fnd_entity_positions_list)
+            
+            fnd_entity_ids_batch, fnd_conf_batch = \
+                self.link_entities(fnd_entity_substr_batch, fnd_tags_batch, fnd_entity_positions_batch, sentences_batch,
                                                                      sentences_offsets_batch, ner_tokens_offsets_batch)
+            
+            entity_substr_batch, tags_batch, entity_positions_batch, entity_ids_batch, conf_batch = [], [], [], [], []
+            for i in range(len(nf_entity_substr_batch)):
+                entity_substr_list, tags_list, entity_positions_list, entity_ids_list, conf_list = [], [], [], [], []
+                entity_substr_list = nf_entity_substr_batch[i] + fnd_entity_substr_batch[i]
+                tags_list = nf_tags_batch[i] + fnd_tags_batch[i]
+                entity_positions_list = nf_entity_positions_batch[i] + fnd_entity_positions_batch[i]
+                entity_ids_list = nf_entity_ids_batch[i] + fnd_entity_ids_batch[i]
+                conf_list = nf_conf_batch[i] + fnd_conf_batch[i]
+                entity_substr_batch.append(entity_substr_list)
+                tags_batch.append(tags_list)
+                entity_positions_batch.append(entity_positions_list)
+                entity_ids_batch.append(entity_ids_list)
+                conf_batch.append(conf_list)
                 
             entity_ids_batch_list.append(entity_ids_batch)
             conf_batch_list.append(conf_batch)
@@ -329,6 +384,13 @@ class EntityLinker(Component, Serializable):
         doc_entity_positions = []
         cur_doc_num = 0
         text_len_sum = 0
+        print("entity_ids_batch", entity_ids_batch_list)
+        print("conf_batch", conf_batch_list)
+        print("entity_substr_batch", entity_substr_batch_list)
+        print("tags_batch", tags_batch_list)
+        print("entity_positions_batch", entity_positions_batch_list)
+        print("text_len_batch", text_len_batch_list)
+        print("nums_batch", nums_batch_list)
         for entity_ids_batch, conf_batch, entity_substr_batch, tags_batch, entity_positions_batch, text_len_batch, nums_batch in \
                 zip(entity_ids_batch_list, conf_batch_list, entity_substr_batch_list, tags_batch_list, entity_positions_batch_list,
                     text_len_batch_list, nums_batch_list):
@@ -590,6 +652,9 @@ class EntityLinker(Component, Serializable):
             if entities_with_scores and 7.5*entities_with_scores[0][3] > 1.0:
                 top_entities = [score[0] for score in entities_with_scores]
                 top_conf = [score[1:] for score in entities_with_scores]
+            else:
+                top_entities = [self.not_found_str]
+                top_conf = [(0.0, 0, 0.0)]
                 
             if self.num_entities_to_return == 1 and top_entities:
                 entity_ids_list.append(top_entities[0])
