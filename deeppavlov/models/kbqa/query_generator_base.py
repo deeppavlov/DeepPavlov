@@ -265,6 +265,7 @@ class QueryGeneratorBase(Component, Serializable):
             except json.decoder.JSONDecodeError:
                 log.info("find_top_rels, not received output from wiki parser")
             if self.use_api_requester and ex_rels:
+                print("ex_rels", ex_rels)
                 ex_rels = [rel[0] for rel in ex_rels]
             ex_rels = list(set(ex_rels))
             ex_rels = [rel.split('/')[-1] for rel in ex_rels]
@@ -273,7 +274,7 @@ class QueryGeneratorBase(Component, Serializable):
         elif source == "rank_list_2":
             ex_rels = self.rank_list_1
         rels_with_scores = []
-        log.info(f"ex_rels", ex_rels)
+        print("ex_rels", ex_rels)
         if ex_rels:
             rels_with_scores = self.rel_ranker.rank_rels(question, ex_rels)
         return rels_with_scores[:self.rels_to_leave]
