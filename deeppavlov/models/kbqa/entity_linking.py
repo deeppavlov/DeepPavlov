@@ -384,13 +384,6 @@ class EntityLinker(Component, Serializable):
         doc_entity_positions = []
         cur_doc_num = 0
         text_len_sum = 0
-        print("entity_ids_batch", entity_ids_batch_list)
-        print("conf_batch", conf_batch_list)
-        print("entity_substr_batch", entity_substr_batch_list)
-        print("tags_batch", tags_batch_list)
-        print("entity_positions_batch", entity_positions_batch_list)
-        print("text_len_batch", text_len_batch_list)
-        print("nums_batch", nums_batch_list)
         for entity_ids_batch, conf_batch, entity_substr_batch, tags_batch, entity_positions_batch, text_len_batch, nums_batch in \
                 zip(entity_ids_batch_list, conf_batch_list, entity_substr_batch_list, tags_batch_list, entity_positions_batch_list,
                     text_len_batch_list, nums_batch_list):
