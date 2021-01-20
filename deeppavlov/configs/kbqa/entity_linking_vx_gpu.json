@@ -88,7 +88,7 @@
         "subdir": "{MODELS_PATH}/entity_ranking_bert_rus_no_mention"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/q_to_descr_ru.pickle",
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/q_to_descr_vx.pickle",
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       }
     ]
