@@ -282,9 +282,6 @@ class EntityLinker(Component, Serializable):
             conf_batch = []
             tm_ner_st = time.time()
             ner_tokens_batch, ner_tokens_offsets_batch, ner_probas_batch = self.ner(text_batch)            
-            print("new_tokens_batch", ner_tokens_batch)
-            print("sentences_offsets", sentences_offsets_batch)
-            print("sentences", sentences_batch)
             entity_substr_batch, _, entity_positions_batch = self.ner_parser(ner_tokens_batch, ner_probas_batch)
             tm_ner_end = time.time()
             log.debug(f"ner time {tm_ner_end-tm_ner_st}")
