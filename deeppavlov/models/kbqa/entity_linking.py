@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 import time
 from logging import getLogger
+from string import punctuation
 from typing import List, Dict, Tuple
 from collections import defaultdict
 
@@ -52,6 +54,8 @@ class NerChunker(Component):
         """
         self.max_chunk_len = max_chunk_len
         self.batch_size = batch_size
+        self.punct_ext = punctuation + " " + "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        self.russian_letters = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
 
     def __call__(self, docs_batch: List[str]) -> Tuple[List[List[str]], List[List[int]]]:
         """
@@ -81,6 +85,7 @@ class NerChunker(Component):
         start = 0
         end = 0
         for n, doc in enumerate(docs_batch):
+            doc = self.sanitize(doc)
             sentences = sent_tokenize(doc)
             for sentence in sentences:
                 sentence_len = len(sentence.split())
@@ -132,6 +137,20 @@ class NerChunker(Component):
             sentences_batch_list.append(sentences_batch)
 
         return text_batch_list, nums_batch_list, sentences_offsets_batch_list, sentences_batch_list
+        
+    def sanitize(self, text):
+        text_len = len(text)
+        if text[text_len-1] not in {'.', '!', '?'}:
+            i = text_len - 1
+            while text[i] in self.punct_ext and i > 0:
+                i -= 1
+                if (text[i] in {'.', '!', '?'} and text[i-1].lower() in self.russian_letters) or \
+                   (i > 1 and text[i] in {'.', '!', '?'} and text[i-1] in '"' and text[i-2].lower() in self.russian_letters):
+                    break
+        
+            text = text[:i+1]
+        text = re.sub(r'\s+', ' ', text)
+        return text
 
 
 @register('entity_linker')
