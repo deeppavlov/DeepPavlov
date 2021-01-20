@@ -27,7 +27,6 @@ from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.models.kbqa.template_matcher import TemplateMatcher
 from deeppavlov.models.kbqa.entity_linking import EntityLinker
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
-from deeppavlov.models.kbqa.rel_ranking_bert_infer import RelRankerBertInfer
 
 log = getLogger(__name__)
 
@@ -41,7 +40,7 @@ class QueryGeneratorBase(Component, Serializable):
     def __init__(self, template_matcher: TemplateMatcher,
                  linker_entities: EntityLinker,
                  linker_types: EntityLinker,
-                 rel_ranker: Union[RelRankerInfer, RelRankerBertInfer],
+                 rel_ranker: RelRankerInfer,
                  load_path: str,
                  rank_rels_filename_1: str,
                  rank_rels_filename_2: str,
@@ -132,15 +131,19 @@ class QueryGeneratorBase(Component, Serializable):
 
         log.debug(f"question: {question}\n")
         log.debug(f"template_type {self.template_nums}")
+        log.debug(f"types from template {types_from_template}")
 
         if entities_from_template or types_from_template:
             if rels_from_template[0][0] == "PHOW":
                 how_to_content = self.find_answer_wikihow(entities_from_template[0])
                 candidate_outputs = [["PHOW", how_to_content, 1.0]]
             else:
+                el_tm1 = time.time()
                 entity_ids = self.get_entity_ids(entities_from_template, "entities", template_found, question,
                                                  entity_types)
                 type_ids = self.get_entity_ids(types_from_template, "types")
+                el_tm2 = time.time()
+                log.debug(f"--------entity linking time: {el_tm2-el_tm1}")
                 log.debug(f"entities_from_template {entities_from_template}")
                 log.debug(f"entity_types {entity_types}")
                 log.debug(f"types_from_template {types_from_template}")
@@ -155,8 +158,11 @@ class QueryGeneratorBase(Component, Serializable):
         if not candidate_outputs and entities_from_ner:
             log.debug(f"(__call__)entities_from_ner: {entities_from_ner}")
             log.debug(f"(__call__)types_from_ner: {types_from_ner}")
+            el_tm1 = time.time()
             entity_ids = self.get_entity_ids(entities_from_ner, "entities", question=question)
             type_ids = self.get_entity_ids(types_from_ner, "types")
+            el_tm2 = time.time()
+            log.debug(f"--------entity linking time: {el_tm2-el_tm1}")
             log.debug(f"(__call__)entity_ids: {entity_ids}")
             log.debug(f"(__call__)type_ids: {type_ids}")
             self.template_nums = template_types
@@ -266,7 +272,9 @@ class QueryGeneratorBase(Component, Serializable):
             ex_rels = self.rank_list_0
         elif source == "rank_list_2":
             ex_rels = self.rank_list_1
-        rels_with_scores = self.rel_ranker.rank_rels(question, ex_rels)
+        rels_with_scores = []
+        if ex_rels:
+            rels_with_scores = self.rel_ranker.rank_rels(question, ex_rels)
         return rels_with_scores[:self.rels_to_leave]
 
     def find_answer_wikihow(self, howto_sentence: str) -> str:

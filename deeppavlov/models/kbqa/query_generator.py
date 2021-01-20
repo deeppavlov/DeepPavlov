@@ -26,7 +26,6 @@ import nltk
 from deeppavlov.core.common.registry import register
 from deeppavlov.models.kbqa.wiki_parser import WikiParser
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
-from deeppavlov.models.kbqa.rel_ranking_bert_infer import RelRankerBertInfer
 from deeppavlov.models.kbqa.utils import \
     extract_year, extract_number, order_of_answers_sorting, make_combs, fill_query, filter_answers
 from deeppavlov.models.kbqa.query_generator_base import QueryGeneratorBase
@@ -41,7 +40,7 @@ class QueryGenerator(QueryGeneratorBase):
     """
 
     def __init__(self, wiki_parser: WikiParser,
-                 rel_ranker: Union[RelRankerInfer, RelRankerBertInfer],
+                 rel_ranker: RelRankerInfer,
                  entities_to_leave: int = 5,
                  rels_to_leave: int = 7,
                  max_comb_num: int = 10000,
