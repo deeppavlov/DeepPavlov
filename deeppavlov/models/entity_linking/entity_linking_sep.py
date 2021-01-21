@@ -294,6 +294,44 @@ class EntityLinkerSep(Component, Serializable):
                  ) -> Tuple[List[List[str]], List[List[List[Tuple[float, int, float]]]],
                             List[List[List[int]]], List[List[List[str]]]]:
 
+        """
+        
+        Args:
+            entity_substr_batch: entity substrings
+            entity_offsets_batch: indices of start and end symbols of entities in text
+            tags batch: NER tags of entity substrings (PER, LOC, ORG)
+            sentences_offsets_batch: indices of start and end symbols of sentences in text
+            sentences_batch: list of sentences from texts
+            
+        Examples of input arguments:
+            entity_substr_batch: [['екатеринбург', 'россии', 'уральского федерального округа',
+                                   'свердловской области', 'среднего урала', 'исети']]
+            entity_offsets_batch: [[(0, 12), (23, 29), (54, 84), (87, 107), (140, 154), (172, 177)]]
+            tags_batch: [['LOC', 'LOC', 'LOC', 'LOC', 'LOC', 'LOC']]
+            sentences_offsets_batch: [[(0, 108), (109, 178)]]
+            sentences_batch: [['Екатеринбург - город в России, административный центр Уральского федерального округа
+                                и Свердловской области.',
+                               'Расположен на восточном склоне Среднего Урала, по берегам реки Исети.']]
+                               
+        Examples of outputs:
+        If return one candidate entity for each substring (self.num_entities_to_return == 1)
+            entity_substr_batch: [['екатеринбург', 'россии', 'уральского федерального округа',
+                                   'свердловской области', 'среднего урала', 'исети']]
+            conf_batch: [[(1.0, 66, 1.0), (1.0, 203, 1.0), (0.61, 20, 0.91),
+                          (1.0, 51, 1.0), (0.5, 9, 1.0), (1.0, 21, 1.0)]]
+            entity_offsets_batch: [[(0, 12), (23, 29), (54, 84), (87, 107), (140, 154), (172, 177)]]
+            entity_ids_batch: [['Q887', 'Q159', 'Q41964', 'Q5462', 'Q1096949', 'Q874369']]
+            
+        If return several candidate entities for each substring, for example, two (self.num_entities_to_return == 2)
+            entity_substr_batch: [['екатеринбург', 'россии', 'уральского федерального округа',
+                                   'свердловской области', 'среднего урала', 'исети']]
+            conf_batch: [[[(1.0, 66, 1.0), (0.89, 15, 0.02)], [(1.0, 203, 1.0), (1.0, 12, 0.01)],
+                          [(0.61, 20, 0.91), (0.61, 5, 0.16)], [(1.0, 51, 1.0), (0.67, 12, 0.45)],
+                          [(0.5, 9, 1.0), (0.5, 12, 0.97)], [(1.0, 21, 1.0), (1.0, 6, 1.0)]]]
+            entity_offsets_batch: [[(0, 12), (23, 29), (54, 84), (87, 107), (140, 154), (172, 177)]]
+            entity_ids_batch: [[['Q887', 'Q3180012'], ['Q159', 'Q1849069'], ['Q41964', 'Q4476750'],
+                                ['Q5462', 'Q1998912'], ['Q1096949', 'Q1894057'], ['Q874369', 'Q36232823']]]
+        """
         nf_entity_substr_batch, nf_tags_batch, nf_entity_offsets_batch = [], [], []
         nf_entity_ids_batch, nf_conf_batch = [], []
         fnd_entity_substr_batch, fnd_tags_batch, fnd_entity_offsets_batch = [], [], []
