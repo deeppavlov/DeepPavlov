@@ -330,7 +330,7 @@ class EntityLinkerSep(Component, Serializable):
         
         fnd_entity_ids_batch, fnd_conf_batch = \
             self.link_entities(fnd_entity_substr_batch, fnd_tags_batch, fnd_entity_offsets_batch, sentences_batch,
-                                                                 sentences_offsets_batch, ner_tokens_offsets_batch)
+                                                                 sentences_offsets_batch)
         
         entity_substr_batch, tags_batch, entity_offsets_batch, entity_ids_batch, conf_batch = [], [], [], [], []
         for i in range(len(nf_entity_substr_batch)):

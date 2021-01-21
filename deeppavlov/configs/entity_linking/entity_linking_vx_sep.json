@@ -1,6 +1,6 @@
 {
   "chainer": {
-    "in": ["entity_substr", "entity_offsets", "tags", "text"],
+    "in": ["entity_substr", "entity_offsets", "tags", "sentences_offsets", "sentences"],
     "pipe": [
       {
         "class_name": "rel_ranking_bert_infer",
@@ -13,7 +13,7 @@
       },
       {
         "class_name": "entity_linker_sep",
-        "in": ["entity_substr", "entity_offsets", "tags", "text"],
+        "in": ["entity_substr", "entity_offsets", "tags", "sentences_offsets", "sentences"],
         "out": ["entity_substr", "conf", "entity_offsets", "entity_ids"],
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "save_path": "{DOWNLOADS_PATH}/wikidata_rus",
