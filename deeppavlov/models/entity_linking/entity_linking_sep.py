@@ -179,11 +179,6 @@ class NerChunkModel(Component):
         doc_entity_offsets_batch.append(doc_entity_offsets)
         doc_sentences_offsets_batch.append(doc_sentences_offsets)
         doc_sentences_batch.append(doc_sentences)
-        print("doc_entity_substr_batch", doc_entity_substr_batch)
-        print("doc_entity_offsets_batch", doc_entity_offsets_batch)
-        print("doc_tags_batch", doc_tags_batch)
-        print("doc_sentences_offsets_batch", doc_sentences_offsets_batch)
-        print("doc_sentences_batch", doc_sentences_batch)
 
         return doc_entity_substr_batch, doc_entity_offsets_batch, doc_tags_batch, doc_sentences_offsets_batch, \
                doc_sentences_batch
