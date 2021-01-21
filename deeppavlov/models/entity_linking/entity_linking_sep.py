@@ -199,6 +199,7 @@ class EntityLinkerSep(Component, Serializable):
             word_to_idlist_filename: file with dict of words (keys) and entity ids list as value
             entities_ranking_filename: file with dict of entity ids (keys) and number of relations in Wikidata
                 for entities
+            entities_types_sets_filename: file with entities split into sets of PER, LOC, ORG entity types
             vectorizer_filename: filename with TfidfVectorizer data
             faiss_index_filename: file with Faiss index of words
             entity_ranker: component deeppavlov.models.kbqa.rel_ranking_bert_infer
@@ -214,6 +215,7 @@ class EntityLinkerSep(Component, Serializable):
             num_entities_to_return: number of candidate entities for the substring which are returned
             lang: russian or english
             use_description: whether to perform entity ranking by context and description
+            return_confidences: whether to return confidences of entities
             lemmatize: whether to lemmatize tokens
             **kwargs:
         """
@@ -336,7 +338,6 @@ class EntityLinkerSep(Component, Serializable):
 
         entity_substr_batch, tags_batch, entity_offsets_batch, entity_ids_batch, conf_batch = [], [], [], [], []
         for i in range(len(nf_entity_substr_batch)):
-            entity_substr_list, tags_list, entity_offsets_list, entity_ids_list, conf_list = [], [], [], [], []
             entity_substr_list = nf_entity_substr_batch[i] + fnd_entity_substr_batch[i]
             tags_list = nf_tags_batch[i] + fnd_tags_batch[i]
             entity_offsets_list = nf_entity_offsets_batch[i] + fnd_entity_offsets_batch[i]
@@ -437,7 +438,7 @@ class EntityLinkerSep(Component, Serializable):
 
                     for ind, score in zip(ind_list, scores_list):
                         entities_set = self.word_to_idlist[self.word_list[ind]]
-                        entities_set = {entity for entity in entities_set if (entity[0] in self.entities_types_sets[tag] \
+                        entities_set = {entity for entity in entities_set if (entity[0] in self.entities_types_sets[tag]
                                                                               or entity[0] in self.entities_types_sets[
                                                                                   "AMB"])}
                         for entity in entities_set:
@@ -466,8 +467,6 @@ class EntityLinkerSep(Component, Serializable):
                     log.debug(f"candidate_entities before ranking {candidate_entities[:10]}")
                     candidate_entities = [candidate_entity + (self.entities_ranking_dict.get(candidate_entity[0], 0),)
                                           for candidate_entity in candidate_entities]
-                    candidate_entities_str = '\n'.join(
-                        [str(candidate_entity) for candidate_entity in candidate_entities])
                     candidate_entities = sorted(candidate_entities, key=lambda x: (x[1], x[2]), reverse=True)
                     log.debug(f"candidate_entities {candidate_entities[:10]}")
                     entities_scores = {entity: (substr_score, pop_score)
@@ -542,14 +541,12 @@ class EntityLinkerSep(Component, Serializable):
             sentence = ""
             rel_start_offset = 0
             rel_end_offset = 0
-            sent_num = 0
             for num, (sent, (sent_start_offset, sent_end_offset)) in \
                     enumerate(zip(sentences_list, sentences_offsets_list)):
                 if entity_start_offset >= sent_start_offset and entity_end_offset <= sent_end_offset:
                     sentence = sent
                     rel_start_offset = entity_start_offset - sent_start_offset
                     rel_end_offset = entity_end_offset - sent_start_offset
-                    sent_num = num
                     break
             log.debug(f"rank, found sentence {sentence}")
             log.debug(f"rank, relative offsets {rel_start_offset}, {rel_end_offset}")
@@ -575,8 +572,6 @@ class EntityLinkerSep(Component, Serializable):
                                     entity[0].startswith("Q")]
             entities_with_scores = sorted(entities_with_scores, key=lambda x: (x[1], x[3], x[2]), reverse=True)
             log.debug(f"entities_with_scores {entities_with_scores}")
-            top_entities = []
-            top_conf = []
 
             if entities_with_scores and 7.5 * entities_with_scores[0][3] > 1.0:
                 top_entities = [score[0] for score in entities_with_scores]
