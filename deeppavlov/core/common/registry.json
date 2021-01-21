@@ -109,6 +109,7 @@
   "ner": "deeppavlov.models.ner.network:NerNetwork",
   "ner_bio_converter": "deeppavlov.models.ner.bio:BIOMarkupRestorer",
   "ner_chunker": "deeppavlov.models.entity_linking.entity_linking:NerChunker",
+  "ner_chunk_model": "deeppavlov.models.entity_linking.entity_linking_sep:NerChunkModel",
   "ner_few_shot_iterator": "deeppavlov.dataset_iterators.ner_few_shot_iterator:NERFewShotIterator",
   "ner_preprocessor": "deeppavlov.models.preprocessors.ner_preprocessor:NerPreprocessor",
   "ner_svm": "deeppavlov.models.ner.svm:SVMTagger",

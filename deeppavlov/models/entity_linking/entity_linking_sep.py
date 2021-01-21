@@ -38,6 +38,126 @@ from deeppavlov.models.kbqa.rel_ranking_bert_infer import RelRankerBertInfer
 log = getLogger(__name__)
 
 
+@register('ner_chunk_model')
+class NerChunkModel(Component):
+    """
+        Class for linking of entity substrings in the document to entities in Wikidata
+    """
+
+    def __init__(self, ner: Chainer,
+                 ner_parser: EntityDetectionParser,
+                 **kwargs) -> None:
+        """
+
+        Args:
+            ner: config for entity detection
+            ner_parser: component deeppavlov.models.kbqa.entity_detection_parser
+            **kwargs:
+        """
+        self.ner = ner
+        self.ner_parser = ner_parser
+
+    def __call__(self, text_batch_list: List[List[str]],
+                       nums_batch_list: List[List[int]],
+                       sentences_offsets_batch_list: List[List[List[Tuple[int, int]]]],
+                       sentences_batch_list: List[List[List[str]]]
+                       ):
+        """
+
+        Args:
+            docs_batch: batch of documents
+        Returns:
+            batch of lists of candidate entity ids
+        """
+        entity_substr_batch_list = []
+        entity_offsets_batch_list = []
+        tags_batch_list = []
+        text_len_batch_list = []
+        for text_batch, sentences_offsets_batch, sentences_batch in \
+                zip(text_batch_list, sentences_offsets_batch_list, sentences_batch_list):
+            tm_ner_st = time.time()
+            ner_tokens_batch, ner_tokens_offsets_batch, ner_probas_batch = self.ner(text_batch)
+            entity_substr_batch, _, entity_positions_batch = self.ner_parser(ner_tokens_batch, ner_probas_batch)
+            
+            tm_ner_end = time.time()
+            log.debug(f"ner time {tm_ner_end-tm_ner_st}")
+            log.debug(f"entity_substr_batch {entity_substr_batch}")
+            log.debug(f"entity_positions_batch {entity_positions_batch}")
+            entity_substr_pos_tags_batch = [[(entity_substr.lower(), entity_substr_positions, tag) 
+                                    for tag, entity_substr_list in entity_substr_dict.items()
+                    for entity_substr, entity_substr_positions in zip(entity_substr_list, entity_positions_dict[tag])]
+                    for entity_substr_dict, entity_positions_dict in zip(entity_substr_batch, entity_positions_batch)]
+            entity_substr_batch = []
+            entity_offsets_batch = []
+            tags_batch = []
+            for entity_substr_pos_tags, ner_tokens_offsets_list in \
+                        zip(entity_substr_pos_tags_batch, ner_tokens_offsets_batch):
+                if entity_substr_pos_tags:
+                    entity_offsets_list = []
+                    entity_substr_list, entity_positions_list, tags_list = zip(*entity_substr_pos_tags)
+                    for entity_positions in entity_positions_list:
+                        start_offset = ner_tokens_offsets_list[entity_positions[0]][0]
+                        end_offset = ner_tokens_offsets_list[entity_positions[-1]][1]
+                        entity_offsets_list.append((start_offset, end_offset))
+                else:
+                    entity_substr_list, entity_offsets_list, tags_list = [], [], []
+                entity_substr_batch.append(entity_substr_list)
+                entity_offsets_batch.append(entity_offsets_list)
+                tags_batch.append(tags_list)
+            
+            log.debug(f"entity_substr_batch {entity_substr_batch}")
+            log.debug(f"entity_positions_batch {entity_positions_batch}")
+            
+            entity_substr_batch_list.append(entity_substr_batch)
+            tags_batch_list.append(tags_batch)
+            entity_offsets_batch_list.append(entity_offsets_batch)
+            text_len_batch_list.append([len(text) for text in text_batch])
+
+        doc_entity_substr_batch, doc_tags_batch, doc_entity_offsets_batch = [], [], []
+        doc_sentences_offsets_batch, doc_sentences_batch = [], []
+        doc_entity_substr, doc_tags, doc_entity_offsets = [], [], []
+        doc_sentences_offsets, doc_sentences = [], []
+        cur_doc_num = 0
+        text_len_sum = 0
+        for entity_substr_batch, tags_batch, entity_offsets_batch, sentences_offsets_batch, \
+                                             sentences_batch, text_len_batch, nums_batch in \
+                zip(entity_substr_batch_list, tags_batch_list, entity_offsets_batch_list,
+                    sentences_offsets_batch_list, sentences_batch_list, text_len_batch_list, nums_batch_list):
+            
+            for entity_substr, tag, entity_offsets, sentences_offsets, sentences, text_len, doc_num in \
+                    zip(entity_substr_batch, tags_batch, entity_offsets_batch, sentences_offsets_batch,
+                                             sentences_batch, text_len_batch, nums_batch):
+                if doc_num == cur_doc_num:
+                    doc_entity_substr += entity_substr
+                    doc_tags += tag
+                    doc_entity_offsets += [(start_offset + text_len_sum, end_offset + text_len_sum)
+                                             for start_offset, end_offset in entity_offsets]
+                    doc_sentences_offsets += sentences_offsets
+                    doc_sentences += sentences
+                    text_len_sum += text_len + 1
+                else:
+                    doc_entity_substr_batch.append(doc_entity_substr)
+                    doc_tags_batch.append(doc_tags)
+                    doc_entity_offsets_batch.append(doc_entity_offsets)
+                    doc_sentences_offsets_batch.append(doc_sentences_offsets)
+                    doc_sentences_batch.append(doc_sentences)
+                    doc_entity_substr = entity_substr
+                    doc_tags = tag
+                    doc_entity_offsets = entity_offsets
+                    doc_sentences_offsets = sentences_offsets
+                    doc_sentences = sentences
+                    cur_doc_num = doc_num
+                    text_len_sum = 0
+        doc_entity_substr_batch.append(doc_entity_substr)
+        doc_tags_batch.append(doc_tags)
+        doc_entity_offsets_batch.append(doc_entity_offsets)
+        doc_sentences_offsets_batch.append(doc_sentences_offsets)
+        doc_sentences_batch.append(doc_sentences)
+
+        return doc_entity_substr_batch, doc_entity_offsets_batch, doc_tags_batch, doc_sentences_offsets_batch, \
+                   doc_sentences_batch
+
+
 @register('entity_linker_sep')
 class EntityLinkerSep(Component, Serializable):
     """
@@ -50,9 +170,6 @@ class EntityLinkerSep(Component, Serializable):
                  entities_types_sets_filename: str,
                  vectorizer_filename: str,
                  faiss_index_filename: str,
-                 chunker: NerChunker = None,
-                 ner: Chainer = None,
-                 ner_parser: EntityDetectionParser = None,
                  entity_ranker: RelRankerBertInfer = None,
                  num_faiss_candidate_entities: int = 20,
                  num_entities_for_bert_ranking: int = 50,
@@ -78,9 +195,6 @@ class EntityLinkerSep(Component, Serializable):
                 for entities
             vectorizer_filename: filename with TfidfVectorizer data
             faiss_index_filename: file with Faiss index of words
-            chunker: component deeppavlov.models.kbqa.ner_chunker
-            ner: config for entity detection
-            ner_parser: component deeppavlov.models.kbqa.entity_detection_parser
             entity_ranker: component deeppavlov.models.kbqa.rel_ranking_bert_infer
             num_faiss_candidate_entities: number of nearest neighbors for the entity substring from the text
             num_entities_for_bert_ranking: number of candidate entities for BERT ranking using description and context
@@ -109,9 +223,6 @@ class EntityLinkerSep(Component, Serializable):
         self.num_faiss_candidate_entities = num_faiss_candidate_entities
         self.num_faiss_cells = num_faiss_cells
         self.use_gpu = use_gpu
-        self.chunker = chunker
-        self.ner = ner
-        self.ner_parser = ner_parser
         self.entity_ranker = entity_ranker
         self.fit_vectorizer = fit_vectorizer
         self.max_tfidf_features = max_tfidf_features
@@ -170,24 +281,10 @@ class EntityLinkerSep(Component, Serializable):
     def __call__(self, entity_substr_batch: List[List[str]],
                        entity_offsets_batch: List[List[List[int]]],
                        tags_batch: List[List[str]],
-                       texts_batch: List[str]
+                       sentences_offsets_batch: List[List[Tuple[int, int]]],
+                       sentences_batch: List[List[str]]
                        ) -> Tuple[List[List[str]], List[List[List[Tuple[float, int, float]]]],
                                   List[List[List[int]]], List[List[List[str]]]]:
-        sentences_batch = []
-        sentences_offsets_batch = []
-        for text in texts_batch:
-            sentences_list = []
-            sentences_offsets_list = []
-            sentences = sent_tokenize(text)
-            start = 0
-            end = 0
-            for sentence in sentences:
-                sentences_list.append(sentence)
-                end = start + len(sentence)
-                sentences_offsets_list.append((start, end))
-                start = end + 1
-            sentences_batch.append(sentences_list)
-            sentences_offsets_batch.append(sentences_offsets_list)
             
         nf_entity_substr_batch, nf_tags_batch, nf_entity_positions_batch = [], [], []
         nf_entity_ids_batch, nf_conf_batch = [], []

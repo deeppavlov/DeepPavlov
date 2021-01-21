@@ -1,0 +1,55 @@
+{
+  "chainer": {
+    "in": ["x"],
+    "pipe": [
+      {
+        "class_name": "ner_chunker",
+        "batch_size": 16,
+        "in": ["x"],
+        "out": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences"]
+      },
+      {
+        "thres_proba": 0.05,
+        "entity_tags": ["PER", "LOC", "ORG"],
+        "type_tag": "TYPE",
+        "o_tag": "O",
+        "tags_file": "{NER_PATH}/tag.dict",
+        "return_entities_with_tags": true,
+        "class_name": "entity_detection_parser",
+        "id": "edp"
+      },
+      {
+        "class_name": "ner_chunk_model",
+        "ner": {"config_path": "{CONFIGS_PATH}/ner/ner_rus_bert_lowercase.json"},
+        "ner_parser": "#edp",
+        "in": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences"],
+        "out": ["entity_substr", "entity_offsets", "tags", "sentences_offsets", "sentences"]
+      }
+    ],
+    "out": ["entity_substr", "entity_offsets", "tags", "sentences_offsets", "sentences"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1",
+      "NER_PATH": "{MODELS_PATH}/ner_rus_bert"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_rus_bert_v1.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v1.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/bert_models"
+      }
+    ]
+  }
+}
