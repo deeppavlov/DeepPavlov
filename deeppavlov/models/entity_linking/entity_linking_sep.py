@@ -12,10 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
 import time
 from logging import getLogger
-from string import punctuation
 from typing import List, Dict, Tuple
 from collections import defaultdict
 
@@ -23,7 +21,6 @@ import numpy as np
 import pymorphy2
 import faiss
 from nltk.corpus import stopwords
-from nltk import sent_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 from deeppavlov.core.common.registry import register
@@ -65,9 +62,16 @@ class NerChunkModel(Component):
         """
 
         Args:
-            docs_batch: batch of documents
+            text_batch_list: list of document chunks
+            nums_batch_list: nums of documents
+            sentences_offsets_batch_list: indices of start and end symbols of sentences in text
+            sentences_batch_list: list of sentences from texts
         Returns:
-            batch of lists of candidate entity ids
+            doc_entity_substr_batch: entity substrings
+            doc_entity_offsets_batch: indices of start and end symbols of entities in text
+            doc_tags_batch: entity tags (PER, LOC, ORG)
+            doc_sentences_offsets_batch: indices of start and end symbols of sentences in text
+            doc_sentences_batch: list of sentences from texts
         """
         entity_substr_batch_list = []
         entity_offsets_batch_list = []
