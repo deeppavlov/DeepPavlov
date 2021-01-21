@@ -72,6 +72,26 @@ class NerChunkModel(Component):
             doc_tags_batch: entity tags (PER, LOC, ORG)
             doc_sentences_offsets_batch: indices of start and end symbols of sentences in text
             doc_sentences_batch: list of sentences from texts
+        
+        Examples of input arguments:
+            text_batch_list: [['Екатеринбург - город в России, административный центр Уральского федерального 
+                                округа и Свердловской области. Расположен на восточном склоне Среднего Урала,
+                                по берегам реки Исети.']]
+            nums_batch_list: [[0]]
+            sentences_offsets_batch_list: [[[(0, 108), (109, 178)]]]
+            sentences_batch_list: [[['Екатеринбург - город в России, административный центр Уральского федерального
+                                      округа и Свердловской области.',
+                                      'Расположен на восточном склоне Среднего Урала, по берегам реки Исети.']]]
+        
+        Examples of outputs:
+            doc_entity_substr_batch: [['екатеринбург', 'россии', 'уральского федерального округа',
+                                       'свердловской области', 'среднего урала', 'исети']]
+            doc_entity_offsets_batch: [[(0, 12), (23, 29), (54, 84), (87, 107), (140, 154), (172, 177)]]
+            doc_tags_batch: [['LOC', 'LOC', 'LOC', 'LOC', 'LOC', 'LOC']]
+            doc_sentences_offsets_batch: [[(0, 108), (109, 178)]]
+            doc_sentences_batch: [['Екатеринбург - город в России, административный центр Уральского федерального
+                                    округа и Свердловской области.',
+                                    'Расположен на восточном склоне Среднего Урала, по берегам реки Исети.']]
         """
         entity_substr_batch_list = []
         entity_offsets_batch_list = []
@@ -159,6 +179,11 @@ class NerChunkModel(Component):
         doc_entity_offsets_batch.append(doc_entity_offsets)
         doc_sentences_offsets_batch.append(doc_sentences_offsets)
         doc_sentences_batch.append(doc_sentences)
+        print("doc_entity_substr_batch", doc_entity_substr_batch)
+        print("doc_entity_offsets_batch", doc_entity_offsets_batch)
+        print("doc_tags_batch", doc_tags_batch)
+        print("doc_sentences_offsets_batch", doc_sentences_offsets_batch)
+        print("doc_sentences_batch", doc_sentences_batch)
 
         return doc_entity_substr_batch, doc_entity_offsets_batch, doc_tags_batch, doc_sentences_offsets_batch, \
                doc_sentences_batch
