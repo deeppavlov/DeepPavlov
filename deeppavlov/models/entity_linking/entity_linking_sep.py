@@ -110,7 +110,7 @@ class NerChunkModel(Component):
                 tags_batch.append(tags_list)
             
             log.debug(f"entity_substr_batch {entity_substr_batch}")
-            log.debug(f"entity_positions_batch {entity_positions_batch}")
+            log.debug(f"entity_offsets_batch {entity_offsets_batch}")
             
             entity_substr_batch_list.append(entity_substr_batch)
             tags_batch_list.append(tags_batch)
@@ -290,16 +290,16 @@ class EntityLinkerSep(Component, Serializable):
                        ) -> Tuple[List[List[str]], List[List[List[Tuple[float, int, float]]]],
                                   List[List[List[int]]], List[List[List[str]]]]:
             
-        nf_entity_substr_batch, nf_tags_batch, nf_entity_positions_batch = [], [], []
+        nf_entity_substr_batch, nf_tags_batch, nf_entity_offsets_batch = [], [], []
         nf_entity_ids_batch, nf_conf_batch = [], []
-        fnd_entity_substr_batch, fnd_tags_batch, fnd_entity_positions_batch = [], [], []
+        fnd_entity_substr_batch, fnd_tags_batch, fnd_entity_offsets_batch = [], [], []
         
-        for entity_substr_list, tags_list, entity_positions_list in \
+        for entity_substr_list, tags_list, entity_offsets_list in \
                 zip(entity_substr_batch, tags_batch, entity_offsets_batch):
-            nf_entity_substr_list, nf_tags_list, nf_entity_positions_list = [], [], []
+            nf_entity_substr_list, nf_tags_list, nf_entity_offsets_list = [], [], []
             nf_entity_ids_list, nf_conf_list = [], []
-            fnd_entity_substr_list, fnd_tags_list, fnd_entity_positions_list = [], [], []
-            for entity_substr, tag, entity_positions in zip(entity_substr_list, tags_list, entity_positions_list):
+            fnd_entity_substr_list, fnd_tags_list, fnd_entity_offsets_list = [], [], []
+            for entity_substr, tag, entity_offsets in zip(entity_substr_list, tags_list, entity_offsets_list):
                 nf = False
                 for tok in self.not_found_tokens:
                     if tok in entity_substr:
@@ -308,7 +308,7 @@ class EntityLinkerSep(Component, Serializable):
                 if nf:
                     nf_entity_substr_list.append(entity_substr)
                     nf_tags_list.append(tag)
-                    nf_entity_positions_list.append(entity_positions)
+                    nf_entity_offsets_list.append(entity_offsets)
                     if self.num_entities_to_return == 1:
                         nf_entity_ids_list.append(self.not_found_str)
                         nf_conf_list.append((0.0, 0, 0.0))
@@ -318,45 +318,45 @@ class EntityLinkerSep(Component, Serializable):
                 else:
                     fnd_entity_substr_list.append(entity_substr)
                     fnd_tags_list.append(tag)
-                    fnd_entity_positions_list.append(entity_positions)
+                    fnd_entity_offsets_list.append(entity_offsets)
             nf_entity_substr_batch.append(nf_entity_substr_list)
             nf_tags_batch.append(nf_tags_list)
-            nf_entity_positions_batch.append(nf_entity_positions_list)
+            nf_entity_offsets_batch.append(nf_entity_offsets_list)
             nf_entity_ids_batch.append(nf_entity_ids_list)
             nf_conf_batch.append(nf_conf_list)
             fnd_entity_substr_batch.append(fnd_entity_substr_list)
             fnd_tags_batch.append(fnd_tags_list)
-            fnd_entity_positions_batch.append(fnd_entity_positions_list)
+            fnd_entity_offsets_batch.append(fnd_entity_offsets_list)
         
         fnd_entity_ids_batch, fnd_conf_batch = \
-            self.link_entities(fnd_entity_substr_batch, fnd_tags_batch, fnd_entity_positions_batch, sentences_batch,
+            self.link_entities(fnd_entity_substr_batch, fnd_tags_batch, fnd_entity_offsets_batch, sentences_batch,
                                                                  sentences_offsets_batch, ner_tokens_offsets_batch)
         
-        entity_substr_batch, tags_batch, entity_positions_batch, entity_ids_batch, conf_batch = [], [], [], [], []
+        entity_substr_batch, tags_batch, entity_offsets_batch, entity_ids_batch, conf_batch = [], [], [], [], []
         for i in range(len(nf_entity_substr_batch)):
-            entity_substr_list, tags_list, entity_positions_list, entity_ids_list, conf_list = [], [], [], [], []
+            entity_substr_list, tags_list, entity_offsets_list, entity_ids_list, conf_list = [], [], [], [], []
             entity_substr_list = nf_entity_substr_batch[i] + fnd_entity_substr_batch[i]
             tags_list = nf_tags_batch[i] + fnd_tags_batch[i]
-            entity_positions_list = nf_entity_positions_batch[i] + fnd_entity_positions_batch[i]
+            entity_offsets_list = nf_entity_offsets_batch[i] + fnd_entity_offsets_batch[i]
             entity_ids_list = nf_entity_ids_batch[i] + fnd_entity_ids_batch[i]
             conf_list = nf_conf_batch[i] + fnd_conf_batch[i]
             entity_substr_batch.append(entity_substr_list)
             tags_batch.append(tags_list)
-            entity_positions_batch.append(entity_positions_list)
+            entity_offsets_batch.append(entity_offsets_list)
             entity_ids_batch.append(entity_ids_list)
             conf_batch.append(conf_list)
                 
         if self.return_confidences:
-            return entity_substr_batch, conf_batch, entity_positions_batch, entity_ids_batch
+            return entity_substr_batch, conf_batch, entity_offsets_batch, entity_ids_batch
         else:
-            return entity_substr_batch, entity_positions_batch, entity_ids_batch
+            return entity_substr_batch, entity_offsets_batch, entity_ids_batch
 
     def link_entities(self, entity_substr_batch: List[str], tags_batch: List[str],
                       entity_offsets_batch: List[List[int]],
                       sentences_batch: List[List[str]],
                       sentences_offsets_batch: List[List[Tuple[int, int]]]) -> List[List[List[Tuple[int, int]]]]:
         log.debug(f"entity substr batch {entity_substr_batch}")
-        log.debug(f"entity positions batch {entity_positions_batch}")
+        log.debug(f"entity offsets batch {entity_offsets_batch}")
         entity_substr_batch = [[[word for word in entity_substr.split(' ')
                                    if word not in self.stopwords and len(word) > 0]
                                   for entity_substr in entity_substr_list]

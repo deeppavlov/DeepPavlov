@@ -41,7 +41,7 @@
         "lang": "ru"
       }
     ],
-    "out": ["entity_substr", "conf", "entity_positions", "entity_ids"]
+    "out": ["entity_substr", "conf", "entity_offsets", "entity_ids"]
   },
   "metadata": {
     "variables": {
