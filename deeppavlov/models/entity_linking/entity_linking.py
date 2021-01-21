@@ -83,7 +83,6 @@ class NerChunker(Component):
         curr_doc = 0
         cur_len = 0
         start = 0
-        end = 0
         for n, doc in enumerate(docs_batch):
             doc = self.sanitize(doc)
             sentences = sent_tokenize(doc)
@@ -192,6 +191,7 @@ class EntityLinker(Component, Serializable):
             word_to_idlist_filename: file with dict of words (keys) and entity ids list as value
             entities_ranking_filename: file with dict of entity ids (keys) and number of relations in Wikidata
                 for entities
+            entities_types_sets_filename: file with entities split into sets of PER, LOC, ORG entity types
             vectorizer_filename: filename with TfidfVectorizer data
             faiss_index_filename: file with Faiss index of words
             chunker: component deeppavlov.models.kbqa.ner_chunker
@@ -210,6 +210,7 @@ class EntityLinker(Component, Serializable):
             num_entities_to_return: number of candidate entities for the substring which are returned
             lang: russian or english
             use_description: whether to perform entity ranking by context and description
+            return_confidences: whether to return confidences of entities
             lemmatize: whether to lemmatize tokens
             **kwargs:
         """
@@ -290,6 +291,7 @@ class EntityLinker(Component, Serializable):
             docs_batch: batch of documents
         Returns:
             batch of lists of candidate entity ids
+            batch of lists of candidate entity ids confidences
         """
         text_batch_list, nums_batch_list, sentences_offsets_batch_list, sentences_batch_list = self.chunker(docs_batch)
         entity_ids_batch_list = []
@@ -300,8 +302,6 @@ class EntityLinker(Component, Serializable):
         text_len_batch_list = []
         for text_batch, sentences_offsets_batch, sentences_batch in \
                 zip(text_batch_list, sentences_offsets_batch_list, sentences_batch_list):
-            entity_ids_batch = []
-            conf_batch = []
             tm_ner_st = time.time()
             ner_tokens_batch, ner_tokens_offsets_batch, ner_probas_batch = self.ner(text_batch)
             entity_substr_batch, _, entity_positions_batch = self.ner_parser(ner_tokens_batch, ner_probas_batch)
@@ -373,7 +373,6 @@ class EntityLinker(Component, Serializable):
 
             entity_substr_batch, tags_batch, entity_positions_batch, entity_ids_batch, conf_batch = [], [], [], [], []
             for i in range(len(nf_entity_substr_batch)):
-                entity_substr_list, tags_list, entity_positions_list, entity_ids_list, conf_list = [], [], [], [], []
                 entity_substr_list = nf_entity_substr_batch[i] + fnd_entity_substr_batch[i]
                 tags_list = nf_tags_batch[i] + fnd_tags_batch[i]
                 entity_positions_list = nf_entity_positions_batch[i] + fnd_entity_positions_batch[i]
@@ -392,19 +391,14 @@ class EntityLinker(Component, Serializable):
             entity_positions_batch_list.append(entity_positions_batch)
             text_len_batch_list.append([len(text) for text in ner_tokens_batch])
 
-        doc_entity_ids_batch = []
-        doc_conf_batch = []
-        doc_entity_substr_batch = []
-        doc_tags_batch = []
-        doc_entity_positions_batch = []
-        doc_entity_ids = []
-        doc_conf = []
-        doc_entity_substr = []
-        doc_tags = []
-        doc_entity_positions = []
+        doc_entity_ids_batch, doc_conf_batch, doc_entity_substr_batch = [], [], []
+        doc_tags_batch, doc_entity_positions_batch = [], []
+        doc_entity_ids, doc_conf, doc_entity_substr = [], [], []
+        doc_tags, doc_entity_positions = [], []
         cur_doc_num = 0
         text_len_sum = 0
-        for entity_ids_batch, conf_batch, entity_substr_batch, tags_batch, entity_positions_batch, text_len_batch, nums_batch in \
+        for entity_ids_batch, conf_batch, entity_substr_batch, tags_batch, entity_positions_batch, \
+            text_len_batch, nums_batch in \
                 zip(entity_ids_batch_list, conf_batch_list, entity_substr_batch_list, tags_batch_list,
                     entity_positions_batch_list,
                     text_len_batch_list, nums_batch_list):
@@ -528,7 +522,7 @@ class EntityLinker(Component, Serializable):
 
                     for ind, score in zip(ind_list, scores_list):
                         entities_set = self.word_to_idlist[self.word_list[ind]]
-                        entities_set = {entity for entity in entities_set if (entity[0] in self.entities_types_sets[tag] \
+                        entities_set = {entity for entity in entities_set if (entity[0] in self.entities_types_sets[tag]
                                                                               or entity[0] in self.entities_types_sets[
                                                                                   "AMB"])}
                         for entity in entities_set:
@@ -557,8 +551,6 @@ class EntityLinker(Component, Serializable):
                     log.debug(f"candidate_entities before ranking {candidate_entities[:10]}")
                     candidate_entities = [candidate_entity + (self.entities_ranking_dict.get(candidate_entity[0], 0),)
                                           for candidate_entity in candidate_entities]
-                    candidate_entities_str = '\n'.join(
-                        [str(candidate_entity) for candidate_entity in candidate_entities])
                     candidate_entities = sorted(candidate_entities, key=lambda x: (x[1], x[2]), reverse=True)
                     log.debug(f"candidate_entities {candidate_entities[:10]}")
                     entities_scores = {entity: (substr_score, pop_score)
@@ -638,14 +630,12 @@ class EntityLinker(Component, Serializable):
             sentence = ""
             rel_start_offset = 0
             rel_end_offset = 0
-            sent_num = 0
             for num, (sent, (sent_start_offset, sent_end_offset)) in \
                     enumerate(zip(sentences_list, sentences_offsets_list)):
                 if entity_start_offset >= sent_start_offset and entity_end_offset <= sent_end_offset:
                     sentence = sent
                     rel_start_offset = entity_start_offset - sent_start_offset
                     rel_end_offset = entity_end_offset - sent_start_offset
-                    sent_num = num
                     break
             log.debug(f"rank, found sentence {sentence}")
             log.debug(f"rank, relative offsets {rel_start_offset}, {rel_end_offset}")
@@ -669,8 +659,6 @@ class EntityLinker(Component, Serializable):
                                     entity[0].startswith("Q")]
             entities_with_scores = sorted(entities_with_scores, key=lambda x: (x[1], x[3], x[2]), reverse=True)
             log.debug(f"entities_with_scores {entities_with_scores}")
-            top_entities = []
-            top_conf = []
 
             if entities_with_scores and 7.5 * entities_with_scores[0][3] > 1.0:
                 top_entities = [score[0] for score in entities_with_scores]
