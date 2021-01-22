@@ -43,8 +43,8 @@
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_rus_bert_v1.tar.gz",
-        "subdir": "{MODELS_PATH}"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_rus_bert_lowercase.tar.gz",
+        "subdir": "{MODELS_PATH}/ner_rus_bert_lowercase"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v1.tar.gz",
