@@ -18,7 +18,7 @@ import re
 import time
 from logging import getLogger
 from typing import Tuple, List, Optional, Union, Dict, Any
-from collections import namedtuple, defaultdict
+from collections import namedtuple, OrderedDict
 
 import numpy as np
 import nltk
@@ -86,6 +86,8 @@ class QueryGenerator(QueryGeneratorBase):
             for question, question_sanitized, template_type, entities_from_ner, types_from_ner in \
                     zip(question_batch, question_san_batch, template_type_batch,
                         entities_from_ner_batch, types_from_ner_batch):
+                if template_type == "-1":
+                    template_type = "7"
                 candidate_outputs, template_answer = self.find_candidate_answers(question, question_sanitized,
                                                                                  template_type, entities_from_ner,
                                                                                  types_from_ner)
@@ -229,10 +231,12 @@ class QueryGenerator(QueryGeneratorBase):
                 candidate_outputs += [[combs[0]] + [rel for rel, score in combs[2][:-1]] + output + [confidence]
                                       for output in candidate_output]
             if self.return_all_possible_answers:
-                candidate_outputs_dict = defaultdict(list)
+                candidate_outputs_dict = OrderedDict()
                 for candidate_output in candidate_outputs:
-                    candidate_outputs_dict[(tuple(candidate_output[0]),
-                                            tuple(candidate_output[1:-2]))].append(candidate_output[-2:])
+                    candidate_output_key = (tuple(candidate_output[0]), tuple(candidate_output[1:-2]))
+                    if candidate_output_key not in candidate_outputs_dict:
+                        candidate_outputs_dict[candidate_output_key] = []
+                    candidate_outputs_dict[candidate_output_key].append(candidate_output[-2:])
                 candidate_outputs = []
                 for (candidate_entity_comb, candidate_rel_comb), candidate_output in candidate_outputs_dict.items():
                     candidate_outputs.append(list(candidate_rel_comb) +

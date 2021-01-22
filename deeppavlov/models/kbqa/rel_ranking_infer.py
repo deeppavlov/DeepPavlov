@@ -34,7 +34,7 @@ class RelRankerInfer(Component, Serializable):
 
     def __init__(self, load_path: str,
                  rel_q2name_filename: str,
-                 ranker: RelRanker,
+                 ranker: Optional[RelRanker] = None,
                  bert_preprocessor: Optional[BertPreprocessor] = None,
                  wiki_parser: Optional[WikiParser] = None,
                  batch_size: int = 32,
@@ -45,6 +45,7 @@ class RelRankerInfer(Component, Serializable):
                  use_api_requester: bool = False,
                  use_mt_bert: bool = False,
                  return_sentence_answer: bool = False,
+                 rank: bool = True,
                  return_confidences: bool = False, **kwargs):
         """
 
@@ -77,6 +78,7 @@ class RelRankerInfer(Component, Serializable):
         self.use_api_requester = use_api_requester
         self.use_mt_bert = use_mt_bert
         self.return_sentence_answer = return_sentence_answer
+        self.rank = rank
         self.return_confidences = return_confidences
         self.load()
 
@@ -98,41 +100,43 @@ class RelRankerInfer(Component, Serializable):
                 zip(questions_list, candidate_answers_list, entities_list, template_answers_list):
             answers_with_scores = []
             answer = "Not Found"
+            if self.rank:
+                n_batches = len(candidate_answers) // self.batch_size + int(len(candidate_answers) % self.batch_size > 0)
+                for i in range(n_batches):
+                    questions_batch = []
+                    rels_labels_batch = []
+                    answers_batch = []
+                    confidences_batch = []
+                    for candidate_ans_and_rels in candidate_answers[i * self.batch_size: (i + 1) * self.batch_size]:
+                        candidate_rels = []
+                        if candidate_ans_and_rels:
+                            candidate_rels = candidate_ans_and_rels[:-2]
+                            candidate_rels = [candidate_rel.split('/')[-1] for candidate_rel in candidate_rels]
+                            candidate_answer = candidate_ans_and_rels[-2]
+                            candidate_confidence = candidate_ans_and_rels[-1]
+                            candidate_rels = " # ".join([self.rel_q2name[candidate_rel] \
+                                                         for candidate_rel in candidate_rels if
+                                                         candidate_rel in self.rel_q2name])
+                        if candidate_rels:
+                            questions_batch.append(question)
+                            rels_labels_batch.append(candidate_rels)
+                            answers_batch.append(candidate_answer)
+                            confidences_batch.append(candidate_confidence)
 
-            n_batches = len(candidate_answers) // self.batch_size + int(len(candidate_answers) % self.batch_size > 0)
-            for i in range(n_batches):
-                questions_batch = []
-                rels_labels_batch = []
-                answers_batch = []
-                confidences_batch = []
-                for candidate_ans_and_rels in candidate_answers[i * self.batch_size: (i + 1) * self.batch_size]:
-                    candidate_rels = []
-                    if candidate_ans_and_rels:
-                        candidate_rels = candidate_ans_and_rels[:-2]
-                        candidate_rels = [candidate_rel.split('/')[-1] for candidate_rel in candidate_rels]
-                        candidate_answer = candidate_ans_and_rels[-2]
-                        candidate_confidence = candidate_ans_and_rels[-1]
-                        candidate_rels = " # ".join([self.rel_q2name[candidate_rel] \
-                                                     for candidate_rel in candidate_rels if
-                                                     candidate_rel in self.rel_q2name])
-                    if candidate_rels:
-                        questions_batch.append(question)
-                        rels_labels_batch.append(candidate_rels)
-                        answers_batch.append(candidate_answer)
-                        confidences_batch.append(candidate_confidence)
+                    if questions_batch:
+                        if self.use_mt_bert:
+                            features = self.bert_preprocessor(questions_batch, rels_labels_batch)
+                            probas = self.ranker(features)
+                        else:
+                            probas = self.ranker(questions_batch, rels_labels_batch)
+                        probas = [proba[1] for proba in probas]
+                        for j, (answer, confidence, rels_labels) in \
+                                enumerate(zip(answers_batch, confidences_batch, rels_labels_batch)):
+                            answers_with_scores.append((answer, rels_labels, max(probas[j], confidence)))
 
-                if questions_batch:
-                    if self.use_mt_bert:
-                        features = self.bert_preprocessor(questions_batch, rels_labels_batch)
-                        probas = self.ranker(features)
-                    else:
-                        probas = self.ranker(questions_batch, rels_labels_batch)
-                    probas = [proba[1] for proba in probas]
-                    for j, (answer, confidence, rels_labels) in \
-                            enumerate(zip(answers_batch, confidences_batch, rels_labels_batch)):
-                        answers_with_scores.append((answer, rels_labels, max(probas[j], confidence)))
-
-            answers_with_scores = sorted(answers_with_scores, key=lambda x: x[-1], reverse=True)
+                answers_with_scores = sorted(answers_with_scores, key=lambda x: x[-1], reverse=True)
+            else:
+                answers_with_scores = [(answer, rels, conf) for *rels, answer, conf in candidate_answers]
 
             if answers_with_scores:
                 log.debug(f"answers: {answers_with_scores[0]}")
