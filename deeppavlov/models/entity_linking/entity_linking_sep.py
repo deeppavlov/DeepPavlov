@@ -617,7 +617,7 @@ class EntityLinkerSep(Component, Serializable):
                 end_of_sentence = len(sentence)
                 if len(sentence) > self.max_text_len:
                     start_of_sentence = max(rel_start_offset - self.max_text_len//2, 0)
-                    end_of_sentence = min(rel_end_offset + self.max_text_len//2)
+                    end_of_sentence = min(rel_end_offset + self.max_text_len//2, len(sentence))
                 if self.include_mention:
                     context = sentence[start_of_sentence:rel_start_offset] + "[ENT]" + \
                         sentence[rel_start_offset:rel_end_offset] + "[ENT]" + sentence[rel_end_offset:end_of_sentence]
