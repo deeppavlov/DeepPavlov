@@ -210,6 +210,7 @@ class EntityLinkerSep(Component, Serializable):
                  lang: str = "ru",
                  use_descriptions: bool = True,
                  return_confidences: bool = False,
+                 max_text_len: int = 300,
                  lemmatize: bool = False,
                  **kwargs) -> None:
         """
@@ -236,6 +237,7 @@ class EntityLinkerSep(Component, Serializable):
             lang: russian or english
             use_description: whether to perform entity ranking by context and description
             return_confidences: whether to return confidences of entities
+            max_text_len: maximum length of text for ranking by context and description
             lemmatize: whether to lemmatize tokens
             **kwargs:
         """
@@ -266,6 +268,7 @@ class EntityLinkerSep(Component, Serializable):
         self.not_found_str = "not in wiki"
         self.use_descriptions = use_descriptions
         self.return_confidences = return_confidences
+        self.max_text_len = max_text_len
 
         self.load()
 
@@ -610,11 +613,17 @@ class EntityLinkerSep(Component, Serializable):
             log.debug(f"rank, relative offsets {rel_start_offset}, {rel_end_offset}")
             context = ""
             if sentence:
+                start_of_sentence = 0
+                end_of_sentence = len(sentence)
+                if len(sentence) > self.max_text_len:
+                    start_of_sentence = max(rel_start_offset - self.max_text_len//2, 0)
+                    end_of_sentence = min(rel_end_offset + self.max_text_len//2)
                 if self.include_mention:
-                    context = sentence[:rel_start_offset] + "[ENT]" + sentence[rel_start_offset:rel_end_offset] + \
-                              "[ENT]" + sentence[rel_end_offset:]
+                    context = sentence[start_of_sentence:rel_start_offset] + "[ENT]" + \
+                        sentence[rel_start_offset:rel_end_offset] + "[ENT]" + sentence[rel_end_offset:end_of_sentence]
                 else:
-                    context = sentence[:rel_start_offset] + "[ENT]" + sentence[rel_end_offset:]
+                    context = sentence[start_of_sentence:rel_start_offset] + "[ENT]" + \
+                              sentence[rel_end_offset:end_of_sentence]
             log.debug(f"rank, context: {context}")
             contexts.append(context)
 
