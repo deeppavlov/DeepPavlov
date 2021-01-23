@@ -247,7 +247,6 @@ class KBEntityLinker(Component, Serializable):
                     entity_types = set(entity_types)
                     candidate_entities = [entity for entity in candidate_entities if
                                           self.types_dict.get(entity[1], set()).intersection(entity_types)]
-                print("template_found", template_found)
                 if template_found in ["what is xxx?", "what was xxx?"]:
                     candidate_entities_filtered = [entity for entity in candidate_entities if
                         not self.types_dict.get(entity[1], set()).intersection(self.black_list_what_is)]

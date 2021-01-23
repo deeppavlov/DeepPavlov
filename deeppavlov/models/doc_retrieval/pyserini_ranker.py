@@ -37,10 +37,12 @@ class PyseriniRanker(Component):
         self.return_scores = return_scores
     def __call__(self, questions: List[str]) -> Tuple[List[Any], List[float]]:
         docs_batch = []
+        doc_ids_batch = []
         scores_batch = []
         if self.n_threads == 1 or len(questions) == 1:
             for question in questions:
                 docs = []
+                doc_ids = []
                 scores = []
                 res = self.searcher.search(question, self.top_n)
                 for elem in res:
@@ -48,8 +50,10 @@ class PyseriniRanker(Component):
                     score = elem.score
                     if doc and isinstance(doc, dict):
                         docs.append(doc.get("contents", ""))
+                        doc_ids.append(doc.get("id", ""))
                         scores.append(score)
                 docs_batch.append(docs)
+                doc_ids_batch.append(doc_ids)
                 scores_batch.append(scores)
         else:
             n_batches = len(questions) // self.n_threads + int(len(questions)%self.n_threads > 0)
@@ -59,6 +63,7 @@ class PyseriniRanker(Component):
                 res_batch = self.searcher.batch_search(questions_cur, qids_cur, self.top_n, self.n_threads)
                 for qid in qids_cur:
                     docs = []
+                    doc_ids = []
                     scores = []
                     res = res_batch.get(qid)
                     for elem in res:
@@ -66,9 +71,12 @@ class PyseriniRanker(Component):
                         score = elem.score
                         if doc and isinstance(doc, dict):
                             docs.append(doc.get("contents", ""))
+                            doc_ids.append(doc.get("id", ""))
                             scores.append(score)
                     docs_batch.append(docs)
+                    doc_ids_batch.append(doc_ids)
                     scores_batch.append(scores)
+        logger.debug(f"found docs {doc_ids_batch}")
         
         if self.return_scores:
             return docs_batch, scores_batch
