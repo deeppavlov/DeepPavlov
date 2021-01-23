@@ -78,15 +78,11 @@
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/kbqa/datasets/rel_ranking.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/rel_ranking"
+        "url": "http://files.deeppavlov.ai/kbqa/models/opendialkg_path_ranking_lite.tar.gz",
+        "subdir": "{MODELS_PATH}/opendialkg_path_ranking_lite"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking.tar.gz",
-        "subdir": "{MODELS_PATH}/rel_ranking"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/embeddings/reddit_fastText/wordpunct_tok_reddit_comments_2017_11_300.bin",
+        "url": "http://files.deeppavlov.ai/embeddings/reddit_fastText/wordpunct_tok_reddit_comments_2017_11_100.bin",
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
