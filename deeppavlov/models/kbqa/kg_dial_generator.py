@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import itertools
+import math
 from logging import getLogger
 from typing import List
 
@@ -19,7 +21,7 @@ from transformers import AutoTokenizer, AutoModelWithLMHead
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.file import load_pickle
+from deeppavlov.core.common.file import load_json
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
 from deeppavlov.models.kbqa.wiki_parser import WikiParser
 
@@ -37,11 +39,14 @@ class KGDialGenerator(Component):
         self.model = AutoModelWithLMHead.from_pretrained(str(expand_path(path_to_model)))
         self.model.resize_token_embeddings(len(self.tokenizer))
         
-    def __call__(self, prev_utterances_batch: List[str], triplets_batch: List[List[str]]) -> List[str]:
+    def __call__(self, prev_utterances_batch: List[str], triplets_batch: List[List[str]],
+                       conf_batch: List[float]) -> List[str]:
         generated_utterances_batch = []
-        for prev_utterance, triplets in zip(prev_utterances_batch, triplets_batch):
-            triplets = ' '.join([' '.join(triplet) for triplet in triplets])
+        for prev_utterance, triplets, conf in zip(prev_utterances_batch, triplets_batch, conf_batch):
+            log.debug(f"prev_utterance {prev_utterance} triplets {triplets}")
+            triplets = ' '.join(triplets)
             context_plus_gk = triplets + " <SEP> " + prev_utterance + self.tokenizer.eos_token
+            log.debug(f"context and gk: {context_plus_gk}")
             input_ids = self.tokenizer.encode(context_plus_gk, return_tensors="pt")
             generated_ids = self.model.generate(input_ids, max_length=200,
                                                 pad_token_id=self.tokenizer.eos_token_id,
@@ -51,7 +56,7 @@ class KGDialGenerator(Component):
                                                         skip_special_tokens=True)
             generated_utterances_batch.append(generated_utterance)
         
-        return generated_utterances_batch
+        return generated_utterances_batch, conf_batch
         
 
 @register('dial_path_ranker')    
@@ -59,34 +64,61 @@ class DialPathRanker(Component):
     def __init__(self, wiki_parser: WikiParser,
                        path_ranker: RelRankerInfer,
                        type_paths_file: str,
-                       type_groups_file: str = None,
+                       type_groups_file: str,
+                       rel_freq_file: str,
                        *args, **kwargs) -> None:
         
-        self.type_paths = load_pickle(expand_path(type_paths_file))
-        if type_groups_file:
-            self.type_groups = load_pickle(expand_path(type_groups_file))
+        self.type_paths = load_json(expand_path(type_paths_file))
+        self.type_groups = load_json(expand_path(type_groups_file))
+        self.rel_freq = load_json(expand_path(rel_freq_file))
+        
         self.wiki_parser = wiki_parser
         self.path_ranker = path_ranker
+        
+        self.max_log_freq = 8.0
     
     def __call__(self, utterances_batch: List[str], entities_batch: List[List[str]]) -> List[List[str]]:
         paths_batch = []
+        conf_batch = []
         for utterance, entities_list in zip(utterances_batch, entities_batch):
             entity = entities_list[0]
             log.debug(f"seed entity {entity}")
             entity_types = self.wiki_parser(["find_types"], [entity])[0]
+            entity_types = set(entity_type)
             log.debug(f"entity types {entity_types}")
             candidate_paths = set()
             for entity_type in entity_types:
                 candidate_paths = candidate_paths.union(self.type_paths[entity_type])
+            if not candidate_paths:
+                log.debug("not found candidate paths, looking in types dict")
+                add_entity_types = set()
+                subclasses = self.wiki_parser(["find_object" for _ in entity_types],
+                                              [(entity_type, "P279", "forw") for entity_type in entity_types])
+                subclasses = list(itertools.chain.from_iterable(subclasses))
+                for subcls in subclasses:
+                    subclass_group = set(self.type_groups[subcls])
+                    if entity_types.intersection(subclass_group):
+                        add_entity_types = add_entity_types.union(subclass_groups.difference(entity_types))
+                for entity_type in entity_types:
+                    candidate_paths = candidate_paths.union(self.type_paths[entity_type])
+                    
+            candidate_paths = list(candidate_paths)
+            log.debug(f"candidate paths {candidate_paths[:10]}")
             
-            paths_with_scores = self.path_ranker.rank_paths(utterance, list(candidate_paths))
+            paths_with_scores = self.path_ranker.rank_paths(utterance, candidate_paths)
             top_paths = [path for path, score in paths_with_scores]
             log.debug(f"top paths {top_paths[:10]}")
-            retrieved_paths = self.wiki_parser(["retrieve_paths"], [[entity, top_paths]])[0]
+            retrieved_paths, retrieved_rels = self.wiki_parser(["retrieve_paths"], [[entity, top_paths]])[0]
             log.debug(f"retrieved paths {retrieved_paths}")
+            chosen_path = retrieved_paths[0]
+            chosen_rels = retrieved_rels[0]
+            conf = min(math.log(sum([self.rel_freq.get(rel, [0])[0] for rel chosen_rels]) / len(chosen_rels)) / self.max_freq, 1.0)
+            
             if retrieved_paths:
                 paths_batch.append(retrieved_paths[0])
+                conf_batch.append(conf)
             else:
                 paths_batch.append([])
+                conf_batch.append(0.0)
                 
-        return paths_batch
+        return paths_batch, conf_batch

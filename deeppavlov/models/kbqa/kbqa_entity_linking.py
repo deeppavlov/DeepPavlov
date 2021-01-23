@@ -30,7 +30,7 @@ from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.file import load_pickle, save_pickle
 from deeppavlov.models.spelling_correction.levenshtein.levenshtein_searcher import LevenshteinSearcher
-from deeppavlov.models.kbqa.rel_ranking_bert_infer import RelRankerBertInfer
+from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
 
 log = getLogger(__name__)
 
@@ -56,7 +56,7 @@ class KBEntityLinker(Component, Serializable):
                  q2descr_filename: str = None,
                  descr_rank_score_thres: float = 0.01,
                  freq_dict_filename: Optional[str] = None,
-                 entity_ranker: RelRankerBertInfer = None,
+                 entity_ranker: RelRankerInfer = None,
                  build_inverted_index: bool = False,
                  kb_format: str = "hdt",
                  kb_filename: str = None,
@@ -87,7 +87,7 @@ class KBEntityLinker(Component, Serializable):
             descr_rank_score_thres: if the score of the entity description is less than threshold, the entity is not
                 added to output list
             freq_dict_filename: filename with frequences dictionary of Russian words
-            entity_ranker: component deeppavlov.models.kbqa.rel_ranker_bert_infer
+            entity_ranker: component deeppavlov.models.kbqa.rel_ranker_infer
             build_inverted_index: if "true", inverted index of entities of the KB will be built
             kb_format: "hdt" or "sqlite3"
             kb_filename: file with the knowledge base, which will be used for building of inverted index
@@ -138,6 +138,17 @@ class KBEntityLinker(Component, Serializable):
         self.use_descriptions = use_descriptions
         self.include_mention = include_mention
         self.num_entities_to_return = num_entities_to_return
+        self.black_list_what_is = set(["Q277759", # book series
+                                       "Q11424", # film
+                                       "Q7889", # video game
+                                       "Q2743", # musical theatre
+                                       "Q5398426", # tv series
+                                       "Q506240", # television film
+                                       "Q21191270", # television series episode
+                                       "Q7725634", # literary work
+                                       "Q131436", # board game
+                                       "Q1783817" # cooperative board game
+                                      ])
         if self.use_descriptions and self.entity_ranker is None:
             raise ValueError("No entity ranker is provided!")
 
@@ -231,10 +242,17 @@ class KBEntityLinker(Component, Serializable):
             entities_ids = ['None']
         else:
             candidate_entities = self.candidate_entities_inverted_index(entity)
-            if entity_types and self.types_dict:
-                entity_types = set(entity_types)
-                candidate_entities = [entity for entity in candidate_entities if
-                                      self.types_dict.get(entity[1], set()).intersection(entity_types)]
+            if self.types_dict:
+                if entity_types:
+                    entity_types = set(entity_types)
+                    candidate_entities = [entity for entity in candidate_entities if
+                                          self.types_dict.get(entity[1], set()).intersection(entity_types)]
+                print("template_found", template_found)
+                if template_found in ["what is xxx?", "what was xxx?"]:
+                    candidate_entities_filtered = [entity for entity in candidate_entities if
+                        not self.types_dict.get(entity[1], set()).intersection(self.black_list_what_is)]
+                    if candidate_entities_filtered:
+                        candidate_entities = candidate_entities_filtered
             if cut_entity and candidate_entities and len(entity.split()) > 1 and candidate_entities[0][3] == 1:
                 entity = self.cut_entity_substr(entity)
                 candidate_entities = self.candidate_entities_inverted_index(entity)

@@ -40,6 +40,8 @@ class RelRanker(LRScheduledTFModel):
 
     def __init__(self, n_classes: int = 2,
                  dropout_keep_prob: float = 0.5,
+                 input_dim: int = 300,
+                 bigru_num_units: int = 75,
                  return_probas: bool = False, **kwargs):
         """
 
@@ -58,6 +60,8 @@ class RelRanker(LRScheduledTFModel):
 
         self.n_classes = n_classes
         self.dropout_keep_prob = dropout_keep_prob
+        self.input_dim = input_dim
+        self.bigru_num_units = bigru_num_units
         self.return_probas = return_probas
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
@@ -67,8 +71,8 @@ class RelRanker(LRScheduledTFModel):
         else:
             self.GRU = CudnnCompatibleGRU
 
-        self.question_ph = tf.placeholder(tf.float32, [None, None, 300])
-        self.rel_emb_ph = tf.placeholder(tf.float32, [None, None, 300])
+        self.question_ph = tf.placeholder(tf.float32, [None, None, self.input_dim])
+        self.rel_emb_ph = tf.placeholder(tf.float32, [None, None, self.input_dim])
 
         r_mask_2 = tf.cast(self.rel_emb_ph, tf.bool)
         r_len_2 = tf.reduce_sum(tf.cast(r_mask_2, tf.int32), axis=2)
@@ -90,7 +94,7 @@ class RelRanker(LRScheduledTFModel):
         b_size = tf.shape(self.question_ph)[0]
 
         with tf.variable_scope("question_encode"):
-            rnn = self.GRU(num_layers=2, num_units=75, batch_size=b_size, input_size=300, keep_prob=self.keep_prob_ph)
+            rnn = self.GRU(num_layers=2, num_units=self.bigru_num_units, batch_size=b_size, input_size=self.input_dim, keep_prob=self.keep_prob_ph)
             q = rnn(question_dr, seq_len=q_len)
 
         with tf.variable_scope("attention"):

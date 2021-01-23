@@ -6,7 +6,7 @@
       {
         "class_name": "rel_ranking_infer",
         "id": "pthr",
-        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/opendialkg_path_ranking.json"},
+        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/opendialkg_path_ranking_lite.json"},
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
         "rel_q2name_filename": "wiki_dict_properties.pickle",
         "rels_to_leave": 40,
@@ -16,20 +16,21 @@
         "class_name": "dial_path_ranker",
         "wiki_parser": {"config_path": "{CONFIGS_PATH}/kbqa/wiki_parser.json"},
         "path_ranker": "#pthr",
-        "type_paths_file": "{DOWNLOADS_PATH}/wikidata/paths.pickle",
-        "type_groups_file": "",
+        "type_paths_file": "{DOWNLOADS_PATH}/wikidata/paths.json",
+        "type_groups_file": "{DOWNLOADS_PATH}/wikidata/subclass_groups.json",
+        "rel_freq_file": "{DOWNLOADS_PATH}/wikidata/rel_wiki_opendialkg_freq.json",
         "in": ["utterance", "entities"],
-        "out": ["paths"]
+        "out": ["paths", "conf"]
       },
       {
         "class_name": "kg_dial_generator",
         "transformer_model": "microsoft/DialoGPT-small",
         "path_to_model": "{MODELS_PATH}/dialogpt_wiki",
-        "in": ["utterance", "paths"],
-        "out": ["generated_utterance"]
+        "in": ["utterance", "paths", "conf"],
+        "out": ["generated_utterance", "conf"]
       }
     ],
-    "out": ["generated_utterance"]
+    "out": ["generated_utterance", "conf"]
   },
   "metadata": {
     "variables": {
@@ -52,7 +53,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/path_ranking_data.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/path_ranking_data"
+        "subdir": "{DOWNLOADS_PATH}/wikidata"
       }
     ]
   }
