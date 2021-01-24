@@ -83,7 +83,7 @@ class QueryGenerator(QueryGeneratorBase):
         candidate_outputs = []
         template_answer = ""
         try:
-            log.info("kbqa inputs {question_batch} {entities_from_ner_batch})
+            log.info(f"kbqa inputs {question_batch} {entities_from_ner_batch}")
             for question, question_sanitized, template_type, entities_from_ner, types_from_ner in \
                     zip(question_batch, question_san_batch, template_type_batch,
                         entities_from_ner_batch, types_from_ner_batch):
