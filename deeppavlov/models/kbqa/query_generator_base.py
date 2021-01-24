@@ -189,6 +189,7 @@ class QueryGeneratorBase(Component, Serializable):
                     el_output = self.linker_entities([entities], [template_found], [question])
                 except json.decoder.JSONDecodeError:
                     log.info("not received output from entity linking")
+            log.info(f"el input {entities} {template_found} {question} el output {el_output}")
             if self.use_api_requester:
                 el_output = el_output[0]
             entity_ids, _ = el_output
