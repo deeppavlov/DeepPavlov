@@ -23,6 +23,7 @@ class EntitiesParser(Serializable):
         self.word_to_idlist_filename = word_to_idlist_filename
         self.entities_ranking_dict_filename = entities_ranking_dict_filename
         self.entities_descr_filename = entities_descr_filename
+        self.entities_types_sets_filename = entities_types_sets_filename
 
         self.name_to_idlist = defaultdict(list)
         self.word_to_idlist = {}
