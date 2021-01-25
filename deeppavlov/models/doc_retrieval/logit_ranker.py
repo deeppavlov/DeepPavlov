@@ -75,6 +75,7 @@ class LogitRanker(Component):
             logger.warning("you didn't pass tfidf_doc_ids as input in logit_ranker config so "
                            "batch_best_answers_doc_ids can't be compute")
 
+        tm_st = time.time()
         batch_best_answers = []
         batch_best_answers_score = []
         batch_best_answers_place = []
@@ -110,14 +111,24 @@ class LogitRanker(Component):
                 doc_ind = [results.index(x) for x in results_sort]
                 batch_best_answers_doc_ids.append(
                     [doc_ids_batch[quest_ind][i] for i in doc_ind][:len(batch_best_answers[-1])])
+        tm_end = time.time()
+        logger.debug(f"time of squad {tm_end-tm_st}")
 
         if self.top_n == 1:
-            batch_best_answers = [x[0] for x in batch_best_answers]
-            batch_best_answers_place = [x[0] for x in batch_best_answers_place]
-            batch_best_answers_score = [x[0] for x in batch_best_answers_score]
-            batch_best_answers_doc_ids = [x[0] for x in batch_best_answers_doc_ids]
-            batch_best_answers_sentences = [x[0] for x in batch_best_answers_sentences]
-            batch_best_answers_contexts = [x[0] for x in batch_best_answers_contexts]
+            if batch_best_answers and batch_best_answers[0]:
+                batch_best_answers = [x[0] for x in batch_best_answers]
+                batch_best_answers_place = [x[0] for x in batch_best_answers_place]
+                batch_best_answers_score = [x[0] for x in batch_best_answers_score]
+                batch_best_answers_doc_ids = [x[0] for x in batch_best_answers_doc_ids]
+                batch_best_answers_sentences = [x[0] for x in batch_best_answers_sentences]
+                batch_best_answers_contexts = [x[0] for x in batch_best_answers_contexts]
+            else:
+                batch_best_answers = ["" for _ in batch_best_answers]
+                batch_best_answers_place = [0 for _ in batch_best_answers_place]
+                batch_best_answers_score = [0.0 for _ in batch_best_answers_score]
+                batch_best_answers_doc_ids = ["" for _ in batch_best_answers_doc_ids]
+                batch_best_answers_sentences = ["" for _ in batch_best_answers_sentences]
+                batch_best_answers_contexts = ["" for _ in batch_best_answers_contexts]
 
         if self.return_answer_sentence:
             return batch_best_answers, batch_best_answers_score, batch_best_answers_place, \

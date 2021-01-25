@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
 from itertools import chain
 from logging import getLogger
 from typing import List, Callable, Union, Tuple, Optional
@@ -45,13 +46,14 @@ class DocumentChunker(Component):
 
     def __init__(self, sentencize_fn: Callable = sent_tokenize, keep_sentences: bool = True,
                  tokens_limit: int = 400, flatten_result: bool = False,
-                 paragraphs: bool = False, number_of_paragraphs: int = -1, *args, **kwargs) -> None:
+                 paragraphs: bool = False, number_of_paragraphs: int = -1, log: bool = False, *args, **kwargs) -> None:
         self._sentencize_fn = sentencize_fn
         self.keep_sentences = keep_sentences
         self.tokens_limit = tokens_limit
         self.flatten_result = flatten_result
         self.paragraphs = paragraphs
         self.number_of_paragraphs = number_of_paragraphs
+        self.log = log
 
     def __call__(self, batch_docs: List[Union[str, List[str]]],
                  batch_docs_ids: Optional[List[Union[str, List[str]]]] = None) -> \
@@ -77,6 +79,7 @@ class DocumentChunker(Component):
         if empty_docs_ids_flag:
             batch_docs_ids = [[[] for j in i] for i in batch_docs]
 
+        tm_st = time.time()
         for ids, docs in zip(batch_docs_ids, batch_docs):
             batch_chunks = []
             batch_chunks_ids = []
@@ -132,13 +135,23 @@ class DocumentChunker(Component):
             result_ids.append(batch_chunks_ids)
 
         if self.flatten_result:
-            if isinstance(result[0][0], list):
+            if result and result[0] and isinstance(result[0][0], list):
                 for i in range(len(result)):
                     flattened = list(chain.from_iterable(result[i]))
                     flattened_ids = list(chain.from_iterable(result_ids[i]))
                     result[i] = flattened
                     result_ids[i] = flattened_ids
-
+        tm_end = time.time()
+        if result:
+            logger.debug(f"chunking time {tm_end-tm_st}, number of chunks {len(result[0])}")
+        if self.log and result:
+            out = open("paragraph_log.txt", 'a')
+            for paragraph in result[0]:
+                out.write(str(paragraph)+'\n')
+                out.write("_"*30+'\n')
+            out.write("="*50+'\n')
+            out.close()
+        
         if empty_docs_ids_flag:
             return result
 
