@@ -198,4 +198,4 @@ class EntitiesParser(Serializable):
             if p279.intersection(self.amb_types):
                 return "AMB"
                     
-        return entity_type
+        return ""

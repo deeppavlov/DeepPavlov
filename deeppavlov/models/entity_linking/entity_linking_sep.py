@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 import time
 from logging import getLogger
 from typing import List, Dict, Tuple
@@ -212,6 +213,8 @@ class EntityLinkerSep(Component, Serializable):
                  return_confidences: bool = False,
                  max_text_len: int = 300,
                  lemmatize: bool = False,
+                 full_paragraph: bool = False,
+                 max_paragraph_len: int = 280,
                  **kwargs) -> None:
         """
 
@@ -269,6 +272,9 @@ class EntityLinkerSep(Component, Serializable):
         self.use_descriptions = use_descriptions
         self.return_confidences = return_confidences
         self.max_text_len = max_text_len
+        self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
+        self.full_paragraph = full_paragraph
+        self.max_paragraph_len = max_paragraph_len
 
         self.load()
 
@@ -602,10 +608,12 @@ class EntityLinkerSep(Component, Serializable):
             sentence = ""
             rel_start_offset = 0
             rel_end_offset = 0
+            found_sentence_num = 0
             for num, (sent, (sent_start_offset, sent_end_offset)) in \
                     enumerate(zip(sentences_list, sentences_offsets_list)):
                 if entity_start_offset >= sent_start_offset and entity_end_offset <= sent_end_offset:
                     sentence = sent
+                    found_sentence_num = num
                     rel_start_offset = entity_start_offset - sent_start_offset
                     rel_end_offset = entity_end_offset - sent_start_offset
                     break
@@ -624,6 +632,31 @@ class EntityLinkerSep(Component, Serializable):
                 else:
                     context = sentence[start_of_sentence:rel_start_offset] + "[ENT]" + \
                               sentence[rel_end_offset:end_of_sentence]
+                if self.full_paragraph:
+                    cur_sent_len = len(re.findall(self.re_tokenizer, context))
+                    first_sentence_num = found_sentence_num
+                    last_sentence_num = found_sentence_num
+                    context = [context]
+                    while True:
+                        added = False
+                        if last_sentence_num < len(sentences_list) - 1:
+                            last_sentence_len = len(re.findall(self.re_tokenizer, sentences_list[last_sentence_num+1]))
+                            if cur_sent_len + last_sentence_len < self.max_paragraph_len:
+                                context.append(sentences_list[last_sentence_num+1])
+                                cur_sent_len += last_sentence_len
+                                last_sentence_num += 1
+                                added = True
+                        if first_sentence_num > 0:
+                            first_sentence_len = len(re.findall(self.re_tokenizer, sentences_list[first_sentence_num-1]))
+                            if cur_sent_len + first_sentence_len < self.max_paragraph_len:
+                                context = [sentences_list[first_sentence_num-1]] + context
+                                cur_sent_len += first_sentence_len
+                                first_sentence_num -= 1
+                                added = True
+                        if not added:
+                            break
+                    context = ' '.join(context)
+                        
             log.debug(f"rank, context: {context}")
             contexts.append(context)
 
