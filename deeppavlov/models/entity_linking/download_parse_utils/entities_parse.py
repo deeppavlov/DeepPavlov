@@ -21,6 +21,7 @@ class EntitiesParser(Serializable):
         self.wiki_dict = {}
 
         self.word_to_idlist_filename = word_to_idlist_filename
+        self.entities_types_sets_filename = entities_types_sets_filename
         self.entities_ranking_dict_filename = entities_ranking_dict_filename
         self.entities_descr_filename = entities_descr_filename
 
