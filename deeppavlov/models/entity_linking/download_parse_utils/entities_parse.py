@@ -12,10 +12,10 @@ log = getLogger(__name__)
 class EntitiesParser(Serializable):
     def __init__(self, load_path: str = "~/.deeppavlov/downloads/wikidata_parse",
                  save_path: str = "~/.deeppavlov/downloads/wikidata_rus",
-                 word_to_idlist_filename: str = "word_to_idlist_rus.pickle",
+                 word_to_idlist_filename: str = "word_to_idlist_vx.pickle",
                  entities_types_sets_filename: str = "entities_types_sets.pickle",
-                 entities_ranking_dict_filename: str = "entities_ranking_dict_rus.pickle",
-                 entities_descr_filename: str = "q_to_descr_ru.pickle"):
+                 entities_ranking_dict_filename: str = "entities_ranking_dict_vx.pickle",
+                 entities_descr_filename: str = "q_to_descr_vx.pickle"):
 
         super().__init__(save_path=save_path, load_path=load_path)
         self.wiki_dict = {}
@@ -198,4 +198,4 @@ class EntitiesParser(Serializable):
             if p279.intersection(self.amb_types):
                 return "AMB"
                     
-        return entity_type
+        return ""
