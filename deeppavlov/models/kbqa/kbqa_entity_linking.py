@@ -206,7 +206,7 @@ class KBEntityLinker(Component, Serializable):
                  context_batch: List[str] = None,
                  entity_types_batch: List[List[List[str]]] = None) -> Tuple[
         List[List[List[str]]], List[List[List[float]]]]:
-        log.debug(f"entity_substr_batch {entity_substr_batch} templates_batch {templates_batch} context_batch {context_batch}")
+        log.info(f"entity_substr_batch {entity_substr_batch} templates_batch {templates_batch} context_batch {context_batch}")
         entity_ids_batch = []
         confidences_batch = []
         if templates_batch is None:
