@@ -15,7 +15,8 @@ class EntitiesParser(Serializable):
                  word_to_idlist_filename: str = "word_to_idlist_vx.pickle",
                  entities_types_sets_filename: str = "entities_types_sets.pickle",
                  entities_ranking_dict_filename: str = "entities_ranking_dict_vx.pickle",
-                 entities_descr_filename: str = "q_to_descr_vx.pickle"):
+                 entities_descr_filename: str = "q_to_descr_vx.pickle",
+                 filter_tags: bool = True):
 
         super().__init__(save_path=save_path, load_path=load_path)
         self.wiki_dict = {}
@@ -34,6 +35,7 @@ class EntitiesParser(Serializable):
         self.subclass_dict = {}
         self.entities_types_sets = {"PER": set(), "LOC": set(), "ORG": set(), "AMB": set()}
         self.used_entities = set()
+        self.filter_tags = filter_tags
 
         self.stopwords = set(stopwords.words("russian"))
         self.alphabet_full = set(
@@ -104,7 +106,7 @@ class EntitiesParser(Serializable):
                 self.entities_types_sets[entity_type].add(entity_id)
         
         for entity_id in self.wiki_dict:
-            if entity_id in self.used_entities:
+            if entity_id in self.used_entities or not self.filter_tags:
                 entity_info = self.wiki_dict[entity_id]
                 name = entity_info.get("name", "")
                 aliases = entity_info.get("aliases", [])
