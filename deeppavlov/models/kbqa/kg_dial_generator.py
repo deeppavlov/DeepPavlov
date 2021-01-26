@@ -21,7 +21,7 @@ from transformers import AutoTokenizer, AutoModelWithLMHead
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.file import load_json
+from deeppavlov.core.common.file import read_json
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
 from deeppavlov.models.kbqa.wiki_parser import WikiParser
 
@@ -68,9 +68,9 @@ class DialPathRanker(Component):
                        rel_freq_file: str,
                        *args, **kwargs) -> None:
         
-        self.type_paths = load_json(expand_path(type_paths_file))
-        self.type_groups = load_json(expand_path(type_groups_file))
-        self.rel_freq = load_json(expand_path(rel_freq_file))
+        self.type_paths = read_json(expand_path(type_paths_file))
+        self.type_groups = read_json(expand_path(type_groups_file))
+        self.rel_freq = read_json(expand_path(rel_freq_file))
         
         self.wiki_parser = wiki_parser
         self.path_ranker = path_ranker
@@ -112,7 +112,8 @@ class DialPathRanker(Component):
             log.debug(f"retrieved paths {retrieved_paths}")
             chosen_path = retrieved_paths[0]
             chosen_rels = retrieved_rels[0]
-            conf = min(math.log(sum([self.rel_freq.get(rel, [0])[0] for rel chosen_rels]) / len(chosen_rels)) / self.max_freq, 1.0)
+            conf = min(math.log(sum([self.rel_freq.get(rel, [0])[0] for rel in chosen_rels]) / 
+                len(chosen_rels)) / self.max_freq, 1.0)
             
             if retrieved_paths:
                 paths_batch.append(retrieved_paths[0])
