@@ -66,6 +66,8 @@ class DialPathRanker(Component):
                        type_paths_file: str,
                        type_groups_file: str,
                        rel_freq_file: str,
+                       max_log_freq: float = 8.0,
+                       use_api_requester: bool = False,
                        *args, **kwargs) -> None:
         
         self.type_paths = read_json(expand_path(type_paths_file))
@@ -75,7 +77,8 @@ class DialPathRanker(Component):
         self.wiki_parser = wiki_parser
         self.path_ranker = path_ranker
         
-        self.max_log_freq = 8.0
+        self.max_log_freq = max_log_freq
+        self.use_api_requester = use_api_requester
     
     def __call__(self, utterances_batch: List[str], entities_batch: List[List[str]]) -> List[List[str]]:
         paths_batch = []
@@ -84,11 +87,13 @@ class DialPathRanker(Component):
             entity = entities_list[0]
             log.debug(f"seed entity {entity}")
             entity_types = self.wiki_parser(["find_types"], [entity])[0]
-            entity_types = set(entity_type)
+            if self.use_api_requester:
+                entity_types = entity_types[0]
+            entity_types = set(entity_types)
             log.debug(f"entity types {entity_types}")
             candidate_paths = set()
             for entity_type in entity_types:
-                candidate_paths = candidate_paths.union(self.type_paths[entity_type])
+                candidate_paths = candidate_paths.union(set([tuple(path) for path, score in self.type_paths[entity_type]]))
             if not candidate_paths:
                 log.debug("not found candidate paths, looking in types dict")
                 add_entity_types = set()
@@ -108,12 +113,15 @@ class DialPathRanker(Component):
             paths_with_scores = self.path_ranker.rank_paths(utterance, candidate_paths)
             top_paths = [path for path, score in paths_with_scores]
             log.debug(f"top paths {top_paths[:10]}")
-            retrieved_paths, retrieved_rels = self.wiki_parser(["retrieve_paths"], [[entity, top_paths]])[0]
+            wp_res = self.wiki_parser(["retrieve_paths"], [[entity, top_paths]])[0]
+            if self.use_api_requester:
+                wp_res = wp_res[0]
+            retrieved_paths, retrieved_rels = wp_res
             log.debug(f"retrieved paths {retrieved_paths}")
             chosen_path = retrieved_paths[0]
             chosen_rels = retrieved_rels[0]
             conf = min(math.log(sum([self.rel_freq.get(rel, [0])[0] for rel in chosen_rels]) / 
-                len(chosen_rels)) / self.max_freq, 1.0)
+                len(chosen_rels)) / self.max_log_freq, 1.0)
             
             if retrieved_paths:
                 paths_batch.append(retrieved_paths[0])
