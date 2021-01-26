@@ -44,8 +44,11 @@ class KGDialGenerator(Component):
         generated_utterances_batch = []
         for prev_utterance, triplets, conf in zip(prev_utterances_batch, triplets_batch, conf_batch):
             log.debug(f"prev_utterance {prev_utterance} triplets {triplets}")
-            triplets = ' '.join(triplets)
-            context_plus_gk = triplets + " <SEP> " + prev_utterance + self.tokenizer.eos_token
+            if triplets:
+                triplets = ' '.join(triplets)
+                context_plus_gk = triplets + " <SEP> " + prev_utterance + self.tokenizer.eos_token
+            else:
+                context_plus_gk = prev_utterance + self.tokenizer.eos_token
             log.debug(f"context and gk: {context_plus_gk}")
             input_ids = self.tokenizer.encode(context_plus_gk, return_tensors="pt")
             generated_ids = self.model.generate(input_ids, max_length=200,
@@ -93,7 +96,7 @@ class DialPathRanker(Component):
             log.debug(f"entity types {entity_types}")
             candidate_paths = set()
             for entity_type in entity_types:
-                candidate_paths = candidate_paths.union(set([tuple(path) for path, score in self.type_paths[entity_type]]))
+                candidate_paths = candidate_paths.union(set([tuple(path) for path, score in self.type_paths.get(entity_type, set())]))
             if not candidate_paths:
                 log.debug("not found candidate paths, looking in types dict")
                 add_entity_types = set()
@@ -101,27 +104,30 @@ class DialPathRanker(Component):
                                               [(entity_type, "P279", "forw") for entity_type in entity_types])
                 subclasses = list(itertools.chain.from_iterable(subclasses))
                 for subcls in subclasses:
-                    subclass_group = set(self.type_groups[subcls])
+                    subclass_group = set(self.type_groups.get(subcls, []))
                     if entity_types.intersection(subclass_group):
                         add_entity_types = add_entity_types.union(subclass_groups.difference(entity_types))
                 for entity_type in entity_types:
-                    candidate_paths = candidate_paths.union(self.type_paths[entity_type])
+                    candidate_paths = candidate_paths.union(self.type_paths.get(entity_type, set()))
                     
             candidate_paths = list(candidate_paths)
             log.debug(f"candidate paths {candidate_paths[:10]}")
             
-            paths_with_scores = self.path_ranker.rank_paths(utterance, candidate_paths)
-            top_paths = [path for path, score in paths_with_scores]
-            log.debug(f"top paths {top_paths[:10]}")
-            wp_res = self.wiki_parser(["retrieve_paths"], [[entity, top_paths]])[0]
-            if self.use_api_requester:
-                wp_res = wp_res[0]
-            retrieved_paths, retrieved_rels = wp_res
-            log.debug(f"retrieved paths {retrieved_paths}")
-            chosen_path = retrieved_paths[0]
-            chosen_rels = retrieved_rels[0]
-            conf = min(math.log(sum([self.rel_freq.get(rel, [0])[0] for rel in chosen_rels]) / 
-                len(chosen_rels)) / self.max_log_freq, 1.0)
+            retrieved_paths = []
+            conf = 0.0
+            if candidate_paths:
+                paths_with_scores = self.path_ranker.rank_paths(utterance, candidate_paths)
+                top_paths = [path for path, score in paths_with_scores]
+                log.debug(f"top paths {top_paths[:10]}")
+                wp_res = self.wiki_parser(["retrieve_paths"], [[entity, top_paths]])[0]
+                if self.use_api_requester:
+                    wp_res = wp_res[0]
+                retrieved_paths, retrieved_rels = wp_res
+                log.debug(f"retrieved paths {retrieved_paths}")
+                chosen_path = retrieved_paths[0]
+                chosen_rels = retrieved_rels[0]
+                conf = min(math.log(sum([self.rel_freq.get(rel, [0])[0] for rel in chosen_rels]) / 
+                    len(chosen_rels)) / self.max_log_freq, 1.0)
             
             if retrieved_paths:
                 paths_batch.append(retrieved_paths[0])

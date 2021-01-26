@@ -579,6 +579,9 @@ class WikiParser:
                 entity = f"{self.prefixes['entity']}/{entity}"
             tr, c = self.document.search_triples(entity, f"{self.prefixes['rels']['direct']}/P31", "")
             types = [triplet[2].split('/')[-1] for triplet in tr]
+            if "Q5" in types:
+                tr, c = self.document.search_triples(entity, f"{self.prefixes['rels']['direct']}/P106", "")
+                types += [triplet[2].split('/')[-1] for triplet in tr]
         if self.file_format == "pickle":
             entity = entity.split('/')[-1]
             triplets = self.document.get(entity, {}).get("forw", [])
