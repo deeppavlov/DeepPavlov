@@ -68,7 +68,7 @@ class WikidataParser:
                 if "claims" in entity_dict and entity_in_russian:
                     triplets = []
                     for relation in entity_dict["claims"]:
-                        if relation in ["P31", "P279", "P106"]:
+                        if relation in ["P31", "P279", "P106", "P734"]:
                             objects_list = []
                             objects = entity_dict["claims"][relation]
                             for obj in objects:

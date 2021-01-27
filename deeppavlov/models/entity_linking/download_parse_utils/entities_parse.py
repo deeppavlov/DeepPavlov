@@ -115,6 +115,11 @@ class EntitiesParser(Serializable):
                 if aliases:
                     for alias in aliases:
                         self.name_to_idlist[alias].append(entity_id)
+                triplets = entity_info.get("triplets", [])
+                if triplets:
+                    surname = self.find_surname(triplets)
+                    if surname:
+                        self.name_to_idlist[surname].append(entity_id)
                 number_of_relations = entity_info.get("number_of_relations", 0)
                 self.entities_ranking_dict[entity_id] = number_of_relations
 
@@ -170,6 +175,16 @@ class EntitiesParser(Serializable):
                 if obj_label:
                     return obj_label
         return descr
+        
+    def find_surname(self, triplets):
+        surname = ""
+        for rel, *objects in triplets:
+            if rel == "P734":
+                for obj in objects:
+                    obj_label = self.wiki_dict.get(obj, {}).get("name", "")
+                    if obj_label:
+                        return obj_label
+        return surname
         
     def find(self, entity):
         entity_type = ""
