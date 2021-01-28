@@ -9,7 +9,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from json import load
+from json import load as json_load
+from yaml import full_load as yaml_load
 from logging import getLogger
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -22,12 +23,12 @@ log = getLogger(__file__)
 
 @register('intent_catcher_reader')
 class IntentCatcherReader(DatasetReader):
-    """Reader for Intent Catcher dataset in json format"""
+    """Reader for Intent Catcher dataset in json or YAML (RASA v2) format"""
 
-    def read(self, data_path: str, *args, **kwargs) -> Dict[str, List[Tuple[str, str]]]:
+    def read(self, data_path: str, format: str = 'json', *args, **kwargs) -> Dict[str, List[Tuple[str, str]]]:
         data_types = ["train", "valid", "test"]
 
-        train_file = kwargs.get('train', 'train.json')
+        train_file = kwargs.get('train', f'train.{format}')
 
         if not Path(data_path, train_file).exists():
             raise Exception(
@@ -39,16 +40,26 @@ class IntentCatcherReader(DatasetReader):
                 "test": []}
 
         for data_type in data_types:
-            file_name = kwargs.get(data_type, '{}.{}'.format(data_type, "json"))
+            file_name = kwargs.get(
+                data_type, '{}.{}'.format(data_type, format))
             if file_name is None:
                 continue
 
             file = Path(data_path).joinpath(file_name)
             if file.exists():
                 with open(file) as fp:
-                    file = load(fp)
+                    if format == 'json':
+                        file = json_load(fp)
+                    elif format == 'yaml':
+                        file = yaml_load(fp)
+                        file = {
+                            sample['intent']: [example[2:]
+                                               for example in sample['examples'].split('\n')]
+                            for sample in file['nlu']
+                        }
                 for label in file:
-                    data[data_type].extend([(phrase, label) for phrase in file[label]])
+                    data[data_type].extend([(phrase, label)
+                                            for phrase in file[label]])
             else:
                 log.warning("Cannot find {} file".format(file))
 
