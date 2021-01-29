@@ -202,8 +202,8 @@ class KBEntityLinker(Component, Serializable):
             save_pickle(self.q2descr, self.save_path / self.q2descr_filename)
 
     def __call__(self, entity_substr_batch: List[List[str]],
-                 templates_batch: List[str] = None,
                  context_batch: List[str] = None,
+                 templates_batch: List[str] = None,
                  entity_types_batch: List[List[List[str]]] = None) -> Tuple[
         List[List[List[str]]], List[List[List[float]]]]:
         log.info(f"entity_substr_batch {entity_substr_batch} templates_batch {templates_batch} context_batch {context_batch}")

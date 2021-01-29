@@ -88,6 +88,8 @@ class DialPathRanker(Component):
         conf_batch = []
         for utterance, entities_list in zip(utterances_batch, entities_batch):
             entity = entities_list[0]
+            if isinstance(entity, list):
+                entity = entity[0]
             log.debug(f"seed entity {entity}")
             entity_types = self.wiki_parser(["find_types"], [entity])[0]
             if self.use_api_requester:

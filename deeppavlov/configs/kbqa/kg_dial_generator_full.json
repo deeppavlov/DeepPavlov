@@ -1,0 +1,121 @@
+{
+  "chainer":
+  {
+    "in": ["utterance"],
+    "pipe": [
+      {
+        "config_path": "{CONFIGS_PATH}/ner/ner_lcquad_bert_ent_and_type.json",
+        "in": ["utterance"],
+        "out": ["utt_tokens", "y_pred"]
+      },
+      {
+        "in": ["utt_tokens", "y_pred"],
+        "out": ["entity_substr", "types", "entities_pos"],
+        "entity_tags": ["E-TAG"],
+        "type_tag": "T-TAG",
+        "o_tag": "O-TAG",
+        "tags_file": "{NER_PATH}/tag.dict",
+        "class_name": "entity_detection_parser"
+      },
+      {
+        "class_name": "rel_ranking_infer",
+        "id": "pthr",
+        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/opendialkg_path_ranking_lite.json"},
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "rel_q2name_filename": "wiki_dict_properties.pickle",
+        "rels_to_leave": 40,
+        "softmax": true
+      },
+      {
+        "class_name": "rel_ranking_infer",
+        "id": "entity_descr_ranking",
+        "ranker": {"config_path": "{CONFIGS_PATH}/classifiers/entity_ranking_bert_eng_no_mention.json"},
+        "batch_size": 100,
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "rel_q2name_filename": "q_to_descr_en.pickle",
+        "rels_to_leave": 20
+      },
+      {
+        "class_name": "kbqa_entity_linker",
+        "in": ["entity_substr", "utterance"],
+        "out": ["entity_ids", "confidences"],
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "inverted_index_filename": "inverted_index_eng.pickle",
+        "entities_list_filename": "entities_list.pickle",
+        "q2name_filename": "wiki_eng_q_to_name.pickle",
+        "q2descr_filename": "q_to_descr_en.pickle",
+        "who_entities_filename": "who_entities.pickle",
+        "entity_ranker": "#entity_descr_ranking",
+        "build_inverted_index": false,
+        "use_descriptions": false,
+        "use_prefix_tree": false,
+        "num_entities_to_return": 2
+      },
+      {
+        "class_name": "dial_path_ranker",
+        "wiki_parser": {"config_path": "{CONFIGS_PATH}/kbqa/wiki_parser.json"},
+        "path_ranker": "#pthr",
+        "type_paths_file": "{DOWNLOADS_PATH}/wikidata/paths.json",
+        "type_groups_file": "{DOWNLOADS_PATH}/wikidata/subclass_groups.json",
+        "rel_freq_file": "{DOWNLOADS_PATH}/wikidata/rel_wiki_opendialkg_freq.json",
+        "in": ["utterance", "entity_ids"],
+        "out": ["paths", "conf"]
+      },
+      {
+        "class_name": "kg_dial_generator",
+        "transformer_model": "microsoft/DialoGPT-small",
+        "path_to_model": "{MODELS_PATH}/dialogpt_wiki",
+        "in": ["utterance", "paths", "conf"],
+        "out": ["generated_utterance", "conf"]
+      }
+    ],
+    "out": ["generated_utterance", "conf"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models_kbqa/cased_L-12_H-768_A-12",
+      "NER_PATH": "{MODELS_PATH}/ner_lcquad_ent_and_type"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
+      "{DEEPPAVLOV_PATH}/requirements/transformers.txt",
+      "{DEEPPAVLOV_PATH}/requirements/pyinflect.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/dialogpt_wiki.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/path_ranking_data.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/wikidata"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
+        "subdir": "{DOWNLOADS_PATH}/bert_models_kbqa"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/ner_lcquad.tar.gz",
+        "subdir": "{MODELS_PATH}/ner_lcquad_ent_and_type"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/kbqa_entity_linking_eng.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/entity_ranking_bert_eng_no_mention.tar.gz",
+        "subdir": "{MODELS_PATH}/entity_ranking_bert_eng_no_mention"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/q_to_descr_en.pickle",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+      }
+    ]
+  }
+}
