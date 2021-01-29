@@ -202,8 +202,8 @@ class KBEntityLinker(Component, Serializable):
             save_pickle(self.q2descr, self.save_path / self.q2descr_filename)
 
     def __call__(self, entity_substr_batch: List[List[str]],
-                 context_batch: List[str] = None,
                  templates_batch: List[str] = None,
+                 context_batch: List[str] = None,
                  entity_types_batch: List[List[List[str]]] = None) -> Tuple[
         List[List[List[str]]], List[List[List[float]]]]:
         log.info(f"entity_substr_batch {entity_substr_batch} templates_batch {templates_batch} context_batch {context_batch}")
@@ -317,6 +317,7 @@ class KBEntityLinker(Component, Serializable):
                             candidate_names: List[List[str]],
                             entity: str,
                             context: str = None) -> Tuple[List[str], List[float], List[Tuple[str, str, int, int]]]:
+        entity_len = len(entity.split())
         entities_ratios = []
         for candidate, entity_names in zip(candidate_entities, candidate_names):
             entity_num, entity_id, num_rels, tokens_matched = candidate
@@ -340,7 +341,7 @@ class KBEntityLinker(Component, Serializable):
             confidences = [score for _, _, _, score in entities_with_scores]
         else:
             entity_ids = [ent[1] for ent in srtd_with_ratios]
-            confidences = [float(ent[2]) * 0.01 for ent in srtd_with_ratios]
+            confidences = [ent[3]*0.01 for ent in srtd_with_ratios]
 
         return entity_ids, confidences, srtd_with_ratios
 
