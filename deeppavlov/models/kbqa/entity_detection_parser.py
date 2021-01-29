@@ -79,7 +79,7 @@ class EntityDetectionParser(Component):
                 self.tag_ind_dict[ind] = self.type_tag
             self.tag_ind_dict[0] = self.o_tag
 
-    def __call__(self, question_tokens: List[List[str]], token_probas: List[List[List[float]]]) -> \
+    def __call__(self, question_tokens_batch: List[List[str]], tokens_info_batch: List[List[List[float]]]) -> \
             Tuple[List[Union[List[str], Dict[str, List[str]]]], List[List[str]],
                   List[Union[List[int], Dict[str, List[List[int]]]]]]:
         """
@@ -95,15 +95,19 @@ class EntityDetectionParser(Component):
         entities_batch = []
         types_batch = []
         positions_batch = []
-        for tokens, probas in zip(question_tokens, token_probas):
-            tags, tag_probas = self.tags_from_probas(probas)
-            entities, types, positions = self.entities_from_tags(tokens, tags, tag_probas)
+        for tokens, tokens_info in zip(question_tokens_batch, tokens_info_batch):
+            if isinstance(tokens_info, np.ndarray):
+                tags, tag_probas = self.tags_from_probas(tokens, tokens_info)
+                entities, types, positions = self.entities_from_tags(tokens, tags, tag_probas)
+            else:
+                tokens_info = [tag.split("-")[-1] for tag in tokens_info]
+                entities, types, positions = self.entities_from_tags(tokens, tokens_info)
             entities_batch.append(entities)
             types_batch.append(types)
             positions_batch.append(positions)
         return entities_batch, types_batch, positions_batch
 
-    def tags_from_probas(self, probas):
+    def tags_from_probas(self, tokens, probas):
         """
         This method makes a list of tags from a list of probas for tags
 
@@ -116,7 +120,7 @@ class EntityDetectionParser(Component):
         """
         tags = []
         tag_probas = []
-        for proba in probas:
+        for token, proba in zip(tokens, probas):
             tag_num = np.argmax(proba)
             if tag_num in self.et_prob_ind:
                 if proba[tag_num] < self.thres_proba:
@@ -128,7 +132,7 @@ class EntityDetectionParser(Component):
 
         return tags, tag_probas
 
-    def entities_from_tags(self, tokens, tags, tag_probas):
+    def entities_from_tags(self, tokens, tags, tag_probas=None):
         """
         This method makes lists of substrings corresponding to entities and entity types
         and a list of indices of tokens which correspond to entities
@@ -144,6 +148,8 @@ class EntityDetectionParser(Component):
             list of indices of tokens which correspond to entities (or a dict of tags (keys)
                 and list of indices of entity tokens)
         """
+        if not tag_probas:
+            tag_probas = [1.0 for _ in tokens]
         entities_dict = defaultdict(list)
         entity_types = []
         entity_dict = defaultdict(list)
