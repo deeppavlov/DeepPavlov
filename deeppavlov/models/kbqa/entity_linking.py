@@ -30,7 +30,7 @@ from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.file import load_pickle, save_pickle
 from deeppavlov.models.kbqa.entity_detection_parser import EntityDetectionParser
-from deeppavlov.models.kbqa.rel_ranking_bert_infer import RelRankerBertInfer
+from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
 
 log = getLogger(__name__)
 
@@ -116,7 +116,7 @@ class EntityLinker(Component, Serializable):
                  chunker: NerChunker = None,
                  ner: Chainer = None,
                  ner_parser: EntityDetectionParser = None,
-                 entity_ranker: RelRankerBertInfer = None,
+                 entity_ranker: RelRankerInfer = None,
                  num_faiss_candidate_entities: int = 20,
                  num_entities_for_bert_ranking: int = 50,
                  num_faiss_cells: int = 50,
@@ -145,7 +145,7 @@ class EntityLinker(Component, Serializable):
             chunker: component deeppavlov.models.kbqa.ner_chunker
             ner: config for entity detection
             ner_parser: component deeppavlov.models.kbqa.entity_detection_parser
-            entity_ranker: component deeppavlov.models.kbqa.rel_ranking_bert_infer
+            entity_ranker: component deeppavlov.models.kbqa.rel_ranking_infer
             num_faiss_candidate_entities: number of nearest neighbors for the entity substring from the text
             num_entities_for_bert_ranking: number of candidate entities for BERT ranking using description and context
             num_faiss_cells: number of Voronoi cells for Faiss index
