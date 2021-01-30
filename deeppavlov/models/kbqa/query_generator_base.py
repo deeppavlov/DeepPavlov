@@ -50,7 +50,8 @@ class QueryGeneratorBase(Component, Serializable):
                  entities_to_leave: int = 5,
                  rels_to_leave: int = 7,
                  syntax_structure_known: bool = False,
-                 use_api_requester: bool = False,
+                 use_wp_api_requester: bool = False,
+                 use_el_api_requester: bool = False,
                  use_alt_templates: bool = True,
                  return_answers: bool = False, *args, **kwargs) -> None:
         """
@@ -87,7 +88,8 @@ class QueryGeneratorBase(Component, Serializable):
         self.entities_to_leave = entities_to_leave
         self.rels_to_leave = rels_to_leave
         self.syntax_structure_known = syntax_structure_known
-        self.use_api_requester = use_api_requester
+        self.use_wp_api_requester = use_wp_api_requester
+        self.use_el_api_requester = use_el_api_requester
         self.use_alt_templates = use_alt_templates
         self.sparql_queries_filename = sparql_queries_filename
         self.return_answers = return_answers
@@ -190,10 +192,10 @@ class QueryGeneratorBase(Component, Serializable):
                 except json.decoder.JSONDecodeError:
                     log.info("not received output from entity linking")
             log.info(f"el input {entities} {template_found} {question} el output {el_output}")
-            if self.use_api_requester:
+            if self.use_el_api_requester:
                 el_output = el_output[0]
             entity_ids, _ = el_output
-            if not self.use_api_requester and entity_ids:
+            if not self.use_el_api_requester and entity_ids:
                 entity_ids = entity_ids[0]
         if what_to_link == "types":
             entity_ids, _ = self.linker_types([entities])
@@ -265,7 +267,7 @@ class QueryGeneratorBase(Component, Serializable):
                 ex_rels = self.wiki_parser(parser_info_list, queries_list)
             except json.decoder.JSONDecodeError:
                 log.info("find_top_rels, not received output from wiki parser")
-            if self.use_api_requester and ex_rels:
+            if self.use_wp_api_requester and ex_rels:
                 ex_rels = [rel[0] for rel in ex_rels]
             ex_rels = list(set(ex_rels))
             ex_rels = [rel.split('/')[-1] for rel in ex_rels]

@@ -221,7 +221,7 @@ class QueryGenerator(QueryGeneratorBase):
             candidate_outputs_list = self.wiki_parser(parser_info_list, queries_list)
         except json.decoder.JSONDecodeError:
             log.info("query execute, not received output from wiki parser")
-        if self.use_api_requester and isinstance(candidate_outputs_list, list) and candidate_outputs_list:
+        if self.use_wp_api_requester and isinstance(candidate_outputs_list, list) and candidate_outputs_list:
             candidate_outputs_list = candidate_outputs_list[0]
 
         if isinstance(candidate_outputs_list, list) and candidate_outputs_list:
