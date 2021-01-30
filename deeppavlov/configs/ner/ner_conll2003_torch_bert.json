@@ -18,7 +18,7 @@
     "pipe": [
       {
         "class_name": "torch_bert_ner_preprocessor",
-        "vocab_file": "bert-base-cased",
+        "vocab_file": "{TRANSFORMER}",
         "do_lower_case": false,
         "max_seq_length": 512,
         "max_subword_length": 15,
@@ -56,7 +56,7 @@
       {
         "class_name": "torch_bert_sequence_tagger",
         "n_tags": "#tag_vocab.len",
-        "pretrained_bert": "bert-base-cased",
+        "pretrained_bert": "{TRANSFORMER}",
         "attention_probs_keep_prob": 0.5,
         "return_probas": false,
         "encoder_layer_ids": [
@@ -142,17 +142,15 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "NER_PATH": "{MODELS_PATH}/ner_conll2003_torch_bert"
+      "TRANSFORMER": "bert-base-uncased",
+      "NER_PATH": "{MODELS_PATH}/ner_conll2003_torch_bert/{TRANSFORMER}"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
       "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
     ],
     "download": [
-      {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_conll2003_torch_bert_v0.tar.gz",
-        "subdir": "{MODELS_PATH}"
-      }
+      
     ]
   }
 }
