@@ -308,6 +308,8 @@ class KBEntityLinker(Component, Serializable):
         for candidate_entities_for_tok in candidate_entities_for_tokens:
             candidate_entities += list(candidate_entities_for_tok)
         candidate_entities = Counter(candidate_entities).most_common()
+        candidate_entities = sorted(candidate_entities, key=lambda x: (x[0][1], x[1]), reverse=True)
+        candidate_entities = candidate_entities[:1000]
         candidate_entities = [(entity_num, self.entities_list[entity_num], entity_freq, count) for \
                               (entity_num, entity_freq), count in candidate_entities]
 
