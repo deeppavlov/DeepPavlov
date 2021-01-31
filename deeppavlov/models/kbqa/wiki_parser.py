@@ -545,25 +545,27 @@ class WikiParser:
             
                                 if objects_2:
                                     chosen_obj = random.choice(objects_2)
-                                    if dir_1 == "forw" and dir_2 == "forw":
-                                        cur_paths.append(([entity_label, self.find_label(rel_1, ""), self.find_label(obj_1, ""),
-                                                                self.find_label(rel_2, ""), self.find_label(chosen_obj, "")],
-                                                          [rel_1, rel_2]))
-                                    elif dir_1 == "forw" and dir_2 == "backw":
-                                        cur_paths.append(([entity_label, self.find_label(rel_1, ""), self.find_label(obj_1, ""),
-                                                                self.find_label(chosen_obj, ""), self.find_label(rel_2, ""),
-                                                                self.find_label(obj_1, "")],
-                                                          [rel_1, rel_2]))
-                                    elif dir_1 == "backw" and dir_2 == "forw":
-                                        cur_paths.append(([self.find_label(obj_1, ""), self.find_label(rel_1, ""), entity_label,
-                                                                self.find_label(obj_1, ""), self.find_label(rel_2, ""),
-                                                                self.find_label(chosen_obj, "")],
-                                                          [rel_1, rel_2]))
-                                    else:
-                                        cur_paths.append(([self.find_label(obj_1, ""), self.find_label(rel_1, ""), entity_label,
-                                                                self.find_label(chosen_obj, ""), self.find_label(rel_2, ""),
-                                                                self.find_label(obj_1, "")],
-                                                          [rel_1, rel_2]))
+                                    obj_1_label = self.find_label(obj_1, "")
+                                    chosen_obj_label = self.find_label(chosen_obj, "")
+                                    rel_1_label = self.find_label(rel_1, "")
+                                    rel_2_label = self.find_label(rel_2, "")
+                                    if obj_1_label != "Not Found" and chosen_obj_label != "Not Found":
+                                        if dir_1 == "forw" and dir_2 == "forw":
+                                            cur_paths.append(([entity_label, rel_1_label, obj_1_label,
+                                                                             rel_2_label, chosen_obj_label],
+                                                              [rel_1, rel_2]))
+                                        elif dir_1 == "forw" and dir_2 == "backw":
+                                            cur_paths.append(([entity_label, rel_1_label, obj_1_label,
+                                                           chosen_obj_label, rel_2_label, obj_1_label],
+                                                              [rel_1, rel_2]))
+                                        elif dir_1 == "backw" and dir_2 == "forw":
+                                            cur_paths.append(([obj_1_label, rel_1_label, entity_label,
+                                                               obj_1_label, rel_2_label, chosen_obj_label],
+                                                              [rel_1, rel_2]))
+                                        else:
+                                            cur_paths.append(([obj_1_label, rel_1_label, entity_label,
+                                                          chosen_obj_label, rel_2_label, obj_1_label],
+                                                              [rel_1, rel_2]))
                         
                         chosen_path, chosen_rels = random.choice(cur_paths)
                         retrieved_paths.append(chosen_path)
