@@ -94,37 +94,17 @@ class DialPathRanker(Component):
         conf_batch = []
         tm_st = time.time()
         for utterance, entities_list in zip(utterances_batch, entities_batch):
-            entity = entities_list[0]
-            if isinstance(entity, list):
-                entity = entity[0]
-            log.debug(f"seed entity {entity}")
-            entity_types = self.wiki_parser(["find_types"], [entity])[0]
-            if self.use_api_requester:
-                entity_types = entity_types[0]
-            entity_types = set(entity_types)
-            log.debug(f"entity types {entity_types}")
-            candidate_paths = set()
-            if self.use_path_stat:
-                for entity_type in entity_types:
-                    candidate_paths = candidate_paths.union(set([tuple([tuple(path), score])
-                        for path, score in self.type_paths.get(entity_type, set())]))
-                candidate_paths = list(candidate_paths)
-                candidate_paths = sorted(candidate_paths, key=lambda x: x[1], reverse=True)
-                candidate_paths = [path for path, score in candidate_paths]
-            else:
-                for entity_type in entity_types:
-                    candidate_paths = candidate_paths.union(set([tuple(path)
-                        for path, score in self.type_paths.get(entity_type, set())]))
-            if not candidate_paths:
-                log.debug("not found candidate paths, looking in types dict")
-                add_entity_types = set()
-                subclasses = self.wiki_parser(["find_object" for _ in entity_types],
-                                              [(entity_type, "P279", "forw") for entity_type in entity_types])
-                subclasses = list(itertools.chain.from_iterable(subclasses))
-                for subcls in subclasses:
-                    subclass_group = set(self.type_groups.get(subcls, []))
-                    if entity_types.intersection(subclass_group):
-                        add_entity_types = add_entity_types.union(subclass_groups.difference(entity_types))
+            if entities_list:
+                entity = entities_list[0]
+                if isinstance(entity, list):
+                    entity = entity[0]
+                log.debug(f"seed entity {entity}")
+                entity_types = self.wiki_parser(["find_types"], [entity])[0]
+                if self.use_api_requester:
+                    entity_types = entity_types[0]
+                entity_types = set(entity_types)
+                log.debug(f"entity types {entity_types}")
+                candidate_paths = set()
                 if self.use_path_stat:
                     for entity_type in entity_types:
                         candidate_paths = candidate_paths.union(set([tuple([tuple(path), score])
@@ -136,35 +116,59 @@ class DialPathRanker(Component):
                     for entity_type in entity_types:
                         candidate_paths = candidate_paths.union(set([tuple(path)
                             for path, score in self.type_paths.get(entity_type, set())]))
-                    
-            candidate_paths = list(candidate_paths)
-            log.debug(f"candidate paths {candidate_paths[:10]}")
-            
-            retrieved_paths = []
-            conf = 0.0
-            if candidate_paths:
-                if self.use_path_stat:
-                    top_paths = candidate_paths
+                if not candidate_paths:
+                    log.debug("not found candidate paths, looking in types dict")
+                    add_entity_types = set()
+                    subclasses = self.wiki_parser(["find_object" for _ in entity_types],
+                                                  [(entity_type, "P279", "forw") for entity_type in entity_types])
+                    subclasses = list(itertools.chain.from_iterable(subclasses))
+                    for subcls in subclasses:
+                        subclass_group = set(self.type_groups.get(subcls, []))
+                        if entity_types.intersection(subclass_group):
+                            add_entity_types = add_entity_types.union(subclass_groups.difference(entity_types))
+                    if self.use_path_stat:
+                        for entity_type in entity_types:
+                            candidate_paths = candidate_paths.union(set([tuple([tuple(path), score])
+                                for path, score in self.type_paths.get(entity_type, set())]))
+                        candidate_paths = list(candidate_paths)
+                        candidate_paths = sorted(candidate_paths, key=lambda x: x[1], reverse=True)
+                        candidate_paths = [path for path, score in candidate_paths]
+                    else:
+                        for entity_type in entity_types:
+                            candidate_paths = candidate_paths.union(set([tuple(path)
+                                for path, score in self.type_paths.get(entity_type, set())]))
+                        
+                candidate_paths = list(candidate_paths)
+                log.debug(f"candidate paths {candidate_paths[:10]}")
+                
+                retrieved_paths = []
+                conf = 0.0
+                if candidate_paths:
+                    if self.use_path_stat:
+                        top_paths = candidate_paths
+                    else:
+                        paths_with_scores = self.path_ranker.rank_paths(utterance, candidate_paths)
+                        log.debug(f"paths with scores {paths_with_scores[:10]}")
+                        top_paths = [path for path, score in paths_with_scores]
+                    log.debug(f"top paths {top_paths[:10]}")
+                    tm_wp_st = time.time()
+                    wp_res = self.wiki_parser(["retrieve_paths"], [[entity, top_paths]])[0]
+                    tm_wp_end = time.time()
+                    if self.use_api_requester:
+                        wp_res = wp_res[0]
+                    retrieved_paths, retrieved_rels = wp_res
+                    log.debug(f"retrieved paths {retrieved_paths}")
+                    chosen_path = retrieved_paths[0]
+                    chosen_rels = retrieved_rels[0]
+                    conf = min(math.log(sum([self.rel_freq.get(rel, [0])[0] for rel in chosen_rels]) / 
+                        len(chosen_rels)) / self.max_log_freq, 1.0)
+                
+                if retrieved_paths:
+                    paths_batch.append(retrieved_paths[0])
+                    conf_batch.append(conf)
                 else:
-                    paths_with_scores = self.path_ranker.rank_paths(utterance, candidate_paths)
-                    log.debug(f"paths with scores {paths_with_scores[:10]}")
-                    top_paths = [path for path, score in paths_with_scores]
-                log.debug(f"top paths {top_paths[:10]}")
-                tm_wp_st = time.time()
-                wp_res = self.wiki_parser(["retrieve_paths"], [[entity, top_paths]])[0]
-                tm_wp_end = time.time()
-                if self.use_api_requester:
-                    wp_res = wp_res[0]
-                retrieved_paths, retrieved_rels = wp_res
-                log.debug(f"retrieved paths {retrieved_paths}")
-                chosen_path = retrieved_paths[0]
-                chosen_rels = retrieved_rels[0]
-                conf = min(math.log(sum([self.rel_freq.get(rel, [0])[0] for rel in chosen_rels]) / 
-                    len(chosen_rels)) / self.max_log_freq, 1.0)
-            
-            if retrieved_paths:
-                paths_batch.append(retrieved_paths[0])
-                conf_batch.append(conf)
+                    paths_batch.append([])
+                    conf_batch.append(0.0)
             else:
                 paths_batch.append([])
                 conf_batch.append(0.0)
