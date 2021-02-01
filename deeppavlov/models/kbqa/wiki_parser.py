@@ -15,6 +15,7 @@
 import datetime
 import random
 import re
+import time
 from logging import getLogger
 from typing import List, Tuple, Dict, Any, Union
 from collections import namedtuple
@@ -493,6 +494,7 @@ class WikiParser:
         paths = paths[:5]
         retrieved_paths = []
         retrieved_rels = []
+        max_paths = 5000
         for path in paths:
             rel_1 = path[0]
             if rel_1.startswith("~"):
@@ -509,19 +511,29 @@ class WikiParser:
                 
                 tr, cnt = self.document.search_triples(*query_1)
                 
+                objects_1 = []
                 if dir_1 == "forw":
-                    objects_1 = [triplet[2].split('/')[-1] for triplet in tr]
+                    for cnt_obj_1, triplet in enumerate(tr):
+                        objects_1.append(triplet[2].split('/')[-1])
+                        if cnt_obj_1 == max_paths:
+                            break
                 else:
-                    objects_1 = [triplet[0].split('/')[-1] for triplet in tr]
+                    for cnt_obj_1, triplet in enumerate(tr):
+                        objects_1.append(triplet[0].split('/')[-1])
+                        if cnt_obj_1 == max_paths:
+                            break
                     
                 if objects_1:
                     if len(path) == 1:
                         chosen_obj = random.choice(objects_1)
-                        if dir_1 == "forw":
-                            retrieved_paths.append([entity_label, self.find_label(rel_1, ""), self.find_label(chosen_obj, "")])
-                        else:
-                            retrieved_paths.append([self.find_label(chosen_obj, ""), self.find_label(rel_1, ""), entity_label])
-                        retrieved_rels.append([rel_1])
+                        chosen_obj_label = self.find_label(chosen_obj, "")
+                        rel_1_label = self.find_label(rel_1, "")
+                        if chosen_obj_label:
+                            if dir_1 == "forw":
+                                retrieved_paths.append([entity_label, rel_1_label, chosen_obj_label])
+                            else:
+                                retrieved_paths.append([chosen_obj_label, rel_1_label, entity_label])
+                            retrieved_rels.append([rel_1])
                     else:
                         cur_paths = []
                         rel_2 = path[1]
@@ -538,10 +550,17 @@ class WikiParser:
                                     query_2 = ["", f"{self.prefixes['rels']['direct']}/{rel_2}", f"{self.prefixes['entity']}/{obj_1}"]
                                 tr, cnt = self.document.search_triples(*query_2)
                                 
+                                objects_2 = []
                                 if dir_2 == "forw":
-                                    objects_2 = [triplet[2].split('/')[-1] for triplet in tr]
+                                    for cnt_obj_2, triplet in enumerate(tr):
+                                        objects_2.append(triplet[2].split('/')[-1])
+                                        if cnt_obj_2 == max_paths:
+                                            break
                                 else:
-                                    objects_2 = [triplet[0].split('/')[-1] for triplet in tr]
+                                    for cnt_obj_2, triplet in enumerate(tr):
+                                        objects_2.append(triplet[0].split('/')[-1])
+                                        if cnt_obj_2 == max_paths:
+                                            break
             
                                 if objects_2:
                                     chosen_obj = random.choice(objects_2)
@@ -566,11 +585,12 @@ class WikiParser:
                                             cur_paths.append(([obj_1_label, rel_1_label, entity_label,
                                                           chosen_obj_label, rel_2_label, obj_1_label],
                                                               [rel_1, rel_2]))
-                        
-                        chosen_path, chosen_rels = random.choice(cur_paths)
-                        retrieved_paths.append(chosen_path)
-                        retrieved_rels.append(chosen_rels)
-                        
+                        if cur_paths:
+                            chosen_path, chosen_rels = random.choice(cur_paths)
+                            retrieved_paths.append(chosen_path)
+                            retrieved_rels.append(chosen_rels)
+            if retrieved_paths:
+                return retrieved_paths, retrieved_rels
         return retrieved_paths, retrieved_rels
         
         
