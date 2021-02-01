@@ -14,6 +14,7 @@
 
 import itertools
 import math
+import time
 from logging import getLogger
 from typing import List
 
@@ -41,6 +42,7 @@ class KGDialGenerator(Component):
         
     def __call__(self, prev_utterances_batch: List[str], triplets_batch: List[List[str]],
                        conf_batch: List[float]) -> List[str]:
+        tm_st = time.time()
         generated_utterances_batch = []
         for prev_utterance, triplets, conf in zip(prev_utterances_batch, triplets_batch, conf_batch):
             log.debug(f"prev_utterance {prev_utterance} triplets {triplets}")
@@ -58,6 +60,8 @@ class KGDialGenerator(Component):
             generated_utterance = self.tokenizer.decode(generated_ids[:, input_ids.shape[-1]:][0],
                                                         skip_special_tokens=True)
             generated_utterances_batch.append(generated_utterance)
+        tm_end = time.time()
+        log.debug(f"Utterance generation time: {tm_end-tm_st}")
         
         return generated_utterances_batch, conf_batch
         
@@ -71,6 +75,7 @@ class DialPathRanker(Component):
                        rel_freq_file: str,
                        max_log_freq: float = 8.0,
                        use_api_requester: bool = False,
+                       use_path_stat: bool = False,
                        *args, **kwargs) -> None:
         
         self.type_paths = read_json(expand_path(type_paths_file))
@@ -82,10 +87,12 @@ class DialPathRanker(Component):
         
         self.max_log_freq = max_log_freq
         self.use_api_requester = use_api_requester
+        self.use_path_stat = use_path_stat
     
     def __call__(self, utterances_batch: List[str], entities_batch: List[List[str]]) -> List[List[str]]:
         paths_batch = []
         conf_batch = []
+        tm_st = time.time()
         for utterance, entities_list in zip(utterances_batch, entities_batch):
             entity = entities_list[0]
             if isinstance(entity, list):
@@ -97,8 +104,17 @@ class DialPathRanker(Component):
             entity_types = set(entity_types)
             log.debug(f"entity types {entity_types}")
             candidate_paths = set()
-            for entity_type in entity_types:
-                candidate_paths = candidate_paths.union(set([tuple(path) for path, score in self.type_paths.get(entity_type, set())]))
+            if self.use_path_stat:
+                for entity_type in entity_types:
+                    candidate_paths = candidate_paths.union(set([tuple([tuple(path), score])
+                        for path, score in self.type_paths.get(entity_type, set())]))
+                candidate_paths = list(candidate_paths)
+                candidate_paths = sorted(candidate_paths, key=lambda x: x[1], reverse=True)
+                candidate_paths = [path for path, score in candidate_paths]
+            else:
+                for entity_type in entity_types:
+                    candidate_paths = candidate_paths.union(set([tuple(path)
+                        for path, score in self.type_paths.get(entity_type, set())]))
             if not candidate_paths:
                 log.debug("not found candidate paths, looking in types dict")
                 add_entity_types = set()
@@ -109,8 +125,17 @@ class DialPathRanker(Component):
                     subclass_group = set(self.type_groups.get(subcls, []))
                     if entity_types.intersection(subclass_group):
                         add_entity_types = add_entity_types.union(subclass_groups.difference(entity_types))
-                for entity_type in entity_types:
-                    candidate_paths = candidate_paths.union(self.type_paths.get(entity_type, set()))
+                if self.use_path_stat:
+                    for entity_type in entity_types:
+                        candidate_paths = candidate_paths.union(set([tuple([tuple(path), score])
+                            for path, score in self.type_paths.get(entity_type, set())]))
+                    candidate_paths = list(candidate_paths)
+                    candidate_paths = sorted(candidate_paths, key=lambda x: x[1], reverse=True)
+                    candidate_paths = [path for path, score in candidate_paths]
+                else:
+                    for entity_type in entity_types:
+                        candidate_paths = candidate_paths.union(set([tuple(path)
+                            for path, score in self.type_paths.get(entity_type, set())]))
                     
             candidate_paths = list(candidate_paths)
             log.debug(f"candidate paths {candidate_paths[:10]}")
@@ -118,10 +143,16 @@ class DialPathRanker(Component):
             retrieved_paths = []
             conf = 0.0
             if candidate_paths:
-                paths_with_scores = self.path_ranker.rank_paths(utterance, candidate_paths)
-                top_paths = [path for path, score in paths_with_scores]
+                if self.use_path_stat:
+                    top_paths = candidate_paths
+                else:
+                    paths_with_scores = self.path_ranker.rank_paths(utterance, candidate_paths)
+                    log.debug(f"paths with scores {paths_with_scores[:10]}")
+                    top_paths = [path for path, score in paths_with_scores]
                 log.debug(f"top paths {top_paths[:10]}")
+                tm_wp_st = time.time()
                 wp_res = self.wiki_parser(["retrieve_paths"], [[entity, top_paths]])[0]
+                tm_wp_end = time.time()
                 if self.use_api_requester:
                     wp_res = wp_res[0]
                 retrieved_paths, retrieved_rels = wp_res
@@ -137,5 +168,7 @@ class DialPathRanker(Component):
             else:
                 paths_batch.append([])
                 conf_batch.append(0.0)
+        tm_end = time.time()
+        log.debug(f"Dialog path ranker time: {tm_end-tm_st}, wiki_parser time: {tm_wp_end-tm_wp_st}")
                 
         return paths_batch, conf_batch
