@@ -302,7 +302,7 @@ class EntityLinkerSep(Component, Serializable):
         self.entities_ranking_dict = load_pickle(self.load_path / self.entities_ranking_filename)
         self.entities_types_sets = load_pickle(self.load_path / self.entities_types_sets_filename)
         if not self.fit_vectorizer:
-            self.vectorizer = load_pickle(self.load_path / self.vectorizer_filename)
+            self.vectorizer = load_pickle(expand_path(self.vectorizer_filename))
             self.faiss_index = faiss.read_index(str(expand_path(self.faiss_index_filename)))
             if self.use_gpu:
                 res = faiss.StandardGpuResources()
@@ -312,7 +312,7 @@ class EntityLinkerSep(Component, Serializable):
         pass
 
     def save_vectorizers_data(self) -> None:
-        save_pickle(self.vectorizer, self.save_path / self.vectorizer_filename)
+        save_pickle(self.vectorizer, expand_path(self.vectorizer_filename))
         faiss.write_index(self.faiss_index, str(expand_path(self.faiss_index_filename)))
 
     def __call__(self, entity_substr_batch: List[List[str]],

@@ -20,7 +20,7 @@
         "word_to_idlist_filename": "word_to_idlist_vx.pickle",
         "entities_ranking_filename": "entities_ranking_dict_vx.pickle",
         "entities_types_sets_filename": "entities_types_sets.pickle",
-        "vectorizer_filename": "vectorizer_vx.pk",
+        "vectorizer_filename": "{DOWNLOADS_PATH}/wikidata_rus/vectorizer_vx.pk",
         "faiss_index_filename": "{DOWNLOADS_PATH}/wikidata_rus/faiss_vectors_gpu.index",
         "q_to_descr_filename": "q_to_descr_vx.pickle",
         "entity_ranker": "#entity_descr_ranking",
