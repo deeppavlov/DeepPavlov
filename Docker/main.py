@@ -14,7 +14,7 @@ from deeppavlov.core.data.utils import simple_download
 from deeppavlov.models.entity_linking.download_parse_utils.entities_parse import EntitiesParser
 from deeppavlov.models.entity_linking.download_parse_utils.wikidata_parse import WikidataParser
 
-log = logging.getLogger('spam_application')
+log = logging.getLogger(__file__)
 log.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
@@ -39,9 +39,8 @@ FAISS_PATH = DATA_PATH / 'faiss'
 FAISS_OLD_PATH = DATA_PATH / 'faiss_old'
 FAISS_NEW_PATH = DATA_PATH / 'faiss_new'
 
-STATE_PATH = Path('/home/ignatov/asdf/down/state.yaml').resolve()
-
-LABELS_PATH = Path('/home/ignatov/asdf/down/labels.yaml').resolve()
+STATE_PATH = DATA_PATH / 'state.yaml'
+LABELS_PATH = DATA_PATH / 'labels.yaml'
 
 
 class State:
@@ -199,3 +198,8 @@ def update_faiss(state: State):
 
         state.faiss_updated = state.entities_parsed
         state.save()
+
+
+def initial_setup():
+    if not ENTITIES_PATH.exists():
+        ENTITIES_PATH.mkdir(parents=True)
