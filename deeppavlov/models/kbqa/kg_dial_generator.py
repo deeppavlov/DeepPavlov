@@ -171,7 +171,7 @@ class DialPathRanker(Component):
                     conf_batch.append(0.0)
             else:
                 paths_batch.append([])
-                conf_batch.append(0.0)
+                conf_batch.append(0.4)
         tm_end = time.time()
         log.debug(f"Dialog path ranker time: {tm_end-tm_st}, wiki_parser time: {tm_wp_end-tm_wp_st}")
                 
