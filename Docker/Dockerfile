@@ -1,4 +1,4 @@
-FROM python:3.7-slim
+FROM python:3.7.9-slim
 
 WORKDIR /app
 
@@ -22,4 +22,13 @@ RUN git clone https://github.com/deepmipt/DeepPavlov.git && \
     cd DeepPavlov && \
     git checkout container_el && \
     pip install -e . && \
-    python -m deeppavlov install entity_linking_vx_sep
+    python -m deeppavlov install entity_linking_vx_sep && \
+    python -c 'import deeppavlov.models'
+
+COPY requirements.txt ./
+
+RUN pip install -r requirements.txt
+
+COPY . .
+
+CMD python -m deeppavlov download entity_linking_vx_sep

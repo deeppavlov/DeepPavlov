@@ -1,7 +1,7 @@
 import datetime
 import logging
 from pathlib import Path
-from shutil import rmtree
+from shutil import copy, rmtree
 from typing import List, Optional
 
 import requests
@@ -126,7 +126,6 @@ def download_wikidata(state: State) -> None:
     if WIKIDATA_PATH.exists() and state.wikidata_is_fresh(remote_wikidata_created):
         log.info('Current wikidata is the latest. Downloading of wikidata is skipped')
     else:
-        WIKIDATA_PATH.parent.mkdir(parents=True, exist_ok=True)
         simple_download(WIKIDATA_URL, WIKIDATA_PATH)
         state.wikidata_created = remote_wikidata_created
         state.save()
@@ -203,3 +202,11 @@ def update_faiss(state: State):
 def initial_setup():
     if not ENTITIES_PATH.exists():
         ENTITIES_PATH.mkdir(parents=True)
+        copy('/root/.deeppavlov/downloads/wikidata_rus/entities_ranking_dict_vx.pickle', ENTITIES_PATH / 'entities_ranking_dict_vx.pickle')
+        copy('/root/.deeppavlov/downloads/wikidata_rus/entities_types_sets.pickle', ENTITIES_PATH / 'entities_types_sets.pickle')
+        copy('/root/.deeppavlov/downloads/wikidata_rus/q_to_descr_vx.pickle', ENTITIES_PATH / 'q_to_descr_vx.pickle')
+        copy('/root/.deeppavlov/downloads/wikidata_rus/word_to_idlist_vx.pickle', ENTITIES_PATH / 'word_to_idlist_vx.pickle')
+    if not FAISS_PATH.exists():
+        FAISS_PATH.mkdir(parents=True)
+        copy('/root/.deeppavlov/downloads/wikidata_rus/vectorizer_vx.pk', FAISS_PATH / 'vectorizer_vx.pk')
+        copy('/root/.deeppavlov/downloads/wikidata_rus/faiss_vectors_gpu.index', FAISS_PATH / 'faiss_vectors_gpu.index')
