@@ -18,6 +18,7 @@ import time
 from logging import getLogger
 from typing import List
 
+import torch
 from transformers import AutoTokenizer, AutoModelWithLMHead
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
@@ -39,6 +40,8 @@ class KGDialGenerator(Component):
         self.tokenizer.add_special_tokens(special_tokens_dict)
         self.model = AutoModelWithLMHead.from_pretrained(str(expand_path(path_to_model)))
         self.model.resize_token_embeddings(len(self.tokenizer))
+        self.device = torch.device("cuda")
+        self.model.to(self.device)
         
     def __call__(self, prev_utterances_batch: List[str], triplets_batch: List[List[str]],
                        conf_batch: List[float]) -> List[str]:
@@ -52,7 +55,7 @@ class KGDialGenerator(Component):
             else:
                 context_plus_gk = prev_utterance + self.tokenizer.eos_token
             log.debug(f"context and gk: {context_plus_gk}")
-            input_ids = self.tokenizer.encode(context_plus_gk, return_tensors="pt")
+            input_ids = self.tokenizer.encode(context_plus_gk, return_tensors="pt").to(self.device)
             generated_ids = self.model.generate(input_ids, max_length=200,
                                                 pad_token_id=self.tokenizer.eos_token_id,
                                                 no_repeat_ngram_size=3, do_sample=True,
