@@ -61,7 +61,7 @@ class KGDialGenerator(Component):
                                                         skip_special_tokens=True)
             generated_utterances_batch.append(generated_utterance)
         tm_end = time.time()
-        log.debug(f"Utterance generation time: {tm_end-tm_st}")
+        log.info(f"Utterance generation time: {tm_end-tm_st}")
         
         return generated_utterances_batch, conf_batch
         
@@ -173,6 +173,6 @@ class DialPathRanker(Component):
                 paths_batch.append([])
                 conf_batch.append(0.4)
         tm_end = time.time()
-        log.debug(f"Dialog path ranker time: {tm_end-tm_st}, wiki_parser time: {tm_wp_end-tm_wp_st}")
+        log.info(f"Dialog path ranker time: {tm_end-tm_st}, wiki_parser time: {tm_wp_end-tm_wp_st}")
                 
         return paths_batch, conf_batch
