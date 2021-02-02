@@ -33,7 +33,8 @@ log = getLogger(__name__)
 @register('kg_dial_generator')
 class KGDialGenerator(Component):
     def __init__(self, transformer_model: str,
-                       path_to_model: str, *args, **kwargs) -> None:
+                       path_to_model: str,
+                       conf_thres: float = 0.3, *args, **kwargs) -> None:
                        
         self.tokenizer = AutoTokenizer.from_pretrained(transformer_model)
         special_tokens_dict = {"sep_token": "<SEP>"}
@@ -42,6 +43,7 @@ class KGDialGenerator(Component):
         self.model.resize_token_embeddings(len(self.tokenizer))
         self.device = torch.device("cuda")
         self.model.to(self.device)
+        self.conf_thres = conf_thres
         
     def __call__(self, prev_utterances_batch: List[str], triplets_batch: List[List[str]],
                        conf_batch: List[float]) -> List[str]:
@@ -49,19 +51,22 @@ class KGDialGenerator(Component):
         generated_utterances_batch = []
         for prev_utterance, triplets, conf in zip(prev_utterances_batch, triplets_batch, conf_batch):
             log.debug(f"prev_utterance {prev_utterance} triplets {triplets}")
-            if triplets:
-                triplets = ' '.join(triplets)
-                context_plus_gk = triplets + " <SEP> " + prev_utterance + self.tokenizer.eos_token
+            if conf > self.conf_thres:
+                if triplets:
+                    triplets = ' '.join(triplets)
+                    context_plus_gk = triplets + " <SEP> " + prev_utterance + self.tokenizer.eos_token
+                else:
+                    context_plus_gk = prev_utterance + self.tokenizer.eos_token
+                log.debug(f"context and gk: {context_plus_gk}")
+                input_ids = self.tokenizer.encode(context_plus_gk, return_tensors="pt").to(self.device)
+                generated_ids = self.model.generate(input_ids, max_length=200,
+                                                    pad_token_id=self.tokenizer.eos_token_id,
+                                                    no_repeat_ngram_size=3, do_sample=True,
+                                                    top_k=100, top_p=0.7, temperature=0.8)
+                generated_utterance = self.tokenizer.decode(generated_ids[:, input_ids.shape[-1]:][0],
+                                                            skip_special_tokens=True)
             else:
-                context_plus_gk = prev_utterance + self.tokenizer.eos_token
-            log.debug(f"context and gk: {context_plus_gk}")
-            input_ids = self.tokenizer.encode(context_plus_gk, return_tensors="pt").to(self.device)
-            generated_ids = self.model.generate(input_ids, max_length=200,
-                                                pad_token_id=self.tokenizer.eos_token_id,
-                                                no_repeat_ngram_size=3, do_sample=True,
-                                                top_k=100, top_p=0.7, temperature=0.8)
-            generated_utterance = self.tokenizer.decode(generated_ids[:, input_ids.shape[-1]:][0],
-                                                        skip_special_tokens=True)
+                generated_utterance = ""
             generated_utterances_batch.append(generated_utterance)
         tm_end = time.time()
         log.info(f"Utterance generation time: {tm_end-tm_st}")
