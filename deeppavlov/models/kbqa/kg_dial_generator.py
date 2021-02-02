@@ -162,6 +162,7 @@ class DialPathRanker(Component):
                     tm_wp_st = time.time()
                     wp_res = self.wiki_parser(["retrieve_paths"], [[entity, top_paths]])[0]
                     tm_wp_end = time.time()
+                    log.info(f"wiki_parser time: {tm_wp_end-tm_wp_st}")
                     if self.use_api_requester:
                         wp_res = wp_res[0]
                     retrieved_paths, retrieved_rels = wp_res
@@ -181,6 +182,6 @@ class DialPathRanker(Component):
                 paths_batch.append([])
                 conf_batch.append(0.4)
         tm_end = time.time()
-        log.info(f"Dialog path ranker time: {tm_end-tm_st}, wiki_parser time: {tm_wp_end-tm_wp_st}")
+        log.info(f"Dialog path ranker time: {tm_end-tm_st}")
                 
         return paths_batch, conf_batch
