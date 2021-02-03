@@ -167,7 +167,7 @@ class DialPathRanker(Component):
                     if self.use_api_requester:
                         wp_res = wp_res[0]
                     retrieved_paths, retrieved_rels = wp_res
-                    log.debug(f"retrieved paths {retrieved_paths}")
+                    log.info(f"retrieved paths {retrieved_paths}")
                     if retrieved_paths:
                         chosen_path = retrieved_paths[0]
                         chosen_rels = retrieved_rels[0]
