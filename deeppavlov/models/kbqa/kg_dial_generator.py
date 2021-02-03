@@ -125,6 +125,7 @@ class DialPathRanker(Component):
                         candidate_paths = candidate_paths.union(set([tuple(path)
                             for path, score in self.type_paths.get(entity_type, set())]))
                 if not candidate_paths:
+                    candidate_paths = set()
                     log.debug("not found candidate paths, looking in types dict")
                     add_entity_types = set()
                     subclasses = self.wiki_parser(["find_object" for _ in entity_types],
