@@ -167,10 +167,11 @@ class DialPathRanker(Component):
                         wp_res = wp_res[0]
                     retrieved_paths, retrieved_rels = wp_res
                     log.debug(f"retrieved paths {retrieved_paths}")
-                    chosen_path = retrieved_paths[0]
-                    chosen_rels = retrieved_rels[0]
-                    conf = min(math.log(sum([self.rel_freq.get(rel, [0])[0] for rel in chosen_rels]) / 
-                        len(chosen_rels)) / self.max_log_freq, 1.0)
+                    if retrieved_paths:
+                        chosen_path = retrieved_paths[0]
+                        chosen_rels = retrieved_rels[0]
+                        conf = min(math.log(sum([self.rel_freq.get(rel, [0])[0] for rel in chosen_rels]) / 
+                            len(chosen_rels)) / self.max_log_freq, 1.0)
                 
                 if retrieved_paths:
                     paths_batch.append(retrieved_paths[0])
