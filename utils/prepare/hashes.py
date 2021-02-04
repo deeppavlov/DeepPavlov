@@ -79,17 +79,11 @@ def compute_hashes(fpath: Union[str, Path]) -> Dict[str, str]:
     return hashes
 
 
-def main(args: List[str] = None) -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("fname", help="path to a file to compute hash for", type=str)
-    parser.add_argument('-o', '--outfile', help='where to write the hashes', default=None, type=str)
-
-    args = parser.parse_args(args)
-
-    p = Path(args.fname).expanduser()
+def main(fname:str, outfile:str) -> None:
+    p = Path(fname).expanduser()
     hashes = compute_hashes(p)
 
-    outfile = args.outfile
+    outfile = outfile
     if outfile is None:
         outfile = p.with_suffix(p.suffix + '.md5').open('w', encoding='utf-8')
     elif outfile == '-':
@@ -105,4 +99,9 @@ def main(args: List[str] = None) -> None:
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("fname", help="path to a file to compute hash for", type=str)
+    parser.add_argument('-o', '--outfile', help='where to write the hashes', default=None, type=str)
+
+    args = parser.parse_args(args)
+    main(args.fname, args.outfile)
