@@ -97,26 +97,35 @@ class WikiParser:
                     log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output += rels
             elif parser_info == "find_top_triplets":
-                triplets = {}
-                log.info(f"input {query}")
+                triplets_info = {}
                 try:
-                    entity = query
-                    entity_label = self.find_label(entity, "")
-                    for rel_id, rel_label in [("P31", "instance of"), ("P279", "subclass of"), ("P131", "located in"),
-                                              ("P106", "occupation"), ("P361", "part of"), ("P17", "country"),
-                                              ("P27", "country of sitizenship"), ("P569", "date of birth"),
-                                              ("P1542", "has effect"), ("P580", "start time"), ("P1552", "has quality")]:
-                        objects = self.find_object(entity, rel, "")
-                        objects_info = []
-                        for obj in objects[:5]:
-                            obj_label = self.find_label(obj, "")
-                            if obj_label:
-                                objects_info.append((obj, obj_label))
-                        if objects_info:
-                            triplets[(rel_id, rel_label)] = objects_info
+                    for entity in query:
+                        if entity.startswith("Q"):
+                            triplets = {}
+                            entity_label = self.find_label(entity, "")
+                            for rel_id, rel_label in [("P31", "instance of"),
+                                                      ("P279", "subclass of"),
+                                                      ("P131", "located in"),
+                                                      ("P106", "occupation"),
+                                                      ("P361", "part of"),
+                                                      ("P17", "country"),
+                                                      ("P27", "country of sitizenship"),
+                                                      ("P569", "date of birth"),
+                                                      ("P1542", "has effect"),
+                                                      ("P580", "start time"),
+                                                      ("P1552", "has quality")]:
+                                objects = self.find_object(entity, rel_id, "")
+                                objects_info = []
+                                for obj in objects[:5]:
+                                    obj_label = self.find_label(obj, "")
+                                    if obj_label:
+                                        objects_info.append((obj, obj_label))
+                                if objects_info:
+                                    triplets[(rel_id, rel_label)] = objects_info
+                            triplets_info[(entity, entity_label)] = triplets
                 except:
                     log.info("Wrong arguments are passed to wiki_parser")
-                wiki_parser_output.append({(entity, entity_label): triplets})
+                wiki_parser_output.append(triplets_info)
             elif parser_info == "find_object":
                 objects = []
                 try:
