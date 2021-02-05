@@ -98,6 +98,7 @@ class WikiParser:
                 wiki_parser_output += rels
             elif parser_info == "find_top_triplets":
                 triplets = {}
+                log.info(f"input {query}")
                 try:
                     entity = query
                     entity_label = self.find_label(entity, "")
