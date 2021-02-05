@@ -1,0 +1,20 @@
+FROM deeppavlov/base-gpu:0.12.0
+
+RUN cd DeepPavlov && \
+    git pull origin container_el && \
+    git checkout container_el && \
+    pip install -e . && \
+    python -m deeppavlov install entity_linking_vx_sep
+
+COPY requirements.txt ./
+
+RUN pip install -r requirements.txt
+
+COPY . .
+
+RUN sed -i 's|{DOWNLOADS_PATH}/wikidata_rus/|/data/faiss/|g' /base/DeepPavlov/deeppavlov/configs/entity_linking/entity_linking_vx_sep.json && \
+    sed -i '0,/{DOWNLOADS_PATH}\/wikidata_rus/! s|{DOWNLOADS_PATH}/wikidata_rus|/data/entities/|g' /base/DeepPavlov/deeppavlov/configs/entity_linking/entity_linking_vx_sep.json
+
+RUN pip uninstall -y tensorflow-gpu && pip install tensorflow==1.15.2
+
+CMD python -m deeppavlov riseapi entity_linking_vx_sep -p 8000 2>&1 | tee /logs/$(date '+%Y-%m-%d-%H-%M-%S-%3N.log')

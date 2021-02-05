@@ -31,4 +31,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-CMD python -m deeppavlov download entity_linking_vx_sep
+CMD python server.py
