@@ -97,10 +97,15 @@ class WikidataParser:
             if num_sample < length:
                 line = common_list[num_sample]
                 line = line[:-2]
-                entity = json.loads(line)
-                entity_id, entity_info = self.process_sample(entity)
+                entity_id = ""
+                try:
+                    entity = json.loads(line)
+                    entity_id, entity_info = self.process_sample(entity)
+                except:
+                    pass
                 if entity_id:
                     self.wiki_dict[entity_id] = entity_info
+                     
 
     def parse(self, continue_parsing: bool = False):
         """
