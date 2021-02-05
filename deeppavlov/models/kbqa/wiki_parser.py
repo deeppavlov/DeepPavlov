@@ -121,8 +121,8 @@ class WikiParser:
                                     if obj_label:
                                         objects_info.append((obj, obj_label))
                                 if objects_info:
-                                    triplets[(rel_id, rel_label)] = objects_info
-                            triplets_info[(entity, entity_label)] = triplets
+                                    triplets[rel_label] = objects_info
+                            triplets_info[entity_label] = triplets
                 except:
                     log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(triplets_info)
