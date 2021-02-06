@@ -2,12 +2,16 @@ import datetime
 import logging
 from pathlib import Path
 from shutil import copy, rmtree
-from typing import List, Optional
+from typing import Optional
 
 import requests
 import yaml
 from dateutil.parser import parse as parsedate
 
+from constants import WIKIDATA_PATH, WIKIDATA_URL, PARSED_WIKIDATA_PATH, PARSED_WIKIDATA_OLD_PATH, \
+    PARSED_WIKIDATA_NEW_PATH, ENTITIES_PATH, ENTITIES_OLD_PATH, ENTITIES_NEW_PATH, FAISS_PATH, FAISS_OLD_PATH, \
+    FAISS_NEW_PATH, STATE_PATH
+from aliases import Aliases
 from deeppavlov import build_model
 from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.data.utils import simple_download
@@ -22,26 +26,6 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 ch.setFormatter(formatter)
 log.addHandler(ch)
 
-DATA_PATH = Path('/data').resolve()
-
-WIKIDATA_PATH = DATA_PATH / 'wikidata.json.bz2'
-WIKIDATA_URL = 'https://dumps.wikimedia.org/wikidatawiki/entities/latest-all.json.bz2'
-
-PARSED_WIKIDATA_PATH = DATA_PATH / 'parsed_wikidata'
-PARSED_WIKIDATA_OLD_PATH = DATA_PATH / 'parsed_wikidata_old'
-PARSED_WIKIDATA_NEW_PATH = DATA_PATH / 'parsed_wikidata_new'
-
-ENTITIES_PATH = DATA_PATH / 'entities'
-ENTITIES_OLD_PATH = DATA_PATH / 'entities_old'
-ENTITIES_NEW_PATH = DATA_PATH / 'entities_new'
-
-FAISS_PATH = DATA_PATH / 'faiss'
-FAISS_OLD_PATH = DATA_PATH / 'faiss_old'
-FAISS_NEW_PATH = DATA_PATH / 'faiss_new'
-
-STATE_PATH = DATA_PATH / 'state.yaml'
-LABELS_PATH = DATA_PATH / 'labels.yaml'
-
 
 class State:
     def __init__(self,
@@ -49,14 +33,14 @@ class State:
                  wikidata_created: Optional[str] = None,
                  wikidata_parsed: Optional[str] = None,
                  entities_wikidata: Optional[str] = None,
-                 labels_updated: Optional[str] = None,
+                 aliases_updated: Optional[str] = None,
                  entities_parsed: Optional[str] = None,
                  faiss_updated: Optional[str] = None) -> None:
         self._state_path = state_path
         self.wikidata_created = wikidata_created
         self.wikidata_parsed = wikidata_parsed
         self.entities_wikidata = entities_wikidata
-        self.labels_updated = labels_updated
+        self.aliases_updated = aliases_updated
         self.entities_parsed = entities_parsed
         self.faiss_updated = faiss_updated
 
@@ -83,40 +67,16 @@ class State:
             return False
         return parsedate(self.wikidata_created) <= parsedate(self.wikidata_parsed)
 
-    def entities_is_fresh(self, labels_mtime: str) -> bool:
-        if self.entities_wikidata is None or self.labels_updated is None:
+    def entities_is_fresh(self, aliases_mtime: datetime.datetime) -> bool:
+        if self.entities_wikidata is None or self.aliases_updated is None:
             return False
         return parsedate(self.entities_wikidata) >= parsedate(self.wikidata_parsed) \
-               and parsedate(labels_mtime) <= parsedate(self.labels_updated)
+               and aliases_mtime <= parsedate(self.aliases_updated)
 
     def faiss_is_fresh(self):
         if self.faiss_updated is None:
             return False
         return parsedate(self.faiss_updated) >= parsedate(self.entities_parsed)
-
-
-class Labels:
-    def __init__(self,
-                 labels_path: Path = LABELS_PATH) -> None:
-        self.labels_path = labels_path
-        if self.labels_path.exists():
-            with open(labels_path) as fin:
-                self.mtime = str(datetime.datetime.fromtimestamp(self.labels_path.stat().st_mtime))
-                self.labels = yaml.safe_load(fin)
-        else:
-            self.labels = []
-            self.save()
-            self.mtime = str(datetime.datetime.fromtimestamp(self.labels_path.stat().st_mtime))
-
-    def add_label(self, label: str, entity_ids: List[str]) -> None:
-        self.labels.append([label, entity_ids])
-
-    def add_labels(self, labels_list: List[List]) -> None:
-        self.labels.extend(labels_list)
-
-    def save(self) -> None:
-        with open(self.labels_path, 'w') as fout:
-            yaml.dump(self.labels, fout)
 
 
 def download_wikidata(state: State) -> None:
@@ -154,8 +114,8 @@ def parse_wikidata(state: State) -> None:
 
 
 def parse_entities(state: State) -> None:
-    labels = Labels()
-    if state.entities_is_fresh(labels.mtime):
+    aliases = Aliases()
+    if state.entities_is_fresh(aliases.mtime):
         log.info('Current entities is the latest. Skipping entities parsing')
     else:
         safe_rmtree(ENTITIES_NEW_PATH)
@@ -164,9 +124,9 @@ def parse_entities(state: State) -> None:
                                          filter_tags=False)  # !!!!!!!!!!!!!!!!!!!! Не забудь удалить
         entities_parser.load()
         entities_parser.parse()
-        labels = Labels()  # entities parsing is quiet long, labels could be updated in this time, so variable is
-                           # re-initialized intentionally
-        for label, entity_ids in labels.labels:
+        aliases = Aliases()  # entities parsing is quiet long, labels could be updated in this time,
+        # so variable is re-initialized intentionally
+        for label, entity_ids in aliases.aliases.items():
             entities_parser.add_label(label, entity_ids)
         entities_parser.save()
         safe_rmtree(ENTITIES_OLD_PATH)
@@ -175,7 +135,7 @@ def parse_entities(state: State) -> None:
         ENTITIES_NEW_PATH.rename(ENTITIES_PATH)
 
         state.entities_wikidata = state.wikidata_parsed
-        state.labels_updated = labels.mtime
+        state.aliases_updated = aliases.mtime
         state.entities_parsed = str(datetime.datetime.now())
         state.save()
 

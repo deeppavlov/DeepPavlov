@@ -1,8 +1,8 @@
 import os
 from pathlib import Path
 from deeppavlov.core.data.utils import simple_download
-from deeppavlov.models.kbqa.download_parse_utils.wikidata_parse import WikidataParser
-from deeppavlov.models.kbqa.download_parse_utils.entities_parse import EntitiesParser
+from deeppavlov.models.entity_linking.download_parse_utils.wikidata_parse import WikidataParser
+from deeppavlov.models.entity_linking.download_parse_utils.entities_parse import EntitiesParser
 
 
 save_path = "~/.deeppavlov/downloads/wikidata"
@@ -22,13 +22,13 @@ wikidata_parser = WikidataParser(wikidata_path,
 wikidata_parser.parse()
 
 
-entities_parser = EntitiesParser(load_path="~/.deeppavlov/downloads/wikidata_parse",
-                                 save_path="~/.deeppavlov/downloads/wikidata_rus",
+entities_parser = EntitiesParser(load_path="~/vx/wiki",
+                                 save_path="~/vx/parsed",
                                  word_to_idlist_filename="word_to_idlist_rus.pickle",
                                  entities_ranking_dict_filename="entities_ranking_dict_rus.pickle",
-                                 entities_descr_filename="q_to_descr_ru.pickle")
+                                 entities_descr_filename="q_to_descr_ru.pickle",
+                                 filter_tags=False)
 
 entities_parser.load()
 entities_parser.parse()
 entities_parser.save()
-

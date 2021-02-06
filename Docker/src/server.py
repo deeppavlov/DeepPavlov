@@ -10,13 +10,13 @@ import yaml
 from docker.models.containers import Container
 from docker.types import DeviceRequest
 from fastapi import FastAPI
+from fastapi import HTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 
+from aliases import Aliases
 from deeppavlov.utils.server.metrics import PrometheusMiddleware
-from main import ENTITIES_PATH, FAISS_PATH
-from main import Labels
-from pydantic import BaseModel
+from constants import DATA_PATH, HOST_DATA_PATH
 
 CONTAINERS_CONFIG_PATH = Path('~/vx/containers.yml').expanduser().resolve()
 print(CONTAINERS_CONFIG_PATH)
@@ -35,6 +35,7 @@ app.add_middleware(
     allow_headers=['*']
 )
 
+
 class Porter:
     def __init__(self):
         with open(CONTAINERS_CONFIG_PATH) as fin:
@@ -46,8 +47,7 @@ class Porter:
                                               detach=True,
                                               device_requests=[DeviceRequest(count=-1, capabilities=[['gpu'], ['nvidia'], ['compute'], ['compat32'], ['graphics'], ['utility'], ['video'], ['display']])],
                                               network='el_network',
-                                              volumes={'/home/ignatov/vx/parsed': {'bind': str(ENTITIES_PATH), 'mode': 'rw'},
-                                                       '/home/ignatov/vx/faiss': {'bind': str(FAISS_PATH), 'mode': 'rw'},
+                                              volumes={'/home/ignatov/vx/parsed': {'bind': str(DATA_PATH), 'mode': 'rw'},
                                                        '/home/ignatov/.deeppavlov': {'bind': '/root/.deeppavlov', 'mode': 'rw'},
                                                        '/home/ignatov/logs': {'bind': '/logs', 'mode': 'rw'}},
                                               name=name,
@@ -97,23 +97,29 @@ async def update():
     return 'OK'
 
 
-@app.get('/labels')
-async def get_labels():
-    labels = Labels()
-    return labels.labels
+@app.get('/aliases')
+async def get_aliases():
+    return Aliases().aliases
 
 
-class Entity(BaseModel):
-    label: str
-    entity_ids: List[str]
+@app.post('/aliases/add/{label}')
+async def add_alias(label: str, entity_ids: List[str]):
+    aliases = Aliases()
+    aliases.add_alias(label, entity_ids)
 
 
-@app.post('/labels')
-async def add_label(entity: Entity):
-    labels = Labels()
-    labels.add_label(entity.label, entity.entity_ids)
-    labels.save()
-    return 200
+@app.post('/aliases/add_many')
+async def add_alias(new_aliases: Dict[str, List[str]]):
+    aliases = Aliases()
+    aliases.add_aliases(new_aliases)
+
+
+@app.get('/aliases/delete/{label}')
+async def add_alias(label: str):
+    aliases = Aliases()
+    if label not in aliases.aliases:
+        raise HTTPException(status_code=404, detail=f'Alias with label "{label}" not found')
+    aliases.delete_alias(label)
 
 
 @app.get('/worker/{worker_id}')
