@@ -145,6 +145,8 @@ def update_faiss(state: State):
     if state.faiss_is_fresh():
         log.info('skipping faiss update')
     else:
+        safe_rmtree(FAISS_NEW_PATH)
+        FAISS_NEW_PATH.mkdir(parents=True, exist_ok=True)
         config = parse_config('entity_linking_vx_sep')
         config['chainer']['pipe'][-1]['load_path'] = config['chainer']['pipe'][-1]['save_path'] = str(ENTITIES_PATH)
         config['chainer']['pipe'][-1]['fit_vectorizer'] = True
