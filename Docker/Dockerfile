@@ -1,4 +1,4 @@
-FROM python:3.7.9-slim
+FROM deeppavlov/base-gpu:0.12.0
 
 WORKDIR /app
 
