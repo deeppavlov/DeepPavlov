@@ -119,6 +119,7 @@ def parse_entities(state: State) -> None:
         log.info('Current entities is the latest. Skipping entities parsing')
     else:
         safe_rmtree(ENTITIES_NEW_PATH)
+        ENTITIES_NEW_PATH.mkdir(parents=True, exist_ok=True)
         entities_parser = EntitiesParser(load_path=PARSED_WIKIDATA_PATH,
                                          save_path=ENTITIES_NEW_PATH,
                                          filter_tags=False)  # !!!!!!!!!!!!!!!!!!!! Не забудь удалить
