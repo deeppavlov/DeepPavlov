@@ -1,31 +1,18 @@
 import asyncio
-from itertools import cycle
-from pathlib import Path
-from typing import Dict, Optional, List
+from typing import Dict, List
 
 import aiohttp
-import docker
 import uvicorn
-import yaml
-from docker.models.containers import Container
-from docker.types import DeviceRequest
 from fastapi import FastAPI
 from fastapi import HTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 
 from aliases import Aliases
-from deeppavlov.utils.server.metrics import PrometheusMiddleware
-from constants import DATA_PATH, HOST_DATA_PATH
+from porter import Porter
 
-CONTAINERS_CONFIG_PATH = Path('~/vx/containers.yml').expanduser().resolve()
-print(CONTAINERS_CONFIG_PATH)
 app = FastAPI()
 
-app.add_middleware(
-    PrometheusMiddleware,
-    ignore_paths=('/', '/metrics', '/api', '/probe', '/docs', '/openapi.json')
-)
 
 app.add_middleware(
     CORSMiddleware,
@@ -35,50 +22,6 @@ app.add_middleware(
     allow_headers=['*']
 )
 
-
-class Porter:
-    def __init__(self):
-        with open(CONTAINERS_CONFIG_PATH) as fin:
-            self.params = yaml.safe_load(fin)
-
-        self.workers: Dict[str, Container] = {}
-        for name, env_vars in self.params.items():
-            container = client.containers.run('client',
-                                              detach=True,
-                                              device_requests=[DeviceRequest(count=-1, capabilities=[['gpu'], ['nvidia'], ['compute'], ['compat32'], ['graphics'], ['utility'], ['video'], ['display']])],
-                                              network='el_network',
-                                              volumes={'/home/ignatov/vx/parsed': {'bind': str(DATA_PATH), 'mode': 'rw'},
-                                                       '/home/ignatov/.deeppavlov': {'bind': '/root/.deeppavlov', 'mode': 'rw'},
-                                                       '/home/ignatov/logs': {'bind': '/logs', 'mode': 'rw'}},
-                                              name=name,
-                                              remove=True,
-                                              environment=env_vars)
-            self.workers[name] = container
-        self.active_hosts = cycle(self.workers)
-        self.manager: Optional[Container] = None
-
-    async def update_containers(self):
-        for name, env_vars in self.params.items():
-            container = self.workers.pop(name)
-            self.active_hosts = cycle(self.workers)
-            loop = asyncio.get_event_loop()
-            await loop.run_in_executor(None, container.stop)
-            await asyncio.sleep(1)
-            container = client.containers.run('client',
-                                              detach=True,
-                                              device_requests=[DeviceRequest(count=-1, capabilities=[['gpu'], ['nvidia'], ['compute'], ['compat32'], ['graphics'], ['utility'], ['video'], ['display']])],
-                                              network='el_network',
-                                              volumes={'/home/ignatov/vx/parsed': {'bind': str(ENTITIES_PATH), 'mode': 'rw'},
-                                                       '/home/ignatov/vx/faiss': {'bind': str(FAISS_PATH), 'mode': 'rw'},
-                                                       '/home/ignatov/.deeppavlov': {'bind': '/root/.deeppavlov', 'mode': 'rw'},
-                                                       '/home/ignatov/logs': {'bind': '/logs', 'mode': 'rw'}},
-                                              name=name,
-                                              remove=True,
-                                              environment=env_vars)
-            self.workers[name] = container
-            self.active_hosts = cycle(self.workers)
-
-client = docker.from_env()
 
 porter = Porter()
 

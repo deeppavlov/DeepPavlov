@@ -21,3 +21,4 @@ FAISS_NEW_PATH = DATA_PATH / 'faiss_new'
 
 STATE_PATH = DATA_PATH / 'state.yaml'
 ALIASES_PATH = DATA_PATH / 'aliases.yaml'
+CONTAINERS_CONFIG_PATH = DATA_PATH / 'containers.yaml'
