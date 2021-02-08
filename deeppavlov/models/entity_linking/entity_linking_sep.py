@@ -431,43 +431,65 @@ class EntityLinkerSep(Component, Serializable):
                                  if word not in self.stopwords and len(word) > 0]
                                 for entity_substr in entity_substr_list]
                                for entity_substr_list in entity_substr_batch]
-        words_doc_nums = []
+        nf_words_doc_nums = []
         word_count = 0
         indices_batch = []
+        word_fnd_flags_batch = []
         word_counts_batch = []
+        fnd_words_batch = []
         word_tags_batch = []
         for doc_num, (entity_substr_list, tags_list) in enumerate(zip(entity_substr_batch, tags_batch)):
             indices = []
+            word_fnd_flags = []
             word_counts = []
             word_tags = []
+            fnd_words = []
             for i, (entity_substr, tag) in enumerate(zip(entity_substr_list, tags_list)):
                 for word in entity_substr:
-                    words_doc_nums.append((word, doc_num))
+                    if word in self.word_to_idlist:
+                        fnd_words.append(word)
+                        word_fnd_flags.append(True)
+                    else:
+                        nf_words_doc_nums.append((word, doc_num))
+                        word_fnd_flags.append(False)
                     indices.append(i)
                     word_counts.append(word_count)
                     word_tags.append(tag)
                     morph_parsed_word = self.morph_parse(word)
                     if word != morph_parsed_word:
-                        words_doc_nums.append((morph_parsed_word, doc_num))
+                        if morph_parsed_word in self.word_to_idlist:
+                            fnd_words.append(morph_parsed_word)
+                            word_fnd_flags.append(True)
+                        else:
+                            nf_words_doc_nums.append((morph_parsed_word, doc_num))
+                            word_fnd_flags.append(False)
                         indices.append(i)
                         word_counts.append(word_count)
                         word_tags.append(tag)
                     word_count += 1
             indices_batch.append(indices)
+            fnd_words_batch.append(fnd_words)
+            word_fnd_flags_batch.append(word_fnd_flags)
             word_counts_batch.append(word_counts)
             word_tags_batch.append(word_tags)
-        log.debug(f"words, indices, tags {words_doc_nums}")
-        words, doc_nums = zip(*words_doc_nums)
-        words = list(words)
-        doc_nums = list(doc_nums)
-        log.debug(
-            f"words {words} doc_nums {doc_nums} word counts batch {word_counts_batch} tags batch {word_tags_batch}")
-        ent_substr_tfidfs = self.vectorizer.transform(words).toarray().astype(np.float32)
-        D_all, I_all = self.faiss_index.search(ent_substr_tfidfs, self.num_faiss_candidate_entities)
+        log.debug(f"words, indices, tags {nf_words_doc_nums}")
+        nf_words, nf_doc_nums = [], []
+        if nf_words_doc_nums:
+            nf_words, nf_doc_nums = zip(*nf_words_doc_nums)
+            nf_words = list(nf_words)
+            nf_doc_nums = list(nf_doc_nums)
+        log.debug(f"nf_words {nf_words} nf_doc_nums {nf_doc_nums}")
+        log.debug(f"fnd words {fnd_words_batch} word counts {word_counts_batch} tags {word_tags_batch}")
+        tm_faiss_st = time.time()
+        D_all, I_all = [], []
+        if nf_words:
+            ent_substr_tfidfs = self.vectorizer.transform(nf_words).toarray().astype(np.float32)
+            D_all, I_all = self.faiss_index.search(ent_substr_tfidfs, self.num_faiss_candidate_entities)
+        tm_faiss_end = time.time()
         D_batch, I_batch = [], []
         D_list, I_list = [], []
         prev_doc_num = 0
-        for D, I, doc_num in zip(D_all, I_all, doc_nums):
+        for D, I, doc_num in zip(D_all, I_all, nf_doc_nums):
             if doc_num != prev_doc_num:    
                 D_batch.append(D_list)
                 I_batch.append(I_list)
@@ -483,12 +505,17 @@ class EntityLinkerSep(Component, Serializable):
             D_batch.append(D_list)
             I_batch.append(I_list)
         
+        for i in range(len(entity_substr_batch) - len(D_batch)):
+            D_batch.append([])
+            I_batch.append([])
+        
         entity_ids_batch = []
         conf_batch = []
         for entity_substr_list, entity_offsets_list, sentences_list, sentences_offsets_list, \
-            indices, word_counts, word_tags, tags, D, I in \
+            indices, word_counts, word_tags, tags, fnd_words, word_fnd_flags, D, I in \
                 zip(entity_substr_batch, entity_offsets_batch, sentences_batch, sentences_offsets_batch,
-                    indices_batch, word_counts_batch, word_tags_batch, tags_batch, D_batch, I_batch):
+                    indices_batch, word_counts_batch, word_tags_batch, tags_batch, fnd_words_batch,
+                    word_fnd_flags_batch, D_batch, I_batch):
             entity_ids_list, conf_list = [], []
             if entity_substr_list:
                 tm_ind_st = time.time()
@@ -497,9 +524,20 @@ class EntityLinkerSep(Component, Serializable):
                 prev_word_count = 0
                 prev_index = 0
                 candidate_entities = {}
-                for ind_list, scores_list, index, word_count, tag in zip(I, D, indices, word_counts, word_tags):
-                    if self.num_faiss_cells > 1:
-                        scores_list = [1.0 - score for score in scores_list]
+                words_i = 0
+                ind_i = 0
+                for i, (index, word_count, tag, flag) in \
+                    enumerate(zip(indices, word_counts, word_tags, word_fnd_flags)):
+                    if flag:
+                        scores_list = [1.0]
+                        ind_list = [fnd_words[words_i]]
+                        words_i += 1
+                    else:
+                        scores_list = D[ind_i]
+                        ind_list = I[ind_i]
+                        if self.num_faiss_cells > 1:
+                            scores_list = [1.0 - score for score in scores_list]
+                        ind_i += 1
                     if word_count != prev_word_count:
                         if candidate_entities:
                             if prev_index not in candidate_entities_dict:
@@ -508,9 +546,12 @@ class EntityLinkerSep(Component, Serializable):
                                                                     for (entity, cand_entity_len), score in
                                                                     candidate_entities.items()]
                         candidate_entities = {}
-
+                    
                     for ind, score in zip(ind_list, scores_list):
-                        entities_set = self.word_to_idlist[self.word_list[ind]]
+                        if flag:
+                            entities_set = self.word_to_idlist[ind]
+                        else:
+                            entities_set = self.word_to_idlist[self.word_list[ind]]
                         entities_set = {entity for entity in entities_set if (entity[0] in self.entities_types_sets[tag]
                                                                               or entity[0] in self.entities_types_sets[
                                                                                   "AMB"])}
@@ -522,8 +563,9 @@ class EntityLinkerSep(Component, Serializable):
                                 candidate_entities[entity] = score
                     prev_index = index
                     prev_word_count = word_count
-                    debug_words = [(self.word_list[ind], score) for ind, score in zip(ind_list[:10], scores_list[:10])]
-                    log.debug(f"{index} candidate_entities {debug_words}")
+                    if not flag:
+                        debug_words = [(self.word_list[ind], score) for ind, score in zip(ind_list[:10], scores_list[:10])]
+                        log.debug(f"{index} candidate_entities {debug_words}")
                 if candidate_entities:
                     if index not in candidate_entities_dict:
                         candidate_entities_dict[index] = []
@@ -676,7 +718,8 @@ class EntityLinkerSep(Component, Serializable):
         for candidate_entities, tag, substr_len, entities_scores, scores in \
                 zip(candidate_entities_list, tags, substr_lens, entities_scores_list, scores_list):
             log.debug(f"len candidate entities {len(candidate_entities)}")
-            entities_with_scores = [(entity, round(entities_scores[entity][0], 2), entities_scores[entity][1],
+            entities_with_scores = [(entity, round(entities_scores.get(entity, (0.0, 0))[0], 2),
+                                     entities_scores.get(entity, (0.0, 0))[1],
                                      round(score, 2)) for entity, score in scores]
             log.debug(f"len entities with scores {len(entities_with_scores)}")
             entities_with_scores = [entity for entity in entities_with_scores if entity[3] > 0.001 if

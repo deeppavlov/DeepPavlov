@@ -21,11 +21,13 @@ class WikidataParser:
 
     def __init__(self, wikidata_filename: str,
                  chunk_num_lines: int = 60000,
+                 total_lines_num: int = 86000000,
                  save_path: str = "~/.deeppavlov/downloads/wikidata_parse",
                  num_processors=None):
 
         self.wikidata_filename = wikidata_filename
         self.chunk_num_lines = chunk_num_lines
+        self.total_lines_num = total_lines_num
         self.save_path = Path(save_path).expanduser().resolve()
         self.save_path.mkdir(parents=True, exist_ok=True)
         self.manager = mp.Manager()
@@ -113,6 +115,7 @@ class WikidataParser:
         """
         line = self.bz_file.readline()
 
+        parsed_lines = 0
         num_iterations = 0
         if continue_parsing:
             files = os.listdir(self.save_path)
@@ -120,6 +123,7 @@ class WikidataParser:
 
             for _ in range(num_iterations * self.chunk_num_lines * self.num_processors):
                 line = self.bz_file.readline()
+                parsed_lines += 1
 
         while True:
             log.debug(f"iteration number {num_iterations}")
@@ -131,9 +135,11 @@ class WikidataParser:
                 line = self.bz_file.readline()
                 common_list.append(line)
                 count += 1
+                parsed_lines += 1
                 if count == self.chunk_num_lines * self.num_processors:
+                    log.info(f"parsed lines {round(100*parsed_lines/self.total_lines_num)}")
                     break
-
+            
             if not common_list:
                 break
 
