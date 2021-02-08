@@ -68,12 +68,8 @@
         "subdir": "{DOWNLOADS_PATH}/bert_models"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/datasets/rel_ranking_bert_rus.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/rel_ranking_rus"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_bert_rus.tar.gz",
-        "subdir": "{MODELS_PATH}/rel_ranking_bert_rus"
+        "url": "http://files.deeppavlov.ai/kbqa/models/entity_ranking_bert_rus_no_mention.tar.gz",
+        "subdir": "{MODELS_PATH}/entity_ranking_bert_rus_no_mention"
       }
     ]
   }
