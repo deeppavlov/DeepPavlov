@@ -7,7 +7,7 @@
         "id": "entity_descr_ranking",
         "ranker": {"config_path": "entity_ranking_bert_rus_no_mention.json"},
         "batch_size": 100,
-        "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
+        "load_path": "{ENTITIES_PATH}",
         "rel_q2name_filename": "q_to_descr_vx.pickle",
         "rels_to_leave": 200
       },
@@ -15,13 +15,13 @@
         "class_name": "entity_linker_sep",
         "in": ["entity_substr", "entity_offsets", "tags", "sentences_offsets", "sentences"],
         "out": ["entity_substr", "conf", "entity_offsets", "entity_ids"],
-        "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
-        "save_path": "{DOWNLOADS_PATH}/wikidata_rus",
+        "load_path": "{ENTITIES_PATH}",
+        "save_path": "{ENTITIES_PATH}",
         "word_to_idlist_filename": "word_to_idlist_vx.pickle",
         "entities_ranking_filename": "entities_ranking_dict_vx.pickle",
         "entities_types_sets_filename": "entities_types_sets.pickle",
-        "vectorizer_filename": "{DOWNLOADS_PATH}/wikidata_rus/vectorizer_vx.pk",
-        "faiss_index_filename": "{DOWNLOADS_PATH}/wikidata_rus/faiss_vectors_gpu.index",
+        "vectorizer_filename": "{FAISS_PATH}/vectorizer_vx.pk",
+        "faiss_index_filename": "{FAISS_PATH}/faiss_vectors_gpu.index",
         "q_to_descr_filename": "q_to_descr_vx.pickle",
         "entity_ranker": "#entity_descr_ranking",
         "num_faiss_candidate_entities": 10,
@@ -45,7 +45,9 @@
   },
   "metadata": {
     "variables": {
-      "ROOT_PATH": "~/.deeppavlov",
+      "ROOT_PATH": "/data",
+      "ENTITIES_PATH": "{ROOT_PATH}/entities",
+      "FAISS_PATH": "{ROOT_PATH}/faiss",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
@@ -61,10 +63,6 @@
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/entity_linking_rus_vx.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/models/entity_ranking_bert_rus_no_mention.tar.gz",
-        "subdir": "{MODELS_PATH}/entity_ranking_bert_rus_no_mention"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/q_to_descr_vx.pickle",

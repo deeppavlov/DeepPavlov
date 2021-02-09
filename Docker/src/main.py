@@ -33,7 +33,7 @@ class State:
                  wikidata_created: Optional[str] = None,
                  wikidata_parsed: Optional[str] = None,
                  entities_wikidata: Optional[str] = None,
-                 aliases_updated: Optional[str] = None,
+                 aliases_updated: Optional[datetime.datetime] = None,
                  entities_parsed: Optional[str] = None,
                  faiss_updated: Optional[str] = None) -> None:
         self._state_path = state_path
@@ -71,7 +71,7 @@ class State:
         if self.entities_wikidata is None or self.aliases_updated is None:
             return False
         return parsedate(self.entities_wikidata) >= parsedate(self.wikidata_parsed) \
-               and aliases_mtime <= parsedate(self.aliases_updated)
+               and aliases_mtime <= self.aliases_updated
 
     def faiss_is_fresh(self):
         if self.faiss_updated is None:
@@ -121,11 +121,10 @@ def parse_entities(state: State) -> None:
         safe_rmtree(ENTITIES_NEW_PATH)
         ENTITIES_NEW_PATH.mkdir(parents=True, exist_ok=True)
         entities_parser = EntitiesParser(load_path=PARSED_WIKIDATA_PATH,
-                                         save_path=ENTITIES_NEW_PATH,
-                                         filter_tags=False)  # !!!!!!!!!!!!!!!!!!!! Не забудь удалить
+                                         save_path=ENTITIES_NEW_PATH)
         entities_parser.load()
         entities_parser.parse()
-        aliases = Aliases()  # entities parsing is quiet long, labels could be updated in this time,
+        aliases = Aliases()  # entities parsing is quiet long, at this time labels could be updated,
         # so variable is re-initialized intentionally
         for label, entity_ids in aliases.aliases.items():
             entities_parser.add_label(label, entity_ids)
