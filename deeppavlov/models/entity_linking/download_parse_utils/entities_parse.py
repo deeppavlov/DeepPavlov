@@ -80,6 +80,7 @@ class EntitiesParser(Serializable):
             wiki_chunk = load_pickle(self.load_path / Path(fl))
             for elem in wiki_chunk:
                 self.wiki_dict[elem] = wiki_chunk[elem]
+        log.debug("loaded files")
 
     def save(self):
         save_pickle(self.word_to_idlist, self.save_path / self.word_to_idlist_filename)
@@ -98,12 +99,18 @@ class EntitiesParser(Serializable):
                     self.types_dict[entity_id] = set(objects)
                 if rel == "P279":
                     self.subclass_dict[entity_id] = set(objects)
+        log.debug("parsed types_dict and subclass_dict")
         
+        entity_type_count = 0
         for entity_id in self.wiki_dict:
             entity_type = self.find(entity_id)
+            entity_type_count += 1
+            if entity_type_count%100000 == 0:
+                log.debug(f"parsed entity types {entity_type_count}")
             if entity_type:
-                self.used_entities.add(entity_type)
+                self.used_entities.add(entity_id)
                 self.entities_types_sets[entity_type].add(entity_id)
+        log.debug("parsed used_entities and entities_types_sets")
         
         for entity_id in self.wiki_dict:
             if entity_id in self.used_entities or not self.filter_tags:
@@ -122,6 +129,7 @@ class EntitiesParser(Serializable):
                         self.name_to_idlist[surname].append(entity_id)
                 number_of_relations = entity_info.get("number_of_relations", 0)
                 self.entities_ranking_dict[entity_id] = number_of_relations
+        log.debug("parsed name_to_idlist and entities_ranking_dict")
 
         for entity_id in self.wiki_dict:
             if entity_id in self.used_entities:
