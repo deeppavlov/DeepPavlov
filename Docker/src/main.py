@@ -1,7 +1,7 @@
 import datetime
 import logging
 from pathlib import Path
-from shutil import copy, rmtree
+from shutil import rmtree, copytree
 from typing import Optional
 
 import requests
@@ -10,7 +10,7 @@ from dateutil.parser import parse as parsedate
 
 from constants import WIKIDATA_PATH, WIKIDATA_URL, PARSED_WIKIDATA_PATH, PARSED_WIKIDATA_OLD_PATH, \
     PARSED_WIKIDATA_NEW_PATH, ENTITIES_PATH, ENTITIES_OLD_PATH, ENTITIES_NEW_PATH, FAISS_PATH, FAISS_OLD_PATH, \
-    FAISS_NEW_PATH, STATE_PATH
+    FAISS_NEW_PATH, STATE_PATH, DATA_PATH, LOGS_PATH
 from aliases import Aliases
 from deeppavlov import build_model
 from deeppavlov.core.commands.utils import parse_config
@@ -146,12 +146,21 @@ def update_faiss(state: State):
     else:
         safe_rmtree(FAISS_NEW_PATH)
         FAISS_NEW_PATH.mkdir(parents=True, exist_ok=True)
-        config = parse_config('entity_linking_vx_sep')
+        config = parse_config('entity_linking_vx_sep_cpu.json')
         config['chainer']['pipe'][-1]['load_path'] = config['chainer']['pipe'][-1]['save_path'] = str(ENTITIES_PATH)
         config['chainer']['pipe'][-1]['fit_vectorizer'] = True
         config['chainer']['pipe'][-1]['vectorizer_filename'] = FAISS_NEW_PATH / Path(config['chainer']['pipe'][-1]['vectorizer_filename']).name
         config['chainer']['pipe'][-1]['faiss_index_filename'] = FAISS_NEW_PATH / Path(config['chainer']['pipe'][-1]['faiss_index_filename']).name
         build_model(config)
+        log.info('faiss cpu updated')
+        config = parse_config('entity_linking_vx_sep_gpu.json')
+        config['chainer']['pipe'][-1]['load_path'] = config['chainer']['pipe'][-1]['save_path'] = str(ENTITIES_PATH)
+        config['chainer']['pipe'][-1]['fit_vectorizer'] = True
+        config['chainer']['pipe'][-1]['use_gpu'] = False
+        config['chainer']['pipe'][-1]['vectorizer_filename'] = FAISS_NEW_PATH / Path(config['chainer']['pipe'][-1]['vectorizer_filename']).name
+        config['chainer']['pipe'][-1]['faiss_index_filename'] = FAISS_NEW_PATH / Path(config['chainer']['pipe'][-1]['faiss_index_filename']).name
+        build_model(config)
+        log.info('faiss gpu updated')
         safe_rmtree(FAISS_OLD_PATH)
         if FAISS_PATH.exists():
             FAISS_PATH.rename(FAISS_OLD_PATH)
@@ -164,11 +173,12 @@ def update_faiss(state: State):
 def initial_setup():
     if not ENTITIES_PATH.exists():
         ENTITIES_PATH.mkdir(parents=True)
-        copy('/root/.deeppavlov/downloads/wikidata_rus/entities_ranking_dict_vx.pickle', ENTITIES_PATH / 'entities_ranking_dict_vx.pickle')
-        copy('/root/.deeppavlov/downloads/wikidata_rus/entities_types_sets.pickle', ENTITIES_PATH / 'entities_types_sets.pickle')
-        copy('/root/.deeppavlov/downloads/wikidata_rus/q_to_descr_vx.pickle', ENTITIES_PATH / 'q_to_descr_vx.pickle')
-        copy('/root/.deeppavlov/downloads/wikidata_rus/word_to_idlist_vx.pickle', ENTITIES_PATH / 'word_to_idlist_vx.pickle')
+        copytree(f'{DATA_PATH}/downloads/entities', ENTITIES_PATH)
     if not FAISS_PATH.exists():
         FAISS_PATH.mkdir(parents=True)
-        copy('/root/.deeppavlov/downloads/wikidata_rus/vectorizer_vx.pk', FAISS_PATH / 'vectorizer_vx.pk')
-        copy('/root/.deeppavlov/downloads/wikidata_rus/faiss_vectors_gpu.index', FAISS_PATH / 'faiss_vectors_gpu.index')
+        copytree(f'{DATA_PATH}/downloads/faiss', FAISS_PATH)
+    if not PARSED_WIKIDATA_PATH.exists():
+        PARSED_WIKIDATA_PATH.mkdir(parents=True)
+        copytree(f'{DATA_PATH}/downloads_parsed_wikidata', PARSED_WIKIDATA_PATH)
+    if not LOGS_PATH.exists():
+        LOGS_PATH.mkdir(parents=True)

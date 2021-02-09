@@ -12,9 +12,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-RUN sed -i 's|{DOWNLOADS_PATH}/wikidata_rus/|/data/faiss/|g' /base/DeepPavlov/deeppavlov/configs/entity_linking/entity_linking_vx_sep.json && \
-    sed -i '0,/{DOWNLOADS_PATH}\/wikidata_rus/! s|{DOWNLOADS_PATH}/wikidata_rus|/data/entities/|g' /base/DeepPavlov/deeppavlov/configs/entity_linking/entity_linking_vx_sep.json
-
-RUN pip uninstall -y tensorflow-gpu && pip install tensorflow==1.15.2
-
-CMD python -m deeppavlov riseapi entity_linking_vx_sep -p 8000 2>&1 | tee /logs/$(date '+%Y-%m-%d-%H-%M-%S-%3N.log')
+CMD python -m deeppavlov riseapi $([ -z $CUDA_VISIBLE_DEVICES ] && echo entity_linking_vx_sep_cpu.json || echo entity_linking_vx_sep_gpu.json) -p 8000 2>&1 | tee /data/logs/$CONTAINER_NAME$(date '+%Y-%m-%d-%H-%M-%S-%3N.log')
