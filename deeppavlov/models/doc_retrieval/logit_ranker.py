@@ -21,6 +21,7 @@ from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Component
 from deeppavlov.models.doc_retrieval.utils import find_answer_sentence
+from deeppavlov.models.preprocessors.odqa_preprocessors import StringMultiplier
 
 logger = getLogger(__name__)
 
@@ -44,15 +45,20 @@ class LogitRanker(Component):
     """
 
     def __init__(self, squad_model: Union[Chainer, Component], batch_size: int = 50,
-                 sort_noans: bool = False, top_n: int = 1, return_answer_sentence: bool = False, **kwargs):
+                 sort_noans: bool = False, top_n: int = 1, return_answer_sentence: bool = False,
+                 use_topical_chat: bool = False, string_multiplier: StringMultiplier = None, **kwargs):
         self.squad_model = squad_model
         self.batch_size = batch_size
         self.sort_noans = sort_noans
         self.top_n = top_n
         self.return_answer_sentence = return_answer_sentence
+        self.use_topical_chat = use_topical_chat
+        self.string_multiplier = string_multiplier
 
-    def __call__(self, contexts_batch: List[List[str]], questions_batch: List[List[str]],
-                 doc_ids_batch: Optional[List[List[str]]] = None) -> \
+    def __call__(self, questions_batch: List[str],
+                       contexts_batch_wiki: List[List[str]],
+                       contexts_batch_tch: List[List[str]],
+                       doc_ids_batch: Optional[List[List[str]]] = None) -> \
             Union[
                 Tuple[List[str], List[float], List[int], List[str]],
                 Tuple[List[List[str]], List[List[float]], List[List[int]], List[List[str]]],
@@ -74,8 +80,32 @@ class LogitRanker(Component):
         if doc_ids_batch is None:
             logger.warning("you didn't pass tfidf_doc_ids as input in logit_ranker config so "
                            "batch_best_answers_doc_ids can't be compute")
+        questions_batch_wiki = self.string_multiplier(questions_batch, contexts_batch_wiki)
 
         tm_st = time.time()
+        batch_best_answers_wiki, batch_best_answers_score_wiki, batch_best_answers_place_wiki, \
+                   batch_best_answers_sentences_wiki, batch_best_answers_contexts_wiki = self.find_answer(
+                                                                        contexts_batch_wiki, questions_batch_wiki)
+        tm_end = time.time()
+        logger.debug(f"time of wikipedia squad {tm_end-tm_st}")
+        if self.use_topical_chat:
+            tm_st = time.time()
+            questions_batch_tch = self.string_multiplier(questions_batch, contexts_batch_tch)
+            batch_best_answers_tch, batch_best_answers_score_tch, batch_best_answers_place_tch, \
+                       batch_best_answers_sentences_tch, batch_best_answers_contexts_tch = self.find_answer(
+                                                                            contexts_batch_tch, questions_batch_tch)
+            tm_end = time.time()
+            logger.debug(f"time of topical chat squad {tm_end-tm_st}")
+            if self.return_answer_sentence:
+                return batch_best_answers_wiki, batch_best_answers_score_wiki, batch_best_answers_place_wiki, \
+                       batch_best_answers_sentences_wiki, batch_best_answers_sentences_tch, \
+                       batch_best_answers_contexts_wiki
+        if self.return_answer_sentence:
+                return batch_best_answers_wiki, batch_best_answers_score_wiki, batch_best_answers_place_wiki, \
+                       batch_best_answers_sentences_wiki, batch_best_answers_contexts_wiki
+        return batch_best_answers_wiki, batch_best_answers_score_wiki, batch_best_answers_place_wiki
+        
+    def find_answer(self, contexts_batch, questions_batch):
         batch_best_answers = []
         batch_best_answers_score = []
         batch_best_answers_place = []
@@ -106,14 +136,7 @@ class LogitRanker(Component):
                 best_answers_sentences.append(sentence)
             batch_best_answers_sentences.append(best_answers_sentences)
             batch_best_answers_contexts.append(best_answers_contexts)
-
-            if doc_ids_batch is not None:
-                doc_ind = [results.index(x) for x in results_sort]
-                batch_best_answers_doc_ids.append(
-                    [doc_ids_batch[quest_ind][i] for i in doc_ind][:len(batch_best_answers[-1])])
-        tm_end = time.time()
-        logger.debug(f"time of squad {tm_end-tm_st}")
-
+        
         if self.top_n == 1:
             if batch_best_answers and batch_best_answers[0]:
                 batch_best_answers = [x[0] for x in batch_best_answers]
@@ -129,8 +152,6 @@ class LogitRanker(Component):
                 batch_best_answers_doc_ids = ["" for _ in batch_best_answers_doc_ids]
                 batch_best_answers_sentences = ["" for _ in batch_best_answers_sentences]
                 batch_best_answers_contexts = ["" for _ in batch_best_answers_contexts]
-
-        if self.return_answer_sentence:
-            return batch_best_answers, batch_best_answers_score, batch_best_answers_place, \
+        
+        return batch_best_answers, batch_best_answers_score, batch_best_answers_place, \
                    batch_best_answers_sentences, batch_best_answers_contexts
-        return batch_best_answers, batch_best_answers_score, batch_best_answers_place
