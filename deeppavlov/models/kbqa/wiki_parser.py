@@ -548,7 +548,9 @@ class WikiParser:
                         chosen_obj = random.choice(objects_1)
                         chosen_obj_label = self.find_label(chosen_obj, "")
                         rel_1_label = self.find_label(rel_1, "")
-                        if chosen_obj_label:
+                        if chosen_obj_label and chosen_obj_label != "Not Found" and \
+                           entity_label and entity_label != "Not Found" and \
+                           rel_1_label and rel_1_label != "Not Found":
                             if dir_1 == "forw":
                                 retrieved_paths.append([entity_label, rel_1_label, chosen_obj_label])
                             else:
@@ -588,7 +590,11 @@ class WikiParser:
                                     chosen_obj_label = self.find_label(chosen_obj, "")
                                     rel_1_label = self.find_label(rel_1, "")
                                     rel_2_label = self.find_label(rel_2, "")
-                                    if obj_1_label != "Not Found" and chosen_obj_label != "Not Found":
+                                    if obj_1_label and obj_1_label != "Not Found" and \
+                                       chosen_obj_label and chosen_obj_label != "Not Found" and \
+                                       entity_label and entity_label != "Not Found" and \
+                                       rel_1_label and rel_1_label != "Not Found" and \
+                                       rel_2_label and rel_2_label != "Not Found":
                                         if dir_1 == "forw" and dir_2 == "forw":
                                             cur_paths.append(([entity_label, rel_1_label, obj_1_label,
                                                                              rel_2_label, chosen_obj_label],
