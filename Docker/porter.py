@@ -26,14 +26,14 @@ class Porter:
 
     async def update_containers(self):
         for name, env_vars in self.params.items():
+            container = self.workers.pop(name)
+            self.active_hosts = cycle(self.workers)
             while True:
                 requests_in_process = await self.requests_in_process(name)
                 if requests_in_process > 0:
                     await asyncio.sleep(1)
                 else:
                     break
-            container = self.workers.pop(name)
-            self.active_hosts = cycle(self.workers)
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(None, container.restart)
             for i in range(30):
@@ -58,7 +58,7 @@ class Porter:
                     if match is None:
                         return 0.0
                     else:
-                        return int(match.group(1))
+                        return float(match.group(1))
             except client_exceptions.ClientConnectorError:
                 print(f'container {name} is unavailable. Restarting')
                 return 0.0
