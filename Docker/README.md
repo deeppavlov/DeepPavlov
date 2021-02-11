@@ -25,12 +25,14 @@ wikidata_parsed: Wed, 27 Jan 2021 19:42:54 GMT
 `/data/containers.yaml`:
 ```yaml
 el_worker_0:
-    CUDA_VISIBLE_DEVICES=0
+    CUDA_VISIBLE_DEVICES:
+        0
 el_worker_1:
-    CUDA_VISIBLE_DEVICES=1
+    CUDA_VISIBLE_DEVICES:
+        1
 ```
 Keys are names for worker containers, `CUDA_VISIBLE_DEVICES` should be defined according your gpu distribution over
-containers. If you want to start worker without GPU, use `CUDA_VISIBLE_DEVICES=''`
+containers. If you want to start worker without GPU, use `''` as `CUDA_VISIBLE_DEVICES` value.
 
 ### Start master container
 Don't forget to change path <data_dir>. Host port also could be changed
