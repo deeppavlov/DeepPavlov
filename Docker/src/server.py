@@ -37,7 +37,6 @@ async def model(request: Request):
 async def update():
     loop = asyncio.get_event_loop()
     loop.create_task(porter.update_containers())
-    return 'OK'
 
 
 @app.get('/aliases')

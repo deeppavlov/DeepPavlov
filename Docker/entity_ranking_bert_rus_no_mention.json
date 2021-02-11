@@ -15,7 +15,7 @@
     "pipe": [
       {
         "class_name": "bert_preprocessor",
-        "vocab_file": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12/vocab.txt",
+        "vocab_file": "{DOWNLOADS_PATH}/multi_cased_L-12_H-768_A-12/vocab.txt",
         "do_lower_case": false,
         "max_seq_length": 64,
         "in": ["text_a", "text_b"],
@@ -26,8 +26,8 @@
         "n_classes": 2,
         "return_probas": true,
         "one_hot_labels": false,
-        "bert_config_file": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12/bert_config.json",
-        "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12/bert_model.ckpt",
+        "bert_config_file": "{DOWNLOADS_PATH}/multi_cased_L-12_H-768_A-12/bert_config.json",
+        "pretrained_bert": "{DOWNLOADS_PATH}/multi_cased_L-12_H-768_A-12/bert_model.ckpt",
         "save_path": "{DOWNLOADS_PATH}/entity_ranking_bert_rus_no_mention/model",
         "load_path": "{DOWNLOADS_PATH}/entity_ranking_bert_rus_no_mention/model",
         "keep_prob": 0.5,

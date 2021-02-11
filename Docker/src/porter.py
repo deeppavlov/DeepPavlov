@@ -1,9 +1,12 @@
 import asyncio
+import re
 from itertools import cycle
 from typing import Dict, Optional
 
+import aiohttp
 import docker
 import yaml
+from aiohttp import client_exceptions
 from docker.models.containers import Container
 from docker.types import DeviceRequest
 
@@ -23,13 +26,39 @@ class Porter:
 
     async def update_containers(self):
         for name, env_vars in self.params.items():
+            while True:
+                requests_in_process = await self.requests_in_process(name)
+                if requests_in_process > 0:
+                    await asyncio.sleep(1)
+                else:
+                    break
             container = self.workers.pop(name)
             self.active_hosts = cycle(self.workers)
             loop = asyncio.get_event_loop()
-            await loop.run_in_executor(None, container.stop)
-            await asyncio.sleep(5)
-            self.workers[name] = self.start_worker(name, env_vars)
+            await loop.run_in_executor(None, container.restart)
+            for i in range(30):
+                try:
+                    async with aiohttp.ClientSession() as session:
+                        async with session.post(f"http://{name}:8000/probe", json={}) as resp:
+                            if resp.status == 200:
+                                break
+                except client_exceptions.ClientConnectorError:
+                    await asyncio.sleep(5)
+            else:
+                raise TimeoutError(f"can't restart a container {name}")
+            self.workers[name] = container
             self.active_hosts = cycle(self.workers)
+
+    @staticmethod
+    async def requests_in_process(name):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"http://{name}:8000/metrics") as resp:
+                text = await resp.text()
+                match = re.search('http_requests_in_progress{endpoint="/model"} (.*)', text)
+                if match is None:
+                    return 0.0
+                else:
+                    return match.group(1)
 
     def start_worker(self, name: str, env_vars: dict) -> Container:
         env_vars['CONTAINER_NAME'] = name
@@ -45,3 +74,5 @@ class Porter:
                                             name=name,
                                             remove=True,
                                             environment=env_vars)
+
+# container.attrs['State']['Running']
