@@ -40,10 +40,9 @@ class Porter:
                 try:
                     async with aiohttp.ClientSession() as session:
                         async with session.post(f"http://{name}:8000/probe", json={}) as resp:
-                            if resp.status == 200:
-                                break
+                            break
                 except client_exceptions.ClientConnectorError:
-                    await asyncio.sleep(5)
+                    await asyncio.sleep(10)
             else:
                 raise TimeoutError(f"can't restart a container {name}")
             self.workers[name] = container
@@ -52,13 +51,17 @@ class Porter:
     @staticmethod
     async def requests_in_process(name):
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"http://{name}:8000/metrics") as resp:
-                text = await resp.text()
-                match = re.search('http_requests_in_progress{endpoint="/model"} (.*)', text)
-                if match is None:
-                    return 0.0
-                else:
-                    return match.group(1)
+            try:
+                async with session.get(f"http://{name}:8000/metrics") as resp:
+                    text = await resp.text()
+                    match = re.search('http_requests_in_progress{endpoint="/model"} (.*)', text)
+                    if match is None:
+                        return 0.0
+                    else:
+                        return int(match.group(1))
+            except client_exceptions.ClientConnectorError:
+                print(f'container {name} is unavailable. Restarting')
+                return 0.0
 
     def start_worker(self, name: str, env_vars: dict) -> Container:
         env_vars['CONTAINER_NAME'] = name
