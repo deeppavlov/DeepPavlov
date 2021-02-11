@@ -29,4 +29,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-CMD python server.py
+CMD python prepare.py && python server.py
