@@ -179,6 +179,6 @@ def initial_setup():
         copytree(f'{DATA_PATH}/downloads/faiss', FAISS_PATH)
     if not PARSED_WIKIDATA_PATH.exists():
         PARSED_WIKIDATA_PATH.mkdir(parents=True)
-        copytree(f'{DATA_PATH}/downloads_parsed_wikidata', PARSED_WIKIDATA_PATH)
+        copytree(f'{DATA_PATH}/downloads/parsed_wikidata', PARSED_WIKIDATA_PATH)
     if not LOGS_PATH.exists():
         LOGS_PATH.mkdir(parents=True)

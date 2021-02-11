@@ -61,12 +61,16 @@
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/entity_linking_rus_vx.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/parsed_wikidata.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/q_to_descr_vx.pickle",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/faiss.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/entities.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
       }
     ]
   }
