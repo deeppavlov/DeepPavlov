@@ -384,12 +384,12 @@ class WikiParser:
                 #                                                    '"Lake Baikal"@en'], ...]
                 for label in labels:
                     if label[2].endswith(self.lang):
-                        found_label = label[2].strip(self.lang).replace('"', '')
+                        found_label = label[2].strip(self.lang).replace('"', '').replace('.', ' ').replace('$', ' ').replace('  ', ' ')
                         return found_label
 
             elif entity.endswith(self.lang):
                 # entity: '"Lake Baikal"@en'
-                entity = entity[:-3]
+                entity = entity[:-3].replace('.', ' ').replace('$', ' ').replace('  ', ' ')
                 return entity
 
             elif "^^" in entity:
@@ -401,10 +401,11 @@ class WikiParser:
                 entity = entity.split("^^")[0]
                 for token in ["T00:00:00Z", "+"]:
                     entity = entity.replace(token, '')
-                entity = self.format_date(entity, question)
+                entity = self.format_date(entity, question).replace('.', '').replace('$', '')
                 return entity
 
             elif entity.isdigit():
+                entity = str(entity).replace('.', ',')
                 return entity
         if self.file_format == "pickle":
             if entity:
