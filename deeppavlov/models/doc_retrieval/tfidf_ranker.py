@@ -144,19 +144,22 @@ class ParTfidfRanker(Component):
     def __call__(self, questions_batch: List[str],
                        paragraphs_batch: List[List[str]],
                        nounphrases_batch: List[List[str]],
-                       entities_batch: List[str]) -> Tuple[List[Any], List[float]]:
+                       entities_batch: List[List[str]]) -> Tuple[List[Any], List[float]]:
         batch_top_paragraphs = []
         batch_top_facts = []
         batch_first_par = []
         sources = []
         tm_st = time.time()
-        for question, paragraphs, nounphrases_list, entity in \
+        for question, paragraphs, nounphrases_list, entities_list in \
             zip(questions_batch, paragraphs_batch, nounphrases_batch, entities_batch):
             facts_list = self.find_facts(nounphrases_list)
             batch_top_facts.append(facts_list)
             paragraphs = self.rank_paragraphs(question, paragraphs)
             batch_top_paragraphs.append(paragraphs)
-            batch_first_par.append(self.wiki_first_par.get(entity, ""))
+            if entities_list:
+                batch_first_par.append(self.wiki_first_par.get(entities_list[0], ""))
+            else:
+                batch_first_par.append("")
         paragraph_total_length = sum([len(chunk) for chunk in batch_top_paragraphs[0]])
         tm_end = time.time()
         logger.debug(f"paragraph ranking time {tm_end-tm_st}, length {paragraph_total_length}")
