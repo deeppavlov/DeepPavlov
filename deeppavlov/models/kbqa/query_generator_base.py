@@ -282,11 +282,13 @@ class QueryGeneratorBase(Component, Serializable):
         return rels_with_scores[:self.rels_to_leave]
 
     def find_answer_wikihow(self, howto_sentence: str) -> str:
+        tags = []
         search_results = search(howto_sentence, 5)
-        article_id = search_results[0]["article_id"]
-        html = get_html(article_id)
-        page = BeautifulSoup(html, 'lxml')
-        tags = list(page.find_all(['p']))
+        if search_results:
+            article_id = search_results[0]["article_id"]
+            html = get_html(article_id)
+            page = BeautifulSoup(html, 'lxml')
+            tags = list(page.find_all(['p']))
         if tags:
             howto_content = f"{tags[0].text.strip()}@en"
         else:
