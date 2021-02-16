@@ -35,14 +35,15 @@ Keys are names for worker containers, `CUDA_VISIBLE_DEVICES` should be defined a
 containers. If you want to start worker without GPU, use `''` as `CUDA_VISIBLE_DEVICES` value.
 
 ### Start master container
-Don't forget to change path <data_dir>. Host port also could be changed
+Don't forget to change path <data_dir>. Host port also can be changed
 ```shell
 docker run -v /var/run/docker.sock:/var/run/docker.sock --net=el_network -v <data_dir>:/data -p 8000:8000 -e HOST_DATA_PATH=<data_dir> el_master
 ```
 
 ### API
 All endpoints are for master container
-You could open `/docs` in web browser to get Swagger
+
+You could can `/docs` in web browser to get Swagger
 
 * GET `/update_containers` - update all containers with the updated data (which will also lead to workers reload)
 * GET `/aliases` - get list of aliases
