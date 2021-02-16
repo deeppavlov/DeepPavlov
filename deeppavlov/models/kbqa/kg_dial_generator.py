@@ -65,6 +65,8 @@ class KGDialGenerator(Component):
                                                     top_k=100, top_p=0.7, temperature=0.8)
                 generated_utterance = self.tokenizer.decode(generated_ids[:, input_ids.shape[-1]:][0],
                                                             skip_special_tokens=True)
+                if "weather" in generated_utterance.lower():
+                    generated_utterance = ""
             else:
                 generated_utterance = ""
             generated_utterances_batch.append(generated_utterance)
