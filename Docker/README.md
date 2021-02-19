@@ -1,7 +1,7 @@
 ### Build master and worker images:
 ```shell
-docker build --no-cache -t el_master .
-docker build --no-cache -t client -f worker_dockerfile .
+docker build -t el_master .
+docker build -t client -f worker_dockerfile .
 ```
 
 ### Create network for containers
@@ -44,9 +44,17 @@ docker run -v /var/run/docker.sock:/var/run/docker.sock --net=el_network -v <dat
 All endpoints are for master container
 You could open `/docs` in web browser to get Swagger
 
-* GET `/update_containers` - reload workers
+* POST `/model` - infer model
+* GET `/update/wikidata` - download new wikidata and parse it to .pickle files
+* GET `/update/model` - update model if wikidata or aliases list was updated
+* GET `/update/containers` - reload worker containers. Current model files will be used
+* GET `/status` - get status of containers
 * GET `/aliases` - get list of aliases
 * POST `/aliases/add/{label}` ["entity_id_1", "entity_id_2"] - add aliase. Example:
 `curl -X POST "http://10.11.1.1:8000/aliases/add/%D0%B2%D0%B2%D0%BF" -H  "accept: application/json" -H  "Content-Type: application/json" -d "[\"Q7747\"]"`
 * POST `/aliases/add_many` {"label1": ["e1", "e2"], "label2": ["e3", "e4"]} - add many aliases
 * GET `/aliases/delete/{label}` - delete alias with label `{label}`
+
+###Resources
+GPU mode: 7731MiB VRAM and 5Gb RAM
+CPU mode: 9Gb RAM
