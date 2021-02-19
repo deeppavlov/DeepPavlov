@@ -87,7 +87,7 @@ class LogitRanker(Component):
                    batch_best_answers_sentences_wiki, batch_best_answers_contexts_wiki = self.find_answer(
                                                                         contexts_batch_wiki, questions_batch_wiki)
         tm_end = time.time()
-        logger.debug(f"time of wikipedia squad {tm_end-tm_st}")
+        logger.info(f"time of wikipedia squad {tm_end-tm_st}")
         if self.use_topical_chat:
             tm_st = time.time()
             questions_batch_tch = self.string_multiplier(questions_batch, contexts_batch_tch)
@@ -95,7 +95,7 @@ class LogitRanker(Component):
                        batch_best_answers_sentences_tch, batch_best_answers_contexts_tch = self.find_answer(
                                                                             contexts_batch_tch, questions_batch_tch)
             tm_end = time.time()
-            logger.debug(f"time of topical chat squad {tm_end-tm_st}")
+            logger.info(f"time of topical chat squad {tm_end-tm_st}")
             if self.return_answer_sentence:
                 return batch_best_answers_wiki, batch_best_answers_score_wiki, batch_best_answers_place_wiki, \
                        batch_best_answers_sentences_wiki, batch_best_answers_sentences_tch, \
