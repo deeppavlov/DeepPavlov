@@ -176,6 +176,8 @@ class DialPathRanker(Component):
                         conf = min(math.log(sum([self.rel_freq.get(rel, [0])[0] for rel in chosen_rels]) / 
                             len(chosen_rels)) / self.max_log_freq, 1.0)
                         conf = conf*0.9
+                        if conf < 0.6:
+                            conf = 0.6
                 
                 if retrieved_paths:
                     paths_batch.append(retrieved_paths[0])
