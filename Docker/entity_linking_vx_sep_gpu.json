@@ -72,7 +72,6 @@
         "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/entities.tar.gz",
         "subdir": "{DOWNLOADS_PATH}"
       }
-      }
     ]
   }
 }
