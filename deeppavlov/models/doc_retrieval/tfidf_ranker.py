@@ -182,13 +182,6 @@ class ParTfidfRanker(Component):
         
         indices = np.argsort(idf_scores)[::-1][:self.top_n]
         top_paragraphs = [paragraphs[ind] for ind in indices]
-        if self.log:
-            out = open("paragraph_log.txt", 'a')
-            for paragraph in top_paragraphs:
-                out.write(str(paragraph)+'\n')
-                out.write("_"*30+'\n')
-            out.write("="*50+'\n')
-            out.close()
         return top_paragraphs
             
     def find_facts(self, nounphrases_list: List[str]):
