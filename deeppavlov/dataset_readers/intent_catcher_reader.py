@@ -9,6 +9,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
+from collections import defaultdict
 from json import load as json_load
 from yaml import full_load as yaml_load
 from logging import getLogger
@@ -25,6 +27,20 @@ log = getLogger(__file__)
 class IntentCatcherReader(DatasetReader):
     """Reader for Intent Catcher dataset in json or YAML (RASA v2) format"""
 
+    def parse_rasa_example(self, example: str, regex: bool = False):
+        example = example[2:]
+        if not regex:
+            search_entities_re = re.compile(
+                "\[[ a-zA-Z0-9]+\]\([ a-zA-Z0-9]+\)")
+            search_entities = search_entities_re.search(example)
+            while search_entities is not None:
+                search_entities = search_entities_re.search(example)
+                start, end = search_entities.span()
+                example = example[:start] + re.sub("\]\([ a-zA-Z0-9]+\)", "", example[start:end])[
+                    1:] + example[end:]
+            example = re.sub("\?", "\?", example)
+        return example
+
     def read(self, data_path: str, format: str = 'json', *args, **kwargs) -> Dict[str, List[Tuple[str, str]]]:
         data_types = ["train", "valid", "test"]
 
@@ -39,6 +55,18 @@ class IntentCatcherReader(DatasetReader):
                 "valid": [],
                 "test": []}
 
+        if format == "yaml":  # load domain.yaml
+            domain_file = Path(data_path, "domain.yml")
+            if domain_file.exists():
+                domain = [
+                    self.parse_rasa_example(intent, regex=True)
+                    for intent in yaml_load(open(domain_file))['intents'].split("\n")
+                ]
+            else:
+                raise Exception(
+                    "domain.yml in data path {} does not exist!".format(
+                        data_path))
+
         for data_type in data_types:
             file_name = kwargs.get(
                 data_type, '{}.{}'.format(data_type, format))
@@ -52,11 +80,24 @@ class IntentCatcherReader(DatasetReader):
                         file = json_load(fp)
                     elif format == 'yaml':
                         file = yaml_load(fp)
-                        file = {
-                            sample['intent']: [example[2:]
-                                               for example in sample['examples'].split('\n')]
-                            for sample in file['nlu']
-                        }
+                        file_data = defaultdict(list)
+                        for part in file['nlu']:
+                            if part.get('intent', '') in domain:
+                                intent = part['intent']
+                                regex = False
+                            elif part.get('regex', '') in domain:
+                                intent = part['regex']
+                                regex = True
+                            else:
+                                continue
+                            file_data[intent].extend([
+                                self.parse_rasa_example(example, regex) for examples in part.get('examples', '').split("\n")
+                            ])
+                            if file['version'] == 'dp_2.0':
+                                file_data[intent].extend([
+                                    self.parse_rasa_example(example, True) for examples in part.get('regex_examples', '').split("\n")
+                                ])
+                        file = file_data
                 for label in file:
                     data[data_type].extend([(phrase, label)
                                             for phrase in file[label]])
