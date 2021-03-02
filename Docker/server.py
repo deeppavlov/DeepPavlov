@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi import HTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
-
+from starlette.responses import HTMLResponse
 from aliases import Aliases
 from porter import Porter
 
@@ -33,11 +33,24 @@ async def model(request: Request):
             return await resp.json()
 
 
-@app.get('/update_containers')
+@app.get('/update/containers')
 async def update():
     loop = asyncio.get_event_loop()
     loop.create_task(porter.update_containers())
 
+@app.get('/update/wikidata')
+async def update_wikidata():
+    try:
+        porter.start_manager('python update_wikidata.py')
+    except RuntimeError as e:
+        return HTTPException(repr(e))
+
+@app.get('/update/model')
+async def update_model():
+    try:
+        porter.start_manager('python update_model.py')
+    except RuntimeError as e:
+        return HTTPException(repr(e))
 
 @app.get('/aliases')
 async def get_aliases():
@@ -71,6 +84,46 @@ async def container_logs(worker_id: str):
     else:
         loop = asyncio.get_event_loop()
         return str(await loop.run_in_executor(None, porter.workers[worker_id].logs))
+
+@app.get('/status', response_class=HTMLResponse)
+async def status():
+    containers = await porter.get_stats()
+    workers = '\n'.join([f"<tr><td><a href='/logs/{name}'>{name}</a></td><td>{status}</td></tr>" for name, status in containers.items() if name != 'manager'])
+    manager = f"<tr><td><a href='/logs/manager'>manager</a></td><td>{containers['manager']}</td></tr>"
+    return f"""
+    <html>
+        <head>
+            <title>Entity linking containers</title>
+        </head>
+        <body>
+            <h4>Manager</h4>
+            <table>
+            <tr><td>name</td><td>status</td></tr>
+            {manager}
+            </table>
+            <h4>Workers</h4>
+            <table>
+            <tr><td>name</td><td>status</td></tr>
+            {workers}
+            </table>
+        </body>
+    </html>
+    """
+
+@app.get('/logs/{container_name}', response_class=HTMLResponse)
+async def container_logs(container_name: str):
+    logs = await porter.get_logs(container_name)
+    logs = logs.replace("\n", "<br />")
+    return f"""
+    <html>
+        <head>
+            <title>{container_name} logs</title>
+        </head>
+        <body>
+            {logs}
+        </body>
+    </html>
+    """
 
 uvicorn.run(app, host='0.0.0.0', port=8000)
 '''
