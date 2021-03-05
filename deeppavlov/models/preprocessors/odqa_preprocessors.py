@@ -103,7 +103,8 @@ class DocumentChunker(Component):
                             num_pieces = len(sentences) // 2
                             for i in range(num_pieces):
                                 piece = ' '.join(sentences[i*2:i*2+3])
-                                new_split_doc.append(piece)
+                                piece_split = piece.split()
+                                new_split_doc.append(' '.join(piece_split[:150]))
                         
                     batch_chunks.append(new_split_doc)
                     batch_chunks_ids.append([id] * len(new_split_doc))
