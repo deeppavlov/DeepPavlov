@@ -47,11 +47,10 @@ class FactRankerInfer(Component):
         self.ranker = ranker
         self.batch_size = batch_size
         self.facts_to_leave = facts_to_leave
-        self.load()
 
     def __call__(self, dialog_history_list: List[str], paragraphs_list: List[List[str]],
                        topical_chat_facts_list: List[List[str]], first_paragraphs_list: List[List[str]]) -> List[str]:
-        facts_with_scores_batch = []
+        top_facts_batch = []
         for dialog_history, paragraphs, topical_chat_facts, first_paragraphs in \
             zip(dialog_history_list, paragraphs_list, topical_chat_facts_list, first_paragraphs_list):
             cand_facts = []
@@ -64,7 +63,7 @@ class FactRankerInfer(Component):
             for i in range(n_batches):
                 dh_batch = []
                 facts_batch = []
-                for candidate_fact in candidate_facts[i * self.batch_size: (i + 1) * self.batch_size]:
+                for candidate_fact in cand_facts[i * self.batch_size: (i + 1) * self.batch_size]:
                     dh_batch.append(dialog_history)
                     facts_batch.append(candidate_fact)
                         
@@ -75,6 +74,7 @@ class FactRankerInfer(Component):
                         facts_with_scores.append((fact, probas[j]))
                         
             facts_with_scores = sorted(facts_with_scores, key=lambda x: x[1], reverse=True)
-            facts_with_scores_batch.append(facts_with_scores[:self.facts_to_leave])
+            top_facts = [fact for fact, score in facts_with_scores]
+            top_facts_batch.append(top_facts[:self.facts_to_leave])
 
-        return facts_with_scores_batch
+        return top_facts_batch
