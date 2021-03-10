@@ -75,13 +75,17 @@ class WikiParser:
         self.manager = mp.Manager()
 
     def __call__(self, parser_info_list: List[str], queries_list: List[Any]) -> List[Any]:
-        wiki_parser_output = self.manager.list()
-        p = mp.Process(target=self.execute_queries_list, args=(parser_info_list, queries_list, wiki_parser_output))
+        wiki_parser_output = [[]]
+        #wiki_parser_output = self.manager.list()
+        #p = mp.Process(target=self.execute_queries_list, args=(parser_info_list, queries_list, wiki_parser_output))
+        p = mp.Process(target=self.execute_queries_list, args=(parser_info_list, queries_list))
         p.start()
         p.join()
         return list(wiki_parser_output)
     
-    def execute_queries_list(self, parser_info_list: List[str], queries_list: List[Any], wiki_parser_output):
+    #def execute_queries_list(self, parser_info_list: List[str], queries_list: List[Any], wiki_parser_output):
+    def execute_queries_list(self, parser_info_list: List[str], queries_list: List[Any]):
+        wiki_parser_output = []
         query_answer_types = []
         for parser_info, query in zip(parser_info_list, queries_list):
             if parser_info == "query_execute":
