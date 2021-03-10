@@ -1,0 +1,90 @@
+{
+  "chainer": {
+    "in": ["question_raw", "question_nounphr", "nounphr", "entities"],
+    "pipe": [
+      {
+        "class_name": "pyserini_ranker",
+        "index_folder": "{DOWNLOADS_PATH}/wiki_index",
+        "in": ["question_nounphr"],
+        "out": ["doc_text"],
+        "top_n": 15
+      },
+      {
+        "class_name": "document_chunker",
+        "in": ["doc_text"],
+        "out": ["paragraphs"],
+        "flatten_result": true,
+        "number_of_paragraphs": 10,
+        "paragraphs": true,
+        "log": true
+      },
+      {
+        "class_name": "par_tfidf_ranker",
+        "in": ["question_raw", "paragraphs", "nounphr", "entities"],
+        "out": ["top_paragraphs", "topical_chat_facts", "first_par"],
+        "tokenizer": {
+          "class_name": "stream_spacy_tokenizer",
+          "lemmas": true,
+          "lowercase": true,
+          "filter_stopwords": true,
+          "ngram_range": [1, 2]
+        },
+        "np_facts_filename": "{DOWNLOADS_PATH}/topical_chat/nounphrases_facts_map.json",
+        "facts_map_filename": "{DOWNLOADS_PATH}/topical_chat/facts_map.json",
+        "unigrams_filename": "{DOWNLOADS_PATH}/topical_chat/google-english-no-swears.txt",
+        "wiki_first_par_filename": "{DOWNLOADS_PATH}/wikidata_eng/q_to_par_en.pickle",
+        "top_n": 32,
+        "log": true
+      },
+      {
+        "class_name": "fact_ranking_infer",
+        "in": ["top_paragraphs", "topical_chat_facts", "first_par"],
+        "out": ["top_facts"],
+        "ranker": {"config_path": "{CONFIGS_PATH}/classifiers/fact_ranking_bert_lite.json"}
+      },
+      {
+        "class_name": "string_multiplier",
+        "id": "str_mult"
+      },
+      {
+        "class_name": "logit_ranker",
+        "string_multiplier": "#str_mult",
+        "batch_size": 32,
+        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/multi_squad_noans_infer.json"},
+        "sort_noans": false,
+        "return_answer_sentence": true,
+        "in": ["question_raw", "top_facts"],
+        "out": ["answer", "answer_score", "answer_place", "answer_sentence", "answer_context"]
+      },
+    ],
+    "out": ["top_facts", "answer", "answer_score", "answer_place", "answer_sentence"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
+      "{DEEPPAVLOV_PATH}/requirements/pyserini.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/wiki_index.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/topical_chat.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/topical_chat"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wiki_first_par.pickle",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+      }
+    ]
+  }
+}

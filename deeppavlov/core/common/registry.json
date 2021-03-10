@@ -58,7 +58,7 @@
   "emb_mat_assembler": "deeppavlov.models.preprocessors.assemble_embeddings_matrix:EmbeddingsMatrixAssembler",
   "entity_detection_parser": "deeppavlov.models.kbqa.entity_detection_parser:EntityDetectionParser",
   "entity_linker": "deeppavlov.models.kbqa.entity_linking:EntityLinker",
-  "fact_ranker": "deeppavlov.models.ranking.fact_ranker:FactRanker",
+  "fact_ranking_infer": "deeppavlov.models.kbqa.fact_ranking:FactRankerInfer",
   "faq_reader": "deeppavlov.dataset_readers.faq_reader:FaqDatasetReader",
   "fasttext": "deeppavlov.models.embedders.fasttext_embedder:FasttextEmbedder",
   "featurized_tracker": "deeppavlov.models.go_bot.tracker.featurized_tracker:FeaturizedTracker",

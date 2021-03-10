@@ -46,18 +46,16 @@ class LogitRanker(Component):
 
     def __init__(self, squad_model: Union[Chainer, Component], batch_size: int = 50,
                  sort_noans: bool = False, top_n: int = 1, return_answer_sentence: bool = False,
-                 use_topical_chat: bool = False, string_multiplier: StringMultiplier = None, **kwargs):
+                 string_multiplier: StringMultiplier = None, **kwargs):
         self.squad_model = squad_model
         self.batch_size = batch_size
         self.sort_noans = sort_noans
         self.top_n = top_n
         self.return_answer_sentence = return_answer_sentence
-        self.use_topical_chat = use_topical_chat
         self.string_multiplier = string_multiplier
 
     def __call__(self, questions_batch: List[str],
-                       contexts_batch_wiki: List[List[str]],
-                       contexts_batch_tch: List[List[str]],
+                       contexts_batch: List[List[str]],
                        doc_ids_batch: Optional[List[List[str]]] = None) -> \
             Union[
                 Tuple[List[str], List[float], List[int], List[str]],
@@ -80,30 +78,18 @@ class LogitRanker(Component):
         if doc_ids_batch is None:
             logger.warning("you didn't pass tfidf_doc_ids as input in logit_ranker config so "
                            "batch_best_answers_doc_ids can't be compute")
-        questions_batch_wiki = self.string_multiplier(questions_batch, contexts_batch_wiki)
+        questions_batch = self.string_multiplier(questions_batch, contexts_batch)
 
         tm_st = time.time()
-        batch_best_answers_wiki, batch_best_answers_score_wiki, batch_best_answers_place_wiki, \
-                   batch_best_answers_sentences_wiki, batch_best_answers_contexts_wiki = self.find_answer(
-                                                                        contexts_batch_wiki, questions_batch_wiki)
+        batch_best_answers, batch_best_answers_score, batch_best_answers_place, \
+                   batch_best_answers_sentences, batch_best_answers_contexts = self.find_answer(
+                                                                        contexts_batch, questions_batch)
         tm_end = time.time()
-        logger.info(f"time of wikipedia squad {tm_end-tm_st}")
-        if self.use_topical_chat:
-            tm_st = time.time()
-            questions_batch_tch = self.string_multiplier(questions_batch, contexts_batch_tch)
-            batch_best_answers_tch, batch_best_answers_score_tch, batch_best_answers_place_tch, \
-                       batch_best_answers_sentences_tch, batch_best_answers_contexts_tch = self.find_answer(
-                                                                            contexts_batch_tch, questions_batch_tch)
-            tm_end = time.time()
-            logger.info(f"time of topical chat squad {tm_end-tm_st}")
-            if self.return_answer_sentence:
-                return batch_best_answers_wiki, batch_best_answers_score_wiki, batch_best_answers_place_wiki, \
-                       batch_best_answers_sentences_wiki, batch_best_answers_sentences_tch, \
-                       batch_best_answers_contexts_wiki
+        logger.info(f"time of squad {tm_end-tm_st}")
         if self.return_answer_sentence:
-                return batch_best_answers_wiki, batch_best_answers_score_wiki, batch_best_answers_place_wiki, \
-                       batch_best_answers_sentences_wiki, batch_best_answers_contexts_wiki
-        return batch_best_answers_wiki, batch_best_answers_score_wiki, batch_best_answers_place_wiki
+                return batch_best_answers, batch_best_answers_score, batch_best_answers_place, \
+                       batch_best_answers_sentences, batch_best_answers_contexts
+        return batch_best_answers, batch_best_answers_score, batch_best_answers_place
         
     def find_answer(self, contexts_batch, questions_batch):
         batch_best_answers = []
