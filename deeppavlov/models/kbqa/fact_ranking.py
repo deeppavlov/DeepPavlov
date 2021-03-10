@@ -31,7 +31,7 @@ log = getLogger(__name__)
 class FactRankerInfer(Component):
     """Class for ranking of paths in subgraph"""
 
-    def __init__(self, ranker: Optional[RelRanker] = None,
+    def __init__(self, ranker = None,
                  batch_size: int = 32,
                  facts_to_leave: int = 3, **kwargs):
         """
