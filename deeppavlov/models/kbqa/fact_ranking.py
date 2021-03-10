@@ -22,7 +22,6 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.file import load_pickle
-from deeppavlov.models.kbqa.wiki_parser import WikiParser
 from deeppavlov.models.preprocessors.bert_preprocessor import BertPreprocessor
 
 log = getLogger(__name__)
