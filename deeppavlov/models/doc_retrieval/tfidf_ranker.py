@@ -157,9 +157,9 @@ class ParTfidfRanker(Component):
             paragraphs = self.rank_paragraphs(question, paragraphs)
             batch_top_paragraphs.append(paragraphs)
             if entities_list:
-                batch_first_par.append(self.wiki_first_par.get(entities_list[0], ""))
+                batch_first_par.append([self.wiki_first_par.get(entity, "") for entity in entities_list])
             else:
-                batch_first_par.append("")
+                batch_first_par.append([])
         paragraph_total_length = sum([len(chunk) for chunk in batch_top_paragraphs[0]])
         tm_end = time.time()
         logger.debug(f"paragraph ranking time {tm_end-tm_st}, length {paragraph_total_length}")
