@@ -64,6 +64,7 @@
   "featurized_tracker": "deeppavlov.models.go_bot.tracker.featurized_tracker:FeaturizedTracker",
   "file_paths_iterator": "deeppavlov.dataset_iterators.file_paths_iterator:FilePathsIterator",
   "file_paths_reader": "deeppavlov.dataset_readers.file_paths_reader:FilePathsReader",
+  "first_par_extractor": "deeppavlov.models.doc_retrieval.tfidf_ranker:FirstParExtractor",
   "fit_trainer": "deeppavlov.core.trainers.fit_trainer:FitTrainer",
   "glove": "deeppavlov.models.embedders.glove_embedder:GloVeEmbedder",
   "go_bot": "deeppavlov.models.go_bot.go_bot:GoalOrientedBot",

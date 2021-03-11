@@ -200,3 +200,19 @@ class ParTfidfRanker(Component):
                 facts_list.append(self.facts_map[str(fact_id)])
                 
         return facts_list
+        
+        
+@register("first_par_extractor")
+class FirstParExtractor(Component):
+    def __init__(self, wiki_first_par_filename: str, **kwargs):
+        self.wiki_first_par = load_pickle(str(expand_path(wiki_first_par_filename)))
+
+    def __call__(self, entities_batch: List[List[str]]) -> Tuple[List[Any], List[float]]:
+        batch_first_par = []
+        for entities_list in zip(entities_batch):
+            if entities_list:
+                batch_first_par.append([self.wiki_first_par.get(entity, "") for entity in entities_list])
+            else:
+                batch_first_par.append([])
+
+        return batch_first_par
