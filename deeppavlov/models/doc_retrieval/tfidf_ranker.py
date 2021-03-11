@@ -101,14 +101,12 @@ class ParTfidfRanker(Component):
                        np_facts_filename: str,
                        facts_map_filename: str,
                        unigrams_filename: str,
-                       wiki_first_par_filename: str,
                        top_n: int = 10, log: bool = False, **kwargs):
         self.tokenizer = tokenizer
         self.np_facts = read_json(expand_path(np_facts_filename))
         self.facts_map = read_json(expand_path(facts_map_filename))
         self.top_n = top_n
         self.log = log
-        self.wiki_first_par = load_pickle(str(expand_path(wiki_first_par_filename)))
         np_remove_list = ["'s", 'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're",
                   "you've", "you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself',
                   'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'they', 'them', 'their',
@@ -147,7 +145,6 @@ class ParTfidfRanker(Component):
                        entities_batch: List[List[str]]) -> Tuple[List[Any], List[float]]:
         batch_top_paragraphs = []
         batch_top_facts = []
-        batch_first_par = []
         sources = []
         tm_st = time.time()
         for question, paragraphs, nounphrases_list, entities_list in \
@@ -156,15 +153,11 @@ class ParTfidfRanker(Component):
             batch_top_facts.append(facts_list)
             paragraphs = self.rank_paragraphs(question, paragraphs)
             batch_top_paragraphs.append(paragraphs)
-            if entities_list:
-                batch_first_par.append([self.wiki_first_par.get(entity, "") for entity in entities_list])
-            else:
-                batch_first_par.append([])
         paragraph_total_length = sum([len(chunk) for chunk in batch_top_paragraphs[0]])
         tm_end = time.time()
         logger.debug(f"paragraph ranking time {tm_end-tm_st}, length {paragraph_total_length}")
 
-        return batch_top_paragraphs, batch_top_facts, batch_first_par
+        return batch_top_paragraphs, batch_top_facts
         
     def rank_paragraphs(self, question: str, paragraphs: List[str]) -> List[str]:
         ngrams = list(self.tokenizer([question]))[0]
