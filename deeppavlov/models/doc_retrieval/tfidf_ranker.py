@@ -141,14 +141,12 @@ class ParTfidfRanker(Component):
 
     def __call__(self, questions_batch: List[str],
                        paragraphs_batch: List[List[str]],
-                       nounphrases_batch: List[List[str]],
-                       entities_batch: List[List[str]]) -> Tuple[List[Any], List[float]]:
+                       nounphrases_batch: List[List[str]]) -> Tuple[List[Any], List[float]]:
         batch_top_paragraphs = []
         batch_top_facts = []
         sources = []
         tm_st = time.time()
-        for question, paragraphs, nounphrases_list, entities_list in \
-            zip(questions_batch, paragraphs_batch, nounphrases_batch, entities_batch):
+        for question, paragraphs, nounphrases_list in zip(questions_batch, paragraphs_batch, nounphrases_batch):
             facts_list = self.find_facts(nounphrases_list)
             batch_top_facts.append(facts_list)
             paragraphs = self.rank_paragraphs(question, paragraphs)
