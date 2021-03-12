@@ -47,9 +47,9 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 [Goal(Task)-oriented Bot](http://docs.deeppavlov.ai/en/master/features/skills/go_bot.html) | [Seq2seq Goal-Oriented bot](http://docs.deeppavlov.ai/en/master/features/skills/seq2seq_go_bot.html)
 
-[Open Domain Questions Answering](http://docs.deeppavlov.ai/en/master/features/skills/odqa.html) | [eCommerce Bot](http://docs.deeppavlov.ai/en/master/features/skills/ecommerce.html) 
+[Open Domain Questions Answering](http://docs.deeppavlov.ai/en/master/features/skills/odqa.html) | [eCommerce Bot](http://docs.deeppavlov.ai/en/master/features/skills/ecommerce.html) (This page does not open)
 
-[Frequently Asked Questions Answering](http://docs.deeppavlov.ai/en/master/features/skills/faq.html) | [Pattern Matching](http://docs.deeppavlov.ai/en/master/features/skills/pattern_matching.html) 
+[Frequently Asked Questions Answering](http://docs.deeppavlov.ai/en/master/features/skills/faq.html) | [Pattern Matching](http://docs.deeppavlov.ai/en/master/features/skills/pattern_matching.html) (This page does not open)
 
 **Embeddings**
 
