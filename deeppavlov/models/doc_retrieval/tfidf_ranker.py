@@ -200,7 +200,7 @@ class FirstParExtractor(Component):
 
     def __call__(self, entities_batch: List[List[str]]) -> Tuple[List[Any], List[float]]:
         batch_first_par = []
-        for entities_list in zip(entities_batch):
+        for entities_list in entities_batch:
             if entities_list:
                 first_par_list = []
                 for entities in entities_list:
