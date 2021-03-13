@@ -202,7 +202,11 @@ class FirstParExtractor(Component):
         batch_first_par = []
         for entities_list in zip(entities_batch):
             if entities_list:
-                batch_first_par.append([self.wiki_first_par.get(entity, "") for entity in entities_list])
+                first_par_list = []
+                for entities in entities_list:
+                    if entities and entities[0] in self.wiki_first_par:
+                        first_par_list.append(self.wiki_first_par[entities[0]])
+                batch_first_par.append(first_par_list)
             else:
                 batch_first_par.append([])
 
