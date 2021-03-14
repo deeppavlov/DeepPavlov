@@ -145,13 +145,6 @@ class DocumentChunker(Component):
         tm_end = time.time()
         if result:
             logger.debug(f"chunking time {tm_end-tm_st}, number of chunks {len(result[0])}")
-        if self.log and result:
-            out = open("paragraph_log.txt", 'a')
-            for paragraph in result[0]:
-                out.write(str(paragraph)+'\n')
-                out.write("_"*30+'\n')
-            out.write("="*50+'\n')
-            out.close()
         
         if empty_docs_ids_flag:
             return result
