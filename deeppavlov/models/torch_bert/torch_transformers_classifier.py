@@ -117,7 +117,8 @@ class TorchTransformersClassifierModel(TorchModel):
 
         # Token_type_id is omitted for Text Classification
 
-        loss, logits = self.model(**tokenized)
+        outputs = self.model(**tokenized)
+        loss, logits = outputs.loss, outputs.logits
         loss.backward()
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
