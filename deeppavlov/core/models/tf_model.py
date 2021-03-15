@@ -34,7 +34,7 @@ log = getLogger(__name__)
 class TFModel(NNModel, metaclass=TfModelMeta):
     """Parent class for all components using TensorFlow."""
 
-    sess: tf.Session
+    sess: tf.compat.v1.session #tf.session is depreciated
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -60,7 +60,7 @@ class TFModel(NNModel, metaclass=TfModelMeta):
         for var_name, value in weights:
             var = self.sess.graph.get_tensor_by_name(var_name)
             value = np.asarray(value)
-            assign_placeholder = tf.placeholder(var.dtype, shape=value.shape)
+            assign_placeholder = tf.compat.v1.placeholder(var.dtype, shape=value.shape) #tf.placeholder is depreciated
             assign_op = tf.assign(var, assign_placeholder)
             assign_ops.append(assign_op)
             feed_dict[assign_placeholder] = value
@@ -111,7 +111,7 @@ class TFModel(NNModel, metaclass=TfModelMeta):
             learning_rate: scalar or placeholder.
             clip_norm: clip gradients norm by clip_norm.
             learnable_scopes: which scopes are trainable (None for all).
-            optimizer: instance of tf.train.Optimizer, default Adam.
+            optimizer: instance of tf.compat.v1.train.Optimizer, default Adam.
             **kwargs: parameters passed to tf.train.Optimizer object
                (scalars or placeholders).
 
@@ -191,7 +191,7 @@ class LRScheduledTFModel(TFModel, LRScheduledModel):
             self._optimizer = cls_from_str(optimizer)
         except Exception:
             self._optimizer = getattr(tf.train, optimizer.split(':')[-1])
-        if not issubclass(self._optimizer, tf.train.Optimizer):
+        if not issubclass(self._optimizer, tf.compat.v1.train.Optimizer):
             raise ConfigError("`optimizer` should be tensorflow.train.Optimizer subclass")
         self._clip_norm = clip_norm
 
@@ -217,8 +217,8 @@ class LRScheduledTFModel(TFModel, LRScheduledModel):
     def get_train_op(self,
                      loss,
                      learning_rate: Union[float, tf.placeholder] = None,
-                     optimizer: tf.train.Optimizer = None,
-                     momentum: Union[float, tf.placeholder] = None,
+                     optimizer: tf.compat.v1.train.Optimizer = None,
+                     momentum: Union[float, tf.compat.v1.placeholder] = None,
                      clip_norm: float = None,
                      **kwargs):
         if learning_rate is not None:
@@ -229,7 +229,7 @@ class LRScheduledTFModel(TFModel, LRScheduledModel):
         kwargs['clip_norm'] = clip_norm or self._clip_norm
 
         momentum_param = 'momentum'
-        if kwargs['optimizer'] == tf.train.AdamOptimizer:
+        if kwargs['optimizer'] == tf.compat.v1.train.AdamOptimizer:
             momentum_param = 'beta1'
         elif kwargs['optimizer'] == tf.train.AdadeltaOptimizer:
             momentum_param = 'rho'
