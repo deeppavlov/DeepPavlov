@@ -194,11 +194,11 @@ class QueryGeneratorBase(Component, Serializable):
             log.info(f"el input {entities} {template_found} {question} el output {el_output}")
             if self.use_el_api_requester:
                 el_output = el_output[0]
-            entity_ids, _ = el_output
+            entity_ids, *_ = el_output
             if not self.use_el_api_requester and entity_ids:
                 entity_ids = entity_ids[0]
         if what_to_link == "types":
-            entity_ids, _ = self.linker_types([entities])
+            entity_ids, *_ = self.linker_types([entities])
             entity_ids = entity_ids[0]
 
         return entity_ids
