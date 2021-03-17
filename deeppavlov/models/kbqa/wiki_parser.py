@@ -16,7 +16,6 @@ import datetime
 import random
 import re
 import time
-import multiprocessing as mp
 from logging import getLogger
 from typing import List, Tuple, Dict, Any, Union
 from collections import namedtuple
@@ -72,16 +71,12 @@ class WikiParser:
         
         self.max_comb_num = max_comb_num
         self.lang = lang
-        self.manager = mp.Manager()
 
     def __call__(self, parser_info_list: List[str], queries_list: List[Any]) -> List[Any]:
-        wiki_parser_output = self.manager.list()
-        p = mp.Process(target=self.execute_queries_list, args=(parser_info_list, queries_list, wiki_parser_output))
-        p.start()
-        p.join()
-        return list(wiki_parser_output)
+        wiki_parser_output = self.execute_queries_list(parser_info_list, queries_list)
+        return wiki_parser_output
     
-    def execute_queries_list(self, parser_info_list: List[str], queries_list: List[Any], wiki_parser_output):
+    def execute_queries_list(self, parser_info_list: List[str], queries_list: List[Any]):
         wiki_parser_output = []
         query_answer_types = []
         for parser_info, query in zip(parser_info_list, queries_list):
@@ -240,6 +235,8 @@ class WikiParser:
                 wiki_parser_output.append("ok")
             else:
                 raise ValueError("Unsupported query type")
+                
+        return wiki_parser_output
 
     def execute(self, what_return: List[str],
                 query_seq: List[List[str]],
