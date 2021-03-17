@@ -28,16 +28,16 @@ class IntentCatcherReader(DatasetReader):
     """Reader for Intent Catcher dataset in json or YAML (RASA v2) format"""
 
     def parse_rasa_example(self, example: str, regex: bool = False):
-        example = example[2:]
+        search_entities_re = re.compile(
+            "\[[ a-zA-Z0-9]+\]\([ a-zA-Z0-9]+\)")
+            example = example[2:]
         if not regex:
-            search_entities_re = re.compile(
-                "\[[ a-zA-Z0-9]+\]\([ a-zA-Z0-9]+\)")
             search_entities = search_entities_re.search(example)
             while search_entities is not None:
-                search_entities = search_entities_re.search(example)
                 start, end = search_entities.span()
                 example = example[:start] + re.sub("\]\([ a-zA-Z0-9]+\)", "", example[start:end])[
                     1:] + example[end:]
+                search_entities = search_entities_re.search(example)
             example = re.sub("\?", "\?", example)
         return example
 
@@ -58,10 +58,7 @@ class IntentCatcherReader(DatasetReader):
         if format == "yaml":  # load domain.yaml
             domain_file = Path(data_path, "domain.yml")
             if domain_file.exists():
-                domain = [
-                    self.parse_rasa_example(intent, regex=True)
-                    for intent in yaml_load(open(domain_file))['intents'].split("\n")
-                ]
+                domain = yaml_load(open(domain_file))['intents']
             else:
                 raise Exception(
                     "domain.yml in data path {} does not exist!".format(
@@ -91,11 +88,11 @@ class IntentCatcherReader(DatasetReader):
                             else:
                                 continue
                             file_data[intent].extend([
-                                self.parse_rasa_example(example, regex) for examples in part.get('examples', '').split("\n")
+                                self.parse_rasa_example(example, regex) for example in part.get('examples', '').split("\n")
                             ])
                             if file['version'] == 'dp_2.0':
                                 file_data[intent].extend([
-                                    self.parse_rasa_example(example, True) for examples in part.get('regex_examples', '').split("\n")
+                                    self.parse_rasa_example(example, True) for example in part.get('regex_examples', '').split("\n")
                                 ])
                         file = file_data
                 for label in file:
@@ -103,5 +100,6 @@ class IntentCatcherReader(DatasetReader):
                                             for phrase in file[label]])
             else:
                 log.warning("Cannot find {} file".format(file))
-
+        for data_type in data: # filter data from ''
+            data[data_type] = list(filter(lambda x: len(x[0]) > 0, data[data_type]))
         return data
