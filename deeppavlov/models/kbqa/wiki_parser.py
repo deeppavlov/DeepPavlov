@@ -429,6 +429,10 @@ class WikiParser:
             year, month, day = date_info[0]
             if "how old" in question.lower():
                 entity = datetime.datetime.now().year - int(year)
+            elif "в каком году" in question.lower():
+                entity = year
+            elif "в каком месяце" in question.lower():
+                entity = month
             elif day != "00":
                 date = datetime.datetime.strptime(f"{year}-{month}-{day}", "%Y-%m-%d")
                 entity = date.strftime("%d %B %Y")
