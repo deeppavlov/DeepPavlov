@@ -12,7 +12,7 @@
 import re
 from collections import defaultdict
 from json import load as json_load
-from yaml import full_load as yaml_load
+from yaml import load as yaml_load
 from logging import getLogger
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -30,7 +30,7 @@ class IntentCatcherReader(DatasetReader):
     def parse_rasa_example(self, example: str, regex: bool = False):
         search_entities_re = re.compile(
             "\[[ a-zA-Z0-9]+\]\([ a-zA-Z0-9]+\)")
-            example = example[2:]
+        example = example[2:]
         if not regex:
             search_entities = search_entities_re.search(example)
             while search_entities is not None:
@@ -44,7 +44,14 @@ class IntentCatcherReader(DatasetReader):
     def read(self, data_path: str, format: str = 'json', *args, **kwargs) -> Dict[str, List[Tuple[str, str]]]:
         data_types = ["train", "valid", "test"]
 
-        train_file = kwargs.get('train', f'train.{format}')
+        if format == 'yaml':
+            fmt = 'yml'
+        elif format == 'json':
+            fmt = 'json'
+        else:
+            raise Exception("Wrong file format. ")
+
+        train_file = kwargs.get('train', f'train.{fmt}')
 
         if not Path(data_path, train_file).exists():
             raise Exception(
@@ -65,8 +72,9 @@ class IntentCatcherReader(DatasetReader):
                         data_path))
 
         for data_type in data_types:
+
             file_name = kwargs.get(
-                data_type, '{}.{}'.format(data_type, format))
+                data_type, '{}.{}'.format(data_type, fmt))
             if file_name is None:
                 continue
 
@@ -102,4 +110,7 @@ class IntentCatcherReader(DatasetReader):
                 log.warning("Cannot find {} file".format(file))
         for data_type in data: # filter data from ''
             data[data_type] = list(filter(lambda x: len(x[0]) > 0, data[data_type]))
+        
+        print(data)
+        
         return data
