@@ -162,7 +162,6 @@ class EntityDetectionParser(Component):
 
         cnt = 0
         for n, (tok, tag, proba) in enumerate(zip(tokens, tags, tag_probas)):
-            print(tok, tag, self.entity_tags)
             if tag.split('-')[-1] in self.entity_tags:
                 f_tag = tag.split("-")[-1]
                 if tag.startswith("B-") and any(entity_dict.values()):
